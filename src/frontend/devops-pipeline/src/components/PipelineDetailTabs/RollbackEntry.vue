@@ -5,6 +5,14 @@
         theme="primary"
         :disabled="loading"
         :loading="loading"
+        v-perm="{
+            permissionData: {
+                projectId: projectId,
+                resourceType: 'pipeline',
+                resourceCode: pipelineId,
+                action: RESOURCE_ACTION.EDIT
+            }
+        }"
         @click.stop="rollback"
     >
         <slot>
@@ -17,6 +25,9 @@
     import { mapActions } from 'vuex'
     import { navConfirm } from '@/utils/util'
     import { UPDATE_PIPELINE_INFO } from '@/store/modules/atom/constants'
+    import {
+        RESOURCE_ACTION
+    } from '@/utils/permission'
 
     export default {
         props: {
@@ -42,7 +53,8 @@
         },
         data () {
             return {
-                loading: false
+                loading: false,
+                RESOURCE_ACTION
             }
         },
         methods: {

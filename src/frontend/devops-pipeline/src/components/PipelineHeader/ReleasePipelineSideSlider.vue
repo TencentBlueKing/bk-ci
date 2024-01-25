@@ -76,7 +76,7 @@
                             {{ $t("yamlCodeLib") }}
                             <i
                                 class="devops-icon icon-question-circle-shape"
-                                v-bk-tooltips="$t('aaaa')"
+                                v-bk-tooltips="$t('yamlCodeLibDesc')"
                             />
                         </label>
                         <bk-form-item required property="repoHashId">
@@ -119,7 +119,7 @@
                             {{ $t("yamlDir") }}
                             <i
                                 class="devops-icon icon-question-circle-shape"
-                                v-bk-tooltips="$t('aaaa')"
+                                v-bk-tooltips="$t('yamlDirDesc')"
                             />
                         </label>
                         <bk-form-item required property="filePath">
@@ -174,11 +174,20 @@
                     </header>
                     <PipelineGroupSelector
                         v-model="groupValue"
-                        :dynamic-group-editable="false"
+                        :dynamic-group-editable="!releaseParams.enablePac"
                         :pipeline-name="pipelineName"
                         ref="pipelineGroupSelector"
                         :has-manage-permission="isManage"
+                        :static-groups="staticGroups"
                     />
+                    <section class="belongs-to-groups-box">
+                        <p>{{ $t('当前流水线所在组：') }}</p>
+                        <div>
+                            <bk-tag v-for="group in viewNames" :key="group">
+                                {{ group }}
+                            </bk-tag>
+                        </div>
+                    </section>
                 </div>
             </bk-form>
             <div
@@ -289,7 +298,8 @@
                 groupValue: {
                     labels: this.pipelineSetting?.labels || [],
                     staticViews: []
-                }
+                },
+                staticGroups: null
             }
         },
         computed: {
@@ -303,7 +313,9 @@
             pipelineName () {
                 return this.pipelineInfo?.pipelineName
             },
-
+            viewNames () {
+                return this.pipelineInfo?.viewNames || []
+            },
             rules () {
                 return {
                     repoHashId: [
@@ -400,7 +412,7 @@
             window.__bk_zIndex_manager.zIndex = 2000
         },
         methods: {
-            ...mapActions('atom', ['releaseDraftPipeline', 'setSaveStatus']),
+            ...mapActions('atom', ['releaseDraftPipeline', 'setSaveStatus', 'listPermissionStaticViews']),
             ...mapActions('common', ['isPACOAuth', 'getSupportPacScmTypeList', 'getPACRepoList']),
             async init () {
                 if (this.releaseParams.enablePac) {
@@ -412,6 +424,10 @@
                         this.fetchPacEnableCodelibList(true)
                     })
                 }
+                this.staticGroups = await this.listPermissionStaticViews({
+                    projectId: this.$route.params.projectId,
+                    pipelineId: this.$route.params.pipelineId
+                })
             },
             async fetchPacEnableCodelibList (init = false) {
                 try {
@@ -482,7 +498,7 @@
                         ...rest
                     } = this.releaseParams
                     const {
-                        data: { version, versionName, versionNum }
+                        data: { version, versionName, versionNum, targetUrl }
                     } = await this.releaseDraftPipeline({
                         projectId,
                         pipelineId,
@@ -494,7 +510,9 @@
                                 ? {
                                     targetAction
                                 }
-                                : {}),
+                                : {
+                                    labels: this.groupValue.labels
+                                }),
                             yamlInfo: rest.enablePac
                                 ? {
                                     scmType,
@@ -594,7 +612,7 @@
                                                 on: {
                                                     click: () => {
                                                         this.$bkInfo.close(instance.id)
-                                                        window.open('https://git.tencent.com', '_blank')
+                                                        window.open(targetUrl, '_blank')
                                                     }
                                                 }
                                             },
@@ -861,5 +879,12 @@
     margin-top: 16px;
     font-size: 12px;
   }
+}
+.belongs-to-groups-box {
+    margin-top: 10px;
+    display: flex;
+    flex-direction: column;
+    grid-gap: 12px;
+    font-size: 12px;
 }
 </style>

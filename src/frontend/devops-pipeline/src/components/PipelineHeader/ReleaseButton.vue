@@ -1,8 +1,20 @@
 <template>
     <div style="height: 100%">
-        <span :class="['publish-pipeline-btn', {
-            'publish-diabled': !canRelease
-        }]" @click="showReleaseSlider">
+        <span
+            :class="['publish-pipeline-btn', {
+                'publish-diabled': !canRelease
+            }]" @click="showReleaseSlider"
+            v-perm="{
+                hasPermission: canEdit,
+                disablePermissionApi: true,
+                permissionData: {
+                    projectId,
+                    resourceType: 'pipeline',
+                    resourceCode: pipelineId,
+                    action: RESOURCE_ACTION.EDIT
+                }
+            }"
+        >
             <i class="devops-icon icon-check-small" />
             {{ $t('release') }}
         </span>
@@ -16,6 +28,9 @@
 </template>
 
 <script>
+    import {
+        RESOURCE_ACTION
+    } from '@/utils/permission'
     import { mapState, mapActions } from 'vuex'
     import ReleasePipelineSideSlider from './ReleasePipelineSideSlider'
     export default {
@@ -23,6 +38,14 @@
             ReleasePipelineSideSlider
         },
         props: {
+            projectId: {
+                type: String,
+                required: true
+            },
+            pipelineId: {
+                type: String,
+                required: true
+            },
             canRelease: {
                 type: Boolean,
                 required: true
@@ -30,6 +53,7 @@
         },
         data () {
             return {
+                RESOURCE_ACTION,
                 isReleaseSliderShow: false
             }
         },
@@ -38,6 +62,10 @@
                 'pipelineInfo',
                 'showVariable'
             ]),
+
+            canEdit () {
+                return this.pipelineInfo?.permissions?.canEdit ?? true
+            },
             currentVersion () {
                 return this.pipelineInfo?.version ?? ''
             },

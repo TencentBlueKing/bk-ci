@@ -3,21 +3,23 @@
         <header class="bk-pipeline-card-header">
             <aside class="bk-pipeline-card-header-left-aside">
                 <h3>
-                    <router-link
+                    <span
                         class="pipeline-cell-link"
-                        :to="pipeline.historyRoute"
+                        @click="goPipeline(pipeline.historyRoute)"
                         v-bk-overflow-tips
                         v-perm="{
+                            hasPermission: pipeline.permissions.canView,
+                            disablePermissionApi: true,
                             permissionData: {
-                                projectId: projectId,
+                                projectId,
                                 resourceType: 'pipeline',
                                 resourceCode: pipeline.pipelineId,
-                                action: RESOURCE_ACTION.EDIT
+                                action: RESOURCE_ACTION.VIEW
                             }
                         }"
                     >
                         {{pipeline.pipelineName}}
-                    </router-link>
+                    </span>
                     <logo
                         class="ml5 template-mode-icon"
                         v-if="pipeline.templateId"
@@ -41,23 +43,36 @@
                 </p>
             </aside>
             <aside class="bk-pipeline-card-header-right-aside">
-                <router-link v-if="pipeline.onlyDraft" class="bk-pipeline-card-trigger-btn" :to="{
-                    name: 'pipelinesEdit',
-                    params: {
-                        projectId: pipeline.projectId,
-                        pipelineId: pipeline.pipelineId
-                    }
-                }"
+                <span
+                    v-if="pipeline.onlyDraft"
+                    class="bk-pipeline-card-trigger-btn"
+                    @click="goPipeline({
+                        name: 'pipelinesEdit',
+                        params: {
+                            projectId,
+                            pipelineId: pipeline.pipelineId
+                        }
+                    })"
+                    v-perm="{
+                        hasPermission: pipeline.permissions.canEdit,
+                        disablePermissionApi: true,
+                        permissionData: {
+                            projectId: projectId,
+                            resourceType: 'pipeline',
+                            resourceCode: pipeline.pipelineId,
+                            action: RESOURCE_ACTION.EDIT
+                        }
+                    }"
                 >
                     <i class="devops-icon icon-edit-line" />
-                </router-link>
+                </span>
                 <span
                     v-else
                     v-perm="{
                         hasPermission: pipeline.permissions.canExecute,
                         disablePermissionApi: true,
                         permissionData: {
-                            projectId: projectId,
+                            projectId,
                             resourceType: 'pipeline',
                             resourceCode: pipeline.pipelineId,
                             action: RESOURCE_ACTION.EXECUTE
@@ -224,6 +239,9 @@
                     resourceCode: pipeline.pipelineId,
                     action: RESOURCE_ACTION.VIEW
                 })
+            },
+            goPipeline (route) {
+                this.$router.push(route)
             }
         }
     }

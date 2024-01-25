@@ -71,7 +71,11 @@
             </div>
             <section slot="content">
                 <template v-for="env in group.params">
-                    <env-item :key="env.name" :name="env.name" :desc="env.desc"
+                    <env-item
+                        :key="env.name"
+                        :name="env.name"
+                        :desc="env.desc"
+                        :editable="editable"
                         :copy-prefix="group.envPrefix"
                         :disabled-copy="!group.stepId || group.disableHeader"
                     />
@@ -220,7 +224,7 @@
 
 <style lang="scss">
     .step-pop-confirm {
-        z-index: 2017 !important;
+        z-index: 2019 !important;
     }
     .disabled-confirm-button.bk-popconfirm-content .popconfirm-operate button[type=button].primary {
         pointer-events: none;

@@ -49,7 +49,6 @@ import {
     SET_ATOM_MODAL_FETCHING,
     SET_ATOM_PAGE_OVER,
     SET_ATOM_VERSION_LIST,
-    SET_AUTH_EDITING,
     SET_COMMEND_ATOM_COUNT,
     SET_COMMEND_ATOM_PAGE_OVER,
     SET_COMMON_PARAMS,
@@ -101,9 +100,6 @@ function getMapByKey (list, key) {
 }
 
 export default {
-    setAuthEditing ({ commit }, editing) {
-        commit(SET_AUTH_EDITING, editing)
-    },
     triggerStage ({ commit }, { projectId, pipelineId, buildNo, stageId, cancel, reviewParams, id, suggest }) {
         return request.post(`/${PROCESS_API_URL_PREFIX}/user/builds/projects/${projectId}/pipelines/${pipelineId}/builds/${buildNo}/stages/${stageId}/manualStart?cancel=${cancel}`, { reviewParams, id, suggest })
     },
@@ -781,6 +777,11 @@ export default {
                 line,
                 column
             }
+        })
+    },
+    listPermissionStaticViews ({ commit }, { projectId, pipelineId }) {
+        return request.get(`/${PROCESS_API_URL_PREFIX}/user/pipelineViews/projects/${projectId}/pipelines/${pipelineId}/listPermissionStaticViews`).then(response => {
+            return response.data
         })
     }
 }

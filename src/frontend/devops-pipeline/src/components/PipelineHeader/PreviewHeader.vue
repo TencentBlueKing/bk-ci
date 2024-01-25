@@ -15,6 +15,8 @@
             <bk-button
                 :disabled="executeStatus"
                 v-perm="{
+                    hasPermission: canEdit,
+                    disablePermissionApi: true,
                     permissionData: {
                         projectId,
                         resourceType: 'pipeline',
@@ -45,10 +47,12 @@
                     :disabled="executeStatus"
                     :loading="executeStatus"
                     v-perm="{
+                        hasPermission: canExecute,
+                        disablePermissionApi: true,
                         permissionData: {
-                            projectId: $route.params.projectId,
+                            projectId,
                             resourceType: 'pipeline',
-                            resourceCode: $route.params.pipelineId,
+                            resourceCode: pipelineId,
                             action: RESOURCE_ACTION.EXECUTE
                         }
                     }"
@@ -62,11 +66,11 @@
 </template>
 
 <script>
-    import { mapState, mapActions, mapGetters } from 'vuex'
     import { bus } from '@/utils/bus'
     import {
         RESOURCE_ACTION
     } from '@/utils/permission'
+    import { mapActions, mapGetters, mapState } from 'vuex'
     import PipelineBreadCrumb from './PipelineBreadCrumb'
     export default {
         components: {
@@ -84,6 +88,9 @@
                 isEditing: 'atom/isEditing',
                 canManualStartup: 'pipelines/canManualStartup'
             }),
+            ...mapState('atom', [
+                'pipelineInfo'
+            ]),
             title () {
                 return this.$t(`details.${this.isDebugPipeline ? 'debug' : 'exec'}Preview`)
             },
@@ -95,6 +102,12 @@
             },
             pipelineId () {
                 return this.$route.params.pipelineId
+            },
+            canEdit () {
+                return this.pipelineInfo?.permissions.canEdit ?? true
+            },
+            canExecute () {
+                return this.pipelineInfo?.permissions.canExecute ?? true
             },
             executeSteps () {
                 return [

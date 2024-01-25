@@ -210,8 +210,10 @@ export default {
             const isDynamicGroup = this.currentGroup?.viewType === 1
             return [
                 {
-                    text: this.$t(pipeline.lock ? 'enable' : 'disabled'),
+                    text: this.$t(pipeline.lock ? 'enable' : 'disable'),
                     handler: this.lockPipelineHandler,
+                    hasPermission: pipeline.permissions.canEdit,
+                    disablePermissionApi: true,
                     permissionData: {
                         projectId: pipeline.projectId,
                         resourceType: 'pipeline',

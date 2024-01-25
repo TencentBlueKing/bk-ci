@@ -220,7 +220,7 @@
       line-height: 40px;
     }
     .nav-child-list {
-      margin-bottom: 8px;
+      margin-bottom: 4px;
     }
     .nav-child-title {
       position: relative;
@@ -230,6 +230,7 @@
       &:hover,
       &.active {
         background: #e1ecff;
+        color: #3A84FF;
         &:after {
           content: "";
           position: absolute;

@@ -18,7 +18,7 @@
             >
                 <section slot="content">
                     <template v-for="env in group.params">
-                        <env-item :key="env.name" :name="env.name" :desc="env.desc" />
+                        <env-item :key="env.name" :name="env.name" :desc="env.desc" :editable="editable" />
                     </template>
                 </section>
             </param-group>
@@ -39,6 +39,10 @@
             container: {
                 type: Object,
                 default: () => ({})
+            },
+            editable: {
+                type: Boolean,
+                default: true
             }
         },
         data () {
@@ -75,19 +79,28 @@
                 }
             }
         },
-        async created () {
-            this.sysParamList.splice(0, 0, ...this.commonParams)
-
-            if (this.atomCodeList.length) {
-                this.triggerParams = await this.requestTriggerParams(this.atomCodeList)
-                this.sysParamList.splice(1, 0, ...this.triggerParams)
+        watch: {
+            atomCodeList () {
+                this.$nextTick(this.initData)
             }
-            this.sysParamList[0] && (this.sysParamList[0].isOpen = true)
+        },
+        created () {
+            this.initData()
         },
         methods: {
             ...mapActions('atom', [
                 'requestTriggerParams'
-            ])
+            ]),
+            async initData () {
+                this.sysParamList = []
+                this.sysParamList.splice(0, 0, ...this.commonParams)
+
+                if (this.atomCodeList.length) {
+                    this.triggerParams = await this.requestTriggerParams(this.atomCodeList)
+                    this.sysParamList.splice(1, 0, ...this.triggerParams)
+                }
+                this.sysParamList[0] && (this.sysParamList[0].isOpen = true)
+            }
         }
     }
 </script>

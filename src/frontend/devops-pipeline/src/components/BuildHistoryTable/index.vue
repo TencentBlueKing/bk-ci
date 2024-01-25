@@ -10,19 +10,48 @@
         >
             <div class="no-build-history-box">
                 <span>{{ $t(isDebug ? 'noDebugRecords' : 'noBuildHistory') }}</span>
-                <div v-if="!isReleasePipeline" class="no-build-history-box-tip">
+                <div v-if="!isReleasePipeline && !isDebug" class="no-build-history-box-tip">
                     <p>{{ $t('onlyDraftBuildHistoryTips') }}</p>
                     <p>{{ $t('onlyDraftBuildHistoryIdTips') }}</p>
                     <p>{{ $t('buildHistoryIdTips') }}</p>
-                    <bk-button @click="goEdit" theme="primary" size="large">
+                    <bk-button
+                        @click="goEdit"
+                        theme="primary"
+                        size="large"
+                        v-perm="{
+                            hasPermission: canEdit,
+                            disablePermissionApi: true,
+                            permissionData: {
+                                projectId,
+                                resourceType: 'pipeline',
+                                resourceCode: pipelineId,
+                                action: RESOURCE_ACTION.EDIT
+                            }
+                        }"
+                    >
                         {{$t('goEdit')}}
                     </bk-button>
                 </div>
                 <div v-else class="no-build-history-box-tip">
                     <p v-if="canManualStartup">{{ $t('noBuildHistoryTips')}}</p>
                     <p>{{ $t('buildHistoryIdTips') }}</p>
-                    <span v-if="canManualStartup">
-                        <bk-button @click="buildNow" theme="primary" size="large">
+                    <span v-bk-tooltips="tooltip">
+                        <bk-button
+                            :disabled="!executable"
+                            @click="buildNow"
+                            theme="primary"
+                            size="large"
+                            v-perm="{
+                                hasPermission: canExecute,
+                                disablePermissionApi: true,
+                                permissionData: {
+                                    projectId,
+                                    resourceType: 'pipeline',
+                                    resourceCode: pipelineId,
+                                    action: RESOURCE_ACTION.EXECUTE
+                                }
+                            }"
+                        >
                             {{$t(isDebug ? 'debugNow' : 'buildNow')}}
                         </bk-button>
                     </span>
@@ -43,7 +72,7 @@
                 @page-limit-change="handleLimitChange"
                 :size="tableSetting.size"
             >
-                <bk-table-column v-for="col in tableSetting.selectedFields" v-bind="col" :prop="col.id" :key="col.id">
+                <bk-table-column v-for="col in tableSetting.selectedFields" v-bind="col" :prop="col.id" :key="col.id" show-overflow-tooltip>
                     <template v-if="col.id === 'buildNum'" v-slot="props">
                         <span class="build-num-status">
                             <router-link
@@ -121,7 +150,7 @@
                                     @click.stop="(e) => showArtifactoriesPopup(e, props.row.index)"
                                     v-html="`${$t('history.fileUnit', [props.row.artifactList.length])}<span>（${props.row.sumSize}）</span>`"
                                 />
-                                <div @click.stop="">
+                                <div v-if="props.row.shortUrl" @click.stop="">
                                     <bk-popover theme="light" trigger="click" placement="bottom-end">
                                         <bk-button text theme="primary">
                                             <i class="devops-icon icon-qrcode" />
@@ -129,7 +158,6 @@
                                         <div class="build-qrcode-popup" slot="content">
                                             <span v-html="$t('scanQRCodeView')"></span>
                                             <qrcode
-                                                v-if="props.row.shortUrl"
                                                 :text="props.row.shortUrl"
                                                 :size="76"
                                             >
@@ -205,6 +233,7 @@
                                 <span
                                     :class="{ 'remark-span': true, active: props.row.active }"
                                     v-bk-tooltips="{
+                                        allowHTML: false,
                                         content: props.row.remark,
                                         maxWidth: 500,
                                         disabled: !props.row.remark, delay: [300, 0]
@@ -278,7 +307,6 @@
                         @setting-change="handleTableSettingChange">
                     </bk-table-setting-content>
                 </bk-table-column>
-
                 <empty-exception slot="empty" type="search-empty" @clear="clearFilter" />
             </bk-table>
         </div>
@@ -373,9 +401,9 @@
             <ul class="error-info-list" v-if="activeBuild">
                 <li v-for="item in activeBuild.errorInfoList" :key="item.errCode">
                     <logo :name="item.icon" size="18" />
-                    <span v-bk-overflow-tips>
+                    <p v-bk-tooltips="{ maxWidth: 600, content: item.errorMsg }" :title="item.errorMsg">
                         {{ $t(item.title) }} (<b>{{ item.errCode }}</b>): {{ item.errorMsg }}
-                    </span>
+                    </p>
                 </li>
             </ul>
             <footer slot="footer">
@@ -388,16 +416,19 @@
 </template>
 
 <script>
-    import { mapActions, mapGetters, mapState } from 'vuex'
-    import Logo from '@/components/Logo'
-    import { convertFileSize, convertTime, convertMStoString, getQueryParamString } from '@/utils/util'
-    import { BUILD_HISTORY_TABLE_DEFAULT_COLUMNS, errorTypeMap, extForFile } from '@/utils/pipelineConst'
-    import pipelineConstMixin from '@/mixins/pipelineConstMixin'
-    import qrcode from '@/components/devops/qrcode'
-    import StageSteps from '@/components/StageSteps'
-    import MaterialItem from '@/components/ExecDetail/MaterialItem'
     import FilterBar from '@/components/BuildHistoryTable/FilterBar'
+    import MaterialItem from '@/components/ExecDetail/MaterialItem'
+    import Logo from '@/components/Logo'
+    import StageSteps from '@/components/StageSteps'
     import EmptyException from '@/components/common/exception'
+    import qrcode from '@/components/devops/qrcode'
+    import pipelineConstMixin from '@/mixins/pipelineConstMixin'
+    import {
+        RESOURCE_ACTION
+    } from '@/utils/permission'
+    import { BUILD_HISTORY_TABLE_DEFAULT_COLUMNS, errorTypeMap, extForFile } from '@/utils/pipelineConst'
+    import { convertFileSize, convertMStoString, convertTime, getQueryParamString } from '@/utils/util'
+    import { mapActions, mapGetters, mapState } from 'vuex'
 
     const LS_COLUMNS_KEYS = 'shownColumns'
     export default {
@@ -419,6 +450,7 @@
         },
         data () {
             return {
+                RESOURCE_ACTION,
                 isShowMoreMaterial: false,
                 isShowMoreArtifactories: false,
                 showErorrInfoDialog: false,
@@ -443,7 +475,8 @@
         computed: {
             ...mapGetters({
                 historyPageStatus: 'pipelines/getHistoryPageStatus',
-                isReleasePipeline: 'atom/isReleasePipeline'
+                isReleasePipeline: 'atom/isReleasePipeline',
+                isCurPipelineLocked: 'atom/isCurPipelineLocked'
             }),
             ...mapState('atom', [
                 'pipelineInfo'
@@ -454,15 +487,33 @@
             pipelineId () {
                 return this.$route.params.pipelineId
             },
+            canEdit () {
+                return this.pipelineInfo?.permissions.canEdit ?? true
+            },
+            canExecute () {
+                return this.pipelineInfo?.permissions.canExecute ?? true
+            },
             isQuerying () {
                 return this.historyPageStatus?.isQuerying ?? false
             },
             canManualStartup () {
                 return this.pipelineInfo?.canManualStartup ?? true
             },
+            executable () {
+                return !this.isCurPipelineLocked && ((this.canManualStartup && this.isReleasePipeline) || this.isDebug)
+            },
+            tooltip () {
+                return this.executable
+                    ? {
+                        disabled: true
+                    }
+                    : {
+                        content: this.$t(!this.isReleasePipeline ? 'draftPipelineExecTips' : this.isCurPipelineLocked ? 'pipelineLockTips' : 'pipelineManualDisable'),
+                        delay: [300, 0]
+                    }
+            },
             versionToolTipsConf () {
                 return {
-                    allowHtml: true,
                     delay: 500,
                     content: '#app-version-tooltip-content'
                 }
@@ -600,7 +651,6 @@
                 'resetHistoryFilterCondition'
             ]),
             handleTableSettingChange ({ fields: selectedFields, size }) {
-                debugger
                 Object.assign(this.tableSetting, {
                     selectedFields,
                     size
@@ -1236,7 +1286,7 @@
         &:first-child {
             border-top: 1px solid #EAEBF0;
         }
-        > span {
+        > p {
             display: -webkit-box;
             -webkit-box-orient: vertical;
             -webkit-line-clamp: 3;

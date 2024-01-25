@@ -13,7 +13,18 @@
                         <div :key="index" class="item-content">
                             <div v-if="editable" class="operate-icons">
                                 <i class="devops-icon icon-edit" @click="handleEdit(card.type, index)"></i>
-                                <i class="devops-icon icon-more" style="font-size: 16px"></i>
+                                <bk-popover class="setting-more-dot-menu"
+                                    placement="bottom-start"
+                                    theme="project-manage-more-dot-menu light"
+                                    :arrow="false"
+                                    :distance="0">
+                                    <span class="more-menu-trigger">
+                                        <i class="devops-icon icon-more" style="display: inline-block;margin-top: 2px;font-size: 18px"></i>
+                                    </span>
+                                    <ul class="setting-menu-list" slot="content">
+                                        <li @click="handleDelete(card.type, index)" style="padding: 0 2px;cursor: pointer;">{{$t('delete')}}</li>
+                                    </ul>
+                                </bk-popover>
                             </div>
                             <template v-for="field in renderFields">
                                 <div class="item-info" :key="field.col">
@@ -48,7 +59,12 @@
             @hidden="closeSlider"
         >
             <div class="edit-notify-content" slot="content">
-                <notify-setting :subscription="sliderEditItem" :update-subscription="updateEditItem" />
+                <notify-setting
+                    ref="notifySettingTab"
+                    :project-group-and-users="projectGroupAndUsers"
+                    :subscription="sliderEditItem"
+                    :update-subscription="updateEditItem"
+                />
             </div>
             <div class="edit-notify-footer" slot="footer">
                 <bk-button theme="primary" @click="handleSaveNotify">
@@ -63,6 +79,7 @@
 </template>
 
 <script>
+    import { mapActions } from 'vuex'
     import NotifySetting from '@/components/pipelineSetting/NotifySetting'
 
     const defaultSuc = {
@@ -108,6 +125,7 @@
                 editType: '', // 当前编辑通知类型，成功或失败
                 editIndex: -1, // 当前编辑哪一项通知， -1表示新增
                 icons: ['icon-right-shape', 'icon-down-shape'],
+                projectGroupAndUsers: [],
                 notifyList: [
                     {
                         type: 'successSubscriptionList',
@@ -145,7 +163,13 @@
                 return actionType + ' - ' + targetType
             }
         },
+        async created () {
+            this.projectGroupAndUsers = await this.requestProjectGroupAndUsers(this.$route.params)
+        },
         methods: {
+            ...mapActions('pipelines', [
+                'requestProjectGroupAndUsers'
+            ]),
             getRenderInfo (type) {
                 console.log(type)
                 return this[type]
@@ -162,6 +186,10 @@
                 }
                 return res
             },
+            handleDelete (type, index) {
+                this[type].splice(index, 1)
+                this.updateSubscription(type, this[type])
+            },
             handleEdit (type, index) {
                 this.showSlider = true
                 this.editType = type
@@ -171,19 +199,17 @@
                 } else {
                     this.sliderEditItem = type === 'failSubscriptionList' ? Object.assign({}, defaultFail) : Object.assign({}, defaultSuc)
                 }
-                console.log(this.successSubscriptionList, this.failSubscriptionList, 'list')
-                console.log(this[type], 'type')
             },
             handleSaveNotify () {
-                console.log(this.sliderEditItem, this.editIndex, this.editType)
-                if (this.editIndex > -1) {
-                    this[this.editType][this.editIndex] = this.sliderEditItem
-                } else {
-                    this[this.editType].push(this.sliderEditItem)
-                }
-                console.log(this[this.editType], 'aftersave')
-                this.updateSubscription(this.editType, this[this.editType])
-                this.hideSlider()
+                this.$refs?.notifySettingTab?.$refs?.notifyForm?.validate().then(() => {
+                    if (this.editIndex > -1) {
+                        this[this.editType][this.editIndex] = this.sliderEditItem
+                    } else {
+                        this[this.editType].push(this.sliderEditItem)
+                    }
+                    this.updateSubscription(this.editType, this[this.editType])
+                    this.hideSlider()
+                })
             },
             updateEditItem (name, value) {
                 Object.assign(this.sliderEditItem, { [name]: value })
@@ -201,6 +227,7 @@
 
 <style lang="scss">
     .notify-item {
+        margin-bottom: 8px;
         box-shadow: none;
         &:hover {
             box-shadow: none;
@@ -227,7 +254,7 @@
                 width: 600px;
                 border: 1px solid #DCDEE5;
                 padding: 24px 24px 8px;
-                margin-bottom: 24px;
+                margin-bottom: 16px;
                 .operate-icons {
                     position: absolute;
                     top: 10px;
@@ -235,7 +262,7 @@
                     display: flex;
                     align-items: center;
                     grid-gap: 10px;
-                    font-size: 14px;
+                    font-size: 16px;
                 }
                 &:nth-child(odd) {
                     margin-right: 140px;

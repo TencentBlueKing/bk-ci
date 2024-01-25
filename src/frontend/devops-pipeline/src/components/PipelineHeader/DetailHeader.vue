@@ -25,8 +25,10 @@
                     :icon="loading ? 'loading' : ''"
                     outline
                     v-perm="{
+                        hasPermission: canExecute,
+                        disablePermissionApi: true,
                         permissionData: {
-                            projectId: projectId,
+                            projectId,
                             resourceType: 'pipeline',
                             resourceCode: pipelineId,
                             action: RESOURCE_ACTION.EXECUTE
@@ -40,8 +42,10 @@
             </template>
             <bk-button
                 v-perm="{
+                    hasPermission: canEdit,
+                    disablePermissionApi: true,
                     permissionData: {
-                        projectId: projectId,
+                        projectId,
                         resourceType: 'pipeline',
                         resourceCode: pipelineId,
                         action: RESOURCE_ACTION.EDIT
@@ -56,8 +60,10 @@
                 theme="primary"
                 :loading="executeStatus"
                 v-perm="{
+                    hasPermission: canExecute,
+                    disablePermissionApi: true,
                     permissionData: {
-                        projectId: projectId,
+                        projectId,
                         resourceType: 'pipeline',
                         resourceCode: pipelineId,
                         action: RESOURCE_ACTION.EXECUTE
@@ -70,6 +76,8 @@
             <release-button
                 v-if="isDebugExec"
                 :can-release="canRelease"
+                :project-id="projectId"
+                :pipeline-id="pipelineId"
             />
         </aside>
     </div>
@@ -81,8 +89,8 @@
     } from '@/utils/permission'
     import { mapActions, mapGetters, mapState } from 'vuex'
     import BuildNumSwitcher from './BuildNumSwitcher'
-    import ReleaseButton from './ReleaseButton'
     import PipelineBreadCrumb from './PipelineBreadCrumb'
+    import ReleaseButton from './ReleaseButton'
 
     export default {
         components: {
@@ -109,6 +117,12 @@
             },
             RESOURCE_ACTION () {
                 return RESOURCE_ACTION
+            },
+            canEdit () {
+                return this.pipelineInfo?.permissions?.canEdit ?? true
+            },
+            canExecute () {
+                return this.pipelineInfo?.permissions?.canExecute ?? true
             },
             isRunning () {
                 return ['RUNNING', 'QUEUE'].indexOf(this.execDetail?.status) > -1

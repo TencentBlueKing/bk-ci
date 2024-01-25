@@ -7,16 +7,22 @@
         @cancel="handleCancel"
     >
         <div class="disable-pipeline-dialog">
-            <i class="bk-icon icon-exclamation disable-pipeline-warning-icon"></i>
-            <h3>{{ $t('disablePipelineConfirmTips') }}</h3>
-            <p>
+            <i :class="['bk-icon disable-pipeline-warning-icon', {
+                'icon-exclamation': !lock,
+                'icon-check-1': lock
+            }]"></i>
+            <h3>{{ $t(lock ? 'enablePipelineConfirmTips' : 'disablePipelineConfirmTips') }}</h3>
+            <p v-if="!lock">
                 {{ $t(pacEnabled ? 'disablePacPipelineConfirmDesc' : 'disablePipelineConfirmDesc') }}
+            </p>
+            <p v-else>
+                {{ $t(pacEnabled ? 'enablePacPipelineConfirmDesc' : 'enablePipelineConfirmDesc') }}
             </p>
             <pre class="disable-pac-code" v-if="pacEnabled">{{ disablePipelineYaml }}<copy-icon :value="disablePipelineYaml" /></pre>
         </div>
         <footer slot="footer">
             <bk-button v-if="!pacEnabled" :loading="disabling" theme="primary" @click="disablePipeline">
-                {{ $t('disable') }}
+                {{ $t(lock ? 'enable' : 'disable') }}
             </bk-button>
             <bk-button @click="handleCancel">
                 {{ $t(pacEnabled ? 'close' : 'cancel') }}
@@ -59,11 +65,11 @@
                     })
                     this.$bkMessage({
                         theme: 'success',
-                        message: this.$t('disableSuc', [this.pipelineName])
+                        message: this.$t(this.lock ? 'enableSuc' : 'disableSuc', [this.pipelineName])
                     })
                     this.$nextTick(() => {
                         this.handleCancel()
-                        this.$emit('done')
+                        this.$emit('done', this.lock)
                     })
                 } catch (error) {
                     this.$bkMessage({
@@ -91,6 +97,10 @@
         height: 42px;
         background: #FFE8C3;
         color: #FF9C01;
+        &.icon-check-1 {
+            background: #e5f6ea;
+            color: #3fc06d;
+        }
         align-items: center;
         justify-content: center;
         border-radius: 50%;

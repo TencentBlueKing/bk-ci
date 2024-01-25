@@ -43,20 +43,20 @@
 
 <script>
     import MiniMap from '@/components/MiniMap'
-    import { navConfirm } from '@/utils/util'
     import {
         AuthorityTab,
-        PipelineEditTab,
         BaseSettingTab,
-        TriggerTab,
         NotifyTab,
-        ShowVariable
+        PipelineEditTab,
+        ShowVariable,
+        TriggerTab
     } from '@/components/PipelineEditTabs/'
-    import pipelineOperateMixin from '@/mixins/pipeline-operate-mixin'
-    import { mapActions, mapState, mapGetters } from 'vuex'
-    import YamlPipelineEditor from './YamlPipelineEditor'
     import emptyTips from '@/components/devops/emptyTips'
+    import pipelineOperateMixin from '@/mixins/pipeline-operate-mixin'
     import { RESOURCE_ACTION, handlePipelineNoPermission } from '@/utils/permission'
+    import { navConfirm } from '@/utils/util'
+    import { mapActions, mapGetters, mapState } from 'vuex'
+    import YamlPipelineEditor from './YamlPipelineEditor'
 
     export default {
         components: {
@@ -248,7 +248,6 @@
             this.removeLeaveListenr()
             this.setPipelineEditing(false)
             this.setSaveStatus(false)
-            this.setAuthEditing(false)
             this.setEditFrom(false)
             this.errors.clear()
         },

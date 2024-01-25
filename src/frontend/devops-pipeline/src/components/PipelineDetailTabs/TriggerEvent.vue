@@ -141,6 +141,9 @@
                 }
             }
         },
+        mounted () {
+            this.init()
+        },
         methods: {
             ...mapActions('pipelines', [
                 'getTriggerEventList',

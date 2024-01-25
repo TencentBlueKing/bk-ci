@@ -11,8 +11,10 @@
         <aside class="pipeline-history-right-aside">
             <bk-button
                 v-perm="{
+                    hasPermission: canEdit,
+                    disablePermissionApi: true,
                     permissionData: {
-                        projectId: projectId,
+                        projectId,
                         resourceType: 'pipeline',
                         resourceCode: pipelineId,
                         action: RESOURCE_ACTION.EDIT
@@ -27,6 +29,8 @@
                     :disabled="!executable"
                     theme="primary"
                     v-perm="{
+                        hasPermission: canExecute,
+                        disablePermissionApi: true,
                         permissionData: {
                             projectId,
                             resourceType: 'pipeline',
@@ -46,14 +50,14 @@
 </template>
 
 <script>
-    import { mapGetters, mapState } from 'vuex'
+    import Badge from '@/components/Badge.vue'
+    import PacTag from '@/components/PacTag.vue'
     import {
         RESOURCE_ACTION
     } from '@/utils/permission'
+    import { mapGetters, mapState } from 'vuex'
     import MoreActions from './MoreActions.vue'
     import PipelineBreadCrumb from './PipelineBreadCrumb.vue'
-    import PacTag from '@/components/PacTag.vue'
-    import Badge from '@/components/Badge.vue'
 
     export default {
         components: {
@@ -68,12 +72,6 @@
             }
         },
         computed: {
-            projectId () {
-                return this.$route.params.projectId
-            },
-            pipelineId () {
-                return this.$route.params.pipelineId
-            },
             editRouteName () {
                 return {
                     name: 'pipelinesEdit',
@@ -86,8 +84,20 @@
                 isReleasePipeline: 'atom/isReleasePipeline',
                 pacEnabled: 'atom/pacEnabled'
             }),
+            projectId () {
+                return this.$route.params.projectId
+            },
+            pipelineId () {
+                return this.$route.params.pipelineId
+            },
             yamlInfo () {
                 return this.pipelineInfo?.yamlInfo
+            },
+            canEdit () {
+                return this.pipelineInfo?.permissions?.canEdit ?? true
+            },
+            canExecute () {
+                return this.pipelineInfo?.permissions?.canExecute ?? true
             },
             executable () {
                 return !this.isCurPipelineLocked && this.canManualStartup && this.isReleasePipeline
@@ -96,7 +106,6 @@
                 return this.pipelineInfo?.canManualStartup ?? true
             },
             tooltip () {
-                console.log(this.executable)
                 return this.executable
                     ? {
                         disabled: true
