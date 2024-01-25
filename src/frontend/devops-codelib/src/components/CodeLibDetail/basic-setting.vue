@@ -350,24 +350,24 @@
 </template>
 <script>
     import {
-        isP4,
-        isGit,
-        isGithub,
-        isGitLab,
-        isSvn,
-        isTGit
-    } from '../../config/'
-    import {
-        mapState,
-        mapActions
-    } from 'vuex'
+        prettyDateTimeFormat
+    } from '@/utils/'
     import {
         RESOURCE_ACTION,
         RESOURCE_TYPE
     } from '@/utils/permission'
     import {
-        prettyDateTimeFormat
-    } from '@/utils/'
+        mapActions,
+        mapState
+    } from 'vuex'
+    import {
+        isGit,
+        isGitLab,
+        isGithub,
+        isP4,
+        isSvn,
+        isTGit
+    } from '../../config/'
     import ResetAuthDialog from './ResetAuthDialog.vue'
  
     export default {
@@ -401,11 +401,11 @@
         },
         data () {
             return {
-                RESOURCE_ACTION,
-                RESOURCE_TYPE,
                 syncStatus: '',
                 time: 1000,
                 loopTimer: null,
+                RESOURCE_ACTION,
+                RESOURCE_TYPE,
                 isEditing: false,
                 hasCiFolder: false,
                 showClosePac: false,

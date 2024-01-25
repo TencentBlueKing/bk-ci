@@ -156,17 +156,17 @@
     </div>
 </template>
 <script>
+    import { RESOURCE_ACTION, RESOURCE_TYPE, handleCodelibNoPermission } from '@/utils/permission'
     import {
         mapActions
     } from 'vuex'
     import {
         REPOSITORY_API_URL_PREFIX
     } from '../../store/constants'
-    import { RESOURCE_ACTION, RESOURCE_TYPE, handleCodelibNoPermission } from '@/utils/permission'
-    import Trigger from './trigger.vue'
+    import UsingPipelinesDialog from '../UsingPipelinesDialog.vue'
     import BasicSetting from './basic-setting.vue'
     import TriggerEvent from './trigger-event.vue'
-    import UsingPipelinesDialog from '../UsingPipelinesDialog.vue'
+    import Trigger from './trigger.vue'
     export default {
         name: 'CodeLibDetail',
         components: {
@@ -227,10 +227,10 @@
                     CODE_TGIT: 'code-TGit',
                     CODE_P4: 'code-P4'
                 },
+                pacProjectName: '',
                 eventTypeList: [],
                 triggerTypeList: [],
-                errorCode: 0,
-                pacProjectName: ''
+                errorCode: 0
             }
         },
         computed: {
@@ -506,13 +506,6 @@
                     this.pipelinesDialogPayload.isLoadingMore = false
                 })
             },
-            handleApply () {
-                handleCodelibNoPermission({
-                    projectId: this.projectId,
-                    resourceCode: this.urlRepoId,
-                    action: RESOURCE_ACTION.VIEW
-                })
-            },
 
             /**
              * 校验仓库是否已经在其他项目开启了PAC
@@ -526,6 +519,13 @@
                         this.pacProjectName = res
                     })
                 }
+            },
+            handleApply () {
+                handleCodelibNoPermission({
+                    projectId: this.projectId,
+                    resourceCode: this.urlRepoId,
+                    action: RESOURCE_ACTION.VIEW
+                })
             }
         }
     }
