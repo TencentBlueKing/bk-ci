@@ -153,7 +153,7 @@
                 return this.$t(this.isRemoveType ? 'removeFrom' : 'delete')
             },
             hasPermissionPipelines () {
-                return this.pipelineList.filter(pipeline => pipeline.hasPermission)
+                return this.pipelineList.filter(pipeline => pipeline.permissions.canDelete)
             },
             pacPipelines () {
                 return this.pipelineList.filter(pipeline => pipeline.pac)
@@ -174,13 +174,13 @@
                     return {
                         id: pipeline.pipelineId,
                         name: pipeline.pipelineName,
-                        hasPermission: pipeline.hasPermission,
+                        hasPermission: pipeline.permissions.canDelete,
                         groups: viewNames.slice(0, visibleTagCount),
                         hiddenGroups: viewNames.slice(visibleTagCount).join(';'),
                         overflowCount,
                         pac: pipeline.pac,
                         showMoreTag: this.visibleTagCountList[index] === undefined || (overflowCount > 0),
-                        tooltips: (!pipeline.hasPermission || pipeline.pac)
+                        tooltips: (!pipeline.permissions.canDelete || pipeline.pac)
                             ? {
                                 content: this.$t(pipeline.pac ? 'pacModePipelineDeleteTips' : 'noPermissionToDelete'),
                                 placement: 'top',
