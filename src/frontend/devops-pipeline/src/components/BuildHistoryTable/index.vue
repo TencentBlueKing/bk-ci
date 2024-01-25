@@ -386,16 +386,16 @@
 </template>
 
 <script>
-    import { mapActions, mapGetters, mapState } from 'vuex'
-    import Logo from '@/components/Logo'
-    import { convertFileSize, convertTime, convertMStoString, getQueryParamString } from '@/utils/util'
-    import { BUILD_HISTORY_TABLE_DEFAULT_COLUMNS, errorTypeMap, extForFile } from '@/utils/pipelineConst'
-    import pipelineConstMixin from '@/mixins/pipelineConstMixin'
-    import qrcode from '@/components/devops/qrcode'
-    import StageSteps from '@/components/StageSteps'
-    import MaterialItem from '@/components/ExecDetail/MaterialItem'
     import FilterBar from '@/components/BuildHistoryTable/FilterBar'
+    import MaterialItem from '@/components/ExecDetail/MaterialItem'
+    import Logo from '@/components/Logo'
+    import StageSteps from '@/components/StageSteps'
     import EmptyException from '@/components/common/exception'
+    import qrcode from '@/components/devops/qrcode'
+    import pipelineConstMixin from '@/mixins/pipelineConstMixin'
+    import { BUILD_HISTORY_TABLE_DEFAULT_COLUMNS, errorTypeMap, extForFile } from '@/utils/pipelineConst'
+    import { convertFileSize, convertMStoString, convertTime, getQueryParamString } from '@/utils/util'
+    import { mapActions, mapGetters, mapState } from 'vuex'
 
     const LS_COLUMNS_KEYS = 'shownColumns'
     export default {
@@ -611,7 +611,6 @@
                 'resetHistoryFilterCondition'
             ]),
             handleTableSettingChange ({ fields: selectedFields, size }) {
-                debugger
                 Object.assign(this.tableSetting, {
                     selectedFields,
                     size
