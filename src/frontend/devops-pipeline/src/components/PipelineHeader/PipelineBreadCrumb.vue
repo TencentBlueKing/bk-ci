@@ -13,7 +13,7 @@
     import { mapActions, mapGetters, mapState } from 'vuex'
     import BreadCrumb from '@/components/BreadCrumb'
     import BreadCrumbItem from '@/components/BreadCrumb/BreadCrumbItem'
-    import { RESOURCE_ACTION, handlePipelineNoPermission } from '@/utils/permission'
+    import { RESOURCE_ACTION } from '@/utils/permission'
     import { debounce } from '@/utils/util'
 
     export default {
@@ -99,9 +99,8 @@
                 requestPipelineSummary: 'atom/requestPipelineSummary'
             }),
             async fetchPipelineList (searchName) {
+                const { projectId, pipelineId } = this.$route.params
                 try {
-                    const { projectId, pipelineId } = this.$route.params
-
                     const [list, pipelineInfo] = await Promise.all([
                         this.searchPipelineList({
                             projectId,
@@ -117,10 +116,10 @@
 
                     this.setBreadCrumbPipelineList(list, pipelineInfo ?? this.pipelineInfo)
                 } catch (err) {
-                    console.log(err)
-                    this.$showTips({
-                        message: err.message || err,
-                        theme: 'error'
+                    this.handleError(err, {
+                        projectId,
+                        resourceCode: pipelineId,
+                        action: RESOURCE_ACTION.VIEW
                     })
                 }
             },
@@ -165,13 +164,11 @@
                         }
                     })
                 } catch (error) {
-                    if (error.code === 403) {
-                        handlePipelineNoPermission({
-                            projectId: this.$route.params.projectId,
-                            resourceCode: pipelineId,
-                            action: RESOURCE_ACTION.VIEW
-                        })
-                    }
+                    this.handleError(error, {
+                        projectId: this.$route.params.projectId,
+                        resourceCode: pipelineId,
+                        action: RESOURCE_ACTION.VIEW
+                    })
                 }
             },
             async handleSearchPipeline (value) {
