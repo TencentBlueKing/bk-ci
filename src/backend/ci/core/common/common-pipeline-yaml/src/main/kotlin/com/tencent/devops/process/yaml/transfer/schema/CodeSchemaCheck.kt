@@ -102,7 +102,10 @@ class CodeSchemaCheck @Autowired constructor(
                 check(yamlJson, YamlVersion.Version.V3_0, templateType, isCiFile)
             }
 
-            else -> {}
+            else -> throw PipelineTransferException(
+                YAML_NOT_VALID,
+                arrayOf("version not valid.")
+            )
         }
     }
 
