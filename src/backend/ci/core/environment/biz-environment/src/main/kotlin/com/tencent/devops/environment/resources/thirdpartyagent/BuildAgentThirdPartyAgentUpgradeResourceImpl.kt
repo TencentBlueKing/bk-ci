@@ -25,22 +25,23 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.worker.common.api.utils
+package com.tencent.devops.environment.resources.thirdpartyagent
 
-import com.tencent.devops.dispatch.pojo.thirdpartyagent.ThirdPartyBuildInfo
-import org.slf4j.LoggerFactory
+import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.environment.api.thirdpartyagent.BuildAgentThirdPartyAgentUpgradeResource
+import com.tencent.devops.environment.service.thirdpartyagent.DownloadAgentInstallService
+import org.springframework.beans.factory.annotation.Autowired
 
-object ThirdPartyAgentBuildInfoUtils {
-    private var buildInfo: ThirdPartyBuildInfo? = null
+@RestResource
+class BuildAgentThirdPartyAgentUpgradeResourceImpl @Autowired constructor(
+    private val downloadAgentInstallService: DownloadAgentInstallService
+) : BuildAgentThirdPartyAgentUpgradeResource {
 
-    fun setBuildInfo(info: ThirdPartyBuildInfo) {
-        if (buildInfo != null) {
-            logger.info("Last build info is not null - $buildInfo")
-        }
-        buildInfo = info
-    }
-
-    fun getBuildInfo() = buildInfo
-
-    private val logger = LoggerFactory.getLogger(ThirdPartyAgentBuildInfoUtils::class.java)
+    override fun downloadUpgrade(
+        projectId: String,
+        agentId: String,
+        secretKey: String,
+        file: String,
+        eTag: String?
+    ) = downloadAgentInstallService.downloadUpgradeFile(projectId, agentId, secretKey, file, eTag)
 }

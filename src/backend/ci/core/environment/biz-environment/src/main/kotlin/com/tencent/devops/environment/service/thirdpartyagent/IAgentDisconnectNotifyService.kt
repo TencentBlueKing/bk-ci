@@ -25,22 +25,17 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.worker.common.api.utils
+package com.tencent.devops.environment.service.thirdpartyagent
 
-import com.tencent.devops.dispatch.pojo.thirdpartyagent.ThirdPartyBuildInfo
-import org.slf4j.LoggerFactory
+interface IAgentDisconnectNotifyService {
 
-object ThirdPartyAgentBuildInfoUtils {
-    private var buildInfo: ThirdPartyBuildInfo? = null
+    /**
+     * Agent上线通知
+     */
+    fun online(projectId: String, ip: String, hostname: String, createUser: String, os: String)
 
-    fun setBuildInfo(info: ThirdPartyBuildInfo) {
-        if (buildInfo != null) {
-            logger.info("Last build info is not null - $buildInfo")
-        }
-        buildInfo = info
-    }
-
-    fun getBuildInfo() = buildInfo
-
-    private val logger = LoggerFactory.getLogger(ThirdPartyAgentBuildInfoUtils::class.java)
+    /**
+     * Agent离线通知
+     */
+    fun offline(projectId: String, ip: String, hostname: String, createUser: String, os: String)
 }

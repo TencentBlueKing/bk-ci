@@ -25,22 +25,30 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.worker.common.api.utils
+package com.tencent.devops.dispatch.pojo.thirdpartyagent
 
-import com.tencent.devops.dispatch.pojo.thirdpartyagent.ThirdPartyBuildInfo
-import org.slf4j.LoggerFactory
+import com.tencent.devops.common.api.pojo.Error
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
 
-object ThirdPartyAgentBuildInfoUtils {
-    private var buildInfo: ThirdPartyBuildInfo? = null
-
-    fun setBuildInfo(info: ThirdPartyBuildInfo) {
-        if (buildInfo != null) {
-            logger.info("Last build info is not null - $buildInfo")
-        }
-        buildInfo = info
-    }
-
-    fun getBuildInfo() = buildInfo
-
-    private val logger = LoggerFactory.getLogger(ThirdPartyAgentBuildInfoUtils::class.java)
-}
+@ApiModel("第三方构建信息模型")
+data class ThirdPartyBuildWithStatus(
+    @ApiModelProperty("项目id")
+    val projectId: String,
+    @ApiModelProperty("构建id")
+    val buildId: String,
+    @ApiModelProperty("构建环境id")
+    val vmSeqId: String,
+    @ApiModelProperty("工作空间")
+    val workspace: String,
+    @ApiModelProperty("流水线id")
+    val pipelineId: String?,
+    @ApiModelProperty("是否成功")
+    val success: Boolean,
+    @ApiModelProperty("message信息")
+    val message: String?,
+    @ApiModelProperty("错误信息")
+    val error: Error?,
+    @ApiModelProperty("流水线执行次数")
+    val executeCount: Int?
+)

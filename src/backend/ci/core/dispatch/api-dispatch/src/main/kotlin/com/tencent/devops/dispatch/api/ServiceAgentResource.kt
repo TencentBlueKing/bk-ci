@@ -28,7 +28,7 @@
 package com.tencent.devops.dispatch.api
 
 import com.tencent.devops.common.api.pojo.Page
-import com.tencent.devops.dispatch.pojo.thirdPartyAgent.AgentBuildInfo
+import com.tencent.devops.dispatch.pojo.thirdpartyagent.AgentBuildInfo
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam

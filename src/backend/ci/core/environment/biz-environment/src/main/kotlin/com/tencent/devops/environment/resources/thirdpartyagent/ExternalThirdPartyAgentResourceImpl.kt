@@ -25,54 +25,45 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.dispatch.controller
+package com.tencent.devops.environment.resources.thirdpartyagent
 
-import com.tencent.devops.common.api.pojo.Page
-import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.dispatch.api.ServiceAgentResource
-import com.tencent.devops.dispatch.pojo.thirdpartyagent.AgentBuildInfo
-import com.tencent.devops.dispatch.service.ThirdPartyAgentDockerService
-import com.tencent.devops.dispatch.service.ThirdPartyAgentService
+import com.tencent.devops.environment.api.thirdpartyagent.ExternalThirdPartyAgentResource
+import com.tencent.devops.common.api.pojo.agent.AgentArchType
+import com.tencent.devops.environment.service.thirdpartyagent.DownloadAgentInstallService
+import com.tencent.devops.environment.service.thirdpartyagent.ImportService
 import org.springframework.beans.factory.annotation.Autowired
+import javax.ws.rs.core.Response
 
 @RestResource
-@Suppress("ALL")
-class ServiceAgentResourceImpl @Autowired constructor(
-    val thirdPartyAgentService: ThirdPartyAgentService,
-    val thirdPartyAgentDockerService: ThirdPartyAgentDockerService
-) : ServiceAgentResource {
-    override fun listAgentBuild(
-        agentId: String,
-        status: String?,
-        pipelineId: String?,
-        page: Int?,
-        pageSize: Int?
-    ): Page<AgentBuildInfo> {
-        return thirdPartyAgentService.listAgentBuilds(
-            agentId = agentId,
-            status = status,
-            pipelineId = pipelineId,
-            page = page,
-            pageSize = pageSize
-        )
-    }
+class ExternalThirdPartyAgentResourceImpl @Autowired constructor(
+    private val downloadAgentInstallService: DownloadAgentInstallService,
+    private val importService: ImportService
+) : ExternalThirdPartyAgentResource {
+    override fun downloadAgentInstallScript(agentId: String) =
+        downloadAgentInstallService.downloadInstallScript(agentId)
 
-    override fun getDockerDebugUrl(
-        userId: String,
-        projectId: String,
-        pipelineId: String,
-        buildId: String?,
-        vmSeqId: String
-    ): Result<String> {
-        return Result(
-            thirdPartyAgentDockerService.createThirdDockerDebugUrl(
-                userId = userId,
-                projectId = projectId,
-                pipelineId = pipelineId,
-                buildId = buildId,
-                vmSeqId = vmSeqId
-            )
+    override fun downloadAgent(agentId: String, eTag: String?, arch: String?) =
+        downloadAgentInstallService.downloadAgent(
+            agentId = agentId,
+            arch = when (arch) {
+                "arm64" -> AgentArchType.ARM64
+                "mips64" -> AgentArchType.MIPS64
+                else -> null
+            }
         )
+
+    override fun downloadJRE(agentId: String, eTag: String?, arch: String?) =
+        downloadAgentInstallService.downloadJre(
+            agentId, eTag, arch = when (arch) {
+                "arm64" -> AgentArchType.ARM64
+                "mips64" -> AgentArchType.MIPS64
+                else -> null
+            }
+        )
+
+    override fun downloadNewInstallAgentBatchFile(agentHashId: String): Response {
+        val newAgentId = importService.generateAgentByOtherAgentId(agentHashId)
+        return downloadAgentInstallService.downloadInstallAgentBatchFile(newAgentId)
     }
 }

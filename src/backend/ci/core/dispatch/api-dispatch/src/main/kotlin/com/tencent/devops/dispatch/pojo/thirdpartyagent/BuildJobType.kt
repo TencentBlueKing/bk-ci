@@ -25,22 +25,24 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.worker.common.api.utils
+package com.tencent.devops.dispatch.pojo.thirdpartyagent
 
-import com.tencent.devops.dispatch.pojo.thirdpartyagent.ThirdPartyBuildInfo
-import org.slf4j.LoggerFactory
+enum class BuildJobType {
+    ALL,
+    DOCKER,
+    BINARY,
+    NONE;
 
-object ThirdPartyAgentBuildInfoUtils {
-    private var buildInfo: ThirdPartyBuildInfo? = null
-
-    fun setBuildInfo(info: ThirdPartyBuildInfo) {
-        if (buildInfo != null) {
-            logger.info("Last build info is not null - $buildInfo")
+    companion object {
+        fun toEnum(type: String?): BuildJobType {
+            return when (type) {
+                ALL.name -> ALL
+                DOCKER.name -> DOCKER
+                BINARY.name -> BINARY
+                NONE.name -> NONE
+                // 兼容旧数据和其他非标准参数情况
+                else -> ALL
+            }
         }
-        buildInfo = info
     }
-
-    fun getBuildInfo() = buildInfo
-
-    private val logger = LoggerFactory.getLogger(ThirdPartyAgentBuildInfoUtils::class.java)
 }

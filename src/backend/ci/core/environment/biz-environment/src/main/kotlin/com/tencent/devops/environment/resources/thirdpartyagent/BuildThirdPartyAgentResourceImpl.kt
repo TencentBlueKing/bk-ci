@@ -25,22 +25,19 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.worker.common.api.utils
+package com.tencent.devops.environment.resources.thirdpartyagent
 
-import com.tencent.devops.dispatch.pojo.thirdpartyagent.ThirdPartyBuildInfo
-import org.slf4j.LoggerFactory
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.environment.api.thirdpartyagent.BuildThirdPartyAgentResource
+import com.tencent.devops.environment.service.thirdpartyagent.ThirdPartyAgentMgrService
+import org.springframework.beans.factory.annotation.Autowired
 
-object ThirdPartyAgentBuildInfoUtils {
-    private var buildInfo: ThirdPartyBuildInfo? = null
-
-    fun setBuildInfo(info: ThirdPartyBuildInfo) {
-        if (buildInfo != null) {
-            logger.info("Last build info is not null - $buildInfo")
-        }
-        buildInfo = info
+@RestResource
+class BuildThirdPartyAgentResourceImpl @Autowired constructor(
+    private val thirdPartyAgentService: ThirdPartyAgentMgrService
+) : BuildThirdPartyAgentResource {
+    override fun getOs(userId: String, projectId: String, agentId: String): Result<String> {
+        return Result(thirdPartyAgentService.getOs(userId, projectId, agentId))
     }
-
-    fun getBuildInfo() = buildInfo
-
-    private val logger = LoggerFactory.getLogger(ThirdPartyAgentBuildInfoUtils::class.java)
 }

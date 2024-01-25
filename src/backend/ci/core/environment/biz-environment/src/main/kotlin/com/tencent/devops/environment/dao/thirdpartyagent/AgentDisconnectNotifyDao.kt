@@ -25,22 +25,21 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.worker.common.api.utils
+package com.tencent.devops.environment.dao.thirdpartyagent
 
-import com.tencent.devops.dispatch.pojo.thirdpartyagent.ThirdPartyBuildInfo
-import org.slf4j.LoggerFactory
+import com.tencent.devops.model.environment.tables.TAgentFailureNotifyUser
+import com.tencent.devops.model.environment.tables.records.TAgentFailureNotifyUserRecord
+import org.jooq.DSLContext
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.stereotype.Repository
 
-object ThirdPartyAgentBuildInfoUtils {
-    private var buildInfo: ThirdPartyBuildInfo? = null
+@Repository
+class AgentDisconnectNotifyDao @Autowired constructor(private val dslContext: DSLContext) {
 
-    fun setBuildInfo(info: ThirdPartyBuildInfo) {
-        if (buildInfo != null) {
-            logger.info("Last build info is not null - $buildInfo")
+    fun list(): List<TAgentFailureNotifyUserRecord> {
+        with(TAgentFailureNotifyUser.T_AGENT_FAILURE_NOTIFY_USER) {
+            return dslContext.selectFrom(this)
+                    .fetch()
         }
-        buildInfo = info
     }
-
-    fun getBuildInfo() = buildInfo
-
-    private val logger = LoggerFactory.getLogger(ThirdPartyAgentBuildInfoUtils::class.java)
 }

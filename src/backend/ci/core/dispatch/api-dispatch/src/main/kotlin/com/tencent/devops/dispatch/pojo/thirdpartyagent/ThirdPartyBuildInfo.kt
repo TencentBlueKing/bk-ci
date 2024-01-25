@@ -25,22 +25,27 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.worker.common.api.utils
+package com.tencent.devops.dispatch.pojo.thirdpartyagent
 
-import com.tencent.devops.dispatch.pojo.thirdpartyagent.ThirdPartyBuildInfo
-import org.slf4j.LoggerFactory
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
 
-object ThirdPartyAgentBuildInfoUtils {
-    private var buildInfo: ThirdPartyBuildInfo? = null
-
-    fun setBuildInfo(info: ThirdPartyBuildInfo) {
-        if (buildInfo != null) {
-            logger.info("Last build info is not null - $buildInfo")
-        }
-        buildInfo = info
-    }
-
-    fun getBuildInfo() = buildInfo
-
-    private val logger = LoggerFactory.getLogger(ThirdPartyAgentBuildInfoUtils::class.java)
-}
+@ApiModel("第三方构建信息")
+data class ThirdPartyBuildInfo(
+    @ApiModelProperty("项目id")
+    val projectId: String,
+    @ApiModelProperty("构建id")
+    val buildId: String,
+    @ApiModelProperty("构建机编排序号")
+    val vmSeqId: String,
+    @ApiModelProperty("工作空间")
+    val workspace: String,
+    @ApiModelProperty("流水线ID")
+    val pipelineId: String?,
+    @ApiModelProperty("docker构建相关信息")
+    val dockerBuildInfo: ThirdPartyBuildDockerInfo?,
+    @ApiModelProperty("流水线执行次数")
+    val executeCount: Int?,
+    @ApiModelProperty("容器hashId日志使用")
+    val containerHashId: String?
+)
