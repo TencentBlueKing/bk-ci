@@ -109,8 +109,8 @@ class UserDao {
                 .set(GROUP_NAME, userDeptDetail.groupName)
                 .set(UPDATE_TIME, LocalDateTime.now())
             userDeptDetail.businessLineId?.let { baseStep.set(BUSINESS_LINE_ID, it.toLong()) }
-            baseStep.where(USER_ID.eq(userDeptDetail.userId))
-                .execute()
+            userDeptDetail.businessLineName?.let { baseStep.set(BUSINESS_LINE_NAME, it) }
+            baseStep.where(USER_ID.eq(userDeptDetail.userId)).execute()
         }
     }
 }
