@@ -76,7 +76,7 @@
                 <span
                     v-if="!pipeline.hasPermission || pipeline.pac"
                     v-bk-tooltips="pipeline.tooltips"
-                    :class="`devops-icon icon-${pipeline.pac ? 'yaml' : 'lock'}`"
+                    :class="`remove-pieline-type-icon devops-icon icon-${pipeline.pac ? 'yaml' : 'lock'}`"
                 />
             </li>
         </ul>
@@ -335,6 +335,7 @@
         }
         .no-permission-pipeline-alert {
             text-align: left;
+            width: 100%;
             .can-not-delete-tips {
                 display: flex;
                 align-items: center;
@@ -375,6 +376,9 @@
                 }
                 > span {
                     @include ellipsis();
+                }
+                .remove-pieline-type-icon {
+                    color: #FF9C01;
                 }
                 .belongs-pipeline-group {
                     vertical-align: top;

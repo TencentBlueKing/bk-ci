@@ -33,6 +33,7 @@
                             @change="diffVersion"
                             enable-scroll-load
                             :scroll-loading="bottomLoadingOptions"
+                            :clearable="false"
                             @scroll-end="loadMore()"
                         >
                             <bk-option
