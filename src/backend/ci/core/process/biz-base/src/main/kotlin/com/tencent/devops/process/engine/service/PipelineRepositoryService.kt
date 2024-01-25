@@ -832,7 +832,13 @@ class PipelineRepositoryService constructor(
                 channelCode = channelCode.name
             )
         )
-        return DeployPipelineResult(pipelineId, pipelineName = model.name, version = 1, versionName)
+        return DeployPipelineResult(
+            pipelineId = pipelineId,
+            pipelineName = model.name,
+            version = 1,
+            versionNum = versionNum,
+            versionName = versionName
+        )
     }
 
     private fun update(
@@ -862,7 +868,7 @@ class PipelineRepositoryService constructor(
         var operationLogType = OperationLogType.NORMAL_SAVE_OPERATION
         var operationLogParams = versionName
         var branchAction: BranchVersionAction? = null
-
+        var versionNum: Int? = null
         try {
             lock.lock()
             dslContext.transaction { configuration ->
@@ -881,7 +887,6 @@ class PipelineRepositoryService constructor(
                     statusCode = Response.Status.NOT_FOUND.statusCode,
                     errorCode = ProcessMessageCode.ERROR_NO_PIPELINE_VERSION_EXISTS_BY_ID
                 )
-                var versionNum = releaseResource?.version ?: latestVersion.version
                 watcher.start("updatePipelineInfo")
                 // 旧逻辑 bak —— 写入INFO表后进行了version的自动+1
                 // 新逻辑 #8161
@@ -980,7 +985,7 @@ class PipelineRepositoryService constructor(
                         pipelineVersion = releaseResource?.pipelineVersion ?: 1
                         triggerVersion = releaseResource?.triggerVersion ?: 1
                         // 数据分离：发布记录的版本自增，旧数据保留和版本表中version一致，后续单独用于前端展示
-                        versionNum += 1
+                        versionNum = (releaseResource?.version ?: latestVersion.version) + 1
                         releaseResource?.let {
                             pipelineVersion = PipelineVersionUtils.getPipelineVersion(
                                 pipelineVersion, it.model, model
@@ -1121,6 +1126,7 @@ class PipelineRepositoryService constructor(
             pipelineId,
             pipelineName = model.name,
             version = version,
+            versionNum = versionNum,
             versionName = versionName
         )
     }
@@ -1711,11 +1717,13 @@ class PipelineRepositoryService constructor(
         userId: String,
         channelCode: ChannelCode,
         days: Long?
-    ): Model {
-        val existModel = getPipelineResourceVersion(projectId, pipelineId)?.model ?: throw ErrorCodeException(
-            statusCode = Response.Status.NOT_FOUND.statusCode,
-            errorCode = ProcessMessageCode.ERROR_PIPELINE_MODEL_NOT_EXISTS
-        )
+    ): PipelineResourceVersion {
+        val existResource = getPipelineResourceVersion(projectId, pipelineId)
+            ?: throw ErrorCodeException(
+                statusCode = Response.Status.NOT_FOUND.statusCode,
+                errorCode = ProcessMessageCode.ERROR_PIPELINE_MODEL_NOT_EXISTS
+            )
+        val existModel = existResource.model
         dslContext.transaction { configuration ->
             val transactionContext = DSL.using(configuration)
 
@@ -1781,7 +1789,7 @@ class PipelineRepositoryService constructor(
             )
         )
 
-        return existModel
+        return existResource
     }
 
     fun countByPipelineIds(projectId: String, channelCode: ChannelCode, pipelineIds: List<String>): Int {

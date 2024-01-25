@@ -804,7 +804,7 @@ class PipelineInfoFacadeService @Autowired constructor(
             }
 
             watcher.start("restorePipeline")
-            val model = pipelineRepositoryService.restorePipeline(
+            val resource = pipelineRepositoryService.restorePipeline(
                 projectId = projectId, pipelineId = pipelineId, userId = userId,
                 channelCode = channelCode, days = deletedPipelineStoreDays.toLong()
             )
@@ -813,13 +813,14 @@ class PipelineInfoFacadeService @Autowired constructor(
                 userId = userId,
                 projectId = projectId,
                 pipelineId = pipelineId,
-                pipelineName = model.name
+                pipelineName = resource.model.name
             )
-            ActionAuditContext.current().setInstanceName(model.name)
+            ActionAuditContext.current().setInstanceName(resource.model.name)
             return DeployPipelineResult(
                 pipelineId = pipelineId,
-                pipelineName = model.name,
-                version = model.latestVersion,
+                pipelineName = resource.model.name,
+                version = resource.model.latestVersion,
+                versionNum = resource.versionNum,
                 versionName = null
             )
         } finally {

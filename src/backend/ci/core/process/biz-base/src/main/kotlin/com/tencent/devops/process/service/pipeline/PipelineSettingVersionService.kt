@@ -55,6 +55,9 @@ class PipelineSettingVersionService @Autowired constructor(
     private val pipelineSettingVersionDao: PipelineSettingVersionDao
 ) {
 
+    /**
+     * 获取指定版本的完整流水线设置（需要合并不属于版本管理的字段）
+     */
     fun getPipelineSetting(
         projectId: String,
         pipelineId: String,
@@ -63,14 +66,17 @@ class PipelineSettingVersionService @Autowired constructor(
         channelCode: ChannelCode = ChannelCode.BS,
         version: Int
     ): PipelineSetting {
-        // 正式版本的流水线设置
+        // 获取正式版本的流水线设置
         var settingInfo = pipelineSettingDao.getSetting(dslContext, projectId, pipelineId)
+
+        // 获取已生效的流水线的标签和分组
         val groups = pipelineGroupService.getGroups(userId, projectId, pipelineId)
         val labels = ArrayList<String>()
         groups.forEach {
             labels.addAll(it.labels)
         }
         if (settingInfo == null) {
+            // 如果没有正式版本的设置，则从流水线信息获取关键信息，生成新的流水线配置
             val (pipelineName, pipelineDesc) = detailInfo?.let {
                 Pair(it.pipelineName, it.pipelineDesc)
             } ?: client.get(ServicePipelineResource::class).getPipelineInfo(
@@ -92,6 +98,7 @@ class PipelineSettingVersionService @Autowired constructor(
                 pipelineAsCodeSettings = PipelineAsCodeSettings()
             )
         } else {
+            // 如果有正式版本，则将匹配好的标签替换进配置
             settingInfo.labels = labels
         }
 
@@ -100,6 +107,7 @@ class PipelineSettingVersionService @Autowired constructor(
             getPipelineSettingVersion(projectId, pipelineId, version)?.let { ve ->
                 settingInfo.successSubscriptionList = ve.successSubscriptionList
                 settingInfo.failSubscriptionList = ve.failSubscriptionList
+                settingInfo.pipelineName
                 settingInfo.labels = ve.labels ?: listOf()
                 settingInfo.desc = ve.desc ?: ""
                 settingInfo.buildNumRule = ve.buildNumRule
