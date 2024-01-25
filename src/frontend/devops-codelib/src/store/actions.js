@@ -354,7 +354,7 @@ const actions = {
         repoUrl,
         repositoryType
     }) {
-        return vue.$ajax.get(`${REPOSITORY_API_URL_PREFIX}/user/repositories/getPacProjectId/?repoUrl=${repoUrl}&repositoryType=${repositoryType}`)
+        return vue.$ajax.get(`${REPOSITORY_API_URL_PREFIX}/user/repositories/pac/getPacProjectId/?repoUrl=${repoUrl}&repositoryType=${repositoryType}`)
     },
 
     /**
@@ -408,7 +408,7 @@ const actions = {
         projectId,
         repositoryHashId
     }) {
-        return vue.$ajax.put(`${REPOSITORY_API_URL_PREFIX}/user/repositories/${projectId}/${repositoryHashId}/disablePac/check`)
+        return vue.$ajax.put(`${REPOSITORY_API_URL_PREFIX}/user/repositories/pac/${projectId}/${repositoryHashId}/checkCiDirExists`)
     },
 
     /**
@@ -418,7 +418,7 @@ const actions = {
         projectId,
         repositoryHashId
     }) {
-        return vue.$ajax.put(`${REPOSITORY_API_URL_PREFIX}/user/repositories/${projectId}/${repositoryHashId}/disablePac`)
+        return vue.$ajax.put(`${REPOSITORY_API_URL_PREFIX}/user/repositories/pac/${projectId}/${repositoryHashId}/disable`)
     },
 
     /**
@@ -428,7 +428,7 @@ const actions = {
         projectId,
         repositoryHashId
     }) {
-        return vue.$ajax.put(`${REPOSITORY_API_URL_PREFIX}/user/repositories/${projectId}/${repositoryHashId}/enablePac`)
+        return vue.$ajax.put(`${REPOSITORY_API_URL_PREFIX}/user/repositories/pac/${projectId}/${repositoryHashId}/enable`)
     },
 
     /**
@@ -540,6 +540,46 @@ const actions = {
         queryOfflineFlag = false
     }) {
         return vue.$ajax.get(`${STORE_API_URL_PREFIX}/user/pipeline/atom/${projectCode}/${atomCode}/${version}?queryOfflineFlag=${queryOfflineFlag}`)
+    },
+
+    /**
+     * PAC - 重试同步YAML
+     */
+    retrySyncRepository ({ commit }, {
+        projectId,
+        repositoryHashId
+    }) {
+        return vue.$ajax.put(`${REPOSITORY_API_URL_PREFIX}/user/repositories/pac/${projectId}/${repositoryHashId}/retry`)
+    },
+
+    /**
+     * PAC - 获取Yaml同步状态
+     */
+    getYamlSyncStatus ({ commit }, {
+        projectId,
+        repositoryHashId
+    }) {
+        return vue.$ajax.get(`${REPOSITORY_API_URL_PREFIX}/user/repositories/pac/${projectId}/${repositoryHashId}/getYamlSyncStatus`)
+    },
+
+    /**
+     * PAC - 获取开启pac的流水线数量
+     */
+    getPacPipelineCount ({ commit }, {
+        projectId,
+        repositoryHashId
+    }) {
+        return vue.$ajax.get(`${PROCESS_API_URL_PREFIX}/user/pipeline/yaml/${projectId}/${repositoryHashId}/count`)
+    },
+
+    /**
+     * PAC - 获取同步失败的流水线列表
+     */
+    getListYamlSync ({ commit }, {
+        projectId,
+        repositoryHashId
+    }) {
+        return vue.$ajax.get(`${PROCESS_API_URL_PREFIX}/user/pipeline/yaml/${projectId}/${repositoryHashId}/listSyncFailedYaml`)
     }
 }
 

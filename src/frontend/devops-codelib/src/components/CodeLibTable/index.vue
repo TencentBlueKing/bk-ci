@@ -2,11 +2,6 @@
     <div>
         <div class="expand-btn" v-if="isListFlod" @click="handleExpandList">
             <bk-icon type="angle-double-right" class="angle-double-right-icon" />
-            <!-- <Icon
-                name="angle-double-right"
-                class="angle-double-right-icon"
-                size="16"
-            /> -->
             {{ $t('codelib.expandList') }}
         </div>
         <bk-table
@@ -70,13 +65,13 @@
                         >
                             {{ props.row.aliasName }}
                         </div>
-                        <!-- <span
+                        <span
                             v-if="props.row.enablePac"
                             class="pac-icon"
                         >
                             <Icon name="PACcode" size="22" class="pac-code-icon" />
                             PAC
-                        </span> -->
+                        </span>
                     </div>
                 </template>
             </bk-table-column>
@@ -722,7 +717,7 @@
     .name-flod {
         position: relative;
         display: inline-block;
-        max-width: 300px;
+        max-width: 280px;
         overflow: hidden;
         white-space: nowrap;
         text-overflow: ellipsis;
