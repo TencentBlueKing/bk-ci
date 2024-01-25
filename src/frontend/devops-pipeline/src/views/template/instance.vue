@@ -59,7 +59,7 @@
                     @select="selectItem"
                     @select-all="selectItem"
                 >
-                    
+
                     <bk-table-column type="selection" width="60" align="center" :selectable="isUpdating"></bk-table-column>
                     <bk-table-column :label="$t('pipelineName')" prop="pipelineName">
                         <template slot-scope="props">
@@ -420,10 +420,10 @@
                     })
 
                     this.versionList = res.versions
-                    const curVersion = this.versionList.filter(val => {
+                    const curVersion = this.versionList.find(val => {
                         return val.version === parseInt(versionId)
                     })
-                    this.instanceVersion = curVersion[0].version
+                    this.instanceVersion = curVersion?.version
 
                     const curData = res.origin
                     const targetData = res.target
