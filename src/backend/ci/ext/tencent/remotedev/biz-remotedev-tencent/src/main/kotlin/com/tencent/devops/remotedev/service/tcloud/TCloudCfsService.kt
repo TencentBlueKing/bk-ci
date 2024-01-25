@@ -179,7 +179,7 @@ class TCloudCfsService @Autowired constructor(
                     return@execute
                 }
                 // 中间休眠下，防止快速操作腾讯云报错
-                Thread.sleep(1000)
+                Thread.sleep(5000)
             }
         }
     }
