@@ -30,6 +30,16 @@
                     @change="value => updateSubscription('content', value)"
                 />
             </bk-form-item>
+
+            <bk-form-item>
+                <atom-checkbox style="width: auto"
+                    :handle-change="updateSubscription"
+                    name="detailFlag"
+                    :text="$t('settings.pipelineLink')"
+                    :desc="$t('settings.pipelineLinkDesc')"
+                    :value="subscription.detailFlag">
+                </atom-checkbox>
+            </bk-form-item>
             
             <bk-form-item v-if="subscription.types.includes('WEWORK')">
                 <atom-checkbox

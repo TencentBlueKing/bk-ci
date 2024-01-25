@@ -67,7 +67,7 @@
             </div>
             <div class="edit-notify-footer" slot="footer">
                 <bk-button theme="primary" @click="handleSaveNotify">
-                    {{$t('new')}}
+                    {{$t('confirm')}}
                 </bk-button>
                 <bk-button style="margin-left: 4px;" @click="hideSlider">
                     {{$t('cancel')}}

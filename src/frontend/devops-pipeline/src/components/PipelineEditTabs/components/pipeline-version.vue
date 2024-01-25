@@ -192,7 +192,7 @@
             }
         },
         watch: {
-            versions () {
+            '$route.params.pipelineId' () {
                 this.$nextTick(() => {
                     this.renderBuildNo = this.buildNo
                     this.showVersions = this.versions.length !== 0
