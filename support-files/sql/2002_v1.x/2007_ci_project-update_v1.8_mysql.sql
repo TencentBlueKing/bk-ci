@@ -29,6 +29,24 @@ BEGIN
             ADD COLUMN `other_router_tags` VARCHAR(128) COMMENT '其他系统网关路由tags';
     END IF;
 
+    IF NOT EXISTS(SELECT 1
+                  FROM information_schema.COLUMNS
+                  WHERE TABLE_SCHEMA = db
+                    AND TABLE_NAME = 'T_USER'
+                    AND COLUMN_NAME = 'BUSINESS_LINE_ID') THEN
+        ALTER TABLE T_USER
+            ADD COLUMN `BUSINESS_LINE_ID` bigint(20) NULL COMMENT '业务线ID';
+    END IF;
+
+    IF NOT EXISTS(SELECT 1
+                  FROM information_schema.COLUMNS
+                  WHERE TABLE_SCHEMA = db
+                    AND TABLE_NAME = 'T_USER'
+                    AND COLUMN_NAME = 'BUSINESS_LINE_ID') THEN
+        ALTER TABLE T_USER
+            ADD COLUMN `BUSINESS_LINE_NAME` varchar(255) NULL COMMENT '业务线名称';
+    END IF;
+
     COMMIT;
 END <CI_UBF>
 DELIMITER ;
