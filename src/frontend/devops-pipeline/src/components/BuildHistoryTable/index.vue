@@ -14,7 +14,21 @@
                     <p>{{ $t('onlyDraftBuildHistoryTips') }}</p>
                     <p>{{ $t('onlyDraftBuildHistoryIdTips') }}</p>
                     <p>{{ $t('buildHistoryIdTips') }}</p>
-                    <bk-button @click="goEdit" theme="primary" size="large">
+                    <bk-button
+                        @click="goEdit"
+                        theme="primary"
+                        size="large"
+                        v-perm="{
+                            hasPermission: canEdit,
+                            disablePermissionApi: true,
+                            permissionData: {
+                                projectId,
+                                resourceType: 'pipeline',
+                                resourceCode: pipelineId,
+                                action: RESOURCE_ACTION.EDIT
+                            }
+                        }"
+                    >
                         {{$t('goEdit')}}
                     </bk-button>
                 </div>
@@ -22,7 +36,22 @@
                     <p v-if="canManualStartup">{{ $t('noBuildHistoryTips')}}</p>
                     <p>{{ $t('buildHistoryIdTips') }}</p>
                     <span v-bk-tooltips="tooltip">
-                        <bk-button :disabled="!executable" @click="buildNow" theme="primary" size="large">
+                        <bk-button
+                            :disabled="!executable"
+                            @click="buildNow"
+                            theme="primary"
+                            size="large"
+                            v-perm="{
+                                hasPermission: canExecute,
+                                disablePermissionApi: true,
+                                permissionData: {
+                                    projectId,
+                                    resourceType: 'pipeline',
+                                    resourceCode: pipelineId,
+                                    action: RESOURCE_ACTION.EXECUTE
+                                }
+                            }"
+                        >
                             {{$t(isDebug ? 'debugNow' : 'buildNow')}}
                         </bk-button>
                     </span>
@@ -397,6 +426,9 @@
     import MaterialItem from '@/components/ExecDetail/MaterialItem'
     import FilterBar from '@/components/BuildHistoryTable/FilterBar'
     import EmptyException from '@/components/common/exception'
+    import {
+        RESOURCE_ACTION
+    } from '@/utils/permission'
 
     const LS_COLUMNS_KEYS = 'shownColumns'
     export default {
@@ -418,6 +450,7 @@
         },
         data () {
             return {
+                RESOURCE_ACTION,
                 isShowMoreMaterial: false,
                 isShowMoreArtifactories: false,
                 showErorrInfoDialog: false,
@@ -453,6 +486,12 @@
             },
             pipelineId () {
                 return this.$route.params.pipelineId
+            },
+            canEdit () {
+                return this.pipelineInfo?.permissions.canEdit ?? true
+            },
+            canExecute () {
+                return this.pipelineInfo?.permissions.canExecute ?? true
             },
             isQuerying () {
                 return this.historyPageStatus?.isQuerying ?? false

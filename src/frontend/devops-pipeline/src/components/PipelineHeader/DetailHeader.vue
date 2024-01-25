@@ -25,10 +25,12 @@
                     :icon="loading ? 'loading' : ''"
                     outline
                     v-perm="{
+                        hasPermission: canExecute,
+                        disablePermissionApi: true,
                         permissionData: {
-                            projectId: $route.params.projectId,
+                            projectId,
                             resourceType: 'pipeline',
-                            resourceCode: $route.params.pipelineId,
+                            resourceCode: pipelineId,
                             action: RESOURCE_ACTION.EXECUTE
                         }
                     }"
@@ -40,10 +42,12 @@
             </template>
             <bk-button
                 v-perm="{
+                    hasPermission: canEdit,
+                    disablePermissionApi: true,
                     permissionData: {
-                        projectId: $route.params.projectId,
+                        projectId,
                         resourceType: 'pipeline',
-                        resourceCode: $route.params.pipelineId,
+                        resourceCode: pipelineId,
                         action: RESOURCE_ACTION.EDIT
                     }
                 }"
@@ -56,10 +60,12 @@
                 theme="primary"
                 :loading="executeStatus"
                 v-perm="{
+                    hasPermission: canExecute,
+                    disablePermissionApi: true,
                     permissionData: {
-                        projectId: $route.params.projectId,
+                        projectId,
                         resourceType: 'pipeline',
-                        resourceCode: $route.params.pipelineId,
+                        resourceCode: pipelineId,
                         action: RESOURCE_ACTION.EXECUTE
                     }
                 }"
@@ -70,6 +76,8 @@
             <release-button
                 v-if="isDebugExec"
                 :can-release="canRelease"
+                :project-id="projectId"
+                :pipeline-id="pipelineId"
             />
         </aside>
     </div>
@@ -103,6 +111,18 @@
             ...mapState('pipelines', ['executeStatus']),
             RESOURCE_ACTION () {
                 return RESOURCE_ACTION
+            },
+            projectId () {
+                return this.$route.params.projectId
+            },
+            pipelineId () {
+                return this.$route.params.pipelineId
+            },
+            canEdit () {
+                return this.pipelineInfo?.permissions?.canEdit ?? true
+            },
+            canExecute () {
+                return this.pipelineInfo?.permissions?.canExecute ?? true
             },
             isRunning () {
                 return ['RUNNING', 'QUEUE'].indexOf(this.execDetail?.status) > -1

@@ -4,17 +4,19 @@
             <pipeline-bread-crumb />
             <pac-tag class="pipeline-pac-indicator" v-if="pacEnabled" :info="yamlInfo" />
             <badge
-                :project-id="$route.params.projectId"
-                :pipeline-id="$route.params.pipelineId"
+                :project-id="projectId"
+                :pipeline-id="pipelineId"
             />
         </div>
         <aside class="pipeline-history-right-aside">
             <bk-button
                 v-perm="{
+                    hasPermission: canEdit,
+                    disablePermissionApi: true,
                     permissionData: {
-                        projectId: $route.params.projectId,
+                        projectId,
                         resourceType: 'pipeline',
-                        resourceCode: $route.params.pipelineId,
+                        resourceCode: pipelineId,
                         action: RESOURCE_ACTION.EDIT
                     }
                 }"
@@ -27,10 +29,12 @@
                     :disabled="!executable"
                     theme="primary"
                     v-perm="{
+                        hasPermission: canExecute,
+                        disablePermissionApi: true,
                         permissionData: {
-                            projectId: $route.params.projectId,
+                            projectId,
                             resourceType: 'pipeline',
-                            resourceCode: $route.params.pipelineId,
+                            resourceCode: pipelineId,
                             action: RESOURCE_ACTION.EXECUTE
                         }
                     }"
@@ -69,8 +73,20 @@
                 isReleasePipeline: 'atom/isReleasePipeline',
                 pacEnabled: 'atom/pacEnabled'
             }),
+            projectId () {
+                return this.$route.params.projectId
+            },
+            pipelineId () {
+                return this.$route.params.pipelineId
+            },
             yamlInfo () {
                 return this.pipelineInfo?.yamlInfo
+            },
+            canEdit () {
+                return this.pipelineInfo?.permissions?.canEdit ?? true
+            },
+            canExecute () {
+                return this.pipelineInfo?.permissions?.canExecute ?? true
             },
             executable () {
                 return !this.isCurPipelineLocked && this.canManualStartup && this.isReleasePipeline
