@@ -327,12 +327,12 @@ class CodeGitRepositoryService @Autowired constructor(
             gitProjectId = gitProjectInfo.id.toString(),
             page = 1,
             pageSize = 1,
-            search = userId,
+            search = codeGitRepository.userName,
             tokenType = TokenTypeEnum.OAUTH,
             token = credentialInfo.token
         ).data?.firstOrNull() ?: throw ErrorCodeException(
             errorCode = RepositoryMessageCode.ERROR_MEMBER_NOT_FOUND,
-            params = arrayOf(userId)
+            params = arrayOf(codeGitRepository.userName)
         )
         if (member.accessLevel < GitAccessLevelEnum.MASTER.level) {
             throw ErrorCodeException(
