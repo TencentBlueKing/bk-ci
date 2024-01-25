@@ -44,6 +44,7 @@ import com.tencent.devops.auth.dao.AuthMigrationDao
 import com.tencent.devops.auth.dao.AuthResourceGroupConfigDao
 import com.tencent.devops.auth.dao.AuthResourceGroupDao
 import com.tencent.devops.auth.pojo.migrate.MigrateTaskDataResult
+import com.tencent.devops.auth.service.AuthResourceGroupService
 import com.tencent.devops.auth.service.DeptService
 import com.tencent.devops.auth.service.PermissionGroupPoliciesService
 import com.tencent.devops.auth.service.RbacCacheService
@@ -74,6 +75,7 @@ abstract class AbMigratePolicyService(
     private val authResourceGroupDao: AuthResourceGroupDao,
     private val authResourceGroupConfigDao: AuthResourceGroupConfigDao,
     private val migrateIamApiService: MigrateIamApiService,
+    private val authResourceGroupService: AuthResourceGroupService,
     private val authMigrationDao: AuthMigrationDao,
     private val permissionService: PermissionService,
     private val rbacCacheService: RbacCacheService,
@@ -525,13 +527,11 @@ abstract class AbMigratePolicyService(
             resourceType = AuthResourceType.PROJECT.value,
             groupName = groupName
         )
-        authResourceGroupDao.create(
-            dslContext = dslContext,
+        authResourceGroupService.create(
             projectCode = projectCode,
             resourceType = AuthResourceType.PROJECT.value,
             resourceCode = projectCode,
             resourceName = projectName,
-            iamResourceCode = projectCode,
             groupCode = groupConfig?.groupCode ?: CUSTOM_GROUP_CODE,
             groupName = groupName,
             defaultGroup = groupConfig != null,
@@ -566,13 +566,11 @@ abstract class AbMigratePolicyService(
             .build()
         val iamGroupId = v2ManagerService.batchCreateRoleGroupV2(gradeManagerId, managerRoleGroupDTO)
 
-        authResourceGroupDao.create(
-            dslContext = dslContext,
+        authResourceGroupService.create(
             projectCode = projectCode,
             resourceType = AuthResourceType.PROJECT.value,
             resourceCode = projectCode,
             resourceName = projectName,
-            iamResourceCode = projectCode,
             groupCode = groupConfig.groupCode,
             groupName = groupConfig.groupName,
             defaultGroup = false,

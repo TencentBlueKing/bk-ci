@@ -44,7 +44,8 @@ class AuthItsmCallbackDao {
         sn: String,
         englishName: String,
         callbackId: String,
-        applicant: String
+        applicant: String,
+        iamResourceCode: String? = null
     ): Int {
         with(TAuthItsmCallback.T_AUTH_ITSM_CALLBACK) {
             return dslContext.insertInto(
@@ -53,13 +54,15 @@ class AuthItsmCallbackDao {
                 SN,
                 ENGLISH_NAME,
                 CALLBACK_ID,
-                APPLICANT
+                APPLICANT,
+                IAM_RESOURCE_CODE
             ).values(
                 applyId,
                 sn,
                 englishName,
                 callbackId,
-                applicant
+                applicant,
+                iamResourceCode
             ).execute()
         }
     }

@@ -105,7 +105,8 @@ class AuthItsmCallbackListener @Autowired constructor(
                 projectName = projectInfo.projectName,
                 sn = sn,
                 callBackId = callBackId,
-                currentStatus = currentStatus
+                currentStatus = currentStatus,
+                projectIamCode = callBackInfo.iamResourceCode
             )
             client.get(ServiceProjectApprovalResource::class).createApproved(
                 projectId = englishName,

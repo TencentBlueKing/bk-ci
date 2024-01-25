@@ -40,10 +40,11 @@ import com.tencent.devops.auth.dao.AuthResourceGroupConfigDao
 import com.tencent.devops.auth.dao.AuthResourceGroupDao
 import com.tencent.devops.auth.dao.AuthResourceTypeDao
 import com.tencent.devops.auth.service.AuthAuthorizationScopesService
+import com.tencent.devops.auth.service.AuthProjectUserMetricsService
 import com.tencent.devops.auth.service.AuthResourceCodeConverter
+import com.tencent.devops.auth.service.AuthResourceGroupService
 import com.tencent.devops.auth.service.AuthResourceNameConverter
 import com.tencent.devops.auth.service.AuthResourceService
-import com.tencent.devops.auth.service.AuthProjectUserMetricsService
 import com.tencent.devops.auth.service.ItsmService
 import com.tencent.devops.auth.service.PermissionGradeManagerService
 import com.tencent.devops.auth.service.PermissionGroupPoliciesService
@@ -87,7 +88,8 @@ class RbacServiceConfiguration {
         dslContext: DSLContext,
         authResourceGroupDao: AuthResourceGroupDao,
         authResourceGroupConfigDao: AuthResourceGroupConfigDao,
-        authResourceNameConverter: AuthResourceNameConverter
+        authResourceNameConverter: AuthResourceNameConverter,
+        authResourceGroupService: AuthResourceGroupService
     ) = PermissionSubsetManagerService(
         permissionGroupPoliciesService = permissionGroupPoliciesService,
         authAuthorizationScopesService = authAuthorizationScopesService,
@@ -95,7 +97,8 @@ class RbacServiceConfiguration {
         dslContext = dslContext,
         authResourceGroupDao = authResourceGroupDao,
         authResourceGroupConfigDao = authResourceGroupConfigDao,
-        authResourceNameConverter = authResourceNameConverter
+        authResourceNameConverter = authResourceNameConverter,
+        authResourceGroupService = authResourceGroupService
     )
 
     @Bean
@@ -108,6 +111,7 @@ class RbacServiceConfiguration {
         authItsmCallbackDao: AuthItsmCallbackDao,
         dslContext: DSLContext,
         authResourceService: AuthResourceService,
+        authResourceGroupService: AuthResourceGroupService,
         authResourceGroupDao: AuthResourceGroupDao,
         authResourceGroupConfigDao: AuthResourceGroupConfigDao,
         traceEventDispatcher: TraceEventDispatcher,
@@ -122,6 +126,7 @@ class RbacServiceConfiguration {
         authItsmCallbackDao = authItsmCallbackDao,
         dslContext = dslContext,
         authResourceService = authResourceService,
+        authResourceGroupService = authResourceGroupService,
         authResourceGroupDao = authResourceGroupDao,
         authResourceGroupConfigDao = authResourceGroupConfigDao,
         traceEventDispatcher = traceEventDispatcher,
@@ -149,6 +154,17 @@ class RbacServiceConfiguration {
     @Bean
     fun itsmService(objectMapper: ObjectMapper) = ItsmService(
         objectMapper = objectMapper
+    )
+
+    @Bean
+    fun authResourceGroupService(
+        dslContext: DSLContext,
+        authResourceDao: AuthResourceDao,
+        authResourceGroupDao: AuthResourceGroupDao
+    ) = AuthResourceGroupService(
+        dslContext = dslContext,
+        authResourceDao = authResourceDao,
+        authResourceGroupDao = authResourceGroupDao
     )
 
     @Bean

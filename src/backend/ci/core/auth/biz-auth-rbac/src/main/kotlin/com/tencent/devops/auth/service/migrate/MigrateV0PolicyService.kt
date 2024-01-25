@@ -40,6 +40,7 @@ import com.tencent.devops.auth.dao.AuthResourceGroupConfigDao
 import com.tencent.devops.auth.dao.AuthResourceGroupDao
 import com.tencent.devops.auth.pojo.migrate.MigrateTaskDataResult
 import com.tencent.devops.auth.service.AuthResourceCodeConverter
+import com.tencent.devops.auth.service.AuthResourceGroupService
 import com.tencent.devops.auth.service.DeptService
 import com.tencent.devops.auth.service.PermissionGroupPoliciesService
 import com.tencent.devops.auth.service.RbacCacheService
@@ -47,6 +48,7 @@ import com.tencent.devops.auth.service.iam.PermissionResourceGroupService
 import com.tencent.devops.auth.service.iam.PermissionService
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthResourceType
+import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
 import org.apache.commons.lang3.RandomUtils
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
@@ -67,7 +69,8 @@ class MigrateV0PolicyService constructor(
     private val groupService: PermissionResourceGroupService,
     private val authMigrationDao: AuthMigrationDao,
     private val deptService: DeptService,
-    private val permissionGroupPoliciesService: PermissionGroupPoliciesService
+    private val permissionGroupPoliciesService: PermissionGroupPoliciesService,
+    private val authResourceGroupService: AuthResourceGroupService
 ) : AbMigratePolicyService(
     v2ManagerService = v2ManagerService,
     iamConfiguration = iamConfiguration,
@@ -79,7 +82,8 @@ class MigrateV0PolicyService constructor(
     permissionService = permissionService,
     rbacCacheService = rbacCacheService,
     deptService = deptService,
-    permissionGroupPoliciesService = permissionGroupPoliciesService
+    permissionGroupPoliciesService = permissionGroupPoliciesService,
+    authResourceGroupService = authResourceGroupService
 ) {
 
     companion object {
@@ -120,6 +124,14 @@ class MigrateV0PolicyService constructor(
         private const val MAX_GROUP_MEMBER = 1000
         private const val CERT_VIEW = "cert_view"
         private const val ENV_NODE_VIEW = "env_node_view"
+        private val PIPELINE_VIEWER_ACTION_GROUP = setOf(
+            "pipeline_download", "pipeline_view",
+            "pipeline_share", "pipeline_list"
+        )
+        private val PIPELINE_EXECUTOR_ACTION_GROUP = setOf(
+            "pipeline_download", "pipeline_view",
+            "pipeline_share", "pipeline_list", "pipeline_execute"
+        )
     }
 
     fun startMigrateTask(projectCodes: List<String>): Int {
@@ -165,6 +177,14 @@ class MigrateV0PolicyService constructor(
             if (resourceActions.isEmpty()) {
                 return@permission
             }
+            if (permission.resources[0].paths.isNotEmpty()) {
+                val isContinue = handlePipelineActionGroup(
+                    projectCode = projectCode,
+                    resourceCode = permission.resources[0].paths[0][0].id,
+                    resourceActions = resourceActions.map { it.id }.toSet()
+                )
+                if (!isContinue) return@permission
+            }
             val rbacResources = buildRbacManagerResources(
                 projectCode = projectCode,
                 projectName = projectName,
@@ -193,6 +213,28 @@ class MigrateV0PolicyService constructor(
             )
         }
         return rbacAuthorizationScopes
+    }
+
+    private fun handlePipelineActionGroup(
+        projectCode: String,
+        resourceCode: String,
+        resourceActions: Set<String>
+    ): Boolean {
+        val pipelineGroupCode = when (resourceActions) {
+            PIPELINE_EXECUTOR_ACTION_GROUP -> BkAuthGroup.EXECUTOR.value
+            PIPELINE_VIEWER_ACTION_GROUP -> BkAuthGroup.VIEWER.value
+            else -> null
+        } ?: return true
+
+        val pipelineGroupId = authResourceGroupDao.get(
+            dslContext = dslContext,
+            projectCode = projectCode,
+            resourceType = AuthResourceType.PIPELINE_DEFAULT.value,
+            resourceCode = resourceCode,
+            groupCode = BkAuthGroup.EXECUTOR.value
+        )?.relationId ?: return true
+        // 查询对应组的人员模板ID，并像该流水线用户组加入人员模板
+        return false
     }
 
     /**

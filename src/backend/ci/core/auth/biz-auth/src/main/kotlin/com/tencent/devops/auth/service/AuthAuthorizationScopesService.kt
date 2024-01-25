@@ -5,6 +5,7 @@ import com.tencent.bk.sdk.iam.dto.manager.AuthorizationScopes
 /**
  * 分级管理员、用户组授权范围类
  */
+@Suppress("LongParameterList")
 interface AuthAuthorizationScopesService {
     /**
      * 生成蓝盾平台授权范围
@@ -12,6 +13,7 @@ interface AuthAuthorizationScopesService {
     fun generateBkciAuthorizationScopes(
         authorizationScopesStr: String,
         projectCode: String,
+        projectIamCode: String? = null,
         projectName: String,
         iamResourceCode: String,
         resourceName: String

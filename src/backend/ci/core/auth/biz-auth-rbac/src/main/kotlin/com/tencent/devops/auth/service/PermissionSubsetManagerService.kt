@@ -50,6 +50,7 @@ class PermissionSubsetManagerService @Autowired constructor(
     private val permissionGroupPoliciesService: PermissionGroupPoliciesService,
     private val authAuthorizationScopesService: AuthAuthorizationScopesService,
     private val iamV2ManagerService: V2ManagerService,
+    private val authResourceGroupService: AuthResourceGroupService,
     private val dslContext: DSLContext,
     private val authResourceGroupDao: AuthResourceGroupDao,
     private val authResourceGroupConfigDao: AuthResourceGroupConfigDao,
@@ -242,13 +243,11 @@ class PermissionSubsetManagerService @Autowired constructor(
             val managerRoleGroup = ManagerRoleGroup(name, description, false)
             val managerRoleGroupDTO = ManagerRoleGroupDTO.builder().groups(listOf(managerRoleGroup)).build()
             val iamGroupId = iamV2ManagerService.batchCreateSubsetRoleGroup(subsetManagerId, managerRoleGroupDTO)
-            authResourceGroupDao.create(
-                dslContext = dslContext,
+            authResourceGroupService.create(
                 projectCode = projectCode,
                 resourceType = resourceType,
                 resourceCode = resourceCode,
                 resourceName = resourceName,
-                iamResourceCode = iamResourceCode,
                 groupCode = groupConfig.groupCode,
                 groupName = name,
                 defaultGroup = true,
@@ -295,13 +294,11 @@ class PermissionSubsetManagerService @Autowired constructor(
         val iamGroupInfoList =
             iamV2ManagerService.getSubsetManagerRoleGroup(subsetManagerId, pageInfoDTO)
         iamGroupInfoList.results.forEach { iamGroupInfo ->
-            authResourceGroupDao.create(
-                dslContext = dslContext,
+            authResourceGroupService.create(
                 projectCode = projectCode,
                 resourceType = resourceType,
                 resourceCode = resourceCode,
                 resourceName = resourceName,
-                iamResourceCode = iamResourceCode,
                 groupCode = DefaultGroupType.MANAGER.value,
                 groupName = iamGroupInfo.name,
                 defaultGroup = true,

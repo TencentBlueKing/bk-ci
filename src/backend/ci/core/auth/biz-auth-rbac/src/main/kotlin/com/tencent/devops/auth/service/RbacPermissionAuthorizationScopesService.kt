@@ -3,13 +3,19 @@ package com.tencent.devops.auth.service
 import com.fasterxml.jackson.core.type.TypeReference
 import com.tencent.bk.sdk.iam.config.IamConfiguration
 import com.tencent.bk.sdk.iam.dto.manager.AuthorizationScopes
+import com.tencent.devops.auth.dao.AuthItsmCallbackDao
 import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.auth.api.AuthResourceType
+import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 
 class RbacPermissionAuthorizationScopesService constructor(
     private val authMonitorSpaceService: AuthMonitorSpaceService,
-    private val iamConfiguration: IamConfiguration
+    private val iamConfiguration: IamConfiguration,
+    private val authResourceService: AuthResourceService,
+    private val authItsmCallbackDao: AuthItsmCallbackDao,
+    private val dslContext: DSLContext
 ) : AuthAuthorizationScopesService {
     @Value("\${monitor.register:false}")
     private val registerMonitor: Boolean = false
@@ -20,14 +26,23 @@ class RbacPermissionAuthorizationScopesService constructor(
     override fun generateBkciAuthorizationScopes(
         authorizationScopesStr: String,
         projectCode: String,
+        projectIamCode: String?,
         projectName: String,
         iamResourceCode: String,
         resourceName: String
     ): List<AuthorizationScopes> {
+        val projectIamResourceCode = projectIamCode ?: authResourceService.getOrNull(
+            projectCode = projectCode,
+            resourceType = AuthResourceType.PROJECT.value,
+            resourceCode = projectCode
+        )?.iamResourceCode ?: authItsmCallbackDao.getCallbackByEnglishName(
+            dslContext = dslContext,
+            projectCode = projectCode
+        )!!.iamResourceCode
         return buildAuthorizationScopes(
             systemId = iamConfiguration.systemId,
             authorizationScopesStr = authorizationScopesStr,
-            projectCode = projectCode,
+            projectCode = projectIamResourceCode,
             projectName = projectName,
             iamResourceCode = iamResourceCode,
             resourceName = resourceName
