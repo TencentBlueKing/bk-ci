@@ -140,14 +140,14 @@ class AuthResourceCodeConverter @Autowired constructor(
 
     /**
      * 是否由auth生成id
-     * 以下资源类型的资源ID可能太长,超过iam限制,需要由auth生成
+     *
+     * 凭证和证书名可能太长,超过iam限制,需要由auth生成
      * 流水线ID太长会导致表达式很长,影响性能,需要由auth生辰
      */
     private fun needConvert(resourceType: String): Boolean {
         return resourceType == AuthResourceType.TICKET_CREDENTIAL.value ||
             resourceType == AuthResourceType.TICKET_CERT.value ||
             resourceType == AuthResourceType.PIPELINE_DEFAULT.value ||
-            resourceType == AuthResourceType.PIPELINE_TEMPLATE.value ||
-            resourceType == AuthResourceType.PROJECT.value
+            resourceType == AuthResourceType.PIPELINE_TEMPLATE.value
     }
 }

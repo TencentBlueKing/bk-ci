@@ -42,7 +42,6 @@ import com.tencent.bk.sdk.iam.service.v2.V2ManagerService
 import com.tencent.bk.sdk.iam.service.v2.impl.V2GrantServiceImpl
 import com.tencent.bk.sdk.iam.service.v2.impl.V2ManagerServiceImpl
 import com.tencent.bk.sdk.iam.service.v2.impl.V2PolicyServiceImpl
-import com.tencent.devops.auth.dao.AuthItsmCallbackDao
 import com.tencent.devops.auth.dao.AuthMigrationDao
 import com.tencent.devops.auth.dao.AuthMonitorSpaceDao
 import com.tencent.devops.auth.dao.AuthResourceGroupConfigDao
@@ -50,7 +49,6 @@ import com.tencent.devops.auth.dao.AuthResourceGroupDao
 import com.tencent.devops.auth.service.AuthMonitorSpaceService
 import com.tencent.devops.auth.service.AuthProjectUserMetricsService
 import com.tencent.devops.auth.service.AuthResourceCodeConverter
-import com.tencent.devops.auth.service.AuthResourceGroupService
 import com.tencent.devops.auth.service.AuthResourceService
 import com.tencent.devops.auth.service.AuthVerifyRecordService
 import com.tencent.devops.auth.service.DeptService
@@ -402,8 +400,7 @@ class RbacAuthConfiguration {
         authMigrationDao: AuthMigrationDao,
         deptService: DeptService,
         permissionGroupPoliciesService: PermissionGroupPoliciesService,
-        groupService: PermissionResourceGroupService,
-        authResourceGroupService: AuthResourceGroupService
+        groupService: PermissionResourceGroupService
     ) = MigrateV3PolicyService(
         v2ManagerService = v2ManagerService,
         iamConfiguration = iamConfiguration,
@@ -418,8 +415,7 @@ class RbacAuthConfiguration {
         authMigrationDao = authMigrationDao,
         deptService = deptService,
         permissionGroupPoliciesService = permissionGroupPoliciesService,
-        groupService = groupService,
-        authResourceGroupService = authResourceGroupService
+        groupService = groupService
     )
 
     @Bean
@@ -437,8 +433,7 @@ class RbacAuthConfiguration {
         groupService: PermissionResourceGroupService,
         authMigrationDao: AuthMigrationDao,
         deptService: DeptService,
-        permissionGroupPoliciesService: PermissionGroupPoliciesService,
-        authResourceGroupService: AuthResourceGroupService
+        permissionGroupPoliciesService: PermissionGroupPoliciesService
     ) = MigrateV0PolicyService(
         v2ManagerService = v2ManagerService,
         iamConfiguration = iamConfiguration,
@@ -453,8 +448,7 @@ class RbacAuthConfiguration {
         groupService = groupService,
         authMigrationDao = authMigrationDao,
         deptService = deptService,
-        permissionGroupPoliciesService = permissionGroupPoliciesService,
-        authResourceGroupService = authResourceGroupService
+        permissionGroupPoliciesService = permissionGroupPoliciesService
     )
 
     @Bean
@@ -518,16 +512,10 @@ class RbacAuthConfiguration {
     @Bean
     fun rbacPermissionAuthorizationScopesService(
         authMonitorSpaceService: AuthMonitorSpaceService,
-        iamConfiguration: IamConfiguration,
-        authResourceService: AuthResourceService,
-        authItsmCallbackDao: AuthItsmCallbackDao,
-        dslContext: DSLContext
+        iamConfiguration: IamConfiguration
     ) = RbacPermissionAuthorizationScopesService(
         authMonitorSpaceService = authMonitorSpaceService,
-        iamConfiguration = iamConfiguration,
-        authResourceService = authResourceService,
-        authItsmCallbackDao = authItsmCallbackDao,
-        dslContext = dslContext
+        iamConfiguration = iamConfiguration
     )
 
     @Bean

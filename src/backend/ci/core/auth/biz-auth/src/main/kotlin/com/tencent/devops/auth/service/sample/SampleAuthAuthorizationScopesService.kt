@@ -7,7 +7,6 @@ class SampleAuthAuthorizationScopesService : AuthAuthorizationScopesService {
     override fun generateBkciAuthorizationScopes(
         authorizationScopesStr: String,
         projectCode: String,
-        projectIamCode: String?,
         projectName: String,
         iamResourceCode: String,
         resourceName: String

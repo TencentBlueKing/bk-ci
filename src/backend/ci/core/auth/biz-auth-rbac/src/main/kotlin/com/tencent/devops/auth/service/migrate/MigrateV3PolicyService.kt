@@ -41,7 +41,6 @@ import com.tencent.devops.auth.dao.AuthResourceGroupConfigDao
 import com.tencent.devops.auth.dao.AuthResourceGroupDao
 import com.tencent.devops.auth.pojo.migrate.MigrateTaskDataResult
 import com.tencent.devops.auth.service.AuthResourceCodeConverter
-import com.tencent.devops.auth.service.AuthResourceGroupService
 import com.tencent.devops.auth.service.DeptService
 import com.tencent.devops.auth.service.PermissionGroupPoliciesService
 import com.tencent.devops.auth.service.RbacCacheService
@@ -77,8 +76,7 @@ class MigrateV3PolicyService constructor(
     private val authMigrationDao: AuthMigrationDao,
     private val deptService: DeptService,
     private val permissionGroupPoliciesService: PermissionGroupPoliciesService,
-    private val groupService: PermissionResourceGroupService,
-    private val authResourceGroupService: AuthResourceGroupService
+    private val groupService: PermissionResourceGroupService
 ) : AbMigratePolicyService(
     v2ManagerService = v2ManagerService,
     iamConfiguration = iamConfiguration,
@@ -90,32 +88,24 @@ class MigrateV3PolicyService constructor(
     permissionService = permissionService,
     rbacCacheService = rbacCacheService,
     deptService = deptService,
-    permissionGroupPoliciesService = permissionGroupPoliciesService,
-    authResourceGroupService = authResourceGroupService
+    permissionGroupPoliciesService = permissionGroupPoliciesService
 ) {
 
     companion object {
         // 项目视图管理
         private const val PROJECT_VIEWS_MANAGER = "project_views_manager"
-
         // 项目查看权限
         private const val PROJECT_VIEW = "project_view"
-
         // 项目访问权限
         private const val PROJECT_VISIT = "project_visit"
-
         // v3项目禁用启用
         private const val PROJECT_DELETE = "project_delete"
-
         // rbac项目禁用启用
         private const val PROJECT_ENABLE = "project_enable"
-
         // v3质量红线启用,rbac没有
         private const val QUALITY_GROUP_ENABLE = "quality_group_enable"
-
         // 流水线查看权限,v3没有pipeline_list权限,迁移至rbac需要添加
         private const val PIPELINE_VIEW = "pipeline_view"
-
         // 项目访问权限
         private const val PIPELINE_LIST = "pipeline_list"
 

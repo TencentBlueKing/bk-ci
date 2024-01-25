@@ -90,7 +90,6 @@ class RbacPermissionResourceService(
             permissionGradeManagerService.createGradeManager(
                 userId = userId,
                 projectCode = projectCode,
-                projectIamCode = iamResourceCode,
                 projectName = resourceName,
                 resourceType = AuthResourceType.PROJECT.value,
                 resourceCode = resourceCode,

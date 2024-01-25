@@ -82,7 +82,6 @@ class PermissionGradeManagerService @Autowired constructor(
     private val authItsmCallbackDao: AuthItsmCallbackDao,
     private val dslContext: DSLContext,
     private val authResourceService: AuthResourceService,
-    private val authResourceGroupService: AuthResourceGroupService,
     private val authResourceGroupDao: AuthResourceGroupDao,
     private val authResourceGroupConfigDao: AuthResourceGroupConfigDao,
     private val traceEventDispatcher: TraceEventDispatcher,
@@ -111,7 +110,6 @@ class PermissionGradeManagerService @Autowired constructor(
     fun createGradeManager(
         userId: String,
         projectCode: String,
-        projectIamCode: String,
         projectName: String,
         resourceType: String,
         resourceCode: String,
@@ -139,7 +137,6 @@ class PermissionGradeManagerService @Autowired constructor(
         var authorizationScopes = authAuthorizationScopesService.generateBkciAuthorizationScopes(
             authorizationScopesStr = manageGroupConfig.authorizationScopes,
             projectCode = projectCode,
-            projectIamCode = projectIamCode,
             projectName = projectName,
             iamResourceCode = projectCode,
             resourceName = projectName
@@ -234,8 +231,7 @@ class PermissionGradeManagerService @Autowired constructor(
                 sn = createGradeManagerApplication.sn,
                 englishName = projectCode,
                 callbackId = callbackId,
-                applicant = userId,
-                iamResourceCode = projectIamCode
+                applicant = userId
             )
             0
         }
@@ -432,11 +428,13 @@ class PermissionGradeManagerService @Autowired constructor(
                 .syncSubjectTemplate(true)
                 .build()
             val iamGroupId = iamV2ManagerService.batchCreateRoleGroupV2(gradeManagerId, managerRoleGroupDTO)
-            authResourceGroupService.create(
+            authResourceGroupDao.create(
+                dslContext = dslContext,
                 projectCode = projectCode,
                 resourceType = AuthResourceType.PROJECT.value,
                 resourceCode = projectCode,
                 resourceName = projectName,
+                iamResourceCode = projectCode,
                 groupCode = groupConfig.groupCode,
                 groupName = name,
                 defaultGroup = false,
@@ -505,11 +503,13 @@ class PermissionGradeManagerService @Autowired constructor(
             pageInfoDTO
         )
         iamGroupInfoList.results.forEach { iamGroupInfo ->
-            authResourceGroupService.create(
+            authResourceGroupDao.create(
+                dslContext = dslContext,
                 projectCode = projectCode,
                 resourceType = AuthResourceType.PROJECT.value,
                 resourceCode = projectCode,
                 resourceName = projectName,
+                iamResourceCode = projectCode,
                 groupCode = DefaultGroupType.MANAGER.value,
                 groupName = iamGroupInfo.name,
                 defaultGroup = true,
@@ -593,8 +593,7 @@ class PermissionGradeManagerService @Autowired constructor(
         projectName: String,
         sn: String,
         callBackId: String,
-        currentStatus: String,
-        projectIamCode: String
+        currentStatus: String
     ): Int {
         logger.info("handle itsm create callback|$userId|$projectCode|$sn|$callBackId|$currentStatus")
         val callbackApplicationDTO = CallbackApplicationDTO
@@ -619,7 +618,7 @@ class PermissionGradeManagerService @Autowired constructor(
             resourceType = AuthResourceType.PROJECT.value,
             resourceCode = projectCode,
             resourceName = projectName,
-            iamResourceCode = projectIamCode,
+            iamResourceCode = projectCode,
             // 项目默认开启权限管理
             enable = true,
             relationId = gradeManagerId.toString()
