@@ -52,26 +52,31 @@
                     'no-permission-pipeline': isDeleteType && (!pipeline.hasPermission || pipeline.pac)
                 }"
             >
-                <span>{{ pipeline.name }}</span>
+                <span v-bk-overflow-tips class="remove-pipeline-name">{{ pipeline.name }}</span>
                 <div v-if="!isRemoveType" class="belongs-pipeline-group" ref="belongsGroupBox">
-                    <bk-tag
-                        ext-cls="pipeline-group-name-tag"
-                        v-for="name in pipeline.groups"
-                        :key="name"
-                        :ref="`groupName_${index}`"
-                    >
-                        {{name}}
-                    </bk-tag>
-                    <bk-popover
-                        v-if="pipeline.showMoreTag"
-                        ref="groupNameMore"
-                        class="pipeline-group-name-tag pipeline-group-more-tag"
-                        :content="pipeline.hiddenGroups"
-                    >
-                        <bk-tag>
-                            +{{pipeline.overflowCount}}
+                    <template v-if="pipeline.groups.length">
+                        <bk-tag
+                            ext-cls="pipeline-group-name-tag"
+                            v-for="name in pipeline.groups"
+                            :key="name"
+                            :ref="`groupName_${index}`"
+                        >
+                            {{name}}
                         </bk-tag>
-                    </bk-popover>
+                        <bk-popover
+                            v-if="pipeline.showMoreTag"
+                            ref="groupNameMore"
+                            class="pipeline-group-name-tag pipeline-group-more-tag"
+                            :content="pipeline.hiddenGroups"
+                        >
+                            <bk-tag>
+                                +{{pipeline.overflowCount}}
+                            </bk-tag>
+                        </bk-popover>
+                    </template>
+                    <bk-tag v-else>
+                        {{ $t('未分组') }}
+                    </bk-tag>
                 </div>
                 <span
                     v-if="!pipeline.hasPermission || pipeline.pac"
@@ -360,10 +365,9 @@
                 width: 100%;
                 height: 40px;
                 padding: 0 8px;
-                display: grid;
+                display: flex;
                 align-items: center;
                 justify-content: space-between;
-                grid-template-columns: 100px 1fr 24px;
                 grid-gap: 12px;
                 overflow: hidden;
                 text-align: left;
@@ -374,8 +378,15 @@
                 &.no-permission-pipeline {
                     background: #FFF3E1;
                 }
+                .remove-pipeline-name {
+                    flex-shrink: 0;
+                    min-width: 100px;
+                    max-width: 300px;
+                    @include ellipsis();
+                }
                 > span {
                     @include ellipsis();
+                    flex-shrink: 0;
                 }
                 .remove-pieline-type-icon {
                     color: #FF9C01;
@@ -383,6 +394,7 @@
                 .belongs-pipeline-group {
                     vertical-align: top;
                     height: 22px;
+                    flex: 1;
                     overflow: hidden;
                 }
             }
