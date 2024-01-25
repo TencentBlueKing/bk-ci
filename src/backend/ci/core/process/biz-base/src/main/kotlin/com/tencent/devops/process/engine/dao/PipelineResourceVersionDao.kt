@@ -370,6 +370,7 @@ class PipelineResourceVersionDao {
         with(T_PIPELINE_RESOURCE_VERSION) {
             return dslContext.selectFrom(this)
                 .where(PIPELINE_ID.eq(pipelineId).and(PROJECT_ID.eq(projectId)))
+                .and(STATUS.ne(VersionStatus.DELETE.name))
                 .and(VERSION.`in`(versions))
                 .fetch(sampleMapper)
         }
@@ -386,6 +387,7 @@ class PipelineResourceVersionDao {
             return dslContext.selectDistinct(CREATOR)
                 .from(this)
                 .where(PIPELINE_ID.eq(pipelineId).and(PROJECT_ID.eq(projectId)))
+                .and(STATUS.ne(VersionStatus.DELETE.name))
                 .and(
                     BRANCH_ACTION.ne(BranchVersionAction.INACTIVE.name)
                         .or(BRANCH_ACTION.isNull)
@@ -425,6 +427,7 @@ class PipelineResourceVersionDao {
             val query = dslContext.selectDistinct(CREATOR)
                 .from(this)
                 .where(PIPELINE_ID.eq(pipelineId).and(PROJECT_ID.eq(projectId)))
+                .and(STATUS.ne(VersionStatus.DELETE.name))
                 .and(
                     BRANCH_ACTION.ne(BranchVersionAction.INACTIVE.name)
                         .or(BRANCH_ACTION.isNull)
