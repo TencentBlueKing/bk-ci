@@ -12,8 +12,10 @@
                 theme="primary"
                 @click="saveDraft"
                 v-perm="{
+                    hasPermission: canEdit,
+                    disablePermissionApi: true,
                     permissionData: {
-                        projectId: projectId,
+                        projectId,
                         resourceType: 'pipeline',
                         resourceCode: pipelineId,
                         action: RESOURCE_ACTION.EDIT
@@ -26,8 +28,10 @@
                 :disabled="!canDebug"
                 :loading="executeStatus"
                 v-perm="{
+                    hasPermission: canExecute,
+                    disablePermissionApi: true,
                     permissionData: {
-                        projectId: projectId,
+                        projectId,
                         resourceType: 'pipeline',
                         resourceCode: pipelineId,
                         action: RESOURCE_ACTION.EXECUTE
@@ -49,6 +53,8 @@
             <!-- <more-actions /> -->
             <release-button
                 :can-release="canRelease && !isEditing"
+                :project-id="projectId"
+                :pipeline-id="pipelineId"
             />
         </aside>
     </div>
@@ -88,7 +94,6 @@
                 'pipelineYaml',
                 'pipelineInfo'
             ]),
-
             ...mapState('pipelines', ['executeStatus', 'isManage']),
             ...mapGetters({
                 isCurPipelineLocked: 'atom/isCurPipelineLocked',
@@ -100,6 +105,12 @@
             },
             pipelineId () {
                 return this.$route.params.pipelineId
+            },
+            canEdit () {
+                return this.pipelineInfo?.permissions?.canEdit ?? true
+            },
+            canExecute () {
+                return this.pipelineInfo?.permissions?.canExecute ?? true
             },
             canDebug () {
                 return (this.pipelineInfo?.canDebug ?? false) && !this.saveStatus && !this.isCurPipelineLocked
@@ -179,9 +190,8 @@
                             ...this.pipelineWithoutTrigger.stages
                         ]
                     })
-                    const { pipelineSetting, checkPipelineInvalid, pipelineYaml } = this
+                    const { projectId, pipelineId, pipelineSetting, checkPipelineInvalid, pipelineYaml } = this
                     const { inValid, message } = checkPipelineInvalid(pipeline.stages, pipelineSetting)
-                    const { projectId, pipelineId } = this.$route.params
                     if (inValid) {
                         throw new Error(message)
                     }
