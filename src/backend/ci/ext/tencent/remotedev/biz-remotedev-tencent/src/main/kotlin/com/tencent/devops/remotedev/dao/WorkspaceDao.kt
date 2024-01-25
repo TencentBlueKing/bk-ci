@@ -151,7 +151,7 @@ class WorkspaceDao {
                     workspace.workspaceSystemType.name,
                     workspace.ownerType.name,
                     projectName,
-                    businessLineNmae
+                    businessLineNmae ?: ""
                 )
                 .returning(ID)
                 .fetchOne()!!.id
