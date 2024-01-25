@@ -31,7 +31,8 @@ enum class VersionStatus(val statusName: String) {
     RELEASED("已发布版本"),
     COMMITTING("草稿版本"),
     BRANCH("分支版本"),
-    BRANCH_RELEASE("通过分支版本发布（中间态）");
+    BRANCH_RELEASE("通过分支版本发布（中间态）"),
+    DELETE("被删除（无法查询）");
 
     fun fix(): VersionStatus {
         return if (this == BRANCH_RELEASE) {
