@@ -62,17 +62,17 @@
 </template>
 
 <script>
-    import { mapActions, mapState, mapGetters } from 'vuex'
-    import ModeSwitch from '@/components/ModeSwitch'
-    import YamlEditor from '@/components/YamlEditor'
-    import { TriggerTab, NotifyTab } from '@/components/PipelineEditTabs/'
-    import PipelineModel from './PipelineModel'
-    import BaseConfig from './BaseConfig'
-    import VersionSideslider from './VersionSideslider'
     import Logo from '@/components/Logo'
-    import VersionDiffEntry from './VersionDiffEntry'
-    import RollbackEntry from './RollbackEntry'
+    import ModeSwitch from '@/components/ModeSwitch'
+    import { NotifyTab, TriggerTab } from '@/components/PipelineEditTabs/'
+    import YamlEditor from '@/components/YamlEditor'
     import { convertTime } from '@/utils/util'
+    import { mapActions, mapGetters, mapState } from 'vuex'
+    import BaseConfig from './BaseConfig'
+    import PipelineModel from './PipelineModel'
+    import RollbackEntry from './RollbackEntry'
+    import VersionDiffEntry from './VersionDiffEntry'
+    import VersionSideslider from './VersionSideslider'
     export default {
         components: {
             ModeSwitch,
@@ -224,7 +224,7 @@
         },
 
         beforeDestroy () {
-            this.$refs.editor?.destroy()
+            this.$refs.editor?.destroy?.()
             this.setPipelineYaml('')
             this.setPipeline(null)
             this.setPipelineWithoutTrigger(null)
