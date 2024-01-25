@@ -49,8 +49,8 @@ import com.tencent.devops.project.pojo.ProjectWithPermission
 import com.tencent.devops.project.pojo.Result
 import com.tencent.devops.project.pojo.enums.ProjectChannelCode
 import com.tencent.devops.project.pojo.enums.ProjectValidateType
-import org.glassfish.jersey.media.multipart.FormDataContentDisposition
 import java.io.InputStream
+import org.glassfish.jersey.media.multipart.FormDataContentDisposition
 
 @Suppress("ALL")
 interface ProjectService {
@@ -257,6 +257,11 @@ interface ProjectService {
     fun updateProjectProductId(
         englishName: String,
         productName: String
+    )
+
+    fun updateOrganizationByEnglishName(
+        englishName: String,
+        projectOrganizationInfo: ProjectOrganizationInfo
     )
 
     fun fixProjectOrganization(
