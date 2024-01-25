@@ -8,6 +8,16 @@
                 :loading="saveStatus"
                 outline
                 theme="primary"
+                v-perm="{
+                    hasPermission: canEdit,
+                    disablePermissionApi: true,
+                    permissionData: {
+                        projectId,
+                        resourceType: 'pipeline',
+                        resourceCode: pipelineId,
+                        action: RESOURCE_ACTION.EDIT
+                    }
+                }"
                 @click="saveDraft"
             >
                 {{ $t("saveDraft") }}
@@ -21,11 +31,19 @@
     import PipelineBreadCrumb from './PipelineBreadCrumb.vue'
     import ModeSwitch from '@/components/ModeSwitch'
     import { UPDATE_PIPELINE_INFO } from '@/store/modules/atom/constants'
+    import {
+        RESOURCE_ACTION
+    } from '@/utils/permission'
 
     export default {
         components: {
             PipelineBreadCrumb,
             ModeSwitch
+        },
+        data () {
+            return {
+                RESOURCE_ACTION
+            }
         },
         computed: {
             ...mapState([
@@ -42,7 +60,16 @@
             ...mapGetters({
                 isEditing: 'atom/isEditing',
                 checkPipelineInvalid: 'atom/checkPipelineInvalid'
-            })
+            }),
+            projectId () {
+                return this.$route.params.projectId
+            },
+            pipelineId () {
+                return this.$route.params.pipelineId
+            },
+            canEdit () {
+                return this.pipelineInfo?.permissions?.canEdit ?? true
+            }
         },
         methods: {
             ...mapActions('atom', [
