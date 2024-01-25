@@ -29,9 +29,10 @@ package com.tencent.devops.project.dao
 
 import com.tencent.devops.model.project.tables.TUser
 import com.tencent.devops.model.project.tables.records.TUserRecord
+import com.tencent.devops.project.pojo.user.UserDeptDetail
+import java.time.LocalDateTime
 import org.jooq.DSLContext
 import org.springframework.stereotype.Repository
-import java.time.LocalDateTime
 
 @Suppress("ALL")
 @Repository
@@ -93,30 +94,22 @@ class UserDao {
 
     fun update(
         dslContext: DSLContext,
-        userId: String,
-        name: String,
-        bgId: Int,
-        bgName: String,
-        deptId: Int,
-        deptName: String,
-        centerId: Int,
-        centerName: String,
-        groupId: Int,
-        groupName: String
+        userDeptDetail: UserDeptDetail
     ) {
         with(TUser.T_USER) {
-            dslContext.update(this)
-                .set(NAME, name)
-                .set(BG_ID, bgId)
-                .set(BG_NAME, bgName)
-                .set(DEPT_ID, deptId)
-                .set(DEPT_NAME, deptName)
-                .set(CENTER_ID, centerId)
-                .set(CENTER_NAME, centerName)
-                .set(GROYP_ID, groupId)
-                .set(GROUP_NAME, groupName)
+            val baseStep = dslContext.update(this)
+                .set(NAME, userDeptDetail.name)
+                .set(BG_ID, userDeptDetail.bgId.toInt())
+                .set(BG_NAME, userDeptDetail.bgName)
+                .set(DEPT_ID, userDeptDetail.deptId.toInt())
+                .set(DEPT_NAME, userDeptDetail.deptName)
+                .set(CENTER_ID, userDeptDetail.centerId.toInt())
+                .set(CENTER_NAME, userDeptDetail.centerName)
+                .set(GROYP_ID, userDeptDetail.groupId.toInt())
+                .set(GROUP_NAME, userDeptDetail.groupName)
                 .set(UPDATE_TIME, LocalDateTime.now())
-                .where(USER_ID.eq(userId))
+            userDeptDetail.businessLineId?.let { baseStep.set(BUSINESS_LINE_ID, it.toLong()) }
+            baseStep.where(USER_ID.eq(userDeptDetail.userId))
                 .execute()
         }
     }
