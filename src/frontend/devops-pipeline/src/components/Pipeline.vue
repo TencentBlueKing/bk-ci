@@ -242,7 +242,8 @@
         watch: {
             pipeline: {
                 handler (val, old) {
-                    if (this.pipelineEditable && !areDeeplyEqual(val, old)) {
+                    if (this.pipelineEditable) {
+                        console.log(areDeeplyEqual(val, old))
                         this.setPipelineEditing(true)
                     }
                 },
