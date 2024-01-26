@@ -918,6 +918,10 @@ class PipelineRepositoryService constructor(
                             operationLogType = OperationLogType.UPDATE_DRAFT_VERSION
                             draftVersion.version
                         }
+                        logger.info(
+                            "PROCESS|updateDraft|version=$version|versionName=$versionName" +
+                                "operationLogType=$operationLogType|base=$realBaseVersion"
+                        )
                     }
                     // 2 分支版本保存 —— 取当前流水线的最新VERSION+1，不关心其他草稿和正式版本
                     VersionStatus.BRANCH -> {
@@ -947,6 +951,10 @@ class PipelineRepositoryService constructor(
                             branchAction = BranchVersionAction.ACTIVE
                             activeBranchVersion.version
                         }
+                        logger.info(
+                            "PROCESS|updateBranch|version=$version|versionName=$versionName" +
+                                "operationLogType=$operationLogType"
+                        )
                     }
                     // 3 通过分支发布 —— 将要通过分支发布的草稿直接更新为分支版本
                     VersionStatus.BRANCH_RELEASE -> {
@@ -978,6 +986,10 @@ class PipelineRepositoryService constructor(
                         } else {
                             OperationLogType.CREATE_BRANCH_VERSION
                         }
+                        logger.info(
+                            "PROCESS|releaseByBranch|version=$version|versionName=$versionName" +
+                                "operationLogType=$operationLogType"
+                        )
                     }
                     // 4 正式版本保存 —— 寻找当前草稿，存在草稿版本则报错，不存在则直接取最新VERSION+1同时更新INFO、RESOURCE表
                     else -> {
@@ -1010,7 +1022,7 @@ class PipelineRepositoryService constructor(
                         version = if (draftVersion == null) {
                             // 没有已有草稿保存正式版本时，直接增加正式版本，基准为上一个发布版本
                             // 创建
-                            realBaseVersion = realBaseVersion ?: releaseResource?.version ?: 0
+                            realBaseVersion = realBaseVersion ?: releaseResource.version
                             latestVersion.version + 1
                         } else {
                             // 更新
@@ -1019,6 +1031,7 @@ class PipelineRepositoryService constructor(
                             )
                             draftVersion.version
                         }
+                        logger.info("PROCESS|releasePipeline|version=$version|versionName=$versionName")
                         watcher.start("updatePipelineResource")
                         pipelineInfoDao.update(
                             dslContext = transactionContext,
