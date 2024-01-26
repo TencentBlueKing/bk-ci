@@ -58,7 +58,7 @@
   },
   "dependencies": {
     "bk-magic-vue": "2.5.8",
-    "vue": "~2.7.0",
+    "vue": "~2.7.16",
     "vuedraggable": "^2.24.3"
   },
   "repository": {

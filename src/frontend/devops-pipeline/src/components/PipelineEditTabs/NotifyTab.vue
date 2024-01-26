@@ -56,7 +56,6 @@
             :title="slideTitle"
             :is-show.sync="showSlider"
             ext-cls="edit-notify-container"
-            @hidden="closeSlider"
         >
             <div class="edit-notify-content" slot="content">
                 <notify-setting
