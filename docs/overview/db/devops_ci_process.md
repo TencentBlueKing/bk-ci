@@ -2,29 +2,31 @@
 
 **数据库名：** devops_ci_process
 
-**文档版本：** 1.0.0
+**文档版本：** 1.0.1
 
 **文档描述：** devops_ci_process的数据库文档
 
 | 表名                  | 说明       |
 | :---: | :---: |
 | [T_AUDIT_RESOURCE](#T_AUDIT_RESOURCE) |  |
-| [T_BUILD_STARTUP_PARAM](#T_BUILD_STARTUP_PARAM) | 流水线启动变量表 |
-| [T_METADATA](#T_METADATA) |  |
 | [T_PIPELINE_ATOM_REPLACE_BASE](#T_PIPELINE_ATOM_REPLACE_BASE) | 流水线插件替换基本信息表 |
 | [T_PIPELINE_ATOM_REPLACE_HISTORY](#T_PIPELINE_ATOM_REPLACE_HISTORY) | 流水线插件替换历史信息表 |
 | [T_PIPELINE_ATOM_REPLACE_ITEM](#T_PIPELINE_ATOM_REPLACE_ITEM) | 流水线插件替换项信息表 |
+| [T_PIPELINE_BUILD_COMMITS](#T_PIPELINE_BUILD_COMMITS) |  |
 | [T_PIPELINE_BUILD_CONTAINER](#T_PIPELINE_BUILD_CONTAINER) | 流水线构建容器环境表 |
 | [T_PIPELINE_BUILD_DETAIL](#T_PIPELINE_BUILD_DETAIL) | 流水线构建详情表 |
 | [T_PIPELINE_BUILD_HISTORY](#T_PIPELINE_BUILD_HISTORY) | 流水线构建历史表 |
 | [T_PIPELINE_BUILD_HIS_DATA_CLEAR](#T_PIPELINE_BUILD_HIS_DATA_CLEAR) | 流水线构建数据清理统计表 |
+| [T_PIPELINE_BUILD_RECORD_CONTAINER](#T_PIPELINE_BUILD_RECORD_CONTAINER) | 流水线构建容器环境表 |
+| [T_PIPELINE_BUILD_RECORD_MODEL](#T_PIPELINE_BUILD_RECORD_MODEL) | 流水线构建详情表 |
+| [T_PIPELINE_BUILD_RECORD_STAGE](#T_PIPELINE_BUILD_RECORD_STAGE) | 流水线构建阶段表 |
+| [T_PIPELINE_BUILD_RECORD_TASK](#T_PIPELINE_BUILD_RECORD_TASK) | 流水线构建任务表 |
 | [T_PIPELINE_BUILD_STAGE](#T_PIPELINE_BUILD_STAGE) | 流水线构建阶段表 |
 | [T_PIPELINE_BUILD_SUMMARY](#T_PIPELINE_BUILD_SUMMARY) | 流水线构建摘要表 |
 | [T_PIPELINE_BUILD_TASK](#T_PIPELINE_BUILD_TASK) | 流水线构建任务表 |
+| [T_PIPELINE_BUILD_TEMPLATE_ACROSS_INFO](#T_PIPELINE_BUILD_TEMPLATE_ACROSS_INFO) | 流水线模板跨项目访问表 |
 | [T_PIPELINE_BUILD_VAR](#T_PIPELINE_BUILD_VAR) | 流水线变量表 |
-| [T_PIPELINE_CONTAINER_MONITOR](#T_PIPELINE_CONTAINER_MONITOR) |  |
 | [T_PIPELINE_DATA_CLEAR](#T_PIPELINE_DATA_CLEAR) | 流水线数据清理统计表 |
-| [T_PIPELINE_FAILURE_NOTIFY_USER](#T_PIPELINE_FAILURE_NOTIFY_USER) |  |
 | [T_PIPELINE_FAVOR](#T_PIPELINE_FAVOR) | 流水线收藏表 |
 | [T_PIPELINE_GROUP](#T_PIPELINE_GROUP) | 流水线分组表 |
 | [T_PIPELINE_INFO](#T_PIPELINE_INFO) | 流水线信息表 |
@@ -32,8 +34,8 @@
 | [T_PIPELINE_LABEL](#T_PIPELINE_LABEL) | 流水线标签表 |
 | [T_PIPELINE_LABEL_PIPELINE](#T_PIPELINE_LABEL_PIPELINE) | 流水线-标签映射表 |
 | [T_PIPELINE_MODEL_TASK](#T_PIPELINE_MODEL_TASK) | 流水线模型task任务表 |
-| [T_PIPELINE_MUTEX_GROUP](#T_PIPELINE_MUTEX_GROUP) | 流水线互斥表 |
 | [T_PIPELINE_PAUSE_VALUE](#T_PIPELINE_PAUSE_VALUE) | 流水线暂停变量表 |
+| [T_PIPELINE_RECENT_USE](#T_PIPELINE_RECENT_USE) | 最近使用的流水线 |
 | [T_PIPELINE_REMOTE_AUTH](#T_PIPELINE_REMOTE_AUTH) | 流水线远程触发auth表 |
 | [T_PIPELINE_RESOURCE](#T_PIPELINE_RESOURCE) | 流水线资源表 |
 | [T_PIPELINE_RESOURCE_VERSION](#T_PIPELINE_RESOURCE_VERSION) | 流水线资源版本表 |
@@ -41,16 +43,19 @@
 | [T_PIPELINE_SETTING](#T_PIPELINE_SETTING) | 流水线基础配置表 |
 | [T_PIPELINE_SETTING_VERSION](#T_PIPELINE_SETTING_VERSION) | 流水线基础配置版本表 |
 | [T_PIPELINE_STAGE_TAG](#T_PIPELINE_STAGE_TAG) |  |
-| [T_PIPELINE_TEMPLATE](#T_PIPELINE_TEMPLATE) | 流水线模板表 |
 | [T_PIPELINE_TIMER](#T_PIPELINE_TIMER) |  |
-| [T_PIPELINE_USER](#T_PIPELINE_USER) |  |
-| [T_PIPELINE_VIEW](#T_PIPELINE_VIEW) |  |
-| [T_PIPELINE_VIEW_LABEL](#T_PIPELINE_VIEW_LABEL) |  |
-| [T_PIPELINE_VIEW_PROJECT](#T_PIPELINE_VIEW_PROJECT) |  |
+| [T_PIPELINE_TRIGGER_DETAIL](#T_PIPELINE_TRIGGER_DETAIL) | 流水线触发事件明细表 |
+| [T_PIPELINE_TRIGGER_EVENT](#T_PIPELINE_TRIGGER_EVENT) | 流水线触发事件表 |
+| [T_PIPELINE_TRIGGER_REVIEW](#T_PIPELINE_TRIGGER_REVIEW) | 流水线触发审核信息 |
+| [T_PIPELINE_VIEW](#T_PIPELINE_VIEW) | 流水线视图 |
+| [T_PIPELINE_VIEW_GROUP](#T_PIPELINE_VIEW_GROUP) | 流水线组关系表 |
+| [T_PIPELINE_VIEW_TOP](#T_PIPELINE_VIEW_TOP) | 流水线组置顶表 |
 | [T_PIPELINE_VIEW_USER_LAST_VIEW](#T_PIPELINE_VIEW_USER_LAST_VIEW) |  |
 | [T_PIPELINE_VIEW_USER_SETTINGS](#T_PIPELINE_VIEW_USER_SETTINGS) |  |
 | [T_PIPELINE_WEBHOOK](#T_PIPELINE_WEBHOOK) |  |
+| [T_PIPELINE_WEBHOOK_BUILD_PARAMETER](#T_PIPELINE_WEBHOOK_BUILD_PARAMETER) | webhook构建参数 |
 | [T_PIPELINE_WEBHOOK_QUEUE](#T_PIPELINE_WEBHOOK_QUEUE) |  |
+| [T_PIPELINE_WEBHOOK_REVISION](#T_PIPELINE_WEBHOOK_REVISION) |  |
 | [T_PROJECT_PIPELINE_CALLBACK](#T_PROJECT_PIPELINE_CALLBACK) |  |
 | [T_PROJECT_PIPELINE_CALLBACK_HISTORY](#T_PROJECT_PIPELINE_CALLBACK_HISTORY) |  |
 | [T_REPORT](#T_REPORT) | 流水线产物表 |
@@ -58,8 +63,6 @@
 | [T_TEMPLATE_INSTANCE_BASE](#T_TEMPLATE_INSTANCE_BASE) | 模板实列化基本信息表 |
 | [T_TEMPLATE_INSTANCE_ITEM](#T_TEMPLATE_INSTANCE_ITEM) | 模板实列化项信息表 |
 | [T_TEMPLATE_PIPELINE](#T_TEMPLATE_PIPELINE) | 流水线模板-实例映射表 |
-| [T_PIPELINE_TRIGGER_EVENT](#T_PIPELINE_TRIGGER_EVENT) | 流水线触发事件表 |
-| [T_PIPELINE_TRIGGER_DETAIL](#T_PIPELINE_TRIGGER_DETAIL) | 流水线触发事件明细表 |
 
 **表名：** <a id="T_AUDIT_RESOURCE">T_AUDIT_RESOURCE</a>
 
@@ -79,36 +82,6 @@
 |  8   | CREATED_TIME |   timestamp   | 19 |   0    |    N     |  N   |   CURRENT_TIMESTAMP    | 创建时间  |
 |  9   | STATUS |   varchar   | 32 |   0    |    Y     |  N   |       | 状态  |
 |  10   | PROJECT_ID |   varchar   | 128 |   0    |    N     |  N   |       | 项目ID  |
-
-**表名：** <a id="T_BUILD_STARTUP_PARAM">T_BUILD_STARTUP_PARAM</a>
-
-**说明：** 流水线启动变量表
-
-**数据列：**
-
-| 序号 | 名称 | 数据类型 |  长度  | 小数位 | 允许空值 | 主键 | 默认值 | 说明 |
-| :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
-|  1   | ID |   bigint   | 20 |   0    |    N     |  Y   |       | 主键ID  |
-|  2   | BUILD_ID |   varchar   | 64 |   0    |    N     |  N   |       | 构建ID  |
-|  3   | PARAM |   mediumtext   | 16777215 |   0    |    N     |  N   |       | 参数  |
-|  4   | PROJECT_ID |   varchar   | 64 |   0    |    Y     |  N   |       | 项目ID  |
-|  5   | PIPELINE_ID |   varchar   | 64 |   0    |    Y     |  N   |       | 流水线ID  |
-
-**表名：** <a id="T_METADATA">T_METADATA</a>
-
-**说明：** 
-
-**数据列：**
-
-| 序号 | 名称 | 数据类型 |  长度  | 小数位 | 允许空值 | 主键 | 默认值 | 说明 |
-| :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
-|  1   | ID |   bigint   | 20 |   0    |    N     |  Y   |       | 主键ID  |
-|  2   | PROJECT_ID |   varchar   | 32 |   0    |    N     |  N   |       | 项目ID  |
-|  3   | PIPELINE_ID |   varchar   | 34 |   0    |    N     |  N   |       | 流水线ID  |
-|  4   | BUILD_ID |   varchar   | 34 |   0    |    N     |  N   |       | 构建ID  |
-|  5   | META_DATA_ID |   varchar   | 128 |   0    |    N     |  N   |       | 元数据ID  |
-|  6   | META_DATA_VALUE |   varchar   | 255 |   0    |    N     |  N   |       | 元数据值  |
-|  7   | CREATE_TIME |   datetime   | 19 |   0    |    N     |  N   |   CURRENT_TIMESTAMP    | 创建时间  |
 
 **表名：** <a id="T_PIPELINE_ATOM_REPLACE_BASE">T_PIPELINE_ATOM_REPLACE_BASE</a>
 
@@ -173,6 +146,30 @@
 |  11   | UPDATE_TIME |   datetime   | 23 |   0    |    N     |  N   |   CURRENT_TIMESTAMP(3)    | 修改时间  |
 |  12   | CREATE_TIME |   datetime   | 23 |   0    |    N     |  N   |   CURRENT_TIMESTAMP(3)    | 创建时间  |
 
+**表名：** <a id="T_PIPELINE_BUILD_COMMITS">T_PIPELINE_BUILD_COMMITS</a>
+
+**说明：** 
+
+**数据列：**
+
+| 序号 | 名称 | 数据类型 |  长度  | 小数位 | 允许空值 | 主键 | 默认值 | 说明 |
+| :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
+|  1   | ID |   bigint   | 20 |   0    |    N     |  Y   |       |   |
+|  2   | PROJECT_ID |   varchar   | 32 |   0    |    N     |  N   |       |   |
+|  3   | PIPELINE_ID |   varchar   | 34 |   0    |    N     |  N   |       |   |
+|  4   | BUILD_ID |   varchar   | 34 |   0    |    N     |  N   |       |   |
+|  5   | COMMIT_ID |   varchar   | 64 |   0    |    N     |  N   |       |   |
+|  6   | MESSAGE |   longtext   | 2147483647 |   0    |    N     |  N   |       |   |
+|  7   | AUTHOR_NAME |   varchar   | 64 |   0    |    N     |  N   |       |   |
+|  8   | MERGE_REQUEST_ID |   varchar   | 256 |   0    |    Y     |  N   |       |   |
+|  9   | REPOSITORY_TYPE |   varchar   | 20 |   0    |    N     |  N   |       |   |
+|  10   | COMMIT_TIME |   datetime   | 19 |   0    |    N     |  N   |       |   |
+|  11   | CREATE_TIME |   datetime   | 19 |   0    |    N     |  N   |       |   |
+|  12   | URL |   varchar   | 255 |   0    |    N     |  N   |       | 仓库url  |
+|  13   | EVENT_TYPE |   varchar   | 32 |   0    |    N     |  N   |       | 触发事件类型  |
+|  14   | CHANNEL |   varchar   | 32 |   0    |    Y     |  N   |       |   |
+|  15   | ACTION |   varchar   | 64 |   0    |    Y     |  N   |       |   |
+
 **表名：** <a id="T_PIPELINE_BUILD_CONTAINER">T_PIPELINE_BUILD_CONTAINER</a>
 
 **说明：** 流水线构建容器环境表
@@ -194,6 +191,9 @@
 |  11   | COST |   int   | 10 |   0    |    Y     |  N   |   0    | 花费  |
 |  12   | EXECUTE_COUNT |   int   | 10 |   0    |    Y     |  N   |   1    | 执行次数  |
 |  13   | CONDITIONS |   mediumtext   | 16777215 |   0    |    Y     |  N   |       | 状况  |
+|  14   | CONTAINER_HASH_ID |   varchar   | 64 |   0    |    Y     |  N   |       | 容器全局唯一ID  |
+|  15   | MATRIX_GROUP_FLAG |   bit   | 1 |   0    |    Y     |  N   |       | 是否为构建矩阵  |
+|  16   | MATRIX_GROUP_ID |   varchar   | 64 |   0    |    Y     |  N   |       | 所属的矩阵组ID  |
 
 **表名：** <a id="T_PIPELINE_BUILD_DETAIL">T_PIPELINE_BUILD_DETAIL</a>
 
@@ -252,9 +252,12 @@
 |  28   | ERROR_MSG |   text   | 65535 |   0    |    Y     |  N   |       | 错误描述  |
 |  29   | WEBHOOK_INFO |   text   | 65535 |   0    |    Y     |  N   |       | WEBHOOK信息  |
 |  30   | IS_RETRY |   bit   | 1 |   0    |    Y     |  N   |   b'0'    | 是否重试  |
-|  31   | ERROR_INFO |   text   | 65535 |   0    |    Y     |  N   |       | 错误信息  |
-|  32   | BUILD_MSG |   varchar   | 255 |   0    |    Y     |  N   |       | 构建信息  |
-|  33   | BUILD_NUM_ALIAS |   varchar   | 256 |   0    |    Y     |  N   |       | 自定义构建号  |
+|  31   | EXECUTE_COUNT |   int   | 10 |   0    |    Y     |  N   |       | 执行次数  |
+|  32   | ERROR_INFO |   text   | 65535 |   0    |    Y     |  N   |       | 错误信息  |
+|  33   | BUILD_MSG |   varchar   | 255 |   0    |    Y     |  N   |       | 构建信息  |
+|  34   | BUILD_NUM_ALIAS |   varchar   | 256 |   0    |    Y     |  N   |       | 自定义构建号  |
+|  35   | CONCURRENCY_GROUP |   varchar   | 255 |   0    |    Y     |  N   |       | 并发时,设定的group  |
+|  36   | UPDATE_TIME |   datetime   | 19 |   0    |    Y     |  N   |   CURRENT_TIMESTAMP    | 更新时间  |
 
 **表名：** <a id="T_PIPELINE_BUILD_HIS_DATA_CLEAR">T_PIPELINE_BUILD_HIS_DATA_CLEAR</a>
 
@@ -268,6 +271,104 @@
 |  2   | PIPELINE_ID |   varchar   | 34 |   0    |    N     |  N   |       | 流水线ID  |
 |  3   | PROJECT_ID |   varchar   | 64 |   0    |    N     |  N   |       | 项目ID  |
 |  4   | DEL_TIME |   datetime   | 23 |   0    |    N     |  N   |   CURRENT_TIMESTAMP(3)    |   |
+
+**表名：** <a id="T_PIPELINE_BUILD_RECORD_CONTAINER">T_PIPELINE_BUILD_RECORD_CONTAINER</a>
+
+**说明：** 流水线构建容器环境表
+
+**数据列：**
+
+| 序号 | 名称 | 数据类型 |  长度  | 小数位 | 允许空值 | 主键 | 默认值 | 说明 |
+| :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
+|  1   | BUILD_ID |   varchar   | 64 |   0    |    N     |  Y   |       | 构建ID  |
+|  2   | PROJECT_ID |   varchar   | 64 |   0    |    N     |  N   |       | 项目ID  |
+|  3   | PIPELINE_ID |   varchar   | 64 |   0    |    N     |  N   |       | 流水线ID  |
+|  4   | RESOURCE_VERSION |   int   | 10 |   0    |    N     |  N   |       | 编排版本  |
+|  5   | STAGE_ID |   varchar   | 64 |   0    |    N     |  N   |       | 步骤ID  |
+|  6   | CONTAINER_ID |   varchar   | 64 |   0    |    N     |  Y   |       | 构建容器ID  |
+|  7   | EXECUTE_COUNT |   int   | 10 |   0    |    N     |  Y   |   1    | 执行次数  |
+|  8   | STATUS |   varchar   | 32 |   0    |    Y     |  N   |       | 构建状态  |
+|  9   | CONTAINER_VAR |   mediumtext   | 16777215 |   0    |    N     |  N   |       | 当次执行的变量记录  |
+|  10   | CONTAINER_TYPE |   varchar   | 45 |   0    |    Y     |  N   |       | 容器类型  |
+|  11   | CONTAIN_POST_TASK |   bit   | 1 |   0    |    Y     |  N   |       | 包含POST插件标识  |
+|  12   | MATRIX_GROUP_FLAG |   bit   | 1 |   0    |    Y     |  N   |       | 矩阵标识  |
+|  13   | MATRIX_GROUP_ID |   varchar   | 64 |   0    |    Y     |  N   |       | 所属的矩阵组ID  |
+|  14   | START_TIME |   datetime   | 23 |   0    |    Y     |  N   |       | 开始时间  |
+|  15   | END_TIME |   datetime   | 23 |   0    |    Y     |  N   |       | 结束时间  |
+|  16   | TIMESTAMPS |   text   | 65535 |   0    |    Y     |  N   |       | 运行中产生的时间戳集合  |
+
+**表名：** <a id="T_PIPELINE_BUILD_RECORD_MODEL">T_PIPELINE_BUILD_RECORD_MODEL</a>
+
+**说明：** 流水线构建详情表
+
+**数据列：**
+
+| 序号 | 名称 | 数据类型 |  长度  | 小数位 | 允许空值 | 主键 | 默认值 | 说明 |
+| :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
+|  1   | BUILD_ID |   varchar   | 34 |   0    |    N     |  Y   |       | 构建ID  |
+|  2   | PROJECT_ID |   varchar   | 64 |   0    |    N     |  N   |       | 项目ID  |
+|  3   | PIPELINE_ID |   varchar   | 34 |   0    |    N     |  N   |       | 流水线ID  |
+|  4   | RESOURCE_VERSION |   int   | 10 |   0    |    N     |  N   |       | 编排版本  |
+|  5   | BUILD_NUM |   int   | 10 |   0    |    N     |  N   |       | 构建次数  |
+|  6   | EXECUTE_COUNT |   int   | 10 |   0    |    N     |  Y   |       | 执行次数  |
+|  7   | START_USER |   varchar   | 32 |   0    |    N     |  N   |       | 启动者  |
+|  8   | MODEL_VAR |   mediumtext   | 16777215 |   0    |    N     |  N   |       | 当次执行的变量记录  |
+|  9   | START_TYPE |   varchar   | 32 |   0    |    N     |  N   |       | 触发方式  |
+|  10   | QUEUE_TIME |   datetime   | 23 |   0    |    N     |  N   |   CURRENT_TIMESTAMP(3)    | 触发时间  |
+|  11   | START_TIME |   datetime   | 23 |   0    |    Y     |  N   |       | 启动时间  |
+|  12   | END_TIME |   datetime   | 23 |   0    |    Y     |  N   |       | 结束时间  |
+|  13   | STATUS |   varchar   | 32 |   0    |    Y     |  N   |       | 构建状态  |
+|  14   | ERROR_INFO |   text   | 65535 |   0    |    Y     |  N   |       | 错误信息  |
+|  15   | CANCEL_USER |   varchar   | 32 |   0    |    Y     |  N   |       | 取消者  |
+|  16   | TIMESTAMPS |   text   | 65535 |   0    |    Y     |  N   |       | 运行中产生的时间戳集合  |
+
+**表名：** <a id="T_PIPELINE_BUILD_RECORD_STAGE">T_PIPELINE_BUILD_RECORD_STAGE</a>
+
+**说明：** 流水线构建阶段表
+
+**数据列：**
+
+| 序号 | 名称 | 数据类型 |  长度  | 小数位 | 允许空值 | 主键 | 默认值 | 说明 |
+| :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
+|  1   | BUILD_ID |   varchar   | 64 |   0    |    N     |  Y   |       | 构建ID  |
+|  2   | PROJECT_ID |   varchar   | 64 |   0    |    N     |  N   |       | 项目ID  |
+|  3   | PIPELINE_ID |   varchar   | 64 |   0    |    N     |  N   |       | 流水线ID  |
+|  4   | RESOURCE_VERSION |   int   | 10 |   0    |    Y     |  N   |       | 编排版本号  |
+|  5   | STAGE_ID |   varchar   | 64 |   0    |    N     |  Y   |       | 步骤ID  |
+|  6   | SEQ |   int   | 10 |   0    |    N     |  N   |       | 步骤序列  |
+|  7   | STAGE_VAR |   text   | 65535 |   0    |    N     |  N   |       | 当次执行的变量记录  |
+|  8   | STATUS |   varchar   | 32 |   0    |    Y     |  N   |       | 构建状态  |
+|  9   | EXECUTE_COUNT |   int   | 10 |   0    |    N     |  Y   |   1    | 执行次数  |
+|  10   | START_TIME |   datetime   | 23 |   0    |    Y     |  N   |       | 开始时间  |
+|  11   | END_TIME |   datetime   | 23 |   0    |    Y     |  N   |       | 结束时间  |
+|  12   | TIMESTAMPS |   text   | 65535 |   0    |    Y     |  N   |       | 运行中产生的时间戳集合  |
+
+**表名：** <a id="T_PIPELINE_BUILD_RECORD_TASK">T_PIPELINE_BUILD_RECORD_TASK</a>
+
+**说明：** 流水线构建任务表
+
+**数据列：**
+
+| 序号 | 名称 | 数据类型 |  长度  | 小数位 | 允许空值 | 主键 | 默认值 | 说明 |
+| :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
+|  1   | BUILD_ID |   varchar   | 34 |   0    |    N     |  Y   |       | 构建ID  |
+|  2   | PROJECT_ID |   varchar   | 64 |   0    |    N     |  N   |       | 项目ID  |
+|  3   | PIPELINE_ID |   varchar   | 34 |   0    |    N     |  N   |       | 流水线ID  |
+|  4   | RESOURCE_VERSION |   int   | 10 |   0    |    N     |  N   |       | 编排版本号  |
+|  5   | STAGE_ID |   varchar   | 34 |   0    |    N     |  N   |       | 步骤ID  |
+|  6   | CONTAINER_ID |   varchar   | 34 |   0    |    N     |  N   |       | 构建容器ID  |
+|  7   | TASK_ID |   varchar   | 34 |   0    |    N     |  Y   |       | 任务ID  |
+|  8   | TASK_SEQ |   int   | 10 |   0    |    N     |  N   |   1    | 任务序列  |
+|  9   | EXECUTE_COUNT |   int   | 10 |   0    |    N     |  Y   |   1    | 执行次数  |
+|  10   | STATUS |   varchar   | 32 |   0    |    Y     |  N   |       | 构建状态  |
+|  11   | TASK_VAR |   mediumtext   | 16777215 |   0    |    N     |  N   |       | 当次执行的变量记录  |
+|  12   | POST_INFO |   text   | 65535 |   0    |    Y     |  N   |       | 市场插件的POST关联信息  |
+|  13   | CLASS_TYPE |   varchar   | 64 |   0    |    N     |  N   |       | 项目ID  |
+|  14   | ATOM_CODE |   varchar   | 128 |   0    |    N     |  N   |       | 插件的唯一标识  |
+|  15   | ORIGIN_CLASS_TYPE |   varchar   | 64 |   0    |    Y     |  N   |       | 所在矩阵组ID  |
+|  16   | START_TIME |   datetime   | 23 |   0    |    Y     |  N   |       | 开始时间  |
+|  17   | END_TIME |   datetime   | 23 |   0    |    Y     |  N   |       | 结束时间  |
+|  18   | TIMESTAMPS |   text   | 65535 |   0    |    Y     |  N   |       | 运行中产生的时间戳集合  |
 
 **表名：** <a id="T_PIPELINE_BUILD_STAGE">T_PIPELINE_BUILD_STAGE</a>
 
@@ -350,7 +451,29 @@
 |  24   | ERROR_TYPE |   int   | 10 |   0    |    Y     |  N   |       | 错误类型  |
 |  25   | ERROR_CODE |   int   | 10 |   0    |    Y     |  N   |       | 错误码  |
 |  26   | ERROR_MSG |   text   | 65535 |   0    |    Y     |  N   |       | 错误描述  |
-|  27   | CONTAINER_HASH_ID |   varchar   | 64 |   0    |    Y     |  N   |       | 构建Job唯一标识  |
+|  27   | PLATFORM_CODE |   varchar   | 64 |   0    |    Y     |  N   |       | 对接平台代码  |
+|  28   | PLATFORM_ERROR_CODE |   int   | 10 |   0    |    Y     |  N   |       | 对接平台错误码  |
+|  29   | CONTAINER_HASH_ID |   varchar   | 64 |   0    |    Y     |  N   |       | 构建Job唯一标识  |
+|  30   | STEP_ID |   varchar   | 64 |   0    |    Y     |  N   |       | 标识上下文的自定义ID  |
+
+**表名：** <a id="T_PIPELINE_BUILD_TEMPLATE_ACROSS_INFO">T_PIPELINE_BUILD_TEMPLATE_ACROSS_INFO</a>
+
+**说明：** 流水线模板跨项目访问表
+
+**数据列：**
+
+| 序号 | 名称 | 数据类型 |  长度  | 小数位 | 允许空值 | 主键 | 默认值 | 说明 |
+| :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
+|  1   | ID |   bigint   | 20 |   0    |    N     |  Y   |       | 主键ID  |
+|  2   | TEMPLATE_ID |   char   | 34 |   0    |    N     |  N   |       | 模板唯一UUID  |
+|  3   | PROJECT_ID |   varchar   | 64 |   0    |    N     |  N   |       | 项目ID  |
+|  4   | PIPELINE_ID |   varchar   | 34 |   0    |    N     |  N   |       | 流水线ID（P-32位UUID)=34位  |
+|  5   | BUILD_ID |   varchar   | 34 |   0    |    Y     |  N   |       | 构建ID  |
+|  6   | TEMPLATE_TYPE |   varchar   | 64 |   0    |    N     |  N   |       | 模板类型  |
+|  7   | TEMPLATE_INSTANCE_IDS |   text   | 65535 |   0    |    N     |  N   |       | 模板对应的实例ID  |
+|  8   | TARGET_PROJECT_ID |   varchar   | 64 |   0    |    N     |  N   |       | 使用的项目ID  |
+|  9   | CREATE_TIME |   timestamp   | 19 |   0    |    N     |  N   |   CURRENT_TIMESTAMP    | 创建时间  |
+|  10   | CREATOR |   varchar   | 64 |   0    |    N     |  N   |       | 创建人  |
 
 **表名：** <a id="T_PIPELINE_BUILD_VAR">T_PIPELINE_BUILD_VAR</a>
 
@@ -368,21 +491,6 @@
 |  6   | VAR_TYPE |   varchar   | 64 |   0    |    Y     |  N   |       | 变量类型  |
 |  7   | READ_ONLY |   bit   | 1 |   0    |    Y     |  N   |       | 是否只读  |
 
-**表名：** <a id="T_PIPELINE_CONTAINER_MONITOR">T_PIPELINE_CONTAINER_MONITOR</a>
-
-**说明：** 
-
-**数据列：**
-
-| 序号 | 名称 | 数据类型 |  长度  | 小数位 | 允许空值 | 主键 | 默认值 | 说明 |
-| :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
-|  1   | ID |   bigint   | 20 |   0    |    N     |  Y   |       | 主键ID  |
-|  2   | OS_TYPE |   varchar   | 32 |   0    |    N     |  N   |       | 系统类型  |
-|  3   | BUILD_TYPE |   varchar   | 32 |   0    |    N     |  N   |       | 构建类型  |
-|  4   | MAX_STARTUP_TIME |   bigint   | 20 |   0    |    N     |  N   |       | 最长启动时间  |
-|  5   | MAX_EXECUTE_TIME |   bigint   | 20 |   0    |    N     |  N   |       | 最长执行时间  |
-|  6   | USERS |   varchar   | 1024 |   0    |    N     |  N   |       | 用户列表  |
-
 **表名：** <a id="T_PIPELINE_DATA_CLEAR">T_PIPELINE_DATA_CLEAR</a>
 
 **说明：** 流水线数据清理统计表
@@ -394,18 +502,6 @@
 |  1   | PIPELINE_ID |   varchar   | 34 |   0    |    N     |  Y   |       | 流水线ID  |
 |  2   | PROJECT_ID |   varchar   | 64 |   0    |    N     |  N   |       | 项目ID  |
 |  3   | DEL_TIME |   datetime   | 23 |   0    |    N     |  N   |   CURRENT_TIMESTAMP(3)    |   |
-
-**表名：** <a id="T_PIPELINE_FAILURE_NOTIFY_USER">T_PIPELINE_FAILURE_NOTIFY_USER</a>
-
-**说明：** 
-
-**数据列：**
-
-| 序号 | 名称 | 数据类型 |  长度  | 小数位 | 允许空值 | 主键 | 默认值 | 说明 |
-| :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
-|  1   | ID |   bigint   | 20 |   0    |    N     |  Y   |       | 主键ID  |
-|  2   | USER_ID |   varchar   | 32 |   0    |    Y     |  N   |       | 用户ID  |
-|  3   | NOTIFY_TYPES |   varchar   | 32 |   0    |    Y     |  N   |       | 通知类型  |
 
 **表名：** <a id="T_PIPELINE_FAVOR">T_PIPELINE_FAVOR</a>
 
@@ -461,6 +557,7 @@
 |  14   | DELETE |   bit   | 1 |   0    |    Y     |  N   |   b'0'    | 是否删除  |
 |  15   | ID |   bigint   | 20 |   0    |    N     |  N   |       | 主键ID  |
 |  16   | PIPELINE_NAME_PINYIN |   varchar   | 1300 |   0    |    Y     |  N   |       | 流水线名称拼音  |
+|  17   | LATEST_START_TIME |   datetime   | 23 |   0    |    Y     |  N   |       | 最近启动时间  |
 
 **表名：** <a id="T_PIPELINE_JOB_MUTEX_GROUP">T_PIPELINE_JOB_MUTEX_GROUP</a>
 
@@ -526,20 +623,9 @@
 |  11   | OS |   varchar   | 45 |   0    |    Y     |  N   |       | 操作系统  |
 |  12   | ADDITIONAL_OPTIONS |   mediumtext   | 16777215 |   0    |    Y     |  N   |       | 其他选项  |
 |  13   | ATOM_CODE |   varchar   | 32 |   0    |    N     |  N   |       | 插件的唯一标识  |
-|  14   | ATOM_VERSION |   varchar   | 20 |   0    |    Y     |  N   |       | 插件版本号  |
+|  14   | ATOM_VERSION |   varchar   | 30 |   0    |    Y     |  N   |       | 插件版本号  |
 |  15   | CREATE_TIME |   datetime   | 23 |   0    |    Y     |  N   |       | 创建时间  |
 |  16   | UPDATE_TIME |   datetime   | 23 |   0    |    Y     |  N   |       | 更新时间  |
-
-**表名：** <a id="T_PIPELINE_MUTEX_GROUP">T_PIPELINE_MUTEX_GROUP</a>
-
-**说明：** 流水线互斥表
-
-**数据列：**
-
-| 序号 | 名称 | 数据类型 |  长度  | 小数位 | 允许空值 | 主键 | 默认值 | 说明 |
-| :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
-|  1   | PROJECT_ID |   varchar   | 64 |   0    |    N     |  Y   |       | 项目ID  |
-|  2   | GROUP_NAME |   varchar   | 127 |   0    |    N     |  Y   |       | 用户组名称  |
 
 **表名：** <a id="T_PIPELINE_PAUSE_VALUE">T_PIPELINE_PAUSE_VALUE</a>
 
@@ -550,11 +636,25 @@
 | 序号 | 名称 | 数据类型 |  长度  | 小数位 | 允许空值 | 主键 | 默认值 | 说明 |
 | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
 |  1   | PROJECT_ID |   varchar   | 64 |   0    |    N     |  N   |       |   |
-|  2   | BUILD_ID |   varchar   | 34 |   0    |    N     |  Y   |       | 构建ID  |
-|  3   | TASK_ID |   varchar   | 34 |   0    |    N     |  Y   |       | 任务ID  |
+|  2   | BUILD_ID |   varchar   | 34 |   0    |    N     |  N   |       | 构建ID  |
+|  3   | TASK_ID |   varchar   | 34 |   0    |    N     |  N   |       | 任务ID  |
 |  4   | DEFAULT_VALUE |   text   | 65535 |   0    |    Y     |  N   |       | 默认变量  |
 |  5   | NEW_VALUE |   text   | 65535 |   0    |    Y     |  N   |       | 暂停后用户提供的变量  |
 |  6   | CREATE_TIME |   timestamp   | 19 |   0    |    Y     |  N   |       | 添加时间  |
+|  7   | EXECUTE_COUNT |   int   | 10 |   0    |    Y     |  N   |       | 执行次数  |
+
+**表名：** <a id="T_PIPELINE_RECENT_USE">T_PIPELINE_RECENT_USE</a>
+
+**说明：** 最近使用的流水线
+
+**数据列：**
+
+| 序号 | 名称 | 数据类型 |  长度  | 小数位 | 允许空值 | 主键 | 默认值 | 说明 |
+| :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
+|  1   | PROJECT_ID |   varchar   | 64 |   0    |    N     |  Y   |       | 项目ID  |
+|  2   | USER_ID |   varchar   | 64 |   0    |    N     |  Y   |       | 用户ID  |
+|  3   | PIPELINE_ID |   varchar   | 64 |   0    |    N     |  Y   |       | 流水线ID  |
+|  4   | USE_TIME |   datetime   | 19 |   0    |    N     |  N   |       | 使用时间  |
 
 **表名：** <a id="T_PIPELINE_REMOTE_AUTH">T_PIPELINE_REMOTE_AUTH</a>
 
@@ -598,8 +698,10 @@
 |  3   | VERSION |   int   | 10 |   0    |    N     |  Y   |   1    | 版本号  |
 |  4   | VERSION_NAME |   varchar   | 64 |   0    |    N     |  N   |       | 版本名称  |
 |  5   | MODEL |   mediumtext   | 16777215 |   0    |    Y     |  N   |       | 流水线模型  |
-|  6   | CREATOR |   varchar   | 64 |   0    |    Y     |  N   |       | 创建者  |
-|  7   | CREATE_TIME |   timestamp   | 19 |   0    |    N     |  N   |   CURRENT_TIMESTAMP    | 创建时间  |
+|  6   | REFER_FLAG |   bit   | 1 |   0    |    Y     |  N   |       | 是否还有构建记录引用该版本标识  |
+|  7   | REFER_COUNT |   int   | 10 |   0    |    Y     |  N   |       | 关联构建记录总数  |
+|  8   | CREATOR |   varchar   | 64 |   0    |    Y     |  N   |       | 创建者  |
+|  9   | CREATE_TIME |   timestamp   | 19 |   0    |    N     |  N   |   CURRENT_TIMESTAMP    | 创建时间  |
 
 **表名：** <a id="T_PIPELINE_RULE">T_PIPELINE_RULE</a>
 
@@ -654,6 +756,10 @@
 |  26   | MAX_PIPELINE_RES_NUM |   int   | 10 |   0    |    Y     |  N   |   500    | 保存流水线编排的最大个数  |
 |  27   | MAX_CON_RUNNING_QUEUE_SIZE |   int   | 10 |   0    |    Y     |  N   |   50    | 并发构建数量限制  |
 |  28   | BUILD_NUM_RULE |   varchar   | 512 |   0    |    Y     |  N   |       | 构建号生成规则  |
+|  29   | CONCURRENCY_GROUP |   varchar   | 255 |   0    |    Y     |  N   |       | 并发时,设定的group  |
+|  30   | CONCURRENCY_CANCEL_IN_PROGRESS |   bit   | 1 |   0    |    Y     |  N   |   b'0'    | 并发时,是否相同group取消正在执行的流水线  |
+|  31   | CLEAN_VARIABLES_WHEN_RETRY |   bit   | 1 |   0    |    Y     |  N   |   b'0'    | 重试时清理变量表  |
+|  32   | PIPELINE_AS_CODE_SETTINGS |   varchar   | 512 |   0    |    Y     |  N   |       | YAML流水线相关配置  |
 
 **表名：** <a id="T_PIPELINE_SETTING_VERSION">T_PIPELINE_SETTING_VERSION</a>
 
@@ -701,29 +807,6 @@
 |  6   | CREATE_TIME |   datetime   | 19 |   0    |    N     |  N   |   CURRENT_TIMESTAMP    | 创建时间  |
 |  7   | UPDATE_TIME |   datetime   | 19 |   0    |    N     |  N   |   CURRENT_TIMESTAMP    | 修改时间  |
 
-**表名：** <a id="T_PIPELINE_TEMPLATE">T_PIPELINE_TEMPLATE</a>
-
-**说明：** 流水线模板表
-
-**数据列：**
-
-| 序号 | 名称 | 数据类型 |  长度  | 小数位 | 允许空值 | 主键 | 默认值 | 说明 |
-| :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
-|  1   | ID |   bigint   | 20 |   0    |    N     |  Y   |       | 主键ID  |
-|  2   | TYPE |   varchar   | 32 |   0    |    N     |  N   |   FREEDOM    | 类型  |
-|  3   | CATEGORY |   varchar   | 128 |   0    |    Y     |  N   |       | 应用范畴  |
-|  4   | TEMPLATE_NAME |   varchar   | 64 |   0    |    N     |  N   |       | 模板名称  |
-|  5   | ICON |   varchar   | 32 |   0    |    N     |  N   |       | 模板图标  |
-|  6   | LOGO_URL |   varchar   | 512 |   0    |    Y     |  N   |       | LOGOURL地址  |
-|  7   | PROJECT_CODE |   varchar   | 32 |   0    |    Y     |  N   |       | 用户组所属项目  |
-|  8   | SRC_TEMPLATE_ID |   varchar   | 32 |   0    |    Y     |  N   |       | 源模版ID  |
-|  9   | AUTHOR |   varchar   | 64 |   0    |    N     |  N   |       | 作者  |
-|  10   | ATOMNUM |   int   | 10 |   0    |    N     |  N   |       | 插件数量  |
-|  11   | PUBLIC_FLAG |   bit   | 1 |   0    |    N     |  N   |   b'0'    | 是否为公共镜像  |
-|  12   | TEMPLATE |   mediumtext   | 16777215 |   0    |    Y     |  N   |       | 模板  |
-|  13   | CREATOR |   varchar   | 32 |   0    |    N     |  N   |       | 创建者  |
-|  14   | CREATE_TIME |   datetime   | 19 |   0    |    Y     |  N   |   CURRENT_TIMESTAMP    | 创建时间  |
-
 **表名：** <a id="T_PIPELINE_TIMER">T_PIPELINE_TIMER</a>
 
 **说明：** 
@@ -739,24 +822,66 @@
 |  5   | CREATE_TIME |   timestamp   | 19 |   0    |    N     |  N   |   CURRENT_TIMESTAMP    | 创建时间  |
 |  6   | CHANNEL |   varchar   | 32 |   0    |    N     |  N   |   BS    | 项目渠道  |
 
-**表名：** <a id="T_PIPELINE_USER">T_PIPELINE_USER</a>
+**表名：** <a id="T_PIPELINE_TRIGGER_DETAIL">T_PIPELINE_TRIGGER_DETAIL</a>
 
-**说明：** 
+**说明：** 流水线触发事件明细表
 
 **数据列：**
 
 | 序号 | 名称 | 数据类型 |  长度  | 小数位 | 允许空值 | 主键 | 默认值 | 说明 |
 | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
-|  1   | ID |   bigint   | 20 |   0    |    N     |  Y   |       | 主键ID  |
-|  2   | PIPELINE_ID |   varchar   | 34 |   0    |    N     |  N   |       | 流水线ID  |
-|  3   | CREATE_TIME |   datetime   | 19 |   0    |    N     |  N   |       | 创建时间  |
-|  4   | UPDATE_TIME |   datetime   | 19 |   0    |    N     |  N   |       | 更新时间  |
-|  5   | CREATE_USER |   varchar   | 64 |   0    |    N     |  N   |       | 创建者  |
-|  6   | UPDATE_USER |   varchar   | 64 |   0    |    N     |  N   |       | 修改人  |
+|  1   | DETAIL_ID |   bigint   | 20 |   0    |    N     |  Y   |       | 事件明细ID  |
+|  2   | PROJECT_ID |   varchar   | 64 |   0    |    N     |  N   |       | 项目ID  |
+|  3   | EVENT_ID |   bigint   | 20 |   0    |    N     |  N   |       | 事件ID  |
+|  4   | STATUS |   varchar   | 100 |   0    |    Y     |  N   |       | 状态(successorfailure)  |
+|  5   | PIPELINE_ID |   varchar   | 100 |   0    |    Y     |  N   |       | 流水线ID  |
+|  6   | PIPELINE_NAME |   varchar   | 255 |   0    |    Y     |  N   |       | 流水线名称  |
+|  7   | VERSION |   int   | 10 |   0    |    Y     |  N   |       | 流水线版本号  |
+|  8   | BUILD_ID |   varchar   | 100 |   0    |    Y     |  N   |       | 构建ID  |
+|  9   | BUILD_NUM |   varchar   | 100 |   0    |    Y     |  N   |       | 构建编号  |
+|  10   | REASON |   varchar   | 100 |   0    |    Y     |  N   |       | 失败原因  |
+|  11   | REASON_DETAIL |   text   | 65535 |   0    |    Y     |  N   |       | 原因详情  |
+|  12   | CREATE_TIME |   timestamp   | 19 |   0    |    N     |  Y   |   CURRENT_TIMESTAMP    | 创建时间  |
+
+**表名：** <a id="T_PIPELINE_TRIGGER_EVENT">T_PIPELINE_TRIGGER_EVENT</a>
+
+**说明：** 流水线触发事件表
+
+**数据列：**
+
+| 序号 | 名称 | 数据类型 |  长度  | 小数位 | 允许空值 | 主键 | 默认值 | 说明 |
+| :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
+|  1   | REQUEST_ID |   varchar   | 64 |   0    |    N     |  N   |       | 请求ID  |
+|  2   | PROJECT_ID |   varchar   | 64 |   0    |    N     |  N   |       | 项目ID  |
+|  3   | EVENT_ID |   bigint   | 20 |   0    |    N     |  Y   |       | 事件ID  |
+|  4   | TRIGGER_TYPE |   varchar   | 64 |   0    |    N     |  N   |       | 触发类型  |
+|  5   | EVENT_SOURCE |   varchar   | 255 |   0    |    N     |  N   |       | 触发源,代码库hashId/触发人/远程ip  |
+|  6   | EVENT_TYPE |   varchar   | 64 |   0    |    N     |  N   |       | 事件类型  |
+|  7   | TRIGGER_USER |   varchar   | 100 |   0    |    N     |  N   |       | 触发用户  |
+|  8   | EVENT_DESC |   text   | 65535 |   0    |    N     |  N   |       | 事件描述  |
+|  9   | REPLAY_REQUEST_ID |   varchar   | 64 |   0    |    Y     |  N   |       | 重放请求ID  |
+|  10   | REQUEST_PARAMS |   text   | 65535 |   0    |    Y     |  N   |       | 请求参数  |
+|  11   | CREATE_TIME |   timestamp   | 19 |   0    |    N     |  Y   |   CURRENT_TIMESTAMP    | 事件时间  |
+
+**表名：** <a id="T_PIPELINE_TRIGGER_REVIEW">T_PIPELINE_TRIGGER_REVIEW</a>
+
+**说明：** 流水线触发审核信息
+
+**数据列：**
+
+| 序号 | 名称 | 数据类型 |  长度  | 小数位 | 允许空值 | 主键 | 默认值 | 说明 |
+| :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
+|  1   | BUILD_ID |   varchar   | 34 |   0    |    N     |  Y   |       | 构建ID  |
+|  2   | PROJECT_ID |   varchar   | 64 |   0    |    N     |  N   |       | 项目ID  |
+|  3   | PIPELINE_ID |   varchar   | 34 |   0    |    N     |  N   |       | 流水线ID  |
+|  4   | TRIGGER_REVIEWER |   text   | 65535 |   0    |    N     |  N   |       | 触发审核人列表  |
+|  5   | TRIGGER_OPERATOR |   varchar   | 64 |   0    |    Y     |  N   |       | 触发审核操作人  |
+|  6   | CREATE_TIME |   datetime   | 19 |   0    |    N     |  N   |   CURRENT_TIMESTAMP    | 创建时间  |
+|  7   | UPDATE_TIME |   datetime   | 19 |   0    |    N     |  N   |   CURRENT_TIMESTAMP    | 审核时间  |
 
 **表名：** <a id="T_PIPELINE_VIEW">T_PIPELINE_VIEW</a>
 
-**说明：** 
+**说明：** 流水线视图
 
 **数据列：**
 
@@ -765,42 +890,45 @@
 |  1   | ID |   bigint   | 20 |   0    |    N     |  Y   |       | 主键ID  |
 |  2   | PROJECT_ID |   varchar   | 32 |   0    |    N     |  N   |       | 项目ID  |
 |  3   | NAME |   varchar   | 64 |   0    |    N     |  N   |       | 名称  |
-|  4   | FILTER_BY_PIPEINE_NAME |   varchar   | 128 |   0    |    Y     |  N   |       | 流水线名称过滤器  |
-|  5   | FILTER_BY_CREATOR |   varchar   | 64 |   0    |    Y     |  N   |       | 创建者过滤器  |
+|  4   | FILTER_BY_PIPEINE_NAME |   varchar   | 128 |   0    |    Y     |  N   |       | 流水线名称过滤器,已废弃,统一到filters管理  |
+|  5   | FILTER_BY_CREATOR |   varchar   | 64 |   0    |    Y     |  N   |       | 创建者过滤器,已废弃,统一到filters管理  |
 |  6   | CREATE_TIME |   datetime   | 19 |   0    |    N     |  N   |       | 创建时间  |
 |  7   | UPDATE_TIME |   datetime   | 19 |   0    |    N     |  N   |       | 更新时间  |
 |  8   | CREATE_USER |   varchar   | 64 |   0    |    N     |  N   |       | 创建者  |
 |  9   | IS_PROJECT |   bit   | 1 |   0    |    Y     |  N   |   b'0'    | 是否项目  |
 |  10   | LOGIC |   varchar   | 32 |   0    |    Y     |  N   |   AND    | 逻辑符  |
 |  11   | FILTERS |   mediumtext   | 16777215 |   0    |    Y     |  N   |       | 过滤器  |
+|  12   | VIEW_TYPE |   int   | 10 |   0    |    N     |  N   |   1    | 1:动态流水线组,2:静态流水线组  |
 
-**表名：** <a id="T_PIPELINE_VIEW_LABEL">T_PIPELINE_VIEW_LABEL</a>
+**表名：** <a id="T_PIPELINE_VIEW_GROUP">T_PIPELINE_VIEW_GROUP</a>
 
-**说明：** 
-
-**数据列：**
-
-| 序号 | 名称 | 数据类型 |  长度  | 小数位 | 允许空值 | 主键 | 默认值 | 说明 |
-| :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
-|  1   | PROJECT_ID |   varchar   | 64 |   0    |    N     |  N   |       | 项目ID  |
-|  2   | VIEW_ID |   bigint   | 20 |   0    |    N     |  Y   |       | 视图ID  |
-|  3   | LABEL_ID |   bigint   | 20 |   0    |    N     |  Y   |       | 标签ID  |
-|  4   | CREATE_TIME |   datetime   | 19 |   0    |    N     |  N   |       | 创建时间  |
-
-**表名：** <a id="T_PIPELINE_VIEW_PROJECT">T_PIPELINE_VIEW_PROJECT</a>
-
-**说明：** 
+**说明：** 流水线组关系表
 
 **数据列：**
 
 | 序号 | 名称 | 数据类型 |  长度  | 小数位 | 允许空值 | 主键 | 默认值 | 说明 |
 | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
 |  1   | ID |   bigint   | 20 |   0    |    N     |  Y   |       | 主键ID  |
-|  2   | VIEW_ID |   bigint   | 20 |   0    |    N     |  N   |       | 视图ID  |
-|  3   | PROJECT_ID |   varchar   | 32 |   0    |    N     |  N   |       | 项目ID  |
-|  4   | CREATE_TIME |   datetime   | 19 |   0    |    N     |  N   |       | 创建时间  |
-|  5   | UPDATE_TIME |   datetime   | 19 |   0    |    N     |  N   |       | 更新时间  |
-|  6   | CREATE_USER |   varchar   | 64 |   0    |    N     |  N   |       | 创建者  |
+|  2   | PROJECT_ID |   varchar   | 64 |   0    |    N     |  N   |       | 项目ID  |
+|  3   | VIEW_ID |   bigint   | 20 |   0    |    N     |  N   |       | 流水线组ID  |
+|  4   | PIPELINE_ID |   varchar   | 34 |   0    |    N     |  N   |       | 流水线ID  |
+|  5   | CREATE_TIME |   datetime   | 19 |   0    |    N     |  N   |       | 创建时间  |
+|  6   | CREATOR |   varchar   | 64 |   0    |    N     |  N   |       | 创建者  |
+
+**表名：** <a id="T_PIPELINE_VIEW_TOP">T_PIPELINE_VIEW_TOP</a>
+
+**说明：** 流水线组置顶表
+
+**数据列：**
+
+| 序号 | 名称 | 数据类型 |  长度  | 小数位 | 允许空值 | 主键 | 默认值 | 说明 |
+| :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
+|  1   | ID |   bigint   | 20 |   0    |    N     |  Y   |       | 主键ID  |
+|  2   | PROJECT_ID |   varchar   | 64 |   0    |    N     |  N   |       | 项目ID  |
+|  3   | VIEW_ID |   bigint   | 20 |   0    |    N     |  N   |       | 流水线组ID  |
+|  4   | CREATOR |   varchar   | 64 |   0    |    N     |  N   |       | 创建者  |
+|  5   | CREATE_TIME |   datetime   | 19 |   0    |    N     |  N   |       | 创建时间  |
+|  6   | UPDATE_TIME |   datetime   | 19 |   0    |    N     |  N   |       | 更新时间  |
 
 **表名：** <a id="T_PIPELINE_VIEW_USER_LAST_VIEW">T_PIPELINE_VIEW_USER_LAST_VIEW</a>
 
@@ -848,10 +976,25 @@
 |  8   | PROJECT_NAME |   varchar   | 128 |   0    |    Y     |  N   |       | 项目名称  |
 |  9   | TASK_ID |   varchar   | 34 |   0    |    Y     |  N   |       | 任务id  |
 |  10   | DELETE |   bit   | 1 |   0    |    Y     |  N   |   b'0'    | 是否删除  |
-|  11   | EXTERNAL_ID |   varchar   | 255 |   0    |    Y     |  N   |      | webhook事件生产者ID,工蜂-工蜂ID,github-github id,svn-svn path,p4-p4port  |
-|  12   | EVENT_TYPE |   varchar   | 32 |   0    |    Y     |  N   |       | 事件类型  |
+|  11   | EVENT_TYPE |   varchar   | 64 |   0    |    Y     |  N   |       | 事件类型  |
+|  12   | EXTERNAL_ID |   varchar   | 255 |   0    |    Y     |  N   |       | 代码库平台ID  |
 |  13   | REPOSITORY_HASH_ID |   varchar   | 64 |   0    |    Y     |  N   |       | 代码库hashId  |
+|  14   | EXTERNAL_NAME |   varchar   | 255 |   0    |    Y     |  N   |       | 代码库平台仓库名  |
 
+**表名：** <a id="T_PIPELINE_WEBHOOK_BUILD_PARAMETER">T_PIPELINE_WEBHOOK_BUILD_PARAMETER</a>
+
+**说明：** webhook构建参数
+
+**数据列：**
+
+| 序号 | 名称 | 数据类型 |  长度  | 小数位 | 允许空值 | 主键 | 默认值 | 说明 |
+| :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
+|  1   | BUILD_ID |   varchar   | 34 |   0    |    N     |  Y   |       |   |
+|  2   | PROJECT_ID |   varchar   | 64 |   0    |    N     |  N   |       |   |
+|  3   | PIPELINE_ID |   varchar   | 34 |   0    |    N     |  N   |       |   |
+|  4   | BUILD_PARAMETERS |   text   | 65535 |   0    |    Y     |  N   |       |   |
+|  5   | CREATE_TIME |   datetime   | 19 |   0    |    N     |  N   |   CURRENT_TIMESTAMP    |   |
+|  6   | UPDATE_TIME |   datetime   | 19 |   0    |    N     |  N   |   CURRENT_TIMESTAMP    |   |
 
 **表名：** <a id="T_PIPELINE_WEBHOOK_QUEUE">T_PIPELINE_WEBHOOK_QUEUE</a>
 
@@ -872,6 +1015,20 @@
 |  9   | TARGET_BRANCH |   varchar   | 255 |   0    |    Y     |  N   |       | 目标分支  |
 |  10   | BUILD_ID |   varchar   | 34 |   0    |    N     |  N   |       | 构建ID  |
 |  11   | CREATE_TIME |   datetime   | 19 |   0    |    N     |  N   |   CURRENT_TIMESTAMP    | 创建时间  |
+
+**表名：** <a id="T_PIPELINE_WEBHOOK_REVISION">T_PIPELINE_WEBHOOK_REVISION</a>
+
+**说明：** 
+
+**数据列：**
+
+| 序号 | 名称 | 数据类型 |  长度  | 小数位 | 允许空值 | 主键 | 默认值 | 说明 |
+| :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
+|  1   | ID |   bigint   | 20 |   0    |    N     |  Y   |       |   |
+|  2   | PROJECT_NAME |   varchar   | 255 |   0    |    Y     |  N   |       |   |
+|  3   | REVISION |   varchar   | 64 |   0    |    Y     |  N   |       |   |
+|  4   | CREATE_TIME |   datetime   | 19 |   0    |    Y     |  N   |       |   |
+|  5   | UPDATE_TIME |   datetime   | 19 |   0    |    Y     |  N   |       |   |
 
 **表名：** <a id="T_PROJECT_PIPELINE_CALLBACK">T_PROJECT_PIPELINE_CALLBACK</a>
 
@@ -932,6 +1089,8 @@
 |  8   | NAME |   text   | 65535 |   0    |    N     |  N   |       | 名称  |
 |  9   | CREATE_TIME |   datetime   | 19 |   0    |    N     |  N   |       | 创建时间  |
 |  10   | UPDATE_TIME |   datetime   | 19 |   0    |    N     |  N   |       | 更新时间  |
+|  11   | TASK_NAME |   varchar   | 128 |   0    |    N     |  N   |       | 任务名称  |
+|  12   | ATOM_CODE |   varchar   | 128 |   0    |    N     |  N   |       | 插件的唯一标识  |
 
 **表名：** <a id="T_TEMPLATE">T_TEMPLATE</a>
 
@@ -947,14 +1106,15 @@
 |  4   | PROJECT_ID |   varchar   | 34 |   0    |    N     |  N   |       | 项目ID  |
 |  5   | VERSION_NAME |   varchar   | 64 |   0    |    N     |  N   |       | 版本名称  |
 |  6   | CREATOR |   varchar   | 64 |   0    |    N     |  N   |       | 创建者  |
-|  7   | CREATED_TIME |   datetime   | 19 |   0    |    Y     |  N   |       | 创建时间  |
-|  8   | TEMPLATE |   mediumtext   | 16777215 |   0    |    Y     |  N   |       | 模板  |
-|  9   | TYPE |   varchar   | 32 |   0    |    N     |  N   |   CUSTOMIZE    | 类型  |
-|  10   | CATEGORY |   varchar   | 128 |   0    |    Y     |  N   |       | 应用范畴  |
-|  11   | LOGO_URL |   varchar   | 512 |   0    |    Y     |  N   |       | LOGOURL地址  |
-|  12   | SRC_TEMPLATE_ID |   varchar   | 32 |   0    |    Y     |  N   |       | 源模版ID  |
-|  13   | STORE_FLAG |   bit   | 1 |   0    |    Y     |  N   |   b'0'    | 是否已关联到store  |
-|  14   | WEIGHT |   int   | 10 |   0    |    Y     |  N   |   0    | 权值  |
+|  7   | CREATED_TIME |   datetime   | 23 |   0    |    Y     |  N   |       | 创建时间  |
+|  8   | UPDATE_TIME |   datetime   | 23 |   0    |    Y     |  N   |       | 更新时间  |
+|  9   | TEMPLATE |   mediumtext   | 16777215 |   0    |    Y     |  N   |       | 模板  |
+|  10   | TYPE |   varchar   | 32 |   0    |    N     |  N   |   CUSTOMIZE    | 类型  |
+|  11   | CATEGORY |   varchar   | 128 |   0    |    Y     |  N   |       | 应用范畴  |
+|  12   | LOGO_URL |   varchar   | 512 |   0    |    Y     |  N   |       | LOGOURL地址  |
+|  13   | SRC_TEMPLATE_ID |   varchar   | 32 |   0    |    Y     |  N   |       | 源模版ID  |
+|  14   | STORE_FLAG |   bit   | 1 |   0    |    Y     |  N   |   b'0'    | 是否已关联到store  |
+|  15   | WEIGHT |   int   | 10 |   0    |    Y     |  N   |   0    | 权值  |
 
 **表名：** <a id="T_TEMPLATE_INSTANCE_BASE">T_TEMPLATE_INSTANCE_BASE</a>
 
@@ -1021,44 +1181,3 @@
 |  12   | BUILD_NO |   text   | 65535 |   0    |    Y     |  N   |       | 构建号  |
 |  13   | PARAM |   mediumtext   | 16777215 |   0    |    Y     |  N   |       | 参数  |
 |  14   | DELETED |   bit   | 1 |   0    |    Y     |  N   |   b'0'    | 流水线已被软删除  |
-
-**表名：** <a id="T_PIPELINE_TRIGGER_EVENT">T_PIPELINE_TRIGGER_EVENT</a>
-
-**说明：** 流水线触发事件表
-
-**数据列：**
-
-| 序号 | 名称 | 数据类型 |  长度  | 小数位 | 允许空值 | 主键 | 默认值 | 说明 |
-| :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
-|  1   | REQUEST_ID |   varchar   | 64 |   0    |    N     |  N   |       | 请求ID  |
-|  2   | PROJECT_ID |   varchar   | 64 |   0    |    N     |  Y   |       | 项目ID  |
-|  3   | EVENT_ID |   bigint   | 20 |   0    |    N     |  Y   |       | 事件ID  |
-|  4   | TRIGGER_TYPE |   varchar   | 32 |   0    |    N     |  N   |       | 触发类型  |
-|  5   | EVENT_SOURCE |   varchar   | 20 |   0    |    N     |  N   |       | 触发源,代码库hashId/触发人/远程ip  |
-|  6   | EVENT_TYPE |   varchar   | 64 |   0    |    N     |  N   |       | 事件类型  |
-|  7   | TRIGGER_USER |   varchar   | 100 |   0    |    N     |  N   |       | 触发用户  |
-|  8   | EVENT_DESC |   text   |  |   0    |    N     |  N   |       | 事件描述  |
-|  9   | REPLAY_REQUEST_ID |   varchar   | 64 |   0    |    Y     |  N   |       | 重放请求ID  |
-|  10   | REQUEST_PARAMS |   text   |  |   0    |    N     |  N   |       | 请求参数  |
-|  11   | CREATE_TIME |   timestamp   |   |   0    |    N     |  Y   |       | 事件时间  |
-
-**表名：** <a id="T_PIPELINE_TRIGGER_DETAIL">T_PIPELINE_TRIGGER_DETAIL</a>
-
-**说明：** 流水线触发事件明细表
-
-**数据列：**
-
-| 序号 | 名称 | 数据类型 |  长度  | 小数位 | 允许空值 | 主键 | 默认值 | 说明 |
-| :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
-|  1   | DETAIL_ID |   varchar   | 64 |   0    |    N     |  Y   |       | 事件明细ID  |
-|  2   | PROJECT_ID |   varchar   | 64 |   0    |    N     |  N   |       | 项目ID  |
-|  3   | EVENT_ID |   bigint   | 20 |   0    |    N     |  N   |       | 事件ID  |
-|  4   | STATUS |   varchar   | 32 |   0    |    Y     |  N   |       | 状态(success or failure)  |
-|  5   | PIPELINE_ID |   varchar   | 20 |   0    |    Y     |  N   |       | 流水线ID  |
-|  6   | PIPELINE_NAME |   varchar   | 64 |   0    |    Y     |  N   |       | 流水线名称  |
-|  7   | VERSION |   varchar   | 100 |   0    |    Y     |  N   |       | 流水线版本号  |
-|  8   | BUILD_ID |   text   |  |   0    |    Y     |  N   |       | 构建ID  |
-|  9   | BUILD_NUM |   varchar   | 64 |   0    |    Y     |  N   |       | 构建编号  |
-|  10   | REASON |   text   |  |   0    |    Y     |  N   |       | 失败原因  |
-|  11   | REASON_DETAIL |   timestamp   |   |   0    |    Y     |  N   |       | 原因详情  |
-|  12   | CREATE_TIME |   timestamp   |   |   0    |    Y     |  Y   |       | 创建时间  |
