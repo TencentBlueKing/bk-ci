@@ -313,9 +313,9 @@ interface ApigwJobResourceV4 {
         userId: String
     )
 
-    @ApiOperation("agent状态版本更新接口", tags = ["v4_app_job_agent_update"])
+    @ApiOperation("蓝盾agent状态版本更新接口", tags = ["v4_app_job_devops_agent_update"])
     @POST
-    @Path("/stock_data_update/agent_update")
+    @Path("/stock_data_update/devops_agent_update")
     fun agentUpdate(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)

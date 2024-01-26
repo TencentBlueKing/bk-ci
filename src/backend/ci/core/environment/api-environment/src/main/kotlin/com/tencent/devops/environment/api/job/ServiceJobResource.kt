@@ -272,7 +272,7 @@ interface ServiceJobResource {
         userId: String
     )
 
-    @ApiOperation("agent状态版本更新接口")
+    @ApiOperation("蓝盾agent状态版本更新接口")
     @POST
     @Path("/stock_data_update/agent_update")
     fun agentUpdate(

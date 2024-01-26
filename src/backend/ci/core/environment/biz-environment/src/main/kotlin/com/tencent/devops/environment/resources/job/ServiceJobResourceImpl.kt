@@ -199,7 +199,7 @@ class ServiceJobResourceImpl @Autowired constructor(
 
     override fun agentUpdate(userId: String) {
         if (userId.isBlank()) throw ParamBlankException("userId is blank.")
-        stockDataUpdateService.scheduledUpdateAgent()
+        stockDataUpdateService.updateDevopsAgent()
     }
 
     override fun checkDeployNodesInCC(userId: String) {

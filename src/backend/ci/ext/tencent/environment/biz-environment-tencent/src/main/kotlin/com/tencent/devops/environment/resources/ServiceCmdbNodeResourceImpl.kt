@@ -27,6 +27,7 @@
 
 package com.tencent.devops.environment.resources
 
+import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
@@ -72,5 +73,9 @@ class ServiceCmdbNodeResourceImpl @Autowired constructor(
 
     override fun addNodesToCC(userId: String) {
         tencentStockDataUpdateService.addNodesToCCOnce()
+    }
+
+    override fun agentUpdate(userId: String) {
+        tencentStockDataUpdateService.updateAgent()
     }
 }

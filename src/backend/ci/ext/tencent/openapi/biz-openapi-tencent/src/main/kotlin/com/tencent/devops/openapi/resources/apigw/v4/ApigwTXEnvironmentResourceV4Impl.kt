@@ -29,4 +29,8 @@ class ApigwTXEnvironmentResourceV4Impl @Autowired constructor(
     override fun addNodesToCC(userId: String) {
         client.get(ServiceCmdbNodeResource::class).addNodesToCC(userId)
     }
+
+    override fun agentUpdate(userId: String) {
+        client.get(ServiceCmdbNodeResource::class).agentUpdate(userId)
+    }
 }
