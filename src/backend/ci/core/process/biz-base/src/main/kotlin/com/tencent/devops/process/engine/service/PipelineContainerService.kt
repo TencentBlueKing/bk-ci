@@ -624,6 +624,18 @@ class PipelineContainerService @Autowired constructor(
                 )
             }
             context.needUpdateStage = true
+        } else if (lastTimeBuildContainers.isEmpty()) {
+            // 新的构建需要为跳过的container增加SKIP的状态记录
+            containerBuildRecords.add(
+                BuildRecordContainer(
+                    projectId = context.projectId, pipelineId = context.pipelineId, buildId = context.buildId,
+                    resourceVersion = context.resourceVersion, stageId = stage.id!!,
+                    containerId = container.containerId!!, containerType = container.getClassType(),
+                    executeCount = context.executeCount, matrixGroupFlag = container.matrixGroupFlag,
+                    matrixGroupId = null, status = BuildStatus.SKIP.name, containerVar = mutableMapOf(),
+                    startTime = null, endTime = null, timestamps = mapOf()
+                )
+            )
         }
     }
 

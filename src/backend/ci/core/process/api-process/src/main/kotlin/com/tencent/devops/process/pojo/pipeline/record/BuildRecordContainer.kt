@@ -120,6 +120,11 @@ data class BuildRecordContainer(
             )
             if (taskBuildRecords == null) return
             container.elements.forEachIndexed { index, element ->
+                val elementPostInfo = element.additionalOptions?.elementPostInfo
+                if (buildStatus == BuildStatus.SKIP && elementPostInfo == null) {
+                    // 不保存跳过的非post任务记录
+                    return@forEachIndexed
+                }
                 taskBuildRecords.add(
                     BuildRecordTask(
                         projectId = context.projectId,
@@ -136,7 +141,7 @@ data class BuildRecordContainer(
                         status = buildStatus?.name,
                         taskVar = mutableMapOf(),
                         timestamps = mapOf(),
-                        elementPostInfo = element.additionalOptions?.elementPostInfo?.takeIf { info ->
+                        elementPostInfo = elementPostInfo?.takeIf { info ->
                             info.parentElementId != element.id
                         }
                     )

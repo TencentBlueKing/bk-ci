@@ -732,11 +732,25 @@ class PipelineRuntimeService @Autowired constructor(
                 } else if (container is NormalContainer) {
                     if (!ContainerUtils.isNormalContainerEnable(container)) {
                         context.containerSeq++
+                        containerBuildRecords.addRecords(
+                            stageId = stage.id!!,
+                            container = container,
+                            context = context,
+                            buildStatus = BuildStatus.SKIP,
+                            taskBuildRecords = taskBuildRecords
+                        )
                         return@nextContainer
                     }
                 } else if (container is VMBuildContainer) {
                     if (!ContainerUtils.isVMBuildContainerEnable(container)) {
                         context.containerSeq++
+                        containerBuildRecords.addRecords(
+                            stageId = stage.id!!,
+                            container = container,
+                            context = context,
+                            buildStatus = BuildStatus.SKIP,
+                            taskBuildRecords = taskBuildRecords
+                        )
                         return@nextContainer
                     }
                 }
