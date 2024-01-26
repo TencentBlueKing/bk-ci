@@ -218,17 +218,17 @@ class WindowsResourceConfigService @Autowired constructor(
             "not find project $projectId", HTTP_400
         )
         val projectProperties = projectInfo.properties
-        var success = true
-            if (projectProperties != null) {
-            val curQuota = projectProperties.cloudDesktopNum
-                success = client.get(OPProjectResource::class).setProjectProperties(
-                    userId = userId,
-                    projectCode = projectId,
-                    properties = projectProperties.copy(
-                        cloudDesktopNum = (curQuota + quota)
-                    )
-                ).data == true
+        if (projectProperties?.remotedev == null || projectProperties.remotedev == false) {
+            logger.info("addProjectTotalQuota|$projectId|not open remotedev")
+            return false
         }
-        return success
+        val curQuota = projectProperties.cloudDesktopNum
+        return client.get(OPProjectResource::class).setProjectProperties(
+            userId = userId,
+            projectCode = projectId,
+            properties = projectProperties.copy(
+                cloudDesktopNum = (curQuota + quota)
+            )
+        ).data == true
     }
 }
