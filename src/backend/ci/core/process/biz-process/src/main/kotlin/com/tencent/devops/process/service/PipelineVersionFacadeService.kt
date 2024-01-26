@@ -117,10 +117,8 @@ class PipelineVersionFacadeService @Autowired constructor(
         val releaseVersion = pipelineRepositoryService.getPipelineResourceVersion(
             projectId = projectId,
             pipelineId = pipelineId,
-            version = detailInfo.pipelineVersion,
-            includeDraft = true
-        )
-        if (draftVersion == null && releaseVersion == null) throw ErrorCodeException(
+            version = detailInfo.pipelineVersion
+        ) ?: throw ErrorCodeException(
             errorCode = ProcessMessageCode.ERROR_NO_PIPELINE_EXISTS_BY_ID,
             params = arrayOf(pipelineId)
         )
@@ -144,11 +142,11 @@ class PipelineVersionFacadeService @Autowired constructor(
             pipelineId = pipelineId,
             detailInfo = detailInfo
         )
-        val yamlInfo = if (releaseSetting.pipelineAsCodeSettings?.enable == true && releaseVersion != null) {
+        val yamlInfo = if (releaseSetting.pipelineAsCodeSettings?.enable == true ) {
             pipelineYamlFacadeService.getPipelineYamlInfo(projectId, pipelineId, releaseVersion.version)
         } else null
-        val version = draftVersion?.version ?: releaseVersion!!.version
-        val versionName = draftVersion?.versionName ?: releaseVersion!!.versionName
+        val version = draftVersion?.version ?: releaseVersion.version
+        val versionName = draftVersion?.versionName ?: releaseVersion.versionName
         val permissions = pipelineListFacadeService.getPipelinePermissions(userId, projectId, pipelineId)
         pipelineRecentUseService.record(userId, projectId, pipelineId)
         return PipelineDetail(
@@ -171,8 +169,8 @@ class PipelineVersionFacadeService @Autowired constructor(
             permissions = permissions,
             version = version,
             versionName = versionName,
-            releaseVersion = releaseVersion?.version,
-            releaseVersionName = releaseVersion?.versionName,
+            releaseVersion = releaseVersion.version,
+            releaseVersionName = releaseVersion.versionName,
             baseVersionStatus = baseVersionStatus,
             baseVersionBranch = baseVersionBranch,
             pipelineAsCodeSettings = releaseSetting.pipelineAsCodeSettings ?: PipelineAsCodeSettings(),
@@ -269,7 +267,6 @@ class PipelineVersionFacadeService @Autowired constructor(
             )
             targetUrl = pushResult.mrUrl
         }
-        val model = draftVersion.model
         val savedSetting = pipelineSettingFacadeService.saveSetting(
             userId = userId,
             projectId = projectId,
@@ -279,7 +276,7 @@ class PipelineVersionFacadeService @Autowired constructor(
             setting = targetSettings
         )
         val result = pipelineRepositoryService.deployPipeline(
-            model = model,
+            model = draftVersion.model,
             projectId = projectId,
             signPipelineId = pipelineId,
             userId = draftVersion.creator,
@@ -299,7 +296,7 @@ class PipelineVersionFacadeService @Autowired constructor(
             userId = userId,
             projectId = projectId,
             pipelineId = pipelineId,
-            labelIds = model.labels
+            labelIds = targetSettings.labels
         )
         // 添加到动态分组
         pipelineViewGroupService.updateGroupAfterPipelineUpdate(

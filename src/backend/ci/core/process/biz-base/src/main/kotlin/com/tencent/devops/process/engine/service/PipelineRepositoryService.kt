@@ -873,8 +873,8 @@ class PipelineRepositoryService constructor(
             lock.lock()
             dslContext.transaction { configuration ->
                 val transactionContext = DSL.using(configuration)
-                var pipelineVersion = 1
-                var triggerVersion = 1
+                var pipelineVersion: Int? = null
+                var triggerVersion: Int? = null
                 val settingVersion = setting?.version ?: 1
                 val releaseResource = pipelineResourceDao.getReleaseVersionResource(
                     transactionContext, projectId, pipelineId
@@ -1389,7 +1389,7 @@ class PipelineRepositoryService constructor(
                 model = newDraft.model,
                 baseVersion = targetVersion.version.takeIf { ignoreBase != true },
                 yaml = newDraft.yaml,
-                versionNum = newDraft.versionNum,
+                versionNum = null,
                 pipelineVersion = newDraft.pipelineVersion,
                 triggerVersion = newDraft.triggerVersion,
                 settingVersion = newDraft.settingVersion,
