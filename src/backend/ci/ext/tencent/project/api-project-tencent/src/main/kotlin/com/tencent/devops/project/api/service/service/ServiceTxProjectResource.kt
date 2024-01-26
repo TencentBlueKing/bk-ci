@@ -417,11 +417,11 @@ interface ServiceTxProjectResource {
         addcloudDesktopNum: Int
     ): Result<Boolean>
 
-    @ApiOperation("按项目扩展系统设置consul Tag")
+    @Operation(summary ="按项目扩展系统设置consul Tag")
     @PUT
     @Path("/ext/system/setTagByProject")
     fun setExtSystemTagByProject(
-        @ApiParam(value = "consulTag请求入参", required = true)
+        @Parameter(description = "consulTag请求入参", required = true)
         extSystemTagDTO: ProjectExtSystemTagDTO
     ): com.tencent.devops.common.api.pojo.Result<Boolean>
 }

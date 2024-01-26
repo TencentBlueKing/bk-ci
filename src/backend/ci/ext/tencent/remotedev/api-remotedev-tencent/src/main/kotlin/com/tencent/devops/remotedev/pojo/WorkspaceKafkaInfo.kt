@@ -27,17 +27,16 @@
 
 package com.tencent.devops.remotedev.pojo
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("发送给kafka的云桌面信息")
+@Schema(title = "发送给kafka的云桌面信息")
 data class WorkspaceKafkaInfo(
-    @ApiModelProperty("工作空间名称")
+    @get:Schema(title = "工作空间名称")
     val workspaceName: String,
-    @ApiModelProperty("项目ID")
+    @get:Schema(title = "项目ID")
     val projectId: String,
-    @ApiModelProperty("云桌面IP")
+    @get:Schema(title = "云桌面IP")
     val ip: String,
-    @ApiModelProperty("云区域")
+    @get:Schema(title = "云区域")
     val regionId: String
 )
