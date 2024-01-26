@@ -29,4 +29,6 @@ package com.tencent.devops.environment.service.job
 
 interface IStockDataUpdateService {
     fun checkDeployNodes()
+
+    fun updateAgent()
 }

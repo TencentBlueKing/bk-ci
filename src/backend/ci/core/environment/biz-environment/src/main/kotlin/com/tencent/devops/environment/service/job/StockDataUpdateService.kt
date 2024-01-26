@@ -69,13 +69,9 @@ class StockDataUpdateService @Autowired constructor(
         private val logger = LoggerFactory.getLogger(StockDataUpdateService::class.java)
 
         private const val DEFAULT_PAGE_SIZE = 100
-        private const val AGENT_NOT_INSTALLED_TAG = false
-        private const val AGENT_ABNORMAL_NODE_STATUS = 0
-        private const val AGENT_NORMAL_NODE_STATUS = 1
 
         private const val EXPIRATION_TIME_OF_THE_LOCK = 200L
         private const val SCHEDULED_WRITE_DISPLAY_NAME_TIMEOUT_LOCK_KEY = "scheduled_write_display_name_timeout_lock"
-        private const val SCHEDULED_UPDATE_AGENT_TIMEOUT_LOCK_KEY = "scheduled_update_agent_timeout_lock"
     }
 
     /**
@@ -83,7 +79,7 @@ class StockDataUpdateService @Autowired constructor(
      * 后台定时轮询机器状态，看机器是否在CC中
      * 轮询T_NODE表中 NODE_TYPE为"部署"的记录。部署：CMDB("CMDB")，UNKNOWN("未知")，OTHER("其他")
      * 在不在cc -> cc的host_id和云区域id是否改变
-     * cron：每天执行一次，上午10点执行。
+     * cron：每小时执行一次。
      */
     override fun checkDeployNodes() {
         checkDeployNodesIsInCC()
@@ -91,14 +87,13 @@ class StockDataUpdateService @Autowired constructor(
 
     /**
      * updateAgent:
-     * 定时任务：gse agent状态/版本 轮询 + 差量更新
-     * 条件：NODE_TYPE为cmdb的，查询该节点的agent安装状态以及版本，并对比差异更新。
+     * 定时任务：蓝盾agent 状态/版本 轮询 + 差量更新
+     * 条件：NODE_TYPE为"构建"的，查询该节点的蓝盾agent状态以及版本，并对比差异更新。
      * 分组执行，每次遍历1000条记录。
      * cron：每小时执行一次。
      */
-    @Scheduled(cron = "0 0 * * * ?") // 测试用：每分钟执行一次
-    fun scheduledUpdateAgent() {
-        taskWithRedisLock(SCHEDULED_UPDATE_AGENT_TIMEOUT_LOCK_KEY, ::updateAgent)
+    override fun updateAgent() {
+        updateDevopsAgent()
     }
 
     /**
@@ -111,74 +106,8 @@ class StockDataUpdateService @Autowired constructor(
         taskWithRedisLock(SCHEDULED_WRITE_DISPLAY_NAME_TIMEOUT_LOCK_KEY, ::writeDisplayName)
     }
 
-    private fun updateAgent() {
-        val countCmdbNodes = nodeDao.countCmdbNodes(dslContext)
-        if (logger.isDebugEnabled) logger.debug("[updateAgent]countCmdbNodes:$countCmdbNodes.")
-        countCmdbNodes.takeIf { it > 0 }?.run {
-            val totalPages = PageUtil.calTotalPage(DEFAULT_PAGE_SIZE, countCmdbNodes.toLong())
-            for (page in 1..totalPages) {
-                val cmdbNodesRecords = nodeDao.getCmdbNodes(dslContext, page - 1, DEFAULT_PAGE_SIZE)
-                val existNodeIdToAgentVersionMap = cmdbNodesRecords.filter {
-                    val opInfo = opService.operateOpProject(
-                        "", OpOperateReq(2, listOf(it[T_NODE_PROJECT_ID] as String))
-                    ).projGrayStatus?.get(0)
-                    it[T_NODE_PROJECT_ID] as String == opInfo?.englishName && true == opInfo.projGrayStatus
-                }.associate {
-                    it[T_NODE_NODE_ID] as Long to
-                        AgentVersion(
-                            ip = it[T_NODE_NODE_IP] as? String,
-                            bkHostId = it[T_NODE_HOST_ID] as? Long,
-                            installedTag = NodeStatus.NOT_INSTALLED.name != it[T_NODE_NODE_STATUS] as String,
-                            version = it[T_NODE_AGENT_VERSION] as? String,
-                            status = if (it[T_NODE_AGENT_STATUS] as Boolean) 1 else 0
-                        )
-                }
-                val existAgentVersionList = existNodeIdToAgentVersionMap.values.toList()
-                if (logger.isDebugEnabled) logger.debug("[updateAgent]existAgentVersionList:$existAgentVersionList.")
-                val ipToExistAgentVersion = existAgentVersionList.associateBy { it.ip }
-                val newAgentVersionList = queryAgentStatusService.getAgentVersions(existAgentVersionList)
-                if (logger.isDebugEnabled) logger.debug("[updateAgent]newAgentVersionList:$newAgentVersionList.")
-                // 判断 newAgentVersionList 和 existAgentVersionList 是否一致，不一致则更新对应数据库表
-                val agentUpdateList = newAgentVersionList?.filterNot {
-                    it.installedTag == ipToExistAgentVersion[it.ip]?.installedTag &&
-                        it.version == ipToExistAgentVersion[it.ip]?.version &&
-                        it.status == ipToExistAgentVersion[it.ip]?.status
-                }
-                if (logger.isDebugEnabled) logger.debug("[updateAgent]agentUpdateList:$agentUpdateList.")
-                agentUpdateList.takeIf { !it.isNullOrEmpty() }.run {
-                    batchUpdateAgent(existNodeIdToAgentVersionMap, agentUpdateList!!)
-                }
-            }
-        }
-    }
-
-    private fun batchUpdateAgent(
-        existNodeIdToAgentVersionMap: Map<Long, AgentVersion>,
-        agentUpdateList: List<AgentVersion>
-    ) {
-        val ipToAgentUpdateList = agentUpdateList.associateBy { it.ip }
-        val agentUpdateIpList = agentUpdateList.mapNotNull { it.ip }
-        val agentUpdateHostIdList = agentUpdateList.mapNotNull { it.bkHostId }
-
-        val agentUpdateRecords = existNodeIdToAgentVersionMap.filter { (key, value) ->
-            agentUpdateIpList.contains(value.ip) || agentUpdateHostIdList.contains(value.bkHostId)
-        }.map { (key, value) ->
-            UpdateTNodeInfo(
-                nodeId = key,
-                nodeStatus = if (AGENT_NOT_INSTALLED_TAG == ipToAgentUpdateList[value.ip]?.installedTag)
-                    NodeStatus.NOT_INSTALLED.name
-                else if (AGENT_ABNORMAL_NODE_STATUS == ipToAgentUpdateList[value.ip]?.status)
-                    NodeStatus.ABNORMAL.name
-                else if (AGENT_NORMAL_NODE_STATUS == ipToAgentUpdateList[value.ip]?.status)
-                    NodeStatus.NORMAL.name
-                else null,
-                agentStatus = AGENT_NORMAL_NODE_STATUS == ipToAgentUpdateList[value.ip]?.status,
-                agentVersion = ipToAgentUpdateList[value.ip]?.version,
-                lastModifyTime = LocalDateTime.now()
-            )
-        }
-        if (logger.isDebugEnabled) logger.debug("[batchUpdateAgent]agentUpdateRecords:$agentUpdateRecords.")
-        nodeDao.batchUpdateAgentInfo(dslContext, agentUpdateRecords)
+    fun updateDevopsAgent() {
+        // TODO
     }
 
     private fun writeDisplayName() {

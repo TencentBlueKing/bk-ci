@@ -28,16 +28,26 @@
 package com.tencent.devops.environment.service.job
 
 import com.tencent.devops.common.api.util.PageUtil
+import com.tencent.devops.environment.constant.T_NODE_AGENT_STATUS
+import com.tencent.devops.environment.constant.T_NODE_AGENT_VERSION
+import com.tencent.devops.environment.constant.T_NODE_HOST_ID
 import com.tencent.devops.environment.constant.T_NODE_NODE_ID
 import com.tencent.devops.environment.constant.T_NODE_NODE_IP
+import com.tencent.devops.environment.constant.T_NODE_NODE_STATUS
+import com.tencent.devops.environment.constant.T_NODE_PROJECT_ID
 import com.tencent.devops.environment.dao.NodeDao
+import com.tencent.devops.environment.pojo.enums.NodeStatus
+import com.tencent.devops.environment.pojo.job.AgentVersion
 import com.tencent.devops.environment.pojo.job.HostIdAndCloudAreaIdInfo
+import com.tencent.devops.environment.pojo.job.UpdateTNodeInfo
+import com.tencent.devops.environment.pojo.job.req.OpOperateReq
 import com.tencent.devops.environment.service.CmdbNodeService
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.context.annotation.Primary
 import org.springframework.stereotype.Service
+import java.time.LocalDateTime
 
 @Service("TencentStockDataUpdateService")
 @Primary
@@ -47,6 +57,8 @@ class TencentStockDataUpdateService @Autowired constructor(
     private val tencentQueryFromCmdbService: TencentQueryFromCmdbService,
     private val queryFromCCService: QueryFromCCService,
     private val cmdbNodeService: CmdbNodeService,
+    private val queryAgentStatusService: QueryAgentStatusService,
+    private val opService: OpService,
     private val stockDataUpdateService: StockDataUpdateService
 ) : IStockDataUpdateService {
 
@@ -54,6 +66,10 @@ class TencentStockDataUpdateService @Autowired constructor(
         private val logger = LoggerFactory.getLogger(TencentStockDataUpdateService::class.java)
         private const val SCHEDULED_ADD_NODE_TO_CC_TIMEOUT_LOCK_KEY = "scheduled_add_node_to_cc_timeout_lock"
         private const val DEFAULT_PAGE_SIZE = 100
+
+        private const val AGENT_NOT_INSTALLED_TAG = false
+        private const val AGENT_ABNORMAL_NODE_STATUS = 0
+        private const val AGENT_NORMAL_NODE_STATUS = 1
     }
 
     /**
@@ -68,6 +84,19 @@ class TencentStockDataUpdateService @Autowired constructor(
     }
 
     /**
+     * updateAgent:
+     * 定时任务：gse agent状态/版本 轮询 + 差量更新
+     * 条件：NODE_TYPE为"部署"的，查询该节点的agent安装状态以及版本，并对比差异更新。
+     * 同步更新蓝盾agent。
+     * 分组执行，每次遍历1000条记录。
+     * cron：每小时执行一次。
+     */
+    override fun updateAgent() {
+        updateGseAgent()
+        stockDataUpdateService.updateDevopsAgent()
+    }
+
+    /**
      * addNodeToCC:
      * 定时任务：执行一次就行。
      * 分组执行，每次遍历100条记录。
@@ -75,6 +104,76 @@ class TencentStockDataUpdateService @Autowired constructor(
      */
     fun addNodesToCCOnce() {
         stockDataUpdateService.taskWithRedisLock(SCHEDULED_ADD_NODE_TO_CC_TIMEOUT_LOCK_KEY, ::addNodesToCC)
+    }
+
+    private fun updateGseAgent() {
+        val countCmdbNodes = nodeDao.countCmdbNodes(dslContext)
+        if (logger.isDebugEnabled) logger.debug("[updateAgent]countCmdbNodes:$countCmdbNodes.")
+        countCmdbNodes.takeIf { it > 0 }?.run {
+            val totalPages = PageUtil.calTotalPage(DEFAULT_PAGE_SIZE, countCmdbNodes.toLong())
+            for (page in 1..totalPages) {
+                val cmdbNodesRecords = nodeDao.getCmdbNodes(dslContext, page - 1, DEFAULT_PAGE_SIZE)
+                val existNodeIdToAgentVersionMap = cmdbNodesRecords.filter {
+                    val opInfo = opService.operateOpProject(
+                        "", OpOperateReq(2, listOf(it[T_NODE_PROJECT_ID] as String))
+                    ).projGrayStatus?.get(0)
+                    it[T_NODE_PROJECT_ID] as String == opInfo?.englishName && true == opInfo.projGrayStatus
+                }.associate {
+                    it[T_NODE_NODE_ID] as Long to
+                        AgentVersion(
+                            ip = it[T_NODE_NODE_IP] as? String,
+                            bkHostId = it[T_NODE_HOST_ID] as? Long,
+                            installedTag = NodeStatus.NOT_INSTALLED.name != it[T_NODE_NODE_STATUS] as String,
+                            version = it[T_NODE_AGENT_VERSION] as? String,
+                            status = if (it[T_NODE_AGENT_STATUS] as Boolean) 1 else 0
+                        )
+                }
+                val existAgentVersionList = existNodeIdToAgentVersionMap.values.toList()
+                if (logger.isDebugEnabled) logger.debug("[updateAgent]existAgentVersionList:$existAgentVersionList.")
+                val ipToExistAgentVersion = existAgentVersionList.associateBy { it.ip }
+                val newAgentVersionList = queryAgentStatusService.getAgentVersions(existAgentVersionList)
+                if (logger.isDebugEnabled) logger.debug("[updateAgent]newAgentVersionList:$newAgentVersionList.")
+                // 判断 newAgentVersionList 和 existAgentVersionList 是否一致，不一致则更新对应数据库表
+                val agentUpdateList = newAgentVersionList?.filterNot {
+                    it.installedTag == ipToExistAgentVersion[it.ip]?.installedTag &&
+                        it.version == ipToExistAgentVersion[it.ip]?.version &&
+                        it.status == ipToExistAgentVersion[it.ip]?.status
+                }
+                if (logger.isDebugEnabled) logger.debug("[updateAgent]agentUpdateList:$agentUpdateList.")
+                agentUpdateList.takeIf { !it.isNullOrEmpty() }.run {
+                    batchUpdateAgent(existNodeIdToAgentVersionMap, agentUpdateList!!)
+                }
+            }
+        }
+    }
+
+    private fun batchUpdateAgent(
+        existNodeIdToAgentVersionMap: Map<Long, AgentVersion>,
+        agentUpdateList: List<AgentVersion>
+    ) {
+        val ipToAgentUpdateList = agentUpdateList.associateBy { it.ip }
+        val agentUpdateIpList = agentUpdateList.mapNotNull { it.ip }
+        val agentUpdateHostIdList = agentUpdateList.mapNotNull { it.bkHostId }
+
+        val agentUpdateRecords = existNodeIdToAgentVersionMap.filter { (key, value) ->
+            agentUpdateIpList.contains(value.ip) || agentUpdateHostIdList.contains(value.bkHostId)
+        }.map { (key, value) ->
+            UpdateTNodeInfo(
+                nodeId = key,
+                nodeStatus = if (AGENT_NOT_INSTALLED_TAG == ipToAgentUpdateList[value.ip]?.installedTag)
+                    NodeStatus.NOT_INSTALLED.name
+                else if (AGENT_ABNORMAL_NODE_STATUS == ipToAgentUpdateList[value.ip]?.status)
+                    NodeStatus.ABNORMAL.name
+                else if (AGENT_NORMAL_NODE_STATUS == ipToAgentUpdateList[value.ip]?.status)
+                    NodeStatus.NORMAL.name
+                else null,
+                agentStatus = AGENT_NORMAL_NODE_STATUS == ipToAgentUpdateList[value.ip]?.status,
+                agentVersion = ipToAgentUpdateList[value.ip]?.version,
+                lastModifyTime = LocalDateTime.now()
+            )
+        }
+        if (logger.isDebugEnabled) logger.debug("[batchUpdateAgent]agentUpdateRecords:$agentUpdateRecords.")
+        nodeDao.batchUpdateAgentInfo(dslContext, agentUpdateRecords)
     }
 
     private fun addNodesToCC() {

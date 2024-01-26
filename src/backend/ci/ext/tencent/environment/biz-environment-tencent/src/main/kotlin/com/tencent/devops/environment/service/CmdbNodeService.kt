@@ -151,6 +151,16 @@ class CmdbNodeService @Autowired constructor(
             nodeIdToCCInfoMap[it.nodeId] = queryCCIpToCCInfoMap[it.nodeIp]
         }
         val nodeRecords = nodeDao.getCmdbNodesByNodeIdList(dslContext, nodeIdList)
+        val ipToAgentVersionInfoMap = queryAgentStatusService.getAgentVersions(
+            nodeIdToCCInfoMap.values.mapNotNull {
+                AgentVersion(ip = it?.bkHostInnerip, bkHostId = it?.bkHostId)
+            }
+        )?.associateBy { it.ip }
+        val agentStatusMap = ipToAgentVersionInfoMap.takeIf { !it.isNullOrEmpty() }.run {
+            esbAgentClient.getAgentStatus(userId, ipToAgentVersionInfoMap!!.keys.filterNotNull().toList())
+        }
+        val opInfo = opService.operateOpProject("", OpOperateReq(2, listOf(projectId))).projGrayStatus?.get(0)
+        val grayTag = projectId == opInfo?.englishName && true == opInfo.projGrayStatus
         val updateNodeInfo = nodeRecords.map {
             val nodeId = it[T_NODE_NODE_ID] as Long
             UpdateTNodeInfo(
@@ -158,6 +168,14 @@ class CmdbNodeService @Autowired constructor(
                 nodeStatus = NodeStatus.NORMAL.name,
                 hostId = nodeIdToCCInfoMap[nodeId]?.bkHostId,
                 cloudAreaId = nodeIdToCCInfoMap[nodeId]?.bkCloudId?.toLong(),
+                agentStatus = if (grayTag) {
+                    1 == ipToAgentVersionInfoMap?.get(it[T_NODE_NODE_IP] as String)?.status
+                } else {
+                    agentStatusMap[it[T_NODE_NODE_IP] as String] ?: false
+                },
+                agentVersion =if (grayTag)
+                    ipToAgentVersionInfoMap?.get(it[T_NODE_NODE_IP] as String)?.version
+                else null,
                 lastModifyTime = LocalDateTime.now()
             )
         }

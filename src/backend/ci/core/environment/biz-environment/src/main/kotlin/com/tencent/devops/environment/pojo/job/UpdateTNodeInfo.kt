@@ -87,6 +87,8 @@ data class UpdateTNodeInfo(
         nodeStatus: String?,
         hostId: Long?,
         cloudAreaId: Long?,
+        agentStatus: Boolean,
+        agentVersion: String?,
         lastModifyTime: LocalDateTime
     ) : this(
         nodeId = nodeId,
@@ -94,8 +96,8 @@ data class UpdateTNodeInfo(
         hostId = hostId,
         cloudAreaId = cloudAreaId,
         lastModifyTime = lastModifyTime,
-        agentStatus = null,
-        agentVersion = null,
+        agentStatus = agentStatus,
+        agentVersion = agentVersion,
         displayName = null
     )
 }
