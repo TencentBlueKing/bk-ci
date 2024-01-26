@@ -916,6 +916,7 @@ class PipelineRepositoryService constructor(
                         } else {
                             // 更新
                             operationLogType = OperationLogType.UPDATE_DRAFT_VERSION
+                            realBaseVersion = draftVersion.baseVersion
                             draftVersion.version
                         }
                         logger.info(
@@ -999,17 +1000,15 @@ class PipelineRepositoryService constructor(
                             projectId = projectId,
                             pipelineId = pipelineId
                         )
-                        pipelineVersion = releaseResource.pipelineVersion ?: 1
-                        triggerVersion = releaseResource.triggerVersion ?: 1
                         // 数据分离：发布记录的版本自增，旧数据保留和版本表中version一致，后续单独用于前端展示
                         versionNum = (releaseResource.versionNum ?: 0) + 1
                         pipelineVersion = PipelineVersionUtils.getPipelineVersion(
-                            currVersion = pipelineVersion,
+                            currVersion = releaseResource.pipelineVersion ?: 1,
                             originModel = releaseResource.model,
                             newModel = model
                         )
                         triggerVersion = PipelineVersionUtils.getTriggerVersion(
-                            currVersion = triggerVersion,
+                            currVersion = releaseResource.triggerVersion ?: 1,
                             originModel = releaseResource.model,
                             newModel = model
                         )
@@ -1072,7 +1071,6 @@ class PipelineRepositoryService constructor(
                     }
                 }
 
-                // 对于新保存的版本如果没有指定基准版本则默认为上一个版本
                 watcher.start("updatePipelineResourceVersion")
                 pipelineResourceVersionDao.create(
                     dslContext = transactionContext,
@@ -1090,6 +1088,7 @@ class PipelineRepositoryService constructor(
                     versionStatus = versionStatus?.fix(),
                     branchAction = branchAction,
                     description = description,
+                    // 对于新保存的版本如果没有指定基准版本则默认为上一个版本
                     baseVersion = realBaseVersion ?: (version - 1)
                 )
                 watcher.start("deleteEarlyVersion")

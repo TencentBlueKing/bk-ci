@@ -53,7 +53,7 @@ object PipelineVersionUtils {
     ): Int {
         val originTriggerJson = JSONObject(originModel.stages.first())
         val triggerJson = JSONObject(newModel.stages.first())
-        return if (!originTriggerJson.similar(triggerJson)) currVersion + 1 else currVersion
+        return if (originTriggerJson.similar(triggerJson)) currVersion else currVersion + 1
     }
 
     /**
@@ -66,7 +66,7 @@ object PipelineVersionUtils {
     ): Int {
         val originPipelineJson = JSONObject(originModel.stages.slice(1 until originModel.stages.size))
         val pipelineJson = JSONObject(newModel.stages.slice(1 until newModel.stages.size))
-        return if (!originPipelineJson.similar(pipelineJson)) currVersion + 1 else currVersion
+        return if (originPipelineJson.similar(pipelineJson)) currVersion else currVersion + 1
     }
 
     /**
@@ -79,6 +79,6 @@ object PipelineVersionUtils {
     ): Int {
         val originJson = JSONObject(originSetting)
         val currentJson = JSONObject(newSetting)
-        return if (!originJson.similar(currentJson)) currVersion + 1 else currVersion
+        return if (originJson.similar(currentJson)) currVersion else currVersion + 1
     }
 }
