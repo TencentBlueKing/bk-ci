@@ -43,6 +43,7 @@ import com.tencent.devops.project.pojo.ProjectCreateExtInfo
 import com.tencent.devops.project.pojo.ProjectCreateInfo
 import com.tencent.devops.project.pojo.ProjectCreateUserDTO
 import com.tencent.devops.project.pojo.ProjectDeptInfo
+import com.tencent.devops.project.pojo.ProjectExtSystemTagDTO
 import com.tencent.devops.project.pojo.ProjectVO
 import com.tencent.devops.project.pojo.Result
 import com.tencent.devops.project.pojo.enums.ProjectChannelCode
@@ -387,6 +388,12 @@ class ServiceTxProjectResourceImpl @Autowired constructor(
 
     override fun updateRemotedev(userId: String, projectCode: String, addcloudDesktopNum: Int): Result<Boolean> {
         return Result(remoteDevService.updateRemoteDevInfo(projectCode, addcloudDesktopNum))
+    }
+
+    override fun setExtSystemTagByProject(
+        extSystemTagDTO: ProjectExtSystemTagDTO
+    ): com.tencent.devops.common.api.pojo.Result<Boolean> {
+        return projectTagService.updateExtSystemRouterTag(extSystemTagDTO)
     }
 
     companion object {
