@@ -293,6 +293,7 @@
                 this.installStatus = ''
                 this.jobId = -1
                 this.keyFile = null
+                this.keyFileFormData = new FormData()
                 this.formData = this.getDefaultFormData()
             },
             
@@ -471,6 +472,11 @@
                 height: 14px;
             }
         }
+    }
+}
+.upload-file-btn {
+    input {
+        font-size: 0;
     }
 }
 </style>

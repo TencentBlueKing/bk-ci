@@ -1,43 +1,16 @@
 <template>
     <div class="node-list-wrapper">
         <content-header class="env-header">
-            <<<<<<< HEAD
-            <div slot="left">{{ $t('environment.node') }}</div>
+            <div slot="left">
+                <span>{{ $t('environment.node') }}</span>
+                <span v-if="isEnableDashboard" class="dashboard-entry ml5">
+                    <i class="devops-icon icon-tiaozhuan jump-icon"></i>
+                    <a :href="jumpDashboardUrl" target="_blank">{{ $t('environment.查看构建机监控') }}</a>
+                </span>
+            </div>
             <div slot="right">
-                =======
-                <div slot="left">
-                    <span>{{ $t('environment.node') }}</span>
-                    <span v-if="isEnableDashboard" class="dashboard-entry ml5">
-                        <i class="devops-icon icon-tiaozhuan jump-icon"></i>
-                        <a :href="jumpDashboardUrl" target="_blank">{{ $t('environment.查看构建机监控') }}</a>
-                    </span>
-                </div>
-                <div slot="right" v-if="nodeList.length > 0">
-                    >>>>>>> 1d7f22e8e1e7e97eea1a32dc7f228c18d913bdf5
-                    <template v-if="isExtendTx">
-                        <bk-button
-                            v-perm="{
-                                permissionData: {
-                                    projectId: projectId,
-                                    resourceType: NODE_RESOURCE_TYPE,
-                                    resourceCode: projectId,
-                                    action: NODE_RESOURCE_ACTION.CREATE
-                                }
-                            }"
-                            theme="primary" @click="toImportNode('cmdb')" key="idcTestMachine">{{ $t('environment.nodeInfo.idcTestMachine') }}</bk-button>
-                        <bk-button
-                            v-perm="{
-                                permissionData: {
-                                    projectId: projectId,
-                                    resourceType: NODE_RESOURCE_TYPE,
-                                    resourceCode: projectId,
-                                    action: NODE_RESOURCE_ACTION.CREATE
-                                }
-                            }"
-                            theme="primary" @click="toImportNode('construct')" key="thirdPartyBuildMachine">{{ $t('environment.thirdPartyBuildMachine') }}</bk-button>
-                    </template>
+                <template v-if="isExtendTx">
                     <bk-button
-                        v-else
                         v-perm="{
                             permissionData: {
                                 projectId: projectId,
@@ -46,26 +19,47 @@
                                 action: NODE_RESOURCE_ACTION.CREATE
                             }
                         }"
-                        theme="primary"
-                        @click="toImportNode('construct')">
-                        {{ $t('environment.nodeInfo.importNode') }}
-                    </bk-button>
-                </div>
-            </div></content-header>
+                        theme="primary" @click="toImportNode('cmdb')" key="idcTestMachine">{{ $t('environment.nodeInfo.idcTestMachine') }}</bk-button>
+                    <bk-button
+                        v-perm="{
+                            permissionData: {
+                                projectId: projectId,
+                                resourceType: NODE_RESOURCE_TYPE,
+                                resourceCode: projectId,
+                                action: NODE_RESOURCE_ACTION.CREATE
+                            }
+                        }"
+                        theme="primary" @click="toImportNode('construct')" key="thirdPartyBuildMachine">{{ $t('environment.thirdPartyBuildMachine') }}</bk-button>
+                </template>
+                <bk-button
+                    v-else
+                    v-perm="{
+                        permissionData: {
+                            projectId: projectId,
+                            resourceType: NODE_RESOURCE_TYPE,
+                            resourceCode: projectId,
+                            action: NODE_RESOURCE_ACTION.CREATE
+                        }
+                    }"
+                    theme="primary"
+                    @click="toImportNode('construct')">
+                    {{ $t('environment.nodeInfo.importNode') }}
+                </bk-button>
+            </div>
+        </content-header>
         <section class="sub-view-port" v-bkloading="{
             isLoading: loading.isLoading,
             title: loading.title
         }">
             <template>
-                <bk-search-select
+                <SearchSelect
                     class="search-input"
                     v-model="searchValue"
                     :placeholder="$t('environment.nodeSearchTips')"
                     :data="filterData"
                     :show-condition="false"
                     clearable
-                >
-                </bk-search-select>
+                ></SearchSelect>
                 <bk-table
                     v-bkloading="{ isLoading: tableLoading }"
                     :size="tableSize"
@@ -425,11 +419,12 @@
     import installAgent from '@/components/devops/environment/install-agent'
     import EmptyTableStatus from '@/components/empty-table-status.vue'
     import StatusIcon from '@/components/status-icon.vue'
+    import SearchSelect from '@blueking/search-select'
     import { getQueryString } from '@/utils/util'
     import webSocketMessage from '../utils/webSocketMessage.js'
     import { NODE_RESOURCE_ACTION, NODE_RESOURCE_TYPE } from '@/utils/permission'
     // import emptyNode from './empty_node'
-
+    import '@blueking/search-select/dist/styles/index.css'
     const NODE_TABLE_COLUMN_CACHE = 'node_list_columns'
 
     export default {
@@ -442,7 +437,8 @@
             importTipsDialog,
             StatusIcon,
             installAgent,
-            EmptyTableStatus
+            EmptyTableStatus,
+            SearchSelect
         },
         data () {
             return {
@@ -573,7 +569,8 @@
                 const data = [
                     {
                         name: 'IP',
-                        id: 'nodeIp'
+                        id: 'nodeIp',
+                        default: true
                     },
                     {
                         name: this.$t('environment.alias'),
@@ -817,6 +814,7 @@
                     theme: 'warning',
                     type: 'warning',
                     title: this.$t('environment.delete'),
+                    confirmLoading: true,
                     subTitle: `${this.$t('environment.nodeInfo.deleteNodetips', [row.displayName])}`,
                     confirmFn: async () => {
                         let message, theme
@@ -1529,5 +1527,9 @@
     .search-input {
         width: 500px;
         background: #fff;
+        flex: 1;
+        ::placeholder {
+            color: #c4c6cc;
+        }
     }
 </style>

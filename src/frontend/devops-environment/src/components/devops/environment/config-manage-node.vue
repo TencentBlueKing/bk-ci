@@ -11,10 +11,10 @@
             <div class="node-list-header">
                 <div class="title">{{ $t('environment.nodeInfo.selectNodeTip') }}
                     <span class="selected-node-prompt">
-                        {{ $t('environment.nodeInfo.total') }}<span class="node-count"> {{ selectHandlercConf.curTotalCount }} </span>{{ $t('environment.nodes') }}
+                        {{ $t('environment.nodeInfo.total') }}<span class="node-count"> {{ pagination.count }} </span>{{ $t('environment.nodes') }}
                     </span>
                     <span class="selected-node-prompt">
-                        {{ $t('environment.selected') }}<span class="node-count"> {{ selectedNodes }} </span>{{ $t('environment.nodes') }}
+                        {{ $t('environment.selected') }}<span class="node-count"> {{ selectedNodeList.length }} </span>{{ $t('environment.nodes') }}
                     </span>
                     <bk-popover placement="right">
                         <i class="devops-icon icon-info-circle"></i>
@@ -61,8 +61,26 @@
                 </div>
             </div>
             <div class="node-table">
-
-                <div class="node-table-message" v-if="!selectHandlercConf.searchEmpty && rowList.length">
+                <bk-table
+                    v-if="rowList.length"
+                    :data="rowList"
+                    height="100%"
+                    size="small"
+                    ext-cls="node-list-table"
+                    :pagination="pagination"
+                    @page-change="handlePageChange"
+                    @page-limit-change="pageLimitChange"
+                    @select="toggleNodeSelect"
+                    @select-all="toggleAllSelect"
+                >
+                    <bk-table-column type="selection" width="60" align="center" :selectable="isImported"></bk-table-column>
+                    <bk-table-column label="IP" prop="ip"></bk-table-column>
+                    <bk-table-column :label="$t('environment.nodeInfo.hostName')" prop="name"></bk-table-column>
+                    <bk-table-column :label="$t('environment.operator')" prop="operator"></bk-table-column>
+                    <bk-table-column :label="$t('environment.bkOperator')" prop="bakOperator"></bk-table-column>
+                    <bk-table-column :label="$t('environment.nodeInfo.gseAgentStatus')" prop="agentStatus"></bk-table-column>
+                </bk-table>
+                <!-- <div class="node-table-message" v-if="rowList.length">
                     <div class="table-node-head">
                         <bk-checkbox
                             :true-value="true"
@@ -111,16 +129,16 @@
                             </div>
                         </template>
                     </div>
-                </div>
-                <div class="no-data-row" v-if="selectHandlercConf.searchEmpty || !rowList.length">
+                </div> -->
+                <div class="no-data-row" v-else>
                     <span>{{ $t('environment.nodeEmptyOpertaor') }}</span>
                 </div>
             </div>
-            <full-paging :show-limit="false"
+            <!-- <full-paging :show-limit="true"
                 :paging-config="pagingConfig"
                 :page-count-config="pageCountConfig"
                 @page-changed="pageChanged"
-            ></full-paging>
+            ></full-paging> -->
         </div>
         <div slot="footer">
             <div class="footer-handler">
@@ -133,10 +151,10 @@
 
 <script>
     import { mapGetters } from 'vuex'
-    import fullPaging from '@/components/common/full-paging'
+    // import fullPaging from '@/components/common/full-paging'
 
     export default {
-        components: { fullPaging },
+        // components: { fullPaging },
         props: {
             nodeSelectConf: Object,
             curUserInfo: Object,
@@ -167,6 +185,12 @@
                     isLoading: false,
                     title: ''
                 },
+                pagination: {
+                    current: 1,
+                    count: 0,
+                    limit: 8,
+                    limitList: [8, 20, 50, 100]
+                },
                 pageCountConfig: {
                     totalCount: 0,
                     perPageCountSelected: 100
@@ -179,10 +203,10 @@
                     curTotalCount: 0,
                     curDisplayCount: 0,
                     selectedNodeCount: 0,
-                    allNodeSelected: false,
-                    searchEmpty: false
+                    allNodeSelected: false
                 },
-                nodeList: []
+                nodeList: [],
+                selectedNodeList: []
             }
         },
         computed: {
@@ -201,10 +225,6 @@
             },
             hasSelected () {
                 return this.rowList.some(node => node.isChecked && !node.isEixtEnvNode)
-            },
-            selectedNodes () {
-                const result = this.rowList.filter(node => node.isChecked && !node.isEixtEnvNode)
-                return result.length || 0
             }
         },
         watch: {
@@ -245,13 +265,12 @@
                         this.rowList.push({
                             ...item,
                             isChecked: !!this.nodeList.some(node => node.nodeType === 'CMDB' && node.ip === item.ip),
-                            isDisplay: true,
-                            isEixtEnvNode: this.nodeList.some(node => (node.nodeType === 'CMDB' && node.ip === item.ip && node.nodeStatus !== 'NOT_IN_CC') || (node.nodeStatus === 'NOT_IN_CC' && !this.reImportIp))
+                            isImported: this.nodeList.some(node => (node.nodeType === 'CMDB' && node.ip === item.ip && node.nodeStatus !== 'NOT_IN_CC') || (node.nodeStatus === 'NOT_IN_CC' && !this.reImportIp))
                         })
                     })
-                    this.toggleNodeSelect()
                     this.selectHandlercConf.curTotalCount = res.count
                     this.pageCountConfig.totalCount = res.count
+                    this.pagination.count = res.count
                 } catch (err) {
                     const message = err.message ? err.message : err
                     const theme = 'error'
@@ -281,7 +300,7 @@
                 this.pagingConfig.curPage = 1
                 this.getDate(this.pagingConfig.curPage)
             },
-            pageChanged (page) {
+            handlePageChange (page) {
                 this.selectHandlercConf.allNodeSelected = false
                 this.getDate(page)
             },
@@ -351,6 +370,7 @@
                     case 'Backspace':
                         if (!this.inputValue) {
                             this.searchKeyList.pop()
+                            this.searchNode()
                         }
                         break
                     default:
@@ -360,32 +380,34 @@
             deleteKey (index) {
                 this.searchKeyList.splice(index, 1)
             },
-            toggleNodeSelect () {
-                const allSelected = this.rowList.every(node => node.isChecked)
-                const allUnSelected = this.rowList.every(node => !node.isChecked || (node.isChecked && node.isEixtEnvNode))
-                if (allSelected) {
-                    this.selectHandlercConf.allNodeSelected = true
-                } else if (allUnSelected) {
-                    this.selectHandlercConf.allNodeSelected = false
-                }
+            toggleNodeSelect (selection) {
+                console.log(selection, 'selection')
+                // const allSelected = this.rowList.every(node => node.isChecked)
+                // const allUnSelected = this.rowList.every(node => !node.isChecked || (node.isChecked && node.isEixtEnvNode))
+                // if (allSelected) {
+                //     this.selectHandlercConf.allNodeSelected = true
+                // } else if (allUnSelected) {
+                //     this.selectHandlercConf.allNodeSelected = false
+                // }
             },
-            toggleAllSelect () {
-                this.rowList = this.rowList.map(item => {
-                    return {
-                        ...item,
-                        isChecked: item.isEixtEnvNode ? item.isChecked : this.selectHandlercConf.allNodeSelected
-                    }
-                })
+            toggleAllSelect (selection) {
+                console.log(selection, 'selection')
+                // this.rowList = this.rowList.map(item => {
+                //     return {
+                //         ...item,
+                //         isChecked: item.isEixtEnvNode ? item.isChecked : this.selectHandlercConf.allNodeSelected
+                //     }
+                // })
             },
             async confirmFn () {
                 const selectNodeId = []
                 if (this.reImportIp) {
-                    this.rowList.map(node => node.isChecked && !node.isEixtEnvNode && selectNodeId.push({
+                    this.rowList.map(node => node.isChecked && !node.isImported && selectNodeId.push({
                         nodeIp: node.ip,
                         nodeId: node.nodeId
                     }))
                 } else {
-                    this.rowList.map(node => node.isChecked && !node.isEixtEnvNode && selectNodeId.push(node.ip))
+                    this.rowList.map(node => node.isChecked && !node.isImported && selectNodeId.push(node.ip))
                 }
                 let theme, message, agentAbnormalNodesCount, agentNotInstallNodesCount
 
@@ -424,6 +446,12 @@
                     pageSize: -1
                 })
                 this.nodeList = res.records
+            },
+            /**
+             * 当前行是否可以勾选
+             */
+            isImported (row) {
+                return !row.isImported
             }
         }
     }
@@ -438,7 +466,9 @@
     }
 
     .node-select-wrapper {
-
+        .bk-dialog-body {
+            padding: 3px 24px 1px;
+        }
         .bk-dialog-tool {
             display: none;
         }
@@ -613,6 +643,7 @@
                 background-color: #fff;
                 color: #c3cdd7;
                 font-size: 12px;
+                z-index: 66;
 
                 p {
                     text-align: left;
@@ -743,6 +774,14 @@
                 height: 32px;
                 line-height: 32px;
             }
+        }
+    }
+    .node-list-table {
+        &::before {
+            background-color: white !important;
+        }
+        .bk-table-body-wrapper {
+            overflow-y: auto;
         }
     }
 </style>
