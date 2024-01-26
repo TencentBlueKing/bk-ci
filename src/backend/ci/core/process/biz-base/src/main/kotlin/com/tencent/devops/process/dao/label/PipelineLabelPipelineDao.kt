@@ -173,6 +173,19 @@ class PipelineLabelPipelineDao {
         }
     }
 
+    fun exitsLabelPipelines(
+        dslContext: DSLContext,
+        projectId: String,
+        pipelineIds: Set<String>
+    ): Set<String> {
+        with(TPipelineLabelPipeline.T_PIPELINE_LABEL_PIPELINE) {
+            return dslContext.selectDistinct(PIPELINE_ID)
+                .where(PIPELINE_ID.`in`(pipelineIds).and(PROJECT_ID.eq(projectId)))
+                .fetch()
+                .map { it[PIPELINE_ID] }.toSet()
+        }
+    }
+
     fun listPipelineLabelRels(
         dslContext: DSLContext,
         pipelineIds: Collection<String>,

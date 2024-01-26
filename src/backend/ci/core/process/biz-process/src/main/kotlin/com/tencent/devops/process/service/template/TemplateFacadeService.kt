@@ -74,6 +74,7 @@ import com.tencent.devops.model.process.tables.records.TTemplateRecord
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_TEMPLATE_NOT_EXISTS
 import com.tencent.devops.process.dao.PipelineSettingDao
+import com.tencent.devops.process.dao.label.PipelineLabelPipelineDao
 import com.tencent.devops.process.engine.atom.AtomUtils
 import com.tencent.devops.process.engine.cfg.ModelContainerIdGenerator
 import com.tencent.devops.process.engine.cfg.ModelTaskIdGenerator
@@ -166,6 +167,7 @@ class TemplateFacadeService @Autowired constructor(
     private val pipelineBuildSummaryDao: PipelineBuildSummaryDao,
     private val templateInstanceBaseDao: TemplateInstanceBaseDao,
     private val templateInstanceItemDao: TemplateInstanceItemDao,
+    private val pipelineLabelPipelineDao: PipelineLabelPipelineDao,
     private val pipelineGroupService: PipelineGroupService,
     private val modelTaskIdGenerator: ModelTaskIdGenerator,
     private val modelContainerIdGenerator: ModelContainerIdGenerator,
@@ -1138,6 +1140,9 @@ class TemplateFacadeService @Autowired constructor(
             pipelineIds = templateIdList,
             projectId = projectId
         ).associateBy { it.pipelineId }
+        val pipelinesWithLabels = projectId?.let {
+            pipelineLabelPipelineDao.exitsLabelPipelines(dslContext, projectId, templateIdList)
+        }
         val tTemplate = TTemplate.T_TEMPLATE
         templates.forEach { record ->
             val type = record[tTemplate.TYPE]
@@ -1148,6 +1153,7 @@ class TemplateFacadeService @Autowired constructor(
             val optionalTemplateInfo = generateOptionalTemplate(
                 setting = setting,
                 record = record,
+                pipelinesWithLabels = pipelinesWithLabels,
                 srcTemplates = srcTemplates
             ) ?: return@forEach
             result[key] = optionalTemplateInfo
@@ -1163,6 +1169,7 @@ class TemplateFacadeService @Autowired constructor(
     private fun generateOptionalTemplate(
         setting: PipelineSetting?,
         record: Record,
+        pipelinesWithLabels: Set<String>?,
         srcTemplates: Map<String, Record>?
     ): OptionalTemplate? {
         val tTemplate = TTemplate.T_TEMPLATE
@@ -1192,7 +1199,9 @@ class TemplateFacadeService @Autowired constructor(
                 category = if (!categoryStr.isNullOrBlank()) JsonUtil.getObjectMapper()
                     .readValue(categoryStr, List::class.java) as List<String> else listOf(),
                 stages = model.stages,
-                cloneTemplateSettingExist = CloneTemplateSettingExist.fromSetting(setting)
+                cloneTemplateSettingExist = CloneTemplateSettingExist.fromSetting(
+                    setting, pipelinesWithLabels
+                )
             )
         } else {
             null
@@ -2493,6 +2502,7 @@ class TemplateFacadeService @Autowired constructor(
             val optionalTemplateInfo = generateOptionalTemplate(
                 setting = null,
                 record = it,
+                pipelinesWithLabels = null,
                 srcTemplates = srcTemplates
             ) ?: return@forEach
             templateList.add(
