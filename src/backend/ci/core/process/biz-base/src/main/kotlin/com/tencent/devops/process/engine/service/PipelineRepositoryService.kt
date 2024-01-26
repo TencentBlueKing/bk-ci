@@ -1000,8 +1000,6 @@ class PipelineRepositoryService constructor(
                             projectId = projectId,
                             pipelineId = pipelineId
                         )
-                        // 数据分离：发布记录的版本自增，旧数据保留和版本表中version一致，后续单独用于前端展示
-                        versionNum = (releaseResource.versionNum ?: 0) + 1
                         pipelineVersion = PipelineVersionUtils.getPipelineVersion(
                             currVersion = releaseResource.pipelineVersion ?: 1,
                             originModel = releaseResource.model,
@@ -1016,6 +1014,8 @@ class PipelineRepositoryService constructor(
                         val newVersionName = PipelineVersionUtils.getVersionName(
                             pipelineVersion, triggerVersion, settingVersion
                         )
+                        // 数据分离：发布记录的版本自增，旧数据保留和版本表中version一致，后续单独用于前端展示
+                        versionNum = (releaseResource.versionNum ?: 0) + 1
                         versionName = newVersionName
                         operationLogParams = newVersionName
                         version = if (draftVersion == null) {

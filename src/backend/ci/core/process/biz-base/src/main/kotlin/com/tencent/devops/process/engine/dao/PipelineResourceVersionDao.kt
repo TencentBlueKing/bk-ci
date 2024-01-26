@@ -130,6 +130,7 @@ class PipelineResourceVersionDao {
                 .set(MODEL, modelStr)
                 .set(YAML, yamlStr)
                 .set(CREATOR, creator)
+                .set(VERSION_NUM, versionNum)
                 .set(VERSION_NAME, versionName)
                 .set(BASE_VERSION, baseVersion)
                 .set(PIPELINE_VERSION, pipelineVersion)
