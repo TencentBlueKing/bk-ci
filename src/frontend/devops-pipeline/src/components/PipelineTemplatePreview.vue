@@ -1,7 +1,7 @@
 <template>
     <bk-dialog
         v-model="isShow"
-        v-bk-loading="{ isLoading }"
+        v-bkloading="{ isLoading }"
         width="90%"
         height="90%"
         :auto-close="false"

@@ -177,7 +177,7 @@
             loadingConf () {
                 return {
                     isLoading: this.isSaving,
-                    title: this.$t('editPage.saving')
+                    title: this.$t?.('editPage.saving')
                 }
             },
             stageTypeDialogWidth () {
