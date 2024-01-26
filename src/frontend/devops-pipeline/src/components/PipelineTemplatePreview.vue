@@ -31,7 +31,6 @@
                     :key="panel.name"
                     :label="panel.label"
                     :name="panel.name"
-                    render-directive="if"
                 >
                     <component
                         style="pointer-events: none"
