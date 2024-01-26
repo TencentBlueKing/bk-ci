@@ -93,7 +93,7 @@ class ItsmService constructor(
             ItsmColumn.builder().key("subjectScopes")
                 .name(I18nUtil.getCodeLanMessage(AuthI18nConstants.BK_SUBJECT_SCOPES)).type(TEXT_TYPE).build(),
             ItsmColumn.builder().key("desc")
-                .name(I18nUtil.getCodeLanMessage(AuthI18nConstants.BK_PROJECT_DESC)).type(TEXT_TYPE).build(),
+                .name(I18nUtil.getCodeLanMessage(AuthI18nConstants.BK_PROJECT_DESC)).type(TEXT_TYPE).build()
         )
         val itsmAttrs = ItsmAttrs.builder().column(itsmColumns).build()
         val itsmScheme = ItsmScheme.builder().attrs(itsmAttrs).type("table").build()
