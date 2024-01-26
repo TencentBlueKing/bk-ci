@@ -46,8 +46,10 @@ import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.api.util.timestamp
 import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.auth.api.AuthPermission
+import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.model.repository.tables.records.TRepositoryRecord
+import com.tencent.devops.process.api.service.ServicePipelineYamlResource
 import com.tencent.devops.repository.constant.RepositoryMessageCode
 import com.tencent.devops.repository.constant.RepositoryMessageCode.USER_CREATE_PEM_ERROR
 import com.tencent.devops.repository.dao.RepositoryCodeGitDao
@@ -95,7 +97,8 @@ class RepositoryService @Autowired constructor(
     private val scmService: IScmService,
     private val tGitOAuthService: TGitOAuthService,
     private val dslContext: DSLContext,
-    private val repositoryPermissionService: RepositoryPermissionService
+    private val repositoryPermissionService: RepositoryPermissionService,
+    private val client: Client
 ) {
 
     @Value("\${repository.git.devopsPrivateToken}")
@@ -511,6 +514,14 @@ class RepositoryService @Autowired constructor(
         val repositoryId =
             repositoryService.create(projectId = projectId, userId = userId, repository = repository)
         createResource(userId, projectId, repositoryId, repository.aliasName)
+        if (repository.enablePac == true) {
+            client.get(ServicePipelineYamlResource::class).enable(
+                userId = userId,
+                projectId = projectId,
+                repoHashId = HashUtil.encodeOtherLongId(repositoryId),
+                scmType = repository.getScmType()
+            )
+        }
         return repositoryId
     }
 

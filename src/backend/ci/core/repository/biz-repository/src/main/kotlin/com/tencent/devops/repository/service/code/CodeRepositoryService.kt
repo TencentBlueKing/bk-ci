@@ -66,10 +66,10 @@ interface CodeRepositoryService<T> {
     /**
      * 开启pac校验
      */
-    fun pacCheckEnabled(projectId: String, userId: String, repository: TRepositoryRecord, retry: Boolean)
+    fun pacCheckEnabled(projectId: String, userId: String, record: TRepositoryRecord, retry: Boolean)
 
     // TODO 暂时放这里,后面代码库统一优化平台层接口
-    fun getGitFileTree(projectId: String, userId: String, repository: TRepositoryRecord): List<GitFileInfo>
+    fun getGitFileTree(projectId: String, userId: String, record: TRepositoryRecord): List<GitFileInfo>
 
     fun getPacRepository(externalId: String): TRepositoryRecord?
 }
