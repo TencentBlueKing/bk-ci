@@ -171,7 +171,6 @@
             </aside>
         </div>
         <pipeline-template-preview
-            data-vv-scope="xxxxx"
             :is-show.sync="isShowPreview"
             :template-pipeline="activeTemp"
             :preview-setting-type="previewSettingType"
