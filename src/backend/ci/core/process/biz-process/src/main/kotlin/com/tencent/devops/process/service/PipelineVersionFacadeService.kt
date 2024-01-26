@@ -116,8 +116,7 @@ class PipelineVersionFacadeService @Autowired constructor(
         val canDebug = draftVersion != null
         val releaseVersion = pipelineRepositoryService.getPipelineResourceVersion(
             projectId = projectId,
-            pipelineId = pipelineId,
-            version = detailInfo.pipelineVersion
+            pipelineId = pipelineId
         ) ?: throw ErrorCodeException(
             errorCode = ProcessMessageCode.ERROR_NO_PIPELINE_EXISTS_BY_ID,
             params = arrayOf(pipelineId)
