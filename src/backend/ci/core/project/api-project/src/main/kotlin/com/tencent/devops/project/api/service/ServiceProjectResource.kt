@@ -337,24 +337,24 @@ interface ServiceProjectResource {
 
     @PUT
     @Path("{projectId}/updateProjectProductId")
-    @ApiOperation("修改项目关联产品")
+    @Operation(summary ="修改项目关联产品")
     fun updateProjectProductId(
-        @ApiParam(value = "项目code", required = true)
+        @Parameter(description = "项目code", required = true)
         @PathParam("projectId")
         projectCode: String,
-        @ApiParam("产品名称", required = true)
+        @Parameter(description ="产品名称", required = true)
         @QueryParam("productName")
         productName: String
     ): Result<Boolean>
 
     @PUT
     @Path("{projectId}/updateOrganizationByEnglishName")
-    @ApiOperation("修改项目组织架构")
+    @Operation(summary ="修改项目组织架构")
     fun updateOrganizationByEnglishName(
-        @ApiParam(value = "项目code", required = true)
+        @Parameter(description = "项目code", required = true)
         @PathParam("projectId")
         projectCode: String,
-        @ApiParam("产品名称", required = true)
+        @Parameter(description ="产品名称", required = true)
         projectOrganizationInfo: ProjectOrganizationInfo
     ): Result<Boolean>
 }

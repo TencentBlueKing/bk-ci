@@ -96,35 +96,35 @@ interface UserStreamProjectResource {
         size: Long?
     ): Result<List<StreamProjectCIInfo>>
 
-    @ApiOperation("获取项目信息")
+    @Operation(summary ="获取项目信息")
     @GET
     @Path("/{english_name}")
     fun getProjectInfo(
-        @ApiParam("userId", required = true)
+        @Parameter(description ="userId", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String,
-        @ApiParam("项目ID英文名标识", required = true)
+        @Parameter(description ="项目ID英文名标识", required = true)
         @PathParam("english_name")
         projectId: String
     ): Result<ProjectVO>
 
-    @ApiOperation("更新项目组织架构和归属")
+    @Operation(summary ="更新项目组织架构和归属")
     @PUT
     @Path("/{english_name}/organization")
     fun updateProjectOrganization(
-        @ApiParam("userId", required = true)
+        @Parameter(description ="userId", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String,
-        @ApiParam("项目ID英文名标识", required = true)
+        @Parameter(description ="项目ID英文名标识", required = true)
         @PathParam("english_name")
         projectId: String,
-        @ApiParam("产品ID", required = true)
+        @Parameter(description ="产品ID", required = true)
         @QueryParam("productId")
         productId: Int,
-        @ApiParam("产品名称", required = true)
+        @Parameter(description ="产品名称", required = true)
         @QueryParam("productName")
         productName: String,
-        @ApiParam("项目组织", required = true)
+        @Parameter(description ="项目组织", required = true)
         organization: ProjectOrganizationInfo
     ): Result<Boolean>
 }
