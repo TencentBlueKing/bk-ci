@@ -2,7 +2,7 @@
 
 **数据库名：** devops_ci_ticket
 
-**文档版本：** 1.0.0
+**文档版本：** 1.0.1
 
 **文档描述：** devops_ci_ticket的数据库文档
 
@@ -103,3 +103,4 @@
 |  11   | CREATED_TIME |   datetime   | 19 |   0    |    N     |  N   |       | 创建时间  |
 |  12   | UPDATED_TIME |   datetime   | 19 |   0    |    N     |  N   |       | 更新时间  |
 |  13   | UPDATE_USER |   varchar   | 64 |   0    |    Y     |  N   |       | 修改人  |
+|  14   | ALLOW_ACROSS_PROJECT |   bit   | 1 |   0    |    N     |  N   |   b'0'    |   |
