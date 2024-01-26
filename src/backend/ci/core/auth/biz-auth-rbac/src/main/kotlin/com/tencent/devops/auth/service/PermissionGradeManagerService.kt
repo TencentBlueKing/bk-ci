@@ -362,7 +362,9 @@ class PermissionGradeManagerService @Autowired constructor(
 
     private fun getOrganizationStr(projectApprovalInfo: ProjectApprovalInfo): String {
         return with(projectApprovalInfo) {
-            listOfNotNull(bgName, businessLineName, deptName, centerName).joinToString("-")
+            listOf(
+                bgName, businessLineName, deptName, centerName
+            ).filter { !it.isNullOrBlank() }.joinToString("-")
         }
     }
 
