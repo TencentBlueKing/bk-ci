@@ -77,14 +77,14 @@ data class CloneTemplateSettingExist(
     val labelSettingExist: Boolean
 ) {
     companion object {
-        fun fromSetting(setting: PipelineSetting?): CloneTemplateSettingExist {
+        fun fromSetting(setting: PipelineSetting?, pipelinesWithLabels: Set<String>?): CloneTemplateSettingExist {
             if (setting == null) {
                 return CloneTemplateSettingExist(false, false, false)
             }
             return CloneTemplateSettingExist(
                 notifySettingExist = !setting.notifySettingIsNull(),
                 concurrencySettingExist = !setting.concurrencySettingIsNull(),
-                labelSettingExist = setting.labels.isNotEmpty()
+                labelSettingExist = pipelinesWithLabels?.contains(setting.pipelineId) ?: false
             )
         }
     }
