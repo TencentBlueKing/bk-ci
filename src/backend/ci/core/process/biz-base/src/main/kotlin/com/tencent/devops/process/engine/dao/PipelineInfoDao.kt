@@ -145,9 +145,10 @@ class PipelineInfoDao {
             val conditions = mutableListOf<Condition>()
             conditions.add(PROJECT_ID.eq(projectId))
             conditions.add(PIPELINE_ID.eq(pipelineId))
-            if (latestVersion > 0) {
-                conditions.add(VERSION.eq(latestVersion))
-            }
+            // 老的并发拦截，在saveAll接口中进行，现在通过模板保存+发布，实现新操作覆盖旧操作
+//            if (latestVersion > 0) {
+//                conditions.add(VERSION.eq(latestVersion))
+//            }
             if (userId != null && updateLastModifyUser == true) {
                 update.set(LAST_MODIFY_USER, userId)
             }
