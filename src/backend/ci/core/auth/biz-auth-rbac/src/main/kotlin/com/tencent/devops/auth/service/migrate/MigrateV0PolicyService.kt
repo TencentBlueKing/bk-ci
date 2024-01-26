@@ -181,7 +181,8 @@ class MigrateV0PolicyService constructor(
             }
             val resources = permission.resources
 
-            if (resources.isNotEmpty() && resources[0].type == AuthResourceType.PIPELINE_DEFAULT.value && resources[0].paths.isNotEmpty()) {
+            if (resources.isNotEmpty() && resources[0].type == AuthResourceType.PIPELINE_DEFAULT.value &&
+                resources[0].paths.isNotEmpty()) {
                 val groupIdOfPipelineActionGroup = getGroupIdOfPipelineActionGroup(
                     projectCode = projectCode,
                     resourceCode = resources[0].paths[0][0].id,
