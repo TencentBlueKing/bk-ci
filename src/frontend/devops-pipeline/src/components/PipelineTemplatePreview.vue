@@ -1,18 +1,16 @@
 <template>
     <bk-dialog
         v-model="isShow"
-        v-bkloading="{ isLoading }"
         width="90%"
         height="90%"
         :auto-close="false"
         :show-footer="false"
         header-position="left"
-        render-directive="if"
         :title="title"
         ext-cls="pipeline-template-preivew"
         @cancel="handleCancel"
     >
-        <template v-if="templatePipeline && isShow">
+        <div style="width: 100%; height: 100%" v-if="templatePipeline && isShow" v-bkloading="{ isLoading }">
             <mode-switch
                 :is-yaml-support="isYamlSupport"
                 :yaml-invalid-msg="yamlInvalidMsg"
@@ -39,7 +37,7 @@
                     />
                 </bk-tab-panel>
             </bk-tab>
-        </template>
+        </div>
     </bk-dialog>
 </template>
 
