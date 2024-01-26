@@ -89,8 +89,8 @@
             }),
             title () {
                 return this.$t('templatePreivewHeader', [
-        this.templatePipeline?.name ?? '',
-        this.previewSettingType
+                    this.templatePipeline?.name ?? '',
+                    this.previewSettingType
                 ])
             },
             highlightType () {
