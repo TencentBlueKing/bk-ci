@@ -819,7 +819,7 @@ class PipelineInfoFacadeService @Autowired constructor(
             return DeployPipelineResult(
                 pipelineId = pipelineId,
                 pipelineName = resource.model.name,
-                version = resource.model.latestVersion,
+                version = resource.version,
                 versionNum = resource.versionNum,
                 versionName = null
             )

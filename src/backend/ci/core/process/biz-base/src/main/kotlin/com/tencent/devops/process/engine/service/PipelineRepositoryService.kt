@@ -883,6 +883,7 @@ class PipelineRepositoryService constructor(
                     errorCode = ProcessMessageCode.ERROR_PIPELINE_NOT_EXISTS,
                     params = arrayOf(pipelineId)
                 )
+                model.latestVersion = releaseResource.version
                 val latestVersion = pipelineResourceVersionDao.getLatestVersionResource(
                     dslContext = transactionContext,
                     projectId = projectId,
@@ -1019,12 +1020,12 @@ class PipelineRepositoryService constructor(
                         versionName = newVersionName
                         operationLogParams = newVersionName
                         version = if (draftVersion == null) {
-                            // 没有已有草稿保存正式版本时，直接增加正式版本，基准为上一个发布版本
-                            // 创建
+                            // 兼容逻辑：没有已有草稿保存正式版本时，直接增加正式版本，基准为上一个发布版本
+                            // 创建新版本记录
                             realBaseVersion = realBaseVersion ?: releaseResource.version
                             latestVersion.version + 1
                         } else {
-                            // 更新
+                            // 更新草稿版本为正式版本
                             if (draftVersion.baseVersion != baseVersion) throw ErrorCodeException(
                                 errorCode = ProcessMessageCode.ERROR_PIPELINE_IS_NOT_THE_LATEST
                             )
@@ -1047,7 +1048,6 @@ class PipelineRepositoryService constructor(
                             // 进行过至少一次发布版本后，才取消仅有草稿的状态
                             onlyDraft = false
                         )
-                        model.latestVersion = version
                         pipelineResourceDao.deleteEarlyVersion(
                             dslContext = transactionContext,
                             projectId = projectId,
