@@ -29,7 +29,6 @@ package com.tencent.devops.process.utils
 
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.process.pojo.setting.PipelineSettingVersion
-import org.json.JSONObject
 
 object PipelineVersionUtils {
 
@@ -51,9 +50,9 @@ object PipelineVersionUtils {
         originModel: Model,
         newModel: Model
     ): Int {
-        val originTriggerJson = JSONObject(originModel.stages.first())
-        val triggerJson = JSONObject(newModel.stages.first())
-        return if (originTriggerJson.similar(triggerJson)) currVersion else currVersion + 1
+        val originTrigger = originModel.stages.first()
+        val newTrigger = newModel.stages.first()
+        return if (originTrigger == newTrigger) currVersion else currVersion + 1
     }
 
     /**
@@ -64,9 +63,9 @@ object PipelineVersionUtils {
         originModel: Model,
         newModel: Model
     ): Int {
-        val originPipelineJson = JSONObject(originModel.stages.slice(1 until originModel.stages.size))
-        val pipelineJson = JSONObject(newModel.stages.slice(1 until newModel.stages.size))
-        return if (originPipelineJson.similar(pipelineJson)) currVersion else currVersion + 1
+        val originStages = originModel.stages.drop(1)
+        val newStages = newModel.stages.drop(1)
+        return if (originStages == newStages) currVersion else currVersion + 1
     }
 
     /**
@@ -77,8 +76,6 @@ object PipelineVersionUtils {
         originSetting: PipelineSettingVersion,
         newSetting: PipelineSettingVersion
     ): Int {
-        val originJson = JSONObject(originSetting)
-        val currentJson = JSONObject(newSetting)
-        return if (originJson.similar(currentJson)) currVersion else currVersion + 1
+        return if (originSetting == newSetting) currVersion else currVersion + 1
     }
 }

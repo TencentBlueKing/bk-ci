@@ -1198,40 +1198,6 @@ class PipelineRepositoryService constructor(
         ).map { it.key to str2model(it.value, it.key) }.toMap()
     }
 
-    @Deprecated("废弃，改用getPipelineResourceVersion()，流水线多版本的信息需要一起获取")
-    fun getModel(
-        projectId: String,
-        pipelineId: String,
-        version: Int? = null,
-        includeDraft: Boolean? = false
-    ): Model? {
-        return if (version == null) { // 取最新版，直接从旧版本表读
-            val latestVersion = pipelineResourceDao.getReleaseVersionResource(
-                dslContext = dslContext,
-                projectId = projectId,
-                pipelineId = pipelineId
-            ) ?: pipelineResourceVersionDao.getDraftVersionResource(
-                dslContext = dslContext,
-                projectId = projectId,
-                pipelineId = pipelineId
-            )
-            latestVersion?.model
-        } else {
-            val targetVersion = pipelineResourceVersionDao.getVersionResource(
-                dslContext = dslContext,
-                projectId = projectId,
-                pipelineId = pipelineId,
-                version = version,
-                includeDraft = includeDraft
-            ) ?: pipelineResourceDao.getReleaseVersionResource(
-                dslContext = dslContext,
-                projectId = projectId,
-                pipelineId = pipelineId
-            )
-            targetVersion?.model
-        }
-    }
-
     fun getPipelineResourceVersion(
         projectId: String,
         pipelineId: String,
