@@ -9,7 +9,7 @@
                     name="pipelineName"
                     :value="pipelineSetting.pipelineName"
                     v-validate.initial="'required|max:128'"
-                    max-length="128"
+                    :max-length="128"
                     :handle-change="handleBaseInfoChange" />
             </bk-form-item>
 
