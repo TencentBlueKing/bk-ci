@@ -173,7 +173,7 @@ class CmdbNodeService @Autowired constructor(
                 } else {
                     agentStatusMap[it[T_NODE_NODE_IP] as String] ?: false
                 },
-                agentVersion =if (grayTag)
+                agentVersion = if (grayTag)
                     ipToAgentVersionInfoMap?.get(it[T_NODE_NODE_IP] as String)?.version
                 else null,
                 lastModifyTime = LocalDateTime.now()
