@@ -195,6 +195,12 @@ enum class ErrorCodeEnum(
         errorType = ErrorType.THIRD_PARTY,
         errorCode = "2132037",
         formatErrorMessage = "{0} {1} create itsm ticket error"
+    ),
+    NO_TGIT_PREMISSION(
+        errorType = ErrorType.USER,
+        errorCode = "2132038",
+        formatErrorMessage = "User{0}does not have sufficient permissions" +
+            "(root directory approval permissions of SVN or master permissions of GIT)"
     );
 
     fun getErrorMessage(): String {

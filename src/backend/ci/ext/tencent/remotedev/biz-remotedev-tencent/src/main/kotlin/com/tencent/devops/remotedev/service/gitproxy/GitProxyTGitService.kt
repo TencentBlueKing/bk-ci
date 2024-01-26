@@ -202,7 +202,18 @@ class GitProxyTGitService @Autowired constructor(
             }!!
         }?.toSet() ?: emptySet()
 
+        // 获取关联的工蜂仓库
+        val repoMap =
+            projectTGitLinkDao.fetch(dslContext, projectId).associate { it.url to Pair(it.oauthUser, it.status) }
+
         urls.filter { it.isNotBlank() }.map { it.trim() }.forEach { url ->
+            if ((repoMap[url] != null) &&
+                (repoMap[url]?.second == TGitRepoStatus.AVAILABLE.name) &&
+                (repoMap[url]?.first == userId)
+            ) {
+                return@forEach
+            }
+
             val fullPath = URLEncoder.encode(
                 url.removeHttpPrefix()
                     .removePrefix(tGitUrl.removeHttpPrefix())
@@ -257,6 +268,8 @@ class GitProxyTGitService @Autowired constructor(
             params = arrayOf(userId, tGitUrl)
         )
 
+        val isSvn = url.removeHttpPrefix().startsWith(tSvnUrl.removeHttpPrefix())
+
         val fullPath = URLEncoder.encode(
             url.removeHttpPrefix()
                 .removePrefix(tGitUrl.removeHttpPrefix())
@@ -264,6 +277,28 @@ class GitProxyTGitService @Autowired constructor(
                 .removePrefix("/"),
             "UTF8"
         )
+
+        // 校验下是否有删除的权限，svn项目用户在根目录下是否是审批人，git项目校验是否有master及以上权限
+        if (isSvn) {
+            val svnRs = TGitApiClient.getSvnProjectAuth(okHttpClient, tGitUrl, token.accessToken, fullPath)
+            if (svnRs?.approverUsers?.any { it.username == userId } != true) {
+                throw ErrorCodeException(
+                    errorCode = ErrorCodeEnum.NO_TGIT_PREMISSION.errorCode,
+                    params = arrayOf(userId)
+                )
+            }
+        } else {
+            val gitRs = TGitApiClient.getProjectMemberAll(okHttpClient, tGitUrl, token.accessToken, fullPath, userId)
+            if (gitRs?.any {
+                it.username == userId && (it.accessLevel ?: 0) >= GitAccessLevelEnum.MASTER.level
+            } != true
+            ) {
+                throw ErrorCodeException(
+                    errorCode = ErrorCodeEnum.NO_TGIT_PREMISSION.errorCode,
+                    params = arrayOf(userId)
+                )
+            }
+        }
 
         val ok = TGitApiClient.addProjectAclIp(
             client = okHttpClient,

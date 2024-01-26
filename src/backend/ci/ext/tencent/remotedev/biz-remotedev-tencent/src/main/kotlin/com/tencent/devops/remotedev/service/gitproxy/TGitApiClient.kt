@@ -113,6 +113,67 @@ object TGitApiClient {
         }
     }
 
+    fun getProjectMemberAll(
+        client: OkHttpClient,
+        gitUrl: String,
+        accessToken: String,
+        projectId: String,
+        userId: String
+    ): List<TGitProjectMember>? {
+        val url = "$gitUrl/api/v3/projects/$projectId/members/all?access_token=$accessToken&query=$userId"
+        val request = Request.Builder()
+            .url(url)
+            .get()
+            .build()
+        try {
+            doRetryHttp(client, request).use { response ->
+                val data = response.body!!.string()
+                // 404 说明这个人不存在
+                if (response.code == 404) {
+                    return null
+                }
+                if (!response.isSuccessful) {
+                    logger.error("getProjectMemberAll fail|{}|{}", response.code, data)
+                    return null
+                }
+                val repoList = JsonParser.parseString(data).asJsonArray
+                if (!repoList.isJsonNull) {
+                    return JsonUtil.to(data, object : TypeReference<List<TGitProjectMember>>() {})
+                }
+                return null
+            }
+        } catch (e: Exception) {
+            logger.error("getProjectList error", e)
+            return null
+        }
+    }
+
+    fun getSvnProjectAuth(
+        client: OkHttpClient,
+        gitUrl: String,
+        accessToken: String,
+        projectId: String
+    ): TGitSvnAuth? {
+        val url = "$gitUrl/api/v3/svn/projects/$projectId/authority?access_token=$accessToken&dir_path=/"
+        val request = Request.Builder()
+            .url(url)
+            .get()
+            .build()
+        try {
+            doRetryHttp(client, request).use { response ->
+                val data = response.body!!.string()
+                if (!response.isSuccessful) {
+                    logger.error("getSvnProjectAuth fail|{}|{}", response.code, data)
+                    return null
+                }
+                return JsonUtil.to(data, object : TypeReference<TGitSvnAuth>() {})
+            }
+        } catch (e: Exception) {
+            logger.error("getProjectList error", e)
+            return null
+        }
+    }
+
     private val RETRY_CODE = listOf(429, 500)
 
     private fun doRetryHttp(client: OkHttpClient, request: Request): okhttp3.Response {
@@ -170,4 +231,22 @@ enum class TGitProjectType {
 data class TGitAclConfig(
     @JsonProperty("allow_ips")
     val allowIps: String
+)
+
+@JsonIgnoreProperties(ignoreUnknown = true)
+data class TGitProjectMember(
+    val username: String?,
+    @JsonProperty("access_level")
+    val accessLevel: Int?
+)
+
+@JsonIgnoreProperties(ignoreUnknown = true)
+data class TGitSvnAuth(
+    @JsonProperty("approver_users")
+    val approverUsers: List<TGitSvnAuthUser>?
+)
+
+@JsonIgnoreProperties(ignoreUnknown = true)
+data class TGitSvnAuthUser(
+    val username: String?
 )
