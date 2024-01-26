@@ -166,7 +166,6 @@
                 return this[type]
             },
             getShowContent (col, val) {
-                console.log(col, val)
                 let res = ''
                 if (col === 'types') {
                     res = val.join(',')
@@ -175,6 +174,7 @@
                 } else {
                     res = val
                 }
+                res = res || '--'
                 return res
             },
             handleDelete (type, index) {

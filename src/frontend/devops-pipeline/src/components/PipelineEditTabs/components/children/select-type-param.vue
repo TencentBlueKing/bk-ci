@@ -11,7 +11,7 @@
             <section v-else>
                 <bk-form form-type="vertical" class="new-ui-form" :label-width="300">
                     <template v-for="obj in remoteTypeOptions">
-                        <form-field :key="obj.key" :desc="obj.tips" :required="obj.required" :label="obj.label" :is-error="errors.has(key)" :error-msg="errors.first(key)">
+                        <form-field :hide-colon="true" :key="obj.key" :desc="obj.tips" :required="obj.required" :label="obj.label" :is-error="errors.has(key)" :error-msg="errors.first(key)">
                             <component :is="'vuex-input'" :disabled="disabled" :name="obj.key" v-validate.initial="Object.assign({}, { required: !!obj.required })" :handle-change="handleRemoteParamChange" :value="payloadValue[obj.key]" v-bind="obj" :placeholder="obj.placeholder"></component>
                         </form-field>
                     </template>

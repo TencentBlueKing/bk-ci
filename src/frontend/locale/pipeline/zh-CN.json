@@ -1111,6 +1111,7 @@
       "varAlias": "变量别名",
       "constAlias": "常量别名",
       "constType": "常量类型",
+      "constValue": "常量值",
       "varTitle": "变量",
       "constTitle": "常量",
       "searchPipelineVar": "变量名/变量别名/变量描述",

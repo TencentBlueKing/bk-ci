@@ -1,15 +1,15 @@
 <template>
     <section>
         <bk-form form-type="vertical" class="new-ui-form" :key="param">
-            <form-field :required="true" :label="idLabel" :is-error="errors.has(`pipelineParam.id`)" :error-msg="errors.first(`pipelineParam.id`)">
-                <vuex-input :disabled="disabled" :handle-change="(name, value) => handleUpdateParam(name, value)" :data-vv-scope="'pipelineParam'" v-validate="`required|notInList:${getUniqueArgs('id')}`" name="id" :placeholder="$t('nameInputTips')" :value="param.id" />
+            <form-field :hide-colon="true" :required="true" :label="idLabel" :is-error="errors.has(`pipelineParam.id`)" :error-msg="errors.first(`pipelineParam.id`)">
+                <vuex-input :disabled="disabled" :handle-change="(name, value) => handleUpdateParam(name, value)" :data-vv-scope="'pipelineParam'" v-validate="idValidRule" name="id" :placeholder="$t('nameInputTips')" :value="param.id" />
             </form-field>
 
-            <form-field :label="nameLabel" :is-error="errors.has('pipelineParam.name')" :error-msg="errors.first('pipelineParam.name')">
+            <form-field :hide-colon="true" :label="nameLabel" :is-error="errors.has('pipelineParam.name')" :error-msg="errors.first('pipelineParam.name')">
                 <vuex-input :disabled="disabled" :handle-change="(name, value) => handleUpdateParam(name, value)" :data-vv-scope="'pipelineParam'" v-validate="`notInList:${getUniqueArgs('name')}`" name="name" :placeholder="$t('newui.pipelineParam.nameInputTips')" :value="param.name" />
             </form-field>
 
-            <form-field :required="true" :label="typeLabel">
+            <form-field :hide-colon="true" :required="true" :label="typeLabel">
                 <selector
                     :popover-min-width="246"
                     :disabled="disabled"
@@ -29,7 +29,7 @@
             >
             </param-value-option>
 
-            <form-field :label="$t('desc')">
+            <form-field :hide-colon="true" :label="$t('desc')">
                 <vuex-textarea :disabled="disabled" :handle-change="(name, value) => handleUpdateParam(name, value)" name="desc" :placeholder="$t('editPage.descTips')" :value="param.desc" />
             </form-field>
 
@@ -128,6 +128,11 @@
             }
         },
         computed: {
+            idValidRule () {
+                return this.paramType === 'constant'
+                    ? `required|notInList:${this.getUniqueArgs('id')}|constVarRule|max:64`
+                    : `required|notInList:${this.getUniqueArgs('id')}`
+            },
             idLabel () {
                 return this.paramType === 'constant' ? this.$t('newui.pipelineParam.constName') : this.$t('newui.pipelineParam.varName')
             },

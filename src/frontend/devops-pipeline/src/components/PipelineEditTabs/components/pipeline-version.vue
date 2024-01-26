@@ -61,7 +61,7 @@
                             </label>
                         </div>
                         <div class="version-options">
-                            <form-field class="version-form-field" v-for="(v, index) in allVersionKeyList" :key="v" :required="v.required" :is-error="errors.has(`pipelineVersion.${v}`)" :error-msg="errors.first(`pipelineVersion.${v}`)">
+                            <form-field :hide-colon="true" class="version-form-field" v-for="(v, index) in allVersionKeyList" :key="v" :required="v.required" :is-error="errors.has(`pipelineVersion.${v}`)" :error-msg="errors.first(`pipelineVersion.${v}`)">
                                 <vuex-input
                                     v-validate.initial="'required|numeric'"
                                     :data-vv-scope="'pipelineVersion'"
@@ -77,7 +77,7 @@
                         </div>
                     </bk-form-item>
 
-                    <form-field class="buildno-form-field" :required="true" :label="$t('buildNum')" :is-error="errors.has('pipelineVersion.buildNo')" :error-msg="errors.first('pipelineVersion.buildNo')">
+                    <form-field :hide-colon="true" class="buildno-form-field" :required="true" :label="$t('buildNum')" :is-error="errors.has('pipelineVersion.buildNo')" :error-msg="errors.first('pipelineVersion.buildNo')">
                         <vuex-input
                             input-type="number"
                             name="buildNo"
@@ -91,7 +91,7 @@
                         />
                     </form-field>
 
-                    <form-field class="buildno-form-field" :required="true" :is-error="errors.has('pipelineVersion.buildNoType')" :error-msg="errors.first('pipelineVersion.buildNoType')">
+                    <form-field :hide-colon="true" class="buildno-form-field" :required="true" :is-error="errors.has('pipelineVersion.buildNoType')" :error-msg="errors.first('pipelineVersion.buildNoType')">
                         <enum-input :list="buildNoRules" :disabled="disabled" name="buildNoType" v-validate.initial="'required|string'" :data-vv-scope="'pipelineVersion'" :value="editBuildNo.buildNoType" :handle-change="handleEditBuildNoChange" />
                     </form-field>
                 </bk-form>
