@@ -105,6 +105,7 @@ class PipelineSettingVersionService @Autowired constructor(
         if (version > 0) { // #671 目前只接受通知设置的版本管理, 其他属于公共设置不接受版本管理
             // #8161 除了通知以外增加了其他用户配置作为版本管理
             getPipelineSettingVersion(projectId, pipelineId, version)?.let { ve ->
+                settingInfo.version = ve.version
                 settingInfo.successSubscriptionList = ve.successSubscriptionList
                 settingInfo.failSubscriptionList = ve.failSubscriptionList
                 // 这里不应该出现错误的流水线名，但保留历史留下的处理方式
