@@ -142,7 +142,7 @@ class PipelineVersionFacadeService @Autowired constructor(
             pipelineId = pipelineId,
             detailInfo = detailInfo
         )
-        val yamlInfo = if (releaseSetting.pipelineAsCodeSettings?.enable == true ) {
+        val yamlInfo = if (releaseSetting.pipelineAsCodeSettings?.enable == true) {
             pipelineYamlFacadeService.getPipelineYamlInfo(projectId, pipelineId, releaseVersion.version)
         } else null
         val version = draftVersion?.version ?: releaseVersion.version
