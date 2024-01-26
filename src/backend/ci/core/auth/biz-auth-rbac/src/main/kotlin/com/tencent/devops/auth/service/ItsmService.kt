@@ -83,19 +83,17 @@ class ItsmService constructor(
             ItsmColumn.builder().key("projectName")
                 .name(I18nUtil.getCodeLanMessage(AuthI18nConstants.BK_PROJECT_NAME)).type(TEXT_TYPE).build(),
             ItsmColumn.builder().key("projectId").name(
-                I18nUtil.getCodeLanMessage(AuthI18nConstants.BK_PROJECT_ID)
-            ).type(TEXT_TYPE).build(),
-            ItsmColumn.builder().key("desc").name(
-                I18nUtil.getCodeLanMessage(AuthI18nConstants.BK_PROJECT_DESC)
-            ).type(TEXT_TYPE).build(),
+                I18nUtil.getCodeLanMessage(AuthI18nConstants.BK_PROJECT_ID)).type(TEXT_TYPE).build(),
+            ItsmColumn.builder().key("productName")
+                .name(I18nUtil.getCodeLanMessage(AuthI18nConstants.BK_PROJECT_PRODUCT)).type(TEXT_TYPE).build(),
             ItsmColumn.builder().key("organization")
                 .name(I18nUtil.getCodeLanMessage(AuthI18nConstants.BK_ORGANIZATION)).type(TEXT_TYPE).build(),
             ItsmColumn.builder().key("authSecrecy")
                 .name(I18nUtil.getCodeLanMessage(AuthI18nConstants.BK_AUTH_SECRECY)).type(TEXT_TYPE).build(),
             ItsmColumn.builder().key("subjectScopes")
                 .name(I18nUtil.getCodeLanMessage(AuthI18nConstants.BK_SUBJECT_SCOPES)).type(TEXT_TYPE).build(),
-            ItsmColumn.builder().key("productName")
-                .name(I18nUtil.getCodeLanMessage(AuthI18nConstants.BK_PROJECT_PRODUCT)).type(TEXT_TYPE).build()
+            ItsmColumn.builder().key("desc")
+                .name(I18nUtil.getCodeLanMessage(AuthI18nConstants.BK_PROJECT_DESC)).type(TEXT_TYPE).build(),
         )
         val itsmAttrs = ItsmAttrs.builder().column(itsmColumns).build()
         val itsmScheme = ItsmScheme.builder().attrs(itsmAttrs).type("table").build()
