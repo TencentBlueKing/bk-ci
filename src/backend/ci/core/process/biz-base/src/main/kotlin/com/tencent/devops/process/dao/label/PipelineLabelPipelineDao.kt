@@ -180,6 +180,7 @@ class PipelineLabelPipelineDao {
     ): Set<String> {
         with(TPipelineLabelPipeline.T_PIPELINE_LABEL_PIPELINE) {
             return dslContext.selectDistinct(PIPELINE_ID)
+                .from(this)
                 .where(PIPELINE_ID.`in`(pipelineIds).and(PROJECT_ID.eq(projectId)))
                 .fetch()
                 .map { it[PIPELINE_ID] }.toSet()
