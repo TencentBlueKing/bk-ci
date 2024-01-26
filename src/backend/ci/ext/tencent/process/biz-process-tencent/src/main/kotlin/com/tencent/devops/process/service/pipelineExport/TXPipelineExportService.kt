@@ -164,7 +164,8 @@ class TXPipelineExportService @Autowired constructor(
                 params = arrayOf(pipelineId)
             )
 
-        val baseModel = pipelineRepositoryService.getModel(projectId, pipelineId) ?: throw ErrorCodeException(
+        val baseModel = pipelineRepositoryService.getPipelineResourceVersion(projectId, pipelineId)
+            ?.model ?: throw ErrorCodeException(
             statusCode = Response.Status.BAD_REQUEST.statusCode,
             errorCode = ProcessMessageCode.ERROR_PIPELINE_NOT_EXISTS
         )
