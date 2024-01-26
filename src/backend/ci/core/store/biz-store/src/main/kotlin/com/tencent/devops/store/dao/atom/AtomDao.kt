@@ -47,6 +47,7 @@ import com.tencent.devops.model.store.tables.TClassify
 import com.tencent.devops.model.store.tables.TStoreProjectRel
 import com.tencent.devops.model.store.tables.TStoreStatisticsTotal
 import com.tencent.devops.model.store.tables.records.TAtomRecord
+import com.tencent.devops.repository.pojo.AtomRefRepositoryInfo
 import com.tencent.devops.repository.pojo.enums.VisibilityLevelEnum
 import com.tencent.devops.store.pojo.atom.AtomBaseInfoUpdateRequest
 import com.tencent.devops.store.pojo.atom.AtomCreateRequest
@@ -1373,23 +1374,39 @@ class AtomDao : AtomBaseDao() {
         }
     }
 
-    fun getAtomByCode(
+    fun getAtomRepoInfoByCode(
         dslContext: DSLContext,
         atomCode: String?,
         limit: Int,
         offset: Int
-    ): Result<TAtomRecord> {
-        return with(TAtom.T_ATOM) {
-            dslContext.selectFrom(this).let {
-                if (!atomCode.isNullOrBlank()) {
-                    it.where(ATOM_CODE.eq(atomCode))
-                }
-                it
-            }
-                .orderBy(CREATE_TIME.desc())
-                .limit(limit)
-                .offset(offset)
-                .fetch()
+    ): List<AtomRefRepositoryInfo> {
+        val ta = TAtom.T_ATOM
+        val ts = TStoreProjectRel.T_STORE_PROJECT_REL
+        val conditions = mutableListOf(
+            ts.STORE_TYPE.eq(StoreTypeEnum.ATOM.type.toByte()),
+            ts.TYPE.eq(StoreProjectTypeEnum.INIT.type.toByte())
+        )
+        if (!atomCode.isNullOrBlank()) {
+            conditions.add(ta.ATOM_CODE.eq(atomCode))
         }
+        return dslContext.select(
+            ta.ATOM_CODE,
+            ts.PROJECT_CODE,
+            ta.REPOSITORY_HASH_ID
+        )
+            .from(ta).leftJoin(ts)
+            .on(ta.ATOM_CODE.eq(ts.STORE_CODE)).where(conditions)
+            .orderBy(ta.CREATE_TIME.desc())
+            .limit(limit)
+            .offset(offset)
+            .fetch()
+            .distinct()
+            .map {
+                AtomRefRepositoryInfo(
+                    atomCode = it.value1(),
+                    projectId = it.value2(),
+                    repositoryHashId = it.value3()
+                )
+            }
     }
 }

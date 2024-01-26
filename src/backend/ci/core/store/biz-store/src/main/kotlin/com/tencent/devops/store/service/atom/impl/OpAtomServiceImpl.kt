@@ -44,7 +44,6 @@ import com.tencent.devops.common.service.utils.ZipUtil
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.model.store.tables.records.TAtomRecord
 import com.tencent.devops.repository.api.ServiceRepositoryResource
-import com.tencent.devops.repository.pojo.AtomRefRepositoryInfo
 import com.tencent.devops.repository.pojo.enums.VisibilityLevelEnum
 import com.tencent.devops.store.constant.StoreMessageCode
 import com.tencent.devops.store.constant.StoreMessageCode.USER_UPLOAD_FILE_PATH_ERROR
@@ -54,7 +53,6 @@ import com.tencent.devops.store.dao.atom.MarketAtomDao
 import com.tencent.devops.store.dao.atom.MarketAtomFeatureDao
 import com.tencent.devops.store.dao.atom.MarketAtomVersionLogDao
 import com.tencent.devops.store.dao.common.LabelDao
-import com.tencent.devops.store.dao.common.StoreProjectRelDao
 import com.tencent.devops.store.pojo.atom.ApproveReq
 import com.tencent.devops.store.pojo.atom.Atom
 import com.tencent.devops.store.pojo.atom.AtomFeatureUpdateRequest
@@ -121,8 +119,7 @@ class OpAtomServiceImpl @Autowired constructor(
     private val storeI18nMessageService: StoreI18nMessageService,
     private val storeFileService: StoreFileService,
     private val redisOperation: RedisOperation,
-    private val client: Client,
-    private val storeProjectRelDao: StoreProjectRelDao
+    private val client: Client
 ) : OpAtomService {
 
     private val logger = LoggerFactory.getLogger(OpAtomServiceImpl::class.java)
@@ -615,7 +612,7 @@ class OpAtomServiceImpl @Autowired constructor(
         var offset = 0
         try {
             do {
-                val atomRecords = atomDao.getAtomByCode(
+                val atomRecords = atomDao.getAtomRepoInfoByCode(
                     dslContext = dslContext,
                     atomCode = atomCode,
                     limit = limit,
@@ -623,33 +620,13 @@ class OpAtomServiceImpl @Autowired constructor(
                 )
                 val recordSize = atomRecords.size
                 logger.info("recordSize:$recordSize")
-                // 获取插件与代码库的对应关系
-                val atomRefRepositoryInfos = mutableListOf<AtomRefRepositoryInfo>()
-                atomRecords.forEach { atomItem ->
-                    // 获取插件初始化时的蓝盾项目code
-                    val atomProjectRel = storeProjectRelDao.getAtomProjectRel(
-                        dslContext = dslContext,
-                        storeCode = atomItem.atomCode
-                    )
-                    if (atomProjectRel == null) {
-                        logger.warn("atomProjectRel is null|atomCode:${atomItem.atomCode}")
-                        return@forEach
-                    }
-                    atomRefRepositoryInfos.add(
-                        AtomRefRepositoryInfo(
-                            atomCode = atomItem.atomCode,
-                            projectId = atomProjectRel.projectCode,
-                            repositoryHashId = atomItem.repositoryHashId
-                        )
-                    )
-                }
                 try {
                     client.get(ServiceRepositoryResource::class).insertAtomRepoFlag(
                         userId = userId,
-                        atomRefRepositoryInfo = atomRefRepositoryInfos
+                        atomRefRepositoryInfo = atomRecords
                     )
                 } catch (ignored: Exception) {
-                    logger.warn("fail to insert atom flag|atomRefRepositoryInfos[$atomRefRepositoryInfos]", ignored)
+                    logger.warn("fail to insert atom flag|atomRefRepositoryInfos[$atomRecords]", ignored)
                 }
                 offset += limit
             } while (recordSize == limit)
