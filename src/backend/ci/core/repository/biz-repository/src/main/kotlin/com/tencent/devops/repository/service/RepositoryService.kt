@@ -719,8 +719,8 @@ class RepositoryService @Autowired constructor(
         val repositoryList = repositoryRecordList.map {
             val authInfo = repoAuthInfoMap[it.repositoryId]
             val atomRepo = it.atomRepo ?: false
-            val hasEditPermission = hasEditPermissionRepoList.contains(it.repositoryId) && atomRepo
-            val hasDeletePermission = hasDeletePermissionRepoList.contains(it.repositoryId) && atomRepo
+            val hasEditPermission = hasEditPermissionRepoList.contains(it.repositoryId) && !atomRepo
+            val hasDeletePermission = hasDeletePermissionRepoList.contains(it.repositoryId) && !atomRepo
             val hasUsePermission = hasUsePermissionRepoList.contains(it.repositoryId)
             val hasViewPermission = hasViewPermissionRepoList.contains(it.repositoryId)
             RepositoryInfoWithPermission(
@@ -729,8 +729,8 @@ class RepositoryService @Autowired constructor(
                 url = it.url,
                 type = ScmType.valueOf(it.type),
                 updatedTime = it.updatedTime.timestamp(),
-                canEdit = atomRepo && hasEditPermission,
-                canDelete = atomRepo && hasDeletePermission,
+                canEdit = hasEditPermission,
+                canDelete = hasDeletePermission,
                 canUse = hasUsePermission,
                 canView = hasViewPermission,
                 authType = authInfo?.authType ?: RepoAuthType.HTTP.name,
