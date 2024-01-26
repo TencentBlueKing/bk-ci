@@ -1211,11 +1211,7 @@ class PipelineRepositoryService constructor(
                     projectId = projectId,
                     pipelineId = pipelineId
                 ) else null
-            } ?: pipelineResourceDao.getReleaseVersionResource(
-                dslContext = dslContext,
-                projectId = projectId,
-                pipelineId = pipelineId
-            )
+            }
         } else {
             pipelineResourceVersionDao.getVersionResource(
                 dslContext = dslContext,
@@ -1224,7 +1220,11 @@ class PipelineRepositoryService constructor(
                 version = version,
                 includeDraft = includeDraft
             )
-        }
+        } ?: pipelineResourceDao.getReleaseVersionResource(
+            dslContext = dslContext,
+            projectId = projectId,
+            pipelineId = pipelineId
+        )
         // 返回时将别名name补全为id
         resource?.let {
             (resource.model.stages[0].containers[0] as TriggerContainer).params.forEach { param ->
