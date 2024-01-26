@@ -316,9 +316,10 @@ class PipelineResourceVersionDao {
         }
     }
 
-    fun deleteByVer(dslContext: DSLContext, projectId: String, pipelineId: String, version: Int) {
+    fun deleteByVersion(dslContext: DSLContext, projectId: String, pipelineId: String, version: Int) {
         return with(T_PIPELINE_RESOURCE_VERSION) {
-            dslContext.deleteFrom(this)
+            dslContext.update(this)
+                .set(STATUS, VersionStatus.DELETE.name)
                 .where(PIPELINE_ID.eq(pipelineId))
                 .and(VERSION.eq(version))
                 .and(PROJECT_ID.eq(projectId))
@@ -341,6 +342,7 @@ class PipelineResourceVersionDao {
         with(T_PIPELINE_RESOURCE_VERSION) {
             val query = dslContext.selectFrom(this)
                 .where(PIPELINE_ID.eq(pipelineId).and(PROJECT_ID.eq(projectId)))
+                .and(STATUS.ne(VersionStatus.DELETE.name))
                 .and(
                     BRANCH_ACTION.ne(BranchVersionAction.INACTIVE.name)
                         .or(BRANCH_ACTION.isNull)

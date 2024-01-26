@@ -25,7 +25,7 @@ class BluekingNotifySendCmd @Autowired constructor(
             else -> TYPE_SHUTDOWN_SUCCESS
         }
         when {
-            buildStatus.isFailure() -> {
+            buildStatus.isSuccess() -> {
                 setting.successSubscriptionList?.forEach { successSubscription ->
                     // 内容为null的时候处理为空字符串
                     val successContent = EnvUtils.parseEnv(
@@ -49,7 +49,7 @@ class BluekingNotifySendCmd @Autowired constructor(
                     )
                 }
             }
-            buildStatus.isSuccess() -> {
+            buildStatus.isFailure() -> {
                 setting.failSubscriptionList?.forEach { failSubscription ->
                     // 内容为null的时候处理为空字符串
                     val failContent = EnvUtils.parseEnv(

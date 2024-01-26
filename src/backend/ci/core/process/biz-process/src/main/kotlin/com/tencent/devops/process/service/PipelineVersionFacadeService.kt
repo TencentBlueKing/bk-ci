@@ -645,7 +645,7 @@ class PipelineVersionFacadeService @Autowired constructor(
         version: Int,
         checkPermission: Boolean = true
     ): String {
-        repositoryVersionService.deletePipelineVer(
+        repositoryVersionService.deletePipelineVersion(
             projectId = projectId,
             pipelineId = pipelineId,
             version = version
