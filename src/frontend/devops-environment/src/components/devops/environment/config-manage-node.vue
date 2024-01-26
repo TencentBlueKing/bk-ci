@@ -3,11 +3,7 @@
         :width="'900'"
         :ext-cls="'node-select-wrapper'"
         :close-icon="false">
-        <div
-            v-bkloading="{
-                isLoading: loading.isLoading,
-                title: loading.title
-            }">
+        <div>
             <div class="node-list-header">
                 <div class="title">{{ $t('environment.nodeInfo.selectNodeTip') }}
                     <span class="selected-node-prompt">
@@ -60,89 +56,47 @@
                     </div>
                 </div>
             </div>
-            <div class="node-table">
+            <div class="node-table"
+                v-bkloading="{
+                    isLoading: loading.isLoading,
+                    title: loading.title
+                }"
+            >
                 <bk-table
-                    v-if="rowList.length"
+                    ref="nodeListTable"
                     :data="rowList"
                     height="100%"
                     size="small"
                     ext-cls="node-list-table"
+                    :empty-text="$t('environment.nodeEmptyOpertaor')"
                     :pagination="pagination"
                     @page-change="handlePageChange"
                     @page-limit-change="pageLimitChange"
                     @select="toggleNodeSelect"
                     @select-all="toggleAllSelect"
                 >
-                    <bk-table-column type="selection" width="60" align="center" :selectable="isImported"></bk-table-column>
-                    <bk-table-column label="IP" prop="ip"></bk-table-column>
-                    <bk-table-column :label="$t('environment.nodeInfo.hostName')" prop="name"></bk-table-column>
-                    <bk-table-column :label="$t('environment.operator')" prop="operator"></bk-table-column>
-                    <bk-table-column :label="$t('environment.bkOperator')" prop="bakOperator"></bk-table-column>
-                    <bk-table-column :label="$t('environment.nodeInfo.gseAgentStatus')" prop="agentStatus"></bk-table-column>
-                </bk-table>
-                <!-- <div class="node-table-message" v-if="rowList.length">
-                    <div class="table-node-head">
-                        <bk-checkbox
-                            :true-value="true"
-                            :false-value="false"
-                            v-model="selectHandlercConf.allNodeSelected"
-                            @change="toggleAllSelect"
-                        ></bk-checkbox>
-                        <div class="table-node-item node-item-ip">IP</div>
-                        <div class="table-node-item node-item-name">{{ $t('environment.nodeInfo.hostName') }}</div>
-                        <div class="table-node-item node-item-operator">{{ $t('environment.operator') }}</div>
-                        <div class="table-node-item node-item-operator">{{ $t('environment.bkOperator') }}</div>
-                        <div class="table-node-item node-item-agstatus">{{ $t('environment.nodeInfo.gseAgentStatus') }}</div>
-                    </div>
-                    <div class="table-node-body">
-                        <template v-for="(col, index) of rowList">
-                            <div class="table-node-row" :key="index" v-if="col.isDisplay">
-                                <div class="table-node-item node-item-checkbox">
-                                    <bk-checkbox
-                                        :true-value="true"
-                                        :false-value="false"
-                                        :disabled="col.isEixtEnvNode"
-                                        v-model="col.isChecked"
-                                        @change="toggleNodeSelect"
-                                    ></bk-checkbox>
-                                </div>
-                                <div class="table-node-item node-item-ip">
-                                    <span class="node-ip">{{ col.ip }}</span>
-                                </div>
-                                <div class="table-node-item node-item-name">
-                                    <span class="node-name">{{ col.name }}</span>
-                                </div>
-                                <div class="table-node-item node-item-operator">
-                                    <span class="node-operator" :class="{ 'over-content': selectHandlercConf.curDisplayCount > 10 }" :title="col.operator">{{ col.operator }}</span>
-                                </div>
-                                <div class="table-node-item node-item-operator">
-                                    <P class="node-operator node-bkOperator" :class="{ 'over-content': selectHandlercConf.curDisplayCount > 10 }" :title="col.bakOperator">{{ col.bakOperator }}</P>
-                                </div>
-                                <div class="table-node-item node-item-agstatus">
-                                    <span class="node-agstatus normal-status-node"
-                                        :class="{
-                                            'abnormal-status-node': !col.agentStatus,
-                                            'over-content': selectHandlercConf.curDisplayCount > 10
-                                        }">{{ col.agentStatus ? $t('environment.nodeInfo.normal') : $t('environment.nodeInfo.abnormal') }}
-                                    </span>
-                                </div>
-                            </div>
+                    <bk-table-column type="selection" width="60" align="center" :selectable="isImported" show-overflow-tooltip></bk-table-column>
+                    <bk-table-column label="IP" prop="ip" show-overflow-tooltip></bk-table-column>
+                    <bk-table-column :label="$t('environment.nodeInfo.hostName')" prop="name" show-overflow-tooltip></bk-table-column>
+                    <bk-table-column :label="$t('environment.operator')" prop="operator" show-overflow-tooltip></bk-table-column>
+                    <bk-table-column :label="$t('environment.bkOperator')" prop="bakOperator" show-overflow-tooltip></bk-table-column>
+                    <bk-table-column :label="$t('environment.nodeInfo.gseAgentStatus')" prop="agentStatus">
+                        <template slot-scope="{ row }">
+                            <span
+                                :class="{
+                                    'node-agstatus normal-status-node': true,
+                                    'abnormal-status-node': !row.agentStatus
+                                }">
+                                {{ row.agentStatus ? $t('environment.nodeInfo.normal') : $t('environment.nodeInfo.abnormal') }}
+                            </span>
                         </template>
-                    </div>
-                </div> -->
-                <div class="no-data-row" v-else>
-                    <span>{{ $t('environment.nodeEmptyOpertaor') }}</span>
-                </div>
+                    </bk-table-column>
+                </bk-table>
             </div>
-            <!-- <full-paging :show-limit="true"
-                :paging-config="pagingConfig"
-                :page-count-config="pageCountConfig"
-                @page-changed="pageChanged"
-            ></full-paging> -->
         </div>
         <div slot="footer">
             <div class="footer-handler">
-                <bk-button theme="primary" @click="confirmFn" :disabled="!hasSelected || loading.isLoading">{{ importText }}</bk-button>
+                <bk-button theme="primary" @click="confirmFn" :disabled="!selectedNodeList.length || loading.isLoading">{{ importText }}</bk-button>
                 <bk-button theme="default" @click="cancelFn" :disabled="loading.isLoading">{{ $t('environment.cancel') }}</bk-button>
             </div>
         </div>
@@ -151,10 +105,8 @@
 
 <script>
     import { mapGetters } from 'vuex'
-    // import fullPaging from '@/components/common/full-paging'
 
     export default {
-        // components: { fullPaging },
         props: {
             nodeSelectConf: Object,
             curUserInfo: Object,
@@ -191,20 +143,6 @@
                     limit: 8,
                     limitList: [8, 20, 50, 100]
                 },
-                pageCountConfig: {
-                    totalCount: 0,
-                    perPageCountSelected: 100
-                },
-                pagingConfig: {
-                    totalPage: 1,
-                    curPage: 1
-                },
-                selectHandlercConf: {
-                    curTotalCount: 0,
-                    curDisplayCount: 0,
-                    selectedNodeCount: 0,
-                    allNodeSelected: false
-                },
                 nodeList: [],
                 selectedNodeList: []
             }
@@ -222,54 +160,107 @@
                 const tag = this.inputValue
                 const charLen = this.getCharLength(tag) + 1
                 return { width: charLen * 8 + 'px' }
-            },
-            hasSelected () {
-                return this.rowList.some(node => node.isChecked && !node.isEixtEnvNode)
             }
         },
         watch: {
             async 'nodeSelectConf.isShow' (val) {
                 if (!val) {
+                    this.rowList = []
                     this.inputValue = ''
                     this.operator = 'operator'
                     this.importText = this.$t('environment.import')
-                    this.selectHandlercConf.allNodeSelected = false
                     this.searchKeyList.splice(0, this.searchKeyList.length)
                 } else {
-                    this.pagingConfig.curPage = 1
+                    this.pagination.current = 1
                     if (this.reImportIp) {
                         this.importText = this.$t('environment.reImport')
                         await this.selectedKey(this.reImportIp || '')
                     }
                     await this.requestAllList()
-                    await this.getDate(this.pagingConfig.curPage)
+                    await this.getDate()
                 }
             }
         },
         methods: {
-            async getDate (page, pageSize = 100) {
+            async getDate () {
                 this.loading.isLoading = true
 
                 try {
                     const params = {
                         bakOperator: this.operator === 'bakOperator',
                         ipList: this.searchKeyList,
-                        page,
-                        pageSize
+                        page: this.pagination.current,
+                        pageSize: this.pagination.limit
                     }
+                    this.rowList = []
                     const res = await this.$store.dispatch('environment/requestCmdbNode', { params })
-
-                    this.rowList.splice(0, this.rowList.length)
+                    // const res = {
+                    //     records: [
+                    //         {
+                    //             name: '',
+                    //             operator: 'greysonfang',
+                    //             bakOperator: 'greysonfang',
+                    //             ip: '9.134.121.99',
+                    //             displayIp: '9.134.121.99',
+                    //             agentStatus: false,
+                    //             osName: 'TencentOS Server 3.2 (Final)',
+                    //             bizId: -1
+                    //         },
+                    //         {
+                    //             name: '',
+                    //             operator: 'greysonfang',
+                    //             bakOperator: 'greysonfang',
+                    //             ip: '9.134.121.11',
+                    //             displayIp: '9.134.121.11',
+                    //             agentStatus: false,
+                    //             osName: 'TencentOS Server 3.2 (Final)',
+                    //             bizId: -1
+                    //         }, {
+                    //             name: '',
+                    //             operator: 'greysonfang',
+                    //             bakOperator: 'greysonfang',
+                    //             ip: '9.134.121.22',
+                    //             displayIp: '9.134.121.22',
+                    //             agentStatus: false,
+                    //             osName: 'TencentOS Server 3.2 (Final)',
+                    //             bizId: -1
+                    //         }, {
+                    //             name: '',
+                    //             operator: 'greysonfang',
+                    //             bakOperator: 'greysonfang',
+                    //             ip: '9.134.121.33',
+                    //             displayIp: '9.134.121.33',
+                    //             agentStatus: false,
+                    //             osName: 'TencentOS Server 3.2 (Final)',
+                    //             bizId: -1
+                    //         }, {
+                    //             name: '',
+                    //             operator: 'greysonfang',
+                    //             bakOperator: 'greysonfang',
+                    //             ip: '9.134.121.44',
+                    //             displayIp: '9.134.121.44',
+                    //             agentStatus: false,
+                    //             osName: 'TencentOS Server 3.2 (Final)',
+                    //             bizId: -1
+                    //         }
+                    //     ]
+                    // }
                     res.records && res.records.forEach(item => {
                         item.nodeId = this.nodeList.find(node => node.nodeType === 'CMDB' && node.ip === item.ip)?.nodeId
                         this.rowList.push({
-                            ...item,
-                            isChecked: !!this.nodeList.some(node => node.nodeType === 'CMDB' && node.ip === item.ip),
-                            isImported: this.nodeList.some(node => (node.nodeType === 'CMDB' && node.ip === item.ip && node.nodeStatus !== 'NOT_IN_CC') || (node.nodeStatus === 'NOT_IN_CC' && !this.reImportIp))
+                            ...item
                         })
                     })
-                    this.selectHandlercConf.curTotalCount = res.count
-                    this.pageCountConfig.totalCount = res.count
+                    
+                    // 回填已经导入的节点
+                    this.$nextTick(() => {
+                        this.nodeList.forEach(selection => {
+                            const matchItem = this.rowList.find(val => val.ip === selection.ip)
+                            if (matchItem) {
+                                this.$refs.nodeListTable.toggleRowSelection(matchItem, true)
+                            }
+                        })
+                    })
                     this.pagination.count = res.count
                 } catch (err) {
                     const message = err.message ? err.message : err
@@ -296,13 +287,17 @@
                 return bitLen
             },
             changeOperator () {
-                this.selectHandlercConf.allNodeSelected = false
-                this.pagingConfig.curPage = 1
-                this.getDate(this.pagingConfig.curPage)
+                this.pagination.current = 1
+                this.getDate()
             },
             handlePageChange (page) {
-                this.selectHandlercConf.allNodeSelected = false
-                this.getDate(page)
+                this.pagination.current = page
+                this.getDate()
+            },
+            pageLimitChange (pageSize) {
+                this.pagination.limit = pageSize
+                this.pagination.current = 1
+                this.getDate()
             },
             handleFocus () {
                 this.isSearchFooter = !this.isSearchFooter
@@ -353,10 +348,9 @@
             },
             searchNode () {
                 this.selectedKey(this.inputValue)
-                this.selectHandlercConf.allNodeSelected = false
-                this.pagingConfig.curPage = 1
-                this.getDate(this.pagingConfig.curPage)
+                this.pagination.current = 1
                 this.isSearchFooter = false
+                this.getDate()
             },
             keyupHandler (event) {
                 switch (event.code) {
@@ -366,6 +360,7 @@
                     case 'Enter':
                     case 'NumpadEnter':
                         this.searchNode()
+                        console.log(123)
                         break
                     case 'Backspace':
                         if (!this.inputValue) {
@@ -379,35 +374,36 @@
             },
             deleteKey (index) {
                 this.searchKeyList.splice(index, 1)
+                this.pagination.current = 1
+                this.getDate()
             },
             toggleNodeSelect (selection) {
-                console.log(selection, 'selection')
-                // const allSelected = this.rowList.every(node => node.isChecked)
-                // const allUnSelected = this.rowList.every(node => !node.isChecked || (node.isChecked && node.isEixtEnvNode))
-                // if (allSelected) {
-                //     this.selectHandlercConf.allNodeSelected = true
-                // } else if (allUnSelected) {
-                //     this.selectHandlercConf.allNodeSelected = false
-                // }
+                if (!this.nodeList.length) {
+                    this.selectedNodeList = selection
+                    return
+                }
+                this.selectedNodeList = selection.filter(i => {
+                    return this.nodeList.find(val => val.ip && val.ip !== i.ip)
+                })
             },
             toggleAllSelect (selection) {
-                console.log(selection, 'selection')
-                // this.rowList = this.rowList.map(item => {
-                //     return {
-                //         ...item,
-                //         isChecked: item.isEixtEnvNode ? item.isChecked : this.selectHandlercConf.allNodeSelected
-                //     }
-                // })
+                if (!this.nodeList.length) {
+                    this.selectedNodeList = selection
+                    return
+                }
+                this.selectedNodeList = selection.filter(i => {
+                    return this.nodeList.find(val => val.ip && val.ip !== i.ip)
+                })
             },
             async confirmFn () {
                 const selectNodeId = []
                 if (this.reImportIp) {
-                    this.rowList.map(node => node.isChecked && !node.isImported && selectNodeId.push({
+                    this.selectedNodeList.map(node => selectNodeId.push({
                         nodeIp: node.ip,
                         nodeId: node.nodeId
                     }))
                 } else {
-                    this.rowList.map(node => node.isChecked && !node.isImported && selectNodeId.push(node.ip))
+                    this.selectedNodeList.map(node => selectNodeId.push(node.ip))
                 }
                 let theme, message, agentAbnormalNodesCount, agentNotInstallNodesCount
 
@@ -424,7 +420,7 @@
                     theme = 'success'
                 } catch (e) {
                     theme = 'error'
-                    message = e || e.message
+                    message = e.message || e
                 } finally {
                     this.loading.isLoading = false
                     this.$emit('confirm-fn', {
@@ -449,9 +445,10 @@
             },
             /**
              * 当前行是否可以勾选
+             * 已经导入过的节点不可勾选，状态为NOT_IN_CC的节点可勾选重新导入
              */
             isImported (row) {
-                return !row.isImported
+                return !this.nodeList.some(node => (node.nodeType === 'CMDB' && node.ip === row.ip && node.nodeStatus !== 'NOT_IN_CC') || (node.nodeStatus === 'NOT_IN_CC' && !this.reImportIp))
             }
         }
     }
@@ -782,6 +779,9 @@
         }
         .bk-table-body-wrapper {
             overflow-y: auto;
+        }
+        .bk-page-selection-count {
+            display: none;
         }
     }
 </style>

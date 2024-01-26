@@ -162,7 +162,7 @@
                                     <StatusIcon v-else-if="failStatus.includes(props.row.nodeStatus)" status="error" />
                                 
                                     <div v-else-if="runningStatus.includes(props.row.nodeStatus)"
-                                        class="bk-spin-loading bk-spin-loading-mini bk-spin-loading-primary"
+                                        class="bk-spin-loading bk-spin-loading-mini bk-spin-loading-primary loading-icon"
                                     >
                                         <div class="rotate rotate1"></div>
                                         <div class="rotate rotate2"></div>
@@ -176,7 +176,18 @@
                                     <!-- 状态值 -->
                                     <span class="node-status">
                                         {{ $t('environment.nodeStatusMap')[props.row.nodeStatus] }}
-                                        <span v-if="props.row.agentVersion">({{ props.row.agentVersion }})</span>
+                                        <span v-if="props.row.agentVersion">
+                                            ({{ props.row.agentVersion }})
+                                        </span>
+                                        <span
+                                            v-if="props.row.nodeStatus === 'RUNNING'"
+                                            @click="handleShowLogDetail(props.row)">
+                                            <Icon
+                                                class="log-icon"
+                                                name="log"
+                                                size="16"
+                                            />
+                                        </span>
                                     </span>
                                 </template>
                             </div>
@@ -245,7 +256,7 @@
                                         </span>
                                         <!-- 重装Agent -->
                                         <bk-button
-                                            v-if="props.row.nodeStatus === 'ABNORMAL'"
+                                            v-if="props.row.nodeStatus === 'ABNORMAL' || (props.row.nodeStatus === 'RUNNING' && props.row.agentStatus === 1)"
                                             v-perm="{
                                                 hasPermission: props.row.canEdit,
                                                 disablePermissionApi: true,
@@ -256,6 +267,7 @@
                                                     action: NODE_RESOURCE_ACTION.EDIT
                                                 }
                                             }"
+                                            :disable="props.row.nodeStatus === 'RUNNING'"
                                             text
                                             class="mr5"
                                             @click="installAgent(props.row)"
@@ -264,7 +276,7 @@
                                         </bk-button>
                                         <!-- 未安装Agent -->
                                         <bk-button
-                                            v-if="props.row.nodeStatus === 'NOT_INSTALLED'"
+                                            v-if="props.row.nodeStatus === 'NOT_INSTALLED' || (props.row.nodeStatus === 'RUNNING' && props.row.agentStatus === 0)"
                                             v-perm="{
                                                 hasPermission: props.row.canEdit,
                                                 disablePermissionApi: true,
@@ -275,6 +287,7 @@
                                                     action: NODE_RESOURCE_ACTION.EDIT
                                                 }
                                             }"
+                                            :disable="props.row.nodeStatus === 'RUNNING'"
                                             text
                                             class="mr5"
                                             @click="installAgent(props.row)"
@@ -317,6 +330,7 @@
                                                 action: NODE_RESOURCE_ACTION.DELETE
                                             }
                                         }"
+                                        :disable="props.row.nodeStatus === 'RUNNING'"
                                         class="mr5"
                                         @click.stop="confirmDelete(props.row, index)"
                                     >
@@ -458,9 +472,9 @@
                 nodeList: [], // 节点列表
                 allNodeList: [],
                 gatewayList: [], // 网关列表
-                runningStatus: ['CREATING', 'STARTING', 'STOPPING', 'RESTARTING', 'DELETING', 'BUILDING_IMAGE'],
+                runningStatus: ['CREATING', 'RUNNING', 'STARTING', 'STOPPING', 'RESTARTING', 'DELETING', 'BUILDING_IMAGE'],
                 successStatus: ['NORMAL', 'BUILD_IMAGE_SUCCESS'],
-                failStatus: ['ABNORMAL', 'DELETED', 'LOST', 'BUILD_IMAGE_FAILED', 'UNKNOWN', 'RUNNING'],
+                failStatus: ['ABNORMAL', 'DELETED', 'LOST', 'BUILD_IMAGE_FAILED', 'UNKNOWN'],
                 removedStatus: ['NOT_IN_CC', 'NOT_IN_CMDB'],
                 removedMessage: {
                     NOT_IN_CMDB: this.$t('environment.节点已从CMDB移除，不可使用'),
@@ -543,13 +557,14 @@
                 pagination: {
                     current: 1,
                     count: 0,
-                    limit: 15
+                    limit: 10
                 },
                 requestParams: {},
                 buildNodes: ['DEVCLOUD', 'THIRDPARTY'], // Build 构建用途的节点 - 第三方构建机类型
                 deploymentNodes: ['CC', 'CMDB', 'UNKNOWN', 'OTHER'], // deployment 部署用途的节点
                 reImportIp: '',
-                installAgentIp: ''
+                installAgentIp: '',
+                isDeleteIng: false
             }
         },
         computed: {
@@ -819,6 +834,8 @@
                     confirmFn: async () => {
                         let message, theme
                         try {
+                            if (this.isDeleteIng) return
+                            this.isDeleteIng = true
                             await this.$store.dispatch('environment/toDeleteNode', {
                                 projectId: this.projectId,
                                 params
@@ -842,6 +859,7 @@
                                 }
                             )
                         } finally {
+                            this.isDeleteIng = false
                             this.requestList()
                         }
                     }
@@ -1059,6 +1077,12 @@
                     this.$refs.installAgent.isShow = true
                 }
             },
+
+            handleShowLogDetail (node) {
+                this.installAgentIp = node.ip
+                this.$refs.installAgent.isShow = true
+            },
+
             async toImportNode (type) {
                 if (type === 'cmdb') {
                     this.cmdbNodeSelectConf.isShow = true
@@ -1491,10 +1515,19 @@
                 }
               }
             }
-
-            .install-agent {
-                color: $primaryColor;
+            .node-item-status {
+                display: flex;
+            }
+            .node-status {
+                display: flex;
+                flex: 1;
+            }
+            .loading-icon {
+                margin-right: 5px;
+            }
+            .log-icon {
                 cursor: pointer;
+                margin-left: 4px;
             }
 
             .node-removed-icon {
@@ -1518,12 +1551,6 @@
         }
     }
 
-    .node-reset-info {
-        .bk-dialog-body {
-            padding: 15px 55px;
-            color: $fontWeightColor;
-        }
-    }
     .search-input {
         width: 500px;
         background: #fff;
