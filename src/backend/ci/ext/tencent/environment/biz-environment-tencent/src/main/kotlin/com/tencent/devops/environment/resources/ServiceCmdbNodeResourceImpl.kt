@@ -27,7 +27,6 @@
 
 package com.tencent.devops.environment.resources
 
-import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
