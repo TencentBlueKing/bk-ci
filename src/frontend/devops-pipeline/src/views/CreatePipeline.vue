@@ -129,7 +129,7 @@
                                     <bk-radio
                                         :value="entry.value"
                                     >
-                                        <span class="radio-lable">{{ entry.label }}</span>
+                                        <span class="radio-label">{{ entry.label }}</span>
                                     </bk-radio>
                                     <div slot="content" style="white-space: normal;">{{entry.tip}}</div>
                                 </bk-popover>
@@ -149,20 +149,20 @@
                                     >
                                         <p class="template-apply-setting-checkbox-txt">
                                             <span class="template-apply-setting-checkbox-txt-label">{{ item.label }}</span>
-                                            <e v-if="item.disabled">
-                                                {{$t('模板未包含此设置')}}
-                                            </e>
-                                            <bk-button
-                                                text
-                                                theme="primary"
-                                                size="small"
-                                                @click.stop="previewSetting(item.value)"
-                                                v-else
-                                            >
-                                                {{$t('pipelinesPreview')}}
-                                            </bk-button>
                                         </p>
                                     </bk-checkbox>
+                                    <em v-if="item.disabled">
+                                        {{$t('模板未包含此设置')}}
+                                    </em>
+                                    <bk-button
+                                        text
+                                        theme="primary"
+                                        size="small"
+                                        @click.stop="previewSetting(item.value)"
+                                        v-else
+                                    >
+                                        {{$t('pipelinesPreview')}}
+                                    </bk-button>
                                 </div>
                             </bk-checkbox-group>
                         </bk-form-item>
@@ -258,21 +258,22 @@
                 ]
             },
             settingItems () {
+                const cloneTemplateSettingExist = this.activeTemp?.cloneTemplateSettingExist
                 return [
                     {
                         label: this.$t('template.notificationSetting'),
                         value: 'useSubscriptionSettings',
-                        disabled: !this.activeTemp?.notifySettingExist
+                        disabled: !cloneTemplateSettingExist?.notifySettingExist
                     },
                     {
                         label: this.$t('template.parallelSetting'),
                         value: 'useConcurrencyGroup',
-                        disabled: !this.activeTemp?.concurrencySettingExist
+                        disabled: !cloneTemplateSettingExist?.concurrencySettingExist
                     },
                     {
                         label: this.$t('template.labelSetting'),
                         value: 'useLabelSettings',
-                        disabled: !this.activeTemp?.labelSettingExist
+                        disabled: !cloneTemplateSettingExist?.labelSettingExist
                     }
                 ]
             },
@@ -290,7 +291,6 @@
                 return Object.values(this.pipelineTemplateMap).map(item => ({
                     ...item,
                     installed: true,
-                    hasCloneSettingExist: true,
                     hasPermission: true,
                     btnText: 'pipelinesPreview'
                 }))
@@ -310,6 +310,19 @@
                             btnText: item.installed ? 'pipelinesPreview' : 'editPage.install'
                         }
                     }).filter(item => item.name.toLowerCase().indexOf(this.searchName.toLowerCase()) > -1) ?? []
+                }
+            }
+        },
+        watch: {
+            settingItems (val) {
+                if (val) {
+                    this.applySettings = val.reduce((acc, item) => {
+                        if (!item.disabled) {
+                            acc.push(item.value)
+                        }
+                        return acc
+                    }, [])
+                    console.log(this.applySettings)
                 }
             }
         },

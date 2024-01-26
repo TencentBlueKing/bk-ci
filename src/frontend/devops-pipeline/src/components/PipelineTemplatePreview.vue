@@ -179,6 +179,10 @@
                     this.isYamlSupport = res.yamlSupported
                     this.yamlInvalidMsg = res.yamlInvalidMsg
                     this.pipelineSetting = res.setting
+
+                    if (this.previewSettingType) {
+                        this.activePanel = 'baseConfig'
+                    }
                 } catch (error) {
                     this.$bkMessage({
                         theme: 'error',
