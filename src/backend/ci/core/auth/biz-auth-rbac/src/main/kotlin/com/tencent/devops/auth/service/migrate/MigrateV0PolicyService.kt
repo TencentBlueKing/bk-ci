@@ -29,11 +29,14 @@
 package com.tencent.devops.auth.service.migrate
 
 import com.tencent.bk.sdk.iam.config.IamConfiguration
+import com.tencent.bk.sdk.iam.constants.ManagerScopesEnum
+import com.tencent.bk.sdk.iam.dto.V2PageInfoDTO
 import com.tencent.bk.sdk.iam.dto.manager.Action
 import com.tencent.bk.sdk.iam.dto.manager.AuthorizationScopes
 import com.tencent.bk.sdk.iam.dto.manager.ManagerPath
 import com.tencent.bk.sdk.iam.dto.manager.ManagerResources
 import com.tencent.bk.sdk.iam.dto.manager.RoleGroupMemberInfo
+import com.tencent.bk.sdk.iam.dto.manager.dto.SearchTemplatesDTO
 import com.tencent.bk.sdk.iam.service.v2.V2ManagerService
 import com.tencent.devops.auth.dao.AuthMigrationDao
 import com.tencent.devops.auth.dao.AuthResourceGroupConfigDao
@@ -45,6 +48,7 @@ import com.tencent.devops.auth.service.PermissionGroupPoliciesService
 import com.tencent.devops.auth.service.RbacCacheService
 import com.tencent.devops.auth.service.iam.PermissionResourceGroupService
 import com.tencent.devops.auth.service.iam.PermissionService
+import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
@@ -157,9 +161,10 @@ class MigrateV0PolicyService constructor(
         projectName: String,
         managerGroupId: Int,
         result: MigrateTaskDataResult
-    ): List<AuthorizationScopes> {
+    ): Pair<List<AuthorizationScopes>, List<String>> {
         val rbacAuthorizationScopes = mutableListOf<AuthorizationScopes>()
         val projectActions = mutableListOf<Action>()
+        val groupIdListOfPipelineActionGroup = mutableListOf<String>()
         result.permissions.forEach permission@{ permission ->
             // 如果发现资源类型是跳过的,则跳过
             if (skipResourceTypes.contains(permission.resources[0].type)) {
@@ -174,13 +179,18 @@ class MigrateV0PolicyService constructor(
             if (resourceActions.isEmpty()) {
                 return@permission
             }
-            if (permission.resources[0].paths.isNotEmpty()) {
-                val isContinue = handlePipelineActionGroup(
+            val resources = permission.resources
+
+            if (resources.isNotEmpty() && resources[0].type == AuthResourceType.PIPELINE_DEFAULT.value && resources[0].paths.isNotEmpty()) {
+                val groupIdOfPipelineActionGroup = getGroupIdOfPipelineActionGroup(
                     projectCode = projectCode,
-                    resourceCode = permission.resources[0].paths[0][0].id,
+                    resourceCode = resources[0].paths[0][0].id,
                     resourceActions = resourceActions.map { it.id }.toSet()
                 )
-                if (!isContinue) return@permission
+                if (groupIdOfPipelineActionGroup != null) {
+                    groupIdListOfPipelineActionGroup.add(groupIdOfPipelineActionGroup)
+                    return@permission
+                }
             }
             val rbacResources = buildRbacManagerResources(
                 projectCode = projectCode,
@@ -209,29 +219,26 @@ class MigrateV0PolicyService constructor(
                     .build()
             )
         }
-        return rbacAuthorizationScopes
+        return Pair(rbacAuthorizationScopes, groupIdListOfPipelineActionGroup)
     }
 
-    private fun handlePipelineActionGroup(
+    private fun getGroupIdOfPipelineActionGroup(
         projectCode: String,
         resourceCode: String,
         resourceActions: Set<String>
-    ): Boolean {
+    ): String? {
         val pipelineGroupCode = when (resourceActions) {
             PIPELINE_EXECUTOR_ACTION_GROUP -> BkAuthGroup.EXECUTOR.value
             PIPELINE_VIEWER_ACTION_GROUP -> BkAuthGroup.VIEWER.value
             else -> null
-        } ?: return true
-
-        val pipelineGroupId = authResourceGroupDao.get(
+        } ?: return null
+        return authResourceGroupDao.get(
             dslContext = dslContext,
             projectCode = projectCode,
             resourceType = AuthResourceType.PIPELINE_DEFAULT.value,
             resourceCode = resourceCode,
-            groupCode = BkAuthGroup.EXECUTOR.value
-        )?.relationId ?: return true
-        // 查询对应组的人员模板ID，并像该流水线用户组加入人员模板aaaa
-        return false
+            groupCode = pipelineGroupCode
+        )?.relationId
     }
 
     /**
@@ -450,29 +457,75 @@ class MigrateV0PolicyService constructor(
         )
     }
 
-    override fun batchAddGroupMember(groupId: Int, defaultGroup: Boolean, members: List<RoleGroupMemberInfo>?) {
+    override fun batchAddGroupMember(
+        groupId: Int,
+        defaultGroup: Boolean,
+        members: List<RoleGroupMemberInfo>?,
+        gradeManagerId: Int?,
+        groupName: String?,
+        groupIdOfPipelineActionGroupList: List<String>
+    ) {
+        // 1.往流水级别用户组添加人员模板
+        if (groupIdOfPipelineActionGroupList.isNotEmpty()) {
+            // 获取人员模板ID
+            val subjectTemplateId = v2ManagerService.getGradeManagerRoleTemplate(
+                gradeManagerId.toString(),
+                SearchTemplatesDTO.builder().name(groupName).build(),
+                V2PageInfoDTO().apply {
+                    page = PageUtil.DEFAULT_PAGE
+                    pageSize = PageUtil.DEFAULT_PAGE_SIZE
+                }
+            ).results.firstOrNull { it.name == groupName }?.id.toString()
+            groupIdOfPipelineActionGroupList.forEach {
+                addGroupMember(
+                    groupId = it.toInt(),
+                    defaultGroup = true,
+                    member = RoleGroupMemberInfo().apply {
+                        type = ManagerScopesEnum.getType(ManagerScopesEnum.TEMPLATE)
+                        id = subjectTemplateId
+                        name = subjectTemplateId
+                        expiredAt = 0
+                    }
+                )
+            }
+        }
+
+        // 2.往用户组添加用户
         if (members.isNullOrEmpty()) {
             return
         }
+
         if (members.size > MAX_GROUP_MEMBER) {
             logger.warn("group member size is too large, max size is $MAX_GROUP_MEMBER")
             return
         }
         members.forEach member@{ member ->
-            val expiredDay = if (defaultGroup) {
-                // 默认用户组,2年或3年随机过期
-                V0_GROUP_EXPIRED_DAY[RandomUtils.nextInt(2, 4)]
-            } else {
-                // 自定义用户组,半年或者一年过期
-                V0_GROUP_EXPIRED_DAY[RandomUtils.nextInt(0, 2)]
-            }
-            groupService.addGroupMember(
-                userId = member.id,
-                memberType = member.type,
-                expiredAt = System.currentTimeMillis() / MILLISECOND + TimeUnit.DAYS.toSeconds(expiredDay),
+            addGroupMember(
+                defaultGroup = defaultGroup,
+                member = member,
                 groupId = groupId
             )
         }
+    }
+
+    private fun addGroupMember(
+        defaultGroup: Boolean,
+        member: RoleGroupMemberInfo,
+        groupId: Int
+    ) {
+        val expiredDay = if (defaultGroup) {
+            // 默认用户组,2年或3年随机过期
+            V0_GROUP_EXPIRED_DAY[RandomUtils.nextInt(2, 4)]
+        } else {
+            // 自定义用户组,半年或者一年过期
+            V0_GROUP_EXPIRED_DAY[RandomUtils.nextInt(0, 2)]
+        }
+        groupService.addGroupMember(
+            userId = member.id,
+            memberType = member.type,
+            expiredAt = System.currentTimeMillis() / MILLISECOND + TimeUnit.DAYS.toSeconds(expiredDay),
+            groupId = groupId
+        )
     }
 
     override fun getGroupName(projectName: String, result: MigrateTaskDataResult): String {

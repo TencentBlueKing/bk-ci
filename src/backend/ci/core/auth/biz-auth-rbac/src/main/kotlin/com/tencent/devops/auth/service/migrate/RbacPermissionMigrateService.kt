@@ -287,10 +287,7 @@ class RbacPermissionMigrateService constructor(
         val traceId = MDC.get(TraceTag.BIZID)
         client.get(ServiceProjectResource::class).listByProjectCode(
             projectCodes = projectCodes.toSet()
-        ).data?.filter {
-            // 仅迁移已迁移成功的项目
-            it.routerTag != null && it.routerTag!!.contains(AuthSystemType.RBAC_AUTH_TYPE.value)
-        }?.forEach {
+        ).data?.forEach {
             // 若已迁移监控资源，直接跳过
             if (authMonitorSpaceDao.get(dslContext, it.englishName) != null)
                 return@forEach
