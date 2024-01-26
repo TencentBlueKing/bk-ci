@@ -472,7 +472,9 @@ class GroupService @Autowired constructor(
             if (inner.deptFullName.isNullOrBlank()) {
                 try {
                     client.get(ServiceTxUserResource::class).get(inner.userId).data?.let {
-                        val deptFullName = StringUtils.joinWith("/", it.bgName, it.deptName, it.centerName)
+                        val businessLineName = it.businessLineName ?: ""
+                        val deptFullName = listOf(it.bgName, businessLineName, it.deptName, it.centerName)
+                            .filter { name -> name.isNotBlank() }.joinToString("/")
                         inner.deptFullName = deptFullName
                         experienceGroupInnerDao.updateDeptFullName(dslContext, inner.id, deptFullName)
                     }
@@ -683,12 +685,10 @@ class GroupService @Autowired constructor(
                 if (it.bgId == "0") {
                     it.groupName
                 } else {
-                    StringUtils.joinWith(
-                        "/",
-                        it.bgName,
-                        it.deptName,
-                        it.centerName
-                    ).replace("^/+", "").replace("/+$", "")
+                    val businessLineName = it.businessLineName ?: ""
+                    listOf(it.bgName, businessLineName, it.deptName, it.centerName)
+                        .filter { name -> name.isNotBlank() }.joinToString("/")
+                        .replace("^/+", "").replace("/+$", "")
                 }
             } ?: ""
         } catch (e: Throwable) {
