@@ -1614,7 +1614,8 @@ class PipelineRepositoryService constructor(
                 pipelineName = setting.pipelineName,
                 pipelineDesc = setting.desc,
                 updateLastModifyUser = updateLastModifyUser,
-                onlyDraft = false
+                // 单独修改流水线配置不影响版本状态
+                onlyDraft = null
             )
             if (version > 0) { // #671 兼容无版本要求的修改入口，比如改名，或者只读流水线的修改操作, version=0
                 if (old?.maxPipelineResNum != null) {
