@@ -878,6 +878,10 @@ class PipelineRepositoryService constructor(
                 val settingVersion = setting?.version ?: 1
                 val releaseResource = pipelineResourceDao.getReleaseVersionResource(
                     transactionContext, projectId, pipelineId
+                ) ?: throw ErrorCodeException(
+                    statusCode = Response.Status.NOT_FOUND.statusCode,
+                    errorCode = ProcessMessageCode.ERROR_PIPELINE_NOT_EXISTS,
+                    params = arrayOf(pipelineId)
                 )
                 val latestVersion = pipelineResourceVersionDao.getLatestVersionResource(
                     dslContext = transactionContext,
@@ -885,7 +889,8 @@ class PipelineRepositoryService constructor(
                     pipelineId = pipelineId
                 ) ?: throw ErrorCodeException(
                     statusCode = Response.Status.NOT_FOUND.statusCode,
-                    errorCode = ProcessMessageCode.ERROR_NO_PIPELINE_VERSION_EXISTS_BY_ID
+                    errorCode = ProcessMessageCode.ERROR_PIPELINE_NOT_EXISTS,
+                    params = arrayOf(pipelineId)
                 )
                 watcher.start("updatePipelineInfo")
                 // 旧逻辑 bak —— 写入INFO表后进行了version的自动+1
@@ -901,7 +906,7 @@ class PipelineRepositoryService constructor(
                         version = if (draftVersion == null) {
                             // 创建
                             operationLogType = OperationLogType.CREATE_DRAFT_VERSION
-                            realBaseVersion = realBaseVersion ?: releaseResource?.version
+                            realBaseVersion = realBaseVersion ?: releaseResource.version
                             operationLogParams = realBaseVersion?.let { base ->
                                 pipelineResourceVersionDao.getPipelineVersionSimple(
                                     dslContext, projectId, pipelineId, base
@@ -982,18 +987,20 @@ class PipelineRepositoryService constructor(
                             projectId = projectId,
                             pipelineId = pipelineId
                         )
-                        pipelineVersion = releaseResource?.pipelineVersion ?: 1
-                        triggerVersion = releaseResource?.triggerVersion ?: 1
+                        pipelineVersion = releaseResource.pipelineVersion ?: 1
+                        triggerVersion = releaseResource.triggerVersion ?: 1
                         // 数据分离：发布记录的版本自增，旧数据保留和版本表中version一致，后续单独用于前端展示
-                        versionNum = (releaseResource?.versionNum ?: 0) + 1
-                        releaseResource?.let {
-                            pipelineVersion = PipelineVersionUtils.getPipelineVersion(
-                                pipelineVersion, it.model, model
-                            )
-                            triggerVersion = PipelineVersionUtils.getTriggerVersion(
-                                triggerVersion, it.model, model
-                            )
-                        }
+                        versionNum = (releaseResource.versionNum ?: 0) + 1
+                        pipelineVersion = PipelineVersionUtils.getPipelineVersion(
+                            currVersion = pipelineVersion,
+                            originModel = releaseResource.model,
+                            newModel = model
+                        )
+                        triggerVersion = PipelineVersionUtils.getTriggerVersion(
+                            currVersion = triggerVersion,
+                            originModel = releaseResource.model,
+                            newModel = model
+                        )
                         operationLogType = OperationLogType.RELEASE_MASTER_VERSION
                         val newVersionName = PipelineVersionUtils.getVersionName(
                             pipelineVersion, triggerVersion, settingVersion
