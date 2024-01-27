@@ -514,13 +514,23 @@ class RepositoryService @Autowired constructor(
         val repositoryId =
             repositoryService.create(projectId = projectId, userId = userId, repository = repository)
         createResource(userId, projectId, repositoryId, repository.aliasName)
-        if (repository.enablePac == true) {
-            client.get(ServicePipelineYamlResource::class).enable(
+        try {
+            if (repository.enablePac == true) {
+                client.get(ServicePipelineYamlResource::class).enable(
+                    userId = userId,
+                    projectId = projectId,
+                    repoHashId = HashUtil.encodeOtherLongId(repositoryId),
+                    scmType = repository.getScmType()
+                )
+            }
+        } catch (exception: Exception) {
+            logger.error("failed to enable pac when create repository,rollback|$projectId|$repositoryId")
+            userDelete(
                 userId = userId,
                 projectId = projectId,
-                repoHashId = HashUtil.encodeOtherLongId(repositoryId),
-                scmType = repository.getScmType()
+                repositoryHashId = HashUtil.encodeOtherLongId(repositoryId)
             )
+            throw exception
         }
         return repositoryId
     }
