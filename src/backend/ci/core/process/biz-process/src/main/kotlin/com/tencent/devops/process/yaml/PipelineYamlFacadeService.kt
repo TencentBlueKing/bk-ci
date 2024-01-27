@@ -61,6 +61,8 @@ import com.tencent.devops.process.yaml.mq.PipelineYamlTriggerEvent
 import com.tencent.devops.process.yaml.v2.enums.StreamObjectKind
 import com.tencent.devops.repository.api.ServiceRepositoryPacResource
 import com.tencent.devops.repository.api.ServiceRepositoryResource
+import com.tencent.devops.repository.pojo.Repository
+import com.tencent.devops.repository.pojo.enums.RepoYamlSyncStatusEnum
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -90,67 +92,77 @@ class PipelineYamlFacadeService @Autowired constructor(
         private val logger = LoggerFactory.getLogger(PipelineYamlFacadeService::class.java)
     }
 
-    fun enablePac(userId: String, projectId: String, repoHashId: String, scmType: ScmType) {
-        logger.info("enable pac|$userId|$projectId|$repoHashId|$scmType")
-        val repository = client.get(ServiceRepositoryResource::class).get(
-            projectId = projectId,
-            repositoryId = repoHashId,
-            repositoryType = RepositoryType.ID
-        ).data ?: return
-        val setting = PacRepoSetting(repository = repository)
-        val event = PipelineYamlManualEvent(
-            userId = userId,
-            projectId = projectId,
-            repoHashId = repoHashId,
-            scmType = scmType
-        )
-        val action = eventActionFactory.loadManualEvent(setting = setting, event = event)
+    fun enablePac(
+        userId: String,
+        projectId: String,
+        repoHashId: String,
+        repository: Repository
+    ) {
+        try {
+            logger.info("enable pac|$userId|$projectId|$repoHashId")
+            val setting = PacRepoSetting(repository = repository)
+            val event = PipelineYamlManualEvent(
+                userId = userId,
+                projectId = projectId,
+                repoHashId = repoHashId,
+                scmType = repository.getScmType()
+            )
+            val action = eventActionFactory.loadManualEvent(setting = setting, event = event)
 
-        val yamlPathList = action.getYamlPathList()
-        pipelineYamlSyncService.initPacSyncDetail(
-            projectId = projectId,
-            repoHashId = repoHashId,
-            yamlPathList = yamlPathList
-        )
-        // 如果没有Yaml文件则不初始化
-        if (yamlPathList.isEmpty()) {
-            logger.warn("enable pac,not found ci yaml from git|$projectId|$repoHashId")
-            return
-        }
-        // 创建yaml流水线组
-        pipelineYamlViewService.createYamlViewIfAbsent(
-            userId = action.data.getUserId(),
-            projectId = projectId,
-            repoHashId = repoHashId,
-            gitProjectName = action.data.setting.projectName,
-            directoryList = yamlPathList.map { GitActionCommon.getCiDirectory(it.yamlPath) }
-        )
-        val path2PipelineExists = pipelineYamlInfoDao.getAllByRepo(
-            dslContext = dslContext, projectId = projectId, repoHashId = repoHashId
-        ).associate {
-            it.filePath to YamlTriggerPipeline(
-                projectId = it.projectId,
-                repoHashId = it.repoHashId,
-                filePath = it.filePath,
-                pipelineId = it.pipelineId,
-                userId = userId
+            val yamlPathList = action.getYamlPathList()
+            pipelineYamlSyncService.initPacSyncDetail(
+                projectId = projectId,
+                repoHashId = repoHashId,
+                yamlPathList = yamlPathList
             )
-        }
-        yamlPathList.forEach {
-            action.data.context.pipeline = path2PipelineExists[it.yamlPath]
-            action.data.context.yamlFile = it
-            pipelineEventDispatcher.dispatch(
-                PipelineYamlEnableEvent(
-                    projectId = projectId,
-                    yamlPath = it.yamlPath,
-                    userId = userId,
-                    eventStr = objectMapper.writeValueAsString(event),
-                    metaData = action.metaData,
-                    actionCommonData = action.data.eventCommon,
-                    actionContext = action.data.context,
-                    actionSetting = action.data.setting
+            // 如果没有Yaml文件则不初始化
+            if (yamlPathList.isEmpty()) {
+                logger.warn("enable pac,not found ci yaml from git|$projectId|$repoHashId")
+                return
+            }
+            // 创建yaml流水线组
+            pipelineYamlViewService.createYamlViewIfAbsent(
+                userId = action.data.getUserId(),
+                projectId = projectId,
+                repoHashId = repoHashId,
+                gitProjectName = action.data.setting.projectName,
+                directoryList = yamlPathList.map { GitActionCommon.getCiDirectory(it.yamlPath) }
+            )
+            val path2PipelineExists = pipelineYamlInfoDao.getAllByRepo(
+                dslContext = dslContext, projectId = projectId, repoHashId = repoHashId
+            ).associate {
+                it.filePath to YamlTriggerPipeline(
+                    projectId = it.projectId,
+                    repoHashId = it.repoHashId,
+                    filePath = it.filePath,
+                    pipelineId = it.pipelineId,
+                    userId = userId
                 )
+            }
+            yamlPathList.forEach {
+                action.data.context.pipeline = path2PipelineExists[it.yamlPath]
+                action.data.context.yamlFile = it
+                pipelineEventDispatcher.dispatch(
+                    PipelineYamlEnableEvent(
+                        projectId = projectId,
+                        yamlPath = it.yamlPath,
+                        userId = userId,
+                        eventStr = objectMapper.writeValueAsString(event),
+                        metaData = action.metaData,
+                        actionCommonData = action.data.eventCommon,
+                        actionContext = action.data.context,
+                        actionSetting = action.data.setting
+                    )
+                )
+            }
+        } catch (exception: Exception) {
+            logger.error("Failed to enable pac|$userId|$projectId|$repoHashId", exception)
+            client.get(ServiceRepositoryPacResource::class).updateYamlSyncStatus(
+                projectId = projectId,
+                repoHashId = repoHashId,
+                syncStatus =  RepoYamlSyncStatusEnum.FAILED.name
             )
+            throw exception
         }
     }
 

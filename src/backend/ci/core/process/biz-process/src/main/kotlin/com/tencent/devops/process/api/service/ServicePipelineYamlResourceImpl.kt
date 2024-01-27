@@ -32,6 +32,7 @@ import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.process.yaml.PipelineYamlFacadeService
+import com.tencent.devops.repository.pojo.Repository
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
@@ -42,13 +43,13 @@ class ServicePipelineYamlResourceImpl @Autowired constructor(
         userId: String,
         projectId: String,
         repoHashId: String,
-        scmType: ScmType
+        repository: Repository
     ): Result<Boolean> {
         pipelineYamlFacadeService.enablePac(
             userId = userId,
             projectId = projectId,
             repoHashId = repoHashId,
-            scmType = scmType
+            repository = repository
         )
         return Result(true)
     }
