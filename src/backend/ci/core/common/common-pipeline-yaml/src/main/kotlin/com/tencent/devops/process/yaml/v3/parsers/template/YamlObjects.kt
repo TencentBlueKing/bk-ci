@@ -75,6 +75,7 @@ object YamlObjects {
             name = variable["name"]?.toString(),
             valueNotEmpty = getNullValue("required", variable)?.toBoolean(),
             readonly = getNullValue("readonly", variable)?.toBoolean(),
+            const = getNullValue("const", variable)?.toBoolean(),
             allowModifyAtStartup = getNullValue("allow-modify-at-startup", variable)?.toBoolean(),
             props = if (variable["props"] == null) {
                 null

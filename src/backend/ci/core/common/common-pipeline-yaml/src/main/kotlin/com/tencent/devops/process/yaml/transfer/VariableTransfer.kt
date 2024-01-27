@@ -27,6 +27,7 @@
 
 package com.tencent.devops.process.yaml.transfer
 
+import com.tencent.devops.common.api.constant.CommonMessageCode.YAML_NOT_VALID
 import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.container.TriggerContainer
@@ -148,6 +149,7 @@ class VariableTransfer @Autowired constructor() {
                 readonly = it.readOnly.nullIfDefault(false),
                 allowModifyAtStartup = it.required.nullIfDefault(true),
                 valueNotEmpty = it.valueNotEmpty.nullIfDefault(false),
+                const = it.constant.nullIfDefault(false),
                 props = props
             )
         }
@@ -197,11 +199,13 @@ class VariableTransfer @Autowired constructor() {
         variables.forEach { (key, variable) ->
             val type = VariablePropType.findType(variable.props?.type)?.toBuildFormPropertyType()
                 ?: BuildFormPropertyType.STRING
+            check(key, variable)
             buildFormProperties.add(
                 BuildFormProperty(
                     id = key,
                     name = variable.name,
                     required = variable.allowModifyAtStartup ?: true,
+                    constant = variable.const ?: false,
                     type = type,
                     defaultValue = when (type) {
                         BuildFormPropertyType.BOOLEAN -> variable.value?.toBoolean() ?: false
@@ -232,5 +236,34 @@ class VariableTransfer @Autowired constructor() {
             )
         }
         return buildFormProperties
+    }
+
+    private fun check(key: String, variable: Variable) {
+        if (key.length > 64) {
+            throw PipelineTransferException(
+                YAML_NOT_VALID,
+                arrayOf("variable key no more than 64 characters. variable: $key")
+            )
+        }
+
+        if (variable.const == true && variable.readonly == false) {
+            throw PipelineTransferException(
+                YAML_NOT_VALID,
+                arrayOf("When the const attribute is set to true, readonly must be true. variable: $key")
+            )
+        }
+        if (variable.const == true && variable.allowModifyAtStartup != null) {
+            throw PipelineTransferException(
+                YAML_NOT_VALID,
+                arrayOf(
+                    "The const attribute and the allow-modify-at-startup attribute are mutually exclusive. " +
+                        "If configured at the same time, the verification will fail. variable: $key"
+                )
+            )
+        }
+
+        if (variable.const == true && variable.readonly == null) {
+            variable.readonly = true
+        }
     }
 }
