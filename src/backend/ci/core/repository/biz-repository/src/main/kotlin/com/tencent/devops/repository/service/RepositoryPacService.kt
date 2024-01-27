@@ -83,25 +83,24 @@ class RepositoryPacService @Autowired constructor(
                 language = I18nUtil.getLanguage(userId)
             )
         )
-        val record = repositoryDao.get(dslContext = dslContext, repositoryId = repositoryId, projectId = projectId)
-        if (record.enablePac == true) {
+        val repository = repositoryDao.get(dslContext = dslContext, repositoryId = repositoryId, projectId = projectId)
+        if (repository.enablePac == true) {
             throw ErrorCodeException(
                 errorCode = RepositoryMessageCode.ERROR_REPO_REPEATEDLY_ENABLED_PAC
             )
         }
-        val codeRepositoryService = CodeRepositoryServiceRegistrar.getServiceByScmType(record.type)
+        val codeRepositoryService = CodeRepositoryServiceRegistrar.getServiceByScmType(repository.type)
         codeRepositoryService.pacCheckEnabled(
             projectId = projectId,
             userId = userId,
-            record = record,
+            record = repository,
             retry = false
         )
-        val repository = codeRepositoryService.compose(record)
         client.get(ServicePipelineYamlResource::class).enable(
             userId = userId,
             projectId = projectId,
             repoHashId = repositoryHashId,
-            repository = repository
+            scmType = ScmType.valueOf(repository.type)
         )
         repositoryDao.enablePac(
             dslContext = dslContext,
@@ -132,21 +131,20 @@ class RepositoryPacService @Autowired constructor(
                 language = I18nUtil.getLanguage(userId)
             )
         )
-        val record = repositoryDao.get(dslContext = dslContext, repositoryId = repositoryId, projectId = projectId)
+        val repository = repositoryDao.get(dslContext = dslContext, repositoryId = repositoryId, projectId = projectId)
 
-        val codeRepositoryService = CodeRepositoryServiceRegistrar.getServiceByScmType(record.type)
+        val codeRepositoryService = CodeRepositoryServiceRegistrar.getServiceByScmType(repository.type)
         codeRepositoryService.pacCheckEnabled(
             projectId = projectId,
             userId = userId,
-            record = record,
+            record = repository,
             retry = true
         )
-        val repository = codeRepositoryService.compose(record)
         client.get(ServicePipelineYamlResource::class).enable(
             userId = userId,
             projectId = projectId,
             repoHashId = repositoryHashId,
-            repository = repository
+            scmType = ScmType.valueOf(repository.type)
         )
     }
 

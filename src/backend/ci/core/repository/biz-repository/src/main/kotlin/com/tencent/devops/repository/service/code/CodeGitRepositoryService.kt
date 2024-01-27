@@ -32,10 +32,8 @@ import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.api.util.MessageUtil
-import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.model.repository.tables.records.TRepositoryRecord
-import com.tencent.devops.process.api.service.ServicePipelineYamlResource
 import com.tencent.devops.repository.constant.RepositoryConstants
 import com.tencent.devops.repository.constant.RepositoryMessageCode
 import com.tencent.devops.repository.constant.RepositoryMessageCode.ERROR_AUTH_TYPE_ENABLED_PAC
@@ -80,8 +78,7 @@ class CodeGitRepositoryService @Autowired constructor(
     private val scmService: IScmService,
     private val gitOauthService: IGitOauthService,
     private val scmOauthService: IScmOauthService,
-    private val gitService: IGitService,
-    private val client: Client
+    private val gitService: IGitService
 ) : CodeRepositoryService<CodeGitRepository> {
     override fun repositoryType(): String {
         return CodeGitRepository::class.java.name
@@ -120,14 +117,6 @@ class CodeGitRepositoryService @Autowired constructor(
                 authType = repository.authType,
                 gitProjectId = gitProjectId
             )
-            if (repository.enablePac == true) {
-                client.get(ServicePipelineYamlResource::class).enable(
-                    userId = userId,
-                    projectId = projectId,
-                    repoHashId = HashUtil.encodeOtherLongId(repositoryId),
-                    repository = repository.copy(repoHashId = HashUtil.encodeOtherLongId(repositoryId))
-                )
-            }
         }
         return repositoryId
     }

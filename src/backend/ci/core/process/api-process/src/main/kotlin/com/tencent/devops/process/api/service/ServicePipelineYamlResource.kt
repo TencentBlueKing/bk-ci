@@ -32,7 +32,6 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.repository.pojo.Repository
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
@@ -64,8 +63,9 @@ interface ServicePipelineYamlResource {
         @ApiParam("代码库hashId", required = true)
         @PathParam("repoHashId")
         repoHashId: String,
-        @ApiParam("代码库信息", required = true)
-        repository: Repository
+        @ApiParam("代码库类型", required = true)
+        @QueryParam("scmType")
+        scmType: ScmType
     ): Result<Boolean>
 
     @ApiOperation("关闭PAC")
