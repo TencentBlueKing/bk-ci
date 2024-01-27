@@ -82,7 +82,8 @@ class PipelineYamlFacadeService @Autowired constructor(
     private val pipelineTriggerEventService: PipelineTriggerEventService,
     private val pipelineYamlService: PipelineYamlService,
     @Lazy
-    private val pipelineYamlRepositoryService: PipelineYamlRepositoryService
+    private val pipelineYamlRepositoryService: PipelineYamlRepositoryService,
+    private val pipelineYamlViewService: PipelineYamlViewService
 ) {
 
     companion object {
@@ -116,6 +117,14 @@ class PipelineYamlFacadeService @Autowired constructor(
             logger.warn("enable pac,not found ci yaml from git|$projectId|$repoHashId")
             return
         }
+        // 创建yaml流水线组
+        pipelineYamlViewService.createYamlViewIfAbsent(
+            userId = action.data.getUserId(),
+            projectId = projectId,
+            repoHashId = repoHashId,
+            gitProjectName = action.data.setting.projectName,
+            directoryList = yamlPathList.map { GitActionCommon.getCiDirectory(it.yamlPath) }
+        )
         val path2PipelineExists = pipelineYamlInfoDao.getAllByRepo(
             dslContext = dslContext, projectId = projectId, repoHashId = repoHashId
         ).associate {
@@ -181,6 +190,7 @@ class PipelineYamlFacadeService @Autowired constructor(
                 logger.warn("pipeline yaml trigger not found ci yaml from git|$projectId|$repoHashId")
                 return
             }
+
             val matcher = webhookEventFactory.createScmWebHookMatcher(scmType = scmType, event = action.data.event)
             val eventId = pipelineTriggerEventService.getEventId(
                 projectId = projectId,
@@ -200,6 +210,14 @@ class PipelineYamlFacadeService @Autowired constructor(
             )
             pipelineTriggerEventService.saveTriggerEvent(triggerEvent)
             action.data.context.eventId = eventId
+            // 创建yaml流水线组
+            pipelineYamlViewService.createYamlViewIfAbsent(
+                userId = action.data.getUserId(),
+                projectId = projectId,
+                repoHashId = repoHashId,
+                gitProjectName = action.data.setting.projectName,
+                directoryList = yamlPathList.map { GitActionCommon.getCiDirectory(it.yamlPath) }
+            )
             val path2PipelineExists = pipelineYamlInfoDao.getAllByRepo(
                 dslContext = dslContext, projectId = projectId, repoHashId = repoHashId
             ).associate {
