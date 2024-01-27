@@ -121,6 +121,7 @@ class PipelineVersionFacadeService @Autowired constructor(
             errorCode = ProcessMessageCode.ERROR_NO_PIPELINE_EXISTS_BY_ID,
             params = arrayOf(pipelineId)
         )
+        val yamlInfo = pipelineYamlFacadeService.getPipelineYamlInfo(projectId, pipelineId, releaseVersion.version)
         val canRelease = draftVersion != null
         var baseVersionStatus = VersionStatus.RELEASED
         var baseVersionBranch: String? = null
@@ -141,9 +142,6 @@ class PipelineVersionFacadeService @Autowired constructor(
             pipelineId = pipelineId,
             detailInfo = detailInfo
         )
-        val yamlInfo = if (releaseSetting.pipelineAsCodeSettings?.enable == true) {
-            pipelineYamlFacadeService.getPipelineYamlInfo(projectId, pipelineId, releaseVersion.version)
-        } else null
         val version = draftVersion?.version ?: releaseVersion.version
         val versionName = draftVersion?.versionName ?: releaseVersion.versionName
         val permissions = pipelineListFacadeService.getPipelinePermissions(userId, projectId, pipelineId)
@@ -172,7 +170,7 @@ class PipelineVersionFacadeService @Autowired constructor(
             releaseVersionName = releaseVersion.versionName,
             baseVersionStatus = baseVersionStatus,
             baseVersionBranch = baseVersionBranch,
-            pipelineAsCodeSettings = releaseSetting.pipelineAsCodeSettings ?: PipelineAsCodeSettings(),
+            pipelineAsCodeSettings = PipelineAsCodeSettings(enable = yamlInfo != null),
             yamlInfo = yamlInfo
         )
     }
@@ -209,8 +207,13 @@ class PipelineVersionFacadeService @Autowired constructor(
             projectId = projectId,
             pipelineId = pipelineId
         )
+        val yamlInfo = pipelineYamlFacadeService.getPipelineYamlInfo(projectId, pipelineId, version)
+        // 如果不匹配已有状态则报错，需要用户重新刷新页面
+        if (yamlInfo != null && !request.enablePac) throw ErrorCodeException(
+            errorCode = ProcessMessageCode.ERROR_PIPELINE_IS_NOT_THE_LATEST
+        )
         // 根据项目PAC状态进行接口调用
-        val enabled = originSetting.pipelineAsCodeSettings?.enable == true || request.enablePac
+        val enabled = yamlInfo != null || request.enablePac
         val targetSettings = originSetting.copy(
             pipelineAsCodeSettings = PipelineAsCodeSettings(enabled)
         )
