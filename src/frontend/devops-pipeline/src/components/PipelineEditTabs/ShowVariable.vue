@@ -84,9 +84,12 @@
             }
         },
         computed: {
-            ...mapState('atom', ['showVariable']),
+            ...mapState('atom', [
+                'pipelineWithoutTrigger',
+                'showVariable'
+            ]),
             stages () {
-                return this.pipeline?.stages || []
+                return this.pipelineWithoutTrigger?.stages || []
             },
             container () {
                 return this.pipeline?.stages[0]?.containers[0] || {}
