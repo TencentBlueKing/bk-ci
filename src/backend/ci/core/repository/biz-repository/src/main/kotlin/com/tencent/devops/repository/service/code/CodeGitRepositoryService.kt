@@ -125,10 +125,7 @@ class CodeGitRepositoryService @Autowired constructor(
                     userId = userId,
                     projectId = projectId,
                     repoHashId = HashUtil.encodeOtherLongId(repositoryId),
-                    repository = repository.copy(
-                        projectId = projectId,
-                        repoHashId = HashUtil.encodeOtherLongId(repositoryId)
-                    )
+                    repository = repository.copy(repoHashId = HashUtil.encodeOtherLongId(repositoryId))
                 )
             }
         }

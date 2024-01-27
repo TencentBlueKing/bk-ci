@@ -62,6 +62,7 @@ import com.tencent.devops.process.yaml.v2.enums.StreamObjectKind
 import com.tencent.devops.repository.api.ServiceRepositoryPacResource
 import com.tencent.devops.repository.api.ServiceRepositoryResource
 import com.tencent.devops.repository.pojo.Repository
+import com.tencent.devops.repository.pojo.enums.RepoYamlSyncStatusEnum
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -156,6 +157,11 @@ class PipelineYamlFacadeService @Autowired constructor(
             }
         } catch (exception: Exception) {
             logger.error("Failed to enable pac|$userId|$projectId|$repoHashId", exception)
+            client.get(ServiceRepositoryPacResource::class).updateYamlSyncStatus(
+                projectId = projectId,
+                repoHashId = repoHashId,
+                syncStatus =  RepoYamlSyncStatusEnum.FAILED.name
+            )
             throw exception
         }
     }
