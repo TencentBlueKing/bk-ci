@@ -119,7 +119,6 @@ class PipelineSettingVersionService @Autowired constructor(
                 settingInfo.maxQueueSize = ve.maxQueueSize ?: PIPELINE_SETTING_MAX_QUEUE_SIZE_DEFAULT
                 settingInfo.concurrencyGroup = ve.concurrencyGroup
                 settingInfo.concurrencyCancelInProgress = ve.concurrencyCancelInProgress ?: false
-                settingInfo.pipelineAsCodeSettings = ve.pipelineAsCodeSettings
             }
         }
 

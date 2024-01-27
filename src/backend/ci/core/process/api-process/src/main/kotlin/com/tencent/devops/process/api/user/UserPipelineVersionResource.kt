@@ -66,7 +66,7 @@ interface UserPipelineVersionResource {
     @ApiOperation("获取流水线信息（含草稿）")
     @GET
     @Path("/projects/{projectId}/pipelines/{pipelineId}/detail")
-    fun getPipelineDetailIncludeDraft(
+    fun getPipelineVersionDetail(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
@@ -78,10 +78,10 @@ interface UserPipelineVersionResource {
         pipelineId: String
     ): Result<PipelineDetail>
 
-    @ApiOperation("将当前模板发布为正式版本")
+    @ApiOperation("将当前草稿发布为正式版本")
     @POST
     @Path("/projects/{projectId}/pipelines/{pipelineId}/releaseVersion/{version}")
-    fun releaseVersion(
+    fun releaseDraftVersion(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
@@ -133,7 +133,7 @@ interface UserPipelineVersionResource {
     @ApiOperation("触发前配置")
     @GET
     @Path("/projects/{projectId}/pipelines/{pipelineId}/previewCode")
-    fun preview(
+    fun previewCode(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
@@ -166,7 +166,7 @@ interface UserPipelineVersionResource {
     @ApiOperation("获取流水线编排创建人列表（分页）")
     @GET
     @Path("/projects/{projectId}/pipelines/{pipelineId}/creatorList")
-    fun creatorList(
+    fun versionCreatorList(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,

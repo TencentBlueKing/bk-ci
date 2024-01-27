@@ -1461,7 +1461,6 @@ class PipelineRepositoryService constructor(
         } finally {
             lock.unlock()
         }
-
         return pipelineResult
     }
 

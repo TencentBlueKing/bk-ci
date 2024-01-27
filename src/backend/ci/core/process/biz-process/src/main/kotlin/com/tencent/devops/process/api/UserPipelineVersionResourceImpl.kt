@@ -69,7 +69,7 @@ class UserPipelineVersionResourceImpl @Autowired constructor(
     private val pipelineRecentUseService: PipelineRecentUseService
 ) : UserPipelineVersionResource {
 
-    override fun getPipelineDetailIncludeDraft(
+    override fun getPipelineVersionDetail(
         userId: String,
         projectId: String,
         pipelineId: String
@@ -81,7 +81,7 @@ class UserPipelineVersionResourceImpl @Autowired constructor(
         )
     }
 
-    override fun releaseVersion(
+    override fun releaseDraftVersion(
         userId: String,
         projectId: String,
         pipelineId: String,
@@ -169,7 +169,7 @@ class UserPipelineVersionResourceImpl @Autowired constructor(
         )
     }
 
-    override fun preview(
+    override fun previewCode(
         userId: String,
         projectId: String,
         pipelineId: String,
@@ -222,7 +222,7 @@ class UserPipelineVersionResourceImpl @Autowired constructor(
         return Result(result)
     }
 
-    override fun creatorList(
+    override fun versionCreatorList(
         userId: String,
         projectId: String,
         pipelineId: String,

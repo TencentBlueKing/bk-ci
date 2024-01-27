@@ -75,9 +75,10 @@ interface IVariable
 data class Variable(
     val value: String?,
     val name: String? = null,
-    val readonly: Boolean? = false,
+    var readonly: Boolean? = false,
     @JsonProperty("allow-modify-at-startup")
     val allowModifyAtStartup: Boolean? = false,
+    val const: Boolean? = null,
     @JsonProperty("required")
     val valueNotEmpty: Boolean? = false,
     val props: VariableProps? = null
