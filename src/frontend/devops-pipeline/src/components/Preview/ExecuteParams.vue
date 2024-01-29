@@ -93,12 +93,12 @@
 </template>
 
 <script>
-    import { mapActions, mapGetters } from 'vuex'
-    import { getParamsValuesMap } from '@/utils/util'
-    import PipelineParamsForm from '@/components/pipelineParamsForm.vue'
     import PipelineVersionsForm from '@/components/PipelineVersionsForm.vue'
-    import { allVersionKeyList } from '@/utils/pipelineConst'
+    import PipelineParamsForm from '@/components/pipelineParamsForm.vue'
     import { bus } from '@/utils/bus'
+    import { allVersionKeyList } from '@/utils/pipelineConst'
+    import { getParamsValuesMap } from '@/utils/util'
+    import { mapActions, mapGetters } from 'vuex'
 
     export default {
         components: {
@@ -172,11 +172,20 @@
                         this.buildNo = startupInfo.buildNo
                         this.isVisibleVersion = startupInfo.buildNo.required
                     }
-                    this.paramList = startupInfo.properties.filter(p => p.required && !allVersionKeyList.includes(p.id) && p.propertyType !== 'BUILD')
+                    this.paramList = startupInfo.properties.filter(p => p.required && !allVersionKeyList.includes(p.id) && p.propertyType !== 'BUILD').map(p => ({
+                        ...p,
+                        readOnly: false
+                    }))
                     this.versionParamList = startupInfo.properties.filter(p => allVersionKeyList.includes(p.id))
                     this.buildList = startupInfo.properties.filter(p => p.propertyType === 'BUILD')
-                    this.constantParams = startupInfo.properties.filter(p => p.constant)
-                    this.otherParams = startupInfo.properties.filter(p => !p.constant && !p.required && !allVersionKeyList.includes(p.id) && p.propertyType !== 'BUILD')
+                    this.constantParams = startupInfo.properties.filter(p => p.constant).map(p => ({
+                        ...p,
+                        readOnly: true
+                    }))
+                    this.otherParams = startupInfo.properties.filter(p => !p.constant && !p.required && !allVersionKeyList.includes(p.id) && p.propertyType !== 'BUILD').map(p => ({
+                        ...p,
+                        readOnly: false
+                    }))
                     this.initParams(values)
                     this.setExecuteParams({
                         pipelineId: this.pipelineId,
