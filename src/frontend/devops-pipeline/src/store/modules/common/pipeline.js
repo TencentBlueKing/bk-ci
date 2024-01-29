@@ -326,16 +326,10 @@ export const actions = {
         }
     },
     isPACOAuth: async (_, { projectId, ...query }) => {
-        try {
-            const { data } = await request.get(`${REPOSITORY_API_URL_PREFIX}/user/repositories/${projectId}/isOauth`, {
-                params: query
-            })
-
-            return data?.status === 200
-        } catch (e) {
-            console.log(e)
-            return false
-        }
+        const { data } = await request.get(`${REPOSITORY_API_URL_PREFIX}/user/repositories/${projectId}/isOauth`, {
+            params: query
+        })
+        return data
     },
     getPACRepoList: async (_, { projectId, ...params }) => {
         try {

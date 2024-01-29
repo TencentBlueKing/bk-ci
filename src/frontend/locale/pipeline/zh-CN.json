@@ -1380,6 +1380,10 @@
   "leaveConfirmTitle": "确认离开当前页面吗？",
   "leaveConfirmTips":"离开将会丢失未保存的信息，建议保存后离开",
   "releasePipeline": "发布流水线",
+  "cancelRelease": "取消发布",
+  "prePipelineGroup": "当前流水线所在组：",
+  "checkPipeline": "查看流水线",
+  "return": "返回",
   "releasePipelineVersion": "待发布版本号：{0}",
   "releasePipelineBaseVersion": "从{0}创建",
   "pacMode": "PAC模式",
@@ -1456,5 +1460,7 @@
   "unMergedTips": "有新的分支版本尚未合并到默认分支，可{0}查看详情",
   "goVersionSideslider": "前往版本历史",
   "pacModePipelineDeleteTips": "已开启PAC模式,请先删除代码库默认分支上的yaml文件,再删除流水线",
-  "noPermissionToDelete": "无权限删除"
+  "noPermissionToDelete": "无权限删除",
+  "noStartupParams": "暂无入参，无需填写",
+  "noParams": "暂无入参"
 }

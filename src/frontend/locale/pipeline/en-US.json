@@ -1379,7 +1379,11 @@
   "pacPipelineReleaseTips1-2": "其他方式触发，如定时、手动、issue等，以默认分支上的 YAML 文件为准",
   "leaveConfirmTitle": "确认离开当前页面吗？",
   "leaveConfirmTips":"离开将会丢失未保存的信息，建议保存后离开",
-  "releasePipeline": "发布流水线",
+  "releasePipeline": "Release",
+  "cancelRelease": "Cancel",
+  "prePipelineGroup": "Pipeline Group: ",
+  "checkPipeline": "查看流水线",
+  "return": "Back",
   "releasePipelineVersion": "待发布版本号：{0}",
   "releasePipelineBaseVersion": "从{0}创建",
   "pacMode": "PAC模式",
@@ -1456,5 +1460,7 @@
   "unMergedTips": "There are new branch versions that have not been merged into the default branch, you can go to the {0} to view the details",
   "goVersionSideslider": "version history",
   "pacModePipelineDeleteTips": "PAC mode is enabled, please delete the yaml file on the default branch of the code repository before deleting the pipeline",
-  "noPermissionToDelete": "No permission to delete"
+  "noPermissionToDelete": "No permission to delete",
+  "noStartupParams": "No input parameters, no need to fill in",
+  "noParams": "No Parameters"
 }

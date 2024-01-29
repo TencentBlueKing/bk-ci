@@ -1,6 +1,7 @@
 <template>
     <bk-dialog
-        v-model="isShow"
+        v-model="value"
+        :draggable="false"
         width="90%"
         height="90%"
         :auto-close="false"
@@ -10,34 +11,32 @@
         ext-cls="pipeline-template-preivew"
         @cancel="handleCancel"
     >
-        <div style="width: 100%; height: 100%" v-if="templatePipeline && isShow" v-bkloading="{ isLoading }">
-            <mode-switch
-                :is-yaml-support="isYamlSupport"
-                :yaml-invalid-msg="yamlInvalidMsg"
-                read-only
-            />
-            <YamlEditor
-                v-if="isCodeMode"
-                style="margin-top: 20px"
-                :value="templateYaml"
-                read-only
-                :highlight-ranges="highlightMarkList"
-            />
-            <bk-tab v-else v-model="activePanel" type="unborder-card">
-                <bk-tab-panel
-                    v-for="panel in panels"
-                    :key="panel.name"
-                    :label="panel.label"
-                    :name="panel.name"
-                >
-                    <component
-                        style="pointer-events: none"
-                        v-bind="panel.props"
-                        :is="panel.component"
-                    />
-                </bk-tab-panel>
-            </bk-tab>
-        </div>
+        <mode-switch
+            :is-yaml-support="isYamlSupport"
+            :yaml-invalid-msg="yamlInvalidMsg"
+            read-only
+        />
+        <YamlEditor
+            v-if="isCodeMode"
+            style="margin-top: 20px"
+            :value="templateYaml"
+            read-only
+            :highlight-ranges="highlightMarkList"
+        />
+        <bk-tab v-else v-model="activePanel" type="unborder-card">
+            <bk-tab-panel
+                v-for="panel in panels"
+                :key="panel.name"
+                :label="panel.label"
+                :name="panel.name"
+            >
+                <component
+                    style="pointer-events: none"
+                    v-bind="panel.props"
+                    :is="panel.component"
+                />
+            </bk-tab-panel>
+        </bk-tab>
     </bk-dialog>
 </template>
 
@@ -58,14 +57,13 @@
             YamlEditor
         },
         props: {
-            isShow: Boolean,
+            value: Boolean,
             previewSettingType: {
                 type: String,
                 default: ''
             },
             templatePipeline: {
-                type: Object,
-                required: true
+                type: Object
             }
         },
         data () {
@@ -81,8 +79,7 @@
         },
         computed: {
             ...mapGetters({
-                isCodeMode: 'isCodeMode',
-                getPipelineSubscriptions: 'atom/getPipelineSubscriptions'
+                isCodeMode: 'isCodeMode'
             }),
             title () {
                 return this.$t('templatePreivewHeader', [
@@ -128,8 +125,8 @@
                         component: 'NotifyTab',
                         props: {
                             editable: false,
-                            failSubscriptionList: this.getPipelineSubscriptions('fail'),
-                            successSubscriptionList: this.getPipelineSubscriptions('success')
+                            failSubscriptionList: this.pipelineSetting?.failSubscriptionList ?? [],
+                            successSubscriptionList: this.pipelineSetting?.successSubscriptionList ?? []
                         }
                     },
                     {
@@ -145,7 +142,7 @@
             }
         },
         watch: {
-            isShow (val) {
+            value (val) {
                 if (val) {
                     this.init()
                 } else {
@@ -191,7 +188,7 @@
                 }
             },
             handleCancel () {
-                this.$emit('update:isShow', false)
+                this.$emit('input', false)
             }
         }
     }

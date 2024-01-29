@@ -171,7 +171,7 @@
             </aside>
         </div>
         <pipeline-template-preview
-            :is-show.sync="isShowPreview"
+            v-model="isShowPreview"
             :template-pipeline="activeTemp"
             :preview-setting-type="previewSettingType"
         />
@@ -307,6 +307,7 @@
                             stages: temp?.stages ?? [],
                             templateId: temp?.templateId,
                             version: temp?.version,
+                            cloneTemplateSettingExist: temp?.cloneTemplateSettingExist,
                             btnText: item.installed ? 'pipelinesPreview' : 'editPage.install'
                         }
                     }).filter(item => item.name.toLowerCase().indexOf(this.searchName.toLowerCase()) > -1) ?? []
@@ -698,7 +699,7 @@
                 .bk-form-checkbox {
                     display: flex;
                     align-items: center;
-                    width: 100%;
+                    flex: 1;
                     .bk-checkbox-text {
                         flex: 1;
                     }
