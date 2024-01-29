@@ -79,8 +79,7 @@
         },
         computed: {
             ...mapGetters({
-                isCodeMode: 'isCodeMode',
-                getPipelineSubscriptions: 'atom/getPipelineSubscriptions'
+                isCodeMode: 'isCodeMode'
             }),
             title () {
                 return this.$t('templatePreivewHeader', [
@@ -126,8 +125,8 @@
                         component: 'NotifyTab',
                         props: {
                             editable: false,
-                            failSubscriptionList: this.getPipelineSubscriptions('fail'),
-                            successSubscriptionList: this.getPipelineSubscriptions('success')
+                            failSubscriptionList: this.pipelineSetting?.failSubscriptionList ?? [],
+                            successSubscriptionList: this.pipelineSetting?.successSubscriptionList ?? []
                         }
                     },
                     {
