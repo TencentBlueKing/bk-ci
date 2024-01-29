@@ -42,7 +42,7 @@ BEGIN
                   FROM information_schema.COLUMNS
                   WHERE TABLE_SCHEMA = db
                     AND TABLE_NAME = 'T_USER'
-                    AND COLUMN_NAME = 'BUSINESS_LINE_ID') THEN
+                    AND COLUMN_NAME = 'BUSINESS_LINE_NAME') THEN
         ALTER TABLE T_USER
             ADD COLUMN `BUSINESS_LINE_NAME` varchar(255) NULL COMMENT '业务线名称';
     END IF;
