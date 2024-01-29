@@ -66,9 +66,9 @@ data class PipelineSetting(
     @ApiModelProperty("订阅失败相关", required = false)
     var failSubscription: Subscription = Subscription(),
     @ApiModelProperty("订阅成功通知组", required = false)
-    var successSubscriptionList: List<Subscription>? = listOf(Subscription()),
+    var successSubscriptionList: List<Subscription>? = null,
     @ApiModelProperty("订阅失败通知组", required = false)
-    var failSubscriptionList: List<Subscription>? = listOf(Subscription()),
+    var failSubscriptionList: List<Subscription>? = null,
 
     // 运行控制、流水线禁用相关配置
     @ApiModelProperty("Lock 类型", required = false)
