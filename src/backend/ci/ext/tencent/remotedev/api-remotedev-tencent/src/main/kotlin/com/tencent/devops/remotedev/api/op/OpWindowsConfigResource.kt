@@ -43,6 +43,7 @@ import javax.ws.rs.HeaderParam
 import javax.ws.rs.POST
 import javax.ws.rs.PUT
 import javax.ws.rs.Path
+import javax.ws.rs.PathParam
 import javax.ws.rs.Produces
 import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
@@ -189,4 +190,19 @@ interface OpWindowsConfigResource {
         @QueryParam("pageSize")
         pageSize: Int?
     ): Result<Page<WindowsSpecResInfo>>
+
+    @ApiOperation("追加项目云桌面总配额")
+    @PUT
+    @Path("/add/{projectId}/{quota}")
+    fun addProjectTotalQuota(
+        @ApiParam(value = "用户ID", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam(value = "项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @ApiParam(value = "配额", required = true)
+        @PathParam("quota")
+        quota: Int
+    ): Result<Boolean>
 }
