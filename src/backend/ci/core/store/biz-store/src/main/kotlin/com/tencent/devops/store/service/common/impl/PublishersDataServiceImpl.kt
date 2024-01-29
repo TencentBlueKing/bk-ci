@@ -29,7 +29,6 @@ package com.tencent.devops.store.service.common.impl
 
 import com.tencent.devops.auth.api.service.ServiceDeptResource
 import com.tencent.devops.auth.pojo.DeptInfo
-import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.UUIDUtil
@@ -54,7 +53,6 @@ import com.tencent.devops.store.service.common.StoreUserService
 import java.time.LocalDateTime
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
-import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
@@ -73,12 +71,7 @@ class PublishersDataServiceImpl @Autowired constructor(
         val storePublisherInfoRecords = mutableListOf<TStorePublisherInfoRecord>()
         val storePublisherMemberRelRecords = mutableListOf<TStorePublisherMemberRelRecord>()
         publishers.forEach {
-            val deptInfos = analysisDept(userId, it.organization)
-            if (deptInfos.isEmpty()) {
-                logger.warn("create publisherData fail, analysis dept data error!")
-                return 0
-            }
-            val storePublisherInfo = TStorePublisherInfoRecord()
+            val storePublisherInfo = getStorePublisherInfo(userId = userId, organization = it.organization)
             val storePublisherInfoId = UUIDUtil.generate()
             storePublisherInfo.id = storePublisherInfoId
             storePublisherInfo.publisherCode = it.publishersCode
@@ -86,16 +79,6 @@ class PublishersDataServiceImpl @Autowired constructor(
             storePublisherInfo.publisherType = it.publishersType.name
             storePublisherInfo.owners = it.owners[0]
             storePublisherInfo.helper = it.helper
-            storePublisherInfo.firstLevelDeptId = deptInfos[0].id.toLong()
-            storePublisherInfo.firstLevelDeptName = deptInfos[0].name
-            storePublisherInfo.secondLevelDeptId = deptInfos[1].id.toLong()
-            storePublisherInfo.secondLevelDeptName = deptInfos[1].name
-            storePublisherInfo.thirdLevelDeptId = deptInfos[2].id.toLong()
-            storePublisherInfo.thirdLevelDeptName = deptInfos[2].name
-            if (deptInfos.size > deptIndex) {
-                storePublisherInfo.fourthLevelDeptId = deptInfos[deptIndex].id.toLong()
-                storePublisherInfo.fourthLevelDeptName = deptInfos[deptIndex].name
-            }
             storePublisherInfo.organizationName = it.organization
             storePublisherInfo.bgName = it.bgName
             storePublisherInfo.certificationFlag = it.certificationFlag
@@ -126,27 +109,11 @@ class PublishersDataServiceImpl @Autowired constructor(
         val createPublisherData = mutableListOf<PublishersRequest>()
         publishers.forEach {
             val publisherId = publishersDao.getPublisherId(dslContext, it.publishersCode)
-            val deptInfos = analysisDept(userId, it.organization)
-            if (deptInfos.isEmpty()) {
-                logger.warn("update publisherData fail, analysis dept data error!")
-                return 0
-            }
             if (publisherId != null) {
-                val records = TStorePublisherInfoRecord()
+                val records = getStorePublisherInfo(userId = userId, organization =it.organization)
                 records.id = publisherId
                 records.publisherCode = it.publishersCode
                 records.publisherName = it.name
-                records.firstLevelDeptName = deptInfos[0].name
-                records.firstLevelDeptId = deptInfos[0].id.toLong()
-                records.secondLevelDeptName = deptInfos[1].name
-                records.secondLevelDeptId = deptInfos[1].id.toLong()
-                records.thirdLevelDeptId = deptInfos[2].id.toLong()
-                records.thirdLevelDeptName = deptInfos[2].name
-                // 如果存在第四层部门层级
-                if (deptInfos.size > deptIndex) {
-                    records.fourthLevelDeptId = deptInfos[deptIndex].id.toLong()
-                    records.fourthLevelDeptName = deptInfos[deptIndex].name
-                }
                 records.publisherType = it.publishersType.name
                 records.owners = JsonUtil.toJson(it.owners)
                 records.certificationFlag = it.certificationFlag
@@ -204,7 +171,7 @@ class PublishersDataServiceImpl @Autowired constructor(
         delRecords: MutableList<TStorePublisherMemberRelRecord>
     ) {
         val members = publisherMemberDao.getPublisherMemberRelMemberIdsByPublisherId(dslContext, publisherId)
-        val intersection = members.intersect(newMembers)
+        val intersection = members.intersect(newMembers.toSet())
         members.forEach { member ->
             if (!intersection.contains(member)) {
                 val storePublisherMemberRel = TStorePublisherMemberRelRecord()
@@ -287,27 +254,55 @@ class PublishersDataServiceImpl @Autowired constructor(
                 organizationPublisherInfo?.let { it -> publishersInfos.add(it) }
             }
         }
-        var personPublisherInfo = publishersDao.getPublisherInfoByCode(dslContext, userId)
-        logger.debug("getPublishers personPublisherInfo is $personPublisherInfo")
+        var personPublisherInfo = publishersDao.getPublisherInfoByCode(dslContext, userId, storeType)
         if (personPublisherInfo == null) {
             // 如果未注册发布者则自动注册并返回
             val userDeptInfo = client.get(ServiceUserResource::class).getDetailFromCache(userId).data
             userDeptInfo?.let {
-                personPublisherInfo = PublisherInfo(
+                personPublisherInfo = TStorePublisherInfoRecord()
+                    personPublisherInfo!!.id = UUIDUtil.generate()
+                    personPublisherInfo!!.publisherCode = userId
+                    personPublisherInfo!!.publisherName = userId
+                    personPublisherInfo!!.publisherType = PublisherType.PERSON.name
+                    personPublisherInfo!!.owners = userId
+                    personPublisherInfo!!.helper = userId
+                    personPublisherInfo!!.firstLevelDeptId = it.bgId.toLong()
+                    personPublisherInfo!!.firstLevelDeptName = it.bgName
+                    personPublisherInfo!!.secondLevelDeptId = it.deptId.toLong()
+                    personPublisherInfo!!.secondLevelDeptName = it.deptName
+                    personPublisherInfo!!.thirdLevelDeptId = it.centerId.toLong()
+                    personPublisherInfo!!.thirdLevelDeptName = it.centerName
+                    personPublisherInfo!!.fourthLevelDeptId = it.groupId.toLong()
+                    personPublisherInfo!!.fourthLevelDeptName = it.groupName
+                    personPublisherInfo!!.organizationName = storeUserService.getUserFullDeptName(userId).data ?: ""
+                    personPublisherInfo!!.bgName = it.bgName
+                    personPublisherInfo!!.certificationFlag = false
+                    personPublisherInfo!!.storeType = storeType.type.toByte()
+                    personPublisherInfo!!.creator = userId
+                    personPublisherInfo!!.modifier = userId
+                    personPublisherInfo!!.createTime = LocalDateTime.now()
+                    personPublisherInfo!!.updateTime = LocalDateTime.now()
+
+                publishersDao.batchCreate(dslContext, listOf(personPublisherInfo!!))
+            }
+        }
+        personPublisherInfo!!.let {
+            publishersInfos.add(
+                PublisherInfo(
                     id = UUIDUtil.generate(),
                     publisherCode = userId,
                     publisherName = userId,
                     publisherType = PublisherType.PERSON,
                     owners = userId,
                     helper = userId,
-                    firstLevelDeptId = it.bgId.toInt(),
-                    firstLevelDeptName = it.bgName,
-                    secondLevelDeptId = it.deptId.toInt(),
-                    secondLevelDeptName = it.deptName,
-                    thirdLevelDeptId = it.centerId.toInt(),
-                    thirdLevelDeptName = it.centerName,
-                    fourthLevelDeptId = it.groupId.toInt(),
-                    fourthLevelDeptName = it.groupName,
+                    firstLevelDeptId = it.firstLevelDeptId.toInt(),
+                    firstLevelDeptName = it.firstLevelDeptName,
+                    secondLevelDeptId = it.secondLevelDeptId.toInt(),
+                    secondLevelDeptName = it.secondLevelDeptName,
+                    thirdLevelDeptId = it.thirdLevelDeptId.toInt(),
+                    thirdLevelDeptName = it.thirdLevelDeptName,
+                    fourthLevelDeptId = it.fourthLevelDeptId.toInt(),
+                    fourthLevelDeptName = it.fourthLevelDeptName,
                     organizationName = storeUserService.getUserFullDeptName(userId).data ?: "",
                     bgName = it.bgName,
                     certificationFlag = false,
@@ -317,11 +312,8 @@ class PublishersDataServiceImpl @Autowired constructor(
                     createTime = LocalDateTime.now(),
                     updateTime = LocalDateTime.now()
                 )
-                publishersDao.create(dslContext, personPublisherInfo!!)
-            }
+            )
         }
-        personPublisherInfo?.let { publishersInfos.add(it) }
-        logger.debug("getPublishers $publishersInfos")
         return Result(publishersInfos)
     }
 
@@ -333,23 +325,56 @@ class PublishersDataServiceImpl @Autowired constructor(
         return false
     }
 
-    private fun analysisDept(userId: String, organization: String): List<DeptInfo> {
+    private fun getStorePublisherInfo(
+        userId: String,
+        storePublisherInfo: TStorePublisherInfoRecord? = null,
+        organization: String
+    ): TStorePublisherInfoRecord {
+        val publisherInfo = storePublisherInfo ?: TStorePublisherInfoRecord()
         //  根据解析组织名称获取组织ID
         val deptNames = organization.split("/")
         val deptInfos = mutableListOf<DeptInfo>()
         deptNames.forEachIndexed() { index, deptName ->
-            try {
-                val result = client.get(ServiceDeptResource::class).getDeptByName(userId, deptName).data
-                result?.let { it -> deptInfos.add(index, it.results[0]) }
-            } catch (e: OperationException) {
-                logger.warn("analysis deptInfo get deptId by name fail! ${e.message}")
+            val deptVo = client.get(ServiceDeptResource::class).getDeptByName(userId, deptName).data
+            if (!deptVo?.results.isNullOrEmpty()) {
+                deptInfos.add(index, deptVo!!.results[0])
             }
         }
-        return deptInfos
+        if (deptInfos.isEmpty()) {
+            publisherInfo.firstLevelDeptId = 0
+            publisherInfo.firstLevelDeptName = ""
+            publisherInfo.secondLevelDeptId = 0
+            publisherInfo.secondLevelDeptName = ""
+            publisherInfo.thirdLevelDeptId = 0
+            publisherInfo.thirdLevelDeptName = ""
+            publisherInfo.fourthLevelDeptId = 0
+            publisherInfo.fourthLevelDeptName = ""
+        } else {
+            // 最多存4级组织ID
+            val levelCount = minOf(3, deptInfos.size)
+            for (i in 0 until levelCount) {
+                when (i) {
+                    0 -> {
+                        publisherInfo.firstLevelDeptId = deptInfos[i].id.toLong()
+                        publisherInfo.firstLevelDeptName = deptInfos[i].name
+                    }
+                    1 -> {
+                        publisherInfo.secondLevelDeptId = deptInfos[i].id.toLong()
+                        publisherInfo.secondLevelDeptName = deptInfos[i].name
+                    }
+                    2 -> {
+                        publisherInfo.thirdLevelDeptId = deptInfos[i].id.toLong()
+                        publisherInfo.thirdLevelDeptName = deptInfos[i].name
+                    }
+                }
+            }
+            if (deptInfos.size > 3) {
+                val fourthLevelDept = deptInfos[3]
+                publisherInfo.fourthLevelDeptId = fourthLevelDept.id.toLong()
+                publisherInfo.fourthLevelDeptName = fourthLevelDept.name
+            }
+        }
+        return publisherInfo
     }
 
-    companion object {
-        private val logger = LoggerFactory.getLogger(PublishersDataServiceImpl::class.java)
-        private const val deptIndex = 3
-    }
 }

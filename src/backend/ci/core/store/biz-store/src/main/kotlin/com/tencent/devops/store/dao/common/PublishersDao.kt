@@ -40,35 +40,50 @@ import org.springframework.stereotype.Repository
 class PublishersDao {
 
     fun batchCreate(dslContext: DSLContext, storePublisherInfos: List<TStorePublisherInfoRecord>): Int {
-        return dslContext.batchInsert(storePublisherInfos).execute().size
-    }
-
-    fun create(dslContext: DSLContext, publisherInfo: PublisherInfo): Int {
         with(TStorePublisherInfo.T_STORE_PUBLISHER_INFO) {
-            return dslContext.insertInto(this)
-                .set(ID, publisherInfo.id)
-                    .set(PUBLISHER_CODE, publisherInfo.publisherCode)
-                    .set(PUBLISHER_NAME, publisherInfo.publisherName)
-                    .set(PUBLISHER_TYPE, publisherInfo.publisherType.name)
-                    .set(OWNERS, publisherInfo.owners)
-                    .set(HELPER, publisherInfo.helper)
-                    .set(FIRST_LEVEL_DEPT_ID, publisherInfo.firstLevelDeptId.toLong())
-                    .set(FIRST_LEVEL_DEPT_NAME, publisherInfo.firstLevelDeptName)
-                    .set(SECOND_LEVEL_DEPT_ID, publisherInfo.secondLevelDeptId.toLong())
-                    .set(SECOND_LEVEL_DEPT_NAME, publisherInfo.secondLevelDeptName)
-                    .set(THIRD_LEVEL_DEPT_ID, publisherInfo.thirdLevelDeptId.toLong())
-                    .set(THIRD_LEVEL_DEPT_NAME, publisherInfo.thirdLevelDeptName)
-                    .set(FOURTH_LEVEL_DEPT_ID, publisherInfo.fourthLevelDeptId?.toLong())
-                    .set(FOURTH_LEVEL_DEPT_NAME, publisherInfo.fourthLevelDeptName)
-                    .set(ORGANIZATION_NAME, publisherInfo.organizationName)
-                    .set(BG_NAME, publisherInfo.bgName)
-                    .set(CERTIFICATION_FLAG, publisherInfo.certificationFlag)
-                    .set(STORE_TYPE, publisherInfo.storeType.type.toByte())
-                    .set(CREATOR, publisherInfo.creator)
-                    .set(MODIFIER, publisherInfo.modifier)
-                    .set(CREATE_TIME, publisherInfo.createTime)
-                    .set(UPDATE_TIME, publisherInfo.updateTime)
-                .execute()
+            return dslContext.batch(storePublisherInfos.map {
+                dslContext.insertInto(this)
+                    .set(ID, it.id)
+                    .set(PUBLISHER_CODE, it.publisherCode)
+                    .set(PUBLISHER_NAME, it.publisherName)
+                    .set(PUBLISHER_TYPE, it.publisherType)
+                    .set(OWNERS, it.owners)
+                    .set(HELPER, it.helper)
+                    .set(FIRST_LEVEL_DEPT_ID, it.firstLevelDeptId.toLong())
+                    .set(FIRST_LEVEL_DEPT_NAME, it.firstLevelDeptName)
+                    .set(SECOND_LEVEL_DEPT_ID, it.secondLevelDeptId.toLong())
+                    .set(SECOND_LEVEL_DEPT_NAME, it.secondLevelDeptName)
+                    .set(THIRD_LEVEL_DEPT_ID, it.thirdLevelDeptId.toLong())
+                    .set(THIRD_LEVEL_DEPT_NAME, it.thirdLevelDeptName)
+                    .set(FOURTH_LEVEL_DEPT_ID, it.fourthLevelDeptId?.toLong())
+                    .set(FOURTH_LEVEL_DEPT_NAME, it.fourthLevelDeptName)
+                    .set(ORGANIZATION_NAME, it.organizationName)
+                    .set(BG_NAME, it.bgName)
+                    .set(CERTIFICATION_FLAG, it.certificationFlag)
+                    .set(STORE_TYPE, it.storeType)
+                    .set(CREATOR, it.creator)
+                    .set(MODIFIER, it.modifier)
+                    .set(CREATE_TIME, it.createTime)
+                    .set(UPDATE_TIME, it.updateTime)
+                    .onDuplicateKeyUpdate()
+                    .set(PUBLISHER_NAME, it.publisherName)
+                    .set(OWNERS, it.owners)
+                    .set(HELPER, it.helper)
+                    .set(FIRST_LEVEL_DEPT_ID, it.firstLevelDeptId.toLong())
+                    .set(FIRST_LEVEL_DEPT_NAME, it.firstLevelDeptName)
+                    .set(SECOND_LEVEL_DEPT_ID, it.secondLevelDeptId.toLong())
+                    .set(SECOND_LEVEL_DEPT_NAME, it.secondLevelDeptName)
+                    .set(THIRD_LEVEL_DEPT_ID, it.thirdLevelDeptId.toLong())
+                    .set(THIRD_LEVEL_DEPT_NAME, it.thirdLevelDeptName)
+                    .set(FOURTH_LEVEL_DEPT_ID, it.fourthLevelDeptId?.toLong())
+                    .set(FOURTH_LEVEL_DEPT_NAME, it.fourthLevelDeptName)
+                    .set(ORGANIZATION_NAME, it.organizationName)
+                    .set(BG_NAME, it.bgName)
+                    .set(CERTIFICATION_FLAG, it.certificationFlag)
+                    .set(MODIFIER, it.modifier)
+                    .set(UPDATE_TIME, it.updateTime)
+            }
+            ).execute().size
         }
     }
 
@@ -163,35 +178,14 @@ class PublishersDao {
 
     fun getPublisherInfoByCode(
         dslContext: DSLContext,
-        publisherCode: String
-    ): PublisherInfo? {
+        publisherCode: String,
+        storeType: StoreTypeEnum
+    ): TStorePublisherInfoRecord? {
         with(TStorePublisherInfo.T_STORE_PUBLISHER_INFO) {
             return dslContext.selectFrom(this)
                 .where(PUBLISHER_CODE.eq(publisherCode))
-                .fetchOne { PublisherInfo(
-                    id = it.id,
-                    publisherCode = it.publisherCode,
-                    publisherName = it.publisherName,
-                    publisherType = PublisherType.valueOf(it.publisherType),
-                    owners = it.owners,
-                    helper = it.helper,
-                    firstLevelDeptId = it.firstLevelDeptId.toInt(),
-                    firstLevelDeptName = it.firstLevelDeptName,
-                    secondLevelDeptId = it.secondLevelDeptId.toInt(),
-                    secondLevelDeptName = it.secondLevelDeptName,
-                    thirdLevelDeptId = it.thirdLevelDeptId.toInt(),
-                    thirdLevelDeptName = it.thirdLevelDeptName,
-                    fourthLevelDeptId = it.fourthLevelDeptId.toInt(),
-                    fourthLevelDeptName = it.fourthLevelDeptName,
-                    organizationName = it.organizationName,
-                    bgName = it.bgName,
-                    certificationFlag = it.certificationFlag,
-                    storeType = StoreTypeEnum.getStoreTypeObj(it.storeType.toInt())!!,
-                    creator = it.creator,
-                    modifier = it.modifier,
-                    createTime = it.createTime,
-                    updateTime = it.updateTime
-                ) }
+                .and(STORE_TYPE.eq(storeType.type.toByte()))
+                .fetchOne()
         }
     }
 }
