@@ -36,7 +36,6 @@ import com.tencent.devops.common.pipeline.container.VMBuildContainer
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.common.pipeline.pojo.element.ElementAdditionalOptions
-import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildAtomElement
 import com.tencent.devops.common.pipeline.pojo.element.matrix.MatrixStatusElement
 import com.tencent.devops.common.pipeline.utils.ModelUtils
 import com.tencent.devops.process.dao.record.BuildRecordContainerDao
@@ -234,7 +233,6 @@ class PipelineRecordModelService @Autowired constructor(
             while (containerRecordTask.taskSeq - lastContainerRecordSeq > 1) {
                 // 补充跳过的task对象
                 val taskBaseMap = containerBaseElements[lastContainerRecordSeq - 1]
-                lastContainerRecordSeq++
                 var taskVarMap = mutableMapOf<String, Any>()
                 val taskId = if (matrixTaskFlag) {
                     modelTaskIdGenerator.getNextId()
@@ -254,6 +252,7 @@ class PipelineRecordModelService @Autowired constructor(
                     taskVarMap = ModelUtils.generateBuildModelDetail(taskBaseMap.deepCopy(), taskVarMap)
                 }
                 tasks.add(taskVarMap)
+                lastContainerRecordSeq++
             }
             var taskVarMap = containerRecordTask.taskVar
             val taskId = containerRecordTask.taskId
