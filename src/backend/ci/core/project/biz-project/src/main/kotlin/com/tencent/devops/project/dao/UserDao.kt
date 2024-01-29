@@ -45,16 +45,7 @@ class UserDao {
 
     fun create(
         dslContext: DSLContext,
-        userId: String,
-        name: String,
-        bgId: Int,
-        bgName: String,
-        deptId: Int,
-        deptName: String,
-        centerId: Int,
-        centerName: String,
-        groupId: Int,
-        groupName: String,
+        userDeptDetail: UserDeptDetail,
         publicAccount: Boolean? = false
     ) {
         val now = LocalDateTime.now()
@@ -65,6 +56,8 @@ class UserDao {
                 NAME,
                 BG_ID,
                 BG_NAME,
+                BUSINESS_LINE_ID,
+                BUSINESS_LINE_NAME,
                 DEPT_ID,
                 DEPT_NAME,
                 CENTER_ID,
@@ -75,16 +68,18 @@ class UserDao {
                 UPDATE_TIME,
                 USER_TYPE
             ).values(
-                userId,
-                name,
-                bgId,
-                bgName,
-                deptId,
-                deptName,
-                centerId,
-                centerName,
-                groupId,
-                groupName,
+                userDeptDetail.userId,
+                userDeptDetail.name,
+                userDeptDetail.bgId.toInt(),
+                userDeptDetail.bgName,
+                userDeptDetail.businessLineId?.toLong(),
+                userDeptDetail.businessLineName,
+                userDeptDetail.deptId.toInt(),
+                userDeptDetail.deptName,
+                userDeptDetail.centerId.toInt(),
+                userDeptDetail.centerName,
+                userDeptDetail.groupId.toInt(),
+                userDeptDetail.groupName,
                 now,
                 now,
                 publicAccount
