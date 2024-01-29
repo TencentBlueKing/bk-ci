@@ -38,6 +38,6 @@ class PipelineYamlViewLock(
 ) :
     RedisLock(
         redisOperation = redisOperation,
-        lockKey = "lock:projectId:$projectId:repoHashId:$repoHashId:view",
+        lockKey = "pipeline:yaml:view:$projectId:$repoHashId",
         expiredTimeInSeconds = expiredTimeInSeconds
     )

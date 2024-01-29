@@ -30,7 +30,7 @@ class PipelineYamlViewService(
         projectId: String,
         repoHashId: String,
         gitProjectName: String,
-        directoryList: List<String>
+        directoryList: Set<String>
     ) {
         PipelineYamlViewLock(
             redisOperation = redisOperation,

@@ -123,7 +123,7 @@ class PipelineYamlFacadeService @Autowired constructor(
             projectId = projectId,
             repoHashId = repoHashId,
             gitProjectName = action.data.setting.projectName,
-            directoryList = yamlPathList.map { GitActionCommon.getCiDirectory(it.yamlPath) }
+            directoryList = yamlPathList.map { GitActionCommon.getCiDirectory(it.yamlPath) }.toSet()
         )
         val path2PipelineExists = pipelineYamlInfoDao.getAllByRepo(
             dslContext = dslContext, projectId = projectId, repoHashId = repoHashId
@@ -216,7 +216,7 @@ class PipelineYamlFacadeService @Autowired constructor(
                 projectId = projectId,
                 repoHashId = repoHashId,
                 gitProjectName = action.data.setting.projectName,
-                directoryList = yamlPathList.map { GitActionCommon.getCiDirectory(it.yamlPath) }
+                directoryList = yamlPathList.map { GitActionCommon.getCiDirectory(it.yamlPath) }.toSet()
             )
             val path2PipelineExists = pipelineYamlInfoDao.getAllByRepo(
                 dslContext = dslContext, projectId = projectId, repoHashId = repoHashId
