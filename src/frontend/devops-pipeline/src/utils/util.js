@@ -462,6 +462,13 @@ export const deepCopy = obj => {
     return JSON.parse(JSON.stringify(obj))
 }
 
+export const deepClone = obj => {
+    if (typeof structuredClone === 'function') {
+        return structuredClone(obj)
+    }
+    return JSON.parse(JSON.stringify(obj))
+}
+
 export const hashID = () => {
     const uuid = uuidv4().replace(/-/g, '')
     return uuid

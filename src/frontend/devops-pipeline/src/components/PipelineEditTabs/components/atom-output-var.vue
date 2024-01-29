@@ -21,7 +21,7 @@
                 v-bk-tooltips="{
                     content: $t('newui.stepUseWarn'),
                     placement: 'top-start',
-                    disabled: group.disableHeader
+                    disabled: !group.disableHeader
                 }"
             >
                 <div class="env-name flex-item">
@@ -129,7 +129,7 @@
                     return 0
                 } else {
                     const { stageIndex = 0, containerIndex = 0, elementIndex = 0 } = this.editingElementPos
-                    return parseInt(`${stageIndex + 1}${containerIndex}${elementIndex}`)
+                    return parseInt(`${stageIndex}${containerIndex}${elementIndex}`)
                 }
             },
             currentStage () {
@@ -154,7 +154,7 @@
             outputAtomList () {
                 const list = []
                 this.stages.forEach((stage, stageIndex) => {
-                    if (stageIndex > 0) {
+                    if (stage) {
                         (stage.containers || []).forEach((container, containerIndex) => {
                             (container.elements || []).forEach((element, elementIndex) => {
                                 if (element?.data?.output && typeof (element?.data?.output) && Object.keys(element?.data?.output).length) {
@@ -166,7 +166,7 @@
                                             elementIndex
                                         },
                                         totalIndex: parseInt(`${stageIndex}${containerIndex}${elementIndex}`),
-                                        title: `${stageIndex}-${containerIndex + 1}-${elementIndex + 1}-${element.name}`,
+                                        title: `${stageIndex + 1}-${containerIndex + 1}-${elementIndex + 1}-${element.name}`,
                                         version: element.version,
                                         stepId: element.stepId,
                                         stepName: element.name,
@@ -186,7 +186,7 @@
             renderOutputList () {
                 return this.outputAtomList.map((group, index) => ({
                     ...group,
-                    disableHeader: this.editingEleIndex && group.totalIndex > this.editingEleIndex,
+                    disableHeader: this.editingElementPos && group.totalIndex >= this.editingEleIndex,
                     ...(
                         this.searchStr
                             ? {
@@ -261,7 +261,7 @@
                 max-width: 460px;
             }
             .group-title.title-overflow {
-                max-width: 210px;
+                max-width: 208px;
             }
         }
         .step-tips {

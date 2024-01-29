@@ -41,7 +41,7 @@
             >
                 <span class="debug-pipeline-draft-btn">
                     {{ $t("debug") }}
-                    <em>|</em>
+                    <b>|</b>
                     <i
                         :class="['devops-icon icon-txt', {
                             'icon-txt-disabled': !canDebug

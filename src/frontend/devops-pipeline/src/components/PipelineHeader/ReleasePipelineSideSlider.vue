@@ -1,7 +1,7 @@
 <template>
     <bk-sideslider
         :is-show.sync="value"
-        :width="800"
+        :width="640"
         @shown="showReleaseSlider"
         @hidden="hideReleaseSlider"
         ext-cls="release-pipeline-side-slider"
@@ -181,7 +181,7 @@
                         :static-groups="staticGroups"
                     />
                     <section class="belongs-to-groups-box">
-                        <p>{{ $t('当前流水线所在组：') }}</p>
+                        <p>{{ $t('prePipelineGroup') }}</p>
                         <div>
                             <bk-tag v-for="group in viewNames" :key="group">
                                 {{ group }}
@@ -234,22 +234,28 @@
             >
                 {{ $t("release") }}
             </bk-button>
-            <bk-button :disabled="releasing" @click="$emit('input', false)">
-                {{ $t("cancel") }}
+            <bk-button :disabled="releasing || previewing" :loading="previewing" @click="hanldePreviewYaml">
+                {{ $t("previewYaml") }}
             </bk-button>
+            <bk-button :disabled="releasing" @click="cancelRelease">
+                {{ $t("cancelRelease") }}
+            </bk-button>
+            <YamlPreviewPopup :yaml="previewYaml" v-if="releaseParams.enablePac && showYamlPreivewPopup" @close="closePreviewYaml" />
         </footer>
     </bk-sideslider>
 </template>
 
 <script>
     import PipelineGroupSelector from '@/components/PipelineActionDialog/PipelineGroupSelector'
+    import YamlPreviewPopup from '@/components/YamlPreviewPopup'
     import { UPDATE_PIPELINE_INFO } from '@/store/modules/atom/constants'
     import { mapActions, mapGetters, mapState } from 'vuex'
     import { generateDisplayName } from '@/utils/util'
 
     export default {
         components: {
-            PipelineGroupSelector
+            PipelineGroupSelector,
+            YamlPreviewPopup
         },
         props: {
             value: {
@@ -299,11 +305,19 @@
                     labels: this.pipelineSetting?.labels || [],
                     staticViews: []
                 },
-                staticGroups: null
+                staticGroups: null,
+                previewing: false,
+                showYamlPreivewPopup: false,
+                previewYaml: ''
             }
         },
         computed: {
-            ...mapState('atom', ['pipelineInfo', 'pipelineSetting']),
+            ...mapState('atom', [
+                'pipelineInfo',
+                'pipelineSetting',
+                'pipelineWithoutTrigger',
+                'pipeline'
+            ]),
             ...mapState('pipelines', ['isManage']),
             ...mapGetters('atom', ['isBranchVersion', 'pacEnabled', 'yamlInfo']),
             ...mapState('common', ['pacSupportScmTypeList']),
@@ -412,7 +426,7 @@
             window.__bk_zIndex_manager.zIndex = 2000
         },
         methods: {
-            ...mapActions('atom', ['releaseDraftPipeline', 'setSaveStatus', 'listPermissionStaticViews']),
+            ...mapActions('atom', ['releaseDraftPipeline', 'setSaveStatus', 'listPermissionStaticViews', 'transfer']),
             ...mapActions('common', ['isPACOAuth', 'getSupportPacScmTypeList', 'getPACRepoList']),
             async init () {
                 if (this.releaseParams.enablePac) {
@@ -639,7 +653,7 @@
                                                 }
                                             }
                                         },
-                                        this.$t('查看流水线')
+                                        this.$t('checkPipeline')
                                     ),
                                     h(
                                         'bk-button',
@@ -650,7 +664,7 @@
                                                 }
                                             }
                                         },
-                                        this.$t('返回')
+                                        this.$t('return')
                                     )
                                 ]
                             )
@@ -679,7 +693,7 @@
                 this.$emit('input', true)
             },
             hideReleaseSlider () {
-                this.$emit('input', false)
+                this.cancelRelease()
                 this.releaseParams = {
                     enablePac: this.pacEnabled,
                     description: '',
@@ -692,6 +706,12 @@
                     targetAction: ''
                 }
             },
+            cancelRelease () {
+                this.$emit('input', false)
+                this.showYamlPreivewPopup = false
+                this.previewYaml = ''
+                this.preivewing = false
+            },
             togglePacCodelibSettingForm () {
                 this.showPacCodelibSetting = !this.showPacCodelibSetting
             },
@@ -702,13 +722,21 @@
                 if (this.oauthing) return
                 try {
                     this.oauthing = true
-                    this.hasOauth = await this.isPACOAuth({
+                    const res = await this.isPACOAuth({
                         projectId: this.$route.params.projectId,
                         redirectUrIType: 'SPEC',
                         redirectUrl: location.href,
                         repositoryType: this.releaseParams.scmType
                     })
+                    if (res?.status === 403) {
+                        window.open(res.url, '_blank')
+                    }
+                    this.hasOauth = res.status === 200
                 } catch (error) {
+                    this.$bkMessage({
+                        theme: 'error',
+                        message: error.message
+                    })
                 } finally {
                     this.oauthing = false
                 }
@@ -718,12 +746,19 @@
                 try {
                     this.refreshing = true
                     // TODO: 刷新Oauth状态
-                    this.hasOauth = await this.isPACOAuth({
+                    const res = await this.isPACOAuth({
                         projectId: this.$route.params.projectId,
                         repositoryType: this.releaseParams.scmType
                     })
+                    if (res?.status === 403) {
+                        window.open(res.url, '_blank')
+                    }
+                    this.hasOauth = res.status === 200
                 } catch (error) {
-                    console.log(error)
+                    this.$bkMessage({
+                        theme: 'error',
+                        message: error.message
+                    })
                 } finally {
                     this.refreshing = false
                 }
@@ -732,6 +767,38 @@
                 return filePath.startsWith(this.filePathDir)
                     ? filePath.replace(this.filePathDir, '')
                     : filePath
+            },
+            async hanldePreviewYaml () {
+                try {
+                    this.previewing = true
+                    const pipeline = Object.assign({}, this.pipeline, {
+                        stages: [
+                            this.pipeline.stages[0],
+                            ...(this.pipelineWithoutTrigger?.stages ?? [])
+                        ]
+                    })
+                    const res = await this.transfer({
+                        projectId: this.$route.params.projectId,
+                        actionType: 'FULL_MODEL2YAML',
+                        modelAndSetting: {
+                            model: pipeline,
+                            setting: this.pipelineSetting
+                        },
+                        oldYaml: ''
+                    })
+                    this.previewYaml = res.newYaml
+                    this.showYamlPreivewPopup = true
+                } catch (error) {
+                    this.$bkMessage({
+                        theme: 'error',
+                        message: error.message
+                    })
+                } finally {
+                    this.previewing = false
+                }
+            },
+            closePreviewYaml () {
+                this.showYamlPreivewPopup = false
             }
         }
     }

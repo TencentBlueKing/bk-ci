@@ -219,7 +219,7 @@
                             ...(this.pipelineWithoutTrigger?.stages ?? [])
                         ]
                     })
-                    await this.transferModelToYaml({
+                    await this.transferPipeline({
                         projectId: this.$route.params.projectId,
                         pipelineId: this.$route.params.pipelineId,
                         actionType: val ? 'FULL_MODEL2YAML' : 'FULL_YAML2MODEL',
@@ -269,7 +269,7 @@
                 'setSaveStatus',
                 'setEditFrom',
                 'updatePipelineSetting',
-                'transferModelToYaml'
+                'transferPipeline'
             ]),
             ...mapActions('common', [
                 'requestQualityAtom',

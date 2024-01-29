@@ -11,34 +11,32 @@
         ext-cls="pipeline-template-preivew"
         @cancel="handleCancel"
     >
-        <div style="width: 100%; height: 100%" v-if="templatePipeline && value">
-            <mode-switch
-                :is-yaml-support="isYamlSupport"
-                :yaml-invalid-msg="yamlInvalidMsg"
-                read-only
-            />
-            <YamlEditor
-                v-if="isCodeMode"
-                style="margin-top: 20px"
-                :value="templateYaml"
-                read-only
-                :highlight-ranges="highlightMarkList"
-            />
-            <bk-tab v-else v-model="activePanel" type="unborder-card">
-                <bk-tab-panel
-                    v-for="panel in panels"
-                    :key="panel.name"
-                    :label="panel.label"
-                    :name="panel.name"
-                >
-                    <component
-                        style="pointer-events: none"
-                        v-bind="panel.props"
-                        :is="panel.component"
-                    />
-                </bk-tab-panel>
-            </bk-tab>
-        </div>
+        <mode-switch
+            :is-yaml-support="isYamlSupport"
+            :yaml-invalid-msg="yamlInvalidMsg"
+            read-only
+        />
+        <YamlEditor
+            v-if="isCodeMode"
+            style="margin-top: 20px"
+            :value="templateYaml"
+            read-only
+            :highlight-ranges="highlightMarkList"
+        />
+        <bk-tab v-else v-model="activePanel" type="unborder-card">
+            <bk-tab-panel
+                v-for="panel in panels"
+                :key="panel.name"
+                :label="panel.label"
+                :name="panel.name"
+            >
+                <component
+                    style="pointer-events: none"
+                    v-bind="panel.props"
+                    :is="panel.component"
+                />
+            </bk-tab-panel>
+        </bk-tab>
     </bk-dialog>
 </template>
 

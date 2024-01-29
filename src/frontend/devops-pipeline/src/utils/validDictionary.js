@@ -26,7 +26,8 @@ const dictionary = {
             required: field => '字段不能为空',
             excludeComma: field => '字段不能包含英文逗号',
             string: field => '字段只能包含数字，字母和下划线',
-            varRule: field => `${field}只能以字母和下划线开头，同时只包含字母，数字以及下划线`,
+            varRule: field => '字段只能以字母和下划线开头，同时只包含字母，数字以及下划线',
+            constVarRule: field => '字段只能以大写字母开头，同时只包含大写字母，数字以及下划线',
             numeric: field => '字段只能包含数字',
             regex: (field, regex) => {
                 return `字段不符合(${regex})正则表达式规则`
@@ -75,7 +76,8 @@ const dictionary = {
             min_value: (field, args) => {
                 return `Minimum must not be less than ${args[0]}`
             },
-            varRule: field => `${field} only begin with letters and underscores, and only contain letters, numbers, and underscores`,
+            varRule: field => 'Field only begin with letters and underscores, and only contain letters, numbers, and underscores',
+            constVarRule: field => 'Field only begin with upper letters, and only contain upper letters, numbers, and underscores',
             pullmode: field => 'Field cannot be empty',
             excludeEmptyCapital: field => 'The field must be filled and only supports English letter, numbers or variables ',
             mutualGroup: field => 'Field only supports English, numbers or fill in variables',
