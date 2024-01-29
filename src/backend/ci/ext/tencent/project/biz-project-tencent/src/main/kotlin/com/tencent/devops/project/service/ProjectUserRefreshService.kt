@@ -142,18 +142,10 @@ class ProjectUserRefreshService @Autowired constructor(
             return null
         }
         val staffInfo = tofService.getStaffInfo(userId)
+        tofDeptInfo.name = staffInfo.chineseName
         userDao.create(
             dslContext = dslContext,
-            groupId = tofDeptInfo.groupId.toInt(),
-            groupName = tofDeptInfo.groupName,
-            bgId = tofDeptInfo.bgId.toInt(),
-            bgName = tofDeptInfo.bgName,
-            centerId = tofDeptInfo.centerId.toInt(),
-            centerName = tofDeptInfo.centerName,
-            deptId = tofDeptInfo.deptId.toInt(),
-            deptName = tofDeptInfo.deptName,
-            name = staffInfo.chineseName,
-            userId = userId
+            userDeptDetail = tofDeptInfo
         )
         return tofDeptInfo
     }
@@ -310,16 +302,18 @@ class ProjectUserRefreshService @Autowired constructor(
 
         userDao.create(
             dslContext = dslContext,
-            userId = userInfo.userId,
-            name = userInfo.userId,
-            bgId = userInfo.bgId,
-            bgName = userInfo.bgName,
-            deptId = userInfo.deptId ?: 0,
-            deptName = userInfo.deptName ?: "",
-            centerId = userInfo.centerId ?: 0,
-            centerName = userInfo.centerName ?: "",
-            groupId = userInfo.groupId ?: 0,
-            groupName = userInfo.groupName ?: "",
+            userDeptDetail = UserDeptDetail(
+                userId = userInfo.userId,
+                name = userInfo.userId,
+                bgId = userInfo.bgId.toString(),
+                bgName = userInfo.bgName,
+                deptId = "${userInfo.deptId ?: 0}",
+                deptName = userInfo.deptName ?: "",
+                centerId = "${userInfo.centerId ?: 0}",
+                centerName = userInfo.centerName ?: "",
+                groupId = "${userInfo.groupId ?: 0}",
+                groupName = userInfo.groupName ?: "",
+            ),
             publicAccount = true
         )
         return true
