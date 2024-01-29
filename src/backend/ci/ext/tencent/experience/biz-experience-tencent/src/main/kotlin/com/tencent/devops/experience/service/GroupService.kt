@@ -69,13 +69,12 @@ import com.tencent.devops.model.experience.tables.records.TExperienceGroupOuterR
 import com.tencent.devops.project.api.service.ServiceProjectOrganizationResource
 import com.tencent.devops.project.api.service.ServiceProjectResource
 import com.tencent.devops.project.api.service.service.ServiceTxUserResource
-import org.apache.commons.lang3.StringUtils
+import javax.ws.rs.core.Response
 import org.jooq.DSLContext
 import org.jooq.Result
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
-import javax.ws.rs.core.Response
 
 @SuppressWarnings("LongParameterList")
 @Service
