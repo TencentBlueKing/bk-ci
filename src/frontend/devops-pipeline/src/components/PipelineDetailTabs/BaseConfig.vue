@@ -5,7 +5,7 @@
                 {{ $t(panel.name) }}
             </header>
             <div class="base-info-panel-content" slot="content">
-                <p v-for="row in panel.rows" :key="row">
+                <p v-for="row in panel.rows" :key="row.key">
                     <label class="base-info-block-row-label">{{ $t(row.key) }}</label>
                     <span class="base-info-block-row-value">
                         <template v-if="['label', 'pipelineGroup'].includes(row.key)">
@@ -28,16 +28,20 @@
 </template>
 
 <script>
-    import { mapState } from 'vuex'
     import { convertTime } from '@/utils/util'
     export default {
+        props: {
+            basicInfo: {
+                type: Object,
+                required: true
+            }
+        },
         data () {
             return {
                 activeName: ['baseInfo', 'executeConfig']
             }
         },
         computed: {
-            ...mapState('atom', ['pipelineInfo', 'pipelineSetting']),
             panels () {
                 return [{
                     name: 'baseInfo',
@@ -48,31 +52,32 @@
                 }]
             },
             baseInfoRows () {
-                const { pipelineInfo, setting } = this
+                const { basicInfo } = this
+                console.log(this.basicInfo, 123321321)
                 return [
                     {
                         key: 'pipelineName',
-                        value: pipelineInfo?.pipelineName ?? '--'
+                        value: basicInfo?.pipelineName ?? '--'
                     },
                     {
                         key: 'label',
-                        value: setting?.labels ?? []
+                        value: basicInfo?.labels ?? []
                     },
                     {
                         key: 'pipelineGroup',
-                        value: setting?.viewNames ?? []
+                        value: basicInfo?.viewNames ?? []
                     },
                     {
                         key: 'desc',
-                        value: pipelineInfo?.pipelineDesc ?? '--'
+                        value: basicInfo?.pipelineDesc ?? '--'
                     },
                     {
                         key: 'creator',
-                        value: pipelineInfo?.creator ?? '--'
+                        value: basicInfo?.creator ?? '--'
                     },
                     {
                         key: 'createTime',
-                        value: convertTime(pipelineInfo?.createTime) ?? '--'
+                        value: convertTime(basicInfo?.createTime) ?? '--'
                     }
                 ]
             },
@@ -80,11 +85,11 @@
                 return [
                     {
                         key: 'customBuildNum',
-                        value: this.pipelineSetting?.buildNumRule ?? '${{DATE:”yyyyMMdd”}}.${{BUILD_NO_OF_DAY}}'
+                        value: this.basicInfo?.buildNumRule ?? '${{DATE:”yyyyMMdd”}}.${{BUILD_NO_OF_DAY}}'
                     },
                     {
                         key: 'parallelSetting',
-                        value: this.$t(`settings.runningOption.${this.pipelineSetting?.runLockType.toLowerCase()}`)
+                        value: this.$t(`settings.runningOption.${this.basicInfo?.runLockType?.toLowerCase?.() ?? '--'}`)
                     }
                 ]
             }

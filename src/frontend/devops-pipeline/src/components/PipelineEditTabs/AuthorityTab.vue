@@ -5,7 +5,6 @@
         :resource-code="resourceCode"
         :project-code="projectCode"
         :show-create-group="false"
-        ajax-prefix="//dev.devops.woa.com"
         :resource-name="pipelineName"
     />
 </template>

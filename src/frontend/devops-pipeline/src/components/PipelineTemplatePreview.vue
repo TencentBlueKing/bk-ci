@@ -1,18 +1,17 @@
 <template>
     <bk-dialog
-        v-model="isShow"
-        v-bk-loading="{ isLoading }"
+        v-model="value"
+        :draggable="false"
         width="90%"
         height="90%"
         :auto-close="false"
         :show-footer="false"
         header-position="left"
-        render-directive="if"
         :title="title"
         ext-cls="pipeline-template-preivew"
         @cancel="handleCancel"
     >
-        <template v-if="templatePipeline && isShow">
+        <div style="width: 100%; height: 100%" v-if="templatePipeline && value">
             <mode-switch
                 :is-yaml-support="isYamlSupport"
                 :yaml-invalid-msg="yamlInvalidMsg"
@@ -31,7 +30,6 @@
                     :key="panel.name"
                     :label="panel.label"
                     :name="panel.name"
-                    render-directive="if"
                 >
                     <component
                         style="pointer-events: none"
@@ -40,7 +38,7 @@
                     />
                 </bk-tab-panel>
             </bk-tab>
-        </template>
+        </div>
     </bk-dialog>
 </template>
 
@@ -61,14 +59,13 @@
             YamlEditor
         },
         props: {
-            isShow: Boolean,
+            value: Boolean,
             previewSettingType: {
                 type: String,
                 default: ''
             },
             templatePipeline: {
-                type: Object,
-                required: true
+                type: Object
             }
         },
         data () {
@@ -89,8 +86,8 @@
             }),
             title () {
                 return this.$t('templatePreivewHeader', [
-        this.templatePipeline?.name ?? '',
-        this.previewSettingType
+                    this.templatePipeline?.name ?? '',
+                    this.previewSettingType
                 ])
             },
             highlightType () {
@@ -148,7 +145,7 @@
             }
         },
         watch: {
-            isShow (val) {
+            value (val) {
                 if (val) {
                     this.init()
                 } else {
@@ -180,6 +177,10 @@
                     this.isYamlSupport = res.yamlSupported
                     this.yamlInvalidMsg = res.yamlInvalidMsg
                     this.pipelineSetting = res.setting
+
+                    if (this.previewSettingType) {
+                        this.activePanel = 'baseConfig'
+                    }
                 } catch (error) {
                     this.$bkMessage({
                         theme: 'error',
@@ -190,7 +191,7 @@
                 }
             },
             handleCancel () {
-                this.$emit('update:isShow', false)
+                this.$emit('input', false)
             }
         }
     }

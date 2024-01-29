@@ -182,7 +182,13 @@
                         }
                     case 'setting':
                         return {
-                            is: BaseConfig
+                            is: BaseConfig,
+                            props: {
+                                basicInfo: {
+                                    ...this.pipelineInfo,
+                                    ...this.pipelineSetting
+                                }
+                            }
                         }
                     default:
                         return null

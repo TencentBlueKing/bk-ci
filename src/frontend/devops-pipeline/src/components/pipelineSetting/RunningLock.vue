@@ -19,7 +19,7 @@
                 </div>
                 <vuex-input
                     name="buildNumRule"
-                    max-length="256"
+                    :max-length="256"
                     :disabled="!editable"
                     :value="pipelineSetting.buildNumRule"
                     :placeholder="$t('buildDescInputTips')"

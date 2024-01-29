@@ -1,5 +1,5 @@
 <template>
-    <div class="create-pipeline-wrapper" v-bkloading="{ isLoading: isSaving, title: $t('editPage.saving') }">
+    <div class="create-pipeline-wrapper" v-bkloading="loadingConf">
         <header v-if="showHeader" class="create-pipeline-header">
             <div>
                 <slot name="pipeline-name"><span style="cursor: default" :title="pipeline.name">{{ pipeline.name }}</span></slot>
@@ -174,6 +174,12 @@
                     })
                 }
             },
+            loadingConf () {
+                return {
+                    isLoading: this.isSaving,
+                    title: this.$t?.('editPage.saving')
+                }
+            },
             stageTypeDialogWidth () {
                 return Array.isArray(this.osList) ? this.osList.length * 130 + 208 : 480
             },
@@ -237,6 +243,7 @@
             pipeline: {
                 handler (val, old) {
                     if (this.pipelineEditable) {
+                        console.log(areDeeplyEqual(val, old))
                         this.setPipelineEditing(true)
                     }
                 },

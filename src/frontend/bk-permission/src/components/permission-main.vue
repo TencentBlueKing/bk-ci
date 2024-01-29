@@ -3,8 +3,7 @@
     class="permission-wrapper"
     v-bkloading="{ isLoading }"
   >
-    <template v-if="!isLoading">
-      <template v-if="isEnablePermission">
+      <template v-if="isEnablePermission && !isLoading">
         <permission-manage
           v-if="hasPermission"
           :show-create-group="showCreateGroup"
@@ -42,11 +41,10 @@
           @open-manage="initStatus"
         />
       </template>
-    </template>
   </article>
 </template>
 
-<script>import NoEnablePermission from './children/no-enable-permission/no-enable-permission.vue';
+<script> import NoEnablePermission from './children/no-enable-permission/no-enable-permission.vue';
 import NoPermission from './children/no-permission/no-permission.vue';
 import PermissionManage from './children/permission-manage/permission-manage.vue';
 import ajax from '../ajax/index';

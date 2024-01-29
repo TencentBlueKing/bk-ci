@@ -198,7 +198,7 @@
                         switch (true) {
                             case val.length === 0:
                                 return this.$t('groupNameNotAllowEmpty')
-                            case val.length > 16:
+                            case val.length > 32:
                                 return this.$t('groupNameTooLong')
                             default:
                                 return this.$t('pipelineGroupRepeatTips', [val])
@@ -283,7 +283,7 @@
                 'requestGroupPipelineCount'
             ]),
             checkGroupNameValid (name) {
-                const valid = this.newPipelineGroup.projected !== this.groupNamesMap[name]?.projected && name.length <= 16 && name.length > 0
+                const valid = this.newPipelineGroup.projected !== this.groupNamesMap[name]?.projected && name.length <= 32 && name.length > 0
                 this.isValidGroupName = valid
                 return valid
             },
