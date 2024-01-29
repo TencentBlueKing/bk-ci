@@ -49,7 +49,7 @@ dependencies {
     api(project(":core:notify:api-notify"))
 
     api("com.zaxxer:HikariCP")
-    api("mysql:mysql-connector-java")
+    api("com.mysql:mysql-connector-j")
     api("org.apache.commons:commons-exec")
     api("org.quartz-scheduler:quartz")
     api("org.springframework.boot:spring-boot-starter-websocket")
