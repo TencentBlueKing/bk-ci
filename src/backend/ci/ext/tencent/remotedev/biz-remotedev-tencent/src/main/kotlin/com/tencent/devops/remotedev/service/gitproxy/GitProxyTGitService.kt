@@ -84,7 +84,7 @@ class GitProxyTGitService @Autowired constructor(
         }.toSet()
         if (gitProjectUrls.isNotEmpty()) {
             val noGroup = gitProjectUrls.all { it.endsWith(".git") }
-            filterUrlPermission(urls, token, result, TGitProjectType.GIT, noGroup)
+            filterUrlPermission(gitProjectUrls, token, result, TGitProjectType.GIT, noGroup)
         }
 
         if (result.isEmpty()) {
@@ -123,8 +123,9 @@ class GitProxyTGitService @Autowired constructor(
     ) {
         var page = 1
         val pageSize = 100
+        val rProjectUrls = projectUrls.map { it.removeHttpPrefix() }.toSet()
         while (true) {
-            val projects = if (projectUrls.isNotEmpty()) {
+            val projects = if (rProjectUrls.isNotEmpty()) {
                 TGitApiClient.getProjectList(
                     client = okHttpClient,
                     gitUrl = tGitUrl,
@@ -141,7 +142,7 @@ class GitProxyTGitService @Autowired constructor(
 
             // 过滤项目信息
             projects.forEach projects@{ project ->
-                projectUrls.forEach urls@{ projectUrl ->
+                rProjectUrls.forEach urls@{ projectUrl ->
                     if (project.httpsUrlToRepo.isNullOrBlank() && project.httpUrlToRepo.isNullOrBlank()) {
                         logger.warn("filterUrlPermission|httpsUrl is null $project")
                         return@projects
@@ -156,7 +157,7 @@ class GitProxyTGitService @Autowired constructor(
                     result[url.removeHttpPrefix()] = true
 
                     // 如果全都是项目判断那么只要项目判断完就可以退出
-                    if (noGroup && projectUrls.subtract(result.keys).isEmpty()) {
+                    if (noGroup && rProjectUrls.subtract(result.keys).isEmpty()) {
                         return
                     }
                 }
