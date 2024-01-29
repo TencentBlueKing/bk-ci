@@ -96,6 +96,8 @@ class PipelineVersionFacadeService @Autowired constructor(
     companion object {
         private val logger = LoggerFactory.getLogger(PipelineVersionFacadeService::class.java)
         private const val PAC_BRANCH_PREFIX = "bk-ci-pipeline-"
+        fun getReleaseBranchName(pipelineId: String, version: Int): String =
+            "$PAC_BRANCH_PREFIX$pipelineId-$version"
     }
 
     fun getPipelineDetailIncludeDraft(
@@ -207,13 +209,13 @@ class PipelineVersionFacadeService @Autowired constructor(
             projectId = projectId,
             pipelineId = pipelineId
         )
-        val yamlInfo = pipelineYamlFacadeService.getPipelineYamlInfo(projectId, pipelineId, version)
+        val originYaml = pipelineYamlFacadeService.getPipelineYamlInfo(projectId, pipelineId, version)
         // 如果不匹配已有状态则报错，需要用户重新刷新页面
-        if (yamlInfo != null && !request.enablePac) throw ErrorCodeException(
+        if (originYaml != null && !request.enablePac) throw ErrorCodeException(
             errorCode = ProcessMessageCode.ERROR_PIPELINE_IS_NOT_THE_LATEST
         )
         // 根据项目PAC状态进行接口调用
-        val enabled = yamlInfo != null || request.enablePac
+        val enabled = originYaml != null || request.enablePac
         val targetSettings = originSetting.copy(
             pipelineAsCodeSettings = PipelineAsCodeSettings(enabled)
         )
@@ -221,7 +223,7 @@ class PipelineVersionFacadeService @Autowired constructor(
         val (versionStatus, branchName) = if (
             enabled && request.targetAction == CodeTargetAction.CHECKOUT_BRANCH_AND_REQUEST_MERGE
         ) {
-            Pair(VersionStatus.BRANCH_RELEASE, "${PAC_BRANCH_PREFIX}$pipelineId")
+            Pair(VersionStatus.BRANCH_RELEASE, getReleaseBranchName(pipelineId, draftVersion.version))
         } else if (enabled && request.targetAction == CodeTargetAction.PUSH_BRANCH_AND_REQUEST_MERGE) {
             val baseVersion = draftVersion.baseVersion?.let {
                 pipelineRepositoryService.getPipelineResourceVersion(projectId, pipelineId, it)
