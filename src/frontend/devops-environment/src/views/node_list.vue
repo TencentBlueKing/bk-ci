@@ -181,6 +181,7 @@
                                         </span>
                                         <span
                                             v-if="props.row.nodeStatus === 'RUNNING'"
+                                            class="log-icon-box"
                                             @click="handleShowLogDetail(props.row)">
                                             <Icon
                                                 class="log-icon"
@@ -1515,15 +1516,14 @@
                 }
               }
             }
-            .node-item-status {
-                display: flex;
-            }
-            .node-status {
-                display: flex;
-                flex: 1;
-            }
             .loading-icon {
+                position: relative;
+                top: -2px;
                 margin-right: 5px;
+            }
+            .log-icon-box {
+                position: relative;
+                top: 3px;
             }
             .log-icon {
                 cursor: pointer;
@@ -1546,6 +1546,7 @@
                 }
             }
             .node-removed-message {
+                padding-left: 2px;
                 color: #ea3636;
             }
         }

@@ -194,57 +194,6 @@
                     }
                     this.rowList = []
                     const res = await this.$store.dispatch('environment/requestCmdbNode', { params })
-                    // const res = {
-                    //     records: [
-                    //         {
-                    //             name: '',
-                    //             operator: 'greysonfang',
-                    //             bakOperator: 'greysonfang',
-                    //             ip: '9.134.121.99',
-                    //             displayIp: '9.134.121.99',
-                    //             agentStatus: false,
-                    //             osName: 'TencentOS Server 3.2 (Final)',
-                    //             bizId: -1
-                    //         },
-                    //         {
-                    //             name: '',
-                    //             operator: 'greysonfang',
-                    //             bakOperator: 'greysonfang',
-                    //             ip: '9.134.121.11',
-                    //             displayIp: '9.134.121.11',
-                    //             agentStatus: false,
-                    //             osName: 'TencentOS Server 3.2 (Final)',
-                    //             bizId: -1
-                    //         }, {
-                    //             name: '',
-                    //             operator: 'greysonfang',
-                    //             bakOperator: 'greysonfang',
-                    //             ip: '9.134.121.22',
-                    //             displayIp: '9.134.121.22',
-                    //             agentStatus: false,
-                    //             osName: 'TencentOS Server 3.2 (Final)',
-                    //             bizId: -1
-                    //         }, {
-                    //             name: '',
-                    //             operator: 'greysonfang',
-                    //             bakOperator: 'greysonfang',
-                    //             ip: '9.134.121.33',
-                    //             displayIp: '9.134.121.33',
-                    //             agentStatus: false,
-                    //             osName: 'TencentOS Server 3.2 (Final)',
-                    //             bizId: -1
-                    //         }, {
-                    //             name: '',
-                    //             operator: 'greysonfang',
-                    //             bakOperator: 'greysonfang',
-                    //             ip: '9.134.121.44',
-                    //             displayIp: '9.134.121.44',
-                    //             agentStatus: false,
-                    //             osName: 'TencentOS Server 3.2 (Final)',
-                    //             bizId: -1
-                    //         }
-                    //     ]
-                    // }
                     res.records && res.records.forEach(item => {
                         item.nodeId = this.nodeList.find(node => node.nodeType === 'CMDB' && node.ip === item.ip)?.nodeId
                         this.rowList.push({
@@ -256,8 +205,9 @@
                     this.$nextTick(() => {
                         this.nodeList.forEach(selection => {
                             const matchItem = this.rowList.find(val => val.ip === selection.ip)
-                            if (matchItem) {
+                            if ((matchItem && selection.nodeStatus !== 'NOT_IN_CC' && !this.reImportIp) || (matchItem && selection.nodeStatus === 'NOT_IN_CC' && !this.reImportIp)) {
                                 this.$refs.nodeListTable.toggleRowSelection(matchItem, true)
+                                this.selectedNodeList.push(matchItem)
                             }
                         })
                     })
@@ -448,7 +398,7 @@
              * 已经导入过的节点不可勾选，状态为NOT_IN_CC的节点可勾选重新导入
              */
             isImported (row) {
-                return !this.nodeList.some(node => (node.nodeType === 'CMDB' && node.ip === row.ip && node.nodeStatus !== 'NOT_IN_CC') || (node.nodeStatus === 'NOT_IN_CC' && !this.reImportIp))
+                return !this.nodeList.some(node => (node.nodeType === 'CMDB' && node.ip === row.ip && node.nodeStatus !== 'NOT_IN_CC') || (node.nodeStatus === 'NOT_IN_CC' && this.reImportIp))
             }
         }
     }
