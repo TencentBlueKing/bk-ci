@@ -201,6 +201,11 @@ enum class ErrorCodeEnum(
         errorCode = "2132038",
         formatErrorMessage = "User{0}does not have sufficient permissions" +
             "(root directory approval permissions of SVN or master permissions of GIT)"
+    ),
+    REQ_DEVCLOUD_ERROR(
+        errorType = ErrorType.THIRD_PARTY,
+        errorCode = "2132039",
+        formatErrorMessage = "request devcloud {0} error {1}"
     );
 
     fun getErrorMessage(): String {
