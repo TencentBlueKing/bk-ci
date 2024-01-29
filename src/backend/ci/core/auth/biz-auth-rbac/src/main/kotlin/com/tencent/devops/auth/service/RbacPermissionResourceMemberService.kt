@@ -3,6 +3,7 @@ package com.tencent.devops.auth.service
 import com.tencent.bk.sdk.iam.constants.ManagerScopesEnum
 import com.tencent.bk.sdk.iam.dto.V2PageInfoDTO
 import com.tencent.bk.sdk.iam.dto.manager.ManagerMember
+import com.tencent.bk.sdk.iam.dto.manager.RoleGroupMemberInfo
 import com.tencent.bk.sdk.iam.dto.manager.V2ManagerRoleGroupInfo
 import com.tencent.bk.sdk.iam.dto.manager.dto.ManagerMemberGroupDTO
 import com.tencent.bk.sdk.iam.dto.manager.dto.SearchGroupDTO
@@ -101,37 +102,33 @@ class RbacPermissionResourceMemberService constructor(
             projectCode = projectCode,
             iamGroupId = iamGroupId
         )
+        // 获取用户组中用户以及部门
         val userType = ManagerScopesEnum.getType(ManagerScopesEnum.USER)
         val deptType = ManagerScopesEnum.getType(ManagerScopesEnum.DEPARTMENT)
         val pageInfoDTO = V2PageInfoDTO().apply {
             pageSize = 1000
             page = 1
         }
-        val groupMemberMap = iamV2ManagerService.getRoleGroupMemberV2(
-            iamGroupId,
-            pageInfoDTO
-        ).results.filter {
-            it.type == userType
-        }.associateBy { it.id }
+        val groupMembers = iamV2ManagerService.getRoleGroupMemberV2(iamGroupId, pageInfoDTO).results
+        val groupUserMap = groupMembers.filter { it.type == userType }.associateBy { it.id }
+        val groupDepartmentSet = groupMembers.filter { it.type == deptType }.map { it.id }.toSet()
+        // 校验用户是否应该加入用户组
         val iamMemberInfos = mutableListOf<ManagerMember>()
-        // 校验是否将用户加入组，如果用户已经在用户组,并且过期时间超过30天,则不再添加
-        val expectExpiredAt = System.currentTimeMillis() / 1000 + TimeUnit.DAYS.toSeconds(VALID_EXPIRED_AT)
         members?.forEach {
-            if (groupMemberMap.containsKey(it) && groupMemberMap[it]!!.expiredAt > expectExpiredAt) {
-                return@forEach
-            }
-            deptService.getUserInfo(
-                userId = "admin",
-                name = it
-            ) ?: throw ErrorCodeException(
-                errorCode = AuthMessageCode.USER_NOT_EXIST,
-                params = arrayOf(it),
-                defaultMessage = "user $it not exist"
+            val shouldAddUserToGroup = shouldAddUserToGroup(
+                groupUserMap = groupUserMap,
+                groupDepartmentSet = groupDepartmentSet,
+                member = it
             )
-            iamMemberInfos.add(ManagerMember(userType, it))
+            if (shouldAddUserToGroup) {
+                iamMemberInfos.add(ManagerMember(userType, it))
+            }
         }
+
         departments?.forEach {
-            iamMemberInfos.add(ManagerMember(deptType, it))
+            if (!groupDepartmentSet.contains(it)) {
+                iamMemberInfos.add(ManagerMember(deptType, it))
+            }
         }
         logger.info("batch add project user:$iamGroupId|$expiredTime|$iamMemberInfos")
         if (iamMemberInfos.isNotEmpty()) {
@@ -161,6 +158,33 @@ class RbacPermissionResourceMemberService constructor(
                 defaultMessage = "The group($iamGroupId) does not belong to the project($projectCode)!"
             )
         }
+    }
+
+    private fun shouldAddUserToGroup(
+        groupUserMap: Map<String, RoleGroupMemberInfo>,
+        groupDepartmentSet: Set<String>,
+        member: String
+    ): Boolean {
+        // 校验是否将用户加入组，如果用户已经在用户组,并且过期时间超过30天,则不再添加
+        val expectExpiredAt = System.currentTimeMillis() / 1000 + TimeUnit.DAYS.toSeconds(VALID_EXPIRED_AT)
+        if (groupUserMap.containsKey(member) && groupUserMap[member]!!.expiredAt > expectExpiredAt) {
+            return false
+        }
+        // 校验用户的部门是否已经加入组，若部门已经加入，则不再添加该用户
+        try {
+            val userDeptInfoSet = deptService.getUserDeptInfo(userId = member)
+            val isUserBelongGroupByDepartments = groupDepartmentSet.intersect(userDeptInfoSet).isNotEmpty()
+            if (isUserBelongGroupByDepartments) {
+                return false
+            }
+        } catch (ignore: Exception) {
+            throw ErrorCodeException(
+                errorCode = AuthMessageCode.USER_NOT_EXIST,
+                params = arrayOf(member),
+                defaultMessage = "user $member not exist"
+            )
+        }
+        return true
     }
 
     override fun batchDeleteResourceGroupMembers(
