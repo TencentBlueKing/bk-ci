@@ -51,16 +51,7 @@ class TCloudCfsService @Autowired constructor(
             return
         }
 
-        val cred = Credential(secretId, secretKey)
-        val profile = HttpProfile().apply {
-            this.endpoint = TCLOUD_DOMAIN
-        }
-        val client = CfsClient(
-            cred, record.region,
-            ClientProfile().apply {
-                this.httpProfile = profile
-            }
-        )
+        val client = buildCfsClient(record.region)
 
         var pgId = record.pgId
         if (pgId == null) {
@@ -124,16 +115,7 @@ class TCloudCfsService @Autowired constructor(
         cfsId: String,
         region: String
     ) {
-        val cred = Credential(secretId, secretKey)
-        val profile = HttpProfile().apply {
-            this.endpoint = TCLOUD_DOMAIN
-        }
-        val client = CfsClient(
-            cred, region,
-            ClientProfile().apply {
-                this.httpProfile = profile
-            }
-        )
+        val client = buildCfsClient(region)
 
         val pgId = getPGId(client, cfsId) ?: throw RuntimeException("获取权限组ID失败")
         projectTCloudCfsDao.add(dslContext, projectId, cfsId, region, pgId)
@@ -190,17 +172,7 @@ class TCloudCfsService @Autowired constructor(
         region: String,
         delete: Boolean
     ) {
-        val cred = Credential(secretId, secretKey)
-        val profile = HttpProfile().apply {
-            this.endpoint = TCLOUD_DOMAIN
-        }
-        val client = CfsClient(
-            cred,
-            region,
-            ClientProfile().apply {
-                this.httpProfile = profile
-            }
-        )
+        val client = buildCfsClient(region)
         if (delete) {
             try {
                 client.DeleteCfsRule(
@@ -250,6 +222,20 @@ class TCloudCfsService @Autowired constructor(
         cfsId: String
     ) {
         projectTCloudCfsDao.delete(dslContext, projectId, cfsId)
+    }
+
+    private fun buildCfsClient(region: String): CfsClient {
+        val cred = Credential(secretId, secretKey)
+        val profile = HttpProfile().apply {
+            this.endpoint = TCLOUD_DOMAIN
+        }
+        return CfsClient(
+            cred,
+            region,
+            ClientProfile().apply {
+                this.httpProfile = profile
+            }
+        )
     }
 
     companion object {
