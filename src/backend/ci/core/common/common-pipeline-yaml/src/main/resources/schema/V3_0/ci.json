@@ -935,19 +935,171 @@
     },
     "variables" : {
       "type" : "object",
-      "properties" : {
+      "patternProperties" : {
+        "^(?!template$)(?!^[A-Z][A-Z0-9_]*$).+$" : {
+          "anyOf" : [ {
+            "type" : "string"
+          }, {
+            "type" : "number"
+          }, {
+            "type" : "boolean"
+          }, {
+            "type" : "object",
+            "additionalProperties" : false,
+            "required" : [ "value" ],
+            "properties" : {
+              "value" : {
+                "anyOf" : [ {
+                  "type" : "string"
+                }, {
+                  "type" : "number"
+                }, {
+                  "type" : "boolean"
+                } ]
+              },
+              "readonly" : {
+                "type" : "boolean"
+              },
+              "required" : {
+                "type" : "boolean"
+              },
+              "allow-modify-at-startup" : {
+                "type" : "boolean"
+              },
+              "value-not-empty" : {
+                "type" : "boolean"
+              },
+              "props" : {
+                "type" : "object",
+                "additionalProperties" : false,
+                "required" : [ "type" ],
+                "properties" : {
+                  "label" : {
+                    "type" : "string"
+                  },
+                  "type" : {
+                    "enum" : [ "vuex-input", "vuex-textarea", "selector", "checkbox", "boolean", "time-picker", "company-staff-input", "git-ref", "code-lib", "container-type", "artifactory", "sub-pipeline", "custom-file", "tips" ]
+                  },
+                  "options" : {
+                    "type" : "array",
+                    "items" : {
+                      "type" : "object",
+                      "additionalProperties" : false,
+                      "required" : [ "id" ],
+                      "properties" : {
+                        "id" : {
+                          "anyOf" : [ {
+                            "type" : "string"
+                          }, {
+                            "type" : "number"
+                          }, {
+                            "type" : "boolean"
+                          } ]
+                        },
+                        "label" : {
+                          "type" : "string"
+                        },
+                        "description" : {
+                          "type" : "string"
+                        }
+                      }
+                    }
+                  },
+                  "datasource" : {
+                    "type" : "object",
+                    "additionalProperties" : false,
+                    "required" : [ "url" ],
+                    "properties" : {
+                      "url" : {
+                        "type" : "string"
+                      },
+                      "data-path" : {
+                        "type" : "string"
+                      },
+                      "param-id" : {
+                        "type" : "string"
+                      },
+                      "param-name" : {
+                        "type" : "string"
+                      },
+                      "has-add-item" : {
+                        "type" : "boolean"
+                      },
+                      "item-text" : {
+                        "type" : "string"
+                      },
+                      "item-target-url" : {
+                        "type" : "string"
+                      }
+                    }
+                  },
+                  "description" : {
+                    "type" : "string"
+                  },
+                  "multiple" : {
+                    "type" : "boolean"
+                  },
+                  "required" : {
+                    "type" : "boolean"
+                  },
+                  "repo-id" : {
+                    "type" : "string"
+                  },
+                  "scm-type" : {
+                    "type" : "string"
+                  },
+                  "container-type" : {
+                    "type" : "object",
+                    "additionalProperties" : false,
+                    "properties" : {
+                      "build-type" : {
+                        "type" : "string"
+                      },
+                      "os" : {
+                        "enum" : [ "MACOS", "WINDOWS", "LINUX" ]
+                      }
+                    }
+                  },
+                  "glob" : {
+                    "type" : "string"
+                  },
+                  "properties" : {
+                    "type" : "object"
+                  },
+                  "payload" : {
+                    "type" : "object"
+                  }
+                },
+                "allOf" : [ {
+                  "if" : {
+                    "required" : [ "options" ]
+                  },
+                  "then" : {
+                    "not" : {
+                      "required" : [ "datasource" ]
+                    }
+                  }
+                }, {
+                  "if" : {
+                    "required" : [ "datasource" ]
+                  },
+                  "then" : {
+                    "not" : {
+                      "required" : [ "options" ]
+                    }
+                  }
+                } ]
+              },
+              "name" : {
+                "type" : "string"
+              }
+            }
+          } ]
+        },
         "template" : {
           "$ref" : "#/definitions/template"
-        }
-      },
-      "additionalProperties" : {
-        "anyOf" : [ {
-          "type" : "string"
-        }, {
-          "type" : "number"
-        }, {
-          "type" : "boolean"
-        }, {
+        },
+        "^[A-Z][A-Z0-9_]{0,63}$" : {
           "type" : "object",
           "additionalProperties" : false,
           "required" : [ "value" ],
@@ -965,6 +1117,9 @@
               "type" : "boolean"
             },
             "required" : {
+              "type" : "boolean"
+            },
+            "const" : {
               "type" : "boolean"
             },
             "allow-modify-at-startup" : {
@@ -1098,8 +1253,9 @@
               "type" : "string"
             }
           }
-        } ]
-      }
+        }
+      },
+      "additionalProperties" : false
     },
     "stages" : {
       "type" : "array",
