@@ -1460,5 +1460,7 @@
   "unMergedTips": "有新的分支版本尚未合并到默认分支，可{0}查看详情",
   "goVersionSideslider": "前往版本历史",
   "pacModePipelineDeleteTips": "已开启PAC模式,请先删除代码库默认分支上的yaml文件,再删除流水线",
-  "noPermissionToDelete": "无权限删除"
+  "noPermissionToDelete": "无权限删除",
+  "noStartupParams": "暂无入参，无需填写",
+  "noParams": "暂无入参"
 }

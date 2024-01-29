@@ -222,7 +222,6 @@
                     this.isPreviewingAtomYAML = true
                     const yaml = await this.atomModel2Yaml()
                     this.showAtomYaml = true
-                    this.toggleAtomSelectorPopup(true)
                     this.atomYaml = yaml
                 } catch (error) {
                     console.error(error)
