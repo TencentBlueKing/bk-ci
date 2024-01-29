@@ -36,7 +36,6 @@ import com.tencent.devops.common.pipeline.type.agent.AgentType
 import com.tencent.devops.common.pipeline.type.agent.ThirdPartyAgentDockerInfo
 import com.tencent.devops.common.pipeline.type.agent.ThirdPartyAgentEnvDispatchType
 import com.tencent.devops.common.pipeline.type.agent.ThirdPartyAgentIDDispatchType
-import com.tencent.devops.common.pipeline.type.bcs.PublicBcsDispatchType
 import com.tencent.devops.common.pipeline.type.devcloud.PublicDevCloudDispathcType
 import com.tencent.devops.common.pipeline.type.docker.DockerDispatchType
 import com.tencent.devops.common.pipeline.type.docker.ImageType

@@ -250,6 +250,7 @@ class DevCloudBuildDao {
                         .greaterOrEqual(7)
                 )
                 .and(STATUS.eq(0))
+                .limit(1000)
                 .fetch()
         }
     }
@@ -263,6 +264,7 @@ class DevCloudBuildDao {
                     timestampDiff(DatePart.HOUR, DEBUG_TIME.cast(java.sql.Timestamp::class.java))
                         .greaterOrEqual(1)
                 )
+                .limit(1000)
                 .fetch()
         }
     }
