@@ -236,7 +236,7 @@ interface ServiceRepositoryResource {
 
     @ApiOperation("添加插件库的标志位")
     @POST
-    @Path("/projects/{projectId}/insertAtomRepoFlag")
+    @Path("/insertAtomRepoFlag")
     fun insertAtomRepoFlag(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
