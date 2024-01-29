@@ -61,7 +61,7 @@ data class UserDeptDetail(
     @ApiModelProperty("用户ID")
     val userId: String? = null,
     @ApiModelProperty("用户名称")
-    val name: String? = null,
+    var name: String? = null,
     @ApiModelProperty("部门及以上层级")
     val deptInfos: List<DeptInfo>? = emptyList()
 )
