@@ -1114,6 +1114,7 @@
       "constName": "Constant name",
       "varAlias": "Variable alias",
       "constAlias": "Constant alias",
+      "constValue": "Constant Value",
       "constType": "Constant type",
       "varTitle": " Variable",
       "constTitle": " Constant",

@@ -72,6 +72,11 @@ const customeRules = {
             return /^[a-z_][a-z_\d]*$/gi.test(value)
         }
     },
+    constVarRule: {
+        validate: function (value, args) {
+            return /^[A-Z][A-Z_\d]*$/g.test(value)
+        }
+    },
     excludeEmptyCapital: {
         validate: function (value, args) {
             return /^[a-z0-9_\/]+$/g.test(value)
