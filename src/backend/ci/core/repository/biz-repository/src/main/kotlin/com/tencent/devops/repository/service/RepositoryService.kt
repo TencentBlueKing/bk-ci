@@ -51,6 +51,7 @@ import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.model.repository.tables.records.TRepositoryRecord
 import com.tencent.devops.process.api.service.ServicePipelineYamlResource
 import com.tencent.devops.repository.constant.RepositoryMessageCode
+import com.tencent.devops.repository.constant.RepositoryMessageCode.ERROR_DELETE_BECAUSE_ENABLED_PAC
 import com.tencent.devops.repository.constant.RepositoryMessageCode.USER_CREATE_PEM_ERROR
 import com.tencent.devops.repository.dao.RepositoryCodeGitDao
 import com.tencent.devops.repository.dao.RepositoryDao
@@ -528,7 +529,8 @@ class RepositoryService @Autowired constructor(
             userDelete(
                 userId = userId,
                 projectId = projectId,
-                repositoryHashId = HashUtil.encodeOtherLongId(repositoryId)
+                repositoryHashId = HashUtil.encodeOtherLongId(repositoryId),
+                checkPac = false
             )
             throw exception
         }
@@ -877,7 +879,7 @@ class RepositoryService @Autowired constructor(
         return SQLPage(count, repositoryList)
     }
 
-    fun userDelete(userId: String, projectId: String, repositoryHashId: String) {
+    fun userDelete(userId: String, projectId: String, repositoryHashId: String, checkPac: Boolean = true) {
         val repositoryId = HashUtil.decodeOtherIdToLong(repositoryHashId)
         validatePermission(
             user = userId,
@@ -894,6 +896,9 @@ class RepositoryService @Autowired constructor(
         val record = repositoryDao.get(dslContext, repositoryId, projectId)
         if (record.projectId != projectId) {
             throw NotFoundException("Repository is not part of the project")
+        }
+        if (checkPac && record.enablePac == true) {
+            throw ErrorCodeException(errorCode = ERROR_DELETE_BECAUSE_ENABLED_PAC)
         }
 
         deleteResource(projectId, repositoryId)
