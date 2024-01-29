@@ -55,7 +55,7 @@
             ]),
             ...mapActions('atom', [
                 'setEditFrom',
-                'transferModelToYaml',
+                'transferPipeline',
                 'setPipeline',
                 'setPipelineYaml',
                 'setPipelineSetting',
@@ -129,7 +129,7 @@
                     name: newPipelineName
                 }
                 try {
-                    await this.transferModelToYaml({
+                    await this.transferPipeline({
                         projectId: this.$route.params.projectId,
                         actionType: 'FULL_MODEL2YAML',
                         modelAndSetting: {

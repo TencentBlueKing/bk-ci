@@ -4,6 +4,7 @@
             <router-view></router-view>
         </main>
         <portal-target name="atom-selector-popup"></portal-target>
+        <portal-target name="yaml-preview-popup"></portal-target>
     </div>
 </template>
 
