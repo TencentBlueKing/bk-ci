@@ -1,6 +1,7 @@
 <template>
     <bk-dialog
-        v-model="isShow"
+        v-model="value"
+        :draggable="false"
         width="90%"
         height="90%"
         :auto-close="false"
@@ -10,7 +11,7 @@
         ext-cls="pipeline-template-preivew"
         @cancel="handleCancel"
     >
-        <div style="width: 100%; height: 100%" v-if="templatePipeline && isShow" v-bkloading="{ isLoading }">
+        <div style="width: 100%; height: 100%" v-if="templatePipeline && value">
             <mode-switch
                 :is-yaml-support="isYamlSupport"
                 :yaml-invalid-msg="yamlInvalidMsg"
@@ -58,14 +59,13 @@
             YamlEditor
         },
         props: {
-            isShow: Boolean,
+            value: Boolean,
             previewSettingType: {
                 type: String,
                 default: ''
             },
             templatePipeline: {
-                type: Object,
-                required: true
+                type: Object
             }
         },
         data () {
@@ -145,7 +145,7 @@
             }
         },
         watch: {
-            isShow (val) {
+            value (val) {
                 if (val) {
                     this.init()
                 } else {
@@ -191,7 +191,7 @@
                 }
             },
             handleCancel () {
-                this.$emit('update:isShow', false)
+                this.$emit('input', false)
             }
         }
     }
