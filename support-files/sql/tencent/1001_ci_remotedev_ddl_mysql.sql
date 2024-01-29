@@ -529,4 +529,16 @@ CREATE TABLE IF NOT EXISTS `T_PROJECT_TCLOUD_CFS` (
 	PRIMARY KEY (`PROJECT_ID`, `CFS_ID`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
+-- ----------------------------
+-- Table structure for T_PROJECT_TGIT_LINK 蓝盾项目和工蜂关联表
+-- ----------------------------
+CREATE TABLE IF NOT EXISTS `T_PROJECT_TGIT_LINK`(
+	`PROJECT_ID` varchar(64) NOT NULL COMMENT '蓝盾项目ID',
+    `URL` varchar(255) NOT NULL COMMENT '工蜂url地址',
+    `STATUS` varchar(32) NOT NULL COMMENT '仓库状态',
+    `OAUTH_USER` varchar(32) NOT NULL COMMENT '授予oauth权限的用户',
+	PRIMARY KEY (`PROJECT_ID`, `URL`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+
 SET FOREIGN_KEY_CHECKS = 1;

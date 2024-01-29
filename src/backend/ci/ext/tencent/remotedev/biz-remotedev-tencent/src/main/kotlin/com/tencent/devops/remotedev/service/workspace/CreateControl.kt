@@ -78,6 +78,7 @@ import com.tencent.devops.remotedev.service.BkTicketService
 import com.tencent.devops.remotedev.service.PermissionService
 import com.tencent.devops.remotedev.service.WhiteListService
 import com.tencent.devops.remotedev.service.WindowsResourceConfigService
+import com.tencent.devops.remotedev.service.gitproxy.GitProxyTGitService
 import com.tencent.devops.remotedev.service.redis.RedisCacheService
 import com.tencent.devops.remotedev.service.redis.RedisHeartBeat
 import com.tencent.devops.remotedev.service.redis.RedisKeys
@@ -119,7 +120,8 @@ class CreateControl @Autowired constructor(
     private val bkccService: BKCCService,
     private val windowsSpecResourceDao: WindowsSpecResourceDao,
     private val notifyControl: NotifyControl,
-    private val tCloudCfsService: TCloudCfsService
+    private val tCloudCfsService: TCloudCfsService,
+    private val gitProxyTGitService: GitProxyTGitService
 ) {
     private val executor = Executors.newCachedThreadPool()
 
@@ -518,6 +520,9 @@ class CreateControl @Autowired constructor(
 
                 // 给有cfs的机器绑定权限组
                 tCloudCfsService.addOrRemoveCfsPermissionRule(ws.projectId, ip, false)
+
+                // 关联tgit相关
+                gitProxyTGitService.addOrRemoveAclIp(ws.projectId, ip, false)
             }
 
             if (!ws.workspaceSystemType.afterCreateNeedWs(ws.ownerType)) {
