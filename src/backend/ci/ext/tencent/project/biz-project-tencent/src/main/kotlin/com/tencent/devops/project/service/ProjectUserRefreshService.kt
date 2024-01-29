@@ -307,6 +307,8 @@ class ProjectUserRefreshService @Autowired constructor(
                 name = userInfo.userId,
                 bgId = userInfo.bgId.toString(),
                 bgName = userInfo.bgName,
+                businessLineId = userInfo.businessLineId,
+                businessLineName = userInfo.businessLineName,
                 deptId = "${userInfo.deptId ?: 0}",
                 deptName = userInfo.deptName ?: "",
                 centerId = "${userInfo.centerId ?: 0}",
