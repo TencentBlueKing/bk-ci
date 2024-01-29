@@ -62,20 +62,22 @@ import com.tencent.devops.remotedev.pojo.event.UpdateEventType
 import com.tencent.devops.remotedev.service.BKCCService
 import com.tencent.devops.remotedev.service.PermissionService
 import com.tencent.devops.remotedev.service.RemoteDevSettingService
+import com.tencent.devops.remotedev.service.gitproxy.GitProxyTGitService
 import com.tencent.devops.remotedev.service.redis.RedisCacheService
 import com.tencent.devops.remotedev.service.redis.RedisCallLimit
 import com.tencent.devops.remotedev.service.redis.RedisHeartBeat
 import com.tencent.devops.remotedev.service.redis.RedisKeys
 import com.tencent.devops.remotedev.service.redis.RedisKeys.REDIS_CALL_LIMIT_KEY_PREFIX
-import java.time.Duration
-import java.time.LocalDateTime
-import java.util.concurrent.TimeUnit
+import com.tencent.devops.remotedev.service.tcloud.TCloudCfsService
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.slf4j.MDC
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
+import java.time.Duration
+import java.time.LocalDateTime
+import java.util.concurrent.TimeUnit
 
 @Service
 @Suppress("LongMethod")
@@ -94,7 +96,9 @@ class DeleteControl @Autowired constructor(
     private val remoteDevSettingService: RemoteDevSettingService,
     private val workspaceCommon: WorkspaceCommon,
     private val bkccService: BKCCService,
-    private val notifyControl: NotifyControl
+    private val notifyControl: NotifyControl,
+    private val tCloudCfsService: TCloudCfsService,
+    private val gitProxyTGitService: GitProxyTGitService
 ) {
 
     companion object {
@@ -241,7 +245,7 @@ class DeleteControl @Autowired constructor(
             MDC.put(TraceTag.BIZID, TraceTag.buildBiz())
             logger.info(
                 "workspace ${it.workspaceName} last active is ${
-                    it.updateTime
+                it.updateTime
                 } ready to delete"
             )
             kotlin.runCatching { heartBeatDeleteWS(it) }.onFailure { i ->
@@ -328,7 +332,7 @@ class DeleteControl @Autowired constructor(
                 EnvStatusEnum.deleted -> event.status = true
                 else -> logger.warn(
                     "delete workspace callback with error|" +
-                            "${event.workspaceName}|${workspaceInfo.status}"
+                        "${event.workspaceName}|${workspaceInfo.status}"
                 )
             }
         }
@@ -354,11 +358,11 @@ class DeleteControl @Autowired constructor(
         if (status) {
             // 删除环境管理第三方构建机记录
             if (!workspace.preciAgentId.isNullOrBlank() && client.get(ServiceNodeResource::class)
-                    .deleteThirdPartyNode(workspace.createUserId, projectId, workspace.preciAgentId!!).data == false
+                .deleteThirdPartyNode(workspace.createUserId, projectId, workspace.preciAgentId!!).data == false
             ) {
                 logger.warn(
                     "delete workspace $workspaceName, but third party agent delete failed." +
-                            "|${workspace.createUserId}|$projectId|${detail?.environmentIP}|${workspace.preciAgentId}"
+                        "|${workspace.createUserId}|$projectId|${detail?.environmentIP}|${workspace.preciAgentId}"
                 )
             }
             // 清心跳
@@ -427,8 +431,8 @@ class DeleteControl @Autowired constructor(
 
         // 删除时给 cmdb 去掉字段方便监控检索
         val hostIdSub = detail?.environmentIP?.split(".")
-        if (!hostIdSub.isNullOrEmpty() && workspace.workspaceSystemType == WorkspaceSystemType.WINDOWS_GPU) {
-            val ip = hostIdSub.subList(1, hostIdSub.size).joinToString(separator = ".")
+        val ip = hostIdSub?.subList(1, hostIdSub.size)?.joinToString(separator = ".")
+        if (!ip.isNullOrBlank() && workspace.workspaceSystemType == WorkspaceSystemType.WINDOWS_GPU) {
             bkccService.updateHostMonitor(
                 regionId = null,
                 workspaceName = workspaceName,
@@ -438,6 +442,12 @@ class DeleteControl @Autowired constructor(
 
             // 删除 cmdb 的机器别名
             bkccService.updateHostName("VM-${hostIdSub.joinToString("-")}", workspaceName)
+
+            // 删除cfs的权限组规则
+            tCloudCfsService.addOrRemoveCfsPermissionRule(workspace.projectId, ip, true)
+
+            // 关联tgit相关
+            gitProxyTGitService.addOrRemoveAclIp(workspace.projectId, ip, true)
         }
 
         notifyControl.dispatchWebsocketPushEvent(

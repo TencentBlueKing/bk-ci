@@ -52,4 +52,5 @@ object Versions {
     const val apachepoi = "5.2.4"
     const val audit = "1.0.8"
     const val MysqlDriver = "8.0.33"
+    const val tencentcloudsdkcfs = "3.1.946"
 }
