@@ -142,23 +142,29 @@
                 show-overflow-tooltip
             >
                 <template slot-scope="props">
-                    <bk-button
-                        theme="primary"
-                        text
-                        v-perm="{
-                            hasPermission: props.row.canDelete,
-                            disablePermissionApi: true,
-                            permissionData: {
-                                projectId: projectId,
-                                resourceType: RESOURCE_TYPE,
-                                resourceCode: props.row.repositoryHashId,
-                                action: RESOURCE_ACTION.DELETE
-                            }
-                        }"
-                        @click.stop="deleteCodeLib(props.row)"
-                    >
-                        {{ $t('codelib.delete') }}
-                    </bk-button>
+                    <span v-bk-tooltips="{
+                        content: $t('codelib.请先关闭 PAC 模式，再删除代码库'),
+                        disabled: !props.row.enablePac
+                    }">
+                        <bk-button
+                            theme="primary"
+                            text
+                            v-perm="{
+                                hasPermission: props.row.canDelete,
+                                disablePermissionApi: true,
+                                permissionData: {
+                                    projectId: projectId,
+                                    resourceType: RESOURCE_TYPE,
+                                    resourceCode: props.row.repositoryHashId,
+                                    action: RESOURCE_ACTION.DELETE
+                                }
+                            }"
+                            :disabled="props.row.enablePac"
+                            @click.stop="deleteCodeLib(props.row)"
+                        >
+                            {{ $t('codelib.delete') }}
+                        </bk-button>
+                    </span>
                 </template>
             </bk-table-column>
             <bk-table-column
