@@ -48,7 +48,7 @@ class ProjectExtOrganizationService constructor(
             val userDeptDetail = try {
                 tofService.getUserDeptDetail(manager)
             } catch (ex: Exception) {
-                logger.info("$englishName ${ex.message.toString()}")
+                logger.info("$englishName ${ex.message}")
                 return@forEach
             }
             managerDeptInfos.add(userDeptDetail)
