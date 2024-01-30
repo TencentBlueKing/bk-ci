@@ -76,7 +76,8 @@ class CodeP4RepositoryService @Autowired constructor(
                 userId = userId,
                 aliasName = repository.aliasName,
                 url = repository.getFormatURL(),
-                type = ScmType.CODE_P4
+                type = ScmType.CODE_P4,
+                enablePac = repository.enablePac
             )
             repositoryCodeP4Dao.create(
                 dslContext = transactionContext,
@@ -223,14 +224,14 @@ class CodeP4RepositoryService @Autowired constructor(
     override fun pacCheckEnabled(
         projectId: String,
         userId: String,
-        repository: TRepositoryRecord,
+        record: TRepositoryRecord,
         retry: Boolean
     ) = Unit
 
     override fun getGitFileTree(
         projectId: String,
         userId: String,
-        repository: TRepositoryRecord
+        record: TRepositoryRecord
     ) = emptyList<GitFileInfo>()
 
     override fun getPacRepository(externalId: String): TRepositoryRecord? = null

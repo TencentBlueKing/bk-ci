@@ -36,15 +36,15 @@ data class PipelinePermissions(
     @ApiModelProperty("管理员权限", required = true)
     val canManage: Boolean,
     @ApiModelProperty("删除权限", required = true)
-    val canDelete: Boolean,
+    val canDelete: Boolean = false,
     @ApiModelProperty("查看权限", required = true)
-    val canView: Boolean,
+    val canView: Boolean = false,
     @ApiModelProperty("编辑权限", required = true)
-    val canEdit: Boolean,
+    val canEdit: Boolean = false,
     @ApiModelProperty("执行权限", required = true)
-    val canExecute: Boolean,
+    val canExecute: Boolean = false,
     @ApiModelProperty("下载权限", required = true)
-    val canDownload: Boolean,
+    val canDownload: Boolean = false,
     @ApiModelProperty("分享权限", required = true)
-    val canShare: Boolean
+    val canShare: Boolean = false
 )

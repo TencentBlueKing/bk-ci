@@ -93,7 +93,7 @@ class RepositoryPacService @Autowired constructor(
         codeRepositoryService.pacCheckEnabled(
             projectId = projectId,
             userId = userId,
-            repository = repository,
+            record = repository,
             retry = false
         )
         client.get(ServicePipelineYamlResource::class).enable(
@@ -137,7 +137,7 @@ class RepositoryPacService @Autowired constructor(
         codeRepositoryService.pacCheckEnabled(
             projectId = projectId,
             userId = userId,
-            repository = repository,
+            record = repository,
             retry = true
         )
         client.get(ServicePipelineYamlResource::class).enable(
@@ -177,7 +177,7 @@ class RepositoryPacService @Autowired constructor(
         val ciDirExists = codeRepositoryService.getGitFileTree(
             projectId = projectId,
             userId = userId,
-            repository = repository
+            record = repository
         ).isNotEmpty()
         if (ciDirExists) {
             throw ErrorCodeException(
@@ -213,7 +213,7 @@ class RepositoryPacService @Autowired constructor(
         return codeRepositoryService.getGitFileTree(
             projectId = projectId,
             userId = userId,
-            repository = repository
+            record = repository
         ).isNotEmpty()
     }
 
@@ -240,7 +240,7 @@ class RepositoryPacService @Autowired constructor(
         return codeRepositoryService.getGitFileTree(
             projectId = projectId,
             userId = userId,
-            repository = repository
+            record = repository
         ).filter { it.type == "tree" }.map { it.name }
     }
 

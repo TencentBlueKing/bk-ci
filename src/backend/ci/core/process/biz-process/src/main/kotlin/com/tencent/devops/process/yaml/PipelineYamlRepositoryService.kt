@@ -37,13 +37,8 @@ import com.tencent.devops.common.pipeline.enums.CodeTargetAction
 import com.tencent.devops.common.pipeline.pojo.element.trigger.WebHookTriggerElement
 import com.tencent.devops.common.pipeline.utils.RepositoryConfigUtils
 import com.tencent.devops.common.redis.RedisOperation
-import com.tencent.devops.process.constant.PipelineViewType
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.engine.service.PipelineWebhookService
-import com.tencent.devops.process.pojo.classify.PipelineViewFilterByPacRepo
-import com.tencent.devops.process.pojo.classify.PipelineViewForm
-import com.tencent.devops.process.pojo.classify.enums.Condition
-import com.tencent.devops.process.pojo.classify.enums.Logic
 import com.tencent.devops.process.pojo.pipeline.enums.PipelineYamlStatus
 import com.tencent.devops.process.pojo.webhook.PipelineWebhookVersion
 import com.tencent.devops.process.service.PipelineInfoFacadeService
@@ -51,7 +46,6 @@ import com.tencent.devops.process.service.view.PipelineViewGroupService
 import com.tencent.devops.process.yaml.actions.BaseAction
 import com.tencent.devops.process.yaml.actions.GitActionCommon
 import com.tencent.devops.process.yaml.actions.internal.PipelineYamlManualAction
-import com.tencent.devops.process.yaml.common.Constansts
 import com.tencent.devops.process.yaml.git.pojo.PacGitPushResult
 import com.tencent.devops.process.yaml.pojo.PipelineYamlTriggerLock
 import com.tencent.devops.process.yaml.pojo.YamlPathListEntry
@@ -68,7 +62,8 @@ class PipelineYamlRepositoryService @Autowired constructor(
     private val pipelineRepositoryService: PipelineRepositoryService,
     private val pipelineWebhookService: PipelineWebhookService,
     private val pipelineViewGroupService: PipelineViewGroupService,
-    private val pipelineYamlSyncService: PipelineYamlSyncService
+    private val pipelineYamlSyncService: PipelineYamlSyncService,
+    private val pipelineYamlViewService: PipelineYamlViewService
 ) {
 
     companion object {
@@ -226,72 +221,10 @@ class PipelineYamlRepositoryService @Autowired constructor(
             userId = userId,
             webhooks = webhooks
         )
-        // 流水线保存后,再创建流水线组,不然流水线组无法加载到流水线
-        createYamlViewIfAbsent(
-            userId = userId,
+        pipelineViewGroupService.updateGroupAfterPipelineCreate(
             projectId = projectId,
             pipelineId = pipelineId,
-            repoHashId = repoHashId,
-            gitProjectName = action.data.setting.projectName,
-            directory = directory
-        )
-    }
-
-    /**
-     * 创建流水线组
-     */
-    private fun createYamlViewIfAbsent(
-        userId: String,
-        projectId: String,
-        pipelineId: String,
-        repoHashId: String,
-        gitProjectName: String,
-        directory: String
-    ) {
-        val pipelineYamlView = pipelineYamlService.getPipelineYamlView(
-            projectId = projectId,
-            repoHashId = repoHashId,
-            directory
-        )
-        // 存在则不再创建
-        if (pipelineYamlView != null) {
-            // 流水线先创建后保存到T_PIPELINE_YAML_INFO表,再创建流水线时刷新流水线组还加载不到yaml流水线,所以这里需要再加载一次
-            pipelineViewGroupService.updateGroupAfterPipelineCreate(
-                projectId = projectId,
-                pipelineId = pipelineId,
-                userId = userId
-            )
-            return
-        }
-        val path = gitProjectName.substringAfterLast("/")
-        val name = if (directory == Constansts.ciFileDirectoryName) {
-            path
-        } else {
-            "$path-${directory.removePrefix(".ci/")}"
-        }
-        val pipelineView = PipelineViewForm(
-            name = name,
-            projected = true,
-            viewType = PipelineViewType.DYNAMIC,
-            logic = Logic.AND,
-            filters = listOf(
-                PipelineViewFilterByPacRepo(
-                    condition = Condition.EQUAL,
-                    repoHashId = repoHashId,
-                    directory = directory
-                )
-            )
-        )
-        val viewHashId = pipelineViewGroupService.addViewGroup(
-            projectId = projectId,
-            userId = userId,
-            pipelineView = pipelineView
-        )
-        pipelineYamlService.savePipelineYamlView(
-            projectId = projectId,
-            repoHashId = repoHashId,
-            directory = directory,
-            viewId = HashUtil.decodeIdToLong(viewHashId)
+            userId = userId
         )
     }
 
@@ -472,7 +405,6 @@ class PipelineYamlRepositoryService @Autowired constructor(
         val blobId = gitPushResult.blobId
         val branch = gitPushResult.branch
         val commitId = gitPushResult.lastCommitId
-        val gitProjectName = action.data.setting.projectName
         val pipelineYamlInfo = pipelineYamlService.getPipelineYamlInfo(
             projectId = projectId,
             repoHashId = repoHashId,
@@ -500,13 +432,10 @@ class PipelineYamlRepositoryService @Autowired constructor(
                 version = version,
                 webhooks = webhooks
             )
-            createYamlViewIfAbsent(
-                userId = userId,
+            pipelineViewGroupService.updateGroupAfterPipelineCreate(
                 projectId = projectId,
                 pipelineId = pipelineId,
-                repoHashId = repoHashId,
-                directory = directory,
-                gitProjectName = gitProjectName
+                userId = userId
             )
         } else {
             val pipelineYamlVersion = pipelineYamlService.getPipelineYamlVersion(
@@ -557,7 +486,7 @@ class PipelineYamlRepositoryService @Autowired constructor(
             )
         }
         // 删除流水线组
-        val yamlViews = pipelineYamlService.listRepoYamlView(projectId = projectId, repoHashId = repoHashId)
+        val yamlViews = pipelineYamlViewService.listRepoYamlView(projectId = projectId, repoHashId = repoHashId)
         yamlViews.forEach { yamlView ->
             pipelineViewGroupService.deleteViewGroup(
                 projectId = projectId,
@@ -565,7 +494,7 @@ class PipelineYamlRepositoryService @Autowired constructor(
                 viewIdEncode = HashUtil.encodeLongId(yamlView.viewId),
                 checkPac = false
             )
-            pipelineYamlService.deleteYamlView(
+            pipelineYamlViewService.deleteYamlView(
                 projectId = projectId,
                 repoHashId = repoHashId,
                 directory = yamlView.directory

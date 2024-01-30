@@ -281,6 +281,7 @@ class TGitApiService @Autowired constructor(
         }?.let { TGitFileInfo(content = it.content ?: "", blobId = it.blobId) }
     }
 
+    @Suppress("ComplexMethod")
     override fun pushYamlFile(
         cred: PacGitCred,
         gitProjectId: String,
