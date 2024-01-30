@@ -134,9 +134,11 @@ class ProjectDao {
     ): Result<TProjectRecord> {
         val centerId = migrateProjectConditionDTO.centerId
         val deptId = migrateProjectConditionDTO.deptId
+        val bdId = migrateProjectConditionDTO.bgId
         val excludedProjectCodes = migrateProjectConditionDTO.excludedProjectCodes
         val creator = migrateProjectConditionDTO.projectCreator
         val routerTag = migrateProjectConditionDTO.routerTag
+        val isRelatedProduct = migrateProjectConditionDTO.relatedProduct
         return with(TProject.T_PROJECT) {
             dslContext.selectFrom(this)
                 .where(APPROVAL_STATUS.notIn(UNSUCCESSFUL_CREATE_STATUS))
@@ -155,8 +157,16 @@ class ProjectDao {
                 }
                 .let { if (centerId == null) it else it.and(CENTER_ID.eq(centerId)) }
                 .let { if (deptId == null) it else it.and(DEPT_ID.eq(deptId)) }
+                .let { if (bdId == null) it else it.and(BG_ID.eq(bdId)) }
                 .let { if (creator == null) it else it.and(CREATOR.eq(creator)) }
                 .let { if (excludedProjectCodes == null) it else it.and(ENGLISH_NAME.notIn(excludedProjectCodes)) }
+                .let {
+                    when (isRelatedProduct) {
+                        null -> it
+                        true -> it.and(PRODUCT_ID.isNotNull)
+                        else -> it.and(PRODUCT_ID.isNull)
+                    }
+                }
                 .orderBy(CREATED_AT.asc())
                 .limit(limit)
                 .offset(offset)

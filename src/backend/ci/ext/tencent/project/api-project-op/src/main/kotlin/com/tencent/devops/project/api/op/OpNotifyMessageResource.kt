@@ -25,18 +25,38 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-dependencies {
-    api(project(":ext:tencent:common:common-digest-tencent"))
-    api(project(":core:project:biz-project"))
-    api(project(":core:project:api-project"))
-    api(project(":ext:tencent:project:api-project-tencent"))
-    api(project(":ext:tencent:store:api-store-service"))
-    api(project(":ext:tencent:common:common-auth:common-auth-tencent"))
-    api(project(":ext:tencent:misc:api-monitoring-tencent"))
-    api(project(":ext:tencent:common:common-archive-tencent"))
-    api(project(":ext:tencent:auth:sdk-auth-tencent"))
-    api(project(":ext:tencent:auth:api-auth-tencent"))
-    api(project(":ext:tencent:stream:api-stream-tencent"))
-    api(project(":ext:tencent:support:api-support-tencent"))
-    api(project(":core:notify:api-notify"))
+package com.tencent.devops.project.api.op
+
+import com.tencent.devops.common.api.pojo.Result
+import io.swagger.annotations.Api
+import io.swagger.annotations.ApiOperation
+import io.swagger.annotations.ApiParam
+import javax.ws.rs.Consumes
+import javax.ws.rs.POST
+import javax.ws.rs.Path
+import javax.ws.rs.PathParam
+import javax.ws.rs.Produces
+import javax.ws.rs.core.MediaType
+
+@Api(tags = ["OP_NOTIFY_MESSAGE"], description = "OP-消息通知")
+@Path("/op/notify/message")
+@Produces(MediaType.APPLICATION_JSON)
+@Consumes(MediaType.APPLICATION_JSON)
+interface OpNotifyMessageResource {
+    @ApiOperation("推动项目关联运营产品-根据项目")
+    @POST
+    @Path("/sendEmailForRelatedObsByProjectIds")
+    fun sendEmailToUserForRelatedObsByProjectIds(
+        @ApiParam(value = "项目通知请求报文体", required = true)
+        projectIds: List<String>
+    ): Result<Boolean>
+
+    @ApiOperation("推动项目关联运营产品-根据BgID")
+    @POST
+    @Path("/sendEmailForRelatedObsByBgId/{bgId}")
+    fun sendEmailForRelatedObsByBgId(
+        @ApiParam(value = "bgId", required = true)
+        @PathParam("bgId")
+        bgId: Long,
+    ): Result<Boolean>
 }
