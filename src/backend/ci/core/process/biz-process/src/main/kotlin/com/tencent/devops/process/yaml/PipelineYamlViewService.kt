@@ -49,7 +49,7 @@ class PipelineYamlViewService(
                 projectId = projectId,
                 userId = userId,
                 projected = true,
-                addCount = addYamlViews.size,
+                addCount = addYamlViews.size
             )
             addYamlViews.forEach { directory ->
                 createYamlView(

@@ -87,5 +87,5 @@ data class PipelineInfo(
     @ApiModelProperty("仅存在草稿", required = false)
     var onlyDraft: Boolean? = false,
     @ApiModelProperty("流水线权限", required = false)
-    var permissions: PipelinePermissions? = null,
+    var permissions: PipelinePermissions? = null
 )
