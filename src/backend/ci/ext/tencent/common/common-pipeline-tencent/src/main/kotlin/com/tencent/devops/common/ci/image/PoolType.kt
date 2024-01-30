@@ -126,30 +126,6 @@ enum class PoolType {
         }
     },
 
-    DockerOnBcs {
-        override fun transfer(pool: Pool): DispatchType {
-            return PublicBcsDispatchType(
-                pool.container!!,
-                "0",
-                imageType = ImageType.THIRD,
-                credentialId = pool.credential?.credentialId
-            )
-        }
-
-        override fun validatePool(pool: Pool) {
-            if (null == pool.container) {
-                logger.error("validatePool, {}, container is null", this)
-                throw OperationException(
-                    I18nUtil.getCodeLanMessage(
-                        messageCode = DANG
-                    ) + "If pool.type=$this, container" + I18nUtil.getCodeLanMessage(
-                        messageCode = PARAMETER_IS_EMPTY
-                    )
-                )
-            }
-        }
-    },
-
     DockerOnPcg {
         override fun transfer(pool: Pool): DispatchType {
             return PCGDispatchType(
