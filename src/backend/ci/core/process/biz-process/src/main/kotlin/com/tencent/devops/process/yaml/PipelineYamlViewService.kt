@@ -89,10 +89,12 @@ class PipelineYamlViewService(
                 )
             )
         )
+        // 系统创建流水线组不需要校验权限
         val viewHashId = pipelineViewGroupService.addViewGroup(
             projectId = projectId,
             userId = userId,
-            pipelineView = pipelineView
+            pipelineView = pipelineView,
+            checkPermission = false
         )
         pipelineYamlViewDao.save(
             dslContext = dslContext,

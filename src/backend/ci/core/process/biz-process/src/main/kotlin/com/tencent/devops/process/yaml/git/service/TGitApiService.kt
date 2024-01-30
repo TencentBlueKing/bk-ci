@@ -28,6 +28,7 @@
 package com.tencent.devops.process.yaml.git.service
 
 import com.tencent.devops.common.api.exception.CustomException
+import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.enums.CodeTargetAction
@@ -60,6 +61,7 @@ import com.tencent.devops.scm.pojo.MergeRequestState
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
+import java.time.LocalDateTime
 import javax.ws.rs.core.Response
 
 @Service
@@ -291,6 +293,7 @@ class TGitApiService @Autowired constructor(
         commitMessage: String,
         targetAction: CodeTargetAction,
         pipelineId: String,
+        pipelineName: String,
         versionName: String?
     ): PacGitPushResult {
         val token = cred.toToken()
@@ -357,7 +360,16 @@ class TGitApiService @Autowired constructor(
         val mrUrl = if (targetAction == CodeTargetAction.PUSH_BRANCH_AND_REQUEST_MERGE ||
             targetAction == CodeTargetAction.CHECKOUT_BRANCH_AND_REQUEST_MERGE
         ) {
-            createYamlMergeRequest(fileExists, pipelineId, token, cred, gitProjectId, branchName, defaultBranch)
+            createYamlMergeRequest(
+                fileExists = fileExists,
+                pipelineId = pipelineId,
+                pipelineName = pipelineName,
+                token = token,
+                cred = cred,
+                gitProjectId = gitProjectId,
+                branchName = branchName,
+                defaultBranch = defaultBranch
+            )
         } else {
             null
         }
@@ -386,22 +398,24 @@ class TGitApiService @Autowired constructor(
     private fun createYamlMergeRequest(
         fileExists: Boolean,
         pipelineId: String,
+        pipelineName: String,
         token: String,
         cred: PacGitCred,
         gitProjectId: String,
         branchName: String,
         defaultBranch: String
     ): String? {
+        val dateStr = DateTimeUtil.toDateTime(LocalDateTime.now())
         val title = if (fileExists) {
             I18nUtil.getCodeLanMessage(
                 messageCode = ProcessMessageCode.BK_MERGE_YAML_UPDATE_FILE_TITLE,
-                params = arrayOf(pipelineId),
+                params = arrayOf(dateStr, pipelineName),
                 language = I18nUtil.getDefaultLocaleLanguage()
             )
         } else {
             I18nUtil.getCodeLanMessage(
                 messageCode = ProcessMessageCode.BK_MERGE_YAML_CREATE_FILE_TITLE,
-                params = arrayOf(pipelineId),
+                params = arrayOf(dateStr, pipelineId),
                 language = I18nUtil.getDefaultLocaleLanguage()
             )
         }

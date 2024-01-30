@@ -33,6 +33,7 @@ import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.enums.RepositoryType
 import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.api.exception.ErrorCodeException
+import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.pipeline.enums.CodeTargetAction
@@ -308,7 +309,7 @@ class PipelineYamlFacadeService @Autowired constructor(
         commitMessage: String,
         targetAction: CodeTargetAction
     ): PushPipelineResult {
-        logger.info("upload yaml file|$userId|$projectId|$pipelineId|$repoHashId|$scmType|$version|$versionName")
+        logger.info("push yaml file|$userId|$projectId|$pipelineId|$repoHashId|$scmType|$version|$versionName")
         val repository = client.get(ServiceRepositoryResource::class).get(
             projectId = projectId,
             repositoryId = repoHashId,
@@ -330,12 +331,16 @@ class PipelineYamlFacadeService @Autowired constructor(
                 errorCode = ProcessMessageCode.ERROR_YAML_FILE_NAME_FORMAT
             )
         }
-        pipelineYamlService.getPipelineYamlInfo(
-            projectId = projectId, repoHashId = repoHashId, filePath = filePath
-        )?.let {
-            if (it.pipelineId != pipelineId) {
+        pipelineYamlService.getPipelineYamlInfo(projectId = projectId, pipelineId = pipelineId)?.let {
+            if (it.repoHashId != repoHashId) {
                 throw ErrorCodeException(
-                    errorCode = ProcessMessageCode.ERROR_YAML_BOUND_PIPELINE,
+                    errorCode = ProcessMessageCode.ERROR_PIPELINE_BOUND_REPO,
+                    params = arrayOf(it.pipelineId)
+                )
+            }
+            if (it.filePath != filePath) {
+                throw ErrorCodeException(
+                    errorCode = ProcessMessageCode.ERROR_PIPELINE_BOUND_YAML,
                     params = arrayOf(it.pipelineId)
                 )
             }
@@ -346,33 +351,52 @@ class PipelineYamlFacadeService @Autowired constructor(
                 params = arrayOf("versionName")
             )
         }
-        val setting = PacRepoSetting(repository = repository)
-        val event = PipelineYamlManualEvent(
-            userId = userId,
-            projectId = projectId,
-            repoHashId = repoHashId,
-            scmType = scmType
-        )
-        val action = eventActionFactory.loadManualEvent(setting = setting, event = event)
-        val gitPushResult = pipelineYamlRepositoryService.releaseYamlPipeline(
-            userId = userId,
-            projectId = projectId,
-            pipelineId = pipelineId,
-            version = version,
-            versionName = versionName,
-            action = action,
-            filePath = filePath,
-            content = content,
-            commitMessage = commitMessage,
-            targetAction = targetAction
-        )
-        return PushPipelineResult(
-            projectId = projectId,
-            repoHashId = repoHashId,
-            filePath = gitPushResult.filePath,
-            branch = gitPushResult.branch,
-            mrUrl = gitPushResult.mrUrl
-        )
+        try {
+            val setting = PacRepoSetting(repository = repository)
+            val event = PipelineYamlManualEvent(
+                userId = userId,
+                projectId = projectId,
+                repoHashId = repoHashId,
+                scmType = scmType
+            )
+            val action = eventActionFactory.loadManualEvent(setting = setting, event = event)
+            // 发布时创建流水线
+            pipelineYamlViewService.createYamlViewIfAbsent(
+                userId = action.data.getUserId(),
+                projectId = projectId,
+                repoHashId = repoHashId,
+                gitProjectName = action.data.setting.projectName,
+                directoryList = setOf(GitActionCommon.getCiDirectory(filePath))
+            )
+            val gitPushResult = pipelineYamlRepositoryService.releaseYamlPipeline(
+                userId = userId,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                pipelineName = pipelineName,
+                version = version,
+                versionName = versionName,
+                action = action,
+                filePath = filePath,
+                content = content,
+                commitMessage = commitMessage,
+                targetAction = targetAction
+            )
+            return PushPipelineResult(
+                projectId = projectId,
+                repoHashId = repoHashId,
+                filePath = gitPushResult.filePath,
+                branch = gitPushResult.branch,
+                mrUrl = gitPushResult.mrUrl
+            )
+        } catch (exception: Exception) {
+            logger.error("Failed to push yaml file|$userId|$projectId|$pipelineId|$repoHashId")
+            if (exception is RemoteServiceException && exception.httpStatus == 403) {
+                throw ErrorCodeException(
+                    errorCode = ProcessMessageCode.ERROR_YAML_PUSH_NO_REPO_PERMISSION
+                )
+            }
+            throw exception
+        }
     }
 
     fun deleteYamlPipelineCheck(

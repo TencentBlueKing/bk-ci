@@ -349,6 +349,7 @@ class PipelineYamlRepositoryService @Autowired constructor(
         userId: String,
         projectId: String,
         pipelineId: String,
+        pipelineName: String,
         version: Int,
         versionName: String?,
         action: PipelineYamlManualAction,
@@ -370,6 +371,7 @@ class PipelineYamlRepositoryService @Autowired constructor(
             // 推送到工蜂必须在锁内，不然流水线版本会不一致
             val gitPushResult = action.pushYamlFile(
                 pipelineId = pipelineId,
+                pipelineName = pipelineName,
                 filePath = filePath,
                 content = content,
                 commitMessage = commitMessage,
