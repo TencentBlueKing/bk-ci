@@ -300,6 +300,7 @@ class PipelineYamlFacadeService @Autowired constructor(
         pipelineId: String,
         version: Int,
         versionName: String?,
+        pipelineName: String,
         repoHashId: String,
         scmType: ScmType,
         filePath: String,

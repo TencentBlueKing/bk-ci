@@ -262,6 +262,7 @@ class PipelineVersionFacadeService @Autowired constructor(
                 pipelineId = pipelineId,
                 version = draftVersion.version,
                 versionName = branchName,
+                pipelineName = targetSettings.pipelineName,
                 content = draftVersion.yaml ?: "",
                 commitMessage = request.description ?: "update",
                 repoHashId = yamlInfo.repoHashId,
