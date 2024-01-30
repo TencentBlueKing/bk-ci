@@ -82,8 +82,12 @@ class JobService @Autowired constructor(
         userId: String,
         scriptExecuteReq: ScriptExecuteReq
     ): JobResult<ScriptExecuteResult> {
-        val allHostList: List<Host> = parseHashListService.getAllHostList(projectId, scriptExecuteReq.executeTarget)
-        permissionManageService.isUserHasAllPermission(userId, projectId, allHostList)
+        val allHostList: List<Host>? = scriptExecuteReq.executeTarget?.let {
+            parseHashListService.getAllHostList(projectId, it)
+        }
+        allHostList.takeIf { !it.isNullOrEmpty() }.run {
+            permissionManageService.isUserHasAllPermission(userId, projectId, allHostList!!)
+        }
         val jobCloudScriptExecuteReq = JobCloudScriptExecuteReq(
             scriptContent = scriptExecuteReq.scriptContent,
             scriptParam = scriptExecuteReq.scriptParam,
@@ -93,10 +97,10 @@ class JobService @Autowired constructor(
             isParamSensitive = scriptExecuteReq.isSensiveParam,
             scriptLanguage = scriptExecuteReq.scriptLanguage,
             targetServer = JobCloudExecuteTarget(
-                hostIdList = allHostList.filter { it.bkHostId != null }.map {
+                hostIdList = allHostList?.filter { it.bkHostId != null }?.map {
                     it.bkHostId ?: 0L
                 },
-                ipList = allHostList.filter { it.bkHostId == null }.map {
+                ipList = allHostList?.filter { it.bkHostId == null }?.map {
                     JobCloudIpInfo(
                         bkCloudId = it.bkCloudId,
                         ip = it.ip
