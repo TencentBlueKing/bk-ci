@@ -427,7 +427,7 @@ class BuildStartControl @Autowired constructor(
                 )
 
                 var parameters = pipelineRuntimeService.getBuildParametersFromStartup(
-                    projectId = projectId, buildId = buildId, debug = debug
+                    projectId = projectId, buildId = buildId
                 )
                 val startParamMap = mutableMapOf<String, BuildParameters>()
                 parameters.associateByTo(startParamMap) { it.key }

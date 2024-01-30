@@ -1625,7 +1625,7 @@ class PipelineRuntimeService @Autowired constructor(
             }
             logger.info("[$pipelineId]|getExecuteTime-$buildId executeTime: $executeTime")
 
-            val buildParameters = getBuildParametersFromStartup(projectId, buildId, debug)
+            val buildParameters = getBuildParametersFromStartup(projectId, buildId)
             // 修正推荐版本号过长和流水号重复更新导致的问题
             val recommendVersion = PipelineVarUtil.getRecommendVersion(buildParameters)
             logger.info("[$pipelineId]|getRecommendVersion-$buildId recommendVersion: $recommendVersion")
@@ -1662,15 +1662,13 @@ class PipelineRuntimeService @Autowired constructor(
     fun getBuildParametersFromStartup(
         projectId: String,
         buildId: String,
-        debug: Boolean?,
         queryDslContext: DSLContext? = null
     ): List<BuildParameters> {
         return try {
             val buildParameters = pipelineBuildDao.getBuildParameters(
                 dslContext = queryDslContext ?: dslContext,
                 projectId = projectId,
-                buildId = buildId,
-                debug = debug
+                buildId = buildId
             )
             return if (buildParameters.isNullOrEmpty()) {
                 emptyList()

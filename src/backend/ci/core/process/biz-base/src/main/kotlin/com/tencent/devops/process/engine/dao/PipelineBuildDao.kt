@@ -1540,25 +1540,20 @@ class PipelineBuildDao {
     fun getBuildParameters(
         dslContext: DSLContext,
         projectId: String,
-        buildId: String,
-        debug: Boolean?
+        buildId: String
     ): String? {
-        return if (debug != true) {
-            with(T_PIPELINE_BUILD_HISTORY) {
-                dslContext.select(BUILD_PARAMETERS)
-                    .from(this)
-                    .where(BUILD_ID.eq(buildId))
-                    .and(PROJECT_ID.eq(projectId))
-                    .fetchAny(0, String::class.java)
-            }
-        } else {
-            with(T_PIPELINE_BUILD_HISTORY_DEBUG) {
-                dslContext.select(BUILD_PARAMETERS)
-                    .from(this)
-                    .where(BUILD_ID.eq(buildId))
-                    .and(PROJECT_ID.eq(projectId))
-                    .fetchAny(0, String::class.java)
-            }
+        return with(T_PIPELINE_BUILD_HISTORY) {
+            dslContext.select(BUILD_PARAMETERS)
+                .from(this)
+                .where(BUILD_ID.eq(buildId))
+                .and(PROJECT_ID.eq(projectId))
+                .fetchAny(0, String::class.java)
+        } ?: with(T_PIPELINE_BUILD_HISTORY_DEBUG) {
+            dslContext.select(BUILD_PARAMETERS)
+                .from(this)
+                .where(BUILD_ID.eq(buildId))
+                .and(PROJECT_ID.eq(projectId))
+                .fetchAny(0, String::class.java)
         }
     }
 
