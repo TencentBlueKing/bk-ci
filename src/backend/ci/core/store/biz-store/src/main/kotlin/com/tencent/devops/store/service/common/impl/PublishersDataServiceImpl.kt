@@ -347,7 +347,7 @@ class PublishersDataServiceImpl @Autowired constructor(
         return true
     }
 
-    private fun getPublisherDeptInfo(userDeptDetail: UserDeptDetail): PublisherDeptInfo{
+    private fun getPublisherDeptInfo(userDeptDetail: UserDeptDetail): PublisherDeptInfo {
         userDeptDetail.let {
             val publisherDeptInfo = PublisherDeptInfo(
                 publisherCode = it.userId!!,
