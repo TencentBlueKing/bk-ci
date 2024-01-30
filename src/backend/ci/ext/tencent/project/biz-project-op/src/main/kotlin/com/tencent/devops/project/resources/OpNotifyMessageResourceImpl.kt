@@ -3,6 +3,7 @@ package com.tencent.devops.project.resources
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.project.api.op.OpNotifyMessageResource
+import com.tencent.devops.project.pojo.SendEmailForProjectByConditionDTO
 import com.tencent.devops.project.service.ProjectNotifyService
 
 @RestResource
@@ -17,15 +18,15 @@ class OpNotifyMessageResourceImpl constructor(
         )
     }
 
-    override fun sendEmailForRelatedObsByBgId(bgId: Long): Result<Boolean> {
+    override fun sendEmailForRelatedObsByCondition(sendEmailForProjectByConditionDTO: SendEmailForProjectByConditionDTO): Result<Boolean> {
         return Result(
-            projectNotifyService.sendEmailForRelatedObsByBgId(
-                bgId = bgId
+            projectNotifyService.sendEmailForRelatedObsByCondition(
+                sendEmailForProjectByConditionDTO = sendEmailForProjectByConditionDTO
             )
         )
     }
 
-    override fun getProjectsForRelatedObsByBgId(bgId: Long): Result<Pair<Int,  List<String>>> {
+    override fun getProjectsForRelatedObsByBgId(bgId: Long): Result<Pair<Int, List<String>>> {
         return Result(
             projectNotifyService.getProjectsForRelatedObsByBgId(
                 bgId = bgId

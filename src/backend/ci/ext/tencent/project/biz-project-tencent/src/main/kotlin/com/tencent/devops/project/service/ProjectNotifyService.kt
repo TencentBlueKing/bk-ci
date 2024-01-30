@@ -11,7 +11,7 @@ import com.tencent.devops.common.service.config.CommonConfig
 import com.tencent.devops.common.service.trace.TraceTag
 import com.tencent.devops.notify.api.service.ServiceNotifyMessageTemplateResource
 import com.tencent.devops.notify.pojo.SendNotifyMessageTemplateRequest
-import com.tencent.devops.project.pojo.enums.ProjectChannelCode
+import com.tencent.devops.project.pojo.SendEmailForProjectByConditionDTO
 import com.tencent.devops.project.service.tof.TOFService
 import org.slf4j.LoggerFactory
 import org.slf4j.MDC
@@ -24,7 +24,8 @@ class ProjectNotifyService constructor(
     val tokenService: ClientTokenService,
     val projectService: ProjectService,
     val tofService: TOFService,
-    val config: CommonConfig
+    val config: CommonConfig,
+    val projectUserService: ProjectUserService
 ) {
     companion object {
         private val projectNotifyThreadPool = Executors.newFixedThreadPool(5)
@@ -50,8 +51,8 @@ class ProjectNotifyService constructor(
         return true
     }
 
-    fun sendEmailForRelatedObsByBgId(bgId: Long): Boolean {
-        logger.info("send email for related obs by bg id:$bgId")
+    fun sendEmailForRelatedObsByCondition(sendEmailForProjectByConditionDTO: SendEmailForProjectByConditionDTO): Boolean {
+        logger.info("send email for related obs by condition:$sendEmailForProjectByConditionDTO")
         val traceId = MDC.get(TraceTag.BIZID)
         projectNotifyThreadPool.submit {
             MDC.put(TraceTag.BIZID, traceId)
@@ -60,14 +61,16 @@ class ProjectNotifyService constructor(
             do {
                 val projectInfos = projectService.listMigrateProjects(
                     migrateProjectConditionDTO = MigrateProjectConditionDTO(
-                        bgId = bgId,
+                        bgId = sendEmailForProjectByConditionDTO.bgId,
+                        deptId = sendEmailForProjectByConditionDTO.deptId,
+                        centerId = sendEmailForProjectByConditionDTO.centerId,
                         relatedProduct = false,
                         routerTag = AuthSystemType.RBAC_AUTH_TYPE
                     ),
                     limit = limit,
                     offset = offset
                 )
-                logger.info("send email for related obs by bg id:$bgId|$offset|$limit|$projectInfos")
+                logger.info("send email for related obs by condition:$offset|$limit|$projectInfos")
                 if (projectInfos.isEmpty()) break
                 projectInfos.forEach {
                     sendEmail(
@@ -118,7 +121,7 @@ class ProjectNotifyService constructor(
             projectCode = projectId,
             group = BkAuthGroup.MANAGER
         ).data ?: return
-        managers.forEach forEach@{
+        managers.filterNot { projectUserService.isSeniorUser(it) }.forEach forEach@{
             try {
                 tofService.getUserDeptDetail(it)
             } catch (ignore: Exception) {

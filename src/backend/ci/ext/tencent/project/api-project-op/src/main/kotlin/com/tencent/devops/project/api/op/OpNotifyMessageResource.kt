@@ -28,6 +28,7 @@
 package com.tencent.devops.project.api.op
 
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.project.pojo.SendEmailForProjectByConditionDTO
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
@@ -54,11 +55,10 @@ interface OpNotifyMessageResource {
 
     @ApiOperation("推动项目关联运营产品-根据BgID")
     @POST
-    @Path("/sendEmailForRelatedObsByBgId/{bgId}")
-    fun sendEmailForRelatedObsByBgId(
-        @ApiParam(value = "bgId", required = true)
-        @PathParam("bgId")
-        bgId: Long,
+    @Path("/sendEmailForRelatedObsByCondition/")
+    fun sendEmailForRelatedObsByCondition(
+        @ApiParam(value = "通过条件对项目进行邮件通知", required = true)
+        sendEmailForProjectByConditionDTO: SendEmailForProjectByConditionDTO
     ): Result<Boolean>
 
     @ApiOperation("推动项目关联运营产品-根据BgID")

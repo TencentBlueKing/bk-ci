@@ -27,19 +27,23 @@
 
 package com.tencent.devops.project.service
 
+import com.github.benmanes.caffeine.cache.Caffeine
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.auth.api.AuthProjectApi
 import com.tencent.devops.common.auth.code.BSProjectServiceCodec
 import com.tencent.devops.model.project.tables.records.TUserRecord
 import com.tencent.devops.project.dao.ProjectDao
+import com.tencent.devops.project.dao.ProjectSeniorUserDao
 import com.tencent.devops.project.dao.ProjectUserDao
 import com.tencent.devops.project.dao.UserDao
 import com.tencent.devops.project.pojo.ProjectProperties
+import com.tencent.devops.project.pojo.SeniorUserDTO
 import com.tencent.devops.project.pojo.user.UserDeptDetail
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
+import java.util.concurrent.TimeUnit
 
 @Service
 class ProjectUserService @Autowired constructor(
@@ -47,9 +51,15 @@ class ProjectUserService @Autowired constructor(
     val userDao: UserDao,
     val projectUserDao: ProjectUserDao,
     val authProjectApi: AuthProjectApi,
+    val seniorUserDao: ProjectSeniorUserDao,
     val projectDao: ProjectDao,
     val projectServiceCode: BSProjectServiceCodec
 ) {
+    private val seniorUserCache = Caffeine.newBuilder()
+        .maximumSize(1000)
+        .expireAfterWrite(7, TimeUnit.DAYS)
+        .build<String, String>()
+
     fun getUserDept(userId: String): UserDeptDetail? {
         val userRecord = userDao.get(dslContext, userId) ?: return null
         return packagingBean(userRecord)
@@ -119,6 +129,36 @@ class ProjectUserService @Autowired constructor(
         }
 
         return res
+    }
+
+    fun creatSeniorUser(seniorUserList: List<SeniorUserDTO>): Boolean {
+        seniorUserList.forEach {
+            seniorUserDao.create(
+                dslContext = dslContext,
+                seniorUserDTO = it
+            )
+        }
+        return true
+    }
+
+    fun deleteSeniorUser(userId: String): Boolean {
+        seniorUserDao.delete(
+            dslContext = dslContext,
+            userId = userId
+        )
+        return true
+    }
+
+    fun isSeniorUser(userId: String): Boolean {
+        if (seniorUserCache.asMap().isEmpty()) {
+            logger.info("refresh senior user cache")
+            seniorUserDao.list(
+                dslContext = dslContext,
+            ).forEach {
+                seniorUserCache.put(it.userId, it.name)
+            }
+        }
+        return seniorUserCache.getIfPresent(userId) != null
     }
 
     companion object {
