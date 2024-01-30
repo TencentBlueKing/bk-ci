@@ -76,42 +76,42 @@ interface UserProjectGitProxyResource {
         repoName: String
     ): Result<Boolean>
 
-    @ApiOperation("关联git.tencent仓库")
+    @Operation(summary = "关联git.tencent仓库")
     @POST
     @Path("/linktgit")
     fun linktgit(
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam(value = "项目ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "项目ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_PROJECT_ID)
         projectId: String,
         data: LinktgitData
     ): Result<Map<String, Boolean>>
 
-    @ApiOperation("获取已经关联的仓库")
+    @Operation(summary = "获取已经关联的仓库")
     @GET
     @Path("/tgit/list")
     fun tgitList(
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam(value = "项目ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "项目ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_PROJECT_ID)
         projectId: String
     ): Result<List<TGitRepoData>>
 
-    @ApiOperation("删除已经关联的仓库")
+    @Operation(summary = "删除已经关联的仓库")
     @DELETE
     @Path("/tgit/delete")
     fun deleteTgitRepo(
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam(value = "项目ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "项目ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_PROJECT_ID)
         projectId: String,
-        @ApiParam(value = "仓库链接", required = true)
+        @Parameter(description = "仓库链接", required = true)
         @QueryParam("url")
         url: String
     ): Result<Boolean>

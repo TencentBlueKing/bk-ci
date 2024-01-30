@@ -191,17 +191,17 @@ interface OpWindowsConfigResource {
         pageSize: Int?
     ): Result<Page<WindowsSpecResInfo>>
 
-    @ApiOperation("追加项目云桌面总配额")
+    @Operation(summary = "追加项目云桌面总配额")
     @PUT
     @Path("/add/{projectId}/{quota}")
     fun addProjectTotalQuota(
-        @ApiParam(value = "用户ID", required = true)
+        @Parameter(description = "用户ID", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam(value = "项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @ApiParam(value = "配额", required = true)
+        @Parameter(description = "配额", required = true)
         @PathParam("quota")
         quota: Int
     ): Result<Boolean>

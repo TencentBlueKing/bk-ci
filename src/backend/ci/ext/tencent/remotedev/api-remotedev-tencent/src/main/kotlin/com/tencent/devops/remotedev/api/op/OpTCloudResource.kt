@@ -4,9 +4,9 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.remotedev.pojo.tcloud.ProjectCfsData
-import io.swagger.annotations.Api
-import io.swagger.annotations.ApiOperation
-import io.swagger.annotations.ApiParam
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.Parameter
+import io.swagger.v3.oas.annotations.tags.Tag
 import javax.ws.rs.Consumes
 import javax.ws.rs.DELETE
 import javax.ws.rs.GET
@@ -17,16 +17,16 @@ import javax.ws.rs.Produces
 import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
-@Api(tags = ["OP_TCLOUD"], description = "OP_TCLOUD")
+@Tag(name = "OP_TCLOUD", description = "OP_TCLOUD")
 @Path("/op/tcloud")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface OpTCloudResource {
-    @ApiOperation("查询项目cfs配置表")
+    @Operation(summary = "查询项目cfs配置表")
     @GET
     @Path("/fetchProjectCfs")
     fun fetchProjectCfs(
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
         @QueryParam("page")
@@ -35,30 +35,30 @@ interface OpTCloudResource {
         pageSize: Int
     ): Result<List<ProjectCfsData>>
 
-    @ApiOperation("查询区域列表")
+    @Operation(summary = "查询区域列表")
     @GET
     @Path("/fetchCfsRegion")
     fun fetchCfsRegion(
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String
     ): Result<List<String>>
 
-    @ApiOperation("新增项目cfs")
+    @Operation(summary = "新增项目cfs")
     @POST
     @Path("/addProjectCfs")
     fun addProjectCfs(
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
         data: ProjectCfsData
     ): Result<Boolean>
 
-    @ApiOperation("删除项目cfs")
+    @Operation(summary = "删除项目cfs")
     @DELETE
     @Path("/deleteProjectCfs")
     fun deleteProjectCfs(
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
         @QueryParam("projectId")
