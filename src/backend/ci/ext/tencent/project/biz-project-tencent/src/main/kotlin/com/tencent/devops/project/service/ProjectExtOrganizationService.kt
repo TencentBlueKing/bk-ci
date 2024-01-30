@@ -9,6 +9,7 @@ import com.tencent.devops.model.project.tables.records.TProjectRecord
 import com.tencent.devops.project.dao.ProjectDao
 import com.tencent.devops.project.pojo.ProjectOrganizationInfo
 import com.tencent.devops.project.pojo.enums.OrganizationType
+import com.tencent.devops.project.pojo.user.UserDeptDetail
 import com.tencent.devops.project.service.tof.TOFService
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
@@ -42,7 +43,18 @@ class ProjectExtOrganizationService constructor(
             group = BkAuthGroup.MANAGER
         ).data ?: return false
 
-        val managerDeptInfos = managers.map { tofService.getUserDeptDetail(it) }
+        val managerDeptInfos = mutableListOf<UserDeptDetail>()
+        managers.forEach forEach@{ manager ->
+            val userDeptDetail = try {
+                tofService.getUserDeptDetail(manager)
+            } catch (ex: Exception) {
+                logger.info("$englishName ${ex.message}")
+                return@forEach
+            }
+            managerDeptInfos.add(userDeptDetail)
+        }
+        if (managerDeptInfos.isEmpty())
+            return false
 
         val managerDeptIds = managerDeptInfos.map { it.deptId }
         val managerCenterIds = managerDeptInfos.map { it.centerId }
