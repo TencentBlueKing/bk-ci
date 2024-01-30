@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.core.type.TypeReference
 import com.sun.org.slf4j.internal.LoggerFactory
 import com.tencent.devops.common.api.exception.ErrorCodeException
+import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.remotedev.common.exception.ErrorCodeEnum
@@ -27,9 +28,12 @@ class DevcloudService {
 
     fun fetchCVMList(
         userId: String,
-        project: String
-    ): List<DevcloudCVMData>? {
-        val url = "$devcloudUrl/v1/project/resourceList?landunId=$project&resourceType=cvm"
+        project: String,
+        page: Int,
+        pageSize: Int
+    ): Page<DevcloudCVMData> {
+        val url =
+            "$devcloudUrl/v1/project/resourceList?landunId=$project&resourceType=cvm&page=$page&pagesize=$pageSize"
 
         val timestamp = (System.currentTimeMillis() / 1000).toString()
         val random = "landun"
@@ -73,7 +77,18 @@ class DevcloudService {
                         params = arrayOf("cvmList", "${data.code}|${data.msg}")
                     )
                 }
-                return data.data
+                val count = data.count ?: (data.data?.size ?: 0)
+                return Page(
+                    page = page,
+                    pageSize = pageSize,
+                    count = (data.count ?: (data.data?.size ?: 0)).toLong(),
+                    totalPages = if (count % pageSize != 0) {
+                        count / pageSize + 1
+                    } else {
+                        count / pageSize
+                    },
+                    records = data.data ?: emptyList()
+                )
             }
         } catch (e: Exception) {
             logger.warn("fetchCVMList error", e)
@@ -92,6 +107,7 @@ class DevcloudService {
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class CVMListResp(
     val code: Int?,
+    val count: Int?,
     val data: List<DevcloudCVMData>?,
     val msg: String?
 )

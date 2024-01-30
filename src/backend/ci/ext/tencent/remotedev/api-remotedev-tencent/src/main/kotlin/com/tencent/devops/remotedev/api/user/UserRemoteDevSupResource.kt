@@ -2,6 +2,7 @@ package com.tencent.devops.remotedev.api.user
 
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
+import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.remotedev.pojo.remotedevsup.DevcloudCVMData
 import io.swagger.annotations.Api
@@ -30,6 +31,12 @@ interface UserRemoteDevSupResource {
         userId: String,
         @ApiParam("项目ID", required = true)
         @QueryParam("projectId")
-        projectId: String
-    ): Result<List<DevcloudCVMData>?>
+        projectId: String,
+        @ApiParam(value = "page", required = true)
+        @QueryParam("page")
+        page: Int = 1,
+        @ApiParam(value = "pageSize", required = true)
+        @QueryParam("pageSize")
+        pageSize: Int = 20
+    ): Result<Page<DevcloudCVMData>?>
 }
