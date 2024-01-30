@@ -698,6 +698,7 @@
     }
     .pac-icon {
         position: relative;
+        flex-shrink: 0;
         font-size: 12px;
         margin-left: 10px;
         color: #699DF4;
