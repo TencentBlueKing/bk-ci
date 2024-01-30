@@ -25,16 +25,23 @@
                         :placeholder="$t('searchProject')"
                     ></bk-input>
                 </div>
+
+                <div class="filter-operation">
+                    <span :class="{ 'is-selected': isEnabled }" @click="isEnabled = true">{{ $t('启用中') }}</span>
+                    <span :class="{ 'is-selected': !isEnabled }" @click="isEnabled = false">{{ $t('已停用') }}</span>
+                </div>
                 <bk-table
-                    class="biz-table mt20"
+                    class="biz-table"
                     size="medium"
                     :data="curProjectList"
                     :pagination="pagination"
+                    @sort-change="handleSortChange"
                     @page-change="pageChange"
                     @page-limit-change="limitChange"
                 >
                     <bk-table-column
                         :label="$t('projectName')"
+                        sortable
                         prop="logoAddr"
                         width="300"
                     >
@@ -80,12 +87,13 @@
                     </bk-table-column>
                     <bk-table-column
                         :label="$t('projectId')"
+                        sortable
                         prop="englishName"
                     />
                     <bk-table-column
                         :label="$t('projectDesc')"
                         prop="description"
-                        width="500"
+                        width="300"
                     />
                     <bk-table-column
                         :label="$t('projectCreator')"
@@ -94,9 +102,8 @@
                     <bk-table-column
                         :label="$t('projectStatus')"
                         prop="creator"
-                        width="180"
                     >
-                        <template slot-scope="{ row }">
+                        <template slot-scope="{ row, $index }">
                             <span class="project-status">
                                 <div class="enable-switcher"
                                     v-perm="{
@@ -109,7 +116,7 @@
                                             action: RESOURCE_ACTION.ENABLE
                                         }
                                     }"
-                                    @click="handleChangeEnabled(row)"
+                                    @click="handleChangeEnabled(row, $index)"
                                 >
                                 </div>
                                 <bk-switcher
@@ -233,19 +240,23 @@
                     2: this.$t('已启用'),
                     3: this.$t('创建中'),
                     4: this.$t('已启用')
-                }
+                },
+                isEnabled: true // 查询过滤-已启用项目
             }
         },
         computed: {
             curProjectList () {
                 const { limit, current } = this.pagination
-                const list = this.projectList.filter(i => i.projectName.includes(this.inputValue)) || []
+                const list = this.projectList.filter(i => i.projectName.includes(this.inputValue) && i.enabled === this.isEnabled) || []
                 this.pagination.count = list.length
                 return list.slice(limit * (current - 1), limit * current)
             }
         },
         watch: {
             inputValue (val) {
+                this.pagination.current = 1
+            },
+            isEnabled (val) {
                 this.pagination.current = 1
             }
         },
@@ -338,12 +349,13 @@
                 this.toggleProjectEnable({
                     projectCode: projectCode,
                     enabled: !enabled
-                }).then(() => {
+                }).then(async () => {
                     row.enabled = !row.enabled
                     this.$bkMessage({
                         message: row.enabled ? this.$t('启用项目成功') : this.$t('停用项目成功'),
                         theme: 'success'
                     })
+                    this.fetchProjects()
                 }).catch((error) => {
                     if (error.code === 403) {
                         const projectTag = this.getProjectTag(routerTag)
@@ -373,6 +385,10 @@
             },
             getProjectTag () {
                 return 'rbac'
+            },
+
+            handleSortChange ({ prop, order }) {
+                console.log(prop, order)
             }
         }
     })
@@ -403,6 +419,28 @@
         justify-content: space-between;
         .search-input {
             width: 320px;
+        }
+    }
+    .filter-operation {
+        display: flex;
+        margin-top: 20px;
+        span {
+            display: inline-block;
+            height: 36px;
+            line-height: 36px;
+            padding: 0 20px;
+            border: 1px solid #dfe0e5;
+            border-bottom: none;
+            cursor: pointer;
+            &.is-selected {
+                color: #3a84ff;
+            }
+            &:first-child {
+                border-right: none;
+            }
+            &:hover {
+                color: #3a84ff;
+            }
         }
     }
     .biz-order {
