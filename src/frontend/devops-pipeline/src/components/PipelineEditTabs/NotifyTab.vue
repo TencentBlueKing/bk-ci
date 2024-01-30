@@ -1,54 +1,52 @@
 <template>
     <section>
-        <template v-for="card in notifyList">
-            <bk-card :key="card.type" :is-collapse="true" :collapse-icons="icons" :border="false" class="notify-item">
-                <div slot="header" class="item-header">
-                    <span class="notify-title">{{card.name}}</span>
-                    <bk-link v-if="editable" theme="primary" icon="bk-icon icon-plus" @click.stop="handleEdit(card.type, -1)">
-                        {{$t('newui.addNotice')}}
-                    </bk-link>
-                </div>
-                <div class="item-content-area">
-                    <template v-for="(item, index) in getRenderInfo(card.type)">
-                        <div :key="index" class="item-content">
-                            <div v-if="editable" class="operate-icons">
-                                <i class="devops-icon icon-edit" @click="handleEdit(card.type, index)"></i>
-                                <bk-popover class="setting-more-dot-menu"
-                                    placement="bottom-start"
-                                    theme="project-manage-more-dot-menu light"
-                                    :arrow="false"
-                                    :distance="0">
-                                    <span class="more-menu-trigger">
-                                        <i class="devops-icon icon-more" style="display: inline-block;margin-top: 2px;font-size: 18px"></i>
-                                    </span>
-                                    <ul class="setting-menu-list" slot="content">
-                                        <li @click="handleDelete(card.type, index)" style="padding: 0 2px;cursor: pointer;">{{$t('delete')}}</li>
-                                    </ul>
-                                </bk-popover>
-                            </div>
-                            <template v-for="field in renderFields">
-                                <div class="item-info" :key="field.col">
-                                    <div class="info-label">
-                                        {{field.label}}
-                                    </div>
-                                    <div class="info-content">
-                                        {{getShowContent(field.col, item[field.col])}}
-                                    </div>
-                                </div>
-                            </template>
-                            <div class="item-info" v-if="item.wechatGroupFlag && item.wechatGroup && item.types && item.types.includes('WEWORK')">
+        <bk-card v-for="card in notifyList" :key="card.type" :is-collapse="true" :collapse-icons="icons" :border="false" class="notify-item">
+            <div slot="header" class="item-header">
+                <span class="notify-title">{{card.name}}</span>
+                <bk-link v-if="editable" theme="primary" icon="bk-icon icon-plus" @click.stop="handleEdit(card.type, -1)">
+                    {{$t('newui.addNotice')}}
+                </bk-link>
+            </div>
+            <div class="item-content-area">
+                <template v-for="(item, index) in getRenderInfo(card.type)">
+                    <div :key="index" class="item-content">
+                        <div v-if="editable" class="operate-icons">
+                            <i class="devops-icon icon-edit" @click="handleEdit(card.type, index)"></i>
+                            <bk-popover class="setting-more-dot-menu"
+                                placement="bottom-start"
+                                theme="project-manage-more-dot-menu light"
+                                :arrow="false"
+                                :distance="0">
+                                <span class="more-menu-trigger">
+                                    <i class="devops-icon icon-more" style="display: inline-block;margin-top: 2px;font-size: 18px"></i>
+                                </span>
+                                <ul class="setting-menu-list" slot="content">
+                                    <li @click="handleDelete(card.type, index)" style="padding: 0 2px;cursor: pointer;">{{$t('delete')}}</li>
+                                </ul>
+                            </bk-popover>
+                        </div>
+                        <template v-for="field in renderFields">
+                            <div class="item-info" :key="field.col">
                                 <div class="info-label">
-                                    {{$t('wechatGroupID')}}
+                                    {{field.label}}
                                 </div>
                                 <div class="info-content">
-                                    {{item.wechatGroup}}
+                                    {{getShowContent(field.col, item[field.col])}}
                                 </div>
                             </div>
+                        </template>
+                        <div class="item-info" v-if="item.wechatGroupFlag && item.wechatGroup && item.types && item.types.includes('WEWORK')">
+                            <div class="info-label">
+                                {{$t('wechatGroupID')}}
+                            </div>
+                            <div class="info-content">
+                                {{item.wechatGroup}}
+                            </div>
                         </div>
-                    </template>
-                </div>
-            </bk-card>
-        </template>
+                    </div>
+                </template>
+            </div>
+        </bk-card>
 
         <bk-sideslider
             quick-close
