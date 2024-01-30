@@ -74,6 +74,9 @@ class ProjectUserDao {
             userDeptDetail.businessLineId?.let {
                 baseStep.set(BUSINESS_LINE_ID, it.toLong())
             }
+            userDeptDetail.businessLineName?.let {
+                baseStep.set(BUSINESS_LINE_NAME, it)
+            }
             baseStep.where(USER_ID.eq(userDeptDetail.userId!!)).execute()
         }
     }
