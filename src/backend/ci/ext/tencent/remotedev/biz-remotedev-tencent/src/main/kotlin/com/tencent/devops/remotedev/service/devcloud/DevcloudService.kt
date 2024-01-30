@@ -15,6 +15,7 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import java.security.MessageDigest
 
+@Suppress("ALL")
 @Service
 class DevcloudService {
     @Value("\${devcloud.url:}")
@@ -78,15 +79,20 @@ class DevcloudService {
                     )
                 }
                 val count = data.count ?: (data.data?.size ?: 0)
+                val totalPage = if (count == 0 || pageSize == 0) {
+                    0
+                } else {
+                    if (count % pageSize != 0) {
+                        count / pageSize + 1
+                    } else {
+                        count / pageSize
+                    }
+                }
                 return Page(
                     page = page,
                     pageSize = pageSize,
                     count = (data.count ?: (data.data?.size ?: 0)).toLong(),
-                    totalPages = if (count % pageSize != 0) {
-                        count / pageSize + 1
-                    } else {
-                        count / pageSize
-                    },
+                    totalPages = totalPage,
                     records = data.data ?: emptyList()
                 )
             }
