@@ -278,6 +278,9 @@
                     margin: 0;
                     font-weight: normal;
                     display: flex;
+                    line-height: 22px;
+                    align-items: center;
+                    grid-gap: 10px;
                     .pipeline-cell-link {
                         @include ellipsis();
                     }

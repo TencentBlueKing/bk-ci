@@ -234,22 +234,24 @@
                 <template
                     v-else-if="props.row.hasPermission && !props.row.delete"
                 >
-                    <span
-                        v-if="props.row.onlyDraft"
-                        class="text-link exec-pipeline-btn"
-                        @click="goEdit(props.row)"
-                        v-perm="{
-                            hasPermission: props.row.permissions && props.row.permissions.canEdit,
-                            disablePermissionApi: true,
-                            permissionData: {
-                                projectId: projectId,
-                                resourceType: 'pipeline',
-                                resourceCode: props.row.pipelineId,
-                                action: RESOURCE_ACTION.EDIT
-                            }
-                        }"
-                    >
-                        {{ $t('edit') }}
+                    <span v-if="props.row.onlyDraft">
+                        <bk-button
+                            text
+                            class="exec-pipeline-btn"
+                            @click="goEdit(props.row)"
+                            v-perm="{
+                                hasPermission: props.row.permissions && props.row.permissions.canEdit,
+                                disablePermissionApi: true,
+                                permissionData: {
+                                    projectId: projectId,
+                                    resourceType: 'pipeline',
+                                    resourceCode: props.row.pipelineId,
+                                    action: RESOURCE_ACTION.EDIT
+                                }
+                            }"
+                        >
+                            {{ $t('edit') }}
+                        </bk-button>
                     </span>
                     <span v-else v-bk-tooltips="props.row.tooltips">
                         <bk-button
