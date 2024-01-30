@@ -32,6 +32,7 @@ import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
 import javax.ws.rs.Consumes
+import javax.ws.rs.GET
 import javax.ws.rs.POST
 import javax.ws.rs.Path
 import javax.ws.rs.PathParam
@@ -59,4 +60,13 @@ interface OpNotifyMessageResource {
         @PathParam("bgId")
         bgId: Long,
     ): Result<Boolean>
+
+    @ApiOperation("推动项目关联运营产品-根据BgID")
+    @GET
+    @Path("/getProjectForRelatedObsByBgId/{bgId}")
+    fun getProjectsForRelatedObsByBgId(
+        @ApiParam(value = "bgId", required = true)
+        @PathParam("bgId")
+        bgId: Long,
+    ): Result<Map<String, List<String>>>
 }

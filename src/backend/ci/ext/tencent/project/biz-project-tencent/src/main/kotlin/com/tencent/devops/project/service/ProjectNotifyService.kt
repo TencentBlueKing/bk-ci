@@ -27,7 +27,8 @@ class ProjectNotifyService constructor(
     companion object {
         private val projectNotifyThreadPool = Executors.newFixedThreadPool(2)
         private val logger = LoggerFactory.getLogger(ProjectNotifyService::class.java)
-        private const val NOTIFY_USER_TO_RELATED_OBS_PRODUCT_TEMPLATE_CODE = "NOTIFY_USER_TO_RELATED_OBS_PRODUCT_TEMPLATE"
+        private const val NOTIFY_USER_TO_RELATED_OBS_PRODUCT_TEMPLATE_CODE =
+            "NOTIFY_USER_TO_RELATED_OBS_PRODUCT_TEMPLATE"
     }
 
     private val projectInfoShowUri = "${config.devopsHostGateway}/console/manage/%s/show"
@@ -57,7 +58,8 @@ class ProjectNotifyService constructor(
             do {
                 val projectInfos = projectService.listMigrateProjects(
                     migrateProjectConditionDTO = MigrateProjectConditionDTO(
-                        bgId = bgId
+                        bgId = bgId,
+                        relatedProduct = false
                     ),
                     limit = limit,
                     offset = offset
@@ -77,7 +79,35 @@ class ProjectNotifyService constructor(
         return true
     }
 
-    fun sendEmail(
+    fun getProjectsForRelatedObsByBgId(bgId: Long): Map<String, List<String>> {
+        var offset = 0
+        val limit = PageUtil.MAX_PAGE_SIZE
+        val projectId2managers = mutableMapOf<String, List<String>>()
+        do {
+            val projectInfos = projectService.listMigrateProjects(
+                migrateProjectConditionDTO = MigrateProjectConditionDTO(
+                    bgId = bgId,
+                    relatedProduct = false
+                ),
+                limit = limit,
+                offset = offset
+            )
+            logger.info("get project for related obs by bg id:$bgId|$offset|$limit|$projectInfos")
+            if (projectInfos.isEmpty()) break
+            projectInfos.forEach forEach@{
+                val managers = client.get(ServiceProjectAuthResource::class).getProjectUsers(
+                    token = tokenService.getSystemToken(),
+                    projectCode = it.englishName,
+                    group = BkAuthGroup.MANAGER
+                ).data ?: return@forEach
+                projectId2managers[it.englishName] = managers
+            }
+            offset += limit
+        } while (projectInfos.size == limit)
+        return projectId2managers
+    }
+
+    private fun sendEmail(
         projectName: String,
         projectId: String
     ) {
