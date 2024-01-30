@@ -1051,6 +1051,7 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
                 ) {
                     nodeRecord.nodeStatus = NodeStatus.NORMAL.name
                     nodeRecord.nodeIp = startInfo.hostIp
+                    nodeRecord.agentVersion = startInfo.masterVersion
                     nodeDao.saveNode(context, nodeRecord)
                     webSocketDispatcher.dispatch(
                         websocketService.buildDetailMessage(projectId, "")
