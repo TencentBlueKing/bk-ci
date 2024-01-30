@@ -68,5 +68,5 @@ interface OpNotifyMessageResource {
         @ApiParam(value = "bgId", required = true)
         @PathParam("bgId")
         bgId: Long,
-    ): Result<Pair<Int, Map<String, List<String>>>>
+    ): Result<Pair<Int, List<String>>>
 }

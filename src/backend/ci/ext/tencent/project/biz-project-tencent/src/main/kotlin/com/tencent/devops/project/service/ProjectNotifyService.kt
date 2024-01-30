@@ -81,11 +81,11 @@ class ProjectNotifyService constructor(
         return true
     }
 
-    fun getProjectsForRelatedObsByBgId(bgId: Long): Pair<Int, Map<String, List<String>>> {
+    fun getProjectsForRelatedObsByBgId(bgId: Long): Pair<Int, List<String>> {
         var offset = 0
         val limit = PageUtil.MAX_PAGE_SIZE
         var count = 0
-        val projectId2managers = mutableMapOf<String, List<String>>()
+        val projectIds = mutableListOf<String>()
         do {
             val projectInfos = projectService.listMigrateProjects(
                 migrateProjectConditionDTO = MigrateProjectConditionDTO(
@@ -100,17 +100,12 @@ class ProjectNotifyService constructor(
             logger.info("get project for related obs by bg id:$bgId|$offset|$limit|$projectInfos")
             if (projectInfos.isEmpty()) break
             projectInfos.forEach forEach@{
-                val managers = client.get(ServiceProjectAuthResource::class).getProjectUsers(
-                    token = tokenService.getSystemToken(),
-                    projectCode = it.englishName,
-                    group = BkAuthGroup.MANAGER
-                ).data ?: return@forEach
-                projectId2managers[it.englishName] = managers
+                projectIds.add(it.englishName)
             }
             count += projectInfos.size
             offset += limit
         } while (projectInfos.size == limit)
-        return Pair(count, projectId2managers)
+        return Pair(count, projectIds)
     }
 
     private fun sendEmail(

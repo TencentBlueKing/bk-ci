@@ -25,7 +25,7 @@ class OpNotifyMessageResourceImpl constructor(
         )
     }
 
-    override fun getProjectsForRelatedObsByBgId(bgId: Long): Result<Pair<Int, Map<String, List<String>>>> {
+    override fun getProjectsForRelatedObsByBgId(bgId: Long): Result<Pair<Int,  List<String>>> {
         return Result(
             projectNotifyService.getProjectsForRelatedObsByBgId(
                 bgId = bgId
