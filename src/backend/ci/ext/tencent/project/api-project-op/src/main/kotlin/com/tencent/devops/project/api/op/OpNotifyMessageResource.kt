@@ -61,7 +61,7 @@ interface OpNotifyMessageResource {
     ): Result<Boolean>
 
     @ApiOperation("推动项目关联运营产品-根据BgID")
-    @GET
+    @POST
     @Path("/getProjectForRelatedObsByCondition/")
     fun getProjectsForRelatedObsByCondition(
         @ApiParam(value = "通过条件对项目进行邮件通知", required = true)
