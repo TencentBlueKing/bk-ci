@@ -31,6 +31,7 @@ import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.experience.api.app.AppExperiencePushResource
+import com.tencent.devops.experience.filter.annotions.AllowOuter
 import com.tencent.devops.experience.pojo.SubscribeParam
 import com.tencent.devops.experience.service.ExperiencePushService
 import org.springframework.beans.factory.annotation.Autowired
@@ -40,6 +41,7 @@ class AppExperiencePushResourceImpl @Autowired constructor(
     private val experiencePushService: ExperiencePushService
 ) : AppExperiencePushResource {
 
+    @AllowOuter
     override fun bindDeviceToken(
         userId: String,
         platform: Int,
