@@ -139,7 +139,6 @@ class ProjectDao {
         val creator = migrateProjectConditionDTO.projectCreator
         val routerTag = migrateProjectConditionDTO.routerTag
         val isRelatedProduct = migrateProjectConditionDTO.relatedProduct
-        val channel = migrateProjectConditionDTO.channel
         return with(TProject.T_PROJECT) {
             dslContext.selectFrom(this)
                 .where(APPROVAL_STATUS.notIn(UNSUCCESSFUL_CREATE_STATUS))
@@ -152,7 +151,7 @@ class ProjectDao {
                         )
                     } else {
                         it.and(
-                            ROUTER_TAG.contains(routerTag.value).or(ROUTER_TAG.contains("devx"))
+                            ROUTER_TAG.like("%${routerTag.value}%").or(ROUTER_TAG.like("%devx%"))
                         )
                     }
                 }
@@ -167,9 +166,6 @@ class ProjectDao {
                         true -> it.and(PRODUCT_ID.isNotNull)
                         else -> it.and(PRODUCT_ID.isNull)
                     }
-                }
-                .let {
-                    if (channel == null) it else it.and(CHANNEL.eq(channel))
                 }
                 .and(ENABLED.eq(true))
                 .orderBy(CREATED_AT.asc())

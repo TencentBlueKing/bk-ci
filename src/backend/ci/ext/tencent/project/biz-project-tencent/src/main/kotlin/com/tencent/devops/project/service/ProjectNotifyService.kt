@@ -61,7 +61,8 @@ class ProjectNotifyService constructor(
                 val projectInfos = projectService.listMigrateProjects(
                     migrateProjectConditionDTO = MigrateProjectConditionDTO(
                         bgId = bgId,
-                        relatedProduct = false
+                        relatedProduct = false,
+                        routerTag = AuthSystemType.RBAC_AUTH_TYPE
                     ),
                     limit = limit,
                     offset = offset
@@ -91,7 +92,6 @@ class ProjectNotifyService constructor(
                 migrateProjectConditionDTO = MigrateProjectConditionDTO(
                     bgId = bgId,
                     relatedProduct = false,
-                    channel = ProjectChannelCode.BS.name,
                     routerTag = AuthSystemType.RBAC_AUTH_TYPE
                 ),
                 limit = limit,
