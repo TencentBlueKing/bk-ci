@@ -22,9 +22,7 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
-import java.util.concurrent.LinkedBlockingQueue
-import java.util.concurrent.ThreadPoolExecutor
-import java.util.concurrent.TimeUnit
+import java.util.concurrent.Executors
 
 @Suppress("ALL")
 @Service
@@ -136,19 +134,27 @@ class TCloudCfsService @Autowired constructor(
             }!!
         }?.toSet() ?: return
 
-        ips.forEach { ip ->
+        // 获取下现有的rule过滤
+        val rules = try {
+            client.DescribeCfsRules(
+                DescribeCfsRulesRequest().apply {
+                    this.pGroupId = pgId
+                }
+            ).ruleList.map { it.authClientIp }.toSet()
+        } catch (e: Exception) {
+            logger.error("addProjectCfsId|DescribeCfsRules error", e)
+            emptySet()
+        }
+
+        val realIps = ips.subtract(rules)
+
+        realIps.forEach { ip ->
             createOrDeleteCfsRule(pgId = pgId, ip = ip, ruleId = "", region = region, delete = false)
         }
     }
 
     // 腾讯云对创建cfs权限组规则有频率限制，我们使用75s发送一次
-    private val askExecutor = ThreadPoolExecutor(
-        10,
-        20,
-        76000L,
-        TimeUnit.MILLISECONDS,
-        LinkedBlockingQueue(100)
-    )
+    private val askExecutor = Executors.newCachedThreadPool()
 
     private fun createOrDeleteCfsRule(
         pgId: String,
