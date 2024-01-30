@@ -35,20 +35,10 @@ object DatabaseUtil {
         defaultMysqlUser: String?,
         defaultMysqlPasswd: String?
     ): Triple<String, String, String> {
-        var mysqlURL = System.getProperty("${moduleName}MysqlURL") ?: System.getProperty("mysqlURL")
-        var mysqlUser = System.getProperty("${moduleName}MysqlUser") ?: System.getProperty("mysqlUser")
-        var mysqlPasswd =
-            System.getProperty("${moduleName}MysqlPasswd") ?: System.getProperty("mysqlPasswd")
-
-        if (mysqlURL == null) {
-            mysqlURL = System.getenv("${moduleName}MysqlURL") ?: System.getenv("mysqlURL")
-            mysqlUser =
-                System.getenv("${moduleName}MysqlUser") ?: System.getenv("mysqlUser")
-            mysqlPasswd =
-                System.getenv("${moduleName}MysqlPasswd") ?: System.getenv("mysqlPasswd")
-        }
-
-        if (mysqlURL == null) {
+        var mysqlURL = getMysqlParamValue(moduleName, "mysqlURL")
+        var mysqlUser = getMysqlParamValue(moduleName, "mysqlUser")
+        var mysqlPasswd = getMysqlParamValue(moduleName, "mysqlPasswd")
+        if (mysqlURL == null || mysqlUser == null || mysqlPasswd == null) {
             println("use default properties.")
             mysqlURL = defaultMysqlURL ?: ""
             mysqlUser = defaultMysqlUser ?: ""
@@ -68,5 +58,18 @@ object DatabaseUtil {
         } else {
             "$defaultMysqlPrefixName$moduleName"
         }
+    }
+
+    private fun getMysqlParamValue(
+        moduleName: String,
+        paramName: String
+    ): String? {
+        val firstCharacter = paramName[0]
+        val moduleParamName = "${moduleName}${paramName.replaceFirst(firstCharacter, firstCharacter.toUpperCase())}"
+        var paramValue = System.getenv(moduleParamName) ?: System.getProperty(moduleParamName)
+        if (paramValue == null) {
+            paramValue = System.getProperty(paramName) ?: System.getenv(paramName)
+        }
+        return paramValue
     }
 }

@@ -60,6 +60,7 @@ import com.tencent.devops.dispatch.kubernetes.pojo.KubernetesDockerRegistry
 import com.tencent.devops.dispatch.kubernetes.pojo.KubernetesResource
 import com.tencent.devops.dispatch.kubernetes.pojo.PodNameSelector
 import com.tencent.devops.dispatch.kubernetes.pojo.Pool
+import com.tencent.devops.dispatch.kubernetes.pojo.SpecialBuilderConfig
 import com.tencent.devops.dispatch.kubernetes.pojo.StartBuilderParams
 import com.tencent.devops.dispatch.kubernetes.pojo.StopBuilderParams
 import com.tencent.devops.dispatch.kubernetes.pojo.TaskStatusEnum
@@ -136,6 +137,9 @@ class KubernetesContainerService @Autowired constructor(
 
     @Value("\${kubernetes.gateway.webConsoleProxy}")
     val webConsoleProxy: String = ""
+
+    @Value("\${kubernetes.privateBuilderTaint:}")
+    val privateBuilderTaint: String = ""
 
     override fun getBuilderStatus(
         buildId: String,
@@ -239,7 +243,11 @@ class KubernetesContainerService @Autowired constructor(
                     ),
                     command = listOf("/bin/sh", entrypoint),
                     nfs = null,
-                    privateBuilder = null,
+                    privateBuilder = if (privateBuilderTaint.isBlank()) {
+                        null
+                    } else {
+                        SpecialBuilderConfig(privateBuilderTaint)
+                    },
                     specialBuilder = null
                 )
             )
