@@ -29,6 +29,7 @@ package com.tencent.devops.process.engine.pojo
 
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.ChannelCode
+import com.tencent.devops.process.pojo.PipelinePermissions
 import com.tencent.devops.process.pojo.pipeline.TemplateInfo
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
@@ -84,5 +85,7 @@ data class PipelineInfo(
     @ApiModelProperty("约束模式下的模板信息", required = false)
     var templateInfo: TemplateInfo? = null,
     @ApiModelProperty("仅存在草稿", required = false)
-    var onlyDraft: Boolean? = false
+    var onlyDraft: Boolean? = false,
+    @ApiModelProperty("流水线权限", required = false)
+    var permissions: PipelinePermissions? = null,
 )
