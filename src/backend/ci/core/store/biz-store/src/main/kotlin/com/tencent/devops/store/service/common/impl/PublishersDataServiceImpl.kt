@@ -118,7 +118,7 @@ class PublishersDataServiceImpl @Autowired constructor(
         publishers.forEach {
             val publisherId = publishersDao.getPublisherId(dslContext, it.publishersCode)
             if (publisherId != null) {
-                val records = getStorePublisherInfo(userId = userId, organization =it.organization)
+                val records = getStorePublisherInfo(userId = userId, organization = it.organization)
                 records.id = publisherId
                 records.publisherCode = it.publishersCode
                 records.publisherName = it.name
