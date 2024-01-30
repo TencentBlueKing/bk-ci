@@ -27,7 +27,7 @@ class ProjectNotifyService constructor(
     val config: CommonConfig
 ) {
     companion object {
-        private val projectNotifyThreadPool = Executors.newFixedThreadPool(2)
+        private val projectNotifyThreadPool = Executors.newFixedThreadPool(5)
         private val logger = LoggerFactory.getLogger(ProjectNotifyService::class.java)
         private const val NOTIFY_USER_TO_RELATED_OBS_PRODUCT_TEMPLATE_CODE =
             "NOTIFY_USER_TO_RELATED_OBS_PRODUCT_TEMPLATE"
