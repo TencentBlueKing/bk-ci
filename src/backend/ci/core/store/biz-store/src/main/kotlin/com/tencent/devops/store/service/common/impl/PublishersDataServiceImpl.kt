@@ -31,18 +31,21 @@ import com.tencent.devops.auth.api.service.ServiceDeptResource
 import com.tencent.devops.auth.pojo.DeptInfo
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.model.store.tables.records.TStorePublisherInfoRecord
 import com.tencent.devops.model.store.tables.records.TStorePublisherMemberRelRecord
 import com.tencent.devops.project.api.service.ServiceUserResource
+import com.tencent.devops.project.pojo.user.UserDeptDetail
 import com.tencent.devops.store.constant.StoreMessageCode.GET_INFO_NO_PERMISSION
 import com.tencent.devops.store.dao.common.PublisherMemberDao
 import com.tencent.devops.store.dao.common.PublishersDao
 import com.tencent.devops.store.dao.common.StoreDockingPlatformDao
 import com.tencent.devops.store.dao.common.StoreDockingPlatformErrorCodeDao
 import com.tencent.devops.store.dao.common.StoreMemberDao
+import com.tencent.devops.store.pojo.common.PublisherDeptInfo
 import com.tencent.devops.store.pojo.common.PublisherInfo
 import com.tencent.devops.store.pojo.common.PublishersRequest
 import com.tencent.devops.store.pojo.common.StoreDockingPlatformRequest
@@ -51,8 +54,10 @@ import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.service.common.PublishersDataService
 import com.tencent.devops.store.service.common.StoreUserService
 import java.time.LocalDateTime
+import java.util.concurrent.Executors
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
@@ -67,6 +72,9 @@ class PublishersDataServiceImpl @Autowired constructor(
     private val storeUserService: StoreUserService,
     private val storeDockingPlatformErrorCodeDao: StoreDockingPlatformErrorCodeDao
 ) : PublishersDataService {
+
+    private val executorService = Executors.newSingleThreadExecutor()
+
     override fun createPublisherData(userId: String, publishers: List<PublishersRequest>): Int {
         val storePublisherInfoRecords = mutableListOf<TStorePublisherInfoRecord>()
         val storePublisherMemberRelRecords = mutableListOf<TStorePublisherMemberRelRecord>()
@@ -110,7 +118,7 @@ class PublishersDataServiceImpl @Autowired constructor(
         publishers.forEach {
             val publisherId = publishersDao.getPublisherId(dslContext, it.publishersCode)
             if (publisherId != null) {
-                val records = getStorePublisherInfo(userId = userId, organization = it.organization)
+                val records = getStorePublisherInfo(userId = userId, organization =it.organization)
                 records.id = publisherId
                 records.publisherCode = it.publishersCode
                 records.publisherName = it.name
@@ -260,29 +268,32 @@ class PublishersDataServiceImpl @Autowired constructor(
             val userDeptInfo = client.get(ServiceUserResource::class).getDetailFromCache(userId).data
             userDeptInfo?.let {
                 personPublisherInfo = TStorePublisherInfoRecord()
-                    personPublisherInfo!!.id = UUIDUtil.generate()
-                    personPublisherInfo!!.publisherCode = userId
-                    personPublisherInfo!!.publisherName = userId
-                    personPublisherInfo!!.publisherType = PublisherType.PERSON.name
-                    personPublisherInfo!!.owners = userId
-                    personPublisherInfo!!.helper = userId
-                    personPublisherInfo!!.firstLevelDeptId = it.bgId.toLong()
-                    personPublisherInfo!!.firstLevelDeptName = it.bgName
-                    personPublisherInfo!!.secondLevelDeptId = it.deptId.toLong()
-                    personPublisherInfo!!.secondLevelDeptName = it.deptName
-                    personPublisherInfo!!.thirdLevelDeptId = it.centerId.toLong()
-                    personPublisherInfo!!.thirdLevelDeptName = it.centerName
-                    personPublisherInfo!!.fourthLevelDeptId = it.groupId.toLong()
-                    personPublisherInfo!!.fourthLevelDeptName = it.groupName
-                    personPublisherInfo!!.organizationName = storeUserService.getUserFullDeptName(userId).data ?: ""
-                    personPublisherInfo!!.bgName = it.bgName
-                    personPublisherInfo!!.certificationFlag = false
-                    personPublisherInfo!!.storeType = storeType.type.toByte()
-                    personPublisherInfo!!.creator = userId
-                    personPublisherInfo!!.modifier = userId
-                    personPublisherInfo!!.createTime = LocalDateTime.now()
-                    personPublisherInfo!!.updateTime = LocalDateTime.now()
-
+                personPublisherInfo?.apply {
+                    id = UUIDUtil.generate()
+                    publisherCode = userId
+                    publisherName = userId
+                    publisherType = PublisherType.PERSON.name
+                    owners = userId
+                    helper = userId
+                    firstLevelDeptId = it.bgId.toLong()
+                    firstLevelDeptName = it.bgName
+                    secondLevelDeptId = it.businessLineId?.toLong() ?: it.deptId.toLong()
+                    secondLevelDeptName = it.businessLineName ?: it.deptName
+                    thirdLevelDeptId =
+                        if (it.businessLineId.isNullOrBlank()) it.centerId.toLong() else it.deptId.toLong()
+                    thirdLevelDeptName = if (it.businessLineId.isNullOrBlank()) it.centerName else it.deptName
+                    fourthLevelDeptId =
+                        if (it.businessLineId.isNullOrBlank()) it.groupId.toLong() else it.centerId.toLong()
+                    fourthLevelDeptName = if (it.businessLineId.isNullOrBlank()) it.groupName else it.centerName
+                    organizationName = storeUserService.getUserFullDeptName(userId).data ?: ""
+                    bgName = it.bgName
+                    certificationFlag = false
+                    this.storeType = storeType.type.toByte()
+                    creator = userId
+                    modifier = userId
+                    createTime = LocalDateTime.now()
+                    updateTime = LocalDateTime.now()
+                }
                 publishersDao.batchCreate(dslContext, listOf(personPublisherInfo!!))
             }
         }
@@ -315,6 +326,53 @@ class PublishersDataServiceImpl @Autowired constructor(
             )
         }
         return Result(publishersInfos)
+    }
+
+    override fun refreshPersonPublisherGroup(): Boolean {
+        executorService.execute {
+            val startTime = System.currentTimeMillis()
+            // 开始同步数据
+            val pageSize = PageUtil.MAX_PAGE_SIZE
+            var offset = 0
+            var personPublishs: List<String>
+            do {
+                personPublishs = publishersDao.listPersonPublish(dslContext, pageSize, offset)
+                val userDeptDetail = client.get(ServiceUserResource::class).listDetailFromCache(personPublishs).data
+                if (!userDeptDetail.isNullOrEmpty()) {
+                    val publisherDeptInfo = getPublisherDeptInfo(userDeptDetail)
+                    publishersDao.batchUpdatePublishDept(dslContext, publisherDeptInfo)
+                }
+                offset += pageSize
+            } while (personPublishs.size == pageSize)
+
+            logger.info("Syn person publisher group ${System.currentTimeMillis() - startTime}ms")
+        }
+        return true
+    }
+
+    fun getPublisherDeptInfo(userDeptDetail: List<UserDeptDetail>): List<PublisherDeptInfo> {
+        return userDeptDetail.filter { !(it.userId.isNullOrBlank()) }.map {
+            val publisherDeptInfo = PublisherDeptInfo(
+                publisherCode = it.userId!!,
+                firstLevelDeptId = it.bgId.toLong(),
+                firstLevelDeptName = it.bgName,
+                secondLevelDeptId = it.businessLineId?.toLong() ?: it.deptId.toLong(),
+                secondLevelDeptName = it.businessLineName ?: it.deptName,
+                thirdLevelDeptId = if (it.businessLineId.isNullOrBlank()) it.centerId.toLong() else it.deptId.toLong(),
+                thirdLevelDeptName = if (it.businessLineId.isNullOrBlank()) it.centerName else it.deptName,
+                fourthLevelDeptId =
+                if (it.businessLineId.isNullOrBlank()) it.groupId.toLong() else it.centerId.toLong(),
+                fourthLevelDeptName = if (it.businessLineId.isNullOrBlank()) it.groupName else it.centerName,
+                bgName = it.bgName
+            )
+            publisherDeptInfo.organizationName = listOf(
+                publisherDeptInfo.firstLevelDeptName,
+                publisherDeptInfo.secondLevelDeptName,
+                publisherDeptInfo.thirdLevelDeptName,
+                publisherDeptInfo.fourthLevelDeptName ?: ""
+            ).filter { info -> info.isNotBlank() }.joinToString("/")
+            publisherDeptInfo
+        }
     }
 
     override fun updatePlatformsLogoInfo(userId: String, platformCode: String, logoUrl: String): Boolean {
@@ -375,5 +433,9 @@ class PublishersDataServiceImpl @Autowired constructor(
             }
         }
         return publisherInfo
+    }
+
+    companion object {
+        private val logger = LoggerFactory.getLogger(PublishersDataServiceImpl::class.java)
     }
 }

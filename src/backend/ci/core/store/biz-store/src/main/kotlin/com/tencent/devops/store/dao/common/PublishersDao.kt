@@ -29,6 +29,7 @@ package com.tencent.devops.store.dao.common
 
 import com.tencent.devops.model.store.tables.TStorePublisherInfo
 import com.tencent.devops.model.store.tables.records.TStorePublisherInfoRecord
+import com.tencent.devops.store.pojo.common.PublisherDeptInfo
 import com.tencent.devops.store.pojo.common.PublisherInfo
 import com.tencent.devops.store.pojo.common.PublishersRequest
 import com.tencent.devops.store.pojo.common.enums.PublisherType
@@ -186,6 +187,36 @@ class PublishersDao {
                 .where(PUBLISHER_CODE.eq(publisherCode))
                 .and(STORE_TYPE.eq(storeType.type.toByte()))
                 .fetchOne()
+        }
+    }
+
+    fun listPersonPublish(dslContext: DSLContext, limit: Int, offset: Int): List<String> {
+        with(TStorePublisherInfo.T_STORE_PUBLISHER_INFO) {
+            return dslContext.select(PUBLISHER_CODE)
+                .from(this)
+                .where(PUBLISHER_TYPE.eq(PublisherType.PERSON.name))
+                .groupBy(PUBLISHER_CODE)
+                .orderBy(PUBLISHER_CODE, CREATE_TIME)
+                .limit(limit)
+                .offset(offset)
+                .fetchInto(String::class.java)
+        }
+    }
+
+    fun batchUpdatePublishDept(dslContext: DSLContext, publisherDeptInfo: List<PublisherDeptInfo>) {
+        with(TStorePublisherInfo.T_STORE_PUBLISHER_INFO) {
+            dslContext.batch(publisherDeptInfo.map {
+                dslContext.update(this)
+                    .set(FIRST_LEVEL_DEPT_ID, it.firstLevelDeptId)
+                    .set(FIRST_LEVEL_DEPT_NAME, it.firstLevelDeptName)
+                    .set(SECOND_LEVEL_DEPT_ID, it.secondLevelDeptId)
+                    .set(SECOND_LEVEL_DEPT_NAME, it.secondLevelDeptName)
+                    .set(THIRD_LEVEL_DEPT_ID, it.thirdLevelDeptId)
+                    .set(THIRD_LEVEL_DEPT_NAME, it.thirdLevelDeptName)
+                    .set(ORGANIZATION_NAME, it.organizationName)
+                    .set(BG_NAME, it.bgName)
+                    .where(PUBLISHER_CODE.eq(it.publisherCode))
+            }).execute()
         }
     }
 }

@@ -32,6 +32,7 @@ import com.tencent.devops.model.project.tables.records.TUserRecord
 import com.tencent.devops.project.pojo.user.UserDeptDetail
 import java.time.LocalDateTime
 import org.jooq.DSLContext
+import org.jooq.Result
 import org.springframework.stereotype.Repository
 
 @Suppress("ALL")
@@ -40,6 +41,20 @@ class UserDao {
     fun get(dslContext: DSLContext, userId: String): TUserRecord? {
         with(TUser.T_USER) {
             return dslContext.selectFrom(this).where(USER_ID.eq(userId)).fetchOne()
+        }
+    }
+
+    fun list(dslContext: DSLContext, userIds: List<String>): Result<TUserRecord> {
+        with(TUser.T_USER) {
+            return dslContext.selectFrom(this).where(USER_ID.`in`(userIds)).fetch()
+        }
+    }
+
+    fun getPublicType(dslContext: DSLContext, userId: String): TUserRecord? {
+        with(TUser.T_USER) {
+            return dslContext.selectFrom(this).where(USER_ID.eq(userId))
+                .and(USER_TYPE.eq(true))
+                .fetchOne()
         }
     }
 

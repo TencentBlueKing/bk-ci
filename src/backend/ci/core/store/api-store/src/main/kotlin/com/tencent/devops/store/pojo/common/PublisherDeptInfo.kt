@@ -25,34 +25,33 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.project.resources
+package com.tencent.devops.store.pojo.common
 
-import com.tencent.devops.common.auth.api.AuthProjectApi
-import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
-import com.tencent.devops.common.auth.code.ProjectAuthServiceCode
-import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.project.api.service.ServiceUserResource
-import com.tencent.devops.project.pojo.Result
-import com.tencent.devops.project.pojo.user.UserDeptDetail
-import com.tencent.devops.project.service.UserCacheService
-import org.springframework.beans.factory.annotation.Autowired
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
 
-@RestResource
-class ServiceUserResourceImpl @Autowired constructor(
-    private val userCacheService: UserCacheService,
-    private val projectAuthServiceCode: ProjectAuthServiceCode,
-    private val bkAuthProjectApi: AuthProjectApi
-) : ServiceUserResource {
-
-    override fun getDetailFromCache(userId: String): Result<UserDeptDetail> {
-        return Result(userCacheService.getDetailFromCache(userId))
-    }
-
-    override fun getProjectUserRoles(projectCode: String, roleId: BkAuthGroup): Result<List<String>> {
-        return Result(bkAuthProjectApi.getProjectUsers(projectAuthServiceCode, projectCode, roleId))
-    }
-
-    override fun listDetailFromCache(userIds: List<String>): Result<List<UserDeptDetail>> {
-        return Result(userCacheService.listDetailFromCache(userIds))
-    }
-}
+@ApiModel("发布者机构信息报文体")
+data class PublisherDeptInfo(
+    @ApiModelProperty("发布者标识")
+    val publisherCode: String,
+    @ApiModelProperty("一级部门ID")
+    val firstLevelDeptId: Long,
+    @ApiModelProperty("一级部门名称")
+    val firstLevelDeptName: String,
+    @ApiModelProperty("二级部门ID")
+    val secondLevelDeptId: Long,
+    @ApiModelProperty("二级部门名称")
+    val secondLevelDeptName: String,
+    @ApiModelProperty("三级部门ID")
+    val thirdLevelDeptId: Long,
+    @ApiModelProperty("三级部门名称")
+    val thirdLevelDeptName: String,
+    @ApiModelProperty("四级部门ID")
+    val fourthLevelDeptId: Long? = null,
+    @ApiModelProperty("四级部门名称")
+    val fourthLevelDeptName: String? = null,
+    @ApiModelProperty("实体组织架构")
+    var organizationName: String = "",
+    @ApiModelProperty("所属工作组BG")
+    val bgName: String
+)
