@@ -171,6 +171,7 @@ class ProjectDao {
                 .let {
                     if (channel == null) it else it.and(CHANNEL.eq(channel))
                 }
+                .and(ENABLED.eq(true))
                 .orderBy(CREATED_AT.asc())
                 .limit(limit)
                 .offset(offset)
