@@ -81,7 +81,7 @@ class ProjectNotifyService constructor(
         return true
     }
 
-    fun getProjectsForRelatedObsByBgId(bgId: Long): Map<String, List<String>> {
+    fun getProjectsForRelatedObsByBgId(bgId: Long): Pair<Int, Map<String, List<String>>> {
         var offset = 0
         val limit = PageUtil.MAX_PAGE_SIZE
         var count = 0
@@ -110,7 +110,7 @@ class ProjectNotifyService constructor(
             count += projectInfos.size
             offset += limit
         } while (projectInfos.size == limit)
-        return projectId2managers
+        return Pair(count, projectId2managers)
     }
 
     private fun sendEmail(
