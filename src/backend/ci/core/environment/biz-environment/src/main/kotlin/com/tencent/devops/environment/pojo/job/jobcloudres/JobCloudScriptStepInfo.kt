@@ -21,7 +21,7 @@ data class JobCloudScriptStepInfo(
     val scriptLanguage: String,
     @ApiModelProperty(value = "脚本参数")
     @JsonProperty("script_param")
-    val scriptParam: String,
+    val scriptParam: String?,
     @ApiModelProperty(value = "脚本超时时间，单位为秒")
     @JsonProperty("script_timeout")
     val scriptTimeout: Int,

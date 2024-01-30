@@ -14,7 +14,7 @@ data class ScriptStepInfo(
     @ApiModelProperty(value = "脚本语言：1-shell，2-bat，3-perl，4-python，5-powershell，6-sql")
     val scriptLanguage: String,
     @ApiModelProperty(value = "脚本参数")
-    val scriptParam: String,
+    val scriptParam: String?,
     @ApiModelProperty(value = "脚本超时时间，单位为秒")
     val scriptTimeout: Int,
     @ApiModelProperty(value = "执行账号")
