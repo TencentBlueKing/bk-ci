@@ -8,8 +8,7 @@
     "js-cookie": "^3.0.1",
     "vee-validate": "^2.0.3",
     "vue-file-upload": "^0.1.12",
-    "vue-property-decorator": "^6.0.0",
-    "vue": "~2.7.0",
+    "vue": "~2.7.16",
     "vuex-class": "^0.3.0"
   },
   "devDependencies": {
@@ -50,7 +49,6 @@
     "style-loader": "^3.3.1",
     "terser-webpack-plugin": "^5.3.6",
     "vue-loader": "^15.10.0",
-    "vue-property-decorator": "^6.0.0",
     "webpack": "^5.58.1"
   },
   "scripts": {

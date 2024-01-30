@@ -1255,7 +1255,7 @@
   "noLabels": "No tags for current project",
   "deleteAlready": "Deleted",
   "removedPipelineError": "Failure to move out of the line",
-  "groupNameTooLong": "Pipeline group names cannot exceed 16 characters in length",
+  "groupNameTooLong": "Pipeline group names cannot exceed 32 characters in length",
   "groupNameNotAllowEmpty": "The pipeline group name cannot be empty",
   "pipelineLockTips": "The pipeline has been disabled. It cannot be triggered in any way",
   "pipelineManualDisable": "This pipeline is not configured for manual trigger",

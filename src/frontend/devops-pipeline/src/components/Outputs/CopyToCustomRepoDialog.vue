@@ -125,8 +125,8 @@
                     if (res) {
                         const self = this
                         const h = this.$createElement
-                        message = h('p', {}, [
-                            self.$t('details.copyToCustomSuc', [this.artifact.name, this.activeFolder]),
+                        message = h('span', {}, [
+                            self.$t('details.copyToCustomSuc', [self.artifact.name, self.activeFolder]),
                             h(
                                 'bk-link',
                                 {
@@ -134,29 +134,27 @@
                                         theme: 'primary',
                                         target: '_blank',
                                         href: `${WEB_URL_PREFIX}/repo/${
-                                            this.$route.params.projectId
+                                            self.$route.params.projectId
                                         }/generic?repoName=custom&path=${encodeURIComponent(
-                                            `${this.activeFolder}/default`
+                                            `${self.activeFolder}/default`
                                         )}`
                                     }
                                 },
-                                [
-                                    h(
-                                        'span',
-                                        {
-                                            class: 'go-dist-link'
-                                        },
-                                        [
-                                            h(Logo, {
-                                                props: {
-                                                    name: 'tiaozhuan',
-                                                    size: 14
-                                                }
-                                            }),
-                                            this.$t('details.goDistFolder')
-                                        ]
-                                    )
-                                ]
+                                h(
+                                    'span',
+                                    {
+                                        class: 'go-dist-link'
+                                    },
+                                    [
+                                        h(Logo, {
+                                            props: {
+                                                name: 'tiaozhuan',
+                                                size: 14
+                                            }
+                                        }),
+                                        self.$t('details.goDistFolder')
+                                    ]
+                                )
                             )
                         ])
                         theme = 'success'

@@ -23,9 +23,9 @@
 
 import Vue from 'vue'
 import App from './App'
-import focus from './directives/focus/index.js'
 import enClass from './directives/focus/en-class'
 import enStyle from './directives/focus/en-style'
+import focus from './directives/focus/index.js'
 import createRouter from './router'
 import store from './store'
 
@@ -49,7 +49,6 @@ import bkMagic from 'bk-magic-vue'
 import BkPipeline from 'bkui-pipeline'
 import { pipelineDocs } from '../../common-lib/docs'
 // 权限指令
-// import VueCompositionAPI from '@vue/composition-api'
 import { BkPermission, PermissionDirective } from 'bk-permission'
 import 'bk-permission/dist/main.css'
 
@@ -104,12 +103,13 @@ String.prototype.isBkVar = function () {
 
 Vue.mixin({
     methods: {
-        handleError (e, data) {
+        handleError (e, data, delay = 3000) {
             if (e.code === 403) { // 没有权限编辑
                 handlePipelineNoPermission(data)
             } else {
                 this.$showTips({
                     message: e.message || e,
+                    delay,
                     theme: 'error'
                 })
             }

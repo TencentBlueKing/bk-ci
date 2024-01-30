@@ -36,6 +36,9 @@ module.exports = (env = {}, argv) => {
             library: 'lib',
             path: path.join(__dirname, 'dist')
         },
+        externals: {
+            vue: 'Vue'
+        },
         resolve: {
             fallback: {
                 path: false

@@ -1252,7 +1252,7 @@
   "noLabels": "当前项目暂无标签",
   "deleteAlready": "流水线已删除",
   "removedPipelineError": "移除流水线失败",
-  "groupNameTooLong": "流水线组名称长度不能超过16个字符",
+  "groupNameTooLong": "流水线组名称长度不能超过32个字符",
   "groupNameNotAllowEmpty": "流水线组名称不能为空",
   "pipelineLockTips": "流水线已禁用，任何方式都不可触发流水线",
   "pipelineManualDisable": "该流水线未配置手动触发",
