@@ -267,33 +267,30 @@ class PublishersDataServiceImpl @Autowired constructor(
             // 如果未注册发布者则自动注册并返回
             val userDeptInfo = client.get(ServiceUserResource::class).getDetailFromCache(userId).data
             userDeptInfo?.let {
+                val publisherDeptInfo = getPublisherDeptInfo(userDeptInfo)
                 personPublisherInfo = TStorePublisherInfoRecord()
-                personPublisherInfo?.apply {
-                    id = UUIDUtil.generate()
-                    publisherCode = userId
-                    publisherName = userId
-                    publisherType = PublisherType.PERSON.name
-                    owners = userId
-                    helper = userId
-                    firstLevelDeptId = it.bgId.toLong()
-                    firstLevelDeptName = it.bgName
-                    secondLevelDeptId = it.businessLineId?.toLong() ?: it.deptId.toLong()
-                    secondLevelDeptName = it.businessLineName ?: it.deptName
-                    thirdLevelDeptId =
-                        if (it.businessLineId.isNullOrBlank()) it.centerId.toLong() else it.deptId.toLong()
-                    thirdLevelDeptName = if (it.businessLineId.isNullOrBlank()) it.centerName else it.deptName
-                    fourthLevelDeptId =
-                        if (it.businessLineId.isNullOrBlank()) it.groupId.toLong() else it.centerId.toLong()
-                    fourthLevelDeptName = if (it.businessLineId.isNullOrBlank()) it.groupName else it.centerName
-                    organizationName = storeUserService.getUserFullDeptName(userId).data ?: ""
-                    bgName = it.bgName
-                    certificationFlag = false
-                    this.storeType = storeType.type.toByte()
-                    creator = userId
-                    modifier = userId
-                    createTime = LocalDateTime.now()
-                    updateTime = LocalDateTime.now()
-                }
+                personPublisherInfo!!.id = UUIDUtil.generate()
+                personPublisherInfo!!.publisherCode = userId
+                personPublisherInfo!!.publisherName = userId
+                personPublisherInfo!!.publisherType = PublisherType.PERSON.name
+                personPublisherInfo!!.owners = userId
+                personPublisherInfo!!.helper = userId
+                personPublisherInfo!!.firstLevelDeptId = publisherDeptInfo.firstLevelDeptId
+                personPublisherInfo!!.firstLevelDeptName = publisherDeptInfo.firstLevelDeptName
+                personPublisherInfo!!.secondLevelDeptId = publisherDeptInfo.secondLevelDeptId
+                personPublisherInfo!!.secondLevelDeptName = publisherDeptInfo.secondLevelDeptName
+                personPublisherInfo!!.thirdLevelDeptId = publisherDeptInfo.thirdLevelDeptId
+                personPublisherInfo!!.thirdLevelDeptName = publisherDeptInfo.thirdLevelDeptName
+                personPublisherInfo!!.fourthLevelDeptId = publisherDeptInfo.fourthLevelDeptId
+                personPublisherInfo!!.fourthLevelDeptName = publisherDeptInfo.fourthLevelDeptName
+                personPublisherInfo!!.organizationName = publisherDeptInfo.organizationName
+                personPublisherInfo!!.bgName = publisherDeptInfo.bgName
+                personPublisherInfo!!.certificationFlag = false
+                personPublisherInfo!!.storeType = storeType.type.toByte()
+                personPublisherInfo!!.creator = userId
+                personPublisherInfo!!.modifier = userId
+                personPublisherInfo!!.createTime = LocalDateTime.now()
+                personPublisherInfo!!.updateTime = LocalDateTime.now()
                 publishersDao.batchCreate(dslContext, listOf(personPublisherInfo!!))
             }
         }
@@ -339,7 +336,7 @@ class PublishersDataServiceImpl @Autowired constructor(
                 personPublishs = publishersDao.listPersonPublish(dslContext, pageSize, offset)
                 val userDeptDetail = client.get(ServiceUserResource::class).listDetailFromCache(personPublishs).data
                 if (!userDeptDetail.isNullOrEmpty()) {
-                    val publisherDeptInfo = getPublisherDeptInfo(userDeptDetail)
+                    val publisherDeptInfo = getPublisherDeptInfos(userDeptDetail)
                     publishersDao.batchUpdatePublishDept(dslContext, publisherDeptInfo)
                 }
                 offset += pageSize
@@ -350,8 +347,8 @@ class PublishersDataServiceImpl @Autowired constructor(
         return true
     }
 
-    fun getPublisherDeptInfo(userDeptDetail: List<UserDeptDetail>): List<PublisherDeptInfo> {
-        return userDeptDetail.filter { !(it.userId.isNullOrBlank()) }.map {
+    private fun getPublisherDeptInfo(userDeptDetail: UserDeptDetail): PublisherDeptInfo{
+        userDeptDetail.let {
             val publisherDeptInfo = PublisherDeptInfo(
                 publisherCode = it.userId!!,
                 firstLevelDeptId = it.bgId.toLong(),
@@ -371,7 +368,13 @@ class PublishersDataServiceImpl @Autowired constructor(
                 publisherDeptInfo.thirdLevelDeptName,
                 publisherDeptInfo.fourthLevelDeptName ?: ""
             ).filter { info -> info.isNotBlank() }.joinToString("/")
-            publisherDeptInfo
+            return publisherDeptInfo
+        }
+    }
+
+    private fun getPublisherDeptInfos(userDeptDetail: List<UserDeptDetail>): List<PublisherDeptInfo> {
+        return userDeptDetail.filter { !(it.userId.isNullOrBlank()) }.map {
+            getPublisherDeptInfo(it)
         }
     }
 
