@@ -76,7 +76,7 @@ class ParseHashListService @Autowired constructor(
                 val bkCloudId = it[T_NODE_CLOUD_AREA_ID] as Long
                 val ip = it[T_NODE_NODE_IP] as String
                 if (logger.isDebugEnabled)
-                    logger.debug("[getHostFromNodeList]hostId:${hostId}, bkCloudId:${bkCloudId}, ip:${ip}")
+                    logger.debug("[getHostFromNodeList]hostId:$hostId, bkCloudId:$bkCloudId, ip:$ip")
                 Host(
                     bkHostId = hostId,
                     bkCloudId = bkCloudId,
