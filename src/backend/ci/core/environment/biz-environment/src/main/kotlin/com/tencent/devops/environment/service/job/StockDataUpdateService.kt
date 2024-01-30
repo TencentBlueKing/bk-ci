@@ -174,7 +174,7 @@ class StockDataUpdateService @Autowired constructor(
                 // 4. CC中信息（host_id和云区域id）改变 - 更新信息，不变 - 不操作
                 val nodeUpdateInfoList = nodeRecords.filterNot {
                     it[T_NODE_HOST_ID] as? Long == ipToCCInfoMap!![it[T_NODE_NODE_IP] as String]?.bkHostId &&
-                        it[T_NODE_CLOUD_AREA_ID] as Long == ipToCCInfoMap!![it[T_NODE_NODE_IP] as String]
+                        it[T_NODE_CLOUD_AREA_ID] as? Long == ipToCCInfoMap!![it[T_NODE_NODE_IP] as String]
                         ?.bkCloudId?.toLong()
                 }.takeIf { it.isNotEmpty() }!!.map {
                     HostIdAndCloudAreaIdInfo(
