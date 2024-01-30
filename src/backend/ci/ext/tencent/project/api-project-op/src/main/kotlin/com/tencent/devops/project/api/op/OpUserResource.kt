@@ -105,7 +105,7 @@ interface OpUserResource {
     @Path("/senior/user/delete/{userId}")
     fun deleteSeniorUsers(
         @ApiParam("用户ID", required = true)
-        @QueryParam("userId")
+        @PathParam("userId")
         userId: String
     ): Result<Boolean>
 }

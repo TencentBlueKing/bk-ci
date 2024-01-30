@@ -43,10 +43,12 @@ class ProjectNotifyService constructor(
             val projectInfo = projectService.getByEnglishName(
                 englishName = it
             ) ?: return@foreach
-            sendEmail(
-                projectName = projectInfo.projectName,
-                projectId = it
-            )
+            if (projectInfo.productId == null && projectInfo.enabled == true) {
+                sendEmail(
+                    projectName = projectInfo.projectName,
+                    projectId = it
+                )
+            }
         }
         return true
     }
@@ -85,7 +87,7 @@ class ProjectNotifyService constructor(
         return true
     }
 
-    fun getProjectsForRelatedObsByBgId(bgId: Long): Pair<Int, List<String>> {
+    fun getProjectsForRelatedObsByCondition(sendEmailForProjectByConditionDTO: SendEmailForProjectByConditionDTO): Pair<Int, List<String>> {
         var offset = 0
         val limit = PageUtil.MAX_PAGE_SIZE
         var count = 0
@@ -93,14 +95,19 @@ class ProjectNotifyService constructor(
         do {
             val projectInfos = projectService.listMigrateProjects(
                 migrateProjectConditionDTO = MigrateProjectConditionDTO(
-                    bgId = bgId,
+                    bgId = sendEmailForProjectByConditionDTO.bgId,
+                    deptId = sendEmailForProjectByConditionDTO.deptId,
+                    centerId = sendEmailForProjectByConditionDTO.centerId,
                     relatedProduct = false,
                     routerTag = AuthSystemType.RBAC_AUTH_TYPE
                 ),
                 limit = limit,
                 offset = offset
             )
-            logger.info("get project for related obs by bg id:$bgId|$offset|$limit|$projectInfos")
+            logger.info(
+                "get project for related obs by bg condition:$sendEmailForProjectByConditionDTO|" +
+                    "$offset|$limit|$projectInfos"
+            )
             if (projectInfos.isEmpty()) break
             projectInfos.forEach forEach@{
                 projectIds.add(it.englishName)

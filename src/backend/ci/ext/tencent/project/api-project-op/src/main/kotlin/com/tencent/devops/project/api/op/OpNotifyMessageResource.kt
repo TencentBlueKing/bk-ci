@@ -36,7 +36,6 @@ import javax.ws.rs.Consumes
 import javax.ws.rs.GET
 import javax.ws.rs.POST
 import javax.ws.rs.Path
-import javax.ws.rs.PathParam
 import javax.ws.rs.Produces
 import javax.ws.rs.core.MediaType
 
@@ -63,10 +62,9 @@ interface OpNotifyMessageResource {
 
     @ApiOperation("推动项目关联运营产品-根据BgID")
     @GET
-    @Path("/getProjectForRelatedObsByBgId/{bgId}")
-    fun getProjectsForRelatedObsByBgId(
-        @ApiParam(value = "bgId", required = true)
-        @PathParam("bgId")
-        bgId: Long,
+    @Path("/getProjectForRelatedObsByCondition/{bgId}")
+    fun getProjectsForRelatedObsByCondition(
+        @ApiParam(value = "通过条件对项目进行邮件通知", required = true)
+        sendEmailForProjectByConditionDTO: SendEmailForProjectByConditionDTO
     ): Result<Pair<Int, List<String>>>
 }
