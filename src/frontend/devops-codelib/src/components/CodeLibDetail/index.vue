@@ -40,13 +40,19 @@
                                 action: RESOURCE_ACTION.DELETE
                             }
                         }"
+                        v-bk-tooltips="{
+                            content: $t('codelib.请先关闭 PAC 模式，再删除代码库'),
+                            disabled: !curRepo.enablePac
+                        }"
                         @click="handleDeleteCodeLib"
                     >
                         <Icon
-                        
                             name="delete"
                             size="14"
                             class="delete-icon"
+                            :class="{
+                                'disable-delete-icon': curRepo.enablePac
+                            }"
                         />
                     </span>
                 </div>
@@ -208,7 +214,7 @@
                     { name: 'trigger', label: this.$t('codelib.trigger') },
                     { name: 'triggerEvent', label: this.$t('codelib.triggerEvent') }
                 ],
-                active: 'basic',
+                active: '',
                 repoInfo: {},
                 pipelinesList: [],
                 pipelinesDialogPayload: {
@@ -291,17 +297,9 @@
                 immediate: true
             }
         },
-        created () {
+        mounted () {
             const tab = this.$route.query.tab || (this.eventId ? 'triggerEvent' : 'basic')
-            if (tab) {
-                this.active = tab
-                this.$router.push({
-                    query: {
-                        ...this.$route.query,
-                        tab: tab
-                    }
-                })
-            }
+            this.active = tab
         },
         methods: {
             ...mapActions('codelib', [
@@ -450,6 +448,7 @@
              * 删除代码库
              */
             async handleDeleteCodeLib () {
+                if (this.curRepo.enablePac) return
                 if (this.curRepo.repositoryHashId !== this.pipelinesDialogPayload.repositoryHashId) {
                     this.pipelinesDialogPayload.repositoryHashId = this.curRepo.repositoryHashId
                     this.pipelinesList = []
@@ -616,6 +615,9 @@
             margin-left: 5px;
             color: #979BA5;
             display: none;
+        }
+        .disable-delete-icon {
+            cursor: not-allowed;
         }
         
         .edit-icon {
