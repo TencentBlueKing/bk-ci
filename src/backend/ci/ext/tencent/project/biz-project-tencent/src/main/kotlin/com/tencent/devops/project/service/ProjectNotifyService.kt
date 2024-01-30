@@ -4,6 +4,7 @@ import com.tencent.devops.auth.api.service.ServiceProjectAuthResource
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
 import com.tencent.devops.common.auth.api.pojo.MigrateProjectConditionDTO
+import com.tencent.devops.common.auth.enums.AuthSystemType
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.client.ClientTokenService
 import com.tencent.devops.common.service.config.CommonConfig
@@ -83,13 +84,15 @@ class ProjectNotifyService constructor(
     fun getProjectsForRelatedObsByBgId(bgId: Long): Map<String, List<String>> {
         var offset = 0
         val limit = PageUtil.MAX_PAGE_SIZE
+        var count = 0
         val projectId2managers = mutableMapOf<String, List<String>>()
         do {
             val projectInfos = projectService.listMigrateProjects(
                 migrateProjectConditionDTO = MigrateProjectConditionDTO(
                     bgId = bgId,
                     relatedProduct = false,
-                    channel = ProjectChannelCode.BS.name
+                    channel = ProjectChannelCode.BS.name,
+                    routerTag = AuthSystemType.RBAC_AUTH_TYPE
                 ),
                 limit = limit,
                 offset = offset
@@ -104,6 +107,7 @@ class ProjectNotifyService constructor(
                 ).data ?: return@forEach
                 projectId2managers[it.englishName] = managers
             }
+            count += projectInfos.size
             offset += limit
         } while (projectInfos.size == limit)
         return projectId2managers
