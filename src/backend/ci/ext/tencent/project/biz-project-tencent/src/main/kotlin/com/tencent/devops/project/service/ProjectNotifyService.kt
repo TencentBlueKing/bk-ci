@@ -34,7 +34,7 @@ class ProjectNotifyService constructor(
     }
 
     private val projectInfoShowUri = "${config.devopsHostGateway}/console/manage/%s/show"
-    private val projectManageUri = "${config.devopsHostGateway}/console/pm"
+    private val projectEditUri = "${config.devopsHostGateway}/console/manage/%s/edit"
 
     fun sendEmailForRelatedObsByProjectIds(projectIds: List<String>): Boolean {
         logger.info("send email for related obs by projectIds:$projectIds")
@@ -137,7 +137,7 @@ class ProjectNotifyService constructor(
         val bodyParams = mapOf(
             "projectName" to projectName,
             "projectInfoShowUri" to String.format(projectInfoShowUri, projectId),
-            "projectManageUri" to projectManageUri
+            "projectEditUri" to String.format(projectEditUri, projectId),
         )
         // 发邮件
         val request = SendNotifyMessageTemplateRequest(
