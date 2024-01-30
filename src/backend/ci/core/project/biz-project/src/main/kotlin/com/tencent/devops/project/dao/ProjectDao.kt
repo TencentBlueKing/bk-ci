@@ -139,6 +139,7 @@ class ProjectDao {
         val creator = migrateProjectConditionDTO.projectCreator
         val routerTag = migrateProjectConditionDTO.routerTag
         val isRelatedProduct = migrateProjectConditionDTO.relatedProduct
+        val channel = migrateProjectConditionDTO.channel
         return with(TProject.T_PROJECT) {
             dslContext.selectFrom(this)
                 .where(APPROVAL_STATUS.notIn(UNSUCCESSFUL_CREATE_STATUS))
@@ -166,6 +167,9 @@ class ProjectDao {
                         true -> it.and(PRODUCT_ID.isNotNull)
                         else -> it.and(PRODUCT_ID.isNull)
                     }
+                }
+                .let {
+                    if (channel == null) it else it.and(CHANNEL.eq(channel))
                 }
                 .orderBy(CREATED_AT.asc())
                 .limit(limit)

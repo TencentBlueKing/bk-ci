@@ -10,6 +10,7 @@ import com.tencent.devops.common.service.config.CommonConfig
 import com.tencent.devops.common.service.trace.TraceTag
 import com.tencent.devops.notify.api.service.ServiceNotifyMessageTemplateResource
 import com.tencent.devops.notify.pojo.SendNotifyMessageTemplateRequest
+import com.tencent.devops.project.pojo.enums.ProjectChannelCode
 import com.tencent.devops.project.service.tof.TOFService
 import org.slf4j.LoggerFactory
 import org.slf4j.MDC
@@ -87,7 +88,8 @@ class ProjectNotifyService constructor(
             val projectInfos = projectService.listMigrateProjects(
                 migrateProjectConditionDTO = MigrateProjectConditionDTO(
                     bgId = bgId,
-                    relatedProduct = false
+                    relatedProduct = false,
+                    channel = ProjectChannelCode.BS.name
                 ),
                 limit = limit,
                 offset = offset
