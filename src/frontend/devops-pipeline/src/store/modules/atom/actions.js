@@ -230,6 +230,7 @@ export default {
                 }
             })
             return {
+                newYaml: data.newYaml,
                 yamlSupported: data.yamlSupported,
                 yamlInvalidMsg: data.yamlInvalidMsg
             }
@@ -240,17 +241,22 @@ export default {
             }
         }
     },
-    async transferModelToYaml ({ commit, state }, { projectId, pipelineId, actionType, ...params }) {
-        try {
-            const { data } = await request.post(`${PROCESS_API_URL_PREFIX}/user/transfer/projects/${projectId}`, params, {
-                params: {
-                    pipelineId,
-                    actionType
-                }
-            })
-            if (data.yamlInvalidMsg) {
-                throw new Error(data.yamlInvalidMsg)
+    async transfer (_, { projectId, pipelineId, actionType, ...params }) {
+        const { data } = await request.post(`${PROCESS_API_URL_PREFIX}/user/transfer/projects/${projectId}`, params, {
+            params: {
+                pipelineId,
+                actionType
             }
+        })
+        if (data.yamlInvalidMsg) {
+            throw new Error(data.yamlInvalidMsg)
+        }
+        return data
+    },
+    async transferPipeline ({ commit, dispatch }, { projectId, pipelineId, actionType, ...params }) {
+        try {
+            const data = await dispatch('transfer', { projectId, pipelineId, actionType, ...params })
+
             switch (actionType) {
                 case 'FULL_YAML2MODEL':
                     if (data?.modelAndSetting?.model) {

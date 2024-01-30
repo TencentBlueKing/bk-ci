@@ -123,16 +123,16 @@
 
                     })
                     if (res) {
-                        message = this.$createElement('span', {}, [
-                            this.$t('details.copyToCustomSuc', [this.artifact.name, this.activeFolder]),
-                            this.$createElement(
+                        const self = this
+                        const h = this.$createElement
+                        message = h('p', {}, [
+                            self.$t('details.copyToCustomSuc', [this.artifact.name, this.activeFolder]),
+                            h(
                                 'bk-link',
                                 {
-                                    domProps: {
-                                        target: '_blank'
-                                    },
                                     props: {
                                         theme: 'primary',
+                                        target: '_blank',
                                         href: `${WEB_URL_PREFIX}/repo/${
                                             this.$route.params.projectId
                                         }/generic?repoName=custom&path=${encodeURIComponent(
@@ -141,13 +141,13 @@
                                     }
                                 },
                                 [
-                                    this.$createElement(
+                                    h(
                                         'span',
                                         {
                                             class: 'go-dist-link'
                                         },
                                         [
-                                            this.$createElement(Logo, {
+                                            h(Logo, {
                                                 props: {
                                                     name: 'tiaozhuan',
                                                     size: 14

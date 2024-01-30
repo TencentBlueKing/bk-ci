@@ -18,12 +18,11 @@
             />
         </section>
         <template v-if="container">
+            <YamlPreviewPopup v-if="showAtomYaml" @close="resetPreviewAtomYaml" :yaml="atomYaml" />
             <atom-selector
+                v-else
                 v-bind="editingElementPos"
                 :container="container"
-                :show-atom-yaml="showAtomYaml"
-                :before-close="resetPreviewAtomYaml"
-                :atom-yaml="atomYaml"
             />
         </template>
         <template v-if="editingElementPos">
@@ -80,11 +79,13 @@
     import { mapState, mapActions, mapGetters } from 'vuex'
     import AtomSelector from '@/components/AtomSelector'
     import AtomPropertyPanel from '@/components/AtomPropertyPanel'
+    import YamlPreviewPopup from '@/components/YamlPreviewPopup'
     export default {
         components: {
             YamlEditor,
             AtomSelector,
-            AtomPropertyPanel
+            AtomPropertyPanel,
+            YamlPreviewPopup
         },
         props: {
             editable: {
@@ -221,7 +222,6 @@
                     this.isPreviewingAtomYAML = true
                     const yaml = await this.atomModel2Yaml()
                     this.showAtomYaml = true
-                    this.toggleAtomSelectorPopup(true)
                     this.atomYaml = yaml
                 } catch (error) {
                     console.error(error)

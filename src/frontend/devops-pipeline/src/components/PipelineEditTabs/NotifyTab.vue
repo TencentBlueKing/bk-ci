@@ -67,7 +67,7 @@
             </div>
             <div class="edit-notify-footer" slot="footer">
                 <bk-button theme="primary" @click="handleSaveNotify">
-                    {{$t('new')}}
+                    {{$t('confirm')}}
                 </bk-button>
                 <bk-button style="margin-left: 4px;" @click="hideSlider">
                     {{$t('cancel')}}
@@ -174,7 +174,6 @@
                 return this[type]
             },
             getShowContent (col, val) {
-                console.log(col, val)
                 let res = ''
                 if (col === 'types') {
                     res = val.join(',')
@@ -183,6 +182,7 @@
                 } else {
                     res = val
                 }
+                res = res || '--'
                 return res
             },
             handleDelete (type, index) {

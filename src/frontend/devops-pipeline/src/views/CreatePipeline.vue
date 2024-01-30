@@ -699,7 +699,7 @@
                 .bk-form-checkbox {
                     display: flex;
                     align-items: center;
-                    width: 100%;
+                    flex: 1;
                     .bk-checkbox-text {
                         flex: 1;
                     }

@@ -44,8 +44,7 @@ export default {
     data () {
         return {
             pipelineMap: {},
-            hasTemplatePermission: false,
-            hasCreatePermission: false
+            hasTemplatePermission: false
         }
     },
     computed: {
@@ -61,7 +60,6 @@ export default {
     },
     created () {
         this.checkHasTemplatePermission()
-        this.checkHasCreatePermission()
     },
     methods: {
         ...mapMutations('pipelines', [
@@ -76,7 +74,6 @@ export default {
             'deletePipeline',
             'copyPipeline',
             'restorePipeline',
-            'requestHasCreatePermission',
             'lockPipeline'
         ]),
         async checkHasTemplatePermission () {
@@ -183,10 +180,6 @@ export default {
             }
             return ''
         },
-        async checkHasCreatePermission () {
-            const res = await this.requestHasCreatePermission(this.$route.params)
-            this.hasCreatePermission = res
-        },
         getPipelineActions (pipeline) {
             const isShowRemovedAction = ![
                 ALL_PIPELINE_VIEW_ID,
@@ -229,7 +222,7 @@ export default {
                     ? [{
                         text: this.$t('copyAsTemplateInstance'),
                         handler: () => this.copyAsTemplateInstance(pipeline),
-                        hasPermission: this.hasCreatePermission,
+                        hasPermission: pipeline.permissions.canCreate,
                         disablePermissionApi: true,
                         permissionData: {
                             projectId: pipeline.projectId,
