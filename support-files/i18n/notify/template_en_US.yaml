@@ -910,3 +910,18 @@
     body: "The data of the pipeline [${pipelineId}] under the project [${projectId}] was successfully migrated, and there was a total of 1 successfully migrated pipeline."
   creator: "system"
   modifior: "system"
+- index: 44
+  id: "ea98239a51a74f8db9a022a809bc2023"
+  templateCode: "NOTIFY_USER_TO_RELATED_OBS_PRODUCT_TEMPLATE"
+  templateName: "Notify user to related obs product template"
+  notifyTypeScope:
+    - "EMAIL"
+  priority: 0
+  source: 0
+  weworkTemplate:
+    id: "390987c50179122388da742924fc2005"
+    sender: "DevOps"
+    title: "[Important] Notice regarding the need to supplement the associated [OBS operating products] of project [${projectName}]"
+    body: "[Important] Notice regarding the need to supplement the associated [OBS operating products] of project [${projectName}]"
+  creator: "system"
+  modifior: "system"
