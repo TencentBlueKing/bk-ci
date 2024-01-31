@@ -525,7 +525,7 @@ class ScmProxyService @Autowired constructor(
                 type = ScmType.CODE_TGIT,
                 privateKey = null,
                 passPhrase = null,
-                token = credInfo.privateKey,
+                token = credInfo.token,
                 region = null,
                 userName = credInfo.username,
                 event = convertEvent(codeEventType)
