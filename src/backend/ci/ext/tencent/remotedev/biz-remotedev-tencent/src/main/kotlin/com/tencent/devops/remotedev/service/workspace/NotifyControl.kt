@@ -40,6 +40,7 @@ import com.tencent.devops.notify.pojo.NotifyMessageContextRequest
 import com.tencent.devops.notify.pojo.SendNotifyMessageTemplateRequest
 import com.tencent.devops.remotedev.common.Constansts.ADMIN_NAME
 import com.tencent.devops.remotedev.common.exception.ErrorCodeEnum
+import com.tencent.devops.remotedev.dao.ProjectNotifyDao
 import com.tencent.devops.remotedev.dao.WorkspaceDao
 import com.tencent.devops.remotedev.pojo.WebSocketActionType
 import com.tencent.devops.remotedev.pojo.WorkspaceAction
@@ -68,7 +69,8 @@ class NotifyControl @Autowired constructor(
     private val workspaceDao: WorkspaceDao,
     private val redisOperation: RedisOperation,
     private val webSocketDispatcher: WebSocketDispatcher,
-    private val taiClient: TaiClient
+    private val taiClient: TaiClient,
+    private val notifyDao: ProjectNotifyDao
 ) {
 
     @Value("\${notice.wework:#{null}}")
@@ -91,6 +93,7 @@ class NotifyControl @Autowired constructor(
     }
 
     fun notifyWorkspaceInfo(
+        userId: String?,
         notifyData: WorkspaceNotifyData
     ) {
         val workspace = workspaceDao.fetchNotifyWorkspaces(
@@ -119,6 +122,7 @@ class NotifyControl @Autowired constructor(
                 projectId = ws["PROJECT_ID"] as String
             )
         }
+        notifyDao.add(dslContext, userId, notifyData)
     }
 
     fun notify4User(
