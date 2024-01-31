@@ -116,7 +116,7 @@ class StockDataUpdateService @Autowired constructor(
                 val buildNodeUpdateInfo = buildNodesAgentVersionRecords.map {
                     AgentVersionInfo(
                         nodeId = it[T_ENVIRONMENT_THIRDPARTY_AGENT_NODE_ID] as Long,
-                        agentVersion = it[T_ENVIRONMENT_THIRDPARTY_AGENT_MASTER_VERSION] as? String,
+                        agentVersion = it[T_ENVIRONMENT_THIRDPARTY_AGENT_MASTER_VERSION] as? String
                     )
                 }
                 nodeDao.updateBuildAgentVersionByNodeId(dslContext, buildNodeUpdateInfo)

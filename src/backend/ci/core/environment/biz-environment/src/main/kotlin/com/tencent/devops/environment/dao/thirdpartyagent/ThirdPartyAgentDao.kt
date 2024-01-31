@@ -31,7 +31,6 @@ import com.tencent.devops.common.api.enums.AgentStatus
 import com.tencent.devops.common.api.pojo.OS
 import com.tencent.devops.environment.constant.T_ENVIRONMENT_THIRDPARTY_AGENT_MASTER_VERSION
 import com.tencent.devops.environment.constant.T_ENVIRONMENT_THIRDPARTY_AGENT_NODE_ID
-import com.tencent.devops.environment.constant.T_NODE_NODE_ID
 import com.tencent.devops.model.environment.tables.TEnvironmentThirdpartyAgent
 import com.tencent.devops.model.environment.tables.TEnvironmentThirdpartyAgentAction
 import com.tencent.devops.model.environment.tables.records.TEnvironmentThirdpartyAgentActionRecord

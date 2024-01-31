@@ -33,5 +33,5 @@ data class AgentVersionInfo(
     @ApiModelProperty(value = "节点ID")
     val nodeId: Long,
     @ApiModelProperty(value = "节点IP")
-    val agentVersion: String?,
+    val agentVersion: String?
 )
