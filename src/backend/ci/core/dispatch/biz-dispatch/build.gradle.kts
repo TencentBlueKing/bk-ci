@@ -31,7 +31,7 @@ dependencies {
     api(project(":core:dispatch:api-dispatch"))
     api(project(":core:dispatch:model-dispatch"))
     api(project(":core:notify:api-notify"))
-    api(project(":core:monitoring:api-monitoring"))
+    api(project(":core:misc:api-monitoring"))
     api(project(":core:log:api-log"))
     api(project(":core:common:common-service"))
     api(project(":core:common:common-web"))

@@ -2,7 +2,7 @@
 
 **数据库名：** devops_ci_quality
 
-**文档版本：** 1.0.0
+**文档版本：** 1.0.1
 
 **文档描述：** devops_ci_quality的数据库文档
 
@@ -26,6 +26,7 @@
 | [T_QUALITY_RULE_BUILD_HIS_OPERATION](#T_QUALITY_RULE_BUILD_HIS_OPERATION) |  |
 | [T_QUALITY_RULE_MAP](#T_QUALITY_RULE_MAP) |  |
 | [T_QUALITY_RULE_OPERATION](#T_QUALITY_RULE_OPERATION) |  |
+| [T_QUALITY_RULE_REVIEWER](#T_QUALITY_RULE_REVIEWER) | 红线审核人 |
 | [T_QUALITY_RULE_TEMPLATE](#T_QUALITY_RULE_TEMPLATE) | 质量红线模板表 |
 | [T_QUALITY_TEMPLATE_INDICATOR_MAP](#T_QUALITY_TEMPLATE_INDICATOR_MAP) | 模板-指标关系表 |
 | [T_RULE](#T_RULE) |  |
@@ -188,9 +189,10 @@
 |  9   | UPDATE_USER |   varchar   | 64 |   0    |    Y     |  N   |       | 更新用户  |
 |  10   | CREATE_TIME |   datetime   | 19 |   0    |    Y     |  N   |       | 创建时间  |
 |  11   | UPDATE_TIME |   datetime   | 19 |   0    |    Y     |  N   |       | 更新时间  |
-|  12   | ATOM_VERSION |   varchar   | 16 |   0    |    Y     |  N   |   1.0.0    | 插件版本  |
+|  12   | ATOM_VERSION |   varchar   | 30 |   0    |    Y     |  N   |   1.0.0    | 插件版本  |
 |  13   | TEST_PROJECT |   varchar   | 64 |   0    |    N     |  N   |       | 测试的项目  |
-|  14   | TAG |   varchar   | 64 |   0    |    Y     |  N   |       |   |
+|  14   | CONTROL_POINT_HASH_ID |   varchar   | 64 |   0    |    Y     |  N   |       | 哈希ID  |
+|  15   | TAG |   varchar   | 64 |   0    |    Y     |  N   |       |   |
 
 **表名：** <a id="T_QUALITY_HIS_DETAIL_METADATA">T_QUALITY_HIS_DETAIL_METADATA</a>
 
@@ -214,6 +216,8 @@
 |  12   | BUILD_NO |   varchar   | 64 |   0    |    Y     |  N   |       | 构建号  |
 |  13   | CREATE_TIME |   bigint   | 20 |   0    |    Y     |  N   |       | 创建时间  |
 |  14   | EXTRA |   text   | 65535 |   0    |    Y     |  N   |       | 额外信息  |
+|  15   | TASK_ID |   varchar   | 34 |   0    |    Y     |  N   |       | 任务节点id  |
+|  16   | TASK_NAME |   varchar   | 128 |   0    |    Y     |  N   |       | 任务节点名  |
 
 **表名：** <a id="T_QUALITY_HIS_ORIGIN_METADATA">T_QUALITY_HIS_ORIGIN_METADATA</a>
 
@@ -261,7 +265,7 @@
 |  20   | UPDATE_USER |   varchar   | 64 |   0    |    Y     |  N   |       | 更新用户  |
 |  21   | CREATE_TIME |   datetime   | 19 |   0    |    Y     |  N   |       | 创建时间  |
 |  22   | UPDATE_TIME |   datetime   | 19 |   0    |    Y     |  N   |       | 更新时间  |
-|  23   | ATOM_VERSION |   varchar   | 16 |   0    |    N     |  N   |   1.0.0    | 插件版本号  |
+|  23   | ATOM_VERSION |   varchar   | 30 |   0    |    N     |  N   |   1.0.0    | 插件版本号  |
 |  24   | LOG_PROMPT |   varchar   | 1024 |   0    |    N     |  N   |       | 日志提示  |
 
 **表名：** <a id="T_QUALITY_METADATA">T_QUALITY_METADATA</a>
@@ -309,7 +313,8 @@
 |  13   | INTERCEPT_TIMES |   int   | 10 |   0    |    Y     |  N   |   0    | 拦截次数  |
 |  14   | EXECUTE_COUNT |   int   | 10 |   0    |    Y     |  N   |   0    | 生效流水线执行数  |
 |  15   | PIPELINE_TEMPLATE_RANGE |   text   | 65535 |   0    |    Y     |  N   |       | 流水线模板生效范围  |
-|  16   | GATEWAY_ID |   varchar   | 128 |   0    |    N     |  N   |       | 红线匹配的id  |
+|  16   | QUALITY_RULE_HASH_ID |   varchar   | 64 |   0    |    Y     |  N   |       | 质量规则哈希ID  |
+|  17   | GATEWAY_ID |   varchar   | 128 |   0    |    N     |  N   |       | 红线匹配的id  |
 
 **表名：** <a id="T_QUALITY_RULE_BUILD_HIS">T_QUALITY_RULE_BUILD_HIS</a>
 
@@ -333,11 +338,13 @@
 |  12   | INDICATOR_OPERATIONS |   text   | 65535 |   0    |    Y     |  N   |       | 指标操作  |
 |  13   | INDICATOR_THRESHOLDS |   text   | 65535 |   0    |    Y     |  N   |       | 指标阈值  |
 |  14   | OPERATION_LIST |   text   | 65535 |   0    |    Y     |  N   |       | 操作清单  |
-|  15   | CREATE_TIME |   datetime   | 19 |   0    |    Y     |  N   |       | 创建时间  |
-|  16   | CREATE_USER |   varchar   | 32 |   0    |    Y     |  N   |       | 创建人  |
-|  17   | STAGE_ID |   varchar   | 40 |   0    |    N     |  N   |   1    | stage_id  |
-|  18   | STATUS |   varchar   | 20 |   0    |    Y     |  N   |       | 红线状态  |
-|  19   | GATE_KEEPERS |   varchar   | 1024 |   0    |    Y     |  N   |       | 红线把关人  |
+|  15   | QUALITY_RULE_HIS_HASH_ID |   varchar   | 64 |   0    |    Y     |  N   |       | 质量规则构建历史哈希ID  |
+|  16   | CREATE_TIME |   datetime   | 19 |   0    |    Y     |  N   |       | 创建时间  |
+|  17   | CREATE_USER |   varchar   | 32 |   0    |    Y     |  N   |       | 创建人  |
+|  18   | STAGE_ID |   varchar   | 40 |   0    |    N     |  N   |   1    | stage_id  |
+|  19   | STATUS |   varchar   | 20 |   0    |    Y     |  N   |       | 红线状态  |
+|  20   | GATE_KEEPERS |   varchar   | 1024 |   0    |    Y     |  N   |       | 红线把关人  |
+|  21   | TASK_STEPS |   text   | 65535 |   0    |    Y     |  N   |       | 红线指定的任务节点  |
 
 **表名：** <a id="T_QUALITY_RULE_BUILD_HIS_OPERATION">T_QUALITY_RULE_BUILD_HIS_OPERATION</a>
 
@@ -383,6 +390,22 @@
 |  6   | NOTIFY_TYPES |   varchar   | 64 |   0    |    Y     |  N   |       | 通知类型  |
 |  7   | AUDIT_USER |   text   | 65535 |   0    |    Y     |  N   |       | 审核人员  |
 |  8   | AUDIT_TIMEOUT |   int   | 10 |   0    |    Y     |  N   |       | 审核超时时间  |
+
+**表名：** <a id="T_QUALITY_RULE_REVIEWER">T_QUALITY_RULE_REVIEWER</a>
+
+**说明：** 红线审核人
+
+**数据列：**
+
+| 序号 | 名称 | 数据类型 |  长度  | 小数位 | 允许空值 | 主键 | 默认值 | 说明 |
+| :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
+|  1   | ID |   bigint   | 20 |   0    |    N     |  Y   |       | 主键ID  |
+|  2   | PROJECT_ID |   varchar   | 64 |   0    |    N     |  N   |       | 项目ID  |
+|  3   | RULE_ID |   bigint   | 20 |   0    |    N     |  N   |       | 规则ID  |
+|  4   | PIPELINE_ID |   varchar   | 64 |   0    |    N     |  N   |       | 流水线ID  |
+|  5   | BUILD_ID |   varchar   | 64 |   0    |    N     |  N   |       | 构建ID  |
+|  6   | REVIEWER |   varchar   | 32 |   0    |    N     |  N   |       | 实际审核人  |
+|  7   | REVIEW_TIME |   datetime   | 19 |   0    |    Y     |  N   |       | 审核时间  |
 
 **表名：** <a id="T_QUALITY_RULE_TEMPLATE">T_QUALITY_RULE_TEMPLATE</a>
 
