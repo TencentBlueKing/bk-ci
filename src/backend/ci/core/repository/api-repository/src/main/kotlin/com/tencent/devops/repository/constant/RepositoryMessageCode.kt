@@ -84,6 +84,7 @@ object RepositoryMessageCode {
     const val ERROR_MEMBER_LEVEL_LOWER_MASTER = "2115035" // 开启pac需要master以上权限
     const val ERROR_DEFAULT_BRANCH_IS_EMPTY = "2115036" // 默认分支不能为空
     const val ERROR_REPO_REPEATEDLY_ENABLED_PAC = "2115037" // 代码库已开启PAC。
+    const val ERROR_DELETE_BECAUSE_ENABLED_PAC = "2115038" // 请先关闭 PAC 模式，再删除代码库
 
     const val BK_REQUEST_FILE_SIZE_LIMIT = "bkRequestFileSizeLimit" // 请求文件不能超过1M
     const val OPERATION_ADD_CHECK_RUNS = "OperationAddCheckRuns" // 添加检测任务

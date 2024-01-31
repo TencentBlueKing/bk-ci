@@ -84,7 +84,8 @@ class CodeTGitRepositoryService @Autowired constructor(
                 userId = userId,
                 aliasName = repository.aliasName,
                 url = repository.getFormatURL(),
-                type = ScmType.CODE_TGIT
+                type = ScmType.CODE_TGIT,
+                enablePac = repository.enablePac
             )
             // Git项目ID
             val gitProjectId = getGitProjectId(repo = repository, token = credentialInfo.token)
@@ -332,14 +333,14 @@ class CodeTGitRepositoryService @Autowired constructor(
     override fun pacCheckEnabled(
         projectId: String,
         userId: String,
-        repository: TRepositoryRecord,
+        record: TRepositoryRecord,
         retry: Boolean
     ) = Unit
 
     override fun getGitFileTree(
         projectId: String,
         userId: String,
-        repository: TRepositoryRecord
+        record: TRepositoryRecord
     ) = emptyList<GitFileInfo>()
 
     override fun getPacRepository(externalId: String): TRepositoryRecord? = null

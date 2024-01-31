@@ -30,7 +30,6 @@ package com.tencent.devops.process.yaml
 
 import com.tencent.devops.common.api.constant.coerceAtMaxLength
 import com.tencent.devops.common.api.enums.RepositoryType
-import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.model.process.tables.records.TPipelineYamlBranchFileRecord
@@ -38,15 +37,12 @@ import com.tencent.devops.process.engine.dao.PipelineWebhookVersionDao
 import com.tencent.devops.process.engine.dao.PipelineYamlBranchFileDao
 import com.tencent.devops.process.engine.dao.PipelineYamlInfoDao
 import com.tencent.devops.process.engine.dao.PipelineYamlVersionDao
-import com.tencent.devops.process.engine.dao.PipelineYamlViewDao
 import com.tencent.devops.process.pojo.pipeline.PipelineYamlInfo
 import com.tencent.devops.process.pojo.pipeline.PipelineYamlVersion
-import com.tencent.devops.process.pojo.pipeline.PipelineYamlView
 import com.tencent.devops.process.pojo.pipeline.PipelineYamlVo
 import com.tencent.devops.process.pojo.pipeline.enums.PipelineYamlStatus
 import com.tencent.devops.process.pojo.webhook.PipelineWebhookVersion
 import com.tencent.devops.repository.api.ServiceRepositoryResource
-import com.tencent.devops.repository.pojo.CodeGitRepository
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
@@ -59,7 +55,6 @@ class PipelineYamlService(
     private val pipelineYamlInfoDao: PipelineYamlInfoDao,
     private val pipelineYamlVersionDao: PipelineYamlVersionDao,
     private val pipelineWebhookVersionDao: PipelineWebhookVersionDao,
-    private val pipelineYamlViewDao: PipelineYamlViewDao,
     private val pipelineYamlBranchFileDao: PipelineYamlBranchFileDao,
     private val client: Client
 ) {
@@ -306,41 +301,47 @@ class PipelineYamlService(
             projectId = projectId,
             pipelineId = pipelineId,
             version = version
-        ) ?: run {
-            logger.info("pipeline yaml version not found|$projectId|$pipelineId|$version")
-            return null
-        }
-        return pipelineYamlVo(pipelineYamlInfo = pipelineYamlInfo, pipelineYamlVersion = pipelineYamlVersion)
+        )
+        return buildPipelineYamlVo(pipelineYamlInfo = pipelineYamlInfo, pipelineYamlVersion = pipelineYamlVersion)
     }
 
-    private fun pipelineYamlVo(
+    private fun buildPipelineYamlVo(
         pipelineYamlInfo: PipelineYamlInfo,
-        pipelineYamlVersion: PipelineYamlVersion
+        pipelineYamlVersion: PipelineYamlVersion?
     ): PipelineYamlVo? {
-        with(pipelineYamlVersion) {
-            val repository = client.get(ServiceRepositoryResource::class).get(
+        val projectId = pipelineYamlInfo.projectId
+        val repoHashId = pipelineYamlInfo.repoHashId
+        val filePath = pipelineYamlInfo.filePath
+
+        val repository = with(pipelineYamlInfo) {
+            client.get(ServiceRepositoryResource::class).get(
                 projectId = projectId, repositoryId = repoHashId, repositoryType = RepositoryType.ID
             ).data ?: run {
                 logger.info("pipeline yaml version repo not found|$projectId|$pipelineId|$repoHashId")
                 return null
             }
-            return when (repository) {
-                is CodeGitRepository -> {
-                    val homePage =
-                        repository.url.replace("git@", "https://").removeSuffix(".git")
-                    PipelineYamlVo(
-                        repoHashId = repoHashId,
-                        scmType = ScmType.CODE_GIT,
-                        pathWithNamespace = repository.projectName,
-                        webUrl = homePage,
-                        filePath = filePath,
-                        fileUrl = "$homePage/blob/$commitId/$filePath",
-                        status = pipelineYamlInfo.status
-                    )
-                }
-
-                else -> null
-            }
+        }
+        val homePage =
+            repository.url.replace("git@", "https://").removeSuffix(".git")
+        return if (pipelineYamlVersion == null) {
+            PipelineYamlVo(
+                repoHashId = repoHashId,
+                scmType = repository.getScmType(),
+                pathWithNamespace = repository.projectName,
+                webUrl = homePage,
+                filePath = filePath,
+                status = pipelineYamlInfo.status
+            )
+        } else {
+            PipelineYamlVo(
+                repoHashId = repoHashId,
+                scmType = repository.getScmType(),
+                pathWithNamespace = repository.projectName,
+                webUrl = homePage,
+                filePath = filePath,
+                fileUrl = "$homePage/blob/${pipelineYamlVersion.commitId}/$filePath",
+                status = pipelineYamlInfo.status
+            )
         }
     }
 
@@ -404,58 +405,6 @@ class PipelineYamlService(
                 filePath = filePath
             )
         }
-    }
-
-    fun savePipelineYamlView(
-        projectId: String,
-        repoHashId: String,
-        directory: String,
-        viewId: Long
-    ) {
-        pipelineYamlViewDao.save(
-            dslContext = dslContext,
-            projectId = projectId,
-            repoHashId = repoHashId,
-            directory = directory,
-            viewId = viewId
-        )
-    }
-
-    fun getPipelineYamlView(
-        projectId: String,
-        repoHashId: String,
-        directory: String
-    ): PipelineYamlView? {
-        return pipelineYamlViewDao.get(
-            dslContext = dslContext,
-            projectId = projectId,
-            repoHashId = repoHashId,
-            directory = directory
-        )
-    }
-
-    fun listRepoYamlView(
-        projectId: String,
-        repoHashId: String
-    ): List<PipelineYamlView> {
-        return pipelineYamlViewDao.listRepoYamlView(
-            dslContext = dslContext,
-            projectId = projectId,
-            repoHashId = repoHashId
-        )
-    }
-
-    fun deleteYamlView(
-        projectId: String,
-        repoHashId: String,
-        directory: String
-    ) {
-        pipelineYamlViewDao.delete(
-            dslContext = dslContext,
-            projectId = projectId,
-            repoHashId = repoHashId,
-            directory = directory
-        )
     }
 
     fun deleteBranchFile(

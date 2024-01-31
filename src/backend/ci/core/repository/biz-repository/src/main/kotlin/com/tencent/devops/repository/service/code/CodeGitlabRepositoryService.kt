@@ -76,7 +76,8 @@ class CodeGitlabRepositoryService @Autowired constructor(
                 userId = userId,
                 aliasName = repository.aliasName,
                 url = repository.getFormatURL(),
-                type = ScmType.CODE_GITLAB
+                type = ScmType.CODE_GITLAB,
+                enablePac = repository.enablePac
             )
             // Git项目ID
             val gitProjectId: Long = getGitProjectId(
@@ -275,14 +276,14 @@ class CodeGitlabRepositoryService @Autowired constructor(
     override fun pacCheckEnabled(
         projectId: String,
         userId: String,
-        repository: TRepositoryRecord,
+        record: TRepositoryRecord,
         retry: Boolean
     ) = Unit
 
     override fun getGitFileTree(
         projectId: String,
         userId: String,
-        repository: TRepositoryRecord
+        record: TRepositoryRecord
     ) = emptyList<GitFileInfo>()
 
     override fun getPacRepository(externalId: String): TRepositoryRecord? = null

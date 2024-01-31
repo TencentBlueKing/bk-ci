@@ -1615,7 +1615,12 @@ class PipelineListFacadeService @Autowired constructor(
         // 加上流水线组
         val pipelineViewNameMap =
             pipelineViewGroupService.getViewNameMap(projectId, list.map { it.pipelineId }.toMutableSet())
-        list.forEach { it.viewNames = pipelineViewNameMap[it.pipelineId] }
+        // 校验是否是管理员
+        val canManage = pipelinePermissionService.checkProjectManager(projectId = projectId, userId = userId)
+        list.forEach {
+            it.viewNames = pipelineViewNameMap[it.pipelineId]
+            it.permissions = PipelinePermissions(canManage = canManage)
+        }
         return PipelineViewPipelinePage(
             page = pageNotNull,
             pageSize = pageSizeNotNull,

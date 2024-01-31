@@ -437,6 +437,29 @@ class PipelineViewService @Autowired constructor(
         }
     }
 
+    fun checkPipelineViewCount(
+        projectId: String,
+        userId: String,
+        projected: Boolean,
+        addCount: Int
+    ) {
+        val countForLimit = pipelineViewDao.countForLimit(
+            dslContext = dslContext,
+            projectId = projectId,
+            isProject = projected,
+            userId = userId
+        )
+        val limit = if (projected) PROJECT_VIEW_LIMIT else PERSONAL_VIEW_LIMIT
+
+        if (countForLimit + addCount >= limit) {
+            logger.warn("exceed the limit for create , project:$projectId , user:$userId, addCount:$addCount")
+            throw ErrorCodeException(
+                errorCode = ProcessMessageCode.ERROR_VIEW_EXCEED_THE_LIMIT,
+                defaultMessage = "exceed the limit for create , the limit is : $limit"
+            )
+        }
+    }
+
     private fun checkForUpset(
         context: DSLContext?,
         projectId: String,

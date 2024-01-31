@@ -83,7 +83,8 @@ class CodeSvnRepositoryService @Autowired constructor(
                 userId = userId,
                 aliasName = repository.aliasName,
                 url = repository.getFormatURL(),
-                type = ScmType.CODE_SVN
+                type = ScmType.CODE_SVN,
+                enablePac = repository.enablePac
             )
             // 如果repository为null，则默认为TC
             repositoryCodeSvnDao.create(
@@ -286,14 +287,14 @@ class CodeSvnRepositoryService @Autowired constructor(
     override fun pacCheckEnabled(
         projectId: String,
         userId: String,
-        repository: TRepositoryRecord,
+        record: TRepositoryRecord,
         retry: Boolean
     ) = Unit
 
     override fun getGitFileTree(
         projectId: String,
         userId: String,
-        repository: TRepositoryRecord
+        record: TRepositoryRecord
     ) = emptyList<GitFileInfo>()
 
     override fun getPacRepository(externalId: String): TRepositoryRecord? = null

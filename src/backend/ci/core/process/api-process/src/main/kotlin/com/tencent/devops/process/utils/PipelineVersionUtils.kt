@@ -36,9 +36,9 @@ object PipelineVersionUtils {
         pipelineVersion: Int?,
         triggerVersion: Int?,
         settingVersion: Int?
-    ): String {
+    ): String? {
         return if (pipelineVersion == null || triggerVersion == null || settingVersion == null) {
-            "init"
+            null
         } else "P$pipelineVersion.T$triggerVersion.$settingVersion"
     }
 
