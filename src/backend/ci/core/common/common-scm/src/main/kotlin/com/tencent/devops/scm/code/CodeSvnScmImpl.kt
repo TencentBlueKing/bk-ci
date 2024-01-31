@@ -38,7 +38,7 @@ import com.tencent.devops.scm.code.svn.api.SvnHookEventType
 import com.tencent.devops.scm.config.SVNConfig
 import com.tencent.devops.scm.exception.ScmException
 import com.tencent.devops.scm.jmx.JMX
-import com.tencent.devops.scm.pojo.GitSession
+import com.tencent.devops.scm.pojo.LoginSession
 import com.tencent.devops.scm.pojo.RevisionInfo
 import com.tencent.devops.scm.utils.code.svn.SvnUtils
 import org.slf4j.LoggerFactory
@@ -339,17 +339,8 @@ class CodeSvnScmImpl constructor(
         }
     }
 
-    private fun getSubDirPath(): String {
-        val index = url.indexOf(projectName)
-        if (index == -1) {
-            logger.warn("invalid param|url[$url]|projectName[$projectName]")
-            return "/"
-        }
-        val substring = url.substring(index + projectName.length)
-        return substring.removeSuffix("/").ifBlank {
-            "/"
-        }
-    }
+    private fun getSubDirPath() = url.substringAfter(projectName, "/")
+        .removeSuffix("/").ifBlank { "/" }
 
     /**
      * 基于私人令牌添加svn仓库的webhook
@@ -391,7 +382,7 @@ class CodeSvnScmImpl constructor(
         }
     }
 
-    override fun getGitSession(): GitSession? {
+    override fun getLoginSession(): LoginSession? {
         return try {
             SVNApi.getSession(
                 host = svnConfig.webhookApiUrl,

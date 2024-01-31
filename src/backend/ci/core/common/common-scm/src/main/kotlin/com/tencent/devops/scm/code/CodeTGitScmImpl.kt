@@ -40,7 +40,7 @@ import com.tencent.devops.scm.pojo.GitMrChangeInfo
 import com.tencent.devops.scm.pojo.GitMrInfo
 import com.tencent.devops.scm.pojo.GitMrReviewInfo
 import com.tencent.devops.scm.pojo.GitProjectInfo
-import com.tencent.devops.scm.pojo.GitSession
+import com.tencent.devops.scm.pojo.LoginSession
 import com.tencent.devops.scm.pojo.RevisionInfo
 import com.tencent.devops.scm.utils.code.git.GitUtils
 import com.tencent.devops.scm.utils.code.git.GitUtils.urlEncode
@@ -302,7 +302,7 @@ class CodeTGitScmImpl constructor(
         )
     }
 
-    override fun getGitSession(): GitSession? {
+    override fun getLoginSession(): LoginSession? {
         val url = "session"
         return gitApi.getGitSession(
             host = apiUrl,

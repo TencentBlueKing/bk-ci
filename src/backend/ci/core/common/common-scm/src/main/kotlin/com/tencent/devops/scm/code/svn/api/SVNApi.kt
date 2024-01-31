@@ -39,7 +39,7 @@ import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.scm.config.SVNConfig
 import com.tencent.devops.scm.exception.ScmException
-import com.tencent.devops.scm.pojo.GitSession
+import com.tencent.devops.scm.pojo.LoginSession
 import com.tencent.devops.scm.pojo.SvnTreeInfo
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.Request
@@ -271,7 +271,7 @@ object SVNApi {
         host: String,
         username: String,
         password: String
-    ): GitSession? {
+    ): LoginSession? {
         val body = JsonUtil.toJson(
             mapOf(
                 "login" to username,
