@@ -58,6 +58,7 @@ import com.tencent.devops.environment.constant.T_NODE_NODE_ID
 import com.tencent.devops.environment.constant.T_NODE_NODE_STATUS
 import com.tencent.devops.environment.constant.T_NODE_NODE_TYPE
 import com.tencent.devops.environment.constant.T_NODE_PROJECT_ID
+import com.tencent.devops.environment.pojo.job.AgentVersion
 import com.tencent.devops.environment.pojo.job.UpdateTNodeInfo
 import org.jooq.Record4
 import org.jooq.Record7
@@ -65,6 +66,15 @@ import org.jooq.Record7
 @Suppress("ALL")
 @Repository
 class NodeDao {
+    fun updateDevopsAgentVersionByNodeId(dslContext: DSLContext, nodeId: Long, agentVersion: String) {
+        with(TNode.T_NODE) {
+            dslContext.update(this)
+                .set(AGENT_VERSION, agentVersion)
+                .where(NODE_ID.eq(nodeId))
+                .execute()
+        }
+    }
+
     fun updateHostIdAndCloudAreaIdByNodeId(
         dslContext: DSLContext,
         nodeHostIdAndCloudAreaIdInfoList: List<HostIdAndCloudAreaIdInfo>

@@ -751,7 +751,7 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
                     ) ?: throw CustomException(
                         Response.Status.FORBIDDEN,
                         I18nUtil.getCodeLanMessage(THIRD_PARTY_BUILD_ENVIRONMENT_NOT_EXIST) +
-                                "($sharedProjectId:$sharedEnvId)"
+                            "($sharedProjectId:$sharedEnvId)"
                     )
                     envShareProjectDao.list(
                         dslContext = dslContext,
@@ -790,12 +790,12 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
         if (sharedEnvRecord.isEmpty()) {
             logger.info(
                 "env name not exists, envName: $sharedEnvName, envId: $sharedEnvId, projectId：$projectId, " +
-                        "mainProjectId: $sharedProjectId"
+                    "mainProjectId: $sharedProjectId"
             )
             throw CustomException(
                 Response.Status.FORBIDDEN,
                 I18nUtil.getCodeLanMessage(ERROR_NO_PERMISSION_TO_USE_THIRD_PARTY_BUILD_ENV) +
-                        "($sharedProjectId:${sharedEnvName ?: sharedEnvId})"
+                    "($sharedProjectId:${sharedEnvName ?: sharedEnvId})"
             )
         }
         logger.info("sharedEnvRecord size: ${sharedEnvRecord.size}")
@@ -841,7 +841,7 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
             throw CustomException(
                 Response.Status.FORBIDDEN,
                 I18nUtil.getCodeLanMessage(ERROR_NO_PERMISSION_TO_USE_THIRD_PARTY_BUILD_ENV) +
-                        "($sharedProjectId:$sharedEnvName)"
+                    "($sharedProjectId:$sharedEnvName)"
             )
         }
         logger.info("sharedThirdPartyAgents size: ${sharedThirdPartyAgents.size}")
@@ -1014,8 +1014,8 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
             status = AgentStatus.IMPORT_OK
         }
         if (!(AgentStatus.isImportException(status) ||
-                    AgentStatus.isUnImport(status) ||
-                    agentRecord.startRemoteIp.isNullOrBlank())
+                AgentStatus.isUnImport(status) ||
+                agentRecord.startRemoteIp.isNullOrBlank())
         ) {
             if (startInfo.hostIp != agentRecord.startRemoteIp) {
                 return AgentStatus.DELETE
@@ -1047,7 +1047,7 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
             if (agentRecord.nodeId != null) {
                 val nodeRecord = nodeDao.get(context, projectId, agentRecord.nodeId)
                 if (nodeRecord != null && (nodeRecord.nodeIp != startInfo.hostIp ||
-                            nodeRecord.nodeStatus == NodeStatus.ABNORMAL.name)
+                        nodeRecord.nodeStatus == NodeStatus.ABNORMAL.name)
                 ) {
                     nodeRecord.nodeStatus = NodeStatus.NORMAL.name
                     nodeRecord.nodeIp = startInfo.hostIp
@@ -1129,6 +1129,8 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
             var agentChanged = false
             if (newHeartbeatInfo.masterVersion != agentRecord.masterVersion) {
                 agentRecord.masterVersion = newHeartbeatInfo.masterVersion
+                // 同时更新T_NODE表中的构建机agent版本字段
+                nodeDao.updateDevopsAgentVersionByNodeId(context, agentRecord.nodeId, newHeartbeatInfo.masterVersion)
                 agentChanged = true
             }
             if (newHeartbeatInfo.slaveVersion != agentRecord.version) {
@@ -1313,6 +1315,12 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
                         projectId = projectId,
                         version = slaveVersion,
                         masterVersion = masterVersion
+                    )
+                    // 同时更新T_NODE表中 构建机的agent版本字段
+                    nodeDao.updateDevopsAgentVersionByNodeId(
+                        dslContext = context,
+                        nodeId = agentRecord.nodeId,
+                        agentVersion = masterVersion
                     )
                 }
             }
