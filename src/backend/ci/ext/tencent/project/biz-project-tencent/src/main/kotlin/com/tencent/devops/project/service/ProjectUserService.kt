@@ -153,7 +153,7 @@ class ProjectUserService @Autowired constructor(
         if (seniorUserCache.asMap().isEmpty()) {
             logger.info("refresh senior user cache")
             seniorUserDao.list(
-                dslContext = dslContext,
+                dslContext = dslContext
             ).forEach {
                 seniorUserCache.put(it.userId, it.name)
             }

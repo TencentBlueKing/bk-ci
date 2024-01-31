@@ -37,7 +37,7 @@ import org.springframework.stereotype.Repository
 @Repository
 class ProjectSeniorUserDao {
     fun list(
-        dslContext: DSLContext,
+        dslContext: DSLContext
     ): Result<TSeniorUserRecord> {
         return with(TSeniorUser.T_SENIOR_USER) {
             dslContext.selectFrom(this).fetch()

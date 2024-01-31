@@ -133,7 +133,7 @@ class ProjectNotifyService constructor(
         val bodyParams = mapOf(
             "projectName" to projectName,
             "projectInfoShowUri" to String.format(projectInfoShowUri, projectId),
-            "projectEditUri" to String.format(projectEditUri, projectId),
+            "projectEditUri" to String.format(projectEditUri, projectId)
         )
         // 发邮件
         val request = SendNotifyMessageTemplateRequest(
