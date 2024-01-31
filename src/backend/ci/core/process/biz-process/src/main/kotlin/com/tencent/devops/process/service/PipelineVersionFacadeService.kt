@@ -125,20 +125,20 @@ class PipelineVersionFacadeService @Autowired constructor(
         )
         val yamlInfo = pipelineYamlFacadeService.getPipelineYamlInfo(projectId, pipelineId, releaseVersion.version)
         val canRelease = draftVersion != null
+        var baseVersion: Int? = null
+        var baseVersionName: String? = null
         var baseVersionStatus = VersionStatus.RELEASED
-        var baseVersionBranch: String? = null
         draftVersion?.let { draft ->
-            val baseVersion = draft.baseVersion?.let { base ->
+            val baseResource = draft.baseVersion?.let { base ->
                 pipelineRepositoryService.getPipelineResourceVersion(
                     projectId = projectId,
                     pipelineId = pipelineId,
                     version = base
                 )
             }
-            baseVersion?.status?.let { baseVersionStatus = it }
-            baseVersion?.versionName?.let {
-                if (baseVersion.status == VersionStatus.BRANCH) baseVersionBranch = it
-            }
+            baseResource?.let { baseVersion = it.version }
+            baseResource?.status?.let { baseVersionStatus = it }
+            baseResource?.versionName?.let { baseVersionName = it }
         }
         val releaseSetting = pipelineSettingFacadeService.userGetSetting(
             userId = userId,
@@ -172,8 +172,9 @@ class PipelineVersionFacadeService @Autowired constructor(
             versionName = versionName,
             releaseVersion = releaseVersion.version,
             releaseVersionName = releaseVersion.versionName,
+            baseVersion = baseVersion,
             baseVersionStatus = baseVersionStatus,
-            baseVersionBranch = baseVersionBranch,
+            baseVersionName = baseVersionName,
             pipelineAsCodeSettings = PipelineAsCodeSettings(enable = yamlInfo != null),
             yamlInfo = yamlInfo
         )
