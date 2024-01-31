@@ -562,7 +562,7 @@ class ScmProxyService @Autowired constructor(
             url = repo.url,
             type = ScmType.CODE_P4,
             privateKey = null,
-            passPhrase = credential.passPhrase,
+            passPhrase = credential.password,
             token = null,
             region = null,
             userName = credential.username,
