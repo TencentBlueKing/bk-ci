@@ -362,7 +362,6 @@ class TGitApiService @Autowired constructor(
         ) {
             createYamlMergeRequest(
                 fileExists = fileExists,
-                pipelineId = pipelineId,
                 pipelineName = pipelineName,
                 token = token,
                 cred = cred,
@@ -397,7 +396,6 @@ class TGitApiService @Autowired constructor(
 
     private fun createYamlMergeRequest(
         fileExists: Boolean,
-        pipelineId: String,
         pipelineName: String,
         token: String,
         cred: PacGitCred,
@@ -415,7 +413,7 @@ class TGitApiService @Autowired constructor(
         } else {
             I18nUtil.getCodeLanMessage(
                 messageCode = ProcessMessageCode.BK_MERGE_YAML_CREATE_FILE_TITLE,
-                params = arrayOf(dateStr, pipelineId),
+                params = arrayOf(dateStr, pipelineName),
                 language = I18nUtil.getDefaultLocaleLanguage()
             )
         }
