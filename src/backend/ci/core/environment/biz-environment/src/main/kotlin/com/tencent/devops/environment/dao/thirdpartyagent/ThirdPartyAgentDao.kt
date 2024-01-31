@@ -351,7 +351,7 @@ class ThirdPartyAgentDao {
         with(TEnvironmentThirdpartyAgent.T_ENVIRONMENT_THIRDPARTY_AGENT) {
             return dslContext.select(
                 NODE_ID.`as`(T_ENVIRONMENT_THIRDPARTY_AGENT_NODE_ID),
-                MASTER_VERSION.`as`(T_ENVIRONMENT_THIRDPARTY_AGENT_MASTER_VERSION),
+                MASTER_VERSION.`as`(T_ENVIRONMENT_THIRDPARTY_AGENT_MASTER_VERSION)
             ).from(this)
                 .where(NODE_ID.`in`(nodeIdList))
                 .fetch()
