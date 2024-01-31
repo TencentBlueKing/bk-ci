@@ -36,6 +36,7 @@ import com.tencent.devops.remotedev.pojo.ProjectWorkspaceFetchData
 import com.tencent.devops.remotedev.pojo.op.OpProjectWorkspaceAssignData
 import com.tencent.devops.remotedev.pojo.windows.FetchOwnerAndAdminData
 import com.tencent.devops.remotedev.pojo.op.OpUpdateCCHostData
+import com.tencent.devops.remotedev.pojo.op.WorkspaceNotifyData
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
@@ -120,4 +121,15 @@ interface OpProjectWorkspaceResource {
         @ApiParam("查询参数")
         data: ProjectWorkspaceFetchData
     ): Response
+
+    @ApiOperation("云桌面通知")
+    @POST
+    @Path("/notify")
+    fun notify(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam(value = "通知信息", required = true)
+        notifyData: WorkspaceNotifyData
+    ): Result<Boolean>
 }

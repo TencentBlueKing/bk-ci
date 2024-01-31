@@ -4,7 +4,7 @@ import io.swagger.annotations.ApiParam
 
 data class WorkspaceNotifyData(
     @ApiParam(value = "projectId", required = true)
-    val projectId: String,
+    val projectId: List<String>?,
     @ApiParam(value = "ip", required = false)
     val ip: List<String>?,
     @ApiParam(value = "title", required = true)

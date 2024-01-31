@@ -26,6 +26,7 @@ import com.tencent.devops.remotedev.pojo.ProjectWorkspaceFetchData
 import com.tencent.devops.remotedev.pojo.op.OpProjectWorkspaceAssignData
 import com.tencent.devops.remotedev.pojo.op.OpUpdateCCHostData
 import com.tencent.devops.remotedev.pojo.op.WindowsSpecResInfo
+import com.tencent.devops.remotedev.pojo.op.WorkspaceNotifyData
 import com.tencent.devops.remotedev.pojo.windows.FetchOwnerAndAdminData
 import com.tencent.devops.remotedev.service.DesktopWorkspaceService
 import com.tencent.devops.remotedev.service.WindowsResourceConfigService
@@ -33,6 +34,7 @@ import com.tencent.devops.remotedev.service.WorkspaceService
 import com.tencent.devops.remotedev.service.WorkspaceXlsxExportService
 import com.tencent.devops.remotedev.service.gitproxy.GitProxyService
 import com.tencent.devops.remotedev.service.workspace.CreateControl
+import com.tencent.devops.remotedev.service.workspace.NotifyControl
 import com.tencent.devops.remotedev.service.workspace.WorkspaceCommon
 import java.util.concurrent.Executors
 import javax.ws.rs.core.Response
@@ -50,6 +52,7 @@ class OpProjectWorkspaceResourceImpl @Autowired constructor(
     private val gitProxyService: GitProxyService,
     private val xlsxExportService: WorkspaceXlsxExportService,
     private val client: Client,
+    private val notifyControl: NotifyControl,
     private val redisOperation: RedisOperation
 ) : OpProjectWorkspaceResource {
     private val executor = Executors.newCachedThreadPool()
@@ -199,6 +202,13 @@ class OpProjectWorkspaceResourceImpl @Autowired constructor(
 
     override fun exportProjectWorkspaceList(userId: String, data: ProjectWorkspaceFetchData): Response {
         return xlsxExportService.exportProjectWorkspaceListOp(userId, data)
+    }
+
+    override fun notify(userId: String, notifyData: WorkspaceNotifyData): Result<Boolean> {
+        notifyControl.notifyWorkspaceInfo(
+            notifyData = notifyData
+        )
+        return Result(true)
     }
 
     companion object {

@@ -97,7 +97,7 @@ class NotifyControl @Autowired constructor(
             dslContext = dslContext,
             mountType = WorkspaceMountType.START,
             ips = notifyData.ip?.toSet(),
-            projectIds = setOf(notifyData.projectId)
+            projectIds = notifyData.projectId?.toSet()
         ) ?: throw ErrorCodeException(
             errorCode = ErrorCodeEnum.WORKSPACE_NOT_FIND.errorCode,
             params = arrayOf(notifyData.ip?.joinToString(";") ?: "")
