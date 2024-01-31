@@ -28,84 +28,42 @@
 package com.tencent.devops.project.api.op
 
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.project.pojo.SeniorUserDTO
-import com.tencent.devops.project.pojo.UserInfo
-import com.tencent.devops.project.pojo.user.UserDeptDetail
+import com.tencent.devops.project.pojo.SendEmailForProjectByConditionDTO
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
 import javax.ws.rs.Consumes
-import javax.ws.rs.DELETE
-import javax.ws.rs.GET
 import javax.ws.rs.POST
-import javax.ws.rs.PUT
 import javax.ws.rs.Path
-import javax.ws.rs.PathParam
 import javax.ws.rs.Produces
-import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
-@Api(tags = ["OP_PROJECT_USER"], description = "OP_用户")
-@Path("/op/users")
+@Api(tags = ["OP_NOTIFY_MESSAGE"], description = "OP-消息通知")
+@Path("/op/notify/message")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
-interface OpUserResource {
-
-    @ApiOperation("同步指定用户tof组织信息")
-    @PUT
-    @Path("/{userId}")
-    fun refreshUserGroup(
-        @ApiParam(value = "用户id", required = true)
-        @PathParam("userId")
-        userId: String
-    ): Result<UserDeptDetail?>
-
-    @ApiOperation("同步所有用户tof组织信息")
-    @PUT
-    @Path("/refresh/all")
-    fun refreshAllUserGroup(): Result<Boolean>
-
-    @ApiOperation("重置所有用户tof组织信息")
-    @GET
-    @Path("/ext/gitci/reset")
-    fun resetProjectInfo(): Result<Int>
-
-    @ApiOperation("刷新工蜂CI项目的组织架构")
-    @GET
-    @Path("/ext/gitci/fixProjectInfo")
-    fun fixGitCIProjectInfo(
-        @ApiParam("起始ID", required = false)
-        @QueryParam("start")
-        start: Long?,
-        @ApiParam("单次数量", required = false)
-        @QueryParam("limit")
-        limit: Int?,
-        @ApiParam("间隔时间", required = false)
-        @QueryParam("sleep")
-        sleep: Long?
-    ): Result<Int>
-
-    @ApiOperation("添加公共账号")
+interface OpNotifyMessageResource {
+    @ApiOperation("推动项目关联运营产品-根据项目")
     @POST
-    @Path("/ext/public/account")
-    fun createPublicAccount(
-        userInfo: UserInfo
+    @Path("/sendEmailForRelatedObsByProjectIds")
+    fun sendEmailToUserForRelatedObsByProjectIds(
+        @ApiParam(value = "项目通知请求报文体", required = true)
+        projectIds: List<String>
     ): Result<Boolean>
 
-    @ApiOperation("添加高级用户")
+    @ApiOperation("推动项目关联运营产品-根据条件")
     @POST
-    @Path("/senior/user/add")
-    fun createSeniorUsers(
-        @ApiParam("高级用户列表", required = true)
-        seniorUserList: List<SeniorUserDTO>
+    @Path("/sendEmailForRelatedObsByCondition/")
+    fun sendEmailForRelatedObsByCondition(
+        @ApiParam(value = "通过条件对项目进行邮件通知", required = true)
+        sendEmailForProjectByConditionDTO: SendEmailForProjectByConditionDTO
     ): Result<Boolean>
 
-    @ApiOperation("删除高级用户")
-    @DELETE
-    @Path("/senior/user/delete/{userId}")
-    fun deleteSeniorUsers(
-        @ApiParam("用户ID", required = true)
-        @PathParam("userId")
-        userId: String
-    ): Result<Boolean>
+    @ApiOperation("查询项目关联运营产品-根据条件")
+    @POST
+    @Path("/getProjectForRelatedObsByCondition/")
+    fun getProjectsForRelatedObsByCondition(
+        @ApiParam(value = "通过条件对项目进行邮件通知", required = true)
+        sendEmailForProjectByConditionDTO: SendEmailForProjectByConditionDTO
+    ): Result<Pair<Int, List<String>>>
 }
