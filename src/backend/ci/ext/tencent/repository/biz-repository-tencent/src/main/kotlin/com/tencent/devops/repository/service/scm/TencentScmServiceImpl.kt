@@ -40,7 +40,7 @@ import com.tencent.devops.scm.pojo.GitMrChangeInfo
 import com.tencent.devops.scm.pojo.GitMrInfo
 import com.tencent.devops.scm.pojo.GitMrReviewInfo
 import com.tencent.devops.scm.pojo.GitProjectInfo
-import com.tencent.devops.scm.pojo.GitSession
+import com.tencent.devops.scm.pojo.LoginSession
 import com.tencent.devops.scm.pojo.RepoSessionRequest
 import com.tencent.devops.scm.pojo.RevisionInfo
 import com.tencent.devops.scm.pojo.TokenCheckResult
@@ -413,7 +413,7 @@ class TencentScmServiceImpl @Autowired constructor(val client: Client) : IScmSer
         username: String,
         password: String,
         url: String
-    ): GitSession? {
+    ): LoginSession? {
         return client.getScm(ServiceScmResource::class).getSession(
             RepoSessionRequest(
                 type = type,
