@@ -93,7 +93,7 @@ class NotifyControl @Autowired constructor(
     }
 
     fun notifyWorkspaceInfo(
-        userId: String?,
+        userId: String,
         notifyData: WorkspaceNotifyData
     ) {
         val workspace = workspaceDao.fetchNotifyWorkspaces(
