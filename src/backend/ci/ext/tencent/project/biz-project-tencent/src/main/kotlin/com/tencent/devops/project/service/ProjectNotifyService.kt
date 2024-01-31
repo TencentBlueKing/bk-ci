@@ -53,7 +53,9 @@ class ProjectNotifyService constructor(
         return true
     }
 
-    fun sendEmailForRelatedObsByCondition(sendEmailForProjectByConditionDTO: SendEmailForProjectByConditionDTO): Boolean {
+    fun sendEmailForRelatedObsByCondition(
+        sendEmailForProjectByConditionDTO: SendEmailForProjectByConditionDTO
+    ): Boolean {
         logger.info("send email for related obs by condition:$sendEmailForProjectByConditionDTO")
         val traceId = MDC.get(TraceTag.BIZID)
         projectNotifyThreadPool.submit {
@@ -87,7 +89,9 @@ class ProjectNotifyService constructor(
         return true
     }
 
-    fun getProjectsForRelatedObsByCondition(sendEmailForProjectByConditionDTO: SendEmailForProjectByConditionDTO): Pair<Int, List<String>> {
+    fun getProjectsForRelatedObsByCondition(
+        sendEmailForProjectByConditionDTO: SendEmailForProjectByConditionDTO
+    ): Pair<Int, List<String>> {
         var offset = 0
         val limit = PageUtil.MAX_PAGE_SIZE
         var count = 0

@@ -18,7 +18,9 @@ class OpNotifyMessageResourceImpl constructor(
         )
     }
 
-    override fun sendEmailForRelatedObsByCondition(sendEmailForProjectByConditionDTO: SendEmailForProjectByConditionDTO): Result<Boolean> {
+    override fun sendEmailForRelatedObsByCondition(
+        sendEmailForProjectByConditionDTO: SendEmailForProjectByConditionDTO
+    ): Result<Boolean> {
         return Result(
             projectNotifyService.sendEmailForRelatedObsByCondition(
                 sendEmailForProjectByConditionDTO = sendEmailForProjectByConditionDTO
