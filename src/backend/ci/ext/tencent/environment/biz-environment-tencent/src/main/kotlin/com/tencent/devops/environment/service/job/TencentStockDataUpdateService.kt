@@ -66,6 +66,7 @@ class TencentStockDataUpdateService @Autowired constructor(
     companion object {
         private val logger = LoggerFactory.getLogger(TencentStockDataUpdateService::class.java)
         private const val SCHEDULED_UPDATE_GSE_AGENT_TIMEOUT_LOCK_KEY = "scheduled_update_gse_agent_timeout_lock"
+        private const val ADD_NODES_TO_CC_TIMEOUT_LOCK_KEY = "add_nodes_to_cc_timeout_lock"
         private const val DEFAULT_PAGE_SIZE = 100
 
         private const val AGENT_NOT_INSTALLED_TAG = false
@@ -104,7 +105,7 @@ class TencentStockDataUpdateService @Autowired constructor(
      * 存量数据更新任务：执行一次。
      */
     fun addNodesToCCOnce() {
-        addNodesToCC()
+        stockDataUpdateService.taskWithRedisLock(ADD_NODES_TO_CC_TIMEOUT_LOCK_KEY, ::addNodesToCC)
     }
 
     private fun updateGseAgent() {

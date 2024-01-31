@@ -56,13 +56,15 @@ class StockDataUpdateService @Autowired constructor(
     private val dslContext: DSLContext,
     private val nodeDao: NodeDao,
     private val queryFromCCService: QueryFromCCService,
-    private val opService: OpService,
+    private val stockDataUpdateService: StockDataUpdateService,
     private val thirdPartyAgentDao: ThirdPartyAgentDao,
     private val redisOperation: RedisOperation
 ) : IStockDataUpdateService {
 
     companion object {
         private val logger = LoggerFactory.getLogger(StockDataUpdateService::class.java)
+        private const val WRITE_DISPLAY_NAME_TIMEOUT_LOCK_KEY = "write_display_name_timeout_lock"
+        private const val UPDATE_DEVOPS_AGENT_TIMEOUT_LOCK_KEY = "update_devops_agent_timeout_lock"
 
         private const val DEFAULT_PAGE_SIZE = 100
         private const val EXPIRATION_TIME_OF_THE_LOCK = 200L
@@ -86,7 +88,7 @@ class StockDataUpdateService @Autowired constructor(
      * 存量数据更新任务：执行一次。提供apigw接口。
      */
     fun writeDisplayNameOnce() {
-        writeDisplayName()
+        stockDataUpdateService.taskWithRedisLock(WRITE_DISPLAY_NAME_TIMEOUT_LOCK_KEY, ::writeDisplayName)
     }
 
     /**
@@ -97,7 +99,7 @@ class StockDataUpdateService @Autowired constructor(
      * cron：执行一次。提供apigw接口。
      */
     fun updateDevopsAgentOnce() {
-        updateDevopsAgent()
+        stockDataUpdateService.taskWithRedisLock(UPDATE_DEVOPS_AGENT_TIMEOUT_LOCK_KEY, ::updateDevopsAgent)
     }
 
     private fun updateDevopsAgent() {
