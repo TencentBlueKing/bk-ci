@@ -122,21 +122,12 @@ class ProjectNotifyService constructor(
         projectName: String,
         projectId: String
     ) {
-        val receives = mutableListOf<String>()
         val managers = client.get(ServiceProjectAuthResource::class).getProjectUsers(
             token = tokenService.getSystemToken(),
             projectCode = projectId,
             group = BkAuthGroup.MANAGER
         ).data ?: return
-        managers.filterNot { projectUserService.isSeniorUser(it) }.forEach forEach@{
-            try {
-                tofService.getUserDeptDetail(it)
-            } catch (ignore: Exception) {
-                logger.info("${ignore.message}|$projectName|$projectId")
-                return@forEach
-            }
-            receives.add(it)
-        }
+        val receives = managers.filterNot { projectUserService.isSeniorUser(it) }
         if (receives.isEmpty()) return
 
         val bodyParams = mapOf(
