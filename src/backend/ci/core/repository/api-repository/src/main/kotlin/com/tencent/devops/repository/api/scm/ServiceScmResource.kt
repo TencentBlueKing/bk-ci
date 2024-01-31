@@ -415,8 +415,8 @@ interface ServiceScmResource {
 
     @ApiOperation("获取会话信息")
     @POST
-    @Path("getGitSession")
-    fun getSession(
+    @Path("getLoginSession")
+    fun getLoginSession(
         reposSessionRequest: RepoSessionRequest
     ): Result<LoginSession?>
 }

@@ -676,7 +676,7 @@ class ScmService @Autowired constructor(
         ).getCommitReviewInfo(crId = crId)
     }
 
-    override fun getGitSession(
+    override fun getLoginSession(
         type: ScmType,
         username: String,
         password: String,

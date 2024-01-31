@@ -69,7 +69,7 @@ class CredentialService @Autowired constructor(
         // 尝试获取会话信息
         if (tryGetSession && credentialInfo.credentialType == CredentialType.USERNAME_PASSWORD.name) {
             credentialInfo.token = try {
-                client.get(ServiceScmResource::class).getSession(
+                client.get(ServiceScmResource::class).getLoginSession(
                     RepoSessionRequest(
                         type = repository.getScmType(),
                         username = credentialInfo.username,

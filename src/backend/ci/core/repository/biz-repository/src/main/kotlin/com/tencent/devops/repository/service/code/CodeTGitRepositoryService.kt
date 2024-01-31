@@ -259,16 +259,6 @@ class CodeTGitRepositoryService @Autowired constructor(
                 logger.warn("Fail to check the repo token & private key because of ${checkResult.message}")
                 throw OperationException(checkResult.message)
             }
-            // 授权凭证信息
-            if (repoCredentialInfo.credentialType == CredentialType.USERNAME_PASSWORD.name) {
-                logger.info("using credential of type [USERNAME_PASSWORD],loginUser[${repoCredentialInfo.username}]")
-                repoCredentialInfo.token = scmService.getGitSession(
-                    type = ScmType.CODE_TGIT,
-                    username = repoCredentialInfo.username,
-                    password = repoCredentialInfo.password,
-                    url = repository.url
-                )?.privateToken ?: ""
-            }
         }
         return repoCredentialInfo
     }

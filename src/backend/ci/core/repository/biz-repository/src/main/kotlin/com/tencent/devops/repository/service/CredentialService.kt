@@ -73,7 +73,7 @@ class CredentialService @Autowired constructor(
         val repoCredentialInfo = buildRepoCredentialInfo(credential, credential.credentialType, pair)
         if (tryGetSession && repoCredentialInfo.credentialType == CredentialType.USERNAME_PASSWORD.name) {
             logger.info("using credential of type [USERNAME_PASSWORD],loginUser[${repoCredentialInfo.username}]")
-            repoCredentialInfo.token = scmService.getGitSession(
+            repoCredentialInfo.token = scmService.getLoginSession(
                 type = repository.getScmType(),
                 username = repoCredentialInfo.username,
                 password = repoCredentialInfo.password,
