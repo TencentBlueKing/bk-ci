@@ -525,7 +525,7 @@ class ScmProxyService @Autowired constructor(
                 type = ScmType.CODE_TGIT,
                 privateKey = null,
                 passPhrase = null,
-                token = credInfo.privateKey,
+                token = credInfo.token,
                 region = null,
                 userName = credInfo.username,
                 event = convertEvent(codeEventType)
@@ -562,7 +562,7 @@ class ScmProxyService @Autowired constructor(
             url = repo.url,
             type = ScmType.CODE_P4,
             privateKey = null,
-            passPhrase = credential.passPhrase,
+            passPhrase = credential.password,
             token = null,
             region = null,
             userName = credential.username,

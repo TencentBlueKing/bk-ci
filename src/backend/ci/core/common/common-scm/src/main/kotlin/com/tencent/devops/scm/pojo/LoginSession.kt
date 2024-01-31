@@ -31,7 +31,7 @@ import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
 @ApiModel("工蜂会话信息")
-data class GitSession(
+data class LoginSession(
     val id: String,
     @ApiModelProperty("邮箱地址")
     val email: String,
