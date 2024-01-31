@@ -33,13 +33,14 @@ import com.tencent.devops.process.pojo.setting.PipelineSettingVersion
 object PipelineVersionUtils {
 
     fun getVersionName(
+        versionNum: Int,
         pipelineVersion: Int?,
         triggerVersion: Int?,
         settingVersion: Int?
     ): String? {
         return if (pipelineVersion == null || triggerVersion == null || settingVersion == null) {
             null
-        } else "P$pipelineVersion.T$triggerVersion.$settingVersion"
+        } else "V$versionNum(P$pipelineVersion.T$triggerVersion.$settingVersion)"
     }
 
     /**

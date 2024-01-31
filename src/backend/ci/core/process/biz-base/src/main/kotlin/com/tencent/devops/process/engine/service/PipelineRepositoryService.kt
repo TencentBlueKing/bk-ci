@@ -752,7 +752,9 @@ class PipelineRepositoryService constructor(
                 versionName = if (versionStatus == VersionStatus.BRANCH) {
                     branchName
                 } else {
-                    PipelineVersionUtils.getVersionName(pipelineVersion, triggerVersion, settingVersion)
+                    PipelineVersionUtils.getVersionName(
+                        versionNum, pipelineVersion, triggerVersion, settingVersion
+                    )
                 }
                 val yaml = yamlStr ?: try {
                     transferService.transfer(
@@ -1012,11 +1014,11 @@ class PipelineRepositoryService constructor(
                             newModel = model
                         )
                         operationLogType = OperationLogType.RELEASE_MASTER_VERSION
-                        val newVersionName = PipelineVersionUtils.getVersionName(
-                            pipelineVersion, triggerVersion, settingVersion
-                        )
                         // 数据分离：发布记录的版本自增，旧数据保留和版本表中version一致，后续单独用于前端展示
                         versionNum = (releaseResource.versionNum ?: 0) + 1
+                        val newVersionName = PipelineVersionUtils.getVersionName(
+                            versionNum!!, pipelineVersion, triggerVersion, settingVersion
+                        )
                         newVersionName?.let {
                             versionName = newVersionName
                             operationLogParams = newVersionName

@@ -295,7 +295,6 @@ class SubPipelineStartUpService @Autowired constructor(
                 isMobile = isMobile,
                 model = model,
                 frequencyLimit = false,
-                versionNum = resource.versionNum,
                 versionName = resource.versionName
             ).id
             // 更新父流水线关联子流水线构建id

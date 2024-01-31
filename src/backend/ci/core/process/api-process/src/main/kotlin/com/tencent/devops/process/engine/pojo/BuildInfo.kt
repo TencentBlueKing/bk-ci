@@ -41,7 +41,6 @@ data class BuildInfo(
     val pipelineId: String,
     val buildId: String,
     val version: Int,
-    val versionNum: Int?,
     val versionName: String?,
     val buildNum: Int,
     val trigger: String,

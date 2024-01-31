@@ -127,7 +127,6 @@ class PipelineBuildService(
         webHookStartParam: MutableMap<String, BuildParameters> = mutableMapOf(),
         triggerReviewers: List<String>? = null,
         debug: Boolean? = false,
-        versionNum: Int? = null,
         versionName: String? = null
     ): BuildId {
 
@@ -213,7 +212,6 @@ class PipelineBuildService(
                 pipelineParamMap = pipelineParamMap,
                 webHookStartParam = webHookStartParam,
                 debug = debug ?: false,
-                versionNum = versionNum,
                 versionName = versionName
             )
 

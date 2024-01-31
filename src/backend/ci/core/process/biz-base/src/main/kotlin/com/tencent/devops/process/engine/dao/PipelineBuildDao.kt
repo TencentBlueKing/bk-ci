@@ -101,7 +101,6 @@ class PipelineBuildDao {
                         BUILD_MSG,
                         BUILD_NUM_ALIAS,
                         CONCURRENCY_GROUP,
-                        VERSION_NUM,
                         VERSION_NAME
                     ).values(
                         startBuildContext.buildId,
@@ -125,7 +124,6 @@ class PipelineBuildDao {
                         startBuildContext.buildMsg,
                         startBuildContext.buildNumAlias,
                         startBuildContext.concurrencyGroup,
-                        startBuildContext.versionNum,
                         startBuildContext.versionName
                     ).execute()
                 }
@@ -1702,7 +1700,6 @@ class PipelineBuildDao {
                     pipelineId = t.pipelineId,
                     buildId = t.buildId,
                     version = t.version,
-                    versionNum = t.versionNum ?: t.version,
                     versionName = t.versionName,
                     buildNum = t.buildNum,
                     trigger = t.trigger,
@@ -1764,7 +1761,6 @@ class PipelineBuildDao {
                     pipelineId = t.pipelineId,
                     buildId = t.buildId,
                     version = t.version,
-                    versionNum = null, // 草稿没有分配正式版本号
                     versionName = null,
                     buildNum = t.buildNum,
                     trigger = t.trigger,
