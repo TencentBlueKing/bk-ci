@@ -52,7 +52,7 @@ interface OpNotifyMessageResource {
         projectIds: List<String>
     ): Result<Boolean>
 
-    @ApiOperation("推动项目关联运营产品-根据BgID")
+    @ApiOperation("推动项目关联运营产品-根据条件")
     @POST
     @Path("/sendEmailForRelatedObsByCondition/")
     fun sendEmailForRelatedObsByCondition(
@@ -60,7 +60,7 @@ interface OpNotifyMessageResource {
         sendEmailForProjectByConditionDTO: SendEmailForProjectByConditionDTO
     ): Result<Boolean>
 
-    @ApiOperation("推动项目关联运营产品-根据BgID")
+    @ApiOperation("查询项目关联运营产品-根据条件")
     @POST
     @Path("/getProjectForRelatedObsByCondition/")
     fun getProjectsForRelatedObsByCondition(
