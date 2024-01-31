@@ -401,40 +401,14 @@ class PublishersDataServiceImpl @Autowired constructor(
                 deptInfos.add(index, deptVo!!.results[0])
             }
         }
-        if (deptInfos.isEmpty()) {
-            publisherInfo.firstLevelDeptId = 0
-            publisherInfo.firstLevelDeptName = ""
-            publisherInfo.secondLevelDeptId = 0
-            publisherInfo.secondLevelDeptName = ""
-            publisherInfo.thirdLevelDeptId = 0
-            publisherInfo.thirdLevelDeptName = ""
-            publisherInfo.fourthLevelDeptId = 0
-            publisherInfo.fourthLevelDeptName = ""
-        } else {
-            // 最多存4级组织ID
-            val levelCount = minOf(3, deptInfos.size)
-            for (i in 0 until levelCount) {
-                when (i) {
-                    0 -> {
-                        publisherInfo.firstLevelDeptId = deptInfos[i].id.toLong()
-                        publisherInfo.firstLevelDeptName = deptInfos[i].name
-                    }
-                    1 -> {
-                        publisherInfo.secondLevelDeptId = deptInfos[i].id.toLong()
-                        publisherInfo.secondLevelDeptName = deptInfos[i].name
-                    }
-                    2 -> {
-                        publisherInfo.thirdLevelDeptId = deptInfos[i].id.toLong()
-                        publisherInfo.thirdLevelDeptName = deptInfos[i].name
-                    }
-                }
-            }
-            if (deptInfos.size > 3) {
-                val fourthLevelDept = deptInfos[3]
-                publisherInfo.fourthLevelDeptId = fourthLevelDept.id.toLong()
-                publisherInfo.fourthLevelDeptName = fourthLevelDept.name
-            }
-        }
+        publisherInfo.firstLevelDeptId = deptInfos.getOrNull(0)?.id?.toLong() ?: 0
+        publisherInfo.firstLevelDeptName = deptInfos.getOrNull(0)?.name ?: ""
+        publisherInfo.secondLevelDeptId = deptInfos.getOrNull(1)?.id?.toLong() ?: 0
+        publisherInfo.secondLevelDeptName = deptInfos.getOrNull(1)?.name ?: ""
+        publisherInfo.thirdLevelDeptId = deptInfos.getOrNull(2)?.id?.toLong() ?: 0
+        publisherInfo.thirdLevelDeptName = deptInfos.getOrNull(2)?.name ?: ""
+        publisherInfo.fourthLevelDeptId = deptInfos.getOrNull(3)?.id?.toLong() ?: 0
+        publisherInfo.fourthLevelDeptName = deptInfos.getOrNull(3)?.name ?: ""
         return publisherInfo
     }
 
