@@ -274,8 +274,8 @@ interface ServiceJobResource {
 
     @ApiOperation("蓝盾agent状态版本更新接口")
     @POST
-    @Path("/stock_data_update/agent_update")
-    fun agentUpdate(
+    @Path("/stock_data_update/update_devops_agent")
+    fun updateDevopsAgent(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String

@@ -30,6 +30,8 @@ package com.tencent.devops.environment.service.job
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.environment.constant.T_ENVIRONMENT_THIRDPARTY_AGENT_MASTER_VERSION
+import com.tencent.devops.environment.constant.T_ENVIRONMENT_THIRDPARTY_AGENT_NODE_ID
 import com.tencent.devops.environment.constant.T_NODE_CLOUD_AREA_ID
 import com.tencent.devops.environment.constant.T_NODE_HOST_ID
 import com.tencent.devops.environment.constant.T_NODE_NODE_HASH_ID
@@ -37,6 +39,8 @@ import com.tencent.devops.environment.constant.T_NODE_NODE_ID
 import com.tencent.devops.environment.constant.T_NODE_NODE_IP
 import com.tencent.devops.environment.constant.T_NODE_NODE_TYPE
 import com.tencent.devops.environment.dao.NodeDao
+import com.tencent.devops.environment.dao.thirdpartyagent.ThirdPartyAgentDao
+import com.tencent.devops.environment.pojo.job.AgentVersionInfo
 import com.tencent.devops.environment.pojo.job.DisplayNameInfo
 import com.tencent.devops.environment.pojo.job.HostIdAndCloudAreaIdInfo
 import com.tencent.devops.environment.pojo.job.UpdateTNodeInfo
@@ -52,8 +56,8 @@ class StockDataUpdateService @Autowired constructor(
     private val dslContext: DSLContext,
     private val nodeDao: NodeDao,
     private val queryFromCCService: QueryFromCCService,
-    private val queryAgentStatusService: QueryAgentStatusService,
     private val opService: OpService,
+    private val thirdPartyAgentDao: ThirdPartyAgentDao,
     private val redisOperation: RedisOperation
 ) : IStockDataUpdateService {
 
@@ -61,9 +65,7 @@ class StockDataUpdateService @Autowired constructor(
         private val logger = LoggerFactory.getLogger(StockDataUpdateService::class.java)
 
         private const val DEFAULT_PAGE_SIZE = 100
-
         private const val EXPIRATION_TIME_OF_THE_LOCK = 200L
-        private const val SCHEDULED_WRITE_DISPLAY_NAME_TIMEOUT_LOCK_KEY = "scheduled_write_display_name_timeout_lock"
     }
 
     /**
@@ -78,28 +80,48 @@ class StockDataUpdateService @Autowired constructor(
     }
 
     /**
-     * updateAgent:
-     * 定时任务：蓝盾agent 状态/版本 轮询 + 差量更新
-     * 条件：NODE_TYPE为"构建"的，查询该节点的蓝盾agent状态以及版本，并对比差异更新。
-     * 分组执行，每次遍历1000条记录。
-     * cron：每小时执行一次。
-     */
-    override fun updateAgent() {
-        updateDevopsAgent()
-    }
-
-    /**
      * writeDisplayName:
      * display_name为空的：拼接节点类型、node hash值、nodeId这三个字段，写入display_name。
      * 分组执行，每次遍历100条记录。
-     * 执行一次就行。提供apigw接口。
+     * 存量数据更新任务：执行一次。提供apigw接口。
      */
     fun writeDisplayNameOnce() {
-        taskWithRedisLock(SCHEDULED_WRITE_DISPLAY_NAME_TIMEOUT_LOCK_KEY, ::writeDisplayName)
+        writeDisplayName()
     }
 
-    fun updateDevopsAgent() {
-        // TODO
+    /**
+     * updateAgent:
+     * 定时任务：构建机 - 查询蓝盾agent版本 + 差量更新
+     * 条件：NODE_TYPE为"构建"的，在T_ENVIRONMENT_THIRDPARTY_AGENT表中查询该节点的蓝盾agent版本，并对比T_NODE表中的状态差异更新。
+     * 分组执行，每次遍历100条记录。
+     * cron：执行一次。提供apigw接口。
+     */
+    fun updateDevopsAgentOnce() {
+        updateDevopsAgent()
+    }
+
+    private fun updateDevopsAgent() {
+        val countBuildNodes = nodeDao.countBuildNodes(dslContext)
+        if (logger.isDebugEnabled)
+            logger.debug("[updateDevopsAgent]countBuildNodes:$countBuildNodes.")
+        countBuildNodes.takeIf { it > 0 }.run {
+            val totalPages = PageUtil.calTotalPage(DEFAULT_PAGE_SIZE, countBuildNodes.toLong())
+            for (page in 1..totalPages) {
+                val buildNodeRecords = nodeDao.getBuildNodesLimit(dslContext, page - 1, DEFAULT_PAGE_SIZE)
+                val buildNodeIdList = buildNodeRecords.mapNotNull { it[T_NODE_NODE_ID] as? Long }
+                val buildNodesAgentVersionRecords = thirdPartyAgentDao.getAgentByNodeIdAllProj(
+                    dslContext = dslContext,
+                    nodeIdList = buildNodeIdList
+                )
+                val buildNodeUpdateInfo = buildNodesAgentVersionRecords.map {
+                    AgentVersionInfo(
+                        nodeId = it[T_ENVIRONMENT_THIRDPARTY_AGENT_NODE_ID] as Long,
+                        agentVersion = it[T_ENVIRONMENT_THIRDPARTY_AGENT_MASTER_VERSION] as? String,
+                    )
+                }
+                nodeDao.updateBuildAgentVersionByNodeId(dslContext, buildNodeUpdateInfo)
+            }
+        }
     }
 
     private fun writeDisplayName() {

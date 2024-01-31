@@ -25,8 +25,13 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.environment.service.job
+package com.tencent.devops.environment.pojo.job
 
-interface IStockDataUpdateService {
-    fun checkDeployNodes()
-}
+import io.swagger.annotations.ApiModelProperty
+
+data class AgentVersionInfo(
+    @ApiModelProperty(value = "节点ID")
+    val nodeId: Long,
+    @ApiModelProperty(value = "节点IP")
+    val agentVersion: String?,
+)

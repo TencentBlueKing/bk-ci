@@ -29,11 +29,15 @@ package com.tencent.devops.environment.dao.thirdpartyagent
 
 import com.tencent.devops.common.api.enums.AgentStatus
 import com.tencent.devops.common.api.pojo.OS
+import com.tencent.devops.environment.constant.T_ENVIRONMENT_THIRDPARTY_AGENT_MASTER_VERSION
+import com.tencent.devops.environment.constant.T_ENVIRONMENT_THIRDPARTY_AGENT_NODE_ID
+import com.tencent.devops.environment.constant.T_NODE_NODE_ID
 import com.tencent.devops.model.environment.tables.TEnvironmentThirdpartyAgent
 import com.tencent.devops.model.environment.tables.TEnvironmentThirdpartyAgentAction
 import com.tencent.devops.model.environment.tables.records.TEnvironmentThirdpartyAgentActionRecord
 import com.tencent.devops.model.environment.tables.records.TEnvironmentThirdpartyAgentRecord
 import org.jooq.DSLContext
+import org.jooq.Record2
 import org.jooq.Result
 import org.jooq.UpdateSetMoreStep
 import org.jooq.impl.DSL
@@ -341,6 +345,17 @@ class ThirdPartyAgentDao {
                 .where(ID.eq(id))
                 .and(PROJECT_ID.eq(projectId))
                 .fetchOne()
+        }
+    }
+
+    fun getAgentByNodeIdAllProj(dslContext: DSLContext, nodeIdList: List<Long>): Result<Record2<Long, String>> {
+        with(TEnvironmentThirdpartyAgent.T_ENVIRONMENT_THIRDPARTY_AGENT) {
+            return dslContext.select(
+                NODE_ID.`as`(T_ENVIRONMENT_THIRDPARTY_AGENT_NODE_ID),
+                MASTER_VERSION.`as`(T_ENVIRONMENT_THIRDPARTY_AGENT_MASTER_VERSION),
+            ).from(this)
+                .where(NODE_ID.`in`(nodeIdList))
+                .fetch()
         }
     }
 

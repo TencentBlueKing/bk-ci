@@ -46,6 +46,7 @@ import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.context.annotation.Primary
+import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Service
 import java.time.LocalDateTime
 
@@ -64,7 +65,7 @@ class TencentStockDataUpdateService @Autowired constructor(
 
     companion object {
         private val logger = LoggerFactory.getLogger(TencentStockDataUpdateService::class.java)
-        private const val SCHEDULED_ADD_NODE_TO_CC_TIMEOUT_LOCK_KEY = "scheduled_add_node_to_cc_timeout_lock"
+        private const val SCHEDULED_UPDATE_GSE_AGENT_TIMEOUT_LOCK_KEY = "scheduled_update_gse_agent_timeout_lock"
         private const val DEFAULT_PAGE_SIZE = 100
 
         private const val AGENT_NOT_INSTALLED_TAG = false
@@ -77,7 +78,7 @@ class TencentStockDataUpdateService @Autowired constructor(
      * 后台定时轮询机器状态，看机器在不在公司cmdb中
      * 轮询T_NODE表中 NODE_TYPE==部署 的记录。部署：CMDB("CMDB")，UNKNOWN("未知")，OTHER("其他")
      * 在不在cmdb -> 在不在cc -> cc的host_id和云区域id是否改变
-     * cron：每天上午10点执行。
+     * cron：每小时执行一次。
      */
     override fun checkDeployNodes() {
         checkDeployNodesIsInCmdb()
@@ -91,19 +92,19 @@ class TencentStockDataUpdateService @Autowired constructor(
      * 分组执行，每次遍历1000条记录。
      * cron：每小时执行一次。
      */
-    override fun updateAgent() {
-        updateGseAgent()
-        stockDataUpdateService.updateDevopsAgent()
+    @Scheduled(cron = "0 17 * * * ?")
+    fun scheduledUpdateGseAgent() {
+        stockDataUpdateService.taskWithRedisLock(SCHEDULED_UPDATE_GSE_AGENT_TIMEOUT_LOCK_KEY, ::updateGseAgent)
     }
 
     /**
      * addNodeToCC:
-     * 定时任务：执行一次就行。
      * 分组执行，每次遍历100条记录。
      * 将不在CC中的 类型为CMDB 的节点，添加到CC中，并返回host_id和云区域id，将host_id和云区域id写入表中
+     * 存量数据更新任务：执行一次。
      */
     fun addNodesToCCOnce() {
-        stockDataUpdateService.taskWithRedisLock(SCHEDULED_ADD_NODE_TO_CC_TIMEOUT_LOCK_KEY, ::addNodesToCC)
+        addNodesToCC()
     }
 
     private fun updateGseAgent() {

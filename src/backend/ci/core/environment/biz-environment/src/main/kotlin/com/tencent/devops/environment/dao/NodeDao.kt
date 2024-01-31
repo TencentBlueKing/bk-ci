@@ -58,7 +58,7 @@ import com.tencent.devops.environment.constant.T_NODE_NODE_ID
 import com.tencent.devops.environment.constant.T_NODE_NODE_STATUS
 import com.tencent.devops.environment.constant.T_NODE_NODE_TYPE
 import com.tencent.devops.environment.constant.T_NODE_PROJECT_ID
-import com.tencent.devops.environment.pojo.job.AgentVersion
+import com.tencent.devops.environment.pojo.job.AgentVersionInfo
 import com.tencent.devops.environment.pojo.job.UpdateTNodeInfo
 import org.jooq.Record4
 import org.jooq.Record7
@@ -66,6 +66,42 @@ import org.jooq.Record7
 @Suppress("ALL")
 @Repository
 class NodeDao {
+    fun updateBuildAgentVersionByNodeId(
+        dslContext: DSLContext,
+        buildNodeAgentVersionInfoList: List<AgentVersionInfo>
+    ) {
+        with(TNode.T_NODE) {
+            val batchUpdate = dslContext.batch(
+                buildNodeAgentVersionInfoList.map {
+                    dslContext.update(this)
+                        .set(AGENT_VERSION, it.agentVersion)
+                        .set(LAST_MODIFY_TIME, LocalDateTime.now())
+                        .where(NODE_ID.eq(it.nodeId))
+                }
+            )
+            batchUpdate.execute()
+        }
+    }
+
+    fun getBuildNodesLimit(dslContext: DSLContext, offset: Int, limit: Int): Result<Record1<Long>> {
+        with(TNode.T_NODE) {
+            return dslContext.select(NODE_ID.`as`(T_NODE_NODE_ID)).from(this)
+                .where(NODE_TYPE.`in`(NodeType.DEVCLOUD.name, NodeType.THIRDPARTY.name))
+                .orderBy(NODE_ID.desc())
+                .limit(limit).offset(offset)
+                .fetch()
+        }
+    }
+
+    fun countBuildNodes(dslContext: DSLContext): Int {
+        with(TNode.T_NODE) {
+            return dslContext.selectCount()
+                .from(TNode.T_NODE)
+                .where(NODE_TYPE.`in`(NodeType.DEVCLOUD.name, NodeType.THIRDPARTY.name))
+                .fetchOne(0, Int::class.java)!!
+        }
+    }
+
     fun updateDevopsAgentVersionByNodeId(dslContext: DSLContext, nodeId: Long, agentVersion: String) {
         with(TNode.T_NODE) {
             dslContext.update(this)

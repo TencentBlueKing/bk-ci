@@ -11,7 +11,6 @@ class NodeScheduledService @Autowired constructor(
 ) {
     companion object {
         private const val SCHEDULED_CHECK_NODES_TIMEOUT_LOCK_KEY = "scheduled_check_nodes_timeout_lock"
-        private const val SCHEDULED_UPDATE_AGENT_TIMEOUT_LOCK_KEY = "scheduled_update_agent_timeout_lock"
     }
 
     @Scheduled(cron = "0 7 * * * ?")
@@ -19,16 +18,7 @@ class NodeScheduledService @Autowired constructor(
         stockDataUpdateService.taskWithRedisLock(SCHEDULED_CHECK_NODES_TIMEOUT_LOCK_KEY, ::sCheckDeployNodes)
     }
 
-    @Scheduled(cron = "0 17 * * * ?")
-    fun scheduledUpdateAgent() {
-        stockDataUpdateService.taskWithRedisLock(SCHEDULED_UPDATE_AGENT_TIMEOUT_LOCK_KEY, ::sUpdateAgent)
-    }
-
     private fun sCheckDeployNodes() {
         iStockDataUpdateService.checkDeployNodes()
-    }
-
-    private fun sUpdateAgent() {
-        iStockDataUpdateService.updateAgent()
     }
 }

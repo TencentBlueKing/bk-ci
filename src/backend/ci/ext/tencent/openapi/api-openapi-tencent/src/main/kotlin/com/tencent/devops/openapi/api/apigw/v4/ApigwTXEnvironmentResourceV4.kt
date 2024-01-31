@@ -61,10 +61,10 @@ interface ApigwTXEnvironmentResourceV4 {
         userId: String
     )
 
-    @ApiOperation("agent状态版本更新接口", tags = ["v4_app_job_agent_update"])
+    @ApiOperation("gse agent状态版本更新接口", tags = ["v4_app_job_update_gse_agent"])
     @POST
-    @Path("/stock_data_update/agent_update")
-    fun agentUpdate(
+    @Path("/stock_data_update/update_gse_agent")
+    fun updateGseAgent(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String

@@ -161,8 +161,8 @@ class ApigwJobResourceV4Impl @Autowired constructor(
         client.get(ServiceJobResource::class).writeDisplayName(userId)
     }
 
-    override fun agentUpdate(userId: String) {
-        client.get(ServiceJobResource::class).agentUpdate(userId)
+    override fun updateDevopsAgent(userId: String) {
+        client.get(ServiceJobResource::class).updateDevopsAgent(userId)
     }
 
     override fun checkDeployNodesInCC(userId: String) {
