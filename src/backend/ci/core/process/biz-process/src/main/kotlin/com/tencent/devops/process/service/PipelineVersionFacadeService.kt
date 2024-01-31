@@ -136,7 +136,9 @@ class PipelineVersionFacadeService @Autowired constructor(
                 )
             }
             baseVersion?.status?.let { baseVersionStatus = it }
-            baseVersion?.versionName?.let { baseVersionBranch = it }
+            baseVersion?.versionName?.let {
+                if (baseVersion.status == VersionStatus.BRANCH) baseVersionBranch = it
+            }
         }
         val releaseSetting = pipelineSettingFacadeService.userGetSetting(
             userId = userId,
@@ -630,7 +632,7 @@ class PipelineVersionFacadeService @Autowired constructor(
             createTime = resource.createTime.timestampmilli(),
             updateTime = resource.updateTime?.timestampmilli(),
             version = resource.version,
-            versionName = resource.versionName ?: "init",
+            versionName = resource.versionName ?: "",
             referFlag = resource.referFlag,
             referCount = resource.referCount,
             versionNum = resource.versionNum,

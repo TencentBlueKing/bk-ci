@@ -1017,8 +1017,10 @@ class PipelineRepositoryService constructor(
                         )
                         // 数据分离：发布记录的版本自增，旧数据保留和版本表中version一致，后续单独用于前端展示
                         versionNum = (releaseResource.versionNum ?: 0) + 1
-                        versionName = newVersionName
-                        operationLogParams = newVersionName
+                        newVersionName?.let {
+                            versionName = newVersionName
+                            operationLogParams = newVersionName
+                        }
                         version = if (draftVersion == null) {
                             // 兼容逻辑：没有已有草稿保存正式版本时，直接增加正式版本，基准为上一个发布版本
                             // 创建新版本记录

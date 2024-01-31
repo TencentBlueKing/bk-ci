@@ -65,7 +65,7 @@ data class PipelineInfo(
     @ApiModelProperty("任务数")
     val taskCount: Int,
     @ApiModelProperty("版本名称")
-    var versionName: String = "init",
+    var versionName: String = "",
     @ApiModelProperty("ID")
     val id: Long?,
     @ApiModelProperty("流水线组名称列表", required = false)

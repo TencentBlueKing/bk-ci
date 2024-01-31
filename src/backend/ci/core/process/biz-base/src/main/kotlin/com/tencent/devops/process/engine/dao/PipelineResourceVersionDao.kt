@@ -584,7 +584,7 @@ class PipelineResourceVersionDao {
                     createTime = record.createTime.timestampmilli(),
                     updateTime = record.updateTime.timestampmilli(),
                     version = record.version ?: 1,
-                    versionName = record.versionName ?: "init",
+                    versionName = record.versionName ?: "",
                     referFlag = record.referFlag,
                     referCount = record.referCount,
                     versionNum = (record.versionNum ?: record.version ?: 1)
