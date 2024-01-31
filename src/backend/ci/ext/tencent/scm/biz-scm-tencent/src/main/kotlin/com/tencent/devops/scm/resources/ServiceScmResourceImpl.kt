@@ -413,7 +413,7 @@ class ServiceScmResourceImpl @Autowired constructor(private val scmService: ScmS
         )
     }
 
-    override fun getSession(reposSessionRequest: RepoSessionRequest): Result<LoginSession?> {
+    override fun getLoginSession(reposSessionRequest: RepoSessionRequest): Result<LoginSession?> {
         return with(reposSessionRequest) {
             Result(
                 scmService.getSession(
