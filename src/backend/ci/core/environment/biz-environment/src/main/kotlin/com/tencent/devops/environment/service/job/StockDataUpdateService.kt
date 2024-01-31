@@ -56,7 +56,6 @@ class StockDataUpdateService @Autowired constructor(
     private val dslContext: DSLContext,
     private val nodeDao: NodeDao,
     private val queryFromCCService: QueryFromCCService,
-    private val stockDataUpdateService: StockDataUpdateService,
     private val thirdPartyAgentDao: ThirdPartyAgentDao,
     private val redisOperation: RedisOperation
 ) : IStockDataUpdateService {
@@ -88,7 +87,7 @@ class StockDataUpdateService @Autowired constructor(
      * 存量数据更新任务：执行一次。提供apigw接口。
      */
     fun writeDisplayNameOnce() {
-        stockDataUpdateService.taskWithRedisLock(WRITE_DISPLAY_NAME_TIMEOUT_LOCK_KEY, ::writeDisplayName)
+        taskWithRedisLock(WRITE_DISPLAY_NAME_TIMEOUT_LOCK_KEY, ::writeDisplayName)
     }
 
     /**
@@ -99,7 +98,7 @@ class StockDataUpdateService @Autowired constructor(
      * cron：执行一次。提供apigw接口。
      */
     fun updateDevopsAgentOnce() {
-        stockDataUpdateService.taskWithRedisLock(UPDATE_DEVOPS_AGENT_TIMEOUT_LOCK_KEY, ::updateDevopsAgent)
+        taskWithRedisLock(UPDATE_DEVOPS_AGENT_TIMEOUT_LOCK_KEY, ::updateDevopsAgent)
     }
 
     private fun updateDevopsAgent() {
