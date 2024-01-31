@@ -265,7 +265,7 @@ interface IScmService {
     /**
      * 读取会话信息
      */
-    fun getGitSession(
+    fun getLoginSession(
         type: ScmType,
         username: String,
         password: String,

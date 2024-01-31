@@ -492,7 +492,7 @@ class GitScmService @Autowired constructor(
         password: String,
         url: String
     ): LoginSession? {
-        return client.get(ServiceScmResource::class).getSession(
+        return client.get(ServiceScmResource::class).getLoginSession(
             RepoSessionRequest(
                 type = scmType,
                 username = username,
