@@ -202,7 +202,7 @@ interface UserWorkspaceResource {
         displayName: String
     ): Result<Boolean>
 
-    @ApiOperation("修改工作空间")
+    @ApiOperation("修改工作空间属性")
     @POST
     @Path("/modify/property")
     fun modifyWorkspaceProperty(

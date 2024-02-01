@@ -31,7 +31,7 @@ import com.fasterxml.jackson.annotation.JsonProperty
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
-@ApiModel("提供给安全侧的获取remotedev项目")
+@ApiModel("工作空间属性")
 data class WorkspaceProperty(
     @ApiModelProperty("别名")
     @JsonProperty("display_name")
