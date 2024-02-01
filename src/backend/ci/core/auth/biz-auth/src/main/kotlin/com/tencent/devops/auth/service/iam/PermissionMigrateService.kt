@@ -95,4 +95,8 @@ interface PermissionMigrateService {
         asyncMigrateManagerGroup: Boolean = true,
         asyncMigrateOtherGroup: Boolean = true
     ): Boolean
+
+    fun autoRenewal(
+        projectCodes: List<String>
+    ): Boolean
 }
