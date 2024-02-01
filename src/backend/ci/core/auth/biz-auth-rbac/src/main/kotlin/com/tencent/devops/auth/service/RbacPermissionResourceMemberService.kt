@@ -242,7 +242,15 @@ class RbacPermissionResourceMemberService constructor(
                     ManagerMemberGroupDTO.builder().members(listOf(ManagerMember(member.type, member.id)))
                         .expiredAt(expiredTime).build()
                 autoRenewalMembers.add(member.id)
-                iamV2ManagerService.createRoleGroupMemberV2(iamGroupId, managerMemberGroup)
+                try {
+                    iamV2ManagerService.createRoleGroupMemberV2(iamGroupId, managerMemberGroup)
+                } catch (ignored: Exception) {
+                    // 用户不存在时,iam会抛异常
+                    logger.error(
+                        "auto renewal member, user not existed||$projectCode|$resourceType|$resourceCode",
+                        ignored
+                    )
+                }
             }
         }
         if (autoRenewalMembers.isNotEmpty()) {
