@@ -45,7 +45,7 @@ interface ApigwTXEnvironmentResourceV4 {
 
     @ApiOperation("部署节点cmdb状态轮询接口", tags = ["v4_app_job_check_deploy_nodes_in_cmdb"])
     @POST
-    @Path("/stock_data_update/v4_app_job_check_deploy_nodes_in_cmdb")
+    @Path("/stock_data_update/check_deploy_nodes_in_cmdb")
     fun checkDeployNodesInCmdb(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
