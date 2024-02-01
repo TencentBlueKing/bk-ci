@@ -24,4 +24,10 @@ interface PermissionResourceMemberService {
         expiredTime: Long,
         members: List<String>
     ): Boolean
+
+    fun autoRenewal(
+        projectCode: String,
+        resourceType: String,
+        resourceCode: String
+    )
 }
