@@ -223,7 +223,7 @@ class RbacPermissionResourceMemberService constructor(
         // 自动续期时间由半年+随机天数,防止同一时间同时过期
         val expiredTime = System.currentTimeMillis() / 1000 +
                 TimeUnit.DAYS.toSeconds(AUTO_RENEWAL_EXPIRED_AT) +
-                TimeUnit.DAYS.toSeconds(RandomUtils.nextLong(180, 360))
+                TimeUnit.DAYS.toSeconds(RandomUtils.nextLong(0, 180))
         val autoRenewalMembers = mutableSetOf<String>()
         resourceGroupInfoList.forEach group@{ resourceGroup ->
             val iamGroupId = resourceGroup.relationId.toInt()
