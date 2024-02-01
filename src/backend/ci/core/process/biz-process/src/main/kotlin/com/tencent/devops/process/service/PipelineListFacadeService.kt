@@ -1452,6 +1452,7 @@ class PipelineListFacadeService @Autowired constructor(
                     channelCode = lastBuild.channelCode
                 )
                 it.latestBuildUserId = lastBuild.triggerUser ?: lastBuild.startUser
+                it.startType = StartType.transform(lastBuild.trigger, lastBuild.webhookType)
                 it.trigger = StartType.toReadableString(
                     lastBuild.trigger,
                     lastBuild.channelCode,
