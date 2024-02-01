@@ -44,10 +44,10 @@ class ChooseAgentInstallChannelIdService @Autowired constructor(
     companion object {
         private val logger = LoggerFactory.getLogger(ChooseAgentInstallChannelIdService::class.java)
 
-        private const val NETWORK_AREA_SUPPORTING = 4
-        private const val NETWORK_AREA_OSS = 5
-        private const val NETWORK_AREA_DEVNET = 6
-        private const val NETWORK_AREA_DEFAULT = -1
+        private const val PROD_NETWORK_AREA_SUPPORTING = 4
+        private const val PROD_NETWORK_AREA_OSS = 6
+        private const val PROD_NETWORK_AREA_DEVNET = 5 // 正式环境安装通道数值
+        private const val PROD_NETWORK_AREA_DEFAULT = -1
     }
 
     fun autoChooseAgentInstallChannelId(ip: String): Int {
@@ -60,18 +60,24 @@ class ChooseAgentInstallChannelIdService @Autowired constructor(
         val networkAreaMap = networkAreaRecord.map {
             it.netArea to it.netSegment.split(",")
         }.toMap()
+
         var networkArea = "SUPPORTING"
-        networkAreaMap.forEach { (key, value) ->
-            if (ipInRange(ip, value)) {
-                networkArea = key
-                return@forEach
+        if (ip.startsWith("9.134.") || ip.startsWith("9.135.")) {
+            networkArea = "DEVNET"
+        } else {
+            networkAreaMap.forEach { (key, value) ->
+                if (ipInRange(ip, value)) {
+                    networkArea = key
+                    return@forEach
+                }
             }
         }
+
         return when (networkArea) {
-            "SUPPORTING" -> NETWORK_AREA_SUPPORTING
-            "OSS" -> NETWORK_AREA_OSS
-            "DEVNET" -> NETWORK_AREA_DEVNET
-            else -> NETWORK_AREA_DEFAULT // 实际走不到，默认SUPPORTING
+            "SUPPORTING" -> PROD_NETWORK_AREA_SUPPORTING
+            "OSS" -> PROD_NETWORK_AREA_OSS
+            "DEVNET" -> PROD_NETWORK_AREA_DEVNET
+            else -> PROD_NETWORK_AREA_DEFAULT // 实际走不到，默认SUPPORTING
         }
     }
 
