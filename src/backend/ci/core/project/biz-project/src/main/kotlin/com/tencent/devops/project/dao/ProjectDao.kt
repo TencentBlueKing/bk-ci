@@ -45,6 +45,8 @@ import com.tencent.devops.project.pojo.enums.ProjectAuthSecrecyStatus
 import com.tencent.devops.project.pojo.enums.ProjectChannelCode
 import com.tencent.devops.project.pojo.user.UserDeptDetail
 import com.tencent.devops.project.util.ProjectUtils
+import java.net.URLDecoder
+import java.time.LocalDateTime
 import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.Record
@@ -53,8 +55,6 @@ import org.jooq.Record3
 import org.jooq.Result
 import org.jooq.impl.DSL
 import org.springframework.stereotype.Repository
-import java.net.URLDecoder
-import java.time.LocalDateTime
 
 @Suppress("ALL")
 @Repository
@@ -928,6 +928,19 @@ class ProjectDao {
             dslContext.update(this)
                 .set(PRODUCT_ID, productId)
                 .where(ENGLISH_NAME.eq(englishName))
+                .execute()
+        }
+    }
+
+    fun batchUpdateProductId(
+        dslContext: DSLContext,
+        englishNames: List<String>,
+        productId: Int
+    ) {
+        with(TProject.T_PROJECT) {
+            dslContext.update(this)
+                .set(PRODUCT_ID, productId)
+                .where(ENGLISH_NAME.`in`(englishNames))
                 .execute()
         }
     }
