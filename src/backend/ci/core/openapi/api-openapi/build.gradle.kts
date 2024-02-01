@@ -38,7 +38,7 @@ dependencies {
     api(project(":core:project:api-project"))
     api(project(":core:sign:api-sign"))
     api("com.tencent.devops:devops-boot-starter-api")
-    api("com.tencent.bk.devops.turbo:api-turbo:0.0.1") {
+    api("com.tencent.bk.devops.turbo:api-turbo:0.0.2-RELEASE") {
         isTransitive = false
     }
 }
