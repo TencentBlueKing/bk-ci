@@ -113,7 +113,7 @@ class UserThirdPartyAgentResourceImpl @Autowired constructor(
     }
 
     override fun importAgent(userId: String, projectId: String, agentId: String): Result<Boolean> {
-        importService.importAgent(userId, projectId, agentId)
+        importService.importAgent(userId, projectId, agentId, masterVersion = null)
         return Result(true)
     }
 

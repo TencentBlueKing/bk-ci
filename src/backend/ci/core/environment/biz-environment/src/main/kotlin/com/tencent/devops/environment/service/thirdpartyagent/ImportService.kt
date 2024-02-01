@@ -126,7 +126,7 @@ class ImportService @Autowired constructor(
         }
     }
 
-    fun importAgent(userId: String, projectId: String, agentId: String) {
+    fun importAgent(userId: String, projectId: String, agentId: String, masterVersion: String?) {
 
         val id = HashUtil.decodeIdToLong(agentId)
 
@@ -135,11 +135,11 @@ class ImportService @Autowired constructor(
                 LOG.info("$agentId duplicate import, skip")
                 return
             }
-            import(id, projectId, agentId, userId)
+            import(id, projectId, agentId, userId, masterVersion)
         }
     }
 
-    private fun import(id: Long, projectId: String, agentId: String, userId: String) {
+    private fun import(id: Long, projectId: String, agentId: String, userId: String, masterVersion: String?) {
         val agentRecord = thirdPartyAgentDao.getAgent(dslContext, id)
             ?: throw NotFoundException("The agent($agentId) is not exist")
 
@@ -174,7 +174,8 @@ class ImportService @Autowired constructor(
                 osName = agentRecord.os.toLowerCase(),
                 status = NodeStatus.NORMAL,
                 type = NodeType.THIRDPARTY,
-                userId = userId
+                userId = userId,
+                agentVersion = masterVersion
             )
 
             val nodeStringId = "BUILD_${HashUtil.encodeLongId(nodeId)}_${agentRecord.ip}"

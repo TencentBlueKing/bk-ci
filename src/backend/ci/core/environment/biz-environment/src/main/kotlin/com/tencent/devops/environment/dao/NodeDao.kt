@@ -633,7 +633,8 @@ class NodeDao {
         osName: String,
         status: NodeStatus,
         type: NodeType,
-        userId: String
+        userId: String,
+        agentVersion: String?
     ): Long
         /** Node ID **/
     {
@@ -652,7 +653,8 @@ class NodeDao {
                     CREATED_USER,
                     CREATED_TIME,
                     LAST_MODIFY_USER,
-                    LAST_MODIFY_TIME
+                    LAST_MODIFY_TIME,
+                    AGENT_VERSION
                 )
                     .values(
                         projectId,
@@ -664,7 +666,8 @@ class NodeDao {
                         userId,
                         LocalDateTime.now(),
                         userId,
-                        LocalDateTime.now()
+                        LocalDateTime.now(),
+                        agentVersion
                     )
                     .returning(NODE_ID)
                     .fetchOne()!!.nodeId

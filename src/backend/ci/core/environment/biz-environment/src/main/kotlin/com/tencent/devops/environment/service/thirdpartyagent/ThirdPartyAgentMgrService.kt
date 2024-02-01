@@ -606,7 +606,8 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
                 createUser = agentRecord.createdUser,
                 createTime = agentRecord.createdTime.timestamp(),
                 parallelTaskCount = agentRecord.parallelTaskCount,
-                dockerParallelTaskCount = agentRecord.dockerParallelTaskCount
+                dockerParallelTaskCount = agentRecord.dockerParallelTaskCount,
+                masterVersion = agentRecord.masterVersion
             )
         )
     }
@@ -683,7 +684,8 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
                 createUser = agentRecord.createdUser,
                 createTime = agentRecord.createdTime.timestamp(),
                 parallelTaskCount = agentRecord.parallelTaskCount,
-                dockerParallelTaskCount = agentRecord.dockerParallelTaskCount
+                dockerParallelTaskCount = agentRecord.dockerParallelTaskCount,
+                masterVersion = agentRecord.masterVersion
             )
         )
     }
@@ -897,7 +899,8 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
                 createUser = it.createdUser,
                 createTime = it.createdTime.timestamp(),
                 parallelTaskCount = it.parallelTaskCount,
-                dockerParallelTaskCount = it.dockerParallelTaskCount
+                dockerParallelTaskCount = it.dockerParallelTaskCount,
+                masterVersion = it.masterVersion
             )
         }.plus(sharedThridPartyAgentList)
     }

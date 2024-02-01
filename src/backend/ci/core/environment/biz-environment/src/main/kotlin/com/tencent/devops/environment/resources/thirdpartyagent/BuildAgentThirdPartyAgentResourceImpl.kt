@@ -71,8 +71,10 @@ class BuildAgentThirdPartyAgentResourceImpl @Autowired constructor(
         val status = thirdPartyAgentService.agentStartup(projectId, agentId, secretKey, startInfo)
         // #4868 构建机安装完毕启动之后，不需要在web再次点击导入就自动生成节点导入
         if (AgentStatus.UN_IMPORT_OK == status) {
-            thirdPartyAgentService.getAgent(projectId, agentId).data?.createUser?.let { userId ->
-                importService.importAgent(userId = userId, projectId = projectId, agentId = agentId)
+            thirdPartyAgentService.getAgent(projectId, agentId).data?.let {
+                importService.importAgent(
+                    userId = it.createUser, projectId = projectId, agentId = agentId, masterVersion = it.masterVersion
+                )
             }
         }
         return Result(status)
