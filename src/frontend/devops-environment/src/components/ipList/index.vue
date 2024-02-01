@@ -13,6 +13,7 @@
             label="IP"
             prop="ip"
             :min-width="150"
+            show-overflow-tooltip
         >
             <template slot-scope="{ row }">
                 <div
@@ -27,6 +28,7 @@
             label="IPv6"
             prop="ipv6"
             width="150"
+            show-overflow-tooltip
         >
             <template slot-scope="{ row }">
                 {{ row.ipv6 || '--' }}
@@ -38,6 +40,7 @@
             prop="totalTime"
             sortable
             width="100"
+            show-overflow-tooltip
         >
             <template slot-scope="{ row }">
                 {{ row.totalTime / 1000 }}
@@ -49,6 +52,7 @@
             prop="bkCloudId"
             sortable
             width="100"
+            show-overflow-tooltip
         >
             <template slot-scope="{ row }">
                 {{ row.bkCloudAreaName || row.bkCloudId || '--' }}
@@ -60,13 +64,15 @@
             prop="exitCode"
             width="100"
             sortable
+            show-overflow-tooltip
         >
         </bk-table-column>
         <bk-table-column
-            v-if="allRenderColumnMap.agentId"
+            v-if="allRenderColumnMap.bkAgentId"
             label="Agent ID"
-            prop="agentId"
+            prop="bkAgentId"
             width="100"
+            show-overflow-tooltip
         >
         </bk-table-column>
         <bk-table-column
@@ -75,6 +81,7 @@
             prop="bkHostId"
             sortable
             width="100"
+            show-overflow-tooltip
         >
         </bk-table-column>
         <bk-table-column
@@ -160,7 +167,7 @@
                     label: this.$t('environment.返回码')
                 },
                 {
-                    id: 'agentId',
+                    id: 'bkAgentId',
                     label: 'Agent ID'
                 },
                 {
@@ -179,7 +186,7 @@
                     { id: 'totalTime' },
                     { id: 'bkCloudId' },
                     { id: 'exitCode' },
-                    { id: 'agentId' },
+                    { id: 'bkAgentId' },
                     { id: 'bkHostId' }
                 ])
             }
