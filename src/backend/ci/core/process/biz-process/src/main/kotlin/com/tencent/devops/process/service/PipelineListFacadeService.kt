@@ -1452,7 +1452,11 @@ class PipelineListFacadeService @Autowired constructor(
                     channelCode = lastBuild.channelCode
                 )
                 it.latestBuildUserId = lastBuild.triggerUser ?: lastBuild.startUser
-                it.trigger = lastBuild.trigger
+                it.trigger = StartType.toReadableString(
+                    lastBuild.trigger,
+                    lastBuild.channelCode,
+                    I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+                )
                 val webhookInfo = lastBuild.webhookInfo
                 if (webhookInfo != null) {
                     it.webhookAliasName = webhookInfo.webhookAliasName ?: getProjectName(webhookInfo.webhookRepoUrl)
