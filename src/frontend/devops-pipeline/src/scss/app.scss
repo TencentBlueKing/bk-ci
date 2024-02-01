@@ -494,10 +494,10 @@ table tr:hover {
 }
 
 .draft-tag {
-    padding: 0 4px;
-    margin: 0;
-    line-height: 16px;
-    height: 16px;
+    padding: 0 4px !important;
+    margin: 0 !important;
+    line-height: 16px !important;
+    height: 16px !important;
     flex-shrink: 0;
 }
 
