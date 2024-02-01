@@ -32,11 +32,15 @@ import com.tencent.devops.common.api.pojo.OS
 import com.tencent.devops.common.api.util.ApiUtil
 import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.api.util.SecurityUtil
+import com.tencent.devops.environment.constant.T_ENVIRONMENT_THIRDPARTY_AGENT_MASTER_VERSION
+import com.tencent.devops.environment.constant.T_ENVIRONMENT_THIRDPARTY_AGENT_NODE_ID
+import com.tencent.devops.environment.constant.T_NODE_NODE_ID
 import com.tencent.devops.environment.dao.NodeDao
 import com.tencent.devops.environment.dao.thirdpartyagent.ThirdPartyAgentDao
 import com.tencent.devops.environment.permission.EnvironmentPermissionService
 import com.tencent.devops.environment.pojo.enums.NodeStatus
 import com.tencent.devops.environment.pojo.enums.NodeType
+import com.tencent.devops.environment.pojo.job.AgentVersionInfo
 import com.tencent.devops.environment.pojo.thirdpartyagent.ThirdPartyAgentStaticInfo
 import com.tencent.devops.environment.service.AgentUrlService
 import com.tencent.devops.environment.service.slave.SlaveGatewayService
@@ -84,7 +88,8 @@ class PreBuildAgentMgrService @Autowired constructor(
                 osName = os.name.toLowerCase(),
                 status = NodeStatus.NORMAL,
                 type = NodeType.THIRDPARTY,
-                userId = userId
+                userId = userId,
+                agentVersion = null
             )
 
             val realNodeStringId = nodeStingId ?: "BUILD_${HashUtil.encodeLongId(nodeId)}_$initIp"
@@ -124,8 +129,21 @@ class PreBuildAgentMgrService @Autowired constructor(
                 script = agentUrlService.genAgentInstallScript(agentRecord),
                 ip = agentRecord.ip,
                 hostName = agentRecord.hostname,
-                status = agentRecord.status
+                status = agentRecord.status,
+                masterVersion = agentRecord.masterVersion
             )
+
+            // 同步更新T_NODE表中记录的agent版本信息
+            val buildNodesAgentVersionRecords = thirdPartyAgentDao.getAgentByNodeIdAllProj(
+                dslContext = dslContext, nodeIdList = listOf(nodeId)
+            )
+            val buildNodeUpdateInfo = buildNodesAgentVersionRecords.map {
+                AgentVersionInfo(
+                    nodeId = it[T_ENVIRONMENT_THIRDPARTY_AGENT_NODE_ID] as Long,
+                    agentVersion = it[T_ENVIRONMENT_THIRDPARTY_AGENT_MASTER_VERSION] as? String
+                )
+            }
+            nodeDao.updateBuildAgentVersionByNodeId(dslContext, buildNodeUpdateInfo)
 
             thirdPartyAgentDao.updateStatus(context, agentId, nodeId, projectId, AgentStatus.IMPORT_EXCEPTION)
             environmentPermissionService.createNode(
@@ -157,7 +175,8 @@ class PreBuildAgentMgrService @Autowired constructor(
                 script = agentUrlService.genAgentInstallScript(it),
                 ip = it.ip,
                 hostName = it.hostname,
-                status = it.status
+                status = it.status,
+                masterVersion = it.masterVersion
             )
         }
     }
