@@ -205,6 +205,7 @@ class CmdbNodeService @Autowired constructor(
         val existIpList = nodeDao.listServerAndDevCloudNodes(dslContext, projectId) // 已存在 节点db记录
             .map { it.nodeIp }.toSet() // 已存在 节点ip
         val toAddIpList = nodeIps.filterNot { existIpList.contains(it) }.filterNot { it.isEmpty() } // 要添加的 节点ip
+            .toSet() // 去重
         val toAddIpToCmdbNodeMap = cmdbIpToNodeMap.filter { toAddIpList.contains(it.key) } // 要添加的 节点ip - cmdb记录映射
         ImportServerNodeUtils.checkImportCount(
             dslContext = dslContext,
