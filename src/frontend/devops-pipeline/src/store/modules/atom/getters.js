@@ -19,7 +19,6 @@
 
 import { buildEnvMap, jobConst, semverVersionKeySet } from '@/utils/pipelineConst'
 import Vue from 'vue'
-import { generateDisplayName } from '../../../utils/util'
 import { getAtomModalKey, isCodePullAtom, isNewAtomTemplate, isNormalContainer, isTriggerContainer, isVmContainer } from './atomUtil'
 import { buildNoRules, defaultBuildNo, platformList } from './constants'
 
@@ -32,10 +31,10 @@ export default {
         return state.pipelineInfo?.runLockType === 'LOCK'
     },
     hasDraftPipeline: state => {
-        return state.pipelineInfo?.version !== state.pipelineInfo?.releaseVesrion
+        return state.pipelineInfo?.version !== state.pipelineInfo?.releaseVersion
     },
     getDraftVersionName: (state, getters) => {
-        return getters.hasDraftPipeline ? generateDisplayName(state.pipelineInfo?.baseVersion, state.pipelineInfo?.baseVersionName) : ''
+        return getters.hasDraftPipeline ? state.pipelineInfo?.baseVersionName : '--'
     },
     isBranchVersion: state => {
         return state.pipelineInfo?.baseVersionStatus === 'BRANCH'
@@ -46,7 +45,6 @@ export default {
     pacEnabled: state => {
         return state.pipelineInfo?.pipelineAsCodeSettings?.enable ?? false
     },
-
     yamlInfo: state => {
         return state.pipelineInfo?.yamlInfo
     },
@@ -69,6 +67,15 @@ export default {
                 }), {})
             }
             : null
+    },
+    fullPipeline: state => {
+        return {
+            ...state.pipeline,
+            stages: [
+                state.pipeline.stages[0],
+                ...state.pipelineWithoutTrigger.stages
+            ]
+        }
     },
     getAtomCodeListByCategory: state => category => {
         return state.atomCodeList.filter(atomCode => {

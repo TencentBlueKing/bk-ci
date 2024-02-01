@@ -1,6 +1,5 @@
 <template>
-    <aside class="pipeline-group-aside"
-    >
+    <aside class="pipeline-group-aside">
         <div class="pipeline-group-aside-main">
             <header class="pipeline-group-aside-header">
                 <div :class="{
@@ -92,9 +91,12 @@
                 </template>
             </article>
         </div>
-        <footer :class="['recycle-pipeline-group-footer', {
-            active: $route.params.viewId === DELETED_VIEW_ID
-        }]" @click="goRecycleBin">
+        <footer
+            :class="['recycle-pipeline-group-footer', {
+                active: $route.params.viewId === DELETED_VIEW_ID
+            }]"
+            @click="goRecycleBin"
+        >
             <logo class="pipeline-group-item-icon" name="delete" size="16"></logo>
             <span>{{$t('restore.recycleBin')}}</span>
         </footer>

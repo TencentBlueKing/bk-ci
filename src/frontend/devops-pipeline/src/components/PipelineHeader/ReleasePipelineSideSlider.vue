@@ -183,7 +183,7 @@
                     <section class="belongs-to-groups-box">
                         <p>{{ $t('prePipelineGroup') }}</p>
                         <div>
-                            <bk-tag v-for="group in viewNames" :key="group">
+                            <bk-tag v-for="(group, index) in viewNames" :key="index">
                                 {{ group }}
                             </bk-tag>
                         </div>
@@ -250,7 +250,6 @@
     import YamlPreviewPopup from '@/components/YamlPreviewPopup'
     import { UPDATE_PIPELINE_INFO } from '@/store/modules/atom/constants'
     import { mapActions, mapGetters, mapState } from 'vuex'
-    import { generateDisplayName } from '@/utils/util'
 
     export default {
         components: {
@@ -322,7 +321,7 @@
             ...mapGetters('atom', ['isBranchVersion', 'pacEnabled', 'yamlInfo']),
             ...mapState('common', ['pacSupportScmTypeList']),
             baseVersionBranch () {
-                return this.pipelineInfo?.baseVersionBranch
+                return this.pipelineInfo?.baseVersionName
             },
             pipelineName () {
                 return this.pipelineInfo?.pipelineName
@@ -569,7 +568,7 @@
                                 },
                                 domProps: {
                                     innerHTML: this.$t(isPacMR ? 'pacMRRelaseSuc' : 'relaseSucTips', [
-                                        generateDisplayName(versionNum, versionName)
+                                        versionName
                                     ])
                                 }
                             }),
@@ -591,12 +590,16 @@
                                                         h(
                                                             'li',
                                                             {
+                                                                domProps: {
+                                                                    innerHTML: this.$t(
+                                                                        `${tipsI18nKey}${index}-${i}`
+                                                                    )
+                                                                },
                                                                 style: {
                                                                     marginLeft: '32px',
                                                                     listStyle: 'disc'
                                                                 }
-                                                            },
-                                                            this.$t(`${tipsI18nKey}${index}-${i}`)
+                                                            }
                                                         )
                                                     )
                                             ])
@@ -915,7 +918,7 @@
   letter-spacing: 0;
   line-height: 22px;
   text-align: left;
-  > span > e {
+  b {
     color: #ff9c01;
   }
 }

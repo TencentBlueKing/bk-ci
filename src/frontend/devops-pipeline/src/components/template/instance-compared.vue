@@ -143,7 +143,7 @@
         .compared-content {
             padding: 20px;
             min-height: 560px;
-            max-height: 580px;
+            max-height: 680px;
         }
         .update-version-compared {
             display: flex;

@@ -154,7 +154,8 @@
             :desc="emptyTipsConfig.desc"
             :btns="emptyTipsConfig.btns">
         </empty-tips>
-        <instance-compared :show-compared-instance="showComparedInstance"
+        <instance-compared
+            :show-compared-instance="showComparedInstance"
             :loading="dialogLoading"
             :instance-version="instanceVersion"
             :cur-version="currentVersion"
@@ -167,7 +168,8 @@
             :target-stages="targetStages"
             @comfire="comfireHandler"
             @cancel="cancelHandler"
-            :selected-version="selectedVersion"></instance-compared>
+            :selected-version="selectedVersion"
+        />
     </div>
 </template>
 

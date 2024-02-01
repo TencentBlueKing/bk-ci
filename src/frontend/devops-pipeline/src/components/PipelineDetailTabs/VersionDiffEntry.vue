@@ -17,6 +17,7 @@
             :draggable="false"
             ext-cls="diff-version-dialog"
             width="90%"
+            height="90"
             :title="$t('diff')"
         >
             <div v-bkloading="{ isLoading: isLoadYaml, color: '#1d1d1d' }">
@@ -65,7 +66,6 @@
 <script>
     import { mapActions } from 'vuex'
     import YamlDiff from '@/components/YamlDiff'
-    import { generateDisplayName } from '@/utils/util'
     export default {
         components: {
             YamlDiff
@@ -127,7 +127,7 @@
                         this.pipelineVersionList.push(...res.records.map(item => {
                             return {
                                 ...item,
-                                versionName: item.versionName || this.$t('editPage.draftVersion', [generateDisplayName(item.baseVersion, item.baseVersionName)])
+                                versionName: item.versionName || this.$t('editPage.draftVersion', [item.baseVersionName])
                             }
                         }))
                     }
@@ -185,9 +185,6 @@
         .bk-dialog {
             transition: all .3s;
             margin: 0;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
         }
     }
 </style>

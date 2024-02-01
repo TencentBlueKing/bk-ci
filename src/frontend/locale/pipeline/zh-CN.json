@@ -1374,9 +1374,9 @@
   "pacMRRelaseSuc": "已自动创建合并请求，请到代码库处理。合并请求未通过前，版本尚未成功发布！",
   "pacPipelineReleaseTips0": "1、PAC 模式下，YAML文件合入默认分支，才视为发布正式版本",
   "pacPipelineReleaseTips1": "2、PAC 模式下，YAML 文件选取规则",
-  "pacPipelineReleaseTips1-0": "Push/Tag 事件触发，以触发分支/Tag上的 YAML 文件为准",
-  "pacPipelineReleaseTips1-1": "MR 触发，以源和目标分支最新 YAML为准。当源和目标同时修改了 YAML 文件时，需先将目标分支变更同步到源分支，否则触发失败",
-  "pacPipelineReleaseTips1-2": "其他方式触发，如定时、手动、issue等，以默认分支上的 YAML 文件为准",
+  "pacPipelineReleaseTips1-0": "Push/Tag 事件触发，以<b>触发分支/Tag</b>上的 YAML 文件为准",
+  "pacPipelineReleaseTips1-1": "MR 触发，以源和目标分支<b>最新 YAML</b>为准。当源和目标同时修改了 YAML 文件时，需先将目标分支变更同步到源分支，否则触发失败",
+  "pacPipelineReleaseTips1-2": "其他方式触发，如定时、手动、issue等，以<b>默认分支</b>上的 YAML 文件为准",
   "leaveConfirmTitle": "确认离开当前页面吗？",
   "leaveConfirmTips":"离开将会丢失未保存的信息，建议保存后离开",
   "releasePipeline": "发布流水线",
@@ -1462,5 +1462,7 @@
   "pacModePipelineDeleteTips": "已开启PAC模式,请先删除代码库默认分支上的yaml文件,再删除流水线",
   "noPermissionToDelete": "无权限删除",
   "noStartupParams": "暂无入参，无需填写",
-  "noParams": "暂无入参"
+  "noParams": "暂无入参",
+  "rollbackSuc": "回滚到版本【{0}】成功",
+  "badgeTips": "徽章可以添加到项目的 README.md 中，方便访问者快速了解项目的构建状态、测试结果或部署状态等信息"
 }
