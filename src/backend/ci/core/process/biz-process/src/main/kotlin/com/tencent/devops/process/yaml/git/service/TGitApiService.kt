@@ -297,32 +297,34 @@ class TGitApiService @Autowired constructor(
         versionName: String?
     ): PacGitPushResult {
         val token = cred.toToken()
+        // 1. 创建分支
         val branchName = if (targetAction == CodeTargetAction.COMMIT_TO_MASTER) {
             defaultBranch
         } else {
-            versionName!!
+            // 判断分支是否存在
+            val branchExists = client.get(ServiceGitResource::class).getBranch(
+                accessToken = token,
+                userId = "",
+                repository = gitProjectId,
+                page = PageUtil.DEFAULT_PAGE,
+                pageSize = PageUtil.DEFAULT_PAGE_SIZE,
+                search = versionName!!
+            ).data?.any { it.name == versionName } ?: false
+            // 分支不存在,则需要创建
+            if (!branchExists) {
+                client.get(ServiceGitResource::class).createBranch(
+                    token = token,
+                    tokenType = cred.toTokenType(),
+                    gitProjectId = gitProjectId,
+                    gitCreateBranch = GitCreateBranch(
+                        branchName = versionName,
+                        ref = defaultBranch
+                    )
+                ).data
+            }
+            versionName
         }
-        // 1. 判断分支是否存在
-        val branchExists = client.get(ServiceGitResource::class).getBranch(
-            accessToken = token,
-            userId = "",
-            repository = gitProjectId,
-            page = PageUtil.DEFAULT_PAGE,
-            pageSize = PageUtil.DEFAULT_PAGE_SIZE,
-            search = branchName
-        ).data?.any { it.name == branchName } ?: false
-        // 分支不存在,则需要创建
-        if (!branchExists) {
-            client.get(ServiceGitResource::class).createBranch(
-                token = token,
-                tokenType = cred.toTokenType(),
-                gitProjectId = gitProjectId,
-                gitCreateBranch = GitCreateBranch(
-                    branchName = branchName,
-                    ref = defaultBranch
-                )
-            ).data
-        }
+
         // 2. 判断文件是否存在
         val fileExists = try {
             client.get(ServiceGitResource::class).getGitFileInfo(

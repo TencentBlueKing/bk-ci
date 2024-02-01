@@ -318,39 +318,7 @@ class PipelineYamlFacadeService @Autowired constructor(
             errorCode = ProcessMessageCode.GIT_NOT_FOUND,
             params = arrayOf(repoHashId)
         )
-        if (content.isBlank()) {
-            throw ErrorCodeException(
-                errorCode = ProcessMessageCode.ERROR_YAML_CONTENT_IS_EMPTY,
-                params = arrayOf(repoHashId)
-            )
-        }
-        if (filePath.startsWith(Constansts.ciFileDirectoryName) &&
-            !GitActionCommon.checkYamlPipelineFile(filePath.substringAfter(".ci/"))
-        ) {
-            throw ErrorCodeException(
-                errorCode = ProcessMessageCode.ERROR_YAML_FILE_NAME_FORMAT
-            )
-        }
-        pipelineYamlService.getPipelineYamlInfo(projectId = projectId, pipelineId = pipelineId)?.let {
-            if (it.repoHashId != repoHashId) {
-                throw ErrorCodeException(
-                    errorCode = ProcessMessageCode.ERROR_PIPELINE_BOUND_REPO,
-                    params = arrayOf(it.pipelineId)
-                )
-            }
-            if (it.filePath != filePath) {
-                throw ErrorCodeException(
-                    errorCode = ProcessMessageCode.ERROR_PIPELINE_BOUND_YAML,
-                    params = arrayOf(it.pipelineId)
-                )
-            }
-        }
-        if (targetAction != CodeTargetAction.COMMIT_TO_MASTER && versionName.isNullOrBlank()) {
-            throw ErrorCodeException(
-                errorCode = CommonMessageCode.PARAMETER_IS_NULL,
-                params = arrayOf("versionName")
-            )
-        }
+        checkPushParam(content, repoHashId, filePath, targetAction, versionName, projectId, pipelineId)
         try {
             val setting = PacRepoSetting(repository = repository)
             val event = PipelineYamlManualEvent(
@@ -396,6 +364,60 @@ class PipelineYamlFacadeService @Autowired constructor(
                 )
             }
             throw exception
+        }
+    }
+
+    private fun checkPushParam(
+        content: String,
+        repoHashId: String,
+        filePath: String,
+        targetAction: CodeTargetAction,
+        versionName: String?,
+        projectId: String,
+        pipelineId: String
+    ) {
+        if (content.isBlank()) {
+            throw ErrorCodeException(
+                errorCode = ProcessMessageCode.ERROR_YAML_CONTENT_IS_EMPTY,
+                params = arrayOf(repoHashId)
+            )
+        }
+        if (filePath.startsWith(Constansts.ciFileDirectoryName) &&
+            !GitActionCommon.checkYamlPipelineFile(filePath.substringAfter(".ci/"))
+        ) {
+            throw ErrorCodeException(
+                errorCode = ProcessMessageCode.ERROR_YAML_FILE_NAME_FORMAT
+            )
+        }
+        if (targetAction != CodeTargetAction.COMMIT_TO_MASTER && versionName.isNullOrBlank()) {
+            throw ErrorCodeException(
+                errorCode = CommonMessageCode.PARAMETER_IS_NULL,
+                params = arrayOf("versionName")
+            )
+        }
+        pipelineYamlService.getPipelineYamlInfo(
+            projectId = projectId, repoHashId = repoHashId, filePath = filePath
+        )?.let {
+            if (it.pipelineId != pipelineId) {
+                throw ErrorCodeException(
+                    errorCode = ProcessMessageCode.ERROR_YAML_BOUND_PIPELINE,
+                    params = arrayOf(filePath, it.pipelineId)
+                )
+            }
+        }
+        pipelineYamlService.getPipelineYamlInfo(projectId = projectId, pipelineId = pipelineId)?.let {
+            if (it.repoHashId != repoHashId) {
+                throw ErrorCodeException(
+                    errorCode = ProcessMessageCode.ERROR_PIPELINE_BOUND_REPO,
+                    params = arrayOf(it.pipelineId)
+                )
+            }
+            if (it.filePath != filePath) {
+                throw ErrorCodeException(
+                    errorCode = ProcessMessageCode.ERROR_PIPELINE_BOUND_YAML,
+                    params = arrayOf(it.pipelineId)
+                )
+            }
         }
     }
 
