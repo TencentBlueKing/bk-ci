@@ -37,6 +37,5 @@ data class WorkspaceProperty(
     @JsonProperty("display_name")
     val displayName: String? = "",
     @ApiModelProperty("备注")
-    @JsonProperty("remark")
     val remark: String? = ""
 )
