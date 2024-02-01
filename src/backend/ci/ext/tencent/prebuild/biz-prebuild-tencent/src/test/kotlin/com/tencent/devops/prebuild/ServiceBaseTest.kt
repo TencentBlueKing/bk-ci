@@ -36,7 +36,8 @@ open class ServiceBaseTest {
         hostName = "${userId}_hostname",
         gateway = "ArgumentMatchers.anyString()",
         link = "ArgumentMatchers.anyString()",
-        ip = ip
+        ip = ip,
+        masterVersion = null
     )
 
     /**
