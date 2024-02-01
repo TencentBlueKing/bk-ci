@@ -39,6 +39,8 @@ data class ProjectCreateUserInfo(
     val roleName: String?,
     @ApiModelProperty("角色Id")
     val roleId: Int?,
+    @ApiModelProperty("组ID")
+    val groupId: Int?,
     @ApiModelProperty("目标用户")
     val userIds: List<String>? = emptyList()
 )

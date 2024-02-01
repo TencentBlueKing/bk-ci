@@ -324,10 +324,11 @@ class PipelineInfoDao {
     }
 
     @SuppressWarnings("ComplexMethod")
-    fun listDeletePipelineIdByProject(
+    fun listPipelinesByProject(
         dslContext: DSLContext,
         projectId: String,
-        days: Long?,
+        deleteFlag: Boolean? = false,
+        days: Long? = null,
         offset: Int? = null,
         limit: Int? = null,
         sortType: PipelineSortType,
@@ -336,7 +337,9 @@ class PipelineInfoDao {
         with(T_PIPELINE_INFO) {
             val conditions = mutableListOf<Condition>()
             conditions.add(PROJECT_ID.eq(projectId))
-            conditions.add(DELETE.eq(true))
+            if (deleteFlag != null) {
+                conditions.add(DELETE.eq(deleteFlag))
+            }
             if (days != null) {
                 conditions.add(UPDATE_TIME.greaterOrEqual(LocalDateTime.now().minusDays(days)))
             }
@@ -378,15 +381,18 @@ class PipelineInfoDao {
         }
     }
 
-    fun countDeletePipeline(
+    fun countPipeline(
         dslContext: DSLContext,
         projectId: String,
-        days: Long?
+        deleteFlag: Boolean? = false,
+        days: Long? = null
     ): Int {
         with(T_PIPELINE_INFO) {
             val conditions = mutableListOf<Condition>()
             conditions.add(PROJECT_ID.eq(projectId))
-            conditions.add(DELETE.eq(true))
+            if (deleteFlag != null) {
+                conditions.add(DELETE.eq(true))
+            }
             if (days != null) {
                 conditions.add(UPDATE_TIME.greaterOrEqual(LocalDateTime.now().minusDays(days)))
             }

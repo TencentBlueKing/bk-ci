@@ -44,6 +44,7 @@ object WebhookI18nConstants {
     const val TGIT_NOTE_EVENT_DESC = "bkTgitNoteEventDesc"
     const val TGIT_REVIEW_APPROVED_EVENT_DESC = "bkTgitReviewApprovedEventDesc"
     const val TGIT_REVIEW_APPROVING_EVENT_DESC = "bkTgitReviewApprovingEventDesc"
+    const val TGIT_REVIEW_CLOSED_EVENT_DESC = "bkTgitReviewClosedEventDesc"
     const val TGIT_REVIEW_CHANGE_DENIED_EVENT_DESC = "bkTgitReviewChangeDeniedEventDesc"
     const val TGIT_REVIEW_CHANGE_REQUIRED_EVENT_DESC = "bkTgitReviewChangeRequiredEventDesc"
     const val TGIT_REVIEW_CREATED_EVENT_DESC = "bkTgitReviewCreatedEventDesc"
@@ -126,6 +127,9 @@ object WebhookI18nConstants {
 
     // issues操作类型不匹配
     const val ISSUES_ACTION_NOT_MATCH = "bkRepoTriggerIssueActionNotMatch"
+
+    // Github Pr操作类型不匹配
+    const val PR_ACTION_NOT_MATCH = "bkRepoTriggerPrActionNotMatch"
 
     // 事件回放
     const val EVENT_REPLAY_DESC = "bkEventReplayDesc"

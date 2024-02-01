@@ -47,9 +47,9 @@ class TemplateService @Autowired constructor(
     private val templatePipelineDao: TemplatePipelineDao
 ) {
 
-    fun getTemplateIdByPipeline(projectId: String, pipelineId: String): String? {
+    fun getTemplateIdByPipeline(projectId: String, pipelineId: String, queryDslContext: DSLContext? = null): String? {
         return templatePipelineDao.get(
-            dslContext = dslContext,
+            dslContext = queryDslContext ?: dslContext,
             projectId = projectId,
             pipelineId = pipelineId
         )?.templateId

@@ -27,6 +27,7 @@
 
 package com.tencent.devops.common.webhook.service.code.matcher
 
+import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeEventType
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeType
 import com.tencent.devops.common.webhook.pojo.code.WebHookParams
 import com.tencent.devops.common.webhook.pojo.code.p4.P4Event
@@ -41,6 +42,10 @@ class P4WebHookMatcher(
 
     companion object {
         private val logger = LoggerFactory.getLogger(P4WebHookMatcher::class.java)
+    }
+
+    override fun getEventType(): CodeEventType {
+        return eventHandler.getEventType(event) ?: super.getEventType()
     }
 
     override fun isMatch(

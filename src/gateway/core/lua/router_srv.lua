@@ -47,13 +47,11 @@ end
 
 -- 获取灰度设置
 local cache_tail = ""
-local ns_config = nil
+local ns_config = config.ns
 
 if ngx.var.devops_region ~= "DEVNET" then
-    ns_config = config.ns
     cache_tail = ".normal.idc"
 else
-    ns_config = config.ns_devnet
     cache_tail = ".normal.devnet"
 end
 

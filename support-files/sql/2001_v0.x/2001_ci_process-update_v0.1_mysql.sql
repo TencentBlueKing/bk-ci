@@ -16,23 +16,6 @@ BEGIN
     IF NOT EXISTS(SELECT 1
                   FROM information_schema.COLUMNS
                   WHERE TABLE_SCHEMA = db
-                    AND TABLE_NAME = 'T_BUILD_STARTUP_PARAM'
-                    AND COLUMN_NAME = 'PARAM') THEN
-        ALTER TABLE T_BUILD_STARTUP_PARAM
-            ADD COLUMN `PARAM` mediumtext NOT NULL COMMENT '参数' AFTER BUILD_ID;
-    ELSEIF NOT EXISTS(SELECT 1
-                      FROM information_schema.COLUMNS
-                      WHERE TABLE_SCHEMA = db
-                        AND TABLE_NAME = 'T_BUILD_STARTUP_PARAM'
-                        AND COLUMN_NAME = 'PARAM'
-                        AND COLUMN_TYPE = 'mediumtext') THEN
-        ALTER TABLE T_BUILD_STARTUP_PARAM
-            CHANGE `PARAM` `PARAM` mediumtext NOT NULL AFTER BUILD_ID;
-    END IF;
-
-    IF NOT EXISTS(SELECT 1
-                  FROM information_schema.COLUMNS
-                  WHERE TABLE_SCHEMA = db
                     AND TABLE_NAME = 'T_PIPELINE_BUILD_HISTORY'
                     AND COLUMN_NAME = 'BUILD_PARAMETERS') THEN
         ALTER TABLE T_PIPELINE_BUILD_HISTORY
@@ -373,36 +356,6 @@ BEGIN
     IF NOT EXISTS(SELECT 1
                   FROM information_schema.COLUMNS
                   WHERE TABLE_SCHEMA = db
-                    AND TABLE_NAME = 'T_BUILD_STARTUP_PARAM'
-                    AND COLUMN_NAME = 'PROJECT_ID') THEN
-        ALTER TABLE T_BUILD_STARTUP_PARAM
-            ADD COLUMN `PROJECT_ID` varchar(64) DEFAULT NULL;
-    END IF;
-
-
-    IF NOT EXISTS(SELECT 1
-                  FROM information_schema.COLUMNS
-                  WHERE TABLE_SCHEMA = db
-                    AND TABLE_NAME = 'T_BUILD_STARTUP_PARAM'
-                    AND COLUMN_NAME = 'PIPELINE_ID') THEN
-        ALTER TABLE T_BUILD_STARTUP_PARAM
-            ADD COLUMN `PIPELINE_ID` varchar(64) DEFAULT NULL COMMENT '流水线ID';
-    END IF;
-
-
-    IF NOT EXISTS(SELECT 1
-                  FROM information_schema.statistics
-                  WHERE TABLE_SCHEMA = db
-                    AND TABLE_NAME = 'T_BUILD_STARTUP_PARAM'
-                    AND INDEX_NAME = 'IDX_DEL') THEN
-        ALTER TABLE T_BUILD_STARTUP_PARAM
-            ADD INDEX IDX_DEL (`PROJECT_ID`,`PIPELINE_ID`);
-    END IF;
-
-
-    IF NOT EXISTS(SELECT 1
-                  FROM information_schema.COLUMNS
-                  WHERE TABLE_SCHEMA = db
                     AND TABLE_NAME = 'T_PIPELINE_BUILD_VAR'
                     AND COLUMN_NAME = 'VAR_TYPE') THEN
         ALTER TABLE T_PIPELINE_BUILD_VAR ADD COLUMN `VAR_TYPE` VARCHAR(64) COMMENT '变量类型';
@@ -512,36 +465,6 @@ BEGIN
                         AND COLUMN_NAME = 'ID'
                         AND COLUMN_TYPE = 'bigint(20)') THEN
             ALTER TABLE T_PIPELINE_WEBHOOK MODIFY COLUMN ID BIGINT(20) NOT NULL AUTO_INCREMENT COMMENT '主键ID';
-        END IF;
-    END IF;
-
-    IF EXISTS(SELECT 1
-              FROM information_schema.COLUMNS
-              WHERE TABLE_SCHEMA = db
-                AND TABLE_NAME = 'T_PIPELINE_TEMPLATE'
-                AND COLUMN_NAME = 'ID') THEN
-        IF NOT EXISTS(SELECT 1
-                      FROM information_schema.COLUMNS
-                      WHERE TABLE_SCHEMA = db
-                        AND TABLE_NAME = 'T_PIPELINE_TEMPLATE'
-                        AND COLUMN_NAME = 'ID'
-                        AND COLUMN_TYPE = 'bigint(20)') THEN
-            ALTER TABLE T_PIPELINE_TEMPLATE MODIFY COLUMN ID BIGINT(20) NOT NULL AUTO_INCREMENT COMMENT '主键ID';
-        END IF;
-    END IF;
-
-    IF EXISTS(SELECT 1
-              FROM information_schema.COLUMNS
-              WHERE TABLE_SCHEMA = db
-                AND TABLE_NAME = 'T_BUILD_STARTUP_PARAM'
-                AND COLUMN_NAME = 'ID') THEN
-        IF NOT EXISTS(SELECT 1
-                      FROM information_schema.COLUMNS
-                      WHERE TABLE_SCHEMA = db
-                        AND TABLE_NAME = 'T_BUILD_STARTUP_PARAM'
-                        AND COLUMN_NAME = 'ID'
-                        AND COLUMN_TYPE = 'bigint(20)') THEN
-            ALTER TABLE T_BUILD_STARTUP_PARAM MODIFY COLUMN ID BIGINT(20) NOT NULL AUTO_INCREMENT COMMENT '主键ID';
         END IF;
     END IF;
 

@@ -48,7 +48,7 @@ class MigratePermissionHandoverService constructor(
     fun handoverPermissions(permissionHandoverDTO: PermissionHandoverDTO) {
         val handoverFrom = permissionHandoverDTO.handoverFrom
         val handoverToList = permissionHandoverDTO.handoverToList
-        val resourceType = permissionHandoverDTO.resourceType
+        val resourceType = permissionHandoverDTO.resourceType!!
         permissionHandoverDTO.projectList.forEach { projectCode ->
             if (permissionHandoverDTO.managerPermission) {
                 val projectManagerGroupId = authResourceGroupDao.get(
@@ -67,46 +67,40 @@ class MigratePermissionHandoverService constructor(
                     )
                 }
             }
-            var offset = 0
-            val limit = 100
-            do {
-                val resourceList = authResourceService.listByCreator(
-                    resourceType = permissionHandoverDTO.resourceType,
+            val resourceList = authResourceService.listByCreator(
+                resourceType = resourceType,
+                projectCode = projectCode,
+                creator = handoverFrom
+            )
+            resourceList.forEach { resource ->
+                val resourceCode = resource.resourceCode
+                val handoverTo = handoverToList.random()
+                logger.info("handover resource permissions :$projectCode|$resourceCode|$handoverFrom|$handoverTo")
+                authResourceService.updateCreator(
                     projectCode = projectCode,
-                    creator = handoverFrom,
-                    offset = offset,
-                    limit = limit
+                    resourceType = resourceType,
+                    resourceCode = resourceCode,
+                    creator = handoverTo
                 )
-                resourceList.forEach { resource ->
-                    val resourceCode = resource.resourceCode
-                    val handoverTo = handoverToList.random()
-                    logger.info("handover resource permissions :$projectCode|$resourceCode|$handoverFrom|$handoverTo")
-                    authResourceService.updateCreator(
-                        projectCode = projectCode,
-                        resourceType = resourceType,
-                        resourceCode = resourceCode,
-                        creator = handoverTo
-                    )
-                    val resourceManagerGroup = authResourceGroupDao.get(
-                        dslContext = dslContext,
-                        projectCode = projectCode,
-                        resourceType = resourceType,
-                        resourceCode = resourceCode,
-                        groupCode = DefaultGroupType.MANAGER.value
-                    )
-                    groupService.addGroupMember(
-                        userId = handoverTo,
-                        memberType = USER_TYPE,
-                        expiredAt = GROUP_EXPIRED_TIME,
-                        groupId = resourceManagerGroup!!.relationId.toInt()
-                    )
-                    v2ManagerService.deleteRoleGroupMemberV2(
-                        resourceManagerGroup.relationId.toInt(),
-                        USER_TYPE,
-                        handoverFrom
-                    )
-                }
-            } while (resourceList.size == limit)
+                val resourceManagerGroup = authResourceGroupDao.get(
+                    dslContext = dslContext,
+                    projectCode = projectCode,
+                    resourceType = resourceType,
+                    resourceCode = resourceCode,
+                    groupCode = DefaultGroupType.MANAGER.value
+                )
+                groupService.addGroupMember(
+                    userId = handoverTo,
+                    memberType = USER_TYPE,
+                    expiredAt = GROUP_EXPIRED_TIME,
+                    groupId = resourceManagerGroup!!.relationId.toInt()
+                )
+                v2ManagerService.deleteRoleGroupMemberV2(
+                    resourceManagerGroup.relationId.toInt(),
+                    USER_TYPE,
+                    handoverFrom
+                )
+            }
         }
     }
 

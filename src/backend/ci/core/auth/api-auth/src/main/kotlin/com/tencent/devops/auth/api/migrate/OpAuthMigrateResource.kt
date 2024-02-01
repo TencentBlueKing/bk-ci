@@ -110,6 +110,14 @@ interface OpAuthMigrateResource {
     ): Result<Boolean>
 
     @POST
+    @Path("/handoverAllPermissions")
+    @ApiOperation("权限交接-全量")
+    fun handoverAllPermissions(
+        @ApiParam("权限交接请求体", required = true)
+        permissionHandoverDTO: PermissionHandoverDTO
+    ): Result<Boolean>
+
+    @POST
     @Path("/handoverPermissions")
     @ApiOperation("权限交接")
     fun handoverPermissions(

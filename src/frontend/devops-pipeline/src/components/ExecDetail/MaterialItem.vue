@@ -3,7 +3,7 @@
         <div class="material-row-info-spans">
             <span v-for="field in materialInfoKeys" :key="field">
                 <logo :name="iconArray[field] || 'commit'" size="14" />
-                <!-- <bk-link
+                <bk-link
                     v-if="includeLink(field)"
                     class="material-span"
                     theme="primary"
@@ -11,9 +11,9 @@
                     :href="getLink(field)"
                 >
                     {{ formatField(field) }}
-                </bk-link> -->
+                </bk-link>
                 <span
-                    v-if="isMR && field === 'webhookSourceTarget'"
+                    v-else-if="isMR && field === 'webhookSourceTarget'"
                     class="mr-source-target"
                 >
                     <span v-bk-tooltips="{ delay: [300, 0], content: material.webhookSourceBranch, allowHTML: false }">{{ material.webhookSourceBranch }}</span>
@@ -62,6 +62,7 @@
             isMR () {
                 return [
                     'MERGE_REQUEST',
+                    'PULL_REQUEST',
                     'MERGE_REQUEST_ACCEPT'
                 ].includes(this.material?.webhookEventType)
             },
@@ -86,7 +87,9 @@
                     noteId: 'webhook-note',
                     issueIid: 'webhook-issue',
                     reviewId: 'webhook-review',
-                    webhookSourceTarget: 'branch'
+                    webhookSourceTarget: 'branch',
+                    parentPipelineName: 'pipeline',
+                    parentBuildNum: 'sharp'
                 }
             },
             materialInfoKeys () {
@@ -105,6 +108,7 @@
                             'webhookCommitId'
                         ]
                     case 'MERGE_REQUEST':
+                    case 'PULL_REQUEST':
                         return [
                             'webhookAliasName',
                             'webhookSourceTarget',
@@ -147,6 +151,11 @@
                             'webhookAliasName',
                             'webhookCommitId'
                         ]
+                    case 'PARENT_PIPELINE':
+                        return [
+                            'parentPipelineName',
+                            'parentBuildNum'
+                        ]
                     default:
                         return [
                             'webhookAliasName',
@@ -168,13 +177,14 @@
             includeLink (field) {
                 return [
                     'newCommitId',
-                    // 'reviewId',
+                    'reviewId',
                     'issueIid',
                     'noteId',
                     'mrIid',
-                    'tagName'
-                    // 'webhookCommitId'
-                ].includes(field) && !this.isSVN
+                    'tagName',
+                    'webhookCommitId',
+                    'parentBuildNum'
+                ].includes(field) && !this.isSVN && this.getLink(field)
             },
             formatField (field) {
                 switch (field) {
@@ -191,24 +201,11 @@
                 }
             },
             getLink (field) {
-                // const webHookRepo = this.material?.webhookRepoUrl?.replace?.(/\.git$/, '') ?? ''
                 switch (field) {
                     case 'newCommitId':
                         return this.material?.url ?? ''
-                    // case 'reviewId':
-                    //     return `${webHookRepo}/reviews/${this.material[field]}` ?? ''
-                    // case 'issueIid':
-                    //     return `${webHookRepo}/issues/${this.material[field]}` ?? ''
-                    // case 'noteId':
-                    //     return `${webHookRepo}/merge_requests/${this.material.mrIid}/comments#note_${this.material[field]}` ?? ''
-                    // case 'mrIid':
-                    //     return this.material?.mrUrl ?? `${webHookRepo}/merge_requests/${this.material[field]}` ?? ''
-                    // case 'tagName':
-                    //     return `${webHookRepo}/-/tags/${this.material[field]}` ?? ''
-                    // case 'webhookCommitId':
-                    //     return `${webHookRepo}/commit/${this.material[field]}` ?? ''
                     default:
-                        return ''
+                        return this.material?.linkUrl ?? ''
                 }
             }
         }

@@ -46,8 +46,9 @@ object Versions {
     const val jjwt = "0.11.5"
     const val Okhttp = "4.9.0"
     const val jgit = "5.13.1.202206130422-r"
-    const val iam = "1.0.0"
+    const val iam = "1.0.2"
     const val disklrucache = "2.0.2"
     const val BkCrypto = "1.1.3"
     const val audit = "1.0.8"
+    const val MysqlDriver = "8.0.33"
 }

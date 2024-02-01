@@ -60,6 +60,7 @@ import com.tencent.devops.dispatch.kubernetes.pojo.KubernetesDockerRegistry
 import com.tencent.devops.dispatch.kubernetes.pojo.KubernetesResource
 import com.tencent.devops.dispatch.kubernetes.pojo.PodNameSelector
 import com.tencent.devops.dispatch.kubernetes.pojo.Pool
+import com.tencent.devops.dispatch.kubernetes.pojo.SpecialBuilderConfig
 import com.tencent.devops.dispatch.kubernetes.pojo.StartBuilderParams
 import com.tencent.devops.dispatch.kubernetes.pojo.StopBuilderParams
 import com.tencent.devops.dispatch.kubernetes.pojo.TaskStatusEnum
@@ -137,6 +138,9 @@ class KubernetesContainerService @Autowired constructor(
     @Value("\${kubernetes.gateway.webConsoleProxy}")
     val webConsoleProxy: String = ""
 
+    @Value("\${kubernetes.privateBuilderTaint:}")
+    val privateBuilderTaint: String = ""
+
     override fun getBuilderStatus(
         buildId: String,
         vmSeqId: String,
@@ -198,7 +202,7 @@ class KubernetesContainerService @Autowired constructor(
         mem: String,
         disk: String
     ): Pair<String, String> {
-        with(dispatchMessages) {
+        with(dispatchMessages.event) {
             val (host, name, tag) = DispatchKubernetesCommonUtils.parseImage(containerPool.container!!)
             val userName = containerPool.credential?.user
             val password = containerPool.credential?.password
@@ -229,9 +233,9 @@ class KubernetesContainerService @Autowired constructor(
                     ),
                     env = mapOf(
                         ENV_KEY_PROJECT_ID to projectId,
-                        ENV_KEY_AGENT_ID to id,
-                        ENV_KEY_AGENT_SECRET_KEY to secretKey,
-                        ENV_KEY_GATEWAY to gateway,
+                        ENV_KEY_AGENT_ID to dispatchMessages.id,
+                        ENV_KEY_AGENT_SECRET_KEY to dispatchMessages.secretKey,
+                        ENV_KEY_GATEWAY to dispatchMessages.gateway,
                         "TERM" to "xterm-256color",
                         SLAVE_ENVIRONMENT to "Kubernetes",
                         ENV_JOB_BUILD_TYPE to (dispatchType?.buildType()?.name ?: BuildType.KUBERNETES.name),
@@ -239,7 +243,11 @@ class KubernetesContainerService @Autowired constructor(
                     ),
                     command = listOf("/bin/sh", entrypoint),
                     nfs = null,
-                    privateBuilder = null,
+                    privateBuilder = if (privateBuilderTaint.isBlank()) {
+                        null
+                    } else {
+                        SpecialBuilderConfig(privateBuilderTaint)
+                    },
                     specialBuilder = null
                 )
             )
@@ -248,7 +256,7 @@ class KubernetesContainerService @Autowired constructor(
                     "taskId:($taskId)"
             )
             logsPrinter.printLogs(
-                this,
+                dispatchMessages,
                 I18nUtil.getCodeLanMessage(
                     messageCode = BK_REQUEST_CREATE_BUILD_MACHINE_SUCCESSFUL,
                     params = arrayOf(builderName),
@@ -267,7 +275,7 @@ class KubernetesContainerService @Autowired constructor(
         mem: String,
         disk: String
     ): String {
-        with(dispatchMessages) {
+        with(dispatchMessages.event) {
             return kubernetesBuilderClient.operateBuilder(
                 buildId = buildId,
                 vmSeqId = vmSeqId,
@@ -276,9 +284,9 @@ class KubernetesContainerService @Autowired constructor(
                 param = StartBuilderParams(
                     env = mapOf(
                         ENV_KEY_PROJECT_ID to projectId,
-                        ENV_KEY_AGENT_ID to id,
-                        ENV_KEY_AGENT_SECRET_KEY to secretKey,
-                        ENV_KEY_GATEWAY to gateway,
+                        ENV_KEY_AGENT_ID to dispatchMessages.id,
+                        ENV_KEY_AGENT_SECRET_KEY to dispatchMessages.secretKey,
+                        ENV_KEY_GATEWAY to dispatchMessages.gateway,
                         "TERM" to "xterm-256color",
                         SLAVE_ENVIRONMENT to "Kubernetes",
                         ENV_JOB_BUILD_TYPE to (dispatchType?.buildType()?.name ?: BuildType.KUBERNETES.name),

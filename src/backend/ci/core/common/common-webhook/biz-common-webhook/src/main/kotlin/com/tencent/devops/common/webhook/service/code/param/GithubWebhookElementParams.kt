@@ -69,6 +69,7 @@ class GithubWebhookElementParams : ScmWebhookElementParams<CodeGithubWebHookTrig
             params.includeNoteComment = includeNoteComment
             params.includeNoteTypes = joinToString(includeNoteTypes)
             params.includeIssueAction = joinToString(includeIssueAction)
+            params.includeMrAction = joinToString(includeMrAction)
         }
         return params
     }

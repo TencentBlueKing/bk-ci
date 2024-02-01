@@ -22,6 +22,7 @@
         />
         <section class="copy-custom-repo-tree">
             <bk-big-tree
+                v-if="isCopyDialogShow"
                 ref="customRepoTree"
                 selectable
                 :expand-on-click="false"
@@ -35,8 +36,8 @@
     </bk-dialog>
 </template>
 <script>
-    import { mapActions } from 'vuex'
     import Logo from '@/components/Logo'
+    import { mapActions } from 'vuex'
 
     export default {
         components: {

@@ -105,21 +105,23 @@ class OPProjectResourceImpl @Autowired constructor(
         productId: Int?,
         request: HttpServletRequest
     ): Result<Map<String, Any?>?> {
-        return projectTagService.getProjectListByFlag(
-            projectName = projectName,
-            englishName = englishName,
-            projectType = projectType,
-            isSecrecy = isSecrecy,
-            creator = creator,
-            approver = approver,
-            approvalStatus = approvalStatus,
-            offset = offset,
-            limit = limit,
-            grayFlag = grayFlag,
-            codeCCGrayFlag = codeCCGrayFlag,
-            repoGrayFlag = repoGrayFlag,
-            remoteDevFlag = remoteDevFlag,
-            productId = productId
+        return Result(
+            opProjectService.getProjectListByFlag(
+                projectName = projectName,
+                englishName = englishName,
+                projectType = projectType,
+                isSecrecy = isSecrecy,
+                creator = creator,
+                approver = approver,
+                approvalStatus = approvalStatus,
+                offset = offset,
+                limit = limit,
+                grayFlag = grayFlag,
+                codeCCGrayFlag = codeCCGrayFlag,
+                repoGrayFlag = repoGrayFlag,
+                remoteDevFlag = remoteDevFlag,
+                productId = productId
+            )
         )
     }
 

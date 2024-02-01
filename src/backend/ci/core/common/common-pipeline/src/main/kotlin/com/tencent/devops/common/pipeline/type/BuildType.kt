@@ -38,7 +38,7 @@ enum class BuildType(
     val visable: Boolean? = true // 是否页面可见
 ) {
     ESXi("蓝盾公共构建资源", listOf(OS.MACOS), false, false, false),
-    MACOS("蓝盾公共构建资源(NEW)", listOf(OS.MACOS), false, false, false),
+    MACOS("云托管: MacOS on DevCloud", listOf(OS.MACOS), false, false, false),
     WINDOWS("云托管：Windows on DevCloud", listOf(OS.WINDOWS), false, false, false),
     KUBERNETES("Kubernetes构建资源", listOf(OS.LINUX), false, false, false),
     PUBLIC_DEVCLOUD("公共：Docker on DevCloud", listOf(OS.LINUX), true, false, false),

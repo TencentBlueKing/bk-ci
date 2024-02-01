@@ -18,7 +18,9 @@
  */
 
 export const REPOSITORY_API_URL_PREFIX = 'repository/api'
+export const PROCESS_API_URL_PREFIX = 'process/api'
 export const TICKET_API_URL_PREFIX = 'ticket/api'
+export const STORE_API_URL_PREFIX = 'store/api'
 
 export const FETCH_ERROR = 'FETCH_ERROR'
 export const SET_CODELIBS_MUTATION = 'SET_CODELIBS_MUTATION'
