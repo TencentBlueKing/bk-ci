@@ -112,6 +112,8 @@ data class Pipeline(
     var lastBuildTotalCount: Int? = null,
     @ApiModelProperty("最后一次构建已完成的任务个数", required = false)
     var lastBuildFinishCount: Int? = null,
+    @ApiModelProperty("启动类型(新)", required = false)
+    var startType: String? = null,
     @ApiModelProperty("触发方式", required = false)
     var trigger: String? = null,
     @ApiModelProperty("webhook仓库别名", required = false)
