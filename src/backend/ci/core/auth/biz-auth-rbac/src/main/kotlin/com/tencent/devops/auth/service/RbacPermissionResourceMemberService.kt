@@ -218,12 +218,9 @@ class RbacPermissionResourceMemberService constructor(
             projectCode = projectCode,
             iamGroupIds = iamGroupInfoList.map { it.id.toString() }
         )
+        val currentTime = TimeUnit.MILLISECONDS.toSeconds(System.currentTimeMillis())
         // 预期的自动过期天数
-        val autoExpectExpiredAt = System.currentTimeMillis() / 1000 + TimeUnit.DAYS.toSeconds(AUTO_VALID_EXPIRED_AT)
-        // 自动续期时间由半年+随机天数,防止同一时间同时过期
-        val expiredTime = System.currentTimeMillis() / 1000 +
-                TimeUnit.DAYS.toSeconds(AUTO_RENEWAL_EXPIRED_AT) +
-                TimeUnit.DAYS.toSeconds(RandomUtils.nextLong(0, 180))
+        val expectAutoExpiredAt = currentTime + AUTO_VALID_EXPIRED_AT
         val autoRenewalMembers = mutableSetOf<String>()
         resourceGroupInfoList.forEach group@{ resourceGroup ->
             val iamGroupId = resourceGroup.relationId.toInt()
@@ -234,10 +231,13 @@ class RbacPermissionResourceMemberService constructor(
             val groupMemberInfoList = iamV2ManagerService.getRoleGroupMemberV2(iamGroupId, pageInfoDTO).results
             groupMemberInfoList.forEach member@{ member ->
                 // 已过期或者要半年后才过期的,不自动过期
-                if (member.expiredAt < System.currentTimeMillis() / 1000 ||
-                    member.expiredAt > autoExpectExpiredAt
+                if (member.expiredAt < currentTime ||
+                    member.expiredAt > expectAutoExpiredAt
                 ) return@member
 
+                // 自动续期时间由半年+随机天数,防止同一时间同时过期
+                val expiredTime = currentTime + AUTO_RENEWAL_EXPIRED_AT +
+                        TimeUnit.DAYS.toSeconds(RandomUtils.nextLong(0, 180))
                 val managerMemberGroup =
                     ManagerMemberGroupDTO.builder().members(listOf(ManagerMember(member.type, member.id)))
                         .expiredAt(expiredTime).build()
@@ -263,8 +263,8 @@ class RbacPermissionResourceMemberService constructor(
         // 有效的过期时间,在30天内就是有效的
         private const val VALID_EXPIRED_AT = 30L
         // 自动续期有效的过期时间,在180天以上就不需要自动续期
-        private const val AUTO_VALID_EXPIRED_AT = 180L
+        private val AUTO_VALID_EXPIRED_AT = TimeUnit.DAYS.toSeconds(180)
         // 自动续期默认180天
-        private const val AUTO_RENEWAL_EXPIRED_AT = 180L
+        private val AUTO_RENEWAL_EXPIRED_AT = TimeUnit.DAYS.toSeconds(180)
     }
 }
