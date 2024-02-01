@@ -126,11 +126,17 @@ class ProjectNotifyService constructor(
         projectName: String,
         projectId: String
     ) {
-        val managers = client.get(ServiceProjectAuthResource::class).getProjectUsers(
-            token = tokenService.getSystemToken(),
-            projectCode = projectId,
-            group = BkAuthGroup.MANAGER
-        ).data ?: return
+        val managers = try {
+            client.get(ServiceProjectAuthResource::class).getProjectUsers(
+                token = tokenService.getSystemToken(),
+                projectCode = projectId,
+                group = BkAuthGroup.MANAGER
+            ).data ?: return
+        } catch (e: Exception) {
+            logger.warn("get project($projectId) managers fail ${e.message}")
+            return
+        }
+
         val receives = managers.filterNot { projectUserService.isSeniorUser(it) }
         if (receives.isEmpty()) return
 
