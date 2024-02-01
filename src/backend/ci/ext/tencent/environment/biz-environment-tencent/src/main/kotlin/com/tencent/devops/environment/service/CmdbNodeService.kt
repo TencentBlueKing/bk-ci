@@ -89,9 +89,6 @@ class CmdbNodeService @Autowired constructor(
         const val AGENT_ABNORMAL_NODE_STATUS = 0
         const val AGENT_NORMAL_NODE_STATUS = 1
         const val AGENT_NOT_INSTALLED_TAG = false
-
-        const val RETRY_PERIOD_MILLS = 500L
-        const val RETRY_MAX_TIMES = 5
     }
 
     fun getUserCmdbNodesNew(
@@ -226,12 +223,7 @@ class CmdbNodeService @Autowired constructor(
         val ipAndHostIdList = queryCCIpToCCInfoMap.values.map {
             AgentVersion(ip = it.bkHostInnerip, bkHostId = it.bkHostId)
         }
-        var agentVersionList = queryAgentStatusService.getAgentVersions(ipAndHostIdList)
-        var retryTimes = 0
-        while (agentVersionList.isNullOrEmpty() && retryTimes++ <= RETRY_MAX_TIMES) {
-            agentVersionList = queryAgentStatusService.getAgentVersions(ipAndHostIdList)
-            Thread.sleep(RETRY_PERIOD_MILLS) // 未添加到CC中的节点需要等待一下再查节点管理, 立刻请求没有返回结果
-        }
+        val agentVersionList = queryAgentStatusService.getAgentVersions(ipAndHostIdList)
         val ipToAgentVersionMap = agentVersionList?.associateBy { it.ip }
         if (logger.isDebugEnabled) logger.debug("[addCmdbNodes]ipToAgentVersionMap:$ipToAgentVersionMap")
         val toAddNodeList = toAddIpList.map {

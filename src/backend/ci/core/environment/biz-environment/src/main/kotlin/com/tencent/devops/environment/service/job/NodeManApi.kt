@@ -101,7 +101,7 @@ class NodeManApi {
             logger.debug("[${getNodemanOperationName()}] headers: $headers, url: $url, body: $requestContent")
         logger.info("[${getNodemanOperationName()}]POST url: $url, body: ${logWithLengthLimit(requestContent)}")
         val resultFromRes = getResultFromRes(OkhttpUtils.doPost(url, requestContent, headers), classOfU)
-        if (logger.isDebugEnabled) logger.debug("[executePostRequest] resultFromRes: $resultFromRes")
+        if (logger.isDebugEnabled) logger.debug("[${getNodemanOperationName()}] resultFromRes: $resultFromRes")
         return resultFromRes
     }
 
