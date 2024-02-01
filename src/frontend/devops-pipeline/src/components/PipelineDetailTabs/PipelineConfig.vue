@@ -22,18 +22,23 @@
                 @change="handleVersionChange"
             />
             <RollbackEntry
-                v-if="canRollBack"
                 :version="activePipelineVersion"
                 :pipeline-id="pipelineId"
                 :project-id="projectId"
                 :version-name="activePipelineVersionName"
                 :draft-version-name="draftVersionName"
+                :is-active-draft="isActiveDraft"
             >
-                <i class="devops-icon icon-rollback" />
-                {{ $t("rollback") }}
+                <template v-if="isCurrentVersion || isActiveDraft">
+                    <i class="devops-icon icon-edit" />
+                    {{$t('edit')}}
+                </template>
+                <template v-else>
+                    <i class="devops-icon icon-rollback" />
+                    {{ $t("rollback") }}
+                </template>
             </RollbackEntry>
             <VersionDiffEntry
-                v-if="!isCurrentVersion"
                 :version="activePipelineVersion"
                 :latest-version="releaseVersion"
                 :current-yaml="pipelineYaml"
@@ -104,6 +109,10 @@
                 'pipeline',
                 'pipelineInfo'
             ]),
+
+            ...mapState([
+                'pipelineMode'
+            ]),
             ...mapGetters({
                 isCodeMode: 'isCodeMode',
                 getPipelineSubscriptions: 'atom/getPipelineSubscriptions',
@@ -114,6 +123,9 @@
             },
             pipelineId () {
                 return this.$route.params.pipelineId
+            },
+            canEdit () {
+                return this.pipelineInfo?.permissions?.canEdit ?? true
             },
             pipelineType () {
                 return this.$route.params.type
@@ -136,12 +148,6 @@
                     default:
                         return ''
                 }
-            },
-            canRollBack () {
-                return (
-                    this.activePipelineVersion !== this.pipelineInfo?.releaseVersion
-                    && !this.isActiveDraft
-                )
             },
             isCurrentVersion () {
                 return this.activePipelineVersion === this.pipelineInfo?.releaseVersion
@@ -222,7 +228,6 @@
         created () {
             if (this.releaseVersion) {
                 this.activePipelineVersion = this.releaseVersion
-                console.log(this.releaseVersion, this.activePipelineVersion, 'init')
                 this.$nextTick(() => {
                     this.init()
                 })

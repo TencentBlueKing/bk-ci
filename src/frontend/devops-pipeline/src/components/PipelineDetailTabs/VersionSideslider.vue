@@ -9,7 +9,9 @@
                 <template v-else>
                     <i v-if="isActiveDraft" class="devops-icon icon-draft" />
                     <logo v-else-if="isActiveBranchVersion" name="branch" size="14" />
-                    <i v-else class="devops-icon icon-check-circle" />
+                    <i v-else :class="['devops-icon icon-check-circle', {
+                        'is-release-version-icon': isCurrentVersion(activeVersion)
+                    }]" />
                     <span v-if="isActiveDraft">{{ $t('editPage.draftVersion', [draftBaseVersionName]) }}</span>
                     <span v-else>
                         {{ activeVersionName }}
@@ -35,14 +37,15 @@
                         @click="switchVersion(item)"
                         :key="item.version"
                         :class="{
-                            'pipeline-current-version': isCurrentVersion(item),
                             'pipeline-version-active': item.version === selectedVersionId
                         }"
                     >
                         <p>
                             <i v-if="item.isDraft" class="devops-icon icon-draft" style="font-size: 14px" />
                             <logo v-else-if="item.isBranchVersion" name="branch" size="14" />
-                            <i v-else class="devops-icon icon-check-circle" />
+                            <i v-else :class="['devops-icon icon-check-circle', {
+                                'is-release-version-icon': isCurrentVersion(item)
+                            }]" />
                             <span class="pipeline-version-name">
                                 {{ item.displayName }}
                             </span>
@@ -75,7 +78,7 @@
 </template>
 <script>
     import { mapState, mapActions } from 'vuex'
-    import { convertTime, generateDisplayName } from '@/utils/util'
+    import { convertTime } from '@/utils/util'
     import VersionHistorySideSlider from './VersionHistorySideSlider'
     import Logo from '@/components/Logo'
     export default {
@@ -134,7 +137,7 @@
                 return this.activeVersion?.isBranchVersion ?? false
             },
             draftBaseVersionName () {
-                return generateDisplayName(this.activeVersion?.baseVersion, this.activeVersion?.baseVersionName)
+                return this.activeVersion?.baseVersionName ?? '--'
             }
         },
         watch: {
@@ -177,11 +180,11 @@
                     this.versionList = records.map(item => {
                         const isDraft = item.status === 'COMMITTING'
                         const isBranchVersion = item.status === 'BRANCH'
-                        const displayName = generateDisplayName(item.versionNum, item.versionName)
+
                         return {
                             ...item,
-                            displayName: isBranchVersion ? item.versionName : isDraft ? this.$t('draft') : displayName,
-                            description: isDraft ? this.$t('baseOn', [generateDisplayName(item.baseVersion, item.baseVersionName)]) : (item.description || '--'),
+                            displayName: isDraft ? this.$t('draft') : item.versionName,
+                            description: isDraft ? this.$t('baseOn', [item.baseVersionName]) : (item.description || '--'),
                             isBranchVersion,
                             isDraft,
                             isRelease: item.status === 'RELEASED'
@@ -239,7 +242,6 @@
     .icon-draft,
     .icon-check-circle {
         &.icon-check-circle {
-            color: $successColor;
             font-size: 18px;
         }
         font-size: 14px;
@@ -249,6 +251,10 @@
     }
     cursor: pointer;
 }
+.icon-check-circle.is-release-version-icon {
+    color: $successColor;
+}
+
 .pipeline-version-dropmenu-content {
     width: 100%;
     min-width: 360px;
@@ -289,11 +295,6 @@
         &.pipeline-version-active {
             background: #E1ECFF;
             color: $primaryColor;
-        }
-        &.pipeline-current-version {
-            .icon-check-circle {
-                color: $successColor;
-            }
         }
 
         > p {

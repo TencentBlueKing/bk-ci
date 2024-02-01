@@ -13,16 +13,16 @@
                 action: RESOURCE_ACTION.EDIT
             }
         }"
-        @click.stop="rollback"
+        @click.stop="handleClick"
     >
         <slot>
-            {{ $t('rollback') }}
+            {{ operateName }}
         </slot>
     </bk-button>
 </template>
 
 <script>
-    import { mapActions } from 'vuex'
+    import { mapState, mapActions, mapGetters } from 'vuex'
     import { navConfirm } from '@/utils/util'
     import { UPDATE_PIPELINE_INFO } from '@/store/modules/atom/constants'
     import {
@@ -42,6 +42,9 @@
             draftVersionName: {
                 type: String
             },
+            draftBaseVersion: {
+                type: Number
+            },
             projectId: {
                 type: String,
                 required: true
@@ -49,7 +52,9 @@
             pipelineId: {
                 type: String,
                 required: true
-            }
+            },
+            isActiveDraft: Boolean,
+            isReleaseVersion: Boolean
         },
         data () {
             return {
@@ -57,14 +62,39 @@
                 RESOURCE_ACTION
             }
         },
+        computed: {
+            ...mapState('atom', [
+                'pipelineInfo'
+            ]),
+            ...mapGetters({
+                hasDraftPipeline: 'atom/hasDraftPipeline'
+            }),
+            isRollback () {
+                const { baseVersion, releaseVersion } = this.pipelineInfo
+                const isReleaseVersion = this.version === releaseVersion
+                return !(this.isActiveDraft || baseVersion === this.version || (isReleaseVersion && !this.hasDraftPipeline))
+            },
+            operateName () {
+                return this.isRollback
+                    ? this.$t('rollback')
+                    : this.$t('edit')
+            }
+        },
         methods: {
             ...mapActions('pipelines', [
                 'rollbackPipelineVersion'
             ]),
+            handleClick () {
+                if (this.isRollback) {
+                    this.rollback()
+                } else {
+                    this.goEdit(this.version)
+                }
+            },
             async rollback () {
                 try {
                     this.loading = true
-                    const hasDraft = this.draftVersionName
+                    const hasDraft = this.hasDraftPipeline
                         ? {
                             title: this.$t('hasDraftTips', [this.draftVersionName]),
                             content: this.$t('dropDraftTips', [this.versionName])
@@ -74,7 +104,8 @@
                         }
                     const result = await navConfirm({
                         ...hasDraft,
-                        theme: 'warning'
+                        type: hasDraft ? 'warning' : '',
+                        theme: hasDraft ? 'warning' : ''
                     })
                     if (!result) {
                         return
@@ -89,17 +120,7 @@
                     })
 
                     if (version) {
-                        this.$showTips({
-                            message: this.$t('rollback') + this.$t('success'),
-                            theme: 'success'
-                        })
-                        this.$router.push({
-                            name: 'pipelinesEdit',
-                            params: {
-                                ...this.$route.params,
-                                version
-                            }
-                        })
+                        this.goEdit(version)
                     }
                 } catch (error) {
                     this.handleError(error, {
@@ -110,6 +131,15 @@
                 } finally {
                     this.loading = false
                 }
+            },
+            goEdit (version) {
+                this.$router.push({
+                    name: 'pipelinesEdit',
+                    params: {
+                        ...this.$route.params,
+                        version
+                    }
+                })
             }
         }
     }

@@ -128,7 +128,7 @@
                 return ['RUNNING', 'QUEUE'].indexOf(this.execDetail?.status) > -1
             },
             canRelease () {
-                return (this.pipelineInfo?.canRelease ?? false) && !this.saveStatus
+                return (this.pipelineInfo?.canRelease ?? false) && !this.saveStatus && !this.isRunning
             },
             canManualStartup () {
                 return this.pipelineInfo?.canManualStartup ?? false

@@ -51,6 +51,7 @@
                                 :project-id="$route.params.projectId"
                                 :version-name="props.row.versionName"
                                 :draft-version-name="draftVersionName"
+                                :is-active-draft="props.row.isDraft"
                             />
                             <bk-button
                                 text
@@ -78,7 +79,7 @@
 <script>
     import SearchSelect from '@blueking/search-select'
     import { mapActions, mapState, mapGetters } from 'vuex'
-    import { convertTime, navConfirm, generateDisplayName } from '@/utils/util'
+    import { convertTime, navConfirm } from '@/utils/util'
     import VersionDiffEntry from './VersionDiffEntry'
     import RollbackEntry from './RollbackEntry'
     import EmptyException from '@/components/common/exception'
@@ -210,11 +211,13 @@
                     count: res.count
                 })
                 this.pipelineVersionList = res.records.map(item => {
+                    const isDraft = item.status === 'COMMITTING'
                     return {
                         ...item,
-                        canRollback: item.version !== this.releaseVersion && item.status !== 'COMMITTING',
+                        isDraft,
+                        canRollback: !isDraft,
                         isBranchVersion: item.status === 'BRANCH',
-                        versionName: item.versionName || this.$t('editPage.draftVersion', [generateDisplayName(item.baseVersion, item.baseVersionName)])
+                        versionName: item.versionName || this.$t('editPage.draftVersion', [item.baseVersionName])
                     }
                 })
             },

@@ -7,7 +7,8 @@
         :max="400"
         :initial-divide="initialDivide"
         @collapse-change="handleCollapseChange"
-        @after-resize="afterResize">
+        @after-resize="afterResize"
+    >
         <pipeline-group-aside slot="aside" />
         <router-view slot="main" />
     </bk-resize-layout>

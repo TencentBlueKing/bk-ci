@@ -123,24 +123,21 @@
 
                     })
                     if (res) {
-                        const self = this
                         const h = this.$createElement
-                        message = h('span', {}, [
-                            self.$t('details.copyToCustomSuc', [self.artifact.name, self.activeFolder]),
+                        message = h('p', {
+                            class: 'copy-to-custom-suc-message'
+                        }, [
+                            this.$t('details.copyToCustomSuc', [this.artifact.name, this.activeFolder]),
                             h(
                                 'bk-link',
                                 {
                                     props: {
                                         theme: 'primary',
                                         target: '_blank',
-                                        href: `${WEB_URL_PREFIX}/repo/${
-                                            self.$route.params.projectId
-                                        }/generic?repoName=custom&path=${encodeURIComponent(
-                                            `${self.activeFolder}/default`
-                                        )}`
+                                        href: `${WEB_URL_PREFIX}/repo/${this.$route.params.projectId}/generic?repoName=custom&path=${encodeURIComponent(`${self.activeFolder}/default`)}`
                                     }
                                 },
-                                h(
+                                [h(
                                     'span',
                                     {
                                         class: 'go-dist-link'
@@ -152,9 +149,9 @@
                                                 size: 14
                                             }
                                         }),
-                                        self.$t('details.goDistFolder')
+                                        this.$t('details.goDistFolder')
                                     ]
-                                )
+                                )]
                             )
                         ])
                         theme = 'success'

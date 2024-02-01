@@ -4,7 +4,7 @@
         <section class="badge-link-content" slot="content">
             <span @click="copy('markdownLink')" class="pointer">
                 {{ $t('copyBadgeMarkdownLink') }}
-                <i class="bk-icon icon-info-circle" />
+                <i class="bk-icon icon-info-circle" v-bk-tooltips="badgeTips" />
             </span>
             <span @click="copy('picLink')" class="pointer">
                 {{ $t('copyBadgePicLink') }}
@@ -40,6 +40,13 @@
                 }
 
                 return `[![BK Pipelines Status](${this.badgeImageUrl})](${location.origin}/process/api-html/user/builds/projects/${projectId}/pipelines/${pipelineId}/latestFinished?X-DEVOPS-PROJECT-ID=${projectId})`
+            },
+            badgeTips () {
+                return {
+                    content: this.$t('badgeTips'),
+                    placement: 'bottom',
+                    maxWidth: 360
+                }
             }
         },
 
