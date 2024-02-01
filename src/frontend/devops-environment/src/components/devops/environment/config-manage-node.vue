@@ -166,6 +166,7 @@
             async 'nodeSelectConf.isShow' (val) {
                 if (!val) {
                     this.rowList = []
+                    this.selectedNodeList = []
                     this.inputValue = ''
                     this.operator = 'operator'
                     this.importText = this.$t('environment.import')
@@ -205,7 +206,7 @@
                     this.$nextTick(() => {
                         this.nodeList.forEach(selection => {
                             const matchItem = this.rowList.find(val => val.ip === selection.ip)
-                            if ((matchItem && selection.nodeStatus !== 'NOT_IN_CC' && !this.reImportIp) || (matchItem && selection.nodeStatus === 'NOT_IN_CC' && !this.reImportIp)) {
+                            if ((matchItem && selection.nodeType === 'CMDB' && selection.nodeStatus !== 'NOT_IN_CC' && !this.reImportIp) || (matchItem && selection.nodeStatus === 'NOT_IN_CC' && this.reImportIp)) {
                                 this.$refs.nodeListTable.toggleRowSelection(matchItem, true)
                                 this.selectedNodeList.push(matchItem)
                             }
