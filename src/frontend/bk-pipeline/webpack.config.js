@@ -27,6 +27,12 @@ module.exports = (env = {}, argv) => {
                 commonjs2: 'vue',
                 amd: 'vue',
                 root: 'Vue'
+            },
+            '@tencent/bk-magic-vue': {
+                commonjs: '@tencent/bk-magic-vue',
+                commonjs2: '@tencent/bk-magic-vue',
+                amd: '@tencent/bk-magic-vue',
+                root: 'bkMagicVue'
             }
         },
         module: {
