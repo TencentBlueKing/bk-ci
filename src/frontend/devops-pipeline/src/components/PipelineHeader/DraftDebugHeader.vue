@@ -1,7 +1,7 @@
 <template>
     <div class="pipeline-draft-debug-header">
         <pipeline-bread-crumb>
-            {{$t('调试纪录')}}
+            {{$t('draftExecRecords')}}
         </pipeline-bread-crumb>
     </div>
 </template>

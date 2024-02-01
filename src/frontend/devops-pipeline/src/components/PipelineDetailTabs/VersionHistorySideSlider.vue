@@ -227,6 +227,7 @@
                     const content = this.$t('deleteVersionConfirm', [row.versionName])
                     navConfirm({
                         content,
+                        type: 'error',
                         theme: 'danger'
                     }).then((val) => {
                         if (val) {

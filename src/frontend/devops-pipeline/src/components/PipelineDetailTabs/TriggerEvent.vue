@@ -19,7 +19,7 @@
                 @change="handleFilterChange(queryList)"
             />
             <search-select
-                :placeholder="$t('triggerEventfilterTips')"
+                :placeholder="filterPlaceHolder"
                 :data="filterData"
                 v-model="searchKey"
                 @change="handleFilterChange(queryList)"
@@ -86,6 +86,9 @@
                         id: 'triggerUser'
                     }
                 ]
+            },
+            filterPlaceHolder () {
+                return this.filterData.map(item => item.name).join(' / ')
             },
             isSearching () {
                 console.log(this.searchKey, this.dateTimeRange)

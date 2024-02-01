@@ -160,7 +160,7 @@
                             </span>
                             <p class="pipeline-exec-msg-desc">
                                 <span class="desc">
-                                    <logo :name="props.row.trigger" size="16" />
+                                    <logo :name="props.row.startType" size="16" />
                                     <span>{{ props.row.latestBuildUserId }}</span>
                                 </span>
                                 <span v-if="props.row.webhookAliasName" class="desc">

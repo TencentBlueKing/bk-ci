@@ -16,8 +16,8 @@
             </p>
             <p class="trigger-event-reason">
                 <span>{{ event.reason }}</span>  |
-                <e v-if="event.buildNum" v-html="event.buildNum"></e>
-                <e v-else v-html="event.reasonDetailList.join(' | ')"></e>
+                <em v-if="event.buildNum" v-html="event.buildNum"></em>
+                <em v-bk-overflow-tips v-else v-html="event.reasonDetailList.join(' | ')"></em>
             </p>
             <bk-button
                 text
@@ -112,8 +112,10 @@
                 align-items: center;
                 grid-gap: 10px;
                 overflow: hidden;
-                > e {
-                    flex-shrink: 0;
+                > em {
+                    flex: 1;
+                    @include ellipsis();
+                    font-style: normal;
                     > a {
                         color: #3A84FF;
                         cursor: pointer;
@@ -123,6 +125,7 @@
                     }
                 }
                 > span {
+                    flex-shrink: 0;
                     @include ellipsis();
                 }
             }
