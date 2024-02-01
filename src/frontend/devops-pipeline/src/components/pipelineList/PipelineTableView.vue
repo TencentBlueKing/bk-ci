@@ -138,16 +138,26 @@
                     <pipeline-status-icon :status="props.row.latestBuildStatus" />
                     <div class="pipeline-exec-msg">
                         <template v-if="props.row.latestBuildNum">
-                            <router-link
+                            <span
                                 class="pipeline-cell-link pipeline-exec-msg-title"
                                 :disabled="props.row.permissions && !props.row.permissions.canView"
+                                v-perm="{
+                                    hasPermission: props.row.permissions && props.row.permissions.canView,
+                                    disablePermissionApi: true,
+                                    permissionData: {
+                                        projectId,
+                                        resourceType: 'pipeline',
+                                        resourceCode: props.row.pipelineId,
+                                        action: RESOURCE_ACTION.VIEW
+                                    }
+                                }"
                                 :event="props.row.permissions && props.row.permissions.canView ? 'click' : ''"
-                                :to="props.row.latestBuildRoute"
+                                @click="$router.push(props.row.latestBuildRoute)"
                             >
                                 <b>#{{ props.row.latestBuildNum }}</b>
                                 |
                                 <span>{{ props.row.lastBuildMsg }}</span>
-                            </router-link>
+                            </span>
                             <p class="pipeline-exec-msg-desc">
                                 <span class="desc">
                                     <logo :name="props.row.trigger" size="16" />
@@ -715,8 +725,12 @@
         flex-direction: column;
     }
     .pipeline-list-table {
+        &.bk-table-enable-row-transition .bk-table-body td {
+            transition: none;
+        }
         td {
             position: inherit;
+
         }
         .bk-table-body-wrapper {
             td {

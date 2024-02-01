@@ -401,7 +401,7 @@
             <ul class="error-info-list" v-if="activeBuild">
                 <li v-for="item in activeBuild.errorInfoList" :key="item.errCode">
                     <logo :name="item.icon" size="18" />
-                    <p v-bk-tooltips="{ maxWidth: 600, content: item.errorMsg }" :title="item.errorMsg">
+                    <p v-bk-tooltips="{ maxWidth: 600, content: item.errorMsg }">
                         {{ $t(item.title) }} (<b>{{ item.errCode }}</b>): {{ item.errorMsg }}
                     </p>
                 </li>
@@ -1062,6 +1062,9 @@
     overflow: hidden;
     .bkdevops-build-history-table {
       color: #333333;
+      &.bk-table-enable-row-transition .bk-table-body td {
+            transition: none;
+        }
       .bk-table-header-wrapper {
         height: 43px;
       }
@@ -1072,12 +1075,7 @@
           }
         }
       }
-      tr:hover {
-        background-color: transparent;
-        > td {
-          background-color: transparent !important;
-        }
-      }
+
       .build-num-status {
         display: flex;
         align-items: center;
