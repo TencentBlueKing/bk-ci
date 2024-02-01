@@ -48,6 +48,7 @@ import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildAtomEle
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildLessAtomElement
 import com.tencent.devops.common.pipeline.pojo.element.matrix.MatrixStatusElement
 import com.tencent.devops.common.pipeline.utils.ModelUtils
+import com.tencent.devops.common.pipeline.utils.SkipElementUtils
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.constant.ProcessMessageCode.BK_MANUALLY_SKIPPED
@@ -427,19 +428,21 @@ class PipelineContainerService @Autowired constructor(
             if (status.isFinish()) {
                 logger.info("[${context.buildId}|${atomElement.id}] status=$status")
                 atomElement.status = status.name
-                if (retryFlag) taskBuildRecords.add(
-                    BuildRecordTask(
-                        projectId = context.projectId, pipelineId = context.pipelineId,
-                        buildId = context.buildId, stageId = stage.id!!, containerId = container.containerId!!,
-                        taskId = atomElement.id!!, classType = atomElement.getClassType(),
-                        atomCode = atomElement.getTaskAtom(), executeCount = context.executeCount,
-                        resourceVersion = context.resourceVersion, taskSeq = taskSeq, status = status.name,
-                        taskVar = mutableMapOf(), timestamps = mapOf(),
-                        elementPostInfo = atomElement.additionalOptions?.elementPostInfo?.takeIf { info ->
-                            info.parentElementId != atomElement.id
-                        }
+                if (retryFlag && SkipElementUtils.getSkipRecordTaskAddFlag(atomElement)) {
+                    taskBuildRecords.add(
+                        BuildRecordTask(
+                            projectId = context.projectId, pipelineId = context.pipelineId,
+                            buildId = context.buildId, stageId = stage.id!!, containerId = container.containerId!!,
+                            taskId = atomElement.id!!, classType = atomElement.getClassType(),
+                            atomCode = atomElement.getTaskAtom(), executeCount = context.executeCount,
+                            resourceVersion = context.resourceVersion, taskSeq = taskSeq, status = status.name,
+                            taskVar = mutableMapOf(), timestamps = mapOf(),
+                            elementPostInfo = atomElement.additionalOptions?.elementPostInfo?.takeIf { info ->
+                                info.parentElementId != atomElement.id
+                            }
+                        )
                     )
-                )
+                }
                 return@nextElement
             }
 
