@@ -73,8 +73,7 @@
                         :checked="pipelineSetting.concurrencyCancelInProgress"
                         @change="handleConCurrencyCancel"
                     >
-                        <!-- {{$t('settings.stopWhenNewCome')}} -->
-                        {{$t('取消正在运行的构建')}}
+                        {{$t('settings.stopWhenNewCome')}}
                     </bk-checkbox>
                 </bk-form-item>
                 <template v-if="!pipelineSetting.concurrencyCancelInProgress">

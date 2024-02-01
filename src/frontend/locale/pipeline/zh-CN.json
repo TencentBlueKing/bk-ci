@@ -317,7 +317,7 @@
       "single": "分组，组内同一时间只能运行一个流水线"
     },
     "disableSetting": "禁用设置",
-    "stopWhenNewCome": "当新任务到达时，总是取消正在运行的构建",
+    "stopWhenNewCome": "取消正在运行的构建",
     "lockGroupDesc": "将根据此项配置进行分组，生效范围为当前项目下的流水线，请谨慎设置。支持的上下文变量：${{ci.pipeline_id}} | ${{ci.branch}}",
     "notify": "通知",
     "auth": "权限",
@@ -568,7 +568,6 @@
     "loadingErr": "加载出错",
     "filterTips": "状态/代码库/commitId/CommitMessage/触发方式/触发分支/备注",
     "reset": "重置",
-    "materialRepo": "代码库",
     "branch": "分支",
     "date": "日期",
     "tableMap": {
@@ -1328,7 +1327,6 @@
   "onlyDraftBuildHistoryIdTips": "发布流水线后即可触发执行构建任务",
   "noBuildHistoryTips": "定义流水线后即可手动触发执行一次构建任务。",
   "buildHistoryIdTips": "系统将为每次构建分配一个唯一 ID，所有构建记录都会展示在这里。",
-  "triggerEventfilterTips": "触发器类型/事件类型/触发人",
   "triggerType": "触发器类型",
   "eventType": "事件类型",
   "baseInfo": "基础信息",
@@ -1464,5 +1462,6 @@
   "noStartupParams": "暂无入参，无需填写",
   "noParams": "暂无入参",
   "rollbackSuc": "回滚到版本【{0}】成功",
-  "badgeTips": "徽章可以添加到项目的 README.md 中，方便访问者快速了解项目的构建状态、测试结果或部署状态等信息"
+  "badgeTips": "徽章可以添加到项目的 README.md 中，方便访问者快速了解项目的构建状态、测试结果或部署状态等信息",
+  "dealMR": "处理合并请求"
 }

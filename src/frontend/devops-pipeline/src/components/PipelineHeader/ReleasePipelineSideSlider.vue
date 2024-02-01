@@ -633,7 +633,7 @@
                                                     }
                                                 }
                                             },
-                                            this.$t('处理合并请求')
+                                            this.$t('dealMR')
                                         )
                                         : null,
                                     h(

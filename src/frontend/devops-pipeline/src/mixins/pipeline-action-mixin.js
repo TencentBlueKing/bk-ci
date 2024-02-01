@@ -18,7 +18,6 @@
  */
 
 import { statusAlias } from '@/utils/pipelineStatus'
-import triggerType from '@/utils/triggerType'
 import { convertMStoStringByRule, convertTime, navConfirm } from '@/utils/util'
 import { mapActions, mapGetters, mapMutations, mapState } from 'vuex'
 
@@ -116,7 +115,6 @@ export default {
                         duration: this.calcDuration(item),
                         progress: this.calcProgress(item),
                         pipelineActions: this.getPipelineActions(item, index),
-                        trigger: triggerType[item.trigger],
                         disabled: this.isDisabledPipeline(item),
                         tooltips: this.disabledTips(item),
                         historyRoute: {
@@ -497,8 +495,7 @@ export default {
                         ...item,
                         latestBuildStartDate: this.getLatestBuildFromNow(item.latestBuildStartTime),
                         duration: this.calcDuration(item),
-                        progress: this.calcProgress(item),
-                        trigger: triggerType[item.trigger]
+                        progress: this.calcProgress(item)
                     })
                 }
             })

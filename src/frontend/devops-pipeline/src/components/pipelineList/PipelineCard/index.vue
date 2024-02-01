@@ -131,7 +131,7 @@
                 </router-link>
                 <p class="bk-pipeline-card-info-row bk-pipeline-card-desc-row">
                     <span>
-                        <logo size="16" :name="pipeline.trigger" />
+                        <logo size="16" :name="pipeline.startType" />
                         <span>{{ pipeline.latestBuildUserId }}</span>
                     </span>
                     <span v-if="pipeline.webhookAliasName">
