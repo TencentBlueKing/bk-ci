@@ -36,6 +36,6 @@ data class InstallAgentReq(
     val hosts: List<HostForInstallAgent>,
     @ApiModelProperty(value = "被替换的Proxy主机ID")
     val replaceHostId: Int?,
-    @ApiModelProperty(value = "是否安装最新版本插件，默认安装最新插件")
+    @ApiModelProperty(value = "是否安装最新版本插件，默认不安装最新插件")
     val isInstallLatestPlugins: Boolean?
 )

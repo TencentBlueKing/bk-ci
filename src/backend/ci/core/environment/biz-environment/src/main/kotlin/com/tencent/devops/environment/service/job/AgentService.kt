@@ -94,6 +94,7 @@ data class AgentService @Autowired constructor(
         private const val DEFAULT_IS_MANUAL = false
         private const val DEFAULT_CLOUD_ID = 0
         private const val DEFAULT_PLACE_HOLDER = -1
+        private const val DEFAULT_NOT_INSTALL_LATEST_PLUGINS = false
     }
 
     fun installAgent(
@@ -132,7 +133,7 @@ data class AgentService @Autowired constructor(
                 )
             },
             replaceHostId = installAgentReq.replaceHostId,
-            isInstallLatestPlugins = installAgentReq.isInstallLatestPlugins
+            isInstallLatestPlugins = DEFAULT_NOT_INSTALL_LATEST_PLUGINS
         )
         val agentInstallAgentRes: AgentOriginalResult<AgentInstallAgentResult> = nodeManApi.executePostRequest(
             installAgentRequest, AgentInstallAgentResult::class.java

@@ -43,7 +43,7 @@ data class AgentInstallAgentReq(
     @JsonProperty("replace_host_id")
     @JsonInclude(JsonInclude.Include.NON_NULL)
     val replaceHostId: Int?,
-    @ApiModelProperty(value = "是否安装最新版本插件，默认安装最新插件")
+    @ApiModelProperty(value = "是否安装最新版本插件，默认不安装最新插件")
     @JsonProperty("is_install_latest_plugins")
     @JsonInclude(JsonInclude.Include.NON_NULL)
     val isInstallLatestPlugins: Boolean?
