@@ -234,7 +234,7 @@ class RbacPermissionResourceMemberService constructor(
             val groupMemberInfoList = iamV2ManagerService.getRoleGroupMemberV2(iamGroupId, pageInfoDTO).results
             groupMemberInfoList.forEach member@{ member ->
                 // 已过期或者要半年后才过期的,不自动过期
-                if (member.expiredAt < System.currentTimeMillis() ||
+                if (member.expiredAt < System.currentTimeMillis() / 1000 ||
                     member.expiredAt > autoExpectExpiredAt
                 ) return@member
 
