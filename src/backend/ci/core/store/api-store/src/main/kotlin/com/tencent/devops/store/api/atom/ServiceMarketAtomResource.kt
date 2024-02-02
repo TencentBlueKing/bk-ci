@@ -32,6 +32,8 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.pipeline.enums.ChannelCode
+import com.tencent.devops.common.web.annotation.BkField
+import com.tencent.devops.common.web.constant.BkStyleEnum
 import com.tencent.devops.store.pojo.atom.AtomPipeline
 import com.tencent.devops.store.pojo.atom.AtomPostReqItem
 import com.tencent.devops.store.pojo.atom.AtomPostResp
@@ -163,4 +165,17 @@ interface ServiceMarketAtomResource {
         @ApiParam("getRelyAtom", required = false)
         getRelyAtom: GetRelyAtom
     ): Result<Map<String, Map<String, Any>>?>
+
+    @ApiOperation("分页查询组件代码库哈希ID")
+    @GET
+    @Path("/atom/repo/list")
+    fun getAtomRepositoryHashId(
+        @ApiParam("第几页", required = true, defaultValue = "1")
+        @QueryParam("page")
+        page: Int,
+        @ApiParam("每页多少条", required = true, defaultValue = "20")
+        @BkField(patternStyle = BkStyleEnum.PAGE_SIZE_STYLE, required = true)
+        @QueryParam("pageSize")
+        pageSize: Int
+    ): Result<List<String>>
 }
