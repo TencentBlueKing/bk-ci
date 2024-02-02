@@ -104,6 +104,7 @@
                         }
                     const result = await navConfirm({
                         ...hasDraft,
+                        width: 500,
                         type: hasDraft ? 'warning' : '',
                         theme: hasDraft ? 'warning' : ''
                     })
