@@ -328,6 +328,7 @@ object ProcessMessageCode {
     const val ERROR_PIPELINE_BOUND_REPO = "2101214" // 流水线已绑定代码库{0},不能修改
     const val ERROR_YAML_BOUND_PIPELINE = "2101215" // 文件{0}已绑定流水线{1}
     const val ERROR_YAML_PUSH_NO_REPO_PERMISSION = "2101216" // 发布必须仓库developer以上权限
+    const val ERROR_REPO_NO_INIT = "2101217" // 默认分支不存在,请先初始化代码库
 
     const val BK_SUCCESSFULLY_DISTRIBUTED = "bkSuccessfullyDistributed" // 跨项目构件分发成功，共分发了{0}个文件
     const val BK_SUCCESSFULLY_FAILED = "bkSuccessfullyFailed" // 跨项目构件分发失败，

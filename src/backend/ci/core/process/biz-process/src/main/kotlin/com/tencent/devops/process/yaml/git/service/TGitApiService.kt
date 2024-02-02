@@ -28,6 +28,7 @@
 package com.tencent.devops.process.yaml.git.service
 
 import com.tencent.devops.common.api.exception.CustomException
+import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.client.Client
@@ -297,68 +298,15 @@ class TGitApiService @Autowired constructor(
         versionName: String?
     ): PacGitPushResult {
         val token = cred.toToken()
-        // 1. 创建分支
         val branchName = if (targetAction == CodeTargetAction.COMMIT_TO_MASTER) {
             defaultBranch
         } else {
-            // 判断分支是否存在
-            val branchExists = client.get(ServiceGitResource::class).getBranch(
-                accessToken = token,
-                userId = "",
-                repository = gitProjectId,
-                page = PageUtil.DEFAULT_PAGE,
-                pageSize = PageUtil.DEFAULT_PAGE_SIZE,
-                search = versionName!!
-            ).data?.any { it.name == versionName } ?: false
-            // 分支不存在,则需要创建
-            if (!branchExists) {
-                client.get(ServiceGitResource::class).createBranch(
-                    token = token,
-                    tokenType = cred.toTokenType(),
-                    gitProjectId = gitProjectId,
-                    gitCreateBranch = GitCreateBranch(
-                        branchName = versionName,
-                        ref = defaultBranch
-                    )
-                ).data
-            }
-            versionName
+            versionName!!
         }
+        createBranch(token, gitProjectId, defaultBranch, branchName, cred)
 
         // 2. 判断文件是否存在
-        val fileExists = try {
-            client.get(ServiceGitResource::class).getGitFileInfo(
-                gitProjectId = gitProjectId,
-                filePath = filePath,
-                token = token,
-                ref = branchName,
-                tokenType = cred.toTokenType()
-            ).data
-            true
-        } catch (ignored: Exception) {
-            false
-        }
-        val gitOperationFile = GitOperationFile(
-            filePath = filePath,
-            branch = branchName,
-            content = content,
-            commitMessage = commitMessage
-        )
-        if (fileExists) {
-            client.get(ServiceGitResource::class).gitUpdateFile(
-                gitProjectId = gitProjectId,
-                token = token,
-                gitOperationFile = gitOperationFile,
-                tokenType = cred.toTokenType()
-            )
-        } else {
-            client.get(ServiceGitResource::class).gitCreateFile(
-                gitProjectId = gitProjectId,
-                token = token,
-                gitOperationFile = gitOperationFile,
-                tokenType = cred.toTokenType()
-            )
-        }
+        val fileExists = createFile(gitProjectId, filePath, token, branchName, cred, content, commitMessage)
         val mrUrl = if (targetAction == CodeTargetAction.PUSH_BRANCH_AND_REQUEST_MERGE ||
             targetAction == CodeTargetAction.CHECKOUT_BRANCH_AND_REQUEST_MERGE
         ) {
@@ -394,6 +342,97 @@ class TGitApiService @Autowired constructor(
             lastCommitId = commitInfo!!.commitId,
             mrUrl = mrUrl
         )
+    }
+
+    private fun createFile(
+        gitProjectId: String,
+        filePath: String,
+        token: String,
+        branchName: String,
+        cred: PacGitCred,
+        content: String,
+        commitMessage: String
+    ): Boolean {
+        val fileExists = try {
+            client.get(ServiceGitResource::class).getGitFileInfo(
+                gitProjectId = gitProjectId,
+                filePath = filePath,
+                token = token,
+                ref = branchName,
+                tokenType = cred.toTokenType()
+            ).data
+            true
+        } catch (ignored: Exception) {
+            false
+        }
+        val gitOperationFile = GitOperationFile(
+            filePath = filePath,
+            branch = branchName,
+            content = content,
+            commitMessage = commitMessage
+        )
+        if (fileExists) {
+            client.get(ServiceGitResource::class).gitUpdateFile(
+                gitProjectId = gitProjectId,
+                token = token,
+                gitOperationFile = gitOperationFile,
+                tokenType = cred.toTokenType()
+            )
+        } else {
+            client.get(ServiceGitResource::class).gitCreateFile(
+                gitProjectId = gitProjectId,
+                token = token,
+                gitOperationFile = gitOperationFile,
+                tokenType = cred.toTokenType()
+            )
+        }
+        return fileExists
+    }
+
+    private fun createBranch(
+        token: String,
+        gitProjectId: String,
+        defaultBranch: String,
+        branchName: String,
+        cred: PacGitCred
+    ) {
+        // 默认分支是否存在,如果仓库没有初始化,则没有默认分支
+        val defaultBranchExists = client.get(ServiceGitResource::class).getBranch(
+            accessToken = token,
+            userId = "",
+            repository = gitProjectId,
+            page = PageUtil.DEFAULT_PAGE,
+            pageSize = PageUtil.DEFAULT_PAGE_SIZE,
+            search = defaultBranch
+        ).data?.any { it.name == defaultBranch } ?: false
+        if (!defaultBranchExists) {
+            throw ErrorCodeException(
+                errorCode = ProcessMessageCode.ERROR_REPO_NO_INIT
+            )
+        }
+        if (branchName != defaultBranch) {
+            // 判断分支是否存在
+            val branchExists = client.get(ServiceGitResource::class).getBranch(
+                accessToken = token,
+                userId = "",
+                repository = gitProjectId,
+                page = PageUtil.DEFAULT_PAGE,
+                pageSize = PageUtil.DEFAULT_PAGE_SIZE,
+                search = branchName
+            ).data?.any { it.name == branchName } ?: false
+            // 分支不存在,则需要创建
+            if (!branchExists) {
+                client.get(ServiceGitResource::class).createBranch(
+                    token = token,
+                    tokenType = cred.toTokenType(),
+                    gitProjectId = gitProjectId,
+                    gitCreateBranch = GitCreateBranch(
+                        branchName = branchName,
+                        ref = defaultBranch
+                    )
+                ).data
+            }
+        }
     }
 
     private fun createYamlMergeRequest(
