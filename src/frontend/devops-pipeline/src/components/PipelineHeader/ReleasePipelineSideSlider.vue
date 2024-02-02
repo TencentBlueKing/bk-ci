@@ -90,6 +90,7 @@
                                 :loading="isInitPacRepo"
                                 :show-empty="false"
                                 :placeholder="$t('editPage.atomForm.selectTips')"
+                                :z-index="2600"
                                 @scroll-end="fetchPacEnableCodelibList(false)"
                                 @toggle="refreshPacEnableCodelibList"
                             >

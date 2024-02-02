@@ -41,7 +41,6 @@
             <VersionDiffEntry
                 :version="activePipelineVersion"
                 :latest-version="releaseVersion"
-                :current-yaml="pipelineYaml"
             >
                 <i class="devops-icon icon-diff" />
                 {{ $t("diff") }}
