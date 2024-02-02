@@ -1,6 +1,7 @@
 <template>
     <div class="version-sideslider-container">
         <bk-select
+            ref="versionSelector"
             searchable
             v-model="activeVersionId"
             :clearable="false"
@@ -37,14 +38,14 @@
                     <i v-else :class="['devops-icon icon-check-circle', {
                         'is-release-version-icon': isCurrentVersion(item)
                     }]" />
-                    <span class="pipeline-version-name">
+                    <span class="pipeline-version-name" v-bk-overflow-tips>
                         {{ item.displayName }}
                     </span>
                     <!-- <span class="pipeline-version-main-branch">
                                 [{{ $t('mainBranch') }}]
                             </span> -->
                 </p>
-                <span class="pipeline-version-option-item-desc">
+                <span class="pipeline-version-option-item-desc" v-bk-overflow-tips>
                     {{ item.description || '--' }}
                 </span>
             </bk-option>
@@ -147,6 +148,7 @@
             ]),
             showVersionSideSlider () {
                 this.setShowVariable(false)
+                this.$refs?.versionSelector?.close?.()
                 this.showVersionSideslider = true
             },
             handlePaginationChange ({ current = 1, limit = this.pagination.limit } = {}) {
@@ -295,6 +297,7 @@
     justify-content: center;
     align-items: center;
     height: 40px;
+    grid-gap: 4px;
     cursor: pointer;
 }
 .icon-check-circle.is-release-version-icon {

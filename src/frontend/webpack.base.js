@@ -57,14 +57,14 @@ module.exports = ({ entry, publicPath, dist, port = 8080, argv, env }) => {
                 },
                 {
                     test: /\.scss$/,
-                    use: [{
-                        loader: MiniCssExtractPlugin.loader,
-                        options: {
-                            publicPath: (resourcePath, context) => {
-                                return ''
+                    use: [isDev
+                        ? 'style-loader'
+                        : {
+                            loader: MiniCssExtractPlugin.loader,
+                            options: {
+                                publicPath: (resourcePath, context) => ''
                             }
-                        }
-                    }, 'css-loader', 'sass-loader']
+                        }, 'css-loader', 'sass-loader']
                 },
                 {
                     test: /\.(js|vue)$/,
@@ -74,6 +74,7 @@ module.exports = ({ entry, publicPath, dist, port = 8080, argv, env }) => {
                     exclude: /node_modules/,
                     options: {
                         fix: true,
+                        emitWarning: false,
                         formatter: require('eslint-friendly-formatter')
                     }
                 },
@@ -129,6 +130,22 @@ module.exports = ({ entry, publicPath, dist, port = 8080, argv, env }) => {
             chunkIds: isDev ? 'named' : 'deterministic',
             moduleIds: 'deterministic',
             minimize: !isDev,
+            splitChunks: {
+                cacheGroups: {
+                    vendor: {
+                        test: /[\\/]node_modules[\\/](bk-magic-vue)[\\/]/, // 指定要单独打包的依赖
+                        name: 'vendors', // chunk 的名字
+                        chunks: 'all' // 可能的值 'async', 'initial', 'all'
+                    },
+                    default: {
+                        minChunks: 2,
+                        priority: -20,
+                        reuseExistingChunk: true
+                    }
+
+                }
+            },
+              
             minimizer: [
                 new CssMinimizerPlugin({
                     minimizerOptions: {
@@ -169,7 +186,6 @@ module.exports = ({ entry, publicPath, dist, port = 8080, argv, env }) => {
             client: {
                 webSocketURL: 'ws://127.0.0.1:' + port + '/ws'
             },
-            // 可以在本地生成证书，开启Https
             // https: {
             //     key: fs.readFileSync(path.join(__dirname, 'localhost+2-key.pem')),
             //     cert: fs.readFileSync(path.join(__dirname, './localhost+2.pem'))

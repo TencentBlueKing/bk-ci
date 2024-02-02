@@ -57,13 +57,15 @@
     "webpack": "^5.58.1"
   },
   "dependencies": {
-    "@tencent/bk-magic-vue": "2.5.9-beta.5",
-    "vue": "~2.7.16",
     "vuedraggable": "^2.24.3"
   },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/Tencent/bk-ci.git"
+  },
+  "peerDependencies": {
+    "vue": "~2.7.16",
+    "@tencent/bk-magic-vue": "2.5.9-beta.5"
   },
   "keywords": [
     "pipeline",

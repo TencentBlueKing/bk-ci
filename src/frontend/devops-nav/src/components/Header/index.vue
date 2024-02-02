@@ -383,7 +383,7 @@
         }
 
         handleChangeLang (item) {
-            this.$setLocale(item.id).then(() => {
+            this.$setLocale(item.id, true).then(() => {
                 location.reload()
             })
         }

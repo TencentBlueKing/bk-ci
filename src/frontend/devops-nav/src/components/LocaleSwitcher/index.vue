@@ -62,7 +62,7 @@
                 // catch
             }
             // @ts-ignore
-            this.$setLocale(locale).then(() => {
+            this.$setLocale(locale, true).then(() => {
                 location.reload()
             })
             

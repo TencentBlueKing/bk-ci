@@ -60,7 +60,7 @@
             })
 
             window.globalVue.$on('order::syncLocale', locale => {
-                this.$setLocale(locale)
+                this.$setLocale(locale, false)
             })
 
             window.globalVue.$on('order::syncServiceHooks', serviceHooks => {

@@ -1,5 +1,5 @@
 const path = require('path')
-// const MiniCssExtractPlugin = require('mini-css-extract-plugin')
+// const BundleAnalyzerPlugin = require('webpack-bundle-analyzer').BundleAnalyzerPlugin
 const { VueLoaderPlugin } = require('vue-loader')
 
 module.exports = (env = {}, argv) => {
@@ -66,6 +66,7 @@ module.exports = (env = {}, argv) => {
             ]
         },
         plugins: [
+            // new BundleAnalyzerPlugin(),
             new VueLoaderPlugin()
             // new MiniCssExtractPlugin({
             //     filename: 'bk-pipeline.css',
