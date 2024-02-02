@@ -6,7 +6,7 @@ const CssMinimizerPlugin = require('css-minimizer-webpack-plugin')
 const { VueLoaderPlugin } = require('vue-loader')
 const CopyWebpackPlugin = require('copy-webpack-plugin')
 const BundleWebpackPlugin = require('./webpackPlugin/bundle-webpack-plugin')
-const BundleAnalyzerPlugin = require('webpack-bundle-analyzer').BundleAnalyzerPlugin
+// const BundleAnalyzerPlugin = require('webpack-bundle-analyzer').BundleAnalyzerPlugin
 
 module.exports = ({ entry, publicPath, dist, port = 8080, argv, env }) => {
     const isDev = argv.mode === 'development'
@@ -97,7 +97,7 @@ module.exports = ({ entry, publicPath, dist, port = 8080, argv, env }) => {
             ]
         },
         plugins: [
-            new BundleAnalyzerPlugin(),
+            // new BundleAnalyzerPlugin(),
             new webpack.HotModuleReplacementPlugin(),
             new VueLoaderPlugin(),
             new BundleWebpackPlugin({

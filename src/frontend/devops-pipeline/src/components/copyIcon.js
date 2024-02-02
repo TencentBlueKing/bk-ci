@@ -6,7 +6,6 @@ const messages = i18n.messages[locale]
 const message = messages.copySuc
 
 async function copyTxt (value) {
-    debugger
     try {
         if (navigator.clipboard.writeText) {
             const res = await navigator.clipboard.writeText(value)

@@ -62,10 +62,10 @@
     </div>
 </template>
 <script>
-    import { mapState, mapActions } from 'vuex'
-    import { convertTime } from '@/utils/util'
-    import VersionHistorySideSlider from './VersionHistorySideSlider'
     import Logo from '@/components/Logo'
+    import { convertTime } from '@/utils/util'
+    import { mapActions, mapState } from 'vuex'
+    import VersionHistorySideSlider from './VersionHistorySideSlider'
     export default {
         name: 'versionSideslider',
         emit: ['input', 'update:value', 'change'],
@@ -240,6 +240,9 @@
     .icon-check-circle {
         &.icon-check-circle {
             font-size: 18px;
+            &.is-release-version-icon {
+                color: $successColor;
+            }
         }
         font-size: 14px;
     }
@@ -277,6 +280,9 @@
             font-size: 18px;
             color: #979BA5;
             flex-shrink: 0;
+            &.icon-check-circle.is-release-version-icon {
+                color: $successColor;
+            }
         }
         .pipeline-version-main-branch {
             color: $successColor;
@@ -299,9 +305,6 @@
     height: 40px;
     grid-gap: 4px;
     cursor: pointer;
-}
-.icon-check-circle.is-release-version-icon {
-    color: $successColor;
 }
 
 </style>
