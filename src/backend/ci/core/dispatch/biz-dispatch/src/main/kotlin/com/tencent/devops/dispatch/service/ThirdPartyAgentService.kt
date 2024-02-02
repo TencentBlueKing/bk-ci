@@ -90,7 +90,9 @@ class ThirdPartyAgentService @Autowired constructor(
         thirdPartyAgentWorkspace: String,
         dispatchMessage: DispatchMessage,
         retryCount: Int = 0,
-        dockerInfo: ThirdPartyAgentDockerInfoDispatch?
+        dockerInfo: ThirdPartyAgentDockerInfoDispatch?,
+        envId: Long?,
+        jobId: String?
     ) {
         with(dispatchMessage.event) {
             try {
@@ -109,12 +111,22 @@ class ThirdPartyAgentService @Autowired constructor(
                     nodeId = HashUtil.decodeIdToLong(agent.nodeId ?: ""),
                     dockerInfo = dockerInfo,
                     executeCount = executeCount,
-                    containerHashId = containerHashId
+                    containerHashId = containerHashId,
+                    envId = envId,
+                    jobId = jobId
                 )
             } catch (e: DeadlockLoserDataAccessException) {
                 logger.warn("Fail to add the third party agent build of ($buildId|$vmSeqId|${agent.agentId}")
                 if (retryCount <= QUEUE_RETRY_COUNT) {
-                    queueBuild(agent, thirdPartyAgentWorkspace, dispatchMessage, retryCount + 1, dockerInfo)
+                    queueBuild(
+                        agent = agent,
+                        thirdPartyAgentWorkspace = thirdPartyAgentWorkspace,
+                        dispatchMessage = dispatchMessage,
+                        retryCount = retryCount + 1,
+                        dockerInfo = dockerInfo,
+                        envId = envId,
+                        jobId = jobId
+                    )
                 } else {
                     throw OperationException("Fail to add the third party agent build")
                 }
@@ -631,6 +643,36 @@ class ThirdPartyAgentService @Autowired constructor(
                 logger.warn("$agentId ask unknow error", e)
             }
         }
+    }
+
+    fun countProjectJobRunningAndQueueAll(
+        pipelineId: String,
+        envId: Long,
+        jobId: String,
+        projectId: String?
+    ): Long {
+        return thirdPartyAgentBuildDao.countProjectJobRunningAndQueueAll(
+            dslContext = dslContext,
+            pipelineId = pipelineId,
+            envId = envId,
+            jobId = jobId,
+            projectId = projectId
+        )
+    }
+
+    fun countAgentsJobRunningAndQueueAll(
+        pipelineId: String,
+        envId: Long,
+        jobId: String,
+        agentIds: Set<String>?
+    ): Map<String, Int> {
+        return thirdPartyAgentBuildDao.countAgentsJobRunningAndQueueAll(
+            dslContext = dslContext,
+            pipelineId = pipelineId,
+            envId = envId,
+            jobId = jobId,
+            agentIds = agentIds
+        )
     }
 
     companion object {

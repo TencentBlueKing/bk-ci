@@ -688,7 +688,7 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
         )
     }
 
-    fun getAgnetByEnvName(projectId: String, envName: String): List<ThirdPartyAgent> {
+    fun getAgnetByEnvName(projectId: String, envName: String): Pair<Long?, List<ThirdPartyAgent>> {
         // 共享环境由 被共享的项目ID@环境名称 组成，这里通过@分隔出的数量来区分是否是共享环境
         val envNameItems = envName.split("@")
         val thirdPartyAgentList = mutableListOf<ThirdPartyAgent>()
@@ -702,15 +702,12 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
                     realEnvName = envNameItems[1]
                     return@sharedEnv
                 }
-                thirdPartyAgentList.addAll(
-                    getSharedThirdPartyAgentList(
-                        projectId = projectId,
-                        sharedProjectId = envNameItems[0],
-                        sharedEnvName = envNameItems[1],
-                        sharedEnvId = null
-                    )
+                return getSharedThirdPartyAgentList(
+                    projectId = projectId,
+                    sharedProjectId = envNameItems[0],
+                    sharedEnvName = envNameItems[1],
+                    sharedEnvId = null
                 )
-                return thirdPartyAgentList
             }
         }
 
@@ -726,7 +723,7 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
             getAgentByEnvId(projectId = projectId, envHashId = HashUtil.encodeLongId(envRecord.envId))
         )
 
-        return thirdPartyAgentList
+        return Pair(envRecord.envId, thirdPartyAgentList)
     }
 
     private fun getSharedThirdPartyAgentList(
@@ -734,7 +731,7 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
         sharedProjectId: String,
         sharedEnvName: String?,
         sharedEnvId: Long?
-    ): List<ThirdPartyAgent> {
+    ): Pair<Long?, List<ThirdPartyAgent>> {
         logger.info("[$projectId|$sharedProjectId|$sharedEnvName|$sharedEnvId]get shared third party agent list")
         val sharedEnvRecord = when {
             !sharedEnvName.isNullOrBlank() -> {
@@ -845,26 +842,27 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
             )
         }
         logger.info("sharedThirdPartyAgents size: ${sharedThirdPartyAgents.size}")
-        return sharedThirdPartyAgents
+        return Pair(sharedEnvRecord.getOrNull(0)?.envId, sharedThirdPartyAgents)
     }
 
     fun getAgentByEnvId(projectId: String, envHashId: String): List<ThirdPartyAgent> {
         logger.info("[$projectId|$envHashId] Get the agents by envId")
-        val sharedThridPartyAgentList = run {
+        run {
             val sharedProjEnv = envHashId.split("@") // sharedProjId@poolName
             if (sharedProjEnv.size != 2 || sharedProjEnv[0].isBlank() || sharedProjEnv[1].isBlank()) {
-                return@run emptyList()
+                return@run
             }
-            getSharedThirdPartyAgentList(
+            val (_, aList) = getSharedThirdPartyAgentList(
                 projectId = projectId,
                 sharedProjectId = sharedProjEnv[0],
                 sharedEnvName = null,
                 sharedEnvId = HashUtil.decodeIdToLong(sharedProjEnv[1])
             )
+            return aList
         }
         val envId = HashUtil.decodeIdToLong(envHashId)
         val nodes = envNodeDao.list(dslContext = dslContext, projectId = projectId, envIds = listOf(envId))
-        if (nodes.isEmpty() && sharedThridPartyAgentList.isEmpty()) {
+        if (nodes.isEmpty()) {
             logger.warn("[$projectId|$envHashId] The env is not exist")
             throw CustomException(
                 Response.Status.FORBIDDEN,
@@ -899,7 +897,7 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
                 parallelTaskCount = it.parallelTaskCount,
                 dockerParallelTaskCount = it.dockerParallelTaskCount
             )
-        }.plus(sharedThridPartyAgentList)
+        }
     }
 
     fun checkIfCanUpgrade(

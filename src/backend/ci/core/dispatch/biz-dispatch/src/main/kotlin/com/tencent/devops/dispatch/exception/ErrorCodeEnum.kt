@@ -113,6 +113,11 @@ enum class ErrorCodeEnum(
         ErrorType.USER,
         2103020,
         "获取登录调试容器链接失败 ({0})"
+    ),
+    GET_BUILD_RESOURCE_ERROR(
+        ErrorType.USER,
+        2103021,
+        "获取构建资源超时"
     );
 
     fun getErrorMessage(params: Array<String>? = null, language: String? = null): String {

@@ -62,5 +62,9 @@ data class JobControlOption(
     @ApiModelProperty("containerId与jobId映射，depend on运行时使用的是containerId", required = false)
     var dependOnContainerId2JobIds: Map<String, String>? = null, // containerId与jobId映射，depend on运行时使用的是containerId
     @ApiModelProperty("是否失败继续", required = false)
-    val continueWhenFailed: Boolean? = false // 失败继续
+    val continueWhenFailed: Boolean? = false, // 失败继续
+    @ApiModelProperty("第三方构建机集群-单节点并发限制")
+    val singleNodeConcurrency: Int? = null,
+    @ApiModelProperty("第三方构建机集群-所有节点并发限制")
+    val allNodeConcurrency: Int? = null
 )

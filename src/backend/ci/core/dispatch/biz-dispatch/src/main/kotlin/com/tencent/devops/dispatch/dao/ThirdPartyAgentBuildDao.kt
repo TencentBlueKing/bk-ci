@@ -37,6 +37,7 @@ import java.time.LocalDateTime
 import org.jooq.DSLContext
 import org.jooq.JSON
 import org.jooq.Result
+import org.jooq.impl.DSL
 import org.springframework.stereotype.Repository
 
 @Repository
@@ -75,7 +76,9 @@ class ThirdPartyAgentBuildDao {
         nodeId: Long,
         dockerInfo: ThirdPartyAgentDockerInfoDispatch?,
         executeCount: Int?,
-        containerHashId: String?
+        containerHashId: String?,
+        envId: Long?,
+        jobId: String?
     ): Int {
         with(TDispatchThirdpartyAgentBuild.T_DISPATCH_THIRDPARTY_AGENT_BUILD) {
             val now = LocalDateTime.now()
@@ -103,6 +106,8 @@ class ThirdPartyAgentBuildDao {
                     )
                     .set(EXECUTE_COUNT, executeCount)
                     .set(CONTAINER_HASH_ID, containerHashId)
+                    .set(ENV_ID, envId)
+                    .set(JOB_ID, jobId)
                     .where(ID.eq(preRecord.id)).execute()
             }
             return dslContext.insertInto(
@@ -123,7 +128,9 @@ class ThirdPartyAgentBuildDao {
                 NODE_ID,
                 DOCKER_INFO,
                 EXECUTE_COUNT,
-                CONTAINER_HASH_ID
+                CONTAINER_HASH_ID,
+                ENV_ID,
+                JOB_ID
             ).values(
                 projectId,
                 agentId,
@@ -145,7 +152,9 @@ class ThirdPartyAgentBuildDao {
                     JSON.json(JsonUtil.toJson(dockerInfo, formatted = false))
                 },
                 executeCount,
-                containerHashId
+                containerHashId,
+                envId,
+                jobId
             ).execute()
         }
     }
@@ -320,6 +329,46 @@ class ThirdPartyAgentBuildDao {
                 .and(VM_SEQ_ID.eq(vmSeqId))
                 .and(DOCKER_INFO.isNotNull)
                 .fetchAny()
+        }
+    }
+
+    fun countProjectJobRunningAndQueueAll(
+        dslContext: DSLContext,
+        pipelineId: String,
+        envId: Long,
+        jobId: String,
+        projectId: String?
+    ): Long {
+        with(TDispatchThirdpartyAgentBuild.T_DISPATCH_THIRDPARTY_AGENT_BUILD) {
+            return dslContext.selectCount().from(this).where(PROJECT_ID.eq(projectId))
+                .and(PIPELINE_ID.eq(pipelineId))
+                .and(JOB_ID.eq(jobId))
+                .and(ENV_ID.eq(envId))
+                .and(STATUS.`in`(PipelineTaskStatus.RUNNING.status, PipelineTaskStatus.QUEUE.status))
+                .fetchOne(0, Long::class.java)!!
+        }
+    }
+
+    fun countAgentsJobRunningAndQueueAll(
+        dslContext: DSLContext,
+        pipelineId: String,
+        envId: Long,
+        jobId: String,
+        agentIds: Set<String>?
+    ): Map<String, Int> {
+        with(TDispatchThirdpartyAgentBuild.T_DISPATCH_THIRDPARTY_AGENT_BUILD) {
+            return dslContext.select(
+                AGENT_ID, DSL.count().`as`("COUNT")
+            ).from(this.forceIndex("IDX_AGENTID_STATUS_UPDATE"))
+                .where(AGENT_ID.`in`(agentIds))
+                .and(STATUS.`in`(PipelineTaskStatus.RUNNING.status, PipelineTaskStatus.QUEUE.status))
+                .and(PIPELINE_ID.eq(pipelineId))
+                .and(JOB_ID.eq(jobId))
+                .and(ENV_ID.eq(envId))
+                .groupBy(AGENT_ID)
+                .fetch().map {
+                    it[AGENT_ID] to (it["COUNT"] as Int)
+                }.toMap()
         }
     }
 }
