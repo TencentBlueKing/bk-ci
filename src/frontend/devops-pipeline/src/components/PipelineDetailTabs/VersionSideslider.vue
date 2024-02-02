@@ -31,7 +31,7 @@
                     'pipeline-version-active': item.version === selectedVersionId
                 }"
             >
-                <p>
+                <p class="pipeline-version-option-item-name">
                     <i v-if="item.isDraft" class="devops-icon icon-draft" style="font-size: 14px" />
                     <logo v-else-if="item.isBranchVersion" name="branch" size="14" />
                     <i v-else :class="['devops-icon icon-check-circle', {
@@ -44,12 +44,12 @@
                                 [{{ $t('mainBranch') }}]
                             </span> -->
                 </p>
-                <span>
+                <span class="pipeline-version-option-item-desc">
                     {{ item.description || '--' }}
                 </span>
             </bk-option>
             <p slot="extension" class="show-all-pipeline-version-entry" @click="showVersionSideSlider">
-                <logo name="tiaozhuan" />
+                <logo name="tiaozhuan" :size="16" />
                 {{ $t('viewAll') }}
             </p>
         </bk-select>
@@ -265,7 +265,7 @@
         color: $primaryColor;
     }
 
-    > p {
+    .pipeline-version-option-item-name {
         display: grid;
         grid-auto-flow: column;
         grid-template-columns: 18px 1fr auto;
@@ -281,12 +281,12 @@
         }
         .pipeline-version-name {
             font-weight: 700;
-            color: #63656E;
             @include ellipsis();
         }
     }
-    > span {
+    .pipeline-version-option-item-desc {
         color: #979BA5;
+        width: 100%;
         @include ellipsis();
     }
 }
