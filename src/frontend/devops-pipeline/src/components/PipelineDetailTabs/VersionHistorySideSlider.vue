@@ -11,7 +11,7 @@
     >
         <main slot="content" class="pipeline-version-history" v-bkloading="{ isLoading }">
             <header class="pipeline-version-history-header">
-                <SearchSelect
+                <search-select
                     class="pipeline-version-search-select"
                     :placeholder="filterTips"
                     :data="filterData"
@@ -57,7 +57,7 @@
                                 text
                                 size="small"
                                 theme="primary"
-                                :disabled="!pipelineInfo.hasPermission || pipelineInfo.version === props.row.version"
+                                :disabled="releaseVersion === props.row.version"
                                 @click="deleteVersion(props.row)"
                             >
                                 {{ $t('delete') }}
@@ -66,7 +66,6 @@
                                 v-if="props.row.version !== releaseVersion"
                                 :version="props.row.version"
                                 :latest-version="releaseVersion"
-                                :current-yaml="currentYaml"
                             />
                         </template>
                     </bk-table-column>
@@ -165,7 +164,7 @@
             }
         },
         mounted () {
-            window.__bk_zIndex_manager.zIndex = 2050
+            window.__bk_zIndex_manager.zIndex = 2500
         },
         beforeDestroy () {
             window.__bk_zIndex_manager.zIndex = 2000
@@ -222,7 +221,7 @@
                 })
             },
             deleteVersion (row) {
-                if (this.pipelineInfo?.hasPermission && this.releaseVersion !== row.version) {
+                if (this.releaseVersion !== row.version) {
                     const { projectId, pipelineId } = this.$route.params
                     const content = this.$t('deleteVersionConfirm', [row.versionName])
                     navConfirm({
