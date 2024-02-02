@@ -27,6 +27,7 @@
 
 package com.tencent.devops.project.api.op
 
+import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.project.pojo.SeniorUserDTO
 import com.tencent.devops.project.pojo.UserInfo
@@ -37,6 +38,7 @@ import io.swagger.annotations.ApiParam
 import javax.ws.rs.Consumes
 import javax.ws.rs.DELETE
 import javax.ws.rs.GET
+import javax.ws.rs.HeaderParam
 import javax.ws.rs.POST
 import javax.ws.rs.PUT
 import javax.ws.rs.Path
@@ -84,6 +86,15 @@ interface OpUserResource {
         @QueryParam("sleep")
         sleep: Long?
     ): Result<Int>
+
+    @ApiOperation("刷新插件代码库关联工蜂CI项目的运营归属")
+    @GET
+    @Path("/refresh/ci/project/product")
+    fun refreshAtomCodeRepoGitCIProjectProduct(
+        @ApiParam(value = "用户ID", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String
+    ): Result<Boolean>
 
     @ApiOperation("添加公共账号")
     @POST

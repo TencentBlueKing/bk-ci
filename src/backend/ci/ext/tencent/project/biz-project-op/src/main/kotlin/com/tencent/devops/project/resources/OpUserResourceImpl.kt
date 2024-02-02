@@ -33,6 +33,7 @@ import com.tencent.devops.project.api.op.OpUserResource
 import com.tencent.devops.project.pojo.SeniorUserDTO
 import com.tencent.devops.project.pojo.UserInfo
 import com.tencent.devops.project.pojo.user.UserDeptDetail
+import com.tencent.devops.project.service.ProjectRefreshService
 import com.tencent.devops.project.service.ProjectUserRefreshService
 import com.tencent.devops.project.service.ProjectUserService
 import org.springframework.beans.factory.annotation.Autowired
@@ -40,7 +41,8 @@ import org.springframework.beans.factory.annotation.Autowired
 @RestResource
 class OpUserResourceImpl @Autowired constructor(
     val projectUserRefreshService: ProjectUserRefreshService,
-    val projectUserService: ProjectUserService
+    val projectUserService: ProjectUserService,
+    val projectRefreshService: ProjectRefreshService
 ) : OpUserResource {
 
     override fun refreshUserGroup(userId: String): Result<UserDeptDetail?> {
@@ -63,6 +65,10 @@ class OpUserResourceImpl @Autowired constructor(
                 sleepTime = sleep ?: 500
             )
         )
+    }
+
+    override fun refreshAtomCodeRepoGitCIProjectProduct(userId: String): Result<Boolean> {
+        return Result(projectRefreshService.refreshAllRelationAtomProjectProduct(userId))
     }
 
     override fun createPublicAccount(userInfo: UserInfo): Result<Boolean> {

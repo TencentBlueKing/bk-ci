@@ -71,6 +71,7 @@ class TXStreamBasicSettingService @Autowired constructor(
     companion object {
         private val logger = LoggerFactory.getLogger(TXStreamBasicSettingService::class.java)
         private const val projectPrefix = "git_"
+        private const val SYSTEM_DEFAULT_NAME = "蓝盾"
     }
 
     override fun updateProjectSetting(
@@ -186,11 +187,18 @@ class TXStreamBasicSettingService @Autowired constructor(
 
             // 增加判断可能存在工蜂侧项目名称删除后，新建同名项目，这时候开启CI就会出现插入project表同名冲突失败的情况,
             checkSameGitProjectName(userId, gitProjectName)
+            val productName =
+                if (setting.url.contains("${streamGitConfig.defaultAtomProjectGroupName}/${setting.name}")) {
+                    SYSTEM_DEFAULT_NAME
+                } else {
+                    null
+                }
             val projectResult =
                 client.get(ServiceTxProjectResource::class).createGitCIProject(
                     gitProjectId = setting.gitProjectId,
                     userId = userId,
-                    gitProjectName = gitProjectName
+                    gitProjectName = gitProjectName,
+                    productName = productName
                 )
             if (projectResult.isNotOk()) {
                 throw RuntimeException("Create git ci project in devops failed, msg: ${projectResult.message}")

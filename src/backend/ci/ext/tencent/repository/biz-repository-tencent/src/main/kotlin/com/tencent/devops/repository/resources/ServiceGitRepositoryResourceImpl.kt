@@ -186,4 +186,11 @@ class ServiceGitRepositoryResourceImpl @Autowired constructor(
             tokenType = tokenType
         )
     }
+
+    override fun getGitProjectIdByRepositoryHashId(
+        userId: String,
+        repositoryHashIdList: List<String>
+    ): Result<List<String>> {
+        return Result(repositoryService.getGitProjectIdByRepositoryHashId(userId, repositoryHashIdList))
+    }
 }
