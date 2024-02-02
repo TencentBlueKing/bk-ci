@@ -39,7 +39,7 @@
                 type: String,
                 required: true
             },
-            draftVersionName: {
+            draftBaseVersionName: {
                 type: String
             },
             draftBaseVersion: {
@@ -96,7 +96,7 @@
                     this.loading = true
                     const hasDraft = this.hasDraftPipeline
                         ? {
-                            title: this.$t('hasDraftTips', [this.draftVersionName]),
+                            title: this.$t('hasDraftTips', [this.draftBaseVersionName]),
                             content: this.$t('dropDraftTips', [this.versionName])
                         }
                         : {

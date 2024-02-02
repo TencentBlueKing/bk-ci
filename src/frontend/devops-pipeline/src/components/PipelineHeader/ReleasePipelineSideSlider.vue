@@ -10,7 +10,7 @@
             {{ $t("releasePipeline") }}
             <bk-tag radius="10px">{{ $t("releasePipelineVersion", [versionName]) }}</bk-tag>
             <span>
-                {{ $t("releasePipelineBaseVersion", [baseVersionName]) }}
+                {{ $t("releasePipelineBaseVersion", [draftBaseVersionName]) }}
             </span>
         </header>
         <section
@@ -261,7 +261,7 @@
                 type: Boolean,
                 default: false
             },
-            baseVersionName: {
+            draftBaseVersionName: {
                 type: String,
                 default: '--'
             },
@@ -321,7 +321,7 @@
             ...mapGetters('atom', ['isBranchVersion', 'pacEnabled', 'yamlInfo']),
             ...mapState('common', ['pacSupportScmTypeList']),
             baseVersionBranch () {
-                return this.pipelineInfo?.baseVersionName
+                return this.pipelineInfo?.baseVersionName || '--'
             },
             pipelineName () {
                 return this.pipelineInfo?.pipelineName

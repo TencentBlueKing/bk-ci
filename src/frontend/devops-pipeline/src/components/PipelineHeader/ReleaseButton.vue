@@ -21,7 +21,7 @@
         <ReleasePipelineSideSlider
             v-model="isReleaseSliderShow"
             :version="currentVersion"
-            :base-version-name="baseVersionName"
+            :draft-base-version-name="draftBaseVersionName"
             :version-name="versionName"
         />
     </div>
@@ -31,7 +31,7 @@
     import {
         RESOURCE_ACTION
     } from '@/utils/permission'
-    import { mapState, mapActions } from 'vuex'
+    import { mapState, mapGetters, mapActions } from 'vuex'
     import ReleasePipelineSideSlider from './ReleasePipelineSideSlider'
     export default {
         components: {
@@ -62,6 +62,9 @@
                 'pipelineInfo',
                 'showVariable'
             ]),
+            ...mapGetters({
+                draftBaseVersionName: 'atom/getDraftBaseVersionName'
+            }),
 
             canEdit () {
                 return this.pipelineInfo?.permissions?.canEdit ?? true
@@ -71,9 +74,6 @@
             },
             versionName () {
                 return this.pipelineInfo?.versionName ?? '--'
-            },
-            baseVersionName () {
-                return this.pipelineInfo?.baseVersionName ?? '--'
             }
         },
         methods: {

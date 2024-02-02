@@ -26,7 +26,7 @@
                 :pipeline-id="pipelineId"
                 :project-id="projectId"
                 :version-name="activePipelineVersionName"
-                :draft-version-name="draftVersionName"
+                :draft-base-version-name="draftBaseVersionName"
                 :is-active-draft="isActiveDraft"
             >
                 <template v-if="isCurrentVersion || isActiveDraft">
@@ -120,7 +120,7 @@
             ...mapGetters({
                 isCodeMode: 'isCodeMode',
                 getPipelineSubscriptions: 'atom/getPipelineSubscriptions',
-                draftVersionName: 'atom/getDraftVersionName'
+                draftBaseVersionName: 'atom/getDraftBaseVersionName'
             }),
             projectId () {
                 return this.$route.params.projectId

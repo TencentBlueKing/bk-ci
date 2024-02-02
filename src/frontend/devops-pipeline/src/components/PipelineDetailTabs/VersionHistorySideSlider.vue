@@ -50,7 +50,7 @@
                                 :pipeline-id="$route.params.pipelineId"
                                 :project-id="$route.params.projectId"
                                 :version-name="props.row.versionName"
-                                :draft-version-name="draftVersionName"
+                                :draft-base-version-name="draftBaseVersionName"
                                 :is-active-draft="props.row.isDraft"
                             />
                             <bk-button
@@ -115,7 +115,7 @@
         computed: {
             ...mapState('atom', ['pipelineInfo']),
             ...mapGetters({
-                draftVersionName: 'atom/getDraftVersionName'
+                draftBaseVersionName: 'atom/getDraftBaseVersionName'
             }),
             releaseVersion () {
                 return this.pipelineInfo?.releaseVersion

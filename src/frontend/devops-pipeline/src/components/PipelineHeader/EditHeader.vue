@@ -98,7 +98,8 @@
             ...mapGetters({
                 isCurPipelineLocked: 'atom/isCurPipelineLocked',
                 isEditing: 'atom/isEditing',
-                checkPipelineInvalid: 'atom/checkPipelineInvalid'
+                checkPipelineInvalid: 'atom/checkPipelineInvalid',
+                draftBaseVersionName: 'atom/getDraftBaseVersionName'
             }),
             projectId () {
                 return this.$route.params.projectId
@@ -127,15 +128,12 @@
             isTemplatePipeline () {
                 return this.pipelineInfo?.instanceFromTemplate ?? false
             },
-            baseVersionName () {
-                return this.pipelineInfo?.baseVersionName ?? '--'
-            },
             versionName () {
                 return this.pipelineInfo?.versionName ?? '--'
             },
             currentVersionName () {
                 if (this.pipelineInfo?.canDebug) {
-                    return this.$t('editPage.draftVersion', [this.baseVersionName ?? '--'])
+                    return this.$t('editPage.draftVersion', [this.draftBaseVersionName])
                 }
                 return this.versionName
             },
