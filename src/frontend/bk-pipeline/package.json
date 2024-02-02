@@ -29,7 +29,7 @@
     "@babel/preset-react": "^7.16.0",
     "@vue/babel-preset-jsx": "^1.2.4",
     "babel-helper-vue-jsx-merge-props": "^2.0.3",
-    "babel-loader": "^8.2.2", 
+    "babel-loader": "^8.2.2",
     "babel-plugin-transform-vue-jsx": "^4.0.1",
     "copy-webpack-plugin": "9.0.1",
     "css-loader": "^6.4.0",
@@ -56,13 +56,15 @@
     "webpack": "^5.58.1"
   },
   "dependencies": {
-    "bk-magic-vue": "2.5.9-beta.5",
-    "vue": "~2.7.16",
     "vuedraggable": "^2.24.3"
   },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/Tencent/bk-ci.git"
+  },
+  "peerDependencies": {
+    "vue": "~2.7.16",
+    "bk-magic-vue": "2.5.9-beta.5"
   },
   "keywords": [
     "pipeline",

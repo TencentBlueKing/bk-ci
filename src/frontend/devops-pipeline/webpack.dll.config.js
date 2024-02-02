@@ -26,7 +26,6 @@ module.exports = (env = {}, argv) => {
         entry: [
             'axios',
             'vee-validate',
-            'bk-magic-vue',
             'vue-i18n',
             'moment'
         ],

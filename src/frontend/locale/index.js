@@ -58,7 +58,6 @@ function getLsLocale () {
     try {
         const cookieLocale = cookies.get(LS_KEY) || DEFAULT_LOCALE
         
-        console.log(12333212, LS_KEY, cookieLocale, cookies.get(LS_KEY), window.INIT_LOCALE, localeAliasMap[cookieLocale.toLowerCase()])
         return localeAliasMap[cookieLocale.toLowerCase()] ?? DEFAULT_LOCALE
     } catch (error) {
         return DEFAULT_LOCALE
@@ -94,10 +93,7 @@ export default (r, initSetLocale = false) => {
             return acc
         }, {})
     })
-    locale.i18n((...args) => {
-        console.log(12333212, 'i18n', ...args)
-        return i18n.t(...args)
-    })
+    locale.i18n((...args) => i18n.t(...args))
     setLocale(initLocale, initSetLocale)
 
     function dynamicLoadModule (module, locale = DEFAULT_LOCALE) {

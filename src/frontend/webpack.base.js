@@ -1,5 +1,5 @@
 const path = require('path')
-const fs = require('fs')
+// const fs = require('fs')
 const webpack = require('webpack')
 const MiniCssExtractPlugin = require('mini-css-extract-plugin')
 const CssMinimizerPlugin = require('css-minimizer-webpack-plugin')
@@ -126,20 +126,21 @@ module.exports = ({ entry, publicPath, dist, port = 8080, argv, env }) => {
             moduleIds: 'deterministic',
             minimize: !isDev,
             splitChunks: {
-                chunks: 'all',
                 cacheGroups: {
-                    defaultVendors: {
-                        test: /[\\/]node_modules[\\/]/,
-                        priority: -10,
-                        reuseExistingChunk: true
+                    vendor: {
+                        test: /[\\/]node_modules[\\/](bk-magic-vue)[\\/]/, // 指定要单独打包的依赖
+                        name: 'vendors', // chunk 的名字
+                        chunks: 'all' // 可能的值 'async', 'initial', 'all'
                     },
                     default: {
                         minChunks: 2,
                         priority: -20,
                         reuseExistingChunk: true
                     }
+
                 }
             },
+              
             minimizer: [
                 new CssMinimizerPlugin({
                     minimizerOptions: {
@@ -180,10 +181,10 @@ module.exports = ({ entry, publicPath, dist, port = 8080, argv, env }) => {
             client: {
                 webSocketURL: 'auto://127.0.0.1:' + port + '/ws'
             },
-            https: {
-                key: fs.readFileSync(path.join(__dirname, 'localhost+2-key.pem')),
-                cert: fs.readFileSync(path.join(__dirname, './localhost+2.pem'))
-            },
+            // https: {
+            //     key: fs.readFileSync(path.join(__dirname, 'localhost+2-key.pem')),
+            //     cert: fs.readFileSync(path.join(__dirname, './localhost+2.pem'))
+            // },
             hot: isDev,
             port
         }
