@@ -80,7 +80,7 @@ interface UserPipelineVersionResource {
     ): Result<PipelineDetail>
 
     @ApiOperation("将当前草稿发布为正式版本")
-    @POST
+    @GET
     @Path("/projects/{projectId}/pipelines/{pipelineId}/releaseVersion/{version}/prefetch")
     fun preFetchDraftVersion(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
