@@ -188,12 +188,7 @@ export default {
                     ...atomProp[element.atomCode]
                 })
             })
-            console.log(pipelineRes.data, 'fdsafdas')
             dispatch('setPipeline', model)
-            commit(UPDATE_PIPELINE_INFO, {
-                baseVersion: pipelineRes.data.baseVersion,
-                baseVersionName: pipelineRes.data.baseVersionName
-            })
             if (!areDeeplyEqual(state.pipelineWithoutTrigger?.stages, model.stages.slice(1))) {
                 commit(SET_PIPELINE_WITHOUT_TRIGGER, {
                     ...model,
