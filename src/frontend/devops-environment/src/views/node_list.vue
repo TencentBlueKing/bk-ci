@@ -1321,7 +1321,7 @@
                     }
                 }
                 this.$bkInfo({
-                    title: this.$t('environment.确认重新导入[]节点吗？', [row.ip]),
+                    title: this.$t('environment.确认重新导入节点吗？', [row.ip]),
                     okText: this.$t('environment.confirm'),
                     cancelText: this.$t('environment.cancel'),
                     confirmFn

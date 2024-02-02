@@ -30,12 +30,6 @@
                     <slot name="side" />
                 </div>
             </div>
-            
-            <input
-                ref="upload"
-                style="position: absolute; width: 0; height: 0;"
-                type="file"
-                @change="handleStartUpload">
         </div>
     </div>
 </template>
@@ -313,7 +307,6 @@
                 }
                 this.$bkMessage({
                     theme: 'warning',
-                    delay: 1000,
                     message: this.$t('environment.只读模式不支持编辑')
                 })
             },

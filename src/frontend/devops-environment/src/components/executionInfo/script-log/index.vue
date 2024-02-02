@@ -32,6 +32,7 @@
         props: {
             name: String,
             hostId: Number,
+            finished: Boolean,
             ip: {
                 type: String
             },
@@ -130,7 +131,7 @@
             /**
              * @desc 获取脚本日志
              */
-            fetchLogContent () {
+            fetchLogContent (isLoading = true) {
                 if (!this.ip) {
                     this.isLoading = false
                     if (this.editor) {
@@ -138,7 +139,7 @@
                         this.editor.clearSelection()
                     }
                 }
-                this.isLoading = true
+                this.isLoading = isLoading
 
                 this.getJobInstanceLogs({
                     projectId: this.projectId,
@@ -150,6 +151,12 @@
                         const logContent = res.scriptTaskLogs[0].logContent || ''
                         this.editor.setValue(logContent)
                         this.editor.clearSelection()
+                        
+                        if (!this.finished) {
+                            setTimeout(() => {
+                                this.fetchLogContent(false)
+                            }, 5000)
+                        }
                     })
                     .finally(() => {
                         this.isLoading = false

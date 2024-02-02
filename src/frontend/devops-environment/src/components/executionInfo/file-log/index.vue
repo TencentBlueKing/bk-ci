@@ -38,6 +38,7 @@
         props: {
             name: String,
             hostId: Number,
+            finished: Boolean,
             ip: {
                 type: String
             },
@@ -152,6 +153,12 @@
                                 0: true
                             }
                             this.isMemoChange = true
+                        }
+
+                        if (!this.finished) {
+                            setTimeout(() => {
+                                this.fetchData()
+                            }, 5000)
                         }
                     })
                     .finally(() => {

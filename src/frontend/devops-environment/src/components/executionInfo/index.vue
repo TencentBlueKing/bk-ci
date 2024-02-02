@@ -75,6 +75,7 @@
                 :font-size="fontSize"
                 :mode="activePanel"
                 :host-id="hostId"
+                :finished="finished"
                 :line-feed="isScriptLogLineFeed"
                 v-bind="$attrs"
                 v-on="$listeners" />
@@ -120,7 +121,8 @@
             ip: String,
             bkCloudId: Number,
             hostId: Number,
-            ipStatus: String
+            ipStatus: String,
+            finished: Boolean
         },
         data () {
             let fontSize = parseInt(localStorage.getItem(STEP_FONT_SIZE_KEY), 10)

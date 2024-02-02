@@ -119,6 +119,7 @@
             <div class="container-right">
                 <!-- 执行日志 -->
                 <execution-info
+                    :finished="jobInstanceFinished"
                     :ip="activeIp"
                     :host-id="activeHostId"
                     :bk-cloud-id="activeBkCloudId"
@@ -166,6 +167,7 @@
                 searchModel: 'log',
                 stepInstanceData: {},
                 stepResultGroupList: [],
+                jobInstanceFinished: false,
                 stepStatusMap: {},
                 statusStyleMap,
                 checkStatus,
@@ -276,12 +278,21 @@
              * @description: 获取步骤执行结果
              */
             fetchJobInstanceStatus () {
-                this.isLoading = true
+                if (!this.jobInstanceFinished) {
+                    this.isLoading = true
+                }
                 this.getJobInstanceStatus({
                     projectId: this.projectId,
                     jobInstanceId: this.jobInstanceId
                 }).then(res => {
                     this.stepInstanceData = res.stepInstanceList[0] || {}
+                    this.jobInstanceFinished = res.finished
+                    if (!this.jobInstanceFinished) {
+                        setTimeout(() => {
+                            this.fetchJobInstanceStatus()
+                            this.fetchStepInstanceStatus()
+                        }, 5000)
+                    }
                 }).finally(() => {
                     this.isLoading = false
                 })
@@ -360,11 +371,11 @@
                     // 跳过输入法复合事件
                     return
                 }
-
                 // 输入框的值被清空直接触发搜索
                 // enter键开始搜索
                 if ((value === '' && value !== this.searchIp)
-                    || event.keyCode === 13) {
+                    || event.keyCode === 13
+                    || event.type === 'click') {
                     this.activeHostId = 0
                     this.activeIp = ''
                     this.activeBkCloudId = 0
@@ -398,7 +409,7 @@
         left: 0;
         right: 0;
         top: 50px;
-        z-index: 1999;
+        z-index: 500;
     }
     .status-box {
         position: absolute;
@@ -630,8 +641,8 @@
         padding: 20px 24px;
 
         .container-left {
+            max-width: 850px;
             height: 100%;
-            width: 50%;
             overflow: hidden;
             background: #fff;
             border: 1px solid #dcdee5;
@@ -646,6 +657,7 @@
             overflow: hidden;
             flex-direction: column;
             flex: 1;
+            min-width: 650px;
         }
     }
     .step-detail-sideslider {

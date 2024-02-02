@@ -4,6 +4,7 @@
         :size="tableSize"
         height="100%"
         class="ip-table"
+        :key="Object.keys(allRenderColumnMap).length"
         :scroll-loading="{ isLoading: paginationChangeLoading }"
         :row-class-name="rowClassName"
         @scroll-end="handleScrollEnd"
