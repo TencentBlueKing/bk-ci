@@ -22,7 +22,6 @@
             v-model="isReleaseSliderShow"
             :version="currentVersion"
             :draft-base-version-name="draftBaseVersionName"
-            :version-name="versionName"
         />
     </div>
 </template>
@@ -71,9 +70,6 @@
             },
             currentVersion () {
                 return this.pipelineInfo?.version ?? ''
-            },
-            versionName () {
-                return this.pipelineInfo?.versionName ?? '--'
             }
         },
         methods: {

@@ -47,11 +47,6 @@ const actions = {
             return response.data
         })
     },
-    requestTemplatePermission: async (_, projectId) => {
-        return ajax.get(`${prefix}/templates/projects/${projectId}/templates/hasManagerPermission`).then(response => {
-            return response.data
-        })
-    },
     requestInstanceList (_, { projectId, templateId, params }) {
         return ajax.get(`${prefix}/templateInstances/projects/${projectId}/templates/${templateId}`, { params }).then(response => {
             return response.data
