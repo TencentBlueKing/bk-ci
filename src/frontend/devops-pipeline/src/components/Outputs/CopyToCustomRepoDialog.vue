@@ -131,9 +131,11 @@
                             h(
                                 'bk-link',
                                 {
+                                    domProps: {
+                                        target: '_blank'
+                                    },
                                     props: {
                                         theme: 'primary',
-                                        target: '_blank',
                                         href: `${WEB_URL_PREFIX}/repo/${this.$route.params.projectId}/generic?repoName=custom&path=${encodeURIComponent(`${self.activeFolder}/default`)}`
                                     }
                                 },
