@@ -1,74 +1,58 @@
 <template>
     <div class="version-sideslider-container">
-        <bk-dropdown-menu trigger="click" @show="focusSearchInput">
-            <div
-                class="pipeline-version-dropmenu-trigger"
-                slot="dropdown-trigger"
-            >
-                <bk-spin v-if="isLoading" size="mini"></bk-spin>
-                <template v-else>
-                    <i v-if="isActiveDraft" class="devops-icon icon-draft" />
-                    <logo v-else-if="isActiveBranchVersion" name="branch" size="14" />
-                    <i v-else :class="['devops-icon icon-check-circle', {
-                        'is-release-version-icon': isCurrentVersion(activeVersion)
-                    }]" />
-                    <span v-if="isActiveDraft">{{ $t('editPage.draftVersion', [draftBaseVersionName]) }}</span>
-                    <span v-else>
-                        {{ activeVersionName }}
-                    </span>
-                    <i class="devops-icon icon-shift" />
-                </template>
+        <bk-select
+            searchable
+            v-model="activeVersionId"
+            :clearable="false"
+            :popover-width="320"
+            ext-cls="pipeline-version-selector"
+            :remote-method="handlePipelineVersionList"
+            @change="switchVersion"
+        >
+            <div slot="trigger" class="pipeline-version-dropmenu-trigger">
+                <i v-if="isActiveDraft" class="devops-icon icon-draft" />
+                <logo v-else-if="isActiveBranchVersion" name="branch" size="14" />
+                <i v-else :class="['devops-icon icon-check-circle', {
+                    'is-release-version-icon': isCurrentVersion(activeVersion)
+                }]" />
+                <span v-if="isActiveDraft">{{ $t('editPage.draftVersion', [draftBaseVersionName]) }}</span>
+                <span v-else>
+                    {{ activeVersionName }}
+                </span>
+                <i class="bk-icon icon-angle-down" />
             </div>
-            <ul v-bkloading="{ isLoading }" class="pipeline-version-dropmenu-content" slot="dropdown-content">
-                <p @click.stop="" class="pipeline-version-search-box">
-                    <bk-input
-                        v-model.trim="searchKeyword"
-                        ref="versionSearchInput"
-                        behavior="simplicity"
-                        class="pipeline-version-search"
-                        clearable
-                        @clear="searchVersion"
-                        @enter="searchVersion"
-                    />
-                </p>
-                <template v-if="versionList.length > 0">
-                    <li
-                        v-for="item in versionList"
-                        @click="switchVersion(item)"
-                        :key="item.version"
-                        :class="{
-                            'pipeline-version-active': item.version === selectedVersionId
-                        }"
-                    >
-                        <p>
-                            <i v-if="item.isDraft" class="devops-icon icon-draft" style="font-size: 14px" />
-                            <logo v-else-if="item.isBranchVersion" name="branch" size="14" />
-                            <i v-else :class="['devops-icon icon-check-circle', {
-                                'is-release-version-icon': isCurrentVersion(item)
-                            }]" />
-                            <span class="pipeline-version-name">
-                                {{ item.displayName }}
-                            </span>
-                            <!-- <span class="pipeline-version-main-branch">
+            <bk-option
+                v-for="item in versionList"
+                :key="item.version"
+                :id="item.version"
+                :name="item.displayName"
+                :class="{
+                    'pipeline-version-option-item': true,
+                    'pipeline-version-active': item.version === selectedVersionId
+                }"
+            >
+                <p>
+                    <i v-if="item.isDraft" class="devops-icon icon-draft" style="font-size: 14px" />
+                    <logo v-else-if="item.isBranchVersion" name="branch" size="14" />
+                    <i v-else :class="['devops-icon icon-check-circle', {
+                        'is-release-version-icon': isCurrentVersion(item)
+                    }]" />
+                    <span class="pipeline-version-name">
+                        {{ item.displayName }}
+                    </span>
+                    <!-- <span class="pipeline-version-main-branch">
                                 [{{ $t('mainBranch') }}]
                             </span> -->
-                        </p>
-                        <span>
-                            {{ item.description || '--' }}
-                        </span>
-                    </li>
-                </template>
-                <div v-else class="pipeline-version-empty-indicator">
-                    <bk-exception
-                        scene="part"
-                        :type="searchKeyword ? 'search-empty' : 'empty'"
-                    />
-                </div>
-                <li class="show-all-pipeline-version-entry" @click="showVersionSideSlider">
-                    {{ $t('viewAll') }}
-                </li>
-            </ul>
-        </bk-dropdown-menu>
+                </p>
+                <span>
+                    {{ item.description || '--' }}
+                </span>
+            </bk-option>
+            <p slot="extension" class="show-all-pipeline-version-entry" @click="showVersionSideSlider">
+                <logo name="tiaozhuan" />
+                {{ $t('viewAll') }}
+            </p>
+        </bk-select>
         <VersionHistorySideSlider
             :show-version-sideslider="showVersionSideslider"
             :current-yaml="pipelineYaml"
@@ -105,6 +89,7 @@
                 versionList: [],
                 searchKeyword: '',
                 activeVersion: null,
+                activeVersionId: this.value,
                 pagination: {
                     current: 1,
                     count: 0,
@@ -142,6 +127,7 @@
         },
         watch: {
             value (val) {
+                this.activeVersionId = val
                 this.activeVersion = this.versionList.find(item => item.version === val)
             },
             pipelineId () {
@@ -190,8 +176,7 @@
                             isRelease: item.status === 'RELEASED'
                         }
                     })
-                    const activeVersion = this.versionList.find(item => item.version === this.value)
-                    this.switchVersion(activeVersion)
+                    this.switchVersion(this.value)
                 }).catch(err => {
                     this.$showTips({
                         message: err.message || err,
@@ -201,12 +186,13 @@
                     this.isLoading = false
                 })
             },
-            switchVersion (version) {
+            switchVersion (versionId) {
+                const version = this.versionList.find(item => item.version === versionId)
                 if (version) {
                     this.activeVersion = version
-                    this.$emit('change', version.version, version)
-                    this.$emit('input', version.version, version)
-                    this.$emit('update:value', version.version, version)
+                    this.$emit('change', versionId, version)
+                    this.$emit('input', versionId, version)
+                    this.$emit('update:value', versionId, version)
                 }
             },
             isCurrentVersion (version) {
@@ -229,6 +215,15 @@
 <style lang="scss" scoped>
 @import "@/scss/conf";
 @import "@/scss/mixins/ellipsis";
+.pipeline-version-selector {
+    border: 0;
+    box-shadow: none;
+    &.is-focus {
+        .icon-angle-down {
+            transform: rotate(180deg);
+        }
+    }
+}
 .pipeline-version-dropmenu-trigger {
     display: grid;
     align-items: center;
@@ -237,7 +232,7 @@
     grid-gap: 6px;
     height: 24px;
     background: #F0F1F5;
-    padding: 0 10px;
+    padding: 0 8px;
     min-width: 200px;
     .icon-draft,
     .icon-check-circle {
@@ -247,78 +242,63 @@
         font-size: 14px;
     }
     > span {
+        line-height: 24px;
         @include ellipsis();
     }
+    cursor: pointer;
+    .icon-angle-down {
+        transition: transform 0.3s;
+        font-size: 20px;
+    }
+}
+.pipeline-version-option-item {
+    display: flex;
+    flex-direction: column;
+    line-height: 20px;
+    grid-gap: 2px;
+    padding: 8px 0;
+    font-size: 12px;
+    cursor: pointer;
+    &:hover,
+    &.pipeline-version-active {
+        background: #E1ECFF;
+        color: $primaryColor;
+    }
+
+    > p {
+        display: grid;
+        grid-auto-flow: column;
+        grid-template-columns: 18px 1fr auto;
+        align-items: center;
+        grid-gap: 4px;
+        .devops-icon {
+            font-size: 18px;
+            color: #979BA5;
+            flex-shrink: 0;
+        }
+        .pipeline-version-main-branch {
+            color: $successColor;
+        }
+        .pipeline-version-name {
+            font-weight: 700;
+            color: #63656E;
+            @include ellipsis();
+        }
+    }
+    > span {
+        color: #979BA5;
+        @include ellipsis();
+    }
+}
+.show-all-pipeline-version-entry {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 40px;
     cursor: pointer;
 }
 .icon-check-circle.is-release-version-icon {
     color: $successColor;
 }
 
-.pipeline-version-dropmenu-content {
-    width: 100%;
-    min-width: 360px;
-    display: flex;
-    flex-direction: column;
-    max-height: 360px;
-    overflow: auto;
-    .pipeline-version-empty-indicator {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        height: 360px;
-    }
-    >.pipeline-version-search-box {
-        position: sticky;
-        padding: 0 12px;
-        background: white;
-        top: 0;
-    }
-    >.show-all-pipeline-version-entry {
-        position: sticky;
-        bottom: 0;
-        background: white;
-        color: $primaryColor;
-        display: flex;
-        align-items: center;
-        padding: 12px 0;
-    }
-    > li {
-        display: flex;
-        flex-direction: column;
-        line-height: 20px;
-        grid-gap: 2px;
-        padding: 8px 16px;
-        font-size: 12px;
-        cursor: pointer;
-        &:hover,
-        &.pipeline-version-active {
-            background: #E1ECFF;
-            color: $primaryColor;
-        }
-
-        > p {
-            display: grid;
-            grid-auto-flow: column;
-            grid-template-columns: 18px 1fr auto;
-            align-items: center;
-            grid-gap: 4px;
-            .devops-icon {
-                font-size: 18px;
-                flex-shrink: 0;
-            }
-            .pipeline-version-main-branch {
-                color: $successColor;
-            }
-            .pipeline-version-name {
-                font-weight: 700;
-                @include ellipsis();
-            }
-        }
-        > span {
-            color: #979BA5;
-            @include ellipsis();
-        }
-    }
-}
 </style>

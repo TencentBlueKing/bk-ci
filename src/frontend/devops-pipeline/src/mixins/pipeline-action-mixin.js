@@ -41,8 +41,7 @@ import { ORDER_ENUM, PIPELINE_SORT_FILED } from '@/utils/pipelineConst'
 export default {
     data () {
         return {
-            pipelineMap: {},
-            hasTemplatePermission: false
+            pipelineMap: {}
         }
     },
     computed: {
@@ -56,9 +55,6 @@ export default {
             return this.groupMap?.[this.$route.params.viewId]
         }
     },
-    created () {
-        this.checkHasTemplatePermission()
-    },
     methods: {
         ...mapMutations('pipelines', [
             'updatePipelineActionState',
@@ -66,7 +62,6 @@ export default {
         ]),
         ...mapActions('pipelines', [
             'requestAllPipelinesListByFilter',
-            'requestTemplatePermission',
             'requestRecyclePipelineList',
             'requestToggleCollect',
             'deletePipeline',
@@ -74,15 +69,6 @@ export default {
             'restorePipeline',
             'lockPipeline'
         ]),
-        async checkHasTemplatePermission () {
-            this.hasTemplatePermission = await this.requestTemplatePermission(this.$route.params.projectId)
-            this.$nextTick(() => {
-                console.log(this.hasTemplatePermission, 'this.hasTemplatePermission')
-                Object.keys(this.pipelineMap).forEach(pipelineId => {
-                    this.pipelineMap[pipelineId].pipelineActions = this.getPipelineActions(this.pipelineMap[pipelineId])
-                })
-            })
-        },
         async getPipelines (query = {}) {
             try {
                 const { viewId, ...restQuery } = query
@@ -244,7 +230,7 @@ export default {
                 {
                     text: this.$t('newlist.saveAsTemp'),
                     handler: this.saveAsTempHandler,
-                    hasPermission: this.hasTemplatePermission,
+                    hasPermission: this.isManage,
                     disablePermissionApi: true,
                     permissionData: {
                         projectId: pipeline.projectId,

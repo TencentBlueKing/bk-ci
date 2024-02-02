@@ -762,6 +762,10 @@ export default {
     releaseDraftPipeline ({ commit }, { projectId, pipelineId, version, params }) {
         return request.post(`/${PROCESS_API_URL_PREFIX}/user/version/projects/${projectId}/pipelines/${pipelineId}/releaseVersion/${version}`, params)
     },
+    async prefetchPipelineVersion ({ commit }, { projectId, pipelineId, version }) {
+        const res = await request.get(`/${PROCESS_API_URL_PREFIX}/user/version/projects/${projectId}/pipelines/${pipelineId}/releaseVersion/${version}/prefetch`)
+        return res.data
+    },
     yamlNavToPipelineModel ({ commit }, { projectId, body, ...params }) {
         return request.post(`/${PROCESS_API_URL_PREFIX}/user/transfer/projects/${projectId}/position`, {
             yaml: body

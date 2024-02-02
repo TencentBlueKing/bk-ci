@@ -8,7 +8,7 @@
     >
         <header slot="header" class="release-pipeline-side-slider-header">
             {{ $t("releasePipeline") }}
-            <bk-tag radius="10px">{{ $t("releasePipelineVersion", [versionName]) }}</bk-tag>
+            <bk-tag radius="10px">{{ $t("releasePipelineVersion", [newReleaseVersionName]) }}</bk-tag>
             <span>
                 {{ $t("releasePipelineBaseVersion", [draftBaseVersionName]) }}
             </span>
@@ -266,10 +266,6 @@
                 type: String,
                 default: '--'
             },
-            versionName: {
-                type: String,
-                default: '--'
-            },
             version: {
                 type: [String, Number],
                 required: true
@@ -285,6 +281,7 @@
                 oauthing: false,
                 refreshing: false,
                 filePathDir: '.ci/',
+                newReleaseVersionName: '--',
                 scrollLoadmoreConf: {
                     isLoading: false,
                     page: 1,
@@ -305,7 +302,7 @@
                     labels: this.pipelineSetting?.labels || [],
                     staticViews: []
                 },
-                staticGroups: null,
+                staticGroups: [],
                 previewing: false,
                 showYamlPreivewPopup: false,
                 previewYaml: ''
@@ -426,22 +423,55 @@
             window.__bk_zIndex_manager.zIndex = 2000
         },
         methods: {
-            ...mapActions('atom', ['releaseDraftPipeline', 'setSaveStatus', 'listPermissionStaticViews', 'transfer']),
+            ...mapActions('atom', [
+                'releaseDraftPipeline',
+                'setSaveStatus',
+                'listPermissionStaticViews',
+                'transfer',
+                'prefetchPipelineVersion'
+            ]),
             ...mapActions('common', ['isPACOAuth', 'getSupportPacScmTypeList', 'getPACRepoList']),
             async init () {
-                if (this.releaseParams.enablePac) {
+                try {
                     this.isLoading = true
-                    await this.getSupportPacScmTypeList()
+                    const enablePac = this.releaseParams.enablePac
+                    const params = {
+                        projectId: this.$route.params.projectId,
+                        pipelineId: this.$route.params.pipelineId
+                    }
+                    const results = await Promise.all([
+                        ...(enablePac
+                            ? [
+                                this.getSupportPacScmTypeList()
+                            ]
+                            : []
+                        ),
+                        this.listPermissionStaticViews(params),
+                        this.prefetchPipelineVersion({
+                            ...params,
+                            version: this.version
+                        })
+                    ])
+
                     this.releaseParams.scmType = this.pacSupportScmTypeList[0]?.id
-                    this.isLoading = false
-                    this.$nextTick(() => {
-                        this.fetchPacEnableCodelibList(true)
+                    this.staticGroups = results[enablePac ? 1 : 0]
+                    const newReleaseVersion = results[enablePac ? 2 : 1]
+                    this.newReleaseVersionName = newReleaseVersion?.newVersionName || '--'
+                    if (enablePac) {
+                        this.$nextTick(() => {
+                            this.fetchPacEnableCodelibList(true)
+                        })
+                    }
+                } catch (error) {
+                    this.handleError(error, {
+                        projectId: this.$route.params.projectId,
+                        resourceCode: this.$route.params.pipelineId,
+                        resourceType: 'pipeline',
+                        action: this.$permissionResourceAction.EDIT
                     })
+                } finally {
+                    this.isLoading = false
                 }
-                this.staticGroups = await this.listPermissionStaticViews({
-                    projectId: this.$route.params.projectId,
-                    pipelineId: this.$route.params.pipelineId
-                })
             },
             async fetchPacEnableCodelibList (init = false) {
                 try {
