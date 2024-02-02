@@ -168,7 +168,7 @@
             const getDefaultFormData = () => {
                 return {
                     osType: 'LINUX',
-                    account: '',
+                    account: 'root',
                     authType: 'PASSWORD',
                     password: '',
                     installChannelId: 'auto',
@@ -203,6 +203,13 @@
                     this.formData.innerIp = this.innerIp
                 } else {
                     this.handleCancel()
+                }
+            },
+            'formData.osType' (val) {
+                if (['LINUX', 'AIX', 'SOLARIS'].includes(val)) {
+                    this.formData.account = 'root'
+                } else {
+                    this.formData.account = 'Administrator'
                 }
             }
         },
@@ -366,6 +373,7 @@
 
 <style lang="scss" scoped>
 .install-agent-side {
+    z-index: 2000;
     ::v-deep .bk-sideslider-content {
         height: calc(100% - 114px) !important;
         padding: 20px;

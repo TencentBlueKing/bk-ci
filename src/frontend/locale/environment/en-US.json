@@ -406,5 +406,6 @@
     "你不是主机负责人，请联系主机负责人重新导入使用": "You are not the host owner, please contact the host owner to re-import for use",
     "自动选择": "Auto Select",
     "其他": "Others",
-    "关闭": "Close"
+    "关闭": "Close",
+    "确认重新导入[]节点吗？": "Confirm to re-import the [{0}] node?"
 }

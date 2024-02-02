@@ -313,6 +313,7 @@
                 }
                 this.$bkMessage({
                     theme: 'warning',
+                    delay: 1000,
                     message: this.$t('environment.只读模式不支持编辑')
                 })
             },

@@ -86,6 +86,7 @@
             padding: 16px;
             margin-top: 15px;
             background-color: #f6f6fa;
+            font-size: 12px;
         }
         .handle-btn {
             color: #3c96ff;

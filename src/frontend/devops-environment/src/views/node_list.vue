@@ -238,6 +238,7 @@
                                         >
                                             <bk-button
                                                 v-if="['NOT_IN_CC'].includes(props.row.nodeStatus)"
+                                                class="mr5"
                                                 text
                                                 v-perm="{
                                                     hasPermission: props.row.canEdit,
@@ -250,8 +251,8 @@
                                                     }
                                                 }"
                                                 :disabled="!(userInfo.username === props.row.operator || userInfo.username === props.row.bakOperator)"
-                                                @click="handleReImport(props.row.ip)"
-                                                class="mr5">
+                                                @click="handleReImport(props.row)"
+                                            >
                                                 {{ $t('environment.reImport') }}
                                             </bk-button>
                                         </span>
@@ -379,7 +380,6 @@
 
         <!-- 导入CMDB -->
         <config-manage-node
-            :re-import-ip="reImportIp"
             :node-select-conf="cmdbNodeSelectConf"
             @confirm-fn="confirmCmdbFn"
             @cancel-fn="cancelCmdbFn"
@@ -563,7 +563,6 @@
                 requestParams: {},
                 buildNodes: ['DEVCLOUD', 'THIRDPARTY'], // Build 构建用途的节点 - 第三方构建机类型
                 deploymentNodes: ['CC', 'CMDB', 'UNKNOWN', 'OTHER'], // deployment 部署用途的节点
-                reImportIp: '',
                 installAgentIp: '',
                 isDeleteIng: false
             }
@@ -1279,7 +1278,6 @@
                 this.requestList()
             },
             cancelCmdbFn () {
-                this.reImportIp = ''
                 this.cmdbNodeSelectConf.isShow = false
             },
             handleSettingChange ({ fields, size }) {
@@ -1299,9 +1297,35 @@
                 this.pagination.limit = limit
                 this.requestList(this.requestParams)
             },
-            handleReImport (ip) {
-                this.reImportIp = ip
-                this.toImportNode('cmdb')
+            handleReImport (row) {
+                const params = []
+                params.push({
+                    nodeIp: row.ip,
+                    nodeId: row.nodeId
+                })
+                const confirmFn = () => {
+                    let theme, message, agentAbnormalNodesCount, agentNotInstallNodesCount
+                    try {
+                        const res = this.$store.dispatch('environment/reImportCmdbNode', {
+                            projectId: this.projectId,
+                            params
+                        })
+                        agentAbnormalNodesCount = res.agentAbnormalNodesCount
+                        agentNotInstallNodesCount = res.agentNotInstallNodesCount
+                        theme = 'success'
+                    } catch (e) {
+                        theme = 'error'
+                        message = e.message || e
+                    } finally {
+                        this.confirmCmdbFn({ theme, message, agentAbnormalNodesCount, agentNotInstallNodesCount })
+                    }
+                }
+                this.$bkInfo({
+                    title: this.$t('environment.确认重新导入[]节点吗？', [row.ip]),
+                    okText: this.$t('environment.confirm'),
+                    cancelText: this.$t('environment.cancel'),
+                    confirmFn
+                })
             },
             clearFilter () {
                 this.searchValue = []

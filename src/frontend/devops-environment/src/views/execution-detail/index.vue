@@ -56,6 +56,7 @@
                                             disabled: !isFile
                                         }"
                                         :value="keyword"
+                                        @right-icon-click="handleLogSearch"
                                         @keyup="handleLogSearch" />
                                     <bk-input
                                         v-if="searchModel === 'ip'"
@@ -63,6 +64,7 @@
                                         right-icon="bk-icon icon-search"
                                         style="width: 292px;"
                                         :value="searchIp"
+                                        @right-icon-click="handleIPSearch"
                                         @keyup="handleIPSearch" />
                                 </compose-form-item>
                             </div>

@@ -33,7 +33,7 @@
                                 <ul class="search-key" ref="searchKey">
                                     <li class="key-node" v-for="(entry, index) in searchKeyList" :key="index">
                                         <span>{{ entry }}</span>
-                                        <i v-if="!reImportIp" class="devops-icon icon-close" @click="deleteKey(index)"></i>
+                                        <i class="devops-icon icon-close" @click="deleteKey(index)"></i>
                                     </li>
                                     <li class="input-item">
                                         <input type="text" class="search-input" ref="searchInput"
@@ -46,7 +46,7 @@
                                 </ul>
                             </div>
                             <div class="actions">
-                                <i class="devops-icon icon-close" @click="deleteAllKey" v-if="searchKeyList.length && !reImportIp"></i>
+                                <i class="devops-icon icon-close" @click="deleteAllKey" v-if="searchKeyList.length"></i>
                                 <i class="devops-icon icon-search" @click="searchNode"></i>
                             </div>
                             <div class="ip-searcher-footer" v-if="isSearchFooter">
@@ -118,8 +118,7 @@
                     data: [],
                     onChange: () => {}
                 }
-            },
-            reImportIp: String
+            }
         },
         data () {
             return {
@@ -173,13 +172,12 @@
                     this.searchKeyList.splice(0, this.searchKeyList.length)
                 } else {
                     this.pagination.current = 1
-                    if (this.reImportIp) {
-                        this.importText = this.$t('environment.reImport')
-                        await this.selectedKey(this.reImportIp || '')
-                    }
                     await this.requestAllList()
                     await this.getDate()
                 }
+            },
+            operator (val) {
+                this.selectedNodeList = []
             }
         },
         methods: {
@@ -196,7 +194,6 @@
                     this.rowList = []
                     const res = await this.$store.dispatch('environment/requestCmdbNode', { params })
                     res.records && res.records.forEach(item => {
-                        item.nodeId = this.nodeList.find(node => node.nodeType === 'CMDB' && node.ip === item.ip)?.nodeId
                         this.rowList.push({
                             ...item
                         })
@@ -205,10 +202,9 @@
                     // 回填已经导入的节点
                     this.$nextTick(() => {
                         this.nodeList.forEach(selection => {
-                            const matchItem = this.rowList.find(val => val.ip === selection.ip)
-                            if ((matchItem && selection.nodeType === 'CMDB' && selection.nodeStatus !== 'NOT_IN_CC' && !this.reImportIp) || (matchItem && selection.nodeStatus === 'NOT_IN_CC' && this.reImportIp)) {
+                            const matchItem = this.rowList.find(val => val.ip === selection.ip && selection.nodeType === 'CMDB')
+                            if (matchItem) {
                                 this.$refs.nodeListTable.toggleRowSelection(matchItem, true)
-                                this.selectedNodeList.push(matchItem)
                             }
                         })
                     })
@@ -257,7 +253,6 @@
                 this.isSearchFooter = false
             },
             focusSearch () {
-                if (this.reImportIp) return
                 if (!this.isSearchFooter) {
                     this.isSearchFooter = true
                 }
@@ -348,21 +343,13 @@
             },
             async confirmFn () {
                 const selectNodeId = []
-                if (this.reImportIp) {
-                    this.selectedNodeList.map(node => selectNodeId.push({
-                        nodeIp: node.ip,
-                        nodeId: node.nodeId
-                    }))
-                } else {
-                    this.selectedNodeList.map(node => selectNodeId.push(node.ip))
-                }
+                this.selectedNodeList.map(node => selectNodeId.push(node.ip))
                 let theme, message, agentAbnormalNodesCount, agentNotInstallNodesCount
 
                 this.loading.isLoading = true
                 this.importText = `${this.$t('environment.nodeInfo.importing')}...`
                 try {
-                    const fn = this.reImportIp ? 'environment/reImportCmdbNode' : 'environment/importCmdbNode'
-                    const res = await this.$store.dispatch(fn, {
+                    const res = await this.$store.dispatch('environment/importCmdbNode', {
                         projectId: this.projectId,
                         params: selectNodeId
                     })
@@ -399,7 +386,7 @@
              * 已经导入过的节点不可勾选，状态为NOT_IN_CC的节点可勾选重新导入
              */
             isImported (row) {
-                return !this.nodeList.some(node => (node.nodeType === 'CMDB' && node.ip === row.ip && node.nodeStatus !== 'NOT_IN_CC') || (node.nodeStatus === 'NOT_IN_CC' && this.reImportIp))
+                return !this.nodeList.some(node => (node.nodeType === 'CMDB' && node.ip === row.ip))
             }
         }
     }

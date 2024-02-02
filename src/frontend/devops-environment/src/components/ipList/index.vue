@@ -1,7 +1,7 @@
 <template>
     <bk-table
         :data="list"
-        :size="size"
+        :size="tableSize"
         height="100%"
         class="ip-table"
         :scroll-loading="{ isLoading: paginationChangeLoading }"

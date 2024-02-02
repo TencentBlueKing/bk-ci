@@ -162,6 +162,7 @@
 }
 
 .execute-history-step-view-server-detail-dialog {
+    z-index: 3000;
     .ip-selector-view-host{
         margin-top: 0 !important;
     }
