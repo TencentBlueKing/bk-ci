@@ -26,7 +26,7 @@ module.exports = (env = {}, argv) => {
         entry: [
             'axios',
             'vee-validate',
-            'bkui-pipeline',
+            'bk-magic-vue',
             'vue-i18n',
             'moment'
         ],
@@ -37,7 +37,12 @@ module.exports = (env = {}, argv) => {
             path: path.join(__dirname, 'dist')
         },
         externals: {
-            vue: 'Vue'
+            vue: {
+                commonjs: 'vue',
+                commonjs2: 'vue',
+                amd: 'vue',
+                root: 'Vue'
+            }
         },
         resolve: {
             fallback: {
@@ -87,6 +92,7 @@ module.exports = (env = {}, argv) => {
             ]
         },
         plugins: [
+            // new BundleAnalyzerPlugin(),
             new webpack.ContextReplacementPlugin(/moment\/locale$/, /zh-cn/),
             new webpack.DllPlugin({
                 context: __dirname,

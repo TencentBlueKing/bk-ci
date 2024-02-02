@@ -6,7 +6,7 @@ const CssMinimizerPlugin = require('css-minimizer-webpack-plugin')
 const { VueLoaderPlugin } = require('vue-loader')
 const CopyWebpackPlugin = require('copy-webpack-plugin')
 const BundleWebpackPlugin = require('./webpackPlugin/bundle-webpack-plugin')
-// const BundleAnalyzerPlugin = require('webpack-bundle-analyzer').BundleAnalyzerPlugin
+const BundleAnalyzerPlugin = require('webpack-bundle-analyzer').BundleAnalyzerPlugin
 
 module.exports = ({ entry, publicPath, dist, port = 8080, argv, env }) => {
     const isDev = argv.mode === 'development'
@@ -56,14 +56,14 @@ module.exports = ({ entry, publicPath, dist, port = 8080, argv, env }) => {
                 },
                 {
                     test: /\.scss$/,
-                    use: [{
-                        loader: MiniCssExtractPlugin.loader,
-                        options: {
-                            publicPath: (resourcePath, context) => {
-                                return ''
+                    use: [isDev
+                        ? 'style-loader'
+                        : {
+                            loader: MiniCssExtractPlugin.loader,
+                            options: {
+                                publicPath: (resourcePath, context) => ''
                             }
-                        }
-                    }, 'css-loader', 'sass-loader']
+                        }, 'css-loader', 'sass-loader']
                 },
                 {
                     test: /\.(js|vue)$/,
@@ -73,6 +73,7 @@ module.exports = ({ entry, publicPath, dist, port = 8080, argv, env }) => {
                     exclude: /node_modules/,
                     options: {
                         fix: true,
+                        emitWarning: false,
                         formatter: require('eslint-friendly-formatter')
                     }
                 },
@@ -96,7 +97,7 @@ module.exports = ({ entry, publicPath, dist, port = 8080, argv, env }) => {
             ]
         },
         plugins: [
-            // new BundleAnalyzerPlugin(),
+            new BundleAnalyzerPlugin(),
             new webpack.HotModuleReplacementPlugin(),
             new VueLoaderPlugin(),
             new BundleWebpackPlugin({
@@ -124,6 +125,21 @@ module.exports = ({ entry, publicPath, dist, port = 8080, argv, env }) => {
             chunkIds: isDev ? 'named' : 'deterministic',
             moduleIds: 'deterministic',
             minimize: !isDev,
+            splitChunks: {
+                chunks: 'all',
+                cacheGroups: {
+                    defaultVendors: {
+                        test: /[\\/]node_modules[\\/]/,
+                        priority: -10,
+                        reuseExistingChunk: true
+                    },
+                    default: {
+                        minChunks: 2,
+                        priority: -20,
+                        reuseExistingChunk: true
+                    }
+                }
+            },
             minimizer: [
                 new CssMinimizerPlugin({
                     minimizerOptions: {
@@ -162,13 +178,12 @@ module.exports = ({ entry, publicPath, dist, port = 8080, argv, env }) => {
             allowedHosts: 'all',
             historyApiFallback: true,
             client: {
-                webSocketURL: 'ws://127.0.0.1:' + port + '/ws'
+                webSocketURL: 'auto://127.0.0.1:' + port + '/ws'
             },
-            // 可以在本地生成证书，开启Https
-            // https: {
-            //     key: fs.readFileSync(path.join(__dirname, 'localhost+2-key.pem')),
-            //     cert: fs.readFileSync(path.join(__dirname, './localhost+2.pem'))
-            // },
+            https: {
+                key: fs.readFileSync(path.join(__dirname, 'localhost+2-key.pem')),
+                cert: fs.readFileSync(path.join(__dirname, './localhost+2.pem'))
+            },
             hot: isDev,
             port
         }

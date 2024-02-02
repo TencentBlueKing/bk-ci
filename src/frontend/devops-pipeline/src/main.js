@@ -52,18 +52,16 @@ import { pipelineDocs } from '../../common-lib/docs'
 import { BkPermission, PermissionDirective } from 'bk-permission'
 import 'bk-permission/dist/main.css'
 
-// 全量引入 bk-magic-vue 样式
-require('bk-magic-vue/dist/bk-magic-vue.min.css')
-
 const { i18n, setLocale } = createLocale(
     require.context('@locale/pipeline/', false, /\.json$/)
 )
 const isInIframe = window.self !== window.parent
 
+console.log('aaaa12333212', bkMagic.locale.getCurLang())
+
 Vue.use(focus)
 Vue.use(enClass)
 Vue.use(enStyle)
-Vue.use(bkMagic)
 Vue.use(PortalVue)
 Vue.use(mavonEditor)
 Vue.use(PermissionDirective(handlePipelineNoPermission))
@@ -82,7 +80,6 @@ Vue.use(VeeValidate, {
 })
 VeeValidate.Validator.localize(validDictionary)
 ExtendsCustomRules(VeeValidate.Validator.extend)
-console.log(i18n.locale)
 Vue.use(BkPipeline, {
     i18n
 })
