@@ -97,6 +97,7 @@ import org.apache.commons.lang3.StringUtils
 import org.reflections.Reflections
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
+import io.swagger.v3.oas.annotations.media.Schema as SchemaAnnotation
 
 @Service
 @Suppress("ComplexMethod")
@@ -797,9 +798,9 @@ class DocumentService {
                 val infoMap = mutableMapOf<String, String>()
                 val subTypes = it.getAnnotation(JsonSubTypes::class.java).value
 //            val typeInfo = it.getAnnotation(JsonTypeInfo::class.java).property
-                val name = it.getAnnotation(Schema::class.java)?.name ?: it.name.split(".").last()
+                val name = it.getAnnotation(SchemaAnnotation::class.java)?.name ?: it.name.split(".").last()
                 subTypes.forEach { child ->
-                    val childName = child.value.java.getAnnotation(Schema::class.java)?.name
+                    val childName = child.value.java.getAnnotation(SchemaAnnotation::class.java)?.name
                         ?: child.value.java.name.split(".").last()
                     infoMap[childName] = child.name
                 }
@@ -809,14 +810,14 @@ class DocumentService {
         }
 
         fun getAllApiModelInfo(reflections: Reflections): Map<String, Map<String, SwaggerDocParameterInfo>> {
-            val clazz = reflections.getTypesAnnotatedWith(Schema::class.java).toList()
+            val clazz = reflections.getTypesAnnotatedWith(SchemaAnnotation::class.java).toList()
             val res = mutableMapOf<String, Map<String, SwaggerDocParameterInfo>>()
             for (i in clazz.indices) {
                 val it = clazz.getOrNull(i) ?: continue
 
                 println("$i${it.name}")
                 try {
-                    val name = it.getAnnotation(Schema::class.java).name
+                    val name = it.getAnnotation(SchemaAnnotation::class.java).name
                     res[name] = getDataClassParameterDefault(it)
                 } catch (e: Throwable) {
 //                println(it.name)
