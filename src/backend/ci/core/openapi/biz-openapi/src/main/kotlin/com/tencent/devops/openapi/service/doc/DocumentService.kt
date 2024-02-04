@@ -26,6 +26,7 @@
  */
 package com.tencent.devops.openapi.service.doc
 
+import com.fasterxml.jackson.annotation.JsonSubTypes
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_APP_CODE
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.util.FileUtil
@@ -85,7 +86,15 @@ import io.swagger.v3.oas.models.parameters.Parameter
 import io.swagger.v3.oas.models.parameters.RequestBody
 import io.swagger.v3.oas.models.responses.ApiResponse
 import io.swagger.v3.oas.models.servers.Server
+import kotlin.jvm.internal.DefaultConstructorMarker
+import kotlin.reflect.KFunction
+import kotlin.reflect.KType
+import kotlin.reflect.full.memberProperties
+import kotlin.reflect.jvm.isAccessible
+import kotlin.reflect.jvm.javaConstructor
+import kotlin.reflect.jvm.javaType
 import org.apache.commons.lang3.StringUtils
+import org.reflections.Reflections
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 
@@ -397,7 +406,7 @@ class DocumentService {
             markdownElement.add(
                 Text(
                     level = 3,
-                    body = "$httpStatus $BK_RETURNS_THE_SAMPLE",
+                    body = "$httpStatus ${getI18n(BK_RETURNS_THE_SAMPLE)}",
                     key = "${httpStatus}_return_example_title"
                 )
             )
@@ -489,7 +498,7 @@ class DocumentService {
         val headerString = header.rows.takeIf { it.isNotEmpty() }?.joinToString(prefix = "\\\n", separator = "\\\n") {
             "-H '${it.columns[0]}: ${it.columns[4]}' "
         } ?: ""
-        return "curl -X ${httpMethod.toUpperCase()} ${getI18n(BK_CURL_PROMPT, arrayOf(queryString))} $headerString"
+        return "curl -X ${httpMethod.toUpperCase()} '${getI18n(BK_CURL_PROMPT, arrayOf(queryString))}' $headerString"
     }
 
     private fun parseResponse(responses: Map<String, ApiResponse>): List<TableRow> {
@@ -775,5 +784,153 @@ class DocumentService {
             language = "zh_CN",
             params = params
         )
+    }
+
+    companion object {
+        /**
+         *  获取所有多态类的实现信息
+         */
+        fun getAllSubType(reflections: Reflections): Map<String, Map<String, String>> {
+            val subTypesClazz = reflections.getTypesAnnotatedWith(JsonSubTypes::class.java)
+            val res = mutableMapOf<String, Map<String, String>>()
+            subTypesClazz.forEach {
+                val infoMap = mutableMapOf<String, String>()
+                val subTypes = it.getAnnotation(JsonSubTypes::class.java).value
+//            val typeInfo = it.getAnnotation(JsonTypeInfo::class.java).property
+                val name = it.getAnnotation(Schema::class.java)?.name ?: it.name.split(".").last()
+                subTypes.forEach { child ->
+                    val childName = child.value.java.getAnnotation(Schema::class.java)?.name
+                        ?: child.value.java.name.split(".").last()
+                    infoMap[childName] = child.name
+                }
+                res[name] = infoMap
+            }
+            return res
+        }
+
+        fun getAllApiModelInfo(reflections: Reflections): Map<String, Map<String, SwaggerDocParameterInfo>> {
+            val clazz = reflections.getTypesAnnotatedWith(Schema::class.java).toList()
+            val res = mutableMapOf<String, Map<String, SwaggerDocParameterInfo>>()
+            for (i in clazz.indices) {
+                val it = clazz.getOrNull(i) ?: continue
+
+                println("$i${it.name}")
+                try {
+                    val name = it.getAnnotation(Schema::class.java).name
+                    res[name] = getDataClassParameterDefault(it)
+                } catch (e: Throwable) {
+//                println(it.name)
+//                println(e)
+                }
+            }
+            return res
+        }
+
+
+        /**
+         * 例子:
+         * ```java
+         *  getDataClassParameterDefault(Class.forName("com.tencent.devops.openapi.pojo.SwaggerDocResponse"))
+         * ```
+         *  @param clazz 目标类
+         *  @return 带默认值的map
+         */
+        @Suppress("ComplexMethod")
+        fun getDataClassParameterDefault(clazz: Class<*>): Map<String, SwaggerDocParameterInfo> {
+            val kClazz = clazz.kotlin
+            if (!kClazz.isData) return emptyMap()
+            val constructor = kClazz.constructors.maxByOrNull { it.parameters.size }!!
+            val parameters = constructor.parameters
+            val syntheticInit = clazz.declaredConstructors.find { it.modifiers == 4097 }
+            val argumentsSize = syntheticInit?.parameterTypes?.size ?: parameters.size
+            val arguments = arrayOfNulls<Any>(argumentsSize)
+            var index = 0
+            var offset = 0
+            val nullable = mutableMapOf<String, Boolean>()
+            parameters.forEach {
+                if (it.isOptional) {
+                    offset += 1 shl index
+                }
+                nullable[it.name ?: ""] = it.type.isMarkedNullable
+                arguments[index++] = makeStandardArgument(it.type, constructor)
+            }
+            for (i in index until argumentsSize - 2) {
+                arguments[i] = 0
+            }
+            if (syntheticInit != null) {
+                arguments[argumentsSize - 2] = offset
+                arguments[argumentsSize - 1] = null as DefaultConstructorMarker?
+            }
+            val mock = (syntheticInit ?: constructor.javaConstructor)!!.newInstance()
+//        val mock = try {
+            val res = mutableMapOf<String, SwaggerDocParameterInfo>()
+            kClazz.memberProperties.forEach {
+                // 编译后，属性默认是private,需要设置isAccessible  才可以读取到值
+                it.isAccessible = true
+                res[it.name] = SwaggerDocParameterInfo(
+                    markedNullable = nullable[it.name] ?: false,
+                    defaultValue = checkDefaultValue(it.call(mock).toString())
+                )
+            }
+            return res
+        }
+
+        @Suppress("ComplexCondition")
+        private fun checkDefaultValue(v: String): String? {
+            if (v.startsWith("Mock") || v.isBlank() || v == "[]" || v == "{=}" || v == "{}") return null
+            return v
+        }
+
+        @Suppress("ComplexMethod")
+        private fun makeStandardArgument(type: KType, debug: KFunction<*>): Any? {
+            if (type.isMarkedNullable) return null
+            return when (type.classifier) {
+                Boolean::class -> false
+                Byte::class -> 0.toByte()
+                Short::class -> 0.toShort()
+                Char::class -> 0.toChar()
+                Int::class -> 0
+                Long::class -> 0L
+                Float::class -> 0f
+                Double::class -> 0.0
+                String::class -> ""
+                Enum::class -> {
+                    null
+                }
+
+                Set::class -> {
+                    type.arguments.firstOrNull()?.let { setOf(makeStandardArgument(it.type!!, debug)) } ?: ""
+                }
+
+                List::class -> {
+                    type.arguments.firstOrNull()?.let { listOf(makeStandardArgument(it.type!!, debug)) } ?: ""
+                }
+
+                ArrayList::class -> {
+                    type.arguments.firstOrNull()?.let { arrayListOf(makeStandardArgument(it.type!!, debug)) } ?: ""
+                }
+
+                Array::class -> {
+                    type.arguments.firstOrNull()?.let { arrayOf(makeStandardArgument(it.type!!, debug)) } ?: ""
+                }
+
+                Map::class -> {
+                    mapOf(
+                        makeStandardArgument(
+                            type.arguments[0].type!!,
+                            debug
+                        ) to makeStandardArgument(type.arguments[1].type!!, debug)
+                    )
+                }
+
+                else -> {
+                    if (type.javaType is Class<*>) {
+                        (type.javaType as Class<*>).newInstance()
+                    } else {
+                        null
+                    }
+                }
+            }
+        }
     }
 }
