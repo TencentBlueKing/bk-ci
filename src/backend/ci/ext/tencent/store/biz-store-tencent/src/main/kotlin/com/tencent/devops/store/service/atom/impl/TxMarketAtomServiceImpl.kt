@@ -38,8 +38,10 @@ import com.tencent.devops.repository.pojo.enums.TokenTypeEnum
 import com.tencent.devops.repository.pojo.git.GitOperationFile
 import com.tencent.devops.store.service.atom.TxMarketAtomService
 import org.slf4j.LoggerFactory
+import org.springframework.context.annotation.Primary
 import org.springframework.stereotype.Service
 
+@Primary
 @Service
 class TxMarketAtomServiceImpl : TxMarketAtomService, MarketAtomServiceImpl() {
 

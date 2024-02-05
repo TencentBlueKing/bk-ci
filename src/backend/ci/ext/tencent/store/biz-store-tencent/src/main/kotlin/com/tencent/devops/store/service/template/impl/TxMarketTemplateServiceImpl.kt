@@ -36,8 +36,10 @@ import com.tencent.devops.store.service.common.StoreVisibleDeptService
 import com.tencent.devops.store.service.template.TemplateVisibleDeptService
 import com.tencent.devops.store.service.template.TxMarketTemplateService
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.context.annotation.Primary
 import org.springframework.stereotype.Service
 
+@Primary
 @Service
 class TxMarketTemplateServiceImpl : TxMarketTemplateService, MarketTemplateServiceImpl() {
 

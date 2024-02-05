@@ -47,8 +47,10 @@ import com.tencent.devops.store.pojo.container.macos.MacOSNode
 import com.tencent.devops.store.pojo.container.pcg.PCGDockerImageResponse
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.context.annotation.Primary
 import org.springframework.stereotype.Service
 
+@Primary
 @Suppress("ALL")
 @Service
 class TxContainerServiceImpl @Autowired constructor() : ContainerServiceImpl() {

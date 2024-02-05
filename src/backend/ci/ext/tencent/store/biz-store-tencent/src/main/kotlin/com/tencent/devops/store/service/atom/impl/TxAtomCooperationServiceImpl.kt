@@ -41,7 +41,9 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import java.text.MessageFormat
 import java.util.concurrent.Executors
+import org.springframework.context.annotation.Primary
 
+@Primary
 @Service
 class TxAtomCooperationServiceImpl @Autowired constructor() : AtomCooperationServiceImpl() {
 

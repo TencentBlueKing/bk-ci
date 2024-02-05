@@ -36,8 +36,10 @@ import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.support.api.service.ServiceFileResource
 import java.io.File
 import org.slf4j.LoggerFactory
+import org.springframework.context.annotation.Primary
 import org.springframework.stereotype.Service
 
+@Primary
 @Service
 class TxStoreLogoServiceImpl : StoreLogoServiceImpl() {
 

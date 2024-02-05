@@ -40,6 +40,7 @@ import com.tencent.devops.store.service.common.StoreVisibleDeptService
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.context.annotation.Primary
 import org.springframework.stereotype.Service
 
 /**
@@ -47,6 +48,7 @@ import org.springframework.stereotype.Service
  *
  * since: 2019-03-26
  */
+@Primary
 @Service
 class TxStoreUserServiceImpl : StoreUserService {
 

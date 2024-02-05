@@ -49,8 +49,10 @@ import com.tencent.devops.store.service.template.TemplateVisibleDeptService
 import com.tencent.devops.store.service.template.TxTemplateReleaseService
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.context.annotation.Primary
 import org.springframework.stereotype.Service
 
+@Primary
 @Service
 class TxTemplateReleaseServiceImpl : TxTemplateReleaseService, TemplateReleaseServiceImpl() {
 

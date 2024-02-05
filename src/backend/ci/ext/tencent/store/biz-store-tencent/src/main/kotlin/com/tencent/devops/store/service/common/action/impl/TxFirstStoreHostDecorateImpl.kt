@@ -34,7 +34,9 @@ import com.tencent.devops.common.web.utils.BkApiUtil
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Component
 import javax.annotation.Priority
+import org.springframework.context.annotation.Primary
 
+@Primary
 @Component
 @Priority(Int.MAX_VALUE)
 @Suppress("UNUSED")

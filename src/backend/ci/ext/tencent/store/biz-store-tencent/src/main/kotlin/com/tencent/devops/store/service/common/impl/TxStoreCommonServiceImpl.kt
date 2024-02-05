@@ -30,8 +30,10 @@ package com.tencent.devops.store.service.common.impl
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.service.common.StoreVisibleDeptService
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.context.annotation.Primary
 import org.springframework.stereotype.Service
 
+@Primary
 @Service
 class TxStoreCommonServiceImpl : StoreCommonServiceImpl() {
 

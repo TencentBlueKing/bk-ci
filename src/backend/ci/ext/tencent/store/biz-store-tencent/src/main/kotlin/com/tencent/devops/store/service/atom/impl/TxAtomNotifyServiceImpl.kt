@@ -45,9 +45,11 @@ import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
+import org.springframework.context.annotation.Primary
 import org.springframework.stereotype.Service
 
 @Service
+@Primary
 class TxAtomNotifyServiceImpl @Autowired constructor() : AtomNotifyService {
 
     private val logger = LoggerFactory.getLogger(TxAtomNotifyServiceImpl::class.java)

@@ -27,7 +27,7 @@
 
 package com.tencent.devops.process.pojo.pipeline
 
-import com.tencent.devops.store.pojo.dto.ExtServiceBaseInfoDTO
+import com.tencent.devops.store.pojo.service.dto.ExtServiceBaseInfoDTO
 import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "扩展服务构建初始化流水线请求报文体")
