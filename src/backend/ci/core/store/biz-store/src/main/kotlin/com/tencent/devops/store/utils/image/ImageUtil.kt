@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C)) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -11,7 +11,7 @@
  * Terms of the MIT License:
  * ---------------------------------------------------
  * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
- * documentation files (the "Software")), to deal in the Software without restriction, including without limitation the
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
  * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
  * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
@@ -25,23 +25,37 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-dependencies {
-    api(project(":core:common:common-client"))
-    api(project(":core:common:common-service"))
-    api(project(":core:common:common-db"))
-    api(project(":core:common:common-websocket"))
-    api(project(":core:common:common-audit"))
-    api(project(":core:store:api-store"))
-    api(project(":core:project:api-project"))
-    api(project(":core:process:api-process"))
-    api(project(":core:quality:api-quality"))
-    api(project(":core:auth:api-auth"))
-    api(project(":core:artifactory:api-artifactory"))
-    api(project(":core:store:model-store"))
-    testImplementation(project(":core:common:common-test"))
-    api("net.coobird:thumbnailator")
-    api("org.springframework.boot:spring-boot-starter-aop")
-    api(project(":core:metrics:api-metrics"))
-    api(project(":core:misc:api-image"))
-    api(project(":core:notify:api-notify"))
+package com.tencent.devops.store.utils.image
+
+import java.lang.Integer.min
+import org.jooq.tools.StringUtils
+
+object ImageUtil {
+
+    @Suppress("ALL")
+    fun compareVersion(version1: String?, version2: String?): Int {
+        if (null == version1 && null == version2) {
+            return 0
+        } else if (null == version1) {
+            return -1
+        } else if (null == version2) {
+            return 1
+        }
+        val arr1 = version1.split(".").filter { !StringUtils.isBlank(it) }
+        val arr2 = version2.split(".").filter { !StringUtils.isBlank(it) }
+        val shortLen = min(arr1.size, arr2.size)
+        for (i in 0 until shortLen) {
+            if (arr1[i].toInt() < arr2[i].toInt()) {
+                return -1
+            } else if (arr1[i].toInt() > arr2[i].toInt()) {
+                return 1
+            }
+        }
+        if (arr1.size < arr2.size) {
+            return -1
+        } else if (arr1.size > arr2.size) {
+            return 1
+        }
+        return 0
+    }
 }
