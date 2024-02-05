@@ -2,7 +2,8 @@
     <div
         :class="atomCls"
         ref="atomCard"
-        v-bk-tooltips="atomOsTooltips">
+        v-bk-tooltips="atomOsTooltips"
+    >
         <div class="atom-logo">
             <honer-img v-if="atom.logoUrl" :detail="atom" />
             <logo v-else class="devops-icon" :name="getIconByCode(atom.atomCode)" size="50" />
@@ -14,7 +15,6 @@
                 <img
                     v-for="indexInfo in atom.indexInfos"
                     v-bk-tooltips="{
-                        allowHTML: true,
                         zIndex: 10000,
                         content: indexInfo.hover
                     }"
@@ -75,16 +75,16 @@
                 :loading="isInstalling"
             >{{ $t('editPage.install') }}
             </bk-button>
-            <p class="atom-from">{{`${atom.publisher} ${$t('editPage.provided')}`}}</p>
+            <p class="atom-from" :title="`${atom.publisher} ${$t('editPage.provided')}`">{{`${atom.publisher} ${$t('editPage.provided')}`}}</p>
             <a v-if="atom.docsLink" target="_blank" class="atom-link" :href="atom.docsLink">{{ $t('newlist.knowMore') }}</a>
         </div>
     </div>
 </template>
 
 <script>
-    import { jobConst } from '@/utils/pipelineConst'
-    import { mapGetters, mapActions } from 'vuex'
     import logo from '@/components/Logo'
+    import { jobConst } from '@/utils/pipelineConst'
+    import { mapActions, mapGetters } from 'vuex'
     import HonerImg from './honer-img.vue'
     import HonerTag from './honer-tag.vue'
     import Rate from './rate.vue'
@@ -155,15 +155,16 @@
                 let context
                 if (os.length && !os.includes('NONE')) {
                     const osListStr = os.map(val => jobConst[val]).join('、')
-                    context = `${osListStr}${this.$t('editPage.envUseTips')}`
+                    context = this.$t('editPage.envUseTips', [osListStr])
                 } else {
                     context = this.$t('editPage.noEnvUseTips')
                 }
                 return {
-                    delay: 300,
+                    delay: [500, 0],
                     disabled: !atom.disabled,
                     content: context,
-                    zIndex: 10001
+                    zIndex: 10001,
+                    maxWidth: 300
                 }
             }
         },
@@ -236,6 +237,7 @@
 </script>
 
 <style lang="scss">
+    @import "@/scss/mixins/ellipsis.scss";
     .atom-item-main:hover {
         .atom-from {
             opacity: 1;
@@ -250,6 +252,7 @@
         right: 95px;
         width: 160px;
         text-align: right;
+        @include ellipsis();
     }
     .install-tips {
         z-index: 10001;

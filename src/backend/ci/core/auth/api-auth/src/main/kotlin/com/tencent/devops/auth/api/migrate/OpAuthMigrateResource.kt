@@ -28,6 +28,8 @@
 
 package com.tencent.devops.auth.api.migrate
 
+import com.tencent.devops.auth.pojo.dto.MigrateResourceDTO
+import com.tencent.devops.auth.pojo.dto.PermissionHandoverDTO
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.auth.api.pojo.MigrateProjectConditionDTO
 import io.swagger.annotations.Api
@@ -38,7 +40,6 @@ import javax.ws.rs.POST
 import javax.ws.rs.Path
 import javax.ws.rs.PathParam
 import javax.ws.rs.Produces
-import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
 @Api(tags = ["AUTH_MIGRATE"], description = "权限-迁移")
@@ -85,18 +86,19 @@ interface OpAuthMigrateResource {
     ): Result<Boolean>
 
     @POST
-    @Path("/{projectCode}/migrateResource")
+    @Path("/migrateSpecificResource")
     @ApiOperation("迁移特定资源类型资源")
-    fun migrateResource(
-        @ApiParam("项目Code", required = true)
-        @PathParam("projectCode")
-        projectCode: String,
-        @ApiParam("资源类型", required = true)
-        @QueryParam("resourceType")
-        resourceType: String,
-        @ApiParam("项目创建人", required = true)
-        @QueryParam("projectCreator")
-        projectCreator: String
+    fun migrateSpecificResource(
+        @ApiParam("迁移资源实体类", required = true)
+        migrateResourceDTO: MigrateResourceDTO
+    ): Result<Boolean>
+
+    @POST
+    @Path("/migrateSpecificResourceOfAllProject")
+    @ApiOperation("迁移所有项目的特定资源类型资源")
+    fun migrateSpecificResourceOfAllProject(
+        @ApiParam("迁移资源实体类", required = true)
+        migrateResourceDTO: MigrateResourceDTO
     ): Result<Boolean>
 
     @POST
@@ -104,6 +106,38 @@ interface OpAuthMigrateResource {
     @ApiOperation("授予项目下自定义用户组RBAC新增的权限")
     fun grantGroupAdditionalAuthorization(
         @ApiParam("迁移项目", required = true)
+        projectCodes: List<String>
+    ): Result<Boolean>
+
+    @POST
+    @Path("/handoverAllPermissions")
+    @ApiOperation("权限交接-全量")
+    fun handoverAllPermissions(
+        @ApiParam("权限交接请求体", required = true)
+        permissionHandoverDTO: PermissionHandoverDTO
+    ): Result<Boolean>
+
+    @POST
+    @Path("/handoverPermissions")
+    @ApiOperation("权限交接")
+    fun handoverPermissions(
+        @ApiParam("权限交接请求体", required = true)
+        permissionHandoverDTO: PermissionHandoverDTO
+    ): Result<Boolean>
+
+    @POST
+    @Path("/migrateMonitorResource")
+    @ApiOperation("迁移监控空间权限资源")
+    fun migrateMonitorResource(
+        @ApiParam("迁移项目", required = true)
+        projectCodes: List<String>
+    ): Result<Boolean>
+
+    @POST
+    @Path("/autoRenewal")
+    @ApiOperation("自动续期")
+    fun autoRenewal(
+        @ApiParam("续期的项目列表", required = true)
         projectCodes: List<String>
     ): Result<Boolean>
 }

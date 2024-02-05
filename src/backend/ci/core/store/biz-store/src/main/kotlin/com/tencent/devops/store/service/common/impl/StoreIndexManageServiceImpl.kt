@@ -60,6 +60,7 @@ import com.tencent.devops.store.pojo.common.index.StoreIndexInfo
 import com.tencent.devops.store.pojo.common.index.StoreIndexPipelineInitRequest
 import com.tencent.devops.store.service.common.StoreIndexManageService
 import com.tencent.devops.store.service.common.StoreIndexPipelineService
+import com.tencent.devops.store.service.common.action.StoreDecorateFactory
 import java.time.LocalDateTime
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
@@ -226,11 +227,14 @@ class StoreIndexManageServiceImpl @Autowired constructor(
             val tStoreIndexResult = TStoreIndexResult.T_STORE_INDEX_RESULT
             val tStoreIndexBaseInfo = TStoreIndexBaseInfo.T_STORE_INDEX_BASE_INFO
             val tStoreIndexLevelInfo = TStoreIndexLevelInfo.T_STORE_INDEX_LEVEL_INFO
+            val iconUrl = it[tStoreIndexLevelInfo.ICON_URL]
             storeIndexInfos.add(
                 StoreIndexInfo(
                     indexCode = it[tStoreIndexResult.INDEX_CODE],
                     indexName = it[tStoreIndexBaseInfo.INDEX_NAME],
-                    iconUrl = it[tStoreIndexLevelInfo.ICON_URL],
+                    iconUrl = iconUrl?.let {
+                        StoreDecorateFactory.get(StoreDecorateFactory.Kind.HOST)?.decorate(iconUrl) as? String
+                    } ?: "",
                     description = it[tStoreIndexBaseInfo.DESCRIPTION],
                     indexLevelName = it[tStoreIndexLevelInfo.LEVEL_NAME],
                     hover = it[tStoreIndexResult.ICON_TIPS]
@@ -255,7 +259,7 @@ class StoreIndexManageServiceImpl @Autowired constructor(
     ): Result<Boolean> {
         val indexId = storeIndexManageInfoDao.getStoreIndexBaseInfo(
             dslContext = dslContext,
-            storeType = StoreTypeEnum.ATOM,
+            storeType = createIndexComputeDetailRequest.storeType,
             indexCode = createIndexComputeDetailRequest.indexCode
         ) ?: throw ErrorCodeException(
             errorCode = ERROR_INVALID_PARAM_,
@@ -299,10 +303,6 @@ class StoreIndexManageServiceImpl @Autowired constructor(
         return Result(true)
     }
 
-    override fun getStoreCodeByElementValue(indexCode: String, elementName: String): Result<List<String>> {
-        return Result(storeIndexManageInfoDao.getStoreCodeByElementName(dslContext, indexCode, elementName))
-    }
-
     override fun deleteStoreIndexResultByStoreCode(
         userId: String,
         indexCode: String,
@@ -323,6 +323,85 @@ class StoreIndexManageServiceImpl @Autowired constructor(
                 storeCodes = storeCodes,
                 storeType = storeType
             )
+        }
+        return Result(true)
+    }
+
+    override fun updateTrustworthyIndexInfo(
+        userId: String,
+        deptCode: String,
+        storeType: StoreTypeEnum,
+        storeCodes: List<String>
+    ): Result<Boolean> {
+        val oldStoreCodes =
+            storeIndexManageInfoDao.getStoreCodeByElementName(dslContext, TRUSTWORTHY_INDEX_CODE, deptCode)
+        val intersects = storeCodes.intersect(oldStoreCodes.toSet())
+        val delStoreCodes: List<String>
+        val newStoreCodes = if (intersects.isNotEmpty()) {
+            delStoreCodes = oldStoreCodes.subtract(intersects).toList()
+            storeCodes.subtract(intersects)
+        } else {
+            delStoreCodes = oldStoreCodes
+            storeCodes
+        }
+        if (delStoreCodes.isNotEmpty()) {
+            deleteStoreIndexResultByStoreCode(
+                userId = userId,
+                indexCode = TRUSTWORTHY_INDEX_CODE,
+                storeType = storeType,
+                storeCodes = delStoreCodes
+            )
+        }
+        if (newStoreCodes.isEmpty()) return Result(true)
+        val indexId = storeIndexManageInfoDao.getStoreIndexBaseInfo(
+            dslContext = dslContext,
+            storeType = storeType,
+            indexCode = TRUSTWORTHY_INDEX_CODE
+        ) ?: throw ErrorCodeException(
+            errorCode = ERROR_INVALID_PARAM_,
+            params = arrayOf("indexCode: $TRUSTWORTHY_INDEX_CODE")
+        )
+        val levelId = storeIndexManageInfoDao.getStoreIndexLevelInfo(
+            dslContext,
+            indexId,
+            TRUSTWORTHY_INDEX_LEVEL_NAME
+        )?.id
+        val tStoreIndexResultRecords = mutableListOf<TStoreIndexResultRecord>()
+        val tStoreIndexElementDetailRecords = mutableListOf<TStoreIndexElementDetailRecord>()
+            newStoreCodes.forEach {
+
+                val tStoreIndexResultRecord = TStoreIndexResultRecord()
+                tStoreIndexResultRecord.id = UUIDUtil.generate()
+                tStoreIndexResultRecord.indexId = indexId
+                tStoreIndexResultRecord.indexCode = TRUSTWORTHY_INDEX_CODE
+                tStoreIndexResultRecord.storeCode = it
+                tStoreIndexResultRecord.storeType = storeType.type.toByte()
+                tStoreIndexResultRecord.iconTips = I18nUtil.getCodeLanMessage(TRUSTWORTHY_INDEX_LEVEL_NAME)
+                tStoreIndexResultRecord.levelId = levelId
+                tStoreIndexResultRecord.creator = userId
+                tStoreIndexResultRecord.modifier = userId
+                tStoreIndexResultRecord.updateTime = LocalDateTime.now()
+                tStoreIndexResultRecord.createTime = LocalDateTime.now()
+                tStoreIndexResultRecords.add(tStoreIndexResultRecord)
+                val tStoreIndexElementDetailRecord = TStoreIndexElementDetailRecord()
+                tStoreIndexElementDetailRecord.id = UUIDUtil.generate()
+                tStoreIndexElementDetailRecord.storeCode = it
+                tStoreIndexElementDetailRecord.storeType = storeType.type.toByte()
+                tStoreIndexElementDetailRecord.indexId = indexId
+                tStoreIndexElementDetailRecord.indexCode = TRUSTWORTHY_INDEX_CODE
+                tStoreIndexElementDetailRecord.elementName = deptCode
+                tStoreIndexElementDetailRecord.elementValue = "Certified"
+                tStoreIndexElementDetailRecord.remark = null
+                tStoreIndexElementDetailRecord.creator = userId
+                tStoreIndexElementDetailRecord.modifier = userId
+                tStoreIndexElementDetailRecord.updateTime = LocalDateTime.now()
+                tStoreIndexElementDetailRecord.createTime = LocalDateTime.now()
+                tStoreIndexElementDetailRecords.add(tStoreIndexElementDetailRecord)
+        }
+        dslContext.transaction { configuration ->
+            val context = DSL.using(configuration)
+            storeIndexManageInfoDao.batchCreateStoreIndexResult(context, tStoreIndexResultRecords)
+            storeIndexManageInfoDao.batchCreateElementDetail(context, tStoreIndexElementDetailRecords)
         }
         return Result(true)
     }
@@ -363,5 +442,7 @@ class StoreIndexManageServiceImpl @Autowired constructor(
 
     companion object {
         private val logger = LoggerFactory.getLogger(StoreIndexManageServiceImpl::class.java)
+        private const val TRUSTWORTHY_INDEX_CODE = "storeTrustworthyIndex"
+        private const val TRUSTWORTHY_INDEX_LEVEL_NAME = "verifiedComponents"
     }
 }

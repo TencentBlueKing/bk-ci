@@ -28,6 +28,7 @@
 package com.tencent.devops.common.webhook.util
 
 import com.google.common.base.Splitter
+import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_BASE_REF
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_HEAD_REF
@@ -37,6 +38,7 @@ import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_MR_IID
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_MR_PROPOSER
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_MR_TITLE
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_MR_URL
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_MR_ASSIGNEE
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_MR_AUTHOR
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_MR_BASE_COMMIT
@@ -74,14 +76,18 @@ import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_MR_COMMITTER
 import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_MR_ID
 import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_SOURCE_BRANCH
 import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_SOURCE_PROJECT_ID
+import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_SOURCE_URL
 import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_TARGET_BRANCH
 import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_TARGET_PROJECT_ID
+import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_TARGET_URL
 import com.tencent.devops.common.webhook.pojo.code.WebHookParams
 import com.tencent.devops.common.webhook.pojo.code.git.GitCommit
 import com.tencent.devops.common.webhook.pojo.code.github.GithubPullRequest
 import com.tencent.devops.common.webhook.pojo.code.p4.P4Event
 import com.tencent.devops.common.webhook.service.code.filter.WebhookFilter
 import com.tencent.devops.common.webhook.service.code.filter.WebhookFilterResponse
+import com.tencent.devops.process.utils.PIPELINE_BUILD_MSG
+import com.tencent.devops.scm.pojo.GitCommitReviewInfo
 import com.tencent.devops.scm.pojo.GitMrInfo
 import com.tencent.devops.scm.pojo.GitMrReviewInfo
 import java.util.regex.Pattern
@@ -253,7 +259,9 @@ object WebhookUtils {
         startParams[BK_REPO_GIT_WEBHOOK_MR_TARGET_BRANCH] = pullRequest.base.ref ?: ""
         startParams[BK_REPO_GIT_WEBHOOK_MR_SOURCE_BRANCH] = pullRequest.head.ref ?: ""
         startParams[PIPELINE_WEBHOOK_SOURCE_PROJECT_ID] = pullRequest.head.repo.id ?: ""
+        startParams[PIPELINE_WEBHOOK_SOURCE_URL] = pullRequest.head.repo.cloneUrl ?: ""
         startParams[PIPELINE_WEBHOOK_TARGET_PROJECT_ID] = pullRequest.base.repo.id ?: ""
+        startParams[PIPELINE_WEBHOOK_TARGET_URL] = pullRequest.base.repo.cloneUrl ?: ""
         startParams[PIPELINE_WEBHOOK_MR_ID] = pullRequest.id
         startParams[PIPELINE_WEBHOOK_MR_COMMITTER] = pullRequest.user.login ?: ""
         startParams[BK_REPO_GIT_WEBHOOK_MR_AUTHOR] = pullRequest.user.login ?: ""
@@ -324,5 +332,19 @@ object WebhookUtils {
 
     fun isCustomP4TriggerVersion(version: String?): Boolean {
         return getMajorVersion(version) >= CUSTOM_P4_TRIGGER_VERSION
+    }
+
+    /**
+     * 代码评审启动参数填充
+     */
+    fun crStartParam(
+        gitCommitReviewInfo: GitCommitReviewInfo?,
+        gitMrInfo: GitMrInfo?
+    ): Map<String, Any> {
+        val startParams = mutableMapOf<String, Any>()
+        startParams[PIPELINE_BUILD_MSG] = gitCommitReviewInfo?.title ?: (gitMrInfo?.title ?: I18nUtil.getCodeLanMessage(
+            CommonMessageCode.BK_CODE_BASE_TRIGGERING
+        ))
+        return startParams
     }
 }

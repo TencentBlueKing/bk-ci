@@ -56,9 +56,16 @@ interface IGithubService {
 
     fun getTag(token: String, projectName: String, tag: String): GithubTag?
 
-    fun getFileContent(projectName: String, ref: String, filePath: String): String
+    fun getFileContent(projectName: String, ref: String, filePath: String, token: String = ""): String
 
     fun listBranches(token: String, projectName: String): List<String>
 
     fun listTags(token: String, projectName: String): List<String>
+
+    fun isOAuth(
+        userId: String,
+        projectId: String,
+        refreshToken: Boolean?,
+        resetType: String?
+    ): AuthorizeResult
 }

@@ -22,4 +22,6 @@ dependencies {
     implementation("org.apache.logging.log4j:log4j-core:2.17.1")
     implementation("org.owasp:dependency-check-gradle:7.1.0.1")
     implementation("com.google.cloud.tools:jib-gradle-plugin:3.3.1")
+    implementation("com.github.jk1:gradle-license-report:1.17") // 2.x need gradle-7.0
+    implementation("com.mysql:mysql-connector-j:8.0.33")
 }

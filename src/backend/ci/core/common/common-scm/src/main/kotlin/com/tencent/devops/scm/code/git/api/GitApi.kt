@@ -46,12 +46,14 @@ import com.tencent.devops.scm.exception.GitApiException
 import com.tencent.devops.scm.pojo.ChangeFileInfo
 import com.tencent.devops.scm.pojo.GitCodeGroup
 import com.tencent.devops.scm.pojo.GitCommit
+import com.tencent.devops.scm.pojo.GitCommitReviewInfo
 import com.tencent.devops.scm.pojo.GitDiff
 import com.tencent.devops.scm.pojo.GitMember
 import com.tencent.devops.scm.pojo.GitMrChangeInfo
 import com.tencent.devops.scm.pojo.GitMrInfo
 import com.tencent.devops.scm.pojo.GitMrReviewInfo
 import com.tencent.devops.scm.pojo.GitProjectInfo
+import com.tencent.devops.scm.pojo.GitSession
 import com.tencent.devops.scm.pojo.TapdWorkItem
 import io.micrometer.core.instrument.MeterRegistry
 import io.micrometer.core.instrument.Tag
@@ -143,7 +145,7 @@ open class GitApi {
         val existHooks = getHooks(host, token, projectName)
         if (existHooks.isNotEmpty()) {
             existHooks.forEach {
-                if (it.url == hookUrl) {
+                if (it.url.contains(hookUrl)) {
                     val exist = when (event) {
                         null -> {
                             it.pushEvents
@@ -314,7 +316,7 @@ open class GitApi {
         return JsonUtil.getObjectMapper().writeValueAsString(params)
     }
 
-    private fun updateHook(
+    fun updateHook(
         host: String,
         hookId: Long,
         token: String,
@@ -340,7 +342,7 @@ open class GitApi {
         }
     }
 
-    private fun getHooks(host: String, token: String, projectName: String): List<GitHook> {
+    fun getHooks(host: String, token: String, projectName: String): List<GitHook> {
         try {
             val request = get(host, token, "projects/${urlEncode(projectName)}/hooks", "")
             val result = JsonUtil.getObjectMapper().readValue<List<GitHook>>(
@@ -647,5 +649,39 @@ open class GitApi {
                 request
             )
         )
+    }
+
+    fun getCommitReviewInfo(host: String, token: String, url: String): GitCommitReviewInfo {
+        val request = get(host, token, url, StringUtils.EMPTY)
+        return JsonUtil.getObjectMapper().readValue(
+            getBody(
+                getMessageByLocale(CommonMessageCode.GET_COMMIT_REVIEW_INFO),
+                request
+            )
+        )
+    }
+
+    fun getGitSession(
+        host: String,
+        url: String,
+        username: String,
+        password: String
+    ): GitSession? {
+        val body = JsonUtil.toJson(
+            mapOf(
+                "login" to username,
+                "password" to password
+            ),
+            false
+        )
+        val request = post(host, "", url, body)
+        val responseBody = getBody(
+            getMessageByLocale(CommonMessageCode.GET_SESSION_INFO),
+            request
+        ).ifBlank {
+            logger.warn("get session is blank, please check the username and password")
+            return null
+        }
+        return JsonUtil.getObjectMapper().readValue(responseBody)
     }
 }

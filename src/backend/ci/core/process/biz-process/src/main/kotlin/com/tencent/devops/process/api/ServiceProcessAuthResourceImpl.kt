@@ -33,12 +33,14 @@ import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.process.api.auth.ServiceProcessAuthResource
 import com.tencent.devops.process.service.AuthPipelineGroupService
 import com.tencent.devops.process.service.AuthPipelineService
+import com.tencent.devops.process.service.AuthPipelineTemplateService
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 class ServiceProcessAuthResourceImpl @Autowired constructor(
     val authPipelineService: AuthPipelineService,
-    val authPipelineGroupService: AuthPipelineGroupService
+    val authPipelineGroupService: AuthPipelineGroupService,
+    val authPipelineTemplateService: AuthPipelineTemplateService
 ) : ServiceProcessAuthResource {
 
     override fun pipelineInfo(
@@ -54,6 +56,13 @@ class ServiceProcessAuthResourceImpl @Autowired constructor(
 
     override fun pipelineGroupInfo(callBackInfo: CallbackRequestDTO, token: String): CallbackBaseResponseDTO? {
         return authPipelineGroupService.pipelineGroupInfo(
+            callBackInfo = callBackInfo,
+            token = token
+        )
+    }
+
+    override fun pipelineTemplateInfo(callBackInfo: CallbackRequestDTO, token: String): CallbackBaseResponseDTO? {
+        return authPipelineTemplateService.pipelineTemplateInfo(
             callBackInfo = callBackInfo,
             token = token
         )

@@ -41,6 +41,8 @@ object PathFilterFactory {
                         triggerOnPath = triggerOnPath,
                         includedPaths = includedPaths,
                         excludedPaths = excludedPaths,
+                        includedFailedReason = includedFailedReason,
+                        excludedFailedReason = excludedFailedReason,
                         caseSensitive = caseSensitive
                     )
                 else ->
@@ -48,7 +50,9 @@ object PathFilterFactory {
                         pipelineId = pipelineId,
                         triggerOnPath = triggerOnPath,
                         includedPaths = includedPaths,
-                        excludedPaths = excludedPaths
+                        excludedPaths = excludedPaths,
+                        includedFailedReason = includedFailedReason,
+                        excludedFailedReason = excludedFailedReason
                     )
             }
         }

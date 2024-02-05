@@ -175,13 +175,12 @@ abstract class ImageReleaseService {
     protected lateinit var imageAgentTypes: String
 
     fun addMarketImage(
-        accessToken: String,
         userId: String,
         imageCode: String,
         marketImageRelRequest: MarketImageRelRequest,
         needAuth: Boolean = true
     ): Result<String> {
-        logger.info("addMarketImage params:[$accessToken|$userId|$imageCode|$marketImageRelRequest|$needAuth]")
+        logger.info("addMarketImage params:[$userId|$imageCode|$marketImageRelRequest|$needAuth]")
         // 判断镜像代码是否存在
         val codeCount = imageDao.countByCode(dslContext, imageCode)
         if (codeCount > 0) {
@@ -211,7 +210,7 @@ abstract class ImageReleaseService {
             try {
                 // 判断用户是否项目的成员
                 validateFlag = client.get(ServiceProjectResource::class)
-                    .verifyUserProjectPermission(accessToken, projectCode, userId).data
+                    .verifyUserProjectPermission(projectCode = projectCode, userId = userId).data
             } catch (ignored: Throwable) {
                 logger.warn("verifyUserProjectPermission error, params[$userId|$projectCode]", ignored)
                 return I18nUtil.generateResponseDataObject(
@@ -229,7 +228,7 @@ abstract class ImageReleaseService {
                 )
             }
         }
-        val imageId = addMarketImageToDB(accessToken, userId, imageCode, marketImageRelRequest)
+        val imageId = addMarketImageToDB(userId, imageCode, marketImageRelRequest)
         return if (null != imageId) {
             Result(imageId)
         } else {
@@ -238,7 +237,6 @@ abstract class ImageReleaseService {
     }
 
     fun addMarketImageToDB(
-        accessToken: String,
         userId: String,
         imageCode: String,
         marketImageRelRequest: MarketImageRelRequest
@@ -688,7 +686,8 @@ abstract class ImageReleaseService {
                 version = version,
                 imageType = imageSourceType,
                 registryUser = userName,
-                registryPwd = password
+                registryPwd = password,
+                registryHost = imageRecord.imageRepoUrl
             )
             val checkImageInitPipelineResp = client.get(ServicePipelineInitResource::class)
                 .initCheckImagePipeline(userId, projectCode!!, checkImageInitPipelineReq).data
@@ -716,6 +715,7 @@ abstract class ImageReleaseService {
             imageSourceType?.let { startParams["imageType"] = it }
             userName?.let { startParams["registryUser"] = it }
             password?.let { startParams["registryPwd"] = it }
+            imageRecord.imageRepoUrl?.let { startParams["registryHost"] = it }
             val buildIdObj = client.get(ServiceBuildResource::class).manualStartupNew(
                 userId = userId,
                 projectId = projectCode!!,

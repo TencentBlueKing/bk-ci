@@ -27,12 +27,14 @@
 
 package com.tencent.devops.log.cron.impl
 
+import com.tencent.devops.common.es.client.LogClient
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
-import com.tencent.devops.log.client.LogClient
 import com.tencent.devops.log.configuration.StorageProperties
 import com.tencent.devops.log.cron.IndexCleanJob
 import com.tencent.devops.log.util.IndexNameUtils.LOG_INDEX_PREFIX
+import java.time.LocalDateTime
+import java.time.temporal.ChronoUnit
 import org.elasticsearch.action.admin.indices.delete.DeleteIndexRequest
 import org.elasticsearch.action.admin.indices.settings.put.UpdateSettingsRequest
 import org.elasticsearch.client.RequestOptions
@@ -44,8 +46,6 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Component
-import java.time.LocalDateTime
-import java.time.temporal.ChronoUnit
 
 @Suppress("MagicNumber")
 @Component
@@ -67,18 +67,14 @@ class IndexCleanJobESImpl @Autowired constructor(
     @Scheduled(cron = "0 0 2 * * ?")
     override fun cleanIndex() {
         logger.info("Start to clean index")
-        val redisLock = RedisLock(redisOperation, ES_INDEX_CLOSE_JOB_KEY, 20)
-        try {
-            if (!redisLock.tryLock()) {
-                logger.info("The other process is processing clean job, ignore")
-                return
+        // #9602 每个实例轮流获得锁进行幂等清理操作
+        RedisLock(redisOperation, ES_INDEX_CLOSE_JOB_KEY, 20).use {
+            try {
+                makeColdESIndexes()
+                deleteESIndexes()
+            } catch (ignore: Throwable) {
+                logger.warn("Fail to clean the index", ignore)
             }
-            makeColdESIndexes()
-            deleteESIndexes()
-        } catch (ignore: Throwable) {
-            logger.warn("Fail to clean the index", ignore)
-        } finally {
-            redisLock.unlock()
         }
     }
 

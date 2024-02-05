@@ -54,7 +54,7 @@ import com.tencent.devops.process.engine.atom.AtomResponse
 import com.tencent.devops.process.engine.atom.AtomUtils
 import com.tencent.devops.process.engine.atom.IAtomTask
 import com.tencent.devops.process.engine.atom.defaultFailAtomResponse
-import com.tencent.devops.process.engine.atom.parser.DispatchTypeParser
+import com.tencent.devops.process.engine.atom.parser.DispatchTypeBuilder
 import com.tencent.devops.process.engine.exception.BuildTaskException
 import com.tencent.devops.process.engine.pojo.PipelineBuildTask
 import com.tencent.devops.process.engine.pojo.PipelineInfo
@@ -68,12 +68,12 @@ import com.tencent.devops.process.service.BuildVariableService
 import com.tencent.devops.process.service.PipelineAsCodeService
 import com.tencent.devops.process.service.PipelineContextService
 import com.tencent.devops.store.api.container.ServiceContainerAppResource
-import java.util.concurrent.TimeUnit
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.config.ConfigurableBeanFactory
 import org.springframework.context.annotation.Scope
 import org.springframework.stereotype.Component
+import java.util.concurrent.TimeUnit
 
 /**
  *
@@ -91,14 +91,14 @@ class DispatchVMStartupTaskAtom @Autowired constructor(
     private val buildVariableService: BuildVariableService,
     private val pipelineEventDispatcher: SampleEventDispatcher,
     private val buildLogPrinter: BuildLogPrinter,
-    private val dispatchTypeParser: DispatchTypeParser,
+    private val dispatchTypeBuilder: DispatchTypeBuilder,
     private val pipelineAsCodeService: PipelineAsCodeService,
     private val pipelineContextService: PipelineContextService
 ) : IAtomTask<VMBuildContainer> {
     override fun getParamElement(task: PipelineBuildTask): VMBuildContainer {
         return JsonUtil.mapTo(task.taskParams, VMBuildContainer::class.java)
     }
-
+    // TODO #7443 改为新写法
     private val logger = LoggerFactory.getLogger(DispatchVMStartupTaskAtom::class.java)
 
     override fun execute(
@@ -237,7 +237,7 @@ class DispatchVMStartupTaskAtom @Autowired constructor(
             buildLogPrinter = buildLogPrinter
         )
 
-        val dispatchType = getDispatchType(task, param)
+        val dispatchType = dispatchTypeBuilder.getDispatchType(task, param)
 
         pipelineEventDispatcher.dispatch(
             PipelineAgentStartupEvent(
@@ -256,11 +256,13 @@ class DispatchVMStartupTaskAtom @Autowired constructor(
                 dispatchType = dispatchType,
                 atoms = atoms,
                 executeCount = task.executeCount,
+                routeKeySuffix = dispatchType.routeKeySuffix?.routeKeySuffix,
                 containerId = task.containerId,
                 containerHashId = task.containerHashId,
                 routeKeySuffix = dispatchType.routeKeySuffix?.routeKeySuffix,
                 queueTimeoutMinutes = param.jobControlOption?.prepareTimeout,
-                customBuildEnv = param.customBuildEnv
+                customBuildEnv = param.customBuildEnv,
+                jobId = container.jobId
             )
         )
     }
@@ -349,7 +351,9 @@ class DispatchVMStartupTaskAtom @Autowired constructor(
                         buildId = task.buildId,
                         vmSeqId = task.containerId,
                         buildResult = false, // #5046 强制终止为失败
-                        dispatchType = getDispatchType(task, param),
+                        routeKeySuffix = dispatchTypeBuilder
+                            .getDispatchType(task, param)
+                            .routeKeySuffix?.routeKeySuffix,
                         executeCount = task.executeCount
                     )
                 )

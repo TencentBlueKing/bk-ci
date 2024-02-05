@@ -26,7 +26,6 @@
  */
 
 dependencies {
-    api(project(":core:process:plugin-load"))
     api(project(":core:common:common-service"))
     api(project(":core:common:common-web"))
     api(project(":core:common:common-client"))
@@ -41,13 +40,13 @@ dependencies {
     api(project(":core:repository:api-repository"))
     api(project(":core:artifactory:api-artifactory"))
     api(project(":core:process:api-process"))
-    api(project(":core:plugin:api-plugin"))
+    api(project(":core:misc:api-plugin"))
     api(project(":core:notify:api-notify"))
     api(project(":core:process:biz-base"))
     api(project(":core:log:api-log"))
     api(project(":core:common:common-webhook:biz-common-webhook"))
     api(project(":core:auth:api-auth"))
-
+    implementation("org.quartz-scheduler:quartz")
     api("org.springframework.boot:spring-boot-starter-websocket")
     api("javax.websocket:javax.websocket-api")
     api("io.undertow:undertow-servlet")

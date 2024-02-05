@@ -155,7 +155,8 @@ interface BuildListener {
     fun retry(
         sleepTimeInMS: Int = 30000,
         retryTimes: Int = 3,
-        pipelineEvent: IPipelineEvent? = null
+        pipelineEvent: IPipelineEvent? = null,
+        errorMessage: String? = ""
     ): Boolean {
         val event = pipelineEvent ?: DispatcherContext.getEvent()
         if (event == null) {
@@ -167,8 +168,8 @@ interface BuildListener {
             logger.warn("Fail to dispatch the agent start event with $retryTimes times - ($event)")
             onFailure(errorType = ErrorType.SYSTEM,
                 errorCode = DispatchSdkErrorCode.RETRY_STARTUP_FAIL,
-                formatErrorMessage = "Fail to start up the job after $retryTimes times",
-                message = "Fail to start up the job after $retryTimes times")
+                formatErrorMessage = errorMessage ?: "Fail to start up the job after $retryTimes times",
+                message = errorMessage ?: "Fail to start up the job after $retryTimes times")
         }
         val sleepTime = if (sleepTimeInMS <= 5000) {
             // 重试不能低于5秒
@@ -224,6 +225,7 @@ interface BuildListener {
     }
 
     @BkTimed
+    // TODO #7443 改为新写法
     fun handleStartup(event: PipelineAgentStartupEvent) {
         // 根据dispatchType筛选消息消费
         if (!consumerFilter(event.dispatchType)) {

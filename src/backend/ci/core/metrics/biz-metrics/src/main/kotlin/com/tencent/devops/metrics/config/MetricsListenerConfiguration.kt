@@ -89,5 +89,54 @@ class MetricsListenerConfiguration {
         return Consumer { event: Message<QualityReportEvent> ->
             thirdPlatformDataReportFacadeService.metricsQualityDataReport(event.payload)
         }
+
+        // TODO #7443 改为新写法
+    @Bean
+    fun dispatchJobMetricsQueue() = Queue(QUEUE_DISPATCH_JOB_METRICS)
+
+    /**
+     * dispatch JOb构建历史数据上报广播交换机
+     */
+    @Bean
+    fun dispatchJobMetricsFanoutExchange(): FanoutExchange {
+        val fanoutExchange = FanoutExchange(MQ.EXCHANGE_DISPATCH_JOB_METRICS_FANOUT, true, false)
+        fanoutExchange.isDelayed = true
+        return fanoutExchange
+    }
+
+    @Bean
+    fun dispatchJobMetricsQueueBind(
+        @Autowired dispatchJobMetricsQueue: Queue,
+        @Autowired dispatchJobMetricsFanoutExchange: FanoutExchange
+    ): Binding {
+        return BindingBuilder.bind(dispatchJobMetricsQueue)
+            .to(dispatchJobMetricsFanoutExchange)
+    }
+
+    @Bean
+    fun dispatchJobHistoryMetricsListenerContainer(
+        @Qualifier(EXTEND_CONNECTION_FACTORY_NAME) @Autowired connectionFactory: ConnectionFactory,
+        @Autowired dispatchJobMetricsQueue: Queue,
+        @Qualifier(value = EXTEND_RABBIT_ADMIN_NAME) @Autowired rabbitAdmin: RabbitAdmin,
+        @Autowired listener: DispatchJobMetricsListener,
+        @Autowired messageConverter: Jackson2JsonMessageConverter
+    ): SimpleMessageListenerContainer {
+        return Tools.createSimpleMessageListenerContainer(
+            connectionFactory = connectionFactory,
+            queue = dispatchJobMetricsQueue,
+            rabbitAdmin = rabbitAdmin,
+            buildListener = listener,
+            messageConverter = messageConverter,
+            startConsumerMinInterval = 1000,
+            consecutiveActiveTrigger = 5,
+            concurrency = 5,
+            maxConcurrency = 50
+        )
+    }
+
+    companion object {
+        private const val QUEUE_BUILD_END_METRICS_DATA_REPORT = "q.build.end.metrics.data.report.queue"
+        private const val QUEUE_PIPELINE_LABEL_CHANGE_METRICS_DATA_SYNC =
+            "q.pipeline.label.change.metrics.data.sync.queue"
     }
 }

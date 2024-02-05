@@ -1,0 +1,26 @@
+# 每天定时生成缓存
+name: Daily Cache
+on:
+  schedule:
+  - cron: '0 17 * * *' # 每天 UTC 时间 17:00 (东八区1点) 执行
+  workflow_dispatch:
+
+jobs:
+  frontend:
+    name: Build frontend
+    with:
+      upload: false
+    uses: ./.github/workflows/frontend.yml
+
+  agent:
+    name: Build agent
+    with:
+      upload: false
+    uses: ./.github/workflows/agent.yml
+
+  backend:
+    name: Build backend
+    with:
+      upload: false
+    secrets: inherit
+    uses: ./.github/workflows/backend.yml

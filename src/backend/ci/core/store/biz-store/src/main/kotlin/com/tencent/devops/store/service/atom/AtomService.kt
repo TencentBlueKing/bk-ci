@@ -30,9 +30,11 @@ package com.tencent.devops.store.service.atom
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.store.pojo.atom.AtomBaseInfoUpdateRequest
+import com.tencent.devops.store.pojo.atom.AtomCodeVersionReqItem
 import com.tencent.devops.store.pojo.atom.AtomCreateRequest
 import com.tencent.devops.store.pojo.atom.AtomResp
 import com.tencent.devops.store.pojo.atom.AtomRespItem
+import com.tencent.devops.store.pojo.atom.AtomRunInfo
 import com.tencent.devops.store.pojo.atom.AtomUpdateRequest
 import com.tencent.devops.store.pojo.atom.InstalledAtom
 import com.tencent.devops.store.pojo.atom.PipelineAtom
@@ -52,7 +54,6 @@ interface AtomService {
      * 获取插件列表
      */
     fun getPipelineAtoms(
-        accessToken: String,
         userId: String,
         serviceScope: String?,
         jobType: String?,
@@ -127,6 +128,12 @@ interface AtomService {
      */
     @Suppress("UNCHECKED_CAST")
     fun getPipelineAtomVersions(projectCode: String? = null, atomCode: String): Result<List<VersionInfo>>
+
+    /**
+     * 根据插件代码和版本号集合批量获取插件信息
+     */
+    @Suppress("UNCHECKED_CAST")
+    fun getAtomInfos(codeVersions: Set<AtomCodeVersionReqItem>): Result<List<AtomRunInfo>>
 
     /**
      * 添加插件信息

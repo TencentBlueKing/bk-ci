@@ -97,6 +97,11 @@ const customeRules = {
         validate: function (value, args) {
             return /\b([1-9]|[1-9]\d{1,3}|10080|100[0-7][0-9]|10079|10000)\b/.test(value) || value.isBkVar()
         }
+    },
+    reminderTimeRule: {
+        validate: function (value, args) {
+            return /^(?:[1-9]|[1-9]\d|1[0-5][0-9]|168)$/.test(value)
+        }
     }
 }
 

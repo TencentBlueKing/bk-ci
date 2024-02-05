@@ -235,14 +235,14 @@ class BuildMonitorControl @Autowired constructor(
         val minute = controlOption.jobControlOption.timeout
         val timeoutMills = Timeout.transMinuteTimeoutToMills(minute)
 
-        buildLogPrinter.addDebugLine(
-            buildId = buildId,
-            message = "[SystemLog]Check job timeout($minute minutes), " +
-                "running: ${TimeUnit.MILLISECONDS.toMinutes(usedTimeMills)} minutes!",
-            tag = VMUtils.genStartVMTaskId(containerId),
-            jobId = containerHashId,
-            executeCount = executeCount
-        )
+//        buildLogPrinter.addDebugLine(
+//            buildId = buildId,
+//            message = "[SystemLog]Check job timeout($minute minutes), " +
+//                "running: ${TimeUnit.MILLISECONDS.toMinutes(usedTimeMills)} minutes!",
+//            tag = VMUtils.genStartVMTaskId(containerId),
+//            jobId = containerHashId,
+//            executeCount = executeCount
+//        )
 
         val interval = timeoutMills - usedTimeMills
         if (interval <= 0) {
@@ -326,14 +326,14 @@ class BuildMonitorControl @Autowired constructor(
             0
         }
 
-        buildLogPrinter.addDebugLine(
-            buildId = buildId,
-            message = "Monitor| check stage review($inOrOut) timeout($hours hours), " +
-                "running: ${TimeUnit.MILLISECONDS.toMinutes(usedTimeMills)}) minutes!",
-            tag = stageId,
-            jobId = "",
-            executeCount = executeCount
-        )
+//        buildLogPrinter.addDebugLine(
+//            buildId = buildId,
+//            message = "Monitor| check stage review($inOrOut) timeout($hours hours), " +
+//                "running: ${TimeUnit.MILLISECONDS.toMinutes(usedTimeMills)}) minutes!",
+//            tag = stageId,
+//            jobId = "",
+//            executeCount = executeCount
+//        )
 
         val interval = timeoutMills - usedTimeMills
         if (interval <= 0) {
@@ -402,10 +402,10 @@ class BuildMonitorControl @Autowired constructor(
             val jobId = "0"
             buildLogPrinter.addRedLine(
                 buildId = event.buildId,
-                message = errorInfo.message ?: I18nUtil.getCodeLanMessage(
+                message = errorInfo.message ?: (I18nUtil.getCodeLanMessage(
                     messageCode = BK_QUEUE_TIMEOUT,
                     language = I18nUtil.getDefaultLocaleLanguage()
-                ) + ". Cancel build!",
+                ) + ". Cancel build!"),
                 tag = VMUtils.genStartVMTaskId(jobId),
                 jobId = jobId,
                 executeCount = 1

@@ -60,7 +60,7 @@ class ExternalScmResourceImpl @Autowired constructor(
         secret: String?,
         traceId: String,
         body: String
-    ) =
+    ): Result<Boolean> =
         Result(
             CodeWebhookEventDispatcher.dispatchEvent(
                 streamBridge = streamBridge,

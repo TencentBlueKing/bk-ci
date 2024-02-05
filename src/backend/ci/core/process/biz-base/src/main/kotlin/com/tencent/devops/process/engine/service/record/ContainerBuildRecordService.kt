@@ -55,11 +55,11 @@ import com.tencent.devops.process.pojo.pipeline.record.BuildRecordContainer
 import com.tencent.devops.process.pojo.pipeline.record.BuildRecordTask
 import com.tencent.devops.process.service.StageTagService
 import com.tencent.devops.process.service.record.PipelineRecordModelService
-import java.time.LocalDateTime
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
+import java.time.LocalDateTime
 
 @Suppress("LongParameterList", "MagicNumber", "LongMethod", "ComplexMethod")
 @Service
@@ -204,7 +204,7 @@ class ContainerBuildRecordService(
         )
         update(
             projectId, pipelineId, buildId, executeCount, BuildStatus.RUNNING,
-            cancelUser = null, operation = "updateContainerStatus#$containerId"
+            cancelUser = null, operation = "$operation#$containerId"
         ) {
             dslContext.transaction { configuration ->
                 val context = DSL.using(configuration)
@@ -417,7 +417,7 @@ class ContainerBuildRecordService(
                 buildId = buildId, containerId = containerId, executeCount = executeCount
             ) ?: run {
                 logger.warn(
-                    "ENGINE|$buildId|updateContainerByMap| get container($containerId) record failed."
+                    "ENGINE|$buildId|updateContainerRecord| get container($containerId) record failed."
                 )
                 return@transaction
             }

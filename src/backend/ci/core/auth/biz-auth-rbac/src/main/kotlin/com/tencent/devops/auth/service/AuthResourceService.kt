@@ -193,7 +193,7 @@ class AuthResourceService @Autowired constructor(
 
     fun list(
         projectCode: String,
-        resourceType: String,
+        resourceType: String?,
         resourceName: String?,
         limit: Int,
         offset: Int
@@ -223,6 +223,19 @@ class AuthResourceService @Autowired constructor(
             offset = offset,
             limit = limit
         ).map { authResourceDao.convert(it) }
+    }
+
+    fun list(
+        projectCode: String,
+        resourceType: String,
+        createUser: String
+    ): List<String> {
+        return authResourceDao.list(
+            dslContext = dslContext,
+            projectCode = projectCode,
+            resourceType = resourceType,
+            createUser = createUser
+        )
     }
 
     private fun formatTimestamp(timestamp: Long?): LocalDateTime? =
@@ -294,6 +307,34 @@ class AuthResourceService @Autowired constructor(
             dslContext = dslContext,
             resourceType = resourceType,
             iamResourceCodes = iamResourceCodes
+        ).map { authResourceDao.convert(it) }
+    }
+
+    fun updateCreator(
+        projectCode: String,
+        resourceType: String,
+        resourceCode: String,
+        creator: String
+    ) {
+        authResourceDao.updateCreator(
+            dslContext = dslContext,
+            projectCode = projectCode,
+            resourceType = resourceType,
+            resourceCode = resourceCode,
+            creator = creator
+        )
+    }
+
+    fun listByCreator(
+        resourceType: String,
+        projectCode: String? = null,
+        creator: String
+    ): List<AuthResourceInfo> {
+        return authResourceDao.listByCreator(
+            dslContext = dslContext,
+            resourceType = resourceType,
+            projectCode = projectCode,
+            creator = creator
         ).map { authResourceDao.convert(it) }
     }
 }

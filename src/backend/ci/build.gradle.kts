@@ -1,21 +1,23 @@
 plugins {
     id("com.tencent.devops.boot") version "0.0.7"
     detektCheck
+    `task-license-report` // 检查License合规
 }
 
 apply(plugin = "org.owasp.dependencycheck")
 
 allprojects {
     apply(plugin = "com.tencent.devops.boot")
-
     // 包路径
     group = "com.tencent.bk.devops.ci"
     // 版本
     version = (System.getProperty("ci_version") ?: "1.9.0") +
-            if (System.getProperty("snapshot") == "true") "-SNAPSHOT" else ""
+        if (System.getProperty("snapshot") == "true") "-SNAPSHOT" else ""
 
     // 加载boot的插件
     if (name.startsWith("boot-")) {
+        pluginManager.apply("task-sharding-db-table-check") // 分区表检查插件
+        pluginManager.apply("org.owasp.dependencycheck") // 检查依赖包漏洞版本
         pluginManager.apply("task-i18n-load") // i18n插件
         if (System.getProperty("devops.assemblyMode") == "KUBERNETES") {
             pluginManager.apply("task-docker-build") // Docker镜像构建
@@ -65,6 +67,7 @@ allprojects {
             dependency("org.bouncycastle:bcprov-ext-jdk15on:${Versions.BouncyCastle}")
             dependency("org.mybatis:mybatis:${Versions.MyBatis}")
             dependency("commons-io:commons-io:${Versions.CommonIo}")
+            dependency("com.tencent.bk.sdk:crypto-java-sdk:${Versions.BkCrypto}")
             dependencySet("org.glassfish.jersey.containers:${Versions.Jersey}") {
                 entry("jersey-container-servlet-core")
                 entry("jersey-container-servlet")
@@ -124,6 +127,9 @@ allprojects {
                 entry("org.eclipse.jgit.ssh.jsch")
             }
             dependency("com.tencent.bk.sdk:iam-java-sdk:${Versions.iam}")
+            dependency("com.tencent.bk.sdk:spring-boot-bk-audit-starter:${Versions.audit}")
+            dependency("com.jakewharton:disklrucache:${Versions.disklrucache}")
+            dependency("com.mysql:mysql-connector-j:${Versions.MysqlDriver}")
         }
     }
 

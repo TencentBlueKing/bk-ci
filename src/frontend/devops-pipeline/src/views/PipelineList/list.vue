@@ -1,16 +1,46 @@
 <template>
-    <section class="pipeline-group-section">
-        <pipeline-group-aside />
-        <router-view />
-    </section>
+    <bk-resize-layout
+        ref="resizeLayout"
+        class="pipeline-group-section"
+        collapsible
+        :min="220"
+        :max="400"
+        :initial-divide="initialDivide"
+        @collapse-change="handleCollapseChange"
+        @after-resize="afterResize">
+        <pipeline-group-aside slot="aside" />
+        <router-view slot="main" />
+    </bk-resize-layout>
 </template>
 
 <script>
     import PipelineGroupAside from './PipelineGroupAside'
+    import {
+        PIPELINE_GROUP_ASIDE_WIDTH_CACHE,
+        PIPELINE_ASIDE_PANEL_TOGGLE
+    } from '@/store/constants'
 
     export default {
         components: {
             PipelineGroupAside
+        },
+        data () {
+            return {
+                initialDivide: Number(localStorage.getItem(PIPELINE_GROUP_ASIDE_WIDTH_CACHE)) || 280
+            }
+        },
+        mounted () {
+            if (localStorage.getItem(PIPELINE_ASIDE_PANEL_TOGGLE) === 'true') {
+                this.$refs.resizeLayout.setCollapse(true)
+            }
+        },
+        methods: {
+            handleCollapseChange (val) {
+                localStorage.setItem(PIPELINE_ASIDE_PANEL_TOGGLE, JSON.stringify(val))
+            },
+            afterResize (width) {
+                localStorage.setItem(PIPELINE_GROUP_ASIDE_WIDTH_CACHE, JSON.stringify(width))
+            }
         }
     }
 </script>
@@ -34,6 +64,7 @@
             flex: 1;
             padding: 24px;
             overflow: hidden;
+            height: 100%;
 
             .current-pipeline-group-name {
                 display: flex;
@@ -115,20 +146,7 @@
             .pipeline-operation-cell {
                 display: flex;
                 align-items: center;
-                .pipeline-exec-btn,
-                .pipeline-collect-btn {
-                    line-height: 1;
-                    height: auto;
-                    width: 30px;
-                    font-size: 16px;
-                    text-align: left;
-                    &.pipeline-exec-btn:not(.is-disabled):hover {
-                        color: $primaryColor;
-                    }
-                    .exec-btn-span {
-                        display: flex;
-                    }
-                }
+                text-wrap: nowrap;
                 .more-action-menu {
                     font-size: 0;
                     cursor: pointer;

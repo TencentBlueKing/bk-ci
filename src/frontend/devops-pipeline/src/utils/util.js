@@ -270,18 +270,23 @@ export function convertMStoString (time) {
     return time ? getDays(Math.floor(time / 1000)) : `0${window.pipelineVue.$i18n.t('timeMap.seconds')}`
 }
 
-export function convertMillSec (ms) {
+export function convertMillSec (ms, full = false) {
+    if (!Number.isInteger(ms)) return '--'
     const millseconds = ms % 1000 > 0 ? `.${`${ms % 1000}`.padStart(3, '0')}` : ''
-
+    const day = Math.floor(ms / (24 * 60 * 60 * 1000))
+    if (day > 0) {
+        // 先减去天数，再计算小时
+        ms -= day * (24 * 60 * 60 * 1000)
+    }
     const seconds = Math.floor(ms / 1000) % 60
     const minutes = Math.floor(ms / 1000 / 60) % 60
     const hours = Math.floor(ms / 1000 / 60 / 60) % 24
 
-    return `${[
-        ...(hours > 0 ? [hours] : []),
+    return `${day ? day + window.pipelineVue.$i18n.t('timeMap.days') : ''} ${[
+        ...(hours > 0 ? [hours] : [full ? '00' : '']),
         minutes,
         seconds
-    ].map(prezero).join(':')}${millseconds}`
+    ].map(prezero).join(':')}${full ? '' : millseconds}`
 }
 
 /**
@@ -391,7 +396,7 @@ export function convertFileSize (size, unit) {
             return convertFileSize(calcSize, next)
         }
     } else {
-        return `${calcSize.toFixed(2)}${next || unit}`
+        return `${calcSize.toFixed(2)} ${next || unit}`
     }
 }
 
@@ -589,13 +594,13 @@ export function throttle (func, interval = DEFAULT_TIME_INTERVAL) {
     }
 }
 
-export function navConfirm ({ content, title, ...restProps }) {
+export function navConfirm ({ content, title, cancelText, ...restProps }) {
     return new Promise((resolve, reject) => {
         if (typeof window.globalVue.$leaveConfirm !== 'function') {
             reject(new Error('')); return
         }
 
-        window.globalVue.$leaveConfirm({ content, title, ...restProps })
+        window.globalVue.$leaveConfirm({ content, title, cancelText, ...restProps })
 
         window.globalVue.$once('order::leaveConfirm', resolve)
 
@@ -744,4 +749,24 @@ export function getMaterialIconByType (type) {
         CODE_P4: 'CODE_P4'
     }
     return materialIconMap[type] ?? 'CODE_GIT'
+}
+
+export const prettyDateTimeFormat = (target) => {
+    if (!target) {
+        return ''
+    }
+    const formatStr = (str) => {
+        if (String(str).length === 1) {
+            return `0${str}`
+        }
+        return str
+    }
+    const d = new Date(target)
+    const year = d.getFullYear()
+    const month = formatStr(d.getMonth() + 1)
+    const date = formatStr(d.getDate())
+    const hours = formatStr(d.getHours())
+    const minutes = formatStr(d.getMinutes())
+    const seconds = formatStr(d.getSeconds())
+    return `${year}-${month}-${date} ${hours}:${minutes}:${seconds}`
 }

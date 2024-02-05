@@ -113,6 +113,7 @@ class MetricsServiceImpl constructor(
             pipelineName = pipelineName ?: "",
             buildId = buildId,
             buildNum = buildInfo.buildNum,
+            trigger = buildInfo.trigger,
             repoUrl = webhookInfo?.webhookRepoUrl,
             branch = webhookInfo?.webhookBranch,
             startUser = buildInfo.startUser,

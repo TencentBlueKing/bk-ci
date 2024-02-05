@@ -40,6 +40,7 @@ import com.tencent.devops.scm.pojo.GitMrChangeInfo
 import com.tencent.devops.scm.pojo.GitMrInfo
 import com.tencent.devops.scm.pojo.GitMrReviewInfo
 import com.tencent.devops.scm.pojo.GitProjectInfo
+import com.tencent.devops.scm.pojo.GitSession
 import com.tencent.devops.scm.pojo.RevisionInfo
 import com.tencent.devops.scm.utils.code.git.GitUtils
 import com.tencent.devops.scm.utils.code.git.GitUtils.urlEncode
@@ -56,6 +57,7 @@ class CodeTGitScmImpl constructor(
     private var passPhrase: String?,
     private val token: String,
     private val gitConfig: GitConfig,
+    private val gitApi: GitApi,
     private val event: String? = null
 ) : IScm {
     private val apiUrl = GitUtils.getGitApiUrl(apiUrl = gitConfig.tGitApiUrl, repoUrl = url)
@@ -300,8 +302,17 @@ class CodeTGitScmImpl constructor(
         )
     }
 
+    override fun getGitSession(): GitSession? {
+        val url = "session"
+        return gitApi.getGitSession(
+            host = apiUrl,
+            url = url,
+            username = privateKey!!,
+            password = passPhrase!!
+        )
+    }
+
     companion object {
         private val logger = LoggerFactory.getLogger(CodeTGitScmImpl::class.java)
-        private val gitApi = GitApi()
     }
 }

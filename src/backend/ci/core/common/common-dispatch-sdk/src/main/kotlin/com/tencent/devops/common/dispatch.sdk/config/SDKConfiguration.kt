@@ -33,17 +33,16 @@ import com.tencent.devops.common.dispatch.sdk.service.DispatchService
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.annotation.Bean
-import org.springframework.context.annotation.Configuration
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.dispatch.sdk.service.DockerRoutingSdkService
 import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.dispatch.sdk.service.JobQuotaService
 import com.tencent.devops.common.dispatch.sdk.utils.ChannelUtils
 import com.tencent.devops.common.event.dispatcher.SampleEventDispatcher
+import com.tencent.devops.common.service.BkTag
 import com.tencent.devops.common.service.config.CommonConfig
 import org.springframework.cloud.stream.function.StreamBridge
 
-@Configuration
 class SDKConfiguration {
     @Value("\${gateway.url:#{null}}")
     private val gateway: String? = ""
@@ -85,4 +84,9 @@ class SDKConfiguration {
     fun pipelineEventDispatcher(@Autowired streamBridge: StreamBridge): SampleEventDispatcher {
         return SampleEventDispatcher(streamBridge)
     }
+
+    @Bean
+    fun channelUtils(
+        @Autowired bkTag: BkTag
+    ) = ChannelUtils(bkTag)
 }

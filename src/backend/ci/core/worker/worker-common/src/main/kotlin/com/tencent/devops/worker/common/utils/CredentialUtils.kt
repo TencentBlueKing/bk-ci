@@ -42,14 +42,16 @@ import com.tencent.devops.common.expression.context.RuntimeNamedValue
 import com.tencent.devops.common.expression.context.StringContextData
 import com.tencent.devops.ticket.pojo.CredentialInfo
 import com.tencent.devops.ticket.pojo.enums.CredentialType
+import com.tencent.devops.worker.common.CI_TOKEN_CONTEXT
 import com.tencent.devops.worker.common.api.ApiFactory
 import com.tencent.devops.worker.common.api.ticket.CredentialSDKApi
 import com.tencent.devops.worker.common.constants.WorkerMessageCode
 import com.tencent.devops.worker.common.env.AgentEnv
 import com.tencent.devops.worker.common.logger.LoggerService
+import com.tencent.devops.worker.common.service.CIKeywordsService
 import com.tencent.devops.worker.common.service.SensitiveValueService
-import java.util.Base64
 import org.slf4j.LoggerFactory
+import java.util.Base64
 
 /**
  * This util is to get the credential from core
@@ -95,7 +97,6 @@ object CredentialUtils {
         }
     }
 
-    @Deprecated("保留原处理变量值逻辑，后续替换凭据建议使用表达式实现")
     fun String.parseCredentialValue(
         context: Map<String, String>? = null,
         acrossProjectId: String? = null
@@ -106,7 +107,11 @@ object CredentialUtils {
                 // 支持嵌套的二次替换
                 context?.get(key)?.let { return it }
                 // 如果不是凭据上下文则直接返回原value值
-                return getCredentialContextValue(key, acrossProjectId)
+                return if (key == CI_TOKEN_CONTEXT) {
+                    CIKeywordsService.getOrRequestToken()
+                } else {
+                    getCredentialContextValue(key, acrossProjectId)
+                }
             }
         },
         context

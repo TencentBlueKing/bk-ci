@@ -29,6 +29,7 @@ package com.tencent.devops.store.dao.atom
 
 import com.tencent.devops.common.api.constant.INIT_VERSION
 import com.tencent.devops.common.api.constant.KEY_ALL
+import com.tencent.devops.common.api.constant.KEY_BRANCH_TEST_FLAG
 import com.tencent.devops.common.api.constant.KEY_DESCRIPTION
 import com.tencent.devops.common.api.constant.KEY_DOCSLINK
 import com.tencent.devops.common.api.constant.KEY_OS
@@ -39,6 +40,7 @@ import com.tencent.devops.common.api.constant.NAME
 import com.tencent.devops.common.api.constant.VERSION
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.db.utils.JooqUtils
+import com.tencent.devops.common.db.utils.skipCheck
 import com.tencent.devops.model.store.tables.TAtom
 import com.tencent.devops.model.store.tables.TAtomFeature
 import com.tencent.devops.model.store.tables.TClassify
@@ -85,8 +87,6 @@ import com.tencent.devops.store.pojo.common.KEY_UPDATE_TIME
 import com.tencent.devops.store.pojo.common.enums.StoreProjectTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.utils.VersionUtils
-import java.net.URLDecoder
-import java.time.LocalDateTime
 import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.Field
@@ -97,6 +97,8 @@ import org.jooq.Result
 import org.jooq.SelectOnConditionStep
 import org.jooq.impl.DSL
 import org.springframework.stereotype.Repository
+import java.net.URLDecoder
+import java.time.LocalDateTime
 
 @Suppress("ALL")
 @Repository
@@ -259,6 +261,16 @@ class AtomDao : AtomBaseDao() {
         }
     }
 
+    fun getAtomByVersionPrefix(dslContext: DSLContext, atomCode: String, versionPrefix: String): TAtomRecord? {
+        return with(TAtom.T_ATOM) {
+            dslContext.selectFrom(this)
+                .where(ATOM_CODE.eq(atomCode).and(VERSION.startsWith(versionPrefix)))
+                .orderBy(UPDATE_TIME.desc())
+                .limit(1)
+                .fetchOne()
+        }
+    }
+
     fun getPipelineAtom(
         dslContext: DSLContext,
         atomCode: String,
@@ -330,6 +342,7 @@ class AtomDao : AtomBaseDao() {
     ): MutableList<Condition> {
         val conditions = mutableListOf<Condition>()
         conditions.add(tAtom.ATOM_CODE.eq(atomCode))
+        conditions.add(tAtom.ATOM_STATUS.notEqual(AtomStatusEnum.TESTED.status.toByte()))
         if (version != null) {
             conditions.add(tAtom.VERSION.like(VersionUtils.generateQueryVersion(version)))
         }
@@ -379,7 +392,9 @@ class AtomDao : AtomBaseDao() {
                 baseStep.where(conditions).orderBy(CREATE_TIME.desc())
             }
 
-            return baseStep.limit((page - 1) * pageSize, pageSize).fetch()
+            return baseStep.limit((page - 1) * pageSize, pageSize)
+                .skipCheck() // ATOM 表量小以及 OP 接口频率可忽略索引问题
+                .fetch()
         }
     }
 
@@ -405,7 +420,9 @@ class AtomDao : AtomBaseDao() {
                 classifyId = classifyId,
                 atomStatus = atomStatus
             )
-            return dslContext.selectCount().from(this).where(conditions).fetchOne(0, Long::class.java)!!
+            return dslContext.selectCount().from(this).where(conditions)
+                .skipCheck() // ATOM 表量小以及 OP 接口频率可忽略索引问题
+                .fetchOne(0, Long::class.java)!!
         }
     }
 
@@ -443,7 +460,8 @@ class AtomDao : AtomBaseDao() {
         with(TAtom.T_ATOM) {
             return dslContext.select(
                 VERSION.`as`(KEY_VERSION),
-                ATOM_STATUS.`as`(KEY_ATOM_STATUS)
+                ATOM_STATUS.`as`(KEY_ATOM_STATUS),
+                BRANCH_TEST_FLAG.`as`(KEY_BRANCH_TEST_FLAG)
             ).from(this)
                 .where(
                     generateGetPipelineAtomCondition(
@@ -469,7 +487,8 @@ class AtomDao : AtomBaseDao() {
         val tStoreProjectRel = TStoreProjectRel.T_STORE_PROJECT_REL
         val baseStep = dslContext.select(
             tAtom.VERSION.`as`(KEY_VERSION),
-            tAtom.ATOM_STATUS.`as`(KEY_ATOM_STATUS)
+            tAtom.ATOM_STATUS.`as`(KEY_ATOM_STATUS),
+            tAtom.BRANCH_TEST_FLAG.`as`(KEY_BRANCH_TEST_FLAG)
         ).from(tAtom)
         val t = if (defaultFlag) {
             val conditions = generateGetPipelineAtomCondition(
@@ -511,16 +530,23 @@ class AtomDao : AtomBaseDao() {
             delim = ".",
             count = -1
         )
+        val branchTestFlagField = t.field(KEY_BRANCH_TEST_FLAG) as Field<Boolean>
         val queryStep = dslContext.select(
             t.field(KEY_VERSION),
             t.field(KEY_ATOM_STATUS),
             firstVersion,
             secondVersion,
-            thirdVersion
+            thirdVersion,
+            branchTestFlagField
         ).from(t)
-            .orderBy(firstVersion.plus(0).desc(), secondVersion.plus(0).desc(), thirdVersion.plus(0).desc())
+            .orderBy(
+                branchTestFlagField.desc(),
+                firstVersion.plus(0).desc(),
+                secondVersion.plus(0).desc(),
+                thirdVersion.plus(0).desc()
+            )
         limitNum?.let { queryStep.limit(it) }
-        return queryStep.fetch()
+        return queryStep.skipCheck().fetch()
     }
 
     fun getPipelineAtoms(
@@ -623,6 +649,7 @@ class AtomDao : AtomBaseDao() {
                 getPipelineAtomBaseStep(dslContext, ta, tc, taf, tst).where(defaultAtomCondition)
             )
         if (queryInitTestAtomStep != null && initTestAtomCondition != null) {
+            initTestAtomCondition.add(ta.LATEST_TEST_FLAG.eq(true))
             queryAtomStep.union(
                 getPipelineAtomBaseStep(dslContext, ta, tc, taf, tst)
                     .join(tspr)
@@ -633,9 +660,9 @@ class AtomDao : AtomBaseDao() {
         val t = queryAtomStep.asTable("t")
         val baseStep = dslContext.select().from(t).orderBy(t.field(KEY_WEIGHT)!!.desc(), t.field(NAME)!!.asc())
         return if (null != page && null != pageSize) {
-            baseStep.limit((page - 1) * pageSize, pageSize).fetch()
+            baseStep.limit((page - 1) * pageSize, pageSize).skipCheck().fetch()
         } else {
-            baseStep.fetch()
+            baseStep.skipCheck().fetch()
         }
     }
 
@@ -675,6 +702,7 @@ class AtomDao : AtomBaseDao() {
             ta.BUILD_LESS_RUN_FLAG.`as`(KEY_BUILD_LESS_RUN_FLAG),
             ta.WEIGHT.`as`(KEY_WEIGHT),
             ta.HTML_TEMPLATE_VERSION.`as`(KEY_HTML_TEMPLATE_VERSION),
+            ta.BRANCH_TEST_FLAG.`as`(KEY_BRANCH_TEST_FLAG),
             taf.RECOMMEND_FLAG.`as`(KEY_RECOMMEND_FLAG),
             tsst.SCORE_AVERAGE.`as`(KEY_AVG_SCORE),
             tsst.RECENT_EXECUTE_NUM.`as`(KEY_RECENT_EXECUTE_NUM),
@@ -784,6 +812,7 @@ class AtomDao : AtomBaseDao() {
             .where(defaultAtomCondition).fetchOne(0, Long::class.java)!!
         val normalAtomCount = queryNormalAtomStep.where(normalAtomConditions).fetchOne(0, Long::class.java)!!
         val initTestAtomCount = if (initTestAtomCondition != null && queryInitTestAtomStep != null) {
+            initTestAtomCondition.add(ta.LATEST_TEST_FLAG.eq(true))
             queryInitTestAtomStep.where(initTestAtomCondition).fetchOne(0, Long::class.java)!!
         } else {
             0

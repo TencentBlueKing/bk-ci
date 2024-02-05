@@ -40,7 +40,9 @@ import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
 import com.tencent.devops.common.pipeline.pojo.BuildFormValue
 import com.tencent.devops.common.pipeline.pojo.StageReviewRequest
+import com.tencent.devops.common.web.annotation.BkApiPermission
 import com.tencent.devops.common.web.annotation.BkField
+import com.tencent.devops.common.web.constant.BkApiHandleType
 import com.tencent.devops.process.pojo.BuildBasicInfo
 import com.tencent.devops.process.pojo.BuildHistory
 import com.tencent.devops.process.pojo.BuildHistoryRemark
@@ -151,6 +153,7 @@ interface ServiceBuildResource {
     @POST
     // @Path("/batchBasic")
     @Path("/batchBasic")
+    @BkApiPermission([BkApiHandleType.API_NO_AUTH_CHECK])
     fun batchServiceBasic(
         @ApiParam("构建ID", required = true)
         buildIds: Set<String>
@@ -178,6 +181,7 @@ interface ServiceBuildResource {
     @ApiOperation("搜索流水线参数")
     @POST
     @Path("/{projectId}/{pipelineId}/manualSearchOptions")
+    @BkApiPermission([BkApiHandleType.API_NO_AUTH_CHECK])
     fun manualSearchOptions(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
@@ -272,7 +276,10 @@ interface ServiceBuildResource {
         buildId: String,
         @ApiParam("渠道号，默认为BS", required = false)
         @QueryParam("channelCode")
-        channelCode: ChannelCode
+        channelCode: ChannelCode,
+        @ApiParam("是否强制终止", required = false)
+        @QueryParam("terminateFlag")
+        terminateFlag: Boolean? = false
     ): Result<Boolean>
 
     @ApiOperation("系统异常导致停止流水线")
@@ -388,7 +395,10 @@ interface ServiceBuildResource {
         executeCount: Int?,
         @ApiParam("渠道号，默认为BS", required = false)
         @QueryParam("channelCode")
-        channelCode: ChannelCode
+        channelCode: ChannelCode,
+        @ApiParam("是否查询归档数据", required = false)
+        @QueryParam("archiveFlag")
+        archiveFlag: Boolean? = false
     ): Result<ModelRecord>
 
     @ApiOperation("获取流水线构建历史")
@@ -479,7 +489,10 @@ interface ServiceBuildResource {
         buildMsg: String? = null,
         @ApiParam("触发人", required = false)
         @QueryParam("startUser")
-        startUser: List<String>? = null
+        startUser: List<String>? = null,
+        @ApiParam("是否查询归档数据", required = false)
+        @QueryParam("archiveFlag")
+        archiveFlag: Boolean? = false
     ): Result<BuildHistoryPage<BuildHistory>>
 
     @ApiOperation("获取构建详情")
@@ -571,6 +584,7 @@ interface ServiceBuildResource {
     @ApiOperation("获取构建中的变量值")
     @POST
     @Path("/{projectId}/{pipelineId}/{buildId}/variables")
+    @BkApiPermission([BkApiHandleType.API_NO_AUTH_CHECK])
     fun getBuildVariableValue(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
@@ -595,6 +609,7 @@ interface ServiceBuildResource {
     @POST
     // @Path("/projects/{projectId}/batchStatus")
     @Path("/{projectId}/batchStatus")
+    @BkApiPermission([BkApiHandleType.API_NO_AUTH_CHECK])
     fun getBatchBuildStatus(
         @ApiParam("项目ID", required = true)
         @PathParam("projectId")
@@ -634,6 +649,7 @@ interface ServiceBuildResource {
     @POST
     // @Path("/projects/{projectId}/getPipelineLatestBuild")
     @Path("/{projectId}/getPipelineLatestBuild")
+    @BkApiPermission([BkApiHandleType.API_NO_AUTH_CHECK])
     fun getPipelineLatestBuildByIds(
         @ApiParam("项目id", required = true)
         @PathParam("projectId")
@@ -662,6 +678,9 @@ interface ServiceBuildResource {
         @ApiParam("构建机节点ID（不是AgentID)", required = true)
         @QueryParam("nodeHashId")
         nodeHashId: String? = null,
+        @ApiParam("流水线执行次数", required = false)
+        @QueryParam("executeCount")
+        executeCount: Int?,
         @ApiParam("结果状态", required = true)
         simpleResult: SimpleResult
     ): Result<Boolean>

@@ -31,10 +31,16 @@ package com.tencent.devops.auth.service.migrate
 import com.tencent.bk.sdk.iam.exception.IamException
 import com.tencent.devops.auth.constant.AuthMessageCode
 import com.tencent.devops.auth.dao.AuthMigrationDao
+import com.tencent.devops.auth.dao.AuthMonitorSpaceDao
+import com.tencent.devops.auth.pojo.dto.MigrateResourceDTO
+import com.tencent.devops.auth.pojo.dto.PermissionHandoverDTO
 import com.tencent.devops.auth.pojo.enum.AuthMigrateStatus
 import com.tencent.devops.auth.service.AuthResourceService
+import com.tencent.devops.auth.service.PermissionGradeManagerService
+import com.tencent.devops.auth.service.RbacCacheService
 import com.tencent.devops.auth.service.iam.MigrateCreatorFixService
 import com.tencent.devops.auth.service.iam.PermissionMigrateService
+import com.tencent.devops.auth.service.iam.PermissionResourceMemberService
 import com.tencent.devops.auth.service.iam.PermissionResourceService
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.PageUtil
@@ -49,6 +55,7 @@ import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.project.api.service.ServiceProjectApprovalResource
 import com.tencent.devops.project.api.service.ServiceProjectResource
 import com.tencent.devops.project.api.service.ServiceProjectTagResource
+import com.tencent.devops.project.pojo.ProjectProperties
 import com.tencent.devops.project.pojo.ProjectVO
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
@@ -70,8 +77,13 @@ class RbacPermissionMigrateService constructor(
     private val permissionResourceService: PermissionResourceService,
     private val authResourceService: AuthResourceService,
     private val migrateCreatorFixService: MigrateCreatorFixService,
+    private val migratePermissionHandoverService: MigratePermissionHandoverService,
+    private val permissionGradeManagerService: PermissionGradeManagerService,
     private val dslContext: DSLContext,
-    private val authMigrationDao: AuthMigrationDao
+    private val authMigrationDao: AuthMigrationDao,
+    private val authMonitorSpaceDao: AuthMonitorSpaceDao,
+    private val cacheService: RbacCacheService,
+    private val permissionResourceMemberService: PermissionResourceMemberService
 ) : PermissionMigrateService {
 
     companion object {
@@ -188,22 +200,161 @@ class RbacPermissionMigrateService constructor(
         return true
     }
 
-    override fun migrateResource(
-        projectCode: String,
-        resourceType: String,
-        projectCreator: String
+    override fun migrateSpecificResource(migrateResourceDTO: MigrateResourceDTO): Boolean {
+        logger.info("start to migrate specific resource |$migrateResourceDTO")
+        val projectCodes = migrateResourceDTO.projectCodes ?: return true
+        val resourceType = migrateResourceDTO.resourceType
+        val isMigrateProjectResource = migrateResourceDTO.migrateProjectResource == true
+        val isMigrateOtherResource = migrateResourceDTO.migrateOtherResource == true &&
+            resourceType != null
+        val projectInfoList = client.get(ServiceProjectResource::class).listByProjectCode(projectCodes.toSet())
+            .data!!.filter {
+                it.routerTag != null && (
+                    it.routerTag!!.contains(AuthSystemType.RBAC_AUTH_TYPE.value) || it.routerTag!!.contains("devx"))
+            }
+        val traceId = MDC.get(TraceTag.BIZID)
+        projectInfoList.forEach {
+            migrateProjectsExecutorService.submit {
+                MDC.put(TraceTag.BIZID, traceId)
+                if (isMigrateProjectResource) {
+                    val gradeManagerId = authResourceService.get(
+                        projectCode = it.englishName,
+                        resourceType = AuthResourceType.PROJECT.value,
+                        resourceCode = it.englishName
+                    ).relationId
+                    val isRegisterMonitorPermission = authMonitorSpaceDao.get(
+                        dslContext = dslContext,
+                        projectCode = it.englishName
+                    ) != null
+                    migrateResourceService.migrateProjectResource(
+                        projectCode = it.englishName,
+                        projectName = it.projectName,
+                        gradeManagerId = gradeManagerId,
+                        registerMonitorPermission = isRegisterMonitorPermission,
+                        migrateManagerGroup = true,
+                        migrateOtherGroup = migrateResourceDTO.migrateProjectDefaultGroup!!
+                    )
+                }
+                if (isMigrateOtherResource) {
+                    migrateResourceService.migrateResource(
+                        projectCode = it.englishName,
+                        resourceType = resourceType!!,
+                        projectCreator = migrateCreatorFixService.getProjectCreator(
+                            projectCode = it.projectCode,
+                            authSystemType = AuthSystemType.V0_AUTH_TYPE,
+                            projectCreator = it.creator!!,
+                            projectUpdator = it.updator
+                        )!!
+                    )
+                }
+            }
+            // 若迁移流水线模板权限，需要修改项目的properties字段
+            if (resourceType == AuthResourceType.PIPELINE_TEMPLATE.value) {
+                val properties = it.properties ?: ProjectProperties()
+                properties.enableTemplatePermissionManage = true
+                logger.info("update project(${it.englishName}) properties|$properties")
+                client.get(ServiceProjectResource::class).updateProjectProperties(it.englishName, properties)
+            }
+        }
+        return true
+    }
+
+    override fun migrateSpecificResourceOfAllProject(migrateResourceDTO: MigrateResourceDTO): Boolean {
+        logger.info("start to migrate specific resource of all project|$migrateResourceDTO")
+        toRbacExecutorService.submit {
+            var offset = 0
+            val limit = PageUtil.MAX_PAGE_SIZE
+            do {
+                val migrateProjects = client.get(ServiceProjectResource::class).listMigrateProjects(
+                    migrateProjectConditionDTO = MigrateProjectConditionDTO(
+                        routerTag = AuthSystemType.RBAC_AUTH_TYPE
+                    ),
+                    limit = limit,
+                    offset = offset
+                ).data ?: break
+                migrateSpecificResource(
+                    migrateResourceDTO = migrateResourceDTO.copy(projectCodes = migrateProjects.map { it.englishName })
+                )
+                offset += limit
+            } while (migrateProjects.size == limit)
+        }
+        return true
+    }
+
+    override fun migrateMonitorResource(
+        projectCodes: List<String>,
+        asyncMigrateManagerGroup: Boolean,
+        asyncMigrateOtherGroup: Boolean
     ): Boolean {
-        migrateResourceService.migrateResource(
-            projectCode = projectCode,
-            resourceType = resourceType,
-            projectCreator = projectCreator
-        )
+        val traceId = MDC.get(TraceTag.BIZID)
+        client.get(ServiceProjectResource::class).listByProjectCode(
+            projectCodes = projectCodes.toSet()
+        ).data?.filter {
+            // 仅迁移已迁移成功的项目
+            it.routerTag != null && it.routerTag!!.contains(AuthSystemType.RBAC_AUTH_TYPE.value)
+        }?.forEach {
+            // 若已迁移监控资源，直接跳过
+            if (authMonitorSpaceDao.get(dslContext, it.englishName) != null)
+                return@forEach
+            val projectInfo = authResourceService.get(
+                projectCode = it.englishName,
+                resourceType = AuthResourceType.PROJECT.value,
+                resourceCode = it.englishName
+            )
+            if (!asyncMigrateManagerGroup) {
+                permissionGradeManagerService.modifyGradeManager(
+                    gradeManagerId = projectInfo.relationId,
+                    projectCode = it.englishName,
+                    projectName = projectInfo.resourceName,
+                    registerMonitorPermission = true
+                )
+            }
+            if (!asyncMigrateOtherGroup) {
+                migrateResourceService.migrateProjectOtherGroup(
+                    projectCode = projectInfo.projectCode,
+                    projectName = projectInfo.resourceName,
+                    registerMonitorPermission = true
+                )
+            }
+            migrateProjectsExecutorService.submit {
+                MDC.put(TraceTag.BIZID, traceId)
+                migrateResourceService.migrateProjectResource(
+                    projectCode = it.englishName,
+                    projectName = projectInfo.resourceName,
+                    gradeManagerId = projectInfo.relationId,
+                    registerMonitorPermission = true,
+                    migrateManagerGroup = asyncMigrateManagerGroup,
+                    migrateOtherGroup = asyncMigrateOtherGroup
+                )
+            }
+        }
         return true
     }
 
     override fun grantGroupAdditionalAuthorization(projectCodes: List<String>): Boolean {
         logger.info("grant group additional authorization|projectCode:$projectCodes")
         projectCodes.forEach { migrateV0PolicyService.grantGroupAdditionalAuthorization(projectCode = it) }
+        return true
+    }
+
+    override fun handoverAllPermissions(permissionHandoverDTO: PermissionHandoverDTO): Boolean {
+        val resourceTypeList = cacheService.listResourceTypes()
+            .filterNot { it.resourceType == AuthResourceType.PROJECT.value }
+        resourceTypeList.forEach {
+            handoverPermissions(
+                permissionHandoverDTO.copy(
+                    resourceType = it.resourceType
+                )
+            )
+        }
+        return true
+    }
+
+    override fun handoverPermissions(permissionHandoverDTO: PermissionHandoverDTO): Boolean {
+        logger.info("handover permissions :$permissionHandoverDTO")
+        toRbacExecutorService.submit {
+            migratePermissionHandoverService.handoverPermissions(permissionHandoverDTO = permissionHandoverDTO)
+        }
         return true
     }
 
@@ -446,5 +597,51 @@ class RbacPermissionMigrateService constructor(
             errorMessage = errorMessage,
             totalTime = null
         )
+    }
+
+    override fun autoRenewal(projectCodes: List<String>): Boolean {
+        val traceId = MDC.get(TraceTag.BIZID)
+        projectCodes.forEach { projectCode ->
+            migrateProjectsExecutorService.submit {
+                MDC.put(TraceTag.BIZID, traceId)
+                autoRenewal(
+                    projectCode = projectCode
+                )
+            }
+        }
+        return true
+    }
+
+    private fun autoRenewal(projectCode: String) {
+        var offset = 0
+        val limit = 100
+        val startTime = System.currentTimeMillis()
+        logger.info("begin auto renewal")
+        do {
+            val authResourceList = authResourceService.list(
+                projectCode = projectCode,
+                resourceType = null,
+                resourceName = null,
+                offset = offset,
+                limit = limit
+            )
+            val resourceSize = authResourceList.size
+            logger.info("auto renewal size|$offset|$resourceSize")
+            authResourceList.forEach { authResource ->
+                val resourceType = authResource.resourceType
+                val resourceCode = authResource.resourceCode
+                try {
+                    permissionResourceMemberService.autoRenewal(
+                        projectCode = projectCode,
+                        resourceType = resourceType,
+                        resourceCode = resourceCode
+                    )
+                } catch (ignored: Throwable) {
+                    logger.error("Failed to auto renewal|$projectCode|$resourceType|$resourceCode")
+                }
+            }
+            offset += limit
+        } while (resourceSize == limit)
+        logger.info("Finish to auto renewal|$projectCode|${System.currentTimeMillis() - startTime}")
     }
 }

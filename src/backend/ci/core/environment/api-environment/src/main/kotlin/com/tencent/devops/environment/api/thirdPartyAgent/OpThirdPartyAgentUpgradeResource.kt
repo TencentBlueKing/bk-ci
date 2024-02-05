@@ -42,6 +42,7 @@ import javax.ws.rs.Produces
 import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
+@Suppress("TooManyFunctions")
 @Api(tags = ["OP_ENVIRONMENT_UPGRADE_THIRD_PARTY_AGENT"], description = "第三方构建机升级设置")
 @Path("/op/thirdPartyAgent")
 @Produces(MediaType.APPLICATION_JSON)

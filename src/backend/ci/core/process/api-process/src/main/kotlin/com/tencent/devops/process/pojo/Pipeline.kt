@@ -60,6 +60,7 @@ data class Pipeline(
     @ApiModelProperty("最后构建版本号", required = false)
     var latestBuildNum: Int? = null,
     @ApiModelProperty("最后构建任务名称", required = false)
+    @Deprecated("无用.不再提供任何信息")
     var latestBuildTaskName: String? = null,
     @ApiModelProperty("最后任务预计执行时间（毫秒）", required = false)
     val latestBuildEstimatedExecutionSeconds: Long?,

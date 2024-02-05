@@ -30,6 +30,8 @@ package com.tencent.devops.process.api.service
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.archive.pojo.ReportListDTO
 import com.tencent.devops.common.archive.pojo.TaskReport
+import com.tencent.devops.common.web.annotation.BkApiPermission
+import com.tencent.devops.common.web.constant.BkApiHandleType
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
@@ -48,6 +50,7 @@ interface ServiceReportResource {
     @ApiOperation("获取构建报告列表")
     @Path("/build/list")
     @POST
+    @BkApiPermission([BkApiHandleType.API_NO_AUTH_CHECK])
     fun get(
         @ApiParam("查询参数", required = true)
         reportListDTO: ReportListDTO
