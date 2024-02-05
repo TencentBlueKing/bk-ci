@@ -25,12 +25,33 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-dependencies {
-    api(project(":core:common:common-api"))
-    api(project(":core:common:common-web"))
-    api(project(":core:store:api-store"))
-}
+package com.tencent.devops.store.service.common.sample.impl
 
-plugins {
-    `task-deploy-to-maven`
+import com.tencent.devops.artifactory.api.service.ServiceArtifactoryResource
+import com.tencent.devops.artifactory.constant.BKREPO_DEFAULT_USER
+import com.tencent.devops.artifactory.constant.BKREPO_STORE_PROJECT_ID
+import com.tencent.devops.artifactory.constant.REPO_NAME_PLUGIN
+import com.tencent.devops.store.service.common.impl.StoreI18nMessageServiceImpl
+import java.net.URLEncoder
+import org.springframework.stereotype.Service
+
+@Service
+class SampleStoreI18nMessageServiceImpl : StoreI18nMessageServiceImpl() {
+
+    override fun getFileStr(
+        projectCode: String,
+        fileDir: String,
+        fileName: String,
+        repositoryHashId: String?,
+        branch: String?
+    ): String? {
+        val filePath =
+            URLEncoder.encode("$projectCode/$fileDir/$fileName", Charsets.UTF_8.name())
+        return client.get(ServiceArtifactoryResource::class).getFileContent(
+            userId = BKREPO_DEFAULT_USER,
+            projectId = BKREPO_STORE_PROJECT_ID,
+            repoName = REPO_NAME_PLUGIN,
+            filePath = filePath
+        ).data
+    }
 }

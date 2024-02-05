@@ -24,13 +24,34 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
+package com.tencent.devops.store.resources.image
 
-dependencies {
-    api(project(":core:common:common-api"))
-    api(project(":core:common:common-web"))
-    api(project(":core:store:api-store"))
-}
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.store.api.image.UserImageCommentReplyResource
+import com.tencent.devops.store.pojo.common.StoreCommentReplyInfo
+import com.tencent.devops.store.pojo.common.StoreCommentReplyRequest
+import com.tencent.devops.store.service.common.StoreCommentReplyService
+import org.springframework.beans.factory.annotation.Autowired
 
-plugins {
-    `task-deploy-to-maven`
+@RestResource
+class UserImageCommentReplyResourceImpl @Autowired constructor(
+    private val storeCommentReplyService: StoreCommentReplyService
+) : UserImageCommentReplyResource {
+
+    override fun getStoreCommentReplysByCommentId(commentId: String): Result<List<StoreCommentReplyInfo>?> {
+        return storeCommentReplyService.getStoreCommentReplysByCommentId(commentId)
+    }
+
+    override fun addStoreCommentReply(
+        userId: String,
+        commentId: String,
+        storeCommentReplyRequest: StoreCommentReplyRequest
+    ): Result<StoreCommentReplyInfo?> {
+        return storeCommentReplyService.addStoreCommentReply(
+            userId = userId,
+            commentId = commentId,
+            storeCommentReplyRequest = storeCommentReplyRequest
+        )
+    }
 }
