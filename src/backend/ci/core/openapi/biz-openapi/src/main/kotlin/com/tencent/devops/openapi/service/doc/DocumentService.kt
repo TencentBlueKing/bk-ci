@@ -71,9 +71,9 @@ import com.tencent.devops.openapi.utils.markdown.MarkdownElement
 import com.tencent.devops.openapi.utils.markdown.Table
 import com.tencent.devops.openapi.utils.markdown.TableRow
 import com.tencent.devops.openapi.utils.markdown.Text
+import io.swagger.v3.jaxrs2.integration.JaxrsOpenApiContextBuilder
 import io.swagger.v3.oas.integration.SwaggerConfiguration
 import io.swagger.v3.oas.models.OpenAPI
-import io.swagger.v3.oas.models.info.Info
 import io.swagger.v3.oas.models.media.ArraySchema
 import io.swagger.v3.oas.models.media.BooleanSchema
 import io.swagger.v3.oas.models.media.ComposedSchema
@@ -85,7 +85,6 @@ import io.swagger.v3.oas.models.media.StringSchema
 import io.swagger.v3.oas.models.parameters.Parameter
 import io.swagger.v3.oas.models.parameters.RequestBody
 import io.swagger.v3.oas.models.responses.ApiResponse
-import io.swagger.v3.oas.models.servers.Server
 import kotlin.jvm.internal.DefaultConstructorMarker
 import kotlin.reflect.KFunction
 import kotlin.reflect.KType
@@ -164,7 +163,7 @@ class DocumentService {
                                 getI18n(BK_PARAM_ILLUSTRATE),
                                 getI18n(BK_DEFAULT_VALUE)
                             ),
-                            rows = parseParameters(operation.parameters.filterIsInstance<Parameter>()),
+                            rows = parseParameters(operation.parameters.filter { it.`in` == PATH_PARAM }),
                             key = "path_parameter"
                         ).checkLoadModel(onLoadModel)
                     }, path + httpMethod + "path")
@@ -180,7 +179,7 @@ class DocumentService {
                                 getI18n(BK_PARAM_ILLUSTRATE),
                                 getI18n(BK_DEFAULT_VALUE)
                             ),
-                            rows = parseParameters(operation.parameters.filterIsInstance<Parameter>()),
+                            rows = parseParameters(operation.parameters.filter { it.`in` == QUERY_PARAM }),
                             "query_parameter"
                         ).checkLoadModel(onLoadModel)
                     }, path + httpMethod + "query")
@@ -196,7 +195,7 @@ class DocumentService {
                                 getI18n(BK_PARAM_ILLUSTRATE),
                                 getI18n(BK_DEFAULT_VALUE)
                             ),
-                            rows = parseParameters(operation.parameters.filterIsInstance<Parameter>()),
+                            rows = parseParameters(operation.parameters.filter { it.`in` == HEADER_PARAM }),
                             "header_parameter"
                         ).checkLoadModel(onLoadModel)
                             .setRow(
@@ -217,11 +216,9 @@ class DocumentService {
                             header = TableRow(
                                 getI18n(BK_PARAM_NAME),
                                 getI18n(BK_PARAM_TYPE),
-                                getI18n(BK_HAVE_TO),
-                                getI18n(BK_PARAM_ILLUSTRATE),
-                                getI18n(BK_DEFAULT_VALUE)
+                                getI18n(BK_HAVE_TO)
                             ),
-                            rows = parseParameters(operation.parameters),
+                            rows = parseRequestBody(operation.requestBody),
                             "body_parameter"
                         ).checkLoadModel(onLoadModel)
                     }, path + httpMethod + "body")
@@ -239,7 +236,7 @@ class DocumentService {
                 // payload 样例
                 loadMarkdown.addAll(
                     parsePayloadExample(
-                        operation.parameters.filterIsInstance<RequestBody>()
+                        operation.requestBody
                     )
                 )
                 loadMarkdown.add(
@@ -260,7 +257,7 @@ class DocumentService {
                 loadMarkdown.addAll(
                     parseRequestExampleJson(
                         httpMethod.name,
-                        operation.parameters.filterIsInstance<RequestBody>()
+                        operation.requestBody
                     )
                 )
                 // 组装返回样例
@@ -309,7 +306,7 @@ class DocumentService {
                 val tableRows = mutableListOf<TableRow>()
                 loadModelDefinitions(model, tableRows)
                 tableRows.forEach { table ->
-                    val reflectInfo = parametersInfo?.get(key)?.get(table.columns[0])
+                    val reflectInfo = parametersInfo?.get("${model.title}@${model.name}")?.get(table.columns[0])
                     if (reflectInfo != null) {
                         val column = table.columns.toMutableList()
                         column[2] = if (reflectInfo.markedNullable.not()) getI18n(BK_YES) else getI18n(BK_NO)
@@ -337,7 +334,8 @@ class DocumentService {
         loadedModel: MutableList<String>
     ): List<MarkdownElement> {
         val markdownElement = mutableListOf<MarkdownElement>()
-        modelList.forEach {
+        modelList.forEach { model ->
+            val it = model.removePrefix("#/components/schemas/")
             if (it in loadedModel) return@forEach
             val onLoadModel = mutableListOf<String>()
             val model = cacheOrLoad({
@@ -366,6 +364,7 @@ class DocumentService {
                 }
             }.checkLoadModel(onLoadModel)
             markdownElement.add(Text(level = 4, body = it, key = "model_${it}_title"))
+            markdownElement.add(Text(level = 5, body = definitions[it]?.title ?: "", key = "model_${it}_title_alis"))
             markdownElement.add(model)
             loadedModel.add(it)
 
@@ -418,8 +417,8 @@ class DocumentService {
         return markdownElement
     }
 
-    private fun parsePayloadExample(body: List<RequestBody>): List<MarkdownElement> {
-        val examples = body.getOrNull(0)?.content?.values?.first()?.examples
+    private fun parsePayloadExample(body: RequestBody?): List<MarkdownElement> {
+        val examples = body?.content?.values?.first()?.examples
         if (examples.isNullOrEmpty()) return emptyList()
         val res = mutableListOf<MarkdownElement>()
         res.add(Text(level = 3, body = "Request Payload 举例", key = "Payload_request_sample_title"))
@@ -448,9 +447,9 @@ class DocumentService {
         return res
     }
 
-    private fun parseRequestExampleJson(httpMethod: String, body: List<RequestBody>): List<MarkdownElement> {
-        if (body.isEmpty()) return emptyList()
-        val schema = body[0].content.values.first().schema
+    private fun parseRequestExampleJson(httpMethod: String, body: RequestBody?): List<MarkdownElement> {
+        if (body == null) return emptyList()
+        val schema = body.content.values.first().schema
         val outJson: Any = if (StringUtils.isNotBlank(schema.`$ref`)) {
             val loadJson = mutableMapOf<String, Any>()
             loadModelJson(schema, loadJson)
@@ -513,15 +512,30 @@ class DocumentService {
         return tableRow
     }
 
+    private fun parseRequestBody(requestBody: RequestBody?): List<TableRow> {
+        val tableRow = mutableListOf<TableRow>()
+        if (requestBody == null) return tableRow
+        tableRow.addNoRepeat(
+            TableRow(
+                requestBody.description,
+                loadModelType(requestBody.content.values.first().schema),
+                requestBody.required
+            )
+        )
+
+        return tableRow
+    }
+
     private fun parseParameters(parameters: List<Parameter>): List<TableRow> {
         val tableRow = mutableListOf<TableRow>()
         parameters.forEach {
             if (StringUtils.isNotBlank(it.`$ref`)) {
+                val key = it.`$ref`.removePrefix("#/components/schemas/")
                 tableRow.addNoRepeat(
                     TableRow(
                         it.name,
-                        Link(it.`$ref`, '#' + it.`$ref`).toString(),
-                        if (it.required) getI18n(BK_YES) else getI18n(BK_NO),
+                        Link(key, "#$key").toString(),
+                        if (it.required == true) getI18n(BK_YES) else getI18n(BK_NO),
                         it.description,
                         ""
                     )
@@ -530,8 +544,8 @@ class DocumentService {
                 tableRow.addNoRepeat(
                     TableRow(
                         it.name,
-                        loadSerializableParameter(it),
-                        if (it.required) getI18n(BK_YES) else getI18n(BK_NO),
+                        loadSerializableParameter(it.schema),
+                        if (it.required == true) getI18n(BK_YES) else getI18n(BK_NO),
                         it.description,
                         it.schema.default?.toString() ?: ""
                     )
@@ -542,17 +556,18 @@ class DocumentService {
     }
 
     private fun loadSwagger(): OpenAPI {
-        val bean = SwaggerConfiguration().apply {
-            openAPI = OpenAPI()
-                .info(Info().title(applicationDesc).version(applicationVersion))
-                .addServersItem(Server().url("/$service/api"))
-            resourcePackages = setOf(packageName)
-        }
-        return bean.openAPI
+        val bean = SwaggerConfiguration()
+            .resourcePackages(setOf(packageName))
+            .readAllResources(true)
+        val res = JaxrsOpenApiContextBuilder<JaxrsOpenApiContextBuilder<*>>()
+            .openApiConfiguration(bean)
+//            .resourcePackages(setOf(packageName))
+            .buildContext(true)
+        return res.read()
     }
 
-    private fun loadSerializableParameter(parameter: Parameter): String {
-        return when (val schema = parameter.schema) {
+    private fun loadSerializableParameter(schema: Schema<*>): String {
+        return when (schema) {
             is StringSchema -> {
                 val enum = schema.enum
                 if (enum.isNullOrEmpty()) {
@@ -584,11 +599,12 @@ class DocumentService {
         tableRow: MutableList<TableRow>
     ) {
         if (StringUtils.isNotBlank(model.`$ref`)) {
+            val key = model.`$ref`.removePrefix("#/components/schemas/")
             tableRow.addAll(
                 cacheOrLoad(
                     {
                         val table = mutableListOf<TableRow>()
-                        definitions[model.`$ref`]?.let {
+                        definitions[key]?.let {
                             loadModelDefinitions(it, table)
                         }
                         Table(
@@ -600,9 +616,9 @@ class DocumentService {
                                 getI18n(BK_DEFAULT_VALUE)
                             ),
                             rows = table,
-                            key = "model_${model.`$ref`}"
+                            key = "model_$key"
                         )
-                    }, model.`$ref`
+                    }, key
                 ).rows
             )
         }
@@ -619,7 +635,7 @@ class DocumentService {
                         TableRow(
                             key,
                             loadPropertyType(property),
-                            if (!property.nullable) getI18n(BK_YES) else getI18n(BK_NO),
+                            if (model.required != null && key in model.required) getI18n(BK_YES) else getI18n(BK_NO),
                             loadDescriptionInfo(property),
                             loadPropertyDefault(property)
                         )
@@ -636,22 +652,27 @@ class DocumentService {
         if (property.readOnly == true) {
             res.append(getI18n(BK_THE_FIELD_IS_READ_ONLY))
         }
-        res.append(property.description ?: "")
+        res.append(property.title ?: "")
         return res.toString()
     }
 
     private fun loadModelType(model: Schema<*>?): String {
         if (model == null) return ""
         if (StringUtils.isNotBlank(model.`$ref`)) {
-            return Link(model.`$ref`, '#' + model.`$ref`).toString()
+            val key = model.`$ref`.removePrefix("#/components/schemas/")
+            return Link(key, "#$key").toString()
         }
         return when (model) {
             is ArraySchema -> {
                 "List<" + loadPropertyType(model.items) + ">"
             }
 
+            is MapSchema -> {
+                "Map<String, " + loadPropertyType(model.additionalProperties as Schema<*>) + ">"
+            }
+
             else -> {
-                "Map<String, " + model.additionalProperties + ">"
+                "Map<String, String>"
             }
         }
     }
@@ -659,7 +680,8 @@ class DocumentService {
     private fun loadModelJson(model: Schema<*>?, loadJson: MutableMap<String, Any>) {
         if (model == null) return
         if (StringUtils.isNotBlank(model.`$ref`)) {
-            definitions[model.`$ref`]?.let { loadModelJson(it, loadJson) }
+            val key = model.`$ref`.removePrefix("#/components/schemas/")
+            definitions[key]?.let { loadModelJson(it, loadJson) }
         }
         when (model) {
             is ComposedSchema -> {
@@ -682,7 +704,8 @@ class DocumentService {
     private fun loadPropertyJson(property: Schema<*>): Any {
         if (StringUtils.isNotBlank(property.`$ref`)) {
             val loadJson = mutableMapOf<String, Any>()
-            definitions[property.`$ref`]?.let { loadModelJson(it, loadJson) }
+            val key = property.`$ref`.removePrefix("#/components/schemas/")
+            definitions[key]?.let { loadModelJson(it, loadJson) }
             return loadJson
         }
         return when (property) {
@@ -729,12 +752,13 @@ class DocumentService {
     private fun loadPropertyType(property: Schema<*>?): String {
         if (property == null) return ""
         if (StringUtils.isNotBlank(property.`$ref`)) {
-            return Link(property.`$ref`, '#' + property.`$ref`).toString()
+            val key = property.`$ref`.removePrefix("#/components/schemas/")
+            return Link(key, "#$key").toString()
         }
         return when (property) {
             // swagger无法获取到map的key类型
             is MapSchema -> {
-                "Map<String, " + property.additionalProperties + ">"
+                "Map<String, " + loadPropertyType(property.additionalProperties as Schema<*>) + ">"
             }
 
             is ObjectSchema -> {
@@ -788,6 +812,11 @@ class DocumentService {
     }
 
     companion object {
+        private const val QUERY_PARAM = "query"
+        private const val HEADER_PARAM = "header"
+        private const val COOKIE_PARAM = "cookie"
+        private const val PATH_PARAM = "path"
+
         /**
          *  获取所有多态类的实现信息
          */
@@ -817,11 +846,12 @@ class DocumentService {
 
                 println("$i${it.name}")
                 try {
-                    val name = it.getAnnotation(SchemaAnnotation::class.java).name
-                    res[name] = getDataClassParameterDefault(it)
+                    val name = it.getAnnotation(SchemaAnnotation::class.java).title
+                    res["${name}@${it.simpleName}"] = getDataClassParameterDefault(it)
                 } catch (e: Throwable) {
-//                println(it.name)
-//                println(e)
+                    println("error: " + it.name)
+                    println(e)
+//                    throw e
                 }
             }
             return res
@@ -838,8 +868,37 @@ class DocumentService {
          */
         @Suppress("ComplexMethod")
         fun getDataClassParameterDefault(clazz: Class<*>): Map<String, SwaggerDocParameterInfo> {
+            val nullable = mutableMapOf<String, Boolean>()
             val kClazz = clazz.kotlin
-            if (!kClazz.isData) return emptyMap()
+            val mock = mockModel(clazz, nullable)
+//        val mock = try {
+            val res = mutableMapOf<String, SwaggerDocParameterInfo>()
+            kClazz.memberProperties.forEach {
+                // 编译后，属性默认是private,需要设置isAccessible  才可以读取到值
+                it.isAccessible = true
+                res[it.name] = SwaggerDocParameterInfo(
+                    markedNullable = nullable[it.name] ?: false,
+                    defaultValue = checkDefaultValue(it.call(mock).toString())
+                )
+            }
+            return res
+        }
+
+        private fun mockModel(clazz: Class<*>, nullable: MutableMap<String, Boolean> = mutableMapOf()): Any? {
+            if (clazz.simpleName == "Object") {
+                return ""
+            }
+            if (clazz.isEnum) {
+                return clazz.enumConstants.first()
+            }
+            if (clazz.simpleName == "GithubRepository"){
+                println()
+            }
+            println(clazz.name)
+            val kClazz = clazz.kotlin
+            if (!kClazz.isData) {
+                return null
+            }
             val constructor = kClazz.constructors.maxByOrNull { it.parameters.size }!!
             val parameters = constructor.parameters
             val syntheticInit = clazz.declaredConstructors.find { it.modifiers == 4097 }
@@ -847,7 +906,6 @@ class DocumentService {
             val arguments = arrayOfNulls<Any>(argumentsSize)
             var index = 0
             var offset = 0
-            val nullable = mutableMapOf<String, Boolean>()
             parameters.forEach {
                 if (it.isOptional) {
                     offset += 1 shl index
@@ -862,18 +920,9 @@ class DocumentService {
                 arguments[argumentsSize - 2] = offset
                 arguments[argumentsSize - 1] = null as DefaultConstructorMarker?
             }
-            val mock = (syntheticInit ?: constructor.javaConstructor)!!.newInstance()
-//        val mock = try {
-            val res = mutableMapOf<String, SwaggerDocParameterInfo>()
-            kClazz.memberProperties.forEach {
-                // 编译后，属性默认是private,需要设置isAccessible  才可以读取到值
-                it.isAccessible = true
-                res[it.name] = SwaggerDocParameterInfo(
-                    markedNullable = nullable[it.name] ?: false,
-                    defaultValue = checkDefaultValue(it.call(mock).toString())
-                )
-            }
-            return res
+            val javaConstructor = constructor.javaConstructor
+            javaConstructor?.isAccessible = true
+            return (syntheticInit ?: javaConstructor)!!.newInstance(*arguments)
         }
 
         @Suppress("ComplexCondition")
@@ -926,7 +975,7 @@ class DocumentService {
 
                 else -> {
                     if (type.javaType is Class<*>) {
-                        (type.javaType as Class<*>).newInstance()
+                        mockModel(type.javaType as Class<*>)
                     } else {
                         null
                     }
