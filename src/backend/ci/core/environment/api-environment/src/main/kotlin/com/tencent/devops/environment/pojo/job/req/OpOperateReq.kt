@@ -36,5 +36,9 @@ data class OpOperateReq(
     )
     val operateFlag: Int,
     @ApiModelProperty(value = "项目编码集合")
-    val projectCodeList: List<String>? = null
+    val projectCodeList: List<String>? = null,
+    @ApiModelProperty(value = "分页大小，默认为10")
+    val pageSize: Int? = null,
+    @ApiModelProperty(value = "当前页数，默认为1；为 -1/null 时返回全量数据。")
+    val page: Int? = null
 )

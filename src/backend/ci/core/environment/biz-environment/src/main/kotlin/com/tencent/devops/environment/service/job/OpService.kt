@@ -77,11 +77,23 @@ class OpService @Autowired constructor(
         const val KEY_NOT_EXIST_RESULT = false
         const val KEY_NOT_EXIST_MSG = "No gray projects."
 
+        const val INVALID_PAGE_CODE = 10006
+        const val INVALID_PAGE_RESULT = false
+        const val INVALID_PAGE_MSG = "Invalid page."
+
+        const val INVALID_PAGE_SIZE_CODE = 10007
+        const val INVALID_PAGE_SIZE_RESULT = false
+        const val INVALID_PAGE_SIZE_MSG = "Invalid page size."
+
         private const val OPERATE_TAG_QUERY_ALL_GRAY_PROJS = 1
         private const val OPERATE_TAG_QUERY_PROJS_GRAY_STATUS = 2
         private const val OPERATE_TAG_SET_PROJS_GRAY_STATUS = 3
         private const val OPERATE_TAG_CANCEL_PROJS_GRAY_STATUS = 4
         private const val OPERATE_TAG_CLEAR_ALL_GRAY_PROJS = 5
+
+        private const val DEFAULT_TRAVERSE_SIZE = 1000
+        private const val DEFAULT_PAGE_SIZE = 10L
+        private const val DEFAULT_PAGE = 0L
     }
 
     fun operateOpProject(userId: String, opOperateReq: OpOperateReq): OpOperateResult {
