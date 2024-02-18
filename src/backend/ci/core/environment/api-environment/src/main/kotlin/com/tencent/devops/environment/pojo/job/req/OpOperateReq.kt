@@ -39,6 +39,6 @@ data class OpOperateReq(
     val projectCodeList: List<String>? = null,
     @ApiModelProperty(value = "分页大小")
     val pageSize: Long? = null,
-    @ApiModelProperty(value = "当前页数，默认为1；为 -1/null 时返回全量数据。")
+    @ApiModelProperty(value = "当前页数，从1开始。为 -1/null 时返回全量数据。")
     val page: Long? = null
 )

@@ -130,7 +130,7 @@ class OpService @Autowired constructor(
         }
         var currentPage = page ?: DEFAULT_PAGE_VALUE
         var currentPageSize = pageSize ?: grayProjNumber
-        if (DEFAULT_PAGE_VALUE == page) {
+        if (DEFAULT_PAGE_VALUE == currentPage) {
             currentPage = 1
             currentPageSize = grayProjNumber
         } else {
