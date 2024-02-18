@@ -36,7 +36,9 @@ import org.jooq.DSLContext
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.data.redis.core.DefaultTypedTuple
 import org.springframework.stereotype.Service
+import kotlin.math.abs
 
 @Service("OpService")
 class OpService @Autowired constructor(
@@ -92,13 +94,12 @@ class OpService @Autowired constructor(
         private const val OPERATE_TAG_CLEAR_ALL_GRAY_PROJS = 5
 
         private const val DEFAULT_TRAVERSE_SIZE = 1000
-        private const val DEFAULT_PAGE_SIZE = 10L
-        private const val DEFAULT_PAGE = 0L
+        private const val DEFAULT_PAGE_VALUE = -1L
     }
 
     fun operateOpProject(userId: String, opOperateReq: OpOperateReq): OpOperateResult {
         return when (opOperateReq.operateFlag) {
-            OPERATE_TAG_QUERY_ALL_GRAY_PROJS -> queryAllGrayProjs()
+            OPERATE_TAG_QUERY_ALL_GRAY_PROJS -> queryAllGrayProjs(opOperateReq.page, opOperateReq.pageSize)
             OPERATE_TAG_QUERY_PROJS_GRAY_STATUS -> queryProjsGrayStatus(opOperateReq.projectCodeList)
             OPERATE_TAG_SET_PROJS_GRAY_STATUS -> setProjsGrayStatus(opOperateReq.projectCodeList)
             OPERATE_TAG_CANCEL_PROJS_GRAY_STATUS -> cancelProjsGrayStatus(opOperateReq.projectCodeList)
@@ -116,29 +117,69 @@ class OpService @Autowired constructor(
 
     /**
      * operateFlag == 1：查询所有 灰度项目
-     * SMEMBERS
+     * ZREVRANGE
      */
-    private fun queryAllGrayProjs(): OpOperateResult {
-        val allGrayProjs = redisOperation.smembers(OP_KEY)
+    private fun queryAllGrayProjs(page: Long?, pageSize: Long?): OpOperateResult {
+        val grayProjNumber = grayProjsTotalNum()
+        var currentPage = page ?: DEFAULT_PAGE_VALUE
+        if (currentPage <= 0L && currentPage != DEFAULT_PAGE_VALUE) {
+            return OpOperateResult(
+                code = INVALID_PAGE_CODE,
+                result = INVALID_PAGE_RESULT,
+                msg = INVALID_PAGE_MSG,
+                grayProjNumber = grayProjNumber
+            )
+        }
+        val currentPageSize: Long? = if (DEFAULT_PAGE_VALUE == currentPage) grayProjNumber else pageSize
+        if (null == currentPageSize || currentPageSize <= 0L) {
+            return OpOperateResult(
+                code = INVALID_PAGE_SIZE_CODE,
+                result = INVALID_PAGE_SIZE_RESULT,
+                msg = INVALID_PAGE_SIZE_MSG,
+                grayProjNumber = grayProjNumber
+            )
+        }
+        currentPage = abs(currentPage)
+        val allGrayProjs = if (currentPageSize <= DEFAULT_TRAVERSE_SIZE) {
+            redisOperation.zrevrange(
+                OP_KEY, (currentPage - 1) * currentPageSize, currentPage * currentPageSize - 1
+            )
+        } else {
+            val allGrayProjsSet: MutableSet<String> = mutableSetOf()
+            val innerPageNum = (currentPageSize / DEFAULT_TRAVERSE_SIZE).toInt() + 1
+            for (i in 1..innerPageNum) {
+                redisOperation.zrevrange(
+                    OP_KEY,
+                    (currentPage - 1) * currentPageSize + (i - 1) * DEFAULT_TRAVERSE_SIZE,
+                    (currentPage - 1) * currentPageSize + i * DEFAULT_TRAVERSE_SIZE - 1
+                )?.let {
+                    allGrayProjsSet.addAll(
+                        it.toCollection(ArrayList())
+                    )
+                }
+            }
+            allGrayProjsSet
+        }
+
         return OpOperateResult(
             code = SUCCESSFUL_CODE,
             result = SUCCESSFUL_RESULT,
             msg = SUCCESSFUL_SMEMBERS_MSG,
-            grayProjNumber = grayProjsTotalNum(),
+            grayProjNumber = grayProjNumber,
             grayProjList = allGrayProjs
         )
     }
 
     /**
      * operateFlag == 2：查询某些 项目灰度状态
-     * SISMEMBER
+     * ZSCORE
      */
     private fun queryProjsGrayStatus(projectCodeList: List<String>?): OpOperateResult {
         return if (!projectCodeList.isNullOrEmpty()) {
             queryProjExist(projectCodeList) ?: run {
                 val projectCodeSet = projectCodeList.toSet()
                 val projsGrayStatus = projectCodeSet.associateWith {
-                    redisOperation.sismember(OP_KEY, it) ?: false
+                    redisOperation.zscore(OP_KEY, it)
                 }
                 OpOperateResult(
                     code = SUCCESSFUL_CODE,
@@ -146,7 +187,7 @@ class OpService @Autowired constructor(
                     msg = SUCCESSFUL_SISMEMBER_MSG,
                     grayProjNumber = grayProjsTotalNum(),
                     projGrayStatus = projsGrayStatus.map {
-                        ProjectOpInfo(englishName = it.key, projGrayStatus = it.value)
+                        ProjectOpInfo(englishName = it.key, projGrayStatus = null != it.value)
                     }
                 )
             }
@@ -162,13 +203,15 @@ class OpService @Autowired constructor(
 
     /**
      * operateFlag == 3：设置某些 项目灰度状态
-     * SADD
+     * ZADD NX
      */
     private fun setProjsGrayStatus(projectCodeList: List<String>?): OpOperateResult {
         return if (!projectCodeList.isNullOrEmpty()) {
             queryProjExist(projectCodeList) ?: run {
-                val projectCodeSet = projectCodeList.toSet()
-                val addProjsNumber = redisOperation.sadd(OP_KEY, *projectCodeSet.toTypedArray())
+                val projectCodeTypedTuple = projectCodeList.map {
+                    DefaultTypedTuple(it, System.currentTimeMillis().toDouble())
+                }
+                val addProjsNumber = redisOperation.zaddIfAbsent(OP_KEY, projectCodeTypedTuple.toSet())
                 if (null != addProjsNumber && addProjsNumber >= 0) {
                     OpOperateResult(
                         code = SUCCESSFUL_CODE,
@@ -197,13 +240,13 @@ class OpService @Autowired constructor(
 
     /**
      * operateFlag == 4：取消某些 项目灰度状态
-     * SREM
+     * ZREM
      */
     private fun cancelProjsGrayStatus(projectCodeList: List<String>?): OpOperateResult {
         return if (!projectCodeList.isNullOrEmpty()) {
             queryProjExist(projectCodeList) ?: run {
                 val projectCodeSet = projectCodeList.toSet()
-                val removeProjsNumber = redisOperation.sremove(OP_KEY, *projectCodeSet.toTypedArray())
+                val removeProjsNumber = redisOperation.zremove(OP_KEY, *projectCodeSet.toTypedArray())
                 if (null != removeProjsNumber && removeProjsNumber > 0) {
                     OpOperateResult(
                         code = SUCCESSFUL_CODE,
@@ -262,10 +305,10 @@ class OpService @Autowired constructor(
 
     /**
      * @return 灰度项目总数
-     * SCARD
+     * ZCARD
      */
     private fun grayProjsTotalNum(): Long {
-        return redisOperation.scard(OP_KEY) ?: 0
+        return redisOperation.zsize(OP_KEY) ?: 0
     }
 
     /**
