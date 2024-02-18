@@ -39,4 +39,10 @@ interface PermissionResourceMemberService {
         projectCode: String,
         roleCode: String
     ): Int
+
+    fun autoRenewal(
+        projectCode: String,
+        resourceType: String,
+        resourceCode: String
+    )
 }

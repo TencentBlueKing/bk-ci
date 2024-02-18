@@ -43,4 +43,6 @@ class SamplePermissionResourceMemberService : PermissionResourceMemberService {
         projectCode: String,
         roleCode: String
     ): Int = 0
+
+    override fun autoRenewal(projectCode: String, resourceType: String, resourceCode: String) = Unit
 }
