@@ -144,7 +144,7 @@ class ApigwProjectResourceV4Impl @Autowired constructor(
         projectId: String,
         createInfo: ProjectCreateUserInfo
     ): Result<Boolean?> {
-        logger.info("createProjectUser v4 |$userId|$projectId|$createInfo|")
+        logger.info("createProjectUser v4 |$appCode|$userId|$projectId|$createInfo")
         openapiPermissionService.validProjectManagerPermission(appCode, apigwType, userId, projectId)
         val projectConsulTag = redisOperation.hget(PROJECT_TAG_REDIS_KEY, projectId)
         if (!projectConsulTag.isNullOrEmpty()) {

@@ -110,6 +110,14 @@ interface OpAuthMigrateResource {
     ): Result<Boolean>
 
     @POST
+    @Path("/handoverAllPermissions")
+    @ApiOperation("权限交接-全量")
+    fun handoverAllPermissions(
+        @ApiParam("权限交接请求体", required = true)
+        permissionHandoverDTO: PermissionHandoverDTO
+    ): Result<Boolean>
+
+    @POST
     @Path("/handoverPermissions")
     @ApiOperation("权限交接")
     fun handoverPermissions(
@@ -122,6 +130,14 @@ interface OpAuthMigrateResource {
     @ApiOperation("迁移监控空间权限资源")
     fun migrateMonitorResource(
         @ApiParam("迁移项目", required = true)
+        projectCodes: List<String>
+    ): Result<Boolean>
+
+    @POST
+    @Path("/autoRenewal")
+    @ApiOperation("自动续期")
+    fun autoRenewal(
+        @ApiParam("续期的项目列表", required = true)
         projectCodes: List<String>
     ): Result<Boolean>
 }

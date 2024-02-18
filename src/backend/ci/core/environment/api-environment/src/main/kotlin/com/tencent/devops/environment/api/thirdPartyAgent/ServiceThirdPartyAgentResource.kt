@@ -27,21 +27,27 @@
 
 package com.tencent.devops.environment.api.thirdPartyAgent
 
+import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_AGENT_ID
+import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_AGENT_SECRET_KEY
+import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_PROJECT_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.AgentResult
 import com.tencent.devops.common.api.pojo.OS
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.api.pojo.agent.NewHeartbeatInfo
 import com.tencent.devops.common.api.pojo.agent.UpgradeItem
 import com.tencent.devops.common.web.annotation.BkField
 import com.tencent.devops.environment.pojo.AgentPipelineRefRequest
 import com.tencent.devops.environment.pojo.slave.SlaveGateway
 import com.tencent.devops.environment.pojo.thirdPartyAgent.AgentBuildDetail
 import com.tencent.devops.environment.pojo.thirdPartyAgent.AgentPipelineRef
+import com.tencent.devops.environment.pojo.thirdPartyAgent.AskHeartbeatResponse
 import com.tencent.devops.environment.pojo.thirdPartyAgent.ThirdPartyAgent
 import com.tencent.devops.environment.pojo.thirdPartyAgent.ThirdPartyAgentDetail
 import com.tencent.devops.environment.pojo.thirdPartyAgent.ThirdPartyAgentInfo
+import com.tencent.devops.environment.pojo.thirdPartyAgent.ThirdPartyAgentPipeline
 import com.tencent.devops.environment.pojo.thirdPartyAgent.ThirdPartyAgentUpgradeByVersionInfo
 import com.tencent.devops.environment.pojo.thirdPartyAgent.pipeline.PipelineCreate
 import com.tencent.devops.environment.pojo.thirdPartyAgent.pipeline.PipelineResponse
@@ -365,4 +371,36 @@ interface ServiceThirdPartyAgentResource {
         @QueryParam("pageSize")
         pageSize: Int?
     ): Result<Page<AgentBuildDetail>>
+
+    @ApiOperation("上报Agent心跳")
+    @POST
+    @Path("/agents/newHeartbeat")
+    fun newHeartbeat(
+        @ApiParam("项目ID", required = true)
+        @HeaderParam(AUTH_HEADER_DEVOPS_PROJECT_ID)
+        projectId: String,
+        @ApiParam("Agent ID", required = true)
+        @HeaderParam(AUTH_HEADER_DEVOPS_AGENT_ID)
+        agentId: String,
+        @ApiParam("秘钥", required = true)
+        @HeaderParam(AUTH_HEADER_DEVOPS_AGENT_SECRET_KEY)
+        secretKey: String,
+        @ApiParam("内容", required = false)
+        heartbeatInfo: NewHeartbeatInfo
+    ): Result<AskHeartbeatResponse>
+
+    @ApiOperation("查询Agent的管道")
+    @GET
+    @Path("/agents/pipelines")
+    fun getPipelines(
+        @ApiParam("项目ID", required = true)
+        @HeaderParam(AUTH_HEADER_DEVOPS_PROJECT_ID)
+        projectId: String,
+        @ApiParam("Agent ID", required = true)
+        @HeaderParam(AUTH_HEADER_DEVOPS_AGENT_ID)
+        agentId: String,
+        @ApiParam("秘钥", required = true)
+        @HeaderParam(AUTH_HEADER_DEVOPS_AGENT_SECRET_KEY)
+        secretKey: String
+    ): Result<ThirdPartyAgentPipeline?>
 }

@@ -130,4 +130,7 @@ object AuthMessageCode {
 
     const val ERROR_WATER_MARK_NOT_EXIST = "2121080" // 水印信息不存在
     const val ERROR_USER_NOT_EXIST = "2121081" // 用户不存在
+
+    const val ERROR_MOA_CREDENTIAL_KEY_VERIFY_FAIL = "2121082" // MOA票据校验失败
+    const val ERROR_USER_NOT_BELONG_TO_THE_PROJECT = "2121083" // 用户不属于项目
 }

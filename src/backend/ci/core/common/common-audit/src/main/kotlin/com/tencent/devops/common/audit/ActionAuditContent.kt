@@ -152,4 +152,8 @@ object ActionAuditContent {
     const val EXPERIENCE_GROUP_VIEW_CONTENT = "get experience group info $CONTENT_TEMPLATE in project $PROJECT_CODE_CONTENT_TEMPLATE"
     const val EXPERIENCE_GROUP_EDIT_CONTENT = "modify experience group $CONTENT_TEMPLATE in project $PROJECT_CODE_CONTENT_TEMPLATE"
     const val EXPERIENCE_GROUP_DELETE_CONTENT = "delete experience group $CONTENT_TEMPLATE in project $PROJECT_CODE_CONTENT_TEMPLATE"
+
+    // 自定义
+    const val PROJECT_USER_VERIFY_CONTENT = "verify project user $CONTENT_TEMPLATE in project $PROJECT_CODE_CONTENT_TEMPLATE"
+    const val WATER_MARK_GET_CONTENT = "get user water mark $CONTENT_TEMPLATE in project $PROJECT_CODE_CONTENT_TEMPLATE"
 }

@@ -74,6 +74,7 @@ import com.tencent.devops.model.process.tables.records.TTemplateRecord
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_TEMPLATE_NOT_EXISTS
 import com.tencent.devops.process.dao.PipelineSettingDao
+import com.tencent.devops.process.engine.atom.AtomUtils
 import com.tencent.devops.process.engine.cfg.ModelContainerIdGenerator
 import com.tencent.devops.process.engine.cfg.ModelTaskIdGenerator
 import com.tencent.devops.process.engine.common.VMUtils
@@ -130,6 +131,7 @@ import com.tencent.devops.project.api.service.ServiceProjectResource
 import com.tencent.devops.repository.api.ServiceRepositoryResource
 import com.tencent.devops.store.api.common.ServiceStoreResource
 import com.tencent.devops.store.api.template.ServiceTemplateResource
+import com.tencent.devops.store.pojo.atom.AtomCodeVersionReqItem
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import org.jooq.DSLContext
 import org.jooq.Record
@@ -359,7 +361,8 @@ class TemplateFacadeService @Autowired constructor(
                 statusCode = Response.Status.NOT_FOUND.statusCode,
                 errorCode = ProcessMessageCode.ERROR_PIPELINE_MODEL_NOT_EXISTS
             )
-
+        val templateModel: Model = objectMapper.readValue(template)
+        checkTemplateAtomsForExplicitVersion(templateModel, userId)
         val templateId = UUIDUtil.generate()
         dslContext.transaction { configuration ->
             val context = DSL.using(configuration)
@@ -593,6 +596,7 @@ class TemplateFacadeService @Autowired constructor(
             permission = AuthPermission.EDIT
         )
         checkTemplate(template, projectId)
+        checkTemplateAtomsForExplicitVersion(template, userId)
         val latestTemplate = templateDao.getLatestTemplate(dslContext, projectId, templateId)
         if (latestTemplate.type == TemplateType.CONSTRAINT.name && latestTemplate.storeFlag == true) {
             throw ErrorCodeException(
@@ -1886,13 +1890,14 @@ class TemplateFacadeService @Autowired constructor(
         instances: List<TemplateInstanceUpdate>
     ): Boolean {
         logger.info("asyncUpdateTemplateInstances [$projectId|$userId|$templateId|$version|$useTemplateSettings]")
+        val template = templateDao.getTemplate(dslContext = dslContext, version = version)
+            ?: throw ErrorCodeException(
+                errorCode = ERROR_TEMPLATE_NOT_EXISTS
+            )
+        val templateModel: Model = objectMapper.readValue(template.template)
+        checkTemplateAtomsForExplicitVersion(templateModel, userId)
         // 当更新的实例数量较小则走同步更新逻辑，较大走异步更新逻辑
         if (instances.size <= maxSyncInstanceNum) {
-            val template = templateDao.getTemplate(dslContext = dslContext, version = version)
-                ?: throw ErrorCodeException(
-                    errorCode = ERROR_TEMPLATE_NOT_EXISTS
-                )
-
             val successPipelines = ArrayList<String>()
             val failurePipelines = ArrayList<String>()
             instances.forEach { templateInstanceUpdate ->
@@ -2314,6 +2319,32 @@ class TemplateFacadeService @Autowired constructor(
         }
         modelCheckPlugin.checkModelIntegrity(model = template, projectId = projectId)
         checkPipelineParam(template)
+    }
+
+    /**
+     * 检查模板中是否存在已下架、测试中插件(明确版本号)
+     */
+    fun checkTemplateAtomsForExplicitVersion(template: Model, userId: String) {
+        val codeVersions = mutableSetOf<AtomCodeVersionReqItem>()
+        template.stages.forEach { stage ->
+            stage.containers.forEach { container ->
+                container.elements.forEach nextElement@{ element ->
+                    val atomCode = element.getAtomCode()
+                    val version = element.version
+                    if (version.contains("*")) {
+                        return@nextElement
+                    }
+                    codeVersions.add(AtomCodeVersionReqItem(atomCode, version))
+                }
+            }
+        }
+        if (codeVersions.isNotEmpty()) {
+            AtomUtils.checkTemplateRealVersionAtoms(
+                codeVersions = codeVersions,
+                userId = userId,
+                client = client
+            )
+        }
     }
 
     fun checkTemplate(templateId: String, projectId: String? = null): Boolean {

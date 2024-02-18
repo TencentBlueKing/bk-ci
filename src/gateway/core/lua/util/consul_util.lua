@@ -34,13 +34,7 @@ function _M:getAllWhitelistIp()
     local in_container = ngx.var.namespace ~= '' and ngx.var.namespace ~= nil
     if not in_container and #ip_whitelist > 1 then
         -- 获取灰度设置
-        local ns_config = nil
-        if ngx.var.devops_region ~= "DEVNET" then
-            ns_config = config.ns
-        else
-            ns_config = config.ns_devnet
-        end
-
+        local ns_config = config.ns
         local white_ip_hot_cache = ngx.shared.white_ip_hot_store
         local white_ip_cold_cache = ngx.shared.white_ip_cold_store
         local ip_cache_key = "X-DEVOPS-WHITE-IP-CONSOL"

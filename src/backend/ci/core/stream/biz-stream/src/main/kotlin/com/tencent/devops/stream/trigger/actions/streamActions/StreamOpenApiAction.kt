@@ -47,7 +47,7 @@ import com.tencent.devops.stream.trigger.pojo.enums.StreamCommitCheckState
 @Suppress("ALL")
 class StreamOpenApiAction(
     private val action: BaseAction,
-    private val checkPipelineTrigger: Boolean
+    val subPipelineTriggerId: String?
 ) : BaseAction {
     override val metaData: ActionMetaData = ActionMetaData(StreamObjectKind.OPENAPI)
     override var data: ActionData = action.data
@@ -128,5 +128,5 @@ class StreamOpenApiAction(
     override fun updatePipelineLastBranchAndDisplayName(pipelineId: String, branch: String?, displayName: String?) =
         Unit
 
-    override fun getStartType() = if (checkPipelineTrigger) StartType.PIPELINE else StartType.SERVICE
+    override fun getStartType() = if (subPipelineTriggerId != null) StartType.PIPELINE else StartType.SERVICE
 }

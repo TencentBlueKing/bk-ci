@@ -10,6 +10,8 @@ data class MigrateProjectConditionDTO(
     val centerId: Long? = null,
     @ApiModelProperty("部门ID")
     val deptId: Long? = null,
+    @ApiModelProperty("bgId")
+    val bgId: Long? = null,
     @ApiModelProperty("项目创建人")
     val projectCreator: String? = null,
     @ApiModelProperty("排除项目code")
@@ -19,5 +21,7 @@ data class MigrateProjectConditionDTO(
     @ApiModelProperty("资源类型")
     val resourceType: String? = null,
     @ApiModelProperty("路由tag")
-    val routerTag: AuthSystemType? = null
+    val routerTag: AuthSystemType? = null,
+    @ApiModelProperty("是否关联产品")
+    val relatedProduct: Boolean? = null
 )

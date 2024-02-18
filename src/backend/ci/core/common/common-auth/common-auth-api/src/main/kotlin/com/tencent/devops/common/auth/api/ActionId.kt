@@ -114,4 +114,8 @@ object ActionId {
     const val EXPERIENCE_GROUP_VIEW = "experience_group_view"
     const val EXPERIENCE_GROUP_EDIT = "experience_group_edit"
     const val EXPERIENCE_GROUP_DELETE = "experience_group_delete"
+
+    // 自定义操作
+    const val PROJECT_USER_VERIFY = "project_user_verify"
+    const val WATER_MARK_GET = "water_mark_get"
 }

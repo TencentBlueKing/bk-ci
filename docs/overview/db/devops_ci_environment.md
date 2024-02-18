@@ -2,7 +2,7 @@
 
 **数据库名：** devops_ci_environment
 
-**文档版本：** 1.0.0
+**文档版本：** 1.0.1
 
 **文档描述：** devops_ci_environment的数据库文档
 
@@ -10,6 +10,7 @@
 | :---: | :---: |
 | [T_AGENT_FAILURE_NOTIFY_USER](#T_AGENT_FAILURE_NOTIFY_USER) |  |
 | [T_AGENT_PIPELINE_REF](#T_AGENT_PIPELINE_REF) |  |
+| [T_AGENT_SHARE_PROJECT](#T_AGENT_SHARE_PROJECT) |  |
 | [T_ENV](#T_ENV) | 环境信息表 |
 | [T_ENVIRONMENT_AGENT_PIPELINE](#T_ENVIRONMENT_AGENT_PIPELINE) |  |
 | [T_ENVIRONMENT_SLAVE_GATEWAY](#T_ENVIRONMENT_SLAVE_GATEWAY) |  |
@@ -50,7 +51,22 @@
 |  7   | VM_SEQ_ID |   varchar   | 34 |   0    |    Y     |  N   |       | 构建序列号  |
 |  8   | JOB_ID |   varchar   | 34 |   0    |    Y     |  N   |       | JOBID  |
 |  9   | JOB_NAME |   varchar   | 255 |   0    |    N     |  N   |       | JOBNAME  |
-|  10   | LAST_BUILD_TIME |   datetime   | 19 |   0    |    N     |  N   |       | 最近构建时间  |
+|  10   | LAST_BUILD_TIME |   datetime   | 19 |   0    |    Y     |  N   |       | 最近构建时间  |
+
+**表名：** <a id="T_AGENT_SHARE_PROJECT">T_AGENT_SHARE_PROJECT</a>
+
+**说明：** 
+
+**数据列：**
+
+| 序号 | 名称 | 数据类型 |  长度  | 小数位 | 允许空值 | 主键 | 默认值 | 说明 |
+| :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
+|  1   | AGENT_ID |   bigint   | 20 |   0    |    N     |  Y   |       | AgentID  |
+|  2   | MAIN_PROJECT_ID |   varchar   | 64 |   0    |    N     |  Y   |       | 主项目ID  |
+|  3   | SHARED_PROJECT_ID |   varchar   | 64 |   0    |    N     |  Y   |       | 共享的目标项目ID  |
+|  4   | CREATOR |   varchar   | 64 |   0    |    N     |  N   |       | 创建者  |
+|  5   | CREATE_TIME |   timestamp   | 19 |   0    |    Y     |  N   |       | 创建时间  |
+|  6   | UPDATE_TIME |   timestamp   | 19 |   0    |    Y     |  N   |       | 更新时间  |
 
 **表名：** <a id="T_ENV">T_ENV</a>
 
@@ -70,7 +86,8 @@
 |  8   | UPDATED_USER |   varchar   | 64 |   0    |    N     |  N   |       | 修改人  |
 |  9   | CREATED_TIME |   timestamp   | 19 |   0    |    Y     |  N   |       | 创建时间  |
 |  10   | UPDATED_TIME |   timestamp   | 19 |   0    |    Y     |  N   |       | 修改时间  |
-|  11   | IS_DELETED |   bit   | 1 |   0    |    N     |  N   |       | 是否删除  |
+|  11   | ENV_HASH_ID |   varchar   | 64 |   0    |    Y     |  N   |       | 环境哈希ID  |
+|  12   | IS_DELETED |   bit   | 1 |   0    |    N     |  N   |       | 是否删除  |
 
 **表名：** <a id="T_ENVIRONMENT_AGENT_PIPELINE">T_ENVIRONMENT_AGENT_PIPELINE</a>
 
@@ -102,6 +119,8 @@
 |  2   | NAME |   varchar   | 32 |   0    |    N     |  N   |       | 名称  |
 |  3   | SHOW_NAME |   varchar   | 32 |   0    |    N     |  N   |       | 展示名称  |
 |  4   | GATEWAY |   varchar   | 127 |   0    |    Y     |  N   |       | 网关地址  |
+|  5   | FILE_GATEWAY |   varchar   | 127 |   0    |    Y     |  N   |       | 文件网关地址  |
+|  6   | VISIBILITY |   bit   | 1 |   0    |    Y     |  N   |   b'0'    | 是否在界面可见  |
 
 **表名：** <a id="T_ENVIRONMENT_THIRDPARTY_AGENT">T_ENVIRONMENT_THIRDPARTY_AGENT</a>
 
@@ -131,6 +150,8 @@
 |  18   | STARTED_USER |   varchar   | 64 |   0    |    Y     |  N   |       | 启动者  |
 |  19   | AGENT_ENVS |   text   | 65535 |   0    |    Y     |  N   |       | 环境变量  |
 |  20   | FILE_GATEWAY |   varchar   | 256 |   0    |    Y     |  N   |       | 文件网关路径  |
+|  21   | AGENT_PROPS |   text   | 65535 |   0    |    Y     |  N   |       | agentconfig配置项Json  |
+|  22   | DOCKER_PARALLEL_TASK_COUNT |   int   | 10 |   0    |    Y     |  N   |       | Docker构建机并行任务计数  |
 
 **表名：** <a id="T_ENVIRONMENT_THIRDPARTY_AGENT_ACTION">T_ENVIRONMENT_THIRDPARTY_AGENT_ACTION</a>
 
@@ -198,7 +219,7 @@
 | 序号 | 名称 | 数据类型 |  长度  | 小数位 | 允许空值 | 主键 | 默认值 | 说明 |
 | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
 |  1   | NODE_ID |   bigint   | 20 |   0    |    N     |  Y   |       | 节点ID主键ID  |
-|  2   | NODE_STRING_ID |   varchar   | 32 |   0    |    Y     |  N   |       | 节点ID字符串  |
+|  2   | NODE_STRING_ID |   varchar   | 255 |   0    |    Y     |  N   |       | 节点ID字符串  |
 |  3   | PROJECT_ID |   varchar   | 64 |   0    |    N     |  N   |       | 项目ID  |
 |  4   | NODE_IP |   varchar   | 64 |   0    |    N     |  N   |       | 节点IP  |
 |  5   | NODE_NAME |   varchar   | 64 |   0    |    N     |  N   |       | 节点名称  |
@@ -219,8 +240,9 @@
 |  20   | LAST_MODIFY_TIME |   timestamp   | 19 |   0    |    Y     |  N   |       | 最近修改时间  |
 |  21   | LAST_MODIFY_USER |   varchar   | 512 |   0    |    Y     |  N   |       | 最近修改者  |
 |  22   | BIZ_ID |   bigint   | 20 |   0    |    Y     |  N   |       | 所属业务  |
-|  23   | PIPELINE_REF_COUNT |   int   | 10 |   0    |    N     |  N   |   0    | 流水线Job引用数  |
-|  24   | LAST_BUILD_TIME |   datetime   | 19 |   0    |    Y     |  N   |       | 最近构建时间  |
+|  23   | NODE_HASH_ID |   varchar   | 64 |   0    |    Y     |  N   |       | 节点哈希ID  |
+|  24   | PIPELINE_REF_COUNT |   int   | 10 |   0    |    N     |  N   |   0    | 流水线Job引用数  |
+|  25   | LAST_BUILD_TIME |   datetime   | 19 |   0    |    Y     |  N   |       | 最近构建时间  |
 
 **表名：** <a id="T_PROJECT_CONFIG">T_PROJECT_CONFIG</a>
 
