@@ -305,7 +305,7 @@ class PipelineRecordModelService @Autowired constructor(
             )
         }
         if (tasks.isNotEmpty()) {
-            // 将转换后的job变量数据放入stage中
+            // 将转换后的task变量数据放入job中
             containerVarMap[Container::elements.name] = tasks
         }
     }

@@ -124,7 +124,12 @@ class ProcessDataClearService @Autowired constructor(
             processDataClearDao.deleteBuildRecordPipelineByBuildId(context, projectId, buildId)
             processDataClearDao.deleteBuildRecordStageByBuildId(context, projectId, buildId)
             processDataClearDao.deleteBuildRecordContainerByBuildId(context, projectId, buildId)
-            processDataClearDao.deleteBuildRecordTaskByBuildId(context, projectId, buildId)
+            processDataClearDao.deleteBuildRecordTaskByBuildId(
+                dslContext = context,
+                projectId = projectId,
+                buildId = buildId,
+                skipTaskDeleteFlag = true
+            )
             // 添加删除记录，插入要实现幂等
             processDao.addBuildHisDataClear(
                 dslContext = context,

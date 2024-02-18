@@ -41,7 +41,7 @@ object SkipElementUtils {
     fun getSkipRecordTaskAddFlag(element: Element): Boolean {
         val elementPostInfo = element.additionalOptions?.elementPostInfo
         val qualityAtomFlag = element is QualityGateInElement || element is QualityGateOutElement
-        // 当插件已启用或者插件是post插件或者插件是质量红线的插件才允许往RecordTask表
+        // 当插件已启用或者插件是post插件或者插件是质量红线的插件才允许往RecordTask表添加记录
         return element.isElementEnable() || elementPostInfo != null || qualityAtomFlag
     }
 }
