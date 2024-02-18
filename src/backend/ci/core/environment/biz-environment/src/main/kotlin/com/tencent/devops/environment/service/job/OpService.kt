@@ -38,7 +38,6 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.data.redis.core.DefaultTypedTuple
 import org.springframework.stereotype.Service
-import kotlin.math.abs
 
 @Service("OpService")
 class OpService @Autowired constructor(
