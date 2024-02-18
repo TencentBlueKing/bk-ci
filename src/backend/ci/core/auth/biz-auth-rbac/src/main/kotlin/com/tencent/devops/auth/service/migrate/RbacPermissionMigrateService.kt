@@ -33,18 +33,20 @@ import com.tencent.devops.auth.constant.AuthMessageCode
 import com.tencent.devops.auth.dao.AuthMigrationDao
 import com.tencent.devops.auth.dao.AuthMonitorSpaceDao
 import com.tencent.devops.auth.pojo.dto.MigrateResourceDTO
+import com.tencent.devops.auth.pojo.dto.PermissionHandoverDTO
 import com.tencent.devops.auth.pojo.enum.AuthMigrateStatus
 import com.tencent.devops.auth.service.AuthResourceService
 import com.tencent.devops.auth.service.PermissionGradeManagerService
+import com.tencent.devops.auth.service.RbacCacheService
 import com.tencent.devops.auth.service.iam.MigrateCreatorFixService
 import com.tencent.devops.auth.service.iam.PermissionMigrateService
+import com.tencent.devops.auth.service.iam.PermissionResourceMemberService
 import com.tencent.devops.auth.service.iam.PermissionResourceService
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.api.util.Watcher
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.api.pojo.MigrateProjectConditionDTO
-import com.tencent.devops.auth.pojo.dto.PermissionHandoverDTO
 import com.tencent.devops.common.auth.api.pojo.SubjectScopeInfo
 import com.tencent.devops.common.auth.enums.AuthSystemType
 import com.tencent.devops.common.client.Client
@@ -79,7 +81,9 @@ class RbacPermissionMigrateService constructor(
     private val permissionGradeManagerService: PermissionGradeManagerService,
     private val dslContext: DSLContext,
     private val authMigrationDao: AuthMigrationDao,
-    private val authMonitorSpaceDao: AuthMonitorSpaceDao
+    private val authMonitorSpaceDao: AuthMonitorSpaceDao,
+    private val cacheService: RbacCacheService,
+    private val permissionResourceMemberService: PermissionResourceMemberService
 ) : PermissionMigrateService {
 
     companion object {
@@ -205,7 +209,8 @@ class RbacPermissionMigrateService constructor(
             resourceType != null
         val projectInfoList = client.get(ServiceProjectResource::class).listByProjectCode(projectCodes.toSet())
             .data!!.filter {
-                it.routerTag != null && it.routerTag!!.contains(AuthSystemType.RBAC_AUTH_TYPE.value)
+                it.routerTag != null && (
+                    it.routerTag!!.contains(AuthSystemType.RBAC_AUTH_TYPE.value) || it.routerTag!!.contains("devx"))
             }
         val traceId = MDC.get(TraceTag.BIZID)
         projectInfoList.forEach {
@@ -217,7 +222,7 @@ class RbacPermissionMigrateService constructor(
                         resourceType = AuthResourceType.PROJECT.value,
                         resourceCode = it.englishName
                     ).relationId
-                    val isRegisterMonitorPermission = authMigrationDao.get(
+                    val isRegisterMonitorPermission = authMonitorSpaceDao.get(
                         dslContext = dslContext,
                         projectCode = it.englishName
                     ) != null
@@ -329,6 +334,19 @@ class RbacPermissionMigrateService constructor(
     override fun grantGroupAdditionalAuthorization(projectCodes: List<String>): Boolean {
         logger.info("grant group additional authorization|projectCode:$projectCodes")
         projectCodes.forEach { migrateV0PolicyService.grantGroupAdditionalAuthorization(projectCode = it) }
+        return true
+    }
+
+    override fun handoverAllPermissions(permissionHandoverDTO: PermissionHandoverDTO): Boolean {
+        val resourceTypeList = cacheService.listResourceTypes()
+            .filterNot { it.resourceType == AuthResourceType.PROJECT.value }
+        resourceTypeList.forEach {
+            handoverPermissions(
+                permissionHandoverDTO.copy(
+                    resourceType = it.resourceType
+                )
+            )
+        }
         return true
     }
 
@@ -579,5 +597,51 @@ class RbacPermissionMigrateService constructor(
             errorMessage = errorMessage,
             totalTime = null
         )
+    }
+
+    override fun autoRenewal(projectCodes: List<String>): Boolean {
+        val traceId = MDC.get(TraceTag.BIZID)
+        projectCodes.forEach { projectCode ->
+            migrateProjectsExecutorService.submit {
+                MDC.put(TraceTag.BIZID, traceId)
+                autoRenewal(
+                    projectCode = projectCode
+                )
+            }
+        }
+        return true
+    }
+
+    private fun autoRenewal(projectCode: String) {
+        var offset = 0
+        val limit = 100
+        val startTime = System.currentTimeMillis()
+        logger.info("begin auto renewal")
+        do {
+            val authResourceList = authResourceService.list(
+                projectCode = projectCode,
+                resourceType = null,
+                resourceName = null,
+                offset = offset,
+                limit = limit
+            )
+            val resourceSize = authResourceList.size
+            logger.info("auto renewal size|$offset|$resourceSize")
+            authResourceList.forEach { authResource ->
+                val resourceType = authResource.resourceType
+                val resourceCode = authResource.resourceCode
+                try {
+                    permissionResourceMemberService.autoRenewal(
+                        projectCode = projectCode,
+                        resourceType = resourceType,
+                        resourceCode = resourceCode
+                    )
+                } catch (ignored: Throwable) {
+                    logger.error("Failed to auto renewal|$projectCode|$resourceType|$resourceCode")
+                }
+            }
+            offset += limit
+        } while (resourceSize == limit)
+        logger.info("Finish to auto renewal|$projectCode|${System.currentTimeMillis() - startTime}")
     }
 }

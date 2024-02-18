@@ -66,6 +66,10 @@ class SamplePermissionMigrateService : PermissionMigrateService {
         return true
     }
 
+    override fun handoverAllPermissions(permissionHandoverDTO: PermissionHandoverDTO): Boolean {
+        return true
+    }
+
     override fun handoverPermissions(permissionHandoverDTO: PermissionHandoverDTO): Boolean {
         return true
     }
@@ -75,6 +79,10 @@ class SamplePermissionMigrateService : PermissionMigrateService {
         asyncMigrateManagerGroup: Boolean,
         asyncMigrateOtherGroup: Boolean
     ): Boolean {
+        return true
+    }
+
+    override fun autoRenewal(projectCodes: List<String>): Boolean {
         return true
     }
 }

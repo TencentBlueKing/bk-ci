@@ -193,7 +193,7 @@ class AuthResourceService @Autowired constructor(
 
     fun list(
         projectCode: String,
-        resourceType: String,
+        resourceType: String?,
         resourceName: String?,
         limit: Int,
         offset: Int
@@ -328,17 +328,13 @@ class AuthResourceService @Autowired constructor(
     fun listByCreator(
         resourceType: String,
         projectCode: String? = null,
-        creator: String,
-        offset: Int,
-        limit: Int
+        creator: String
     ): List<AuthResourceInfo> {
         return authResourceDao.listByCreator(
             dslContext = dslContext,
             resourceType = resourceType,
             projectCode = projectCode,
-            creator = creator,
-            offset = offset,
-            limit = limit
+            creator = creator
         ).map { authResourceDao.convert(it) }
     }
 }

@@ -28,16 +28,12 @@
 
 package com.tencent.devops.auth.service
 
-import com.tencent.bk.sdk.iam.constants.ManagerScopesEnum
-import com.tencent.bk.sdk.iam.dto.V2PageInfoDTO
-import com.tencent.bk.sdk.iam.dto.manager.ManagerMember
-import com.tencent.bk.sdk.iam.dto.manager.dto.ManagerMemberGroupDTO
 import com.tencent.bk.sdk.iam.helper.AuthHelper
-import com.tencent.bk.sdk.iam.service.v2.V2ManagerService
 import com.tencent.devops.auth.constant.AuthMessageCode
 import com.tencent.devops.auth.dao.AuthResourceGroupDao
 import com.tencent.devops.auth.pojo.vo.ProjectPermissionInfoVO
 import com.tencent.devops.auth.service.iam.PermissionProjectService
+import com.tencent.devops.auth.service.iam.PermissionResourceMemberService
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthResourceType
@@ -55,20 +51,17 @@ import java.util.concurrent.TimeUnit
 class RbacPermissionProjectService(
     private val authHelper: AuthHelper,
     private val authResourceService: AuthResourceService,
-    private val iamV2ManagerService: V2ManagerService,
     private val authResourceGroupDao: AuthResourceGroupDao,
     private val dslContext: DSLContext,
     private val rbacCacheService: RbacCacheService,
-    private val deptService: DeptService,
     private val resourceGroupMemberService: RbacPermissionResourceMemberService,
-    private val client: Client
+    private val client: Client,
+    private val resourceMemberService: PermissionResourceMemberService
 ) : PermissionProjectService {
 
     companion object {
         private val logger = LoggerFactory.getLogger(RbacPermissionProjectService::class.java)
         private const val expiredAt = 365L
-        // 有效的过期时间,在30天内就是有效的
-        private const val VALID_EXPIRED_AT = 30L
     }
 
     override fun getProjectUsers(
@@ -171,6 +164,7 @@ class RbacPermissionProjectService(
         members: List<String>
     ): Boolean {
         logger.info("batchCreateProjectUser:$userId|$projectCode|$roleCode|$members")
+        // 根据roleCode获取到对应的iam组ID
         val iamGroupId = if (roleCode == BkAuthGroup.CI_MANAGER.value) {
             authResourceGroupDao.getByGroupName(
                 dslContext = dslContext,
@@ -192,43 +186,15 @@ class RbacPermissionProjectService(
             params = arrayOf(roleCode),
             defaultMessage = "group $roleCode not exist"
         )
-        val type = ManagerScopesEnum.getType(ManagerScopesEnum.USER)
-        val pageInfoDTO = V2PageInfoDTO().apply {
-            pageSize = 1000
-            page = 1
-        }
-        val groupMemberMap = iamV2ManagerService.getRoleGroupMemberV2(
-            iamGroupId.toInt(),
-            pageInfoDTO
-        ).results.filter {
-            it.type == type
-        }.associateBy { it.id }
-        val addMembers = mutableListOf<String>()
-        // 预期的过期天数
-        val expectExpiredAt = System.currentTimeMillis() / 1000 + TimeUnit.DAYS.toSeconds(VALID_EXPIRED_AT)
-        members.forEach {
-            // 如果用户已经在用户组,并且过期时间超过30天,则不再添加
-            if (groupMemberMap.containsKey(it) && groupMemberMap[it]!!.expiredAt > expectExpiredAt) {
-                return@forEach
-            }
-            deptService.getUserInfo(
-                userId = "admin",
-                name = it
-            ) ?: throw ErrorCodeException(
-                errorCode = AuthMessageCode.USER_NOT_EXIST,
-                params = arrayOf(it),
-                defaultMessage = "user $it not exist"
-            )
-            addMembers.add(it)
-        }
-        logger.info("batch add project user:$userId|$projectCode|$roleCode|$addMembers")
-        if (addMembers.isNotEmpty()) {
-            val iamMemberInfos = addMembers.map { ManagerMember(type, it) }
-            val expiredTime = System.currentTimeMillis() / 1000 + TimeUnit.DAYS.toSeconds(expiredAt)
-            val managerMemberGroup =
-                ManagerMemberGroupDTO.builder().members(iamMemberInfos).expiredAt(expiredTime).build()
-            iamV2ManagerService.createRoleGroupMemberV2(iamGroupId.toInt(), managerMemberGroup)
-        }
+        logger.info("batch add project user:$userId|$projectCode|$roleCode|$members")
+        val expiredTime = System.currentTimeMillis() / 1000 + TimeUnit.DAYS.toSeconds(expiredAt)
+        resourceMemberService.batchAddResourceGroupMembers(
+            userId = userId,
+            projectCode = projectCode,
+            iamGroupId = iamGroupId.toInt(),
+            expiredTime = expiredTime,
+            members = members
+        )
         return true
     }
 
