@@ -45,6 +45,7 @@ import com.tencent.devops.remotedev.service.WatermarkService
 import com.tencent.devops.remotedev.service.WindowsResourceConfigService
 import com.tencent.devops.remotedev.service.WorkspaceService
 import com.tencent.devops.remotedev.service.expert.ExpertSupportService
+import com.tencent.devops.remotedev.service.tuxiaochao.TxcService
 import com.tencent.devops.remotedev.service.workspace.WorkspaceCommon
 import org.glassfish.jersey.server.ChunkedOutput
 import org.slf4j.LoggerFactory
@@ -63,7 +64,8 @@ class UserRemoteDevResourceImpl @Autowired constructor(
     private val workspaceCommon: WorkspaceCommon,
     private val permissionService: PermissionService,
     private val expertSupportService: ExpertSupportService,
-    private val client: Client
+    private val client: Client,
+    private val txcService: TxcService
 ) : UserRemoteDevResource {
 
     companion object {
@@ -120,9 +122,12 @@ class UserRemoteDevResourceImpl @Autowired constructor(
         return Result(userId)
     }
 
-    override fun getAllWindowsResourceConfig(userId: String, withUnavailable: Boolean?): Result<List<WindowsResourceTypeConfig>> {
+    override fun getAllWindowsResourceConfig(
+        userId: String,
+        withUnavailable: Boolean?
+    ): Result<List<WindowsResourceTypeConfig>> {
         logger.info("getAllWindowsResourceConfig|$userId|withUnavailable|$withUnavailable")
-        return Result(windowsResourceConfigService.getAllType(withUnavailable))
+        return Result(windowsResourceConfigService.getAllType(withUnavailable, null))
     }
 
     override fun getAllWindowsResourceZone(userId: String): Result<List<WindowsResourceZoneConfig>> {
@@ -130,7 +135,10 @@ class UserRemoteDevResourceImpl @Autowired constructor(
         return Result(windowsResourceConfigService.getAllZone())
     }
 
-    override fun allWindowsQuota(userId: String, searchCustom: Boolean?): Result<Map<String, Map<String, Int>>> {
+    override fun allWindowsQuota(
+        userId: String,
+        searchCustom: Boolean?
+    ): Result<Map<String, Map<String, Int>>> {
         if (searchCustom == true) {
             val res = mutableMapOf<String, MutableMap<String, Int>>()
             client.get(ServiceStartCloudResource::class).getResourceVm(ResourceVmReq(null, null)).data
@@ -166,5 +174,24 @@ class UserRemoteDevResourceImpl @Autowired constructor(
         } else {
             Result(message, res)
         }
+    }
+
+    override fun queryCgsPwd(userId: String, cgsId: String): Result<Boolean> {
+        val (res, message) = expertSupportService.queryCgsPwd(userId, cgsId)
+        return if (message.isNullOrBlank()) {
+            Result(res)
+        } else {
+            Result(message, res)
+        }
+    }
+
+    override fun getTxcToken(userId: String, openId: String, nickName: String, avatar: String): Result<String> {
+        return Result(
+            txcService.getTxcToken(
+                openId = openId,
+                nickName = nickName,
+                avatar = avatar
+            )
+        )
     }
 }

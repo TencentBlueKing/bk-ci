@@ -32,5 +32,6 @@ data class ResourceVmRespDataMachineResource(
     val cap: Int?,
     val used: Int?,
     val free: Int?,
-    val machineType: String
+    val machineType: String,
+    val zoneId: String?
 )

@@ -42,6 +42,7 @@ CREATE TABLE IF NOT EXISTS `T_WORKSPACE` (
 	`OWNER_TYPE` varchar(32) NOT NULL DEFAULT 'PERSONAL' COMMENT '工作空间所属（PERSONAL、PROJECT）',
 	`WIN_CONFIG_ID` int(11) NULL COMMENT 'windows资源配置id',
     `PROJECT_NAME` varchar(64) NOT NULL DEFAULT '' COMMENT '项目名称',
+    `BUSINESS_LINE_NAME` varchar(255) NOT NULL DEFAULT '' COMMENT '业务线名称',
     PRIMARY KEY (`ID`),
     UNIQUE INDEX `NAME`(`NAME`)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
@@ -274,6 +275,7 @@ CREATE TABLE IF NOT EXISTS `T_WINDOWS_RESOURCE_TYPE` (
     `AVAILABLED` tinyint(1) NOT NULL DEFAULT '1' COMMENT '是否可用，默认可见',
     `WEIGHT` int(11) NOT NULL DEFAULT '0' COMMENT '权重，用于控制台页面展示先后顺序',
     `DESCRIPTION` varchar(256) NOT NULL DEFAULT '' COMMENT '描述',
+    `SPEC_MODEL` bit(1) DEFAULT b'0' NOT NULL COMMENT '是否是特殊机型',
     `CREATE_TIME` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
     `UPDATE_TIME` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '修改时间',
     PRIMARY KEY (`ID`),
@@ -515,6 +517,28 @@ CREATE TABLE IF NOT EXISTS `T_WINDOWS_SPEC_RESOURCE` (
 	`QUOTA` INT NOT NULL COMMENT '配额',
     PRIMARY KEY (`PROJECT_ID`, `SIZE`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='windows特殊机型配额表';
+
+-- ----------------------------
+-- Table structure for T_PROJECT_TCLOUD_CFS 项目和腾讯云cfs关联表
+-- ----------------------------
+CREATE TABLE IF NOT EXISTS `T_PROJECT_TCLOUD_CFS` (
+	PROJECT_ID varchar(64) NOT NULL COMMENT '蓝盾项目ID',
+	CFS_ID varchar(64) NOT NULL,
+	PG_ID varchar(64) NULL COMMENT '权限组ID',
+    REGION varchar(32) NOT NULL COMMENT '区域',
+	PRIMARY KEY (`PROJECT_ID`, `CFS_ID`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- ----------------------------
+-- Table structure for T_PROJECT_TGIT_LINK 蓝盾项目和工蜂关联表
+-- ----------------------------
+CREATE TABLE IF NOT EXISTS `T_PROJECT_TGIT_LINK`(
+	`PROJECT_ID` varchar(64) NOT NULL COMMENT '蓝盾项目ID',
+    `URL` varchar(255) NOT NULL COMMENT '工蜂url地址',
+    `STATUS` varchar(32) NOT NULL COMMENT '仓库状态',
+    `OAUTH_USER` varchar(32) NOT NULL COMMENT '授予oauth权限的用户',
+	PRIMARY KEY (`PROJECT_ID`, `URL`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 
 SET FOREIGN_KEY_CHECKS = 1;

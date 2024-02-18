@@ -29,52 +29,65 @@ package com.tencent.devops.remotedev.service.workspace
 
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.notify.enums.NotifyType
+import com.tencent.devops.common.notify.utils.NotifyUtils
 import com.tencent.devops.common.redis.RedisOperation
-import com.tencent.devops.common.remotedev.RemoteDevDispatcher
+import com.tencent.devops.common.websocket.dispatch.WebSocketDispatcher
+import com.tencent.devops.common.websocket.enum.NotityLevel
+import com.tencent.devops.common.websocket.pojo.NotifyPost
+import com.tencent.devops.notify.api.service.ServiceNotifyMessageTemplateResource
+import com.tencent.devops.notify.pojo.NotifyMessageContextRequest
+import com.tencent.devops.notify.pojo.SendNotifyMessageTemplateRequest
 import com.tencent.devops.remotedev.common.Constansts.ADMIN_NAME
 import com.tencent.devops.remotedev.common.exception.ErrorCodeEnum
-import com.tencent.devops.remotedev.dao.RemoteDevBillingDao
-import com.tencent.devops.remotedev.dao.RemoteDevSettingDao
 import com.tencent.devops.remotedev.dao.WorkspaceDao
-import com.tencent.devops.remotedev.dao.WorkspaceHistoryDao
-import com.tencent.devops.remotedev.dao.WorkspaceOpHistoryDao
 import com.tencent.devops.remotedev.pojo.WebSocketActionType
 import com.tencent.devops.remotedev.pojo.WorkspaceAction
 import com.tencent.devops.remotedev.pojo.WorkspaceMountType
+import com.tencent.devops.remotedev.pojo.WorkspaceOwnerType
+import com.tencent.devops.remotedev.pojo.WorkspaceResponse
+import com.tencent.devops.remotedev.pojo.WorkspaceShared
 import com.tencent.devops.remotedev.pojo.WorkspaceSystemType
+import com.tencent.devops.remotedev.pojo.common.RemoteDevNotifyType
 import com.tencent.devops.remotedev.pojo.op.WorkspaceNotifyData
-import com.tencent.devops.remotedev.service.BkTicketService
-import com.tencent.devops.remotedev.service.PermissionService
-import com.tencent.devops.remotedev.service.SshPublicKeysService
-import com.tencent.devops.remotedev.service.redis.RedisHeartBeat
+import com.tencent.devops.remotedev.service.client.TaiClient
+import com.tencent.devops.remotedev.service.client.TaiUserInfoRequest
+import com.tencent.devops.remotedev.websocket.page.WorkspacePageBuild
+import com.tencent.devops.remotedev.websocket.push.WorkspaceWebsocketPush
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
-import java.util.concurrent.TimeUnit
 
 @Service
 @Suppress("LongMethod")
 class NotifyControl @Autowired constructor(
-    private val dslContext: DSLContext,
-    private val redisOperation: RedisOperation,
-    private val workspaceDao: WorkspaceDao,
-    private val workspaceHistoryDao: WorkspaceHistoryDao,
-    private val workspaceOpHistoryDao: WorkspaceOpHistoryDao,
-    private val permissionService: PermissionService,
-    private val sshService: SshPublicKeysService,
     private val client: Client,
-    private val dispatcher: RemoteDevDispatcher,
-    private val remoteDevSettingDao: RemoteDevSettingDao,
-    private val redisHeartBeat: RedisHeartBeat,
-    private val remoteDevBillingDao: RemoteDevBillingDao,
-    private val bkTicketServie: BkTicketService,
-    private val workspaceCommon: WorkspaceCommon
+    private val dslContext: DSLContext,
+    private val workspaceDao: WorkspaceDao,
+    private val redisOperation: RedisOperation,
+    private val webSocketDispatcher: WebSocketDispatcher,
+    private val taiClient: TaiClient
 ) {
+
+    @Value("\${notice.wework:#{null}}")
+    private var weworkId: String? = null
 
     companion object {
         private val logger = LoggerFactory.getLogger(NotifyControl::class.java)
-        private val expiredTimeInSeconds = TimeUnit.MINUTES.toSeconds(2)
+
+        /*云桌面通知功能-个人名下云桌面新增时*/
+        const val WINDOWS_GPU_OWNER_CHANGE_NOTIFY = "WINDOWS_GPU_OWNER_CHANGE_NOTIFY"
+
+        /*云桌面通知功能-云桌面重启时*/
+        const val WINDOWS_GPU_RESTART_NOTIFY = "WINDOWS_GPU_RESTART_NOTIFY"
+
+        /*云桌面通知功能-云桌面已分配到项目时*/
+        const val WINDOWS_GPU_ASSIGN_NOTIFY = "WINDOWS_GPU_ASSIGN_NOTIFY"
+
+        /*云桌面通知功能-云桌面已分配到项目时*/
+        const val CLIENT_VERSION_WARNING_NOTIFY = "CLIENT_VERSION_WARNING_NOTIFY"
     }
 
     fun notifyWorkspaceInfo(
@@ -92,7 +105,7 @@ class NotifyControl @Autowired constructor(
 
         // 分发到WS
         workspace.forEach { ws ->
-            workspaceCommon.dispatchWebsocketPushEvent(
+            dispatchWebsocketPushEvent(
                 userId = ADMIN_NAME,
                 workspaceName = ws["NAME"] as String,
                 workspaceHost = null,
@@ -105,6 +118,176 @@ class NotifyControl @Autowired constructor(
                 ownerType = null,
                 projectId = ws["PROJECT_ID"] as String
             )
+        }
+    }
+
+    fun notify4User(
+        userIds: MutableSet<String>,
+        workspaceName: String,
+        notifyTemplateCode: String,
+        notifyType: MutableSet<RemoteDevNotifyType>,
+        bodyParams: Map<String, String>
+    ) {
+        /* 发外部邮件，需要模板配置email_type=0*/
+        if (notifyType.contains(RemoteDevNotifyType.EMAIL)) {
+            // 掉接口拿真正邮件地址
+            val taiInfos = taiClient.taiUserInfo(
+                TaiUserInfoRequest(usernames = userIds.filter { it.contains("@tai") }.toSet())
+            ).associateBy({
+                it.username
+            }, { user ->
+                user.accountEmail
+            })
+            val receivers = userIds.map { taiInfos[it] ?: it }
+            logger.info("notify4User EMAIL|$notifyTemplateCode|$receivers|$bodyParams")
+            sendNotifyMessageTemplateRequest(
+                notifyTemplateCode = notifyTemplateCode,
+                bodyParams = bodyParams,
+                notifyType = mutableSetOf(NotifyType.EMAIL.name),
+                receivers = receivers.toMutableSet(),
+                markdownContent = false
+            )
+        }
+
+        if (notifyType.contains(RemoteDevNotifyType.CLIENT_PUSH)) {
+            val request = NotifyMessageContextRequest(
+                templateCode = notifyTemplateCode,
+                notifyType = NotifyType.RTX,
+                bodyParams = bodyParams
+            )
+            val res = kotlin.runCatching {
+                client.get(ServiceNotifyMessageTemplateResource::class).getNotifyMessageByTemplate(request)
+            }.onFailure {
+                logger.warn("notify CLIENT_PUSH fail ${it.message}")
+            }.getOrNull()?.data?.body ?: kotlin.run {
+                logger.warn("notify CLIENT_PUSH fail with null body|$notifyTemplateCode")
+                return
+            }
+            logger.info("notify4User CLIENT_PUSH|$notifyTemplateCode|$userIds|$res")
+            userIds.forEach { user ->
+                dispatchWebsocketPushEvent(
+                    userId = user,
+                    workspaceName = workspaceName,
+                    workspaceHost = null,
+                    errorMsg = res,
+                    type = WebSocketActionType.WORKSPACE_NOTIFY,
+                    status = true,
+                    action = WorkspaceAction.NOTIFY,
+                    systemType = WorkspaceSystemType.WINDOWS_GPU,
+                    workspaceMountType = null,
+                    ownerType = null
+                )
+            }
+        }
+
+        if (notifyType.contains(RemoteDevNotifyType.RTX)) {
+            logger.info("notify4User RTX|$notifyTemplateCode|$userIds|$bodyParams")
+            sendNotifyMessageTemplateRequest(
+                notifyTemplateCode = notifyTemplateCode,
+                bodyParams = bodyParams,
+                notifyType = mutableSetOf(NotifyType.RTX.name),
+                markdownContent = false
+            )
+        }
+    }
+
+    /*
+    * 通知给系统运维人员
+    * 方式是固定企微群
+    */
+    fun notify4SystemAdministrator(
+        notifyTemplateCode: String,
+        bodyParams: Map<String, String>
+    ) {
+        // 通知
+        if (!weworkId.isNullOrBlank()) {
+            sendNotifyMessageTemplateRequest(
+                notifyTemplateCode = notifyTemplateCode,
+                bodyParams = bodyParams.plus(
+                    NotifyUtils.WEWORK_GROUP_KEY to weworkId!!
+                ),
+                notifyType = setOf(NotifyType.WEWORK_GROUP.name),
+                markdownContent = false
+            )
+        }
+    }
+
+    // 封装统一分发WS的方法
+    fun dispatchWebsocketPushEvent(
+        userId: String,
+        workspaceName: String,
+        workspaceHost: String?,
+        errorMsg: String? = null,
+        type: WebSocketActionType,
+        status: Boolean?,
+        action: WorkspaceAction,
+        systemType: WorkspaceSystemType? = null,
+        workspaceMountType: WorkspaceMountType? = null,
+        ownerType: WorkspaceOwnerType? = null,
+        projectId: String = ""
+    ) {
+        webSocketDispatcher.dispatch(
+            WorkspaceWebsocketPush(
+                type = type,
+                status = status ?: true,
+                anyMessage = WorkspaceResponse(
+                    workspaceHost = workspaceHost ?: "",
+                    workspaceName = workspaceName,
+                    status = action,
+                    errorMsg = errorMsg,
+                    systemType = systemType,
+                    workspaceMountType = workspaceMountType,
+                    ownerType = ownerType
+                ),
+                projectId = projectId,
+                userIds = getWebSocketUsers(userId, workspaceName),
+                redisOperation = redisOperation,
+                page = WorkspacePageBuild.buildPage(workspaceName),
+                notifyPost = NotifyPost(
+                    module = "remotedev",
+                    level = NotityLevel.LOW_LEVEL.getLevel(),
+                    message = "",
+                    dealUrl = null,
+                    code = 200,
+                    webSocketType = "IFRAME",
+                    page = WorkspacePageBuild.buildPage(workspaceName)
+                )
+            )
+        )
+    }
+
+    private fun getWebSocketUsers(operator: String, workspaceName: String): Set<String> {
+        return if (operator == ADMIN_NAME) {
+            val result = workspaceDao.fetchWorkspaceWithOwner(
+                dslContext = dslContext,
+                workspaceName = workspaceName,
+                assignType = WorkspaceShared.AssignType.OWNER
+            ) ?: emptyList()
+            result.map { it["SHARED_USER"] as String }.toSet()
+        } else {
+            setOf(operator)
+        }
+    }
+
+    private fun sendNotifyMessageTemplateRequest(
+        notifyTemplateCode: String,
+        bodyParams: Map<String, String>,
+        notifyType: Set<String>,
+        receivers: MutableSet<String> = mutableSetOf(),
+        markdownContent: Boolean = false
+    ) {
+        val request = SendNotifyMessageTemplateRequest(
+            templateCode = notifyTemplateCode,
+            bodyParams = bodyParams,
+            titleParams = bodyParams,
+            notifyType = notifyType.toMutableSet(),
+            markdownContent = markdownContent,
+            receivers = receivers
+        )
+        kotlin.runCatching {
+            client.get(ServiceNotifyMessageTemplateResource::class).sendNotifyMessageByTemplate(request)
+        }.onFailure {
+            logger.warn("notify WINDOWS_GPU_SAFE_INIT_FAILED fail ${it.message}")
         }
     }
 }

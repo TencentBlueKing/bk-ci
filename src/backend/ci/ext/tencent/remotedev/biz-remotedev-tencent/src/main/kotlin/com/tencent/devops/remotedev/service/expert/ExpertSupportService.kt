@@ -136,6 +136,7 @@ class ExpertSupportService @Autowired constructor(
                 info.buildParam.forEach { (k, v) ->
                     when (v) {
                         "ip" -> newParam[k] = ip
+                        "projectId" -> newParam[k] = data.projectId
                         else -> newParam[k] = v
                     }
                 }
@@ -273,10 +274,48 @@ class ExpertSupportService @Autowired constructor(
         return Pair(true, null)
     }
 
+    fun queryCgsPwd(userId: String, cgsId: String): Pair<Boolean, String?> {
+        // 校验这个人是不是可以分配的运维
+        if (!expertSupportDao.fetchExpertSupportConfig(dslContext, ExpertSupportConfigType.SUPPORTER)
+                .map { it.content.trim() }.toSet().contains(userId.trim())
+        ) {
+            return Pair(false, "${userId}不是云研发运维，不可查询")
+        }
+        try {
+            val infoS = redisOperation.get(PIPELINE_QUERY_CGS_PWD) ?: return Pair(false, null)
+            val info = JsonUtil.to(infoS, AssignWorkspacePipelineInfo::class.java)
+
+            val newParam = mutableMapOf<String, String>()
+            val hostIdSub = cgsId.split(".")
+            val ip = hostIdSub.subList(1, hostIdSub.size).joinToString(separator = ".")
+            info.buildParam.forEach { (k, v) ->
+                when (v) {
+                    "ip" -> newParam[k] = ip
+                    "user" -> newParam[k] = userId
+                    else -> newParam[k] = v
+                }
+            }
+
+            client.get(ServiceBuildResource::class).manualStartupNew(
+                userId = info.userId ?: "",
+                projectId = info.projectId,
+                pipelineId = info.pipelineId,
+                values = newParam,
+                channelCode = ChannelCode.BS,
+                buildNo = null,
+                startType = StartType.SERVICE
+            )
+        } catch (e: Exception) {
+            logger.warn("execute createSupport pipeline error", e)
+        }
+
+        return Pair(true, "已发起查询，稍后通知密码")
+    }
     companion object {
         private val logger = LoggerFactory.getLogger(ExpertSupportService::class.java)
         private const val DEFAULT_WAIT_TIME = 3600
         private val dateTimeFormatter = DateTimeFormatter.ofPattern("yyyy年MM月dd日HH:mm:ss")
         private const val PIPELINE_EXPORT_CONFIG_INFO = "remotedev:createExpSupport.pipelineinfo"
+        private const val PIPELINE_QUERY_CGS_PWD = "remotedev:queryCgsPwd.pipelineinfo"
     }
 }

@@ -118,7 +118,7 @@ class ServiceCommonDao : AbstractStoreCommonDao() {
             .leftJoin(tesei).on(tes.ID.eq(tesei.SERVICE_ID))
             .join(tspr).on(tes.SERVICE_CODE.eq(tspr.STORE_CODE))
             .join(tspir).on(tes.SERVICE_CODE.eq(tspir.STORE_CODE).and(tspr.STORE_TYPE.eq(tspir.STORE_TYPE)))
-            .where(tspr.STORE_TYPE.eq(StoreTypeEnum.ATOM.type.toByte()))
+            .where(tspr.STORE_TYPE.eq(StoreTypeEnum.SERVICE.type.toByte()))
             .and(tes.LATEST_FLAG.eq(true))
             .and(tspr.TYPE.eq(StoreProjectTypeEnum.INIT.type.toByte()))
             .and(tes.SERVICE_CODE.`in`(storeCodeList))

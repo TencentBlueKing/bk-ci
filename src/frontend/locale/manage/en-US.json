@@ -107,8 +107,8 @@
     "请选择项目项目最大可授权人员范围": "Please select the maximum scope of authorized personnel for the project",
     "只允许上传png、jpg": "Only png and jpg are allowed to be uploaded",
     "大小不超过2M": "The size should not exceed 2M",
-    "部门": "Department",
-    "中心": "Center",
+    "请选择部门": "Department",
+    "请选择中心": "Center",
     "`项目最大可授权人员范围`内的用户可以主动申请加入项目": "Users within the scope of the project's maximum authorized personnel can actively apply to join the project",
     "拥有项目/资源管理权限的成员才可以主动添加用户": "Only members with project/resource management permissions can actively add users",
     "该设置表示可以加入项目的成员的最大范围，范围内的用户才可以成功加入项目下的任意用户组": "Only users on the list are allowed to be granted permissions.",
@@ -139,5 +139,6 @@
     "项目类型": "Project Type",
     "创建项目申请单已撤回": "Creation of project application has been withdrawn",
     "项目所属运营产品": "Operational Product",
-    "请选择所属运营产品": "Please select the operational product"
+    "请选择所属运营产品": "Please select the operational product",
+    "公司OBS结算业务的运营产品，1个项目仅支持关联1个运营产品，多个项目可关联到同一运营产品": "The operational product for the company’s OBS settlement business supports only one project association per project, but multiple projects can be associated with the same operational product."
 }

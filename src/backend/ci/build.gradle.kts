@@ -131,6 +131,7 @@ allprojects {
             dependency("org.apache.poi:poi:${Versions.apachepoi}")
             dependency("org.apache.poi:poi-ooxml:${Versions.apachepoi}")
             dependency("com.mysql:mysql-connector-j:${Versions.MysqlDriver}")
+            dependency("com.tencentcloudapi:tencentcloud-sdk-java-cfs:${Versions.tencentcloudsdkcfs}")
         }
     }
 

@@ -52,6 +52,7 @@ import com.tencent.devops.remotedev.dao.WorkspaceOpHistoryDao
 import com.tencent.devops.remotedev.pojo.OpHistoryCopyWriting
 import com.tencent.devops.remotedev.pojo.WebSocketActionType
 import com.tencent.devops.remotedev.pojo.WorkspaceAction
+import com.tencent.devops.remotedev.pojo.WorkspaceKafkaInfo
 import com.tencent.devops.remotedev.pojo.WorkspaceOwnerType
 import com.tencent.devops.remotedev.pojo.WorkspaceRecord
 import com.tencent.devops.remotedev.pojo.WorkspaceStatus
@@ -61,20 +62,22 @@ import com.tencent.devops.remotedev.pojo.event.UpdateEventType
 import com.tencent.devops.remotedev.service.BKCCService
 import com.tencent.devops.remotedev.service.PermissionService
 import com.tencent.devops.remotedev.service.RemoteDevSettingService
+import com.tencent.devops.remotedev.service.gitproxy.GitProxyTGitService
 import com.tencent.devops.remotedev.service.redis.RedisCacheService
 import com.tencent.devops.remotedev.service.redis.RedisCallLimit
 import com.tencent.devops.remotedev.service.redis.RedisHeartBeat
 import com.tencent.devops.remotedev.service.redis.RedisKeys
 import com.tencent.devops.remotedev.service.redis.RedisKeys.REDIS_CALL_LIMIT_KEY_PREFIX
-import java.time.Duration
-import java.time.LocalDateTime
-import java.util.concurrent.TimeUnit
+import com.tencent.devops.remotedev.service.tcloud.TCloudCfsService
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.slf4j.MDC
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
+import java.time.Duration
+import java.time.LocalDateTime
+import java.util.concurrent.TimeUnit
 
 @Service
 @Suppress("LongMethod")
@@ -92,7 +95,10 @@ class DeleteControl @Autowired constructor(
     private val redisCache: RedisCacheService,
     private val remoteDevSettingService: RemoteDevSettingService,
     private val workspaceCommon: WorkspaceCommon,
-    private val bkccService: BKCCService
+    private val bkccService: BKCCService,
+    private val notifyControl: NotifyControl,
+    private val tCloudCfsService: TCloudCfsService,
+    private val gitProxyTGitService: GitProxyTGitService
 ) {
 
     companion object {
@@ -159,7 +165,7 @@ class DeleteControl @Autowired constructor(
             )
 
             // 发送给用户
-            workspaceCommon.dispatchWebsocketPushEvent(
+            notifyControl.dispatchWebsocketPushEvent(
                 userId = userId,
                 workspaceName = workspaceName,
                 workspaceHost = null,
@@ -239,7 +245,7 @@ class DeleteControl @Autowired constructor(
             MDC.put(TraceTag.BIZID, TraceTag.buildBiz())
             logger.info(
                 "workspace ${it.workspaceName} last active is ${
-                    it.updateTime
+                it.updateTime
                 } ready to delete"
             )
             kotlin.runCatching { heartBeatDeleteWS(it) }.onFailure { i ->
@@ -299,7 +305,7 @@ class DeleteControl @Autowired constructor(
                 )
             )
 
-            workspaceCommon.dispatchWebsocketPushEvent(
+            notifyControl.dispatchWebsocketPushEvent(
                 userId = workspace.createUserId,
                 workspaceName = workspace.workspaceName,
                 workspaceHost = null,
@@ -326,7 +332,7 @@ class DeleteControl @Autowired constructor(
                 EnvStatusEnum.deleted -> event.status = true
                 else -> logger.warn(
                     "delete workspace callback with error|" +
-                            "${event.workspaceName}|${workspaceInfo.status}"
+                        "${event.workspaceName}|${workspaceInfo.status}"
                 )
             }
         }
@@ -352,11 +358,11 @@ class DeleteControl @Autowired constructor(
         if (status) {
             // 删除环境管理第三方构建机记录
             if (!workspace.preciAgentId.isNullOrBlank() && client.get(ServiceNodeResource::class)
-                    .deleteThirdPartyNode(workspace.createUserId, projectId, workspace.preciAgentId!!).data == false
+                .deleteThirdPartyNode(workspace.createUserId, projectId, workspace.preciAgentId!!).data == false
             ) {
                 logger.warn(
                     "delete workspace $workspaceName, but third party agent delete failed." +
-                            "|${workspace.createUserId}|$projectId|${detail?.environmentIP}|${workspace.preciAgentId}"
+                        "|${workspace.createUserId}|$projectId|${detail?.environmentIP}|${workspace.preciAgentId}"
                 )
             }
             // 清心跳
@@ -380,6 +386,16 @@ class DeleteControl @Autowired constructor(
                     )
                 )
             }
+
+            // 删除成功后发送kafka消息给安全侧消费
+            workspaceCommon.sendCgsInfo2Kafka(
+                workspaceKafkaInfo = WorkspaceKafkaInfo(
+                    workspaceName = workspaceName,
+                    projectId = workspace.projectId,
+                    ip = detail?.environmentIP ?: "",
+                    regionId = (detail?.regionId ?: "").toString()
+                )
+            )
         } else {
             workspaceDao.updateWorkspaceStatus(
                 workspaceName = workspaceName,
@@ -415,8 +431,8 @@ class DeleteControl @Autowired constructor(
 
         // 删除时给 cmdb 去掉字段方便监控检索
         val hostIdSub = detail?.environmentIP?.split(".")
-        if (!hostIdSub.isNullOrEmpty() && workspace.workspaceSystemType == WorkspaceSystemType.WINDOWS_GPU) {
-            val ip = hostIdSub.subList(1, hostIdSub.size).joinToString(separator = ".")
+        val ip = hostIdSub?.subList(1, hostIdSub.size)?.joinToString(separator = ".")
+        if (!ip.isNullOrBlank() && workspace.workspaceSystemType == WorkspaceSystemType.WINDOWS_GPU) {
             bkccService.updateHostMonitor(
                 regionId = null,
                 workspaceName = workspaceName,
@@ -426,9 +442,15 @@ class DeleteControl @Autowired constructor(
 
             // 删除 cmdb 的机器别名
             bkccService.updateHostName("VM-${hostIdSub.joinToString("-")}", workspaceName)
+
+            // 删除cfs的权限组规则
+            tCloudCfsService.addOrRemoveCfsPermissionRule(workspace.projectId, ip, true)
+
+            // 关联tgit相关
+            gitProxyTGitService.addOrRemoveAclIp(workspace.projectId, ip, true)
         }
 
-        workspaceCommon.dispatchWebsocketPushEvent(
+        notifyControl.dispatchWebsocketPushEvent(
             userId = ADMIN_NAME,
             workspaceName = workspaceName,
             workspaceHost = null,

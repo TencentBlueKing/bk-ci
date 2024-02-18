@@ -30,6 +30,7 @@ package com.tencent.devops.remotedev.api.user
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.remotedev.pojo.image.StandardVmImage
 import com.tencent.devops.remotedev.pojo.image.ProjectImage
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
@@ -75,4 +76,16 @@ interface UserProjectWorkspaceImageResource {
         @PathParam("imageId")
         imageId: String
     ): Result<Boolean>
+
+    @ApiOperation("获取标准镜像列表")
+    @GET
+    @Path("/list/standard")
+    fun getVmStandardImages(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String
+    ): Result<List<StandardVmImage>>
 }

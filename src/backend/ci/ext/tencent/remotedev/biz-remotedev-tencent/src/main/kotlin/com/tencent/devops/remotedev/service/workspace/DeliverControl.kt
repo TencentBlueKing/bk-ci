@@ -39,12 +39,12 @@ import com.tencent.devops.common.auth.api.ActionId
 import com.tencent.devops.common.auth.api.ResourceTypeId
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.redis.RedisOperation
-import com.tencent.devops.remotedev.common.Constansts
+import com.tencent.devops.project.api.service.ServiceProjectResource
+import com.tencent.devops.project.constant.ProjectMessageCode
 import com.tencent.devops.remotedev.common.exception.ErrorCodeEnum
 import com.tencent.devops.remotedev.dao.WorkspaceDao
 import com.tencent.devops.remotedev.dao.WorkspaceOpHistoryDao
 import com.tencent.devops.remotedev.dao.WorkspaceSharedDao
-import com.tencent.devops.remotedev.dao.WorkspaceWindowsDao
 import com.tencent.devops.remotedev.pojo.OpHistoryCopyWriting
 import com.tencent.devops.remotedev.pojo.ProjectWorkspaceAssign
 import com.tencent.devops.remotedev.pojo.WebSocketActionType
@@ -53,11 +53,13 @@ import com.tencent.devops.remotedev.pojo.WorkspaceMountType
 import com.tencent.devops.remotedev.pojo.WorkspaceRecord
 import com.tencent.devops.remotedev.pojo.WorkspaceShared
 import com.tencent.devops.remotedev.pojo.WorkspaceStatus
+import com.tencent.devops.remotedev.pojo.common.RemoteDevNotifyType
 import com.tencent.devops.remotedev.pojo.software.SoftwareCallbackRes
 import com.tencent.devops.remotedev.pojo.software.TaskStatusEnum
 import com.tencent.devops.remotedev.service.redis.RedisCallLimit
 import com.tencent.devops.remotedev.service.redis.RedisKeys.REDIS_CALL_LIMIT_KEY_PREFIX
 import com.tencent.devops.remotedev.service.software.SoftwareManageService
+import com.tencent.devops.remotedev.service.workspace.NotifyControl.Companion.WINDOWS_GPU_ASSIGN_NOTIFY
 import java.util.concurrent.TimeUnit
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
@@ -73,9 +75,9 @@ class DeliverControl @Autowired constructor(
     private val workspaceDao: WorkspaceDao,
     private val workspaceOpHistoryDao: WorkspaceOpHistoryDao,
     private val sharedDao: WorkspaceSharedDao,
-    private val workspaceWindowsDao: WorkspaceWindowsDao,
     private val workspaceCommon: WorkspaceCommon,
-    private val softwareManageService: SoftwareManageService
+    private val softwareManageService: SoftwareManageService,
+    private val notifyControl: NotifyControl
 ) {
 
     companion object {
@@ -227,21 +229,6 @@ class DeliverControl @Autowired constructor(
                 mountType = WorkspaceMountType.START
             )
         }
-
-        // 分配完机器后通知客户端，刷新列表
-        workspaceCommon.dispatchWebsocketPushEvent(
-            userId = Constansts.ADMIN_NAME,
-            workspaceName = workspaceName,
-            workspaceHost = null,
-            errorMsg = null,
-            type = WebSocketActionType.WORKSPACE_ASSIGN,
-            status = true,
-            action = WorkspaceAction.ASSIGN,
-            systemType = workspace.workspaceSystemType,
-            workspaceMountType = workspace.workspaceMountType,
-            ownerType = workspace.ownerType,
-            projectId = workspace.projectId
-        )
     }
 
     fun softwareInstallationCompleteCallback(
@@ -286,6 +273,24 @@ class DeliverControl @Autowired constructor(
                                 )
                             )
                         }
+                        val projectInfo = kotlin.runCatching {
+                            client.get(ServiceProjectResource::class).get(projectId)
+                        }.onFailure { logger.warn("get project $projectId info error|${it.message}") }
+                            .getOrElse { null }?.data ?: throw ErrorCodeException(
+                            errorCode = ProjectMessageCode.PROJECT_NOT_EXIST
+                        )
+                        notifyControl.notify4User(
+                            userIds = projectInfo.properties?.remotedevManager?.split(";")?.toMutableSet()
+                                ?: mutableSetOf(),
+                            workspaceName = workspace.workspaceName,
+                            notifyTemplateCode = WINDOWS_GPU_ASSIGN_NOTIFY,
+                            notifyType = mutableSetOf(RemoteDevNotifyType.EMAIL),
+                            bodyParams = mapOf(
+                                "workspaceName" to workspace.workspaceName,
+                                "cgsId" to (workspace.hostName ?: workspace.workspaceName),
+                                "projectId" to projectId
+                            )
+                        )
                     }
                 }
 
@@ -317,7 +322,7 @@ class DeliverControl @Autowired constructor(
                             WorkspaceStatus.RUNNING.name
                         )
                     )
-                    workspaceCommon.dispatchWebsocketPushEvent(
+                    notifyControl.dispatchWebsocketPushEvent(
                         userId = workspace.createUserId,
                         workspaceName = workspace.workspaceName,
                         workspaceHost = workspace.hostName,

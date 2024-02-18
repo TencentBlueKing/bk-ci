@@ -1,10 +1,15 @@
 package com.tencent.devops.remotedev.api.user
 
 import com.tencent.bkrepo.common.api.pojo.Page
+import com.tencent.devops.common.api.auth.AUTH_HEADER_PROJECT_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.enums.ScmType
+import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.remotedev.pojo.gitproxy.CreateGitProxyData
+import com.tencent.devops.remotedev.pojo.gitproxy.FetchRepoResp
+import com.tencent.devops.remotedev.pojo.gitproxy.LinktgitData
+import com.tencent.devops.remotedev.pojo.gitproxy.TGitRepoData
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
@@ -17,8 +22,6 @@ import javax.ws.rs.Path
 import javax.ws.rs.Produces
 import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
-import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.remotedev.pojo.gitproxy.FetchRepoResp
 
 @Api(tags = ["USER_GITPEROXY"], description = "用户-GitProxy")
 @Path("/user/gitproxy")
@@ -71,5 +74,45 @@ interface UserProjectGitProxyResource {
         @ApiParam("项目名称", required = true)
         @QueryParam("repoName")
         repoName: String
+    ): Result<Boolean>
+
+    @ApiOperation("关联git.tencent仓库")
+    @POST
+    @Path("/linktgit")
+    fun linktgit(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam(value = "项目ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_PROJECT_ID)
+        projectId: String,
+        data: LinktgitData
+    ): Result<Map<String, Boolean>>
+
+    @ApiOperation("获取已经关联的仓库")
+    @GET
+    @Path("/tgit/list")
+    fun tgitList(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam(value = "项目ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_PROJECT_ID)
+        projectId: String
+    ): Result<List<TGitRepoData>>
+
+    @ApiOperation("删除已经关联的仓库")
+    @DELETE
+    @Path("/tgit/delete")
+    fun deleteTgitRepo(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam(value = "项目ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_PROJECT_ID)
+        projectId: String,
+        @ApiParam(value = "仓库链接", required = true)
+        @QueryParam("url")
+        url: String
     ): Result<Boolean>
 }

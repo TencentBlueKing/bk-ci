@@ -46,7 +46,8 @@ enum class WorkspaceStatus {
     DELIVERING_FAILED, // 11 交付失败
     STOPPING, // 12 关机中
     RESTARTING, // 13 重启中
-    MAKING_IMAGE; // 14 制作镜像中
+    MAKING_IMAGE, // 14 制作镜像中
+    REBUILDING; // 14 重装系统中
 
     fun checkRunning() = this == RUNNING
 
@@ -65,14 +66,14 @@ enum class WorkspaceStatus {
     fun workspaceInitializing() = checkDelivering()
 
     fun checkInUse() = !checkDeleted() && !checkException()
-
+    fun checkInProcess() = this == RESTARTING || this == MAKING_IMAGE || this == REBUILDING
     /**
      * 当正在做某事时，不能新建任务去执行
      */
     fun notOk2doNextAction(workspaceSystemType: WorkspaceSystemType) =
         (this == PREPARING && workspaceSystemType != WorkspaceSystemType.WINDOWS_GPU) ||
             this == STARTING || this == SLEEPING || this == DELETING || this == STOPPING ||
-            this == RESTARTING || this == MAKING_IMAGE
+            this == RESTARTING || this == MAKING_IMAGE || this == REBUILDING
 }
 
 @Suppress("ALL")
@@ -93,5 +94,6 @@ fun WorkspaceStatus.display(): String {
         WorkspaceStatus.STOPPING -> "关机中"
         WorkspaceStatus.RESTARTING -> "重启中"
         WorkspaceStatus.MAKING_IMAGE -> "制作镜像中"
+        WorkspaceStatus.REBUILDING -> "重装系统中"
     }
 }

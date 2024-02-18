@@ -184,7 +184,28 @@ enum class ErrorCodeEnum(
     PROJECT_DESKTOP_SPEC_RESOURCES_INSUFFICIENT(
         errorType = ErrorType.USER,
         errorCode = "2132035",
-        formatErrorMessage = "project insufficient quota for {0}.Quota {1}, but already {2} instances."
+        formatErrorMessage = "{0} is a special model, project quota is insufficient.Quota is {1}, and {2} are available"
+    ),
+    NO_TGIT_OAUTH_ERROR(
+        errorType = ErrorType.USER,
+        errorCode = "2132036",
+        formatErrorMessage = "{0} No oauth authorization for {1}"
+    ),
+    CREATE_ITSM_TICKET_ERROR(
+        errorType = ErrorType.THIRD_PARTY,
+        errorCode = "2132037",
+        formatErrorMessage = "{0} {1} create itsm ticket error"
+    ),
+    NO_TGIT_PREMISSION(
+        errorType = ErrorType.USER,
+        errorCode = "2132038",
+        formatErrorMessage = "User{0}does not have sufficient permissions" +
+            "(root directory approval permissions of SVN or master permissions of GIT)"
+    ),
+    REQ_DEVCLOUD_ERROR(
+        errorType = ErrorType.THIRD_PARTY,
+        errorCode = "2132039",
+        formatErrorMessage = "request devcloud {0} error {1}"
     );
 
     fun getErrorMessage(): String {

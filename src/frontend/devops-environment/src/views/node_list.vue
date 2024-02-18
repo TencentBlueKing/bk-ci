@@ -5,7 +5,7 @@
                 <span>{{ $t('environment.node') }}</span>
                 <span v-if="isEnableDashboard" class="dashboard-entry ml5">
                     <i class="devops-icon icon-tiaozhuan jump-icon"></i>
-                    <a :href="jumpDashboardUrl">{{ $t('environment.查看构建机监控') }}</a>
+                    <a :href="jumpDashboardUrl" target="_blank">{{ $t('environment.查看构建机监控') }}</a>
                 </span>
             </div>
             <div slot="right" v-if="nodeList.length > 0">

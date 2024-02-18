@@ -35,9 +35,11 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.remotedev.pojo.ProjectWorkspace
 import com.tencent.devops.remotedev.pojo.ProjectWorkspaceAssign
 import com.tencent.devops.remotedev.pojo.ProjectWorkspaceCreate
+import com.tencent.devops.remotedev.pojo.WorkspaceRebuildReq
 import com.tencent.devops.remotedev.pojo.WorkspaceSearch
 import com.tencent.devops.remotedev.pojo.windows.ComputerStatusResp
 import com.tencent.devops.remotedev.pojo.image.MakeWorkspaceImageReq
+import com.tencent.devops.remotedev.pojo.op.WindowsSpecResInfo
 import com.tencent.devops.remotedev.pojo.windows.TimeScope
 import com.tencent.devops.remotedev.pojo.windows.UserLoginTimeResp
 import io.swagger.annotations.Api
@@ -265,4 +267,42 @@ interface UserProjectWorkspaceResource {
         @QueryParam("pageSize")
         pageSize: Int?
     ): Response
+
+    @ApiOperation("重装工作空间系统")
+    @POST
+    @Path("/workspace/{workspaceName}/rebuild")
+    fun reBuildWorkspace(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam(value = "projectId", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @ApiParam("工作空间名称", required = true)
+        @PathParam("workspaceName")
+        workspaceName: String,
+        @ApiParam("请求报文", required = true)
+        rebuildReq: WorkspaceRebuildReq
+    ): Result<Boolean>
+
+    @ApiOperation("特殊机型配额列表")
+    @GET
+    @Path("/spec/list")
+    fun fetchSpec(
+        @ApiParam(value = "用户ID", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("项目ID", required = false)
+        @PathParam("projectId")
+        projectId: String?,
+        @ApiParam("机型", required = false)
+        @QueryParam("machineType")
+        machineType: String?,
+        @ApiParam("第几页", required = true)
+        @QueryParam("page")
+        page: Int?,
+        @ApiParam("每页数据条数", required = true)
+        @QueryParam("pageSize")
+        pageSize: Int?
+    ): Result<Page<WindowsSpecResInfo>>
 }

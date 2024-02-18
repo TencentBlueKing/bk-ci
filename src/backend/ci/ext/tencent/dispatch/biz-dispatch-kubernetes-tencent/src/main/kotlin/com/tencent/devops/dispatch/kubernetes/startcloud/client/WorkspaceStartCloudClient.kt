@@ -10,6 +10,8 @@ import com.tencent.devops.dispatch.kubernetes.dao.DispatchWorkspaceOpHisDao
 import com.tencent.devops.dispatch.kubernetes.pojo.EnvironmentAction
 import com.tencent.devops.dispatch.kubernetes.pojo.EnvironmentStatus
 import com.tencent.devops.dispatch.kubernetes.pojo.EnvironmentStatusRsp
+import com.tencent.devops.remotedev.pojo.image.ListVmImagesResp
+import com.tencent.devops.remotedev.pojo.image.StandardVmImage
 import com.tencent.devops.dispatch.kubernetes.pojo.remotedev.EnvironmentResourceData
 import com.tencent.devops.dispatch.kubernetes.pojo.remotedev.ResourceVmReq
 import com.tencent.devops.dispatch.kubernetes.pojo.remotedev.ResourceVmResp
@@ -686,6 +688,51 @@ class WorkspaceStartCloudClient @Autowired constructor(
                 errorCode = ErrorCodeEnum.LIST_CGS_ERROR.errorCode,
                 formatErrorMessage = ErrorCodeEnum.LIST_CGS_ERROR.formatErrorMessage,
                 errorMessage = " 获取listcgs接口超时, url: $url"
+            )
+        }
+    }
+
+    // 获取基础镜像列表
+    fun getVmStandardImages(): List<StandardVmImage>? {
+        val url = "$bcsCloudUrl/api/v1/remotedevenv/list/image"
+        val body = JsonUtil.toJson("", false)
+        val request = Request.Builder()
+            .url(url)
+            .headers(makeBcsHeaders().toHeaders())
+            .post(body.toRequestBody("application/json; charset=utf-8".toMediaTypeOrNull()))
+            .build()
+
+        try {
+            OkhttpUtils.doHttp(request).use { response ->
+                val responseContent = response.body!!.string()
+                if (!response.isSuccessful) {
+                    throw BuildFailureException(
+                        ErrorCodeEnum.RESOURCE_VM_ERROR.errorType,
+                        ErrorCodeEnum.RESOURCE_VM_ERROR.errorCode,
+                        ErrorCodeEnum.RESOURCE_VM_ERROR.formatErrorMessage,
+                        "${response.code}"
+                    )
+                }
+                logger.debug("list vm image body: $body response: $responseContent")
+                val resp: ListVmImagesResp = jacksonObjectMapper().readValue(responseContent)
+                if (OK == resp.code) {
+                    return resp.data
+                } else {
+                    throw BuildFailureException(
+                        ErrorCodeEnum.LIST_IMAGE_INTERFACE_ERROR.errorType,
+                        ErrorCodeEnum.LIST_IMAGE_INTERFACE_ERROR.errorCode,
+                        ErrorCodeEnum.LIST_IMAGE_INTERFACE_ERROR.formatErrorMessage,
+                        "${resp.code}-${resp.message}"
+                    )
+                }
+            }
+        } catch (e: SocketTimeoutException) {
+            logger.error("get resource vm SocketTimeoutException.", e)
+            throw BuildFailureException(
+                errorType = ErrorCodeEnum.LIST_IMAGE_INTERFACE_ERROR.errorType,
+                errorCode = ErrorCodeEnum.LIST_IMAGE_INTERFACE_ERROR.errorCode,
+                formatErrorMessage = ErrorCodeEnum.LIST_IMAGE_INTERFACE_ERROR.formatErrorMessage,
+                errorMessage = " 接口超时, url: $url"
             )
         }
     }
