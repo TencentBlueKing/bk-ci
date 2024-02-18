@@ -194,10 +194,9 @@ class PipelineRecordModelService @Autowired constructor(
             val containerBaseModelMap = containerBaseMap.deepCopy<MutableMap<String, Any>>()
             handleContainerRecordTask(
                 stageRecordTasks = stageRecordTasks,
-                containerId = containerId,
+                buildRecordContainer = stageRecordContainer,
                 containerVarMap = containerVarMap,
                 containerBaseMap = containerBaseModelMap,
-                containerExecuteCount = stageRecordContainer.executeCount
             )
             val matrixGroupFlag = stageRecordContainer.matrixGroupFlag
             if (matrixGroupFlag == true) {
@@ -216,10 +215,9 @@ class PipelineRecordModelService @Autowired constructor(
                         matrixRecordContainer.containPostTaskFlag ?: false
                     handleContainerRecordTask(
                         stageRecordTasks = stageRecordTasks,
-                        containerId = matrixContainerId,
+                        buildRecordContainer = matrixRecordContainer,
                         containerVarMap = matrixContainerVarMap,
                         containerBaseMap = containerBaseModelMap,
-                        containerExecuteCount = stageRecordContainer.executeCount,
                         matrixTaskFlag = true
                     )
                     containerBaseModelMap.remove(VMBuildContainer::matrixControlOption.name)
@@ -237,21 +235,21 @@ class PipelineRecordModelService @Autowired constructor(
         stageVarMap[Stage::containers.name] = containers
     }
 
-    @Suppress("LongParameterList")
     private fun handleContainerRecordTask(
         stageRecordTasks: List<BuildRecordTask>,
-        containerId: String,
+        buildRecordContainer: BuildRecordContainer,
         containerVarMap: MutableMap<String, Any>,
         containerBaseMap: Map<String, Any>,
-        containerExecuteCount: Int,
         matrixTaskFlag: Boolean = false
     ) {
+        val containerId = buildRecordContainer.containerId
         // 过滤出job下的task变量数据
         val containerRecordTasks = stageRecordTasks.filter { it.containerId == containerId }.sortedBy { it.taskSeq }
         val tasks = mutableListOf<Map<String, Any>>()
         val taskBaseMaps = containerBaseMap[Container::elements.name] as List<Map<String, Any>>
         // 如果job下的task都被跳过，则使用流水线model的element节点生成task模型
-        if (containerRecordTasks.isEmpty()) {
+        val containerExecuteCount = buildRecordContainer.executeCount
+        if (buildRecordContainer.matrixGroupFlag != true && containerRecordTasks.isEmpty()) {
             taskBaseMaps.forEach { taskBaseMap ->
                 val taskVarMap = generateSkipTaskVarModel(matrixTaskFlag, taskBaseMap, containerExecuteCount)
                 tasks.add(taskVarMap)
@@ -275,7 +273,7 @@ class PipelineRecordModelService @Autowired constructor(
             }
             var taskVarMap = containerRecordTask.taskVar
             val taskId = containerRecordTask.taskId
-            if (taskId == lastElementTaskId) {
+            if (matrixTaskFlag || taskId == lastElementTaskId) {
                 supplementSkipTaskFlag = false
             }
             taskVarMap[Element::id.name] = taskId
