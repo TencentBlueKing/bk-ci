@@ -121,6 +121,14 @@ class OpService @Autowired constructor(
      */
     private fun queryAllGrayProjs(page: Long?, pageSize: Long?): OpOperateResult {
         val grayProjNumber = grayProjsTotalNum()
+        if (0L == grayProjNumber) {
+            return OpOperateResult(
+                code = KEY_NOT_EXIST_CODE,
+                result = KEY_NOT_EXIST_RESULT,
+                msg = KEY_NOT_EXIST_MSG,
+                grayProjNumber = grayProjNumber
+            )
+        }
         var currentPage = page ?: DEFAULT_PAGE_VALUE
         if (currentPage <= 0L && currentPage != DEFAULT_PAGE_VALUE) {
             return OpOperateResult(
