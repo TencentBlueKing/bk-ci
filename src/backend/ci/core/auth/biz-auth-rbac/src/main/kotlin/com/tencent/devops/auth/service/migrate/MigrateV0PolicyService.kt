@@ -478,6 +478,7 @@ class MigrateV0PolicyService constructor(
                 }
             ).results.firstOrNull { it.name == groupName }?.id.toString()
             groupIdOfPipelineActionGroupList.forEach {
+                logger.info("add subject template to group of pipeline:$it|$subjectTemplateId")
                 addGroupMember(
                     groupId = it.toInt(),
                     defaultGroup = true,

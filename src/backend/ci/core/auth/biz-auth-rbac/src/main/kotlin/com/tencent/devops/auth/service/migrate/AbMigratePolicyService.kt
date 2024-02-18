@@ -212,7 +212,7 @@ abstract class AbMigratePolicyService(
                 result = result
             )
             logger.info(
-                "migrate group|${result.projectId}|${result.subject.name}|${
+                "migrate group|${result.projectId}|${result.subject.name}|$groupIdListOfPipelineActionGroup|${
                     JsonUtil.toJson(
                         rbacAuthorizationScopeList,
                         false
