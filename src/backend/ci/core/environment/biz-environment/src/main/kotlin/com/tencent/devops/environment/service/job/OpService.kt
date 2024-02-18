@@ -130,24 +130,28 @@ class OpService @Autowired constructor(
             )
         }
         var currentPage = page ?: DEFAULT_PAGE_VALUE
-        if (currentPage <= 0L && currentPage != DEFAULT_PAGE_VALUE) {
-            return OpOperateResult(
-                code = INVALID_PAGE_CODE,
-                result = INVALID_PAGE_RESULT,
-                msg = INVALID_PAGE_MSG,
-                grayProjNumber = grayProjNumber
-            )
+        var currentPageSize = pageSize ?: grayProjNumber
+        if (DEFAULT_PAGE_VALUE == page) {
+            currentPage = 1
+            currentPageSize = grayProjNumber
+        } else {
+            if (currentPage <= 0L) {
+                return OpOperateResult(
+                    code = INVALID_PAGE_CODE,
+                    result = INVALID_PAGE_RESULT,
+                    msg = INVALID_PAGE_MSG,
+                    grayProjNumber = grayProjNumber
+                )
+            }
+            if (currentPageSize <= 0L) {
+                return OpOperateResult(
+                    code = INVALID_PAGE_SIZE_CODE,
+                    result = INVALID_PAGE_SIZE_RESULT,
+                    msg = INVALID_PAGE_SIZE_MSG,
+                    grayProjNumber = grayProjNumber
+                )
+            }
         }
-        val currentPageSize: Long? = if (DEFAULT_PAGE_VALUE == currentPage) grayProjNumber else pageSize
-        if (null == currentPageSize || currentPageSize <= 0L) {
-            return OpOperateResult(
-                code = INVALID_PAGE_SIZE_CODE,
-                result = INVALID_PAGE_SIZE_RESULT,
-                msg = INVALID_PAGE_SIZE_MSG,
-                grayProjNumber = grayProjNumber
-            )
-        }
-        currentPage = abs(currentPage)
         val allGrayProjs = if (currentPageSize <= DEFAULT_TRAVERSE_SIZE) {
             redisOperation.zrevrange(
                 OP_KEY, (currentPage - 1) * currentPageSize, currentPage * currentPageSize - 1
