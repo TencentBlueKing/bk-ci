@@ -159,56 +159,12 @@ class OpService @Autowired constructor(
         val msg: String
         val allGrayProjs = if (keyword.isNullOrBlank()) {
             msg = SUCCESSFUL_QUERY_ALL_MSG
-            if (currentPageSize <= DEFAULT_TRAVERSE_SIZE) {
-                redisOperation.zrevrange(
-                    OP_KEY, (currentPage - 1) * currentPageSize, currentPage * currentPageSize - 1
-                )
-            } else {
-                val innerPageNum = (currentPageSize / DEFAULT_TRAVERSE_SIZE).toInt() + 1
-                val allGrayProjsSet: MutableSet<String> = mutableSetOf()
-                for (i in 1..innerPageNum) {
-                    redisOperation.zrevrange(
-                        OP_KEY,
-                        (currentPage - 1) * currentPageSize + (i - 1) * DEFAULT_TRAVERSE_SIZE,
-                        (currentPage - 1) * currentPageSize + i * DEFAULT_TRAVERSE_SIZE - 1
-                    )?.let {
-                        allGrayProjsSet.addAll(
-                            it.toCollection(ArrayList())
-                        )
-                    }
-                }
-                allGrayProjsSet
-            }
+            getGrayProjsByPage(currentPage, currentPageSize)
         } else {
-            val grayProjsList: MutableList<String> = mutableListOf()
-            val allPage = (grayProjNumber / DEFAULT_TRAVERSE_SIZE).toInt() + 1
-            for (i in 1..allPage) {
-                redisOperation.zrevrange(
-                    OP_KEY, ((i - 1) * DEFAULT_TRAVERSE_SIZE).toLong(), (i * DEFAULT_TRAVERSE_SIZE - 1).toLong()
-                )?.filter { keyword in it }?.let {
-                    grayProjsList.addAll(it)
-                }
-                if (grayProjsList.size >= currentPage * currentPageSize - 1) {
-                    break
-                }
-            }
-            if ((currentPage - 1) * currentPageSize > grayProjsList.size - 1) {
-                msg = String.format(SUCCESSFUL_FUZZY_QUERY_MSG, EMPTY_GRAY_PROJS_NUM)
-                emptySet()
-            } else {
-                val toIndex = if (currentPage * currentPageSize > grayProjsList.size) {
-                    grayProjsList.size
-                } else {
-                    currentPage * currentPageSize
-                }
-                val grayProjsInCurPage = grayProjsList.subList(
-                    ((currentPage - 1) * currentPageSize).toInt(), toIndex.toInt()
-                ).toSet()
-                msg = String.format(SUCCESSFUL_FUZZY_QUERY_MSG, grayProjsInCurPage.size)
-                grayProjsInCurPage
-            }
+            val fuzzyQueryGrayProjs = fuzzyQueryGrayProjsByPage(currentPage, currentPageSize, keyword)
+            msg = String.format(SUCCESSFUL_FUZZY_QUERY_MSG, fuzzyQueryGrayProjs?.size ?: 0)
+            fuzzyQueryGrayProjs
         }
-
         return OpOperateResult(
             code = SUCCESSFUL_CODE,
             result = SUCCESSFUL_RESULT,
@@ -216,6 +172,59 @@ class OpService @Autowired constructor(
             grayProjNumber = grayProjNumber,
             grayProjList = allGrayProjs
         )
+    }
+
+    private fun getGrayProjsByPage(currentPage: Long, currentPageSize: Long): Set<String>? {
+        return if (currentPageSize <= DEFAULT_TRAVERSE_SIZE) {
+            redisOperation.zrevrange(
+                OP_KEY, (currentPage - 1) * currentPageSize, currentPage * currentPageSize - 1
+            )
+        } else {
+            val innerPageNum = (currentPageSize / DEFAULT_TRAVERSE_SIZE).toInt() + 1
+            val allGrayProjsSet: MutableSet<String> = mutableSetOf()
+            for (i in 1..innerPageNum) {
+                redisOperation.zrevrange(
+                    OP_KEY,
+                    (currentPage - 1) * currentPageSize + (i - 1) * DEFAULT_TRAVERSE_SIZE,
+                    (currentPage - 1) * currentPageSize + i * DEFAULT_TRAVERSE_SIZE - 1
+                )?.let {
+                    allGrayProjsSet.addAll(it)
+                }
+            }
+            allGrayProjsSet
+        }
+    }
+
+    private fun fuzzyQueryGrayProjsByPage(
+        currentPage: Long,
+        currentPageSize: Long,
+        keyword: String
+    ): Set<String>? {
+        val grayProjsList: MutableList<String> = mutableListOf()
+        val allPage = (grayProjsTotalNum() / DEFAULT_TRAVERSE_SIZE).toInt() + 1
+        for (i in 1..allPage) {
+            redisOperation.zrevrange(
+                OP_KEY, ((i - 1) * DEFAULT_TRAVERSE_SIZE).toLong(), (i * DEFAULT_TRAVERSE_SIZE - 1).toLong()
+            )?.filter { keyword in it }?.let {
+                grayProjsList.addAll(it)
+            }
+            if (grayProjsList.size >= currentPage * currentPageSize - 1) {
+                break
+            }
+        }
+        return if ((currentPage - 1) * currentPageSize > grayProjsList.size - 1) {
+            emptySet()
+        } else {
+            val toIndex = if (currentPage * currentPageSize > grayProjsList.size) {
+                grayProjsList.size
+            } else {
+                currentPage * currentPageSize
+            }
+            val grayProjsInCurPage = grayProjsList.subList(
+                ((currentPage - 1) * currentPageSize).toInt(), toIndex.toInt()
+            ).toSet()
+            grayProjsInCurPage
+        }
     }
 
     /**
