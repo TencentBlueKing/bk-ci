@@ -161,7 +161,7 @@ class ProjectDao {
                 .let { if (bdId == null) it else it.and(BG_ID.eq(bdId)) }
                 .let { if (creator == null) it else it.and(CREATOR.eq(creator)) }
                 .let { if (excludedProjectCodes == null) it else it.and(ENGLISH_NAME.notIn(excludedProjectCodes)) }
-                .let { if (projectCodes == null) it else it.and(ENGLISH_NAME.`in`(projectCodes))}
+                .let { if (projectCodes == null) it else it.and(ENGLISH_NAME.`in`(projectCodes)) }
                 .let {
                     when (isRelatedProduct) {
                         null -> it
