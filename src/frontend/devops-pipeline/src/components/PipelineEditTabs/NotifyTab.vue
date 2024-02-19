@@ -37,7 +37,7 @@
                         </template>
                         <div class="item-info" v-if="item.wechatGroupFlag && item.wechatGroup && item.types && item.types.includes('WEWORK')">
                             <div class="info-label">
-                                {{$t('wechatGroupID')}}
+                                {{$t('weChatGroupID')}}
                             </div>
                             <div class="info-content">
                                 {{item.wechatGroup}}
