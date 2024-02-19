@@ -426,7 +426,7 @@ class DispatchVMStartupTaskAtom @Autowired constructor(
                 // 通过获取task param一个固定的参数，重新发送启动请求
                 val retryThirdAgentEnv = task.taskParams["RETRY_THIRD_AGENT_ENV"]?.toString()
                 if (!retryThirdAgentEnv.isNullOrBlank()) {
-                    task.taskParams["RETRY_THIRD_AGENT_ENV"] = ""
+                    task.taskParams.remove("RETRY_THIRD_AGENT_ENV")
                     pipelineTaskService.updateTaskParam(
                         transactionContext = null,
                         projectId = task.projectId,
