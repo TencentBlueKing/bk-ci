@@ -53,6 +53,8 @@ import org.springframework.core.Ordered
 @AutoConfigureOrder(Ordered.LOWEST_PRECEDENCE)
 class DispatchKubernetesMQConfiguration @Autowired constructor() {
 
+    // TODO #7443 改为SCS新写法
+
     @Value("\${dispatch.demoteQueue.concurrency:2}")
     private val demoteQueueConcurrency: Int = 2
 
