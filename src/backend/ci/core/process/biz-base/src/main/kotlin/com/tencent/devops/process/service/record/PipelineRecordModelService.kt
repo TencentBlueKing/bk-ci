@@ -196,7 +196,7 @@ class PipelineRecordModelService @Autowired constructor(
                 stageRecordTasks = stageRecordTasks,
                 buildRecordContainer = stageRecordContainer,
                 containerVarMap = containerVarMap,
-                containerBaseMap = containerBaseModelMap,
+                containerBaseMap = containerBaseModelMap
             )
             val matrixGroupFlag = stageRecordContainer.matrixGroupFlag
             if (matrixGroupFlag == true) {
