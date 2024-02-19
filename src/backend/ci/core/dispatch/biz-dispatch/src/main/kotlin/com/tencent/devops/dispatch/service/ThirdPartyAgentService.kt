@@ -41,8 +41,10 @@ import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.api.util.timestamp
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.dispatch.sdk.pojo.DispatchMessage
+import com.tencent.devops.common.notify.enums.NotifyType
 import com.tencent.devops.common.pipeline.type.agent.ThirdPartyAgentDockerInfoDispatch
 import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.common.service.utils.HomeHostUtil
 import com.tencent.devops.dispatch.dao.ThirdPartyAgentBuildDao
 import com.tencent.devops.dispatch.pojo.enums.PipelineTaskStatus
 import com.tencent.devops.dispatch.pojo.thirdPartyAgent.AgentBuildInfo
@@ -59,11 +61,14 @@ import com.tencent.devops.environment.api.thirdPartyAgent.ServiceThirdPartyAgent
 import com.tencent.devops.environment.pojo.thirdPartyAgent.ThirdPartyAgent
 import com.tencent.devops.environment.pojo.thirdPartyAgent.ThirdPartyAgentUpgradeByVersionInfo
 import com.tencent.devops.model.dispatch.tables.records.TDispatchThirdpartyAgentBuildRecord
+import com.tencent.devops.notify.api.service.ServiceNotifyMessageTemplateResource
+import com.tencent.devops.notify.pojo.SendNotifyMessageTemplateRequest
 import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.process.pojo.mq.PipelineAgentShutdownEvent
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.dao.DeadlockLoserDataAccessException
 import org.springframework.stereotype.Service
 import java.util.concurrent.CancellationException
@@ -84,13 +89,17 @@ class ThirdPartyAgentService @Autowired constructor(
     private val thirdPartyAgentBuildDao: ThirdPartyAgentBuildDao,
     private val thirdPartyAgentDockerService: ThirdPartyAgentDockerService
 ) {
+    @Value("\${thirdagent.workerErrorTemplate:#{null}}")
+    val workerErrorRtxTemplate: String? = null
 
     fun queueBuild(
         agent: ThirdPartyAgent,
         thirdPartyAgentWorkspace: String,
         dispatchMessage: DispatchMessage,
         retryCount: Int = 0,
-        dockerInfo: ThirdPartyAgentDockerInfoDispatch?
+        dockerInfo: ThirdPartyAgentDockerInfoDispatch?,
+        envId: Long?,
+        ignoreEnvAgentIds: Set<String>?
     ) {
         with(dispatchMessage.event) {
             try {
@@ -109,12 +118,22 @@ class ThirdPartyAgentService @Autowired constructor(
                     nodeId = HashUtil.decodeIdToLong(agent.nodeId ?: ""),
                     dockerInfo = dockerInfo,
                     executeCount = executeCount,
-                    containerHashId = containerHashId
+                    containerHashId = containerHashId,
+                    envId = envId,
+                    ignoreEnvAgentIds = ignoreEnvAgentIds
                 )
             } catch (e: DeadlockLoserDataAccessException) {
                 logger.warn("Fail to add the third party agent build of ($buildId|$vmSeqId|${agent.agentId}")
                 if (retryCount <= QUEUE_RETRY_COUNT) {
-                    queueBuild(agent, thirdPartyAgentWorkspace, dispatchMessage, retryCount + 1, dockerInfo)
+                    queueBuild(
+                        agent = agent,
+                        thirdPartyAgentWorkspace = thirdPartyAgentWorkspace,
+                        dispatchMessage = dispatchMessage,
+                        retryCount = retryCount + 1,
+                        dockerInfo = dockerInfo,
+                        envId = envId,
+                        ignoreEnvAgentIds = ignoreEnvAgentIds
+                    )
                 } else {
                     throw OperationException("Fail to add the third party agent build")
                 }
@@ -223,9 +242,9 @@ class ThirdPartyAgentService @Autowired constructor(
                 // 只有凭据ID的参与计算
                 if (dockerInfo != null) {
                     if ((
-                            dockerInfo.credential?.user.isNullOrBlank() &&
-                                dockerInfo.credential?.password.isNullOrBlank()
-                            ) &&
+                        dockerInfo.credential?.user.isNullOrBlank() &&
+                            dockerInfo.credential?.password.isNullOrBlank()
+                        ) &&
                         !(dockerInfo.credential?.credentialId.isNullOrBlank())
                     ) {
                         val (userName, password) = try {
@@ -463,9 +482,9 @@ class ThirdPartyAgentService @Autowired constructor(
         // 有些并发情况可能会导致在finish时AgentBuild状态没有被置为Done在这里改一下
         val buildRecord = thirdPartyAgentBuildDao.get(dslContext, buildInfo.buildId, buildInfo.vmSeqId)
         if (buildRecord != null && (
-                buildRecord.status != PipelineTaskStatus.DONE.status ||
-                    buildRecord.status != PipelineTaskStatus.FAILURE.status
-                )
+            buildRecord.status != PipelineTaskStatus.DONE.status ||
+                buildRecord.status != PipelineTaskStatus.FAILURE.status
+            )
         ) {
             thirdPartyAgentBuildDao.updateStatus(
                 dslContext = dslContext,
@@ -478,7 +497,22 @@ class ThirdPartyAgentService @Autowired constructor(
             )
         }
 
-        client.get(ServiceBuildResource::class).workerBuildFinish(
+        // #9910 环境构建时遇到启动错误时调度到一个新的Agent
+        val ignoreAgentIds = if (buildRecord?.envId != null &&
+            !buildInfo.success &&
+            buildInfo.error != null &&
+            buildInfo.error?.errorCode == 2128040
+        ) {
+            val ignoreIds = mutableSetOf(agentResult.data!!.agentId)
+            if (buildRecord.ignoreEnvAgentIds != null) {
+                ignoreIds.addAll(JsonUtil.to(buildRecord.ignoreEnvAgentIds.data()))
+            }
+            ignoreIds
+        } else {
+            null
+        }
+
+        val starter = client.get(ServiceBuildResource::class).workerBuildFinish(
             projectId = buildInfo.projectId,
             pipelineId = if (buildInfo.pipelineId.isNullOrBlank()) "dummyPipelineId" else buildInfo.pipelineId!!,
             buildId = buildInfo.buildId,
@@ -488,7 +522,45 @@ class ThirdPartyAgentService @Autowired constructor(
             simpleResult = SimpleResult(
                 success = buildInfo.success,
                 message = buildInfo.message,
-                error = buildInfo.error
+                error = buildInfo.error,
+                // #9910 环境构建时遇到启动错误时调度到一个新的Agent
+                ignoreAgentIds = ignoreAgentIds
+            )
+        ).data
+
+        // #9910 构建机worker失败时发送通知
+        if (workerErrorRtxTemplate.isNullOrBlank() ||
+            buildRecord == null ||
+            buildInfo.success ||
+            buildInfo.error == null ||
+            buildInfo.error?.errorCode != 2128040
+        ) {
+            return
+        }
+        // 构建需要使用构建的项目id跳转，防止是共享agent，agent链接使用上报的项目Id即可
+        val buildUrl = "${HomeHostUtil.innerServerHost()}/console/pipeline/${buildRecord.projectId}/" +
+                "${buildRecord.pipelineId}/detail/${buildRecord.buildId}/executeDetail"
+        val agentUrl = "${HomeHostUtil.innerServerHost()}/console/environment/$projectId/" +
+                "nodeDetail/${agentResult.data!!.nodeId}"
+        client.get(ServiceNotifyMessageTemplateResource::class).sendNotifyMessageByTemplate(
+            SendNotifyMessageTemplateRequest(
+                templateCode = workerErrorRtxTemplate!!,
+                notifyType = mutableSetOf(NotifyType.RTX.name),
+                titleParams = mapOf(
+                    "agentId" to agentResult.data!!.agentId,
+                    "projectCode" to buildRecord.projectId
+                ),
+                bodyParams = mapOf(
+                    "userId" to (starter ?: ""),
+                    "buildUrl" to buildUrl,
+                    "agentUrl" to agentUrl,
+                    "agentOwner" to agentResult.data!!.createUser
+                ),
+                receivers = if (!starter.isNullOrBlank()) {
+                    mutableSetOf(starter, agentResult.data!!.createUser)
+                } else {
+                    mutableSetOf(agentResult.data!!.createUser)
+                }
             )
         )
     }
