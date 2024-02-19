@@ -271,25 +271,18 @@ class PipelineRecordModelService @Autowired constructor(
                 tasks.add(taskVarMap)
                 lastContainerRecordSeq++
             }
-            var taskVarMap = containerRecordTask.taskVar
             val taskId = containerRecordTask.taskId
             if (matrixTaskFlag || taskId == lastElementTaskId) {
                 supplementSkipTaskFlag = false
             }
-            taskVarMap[Element::id.name] = taskId
-            taskVarMap[Element::status.name] = containerRecordTask.status ?: ""
-            taskVarMap[Element::executeCount.name] = containerRecordTask.executeCount
-            val elementPostInfo = containerRecordTask.elementPostInfo
-            if (elementPostInfo != null) {
-                // 生成post类型task的变量模型
-                taskVarMap = doElementPostInfoBus(elementPostInfo, taskVarMap, containerBaseMap)
-            }
-            if (matrixTaskFlag && elementPostInfo == null) {
-                // 生成矩阵task的变量模型
-                val taskBaseMap = taskBaseMaps[containerRecordTask.taskSeq - 2]
-                taskVarMap = ModelUtils.generateBuildModelDetail(taskBaseMap.deepCopy(), taskVarMap)
-            }
             lastContainerRecordSeq = containerRecordTask.taskSeq
+            val taskVarMap = generateTaskVarMap(
+                containerRecordTask = containerRecordTask,
+                taskId = taskId,
+                containerBaseMap = containerBaseMap,
+                matrixTaskFlag = matrixTaskFlag,
+                taskBaseMaps = taskBaseMaps
+            )
             tasks.add(taskVarMap)
         }
         // 判断当前job执行的task任务后是否还有跳过的task任务，有则继续补充跳过的task对象
@@ -306,6 +299,30 @@ class PipelineRecordModelService @Autowired constructor(
             // 将转换后的task变量数据放入job中
             containerVarMap[Container::elements.name] = tasks
         }
+    }
+
+    private fun generateTaskVarMap(
+        containerRecordTask: BuildRecordTask,
+        taskId: String,
+        containerBaseMap: Map<String, Any>,
+        matrixTaskFlag: Boolean,
+        taskBaseMaps: List<Map<String, Any>>
+    ): MutableMap<String, Any> {
+        var taskVarMap = containerRecordTask.taskVar
+        taskVarMap[Element::id.name] = taskId
+        taskVarMap[Element::status.name] = containerRecordTask.status ?: ""
+        taskVarMap[Element::executeCount.name] = containerRecordTask.executeCount
+        val elementPostInfo = containerRecordTask.elementPostInfo
+        if (elementPostInfo != null) {
+            // 生成post类型task的变量模型
+            taskVarMap = doElementPostInfoBus(elementPostInfo, taskVarMap, containerBaseMap)
+        }
+        if (matrixTaskFlag && elementPostInfo == null) {
+            // 生成矩阵task的变量模型
+            val taskBaseMap = taskBaseMaps[containerRecordTask.taskSeq - 2]
+            taskVarMap = ModelUtils.generateBuildModelDetail(taskBaseMap.deepCopy(), taskVarMap)
+        }
+        return taskVarMap
     }
 
     private fun doSupplementSkipTaskBus(
