@@ -52,10 +52,10 @@ class OpService @Autowired constructor(
 
         const val SUCCESSFUL_CODE = 0
         const val SUCCESSFUL_RESULT = true
-        const val SUCCESSFUL_SADD_MSG = "Operation executed successfully. %d new projects have been added."
-        const val SUCCESSFUL_SREM_MSG = "Operation executed successfully. %d new projects have been removed."
-        const val SUCCESSFUL_SMEMBERS_MSG = "Query all gray projects successfully."
-        const val SUCCESSFUL_SISMEMBER_MSG = "Query gray project(s) successfully."
+        const val SUCCESSFUL_ZADD_MSG = "Operation executed successfully. %d new projects have been added."
+        const val SUCCESSFUL_ZREM_MSG = "Operation executed successfully. %d new projects have been removed."
+        const val SUCCESSFUL_QUERY_ALL_MSG = "Query all gray projects successfully."
+        const val SUCCESSFUL_ZSCORE_MSG = "Query gray project(s) successfully."
         const val SUCCESSFUL_DELETE_KEY_MSG = "Clear all gray projects successfully."
         const val SUCCESSFUL_FUZZY_QUERY_MSG = "Fuzzy query successfully. %d gray project(s) in current page."
 
@@ -158,7 +158,7 @@ class OpService @Autowired constructor(
         }
         val msg: String
         val allGrayProjs = if (keyword.isNullOrBlank()) {
-            msg = SUCCESSFUL_SMEMBERS_MSG
+            msg = SUCCESSFUL_QUERY_ALL_MSG
             if (currentPageSize <= DEFAULT_TRAVERSE_SIZE) {
                 redisOperation.zrevrange(
                     OP_KEY, (currentPage - 1) * currentPageSize, currentPage * currentPageSize - 1
@@ -232,7 +232,7 @@ class OpService @Autowired constructor(
                 OpOperateResult(
                     code = SUCCESSFUL_CODE,
                     result = SUCCESSFUL_RESULT,
-                    msg = SUCCESSFUL_SISMEMBER_MSG,
+                    msg = SUCCESSFUL_ZSCORE_MSG,
                     grayProjNumber = grayProjsTotalNum(),
                     projGrayStatus = projsGrayStatus.map {
                         ProjectOpInfo(englishName = it.key, projGrayStatus = null != it.value)
@@ -264,7 +264,7 @@ class OpService @Autowired constructor(
                     OpOperateResult(
                         code = SUCCESSFUL_CODE,
                         result = SUCCESSFUL_RESULT,
-                        msg = String.format(SUCCESSFUL_SADD_MSG, addProjsNumber),
+                        msg = String.format(SUCCESSFUL_ZADD_MSG, addProjsNumber),
                         grayProjNumber = grayProjsTotalNum()
                     )
                 } else {
@@ -299,7 +299,7 @@ class OpService @Autowired constructor(
                     OpOperateResult(
                         code = SUCCESSFUL_CODE,
                         result = SUCCESSFUL_RESULT,
-                        msg = String.format(SUCCESSFUL_SREM_MSG, removeProjsNumber),
+                        msg = String.format(SUCCESSFUL_ZREM_MSG, removeProjsNumber),
                         grayProjNumber = grayProjsTotalNum()
                     )
                 } else if (0L == removeProjsNumber) {
