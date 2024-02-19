@@ -260,7 +260,7 @@ class PipelineRecordModelService @Autowired constructor(
         val lastElementTaskId = taskBaseMaps[taskBaseMaps.size - 1][Element::id.name].toString()
         var supplementSkipTaskFlag = true
         var lastContainerRecordSeq = 1
-        containerRecordTasks.forEachIndexed { index, containerRecordTask ->
+        containerRecordTasks.forEach { containerRecordTask ->
             while (containerRecordTask.taskSeq - lastContainerRecordSeq > 1) {
                 // 补充跳过的task对象
                 val taskBaseMap = taskBaseMaps[lastContainerRecordSeq - 1]
@@ -286,7 +286,7 @@ class PipelineRecordModelService @Autowired constructor(
             }
             if (matrixTaskFlag && elementPostInfo == null) {
                 // 生成矩阵task的变量模型
-                val taskBaseMap = taskBaseMaps[index]
+                val taskBaseMap = taskBaseMaps[containerRecordTask.taskSeq - 2]
                 taskVarMap = ModelUtils.generateBuildModelDetail(taskBaseMap.deepCopy(), taskVarMap)
             }
             lastContainerRecordSeq = containerRecordTask.taskSeq

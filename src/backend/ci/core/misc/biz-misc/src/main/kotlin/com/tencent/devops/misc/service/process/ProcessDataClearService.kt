@@ -124,12 +124,7 @@ class ProcessDataClearService @Autowired constructor(
             processDataClearDao.deleteBuildRecordPipelineByBuildId(context, projectId, buildId)
             processDataClearDao.deleteBuildRecordStageByBuildId(context, projectId, buildId)
             processDataClearDao.deleteBuildRecordContainerByBuildId(context, projectId, buildId)
-            processDataClearDao.deleteBuildRecordTaskByBuildId(
-                dslContext = context,
-                projectId = projectId,
-                buildId = buildId,
-                skipTaskDeleteFlag = true
-            )
+            processDataClearDao.deleteBuildRecordTaskByBuildId(context, projectId, buildId)
             // 添加删除记录，插入要实现幂等
             processDao.addBuildHisDataClear(
                 dslContext = context,
@@ -180,5 +175,22 @@ class ProcessDataClearService @Autowired constructor(
                 pipelineVersionLock.unlock()
             }
         }
+    }
+
+    /**
+     * 清除流水线被跳过的任务数据
+     * @param projectId 项目ID
+     * @param buildId 构建ID
+     */
+    fun clearSkipRecordTaskData(
+        projectId: String,
+        buildId: String
+    ) {
+        processDataClearDao.deleteBuildRecordTaskByBuildId(
+            dslContext = dslContext,
+            projectId = projectId,
+            buildId = buildId,
+            skipTaskDeleteFlag = true
+        )
     }
 }
