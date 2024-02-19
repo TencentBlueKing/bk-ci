@@ -27,111 +27,39 @@
 
 package com.tencent.devops.dispatch.docker.config
 
-import com.fasterxml.jackson.databind.ObjectMapper
-import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
-import com.tencent.devops.common.event.dispatcher.pipeline.mq.Tools
+import com.tencent.devops.common.event.annotation.EventConsumer
+import com.tencent.devops.common.stream.constants.StreamBinding
 import com.tencent.devops.dispatch.docker.listener.AgentLessListener
-import org.springframework.amqp.core.Binding
-import org.springframework.amqp.core.BindingBuilder
-import org.springframework.amqp.core.DirectExchange
-import org.springframework.amqp.core.Queue
-import org.springframework.amqp.rabbit.connection.ConnectionFactory
-import org.springframework.amqp.rabbit.core.RabbitAdmin
-import org.springframework.amqp.rabbit.listener.SimpleMessageListenerContainer
-import org.springframework.amqp.rabbit.listener.adapter.MessageListenerAdapter
-import org.springframework.amqp.support.converter.Jackson2JsonMessageConverter
+import com.tencent.devops.process.pojo.mq.PipelineBuildLessShutdownEvent
+import com.tencent.devops.process.pojo.mq.PipelineBuildLessStartupEvent
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
+import org.springframework.messaging.Message
+import java.util.function.Consumer
 
 @Configuration
 class AgentLessMQConfiguration @Autowired constructor() {
 
-    @Bean
-    fun rabbitAdmin(connectionFactory: ConnectionFactory): RabbitAdmin {
-        return RabbitAdmin(connectionFactory)
+    companion object {
+        const val STREAM_CONSUMER_GROUP = "dispatch-docker-service"
     }
 
-    @Bean
-    fun messageConverter(objectMapper: ObjectMapper) = Jackson2JsonMessageConverter(objectMapper)
-
-    /**
-     * 构建无编译构建机启动交换机
-     */
-    @Bean
-    fun agentLessDispatchExchange(): DirectExchange {
-        val directExchange = DirectExchange(MQ.EXCHANGE_BUILD_LESS_AGENT_LISTENER_DIRECT, true, false)
-        directExchange.isDelayed = true
-        return directExchange
+    // TODO #7443 补充服务MQ配置
+    @EventConsumer(StreamBinding.QUEUE_BUILD_LESS_AGENT_STARTUP_DISPATCH, STREAM_CONSUMER_GROUP)
+    fun agentLessDispatchStartListener(
+        @Autowired agentLessListener: AgentLessListener
+    ): Consumer<Message<PipelineBuildLessStartupEvent>> {
+        return Consumer { event: Message<PipelineBuildLessStartupEvent> ->
+            agentLessListener.listenAgentStartUpEvent(event.payload)
+        }
     }
 
-    @Bean
-    fun agentLessDispatchStartQueue() = Queue(MQ.QUEUE_BUILD_LESS_AGENT_STARTUP_DISPATCH)
-
-    @Bean
-    fun agentLessDispatchStartQueueBind(
-        @Autowired agentLessDispatchStartQueue: Queue,
-        @Autowired agentLessDispatchExchange: DirectExchange
-    ): Binding {
-        return BindingBuilder.bind(agentLessDispatchStartQueue).to(agentLessDispatchExchange)
-            .with(MQ.ROUTE_BUILD_LESS_AGENT_STARTUP_DISPATCH)
-    }
-
-    @Bean
-    fun agentLessDispatchStartListenerContainer(
-        @Autowired connectionFactory: ConnectionFactory,
-        @Autowired agentLessDispatchStartQueue: Queue,
-        @Autowired rabbitAdmin: RabbitAdmin,
-        @Autowired agentLessListener: AgentLessListener,
-        @Autowired messageConverter: Jackson2JsonMessageConverter
-    ): SimpleMessageListenerContainer {
-        val adapter = MessageListenerAdapter(agentLessListener, agentLessListener::listenAgentStartUpEvent.name)
-        adapter.setMessageConverter(messageConverter)
-        return Tools.createSimpleMessageListenerContainerByAdapter(
-            connectionFactory = connectionFactory,
-            queue = agentLessDispatchStartQueue,
-            rabbitAdmin = rabbitAdmin,
-            startConsumerMinInterval = 10000,
-            consecutiveActiveTrigger = 5,
-            concurrency = 50,
-            maxConcurrency = 100,
-            adapter = adapter,
-            prefetchCount = 1
-        )
-    }
-
-    @Bean
-    fun agentLessDispatchShutdownQueue() = Queue(MQ.QUEUE_BUILD_LESS_AGENT_SHUTDOWN_DISPATCH)
-
-    @Bean
-    fun agentLessDispatchShutdownQueueBind(
-        @Autowired agentLessDispatchShutdownQueue: Queue,
-        @Autowired agentLessDispatchExchange: DirectExchange
-    ): Binding {
-        return BindingBuilder.bind(agentLessDispatchShutdownQueue).to(agentLessDispatchExchange)
-            .with(MQ.ROUTE_BUILD_LESS_AGENT_SHUTDOWN_DISPATCH)
-    }
-
-    @Bean
-    fun agentLessDispatchShutdownListenerContainer(
-        @Autowired connectionFactory: ConnectionFactory,
-        @Autowired agentLessDispatchShutdownQueue: Queue,
-        @Autowired rabbitAdmin: RabbitAdmin,
-        @Autowired agentLessListener: AgentLessListener,
-        @Autowired messageConverter: Jackson2JsonMessageConverter
-    ): SimpleMessageListenerContainer {
-        val adapter = MessageListenerAdapter(agentLessListener, agentLessListener::listenAgentShutdownEvent.name)
-        adapter.setMessageConverter(messageConverter)
-        return Tools.createSimpleMessageListenerContainerByAdapter(
-            connectionFactory = connectionFactory,
-            queue = agentLessDispatchShutdownQueue,
-            rabbitAdmin = rabbitAdmin,
-            startConsumerMinInterval = 10000,
-            consecutiveActiveTrigger = 5,
-            concurrency = 50,
-            maxConcurrency = 100,
-            adapter = adapter,
-            prefetchCount = 1
-        )
+    @EventConsumer(StreamBinding.QUEUE_BUILD_LESS_AGENT_SHUTDOWN_DISPATCH, STREAM_CONSUMER_GROUP)
+    fun agentLessDispatchShutdownListener(
+        @Autowired agentLessListener: AgentLessListener
+    ): Consumer<Message<PipelineBuildLessShutdownEvent>> {
+        return Consumer { event: Message<PipelineBuildLessShutdownEvent> ->
+            agentLessListener.listenAgentShutdownEvent(event.payload)
+        }
     }
 }

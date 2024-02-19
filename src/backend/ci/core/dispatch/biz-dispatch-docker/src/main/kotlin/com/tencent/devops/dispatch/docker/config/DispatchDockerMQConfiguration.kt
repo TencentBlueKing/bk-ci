@@ -47,7 +47,6 @@ class DispatchDockerMQConfiguration @Autowired constructor() {
     }
 
     // TODO #7443 补充服务MQ配置
-
     @EventConsumer(StreamBinding.QUEUE_AGENT_STARTUP, STREAM_CONSUMER_GROUP)
     fun startDockerListener(
         @Autowired dockerVMListener: DockerVMListener

@@ -54,7 +54,7 @@ class MQConfiguration @Autowired constructor() {
         @Autowired streamBridge: StreamBridge
     ) = MQDispatcher(streamBridge)
 
-    @Bean(StreamBinding.BINDING_OPENAPI_LOG_EVENT_IN)
+    @Bean(StreamBinding.BINDING_OPENAPI_LOG_EVENT)
     fun openapiLogEventIn(
         @Autowired listenerService: MQListenerService
     ): Consumer<Message<ESEvent>> {

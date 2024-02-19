@@ -29,7 +29,6 @@ package com.tencent.devops.process.engine.init
 
 import com.tencent.devops.common.event.annotation.EventConsumer
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
-import com.tencent.devops.common.event.pojo.pipeline.PipelineArchiveEvent
 import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.stream.constants.StreamBinding

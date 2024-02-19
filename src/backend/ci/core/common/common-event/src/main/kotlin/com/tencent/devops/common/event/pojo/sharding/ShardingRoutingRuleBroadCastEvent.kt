@@ -37,4 +37,4 @@ data class ShardingRoutingRuleBroadCastEvent(
     val routingName: String,
     val routingRule: String? = null,
     val actionType: CrudEnum
-): IEvent()
+) : IEvent()

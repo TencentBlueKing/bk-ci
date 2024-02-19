@@ -27,12 +27,8 @@
 
 package com.tencent.devops.dispatch.configuration
 
-import com.tencent.devops.common.event.dispatcher.pipeline.mq.MeasureEventDispatcher
-import com.tencent.devops.common.web.mq.EXTEND_RABBIT_TEMPLATE_NAME
 import com.tencent.devops.dispatch.service.jobquota.JobQuotaInterface
 import com.tencent.devops.dispatch.service.jobquota.JobQuotaInterfaceImpl
-import org.springframework.amqp.rabbit.core.RabbitTemplate
-import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.boot.autoconfigure.AutoConfigureOrder
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication
@@ -46,13 +42,8 @@ import org.springframework.core.Ordered
 @AutoConfigureOrder(Ordered.LOWEST_PRECEDENCE)
 class DispatchBeanConfiguration {
 
+    // TODO #7443 增加ext实例配置
     @Bean
     @ConditionalOnMissingBean(JobQuotaInterface::class)
     fun jobQuotaInterface() = JobQuotaInterfaceImpl()
-
-    @Bean
-    fun measureEventDispatcher(
-        @Qualifier(EXTEND_RABBIT_TEMPLATE_NAME) extendRabbitTemplate: RabbitTemplate
-    ): MeasureEventDispatcher =
-        MeasureEventDispatcher(extendRabbitTemplate)
 }

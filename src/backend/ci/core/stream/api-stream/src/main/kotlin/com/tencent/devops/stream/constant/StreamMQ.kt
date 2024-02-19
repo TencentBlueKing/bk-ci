@@ -25,32 +25,29 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.engine.pojo.event
+package com.tencent.devops.stream.constant
 
-import com.tencent.devops.common.event.annotation.Event
-import com.tencent.devops.common.event.enums.ActionType
-import com.tencent.devops.common.event.pojo.pipeline.IPipelineEvent
-import com.tencent.devops.common.stream.constants.StreamBinding
+object StreamMQ {
 
-/**
- * 用于审核提醒（利用延迟消费）
- * @author royalhuang
- * @version 1.0
- */
-@Event(StreamBinding.EXCHANGE_PIPELINE_MONITOR_DIRECT)
-data class PipelineBuildReviewReminderEvent(
-    override val source: String,
-    override val projectId: String,
-    override val pipelineId: String,
-    override val userId: String,
-    override var actionType: ActionType = ActionType.REFRESH,
-    override var delayMills: Int = 0,
-    val reviewUsers: Set<String>,
-    val notifyTitle: String,
-    val notifyBody: String,
-    val weworkGroup: Set<String> = emptySet(),
-    val buildId: String,
-    val taskId: String,
-    val executeCount: Int,
-    val reminderCount: Int = 1
-) : IPipelineEvent(actionType, source, projectId, pipelineId, userId, delayMills)
+    // 接受流水线结束的广播事件
+    const val QUEUE_PIPELINE_BUILD_FINISH_STREAM = "q.engine.pipeline.build.stream"
+
+    // 接受stage审核和红线的广播事件
+    const val QUEUE_PIPELINE_BUILD_REVIEW_STREAM = "q.engine.pipeline.build.review.stream"
+    const val QUEUE_PIPELINE_BUILD_QUALITY_CHECK_STREAM = "q.engine.pipeline.build.quality.check.stream"
+
+    // Stream webhook请求
+    const val QUEUE_STREAM_REQUEST_EVENT = "q.stream.request.event"
+
+    // Stream Mr webhook 冲突检查
+    const val QUEUE_STREAM_MR_CONFLICT_CHECK_EVENT = "q.stream.mr.conflict.check.event"
+
+    // Stream 每条流水线的触发构建请求
+    const val QUEUE_STREAM_TRIGGER_PIPELINE_EVENT = "q.stream.trigger.pipeline.event"
+
+    // 定时变更广播exchange ====================================
+    const val ENGINE_STREAM_LISTENER_EXCHANGE = "e.engine.stream.listener"
+    const val EXCHANGE_STREAM_TIMER_CHANGE_FANOUT = "e.engine.stream.timer.change"
+
+    const val QUEUE_STREAM_TIMER = "q.engine.stream.timer"
+}

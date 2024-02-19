@@ -32,7 +32,6 @@ import com.tencent.devops.common.event.annotation.EventConsumer
 import com.tencent.devops.common.event.pojo.sharding.ShardingRoutingRuleBroadCastEvent
 import com.tencent.devops.common.stream.constants.StreamBinding
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.boot.autoconfigure.AutoConfigureAfter
 import org.springframework.boot.autoconfigure.AutoConfigureOrder
 import org.springframework.context.annotation.Configuration
 import org.springframework.core.Ordered

@@ -3,8 +3,6 @@ package com.tencent.devops.notify.blueking.service.inner
 import com.tencent.devops.common.api.util.JsonUtil.deepCopy
 import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.common.notify.utils.Configuration
-import com.tencent.devops.notify.EXCHANGE_NOTIFY
-import com.tencent.devops.notify.ROUTE_VOICE
 import com.tencent.devops.notify.blueking.utils.NotifyService
 import com.tencent.devops.notify.blueking.utils.NotifyService.Companion.VOICE_URL
 import com.tencent.devops.notify.dao.VoiceNotifyDao
@@ -13,7 +11,6 @@ import com.tencent.devops.notify.pojo.VoiceNotifyMessage
 import com.tencent.devops.notify.service.VoiceService
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
-import org.springframework.amqp.rabbit.core.RabbitTemplate
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.cloud.stream.function.StreamBridge
 

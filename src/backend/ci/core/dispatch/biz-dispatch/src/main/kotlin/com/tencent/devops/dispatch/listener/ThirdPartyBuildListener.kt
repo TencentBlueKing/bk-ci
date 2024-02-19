@@ -33,7 +33,6 @@ import com.tencent.devops.common.pipeline.type.DispatchType
 import com.tencent.devops.common.pipeline.type.agent.ThirdPartyAgentEnvDispatchType
 import com.tencent.devops.common.pipeline.type.agent.ThirdPartyAgentIDDispatchType
 import com.tencent.devops.common.pipeline.type.agent.ThirdPartyDevCloudDispatchType
-import com.tencent.devops.common.pipeline.type.docker.DockerDispatchType
 import com.tencent.devops.dispatch.exception.DispatchRetryMQException
 import com.tencent.devops.dispatch.pojo.enums.JobQuotaVmType
 import com.tencent.devops.dispatch.service.ThirdPartyAgentService

@@ -29,7 +29,7 @@ package com.tencent.devops.dispatch.configuration
 
 import com.tencent.devops.common.event.annotation.EventConsumer
 import com.tencent.devops.common.stream.constants.StreamBinding
-import com.tencent.devops.dispatch.listener.ThirdPartyAgentListener
+import com.tencent.devops.dispatch.listener.ThirdPartyBuildListener
 import com.tencent.devops.process.pojo.mq.PipelineAgentShutdownEvent
 import com.tencent.devops.process.pojo.mq.PipelineAgentStartupEvent
 import org.springframework.beans.factory.annotation.Autowired
@@ -46,19 +46,19 @@ class DispatchMQConfiguration @Autowired constructor() {
 
     @EventConsumer(StreamBinding.QUEUE_AGENT_STARTUP, STREAM_CONSUMER_GROUP)
     fun thirdAgentDispatchStartListener(
-        @Autowired thirdPartyAgentListener: ThirdPartyAgentListener
+        @Autowired thirdPartyAgentListener: ThirdPartyBuildListener
     ): Consumer<Message<PipelineAgentStartupEvent>> {
         return Consumer { event: Message<PipelineAgentStartupEvent> ->
-            thirdPartyAgentListener.listenAgentStartUpEvent(event.payload)
+            thirdPartyAgentListener.handleStartup(event.payload)
         }
     }
 
     @EventConsumer(StreamBinding.QUEUE_AGENT_SHUTDOWN, STREAM_CONSUMER_GROUP)
     fun thirdAgentDispatchShutdownListenerContainer(
-        @Autowired thirdPartyAgentListener: ThirdPartyAgentListener
+        @Autowired thirdPartyAgentListener: ThirdPartyBuildListener
     ): Consumer<Message<PipelineAgentShutdownEvent>> {
         return Consumer { event: Message<PipelineAgentShutdownEvent> ->
-            thirdPartyAgentListener.listenAgentShutdownEvent(event.payload)
+            thirdPartyAgentListener.handleShutdownMessage(event.payload)
         }
     }
 }

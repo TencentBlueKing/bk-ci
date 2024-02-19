@@ -37,6 +37,9 @@ object StreamBinding {
     // 日志构建状态事件
     const val BINDING_LOG_STATUS_EVENT_DESTINATION = "build.log.status.event"
 
+    // openapi审计日志预处理事件
+    const val BINDING_OPENAPI_LOG_EVENT = "openapi.log.event"
+
     // 核心交换机及队列 ====================================
     const val QUEUE_PIPELINE_UPDATE = "engine.pipeline.update"
 
