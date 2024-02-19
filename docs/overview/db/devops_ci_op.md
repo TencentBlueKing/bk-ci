@@ -4,24 +4,23 @@
 
 **文档版本：** 1.0.1
 
-**文档描述：** devops_ci_op的数据库文档
-
+**文档描述：** devops_ci_op 的数据库文档
 | 表名                  | 说明       |
 | :---: | :---: |
-| [dept_info](#dept_info) |  |
-| [project_info](#project_info) |  |
-| [role](#role) |  |
-| [role_permission](#role_permission) |  |
-| [schema_version](#schema_version) |  |
-| [spring_session](#spring_session) |  |
-| [SPRING_SESSION_ATTRIBUTES](#SPRING_SESSION_ATTRIBUTES) |  |
-| [t_user_token](#t_user_token) |  |
-| [url_action](#url_action) |  |
-| [user](#user) |  |
-| [user_permission](#user_permission) |  |
-| [user_role](#user_role) |  |
+| dept_info |  |
+| project_info |  |
+| role |  |
+| role_permission |  |
+| schema_version |  |
+| spring_session |  |
+| SPRING_SESSION_ATTRIBUTES |  |
+| t_user_token |  |
+| url_action |  |
+| user |  |
+| user_permission |  |
+| user_role |  |
 
-**表名：** <a id="dept_info">dept_info</a>
+**表名：** <a>dept_info</a>
 
 **说明：** 
 
@@ -37,7 +36,7 @@
 |  6   | parent_dept_id |   int   | 10 |   0    |    Y     |  N   |       |   |
 |  7   | UPDATE_TIME |   datetime   | 19 |   0    |    Y     |  N   |       | æ›´æ–°æ—¶é—´  |
 
-**表名：** <a id="project_info">project_info</a>
+**表名：** <a>project_info</a>
 
 **说明：** 
 
@@ -51,10 +50,10 @@
 |  4   | approver |   varchar   | 100 |   0    |    Y     |  N   |       | æ‰¹å‡†äºº  |
 |  5   | cc_app_id |   int   | 10 |   0    |    Y     |  N   |       | åº”ç”¨ID  |
 |  6   | created_at |   datetime   | 19 |   0    |    Y     |  N   |       | åˆ›å»ºæ—¶é—´  |
-|  7   | creator |   varchar   | 100 |   0    |    Y     |  N   |       | åˆ›å»ºè€…  |
-|  8   | creator_bg_name |   varchar   | 100 |   0    |    Y     |  N   |       | åˆ›å»ºè€…äº‹ä¸šç¾¤åç§°  |
-|  9   | creator_center_name |   varchar   | 100 |   0    |    Y     |  N   |       | åˆ›å»ºè€…ä¸­å¿ƒåå­—  |
-|  10   | creator_dept_name |   varchar   | 100 |   0    |    Y     |  N   |       | åˆ›å»ºè€…é¡¹ç›®æ‰€å±žäºŒçº§æœºæž„åç§°  |
+|  7   | creator |   varchar   | 100 |   0    |    Y     |  N   |       | åˆ›å»ºè€……  |
+|  8   | creator_bg_name |   varchar   | 100 |   0    |    Y     |  N   |       | åˆ›å»ºè€……äº‹ä¸šç¾¤åç§°  |
+|  9   | creator_center_name |   varchar   | 100 |   0    |    Y     |  N   |       | åˆ›å»ºè€……ä¸­å¿ƒåå­—  |
+|  10   | creator_dept_name |   varchar   | 100 |   0    |    Y     |  N   |       | åˆ›å»ºè€……é¡¹ç›®æ‰€å±žäºŒçº§æœºæž„åç§°  |
 |  11   | english_name |   varchar   | 255 |   0    |    Y     |  N   |       | è‹±æ–‡åç§°  |
 |  12   | is_offlined |   bit   | 1 |   0    |    Y     |  N   |       | æ˜¯å¦åœç”¨  |
 |  13   | is_secrecy |   bit   | 1 |   0    |    Y     |  N   |       | æ˜¯å¦ä¿å¯†  |
@@ -69,7 +68,7 @@
 |  22   | project_type |   int   | 10 |   0    |    Y     |  N   |       | é¡¹ç›®ç±»åž‹  |
 |  23   | use_bk |   bit   | 1 |   0    |    Y     |  N   |       | æ˜¯å¦ç”¨è“é²¸  |
 
-**表名：** <a id="role">role</a>
+**表名：** <a>role</a>
 
 **说明：** 
 
@@ -84,7 +83,7 @@
 |  5   | create_time |   datetime   | 19 |   0    |    Y     |  N   |       | åˆ›å»ºæ—¶é—´  |
 |  6   | modify_time |   datetime   | 19 |   0    |    Y     |  N   |       | ä¿®æ”¹æ—¶é—´  |
 
-**表名：** <a id="role_permission">role_permission</a>
+**表名：** <a>role_permission</a>
 
 **说明：** 
 
@@ -99,7 +98,7 @@
 |  5   | create_time |   datetime   | 19 |   0    |    Y     |  N   |       | åˆ›å»ºæ—¶é—´  |
 |  6   | modify_time |   datetime   | 19 |   0    |    Y     |  N   |       | ä¿®æ”¹æ—¶é—´  |
 
-**表名：** <a id="schema_version">schema_version</a>
+**表名：** <a>schema_version</a>
 
 **说明：** 
 
@@ -111,14 +110,14 @@
 |  2   | version |   varchar   | 50 |   0    |    Y     |  N   |       | ç‰ˆæœ¬å·  |
 |  3   | description |   varchar   | 200 |   0    |    N     |  N   |       | æè¿°  |
 |  4   | type |   varchar   | 20 |   0    |    N     |  N   |       | ç±»åž‹  |
-|  5   | script |   varchar   | 1000 |   0    |    N     |  N   |       | æ‰“åŒ…è„šæœ¬  |
+|  5   | script |   varchar   | 1000 |   0    |    N     |  N   |       | æ‰“åŒ……è„šæœ¬  |
 |  6   | checksum |   int   | 10 |   0    |    Y     |  N   |       | æ ¡éªŒå’Œ  |
-|  7   | installed_by |   varchar   | 100 |   0    |    N     |  N   |       | å®‰è£…è€…  |
-|  8   | installed_on |   timestamp   | 19 |   0    |    N     |  N   |   CURRENT_TIMESTAMP    | å®‰è£…æ—¶é—´  |
+|  7   | installed_by |   varchar   | 100 |   0    |    N     |  N   |       | å®‰è£……è€……  |
+|  8   | installed_on |   timestamp   | 19 |   0    |    N     |  N   |   CURRENT_TIMESTAMP    | å®‰è£……æ—¶é—´  |
 |  9   | execution_time |   int   | 10 |   0    |    N     |  N   |       | æ‰§è¡Œæ—¶é—´  |
 |  10   | success |   bit   | 1 |   0    |    N     |  N   |       | æ˜¯å¦æˆåŠŸ  |
 
-**表名：** <a id="spring_session">spring_session</a>
+**表名：** <a>spring_session</a>
 
 **说明：** 
 
@@ -132,7 +131,7 @@
 |  4   | MAX_INACTIVE_INTERVAL |   int   | 10 |   0    |    N     |  N   |       |   |
 |  5   | PRINCIPAL_NAME |   varchar   | 100 |   0    |    Y     |  N   |       |   |
 
-**表名：** <a id="SPRING_SESSION_ATTRIBUTES">SPRING_SESSION_ATTRIBUTES</a>
+**表名：** <a>SPRING_SESSION_ATTRIBUTES</a>
 
 **说明：** 
 
@@ -144,7 +143,7 @@
 |  2   | ATTRIBUTE_NAME |   varchar   | 200 |   0    |    N     |  Y   |       | å±žæ€§åç§°  |
 |  3   | ATTRIBUTE_BYTES |   blob   | 65535 |   0    |    Y     |  N   |       | å±žæ€§å­—èŠ‚  |
 
-**表名：** <a id="t_user_token">t_user_token</a>
+**表名：** <a>t_user_token</a>
 
 **说明：** 
 
@@ -159,7 +158,7 @@
 |  5   | refresh_Token |   varchar   | 255 |   0    |    Y     |  N   |       | åˆ·æ–°token  |
 |  6   | user_Type |   varchar   | 255 |   0    |    Y     |  N   |       | ç”¨æˆ·ç±»åž‹  |
 
-**表名：** <a id="url_action">url_action</a>
+**表名：** <a>url_action</a>
 
 **说明：** 
 
@@ -174,7 +173,7 @@
 |  5   | create_time |   datetime   | 19 |   0    |    Y     |  N   |       | åˆ›å»ºæ—¶é—´  |
 |  6   | modify_time |   datetime   | 19 |   0    |    Y     |  N   |       | ä¿®æ”¹æ—¶é—´  |
 
-**表名：** <a id="user">user</a>
+**表名：** <a>user</a>
 
 **说明：** 
 
@@ -191,7 +190,7 @@
 |  7   | phone |   varchar   | 255 |   0    |    Y     |  N   |       | ç”µè¯  |
 |  8   | username |   varchar   | 255 |   0    |    N     |  N   |       | ç”¨æˆ·åç§°  |
 
-**表名：** <a id="user_permission">user_permission</a>
+**表名：** <a>user_permission</a>
 
 **说明：** 
 
@@ -206,7 +205,7 @@
 |  5   | create_time |   datetime   | 19 |   0    |    Y     |  N   |       | åˆ›å»ºæ—¶é—´  |
 |  6   | modify_time |   datetime   | 19 |   0    |    Y     |  N   |       | ä¿®æ”¹æ—¶é—´  |
 
-**表名：** <a id="user_role">user_role</a>
+**表名：** <a>user_role</a>
 
 **说明：** 
 
