@@ -131,7 +131,7 @@ class RbacPermissionResourceMemberService constructor(
                 iamMemberInfos.add(ManagerMember(deptType, it))
             }
         }
-        logger.info("batch add project user:$iamGroupId|$expiredTime|$iamMemberInfos")
+        logger.info("batch add project user:$userId|$projectCode|$iamGroupId|$expiredTime|$iamMemberInfos")
         if (iamMemberInfos.isNotEmpty()) {
             val managerMemberGroup =
                 ManagerMemberGroupDTO.builder().members(iamMemberInfos).expiredAt(expiredTime).build()
@@ -195,6 +195,7 @@ class RbacPermissionResourceMemberService constructor(
         members: List<String>?,
         departments: List<String>?
     ): Boolean {
+        logger.info("batch delete resource group members :$userId|$projectCode|$iamGroupId||$members|$departments")
         verifyGroupBelongToProject(
             projectCode = projectCode,
             iamGroupId = iamGroupId
@@ -323,7 +324,7 @@ class RbacPermissionResourceMemberService constructor(
 
                 // 自动续期时间由半年+随机天数,防止同一时间同时过期
                 val expiredTime = currentTime + AUTO_RENEWAL_EXPIRED_AT +
-                        TimeUnit.DAYS.toSeconds(RandomUtils.nextLong(0, 180))
+                    TimeUnit.DAYS.toSeconds(RandomUtils.nextLong(0, 180))
                 val managerMemberGroup =
                     ManagerMemberGroupDTO.builder().members(listOf(ManagerMember(member.type, member.id)))
                         .expiredAt(expiredTime).build()
@@ -349,8 +350,10 @@ class RbacPermissionResourceMemberService constructor(
 
         // 有效的过期时间,在30天内就是有效的
         private const val VALID_EXPIRED_AT = 30L
+
         // 自动续期有效的过期时间,在180天以上就不需要自动续期
         private val AUTO_VALID_EXPIRED_AT = TimeUnit.DAYS.toSeconds(180)
+
         // 自动续期默认180天
         private val AUTO_RENEWAL_EXPIRED_AT = TimeUnit.DAYS.toSeconds(180)
     }
