@@ -612,9 +612,12 @@ class RbacPermissionMigrateService constructor(
                     offset = offset
                 ).data ?: break
                 migrateProjects.forEach { migrateProject ->
-                    autoRenewal(
-                        projectCode = migrateProject.englishName
-                    )
+                    migrateProjectsExecutorService.submit {
+                        MDC.put(TraceTag.BIZID, traceId)
+                        autoRenewal(
+                            projectCode = migrateProject.englishName
+                        )
+                    }
                 }
                 offset += limit
             } while (migrateProjects.size == limit)
