@@ -180,13 +180,9 @@ class OpService @Autowired constructor(
             val allPage = (grayProjNumber / DEFAULT_TRAVERSE_SIZE).toInt() + 1
             for (i in 1..allPage) {
                 redisOperation.zrevrange(
-                    OP_KEY,
-                    (currentPage - 1) * currentPageSize + (i - 1) * DEFAULT_TRAVERSE_SIZE,
-                    (currentPage - 1) * currentPageSize + i * DEFAULT_TRAVERSE_SIZE - 1
+                    OP_KEY, ((i - 1) * DEFAULT_TRAVERSE_SIZE).toLong(), (i * DEFAULT_TRAVERSE_SIZE - 1).toLong()
                 )?.filter { keyword in it }?.let {
-                    grayProjsList.addAll(
-                        it.toCollection(ArrayList())
-                    )
+                    grayProjsList.addAll(it)
                 }
                 if (grayProjsList.size >= currentPage * currentPageSize - 1) {
                     break
