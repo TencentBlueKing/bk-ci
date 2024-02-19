@@ -57,7 +57,7 @@ class OpService @Autowired constructor(
         const val SUCCESSFUL_SMEMBERS_MSG = "Query all gray projects successfully."
         const val SUCCESSFUL_SISMEMBER_MSG = "Query gray project(s) successfully."
         const val SUCCESSFUL_DELETE_KEY_MSG = "Clear all gray projects successfully."
-        const val SUCCESSFUL_FUZZY_QUERY_MSG = "Fuzzy query successfully."
+        const val SUCCESSFUL_FUZZY_QUERY_MSG = "Fuzzy query successfully. %d gray project(s) in current page."
 
         const val INVALID_OPERATION_TYPE_CODE = 10001
         const val INVALID_OPERATION_TYPE_RESULT = false
@@ -95,6 +95,7 @@ class OpService @Autowired constructor(
 
         private const val DEFAULT_TRAVERSE_SIZE = 1000
         private const val DEFAULT_PAGE_VALUE = -1L
+        private const val EMPTY_GRAY_PROJS_NUM = 0
     }
 
     fun operateOpProject(userId: String, opOperateReq: OpOperateReq): OpOperateResult {
@@ -179,7 +180,6 @@ class OpService @Autowired constructor(
                 allGrayProjsSet
             }
         } else {
-            msg = SUCCESSFUL_FUZZY_QUERY_MSG
             val grayProjsList: MutableList<String> = mutableListOf()
             val allPage = (grayProjNumber / DEFAULT_TRAVERSE_SIZE).toInt() + 1
             for (i in 1..allPage) {
@@ -192,9 +192,21 @@ class OpService @Autowired constructor(
                     break
                 }
             }
-            grayProjsList.subList(
-                ((currentPage - 1) * currentPageSize).toInt(), (currentPage * currentPageSize).toInt()
-            ).toSet()
+            if ((currentPage - 1) * currentPageSize > grayProjsList.size - 1) {
+                msg = String.format(SUCCESSFUL_FUZZY_QUERY_MSG, EMPTY_GRAY_PROJS_NUM)
+                emptySet()
+            } else {
+                val toIndex = if (currentPage * currentPageSize > grayProjsList.size) {
+                    grayProjsList.size
+                } else {
+                    currentPage * currentPageSize
+                }
+                val grayProjsInCurPage = grayProjsList.subList(
+                    ((currentPage - 1) * currentPageSize).toInt(), toIndex.toInt()
+                ).toSet()
+                msg = String.format(SUCCESSFUL_FUZZY_QUERY_MSG, grayProjsInCurPage.size)
+                grayProjsInCurPage
+            }
         }
 
         return OpOperateResult(
