@@ -123,7 +123,7 @@ class DispatchVMStartupTaskAtom @Autowired constructor(
                     errorMsg = "check job start fail"
                 )
             } else {
-                execute(task, fixParam)
+                execute(task, fixParam, null)
             }
             buildLogPrinter.stopLog(
                 buildId = task.buildId,
@@ -165,7 +165,7 @@ class DispatchVMStartupTaskAtom @Autowired constructor(
         return atomResponse
     }
 
-    fun execute(task: PipelineBuildTask, param: VMBuildContainer): AtomResponse {
+    fun execute(task: PipelineBuildTask, param: VMBuildContainer, ignoreEnvAgentIds: Set<String>?): AtomResponse {
         val projectId = task.projectId
         val pipelineId = task.pipelineId
         val buildId = task.buildId
@@ -216,7 +216,7 @@ class DispatchVMStartupTaskAtom @Autowired constructor(
         containerBuildRecordService.containerPreparing(
             projectId, pipelineId, buildId, vmSeqId, task.executeCount ?: 1
         )
-        dispatch(task, pipelineInfo!!, param, vmNames, container!!)
+        dispatch(task, pipelineInfo!!, param, vmNames, container!!, ignoreEnvAgentIds)
         logger.info("[$buildId]|STARTUP_VM|VM=${param.baseOS}-$vmNames($vmSeqId)|Dispatch startup")
         return AtomResponse(BuildStatus.CALL_WAITING)
     }
@@ -226,7 +226,8 @@ class DispatchVMStartupTaskAtom @Autowired constructor(
         pipelineInfo: PipelineInfo,
         param: VMBuildContainer,
         vmNames: String,
-        container: Container
+        container: Container,
+        ignoreEnvAgentIds: Set<String>?
     ) {
 
         // 读取插件市场中的插件信息，写入待构建处理
@@ -261,7 +262,8 @@ class DispatchVMStartupTaskAtom @Autowired constructor(
                 containerHashId = task.containerHashId,
                 queueTimeoutMinutes = param.jobControlOption?.prepareTimeout,
                 customBuildEnv = param.customBuildEnv,
-                jobId = container.jobId
+                jobId = container.jobId,
+                ignoreEnvAgentIds = ignoreEnvAgentIds
             )
         )
     }
@@ -363,6 +365,16 @@ class DispatchVMStartupTaskAtom @Autowired constructor(
             if (param.dispatchType is ThirdPartyAgentEnvDispatchType ||
                 param.dispatchType is ThirdPartyAgentIDDispatchType
             ) {
+                // #9910 环境构建时遇到启动错误时调度到一个新的Agent
+                // 通过获取task param一个固定的参数，重新发送启动请求
+                val retryThirdAgentEnv = task.taskParams["RETRY_THIRD_AGENT_ENV"]?.toString()
+                if (!retryThirdAgentEnv.isNullOrBlank()) {
+                    return execute(
+                        task = task,
+                        param = param,
+                        ignoreEnvAgentIds = retryThirdAgentEnv.split(",").filter { it.isNotBlank() }.toSet()
+                    )
+                }
                 thirdPartyAgentMonitorPrint(task)
             }
 

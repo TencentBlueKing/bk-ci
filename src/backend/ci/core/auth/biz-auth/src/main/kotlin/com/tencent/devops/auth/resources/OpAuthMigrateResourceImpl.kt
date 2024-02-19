@@ -94,8 +94,8 @@ class OpAuthMigrateResourceImpl @Autowired constructor(
         return Result(permissionMigrateService.migrateMonitorResource(projectCodes = projectCodes))
     }
 
-    override fun autoRenewal(projectCodes: List<String>): Result<Boolean> {
-        permissionMigrateService.autoRenewal(projectCodes)
+    override fun autoRenewal(migrateProjectConditionDTO: MigrateProjectConditionDTO): Result<Boolean> {
+        permissionMigrateService.autoRenewal(migrateProjectConditionDTO)
         return Result(true)
     }
 }

@@ -82,7 +82,7 @@ class SamplePermissionMigrateService : PermissionMigrateService {
         return true
     }
 
-    override fun autoRenewal(projectCodes: List<String>): Boolean {
+    override fun autoRenewal(migrateProjectConditionDTO: MigrateProjectConditionDTO): Boolean {
         return true
     }
 }

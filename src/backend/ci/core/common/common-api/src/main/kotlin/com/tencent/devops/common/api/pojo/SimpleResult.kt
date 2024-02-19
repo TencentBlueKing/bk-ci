@@ -37,7 +37,9 @@ data class SimpleResult(
     @ApiModelProperty("错误信息", required = false)
     val message: String? = null,
     @ApiModelProperty("错误码信息", required = false)
-    val error: Error? = null
+    val error: Error? = null,
+    @ApiModelProperty("ENV中需要被忽略的调度机器")
+    val ignoreAgentIds: Set<String>?
 )
 
 @ApiModel("第三方构建信息模型-错误信息")

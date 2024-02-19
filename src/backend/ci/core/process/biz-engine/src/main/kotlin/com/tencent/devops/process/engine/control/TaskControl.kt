@@ -96,7 +96,7 @@ class TaskControl @Autowired constructor(
     /**
      * 处理[PipelineBuildAtomTaskEvent]事件，开始执行/结束插件任务
      */
-    @Suppress("LongMethod")
+    @Suppress("LongMethod", "ComplexMethod")
     private fun PipelineBuildAtomTaskEvent.execute() {
 
         val buildInfo = pipelineRuntimeService.getBuildInfo(projectId, buildId)
@@ -158,7 +158,14 @@ class TaskControl @Autowired constructor(
         } else {
             buildTask.starter = userId
             if (taskParam.isNotEmpty()) { // 追加事件传递的参数变量值
-                buildTask.taskParams.putAll(taskParam)
+                // #9910 针对第三方构建机关键字参数以数据库版本为准不使用 event
+                if (buildTask.taskParams["RETRY_THIRD_AGENT_ENV"] != null) {
+                    val m = buildTask.taskParams["RETRY_THIRD_AGENT_ENV"]
+                    buildTask.taskParams.putAll(taskParam)
+                    buildTask.taskParams["RETRY_THIRD_AGENT_ENV"] = m!!
+                } else {
+                    buildTask.taskParams.putAll(taskParam)
+                }
             }
             LOG.info(
                 "ENGINE|$buildId|$source|ATOM_$actionType|$stageId|j($containerId)|t($taskId)|" +

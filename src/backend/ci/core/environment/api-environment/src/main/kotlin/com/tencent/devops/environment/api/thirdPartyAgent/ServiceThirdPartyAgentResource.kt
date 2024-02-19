@@ -403,4 +403,16 @@ interface ServiceThirdPartyAgentResource {
         @HeaderParam(AUTH_HEADER_DEVOPS_AGENT_SECRET_KEY)
         secretKey: String
     ): Result<ThirdPartyAgentPipeline?>
+
+    @ApiOperation("根据环境名称获取Agent列表,并返回环境ID")
+    @GET
+    @Path("/projects/{projectId}/envNames/{envName}/withId")
+    fun getAgentsByEnvNameWithId(
+        @ApiParam("项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @ApiParam("Environment name", required = true)
+        @PathParam("envName")
+        envName: String
+    ): Result<Pair<Long?, List<ThirdPartyAgent>>>
 }
