@@ -15,16 +15,17 @@ import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.amqp.rabbit.core.RabbitTemplate
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.cloud.stream.function.StreamBridge
 
 class VoiceServiceImpl @Autowired constructor(
     private val notifyService: NotifyService,
     private val voiceNotifyDao: VoiceNotifyDao,
-    private val rabbitTemplate: RabbitTemplate,
+    private val streamBridge: StreamBridge,
     private val configuration: Configuration,
     private val dslContext: DSLContext
 ) : VoiceService {
     override fun sendMqMsg(message: VoiceNotifyMessage) {
-        rabbitTemplate.convertAndSend(EXCHANGE_NOTIFY, ROUTE_VOICE, message)
+        message.sendTo(streamBridge)
     }
 
     /**
@@ -67,17 +68,16 @@ class VoiceServiceImpl @Autowired constructor(
             val deepCopyMessage = voiceNotifyMessageWithOperation.deepCopy<VoiceNotifyMessageWithOperation>()
             deepCopyMessage.id = id
             deepCopyMessage.retryCount = retryCount + 1
-            rabbitTemplate.convertAndSend(EXCHANGE_NOTIFY, ROUTE_VOICE, deepCopyMessage) { message ->
-                var delayTime = 0
-                when (retryCount) {
-                    1 -> delayTime = 30000
-                    2 -> delayTime = 120000
-                }
-                if (delayTime > 0) {
-                    message.messageProperties.setHeader("x-delay", delayTime)
-                }
-                message
+            var delayTime = 0
+            when (retryCount) {
+                1 -> delayTime = 30000
+                2 -> delayTime = 120000
+                3 -> delayTime = 300000
             }
+            if (delayTime > 0) {
+                deepCopyMessage.delayMills = delayTime
+            }
+            deepCopyMessage.sendTo(streamBridge)
         }
     }
 

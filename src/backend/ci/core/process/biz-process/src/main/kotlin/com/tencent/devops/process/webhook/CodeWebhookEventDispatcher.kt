@@ -65,21 +65,12 @@ object CodeWebhookEventDispatcher {
         return result
     }
 
-    fun dispatchReplayEvent(rabbitTemplate: RabbitTemplate, event: ReplayWebhookEvent): Boolean {
+    fun dispatchReplayEvent(streamBridge: StreamBridge, event: ReplayWebhookEvent): Boolean {
         logger.debug("Webhook comming [replay|$event]")
         var result = false
         try {
             logger.info("Dispatch the replay webhook event by MQ")
-            val eventType = event::class.java.annotations.find { s -> s is Event } as Event
-            rabbitTemplate.convertAndSend(eventType.exchange, eventType.routeKey, event) { message ->
-                // 事件中的变量指定
-                if (event.delayMills > 0) {
-                    message.messageProperties.setHeader("x-delay", event.delayMills)
-                } else if (eventType.delayMills > 0) { // 事件类型固化默认值
-                    message.messageProperties.setHeader("x-delay", eventType.delayMills)
-                }
-                message
-            }
+            event.sendTo(streamBridge)
             result = true
         } catch (e: Throwable) {
             logger.error("Fail to dispatch the event($event) by MQ", e)

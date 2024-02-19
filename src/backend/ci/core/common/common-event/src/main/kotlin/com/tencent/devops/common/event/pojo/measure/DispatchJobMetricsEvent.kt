@@ -28,10 +28,9 @@
 package com.tencent.devops.common.event.pojo.measure
 
 import com.tencent.devops.common.event.annotation.Event
-import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
+import com.tencent.devops.common.stream.constants.StreamBinding
 
-@Event(exchange = MQ.EXCHANGE_DISPATCH_JOB_METRICS_FANOUT)
-// TODO #7443 改为新写法
+@Event(destination = StreamBinding.EXCHANGE_METRICS_DISPATCH_JOB)
 data class DispatchJobMetricsEvent(
     override val projectId: String,
     override val pipelineId: String,

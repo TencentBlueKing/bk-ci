@@ -250,8 +250,8 @@ class WebhookEventListener constructor(
                 logger.warn("Retry to handle the Github event [${replayEvent.retryTime}]")
                 with(replayEvent) {
                     CodeWebhookEventDispatcher.dispatchReplayEvent(
-                        rabbitTemplate = rabbitTemplate,
-                        event = ReplayWebhookEvent(
+                        streamBridge,
+                        ReplayWebhookEvent(
                             userId = userId,
                             projectId = projectId,
                             eventId = eventId,

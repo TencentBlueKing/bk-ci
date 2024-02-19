@@ -64,7 +64,7 @@ class DispatchVMShutdownTaskAtom @Autowired constructor(
     }
 
     private val logger = LoggerFactory.getLogger(DispatchVMShutdownTaskAtom::class.java)
-    // TODO #7443 改为新写法
+
     override fun execute(
         task: PipelineBuildTask,
         param: VMBuildContainer,
@@ -87,6 +87,7 @@ class DispatchVMShutdownTaskAtom @Autowired constructor(
                 buildId = buildId,
                 vmSeqId = vmSeqId,
                 buildResult = true,
+                dispatchType = dispatchTypeBuilder.getDispatchType(task, param),
                 routeKeySuffix = dispatchTypeBuilder.getDispatchType(task, param).routeKeySuffix?.routeKeySuffix,
                 executeCount = task.executeCount
             )
@@ -139,6 +140,7 @@ class DispatchVMShutdownTaskAtom @Autowired constructor(
                         buildId = task.buildId,
                         vmSeqId = task.containerId,
                         buildResult = true,
+                        dispatchType = dispatchTypeBuilder.getDispatchType(task, param),
                         routeKeySuffix = dispatchTypeBuilder
                             .getDispatchType(task, param)
                             .routeKeySuffix?.routeKeySuffix,

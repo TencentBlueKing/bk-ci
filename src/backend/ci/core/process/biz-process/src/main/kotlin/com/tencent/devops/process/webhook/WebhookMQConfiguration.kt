@@ -29,13 +29,12 @@ package com.tencent.devops.process.webhook
 
 import com.tencent.devops.common.event.annotation.EventConsumer
 import com.tencent.devops.common.stream.constants.StreamBinding
-import com.tencent.devops.process.engine.service.PipelineWebhookBuildLogService
-import com.tencent.devops.process.service.webhook.PipelineBuildWebhookService
 import com.tencent.devops.process.webhook.listener.WebhookEventListener
 import com.tencent.devops.process.webhook.pojo.event.commit.GitWebhookEvent
 import com.tencent.devops.process.webhook.pojo.event.commit.GithubWebhookEvent
 import com.tencent.devops.process.webhook.pojo.event.commit.GitlabWebhookEvent
 import com.tencent.devops.process.webhook.pojo.event.commit.P4WebhookEvent
+import com.tencent.devops.process.webhook.pojo.event.commit.ReplayWebhookEvent
 import com.tencent.devops.process.webhook.pojo.event.commit.SvnWebhookEvent
 import com.tencent.devops.process.webhook.pojo.event.commit.TGitWebhookEvent
 import org.springframework.beans.factory.annotation.Autowired
@@ -64,13 +63,11 @@ class WebhookMQConfiguration @Autowired constructor() {
 
     @Bean
     fun webhookEventListener(
-        @Autowired pipelineBuildService: PipelineBuildWebhookService,
         @Autowired streamBridge: StreamBridge,
-        @Autowired triggerBuildLogService: PipelineWebhookBuildLogService
+        @Autowired webhookRequestService: WebhookRequestService
     ) = WebhookEventListener(
-        pipelineBuildService = pipelineBuildService,
         streamBridge = streamBridge,
-        triggerBuildLogService = triggerBuildLogService
+        webhookRequestService = webhookRequestService
     )
 
     // 各类Commit事件监听
@@ -128,75 +125,12 @@ class WebhookMQConfiguration @Autowired constructor() {
         }
     }
 
-    // TODO #7443 改为新写法
-    @Bean
-    fun p4EventListener(
-        @Autowired connectionFactory: ConnectionFactory,
-        @Autowired p4EventQueue: Queue,
-        @Autowired rabbitAdmin: RabbitAdmin,
-        @Autowired webhookEventListener: WebhookEventListener,
-        @Autowired messageConverter: Jackson2JsonMessageConverter
-    ): SimpleMessageListenerContainer {
-        logger.info("Start p4 commit event listener")
-        val adapter = MessageListenerAdapter(webhookEventListener, WebhookEventListener::handleCommitEvent.name)
-        adapter.setMessageConverter(messageConverter)
-        return Tools.createSimpleMessageListenerContainerByAdapter(
-            connectionFactory = connectionFactory,
-            queue = p4EventQueue,
-            rabbitAdmin = rabbitAdmin,
-            adapter = adapter,
-            startConsumerMinInterval = 1,
-            consecutiveActiveTrigger = 1,
-            concurrency = 10,
-            maxConcurrency = 20
-        )
-    }
-
-    // replay 消息队列配置
-    @Bean
-    fun replayEventExchange(): DirectExchange {
-        val directExchange = DirectExchange(MQ.EXCHANGE_REPLAY_BUILD_REQUEST_EVENT, true, false)
-        directExchange.isDelayed = true
-        return directExchange
-    }
-
-    @Bean
-    fun replayEventQueue(): Queue {
-        return Queue(MQ.QUEUE_REPLAY_BUILD_REQUEST_EVENT, true)
-    }
-
-    @Bean
-    fun replayEventBind(
-        @Autowired replayEventQueue: Queue,
-        @Autowired replayEventExchange: DirectExchange
-    ): Binding {
-        return BindingBuilder.bind(replayEventQueue).to(replayEventExchange).with(MQ.ROUTE_REPLAY_BUILD_REQUEST_EVENT)
-    }
-
-    @Bean
+    @EventConsumer(StreamBinding.QUEUE_REPLAY_BUILD_REQUEST_EVENT, STREAM_CONSUMER_GROUP)
     fun replayEventListener(
-        @Autowired connectionFactory: ConnectionFactory,
-        @Autowired replayEventQueue: Queue,
-        @Autowired rabbitAdmin: RabbitAdmin,
-        @Autowired webhookEventListener: WebhookEventListener,
-        @Autowired messageConverter: Jackson2JsonMessageConverter
-    ): SimpleMessageListenerContainer {
-        logger.info("Start webhook replay event listener")
-        val adapter = MessageListenerAdapter(webhookEventListener, WebhookEventListener::handleReplayEvent.name)
-        adapter.setMessageConverter(messageConverter)
-        return Tools.createSimpleMessageListenerContainerByAdapter(
-            connectionFactory = connectionFactory,
-            queue = replayEventQueue,
-            rabbitAdmin = rabbitAdmin,
-            adapter = adapter,
-            startConsumerMinInterval = 1,
-            consecutiveActiveTrigger = 1,
-            concurrency = 10,
-            maxConcurrency = 20
-        )
-    }
-
-    companion object {
-        private val logger = LoggerFactory.getLogger(WebhookMQConfiguration::class.java)
+        @Autowired webhookEventListener: WebhookEventListener
+    ): Consumer<Message<ReplayWebhookEvent>> {
+        return Consumer { event: Message<ReplayWebhookEvent> ->
+            webhookEventListener.handleReplayEvent(event.payload)
+        }
     }
 }

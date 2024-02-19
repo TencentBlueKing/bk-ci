@@ -28,6 +28,7 @@
 package com.tencent.devops.dispatch.service
 
 import com.tencent.devops.common.api.enums.AgentStatus
+import com.tencent.devops.common.api.exception.InvalidParamException
 import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.event.dispatcher.SampleEventDispatcher
@@ -86,7 +87,6 @@ class ThirdPartyDispatchService @Autowired constructor(
                 event.dispatchType is ThirdPartyAgentEnvDispatchType ||
                 event.dispatchType is ThirdPartyDevCloudDispatchType
 
-    // TODO #7443 改为新写法
     fun startUp(dispatchMessage: DispatchMessage) {
         when (dispatchMessage.event.dispatchType) {
             is ThirdPartyAgentIDDispatchType -> {

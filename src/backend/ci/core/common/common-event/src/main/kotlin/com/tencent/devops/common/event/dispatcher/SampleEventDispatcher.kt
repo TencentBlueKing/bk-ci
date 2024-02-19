@@ -25,39 +25,27 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.db.listener
+package com.tencent.devops.common.event.dispatcher
 
-import com.tencent.devops.common.api.constant.CommonMessageCode
-import com.tencent.devops.common.api.exception.ErrorCodeException
-import com.tencent.devops.common.db.service.ShardingRoutingRuleManageService
-import com.tencent.devops.common.event.listener.Listener
-import com.tencent.devops.common.event.pojo.sharding.ShardingRoutingRuleBroadCastEvent
+import com.tencent.devops.common.event.pojo.IEvent
 import org.slf4j.LoggerFactory
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.stereotype.Component
+import org.springframework.cloud.stream.function.StreamBridge
 
-@Component
-class BkShardingRoutingRuleListener @Autowired constructor(
-    private val shardingRoutingRuleManageService: ShardingRoutingRuleManageService
-) : Listener<ShardingRoutingRuleBroadCastEvent> {
+class SampleEventDispatcher constructor(
+    private val streamBridge: StreamBridge
+) : EventDispatcher<IEvent> {
 
-    override fun execute(event: ShardingRoutingRuleBroadCastEvent) {
-        try {
-            shardingRoutingRuleManageService.handleShardingRoutingRuleLocalCache(
-                routingName = event.routingName,
-                routingRule = event.routingRule,
-                actionType = event.actionType
-            )
-        } catch (ignored: Throwable) {
-            logger.warn("Fail to handle the shardingRoutingRule data", ignored)
-            throw ErrorCodeException(
-                errorCode = CommonMessageCode.SYSTEM_ERROR,
-                defaultMessage = "Fail to handle the shardingRoutingRule data"
-            )
+    override fun dispatch(vararg events: IEvent) {
+        events.forEach { event ->
+            try {
+                event.sendTo(streamBridge)
+            } catch (ignored: Exception) {
+                logger.error("[MQ] Fail to dispatch the event($events)", ignored)
+            }
         }
     }
 
     companion object {
-        private val logger = LoggerFactory.getLogger(BkShardingRoutingRuleListener::class.java)
+        private val logger = LoggerFactory.getLogger(SampleEventDispatcher::class.java)
     }
 }

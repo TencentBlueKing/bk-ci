@@ -62,6 +62,8 @@ object StreamBinding {
 
     const val QUEUE_PIPELINE_PAUSE_TASK_EXECUTE = "engine.pipeline.pause.task.execute"
 
+    const val QUEUE_PIPELINE_ARCHIVE = "engine.pipeline.archive"
+
     // 监控 ====================================
     const val EXCHANGE_PIPELINE_MONITOR_DIRECT = "engine.pipeline.listener.monitor"
 
@@ -138,6 +140,9 @@ object StreamBinding {
     // P4代码仓库webhook请求回调
     const val QUEUE_P4_BUILD_REQUEST_EVENT = "engine.pipeline.hook.p4.event"
 
+    // P4代码仓库webhook请求回调
+    const val QUEUE_REPLAY_BUILD_REQUEST_EVENT = "q.engine.pipeline.hook.replay.event"
+
     // 度量数据
     const val EXCHANGE_MEASURE_REQUEST_EVENT = "e.measure.request.event"
     const val ROUTE_MEASURE_REQUEST_EVENT = "r.measure.request.event"
@@ -186,6 +191,8 @@ object StreamBinding {
     const val EXCHANGE_METRICS_STATISTIC_QUALITY_DAILY = "metrics.statistic.quality.daily"
     const val EXCHANGE_METRICS_STATISTIC_TURBO_DAILY = "metrics.statistic.turbo.daily"
     const val EXCHANGE_METRICS_STATISTIC_CODE_CHECK_DAILY = "metrics.statistic.code.check.daily"
+    const val EXCHANGE_METRICS_PROJECT_USER_DAILY = "metrics.project.user.daily.queue"
+    const val EXCHANGE_METRICS_DISPATCH_JOB = "metrics.dispatch.job.daily.exchange.fanout"
 
     const val QUEUE_PIPELINE_STREAM_ENABLED = "engine.pipeline.stream.enabled"
 
@@ -193,14 +200,14 @@ object StreamBinding {
     const val EXCHANGE_AUTH_RBAC_LISTENER_EXCHANGE = "e.auth.rbac.listener"
 
     // 权限itsm回调事件
-    const val ROUTE_AUTH_ITSM_CALLBACK = "r.auth.itsm.callback"
     const val QUEUE_AUTH_ITSM_CALLBACK = "q.auth.itsm.callback"
 
     // 权限资源关联用户组创建事件
-    const val ROUTE_AUTH_RESOURCE_GROUP_CREATE = "r.auth.resource.group.create"
     const val QUEUE_AUTH_RESOURCE_GROUP_CREATE = "q.auth.resource.group.create"
 
     // 权限资源关联用户组修改事件
-    const val ROUTE_AUTH_RESOURCE_GROUP_MODIFY = "r.auth.resource.group.modify"
     const val QUEUE_AUTH_RESOURCE_GROUP_MODIFY = "q.auth.resource.group.modify"
+
+    // 数据库分片
+    const val QUEUE_SHARDING_ROUTING_RULE_FANOUT = "e.sharding.routing.rule.exchange.fanout"
 }

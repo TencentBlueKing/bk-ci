@@ -53,11 +53,6 @@ class AuthCoreConfiguration {
         const val STREAM_CONSUMER_GROUP = "auth-service"
     }
 
-    // TODO #7443 改用ext
-    @Bean
-    fun measureEventDispatcher(@Qualifier(EXTEND_RABBIT_TEMPLATE_NAME) extendRabbitTemplate: RabbitTemplate) =
-        MeasureEventDispatcher(extendRabbitTemplate)
-
     @Bean
     fun refreshDispatch(streamBridge: StreamBridge) = AuthRefreshDispatch(streamBridge)
 

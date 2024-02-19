@@ -31,12 +31,14 @@ import com.tencent.devops.common.event.annotation.EventConsumer
 import com.tencent.devops.notify.QUEUE_NOTIFY_EMAIL
 import com.tencent.devops.notify.QUEUE_NOTIFY_RTX
 import com.tencent.devops.notify.QUEUE_NOTIFY_SMS
+import com.tencent.devops.notify.QUEUE_NOTIFY_VOICE
 import com.tencent.devops.notify.QUEUE_NOTIFY_WECHAT
 import com.tencent.devops.notify.QUEUE_NOTIFY_WEWORK
 import com.tencent.devops.notify.consumer.NotifyMessageConsumer
 import com.tencent.devops.notify.model.EmailNotifyMessageWithOperation
 import com.tencent.devops.notify.model.RtxNotifyMessageWithOperation
 import com.tencent.devops.notify.model.SmsNotifyMessageWithOperation
+import com.tencent.devops.notify.model.VoiceNotifyMessageWithOperation
 import com.tencent.devops.notify.model.WechatNotifyMessageWithOperation
 import com.tencent.devops.notify.model.WeworkNotifyMessageWithOperation
 import org.springframework.beans.factory.annotation.Autowired
@@ -93,6 +95,15 @@ class ListenerConfiguration {
     ): Consumer<Message<WeworkNotifyMessageWithOperation>> {
         return Consumer { event: Message<WeworkNotifyMessageWithOperation> ->
             listener.onReceiveWeworkMessage(event.payload)
+        }
+    }
+
+    @EventConsumer(QUEUE_NOTIFY_VOICE, STREAM_CONSUMER_GROUP)
+    fun voiceNotifyListener(
+        @Autowired listener: NotifyMessageConsumer
+    ): Consumer<Message<VoiceNotifyMessageWithOperation>> {
+        return Consumer { event: Message<VoiceNotifyMessageWithOperation> ->
+            listener.onReceiveVoiceMessage(event.payload)
         }
     }
 }

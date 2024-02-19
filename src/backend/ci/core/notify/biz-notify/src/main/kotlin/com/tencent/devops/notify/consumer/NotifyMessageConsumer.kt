@@ -82,17 +82,6 @@ class NotifyMessageConsumer @Autowired constructor(
         }
     }
 
-    // TODO #7443 改为新写法
-    @RabbitListener(
-        containerFactory = "rabbitListenerContainerFactory",
-        bindings = [
-            QueueBinding(
-                key = [ROUTE_VOICE],
-                value = Queue(value = QUEUE_NOTIFY_VOICE, durable = "true"),
-                exchange = Exchange(value = EXCHANGE_NOTIFY, durable = "true", delayed = "true", type = "topic")
-            )
-        ]
-    )
     fun onReceiveVoiceMessage(voiceNotifyMessageWithOperation: VoiceNotifyMessageWithOperation) {
         try {
             voiceService.sendMessage(voiceNotifyMessageWithOperation)

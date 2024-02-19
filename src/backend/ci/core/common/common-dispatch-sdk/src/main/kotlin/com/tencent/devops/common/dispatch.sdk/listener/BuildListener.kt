@@ -225,7 +225,6 @@ interface BuildListener {
     }
 
     @BkTimed
-    // TODO #7443 改为新写法
     fun handleStartup(event: PipelineAgentStartupEvent) {
         // 根据dispatchType筛选消息消费
         if (!consumerFilter(event.dispatchType)) {
@@ -255,7 +254,7 @@ interface BuildListener {
             val jobQuotaService = getJobQuotaService()
             if (!jobQuotaService.checkAndAddRunningJob(
                     startupEvent = event,
-                    vmType = getVmType(),
+                    jobType = getVmType(),
                     demoteQueueRouteKeySuffix = getStartupDemoteQueue()
                 )) {
                 return

@@ -98,7 +98,7 @@ class DispatchVMStartupTaskAtom @Autowired constructor(
     override fun getParamElement(task: PipelineBuildTask): VMBuildContainer {
         return JsonUtil.mapTo(task.taskParams, VMBuildContainer::class.java)
     }
-    // TODO #7443 改为新写法
+
     private val logger = LoggerFactory.getLogger(DispatchVMStartupTaskAtom::class.java)
 
     override fun execute(
@@ -259,7 +259,6 @@ class DispatchVMStartupTaskAtom @Autowired constructor(
                 routeKeySuffix = dispatchType.routeKeySuffix?.routeKeySuffix,
                 containerId = task.containerId,
                 containerHashId = task.containerHashId,
-                routeKeySuffix = dispatchType.routeKeySuffix?.routeKeySuffix,
                 queueTimeoutMinutes = param.jobControlOption?.prepareTimeout,
                 customBuildEnv = param.customBuildEnv,
                 jobId = container.jobId
@@ -351,6 +350,7 @@ class DispatchVMStartupTaskAtom @Autowired constructor(
                         buildId = task.buildId,
                         vmSeqId = task.containerId,
                         buildResult = false, // #5046 强制终止为失败
+                        dispatchType = dispatchTypeBuilder.getDispatchType(task, param),
                         routeKeySuffix = dispatchTypeBuilder
                             .getDispatchType(task, param)
                             .routeKeySuffix?.routeKeySuffix,

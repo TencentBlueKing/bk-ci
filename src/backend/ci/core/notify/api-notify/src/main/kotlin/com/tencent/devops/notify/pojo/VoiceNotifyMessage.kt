@@ -1,10 +1,13 @@
 package com.tencent.devops.notify.pojo
 
+import com.tencent.devops.common.event.annotation.Event
 import com.tencent.devops.common.notify.pojo.VoiceNotifyPost
+import com.tencent.devops.notify.QUEUE_NOTIFY_VOICE
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
 @ApiModel("语音信息")
+@Event(QUEUE_NOTIFY_VOICE)
 open class VoiceNotifyMessage : BaseMessage() {
     @ApiModelProperty("接收人(英文ID)，支持多个")
     var receivers = mutableSetOf<String>()
