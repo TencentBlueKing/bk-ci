@@ -163,4 +163,16 @@ interface ApigwRemoteDevResource {
         @ApiParam(value = "通知信息", required = true)
         notifyData: WorkspaceNotifyData
     ): Result<Boolean>
+
+    @ApiOperation("校验是否是当前项目下的云桌面")
+    @GET
+    @Path("/checkWorkspaceProject")
+    fun checkWorkspaceProject(
+        @ApiParam("projectId", required = true)
+        @QueryParam("projectId")
+        projectId: String,
+        @ApiParam("ip", required = true)
+        @QueryParam("ip")
+        ip: String
+    ): Result<Boolean>
 }
