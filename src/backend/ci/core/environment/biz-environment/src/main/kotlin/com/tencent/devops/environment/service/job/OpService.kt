@@ -57,6 +57,7 @@ class OpService @Autowired constructor(
         const val SUCCESSFUL_SMEMBERS_MSG = "Query all gray projects successfully."
         const val SUCCESSFUL_SISMEMBER_MSG = "Query gray project(s) successfully."
         const val SUCCESSFUL_DELETE_KEY_MSG = "Clear all gray projects successfully."
+        const val SUCCESSFUL_FUZZY_QUERY_MSG = "Fuzzy query successfully."
 
         const val INVALID_OPERATION_TYPE_CODE = 10001
         const val INVALID_OPERATION_TYPE_RESULT = false
@@ -154,7 +155,9 @@ class OpService @Autowired constructor(
                 )
             }
         }
+        val msg: String
         val allGrayProjs = if (keyword.isNullOrBlank()) {
+            msg = SUCCESSFUL_SMEMBERS_MSG
             if (currentPageSize <= DEFAULT_TRAVERSE_SIZE) {
                 redisOperation.zrevrange(
                     OP_KEY, (currentPage - 1) * currentPageSize, currentPage * currentPageSize - 1
@@ -176,6 +179,7 @@ class OpService @Autowired constructor(
                 allGrayProjsSet
             }
         } else {
+            msg = SUCCESSFUL_FUZZY_QUERY_MSG
             val grayProjsList: MutableList<String> = mutableListOf()
             val allPage = (grayProjNumber / DEFAULT_TRAVERSE_SIZE).toInt() + 1
             for (i in 1..allPage) {
@@ -189,14 +193,14 @@ class OpService @Autowired constructor(
                 }
             }
             grayProjsList.subList(
-                ((currentPage - 1) * currentPageSize).toInt(), (currentPage * currentPageSize - 1).toInt()
+                ((currentPage - 1) * currentPageSize).toInt(), (currentPage * currentPageSize).toInt()
             ).toSet()
         }
 
         return OpOperateResult(
             code = SUCCESSFUL_CODE,
             result = SUCCESSFUL_RESULT,
-            msg = SUCCESSFUL_SMEMBERS_MSG,
+            msg = msg,
             grayProjNumber = grayProjNumber,
             grayProjList = allGrayProjs
         )
