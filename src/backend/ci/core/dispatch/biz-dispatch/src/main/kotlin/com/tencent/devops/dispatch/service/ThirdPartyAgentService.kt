@@ -535,6 +535,7 @@ class ThirdPartyAgentService @Autowired constructor(
             buildInfo.error == null ||
             buildInfo.error?.errorCode != 2128040
         ) {
+            logger.debug("no send message|${workerErrorRtxTemplate.isNullOrBlank()}|${buildRecord == null}|${buildInfo.success}")
             return
         }
         // 构建需要使用构建的项目id跳转，防止是共享agent，agent链接使用上报的项目Id即可
