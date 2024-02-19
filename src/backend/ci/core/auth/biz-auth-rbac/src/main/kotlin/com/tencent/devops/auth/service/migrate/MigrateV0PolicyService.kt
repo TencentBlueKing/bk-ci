@@ -525,8 +525,8 @@ class MigrateV0PolicyService constructor(
         groupService.addGroupMember(
             userId = member.id,
             memberType = member.type,
-            expiredAt = System.currentTimeMillis() / MILLISECOND + TimeUnit.DAYS.toSeconds(expiredDay)
-                + TimeUnit.DAYS.toSeconds(RandomUtils.nextLong(0, 180)),
+            expiredAt = System.currentTimeMillis() / MILLISECOND + TimeUnit.DAYS.toSeconds(expiredDay) +
+                TimeUnit.DAYS.toSeconds(RandomUtils.nextLong(0, 180)),
             groupId = groupId
         )
     }
