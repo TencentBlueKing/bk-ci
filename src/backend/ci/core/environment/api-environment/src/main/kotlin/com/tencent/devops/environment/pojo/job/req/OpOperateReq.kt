@@ -40,6 +40,7 @@ data class OpOperateReq(
     @ApiModelProperty(value = "当前页数，从1开始。为 -1/null 时返回全量数据。")
     val page: Long? = null,
     @ApiModelProperty(value = "分页大小")
-    val pageSize: Long? = null
-
+    val pageSize: Long? = null,
+    @ApiModelProperty(value = "模糊搜索关键词")
+    val keyword: String? = null
 )

@@ -98,7 +98,10 @@ class OpService @Autowired constructor(
 
     fun operateOpProject(userId: String, opOperateReq: OpOperateReq): OpOperateResult {
         return when (opOperateReq.operateFlag) {
-            OPERATE_TAG_QUERY_ALL_GRAY_PROJS -> queryAllGrayProjs(opOperateReq.page, opOperateReq.pageSize)
+            OPERATE_TAG_QUERY_ALL_GRAY_PROJS -> queryAllGrayProjs(
+                opOperateReq.page, opOperateReq.pageSize, opOperateReq.keyword
+            )
+
             OPERATE_TAG_QUERY_PROJS_GRAY_STATUS -> queryProjsGrayStatus(opOperateReq.projectCodeList)
             OPERATE_TAG_SET_PROJS_GRAY_STATUS -> setProjsGrayStatus(opOperateReq.projectCodeList)
             OPERATE_TAG_CANCEL_PROJS_GRAY_STATUS -> cancelProjsGrayStatus(opOperateReq.projectCodeList)
@@ -118,7 +121,7 @@ class OpService @Autowired constructor(
      * operateFlag == 1：查询所有 灰度项目
      * ZREVRANGE
      */
-    private fun queryAllGrayProjs(page: Long?, pageSize: Long?): OpOperateResult {
+    private fun queryAllGrayProjs(page: Long?, pageSize: Long?, keyword: String?): OpOperateResult {
         val grayProjNumber = grayProjsTotalNum()
         if (0L == grayProjNumber) {
             return OpOperateResult(
@@ -151,25 +154,47 @@ class OpService @Autowired constructor(
                 )
             }
         }
-        val allGrayProjs = if (currentPageSize <= DEFAULT_TRAVERSE_SIZE) {
-            redisOperation.zrevrange(
-                OP_KEY, (currentPage - 1) * currentPageSize, currentPage * currentPageSize - 1
-            )
+        val allGrayProjs = if (keyword.isNullOrBlank()) {
+            if (currentPageSize <= DEFAULT_TRAVERSE_SIZE) {
+                redisOperation.zrevrange(
+                    OP_KEY, (currentPage - 1) * currentPageSize, currentPage * currentPageSize - 1
+                )
+            } else {
+                val innerPageNum = (currentPageSize / DEFAULT_TRAVERSE_SIZE).toInt() + 1
+                val allGrayProjsSet: MutableSet<String> = mutableSetOf()
+                for (i in 1..innerPageNum) {
+                    redisOperation.zrevrange(
+                        OP_KEY,
+                        (currentPage - 1) * currentPageSize + (i - 1) * DEFAULT_TRAVERSE_SIZE,
+                        (currentPage - 1) * currentPageSize + i * DEFAULT_TRAVERSE_SIZE - 1
+                    )?.let {
+                        allGrayProjsSet.addAll(
+                            it.toCollection(ArrayList())
+                        )
+                    }
+                }
+                allGrayProjsSet
+            }
         } else {
-            val allGrayProjsSet: MutableSet<String> = mutableSetOf()
-            val innerPageNum = (currentPageSize / DEFAULT_TRAVERSE_SIZE).toInt() + 1
-            for (i in 1..innerPageNum) {
+            val grayProjsList: MutableList<String> = mutableListOf()
+            val allPage = (grayProjNumber / DEFAULT_TRAVERSE_SIZE).toInt() + 1
+            for (i in 1..allPage) {
                 redisOperation.zrevrange(
                     OP_KEY,
                     (currentPage - 1) * currentPageSize + (i - 1) * DEFAULT_TRAVERSE_SIZE,
                     (currentPage - 1) * currentPageSize + i * DEFAULT_TRAVERSE_SIZE - 1
-                )?.let {
-                    allGrayProjsSet.addAll(
+                )?.filter { keyword in it }?.let {
+                    grayProjsList.addAll(
                         it.toCollection(ArrayList())
                     )
                 }
+                if (grayProjsList.size >= currentPage * currentPageSize - 1) {
+                    break
+                }
             }
-            allGrayProjsSet
+            grayProjsList.subList(
+                ((currentPage - 1) * currentPageSize).toInt(), (currentPage * currentPageSize - 1).toInt()
+            ).toSet()
         }
 
         return OpOperateResult(
