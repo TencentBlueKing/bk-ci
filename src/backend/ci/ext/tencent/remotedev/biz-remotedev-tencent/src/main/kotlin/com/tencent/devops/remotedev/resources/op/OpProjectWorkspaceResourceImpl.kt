@@ -27,6 +27,7 @@ import com.tencent.devops.remotedev.pojo.op.OpProjectWorkspaceAssignData
 import com.tencent.devops.remotedev.pojo.op.OpUpdateCCHostData
 import com.tencent.devops.remotedev.pojo.op.WindowsSpecResInfo
 import com.tencent.devops.remotedev.pojo.op.WorkspaceNotifyData
+import com.tencent.devops.remotedev.pojo.op.WorkspaceNotifyListData
 import com.tencent.devops.remotedev.pojo.windows.FetchOwnerAndAdminData
 import com.tencent.devops.remotedev.service.DesktopWorkspaceService
 import com.tencent.devops.remotedev.service.WindowsResourceConfigService
@@ -210,6 +211,10 @@ class OpProjectWorkspaceResourceImpl @Autowired constructor(
             notifyData = notifyData
         )
         return Result(true)
+    }
+
+    override fun fetchNotifyList(userId: String, page: Int, pageSize: Int): Result<List<WorkspaceNotifyListData>> {
+        return Result(notifyControl.fetchNotifyList(page, pageSize))
     }
 
     companion object {

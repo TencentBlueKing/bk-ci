@@ -1,6 +1,9 @@
 package com.tencent.devops.remotedev.dao
 
+import com.tencent.devops.common.api.model.SQLLimit
+import com.tencent.devops.common.db.utils.skipCheck
 import com.tencent.devops.model.remotedev.tables.TWorkspaceNotify
+import com.tencent.devops.model.remotedev.tables.records.TWorkspaceNotifyRecord
 import com.tencent.devops.remotedev.pojo.op.WorkspaceNotifyData
 import org.jooq.DSLContext
 import org.springframework.stereotype.Repository
@@ -31,6 +34,15 @@ class ProjectNotifyDao {
                 notifyData.desc ?: "",
                 LocalDateTime.now()
             ).execute()
+        }
+    }
+
+    fun fetch(
+        dslContext: DSLContext,
+        sqlLimit: SQLLimit
+    ): List<TWorkspaceNotifyRecord> {
+        with(TWorkspaceNotify.T_WORKSPACE_NOTIFY) {
+            return dslContext.selectFrom(this).offset(sqlLimit.offset).limit(sqlLimit.limit).skipCheck().fetch()
         }
     }
 }

@@ -37,10 +37,12 @@ import com.tencent.devops.remotedev.pojo.op.OpProjectWorkspaceAssignData
 import com.tencent.devops.remotedev.pojo.windows.FetchOwnerAndAdminData
 import com.tencent.devops.remotedev.pojo.op.OpUpdateCCHostData
 import com.tencent.devops.remotedev.pojo.op.WorkspaceNotifyData
+import com.tencent.devops.remotedev.pojo.op.WorkspaceNotifyListData
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
 import javax.ws.rs.Consumes
+import javax.ws.rs.GET
 import javax.ws.rs.HeaderParam
 import javax.ws.rs.POST
 import javax.ws.rs.Path
@@ -132,4 +134,17 @@ interface OpProjectWorkspaceResource {
         @ApiParam(value = "通知信息", required = true)
         notifyData: WorkspaceNotifyData
     ): Result<Boolean>
+
+    @ApiOperation("查询云桌面通知列表")
+    @GET
+    @Path("/notify/list")
+    fun fetchNotifyList(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @QueryParam("page")
+        page: Int,
+        @QueryParam("pageSize")
+        pageSize: Int
+    ): Result<List<WorkspaceNotifyListData>>
 }

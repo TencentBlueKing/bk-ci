@@ -28,6 +28,7 @@
 package com.tencent.devops.remotedev.service.workspace
 
 import com.tencent.devops.common.api.exception.ErrorCodeException
+import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.notify.enums.NotifyType
 import com.tencent.devops.common.notify.utils.NotifyUtils
@@ -51,6 +52,7 @@ import com.tencent.devops.remotedev.pojo.WorkspaceShared
 import com.tencent.devops.remotedev.pojo.WorkspaceSystemType
 import com.tencent.devops.remotedev.pojo.common.RemoteDevNotifyType
 import com.tencent.devops.remotedev.pojo.op.WorkspaceNotifyData
+import com.tencent.devops.remotedev.pojo.op.WorkspaceNotifyListData
 import com.tencent.devops.remotedev.service.client.TaiClient
 import com.tencent.devops.remotedev.service.client.TaiUserInfoRequest
 import com.tencent.devops.remotedev.websocket.page.WorkspacePageBuild
@@ -292,6 +294,22 @@ class NotifyControl @Autowired constructor(
             client.get(ServiceNotifyMessageTemplateResource::class).sendNotifyMessageByTemplate(request)
         }.onFailure {
             logger.warn("notify WINDOWS_GPU_SAFE_INIT_FAILED fail ${it.message}")
+        }
+    }
+
+    fun fetchNotifyList(
+        page: Int,
+        pageSize: Int
+    ): List<WorkspaceNotifyListData> {
+        val sqlLimit = PageUtil.convertPageSizeToSQLLimit(page, pageSize)
+        return notifyDao.fetch(dslContext, sqlLimit).map {
+            WorkspaceNotifyListData(
+                projectId = it.projectIds,
+                ip = it.ips,
+                title = it.title,
+                desc = it.desc,
+                createTime = it.createdTime.toString()
+            )
         }
     }
 }
