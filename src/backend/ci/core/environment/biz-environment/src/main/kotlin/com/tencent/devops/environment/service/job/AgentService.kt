@@ -166,7 +166,7 @@ data class AgentService @Autowired constructor(
             )
         )
         checkAgentStatusAsyncService.checkAgentStatus(
-            userId, projectId, installAgentRes.data?.jobId,installAgentReq.hosts.mapNotNull { it.innerIp }
+            userId, projectId, installAgentRes.data?.jobId, installAgentReq.hosts.mapNotNull { it.innerIp }
         )
         return installAgentRes
     }
