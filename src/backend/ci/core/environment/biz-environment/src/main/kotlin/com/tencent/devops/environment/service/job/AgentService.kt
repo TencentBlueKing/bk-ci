@@ -229,13 +229,9 @@ data class AgentService @Autowired constructor(
                         val queryAgentTaskStatusRes = queryAgentTaskStatus(
                             userId, projectId, jobId, queryAgentTaskStatusReq
                         )
-                        if (logger.isDebugEnabled)
-                            logger.debug("Agent install task queryAgentTaskStatusRes:$queryAgentTaskStatusRes")
-                        val inRunningIpList = queryAgentTaskStatusRes.data?.list?.filter {
+                        queryAgentTaskStatusRes.data?.list?.filter {
                             it.ip in runningIpList
-                        }
-                        if (logger.isDebugEnabled) logger.debug("Agent install task inRunningIpList:$inRunningIpList")
-                        inRunningIpList?.map {
+                        }?.map {
                             if (logger.isDebugEnabled)
                                 logger.debug("Agent install task: ip: ${it.ip}, status: ${it.status}")
                             if (it.status in agentTaskEndStatusList) { // agent安装结束(成功/失败)
