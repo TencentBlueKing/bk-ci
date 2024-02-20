@@ -75,6 +75,7 @@ import com.tencent.devops.remotedev.service.workspace.NotifyControl.Companion.NO
 import com.tencent.devops.remotedev.service.workspace.NotifyControl.Companion.SLEEP_7_DAY_AUTO_DELETE_NOTIFY
 import java.time.Duration
 import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
 import java.util.concurrent.TimeUnit
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
@@ -109,6 +110,7 @@ class DeleteControl @Autowired constructor(
     companion object {
         private val logger = LoggerFactory.getLogger(DeleteControl::class.java)
         private val expiredTimeInSeconds = TimeUnit.MINUTES.toSeconds(2)
+        val formatter: DateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd hh:mm:ss")
     }
 
     @ActionAuditRecord(
@@ -294,7 +296,11 @@ class DeleteControl @Autowired constructor(
                     action = WorkspaceAction.DELETE,
                     actionMessage = workspaceCommon.getOpHistory(OpHistoryCopyWriting.TIMEOUT_STOP)
                 )
-                readyDeleteWorkspace.add("ip=${workspace.hostName}, project=${workspace.projectId}")
+                readyDeleteWorkspace.add(
+                    "project=${workspace.projectId}, ip=${workspace.hostName}," +
+                            " 原因=超过3天未分配(创建时间: ${workspace.lastStatusUpdateTime?.format(formatter)}" +
+                            " 早于检测时间 ${limitDay.format(formatter)})"
+                )
                 if (onDelete) {
                     kotlin.runCatching { deleteWorkspace4OP(ADMIN_NAME, workspace.workspaceName) }.onFailure { i ->
                         logger.warn("auto delete fail|${i.message}", i)
@@ -343,7 +349,11 @@ class DeleteControl @Autowired constructor(
                     action = WorkspaceAction.DELETE,
                     actionMessage = workspaceCommon.getOpHistory(OpHistoryCopyWriting.TIMEOUT_STOP)
                 )
-                readyDeleteWorkspace.add("ip=${workspace.hostName}, project=${workspace.projectId}")
+                readyDeleteWorkspace.add(
+                    "project=${workspace.projectId}, ip=${workspace.hostName}" +
+                            ", 原因=关机超过7天(关机时间: ${workspace.lastStatusUpdateTime?.format(formatter)}" +
+                            " 早于检测时间 ${limitDay.format(formatter)})"
+                )
                 if (onDelete) {
                     kotlin.runCatching { deleteWorkspace4OP(ADMIN_NAME, workspace.workspaceName) }.onFailure { i ->
                         logger.warn("auto delete fail|${i.message}", i)
