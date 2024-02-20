@@ -30,6 +30,11 @@ package com.tencent.devops.environment.service.job
 import com.fasterxml.jackson.databind.DeserializationFeature
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
+import com.tencent.devops.common.api.exception.CustomException
+import com.tencent.devops.common.redis.RedisLock
+import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.environment.dao.NodeDao
+import com.tencent.devops.environment.pojo.enums.NodeStatus
 import com.tencent.devops.environment.pojo.job.agentreq.AgentCondition
 import com.tencent.devops.environment.pojo.job.agentreq.AgentHostForInstallAgent
 import com.tencent.devops.environment.pojo.job.agentreq.AgentInstallAgentReq
@@ -68,23 +73,33 @@ import com.tencent.devops.environment.pojo.job.agentres.QueryAgentTaskStatusResu
 import com.tencent.devops.environment.pojo.job.agentres.RetryAgentInstallTaskResult
 import com.tencent.devops.environment.pojo.job.agentres.Statistics
 import com.tencent.devops.environment.pojo.job.agentres.TerminalAgentInstallTaskResult
+import org.jooq.DSLContext
 import org.json.JSONObject
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
+import org.springframework.scheduling.annotation.Async
 import org.springframework.stereotype.Service
 import java.io.InputStream
+import java.util.concurrent.Executors
+import java.util.concurrent.TimeUnit
+import javax.ws.rs.core.Response
 
 @Service("AgentService")
 data class AgentService @Autowired constructor(
     private val nodeManApi: NodeManApi,
     private val chooseAgentInstallChannelIdService: ChooseAgentInstallChannelIdService,
-    private val checkAgentStatusAsyncService: CheckAgentStatusAsyncService,
-    private val fileService: FileService
+    private val fileService: FileService,
+    private val dslContext: DSLContext,
+    private val nodeDao: NodeDao,
+    private val redisOperation: RedisOperation
 ) {
     @Value("\${environment.cc.bkBizScopeId:#{null}}")
     val bkBizScopeId: Int = 0
 
     companion object {
+        private val logger = LoggerFactory.getLogger(AgentService::class.java)
+
         private val mapper = jacksonObjectMapper().apply {
             configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
         }
@@ -96,6 +111,20 @@ data class AgentService @Autowired constructor(
         private const val DEFAULT_CLOUD_ID = 0
         private const val DEFAULT_PLACE_HOLDER = -1
         private const val DEFAULT_NOT_INSTALL_LATEST_PLUGINS = false
+
+        private const val DEFAULT_PAGE = 20
+        private const val DEFAULT_PAGE_SIZE = 20
+        private const val MAXIMUM_RETRY_TIMES = 20
+        private const val INITIAL_DELAY = 1000L // unit: ms
+        private const val TASK_PERIOD = 15000L // unit: ms
+
+        private const val AGENT_INSTALL_NORMAL = "SUCCESS"
+        private val agentTaskEndStatusList = listOf(
+            "FAILED", "SUCCESS", "PART_FAILED", "TERMINATED", "REMOVED", "FILTERED", "IGNORED"
+        ) // 两种正在执行状态："PENDING"(等待), "RUNNING"（正在执行）
+
+        private const val CHECK_NODE_STATUS_TIMEOUT_LOCK_KEY = "check_node_status_timeout_lock"
+        private const val EXPIRATION_TIME_OF_THE_LOCK = 200L
     }
 
     fun installAgent(
@@ -165,10 +194,70 @@ data class AgentService @Autowired constructor(
                 }
             )
         )
-        checkAgentStatusAsyncService.checkAgentStatus(
+        checkAgentStatus(
             userId, projectId, installAgentRes.data?.jobId, installAgentReq.hosts.mapNotNull { it.innerIp }
         )
         return installAgentRes
+    }
+
+    /**
+     * 安装agent状态轮询
+     * 发起安装任务后，轮询安装状态：安装中 - NODE_STATUS: RUNNING
+     * 执行定时轮询任务，每隔 30000ms 检查任务状态，如果结束（成功/失败）则停止轮询。
+     */
+    @Async("checkAgentStatus")
+    fun checkAgentStatus(userId: String, projectId: String, jobId: Int?, ipList: List<String>?) {
+        val redisLock = RedisLock(redisOperation, CHECK_NODE_STATUS_TIMEOUT_LOCK_KEY, EXPIRATION_TIME_OF_THE_LOCK)
+        redisLock.takeIf { it.tryLock() }.run {
+            try {
+                if (null == jobId) {
+                    throw CustomException(
+                        Response.Status.INTERNAL_SERVER_ERROR,
+                        "Empty job id."
+                    )
+                }
+                if (null == ipList) return
+                val executor = Executors.newSingleThreadScheduledExecutor()
+                val runningIpList = ipList.toMutableList()
+                nodeDao.updateNodeStatusByNodeIp(dslContext, ipList, NodeStatus.RUNNING.name)
+                val task = object : Runnable {
+                    var count = 0
+                    override fun run() {
+                        val queryAgentTaskStatusReq = QueryAgentTaskStatusReq(
+                            page = DEFAULT_PAGE, pageSize = DEFAULT_PAGE_SIZE
+                        )
+                        val queryAgentTaskStatusRes = queryAgentTaskStatus(
+                            userId, projectId, jobId, queryAgentTaskStatusReq
+                        )
+                        queryAgentTaskStatusRes.data?.list?.filter {
+                            it.ip in runningIpList
+                        }?.map {
+                            if (it.status in agentTaskEndStatusList) { // agent安装结束(成功/失败)
+                                val nodeStatus =
+                                    if (AGENT_INSTALL_NORMAL == it.status) NodeStatus.NORMAL.name
+                                    else NodeStatus.ABNORMAL.name
+                                nodeDao.updateNodeStatusByNodeIp(dslContext, listOf(it.ip), nodeStatus)
+                                runningIpList.remove(it.ip)
+                            }
+                        }
+                        if (runningIpList.isEmpty()) {
+                            logger.info("Agent install task is complete.")
+                            executor.shutdown()
+                        } else if (count > MAXIMUM_RETRY_TIMES) {
+                            logger.info("Agent install task is partially complete. Abnormal ip: $runningIpList")
+                            nodeDao.updateNodeStatusByNodeIp(dslContext, runningIpList, NodeStatus.ABNORMAL.name)
+                            executor.shutdown()
+                        } else {
+                            if (logger.isDebugEnabled) logger.debug("Agent install task running...")
+                            count++
+                        }
+                    }
+                }
+                executor.scheduleAtFixedRate(task, INITIAL_DELAY, TASK_PERIOD, TimeUnit.MILLISECONDS)
+            } finally {
+                redisLock.unlock()
+            }
+        }
     }
 
     fun queryAgentTaskStatus(
