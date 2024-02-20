@@ -221,9 +221,11 @@ class PipelineYamlRepositoryService @Autowired constructor(
             userId = userId,
             webhooks = webhooks
         )
-        pipelineViewGroupService.updateGroupAfterPipelineCreate(
+        pipelineViewGroupService.updateGroupAfterPipelineUpdate(
             projectId = projectId,
             pipelineId = pipelineId,
+            pipelineName = deployPipelineResult.pipelineName,
+            creator = userId,
             userId = userId
         )
     }
