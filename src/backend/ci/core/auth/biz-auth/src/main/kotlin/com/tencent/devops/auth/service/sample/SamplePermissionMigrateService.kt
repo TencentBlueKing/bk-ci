@@ -81,4 +81,8 @@ class SamplePermissionMigrateService : PermissionMigrateService {
     ): Boolean {
         return true
     }
+
+    override fun autoRenewal(migrateProjectConditionDTO: MigrateProjectConditionDTO): Boolean {
+        return true
+    }
 }

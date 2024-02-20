@@ -188,14 +188,14 @@ class AuthResourceDao {
         dslContext: DSLContext,
         projectCode: String,
         resourceName: String?,
-        resourceType: String,
+        resourceType: String?,
         offset: Int,
         limit: Int
     ): Result<TAuthResourceRecord> {
         with(TAuthResource.T_AUTH_RESOURCE) {
             return dslContext.selectFrom(this)
                 .where(PROJECT_CODE.eq(projectCode))
-                .and(RESOURCE_TYPE.eq(resourceType))
+                .let { if (resourceType == null) it else it.and(RESOURCE_TYPE.eq(resourceType)) }
                 .let { if (resourceName == null) it else it.and(RESOURCE_NAME.like("%$resourceName%")) }
                 .limit(limit)
                 .offset(offset)

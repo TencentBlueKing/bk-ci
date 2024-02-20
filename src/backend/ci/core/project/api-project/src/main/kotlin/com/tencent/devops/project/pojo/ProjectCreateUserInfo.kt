@@ -42,5 +42,7 @@ data class ProjectCreateUserInfo(
     @ApiModelProperty("组ID")
     val groupId: Int?,
     @ApiModelProperty("目标用户")
-    val userIds: List<String>? = emptyList()
+    val userIds: List<String>? = emptyList(),
+    @ApiModelProperty("目标部门")
+    val deptIds: List<String>? = emptyList()
 )
