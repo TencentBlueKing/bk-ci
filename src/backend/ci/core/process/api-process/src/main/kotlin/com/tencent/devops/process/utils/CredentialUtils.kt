@@ -30,7 +30,6 @@ package com.tencent.devops.process.utils
 import com.tencent.devops.repository.pojo.CodeP4Repository
 import com.tencent.devops.repository.pojo.CodeSvnRepository
 import com.tencent.devops.repository.pojo.Repository
-import com.tencent.devops.repository.pojo.credential.RepoCredentialInfo
 import com.tencent.devops.ticket.pojo.enums.CredentialType
 import org.slf4j.LoggerFactory
 
