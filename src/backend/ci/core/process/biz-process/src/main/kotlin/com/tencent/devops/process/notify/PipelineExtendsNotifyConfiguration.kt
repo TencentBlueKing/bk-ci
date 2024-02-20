@@ -33,6 +33,7 @@ import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatch
 import com.tencent.devops.common.stream.constants.StreamBinding
 import com.tencent.devops.process.bean.PipelineUrlBean
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildNotifyEvent
+import com.tencent.devops.process.engine.pojo.event.PipelineBuildReviewReminderEvent
 import com.tencent.devops.process.service.ProjectCacheService
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.context.annotation.Bean
@@ -70,38 +71,15 @@ class PipelineExtendsNotifyConfiguration {
         }
     }
 
-    @Bean
-    fun pipelineBuildNotifyReminderQueue(): Queue {
-        return Queue(MQ.QUEUE_PIPELINE_BUILD_REVIEW_REMINDER)
-    }
-
-    @Bean
-    fun pipelineBuildNotifyReminderQueueBind(
-        @Autowired pipelineBuildNotifyReminderQueue: Queue,
-        @Autowired pipelineMonitorExchange: DirectExchange
-    ): Binding {
-        return BindingBuilder.bind(pipelineBuildNotifyReminderQueue).to(pipelineMonitorExchange)
-            .with(MQ.ROUTE_PIPELINE_BUILD_REVIEW_REMINDER)
-    }
-
-    @Bean
-    fun pipelineBuildNotifyReminderListenerContainer(
-        @Autowired connectionFactory: ConnectionFactory,
-        @Autowired pipelineBuildNotifyReminderQueue: Queue,
-        @Autowired rabbitAdmin: RabbitAdmin,
-        @Autowired pipelineAtomTaskReminderListener: PipelineAtomTaskReminderListener,
-        @Autowired messageConverter: Jackson2JsonMessageConverter
-    ): SimpleMessageListenerContainer {
-        return Tools.createSimpleMessageListenerContainer(
-            connectionFactory = connectionFactory,
-            queue = pipelineBuildNotifyReminderQueue,
-            rabbitAdmin = rabbitAdmin,
-            buildListener = pipelineAtomTaskReminderListener,
-            messageConverter = messageConverter,
-            startConsumerMinInterval = 10000,
-            consecutiveActiveTrigger = 5,
-            concurrency = 1,
-            maxConcurrency = 10
-        )
+    /**
+     * 审核提醒广播监听
+     */
+    @EventConsumer(StreamBinding.QUEUE_PIPELINE_BUILD_REVIEW_REMINDER, STREAM_CONSUMER_GROUP)
+    fun pipelineBuildNotifyReminderListener(
+        @Autowired pipelineAtomTaskReminderListener: PipelineAtomTaskReminderListener
+    ): Consumer<Message<PipelineBuildReviewReminderEvent>> {
+        return Consumer { event: Message<PipelineBuildReviewReminderEvent> ->
+            pipelineAtomTaskReminderListener.execute(event.payload)
+        }
     }
 }

@@ -37,7 +37,7 @@ import com.tencent.devops.common.stream.constants.StreamBinding
  * @author royalhuang
  * @version 1.0
  */
-@Event(StreamBinding.EXCHANGE_PIPELINE_MONITOR_DIRECT)
+@Event(StreamBinding.QUEUE_PIPELINE_BUILD_REVIEW_REMINDER)
 data class PipelineBuildReviewReminderEvent(
     override val source: String,
     override val projectId: String,

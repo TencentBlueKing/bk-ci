@@ -67,9 +67,6 @@ object StreamBinding {
 
     const val QUEUE_PIPELINE_ARCHIVE = "engine.pipeline.archive"
 
-    // 监控 ====================================
-    const val EXCHANGE_PIPELINE_MONITOR_DIRECT = "engine.pipeline.listener.monitor"
-
     // 接收上述广播的队列
     const val QUEUE_PIPELINE_BUILD_HEART_BEAT = "engine.pipeline.build.hb"
     // 构建产生的审核通知类队列
