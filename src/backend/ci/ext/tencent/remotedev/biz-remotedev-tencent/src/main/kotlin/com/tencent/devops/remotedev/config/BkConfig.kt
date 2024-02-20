@@ -45,4 +45,6 @@ class BkConfig {
     // bkvision配置
     @Value("\${bkvision.url:}")
     val bkvisionUrl: String = ""
+    @Value("\${bkvision.shareId:}")
+    val bkvisionShareId: String = ""
 }

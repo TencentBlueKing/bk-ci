@@ -29,7 +29,7 @@ class BKVisionService @Autowired constructor(
         shareUid: String,
         type: String
     ): BkVisionResp {
-        val url = "${bkConfig.bkvisionUrl}/v1/meta/query?share_uid=$shareUid&type=$type"
+        val url = "${bkConfig.bkvisionUrl}/v1/meta/query?share_uid=${bkConfig.bkvisionShareId}&type=$type"
         val req = Request.Builder()
             .url(url)
             .headers(headers())
