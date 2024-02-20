@@ -47,6 +47,7 @@ import org.tmatesoft.svn.core.SVNDirEntry
 import org.tmatesoft.svn.core.SVNException
 import org.tmatesoft.svn.core.SVNLogEntry
 import org.tmatesoft.svn.core.SVNNodeKind
+import org.tmatesoft.svn.core.SVNURL
 import org.tmatesoft.svn.core.io.SVNRepository
 
 @Suppress("ALL")
@@ -58,7 +59,7 @@ class CodeSvnScmImpl constructor(
     private var privateKey: String,
     private val passphrase: String?,
     private val svnConfig: SVNConfig,
-    private val token: String?
+    private var token: String?
 ) : IScm {
 
     override fun getLatestRevision(): RevisionInfo {
@@ -122,32 +123,6 @@ class CodeSvnScmImpl constructor(
 
     override fun checkTokenAndPrivateKey() {
         try {
-            if (token.isNullOrBlank()) {
-                throw ScmException(
-                    MessageUtil.getMessageByLocale(
-                        messageCode = CommonMessageCode.SVN_TOKEN_EMPTY,
-                        language = DEFAULT_LOCALE_LANGUAGE
-                    ),
-                    ScmType.CODE_SVN.name
-                )
-            }
-            SVNApi.getFileList(
-                host = svnConfig.webhookApiUrl,
-                token = token,
-                projectName = projectName,
-                path = getSubDirPath(),
-                revision = "HEAD"
-            )
-        } catch (ignored: Throwable) {
-            logger.warn("Fail to get file list", ignored)
-            throw ScmException(
-                I18nUtil.getCodeLanMessage(
-                    CommonMessageCode.SVN_TOKEN_FAIL
-                ),
-                ScmType.CODE_SVN.name
-            )
-        }
-        try {
             getLatestRevision()
         } catch (ignored: Throwable) {
             logger.warn("Fail to check the svn latest revision", ignored)
@@ -161,32 +136,6 @@ class CodeSvnScmImpl constructor(
     }
 
     override fun checkTokenAndUsername() {
-        try {
-            if (token.isNullOrBlank()) {
-                throw ScmException(
-                    MessageUtil.getMessageByLocale(
-                        messageCode = CommonMessageCode.SVN_TOKEN_EMPTY,
-                        language = DEFAULT_LOCALE_LANGUAGE
-                    ),
-                    ScmType.CODE_SVN.name
-                )
-            }
-            SVNApi.getFileList(
-                host = svnConfig.webhookApiUrl,
-                token = token,
-                projectName = projectName,
-                path = getSubDirPath(),
-                revision = "HEAD"
-            )
-        } catch (ignored: Throwable) {
-            logger.warn("Fail to get file list", ignored)
-            throw ScmException(
-                I18nUtil.getCodeLanMessage(
-                    CommonMessageCode.SVN_TOKEN_FAIL
-                ),
-                ScmType.CODE_SVN.name
-            )
-        }
         try {
             // 检查用户名密码时privateKey为用户名，passphrase为密码
             // 参考：com.tencent.devops.repository.service.scm.ScmService.checkUsernameAndPassword
@@ -346,6 +295,10 @@ class CodeSvnScmImpl constructor(
      * 基于私人令牌添加svn仓库的webhook
      */
     private fun addWebhookByToken(hookUrl: String) {
+        val ssh = SvnUtils.isSSHProtocol(SVNURL.parseURIEncoded(url).protocol)
+        if (!ssh) {
+            token = getLoginSession()?.privateToken
+        }
         if (token.isNullOrBlank()) {
             throw ScmException(
                 MessageUtil.getMessageByLocale(
@@ -358,7 +311,7 @@ class CodeSvnScmImpl constructor(
         val hooks = SVNApi.getWebhooks(
             host = svnConfig.webhookApiUrl,
             projectName = projectName,
-            token = token
+            token = token!!
         )
         val subDirPath = getSubDirPath()
         val existHook = if (hooks.isEmpty()) {
@@ -373,7 +326,7 @@ class CodeSvnScmImpl constructor(
                 host = svnConfig.webhookApiUrl,
                 projectName = projectName,
                 hookUrl = hookUrl,
-                token = token,
+                token = token!!,
                 eventType = SvnHookEventType.SVN_POST_COMMIT_EVENTS,
                 path = subDirPath
             )
