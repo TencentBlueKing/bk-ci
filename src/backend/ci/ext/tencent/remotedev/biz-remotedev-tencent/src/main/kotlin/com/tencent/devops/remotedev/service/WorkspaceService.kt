@@ -54,6 +54,7 @@ import com.tencent.devops.remotedev.common.Constansts
 import com.tencent.devops.remotedev.common.Constansts.ADMIN_NAME
 import com.tencent.devops.remotedev.common.WorkspaceNotifyTemplateEnum
 import com.tencent.devops.remotedev.common.exception.ErrorCodeEnum
+import com.tencent.devops.remotedev.cron.HolidayHelper
 import com.tencent.devops.remotedev.dao.ExpertSupportDao
 import com.tencent.devops.remotedev.dao.RemoteDevBillingDao
 import com.tencent.devops.remotedev.dao.RemoteDevSettingDao
@@ -88,6 +89,7 @@ import com.tencent.devops.remotedev.pojo.WorkspaceStatus
 import com.tencent.devops.remotedev.pojo.WorkspaceSystemType
 import com.tencent.devops.remotedev.pojo.WorkspaceUserDetail
 import com.tencent.devops.remotedev.pojo.common.QueryType
+import com.tencent.devops.remotedev.pojo.common.RemoteDevNotifyType
 import com.tencent.devops.remotedev.pojo.expert.FetchSupportResp
 import com.tencent.devops.remotedev.pojo.op.RemotedevCvmData
 import com.tencent.devops.remotedev.pojo.project.RemotedevProject
@@ -100,6 +102,8 @@ import com.tencent.devops.remotedev.service.redis.RedisKeys.REDIS_DISCOUNT_TIME_
 import com.tencent.devops.remotedev.service.redis.RedisKeys.REDIS_OFFICIAL_DEVFILE_KEY
 import com.tencent.devops.remotedev.service.transfer.RemoteDevGitTransfer
 import com.tencent.devops.remotedev.service.workspace.NotifyControl
+import com.tencent.devops.remotedev.service.workspace.NotifyControl.Companion.NOT_LOGIN_NOTIFY
+import com.tencent.devops.remotedev.service.workspace.NotifyControl.Companion.SLEEP_3_DAY_NOTIFY
 import com.tencent.devops.remotedev.service.workspace.WorkspaceCommon
 import com.tencent.devops.scm.utils.code.git.GitUtils
 import java.time.Duration
@@ -140,7 +144,9 @@ class WorkspaceService @Autowired constructor(
     private val expertSupportDao: ExpertSupportDao,
     private val apiGwService: ApiGwService,
     private val notifyControl: NotifyControl,
-    private val startWorkspaceService: StartWorkspaceService
+    private val startWorkspaceService: StartWorkspaceService,
+    private val bkBaseService: BKBaseService,
+    private val holidayHelper: HolidayHelper
 ) {
     @ActionAuditRecord(
         actionId = ActionId.CGS_EDIT,
@@ -1135,6 +1141,74 @@ class WorkspaceService @Autowired constructor(
                 )
             } else {
                 logger.info("no need to notify now|$userId|$duration|${limit * 60}")
+            }
+        }
+    }
+
+    fun notifyWinSleep3Day() {
+        logger.info("notifyWinSleep3Day")
+        val limitDay = holidayHelper.getLastWorkingDays(3).last()
+        workspaceDao.fetchWorkspace(
+            dslContext = dslContext,
+            status = WorkspaceStatus.STOPPED,
+            systemType = WorkspaceSystemType.WINDOWS_GPU
+        )?.parallelStream()?.forEach { workspace ->
+            if ((workspace.lastStatusUpdateTime ?: LocalDateTime.now()) < limitDay) {
+                logger.info(
+                    "ready to notify when sleep in 3 day " +
+                            "|${workspace.workspaceName}|${workspace.lastStatusUpdateTime}"
+                )
+                workspaceOpHistoryDao.createWorkspaceHistory(
+                    dslContext = dslContext,
+                    workspaceName = workspace.workspaceName,
+                    operator = ADMIN_NAME,
+                    action = WorkspaceAction.NOTIFY,
+                    actionMessage = workspaceCommon.getOpHistory(OpHistoryCopyWriting.TIMEOUT_STOP)
+                )
+                notifyControl.notify4UserAndCCRemoteDevManager(
+                    userIds = permissionService.getWorkspaceOwner(workspace.workspaceName).toMutableSet(),
+                    projectId = workspace.projectId,
+                    notifyTemplateCode = SLEEP_3_DAY_NOTIFY,
+                    notifyType = mutableSetOf(RemoteDevNotifyType.EMAIL),
+                    bodyParams = mapOf(
+                        "cgsIp" to (workspace.hostName ?: "")
+                    )
+                )
+            }
+        }
+    }
+
+    fun notifyWinNotLogin3Day() {
+        val limitDay = holidayHelper.getLastWorkingDays(3).last()
+        val logins = bkBaseService.fetchOnlineIps(limitDay)
+        logger.info("notifyWinNotLogin3Day|$limitDay|${logins.size}")
+        val running = workspaceDao.fetchWorkspace(
+            dslContext = dslContext,
+            status = WorkspaceStatus.RUNNING,
+            systemType = WorkspaceSystemType.WINDOWS_GPU
+        ) ?: return
+        running.parallelStream().forEach { workspace ->
+            if ((workspace.lastStatusUpdateTime ?: LocalDateTime.now()) < limitDay) {
+                logger.info(
+                    "ready to notify when not login in 3 day " +
+                            "|${workspace.workspaceName}|${workspace.lastStatusUpdateTime}"
+                )
+                workspaceOpHistoryDao.createWorkspaceHistory(
+                    dslContext = dslContext,
+                    workspaceName = workspace.workspaceName,
+                    operator = ADMIN_NAME,
+                    action = WorkspaceAction.NOTIFY,
+                    actionMessage = workspaceCommon.getOpHistory(OpHistoryCopyWriting.TIMEOUT_SLEEP)
+                )
+                notifyControl.notify4UserAndCCRemoteDevManager(
+                    userIds = permissionService.getWorkspaceOwner(workspace.workspaceName).toMutableSet(),
+                    projectId = workspace.projectId,
+                    notifyTemplateCode = NOT_LOGIN_NOTIFY,
+                    notifyType = mutableSetOf(RemoteDevNotifyType.EMAIL),
+                    bodyParams = mapOf(
+                        "cgsIp" to (workspace.hostName ?: "")
+                    )
+                )
             }
         }
     }

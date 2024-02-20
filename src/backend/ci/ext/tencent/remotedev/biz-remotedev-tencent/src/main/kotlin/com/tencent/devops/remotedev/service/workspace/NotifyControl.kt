@@ -38,8 +38,11 @@ import com.tencent.devops.common.websocket.pojo.NotifyPost
 import com.tencent.devops.notify.api.service.ServiceNotifyMessageTemplateResource
 import com.tencent.devops.notify.pojo.NotifyMessageContextRequest
 import com.tencent.devops.notify.pojo.SendNotifyMessageTemplateRequest
+import com.tencent.devops.project.api.service.ServiceProjectResource
+import com.tencent.devops.project.constant.ProjectMessageCode
 import com.tencent.devops.remotedev.common.Constansts.ADMIN_NAME
 import com.tencent.devops.remotedev.common.exception.ErrorCodeEnum
+import com.tencent.devops.remotedev.dao.RemoteDevSettingDao
 import com.tencent.devops.remotedev.dao.WorkspaceDao
 import com.tencent.devops.remotedev.pojo.WebSocketActionType
 import com.tencent.devops.remotedev.pojo.WorkspaceAction
@@ -68,6 +71,7 @@ class NotifyControl @Autowired constructor(
     private val workspaceDao: WorkspaceDao,
     private val redisOperation: RedisOperation,
     private val webSocketDispatcher: WebSocketDispatcher,
+    private val remoteDevSettingDao: RemoteDevSettingDao,
     private val taiClient: TaiClient
 ) {
 
@@ -88,6 +92,21 @@ class NotifyControl @Autowired constructor(
 
         /*云桌面通知功能-云桌面已分配到项目时*/
         const val CLIENT_VERSION_WARNING_NOTIFY = "CLIENT_VERSION_WARNING_NOTIFY"
+
+        /*云桌面处于待分配超过3天的自动回收，并邮件提醒	*/
+        const val NOT_ASSIGN_AUTO_DELETE_NOTIFY = "NOT_ASSIGN_AUTO_DELETE_NOTIFY"
+
+        /*云桌面通知-关机超过7天时自动销毁*/
+        const val SLEEP_7_DAY_AUTO_DELETE_NOTIFY = "SLEEP_7_DAY_AUTO_DELETE_NOTIFY"
+
+        /*云桌面通知-关机超过3天时提醒*/
+        const val SLEEP_3_DAY_NOTIFY = "SLEEP_3_DAY_NOTIFY"
+
+        /*云桌面通知-未登录7天时自动降配并关机*/
+        const val NOT_LOGIN_AUTO_SLEEP_NOTIFY = "NOT_LOGIN_AUTO_SLEEP_NOTIFY"
+
+        /*云桌面通知-未登录3天时提醒*/
+        const val NOT_LOGIN_NOTIFY = "NOT_LOGIN_NOTIFY"
     }
 
     fun notifyWorkspaceInfo(
@@ -121,12 +140,56 @@ class NotifyControl @Autowired constructor(
         }
     }
 
-    fun notify4User(
-        userIds: MutableSet<String>,
-        workspaceName: String,
+    fun notify4RemoteDevManager(
+        projectId: String,
         notifyTemplateCode: String,
         notifyType: MutableSet<RemoteDevNotifyType>,
         bodyParams: Map<String, String>
+    ) {
+        val projectInfo = kotlin.runCatching {
+            client.get(ServiceProjectResource::class).get(projectId)
+        }.onFailure { logger.warn("get project $projectId info error|${it.message}") }
+            .getOrElse { null }?.data ?: throw ErrorCodeException(
+            errorCode = ProjectMessageCode.PROJECT_NOT_EXIST
+        )
+        notify4User(
+            userIds = projectInfo.properties?.remotedevManager?.split(";")?.toMutableSet()
+                ?: mutableSetOf(),
+            notifyTemplateCode = notifyTemplateCode,
+            notifyType = notifyType,
+            bodyParams = bodyParams
+        )
+    }
+
+    fun notify4UserAndCCRemoteDevManager(
+        userIds: MutableSet<String>,
+        projectId: String,
+        notifyTemplateCode: String,
+        notifyType: MutableSet<RemoteDevNotifyType>,
+        bodyParams: Map<String, String>
+    ) {
+        val projectInfo = kotlin.runCatching {
+            client.get(ServiceProjectResource::class).get(projectId)
+        }.onFailure { logger.warn("get project $projectId info error|${it.message}") }
+            .getOrElse { null }?.data ?: throw ErrorCodeException(
+            errorCode = ProjectMessageCode.PROJECT_NOT_EXIST
+        )
+        notify4User(
+            userIds = userIds,
+            cc = projectInfo.properties?.remotedevManager?.split(";")?.toMutableSet()
+                ?: mutableSetOf(),
+            notifyTemplateCode = notifyTemplateCode,
+            notifyType = notifyType,
+            bodyParams = bodyParams
+        )
+    }
+
+    fun notify4User(
+        userIds: MutableSet<String>,
+        notifyTemplateCode: String,
+        notifyType: MutableSet<RemoteDevNotifyType>,
+        bodyParams: Map<String, String>,
+        cc: MutableSet<String> = mutableSetOf()
     ) {
         /* 发外部邮件，需要模板配置email_type=0*/
         if (notifyType.contains(RemoteDevNotifyType.EMAIL)) {
@@ -139,12 +202,17 @@ class NotifyControl @Autowired constructor(
                 user.accountEmail
             })
             val receivers = userIds.map { taiInfos[it] ?: it }
-            logger.info("notify4User EMAIL|$notifyTemplateCode|$receivers|$bodyParams")
+            val receiversNameWithCN = remoteDevSettingDao.fetchTaiUserInfo(dslContext, userIds = userIds)
+                .mapValues { "${it.value.first}@${it.value.second}" }.values
+            logger.info("notify4User EMAIL|$notifyTemplateCode|$receivers|$bodyParams|$receiversNameWithCN")
             sendNotifyMessageTemplateRequest(
                 notifyTemplateCode = notifyTemplateCode,
-                bodyParams = bodyParams,
+                bodyParams = bodyParams.plus(
+                    "receiversNameWithCN" to receiversNameWithCN.joinToString()
+                ),
                 notifyType = mutableSetOf(NotifyType.EMAIL.name),
                 receivers = receivers.toMutableSet(),
+                cc = cc,
                 markdownContent = false
             )
         }
@@ -167,7 +235,7 @@ class NotifyControl @Autowired constructor(
             userIds.forEach { user ->
                 dispatchWebsocketPushEvent(
                     userId = user,
-                    workspaceName = workspaceName,
+                    workspaceName = bodyParams["workspaceName"] ?: "",
                     workspaceHost = null,
                     errorMsg = res,
                     type = WebSocketActionType.WORKSPACE_NOTIFY,
@@ -274,6 +342,7 @@ class NotifyControl @Autowired constructor(
         bodyParams: Map<String, String>,
         notifyType: Set<String>,
         receivers: MutableSet<String> = mutableSetOf(),
+        cc: MutableSet<String> = mutableSetOf(),
         markdownContent: Boolean = false
     ) {
         val request = SendNotifyMessageTemplateRequest(
@@ -282,7 +351,8 @@ class NotifyControl @Autowired constructor(
             titleParams = bodyParams,
             notifyType = notifyType.toMutableSet(),
             markdownContent = markdownContent,
-            receivers = receivers
+            receivers = receivers,
+            cc = cc
         )
         kotlin.runCatching {
             client.get(ServiceNotifyMessageTemplateResource::class).sendNotifyMessageByTemplate(request)

@@ -18,6 +18,8 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import java.security.cert.CertificateException
 import java.text.SimpleDateFormat
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
 import java.util.Calendar
 import java.util.concurrent.TimeUnit
 import javax.net.ssl.SSLContext
@@ -151,8 +153,70 @@ class BKBaseService @Autowired constructor(
         return UserLoginTimeResp(resp.data.totalRecords, result)
     }
 
+    fun fetchOnlineIps(
+        date: LocalDateTime,
+        limit: Int = 1000,
+        offset: Int = 0,
+        result: MutableSet<String> = mutableSetOf()
+    ): Set<String> {
+        val sql = "SELECT inner_ip " +
+                "FROM 100656_ads_desktop_daily_activity_res " +
+                "WHERE thedate >= '${date.format(theDateFormat)}' " +
+                "LIMIT $limit OFFSET $offset"
+
+        val url = "${bkConfig.baseUrl}/prod/v3/queryengine/query_sync/"
+        val body = BakeBaseQuerySyncReq(
+            bkdataDataToken = bkConfig.baseToken,
+            bkAppCode = bkConfig.appCode,
+            bkAppSecret = bkConfig.appSecret,
+            sql = sql
+        )
+        val request = Request.Builder()
+            .url(url)
+            .post(JsonUtil.toJson(body).toRequestBody("application/json; charset=utf-8".toMediaTypeOrNull()))
+            .build()
+
+        val resp = try {
+            okHttpClient.newCall(request).execute().use { response ->
+                val data = response.body!!.string()
+                logger.debug("fetchOnlineUserMin｜req|{}|response code|{}|content|{}", body, response.code, data)
+                if (!response.isSuccessful) {
+                    logger.error("fetchOnlineUserMin｜req|{}|response code|{}|content|{}", body, response.code, data)
+                    return result
+                }
+
+                val resp = objectMapper.readValue<BakeBaseQuerySyncResp>(data)
+                if (!resp.result) {
+                    logger.error("fetchOnlineUserMin｜req|{}|response code|{}|content|{}", body, response.code, data)
+                    return result
+                }
+                resp
+            }
+        } catch (e: Exception) {
+            logger.error("fetchOnlineUserMin request error", e)
+            return result
+        }
+
+        try {
+            resp.data?.list?.forEach { l ->
+                result.add(l["inner_ip"] as String)
+            } ?: return result
+            if (resp.data.list.size == limit) {
+                fetchOnlineIps(
+                    date, offset + limit, limit, result
+                )
+            }
+        } catch (e: Exception) {
+            logger.error("fetchOnlineUserMin parse data error", e)
+            return result
+        }
+
+        return result
+    }
+
     companion object {
         private val dateFormat = SimpleDateFormat("yyyy-MM-dd HH:mm:ss")
+        private val theDateFormat = DateTimeFormatter.ofPattern("yyyyMMdd")
         private val dataInputFormat = SimpleDateFormat("yyyyMMddHHmm")
         private val logger = LoggerFactory.getLogger(BKBaseService::class.java)
 

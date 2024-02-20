@@ -2,6 +2,8 @@ package com.tencent.devops.remotedev.cron
 
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.DateTimeUtil
+import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.BkTag
@@ -20,6 +22,7 @@ import com.tencent.devops.remotedev.service.workspace.WorkspaceCommon
 import org.slf4j.LoggerFactory
 import org.slf4j.MDC
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Component
 
@@ -50,6 +53,9 @@ class WorkspaceCheckJob @Autowired constructor(
         private const val notifyWinBeforeSleep = "dispatch_devcloud_cron_notify_win_before_sleep"
         private const val backupCgsDataLockKey = "remotedev_cron_backup_csg_data_job"
     }
+
+    @Value("\${remoteDev.autoDeletePipeline:}")
+    val autoDeletePipeline = ""
 
     /**
      * 每5min检测一次 30min内没有心跳上报的工作空间，主动stop
@@ -126,10 +132,10 @@ class WorkspaceCheckJob @Autowired constructor(
                     MDC.put(TraceTag.BIZID, TraceTag.buildBiz())
                     logger.info(
                         "workspace $workspaceName last active is ${
-                        DateTimeUtil.formatMilliTime(
-                            time.toLong(),
-                            DateTimeUtil.YYYY_MM_DD_HH_MM_SS
-                        )
+                            DateTimeUtil.formatMilliTime(
+                                time.toLong(),
+                                DateTimeUtil.YYYY_MM_DD_HH_MM_SS
+                            )
                         } ready to sleep"
                     )
                     kotlin.runCatching {
@@ -139,9 +145,9 @@ class WorkspaceCheckJob @Autowired constructor(
                         // 针对已经休眠或销毁的容器，删除上报心跳记录。
                         if (it is ErrorCodeException &&
                             (
-                                it.errorCode == ErrorCodeEnum.WORKSPACE_STATUS_CHANGE_FAIL.errorCode ||
-                                    it.errorCode == ErrorCodeEnum.WORKSPACE_NOT_FIND.errorCode
-                                )
+                                    it.errorCode == ErrorCodeEnum.WORKSPACE_STATUS_CHANGE_FAIL.errorCode ||
+                                            it.errorCode == ErrorCodeEnum.WORKSPACE_NOT_FIND.errorCode
+                                    )
                         ) {
                             redisHeartBeat.deleteWorkspaceHeartbeat(ADMIN_NAME, workspaceName)
                         }
@@ -195,6 +201,46 @@ class WorkspaceCheckJob @Autowired constructor(
             }
         } catch (e: Throwable) {
             logger.error("send idle workspace notify failed", e)
+        }
+    }
+
+    /**
+     * 每天10点触发，执行云桌面专项空闲工作空间检测
+     */
+    @Scheduled(cron = "0 0 10 * * ?")
+    fun projectWinJob() {
+        val readyDeleteWorkspace = mutableListOf<String>()
+        // 云桌面处于待分配超过3天的自动回收，并邮件提醒
+        kotlin.runCatching {
+            deleteControl.autoDeleteWhenNotAssign(false, readyDeleteWorkspace)
+        }
+        // 云桌面通知-关机超过7天时自动销毁
+        kotlin.runCatching {
+            deleteControl.autoDeleteWhenSleep7Day(false, readyDeleteWorkspace)
+            if (readyDeleteWorkspace.isNotEmpty()) {
+                logger.info("read to notify system manager|$readyDeleteWorkspace")
+                OkhttpUtils.doPost(
+                    autoDeletePipeline,
+                    JsonUtil.toJson(mapOf("infos" to readyDeleteWorkspace.joinToString("\n"))),
+                    headers = mapOf(
+                        "Content-Type" to "application/json",
+                        "X-DEVOPS-PROJECT-ID" to "bkci-desktop",
+                        "X-DEVOPS-UID" to "autoJob"
+                    )
+                )
+            }
+        }
+        // 云桌面通知-关机超过3天时提醒
+        kotlin.runCatching {
+            workspaceService.notifyWinSleep3Day()
+        }
+        // 云桌面通知-未登录7天时自动降配(暂时不做)并关机
+        kotlin.runCatching {
+            sleepControl.autoSleepWhenNotLogin()
+        }
+        // 云桌面通知-未登录3天时提醒
+        kotlin.runCatching {
+            workspaceService.notifyWinNotLogin3Day()
         }
     }
 
