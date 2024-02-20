@@ -97,6 +97,7 @@ object ProjectMessageCode {
     const val APPROVAL_PROJECT_CANT_UPDATE = "2119049" // 审批下的下项目{0}不能修改
     const val UNDER_APPROVAL_PROJECT = "2119050" // 项目{0}审批中，请耐心等待，或联系审批人处理
     const val ERROR_GROUP_NOT_BELONG_TO_PROJECT = "2119051" // 用户组不属于该项目
+    const val ERROR_PROJECT_NOT_RELATED_PRODUCT = "2119052" // 项目未关联产品ID
 
     const val BK_CONTAINER_SERVICE = "bkContainerService" // 容器服务
     const val BK_FAILED_BSC_CREATE_PROJECT = "bkFailedBscCreateProject" // 调用BSC接口创建项目失败
