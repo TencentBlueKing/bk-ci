@@ -491,7 +491,8 @@ class ScmProxyService @Autowired constructor(private val client: Client) {
                     getAccessToken(repo.userName).first
                 } catch (e: Exception) {
                     throw ErrorCodeException(
-                        errorCode = ProcessMessageCode.ERROR_REPOSITORY_NOT_OAUTH
+                        errorCode = ProcessMessageCode.ERROR_REPOSITORY_NOT_OAUTH,
+                        params = arrayOf(repo.userName)
                     )
                 }
             } else {
