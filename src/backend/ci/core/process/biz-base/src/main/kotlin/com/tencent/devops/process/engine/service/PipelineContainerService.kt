@@ -48,7 +48,7 @@ import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildAtomEle
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildLessAtomElement
 import com.tencent.devops.common.pipeline.pojo.element.matrix.MatrixStatusElement
 import com.tencent.devops.common.pipeline.utils.ModelUtils
-import com.tencent.devops.common.pipeline.utils.SkipElementUtils
+import com.tencent.devops.common.pipeline.utils.ElementUtils
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.constant.ProcessMessageCode.BK_MANUALLY_SKIPPED
@@ -323,31 +323,33 @@ class PipelineContainerService @Autowired constructor(
             )
             buildTaskList.add(buildTask)
             resourceVersion?.let {
-                recordTaskList.add(
-                    BuildRecordTask(
-                        projectId = projectId,
-                        pipelineId = pipelineId,
-                        buildId = buildId,
-                        stageId = stage.id!!,
-                        containerId = container.id!!,
-                        taskSeq = taskSeq,
-                        taskId = atomElement.id!!,
-                        classType = MatrixStatusElement.classType,
-                        atomCode = atomElement.getAtomCode(),
-                        executeCount = context.executeCount,
-                        originClassType = atomElement.getClassType(),
-                        resourceVersion = resourceVersion,
-                        timestamps = mapOf(),
-                        elementPostInfo = buildTask.additionalOptions?.elementPostInfo,
-                        // 对矩阵产生的插件特殊表示类型
-                        taskVar = mutableMapOf(
-                            "@type" to MatrixStatusElement.classType,
-                            MatrixStatusElement::originClassType.name to atomElement.getClassType(),
-                            MatrixStatusElement::originAtomCode.name to atomElement.getAtomCode(),
-                            MatrixStatusElement::originTaskAtom.name to atomElement.getTaskAtom()
+                if (ElementUtils.getTaskAddFlag(atomElement)) {
+                    recordTaskList.add(
+                        BuildRecordTask(
+                            projectId = projectId,
+                            pipelineId = pipelineId,
+                            buildId = buildId,
+                            stageId = stage.id!!,
+                            containerId = container.id!!,
+                            taskSeq = taskSeq,
+                            taskId = atomElement.id!!,
+                            classType = MatrixStatusElement.classType,
+                            atomCode = atomElement.getAtomCode(),
+                            executeCount = context.executeCount,
+                            originClassType = atomElement.getClassType(),
+                            resourceVersion = resourceVersion,
+                            timestamps = mapOf(),
+                            elementPostInfo = buildTask.additionalOptions?.elementPostInfo,
+                            // 对矩阵产生的插件特殊表示类型
+                            taskVar = mutableMapOf(
+                                "@type" to MatrixStatusElement.classType,
+                                MatrixStatusElement::originClassType.name to atomElement.getClassType(),
+                                MatrixStatusElement::originAtomCode.name to atomElement.getAtomCode(),
+                                MatrixStatusElement::originTaskAtom.name to atomElement.getTaskAtom()
+                            )
                         )
                     )
-                )
+                }
             }
         }
         // 填入: 构建机或无编译环境的环境处理，需要启动和结束构建机/环境的插件任务
@@ -428,7 +430,7 @@ class PipelineContainerService @Autowired constructor(
             if (status.isFinish()) {
                 logger.info("[${context.buildId}|${atomElement.id}] status=$status")
                 atomElement.status = status.name
-                if (retryFlag && SkipElementUtils.getSkipRecordTaskAddFlag(atomElement)) {
+                if (retryFlag && ElementUtils.getTaskAddFlag(atomElement)) {
                     taskBuildRecords.add(
                         BuildRecordTask(
                             projectId = context.projectId, pipelineId = context.pipelineId,

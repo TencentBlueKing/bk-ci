@@ -33,7 +33,7 @@ import com.tencent.devops.common.pipeline.container.VMBuildContainer
 import com.tencent.devops.common.pipeline.enums.BuildRecordTimeStamp
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.pojo.time.BuildTimestampType
-import com.tencent.devops.common.pipeline.utils.SkipElementUtils
+import com.tencent.devops.common.pipeline.utils.ElementUtils
 import com.tencent.devops.process.pojo.app.StartBuildContext
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
@@ -121,7 +121,7 @@ data class BuildRecordContainer(
             )
             if (taskBuildRecords == null) return
             container.elements.forEachIndexed { index, element ->
-                if (buildStatus == BuildStatus.SKIP && !SkipElementUtils.getSkipRecordTaskAddFlag(element)) {
+                if (buildStatus == BuildStatus.SKIP && !ElementUtils.getTaskAddFlag(element)) {
                     // 不保存跳过的非post任务记录或非质量红线记录
                     return@forEachIndexed
                 }

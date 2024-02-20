@@ -62,7 +62,7 @@ import com.tencent.devops.common.pipeline.pojo.element.quality.QualityGateInElem
 import com.tencent.devops.common.pipeline.pojo.element.quality.QualityGateOutElement
 import com.tencent.devops.common.pipeline.pojo.time.BuildRecordTimeCost
 import com.tencent.devops.common.pipeline.pojo.time.BuildTimestampType
-import com.tencent.devops.common.pipeline.utils.SkipElementUtils
+import com.tencent.devops.common.pipeline.utils.ElementUtils
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.utils.LogUtils
 import com.tencent.devops.common.web.utils.I18nUtil
@@ -123,7 +123,6 @@ import com.tencent.devops.process.pojo.pipeline.record.BuildRecordContainer
 import com.tencent.devops.process.pojo.pipeline.record.BuildRecordContainer.Companion.addRecords
 import com.tencent.devops.process.pojo.pipeline.record.BuildRecordModel
 import com.tencent.devops.process.pojo.pipeline.record.BuildRecordStage
-import com.tencent.devops.process.pojo.pipeline.record.BuildRecordStage.Companion.addRecords
 import com.tencent.devops.process.pojo.pipeline.record.BuildRecordTask
 import com.tencent.devops.process.pojo.pipeline.record.BuildRecordTask.Companion.addRecords
 import com.tencent.devops.process.service.BuildVariableService
@@ -1649,7 +1648,7 @@ class PipelineRuntimeService @Autowired constructor(
                 emptyList()
             } else {
                 (JsonUtil.getObjectMapper().readValue(buildParameters) as List<BuildParameters>)
-                    .filter { !it.key.startsWith(SkipElementUtils.prefix) }
+                    .filter { !it.key.startsWith(ElementUtils.skipPrefix) }
             }
         } catch (ignore: Exception) {
             emptyList()

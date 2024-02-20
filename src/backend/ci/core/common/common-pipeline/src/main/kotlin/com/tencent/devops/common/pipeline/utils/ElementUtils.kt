@@ -31,17 +31,17 @@ import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.common.pipeline.pojo.element.quality.QualityGateInElement
 import com.tencent.devops.common.pipeline.pojo.element.quality.QualityGateOutElement
 
-object SkipElementUtils {
+object ElementUtils {
 
-    const val prefix = "devops_container_condition_skip_atoms_"
+    const val skipPrefix = "devops_container_condition_skip_atoms_"
 
     fun getSkipElementVariableName(elementId: String?) =
-        "$prefix$elementId"
+        "$skipPrefix$elementId"
 
-    fun getSkipRecordTaskAddFlag(element: Element): Boolean {
+    fun getTaskAddFlag(element: Element): Boolean {
         val elementPostInfo = element.additionalOptions?.elementPostInfo
         val qualityAtomFlag = element is QualityGateInElement || element is QualityGateOutElement
-        // 当插件已启用或者插件是post插件或者插件是质量红线的插件才允许往RecordTask表添加记录
+        // 当插件已启用或者插件是post插件或者插件是质量红线的插件才允许往Task表添加记录
         return element.isElementEnable() || elementPostInfo != null || qualityAtomFlag
     }
 }
