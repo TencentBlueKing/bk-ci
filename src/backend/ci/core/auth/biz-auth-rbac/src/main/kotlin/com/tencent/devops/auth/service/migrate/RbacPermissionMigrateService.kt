@@ -289,10 +289,7 @@ class RbacPermissionMigrateService constructor(
         val traceId = MDC.get(TraceTag.BIZID)
         client.get(ServiceProjectResource::class).listByProjectCode(
             projectCodes = projectCodes.toSet()
-        ).data?.filter {
-            // 仅迁移已迁移成功的项目
-            it.routerTag != null && it.routerTag!!.contains(AuthSystemType.RBAC_AUTH_TYPE.value)
-        }?.forEach {
+        ).data?.forEach {
             // 若已迁移监控资源，直接跳过
             if (authMonitorSpaceDao.get(dslContext, it.englishName) != null)
                 return@forEach
@@ -599,15 +596,28 @@ class RbacPermissionMigrateService constructor(
         )
     }
 
-    override fun autoRenewal(projectCodes: List<String>): Boolean {
+    override fun autoRenewal(migrateProjectConditionDTO: MigrateProjectConditionDTO): Boolean {
         val traceId = MDC.get(TraceTag.BIZID)
-        projectCodes.forEach { projectCode ->
-            migrateProjectsExecutorService.submit {
-                MDC.put(TraceTag.BIZID, traceId)
-                autoRenewal(
-                    projectCode = projectCode
-                )
-            }
+        toRbacExecutorService.submit {
+            MDC.put(TraceTag.BIZID, traceId)
+            var offset = 0
+            val limit = PageUtil.MAX_PAGE_SIZE / 2
+            do {
+                val migrateProjects = client.get(ServiceProjectResource::class).listMigrateProjects(
+                    migrateProjectConditionDTO = migrateProjectConditionDTO,
+                    limit = limit,
+                    offset = offset
+                ).data ?: break
+                migrateProjects.forEach { migrateProject ->
+                    migrateProjectsExecutorService.submit {
+                        MDC.put(TraceTag.BIZID, traceId)
+                        autoRenewal(
+                            projectCode = migrateProject.englishName
+                        )
+                    }
+                }
+                offset += limit
+            } while (migrateProjects.size == limit)
         }
         return true
     }
@@ -616,7 +626,7 @@ class RbacPermissionMigrateService constructor(
         var offset = 0
         val limit = 100
         val startTime = System.currentTimeMillis()
-        logger.info("begin auto renewal")
+        logger.info("begin auto renewal|$projectCode")
         do {
             val authResourceList = authResourceService.list(
                 projectCode = projectCode,
@@ -626,7 +636,7 @@ class RbacPermissionMigrateService constructor(
                 limit = limit
             )
             val resourceSize = authResourceList.size
-            logger.info("auto renewal size|$offset|$resourceSize")
+            logger.info("auto renewal size|$projectCode|$offset|$resourceSize")
             authResourceList.forEach { authResource ->
                 val resourceType = authResource.resourceType
                 val resourceCode = authResource.resourceCode

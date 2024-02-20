@@ -23,14 +23,26 @@
  * NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ *
  */
 
-dependencies {
-    api(project(":core:common:common-web"))
-    api(project(":core:common:common-auth:common-auth-api"))
-    api(project(":core:project:api-project"))
-}
+package com.tencent.devops.project.pojo
 
-plugins {
-    `task-deploy-to-maven`
-}
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
+
+@ApiModel
+data class ProjectDeleteUserInfo(
+    @ApiModelProperty("操作人")
+    val operator: String,
+    @ApiModelProperty("待分配的角色名称")
+    val roleName: String?,
+    @ApiModelProperty("角色Id")
+    val roleId: Int?,
+    @ApiModelProperty("组ID")
+    val groupId: Int?,
+    @ApiModelProperty("目标用户")
+    val userIds: List<String>? = emptyList(),
+    @ApiModelProperty("目标部门")
+    val deptIds: List<String>? = emptyList()
+)

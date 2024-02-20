@@ -30,6 +30,7 @@ package com.tencent.devops.dispatch.service
 import com.tencent.devops.common.api.enums.AgentStatus
 import com.tencent.devops.common.api.exception.InvalidParamException
 import com.tencent.devops.common.api.exception.RemoteServiceException
+import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.event.dispatcher.SampleEventDispatcher
 import com.tencent.devops.common.dispatch.sdk.BuildFailureException
@@ -46,6 +47,7 @@ import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.dispatch.constants.BK_AGENT_IS_BUSY
 import com.tencent.devops.dispatch.constants.BK_ENV_BUSY
+import com.tencent.devops.dispatch.constants.BK_ENV_WORKER_ERROR_IGNORE
 import com.tencent.devops.dispatch.constants.BK_MAX_BUILD_SEARCHING_AGENT
 import com.tencent.devops.dispatch.constants.BK_NO_AGENT_AVAILABLE
 import com.tencent.devops.dispatch.constants.BK_QUEUE_TIMEOUT_MINUTES
@@ -161,7 +163,15 @@ class ThirdPartyDispatchService @Autowired constructor(
             )
         }
 
-        if (!buildByAgentId(dispatchMessage, agentResult.data!!, dispatchType.workspace, dispatchType.dockerInfo)) {
+        if (!buildByAgentId(
+                dispatchMessage = dispatchMessage,
+                agent = agentResult.data!!,
+                workspace = dispatchType.workspace,
+                dockerInfo = dispatchType.dockerInfo,
+                envId = null,
+                ignoreEnvAgentIds = null
+            )
+        ) {
             logDebug(
                 buildLogPrinter = buildLogPrinter,
                 dispatchMessage = dispatchMessage,
@@ -174,7 +184,8 @@ class ThirdPartyDispatchService @Autowired constructor(
             throw DispatchRetryMQException(
                 errorCodeEnum = ErrorCodeEnum.LOAD_BUILD_AGENT_FAIL,
                 errorMessage = ErrorCodeEnum.CONSTANT_AGENTS_UPGRADING_OR_TIMED_OUT.getErrorMessage(
-                    params = arrayOf(dispatchType.displayName))
+                    params = arrayOf(dispatchType.displayName)
+                )
             )
         }
     }
@@ -183,7 +194,9 @@ class ThirdPartyDispatchService @Autowired constructor(
         dispatchMessage: DispatchMessage,
         agent: ThirdPartyAgent,
         workspace: String?,
-        dockerInfo: ThirdPartyAgentDockerInfo?
+        dockerInfo: ThirdPartyAgentDockerInfo?,
+        envId: Long?,
+        ignoreEnvAgentIds: Set<String>?
     ): Boolean {
         val event = dispatchMessage.event
         val redisLock = ThirdPartyAgentLock(redisOperation, event.projectId, agent.agentId)
@@ -192,7 +205,8 @@ class ThirdPartyDispatchService @Autowired constructor(
                 if (thirdPartyAgentBuildRedisUtils.isThirdPartyAgentUpgrading(
                         projectId = event.projectId,
                         agentId = agent.agentId
-                )) {
+                    )
+                ) {
                     logger.warn("The agent(${agent.agentId}) of project(${event.projectId}) is upgrading")
                     log(
                         dispatchMessage.event,
@@ -217,14 +231,18 @@ class ThirdPartyDispatchService @Autowired constructor(
                             secretKey = dispatchMessage.secretKey,
                             info = dockerInfo
                         )
-                    }
+                    },
+                    envId = envId,
+                    ignoreEnvAgentIds = ignoreEnvAgentIds
                 )
 
                 // 保存构建详情
                 saveAgentInfoToBuildDetail(dispatchMessage = dispatchMessage, agent = agent)
 
-                logger.info("${event.buildId}|START_AGENT_BY_ID|j(${event.vmSeqId})|" +
-                        "agent=${agent.agentId}")
+                logger.info(
+                    "${event.buildId}|START_AGENT_BY_ID|j(${event.vmSeqId})|" +
+                            "agent=${agent.agentId}"
+                )
                 log(
                     dispatchMessage.event,
                     I18nUtil.getCodeLanMessage(
@@ -263,14 +281,18 @@ class ThirdPartyDispatchService @Autowired constructor(
         dispatchMessage: DispatchMessage,
         agentId: String,
         workspace: String?,
-        dockerInfo: ThirdPartyAgentDockerInfoDispatch?
+        dockerInfo: ThirdPartyAgentDockerInfoDispatch?,
+        envId: Long?,
+        ignoreEnvAgentIds: Set<String>?
     ) {
         thirdPartyAgentBuildService.queueBuild(
             agent = agent,
             thirdPartyAgentWorkspace = workspace ?: "",
             dispatchMessage = dispatchMessage,
             retryCount = 0,
-            dockerInfo = dockerInfo
+            dockerInfo = dockerInfo,
+            envId = envId,
+            ignoreEnvAgentIds = ignoreEnvAgentIds
         )
 
         thirdPartyAgentBuildRedisUtils.setThirdPartyBuild(
@@ -288,7 +310,7 @@ class ThirdPartyDispatchService @Autowired constructor(
         )
 
         // 添加上下文关键字 jobs.<job_id>.container.node_alias
-        if (dispatchMessage.event.jobId.isNullOrBlank() || agent.nodeId.isNullOrBlank()) {
+        if (dispatchMessage.event.jobId.isNullOrBlank()) {
             return
         }
         try {
@@ -335,7 +357,7 @@ class ThirdPartyDispatchService @Autowired constructor(
 
                 AgentType.NAME -> {
                     client.get(ServiceThirdPartyAgentResource::class)
-                        .getAgentsByEnvName(
+                        .getAgentsByEnvNameWithId(
                             dispatchMessage.event.projectId,
                             dispatchType.envProjectId.takeIf { !it.isNullOrBlank() }
                                 ?.let { "$it@${dispatchType.envName}" } ?: dispatchType.envName)
@@ -411,7 +433,16 @@ class ThirdPartyDispatchService @Autowired constructor(
             )
         }
 
-        if (agentsResult.data!!.isEmpty()) {
+        val (envId, agentResData) = when (dispatchType.agentType) {
+            AgentType.ID -> Pair(
+                HashUtil.decodeIdToLong(dispatchType.envName),
+                (agentsResult.data!! as List<ThirdPartyAgent>)
+            )
+
+            AgentType.NAME -> (agentsResult.data as Pair<Long?, List<ThirdPartyAgent>>)
+        }
+
+        if (agentResData.isEmpty()) {
             logger.warn(
                 "${dispatchMessage.event.buildId}|START_AGENT_FAILED|j(${dispatchMessage.event.vmSeqId})|" +
                         "dispatchType=$dispatchType|err=empty agents"
@@ -433,12 +464,48 @@ class ThirdPartyDispatchService @Autowired constructor(
                  * 3. 优先调用可用的agent执行任务
                  * 4. 如果启动可用的agent失败再调用有任务的agent
                  */
-                val activeAgents = agentsResult.data!!.filter {
+                val activeAgents = agentResData.filter {
                     it.status == AgentStatus.IMPORT_OK &&
                             (dispatchMessage.event.os == it.os || dispatchMessage.event.os == VMBaseOS.ALL.name)
                 }
+
+                var jobEnvActiveAgents = activeAgents
+                if (!dispatchMessage.event.ignoreEnvAgentIds.isNullOrEmpty()) {
+                    log(
+                        buildLogPrinter,
+                        dispatchMessage,
+                        message = I18nUtil.getCodeLanMessage(
+                            messageCode = BK_ENV_WORKER_ERROR_IGNORE,
+                            params = arrayOf(dispatchMessage.event.ignoreEnvAgentIds!!.joinToString(",")),
+                            language = I18nUtil.getDefaultLocaleLanguage()
+                        )
+                    )
+                    jobEnvActiveAgents =
+                        activeAgents.filter { it.agentId !in dispatchMessage.event.ignoreEnvAgentIds!! }
+                    if (jobEnvActiveAgents.isEmpty()) {
+                        throw BuildFailureException(
+                            ErrorCodeEnum.BK_ENV_WORKER_ERROR_IGNORE_ALL_ERROR.errorType,
+                            ErrorCodeEnum.BK_ENV_WORKER_ERROR_IGNORE_ALL_ERROR.errorCode,
+                            ErrorCodeEnum.BK_ENV_WORKER_ERROR_IGNORE_ALL_ERROR.formatErrorMessage,
+                            I18nUtil.getCodeLanMessage(
+                                messageCode = ErrorCodeEnum.BK_ENV_WORKER_ERROR_IGNORE_ALL_ERROR.errorCode.toString(),
+                                params = arrayOf(dispatchMessage.event.ignoreEnvAgentIds!!.joinToString(",")),
+                                language = I18nUtil.getDefaultLocaleLanguage()
+                            )
+                        )
+                    }
+                }
+
                 // 没有可用构建机列表进入下一次重试, 修复获取最近构建构建机超过10次不构建会被驱逐出最近构建机列表的BUG
-                if (activeAgents.isNotEmpty() && pickupAgent(activeAgents, dispatchMessage, dispatchType)) return
+                if (jobEnvActiveAgents.isNotEmpty() && pickupAgent(
+                        activeAgents = jobEnvActiveAgents,
+                        dispatchMessage = dispatchMessage,
+                        dispatchType = dispatchType,
+                        envId = envId
+                    )
+                ) {
+                    return
+                }
             } else {
                 log(
                     buildLogPrinter,
@@ -479,7 +546,8 @@ class ThirdPartyDispatchService @Autowired constructor(
     private fun pickupAgent(
         activeAgents: List<ThirdPartyAgent>,
         dispatchMessage: DispatchMessage,
-        dispatchType: ThirdPartyAgentEnvDispatchType
+        dispatchType: ThirdPartyAgentEnvDispatchType,
+        envId: Long?
     ): Boolean {
         val agentMaps = activeAgents.associateBy { it.agentId }
 
@@ -526,9 +594,11 @@ class ThirdPartyDispatchService @Autowired constructor(
                         language = I18nUtil.getDefaultLocaleLanguage()
                     )
         )
-        if (startEmptyAgents(dispatchMessage, dispatchType, pbAgents, hasTryAgents)) {
-            logger.info("${dispatchMessage.event.buildId}|START_AGENT|j(${dispatchMessage.event.vmSeqId})|" +
-                    "dispatchType=$dispatchType|Get Lv.1")
+        if (startEmptyAgents(dispatchMessage, dispatchType, pbAgents, hasTryAgents, envId)) {
+            logger.info(
+                "${dispatchMessage.event.buildId}|START_AGENT|j(${dispatchMessage.event.vmSeqId})|" +
+                        "dispatchType=$dispatchType|Get Lv.1"
+            )
             return true
         }
 
@@ -542,9 +612,11 @@ class ThirdPartyDispatchService @Autowired constructor(
         /**
          * 次高优先级的agent: 最近构建机中使用过这个构建机,并且当前有构建任务,选当前正在运行任务最少的构建机(没有达到当前构建机的最大并发数)
          */
-        if (startAvailableAgents(dispatchMessage, dispatchType, pbAgents, hasTryAgents)) {
-            logger.info("${dispatchMessage.event.buildId}|START_AGENT|j(${dispatchMessage.event.vmSeqId})|" +
-                    "dispatchType=$dispatchType|Get Lv.2")
+        if (startAvailableAgents(dispatchMessage, dispatchType, pbAgents, hasTryAgents, envId)) {
+            logger.info(
+                "${dispatchMessage.event.buildId}|START_AGENT|j(${dispatchMessage.event.vmSeqId})|" +
+                        "dispatchType=$dispatchType|Get Lv.2"
+            )
             return true
         }
 
@@ -565,9 +637,11 @@ class ThirdPartyDispatchService @Autowired constructor(
         /**
          * 第三优先级的agent: 当前没有任何构建机任务
          */
-        if (startEmptyAgents(dispatchMessage, dispatchType, allAgents, hasTryAgents)) {
-            logger.info("${dispatchMessage.event.buildId}|START_AGENT|j(${dispatchMessage.event.vmSeqId})|" +
-                    "dispatchType=$dispatchType|pickup Lv.3")
+        if (startEmptyAgents(dispatchMessage, dispatchType, allAgents, hasTryAgents, envId)) {
+            logger.info(
+                "${dispatchMessage.event.buildId}|START_AGENT|j(${dispatchMessage.event.vmSeqId})|" +
+                        "dispatchType=$dispatchType|pickup Lv.3"
+            )
             return true
         }
 
@@ -581,10 +655,12 @@ class ThirdPartyDispatchService @Autowired constructor(
         /**
          * 第四优先级的agent: 当前有构建任务,选当前正在运行任务最少的构建机(没有达到当前构建机的最大并发数)
          */
-        if (startAvailableAgents(dispatchMessage, dispatchType, allAgents, hasTryAgents)
+        if (startAvailableAgents(dispatchMessage, dispatchType, allAgents, hasTryAgents, envId)
         ) {
-            logger.info("${dispatchMessage.event.buildId}|START_AGENT|j(${dispatchMessage.event.vmSeqId})|" +
-                    "dispatchType=$dispatchType|Get Lv.4")
+            logger.info(
+                "${dispatchMessage.event.buildId}|START_AGENT|j(${dispatchMessage.event.vmSeqId})|" +
+                        "dispatchType=$dispatchType|Get Lv.4"
+            )
             return true
         }
 
@@ -605,18 +681,20 @@ class ThirdPartyDispatchService @Autowired constructor(
         dispatchMessage: DispatchMessage,
         dispatchType: ThirdPartyAgentEnvDispatchType,
         agents: Collection<Triple<ThirdPartyAgent, Int, Int>>,
-        hasTryAgents: HashSet<String>
+        hasTryAgents: HashSet<String>,
+        envId: Long?
     ): Boolean {
-        return startAgentsForEnvBuild(dispatchMessage, dispatchType, agents, hasTryAgents, idleAgentMatcher)
+        return startAgentsForEnvBuild(dispatchMessage, dispatchType, agents, hasTryAgents, idleAgentMatcher, envId)
     }
 
     private fun startAvailableAgents(
         dispatchMessage: DispatchMessage,
         dispatchType: ThirdPartyAgentEnvDispatchType,
         agents: Collection<Triple<ThirdPartyAgent, Int, Int>>,
-        hasTryAgents: HashSet<String>
+        hasTryAgents: HashSet<String>,
+        envId: Long?
     ): Boolean {
-        return startAgentsForEnvBuild(dispatchMessage, dispatchType, agents, hasTryAgents, availableAgentMatcher)
+        return startAgentsForEnvBuild(dispatchMessage, dispatchType, agents, hasTryAgents, availableAgentMatcher, envId)
     }
 
     private fun startAgentsForEnvBuild(
@@ -624,7 +702,8 @@ class ThirdPartyDispatchService @Autowired constructor(
         dispatchType: ThirdPartyAgentEnvDispatchType,
         agents: Collection<Triple<ThirdPartyAgent, Int, Int>>,
         hasTryAgents: HashSet<String>,
-        agentMatcher: AgentMatcher
+        agentMatcher: AgentMatcher,
+        envId: Long?
     ): Boolean {
         if (agents.isNotEmpty()) {
             // 当前正在运行任务少升序开始遍历(通常任务少是负载最低,但不完全是,负载取决于构建机上运行的任务大小,目前未有采集,先只按任务数来判断)
@@ -641,7 +720,7 @@ class ThirdPartyDispatchService @Autowired constructor(
                     )
                 ) {
                     val agent = it.first
-                    if (startEnvAgentBuild(dispatchMessage, agent, dispatchType, hasTryAgents)) {
+                    if (startEnvAgentBuild(dispatchMessage, agent, dispatchType, hasTryAgents, envId)) {
                         logger.info(
                             "[${dispatchMessage.event.projectId}|$[${dispatchMessage.event.pipelineId}|" +
                                     "${dispatchMessage.event.buildId}|${agent.agentId}] Success to start the build"
@@ -658,13 +737,21 @@ class ThirdPartyDispatchService @Autowired constructor(
         dispatchMessage: DispatchMessage,
         agent: ThirdPartyAgent,
         dispatchType: ThirdPartyAgentEnvDispatchType,
-        hasTryAgents: HashSet<String>
+        hasTryAgents: HashSet<String>,
+        envId: Long?
     ): Boolean {
         if (hasTryAgents.contains(agent.agentId)) {
             return false
         }
         hasTryAgents.add(agent.agentId)
-        return buildByAgentId(dispatchMessage, agent, dispatchType.workspace, dispatchType.dockerInfo)
+        return buildByAgentId(
+            dispatchMessage = dispatchMessage,
+            agent = agent,
+            workspace = dispatchType.workspace,
+            dockerInfo = dispatchType.dockerInfo,
+            envId = envId,
+            ignoreEnvAgentIds = dispatchMessage.event.ignoreEnvAgentIds
+        )
     }
 
     private fun getRunningCnt(agentId: String, runningBuildsMapper: HashMap<String, Int>): Int {

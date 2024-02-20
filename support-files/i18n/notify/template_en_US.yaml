@@ -909,3 +909,18 @@
     body: "The data of the pipeline [${pipelineId}] under the project [${projectId}] was successfully migrated, and there was a total of 1 successfully migrated pipeline."
   creator: "system"
   modifior: "system"
+- index: 44
+  id: "8565a48174524fedb68bfcccb5305d0c"
+  templateCode: "THIRD_AGENT_WORKER_ERROR"
+  templateName: "Third-party build machine worker startup failure template"
+  notifyTypeScope:
+    - "WEWORK"
+  priority: 0
+  source: 0
+  weworkTemplate:
+    id: "2513d77c0b6b463f8dff122f975641f0"
+    sender: "DevOps"
+    title: "[Project ${projectCode}] Third-party build machine ${agentId} failed to start the build"
+    body: "[Build link|${buildUrl}]\n[Third-party build machine connection|${agentUrl}]\nBuild triggerer: ${userId}\nBuild machine owner: ${agentOwner}"
+  creator: "system"
+  modifior: "system"
