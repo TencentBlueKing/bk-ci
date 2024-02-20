@@ -521,11 +521,12 @@ class MigrateV0PolicyService constructor(
         } else {
             // 自定义用户组,半年或者一年过期
             V0_GROUP_EXPIRED_DAY[RandomUtils.nextInt(0, 2)]
-        } + TimeUnit.DAYS.toSeconds(RandomUtils.nextLong(0, 180))
+        }
         groupService.addGroupMember(
             userId = member.id,
             memberType = member.type,
-            expiredAt = System.currentTimeMillis() / MILLISECOND + TimeUnit.DAYS.toSeconds(expiredDay),
+            expiredAt = System.currentTimeMillis() / MILLISECOND + TimeUnit.DAYS.toSeconds(expiredDay) +
+                TimeUnit.DAYS.toSeconds(RandomUtils.nextLong(0, 180)),
             groupId = groupId
         )
     }

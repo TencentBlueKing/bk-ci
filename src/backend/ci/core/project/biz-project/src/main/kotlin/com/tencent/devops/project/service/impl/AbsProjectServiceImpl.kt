@@ -469,7 +469,7 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
                         )
                     }
                 }
-                // 判断是否需要审批,只有修改最大授权范围和权限敏感才需要审批
+                // 判断是否需要审批,当修改最大授权范围/权限敏感/关联运营产品时需要审批
                 val (finalNeedApproval, newApprovalStatus) = getUpdateApprovalStatus(
                     needApproval = needApproval,
                     projectInfo = projectInfo,
@@ -586,7 +586,8 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
             // 当项目创建成功,则只有最大授权范围和项目性质修改才审批
             val finalNeedApproval = authNeedApproval &&
                 (projectInfo.subjectScopes != subjectScopesStr ||
-                    projectInfo.authSecrecy != projectUpdateInfo.authSecrecy
+                    projectInfo.authSecrecy != projectUpdateInfo.authSecrecy ||
+                    projectInfo.productId != projectUpdateInfo.productId
                     )
             val approvalStatus = if (finalNeedApproval) {
                 ProjectApproveStatus.UPDATE_PENDING.status

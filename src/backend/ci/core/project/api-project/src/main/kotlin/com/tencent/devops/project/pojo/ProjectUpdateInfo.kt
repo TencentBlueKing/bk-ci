@@ -47,13 +47,13 @@ data class ProjectUpdateInfo(
     @ApiModelProperty("业务线名称")
     val businessLineName: String? = "",
     @ApiModelProperty("中心ID")
-    val centerId: Long = 0,
+    val centerId: Long? = null,
     @ApiModelProperty("中心名称")
-    val centerName: String = "",
+    val centerName: String? = "",
     @ApiModelProperty("部门ID")
-    val deptId: Long = 0,
+    val deptId: Long? = null,
     @ApiModelProperty("部门名称")
-    val deptName: String = "",
+    val deptName: String? = "",
     @ApiModelProperty("描述")
     val description: String,
     @ApiModelProperty("英文缩写")
