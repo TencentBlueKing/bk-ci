@@ -112,7 +112,7 @@ data class AgentService @Autowired constructor(
         private const val DEFAULT_PLACE_HOLDER = -1
         private const val DEFAULT_NOT_INSTALL_LATEST_PLUGINS = false
 
-        private const val DEFAULT_PAGE = 20
+        private const val DEFAULT_PAGE = 1
         private const val DEFAULT_PAGE_SIZE = 20
         private const val MAXIMUM_RETRY_TIMES = 20
         private const val INITIAL_DELAY = 1000L // unit: ms
