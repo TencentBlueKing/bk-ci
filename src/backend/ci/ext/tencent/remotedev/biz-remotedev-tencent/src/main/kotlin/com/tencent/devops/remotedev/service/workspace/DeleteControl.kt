@@ -110,7 +110,7 @@ class DeleteControl @Autowired constructor(
     companion object {
         private val logger = LoggerFactory.getLogger(DeleteControl::class.java)
         private val expiredTimeInSeconds = TimeUnit.MINUTES.toSeconds(2)
-        val formatter: DateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd hh:mm:ss")
+        val formatter: DateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
     }
 
     @ActionAuditRecord(

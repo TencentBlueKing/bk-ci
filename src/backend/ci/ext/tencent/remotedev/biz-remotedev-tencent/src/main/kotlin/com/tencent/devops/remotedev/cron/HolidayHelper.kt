@@ -54,24 +54,28 @@ class HolidayHelper @Autowired constructor(
             }
             now = now.plusDays(-1)
         }
-        logger.info("getLastWorkingDays|$days|${now.format(formatter)}|${result.last().format(formatter)}")
+        logger.info(
+            "getLastWorkingDays|$days|" +
+                    "${LocalDateTime.now().format(formatter)}|${result.last().format(formatter)}"
+        )
         return result
     }
 
     private fun getOrInitHolidays(): Set<String> {
-        return redisCache.getSetMembers(REDIS_HOLIDAY) ?: kotlin.run {
+        return redisCache.getSetMembers(REDIS_HOLIDAY)?.ifEmpty { null } ?: kotlin.run {
             initHolidayInfo()?.second ?: emptySet()
         }
     }
 
     private fun getOrInitWorkingDays(): Set<String> {
-        return redisCache.getSetMembers(REDIS_WORKING_ON_WEEKEND_DAY) ?: kotlin.run {
+        return redisCache.getSetMembers(REDIS_WORKING_ON_WEEKEND_DAY)?.ifEmpty { null }  ?: kotlin.run {
             initHolidayInfo()?.first ?: emptySet()
         }
     }
 
     private fun initHolidayInfo(): Pair<Set<String>, Set<String>>? {
         OkhttpUtils.doGet("https://timor.tech/api/holiday/year").use { response ->
+            logger.info("initHolidayInfo response|${response.body.toString()}")
             if (!response.isSuccessful) {
                 logger.warn("initHolidayInfo fail ,${response.body}")
                 return null
