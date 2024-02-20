@@ -545,7 +545,7 @@ class ThirdPartyAgentService @Autowired constructor(
         client.get(ServiceNotifyMessageTemplateResource::class).sendNotifyMessageByTemplate(
             SendNotifyMessageTemplateRequest(
                 templateCode = workerErrorRtxTemplate!!,
-                notifyType = mutableSetOf(NotifyType.RTX.name),
+                notifyType = mutableSetOf(NotifyType.WEWORK.name),
                 titleParams = mapOf(
                     "agentId" to agentResult.data!!.agentId,
                     "projectCode" to buildRecord.projectId
