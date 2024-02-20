@@ -66,6 +66,23 @@ import org.jooq.Record7
 @Suppress("ALL")
 @Repository
 class NodeDao {
+    fun updateNodeStatusByNodeIp(
+        dslContext: DSLContext,
+        nodeIpList: List<String>,
+        nodeStatus: String
+    ) {
+        with(TNode.T_NODE) {
+            val batchUpdate = dslContext.batch(
+                dslContext.update(this)
+                    .set(NODE_STATUS, nodeStatus)
+                    .set(LAST_MODIFY_TIME, LocalDateTime.now())
+                    .where(NODE_IP.`in`(nodeIpList))
+                    .and(NODE_TYPE.eq(NodeType.CMDB.name))
+            )
+            batchUpdate.execute()
+        }
+    }
+
     fun updateBuildAgentVersionByNodeId(
         dslContext: DSLContext,
         buildNodeAgentVersionInfoList: List<AgentVersionInfo>

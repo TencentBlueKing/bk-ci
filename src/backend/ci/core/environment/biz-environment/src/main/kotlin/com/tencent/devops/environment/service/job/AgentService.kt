@@ -78,6 +78,7 @@ import java.io.InputStream
 data class AgentService @Autowired constructor(
     private val nodeManApi: NodeManApi,
     private val chooseAgentInstallChannelIdService: ChooseAgentInstallChannelIdService,
+    private val checkAgentStatusAsyncService: CheckAgentStatusAsyncService,
     private val fileService: FileService
 ) {
     @Value("\${environment.cc.bkBizScopeId:#{null}}")
@@ -163,6 +164,9 @@ data class AgentService @Autowired constructor(
                     )
                 }
             )
+        )
+        checkAgentStatusAsyncService.checkAgentStatus(
+            userId, projectId, installAgentRes.data?.jobId,installAgentReq.hosts.mapNotNull { it.innerIp }
         )
         return installAgentRes
     }
