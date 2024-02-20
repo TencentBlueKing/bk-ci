@@ -1384,7 +1384,8 @@ class AtomDao : AtomBaseDao() {
         val ts = TStoreProjectRel.T_STORE_PROJECT_REL
         val conditions = mutableListOf(
             ts.STORE_TYPE.eq(StoreTypeEnum.ATOM.type.toByte()),
-            ts.TYPE.eq(StoreProjectTypeEnum.INIT.type.toByte())
+            ts.TYPE.eq(StoreProjectTypeEnum.INIT.type.toByte()),
+            ta.REPOSITORY_HASH_ID.isNotNull
         )
         if (!atomCode.isNullOrBlank()) {
             conditions.add(ta.ATOM_CODE.eq(atomCode))
