@@ -36,6 +36,7 @@ import com.tencent.devops.common.dispatch.sdk.pojo.DispatchMessage
 import com.tencent.devops.common.dispatch.sdk.service.DispatchService
 import com.tencent.devops.common.dispatch.sdk.service.JobQuotaService
 import com.tencent.devops.common.dispatch.sdk.utils.DispatchLogRedisUtils
+import com.tencent.devops.common.event.pojo.IEvent
 import com.tencent.devops.common.event.pojo.pipeline.IPipelineEvent
 import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.notify.enums.EnumEmailFormat
@@ -155,7 +156,7 @@ interface BuildListener {
     fun retry(
         sleepTimeInMS: Int = 30000,
         retryTimes: Int = 3,
-        pipelineEvent: IPipelineEvent? = null,
+        pipelineEvent: IEvent? = null,
         errorMessage: String? = ""
     ): Boolean {
         val event = pipelineEvent ?: DispatcherContext.getEvent()
