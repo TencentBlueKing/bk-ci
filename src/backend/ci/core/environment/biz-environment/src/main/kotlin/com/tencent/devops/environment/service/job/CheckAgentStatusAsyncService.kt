@@ -27,13 +27,13 @@
 
 package com.tencent.devops.environment.service.job
 
-import com.tencent.devops.common.api.constant.NORMAL
 import com.tencent.devops.common.api.exception.CustomException
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.environment.dao.NodeDao
 import com.tencent.devops.environment.pojo.enums.NodeStatus
 import com.tencent.devops.environment.pojo.job.agentreq.QueryAgentTaskStatusReq
+import com.tencent.devops.environment.resources.job.UserJobResourceImpl
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -45,7 +45,7 @@ import javax.ws.rs.core.Response
 
 @Service("CheckAgentStatusAsyncService")
 class CheckAgentStatusAsyncService @Autowired constructor(
-    private val agentService: AgentService,
+    private val userJobResourceImpl: UserJobResourceImpl,
     private val dslContext: DSLContext,
     private val nodeDao: NodeDao,
     val redisOperation: RedisOperation
@@ -94,7 +94,7 @@ class CheckAgentStatusAsyncService @Autowired constructor(
                         val queryAgentTaskStatusReq = QueryAgentTaskStatusReq(
                             page = DEFAULT_PAGE, pageSize = DEFAULT_PAGE_SIZE
                         )
-                        val queryAgentTaskStatusRes = agentService.queryAgentTaskStatus(
+                        val queryAgentTaskStatusRes = userJobResourceImpl.queryAgentTaskStatus(
                             userId, projectId, jobId, queryAgentTaskStatusReq
                         )
                         queryAgentTaskStatusRes.data?.list?.filter {
