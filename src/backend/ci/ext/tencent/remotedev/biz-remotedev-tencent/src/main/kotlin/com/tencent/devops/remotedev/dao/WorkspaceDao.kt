@@ -869,7 +869,8 @@ class WorkspaceDao {
                     preciAgentId = preciAgentId,
                     workspaceMountType = WorkspaceMountType.valueOf(workspaceMountType),
                     workspaceSystemType = WorkspaceSystemType.valueOf(systemType),
-                    ownerType = WorkspaceOwnerType.valueOf(ownerType)
+                    ownerType = WorkspaceOwnerType.valueOf(ownerType),
+                    remark = remark
                 )
             }
         }

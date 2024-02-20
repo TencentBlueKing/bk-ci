@@ -495,7 +495,8 @@ class WorkspaceService @Autowired constructor(
                     disk = it.memory,
                     currentLoginUsers = detail?.hostIP?.let { ip -> loginUserMap[ip] } ?: emptyList(),
                     expertSupportList = expertMap?.get(it.workspaceName),
-                    macAddress = allWindows[it.workspaceName]?.macAddress
+                    macAddress = allWindows[it.workspaceName]?.macAddress,
+                    remark = it.remark
                 )
             )
         }
