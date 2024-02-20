@@ -64,7 +64,7 @@ class BuildMonitorConfiguration {
         pipelineEventDispatcher = pipelineEventDispatcher
     )
 
-    @EventConsumer(StreamBinding.EXCHANGE_PIPELINE_MONITOR_DIRECT, STREAM_CONSUMER_GROUP)
+    @EventConsumer(StreamBinding.QUEUE_PIPELINE_BUILD_MONITOR, STREAM_CONSUMER_GROUP)
     fun buildMonitorListener(
         @Autowired buildListener: PipelineBuildMonitorListener
     ): Consumer<Message<PipelineBuildMonitorEvent>> {

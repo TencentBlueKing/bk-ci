@@ -43,6 +43,7 @@ import com.tencent.devops.process.engine.service.AgentPipelineRefService
 import com.tencent.devops.process.engine.service.PipelineAtomStatisticsService
 import com.tencent.devops.process.engine.service.PipelineRuntimeService
 import com.tencent.devops.process.engine.service.PipelineWebhookService
+import com.tencent.devops.process.engine.service.RepoPipelineRefService
 import com.tencent.devops.process.service.label.PipelineGroupService
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.context.annotation.Bean
@@ -67,13 +68,15 @@ class PipelineBaseConfiguration {
         @Autowired pipelineAtomStatisticsService: PipelineAtomStatisticsService,
         @Autowired callBackControl: CallBackControl,
         @Autowired agentPipelineRefService: AgentPipelineRefService,
-        @Autowired pipelineEventDispatcher: PipelineEventDispatcher
+        @Autowired pipelineEventDispatcher: PipelineEventDispatcher,
+        @Autowired repoPipelineRefService: RepoPipelineRefService
     ) = MQPipelineCreateListener(
         pipelineWebhookService = pipelineWebhookService,
         pipelineAtomStatisticsService = pipelineAtomStatisticsService,
         callBackControl = callBackControl,
         agentPipelineRefService = agentPipelineRefService,
-        pipelineEventDispatcher = pipelineEventDispatcher
+        pipelineEventDispatcher = pipelineEventDispatcher,
+        repoPipelineRefService = repoPipelineRefService
     )
 
     @Bean
@@ -84,7 +87,8 @@ class PipelineBaseConfiguration {
         @Autowired pipelineAtomStatisticsService: PipelineAtomStatisticsService,
         @Autowired callBackControl: CallBackControl,
         @Autowired agentPipelineRefService: AgentPipelineRefService,
-        @Autowired pipelineEventDispatcher: PipelineEventDispatcher
+        @Autowired pipelineEventDispatcher: PipelineEventDispatcher,
+        @Autowired repoPipelineRefService: RepoPipelineRefService
     ) = MQPipelineDeleteListener(
         pipelineRuntimeService = pipelineRuntimeService,
         pipelineWebhookService = pipelineWebhookService,
@@ -92,7 +96,8 @@ class PipelineBaseConfiguration {
         pipelineAtomStatisticsService = pipelineAtomStatisticsService,
         callBackControl = callBackControl,
         agentPipelineRefService = agentPipelineRefService,
-        pipelineEventDispatcher = pipelineEventDispatcher
+        pipelineEventDispatcher = pipelineEventDispatcher,
+        repoPipelineRefService = repoPipelineRefService
     )
 
     @Bean
@@ -102,14 +107,16 @@ class PipelineBaseConfiguration {
         @Autowired pipelineAtomStatisticsService: PipelineAtomStatisticsService,
         @Autowired callBackControl: CallBackControl,
         @Autowired agentPipelineRefService: AgentPipelineRefService,
-        @Autowired pipelineEventDispatcher: PipelineEventDispatcher
+        @Autowired pipelineEventDispatcher: PipelineEventDispatcher,
+        @Autowired repoPipelineRefService: RepoPipelineRefService
     ) = MQPipelineUpdateListener(
         pipelineRuntimeService = pipelineRuntimeService,
         pipelineWebhookService = pipelineWebhookService,
         pipelineAtomStatisticsService = pipelineAtomStatisticsService,
         callBackControl = callBackControl,
         agentPipelineRefService = agentPipelineRefService,
-        pipelineEventDispatcher = pipelineEventDispatcher
+        pipelineEventDispatcher = pipelineEventDispatcher,
+        repoPipelineRefService = repoPipelineRefService
     )
 
     @Bean
@@ -117,12 +124,14 @@ class PipelineBaseConfiguration {
         @Autowired pipelineAtomStatisticsService: PipelineAtomStatisticsService,
         @Autowired callBackControl: CallBackControl,
         @Autowired agentPipelineRefService: AgentPipelineRefService,
-        @Autowired pipelineEventDispatcher: PipelineEventDispatcher
+        @Autowired pipelineEventDispatcher: PipelineEventDispatcher,
+        @Autowired repoPipelineRefService: RepoPipelineRefService
     ) = MQPipelineRestoreListener(
         pipelineAtomStatisticsService = pipelineAtomStatisticsService,
         callBackControl = callBackControl,
         agentPipelineRefService = agentPipelineRefService,
-        pipelineEventDispatcher = pipelineEventDispatcher
+        pipelineEventDispatcher = pipelineEventDispatcher,
+        repoPipelineRefService = repoPipelineRefService
     )
 
     /**

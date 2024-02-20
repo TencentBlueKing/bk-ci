@@ -38,7 +38,7 @@ import com.tencent.devops.common.event.enums.ActionType
  * @version 1.0
  */
 @Suppress("MagicNumber")
-@Event(StreamBinding.EXCHANGE_PIPELINE_MONITOR_DIRECT, 20000)
+@Event(StreamBinding.QUEUE_PIPELINE_BUILD_MONITOR, 20000)
 data class PipelineBuildMonitorEvent(
     override val source: String,
     override val projectId: String,
