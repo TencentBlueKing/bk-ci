@@ -92,6 +92,7 @@ import com.tencent.devops.remotedev.pojo.expert.FetchSupportResp
 import com.tencent.devops.remotedev.pojo.op.RemotedevCvmData
 import com.tencent.devops.remotedev.pojo.project.RemotedevProject
 import com.tencent.devops.remotedev.pojo.project.WeSecProjectWorkspace
+import com.tencent.devops.remotedev.pojo.project.WorkspaceProperty
 import com.tencent.devops.remotedev.service.redis.RedisCacheService
 import com.tencent.devops.remotedev.service.redis.RedisCallLimit
 import com.tencent.devops.remotedev.service.redis.RedisKeys
@@ -182,6 +183,33 @@ class WorkspaceService @Autowired constructor(
             bkccService.updateHostName(displayName, workspaceName)
         }
 
+        return true
+    }
+
+    fun modifyWorkspaceProperty(userId: String, workspaceName: String, workspaceProperty: WorkspaceProperty): Boolean {
+        logger.info("$userId modify workspace property $workspaceName|$workspaceProperty")
+
+        val ws = workspaceDao.fetchAnyWorkspace(dslContext, workspaceName = workspaceName)
+            ?: throw ErrorCodeException(
+                errorCode = ErrorCodeEnum.WORKSPACE_NOT_FIND.errorCode,
+                params = arrayOf(workspaceName)
+            )
+        // 审计
+        ActionAuditContext.current()
+            .addAttribute(ActionAuditContent.PROJECT_CODE_TEMPLATE, ws.projectId)
+            .scopeId = ws.projectId
+
+        if (!permissionService.hasUserManager(userId, ws.projectId)) {
+            permissionService.checkViewerPermission(userId, workspaceName, ws.projectId)
+        }
+        dslContext.transaction { configuration ->
+            val transactionContext = DSL.using(configuration)
+            workspaceDao.modifyWorkspaceProperty(
+                dslContext = transactionContext,
+                workspaceName = workspaceName,
+                workspaceProperty = workspaceProperty
+            )
+        }
         return true
     }
 

@@ -45,6 +45,7 @@ import com.tencent.devops.remotedev.pojo.WorkspaceResponse
 import com.tencent.devops.remotedev.pojo.WorkspaceSearch
 import com.tencent.devops.remotedev.pojo.WorkspaceStartCloudDetail
 import com.tencent.devops.remotedev.pojo.WorkspaceUserDetail
+import com.tencent.devops.remotedev.pojo.project.WorkspaceProperty
 import com.tencent.devops.repository.pojo.AuthorizeResult
 import com.tencent.devops.repository.pojo.enums.RedirectUrlTypeEnum
 import io.swagger.annotations.Api
@@ -200,7 +201,20 @@ interface UserWorkspaceResource {
         @QueryParam("displayName")
         displayName: String
     ): Result<Boolean>
-    // todo 获取运行日志的接口
+
+    @ApiOperation("修改工作空间属性")
+    @POST
+    @Path("/modify/property")
+    fun modifyWorkspaceProperty(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("工作空间名称", required = true)
+        @QueryParam("workspaceName")
+        workspaceName: String,
+        @ApiParam("备注名称", required = true)
+        workspaceProperty: WorkspaceProperty
+    ): Result<Boolean>
 
     @ApiOperation("获取指定工作空间详情")
     @GET
