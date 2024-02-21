@@ -193,17 +193,20 @@ class NotifyControl @Autowired constructor(
     ) {
         /* 发外部邮件，需要模板配置email_type=0*/
         if (notifyType.contains(RemoteDevNotifyType.EMAIL)) {
+            val taiUserNames = userIds.filter { it.contains("@tai") }.toSet()
             // 掉接口拿真正邮件地址
             val taiInfos = taiClient.taiUserInfo(
-                TaiUserInfoRequest(usernames = userIds.filter { it.contains("@tai") }.toSet())
+                TaiUserInfoRequest(usernames = taiUserNames)
             ).associateBy({
                 it.username
             }, { user ->
                 user.accountEmail
             })
             val receivers = userIds.map { taiInfos[it] ?: it }
-            val receiversNameWithCN = remoteDevSettingDao.fetchTaiUserInfo(dslContext, userIds = userIds)
-                .mapValues { "${it.value.first}@${it.value.second}" }.values
+            val receiversNameWithCN = remoteDevSettingDao.fetchTaiUserInfo(dslContext, userIds = taiUserNames)
+                .mapValues { "${it.value.first}@${it.value.second}" }.values.plus(
+                    userIds.filter { !it.contains("@tai") }
+                )
             logger.info("notify4User EMAIL|$notifyTemplateCode|$receivers|$bodyParams|$receiversNameWithCN")
             sendNotifyMessageTemplateRequest(
                 notifyTemplateCode = notifyTemplateCode,

@@ -75,12 +75,12 @@ class HolidayHelper @Autowired constructor(
 
     private fun initHolidayInfo(): Pair<Set<String>, Set<String>>? {
         OkhttpUtils.doGet("https://timor.tech/api/holiday/year").use { response ->
-            logger.info("initHolidayInfo response|${response.body.toString()}")
+            logger.info("initHolidayInfo response|${response.body?.string()}")
             if (!response.isSuccessful) {
-                logger.warn("initHolidayInfo fail ,${response.body}")
+                logger.warn("initHolidayInfo fail ,${response.body?.string()}")
                 return null
             }
-            val res = objectMapper.readValue(response.body.toString(), HolidayInfo::class.java)
+            val res = objectMapper.readValue(response.body?.string(), HolidayInfo::class.java)
             val workingDays = res.holiday.filter { !it.value.holiday }.keys
             val holidays = res.holiday.filter { it.value.holiday }.keys
 
