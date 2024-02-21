@@ -92,19 +92,19 @@ interface OpUserResource {
         userInfo: UserInfo
     ): Result<Boolean>
 
-    @ApiOperation("添加高级用户")
+    @Operation(summary = "添加高级用户")
     @POST
     @Path("/senior/user/add")
     fun createSeniorUsers(
-        @ApiParam("高级用户列表", required = true)
+        @Parameter(description = "高级用户列表", required = true)
         seniorUserList: List<SeniorUserDTO>
     ): Result<Boolean>
 
-    @ApiOperation("删除高级用户")
+    @Operation(summary = "删除高级用户")
     @DELETE
     @Path("/senior/user/delete/{userId}")
     fun deleteSeniorUsers(
-        @ApiParam("用户ID", required = true)
+        @Parameter(description = "用户ID", required = true)
         @PathParam("userId")
         userId: String
     ): Result<Boolean>

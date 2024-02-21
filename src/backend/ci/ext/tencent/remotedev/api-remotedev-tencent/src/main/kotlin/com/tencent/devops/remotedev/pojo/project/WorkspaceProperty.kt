@@ -28,14 +28,13 @@
 package com.tencent.devops.remotedev.pojo.project
 
 import com.fasterxml.jackson.annotation.JsonProperty
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("工作空间属性")
+@Schema(title = "工作空间属性")
 data class WorkspaceProperty(
-    @ApiModelProperty("别名")
+    @get:Schema(title = "别名")
     @JsonProperty("display_name")
     val displayName: String? = "",
-    @ApiModelProperty("备注")
+    @get:Schema(title = "备注")
     val remark: String? = ""
 )

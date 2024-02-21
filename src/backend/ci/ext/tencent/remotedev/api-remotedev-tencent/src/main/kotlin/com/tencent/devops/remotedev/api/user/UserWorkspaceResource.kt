@@ -202,17 +202,17 @@ interface UserWorkspaceResource {
         displayName: String
     ): Result<Boolean>
 
-    @ApiOperation("修改工作空间属性")
+    @Operation(summary = "修改工作空间属性")
     @POST
     @Path("/modify/property")
     fun modifyWorkspaceProperty(
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("工作空间名称", required = true)
+        @Parameter(description = "工作空间名称", required = true)
         @QueryParam("workspaceName")
         workspaceName: String,
-        @ApiParam("备注名称", required = true)
+        @Parameter(description = "备注名称", required = true)
         workspaceProperty: WorkspaceProperty
     ): Result<Boolean>
 

@@ -164,20 +164,20 @@ interface ApigwRemoteDevResource {
         notifyData: WorkspaceNotifyData
     ): Result<Boolean>
 
-    @ApiOperation("校验是否是当前项目下的云桌面", tags = ["v4_app_check_project_workspace"])
+    @Operation(summary = "校验是否是当前项目下的云桌面", tags = ["v4_app_check_project_workspace"])
     @GET
     @Path("/checkWorkspaceProject")
     fun checkWorkspaceProject(
-        @ApiParam(value = "appCode", required = true, defaultValue = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
+        @Parameter(description = "appCode", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
         appCode: String?,
-        @ApiParam(value = "apigw Type", required = true)
+        @Parameter(description = "apigw Type", required = true)
         @PathParam("apigwType")
         apigwType: String?,
-        @ApiParam("projectId", required = true)
+        @Parameter(description = "projectId", required = true)
         @QueryParam("projectId")
         projectId: String,
-        @ApiParam("ip", required = true)
+        @Parameter(description = "ip", required = true)
         @QueryParam("ip")
         ip: String
     ): Result<Boolean>
