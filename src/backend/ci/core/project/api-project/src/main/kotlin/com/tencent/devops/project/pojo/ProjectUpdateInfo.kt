@@ -46,13 +46,13 @@ data class ProjectUpdateInfo(
     @get:Schema(title = "业务线名称")
     val businessLineName: String? = "",
     @get:Schema(title = "中心ID")
-    val centerId: Long = 0,
+    val centerId: Long? = null,
     @get:Schema(title = "中心名称")
-    val centerName: String = "",
+    val centerName: String? = "",
     @get:Schema(title = "部门ID")
-    val deptId: Long = 0,
+    val deptId: Long? = null,
     @get:Schema(title = "部门名称")
-    val deptName: String = "",
+    val deptName: String? = "",
     @get:Schema(title = "描述")
     val description: String,
     @get:Schema(title = "英文缩写")

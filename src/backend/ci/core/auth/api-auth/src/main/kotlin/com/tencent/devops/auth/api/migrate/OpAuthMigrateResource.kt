@@ -132,4 +132,12 @@ interface OpAuthMigrateResource {
         @Parameter(description = "迁移项目", required = true)
         projectCodes: List<String>
     ): Result<Boolean>
+
+    @POST
+    @Path("/autoRenewal")
+    @ApiOperation("自动续期")
+    fun autoRenewal(
+        @ApiParam("按条件迁移项目实体", required = true)
+        migrateProjectConditionDTO: MigrateProjectConditionDTO
+    ): Result<Boolean>
 }

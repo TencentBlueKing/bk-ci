@@ -8,10 +8,12 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
 import com.tencent.devops.project.pojo.ProjectCreateUserInfo
+import com.tencent.devops.project.pojo.ProjectDeleteUserInfo
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.tags.Tag
 import javax.ws.rs.Consumes
+import javax.ws.rs.DELETE
 import javax.ws.rs.GET
 import javax.ws.rs.HeaderParam
 import javax.ws.rs.POST
@@ -86,7 +88,7 @@ interface ApigwAuthProjectResourceV4 {
 
     @POST
     @Path("/batch_add_resource_group_members")
-    @Operation(summary = "根据组ID往项目下加人", tags = ["v4_app_batch_add_resource_group_members"])
+    @Operation(summary = "用户组批量添加成员", tags = ["v4_app_batch_add_resource_group_members"])
     fun batchAddResourceGroupMembers(
         @Parameter(description = "appCode", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
@@ -102,5 +104,25 @@ interface ApigwAuthProjectResourceV4 {
         projectId: String,
         @Parameter(description = "添加信息", required = true)
         createInfo: ProjectCreateUserInfo
+    ): Result<Boolean>
+
+    @DELETE
+    @Path("/batch_delete_resource_group_members")
+    @Operation(summary = "用户组批量删除成员", tags = ["v4_app_batch_delete_resource_group_members"])
+    fun batchDeleteResourceGroupMembers(
+        @Parameter(description = "appCode", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
+        appCode: String?,
+        @Parameter(description = "apigw Type", required = true)
+        @PathParam("apigwType")
+        apigwType: String?,
+        @Parameter(description = "userId")
+        @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
+        userId: String?,
+        @Parameter(description = "projectId", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @Parameter(description = "删除信息", required = true)
+        deleteInfo: ProjectDeleteUserInfo
     ): Result<Boolean>
 }

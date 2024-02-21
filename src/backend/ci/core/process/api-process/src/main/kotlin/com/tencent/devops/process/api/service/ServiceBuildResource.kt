@@ -683,7 +683,7 @@ interface ServiceBuildResource {
         executeCount: Int?,
         @Parameter(description = "结果状态", required = true)
         simpleResult: SimpleResult
-    ): Result<Boolean>
+    ): Result<String?>
 
     @Operation(summary = "保存构建详情")
     @POST

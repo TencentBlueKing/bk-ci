@@ -41,5 +41,7 @@ data class ProjectCreateUserInfo(
     @get:Schema(title = "组ID")
     val groupId: Int?,
     @get:Schema(title = "目标用户")
-    val userIds: List<String>? = emptyList()
+    val userIds: List<String>? = emptyList(),
+    @get:Schema(title = "目标部门")
+    val deptIds: List<String>? = emptyList()
 )
