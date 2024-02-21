@@ -72,7 +72,8 @@ class RepoPipelineRefDao {
                     TRIGGER_CONDITION,
                     TRIGGER_CONDITION_MD5,
                     CREATE_TIME,
-                    UPDATE_TIME
+                    UPDATE_TIME,
+                    CHANNEL
                 ).values(
                     it.projectId,
                     it.pipelineId,
@@ -91,7 +92,8 @@ class RepoPipelineRefDao {
                     it.triggerCondition?.let { JsonUtil.toJson(it) },
                     it.triggerConditionMd5,
                     now,
-                    now
+                    now,
+                    it.channel
                 ).onDuplicateKeyUpdate()
                     .set(TASK_NAME, it.taskName)
                     .set(PIPELINE_NAME, it.pipelineName)
@@ -147,7 +149,8 @@ class RepoPipelineRefDao {
         return with(TRepositoryPipelineRef.T_REPOSITORY_PIPELINE_REF) {
             val conditions = mutableListOf(
                 PROJECT_ID.eq(projectId),
-                REPOSITORY_ID.eq(repositoryId)
+                REPOSITORY_ID.eq(repositoryId),
+                CHANNEL.eq("BS")
             )
             if (!triggerConditionMd5.isNullOrBlank()) {
                 conditions.add(TRIGGER_CONDITION_MD5.eq(triggerConditionMd5))
@@ -181,7 +184,8 @@ class RepoPipelineRefDao {
         return with(TRepositoryPipelineRef.T_REPOSITORY_PIPELINE_REF) {
             val conditions = mutableListOf(
                 PROJECT_ID.eq(projectId),
-                REPOSITORY_ID.eq(repositoryId)
+                REPOSITORY_ID.eq(repositoryId),
+                CHANNEL.eq("BS")
             )
             if (!triggerConditionMd5.isNullOrBlank()) {
                 conditions.add(TRIGGER_CONDITION_MD5.eq(triggerConditionMd5))

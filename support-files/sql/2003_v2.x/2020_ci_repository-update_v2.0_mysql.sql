@@ -19,6 +19,15 @@ BEGIN
     ALTER TABLE `T_REPOSITORY`
         ADD COLUMN `UPDATED_USER` varchar(64) NULL DEFAULT NULL COMMENT '代码库最近修改人';
     END IF;
+
+    IF NOT EXISTS(SELECT 1
+                  FROM information_schema.COLUMNS
+                  WHERE TABLE_SCHEMA = db
+                    AND TABLE_NAME = 'T_REPOSITORY_PIPELINE_REF'
+                    AND COLUMN_NAME = 'CHANNEL') THEN
+    ALTER TABLE `T_REPOSITORY_PIPELINE_REF`
+        ADD COLUMN `CHANNEL` varchar(32) DEFAULT NULL COMMENT '流水线渠道';
+    END IF;
     
     COMMIT;
 END <CI_UBF>

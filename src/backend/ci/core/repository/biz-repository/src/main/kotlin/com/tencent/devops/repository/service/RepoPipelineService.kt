@@ -77,7 +77,7 @@ class RepoPipelineService @Autowired constructor(
                     cleanPipelineRef(projectId, request.pipelineId)
                     return
                 }
-                savePipelineRefInfo(projectId, request.pipelineId, request.pipelineRefInfos)
+                savePipelineRefInfo(projectId, request.pipelineId, request.pipelineRefInfos, request.channel)
             }
             "delete_pipeline" -> {
                 cleanPipelineRef(projectId, request.pipelineId)
@@ -91,7 +91,8 @@ class RepoPipelineService @Autowired constructor(
     private fun savePipelineRefInfo(
         projectId: String,
         pipelineId: String,
-        pipelineRefInfos: List<RepoPipelineRefInfo>
+        pipelineRefInfos: List<RepoPipelineRefInfo>,
+        channel: String
     ) {
         val repoPipelineRefs = mutableListOf<RepoPipelineRef>()
         val repoBuffer = mutableMapOf<String, Repository>()
@@ -133,7 +134,8 @@ class RepoPipelineService @Autowired constructor(
                     triggerCondition = refInfo.triggerCondition,
                     triggerConditionMd5 = refInfo.triggerCondition?.let {
                         DigestUtils.md5Hex(JsonUtil.toJson(it))
-                    }
+                    },
+                    channel = channel
                 )
             )
         }
@@ -182,6 +184,7 @@ class RepoPipelineService @Autowired constructor(
         offset: Int
     ): SQLPage<RepoPipelineRefVo> {
         val repositoryId = HashUtil.decodeOtherIdToLong((repositoryHashId))
+        // 仅展示蓝盾平台流水线关联的数据
         val count = repoPipelineRefDao.countByRepo(
             dslContext = dslContext,
             projectId = projectId,

@@ -37,5 +37,7 @@ data class RepoPipelineRefRequest(
     val action: String,
     @ApiModelProperty("pipelineId", required = true)
     val pipelineId: String,
-    val pipelineRefInfos: List<RepoPipelineRefInfo>
+    val pipelineRefInfos: List<RepoPipelineRefInfo>,
+    @ApiModelProperty("创建渠道", required = true)
+    val channel: String
 )

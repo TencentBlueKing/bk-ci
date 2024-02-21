@@ -64,5 +64,7 @@ data class RepoPipelineRef(
     @ApiModelProperty("触发条件")
     val triggerCondition: String?,
     @ApiModelProperty("触发条件md5")
-    val triggerConditionMd5: String?
+    val triggerConditionMd5: String?,
+    @ApiModelProperty("流水线创建渠道")
+    val channel: String
 )
