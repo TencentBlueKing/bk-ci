@@ -41,14 +41,15 @@ import com.tencent.devops.process.plugin.annotation.ElementBiz
 import com.tencent.devops.process.plugin.trigger.service.PipelineTimerService
 import com.tencent.devops.process.plugin.trigger.util.CronExpressionUtils
 import com.tencent.devops.process.utils.PIPELINE_TIMER_DISABLE
+import com.tencent.devops.process.yaml.PipelineYamlService
 import com.tencent.devops.repository.api.ServiceRepositoryResource
-import com.tencent.devops.repository.pojo.Repository
 import org.quartz.CronExpression
 import org.slf4j.LoggerFactory
 
 @ElementBiz
 class TimerTriggerElementBizPlugin constructor(
     private val pipelineTimerService: PipelineTimerService,
+    private val pipelineYamlService: PipelineYamlService,
     private val client: Client
 ) : ElementBizPlugin<TimerTriggerElement> {
 
@@ -100,24 +101,12 @@ class TimerTriggerElementBizPlugin constructor(
                 crontabExpressions.add(cron)
             }
         }
-
-        var repository: Repository? = null
-        if (!element.repoHashId.isNullOrBlank() || !element.repoName.isNullOrBlank()) {
-            val repositoryConfig = with(element) {
-                RepositoryConfigUtils.getRepositoryConfig(
-                    repoHashId = repoHashId,
-                    repoName = repoName,
-                    repoType = repoType,
-                    variables = variables
-                )
-            }
-            repository = client.get(ServiceRepositoryResource::class).get(
-                projectId = projectId,
-                repositoryId = repositoryConfig.getURLEncodeRepositoryId(),
-                repositoryType = repositoryConfig.repositoryType
-            ).data
+        val repoHashId = getRepoHashId(projectId = projectId, pipelineId = pipelineId, element = element)
+        val branchs = if (repoHashId.isNullOrBlank()) {
+            null
+        } else {
+            element.branches
         }
-
         if (crontabExpressions.isNotEmpty()) {
             val result = pipelineTimerService.saveTimer(
                 projectId = projectId,
@@ -125,8 +114,8 @@ class TimerTriggerElementBizPlugin constructor(
                 userId = userId,
                 crontabExpressions = crontabExpressions,
                 channelCode = channelCode,
-                repoHashId = repository?.repoHashId,
-                branchs = element.branches?.toSet(),
+                repoHashId = repoHashId,
+                branchs = branchs?.toSet(),
                 noScm = element.noScm
             )
             logger.info("[$pipelineId]|$userId| Update pipeline timer|crontab=$crontabExpressions")
@@ -144,6 +133,34 @@ class TimerTriggerElementBizPlugin constructor(
     override fun beforeDelete(element: TimerTriggerElement, param: BeforeDeleteParam) {
         if (param.pipelineId.isNotBlank()) {
             pipelineTimerService.deleteTimer(param.projectId, param.pipelineId, param.userId)
+        }
+    }
+
+    private fun getRepoHashId(projectId: String, pipelineId: String, element: TimerTriggerElement): String? {
+        return when {
+            !element.repoHashId.isNullOrBlank() || !element.repoName.isNullOrBlank() -> {
+                val repositoryConfig = with(element) {
+                    RepositoryConfigUtils.getRepositoryConfig(
+                        repoHashId = repoHashId,
+                        repoName = repoName,
+                        repoType = repoType,
+                        variables = variables
+                    )
+                }
+                client.get(ServiceRepositoryResource::class).get(
+                    projectId = projectId,
+                    repositoryId = repositoryConfig.getURLEncodeRepositoryId(),
+                    repositoryType = repositoryConfig.repositoryType
+                ).data?.repoHashId
+            }
+            // 如果流水线开启PAC,那么repo-name可以为空,默认为开启PAC的代码库
+            !element.branches.isNullOrEmpty() -> {
+                val pipelineYamlInfo = pipelineYamlService.getPipelineYamlInfo(
+                    projectId = projectId, pipelineId = pipelineId
+                ) ?: return null
+                pipelineYamlInfo.repoHashId
+            }
+            else -> null
         }
     }
 

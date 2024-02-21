@@ -98,22 +98,26 @@ class PipelineTimerBuildListener @Autowired constructor(
 
     private fun repoTimerTrigger(event: PipelineTimerBuildEvent, repoHashId: String, branchs: List<String>?) {
         with(event) {
-            val repositoryConfig = RepositoryConfig(
-                repositoryHashId = repoHashId,
-                repositoryName = null,
-                repositoryType = RepositoryType.ID
-            )
-            val finalBranchs = if (branchs.isNullOrEmpty()) {
-                val defaultBranch = scmProxyService.getDefaultBranch(
-                    projectId = projectId,
-                    repositoryConfig = repositoryConfig
-                ) ?: return
-                listOf(defaultBranch)
-            } else {
-                branchs
-            }
-            finalBranchs.forEach { branch ->
-                branchTimerTrigger(event = event, repoHashId = repoHashId, branch = branch)
+            try {
+                val repositoryConfig = RepositoryConfig(
+                    repositoryHashId = repoHashId,
+                    repositoryName = null,
+                    repositoryType = RepositoryType.ID
+                )
+                val finalBranchs = if (branchs.isNullOrEmpty()) {
+                    val defaultBranch = scmProxyService.getDefaultBranch(
+                        projectId = projectId,
+                        repositoryConfig = repositoryConfig
+                    ) ?: return
+                    listOf(defaultBranch)
+                } else {
+                    branchs
+                }
+                finalBranchs.forEach { branch ->
+                    branchTimerTrigger(event = event, repoHashId = repoHashId, branch = branch)
+                }
+            } catch (ignored: Exception) {
+                logger.warn("repo timer trigger fail|$projectId|$pipelineId|$repoHashId|$branchs")
             }
         }
     }
@@ -125,30 +129,36 @@ class PipelineTimerBuildListener @Autowired constructor(
             repositoryType = RepositoryType.ID
         )
         with(event) {
-            val revision = scmProxyService.recursiveFetchLatestRevision(
-                projectId = projectId,
-                pipelineId = pipelineId,
-                repositoryConfig = repositoryConfig,
-                branchName = branch,
-                variables = emptyMap()
-            ).data?.revision ?: return
-            val timerBranch = pipelineTimerService.getTimerBranch(
-                projectId = projectId,
-                pipelineId = pipelineId,
-                repoHashId = repoHashId,
-                branch = branch
-            )
-            if (
-                (timerBranch == null || timerBranch.revision != revision) &&
-                !timerTrigger(event = event).isNullOrBlank()
-            ) {
-                pipelineTimerService.saveTimerBranch(
+            try {
+                val revision = scmProxyService.recursiveFetchLatestRevision(
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    repositoryConfig = repositoryConfig,
+                    branchName = branch,
+                    variables = emptyMap()
+                ).data?.revision ?: return
+                val timerBranch = pipelineTimerService.getTimerBranch(
                     projectId = projectId,
                     pipelineId = pipelineId,
                     repoHashId = repoHashId,
-                    branch = branch,
-                    revision = revision
+                    branch = branch
                 )
+                if (
+                    (timerBranch == null || timerBranch.revision != revision) &&
+                    !timerTrigger(event = event).isNullOrBlank()
+                ) {
+                    pipelineTimerService.saveTimerBranch(
+                        projectId = projectId,
+                        pipelineId = pipelineId,
+                        repoHashId = repoHashId,
+                        branch = branch,
+                        revision = revision
+                    )
+                } else {
+                    logger.info("branch timer trigger fail,revision not change|$projectId|$repoHashId|$branch")
+                }
+            } catch (exception: Exception) {
+                logger.warn("branch timer trigger fail|$projectId|$pipelineId|$repoHashId|$branch", exception)
             }
         }
     }
