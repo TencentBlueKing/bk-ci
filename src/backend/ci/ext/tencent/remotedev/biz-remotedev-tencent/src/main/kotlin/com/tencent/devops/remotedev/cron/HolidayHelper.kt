@@ -13,6 +13,7 @@ import com.tencent.devops.remotedev.service.redis.RedisKeys.REDIS_WORKING_ON_WEE
 import java.time.DayOfWeek
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
+import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
@@ -26,8 +27,8 @@ class HolidayHelper @Autowired constructor(
 ) {
 
     companion object {
-        val logger = LoggerFactory.getLogger(HolidayHelper::class.java)
-        val formatter: DateTimeFormatter = DateTimeFormatter.ofPattern("MM-dd")
+        val logger: Logger = LoggerFactory.getLogger(HolidayHelper::class.java)
+        val formatter: DateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd")
     }
 
     /**
@@ -36,8 +37,8 @@ class HolidayHelper @Autowired constructor(
     fun getLastWorkingDays(days: Int): List<LocalDateTime> {
         var now = LocalDateTime.now()
         val result = mutableListOf<LocalDateTime>()
-        val holidays = getOrInitHolidays()
-        val workingDays = getOrInitWorkingDays()
+        val holidays = getOrInitHolidays(now.year)
+        val workingDays = getOrInitWorkingDays(now.year)
         var max = 32
         while (max-- > 0 && result.size < days) {
             when (now.dayOfWeek) {
@@ -62,20 +63,20 @@ class HolidayHelper @Autowired constructor(
         return result
     }
 
-    private fun getOrInitHolidays(): Set<String> {
-        return redisCache.getSetMembers(REDIS_HOLIDAY)?.ifEmpty { null } ?: kotlin.run {
-            initHolidayInfo()?.second ?: emptySet()
+    private fun getOrInitHolidays(year: Int): Set<String> {
+        return redisCache.getSetMembers("$REDIS_HOLIDAY:$year")?.ifEmpty { null } ?: kotlin.run {
+            initHolidayInfo(year)?.second ?: emptySet()
         }
     }
 
-    private fun getOrInitWorkingDays(): Set<String> {
-        return redisCache.getSetMembers(REDIS_WORKING_ON_WEEKEND_DAY)?.ifEmpty { null } ?: kotlin.run {
-            initHolidayInfo()?.first ?: emptySet()
+    private fun getOrInitWorkingDays(year: Int): Set<String> {
+        return redisCache.getSetMembers("$REDIS_WORKING_ON_WEEKEND_DAY:$year")?.ifEmpty { null } ?: kotlin.run {
+            initHolidayInfo(year)?.first ?: emptySet()
         }
     }
 
-    private fun initHolidayInfo(): Pair<Set<String>, Set<String>>? {
-        OkhttpUtils.doGet("https://api.jiejiariapi.com/v1/holidays/2024").use { response ->
+    private fun initHolidayInfo(year: Int): Pair<Set<String>, Set<String>>? {
+        OkhttpUtils.doGet("https://api.jiejiariapi.com/v1/holidays/$year").use { response ->
             val body = response.body?.string()
             logger.info("initHolidayInfo response|$body")
             if (!response.isSuccessful) {
@@ -86,8 +87,8 @@ class HolidayHelper @Autowired constructor(
             val workingDays = res.filter { !it.value.offDay }.keys
             val holidays = res.filter { it.value.offDay }.keys
 
-            redisOperation.sadd(REDIS_WORKING_ON_WEEKEND_DAY, *workingDays.toTypedArray())
-            redisOperation.sadd(REDIS_HOLIDAY, *holidays.toTypedArray())
+            redisOperation.sadd("$REDIS_WORKING_ON_WEEKEND_DAY:$year", *workingDays.toTypedArray())
+            redisOperation.sadd("$REDIS_HOLIDAY:$year", *holidays.toTypedArray())
             return Pair(workingDays, holidays)
         }
     }
