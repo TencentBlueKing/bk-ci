@@ -213,6 +213,8 @@ class WorkspaceCheckJob @Autowired constructor(
         // 云桌面处于待分配超过3天的自动回收，并邮件提醒
         kotlin.runCatching {
             deleteControl.autoDeleteWhenNotAssign(false, readyDeleteWorkspace)
+        }.onFailure {
+            logger.warn("autoDeleteWhenNotAssign fail ${it.message}", it)
         }
         // 云桌面通知-关机超过7天时自动销毁
         kotlin.runCatching {
@@ -229,18 +231,26 @@ class WorkspaceCheckJob @Autowired constructor(
                     )
                 )
             }
+        }.onFailure {
+            logger.warn("autoDeleteWhenSleep7Day fail ${it.message}", it)
         }
         // 云桌面通知-关机超过3天时提醒
         kotlin.runCatching {
             workspaceService.notifyWinSleep3Day()
+        }.onFailure {
+            logger.warn("notifyWinSleep3Day fail ${it.message}", it)
         }
         // 云桌面通知-未登录7天时自动降配(暂时不做)并关机
         kotlin.runCatching {
             sleepControl.autoSleepWhenNotLogin()
+        }.onFailure {
+            logger.warn("autoSleepWhenNotLogin fail ${it.message}", it)
         }
         // 云桌面通知-未登录3天时提醒
         kotlin.runCatching {
             workspaceService.notifyWinNotLogin3Day()
+        }.onFailure {
+            logger.warn("notifyWinNotLogin3Day fail ${it.message}", it)
         }
     }
 
