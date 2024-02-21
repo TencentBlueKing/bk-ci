@@ -108,6 +108,7 @@ class RepoPipelineRefDao {
                     .set(TRIGGER_CONDITION, it.triggerCondition?.let { JsonUtil.toJson(it) })
                     .set(TRIGGER_CONDITION_MD5, it.triggerConditionMd5)
                     .set(UPDATE_TIME, now)
+                    .set(CHANNEL, it.channel)
             }
         }).execute()
     }
