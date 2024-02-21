@@ -484,8 +484,8 @@ class ScmProxyService @Autowired constructor(private val client: Client) {
             projectName = repo.projectName,
             url = repo.url,
             type = ScmType.CODE_SVN,
-            privateKey = credential.privateKey,
-            passPhrase = credential.passPhrase,
+            privateKey = credential.username,
+            passPhrase = credential.privateKey,
             token = if (repo.svnType == CodeSvnRepository.SVN_TYPE_SSH) {
                 try {
                     getAccessToken(repo.userName).first
