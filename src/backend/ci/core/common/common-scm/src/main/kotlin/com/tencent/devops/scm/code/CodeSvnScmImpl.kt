@@ -57,7 +57,8 @@ class CodeSvnScmImpl constructor(
     private var privateKey: String,
     private val passphrase: String?,
     private val svnConfig: SVNConfig,
-    private var token: String?
+    private var token: String?,
+    private val svnApi: SVNApi
 ) : IScm {
 
     override fun getLatestRevision(): RevisionInfo {
@@ -203,7 +204,7 @@ class CodeSvnScmImpl constructor(
     override fun lock(repoName: String, applicant: String, subpath: String) {
         logger.info("Start to lock the repo $repoName")
         try {
-            SVNApi.lock(repname = repoName, applicant = applicant, subpath = subpath, svnConfig = svnConfig)
+            svnApi.lock(repname = repoName, applicant = applicant, subpath = subpath, svnConfig = svnConfig)
         } catch (e: Exception) {
             logger.warn("Fail to lock the repo:$repoName", e)
             throw ScmException(
@@ -218,7 +219,7 @@ class CodeSvnScmImpl constructor(
     override fun unlock(repoName: String, applicant: String, subpath: String) {
         logger.info("Start to unlock the repo $repoName")
         try {
-            SVNApi.unlock(repname = repoName, applicant = applicant, subpath = subpath, svnConfig = svnConfig)
+            svnApi.unlock(repname = repoName, applicant = applicant, subpath = subpath, svnConfig = svnConfig)
         } catch (e: Exception) {
             logger.warn("Fail to unlock the repo:$repoName", e)
             throw ScmException(
@@ -313,12 +314,12 @@ class CodeSvnScmImpl constructor(
      */
     private fun addWebhookByToken(hookUrl: String, projectName: String = this.projectName) {
         var isOauth = true
-        val ssh = SvnUtils.isSSHProtocol(SVNURL.parseURIEncoded(url).protocol)
-        if (!ssh) {
+        // 兜底，若token为空，尝试获取用户会话信息
+        if (token.isNullOrBlank() && !SvnUtils.isSSHProtocol(SVNURL.parseURIEncoded(url).protocol)){
             token = getLoginSession()?.privateToken
             isOauth = false
         }
-        val hooks = SVNApi.getWebhooks(
+        val hooks = svnApi.getWebhooks(
             host = svnConfig.webhookApiUrl,
             projectName = projectName,
             token = token!!,
@@ -333,7 +334,7 @@ class CodeSvnScmImpl constructor(
             }
         }
         if (existHook == null) {
-            SVNApi.addWebhooks(
+            svnApi.addWebhooks(
                 host = svnConfig.webhookApiUrl,
                 projectName = projectName,
                 hookUrl = hookUrl,
@@ -349,7 +350,7 @@ class CodeSvnScmImpl constructor(
 
     override fun getLoginSession(): LoginSession? {
         return try {
-            SVNApi.getSession(
+            svnApi.getSession(
                 host = svnConfig.webhookApiUrl,
                 username = privateKey,
                 password = passphrase ?: ""

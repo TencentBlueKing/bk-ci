@@ -48,7 +48,7 @@ import org.slf4j.LoggerFactory
 import java.net.URLEncoder
 
 @Suppress("ALL")
-object SVNApi {
+open class SVNApi {
 
     private val logger = LoggerFactory.getLogger(SVNApi::class.java)
     private val mediaType = "application/json; charset=utf-8".toMediaTypeOrNull()
@@ -195,7 +195,7 @@ object SVNApi {
         it
     }
 
-    fun request(host: String, token: String, url: String, page: String): Request.Builder {
+    open fun request(host: String, token: String, url: String, page: String): Request.Builder {
         return if (page.isNotEmpty()) Request.Builder()
             .url("$host/$url?$page")
             .header("PRIVATE-TOKEN", token)

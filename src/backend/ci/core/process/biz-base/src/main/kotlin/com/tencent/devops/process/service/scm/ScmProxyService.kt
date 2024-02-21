@@ -481,17 +481,32 @@ class ScmProxyService @Autowired constructor(private val client: Client) {
         val repo = getRepo(projectId, repositoryConfig) as? CodeSvnRepository
             ?: throw ErrorCodeException(errorCode = ProcessMessageCode.SVN_INVALID)
         val credential = getCredential(projectId, repo)
-        client.get(ServiceScmResource::class).addWebHook(
-            projectName = repo.projectName,
-            url = repo.url,
-            type = ScmType.CODE_SVN,
-            privateKey = credential.username,
-            passPhrase = credential.privateKey,
-            token = getSvnToken(credential, repo.svnType, repo.userName),
-            region = repo.region,
-            userName = credential.username,
-            event = null
-        )
+        val (isOauth, token) = getSvnToken(credential, repo.svnType, repo.userName)
+        if (isOauth) {
+            client.get(ServiceScmOauthResource::class).addWebHook(
+                projectName = repo.projectName,
+                url = repo.url,
+                type = ScmType.CODE_SVN,
+                privateKey = credential.username,
+                passPhrase = credential.privateKey,
+                token = token,
+                region = repo.region,
+                userName = credential.username,
+                event = null
+            )
+        } else {
+            client.get(ServiceScmResource::class).addWebHook(
+                projectName = repo.projectName,
+                url = repo.url,
+                type = ScmType.CODE_SVN,
+                privateKey = credential.username,
+                passPhrase = credential.privateKey,
+                token = token,
+                region = repo.region,
+                userName = credential.username,
+                event = null
+            )
+        }
         return repo
     }
 
@@ -760,11 +775,11 @@ class ScmProxyService @Autowired constructor(private val client: Client) {
         CodeSvnRepository.SVN_TYPE_SSH -> {
             // 凭证中存在token，则直接使用
             if (credential.credentialType == CredentialType.TOKEN_SSH_PRIVATEKEY) {
-                credential.privateKey
+                Pair(false, credential.privateKey)
             } else {
                 // 兜底，以当前代码关联人的oauthToken去操作
                 try {
-                    getAccessToken(userName).first
+                    Pair(true, getAccessToken(userName).first)
                 } catch (e: Exception) {
                     throw NotFoundException(
                         I18nUtil.getCodeLanMessage(
@@ -778,13 +793,13 @@ class ScmProxyService @Autowired constructor(private val client: Client) {
         CodeSvnRepository.SVN_TYPE_HTTP -> {
             // 凭证中存在token，则直接使用
             if (credential.credentialType == CredentialType.TOKEN_USERNAME_PASSWORD) {
-                credential.privateKey
+                Pair(false, credential.privateKey)
             } else {
-                ""
+                Pair(false, "")
             }
         }
         else -> {
-            ""
+            Pair(false, "")
         }
     }
 }
