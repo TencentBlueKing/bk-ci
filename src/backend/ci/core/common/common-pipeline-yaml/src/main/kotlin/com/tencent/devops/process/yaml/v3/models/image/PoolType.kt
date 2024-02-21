@@ -54,7 +54,8 @@ enum class PoolType {
                 credentialId = pool.credentialId,
                 imageVersion = pool.image?.imageVersion,
                 imageCode = pool.image?.imageCode,
-                performanceConfigId = pool.performanceConfigId?.toInt() ?: 0
+                performanceConfigId = pool.performanceConfigId?.toInt() ?: 0,
+                imageName = pool.container ?: pool.image?.imageCode
             )
         }
 
