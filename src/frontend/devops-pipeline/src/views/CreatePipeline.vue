@@ -135,7 +135,7 @@
                                 </bk-popover>
                             </bk-radio-group>
                         </bk-form-item>
-                        <bk-form-item :label="$t('克隆模板配置')">
+                        <bk-form-item :label="$t('copyTempConf')">
                             <bk-checkbox-group v-model="applySettings">
                                 <div v-for="item in settingItems"
                                     :key="item.label"
@@ -152,7 +152,7 @@
                                         </p>
                                     </bk-checkbox>
                                     <em v-if="item.disabled">
-                                        {{$t('模板未包含此设置')}}
+                                        {{$t('tempWithoutConf')}}
                                     </em>
                                     <bk-button
                                         text
