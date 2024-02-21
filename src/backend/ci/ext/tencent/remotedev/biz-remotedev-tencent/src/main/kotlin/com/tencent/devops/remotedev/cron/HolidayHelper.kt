@@ -3,6 +3,7 @@ package com.tencent.devops.remotedev.cron
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.annotation.JsonInclude
 import com.fasterxml.jackson.annotation.JsonProperty
+import com.fasterxml.jackson.core.type.TypeReference
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.redis.RedisOperation
@@ -68,21 +69,21 @@ class HolidayHelper @Autowired constructor(
     }
 
     private fun getOrInitWorkingDays(): Set<String> {
-        return redisCache.getSetMembers(REDIS_WORKING_ON_WEEKEND_DAY)?.ifEmpty { null }  ?: kotlin.run {
+        return redisCache.getSetMembers(REDIS_WORKING_ON_WEEKEND_DAY)?.ifEmpty { null } ?: kotlin.run {
             initHolidayInfo()?.first ?: emptySet()
         }
     }
 
     private fun initHolidayInfo(): Pair<Set<String>, Set<String>>? {
-        OkhttpUtils.doGet("https://timor.tech/api/holiday/year").use { response ->
+        OkhttpUtils.doGet("https://api.jiejiariapi.com/v1/holidays/2024").use { response ->
             logger.info("initHolidayInfo response|${response.body?.string()}")
             if (!response.isSuccessful) {
                 logger.warn("initHolidayInfo fail ,${response.body?.string()}")
                 return null
             }
-            val res = objectMapper.readValue(response.body?.string(), HolidayInfo::class.java)
-            val workingDays = res.holiday.filter { !it.value.holiday }.keys
-            val holidays = res.holiday.filter { it.value.holiday }.keys
+            val res = objectMapper.readValue(response.body?.string(), object : TypeReference<Map<String, Holiday>>() {})
+            val workingDays = res.filter { !it.value.offDay }.keys
+            val holidays = res.filter { it.value.offDay }.keys
 
             redisOperation.sadd(REDIS_WORKING_ON_WEEKEND_DAY, *workingDays.toTypedArray())
             redisOperation.sadd(REDIS_HOLIDAY, *holidays.toTypedArray())
@@ -90,19 +91,14 @@ class HolidayHelper @Autowired constructor(
         }
     }
 
-    data class HolidayInfo(
-        @JsonProperty("code")
-        val code: Int,
-        @JsonProperty("holiday")
-        val holiday: Map<String, Holiday>
-    )
-
     @JsonInclude(JsonInclude.Include.NON_NULL)
     @JsonIgnoreProperties(ignoreUnknown = true)
     data class Holiday(
         @JsonProperty("date")
         val date: String,
-        @JsonProperty("holiday")
-        val holiday: Boolean
+        @JsonProperty("name")
+        val name: String,
+        @JsonProperty("isOffDay")
+        val offDay: Boolean
     )
 }
