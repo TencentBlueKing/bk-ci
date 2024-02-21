@@ -210,57 +210,61 @@ data class AgentService @Autowired constructor(
         val redisLock = RedisLock(redisOperation, CHECK_NODE_STATUS_TIMEOUT_LOCK_KEY, EXPIRATION_TIME_OF_THE_LOCK)
         redisLock.takeIf { it.tryLock() }.run {
             try {
-                if (null == jobId) {
-                    throw CustomException(
-                        Response.Status.INTERNAL_SERVER_ERROR,
-                        "Empty job id."
-                    )
-                }
-                if (null == ipList) return
-                val executor = Executors.newSingleThreadScheduledExecutor()
-                val runningIpList = ipList.toMutableList()
-                nodeDao.updateNodeStatusByNodeIp(dslContext, ipList, NodeStatus.RUNNING.name, jobId.toLong())
-                val task = object : Runnable {
-                    var count = 0
-                    override fun run() {
-                        val queryAgentTaskStatusReq = QueryAgentTaskStatusReq(
-                            page = DEFAULT_PAGE, pageSize = DEFAULT_PAGE_SIZE
-                        )
-                        val queryAgentTaskStatusRes = queryAgentTaskStatus(
-                            userId, projectId, jobId, queryAgentTaskStatusReq
-                        )
-                        queryAgentTaskStatusRes.data?.list?.filter {
-                            it.ip in runningIpList
-                        }?.map {
-                            if (logger.isDebugEnabled)
-                                logger.debug("Agent install task: ip: ${it.ip}, status: ${it.status}")
-                            if (it.status in agentTaskEndStatusList) { // agent安装结束(成功/失败)
-                                val nodeStatus =
-                                    if (AGENT_INSTALL_NORMAL == it.status) NodeStatus.NORMAL.name
-                                    else NodeStatus.ABNORMAL.name
-                                nodeDao.updateNodeStatusByNodeIp(dslContext, listOf(it.ip), nodeStatus, null)
-                                runningIpList.remove(it.ip)
-                            }
-                        }
-                        if (logger.isDebugEnabled) logger.debug("Agent install task runningIpList:$runningIpList")
-                        if (runningIpList.isEmpty()) {
-                            logger.info("Agent install task is complete.")
-                            executor.shutdown()
-                        } else if (count > MAXIMUM_RETRY_TIMES) {
-                            logger.info("Agent install task abnormal ip: $runningIpList")
-                            nodeDao.updateNodeStatusByNodeIp(dslContext, runningIpList, NodeStatus.ABNORMAL.name, null)
-                            executor.shutdown()
-                        } else {
-                            if (logger.isDebugEnabled) logger.debug("Agent install task running...")
-                            count++
-                        }
-                    }
-                }
-                executor.scheduleAtFixedRate(task, INITIAL_DELAY, TASK_PERIOD, TimeUnit.MILLISECONDS)
+                checkAgentStatusTimed(userId, projectId, jobId, ipList)
             } finally {
                 redisLock.unlock()
             }
         }
+    }
+
+    private fun checkAgentStatusTimed(userId: String, projectId: String, jobId: Int?, ipList: List<String>?) {
+        if (null == jobId) {
+            throw CustomException(
+                Response.Status.INTERNAL_SERVER_ERROR,
+                "Empty job id."
+            )
+        }
+        if (null == ipList) return
+        val executor = Executors.newSingleThreadScheduledExecutor()
+        val runningIpList = ipList.toMutableList()
+        nodeDao.updateNodeStatusByNodeIp(dslContext, ipList, NodeStatus.RUNNING.name, jobId.toLong())
+        val task = object : Runnable {
+            var count = 0
+            override fun run() {
+                val queryAgentTaskStatusReq = QueryAgentTaskStatusReq(
+                    page = DEFAULT_PAGE, pageSize = DEFAULT_PAGE_SIZE
+                )
+                val queryAgentTaskStatusRes = queryAgentTaskStatus(
+                    userId, projectId, jobId, queryAgentTaskStatusReq
+                )
+                queryAgentTaskStatusRes.data?.list?.filter {
+                    it.ip in runningIpList
+                }?.map {
+                    if (logger.isDebugEnabled)
+                        logger.debug("Agent install task: ip: ${it.ip}, status: ${it.status}")
+                    if (it.status in agentTaskEndStatusList) { // agent安装结束(成功/失败)
+                        val nodeStatus =
+                            if (AGENT_INSTALL_NORMAL == it.status) NodeStatus.NORMAL.name
+                            else NodeStatus.ABNORMAL.name
+                        nodeDao.updateNodeStatusByNodeIp(dslContext, listOf(it.ip), nodeStatus, null)
+                        runningIpList.remove(it.ip)
+                    }
+                }
+                if (logger.isDebugEnabled) logger.debug("Agent install task runningIpList:$runningIpList")
+                if (runningIpList.isEmpty()) {
+                    logger.info("Agent install task is complete.")
+                    executor.shutdown()
+                } else if (count > MAXIMUM_RETRY_TIMES) {
+                    logger.info("Agent install task abnormal ip: $runningIpList")
+                    nodeDao.updateNodeStatusByNodeIp(dslContext, runningIpList, NodeStatus.ABNORMAL.name, null)
+                    executor.shutdown()
+                } else {
+                    if (logger.isDebugEnabled) logger.debug("Agent install task running...")
+                    count++
+                }
+            }
+        }
+        executor.scheduleAtFixedRate(task, INITIAL_DELAY, TASK_PERIOD, TimeUnit.MILLISECONDS)
     }
 
     fun queryAgentTaskStatus(
