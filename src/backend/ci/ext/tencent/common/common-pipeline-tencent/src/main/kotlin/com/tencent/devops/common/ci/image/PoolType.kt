@@ -56,7 +56,8 @@ enum class PoolType {
             return DockerDispatchType(
                 dockerBuildVersion = pool.container,
                 imageType = ImageType.THIRD,
-                credentialId = pool.credential?.credentialId
+                credentialId = pool.credential?.credentialId,
+                imageName = pool.container ?: ""
             )
         }
 
@@ -82,7 +83,8 @@ enum class PoolType {
                 imageType = pool.image?.imageType ?: ImageType.THIRD,
                 credentialId = pool.credential?.credentialId,
                 imageVersion = pool.image?.imageVersion,
-                imageCode = pool.image?.imageCode
+                imageCode = pool.image?.imageCode,
+                imageName = pool.container ?: pool.image?.imageCode
             )
         }
 
