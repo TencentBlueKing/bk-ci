@@ -27,12 +27,15 @@
 
 package com.tencent.devops.process.plugin.trigger.timer.listener
 
+import com.tencent.devops.common.api.enums.RepositoryConfig
+import com.tencent.devops.common.api.enums.RepositoryType
 import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.event.listener.pipeline.BaseListener
 import com.tencent.devops.process.api.service.ServiceTimerBuildResource
 import com.tencent.devops.process.plugin.trigger.pojo.event.PipelineTimerBuildEvent
 import com.tencent.devops.process.plugin.trigger.service.PipelineTimerService
+import com.tencent.devops.process.service.scm.ScmProxyService
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
 
@@ -45,13 +48,29 @@ import org.springframework.stereotype.Component
 class PipelineTimerBuildListener @Autowired constructor(
     pipelineEventDispatcher: PipelineEventDispatcher,
     private val serviceTimerBuildResource: ServiceTimerBuildResource,
-    private val pipelineTimerService: PipelineTimerService
+    private val pipelineTimerService: PipelineTimerService,
+    private val scmProxyService: ScmProxyService
 ) : BaseListener<PipelineTimerBuildEvent>(pipelineEventDispatcher) {
 
     override fun run(event: PipelineTimerBuildEvent) {
+        val pipelineTimer =
+            pipelineTimerService.get(projectId = event.projectId, pipelineId = event.pipelineId) ?: return
+        when {
+            pipelineTimer.repoHashId == null || pipelineTimer.noScm != true ->
+                timerTrigger(event = event)
+
+            else ->
+                repoTimerTrigger(
+                    event = event,
+                    repoHashId = pipelineTimer.repoHashId!!,
+                    branchs = pipelineTimer.branchs
+                )
+        }
+    }
+
+    private fun timerTrigger(event: PipelineTimerBuildEvent): String? {
         with(event) {
             try {
-
                 val buildResult = serviceTimerBuildResource.timerTrigger(
                     userId = userId,
                     projectId = projectId,
@@ -67,10 +86,69 @@ class PipelineTimerBuildListener @Autowired constructor(
                 } else {
                     logger.info("[$pipelineId]|TimerTrigger start| buildId=${buildResult.data}")
                 }
+                return buildResult.data
             } catch (t: OperationException) {
                 logger.info("[$pipelineId]|TimerTrigger no start| msg=${t.message}")
             } catch (ignored: Throwable) {
-                logger.warn("[$pipelineId]|TimerTrigger fail event=$event| error=${ignored.message}")
+                logger.warn("[$pipelineId]|TimerTrigger fail event=$this| error=${ignored.message}")
+            }
+            return null
+        }
+    }
+
+    private fun repoTimerTrigger(event: PipelineTimerBuildEvent, repoHashId: String, branchs: List<String>?) {
+        with(event) {
+            val repositoryConfig = RepositoryConfig(
+                repositoryHashId = repoHashId,
+                repositoryName = null,
+                repositoryType = RepositoryType.ID
+            )
+            val finalBranchs = if (branchs.isNullOrEmpty()) {
+                val defaultBranch = scmProxyService.getDefaultBranch(
+                    projectId = projectId,
+                    repositoryConfig = repositoryConfig
+                ) ?: return
+                listOf(defaultBranch)
+            } else {
+                branchs
+            }
+            finalBranchs.forEach { branch ->
+                branchTimerTrigger(event = event, repoHashId = repoHashId, branch = branch)
+            }
+        }
+    }
+
+    private fun branchTimerTrigger(event: PipelineTimerBuildEvent, repoHashId: String, branch: String) {
+        val repositoryConfig = RepositoryConfig(
+            repositoryHashId = repoHashId,
+            repositoryName = null,
+            repositoryType = RepositoryType.ID
+        )
+        with(event) {
+            val revision = scmProxyService.recursiveFetchLatestRevision(
+                projectId = projectId,
+                pipelineId = pipelineId,
+                repositoryConfig = repositoryConfig,
+                branchName = branch,
+                variables = emptyMap()
+            ).data?.revision ?: return
+            val timerBranch = pipelineTimerService.getTimerBranch(
+                projectId = projectId,
+                pipelineId = pipelineId,
+                repoHashId = repoHashId,
+                branch = branch
+            )
+            if (
+                (timerBranch == null || timerBranch.revision != revision) &&
+                !timerTrigger(event = event).isNullOrBlank()
+            ) {
+                pipelineTimerService.saveTimerBranch(
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    repoHashId = repoHashId,
+                    branch = branch,
+                    revision = revision
+                )
             }
         }
     }

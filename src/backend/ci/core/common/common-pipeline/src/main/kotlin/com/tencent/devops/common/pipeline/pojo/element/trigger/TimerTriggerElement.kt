@@ -31,6 +31,7 @@ import com.cronutils.mapper.CronMapper
 import com.cronutils.model.CronType
 import com.cronutils.model.definition.CronDefinitionBuilder
 import com.cronutils.parser.CronParser
+import com.tencent.devops.common.api.enums.RepositoryType
 import com.tencent.devops.common.api.util.EnvUtils
 import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.common.pipeline.pojo.element.Element
@@ -57,6 +58,10 @@ data class TimerTriggerElement(
     val noScm: Boolean? = false,
     @ApiModelProperty("指定代码库分支", required = false)
     val branches: List<String>? = null,
+    @ApiModelProperty("代码库类型", required = false)
+    val repoType: RepositoryType? = null,
+    @ApiModelProperty("代码库HashId", required = false)
+    val repoHashId: String? = null,
     @ApiModelProperty("指定代码库别名", required = false)
     val repoName: String? = null
 ) : Element(name, id, status) {

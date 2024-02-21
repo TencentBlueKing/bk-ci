@@ -43,6 +43,10 @@ data class SchedulesRule(
     val cron: Any? = null,
     val interval: Interval? = null,
 
+    @ApiModelProperty(name = "repo-id")
+    @JsonProperty("repo-id")
+    val repoId: String? = null,
+
     @ApiModelProperty(name = "repo-name")
     @JsonProperty("repo-name")
     val repoName: String? = null,

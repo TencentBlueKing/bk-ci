@@ -45,6 +45,7 @@ import com.tencent.devops.process.utils.CredentialUtils
 import com.tencent.devops.repository.api.ServiceGithubResource
 import com.tencent.devops.repository.api.ServiceOauthResource
 import com.tencent.devops.repository.api.ServiceRepositoryResource
+import com.tencent.devops.repository.api.scm.ServiceGitResource
 import com.tencent.devops.repository.api.scm.ServiceScmOauthResource
 import com.tencent.devops.repository.api.scm.ServiceScmResource
 import com.tencent.devops.repository.pojo.CodeGitRepository
@@ -57,6 +58,7 @@ import com.tencent.devops.repository.pojo.GithubCheckRunsResponse
 import com.tencent.devops.repository.pojo.GithubRepository
 import com.tencent.devops.repository.pojo.Repository
 import com.tencent.devops.repository.pojo.enums.RepoAuthType
+import com.tencent.devops.repository.pojo.enums.TokenTypeEnum
 import com.tencent.devops.scm.code.git.CodeGitWebhookEvent
 import com.tencent.devops.scm.pojo.RepoSessionRequest
 import com.tencent.devops.scm.pojo.RevisionInfo
@@ -212,6 +214,35 @@ class ScmProxyService @Autowired constructor(private val client: Client) {
                     }
                 }
             }
+            else -> {
+                throw IllegalArgumentException("Unknown repo($repo)")
+            }
+        }
+    }
+
+    fun getDefaultBranch(
+        projectId: String,
+        repositoryConfig: RepositoryConfig
+    ): String? {
+        checkRepoID(repositoryConfig)
+        val repo = getRepo(projectId, repositoryConfig)
+        return when (repo) {
+            is CodeGitRepository -> {
+                val isOauth = repo.authType == RepoAuthType.OAUTH
+                val (token, tokenType) = if (isOauth) {
+                    val credInfo = getAccessToken(repo.userName)
+                    credInfo.first to TokenTypeEnum.OAUTH
+                } else {
+                    val credInfo = getCredential(projectId, repo)
+                    credInfo.privateKey to TokenTypeEnum.PRIVATE_KEY
+                }
+                client.get(ServiceGitResource::class).getProjectInfo(
+                    token = token,
+                    tokenType = tokenType,
+                    gitProjectId = repo.projectName
+                ).data?.defaultBranch
+            }
+
             else -> {
                 throw IllegalArgumentException("Unknown repo($repo)")
             }
