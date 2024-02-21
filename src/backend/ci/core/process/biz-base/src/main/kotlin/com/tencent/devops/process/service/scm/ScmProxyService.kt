@@ -38,6 +38,7 @@ import com.tencent.devops.common.api.util.EnvUtils
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeEventType
 import com.tencent.devops.common.service.utils.RetryUtils
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_RETRY_3_FAILED
 import com.tencent.devops.process.utils.Credential
@@ -486,18 +487,7 @@ class ScmProxyService @Autowired constructor(private val client: Client) {
             type = ScmType.CODE_SVN,
             privateKey = credential.username,
             passPhrase = credential.privateKey,
-            token = if (repo.svnType == CodeSvnRepository.SVN_TYPE_SSH) {
-                try {
-                    getAccessToken(repo.userName).first
-                } catch (e: Exception) {
-                    throw ErrorCodeException(
-                        errorCode = ProcessMessageCode.ERROR_REPOSITORY_NOT_OAUTH,
-                        params = arrayOf(repo.userName)
-                    )
-                }
-            } else {
-                ""
-            },
+            token = getSvnToken(credential, repo.svnType, repo.userName),
             region = repo.region,
             userName = credential.username,
             event = null
@@ -743,7 +733,9 @@ class ScmProxyService @Autowired constructor(private val client: Client) {
         } else {
             listOf(privateKey, passPhrase)
         }
-        return CredentialUtils.getCredential(repository, list, credentialResult.data!!.credentialType)
+        return CredentialUtils.getCredential(repository, list, credential.credentialType).apply {
+            this.credentialType = credential.credentialType
+        }
     }
 
     private fun getAccessToken(userName: String): Pair<String, String?> {
@@ -762,5 +754,37 @@ class ScmProxyService @Autowired constructor(private val client: Client) {
         val accessToken = client.get(ServiceGithubResource::class).getAccessToken(userName).data
             ?: throw NotFoundException("cannot find github oauth accessToekn for user($userName)")
         return accessToken.accessToken
+    }
+
+    private fun getSvnToken(credential: Credential, svnType: String?, userName: String) = when (svnType) {
+        CodeSvnRepository.SVN_TYPE_SSH -> {
+            // 凭证中存在token，则直接使用
+            if (credential.credentialType == CredentialType.TOKEN_SSH_PRIVATEKEY) {
+                credential.privateKey
+            } else {
+                // 兜底，以当前代码关联人的oauthToken去操作
+                try {
+                    getAccessToken(userName).first
+                } catch (e: Exception) {
+                    throw NotFoundException(
+                        I18nUtil.getCodeLanMessage(
+                            messageCode = ProcessMessageCode.ERROR_REPOSITORY_NOT_OAUTH,
+                            params = arrayOf(userName)
+                        )
+                    )
+                }
+            }
+        }
+        CodeSvnRepository.SVN_TYPE_HTTP -> {
+            // 凭证中存在token，则直接使用
+            if (credential.credentialType == CredentialType.TOKEN_USERNAME_PASSWORD) {
+                credential.privateKey
+            } else {
+                ""
+            }
+        }
+        else -> {
+            ""
+        }
     }
 }
