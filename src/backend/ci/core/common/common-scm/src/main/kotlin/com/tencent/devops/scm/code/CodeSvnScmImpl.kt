@@ -28,9 +28,7 @@
 package com.tencent.devops.scm.code
 
 import com.tencent.devops.common.api.constant.CommonMessageCode
-import com.tencent.devops.common.api.constant.DEFAULT_LOCALE_LANGUAGE
 import com.tencent.devops.common.api.enums.ScmType
-import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.scm.IScm
 import com.tencent.devops.scm.code.svn.api.SVNApi
@@ -52,7 +50,7 @@ import org.tmatesoft.svn.core.io.SVNRepository
 
 @Suppress("ALL")
 class CodeSvnScmImpl constructor(
-    override val projectName: String,
+    override var projectName: String,
     override val branchName: String?,
     override val url: String,
     private var username: String,
@@ -160,14 +158,33 @@ class CodeSvnScmImpl constructor(
         )
         try {
             addWebhookByToken(hookUrl)
-        } catch (ignored: Exception) {
-            logger.warn("Fail to add the webhook", ignored)
-            throw ScmException(
-                message = ignored.message ?: I18nUtil.getCodeLanMessage(
-                    CommonMessageCode.SVN_CREATE_HOOK_FAIL
-                ),
-                scmType = ScmType.CODE_SVN.name
-            )
+        } catch (ignored: ScmException) {
+            // 旧项目迁移后的svn项目名可能带有_svn, 去掉_svn后重新尝试添加
+            if (projectName.endsWith(SVN_PROJECT_NAME_SUFFIX)) {
+                try {
+                    logger.info("retry addWebHookSVN|newProjectName=$projectName")
+                    addWebhookByToken(
+                        hookUrl = hookUrl,
+                        projectName = projectName.removeSuffix(SVN_PROJECT_NAME_SUFFIX)
+                    )
+                } catch (ignored: ScmException) {
+                    logger.error("Fail to retry add the webhook", ignored)
+                    throw ScmException(
+                        message = ignored.message ?: I18nUtil.getCodeLanMessage(
+                            CommonMessageCode.SVN_CREATE_HOOK_FAIL
+                        ),
+                        scmType = ScmType.CODE_SVN.name
+                    )
+                }
+            } else {
+                logger.error("Fail to add the webhook", ignored)
+                throw ScmException(
+                    message = ignored.message ?: I18nUtil.getCodeLanMessage(
+                        CommonMessageCode.SVN_CREATE_HOOK_FAIL
+                    ),
+                    scmType = ScmType.CODE_SVN.name
+                )
+            }
         }
     }
 
@@ -294,7 +311,7 @@ class CodeSvnScmImpl constructor(
     /**
      * 基于私人令牌添加svn仓库的webhook
      */
-    private fun addWebhookByToken(hookUrl: String) {
+    private fun addWebhookByToken(hookUrl: String, projectName: String = this.projectName) {
         var isOauth = true
         val ssh = SvnUtils.isSSHProtocol(SVNURL.parseURIEncoded(url).protocol)
         if (!ssh) {
@@ -345,5 +362,8 @@ class CodeSvnScmImpl constructor(
 
     companion object {
         private val logger = LoggerFactory.getLogger(CodeSvnScmImpl::class.java)
+
+        // svn项目迁移后补充的后缀
+        const val SVN_PROJECT_NAME_SUFFIX = "_svn"
     }
 }
