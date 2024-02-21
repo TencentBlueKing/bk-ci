@@ -225,6 +225,7 @@
                 }
             },
             goExecPreview () {
+                const version = this.pipelineInfo?.[this.isDebugExec ? 'version' : 'releaseVersion']
                 this.$router.push({
                     name: 'executePreview',
                     query: {
@@ -232,7 +233,7 @@
                     },
                     params: {
                         ...this.$route.params,
-                        version: this.pipelineInfo?.version
+                        version
                     }
                 })
             },
