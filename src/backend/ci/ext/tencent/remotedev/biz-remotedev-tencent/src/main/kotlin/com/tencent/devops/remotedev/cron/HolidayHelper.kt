@@ -76,12 +76,13 @@ class HolidayHelper @Autowired constructor(
 
     private fun initHolidayInfo(): Pair<Set<String>, Set<String>>? {
         OkhttpUtils.doGet("https://api.jiejiariapi.com/v1/holidays/2024").use { response ->
-            logger.info("initHolidayInfo response|${response.body?.string()}")
+            val body = response.body?.string()
+            logger.info("initHolidayInfo response|$body")
             if (!response.isSuccessful) {
-                logger.warn("initHolidayInfo fail ,${response.body?.string()}")
+                logger.warn("initHolidayInfo fail ,$body")
                 return null
             }
-            val res = objectMapper.readValue(response.body?.string(), object : TypeReference<Map<String, Holiday>>() {})
+            val res = objectMapper.readValue(body, object : TypeReference<Map<String, Holiday>>() {})
             val workingDays = res.filter { !it.value.offDay }.keys
             val holidays = res.filter { it.value.offDay }.keys
 
