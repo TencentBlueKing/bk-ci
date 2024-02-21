@@ -25,18 +25,49 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-dependencies {
-    api(project(":ext:tencent:common:common-digest-tencent"))
-    api(project(":core:project:biz-project"))
-    api(project(":core:project:api-project"))
-    api(project(":ext:tencent:project:api-project-tencent"))
-    api(project(":ext:tencent:store:api-store-service"))
-    api(project(":ext:tencent:common:common-auth:common-auth-tencent"))
-    api(project(":ext:tencent:misc:api-monitoring-tencent"))
-    api(project(":ext:tencent:common:common-archive-tencent"))
-    api(project(":ext:tencent:auth:sdk-auth-tencent"))
-    api(project(":ext:tencent:auth:api-auth-tencent"))
-    api(project(":ext:tencent:stream:api-stream-tencent"))
-    api(project(":ext:tencent:support:api-support-tencent"))
-    api(project(":core:notify:api-notify"))
+package com.tencent.devops.project.dao
+
+import com.tencent.devops.model.project.tables.TSeniorUser
+import com.tencent.devops.model.project.tables.records.TSeniorUserRecord
+import com.tencent.devops.project.pojo.SeniorUserDTO
+import org.jooq.DSLContext
+import org.jooq.Result
+import org.springframework.stereotype.Repository
+
+@Repository
+class ProjectSeniorUserDao {
+    fun list(
+        dslContext: DSLContext
+    ): Result<TSeniorUserRecord> {
+        return with(TSeniorUser.T_SENIOR_USER) {
+            dslContext.selectFrom(this).fetch()
+        }
+    }
+
+    fun delete(
+        dslContext: DSLContext,
+        userId: String
+    ) {
+        with(TSeniorUser.T_SENIOR_USER) {
+            dslContext.delete(this).where(USER_ID.eq(userId)).execute()
+        }
+    }
+
+    fun create(
+        dslContext: DSLContext,
+        seniorUserDTO: SeniorUserDTO
+    ) {
+        with(TSeniorUser.T_SENIOR_USER) {
+            dslContext.insertInto(
+                this,
+                USER_ID,
+                NAME,
+                BG_NAME
+            ).values(
+                seniorUserDTO.userId,
+                seniorUserDTO.name,
+                seniorUserDTO.bgName
+            ).execute()
+        }
+    }
 }

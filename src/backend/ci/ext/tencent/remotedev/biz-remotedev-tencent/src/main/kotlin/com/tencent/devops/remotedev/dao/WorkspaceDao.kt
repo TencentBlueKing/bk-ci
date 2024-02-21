@@ -45,6 +45,7 @@ import com.tencent.devops.remotedev.pojo.WorkspaceRecord
 import com.tencent.devops.remotedev.pojo.WorkspaceShared
 import com.tencent.devops.remotedev.pojo.WorkspaceStatus
 import com.tencent.devops.remotedev.pojo.WorkspaceSystemType
+import com.tencent.devops.remotedev.pojo.project.WorkspaceProperty
 import java.sql.Timestamp
 import java.time.LocalDateTime
 import org.jooq.Condition
@@ -639,6 +640,25 @@ class WorkspaceDao {
             dslContext.update(this)
                 .set(DISPLAY_NAME, displayName)
                 .set(UPDATE_TIME, LocalDateTime.now())
+                .where(NAME.eq(workspaceName))
+                .execute()
+        }
+    }
+
+    fun modifyWorkspaceProperty(
+        dslContext: DSLContext,
+        workspaceName: String,
+        workspaceProperty: WorkspaceProperty
+    ) {
+        with(TWorkspace.T_WORKSPACE) {
+            dslContext.update(this)
+                .set(UPDATE_TIME, LocalDateTime.now())
+                .let {
+                    i -> if (!workspaceProperty.displayName.isNullOrEmpty()) i.set(DISPLAY_NAME, workspaceProperty.displayName) else i
+                }
+                .let {
+                    i -> if (!workspaceProperty.remark.isNullOrEmpty()) i.set(REMARK, workspaceProperty.remark) else i
+                }
                 .where(NAME.eq(workspaceName))
                 .execute()
         }

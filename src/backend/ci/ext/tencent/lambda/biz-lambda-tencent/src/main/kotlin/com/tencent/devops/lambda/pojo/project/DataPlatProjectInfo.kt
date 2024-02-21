@@ -45,16 +45,16 @@ data class DataPlatProjectInfo(
     val bgName: String = "",
     @get:Schema(title = "中心ID")
 //    @JsonProperty("center_id")
-    val centerId: Long = 0,
+    val centerId: Long? = 0,
     @get:Schema(title = "中心名称")
 //    @JsonProperty("center_name")
-    val centerName: String = "",
+    val centerName: String? = "",
     @get:Schema(title = "部门ID")
 //    @JsonProperty("dept_id")
-    val deptId: Long = 0,
+    val deptId: Long? = 0,
     @get:Schema(title = "部门名称")
 //    @JsonProperty("dept_name")
-    val deptName: String = "",
+    val deptName: String? = "",
     @get:Schema(title = "描述")
     val description: String,
     @get:Schema(title = "英文缩写")
