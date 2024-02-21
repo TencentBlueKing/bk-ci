@@ -260,6 +260,9 @@
                         }
                       }
                     },
+                    "repo-id" : {
+                      "type" : "string"
+                    },
                     "repo-name" : {
                       "type" : "string"
                     },
@@ -306,6 +309,9 @@
                         "type" : "array"
                       }
                     }
+                  },
+                  "repo-id" : {
+                    "type" : "string"
                   },
                   "repo-name" : {
                     "type" : "string"
@@ -715,6 +721,9 @@
                       }
                     }
                   },
+                  "repo-id" : {
+                    "type" : "string"
+                  },
                   "repo-name" : {
                     "type" : "string"
                   },
@@ -761,6 +770,9 @@
                       "type" : "array"
                     }
                   }
+                },
+                "repo-id" : {
+                  "type" : "string"
                 },
                 "repo-name" : {
                   "type" : "string"
