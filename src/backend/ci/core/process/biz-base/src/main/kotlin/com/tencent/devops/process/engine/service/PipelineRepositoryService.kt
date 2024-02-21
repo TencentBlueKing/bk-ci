@@ -1072,6 +1072,13 @@ class PipelineRepositoryService constructor(
                             triggerVersion = triggerVersion,
                             settingVersion = settingVersion
                         )
+                        watcher.start("updatePipelineModelTask")
+                        pipelineModelTaskDao.deletePipelineTasks(
+                            dslContext = transactionContext,
+                            projectId = projectId,
+                            pipelineId = pipelineId
+                        )
+                        pipelineModelTaskDao.batchSave(transactionContext, modelTasks)
                     }
                 }
 
@@ -1096,11 +1103,6 @@ class PipelineRepositoryService constructor(
                     baseVersion = realBaseVersion ?: (version - 1)
                 )
                 watcher.start("deleteEarlyVersion")
-                pipelineModelTaskDao.deletePipelineTasks(
-                    dslContext = transactionContext,
-                    projectId = projectId,
-                    pipelineId = pipelineId
-                )
                 setting?.maxPipelineResNum?.let {
                     pipelineResourceVersionDao.deleteEarlyVersion(
                         dslContext = transactionContext,
@@ -1110,7 +1112,6 @@ class PipelineRepositoryService constructor(
                         maxPipelineResNum = it
                     )
                 }
-                pipelineModelTaskDao.batchSave(transactionContext, modelTasks)
             }
         } finally {
             watcher.stop()
