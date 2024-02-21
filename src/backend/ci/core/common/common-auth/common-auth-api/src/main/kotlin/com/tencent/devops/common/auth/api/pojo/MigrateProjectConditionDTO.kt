@@ -21,6 +21,6 @@ data class MigrateProjectConditionDTO(
     val resourceType: String? = null,
     @get:Schema(title = "路由tag")
     val routerTag: AuthSystemType? = null,
-    @ApiModelProperty("是否关联产品")
+    @get:Schema(title = "是否关联产品")
     val relatedProduct: Boolean? = null
 )
