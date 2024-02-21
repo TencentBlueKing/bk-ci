@@ -268,6 +268,7 @@ class NodeService @Autowired constructor(
                 name = it.nodeName,
                 ip = it.nodeIp,
                 nodeStatus = nodeStatus,
+                taskId = it.taskId,
                 nodeType = it.nodeType,
                 osName = it.osName,
                 createdUser = it.createdUser,
@@ -382,7 +383,8 @@ class NodeService @Autowired constructor(
                 agentStatus = getAgentStatus(it),
                 agentVersion = it.agentVersion,
                 agentHashId = HashUtil.encodeLongId(thirdPartyAgent?.id ?: 0L),
-                cloudAreaId = it.cloudAreaId
+                cloudAreaId = it.cloudAreaId,
+                taskId = null
             )
         }
     }
@@ -436,7 +438,8 @@ class NodeService @Autowired constructor(
                 agentStatus = getAgentStatus(it),
                 agentVersion = it.agentVersion,
                 lastModifyUser = it.lastModifyUser ?: "",
-                cloudAreaId = it.cloudAreaId
+                cloudAreaId = it.cloudAreaId,
+                taskId = null
             )
         }
     }
@@ -614,7 +617,8 @@ class NodeService @Autowired constructor(
                 } else {
                     DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss").format(it.lastBuildTime)
                 },
-                cloudAreaId = it.cloudAreaId
+                cloudAreaId = it.cloudAreaId,
+                taskId = null
             )
         }
     }

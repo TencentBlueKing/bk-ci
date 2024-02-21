@@ -42,6 +42,8 @@ data class NodeWithPermission(
     val ip: String,
     @ApiModelProperty("节点状态", required = true)
     val nodeStatus: String,
+    @ApiModelProperty("任务Id", required = false)
+    val taskId: Long?,
     @ApiModelProperty("节点类型", required = true)
     val nodeType: String,
     @ApiModelProperty("操作系统", required = false)

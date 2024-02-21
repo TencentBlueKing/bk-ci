@@ -219,7 +219,7 @@ data class AgentService @Autowired constructor(
                 if (null == ipList) return
                 val executor = Executors.newSingleThreadScheduledExecutor()
                 val runningIpList = ipList.toMutableList()
-                nodeDao.updateNodeStatusByNodeIp(dslContext, ipList, NodeStatus.RUNNING.name)
+                nodeDao.updateNodeStatusByNodeIp(dslContext, ipList, NodeStatus.RUNNING.name, jobId.toLong())
                 val task = object : Runnable {
                     var count = 0
                     override fun run() {
@@ -238,7 +238,7 @@ data class AgentService @Autowired constructor(
                                 val nodeStatus =
                                     if (AGENT_INSTALL_NORMAL == it.status) NodeStatus.NORMAL.name
                                     else NodeStatus.ABNORMAL.name
-                                nodeDao.updateNodeStatusByNodeIp(dslContext, listOf(it.ip), nodeStatus)
+                                nodeDao.updateNodeStatusByNodeIp(dslContext, listOf(it.ip), nodeStatus, null)
                                 runningIpList.remove(it.ip)
                             }
                         }
@@ -248,7 +248,7 @@ data class AgentService @Autowired constructor(
                             executor.shutdown()
                         } else if (count > MAXIMUM_RETRY_TIMES) {
                             logger.info("Agent install task abnormal ip: $runningIpList")
-                            nodeDao.updateNodeStatusByNodeIp(dslContext, runningIpList, NodeStatus.ABNORMAL.name)
+                            nodeDao.updateNodeStatusByNodeIp(dslContext, runningIpList, NodeStatus.ABNORMAL.name, null)
                             executor.shutdown()
                         } else {
                             if (logger.isDebugEnabled) logger.debug("Agent install task running...")
