@@ -323,7 +323,12 @@ class PipelineContainerService @Autowired constructor(
             )
             buildTaskList.add(buildTask)
             resourceVersion?.let {
-                if (ElementUtils.getTaskAddFlag(atomElement)) {
+                if (ElementUtils.getTaskAddFlag(
+                        element = atomElement,
+                        stageEnableFlag = stage.isStageEnable(),
+                        containerEnableFlag = container.isContainerEnable()
+                    )
+                ) {
                     recordTaskList.add(
                         BuildRecordTask(
                             projectId = projectId,
@@ -430,7 +435,12 @@ class PipelineContainerService @Autowired constructor(
             if (status.isFinish()) {
                 logger.info("[${context.buildId}|${atomElement.id}] status=$status")
                 atomElement.status = status.name
-                if (retryFlag && ElementUtils.getTaskAddFlag(atomElement)) {
+                if (retryFlag && ElementUtils.getTaskAddFlag(
+                        element = atomElement,
+                        stageEnableFlag = stage.isStageEnable(),
+                        containerEnableFlag = container.isContainerEnable()
+                    )
+                ) {
                     taskBuildRecords.add(
                         BuildRecordTask(
                             projectId = context.projectId, pipelineId = context.pipelineId,

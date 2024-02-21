@@ -101,4 +101,11 @@ data class Stage(
             container.transformCompatibility()
         }
     }
+
+    fun isStageEnable(): Boolean {
+        if (stageControlOption == null) {
+            return true
+        }
+        return stageControlOption!!.enable
+    }
 }

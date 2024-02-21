@@ -80,6 +80,7 @@ data class BuildRecordContainer(
         @Suppress("ComplexMethod")
         fun MutableList<BuildRecordContainer>.addRecords(
             stageId: String,
+            stageEnableFlag: Boolean,
             container: Container,
             context: StartBuildContext,
             buildStatus: BuildStatus?,
@@ -121,7 +122,12 @@ data class BuildRecordContainer(
             )
             if (taskBuildRecords == null) return
             container.elements.forEachIndexed { index, element ->
-                if (buildStatus == BuildStatus.SKIP && !ElementUtils.getTaskAddFlag(element)) {
+                if (buildStatus == BuildStatus.SKIP && !ElementUtils.getTaskAddFlag(
+                        element = element,
+                        stageEnableFlag = stageEnableFlag,
+                        containerEnableFlag = container.isContainerEnable()
+                    )
+                ) {
                     // 不保存跳过的非post任务记录或非质量红线记录
                     return@forEachIndexed
                 }
@@ -137,7 +143,7 @@ data class BuildRecordContainer(
                         atomCode = element.getTaskAtom(),
                         executeCount = context.executeCount,
                         resourceVersion = context.resourceVersion,
-                        taskSeq = index,
+                        taskSeq = index + 2, // model中的插件在数据库表的顺序是从2开始
                         status = buildStatus?.name,
                         taskVar = mutableMapOf(),
                         timestamps = mapOf(),

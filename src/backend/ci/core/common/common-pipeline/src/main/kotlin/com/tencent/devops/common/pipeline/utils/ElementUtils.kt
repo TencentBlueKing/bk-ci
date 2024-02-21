@@ -38,10 +38,11 @@ object ElementUtils {
     fun getSkipElementVariableName(elementId: String?) =
         "$skipPrefix$elementId"
 
-    fun getTaskAddFlag(element: Element): Boolean {
+    fun getTaskAddFlag(element: Element, stageEnableFlag: Boolean, containerEnableFlag: Boolean): Boolean {
         val elementPostInfo = element.additionalOptions?.elementPostInfo
         val qualityAtomFlag = element is QualityGateInElement || element is QualityGateOutElement
         // 当插件已启用或者插件是post插件或者插件是质量红线的插件才允许往Task表添加记录
-        return element.isElementEnable() || elementPostInfo != null || qualityAtomFlag
+        val enableFlag = stageEnableFlag && containerEnableFlag && element.isElementEnable()
+        return enableFlag || elementPostInfo != null || qualityAtomFlag
     }
 }

@@ -123,6 +123,7 @@ import com.tencent.devops.process.pojo.pipeline.record.BuildRecordContainer
 import com.tencent.devops.process.pojo.pipeline.record.BuildRecordContainer.Companion.addRecords
 import com.tencent.devops.process.pojo.pipeline.record.BuildRecordModel
 import com.tencent.devops.process.pojo.pipeline.record.BuildRecordStage
+import com.tencent.devops.process.pojo.pipeline.record.BuildRecordStage.Companion.addRecords
 import com.tencent.devops.process.pojo.pipeline.record.BuildRecordTask
 import com.tencent.devops.process.pojo.pipeline.record.BuildRecordTask.Companion.addRecords
 import com.tencent.devops.process.service.BuildVariableService
@@ -702,6 +703,17 @@ class PipelineRuntimeService @Autowired constructor(
                     }
                     stage.executeCount?.let { count -> stage.executeCount = count + 1 }
                 }
+                // record表需要记录被跳过的记录
+                if (stage.stageControlOption?.enable == false) {
+                    stageBuildRecords.addRecords(
+                        stage = stage,
+                        context = context,
+                        stageIndex = index,
+                        buildStatus = BuildStatus.SKIP,
+                        containerBuildRecords = containerBuildRecords,
+                        taskBuildRecords = taskBuildRecords
+                    )
+                }
                 return@nextStage
             }
 
@@ -720,6 +732,7 @@ class PipelineRuntimeService @Autowired constructor(
                     context.containerSeq++
                     containerBuildRecords.addRecords(
                         stageId = stage.id!!,
+                        stageEnableFlag = stage.isStageEnable(),
                         container = container,
                         context = context,
                         buildStatus = null,
@@ -733,6 +746,7 @@ class PipelineRuntimeService @Autowired constructor(
                         context.containerSeq++
                         containerBuildRecords.addRecords(
                             stageId = stage.id!!,
+                            stageEnableFlag = stage.isStageEnable(),
                             container = container,
                             context = context,
                             buildStatus = BuildStatus.SKIP,
@@ -745,6 +759,7 @@ class PipelineRuntimeService @Autowired constructor(
                         context.containerSeq++
                         containerBuildRecords.addRecords(
                             stageId = stage.id!!,
+                            stageEnableFlag = stage.isStageEnable(),
                             container = container,
                             context = context,
                             buildStatus = BuildStatus.SKIP,

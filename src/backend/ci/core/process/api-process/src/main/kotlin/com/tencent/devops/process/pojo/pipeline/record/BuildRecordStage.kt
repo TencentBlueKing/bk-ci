@@ -91,6 +91,7 @@ data class BuildRecordStage(
             stage.containers.forEach { container ->
                 containerBuildRecords.addRecords(
                     stageId = stage.id!!,
+                    stageEnableFlag = stage.isStageEnable(),
                     container = container,
                     context = context,
                     buildStatus = buildStatus,
