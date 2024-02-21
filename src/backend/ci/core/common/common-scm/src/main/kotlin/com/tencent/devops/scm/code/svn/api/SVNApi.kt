@@ -184,8 +184,16 @@ object SVNApi {
     private fun request(
         host: String,
         url: String,
-        token: String
-    ) = Request.Builder().url("$host/$url").header("PRIVATE-TOKEN", token)
+        token: String,
+        isOauth: Boolean = false
+    ) = Request.Builder().url("$host/$url").let {
+        if (isOauth) {
+            it.header("OAUTH-TOKEN", token)
+        } else {
+            it.header("PRIVATE-TOKEN", token)
+        }
+        it
+    }
 
     fun request(host: String, token: String, url: String, page: String): Request.Builder {
         return if (page.isNotEmpty()) Request.Builder()
@@ -202,13 +210,15 @@ object SVNApi {
     fun getWebhooks(
         host: String,
         projectName: String,
-        token: String
+        token: String,
+        isOauth: Boolean = false
     ): List<SvnHook> {
         val fullName = URLEncoder.encode(projectName, "UTF-8")
         val request = request(
             host = host,
             url = "svn/projects/$fullName/hooks",
-            token = token
+            token = token,
+            isOauth = isOauth
         ).get().build()
         val body = getBody(request)
         logger.info("Get the webhook($body)")
@@ -221,7 +231,8 @@ object SVNApi {
         hookUrl: String,
         token: String,
         eventType: SvnHookEventType,
-        path: String
+        path: String,
+        isOauth: Boolean = false
     ): SvnHook {
         val fullName = URLEncoder.encode(projectName, "UTF-8")
         val param = mutableMapOf<String, Any>(
@@ -234,7 +245,8 @@ object SVNApi {
         val request = request(
             host = host,
             url = "svn/projects/$fullName/hooks",
-            token = token
+            token = token,
+            isOauth = isOauth
         )
             .post(
                 RequestBody.create(

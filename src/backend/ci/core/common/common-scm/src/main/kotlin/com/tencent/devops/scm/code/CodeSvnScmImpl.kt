@@ -295,23 +295,17 @@ class CodeSvnScmImpl constructor(
      * 基于私人令牌添加svn仓库的webhook
      */
     private fun addWebhookByToken(hookUrl: String) {
+        var isOauth = true
         val ssh = SvnUtils.isSSHProtocol(SVNURL.parseURIEncoded(url).protocol)
         if (!ssh) {
             token = getLoginSession()?.privateToken
-        }
-        if (token.isNullOrBlank()) {
-            throw ScmException(
-                MessageUtil.getMessageByLocale(
-                    messageCode = CommonMessageCode.SVN_TOKEN_EMPTY,
-                    language = DEFAULT_LOCALE_LANGUAGE
-                ),
-                ScmType.CODE_SVN.name
-            )
+            isOauth = false
         }
         val hooks = SVNApi.getWebhooks(
             host = svnConfig.webhookApiUrl,
             projectName = projectName,
-            token = token!!
+            token = token!!,
+            isOauth = isOauth
         )
         val subDirPath = getSubDirPath()
         val existHook = if (hooks.isEmpty()) {
@@ -328,7 +322,8 @@ class CodeSvnScmImpl constructor(
                 hookUrl = hookUrl,
                 token = token!!,
                 eventType = SvnHookEventType.SVN_POST_COMMIT_EVENTS,
-                path = subDirPath
+                path = subDirPath,
+                isOauth = isOauth
             )
         } else {
             logger.info("The web hook url($hookUrl) is already exist($existHook)")
