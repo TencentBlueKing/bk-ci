@@ -47,6 +47,7 @@ class WorkspaceCheckJob @Autowired constructor(
         private const val stopJobLockKeyD = "dispatch_devcloud_cron_workspace_clear_job_duration"
         private const val deleteJobLockKey = "dispatch_devcloud_cron_workspace_delete_job"
         private const val nofityJobLockKey = "dispatch_devcloud_cron_workspace_nofity_job"
+        private const val winJobLockKey = "dispatch_devcloud_cron_workspace_win_job"
         private const val billJobLockKey = "dispatch_devcloud_cron_workspace_init_bill"
         private const val syncJobLockKey = "remotedev_cron_sync_start_resource_job"
         private const val computeAllUserWinUsageTime = "dispatch_devcloud_cron_workspace_computeAllUserWinUsageTime"
@@ -209,48 +210,58 @@ class WorkspaceCheckJob @Autowired constructor(
      */
     @Scheduled(cron = "0 0 10 * * ?")
     fun projectWinJob() {
-        val readyDeleteWorkspace = mutableListOf<String>()
-        // 云桌面处于待分配超过3天的自动回收，并邮件提醒
-        kotlin.runCatching {
-            deleteControl.autoDeleteWhenNotAssign(false, readyDeleteWorkspace)
-        }.onFailure {
-            logger.warn("autoDeleteWhenNotAssign fail ${it.message}", it)
-        }
-        // 云桌面通知-关机超过7天时自动销毁
-        kotlin.runCatching {
-            deleteControl.autoDeleteWhenSleep7Day(false, readyDeleteWorkspace)
-            if (readyDeleteWorkspace.isNotEmpty()) {
-                logger.info("read to notify system manager|$readyDeleteWorkspace")
-                OkhttpUtils.doPost(
-                    autoDeletePipeline,
-                    JsonUtil.toJson(mapOf("infos" to readyDeleteWorkspace.joinToString("\n"))),
-                    headers = mapOf(
-                        "Content-Type" to "application/json",
-                        "X-DEVOPS-PROJECT-ID" to "bkci-desktop",
-                        "X-DEVOPS-UID" to "autoJob"
-                    )
-                )
+        logger.info("=========>> projectWinJob <<=========")
+
+        val redisLock = RedisLock(redisOperation, winJobLockKey, 60L)
+        try {
+            val lockSuccess = redisLock.tryLock()
+            if (lockSuccess) {
+                val readyDeleteWorkspace = mutableListOf<String>()
+                // 云桌面处于待分配超过3天的自动回收，并邮件提醒
+                kotlin.runCatching {
+                    deleteControl.autoDeleteWhenNotAssign(false, readyDeleteWorkspace)
+                }.onFailure {
+                    logger.warn("autoDeleteWhenNotAssign fail ${it.message}", it)
+                }
+                // 云桌面通知-关机超过7天时自动销毁
+                kotlin.runCatching {
+                    deleteControl.autoDeleteWhenSleep7Day(false, readyDeleteWorkspace)
+                    if (readyDeleteWorkspace.isNotEmpty()) {
+                        logger.info("read to notify system manager|$readyDeleteWorkspace")
+                        OkhttpUtils.doPost(
+                            autoDeletePipeline,
+                            JsonUtil.toJson(mapOf("infos" to readyDeleteWorkspace.joinToString("\n"))),
+                            headers = mapOf(
+                                "Content-Type" to "application/json",
+                                "X-DEVOPS-PROJECT-ID" to "bkci-desktop",
+                                "X-DEVOPS-UID" to "autoJob"
+                            )
+                        )
+                    }
+                }.onFailure {
+                    logger.warn("autoDeleteWhenSleep7Day fail ${it.message}", it)
+                }
+                // 云桌面通知-关机超过3天时提醒
+                kotlin.runCatching {
+                    workspaceService.notifyWinSleep3Day()
+                }.onFailure {
+                    logger.warn("notifyWinSleep3Day fail ${it.message}", it)
+                }
+                // 云桌面通知-未登录7天时自动降配(暂时不做)并关机
+                kotlin.runCatching {
+                    sleepControl.autoSleepWhenNotLogin()
+                }.onFailure {
+                    logger.warn("autoSleepWhenNotLogin fail ${it.message}", it)
+                }
+                // 云桌面通知-未登录3天时提醒
+                kotlin.runCatching {
+                    workspaceService.notifyWinNotLogin3Day()
+                }.onFailure {
+                    logger.warn("notifyWinNotLogin3Day fail ${it.message}", it)
+                }
             }
-        }.onFailure {
-            logger.warn("autoDeleteWhenSleep7Day fail ${it.message}", it)
-        }
-        // 云桌面通知-关机超过3天时提醒
-        kotlin.runCatching {
-            workspaceService.notifyWinSleep3Day()
-        }.onFailure {
-            logger.warn("notifyWinSleep3Day fail ${it.message}", it)
-        }
-        // 云桌面通知-未登录7天时自动降配(暂时不做)并关机
-        kotlin.runCatching {
-            sleepControl.autoSleepWhenNotLogin()
-        }.onFailure {
-            logger.warn("autoSleepWhenNotLogin fail ${it.message}", it)
-        }
-        // 云桌面通知-未登录3天时提醒
-        kotlin.runCatching {
-            workspaceService.notifyWinNotLogin3Day()
-        }.onFailure {
-            logger.warn("notifyWinNotLogin3Day fail ${it.message}", it)
+        } catch (e: Throwable) {
+            logger.error("projectWinJob failed", e)
         }
     }
 
