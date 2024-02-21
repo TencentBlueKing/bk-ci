@@ -554,7 +554,7 @@ class WorkspaceJoinDao {
                 workspaceMountType = WorkspaceMountType.valueOf(record["WORKSPACE_MOUNT_TYPE"] as String),
                 workspaceSystemType = WorkspaceSystemType.valueOf(record["SYSTEM_TYPE"] as String),
                 ownerType = WorkspaceOwnerType.valueOf(record["OWNER_TYPE"] as String),
-                remark = record["REMARK"] as String
+                remark = record["REMARK"] as String?
             )
         }
     }
@@ -600,7 +600,7 @@ class WorkspaceJoinDao {
                 workspaceSystemType = WorkspaceSystemType.valueOf(record["SYSTEM_TYPE"] as String),
                 ownerType = WorkspaceOwnerType.valueOf(record["OWNER_TYPE"] as String),
                 workSpaceDetail = record["DETAIL"] as String,
-                remark = record["REMARK"] as String
+                remark = record["REMARK"] as String?
             )
         }
     }
