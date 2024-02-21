@@ -45,7 +45,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
 @Service
-@Suppress("NestedBlockDepth")
+@Suppress("NestedBlockDepth", "ComplexMethod")
 class PipelineBuildQualityListener @Autowired constructor(
     private val dslContext: DSLContext,
     private val qualityRuleBuildHisDao: QualityRuleBuildHisDao,

@@ -157,7 +157,7 @@ object StreamBinding {
     // webSocket消息
     const val EXCHANGE_WEBSOCKET_TMP_FANOUT = "websocket.fanout"
     const val EXCHANGE_WEBSOCKET_TRANSFER_FANOUT = "websocket.transfer.fanout"
-    const val BINDING_WEBSOCKET_SESSION_CLEAR_DESTINATION = "websocket.session.clear.fanout"
+    const val EXCHANGE_WEBSOCKET_SESSION_CLEAR = "websocket.session.clear.fanout"
 
     // 回调
     const val EXCHANGE_PIPELINE_BUILD_CALL_BACK_FANOUT = "engine.pipeline.build.callback.fanout"
