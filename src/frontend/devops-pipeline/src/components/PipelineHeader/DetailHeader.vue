@@ -89,8 +89,8 @@
     } from '@/utils/permission'
     import { mapActions, mapGetters, mapState } from 'vuex'
     import BuildNumSwitcher from './BuildNumSwitcher'
-    import ReleaseButton from './ReleaseButton'
     import PipelineBreadCrumb from './PipelineBreadCrumb'
+    import ReleaseButton from './ReleaseButton'
 
     export default {
         components: {
@@ -224,6 +224,7 @@
                 }
             },
             goExecPreview () {
+                const version = this.pipelineInfo?.[this.isDebugExec ? 'version' : 'releaseVersion']
                 this.$router.push({
                     name: 'executePreview',
                     query: {
@@ -231,7 +232,7 @@
                     },
                     params: {
                         ...this.$route.params,
-                        version: this.pipelineInfo?.version
+                        version
                     }
                 })
             },

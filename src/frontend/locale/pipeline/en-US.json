@@ -291,7 +291,7 @@
   "settings": {
     "baseInfo": "Basic Information",
     "group": "Group",
-    "groupName": "Group",    
+    "groupName": "Group",
     "manageLabel": "Manage label",
     "trigger": "Trigger",
     "enableStatus": "Enabled",
@@ -1377,7 +1377,7 @@
   "pacPipelineReleaseTips1-1": "Triggered by MR, the <b>latest YAML</b> on the source and target branches shall prevail. When the source and target both modify the YAML file, the changes on the target branch need to be synchronized to the source branch first, otherwise the trigger will fail",
   "pacPipelineReleaseTips1-2": "Triggered by other methods, such as timing, manual, issue, etc., the YAML file on the <b>default branch</b> shall prevail",
   "leaveConfirmTitle": "Are you sure you want to leave the current page?",
-  "leaveConfirmTips":"Leaving will lose unsaved information, it is recommended to save before leaving",
+  "leaveConfirmTips": "Leaving will lose unsaved information, it is recommended to save before leaving",
   "releasePipeline": "Release",
   "cancelRelease": "Cancel",
   "prePipelineGroup": "Pipeline Group: ",
@@ -1464,5 +1464,7 @@
   "noParams": "No Parameters",
   "rollbackSuc": "Rollback to {0} successfully",
   "badgeTips": "Badge can be added to the README.md of the project to facilitate visitors to quickly understand the construction status, test results or deployment status of the project",
-  "dealMR": "Processing MR"
+  "dealMR": "Processing MR",
+  "copyTempConf": "Clone Template Configuration",
+  "tempWithoutConf": "Template does not include this setting"
 }
