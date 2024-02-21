@@ -181,20 +181,6 @@ open class SVNApi {
     private fun request(svnConfig: SVNConfig, url: String) =
         Request.Builder().url(url).header("apiKey", svnConfig.apiKey)
 
-    private fun request(
-        host: String,
-        url: String,
-        token: String,
-        isOauth: Boolean = false
-    ) = Request.Builder().url("$host/$url").let {
-        if (isOauth) {
-            it.header("OAUTH-TOKEN", token)
-        } else {
-            it.header("PRIVATE-TOKEN", token)
-        }
-        it
-    }
-
     open fun request(host: String, token: String, url: String, page: String): Request.Builder {
         return if (page.isNotEmpty()) Request.Builder()
             .url("$host/$url?$page")
@@ -210,15 +196,14 @@ open class SVNApi {
     fun getWebhooks(
         host: String,
         projectName: String,
-        token: String,
-        isOauth: Boolean = false
+        token: String
     ): List<SvnHook> {
         val fullName = URLEncoder.encode(projectName, "UTF-8")
         val request = request(
             host = host,
             url = "svn/projects/$fullName/hooks",
             token = token,
-            isOauth = isOauth
+            page = ""
         ).get().build()
         val body = getBody(request)
         logger.info("Get the webhook($body)")
@@ -246,7 +231,7 @@ open class SVNApi {
             host = host,
             url = "svn/projects/$fullName/hooks",
             token = token,
-            isOauth = isOauth
+            page = ""
         )
             .post(
                 RequestBody.create(
@@ -272,7 +257,8 @@ open class SVNApi {
         val request = request(
             host = host,
             url = "svn/projects/$fullName/tree?$queryParam",
-            token = token
+            token = token,
+            page = ""
         ).get().build()
         val body = getBody(request)
         logger.info("Get the svn file list($body)")
