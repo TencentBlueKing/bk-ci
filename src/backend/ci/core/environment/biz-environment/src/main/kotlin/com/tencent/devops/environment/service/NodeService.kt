@@ -243,18 +243,16 @@ class NodeService @Autowired constructor(
             } else ""
 
             // 如果是构建机类型，则取蓝盾Node状态，否则取gseAgent状态
+            val buildNodeType = listOf(NodeType.THIRDPARTY.name, NodeType.DEVCLOUD.name)
+            val deployNodeType = listOf(NodeType.CMDB.name, NodeType.UNKNOWN.name, NodeType.OTHER.name)
+            val deployNodeStatus = listOf(
+                NodeStatus.NOT_IN_CC.name, NodeStatus.NOT_IN_CMDB.name, NodeStatus.NOT_INSTALLED.name,
+                NodeStatus.RUNNING.name
+            )
             val nodeStatus =
-                if (it.nodeType == NodeType.THIRDPARTY.name ||
-                    it.nodeType == NodeType.DEVCLOUD.name
-                ) {
+                if (it.nodeType in buildNodeType) {
                     it.nodeStatus
-                } else if ((it.nodeType == NodeType.CMDB.name ||
-                        it.nodeType == NodeType.UNKNOWN.name ||
-                        it.nodeType == NodeType.OTHER.name) &&
-                    (it.nodeStatus == NodeStatus.NOT_IN_CC.name ||
-                        it.nodeStatus == NodeStatus.NOT_IN_CMDB.name ||
-                        it.nodeStatus == NodeStatus.NOT_INSTALLED.name)
-                ) {
+                } else if (it.nodeType in deployNodeType && it.nodeStatus in deployNodeStatus) {
                     it.nodeStatus
                 } else {
                     if (getAgentStatus(it)) {
