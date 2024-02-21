@@ -34,6 +34,7 @@
                     class="biz-table"
                     size="medium"
                     :data="curProjectList"
+                    :default-sort="sortField"
                     :pagination="pagination"
                     @sort-change="handleSortChange"
                     @page-change="pageChange"
@@ -42,7 +43,7 @@
                     <bk-table-column
                         :label="$t('projectName')"
                         sortable
-                        prop="logoAddr"
+                        prop="projectName"
                         width="300"
                     >
                         <template slot-scope="{ row }">
@@ -212,7 +213,16 @@
         handleProjectNoPermission,
         RESOURCE_ACTION
     } from '@/utils/permission'
-
+    
+    const PROJECT_SORT_FILED = {
+        projectName: 'PROJECT_NAME',
+        englishName: 'ENGLISH_NAME'
+    }
+    
+    const ORDER_ENUM = {
+        ascending: 'ASC',
+        descending: 'DESC'
+    }
     export default ({
         name: 'ProjectManage',
         components: {
@@ -250,6 +260,16 @@
                 const list = this.projectList.filter(i => i.projectName.includes(this.inputValue) && i.enabled === this.isEnabled) || []
                 this.pagination.count = list.length
                 return list.slice(limit * (current - 1), limit * current)
+            },
+
+            sortField () {
+                const { sortType, collation } = this.$route.query
+                const prop = sortType || localStorage.getItem('projectSortType')
+                const order = collation || localStorage.getItem('projectSortCollation')
+                return {
+                    prop: this.getkeyByValue(PROJECT_SORT_FILED, prop),
+                    order: this.getkeyByValue(ORDER_ENUM, order)
+                }
             }
         },
         watch: {
@@ -265,9 +285,12 @@
         },
         methods: {
             ...mapActions(['fetchProjectList', 'toggleProjectEnable']),
-            async fetchProjects () {
+            getkeyByValue (obj, value) {
+                return Object.keys(obj).find(key => obj[key] === value)
+            },
+            async fetchProjects (params) {
                 this.isDataLoading = true
-                await this.fetchProjectList().then(res => {
+                await this.fetchProjectList(params).then(res => {
                     this.projectList = res
                 }).catch(() => [])
                 this.isDataLoading = false
@@ -388,7 +411,22 @@
             },
 
             handleSortChange ({ prop, order }) {
-                console.log(prop, order)
+                const sortType = PROJECT_SORT_FILED[prop] || ''
+                const collation = ORDER_ENUM[order] || ''
+                localStorage.setItem('projectSortType', sortType)
+                localStorage.setItem('projectSortCollation', collation)
+                this.$router.push({
+                    ...this.$route,
+                    query: {
+                        ...this.$route.query,
+                        sortType,
+                        collation
+                    }
+                })
+                this.fetchProjects({
+                    sortType,
+                    collation
+                })
             }
         }
     })
