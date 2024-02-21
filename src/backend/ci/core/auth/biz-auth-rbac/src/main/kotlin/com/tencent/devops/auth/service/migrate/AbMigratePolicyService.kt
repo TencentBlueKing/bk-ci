@@ -205,14 +205,14 @@ abstract class AbMigratePolicyService(
     ) {
         results.forEach result@{ result ->
             logger.info("migrate group|${result.projectId}|${result.subject.name}|${result.subject.id}")
-            val rbacAuthorizationScopeList = buildRbacAuthorizationScopeList(
+            val (rbacAuthorizationScopeList, groupIdListOfPipelineActionGroup) = buildRbacAuthorizationScopeList(
                 projectCode = projectCode,
                 projectName = projectName,
                 managerGroupId = managerGroupId,
                 result = result
             )
             logger.info(
-                "migrate group|${result.projectId}|${result.subject.name}|${
+                "migrate group|${result.projectId}|${result.subject.name}|$groupIdListOfPipelineActionGroup|${
                     JsonUtil.toJson(
                         rbacAuthorizationScopeList,
                         false
@@ -257,7 +257,14 @@ abstract class AbMigratePolicyService(
                 v2ManagerService.grantRoleGroupV2(groupId, authorizationScope)
             }
             // 往用户组添加成员
-            batchAddGroupMember(groupId = groupId, defaultGroup = defaultGroup, members = result.members)
+            batchAddGroupMember(
+                groupId = groupId,
+                defaultGroup = defaultGroup,
+                members = result.members,
+                gradeManagerId = gradeManagerId,
+                groupName = groupName,
+                groupIdOfPipelineActionGroupList = groupIdListOfPipelineActionGroup
+            )
         }
     }
 
@@ -266,9 +273,16 @@ abstract class AbMigratePolicyService(
         projectName: String,
         managerGroupId: Int,
         result: MigrateTaskDataResult
-    ): List<AuthorizationScopes>
+    ): Pair<List<AuthorizationScopes>/*组授权范围*/, List<String>/*流水线用户组ID（关联流水线动作组）*/>
 
-    abstract fun batchAddGroupMember(groupId: Int, defaultGroup: Boolean, members: List<RoleGroupMemberInfo>?)
+    abstract fun batchAddGroupMember(
+        groupId: Int,
+        defaultGroup: Boolean,
+        members: List<RoleGroupMemberInfo>?,
+        gradeManagerId: Int? = null,
+        groupName: String? = null,
+        groupIdOfPipelineActionGroupList: List<String> = emptyList()
+    )
 
     abstract fun getGroupName(projectName: String, result: MigrateTaskDataResult): String
 

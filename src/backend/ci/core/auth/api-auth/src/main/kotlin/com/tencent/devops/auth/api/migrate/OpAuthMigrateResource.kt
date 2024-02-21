@@ -32,9 +32,9 @@ import com.tencent.devops.auth.pojo.dto.MigrateResourceDTO
 import com.tencent.devops.auth.pojo.dto.PermissionHandoverDTO
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.auth.api.pojo.MigrateProjectConditionDTO
-import io.swagger.v3.oas.annotations.tags.Tag
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
+import io.swagger.v3.oas.annotations.tags.Tag
 import javax.ws.rs.Consumes
 import javax.ws.rs.POST
 import javax.ws.rs.Path
@@ -131,5 +131,13 @@ interface OpAuthMigrateResource {
     fun migrateMonitorResource(
         @Parameter(description = "迁移项目", required = true)
         projectCodes: List<String>
+    ): Result<Boolean>
+
+    @POST
+    @Path("/autoRenewal")
+    @Operation(summary = "自动续期")
+    fun autoRenewal(
+        @Parameter(description = "按条件迁移项目实体", required = true)
+        migrateProjectConditionDTO: MigrateProjectConditionDTO
     ): Result<Boolean>
 }

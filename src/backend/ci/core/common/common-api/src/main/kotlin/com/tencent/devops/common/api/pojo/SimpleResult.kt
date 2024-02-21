@@ -36,7 +36,9 @@ data class SimpleResult(
     @get:Schema(title = "错误信息", required = false)
     val message: String? = null,
     @get:Schema(title = "错误码信息", required = false)
-    val error: Error? = null
+    val error: Error? = null,
+    @get:Schema(title = "ENV中需要被忽略的调度机器")
+    val ignoreAgentIds: Set<String>?
 )
 
 @Schema(title = "第三方构建信息模型-错误信息")

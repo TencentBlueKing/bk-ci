@@ -52,9 +52,9 @@ import com.tencent.devops.environment.pojo.thirdPartyAgent.ThirdPartyAgentUpgrad
 import com.tencent.devops.environment.pojo.thirdPartyAgent.pipeline.PipelineCreate
 import com.tencent.devops.environment.pojo.thirdPartyAgent.pipeline.PipelineResponse
 import com.tencent.devops.environment.pojo.thirdPartyAgent.pipeline.PipelineSeqId
-import io.swagger.v3.oas.annotations.tags.Tag
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
+import io.swagger.v3.oas.annotations.tags.Tag
 import javax.ws.rs.Consumes
 import javax.ws.rs.GET
 import javax.ws.rs.HeaderParam
@@ -403,4 +403,16 @@ interface ServiceThirdPartyAgentResource {
         @HeaderParam(AUTH_HEADER_DEVOPS_AGENT_SECRET_KEY)
         secretKey: String
     ): Result<ThirdPartyAgentPipeline?>
+
+    @Operation(summary = "根据环境名称获取Agent列表,并返回环境ID")
+    @GET
+    @Path("/projects/{projectId}/envNames/{envName}/withId")
+    fun getAgentsByEnvNameWithId(
+        @Parameter(description = "项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @Parameter(description = "Environment name", required = true)
+        @PathParam("envName")
+        envName: String
+    ): Result<Pair<Long?, List<ThirdPartyAgent>>>
 }

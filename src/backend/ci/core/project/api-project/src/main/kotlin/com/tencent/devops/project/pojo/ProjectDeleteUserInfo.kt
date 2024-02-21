@@ -23,14 +23,25 @@
  * NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ *
  */
 
-dependencies {
-    api(project(":core:common:common-web"))
-    api(project(":core:common:common-auth:common-auth-api"))
-    api(project(":core:project:api-project"))
-}
+package com.tencent.devops.project.pojo
 
-plugins {
-    `task-deploy-to-maven`
-}
+import io.swagger.v3.oas.annotations.media.Schema
+
+@Schema
+data class ProjectDeleteUserInfo(
+    @get:Schema(title = "操作人")
+    val operator: String,
+    @get:Schema(title = "待分配的角色名称")
+    val roleName: String?,
+    @get:Schema(title = "角色Id")
+    val roleId: Int?,
+    @get:Schema(title = "组ID")
+    val groupId: Int?,
+    @get:Schema(title = "目标用户")
+    val userIds: List<String>? = emptyList(),
+    @get:Schema(title = "目标部门")
+    val deptIds: List<String>? = emptyList()
+)

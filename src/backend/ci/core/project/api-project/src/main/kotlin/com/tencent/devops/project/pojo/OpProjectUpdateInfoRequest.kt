@@ -53,16 +53,16 @@ data class OpProjectUpdateInfoRequest(
     val businessLineName: String? = "",
     @JsonProperty(value = "dept_id", required = true)
     @get:Schema(title = "项目所属二级机构ID", description = "dept_id")
-    val deptId: Long,
+    val deptId: Long? = null,
     @JsonProperty(value = "dept_name", required = true)
     @get:Schema(title = "项目所属二级机构名称", description = "dept_name")
-    val deptName: String,
+    val deptName: String? = null,
     @JsonProperty(value = "center_id", required = true)
     @get:Schema(title = "项目所属三级机构ID", description = "center_id")
-    val centerId: Long,
+    val centerId: Long? = null,
     @JsonProperty(value = "center_name", required = true)
     @get:Schema(title = "项目所属三级机构名称", description = "center_name")
-    val centerName: String,
+    val centerName: String? = null,
     @JsonProperty(value = "project_type", required = true)
     @get:Schema(title = "项目类型", description = "project_type")
     val projectType: Int,

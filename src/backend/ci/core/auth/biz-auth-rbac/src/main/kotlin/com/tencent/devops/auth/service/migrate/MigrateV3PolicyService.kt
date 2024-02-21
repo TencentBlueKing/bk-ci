@@ -145,7 +145,7 @@ class MigrateV3PolicyService constructor(
         projectName: String,
         managerGroupId: Int,
         result: MigrateTaskDataResult
-    ): List<AuthorizationScopes> {
+    ): Pair<List<AuthorizationScopes>, List<String>> {
         val rbacAuthorizationScopes = mutableListOf<AuthorizationScopes>()
         result.permissions.forEach permission@{ permission ->
             val (isManager, rbacActions) = buildRbacActions(
@@ -155,7 +155,7 @@ class MigrateV3PolicyService constructor(
             )
             // 已经添加到管理员组,不需要再做处理
             if (isManager) {
-                return emptyList()
+                return Pair(emptyList(), emptyList())
             }
             // 操作为空,可能action在rbac已经不存在,直接跳过
             if (rbacActions.isEmpty()) {
@@ -170,7 +170,7 @@ class MigrateV3PolicyService constructor(
                     .build()
             )
         }
-        return rbacAuthorizationScopes
+        return Pair(rbacAuthorizationScopes, emptyList())
     }
 
     private fun buildRbacActions(
@@ -368,7 +368,14 @@ class MigrateV3PolicyService constructor(
         return finalUserActions
     }
 
-    override fun batchAddGroupMember(groupId: Int, defaultGroup: Boolean, members: List<RoleGroupMemberInfo>?) {
+    override fun batchAddGroupMember(
+        groupId: Int,
+        defaultGroup: Boolean,
+        members: List<RoleGroupMemberInfo>?,
+        gradeManagerId: Int?,
+        groupName: String?,
+        groupIdOfPipelineActionGroupList: List<String>
+    ) {
         members?.forEach member@{ member ->
             // 已过期用户,迁移时无法添加到用户组成员,增加5分钟添加到iam就过期，方便用户续期
             val expiredAt = if (member.expiredAt * MILLISECOND < System.currentTimeMillis()) {
