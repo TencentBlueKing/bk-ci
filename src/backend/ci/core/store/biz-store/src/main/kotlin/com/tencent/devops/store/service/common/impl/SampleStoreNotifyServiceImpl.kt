@@ -25,30 +25,24 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.store.service.common.sample.impl
+package com.tencent.devops.store.service.common.impl
 
-import com.tencent.devops.artifactory.api.service.ServiceFileResource
-import com.tencent.devops.artifactory.pojo.enums.FileChannelTypeEnum
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.service.utils.CommonUtils
-import com.tencent.devops.common.web.utils.I18nUtil
-import com.tencent.devops.store.service.common.impl.StoreLogoServiceImpl
-import com.tencent.devops.store.utils.StoreUtils
-import java.io.File
+import com.tencent.devops.store.service.common.StoreNotifyService
+import org.springframework.beans.factory.annotation.Autowired
 
-class SampleStoreLogoServiceImpl : StoreLogoServiceImpl() {
+class SampleStoreNotifyServiceImpl @Autowired constructor() : StoreNotifyService {
 
-    override fun uploadStoreLogo(userId: String, file: File): Result<String?> {
-        val serviceUrlPrefix = client.getServiceUrl(ServiceFileResource::class)
-        val logoUrl = CommonUtils.serviceUploadFile(
-            userId = userId,
-            serviceUrlPrefix = serviceUrlPrefix,
-            file = file,
-            fileChannelType = FileChannelTypeEnum.WEB_SHOW.name,
-            staticFlag = true,
-            language = I18nUtil.getLanguage(userId)
-        ).data
-        // 开源版如果logoUrl的域名和ci域名一样，则logoUrl无需带上域名，防止域名变更影响图片显示（logoUrl会存db）
-        return Result(if (logoUrl != null) StoreUtils.removeUrlHost(logoUrl) else logoUrl)
+    override fun sendNotifyMessage(
+        templateCode: String,
+        sender: String,
+        receivers: MutableSet<String>,
+        titleParams: Map<String, String>?,
+        bodyParams: Map<String, String>?,
+        cc: MutableSet<String>?,
+        bcc: MutableSet<String>?
+    ): Result<Boolean> {
+        // 开源版暂不支持消息服务
+        return Result(true)
     }
 }

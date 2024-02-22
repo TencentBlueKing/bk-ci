@@ -25,24 +25,27 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.store.service.common.sample.impl
+package com.tencent.devops.store.service.common.impl
 
-import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.store.service.common.StoreNotifyService
-import org.springframework.beans.factory.annotation.Autowired
+import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
+import com.tencent.devops.store.service.common.impl.StoreCommonServiceImpl
 
-class SampleStoreNotifyServiceImpl @Autowired constructor() : StoreNotifyService {
+class SampleStoreCommonServiceImpl : StoreCommonServiceImpl() {
 
-    override fun sendNotifyMessage(
-        templateCode: String,
-        sender: String,
-        receivers: MutableSet<String>,
-        titleParams: Map<String, String>?,
-        bodyParams: Map<String, String>?,
-        cc: MutableSet<String>?,
-        bcc: MutableSet<String>?
-    ): Result<Boolean> {
-        // 开源版暂不支持消息服务
-        return Result(true)
+    override fun generateInstallFlag(
+        defaultFlag: Boolean,
+        members: MutableList<String>?,
+        userId: String,
+        visibleList: MutableList<Int>?,
+        userDeptList: List<Int>
+    ): Boolean {
+        return true // 开源版所有用户都有权限安装
+    }
+
+    override fun generateStoreVisibleData(
+        storeCodeList: List<String?>,
+        storeType: StoreTypeEnum
+    ): HashMap<String, MutableList<Int>>? {
+        return null // 开源版插件不设置可见范围
     }
 }

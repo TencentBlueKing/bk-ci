@@ -25,27 +25,30 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.store.service.common.sample.impl
+package com.tencent.devops.store.service.common.impl
 
-import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
-import com.tencent.devops.store.service.common.impl.StoreCommonServiceImpl
+import com.tencent.devops.artifactory.api.service.ServiceFileResource
+import com.tencent.devops.artifactory.pojo.enums.FileChannelTypeEnum
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.service.utils.CommonUtils
+import com.tencent.devops.common.web.utils.I18nUtil
+import com.tencent.devops.store.service.common.impl.StoreLogoServiceImpl
+import com.tencent.devops.store.utils.StoreUtils
+import java.io.File
 
-class SampleStoreCommonServiceImpl : StoreCommonServiceImpl() {
+class SampleStoreLogoServiceImpl : StoreLogoServiceImpl() {
 
-    override fun generateInstallFlag(
-        defaultFlag: Boolean,
-        members: MutableList<String>?,
-        userId: String,
-        visibleList: MutableList<Int>?,
-        userDeptList: List<Int>
-    ): Boolean {
-        return true // 开源版所有用户都有权限安装
-    }
-
-    override fun generateStoreVisibleData(
-        storeCodeList: List<String?>,
-        storeType: StoreTypeEnum
-    ): HashMap<String, MutableList<Int>>? {
-        return null // 开源版插件不设置可见范围
+    override fun uploadStoreLogo(userId: String, file: File): Result<String?> {
+        val serviceUrlPrefix = client.getServiceUrl(ServiceFileResource::class)
+        val logoUrl = CommonUtils.serviceUploadFile(
+            userId = userId,
+            serviceUrlPrefix = serviceUrlPrefix,
+            file = file,
+            fileChannelType = FileChannelTypeEnum.WEB_SHOW.name,
+            staticFlag = true,
+            language = I18nUtil.getLanguage(userId)
+        ).data
+        // 开源版如果logoUrl的域名和ci域名一样，则logoUrl无需带上域名，防止域名变更影响图片显示（logoUrl会存db）
+        return Result(if (logoUrl != null) StoreUtils.removeUrlHost(logoUrl) else logoUrl)
     }
 }
