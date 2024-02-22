@@ -846,7 +846,7 @@ class DocumentService {
                 println("$i${it.name}")
                 try {
                     val name = it.getAnnotation(SchemaAnnotation::class.java).title
-                    res["${name}@${it.simpleName}"] = getDataClassParameterDefault(it)
+                    res["$name@${it.simpleName}"] = getDataClassParameterDefault(it)
                 } catch (e: Throwable) {
                     println("error: " + it.name)
                     println(e)
