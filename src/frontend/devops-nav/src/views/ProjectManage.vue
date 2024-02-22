@@ -206,12 +206,11 @@
         <bk-dialog
             v-model="showFailedEnableDialog"
             :width="600"
-            ext-cls="failed-enable-dialog"
-            :show-footer="false"
+            header-position="left"
             :title="$t('启用项目失败')">
             {{ $t('项目尚未关联运营产品，启用失败，请先关联所属运营产品再启用项目。') }}
 
-            <div class="footer">
+            <div slot="footer">
                 <bk-button class="mr10" theme="primary" @click="handleToProjectManage">{{ $t('去关联运营产品') }}</bk-button>
                 <bk-button @click="showFailedEnableDialog = false">{{ $t('cancel') }}</bk-button>
             </div>
@@ -219,9 +218,8 @@
         <bk-dialog
             v-model="showDisableProjectDialog"
             :width="600"
-            ext-cls="failed-enable-dialog"
-            :show-footer="false"
-            :title="$t('确认停用项目吗？')">
+            header-position="left"
+            :title="$t('确定停用项目吗？')">
             <i18n
                 tag="div"
                 path="停用项目后，系统将定期清理已停用项目下流水线产生的构建日志、制品、报告。请备份需要的数据后再停用！"
@@ -229,7 +227,7 @@
                 <span style="color: red">{{$t('流水线产生的构建日志、制品、报告。')}}</span>
                 <span style="color: red">{{$t('备份需要的')}}</span>
             </i18n>
-            <div class="footer">
+            <div slot="footer">
                 <bk-button class="mr10" theme="primary" @click="toggleEnable">{{ $t('confirm') }}</bk-button>
                 <bk-button @click="showDisableProjectDialog = false">{{ $t('cancel') }}</bk-button>
             </div>
@@ -445,13 +443,10 @@
                 if (!row.productId && !row.enabled) {
                     this.showFailedEnableDialog = true
                     this.projectCode = row.englishName
-                    return
                 } else if (row.productId && !row.enabled) {
                     this.toggleEnable()
-                }
-
-                // 停用项目
-                if (row.enabled) {
+                } else if (row.enabled) {
+                    // 停用项目
                     this.showDisableProjectDialog = true
                 }
             },
