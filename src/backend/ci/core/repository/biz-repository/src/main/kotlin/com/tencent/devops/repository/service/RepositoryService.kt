@@ -1184,7 +1184,7 @@ class RepositoryService @Autowired constructor(
             repositoryDao.insertAtomRepoFlag(
                 dslContext = dslContext,
                 projectId = it.projectId,
-                repositoryHashId = it.repositoryHashId
+                repositoryId = HashUtil.decodeOtherIdToLong(it.repositoryHashId)
             )
         }
     }

@@ -442,12 +442,12 @@ class RepositoryDao {
     fun insertAtomRepoFlag(
         dslContext: DSLContext,
         projectId: String,
-        repositoryHashId: String
+        repositoryId: Long
     ) {
         with(TRepository.T_REPOSITORY) {
             dslContext.update(this)
                 .set(IS_ATOM, true)
-                .where(REPOSITORY_HASH_ID.eq(repositoryHashId).and(PROJECT_ID.eq(projectId)))
+                .where(REPOSITORY_ID.eq(repositoryId).and(PROJECT_ID.eq(projectId)))
                 .execute()
         }
     }
