@@ -764,7 +764,8 @@ class NodeDao {
                     PIPELINE_REF_COUNT,
                     LAST_BUILD_TIME,
                     HOST_ID,
-                    CLOUD_AREA_ID
+                    CLOUD_AREA_ID,
+                    OS_TYPE
                 ).values(
                     it.nodeStringId,
                     it.projectId,
@@ -790,7 +791,8 @@ class NodeDao {
                     it.pipelineRefCount,
                     it.lastBuildTime,
                     it.hostId,
-                    it.cloudAreaId
+                    it.cloudAreaId,
+                    it.osType
                 ).returning(NODE_ID).fetchOne()!!.let { newRecord ->
                     val hashId = HashUtil.encodeLongId(newRecord.nodeId)
                     val displayName = it.nodeType + "-" + hashId + "-" + newRecord.nodeId

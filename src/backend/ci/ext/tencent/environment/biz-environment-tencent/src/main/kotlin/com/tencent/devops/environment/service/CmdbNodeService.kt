@@ -329,7 +329,11 @@ class CmdbNodeService @Autowired constructor(
         var queryCCIpToCCInfoMap = mapOf<String?, CCInfo>() // 在cc中，节点 ip-CCInfo 映射
         if (inCCSvrIdList.isNotEmpty()) { // 在CC中，通过svrId查出host_id（和云区域id，默认0，可默认）
             val ccData = svrIdQueryCCRes.data?.info
-            queryCCIpToCCInfoMap = ccData!!.associateBy { it.bkHostInnerip }
+            val ccDataWithStringOsType = ccData?.map {
+                it.osType = getOsTypeByCCCode(it.osType)
+                it
+            }
+            queryCCIpToCCInfoMap = ccDataWithStringOsType!!.associateBy { it.bkHostInnerip }
         }
         if (logger.isDebugEnabled) logger.debug("[addCmdbNodes]queryCCIpToCCInfoMap:$queryCCIpToCCInfoMap")
 
@@ -342,18 +346,12 @@ class CmdbNodeService @Autowired constructor(
             val hostIdToCCInfoMap = addToCCData?.associateBy { it.bkHostId }
             val ccHostIdList = addToCCResp.data?.bkHostIds // [11111,22222,33333,...]
             val addToCCInfoList = ccHostIdList?.mapIndexed { index, value ->
-                val osType = when (hostIdToCCInfoMap?.get(value)?.osType) {
-                    OS_TYPE_CC_CODE_LINUX -> OsType.LINUX.name
-                    OS_TYPE_CC_CODE_WINDOWS -> OsType.WINDOWS.name
-                    OS_TYPE_CC_CODE_AIX -> OsType.AIX.name
-                    else -> OsType.OTHER.name
-                }
                 CCInfo(
                     svrId = notInCCSvrIdList[index],
                     bkHostId = value,
                     bkHostInnerip = serverIdToCmdbNodeMap[notInCCSvrIdList[index]]?.ip,
                     bkCloudId = hostIdToCCInfoMap?.get(value)?.bkCloudId,
-                    osType = osType
+                    osType = getOsTypeByCCCode(hostIdToCCInfoMap?.get(value)?.osType)
                 )
             }
             if (logger.isDebugEnabled) logger.debug("[addCmdbNodes]addToCCInfo:$addToCCInfoList")
@@ -385,6 +383,15 @@ class CmdbNodeService @Autowired constructor(
         if (logger.isDebugEnabled) logger.debug("[checkNodeInCCBySvrId]inCCSvrIdList:$inCCSvrIdList")
         if (logger.isDebugEnabled) logger.debug("[checkNodeInCCBySvrId]notInCCSvrIdList:$notInCCSvrIdList")
         return Triple(svrIdQueryCCRes, inCCSvrIdList, notInCCSvrIdList)
+    }
+
+    fun getOsTypeByCCCode(ccCode: String?): String {
+        return when (ccCode) {
+            OS_TYPE_CC_CODE_LINUX -> OsType.LINUX.name
+            OS_TYPE_CC_CODE_WINDOWS -> OsType.WINDOWS.name
+            OS_TYPE_CC_CODE_AIX -> OsType.AIX.name
+            else -> OsType.OTHER.name
+        }
     }
 
     private fun batchRegisterNodePermission(

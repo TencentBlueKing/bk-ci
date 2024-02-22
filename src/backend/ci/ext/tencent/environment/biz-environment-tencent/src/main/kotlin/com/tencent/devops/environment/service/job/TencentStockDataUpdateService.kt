@@ -225,18 +225,12 @@ class TencentStockDataUpdateService @Autowired constructor(
             val svrIdQueryCCList = svrIdQueryCCRes.data?.info // 所有刚添加到cc中的节点 cc信息
             val hostIdToCCinfo = svrIdQueryCCList?.associateBy { it.bkHostId }
             val addToCCInfoList = ccHostIdList?.mapIndexed { index, value ->
-                val osType = when (hostIdToCCinfo?.get(value)?.osType) {
-                    OS_TYPE_CC_CODE_LINUX -> OsType.LINUX.name
-                    OS_TYPE_CC_CODE_WINDOWS -> OsType.WINDOWS.name
-                    OS_TYPE_CC_CODE_AIX -> OsType.AIX.name
-                    else -> OsType.OTHER.name
-                }
                 CCUpdateInfo(
                     nodeId = nodeIpToNodesRecords[svrIdToCmdbInfoMap[notInCCSvrIdList[index]]?.SvrIp]
                         ?.get(T_NODE_NODE_ID) as Long,
                     bkCloudId = hostIdToCCinfo?.get(value)?.bkCloudId?.toLong(),
                     bkHostId = value,
-                    osType = osType
+                    osType = cmdbNodeService.getOsTypeByCCCode(hostIdToCCinfo?.get(value)?.osType)
                 )
             }
             if (!addToCCInfoList.isNullOrEmpty()) {

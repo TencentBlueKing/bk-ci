@@ -24,7 +24,7 @@ data class CCInfo(
     val svrId: Long?,
     @ApiModelProperty(value = "操作系统类型")
     @JsonProperty("bk_os_type")
-    val osType: String?
+    var osType: String?
 ) {
     constructor(bkHostId: Long?, bkCloudId: Int?, bkHostInnerip: String?, svrId: Long?, osType: String?) :
         this(bkHostId, bkCloudId, bkHostInnerip, "", "", svrId, osType)
