@@ -19,6 +19,7 @@ import com.tencent.devops.remotedev.service.redis.RedisHeartBeat
 import com.tencent.devops.remotedev.service.workspace.DeleteControl
 import com.tencent.devops.remotedev.service.workspace.SleepControl
 import com.tencent.devops.remotedev.service.workspace.WorkspaceCommon
+import java.time.LocalDateTime
 import org.slf4j.LoggerFactory
 import org.slf4j.MDC
 import org.springframework.beans.factory.annotation.Autowired
@@ -35,7 +36,8 @@ class WorkspaceCheckJob @Autowired constructor(
     private val bkTag: BkTag,
     private val sleepControl: SleepControl,
     private val workspaceCommon: WorkspaceCommon,
-    private val deleteControl: DeleteControl
+    private val deleteControl: DeleteControl,
+    private val holidayHelper: HolidayHelper
 ) {
     companion object {
         private val logger = LoggerFactory.getLogger(WorkspaceCheckJob::class.java)
@@ -215,6 +217,10 @@ class WorkspaceCheckJob @Autowired constructor(
         val redisLock = RedisLock(redisOperation, winJobLockKey, 60L)
         try {
             val lockSuccess = redisLock.tryLock()
+            if (!holidayHelper.isWorkingDay(LocalDateTime.now())) {
+                logger.warn("not working day, so ignore.")
+                return
+            }
             if (lockSuccess) {
                 val readyDeleteWorkspace = mutableListOf<String>()
                 // 云桌面处于待分配超过3天的自动回收，并邮件提醒

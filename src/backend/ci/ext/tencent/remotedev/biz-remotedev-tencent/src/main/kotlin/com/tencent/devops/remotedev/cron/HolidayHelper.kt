@@ -36,22 +36,10 @@ class HolidayHelper @Autowired constructor(
     fun getLastWorkingDays(days: Int): List<LocalDateTime> {
         var now = LocalDateTime.now()
         val result = mutableListOf<LocalDateTime>()
-        val holidays = getOrInitHolidays(now.year)
-        val workingDays = getOrInitWorkingDays(now.year)
         var max = 32
         while (max-- > 0 && result.size < days) {
-            when (now.dayOfWeek) {
-                DayOfWeek.SATURDAY, DayOfWeek.SUNDAY -> {
-                    if (now.format(formatter) in workingDays) {
-                        result.add(now)
-                    }
-                }
-
-                else -> {
-                    if (now.format(formatter) !in holidays) {
-                        result.add(now)
-                    }
-                }
+            if (isWorkingDay(now)) {
+                result.add(now)
             }
             now = now.plusDays(-1)
         }
@@ -60,6 +48,25 @@ class HolidayHelper @Autowired constructor(
                     "${LocalDateTime.now().format(formatter)}|${result.last().format(formatter)}"
         )
         return result
+    }
+
+    fun isWorkingDay(now: LocalDateTime): Boolean {
+        val holidays = getOrInitHolidays(now.year)
+        val workingDays = getOrInitWorkingDays(now.year)
+        when (now.dayOfWeek) {
+            DayOfWeek.SATURDAY, DayOfWeek.SUNDAY -> {
+                if (now.format(formatter) in workingDays) {
+                    return true
+                }
+            }
+
+            else -> {
+                if (now.format(formatter) !in holidays) {
+                    return true
+                }
+            }
+        }
+        return false
     }
 
     private fun getOrInitHolidays(year: Int): Set<String> {
