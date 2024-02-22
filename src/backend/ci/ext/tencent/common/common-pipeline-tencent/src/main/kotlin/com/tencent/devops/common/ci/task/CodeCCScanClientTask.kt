@@ -59,7 +59,20 @@ open class CodeCCScanClientTask(
         )
     }
 
-    private val scanTools = listOf("ccn", "dupc", "sensitive", "checkstyle", "cpplint", "detekt", "eslint", "goml", "occheck", "phpcs", "pylint", "styecop")
+    private val scanTools = listOf(
+        "ccn",
+        "dupc",
+        "sensitive",
+        "checkstyle",
+        "cpplint",
+        "detekt",
+        "eslint",
+        "goml",
+        "occheck",
+        "phpcs",
+        "pylint",
+        "styecop"
+    )
 
     private fun createScanScript(config: CiBuildConfig): String {
         val tools = inputs.tools.split(",").map { it.trim() }.filter { scanTools.contains(it) }
@@ -85,10 +98,10 @@ open class CodeCCScanClientTask(
         }
         return if (inputs.scanType == "all") { // 全量
             "echo \${WORKSPACE} > /tmp/scan_file_list.txt \r\n" +
-            "docker run -t --rm -v /tmp:/tmp -v \${WORKSPACE}:\${WORKSPACE} ${config.codeCCSofwareClientImage} /bin/sh -c 'python /data/codecc_software/scan_local_prod/bin/build.py \${pipeline.name} -DSCAN_TOOLS=$toolsStr -DSCAN_LIST_FILE=/tmp/scan_file_list.txt $ruleSetCmd $skipPath -DWORKSPACE_PATH=\${WORKSPACE}' \r\n"
+                    "docker run -t --rm -v /tmp:/tmp -v \${WORKSPACE}:\${WORKSPACE} ${config.codeCCSofwareClientImage} /bin/sh -c 'python /data/codecc_software/scan_local_prod/bin/build.py \${pipeline.name} -DSCAN_TOOLS=$toolsStr -DSCAN_LIST_FILE=/tmp/scan_file_list.txt $ruleSetCmd $skipPath -DWORKSPACE_PATH=\${WORKSPACE}' \r\n"
         } else {
             "echo $path > /tmp/scan_file_list.txt \r\n" +
-            "docker run -t --rm -v /tmp:/tmp -v \${WORKSPACE}:\${WORKSPACE} ${config.codeCCSofwareClientImage} /bin/sh -c 'python /data/codecc_software/scan_local_prod/bin/build.py \${pipeline.name} -DSCAN_TOOLS=$toolsStr -DSCAN_LIST_FILE=/tmp/scan_file_list.txt $ruleSetCmd $skipPath -DWORKSPACE_PATH=\${WORKSPACE}' \r\n"
+                    "docker run -t --rm -v /tmp:/tmp -v \${WORKSPACE}:\${WORKSPACE} ${config.codeCCSofwareClientImage} /bin/sh -c 'python /data/codecc_software/scan_local_prod/bin/build.py \${pipeline.name} -DSCAN_TOOLS=$toolsStr -DSCAN_LIST_FILE=/tmp/scan_file_list.txt $ruleSetCmd $skipPath -DWORKSPACE_PATH=\${WORKSPACE}' \r\n"
         }
     }
 }
@@ -97,7 +110,10 @@ open class CodeCCScanClientTask(
 open class CodeCCScanClientInput(
     @get:Schema(title = "扫描类型（all：全量, updated：增量）", required = false)
     open var scanType: String? = "all",
-    @get:Schema(title = "工具包,多个之间逗号分隔：ccn,dupc,sensitive,checkstyle,cpplint,detekt,eslint,goml,occheck,phpcs,pylint,styecop", required = true)
+    @get:Schema(
+        title = "工具包,多个之间逗号分隔：ccn,dupc,sensitive,checkstyle,cpplint,detekt,eslint,goml,occheck,phpcs,pylint,styecop",
+        required = true
+    )
     var tools: String,
     @get:Schema(title = "要扫描的代码路径，默认为整个workspace", required = false)
     var path: String?,

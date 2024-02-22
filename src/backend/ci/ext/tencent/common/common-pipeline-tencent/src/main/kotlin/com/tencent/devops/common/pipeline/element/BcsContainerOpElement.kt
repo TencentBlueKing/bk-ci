@@ -45,13 +45,16 @@ data class BcsContainerOpElement(
     val ccAppId: String = "",
     @get:Schema(title = "操作类型(包括：create,recreate,scale,rollingupdate,delete)", required = true)
     val opType: String = "",
-        // 其他操作参数
-    @get:Schema(title = "对象类型(包含k8s: DaemonSet/Job/Deployment/StatefulSet/,mesos: Application/Deployment)", required = false)
+    // 其他操作参数
+    @get:Schema(
+        title = "对象类型(包含k8s: DaemonSet/Job/Deployment/StatefulSet/,mesos: Application/Deployment)",
+        required = false
+    )
     val category: String?,
     @get:Schema(title = "超时时间(minutes)", required = false)
     val timeout: Int = 8,
 
-        // 创建类参数
+    // 创建类参数
     @get:Schema(title = "集群ID", required = false)
     val clusterId: String?,
     @get:Schema(title = "模板ID", required = false)
@@ -76,7 +79,7 @@ data class BcsContainerOpElement(
     @get:Schema(title = "应用实例ID", required = false)
     val bcsAppInstId: String?,
 
-        // 公共参数
+    // 公共参数
     @get:Schema(title = "命名空间以及变量", required = false)
     val instVar: List<KeyValue>?
 

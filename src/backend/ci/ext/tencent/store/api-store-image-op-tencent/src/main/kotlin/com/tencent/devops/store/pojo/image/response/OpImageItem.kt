@@ -47,8 +47,11 @@ data class OpImageItem(
     val imageType: ImageType?,
     @get:Schema(title = "版本号", required = true)
     val imageVersion: String,
-    @get:Schema(title =
-        "镜像状态，INIT：初始化|COMMITTING：提交中|CHECKING：验证中|CHECK_FAIL：验证失败|TESTING：测试中|AUDITING：审核中|AUDIT_REJECT：审核驳回|RELEASED：已发布|GROUNDING_SUSPENSION：上架中止|UNDERCARRIAGING：下架中|UNDERCARRIAGED：已下架",
+    @get:Schema(
+        title =
+        "镜像状态，INIT：初始化|COMMITTING：提交中|CHECKING：验证中|CHECK_FAIL：验证失败|TESTING：测试中|AUDITING：审核中|" +
+                "AUDIT_REJECT：审核驳回|RELEASED：已发布|GROUNDING_SUSPENSION：上架中止|UNDERCARRIAGING：下架中|" +
+                "UNDERCARRIAGED：已下架",
         required = false
     )
     val imageStatus: String,
@@ -56,8 +59,11 @@ data class OpImageItem(
     var opImageId: String? = null,
     @get:Schema(title = "需管理员操作的最新镜像版本号", required = false)
     var opImageVersion: String? = null,
-    @get:Schema(title =
-        "需管理员操作的最新镜像状态，INIT：初始化|COMMITTING：提交中|CHECKING：验证中|CHECK_FAIL：验证失败|TESTING：测试中|AUDITING：审核中|AUDIT_REJECT：审核驳回|RELEASED：已发布|GROUNDING_SUSPENSION：上架中止|UNDERCARRIAGING：下架中|UNDERCARRIAGED：已下架",
+    @get:Schema(
+        title =
+        "需管理员操作的最新镜像状态，INIT：初始化|COMMITTING：提交中|CHECKING：验证中|CHECK_FAIL：验证失败|TESTING：测试中|" +
+                "AUDITING：审核中|AUDIT_REJECT：审核驳回|RELEASED：已发布|GROUNDING_SUSPENSION：上架中止|" +
+                "UNDERCARRIAGING：下架中|UNDERCARRIAGED：已下架",
         required = false
     )
     var opImageStatus: String? = null,

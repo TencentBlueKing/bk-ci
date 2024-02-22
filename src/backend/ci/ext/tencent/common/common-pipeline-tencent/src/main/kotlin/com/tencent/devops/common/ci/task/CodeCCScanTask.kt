@@ -59,7 +59,20 @@ open class CodeCCScanTask(
         )
     }
 
-    private val scanTools = listOf("ccn", "dupc", "sensitive", "checkstyle", "cpplint", "detekt", "eslint", "goml", "occheck", "phpcs", "pylint", "styecop")
+    private val scanTools = listOf(
+        "ccn",
+        "dupc",
+        "sensitive",
+        "checkstyle",
+        "cpplint",
+        "detekt",
+        "eslint",
+        "goml",
+        "occheck",
+        "phpcs",
+        "pylint",
+        "styecop"
+    )
 
     private fun createScanScript(config: CiBuildConfig): String {
         val tools = inputs.tools.split(",").map { it.trim() }.filter { scanTools.contains(it) }
@@ -103,7 +116,10 @@ open class CodeCCScanTask(
 open class CodeCCScanInput(
     @get:Schema(title = "扫描类型（0：全量, 1：增量）", required = false)
     open var scanType: Int? = 0,
-    @get:Schema(title = "工具包,多个之间逗号分隔：ccn,dupc,sensitive,checkstyle,cpplint,detekt,eslint,goml,occheck,phpcs,pylint,styecop", required = true)
+    @get:Schema(
+        title = "工具包,多个之间逗号分隔：ccn,dupc,sensitive,checkstyle,cpplint,detekt,eslint,goml,occheck,phpcs,pylint,styecop",
+        required = true
+    )
     var tools: String,
     @get:Schema(title = "要扫描的代码路径，默认为整个workspace", required = false)
     var path: String?,

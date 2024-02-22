@@ -28,9 +28,9 @@
 package com.tencent.devops.store.pojo.ideatom
 
 import com.tencent.devops.repository.pojo.enums.VisibilityLevelEnum
-import com.tencent.devops.store.pojo.common.enums.ReleaseTypeEnum
 import com.tencent.devops.store.pojo.common.Category
 import com.tencent.devops.store.pojo.common.Label
+import com.tencent.devops.store.pojo.common.enums.ReleaseTypeEnum
 import com.tencent.devops.store.pojo.ideatom.enums.IdeAtomStatusEnum
 import com.tencent.devops.store.pojo.ideatom.enums.IdeAtomTypeEnum
 import io.swagger.v3.oas.annotations.media.Schema
@@ -45,7 +45,10 @@ data class IdeAtom(
     val atomCode: String,
     @get:Schema(title = "插件类型，SELF_DEVELOPED：自研 THIRD_PARTY：第三方开发", required = false)
     val atomType: IdeAtomTypeEnum?,
-    @get:Schema(title = "插件状态，INIT：初始化|AUDITING：审核中|AUDIT_REJECT：审核驳回|RELEASED：已发布|GROUNDING_SUSPENSION：上架中止|UNDERCARRIAGED：已下架")
+    @get:Schema(
+        title = "插件状态，INIT：初始化|AUDITING：审核中|AUDIT_REJECT：审核驳回|RELEASED：已发布|" +
+                "GROUNDING_SUSPENSION：上架中止|UNDERCARRIAGED：已下架"
+    )
     val atomStatus: IdeAtomStatusEnum,
     @get:Schema(title = "插件分类code", required = false)
     val classifyCode: String?,
@@ -53,7 +56,10 @@ data class IdeAtom(
     val classifyName: String?,
     @get:Schema(title = "版本号", required = true)
     val version: String,
-    @get:Schema(title = "发布类型，NEW：新上架 INCOMPATIBILITY_UPGRADE：非兼容性升级 COMPATIBILITY_UPGRADE：兼容性功能更新 COMPATIBILITY_FIX：兼容性问题修正", required = true)
+    @get:Schema(
+        title = "发布类型，NEW：新上架 INCOMPATIBILITY_UPGRADE：非兼容性升级 COMPATIBILITY_UPGRADE：兼容性功能更新 COMPATIBILITY_FIX：兼容性问题修正",
+        required = true
+    )
     val releaseType: ReleaseTypeEnum,
     @get:Schema(title = "版本日志内容", required = false)
     val versionContent: String?,

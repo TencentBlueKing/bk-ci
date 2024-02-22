@@ -44,13 +44,21 @@ data class OpIdeAtomItem(
     val atomType: IdeAtomTypeEnum?,
     @get:Schema(title = "版本号", required = true)
     val atomVersion: String,
-    @get:Schema(title = "插件状态，INIT：初始化|AUDITING：审核中|AUDIT_REJECT：审核驳回|RELEASED：已发布|GROUNDING_SUSPENSION：上架中止|UNDERCARRIAGED：已下架", required = false)
+    @get:Schema(
+        title = "插件状态，INIT：初始化|AUDITING：审核中|AUDIT_REJECT：审核驳回|RELEASED：已发布|" +
+                "GROUNDING_SUSPENSION：上架中止|UNDERCARRIAGED：已下架",
+        required = false
+    )
     val atomStatus: IdeAtomStatusEnum,
     @get:Schema(title = "需管理员操作的最新插件ID", required = false)
     var opAtomId: String? = null,
     @get:Schema(title = "需管理员操作的最新插件版本号", required = false)
     var opAtomVersion: String? = null,
-    @get:Schema(title = "需管理员操作的最新插件状态，INIT：初始化|AUDITING：审核中|AUDIT_REJECT：审核驳回|RELEASED：已发布|GROUNDING_SUSPENSION：上架中止|UNDERCARRIAGED：已下架", required = false)
+    @get:Schema(
+        title = "需管理员操作的最新插件状态，INIT：初始化|AUDITING：审核中|AUDIT_REJECT：审核驳回|RELEASED：已发布|" +
+                "GROUNDING_SUSPENSION：上架中止|UNDERCARRIAGED：已下架",
+        required = false
+    )
     var opAtomStatus: IdeAtomStatusEnum? = null,
     @get:Schema(title = "所属分类代码", required = false)
     val classifyCode: String?,

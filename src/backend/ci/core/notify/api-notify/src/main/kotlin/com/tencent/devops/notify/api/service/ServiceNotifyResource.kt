@@ -35,9 +35,9 @@ import com.tencent.devops.notify.pojo.RtxNotifyMessage
 import com.tencent.devops.notify.pojo.SmsNotifyMessage
 import com.tencent.devops.notify.pojo.WechatNotifyMessage
 import com.tencent.devops.notify.pojo.WeworkRobotNotifyMessage
-import io.swagger.v3.oas.annotations.tags.Tag
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
+import io.swagger.v3.oas.annotations.tags.Tag
 import org.glassfish.jersey.media.multipart.FormDataParam
 import java.io.InputStream
 import javax.ws.rs.Consumes
@@ -63,17 +63,32 @@ interface ServiceNotifyResource {
     @Operation(summary = "发送电子邮件通知")
     @POST
     @Path("/email")
-    fun sendEmailNotify(@Parameter(description = "电子邮件信息内容", required = true) message: EmailNotifyMessage): Result<Boolean>
+    fun sendEmailNotify(
+        @Parameter(
+            description = "电子邮件信息内容",
+            required = true
+        ) message: EmailNotifyMessage
+    ): Result<Boolean>
 
     @Operation(summary = "发送微信通知")
     @POST
     @Path("/wechat")
-    fun sendWechatNotify(@Parameter(description = "微信信息内容", required = true) message: WechatNotifyMessage): Result<Boolean>
+    fun sendWechatNotify(
+        @Parameter(
+            description = "微信信息内容",
+            required = true
+        ) message: WechatNotifyMessage
+    ): Result<Boolean>
 
     @Operation(summary = "发送短信通知")
     @POST
     @Path("/sms")
-    fun sendSmsNotify(@Parameter(description = "短信信息内容", required = true) message: SmsNotifyMessage): Result<Boolean>
+    fun sendSmsNotify(
+        @Parameter(
+            description = "短信信息内容",
+            required = true
+        ) message: SmsNotifyMessage
+    ): Result<Boolean>
 
     @Operation(summary = "发送企业微信多媒体信息")
     @POST
