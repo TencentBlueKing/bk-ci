@@ -68,6 +68,7 @@ data class PipelineSettingVersion(
     val waitQueueTimeMinute: Int?,
     @ApiModelProperty("最大排队数量", required = false)
     val maxQueueSize: Int?,
+    @field:BkField(patternStyle = BkStyleEnum.PIPELINE_CONCURRENCY_GROUP_STYLE, required = false)
     @ApiModelProperty("并发时,设定的group", required = false)
     var concurrencyGroup: String?,
     @ApiModelProperty("并发时,是否相同group取消正在执行的流水线", required = false)
