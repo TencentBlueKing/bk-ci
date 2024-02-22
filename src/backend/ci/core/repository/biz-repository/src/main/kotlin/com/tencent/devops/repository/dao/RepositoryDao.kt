@@ -55,7 +55,7 @@ class RepositoryDao {
         aliasName: String,
         url: String,
         type: ScmType,
-        atomRepo: Boolean? = false
+        isAtom: Boolean? = false
     ): Long {
         val now = LocalDateTime.now()
         var repoId = 0L
@@ -73,7 +73,7 @@ class RepositoryDao {
                     UPDATED_TIME,
                     IS_DELETED,
                     UPDATED_USER,
-                    ATOM_REPO
+                    IS_ATOM
                 ).values(
                     projectId,
                     userId,
@@ -84,7 +84,7 @@ class RepositoryDao {
                     now,
                     false,
                     userId,
-                    atomRepo
+                    isAtom
                 )
                     .returning(REPOSITORY_ID)
                     .fetchOne()!!.repositoryId
@@ -446,7 +446,7 @@ class RepositoryDao {
     ) {
         with(TRepository.T_REPOSITORY) {
             dslContext.update(this)
-                .set(ATOM_REPO, true)
+                .set(IS_ATOM, true)
                 .where(REPOSITORY_HASH_ID.eq(repositoryHashId))
                 .execute()
         }

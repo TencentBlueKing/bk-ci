@@ -603,7 +603,7 @@ class RepositoryService @Autowired constructor(
                 )
             )
         }
-        if (record.atomRepo == true) {
+        if (record.isAtom == true) {
             throw OperationException(
                 MessageUtil.getMessageByLocale(
                     RepositoryMessageCode.ATOM_REPO_CAN_NOT_EDIT,
@@ -718,7 +718,7 @@ class RepositoryService @Autowired constructor(
         }
         val repositoryList = repositoryRecordList.map {
             val authInfo = repoAuthInfoMap[it.repositoryId]
-            val atomRepo = it.atomRepo ?: false
+            val atomRepo = it.isAtom ?: false
             val hasEditPermission = hasEditPermissionRepoList.contains(it.repositoryId) && !atomRepo
             val hasDeletePermission = hasDeletePermissionRepoList.contains(it.repositoryId) && !atomRepo
             val hasUsePermission = hasUsePermissionRepoList.contains(it.repositoryId)
@@ -878,7 +878,7 @@ class RepositoryService @Autowired constructor(
         if (record.projectId != projectId) {
             throw NotFoundException("Repository is not part of the project")
         }
-        if (record.atomRepo == true) {
+        if (record.isAtom == true) {
             throw OperationException(
                 MessageUtil.getMessageByLocale(
                     RepositoryMessageCode.ATOM_REPO_CAN_NOT_DELETE,

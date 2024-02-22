@@ -84,7 +84,7 @@ class CodeGitRepositoryService @Autowired constructor(
                 aliasName = repository.aliasName,
                 url = repository.getFormatURL(),
                 type = ScmType.CODE_GIT,
-                atomRepo = repository.atomRepo
+                isAtom = repository.atomRepo
             )
             // Git项目ID
             val gitProjectId =
@@ -112,7 +112,7 @@ class CodeGitRepositoryService @Autowired constructor(
         repository: CodeGitRepository,
         record: TRepositoryRecord
     ) {
-        if (record.atomRepo == true) {
+        if (record.isAtom == true) {
             throw OperationException(
                 MessageUtil.getMessageByLocale(
                     RepositoryMessageCode.ATOM_REPO_CAN_NOT_EDIT,
@@ -194,7 +194,7 @@ class CodeGitRepositoryService @Autowired constructor(
             projectId = repository.projectId,
             repoHashId = HashUtil.encodeOtherLongId(repository.repositoryId),
             gitProjectId = record.gitProjectId,
-            atomRepo = repository.atomRepo
+            atomRepo = repository.isAtom
         )
     }
 

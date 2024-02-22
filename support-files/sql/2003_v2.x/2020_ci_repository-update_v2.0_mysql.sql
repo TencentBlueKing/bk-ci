@@ -19,6 +19,15 @@ BEGIN
     ALTER TABLE `T_REPOSITORY`
         ADD COLUMN `UPDATED_USER` varchar(64) NULL DEFAULT NULL COMMENT '代码库最近修改人';
     END IF;
+
+    IF NOT EXISTS(SELECT 1
+                  FROM information_schema.COLUMNS
+                  WHERE TABLE_SCHEMA = db
+                    AND TABLE_NAME = 'T_REPOSITORY'
+                    AND COLUMN_NAME = 'IS_ATOM') THEN
+    ALTER TABLE `T_REPOSITORY`
+        ADD COLUMN `IS_ATOM` bit(1) DEFAULT b'0' COMMENT '是否为插件库(插件库不得修改和删除)';
+    END IF;
     
     COMMIT;
 END <CI_UBF>
