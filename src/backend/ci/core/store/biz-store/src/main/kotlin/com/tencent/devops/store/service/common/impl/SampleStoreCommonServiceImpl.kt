@@ -28,7 +28,6 @@
 package com.tencent.devops.store.service.common.impl
 
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
-import com.tencent.devops.store.service.common.impl.StoreCommonServiceImpl
 
 class SampleStoreCommonServiceImpl : StoreCommonServiceImpl() {
 
