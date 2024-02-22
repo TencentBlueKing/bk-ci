@@ -128,8 +128,9 @@
         display: grid;
         grid-gap: 16px;
         > li {
+            width: 100%;
             display: flex;
-
+            overflow: hidden;
             .pipeline-selector-label {
                 width: 80px;
                 text-align: right;

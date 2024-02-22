@@ -314,7 +314,8 @@
     "runningOption": {
       "multiple": "可并发运行",
       "lock": "禁用流水线，任何触发方式都无法运行",
-      "single": "分组，组内同一时间只能运行一个流水线"
+      "single": "分组，组内同一时间只能运行一个流水线",
+      "group_lock": "分组，组内同一时间只能运行一个流水线"
     },
     "disableSetting": "禁用设置",
     "stopWhenNewCome": "取消正在运行的构建",
@@ -411,6 +412,8 @@
     "previewDiff": "编排预览",
     "templateInstantiation": "模板实例化",
     "templateVersion": "模板版本",
+    "applyTemplateSetting": "同时应用模板设置",
+    "applyTemplateSettingTips": "勾选则表示把模板的设置应用到实例化的流水线",
     "templateVersionErrTips": "请先选择模板版本",
     "notificationSetting": "通知设置",
     "parallelSetting": "并发策略",

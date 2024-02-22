@@ -315,7 +315,8 @@
     "runningOption": {
       "multiple": "Can run concurrently",
       "lock": "Disable the pipeline, it cannot be run by any triggering method",
-      "single": "Grouping, only one build can run at the same time within the group"
+      "single": "Grouping, only one build can run at the same time within the group",
+      "group_lock": "Grouping, only one build can run at the same time within the group"
     },
     "disableSetting": "Disable Settings",
     "parallelSetting": "Concurrency Settings",
