@@ -18,7 +18,7 @@
                     <label class="ui-inner-label">
                         <span class="bk-label-text">{{ $t('settings.label') }} </span>
                     </label>
-                    <label class="ui-inner-label">
+                    <label v-if="editable" class="ui-inner-label">
                         <span @click="toManageLabel" class="bk-label-text link-text">{{$t('settings.manageLabel')}}</span>
                     </label>
                 </div>
@@ -61,8 +61,8 @@
 </template>
 
 <script>
-    import VuexTextarea from '@/components/atomFormField/VuexTextarea/index.vue'
     import VuexInput from '@/components/atomFormField/VuexInput/index.vue'
+    import VuexTextarea from '@/components/atomFormField/VuexTextarea/index.vue'
     import { mapGetters } from 'vuex'
 
     export default {
@@ -171,6 +171,8 @@
             padding: 16px;
             > li {
                 display: flex;
+                width: 100%;
+                overflow: hidden;
                 &:not(:last-child) {
                     padding-bottom: 16px;
                 }
