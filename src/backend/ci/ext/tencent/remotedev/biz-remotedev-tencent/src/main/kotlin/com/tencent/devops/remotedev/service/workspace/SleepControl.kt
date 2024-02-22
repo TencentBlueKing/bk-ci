@@ -290,12 +290,11 @@ class SleepControl @Autowired constructor(
             systemType = WorkspaceSystemType.WINDOWS_GPU
         )?.parallelStream()?.forEach { workspace ->
             if ((workspace.lastStatusUpdateTime ?: LocalDateTime.now()) < limitDay &&
-                workspace.hostName != null &&
-                workspace.hostName!!.substringAfter(".") !in logins
+                workspace.hostName != null && workspace.hostName !in logins
             ) {
                 logger.info(
                     "ready to delete when sleep 7 day " +
-                            "|${workspace.workspaceName}|${workspace.lastStatusUpdateTime}"
+                            "|${workspace.workspaceName}|${workspace.lastStatusUpdateTime}|${workspace.hostName}"
                 )
                 workspaceOpHistoryDao.createWorkspaceHistory(
                     dslContext = dslContext,
@@ -308,16 +307,16 @@ class SleepControl @Autowired constructor(
                     .onFailure { i ->
                         logger.warn("auto delete fail|${i.message}", i)
                     }.onSuccess {
-                    notifyControl.notify4UserAndCCRemoteDevManager(
-                        userIds = permissionService.getWorkspaceOwner(workspace.workspaceName).toMutableSet(),
-                        projectId = workspace.projectId,
-                        notifyTemplateCode = NotifyControl.NOT_LOGIN_AUTO_SLEEP_NOTIFY,
-                        notifyType = mutableSetOf(RemoteDevNotifyType.EMAIL),
-                        bodyParams = mapOf(
-                            "cgsIp" to (workspace.hostName ?: "")
+                        notifyControl.notify4UserAndCCRemoteDevManager(
+                            userIds = permissionService.getWorkspaceOwner(workspace.workspaceName).toMutableSet(),
+                            projectId = workspace.projectId,
+                            notifyTemplateCode = NotifyControl.NOT_LOGIN_AUTO_SLEEP_NOTIFY,
+                            notifyType = mutableSetOf(RemoteDevNotifyType.EMAIL),
+                            bodyParams = mapOf(
+                                "cgsIp" to (workspace.hostName ?: "")
+                            )
                         )
-                    )
-                }
+                    }
             }
         }
     }

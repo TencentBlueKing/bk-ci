@@ -1156,7 +1156,7 @@ class WorkspaceService @Autowired constructor(
             if ((workspace.lastStatusUpdateTime ?: LocalDateTime.now()) < limitDay) {
                 logger.info(
                     "ready to notify when sleep in 3 day " +
-                            "|${workspace.workspaceName}|${workspace.lastStatusUpdateTime}"
+                            "|${workspace.workspaceName}|${workspace.lastStatusUpdateTime}|${workspace.hostName}"
                 )
                 workspaceOpHistoryDao.createWorkspaceHistory(
                     dslContext = dslContext,
@@ -1188,10 +1188,12 @@ class WorkspaceService @Autowired constructor(
             systemType = WorkspaceSystemType.WINDOWS_GPU
         ) ?: return
         running.parallelStream().forEach { workspace ->
-            if ((workspace.lastStatusUpdateTime ?: LocalDateTime.now()) < limitDay) {
+            if ((workspace.lastStatusUpdateTime ?: LocalDateTime.now()) < limitDay &&
+                workspace.hostName != null && workspace.hostName !in logins
+            ) {
                 logger.info(
                     "ready to notify when not login in 3 day " +
-                            "|${workspace.workspaceName}|${workspace.lastStatusUpdateTime}"
+                            "|${workspace.workspaceName}|${workspace.lastStatusUpdateTime}|${workspace.hostName}"
                 )
                 workspaceOpHistoryDao.createWorkspaceHistory(
                     dslContext = dslContext,

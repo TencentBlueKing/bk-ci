@@ -159,10 +159,10 @@ class BKBaseService @Autowired constructor(
         offset: Int = 0,
         result: MutableSet<String> = mutableSetOf()
     ): Set<String> {
-        val sql = "SELECT inner_ip " +
-                "FROM 100656_ads_desktop_daily_activity_res " +
+        val sql = "SELECT node_id " +
+                "FROM 100656_cgs_report_game_all " +
                 "WHERE thedate >= '${date.format(theDateFormat)}' " +
-                "LIMIT $limit OFFSET $offset"
+                "GROUP BY node_id LIMIT $limit OFFSET $offset"
 
         val url = "${bkConfig.baseUrl}/prod/v3/queryengine/query_sync/"
         val body = BakeBaseQuerySyncReq(

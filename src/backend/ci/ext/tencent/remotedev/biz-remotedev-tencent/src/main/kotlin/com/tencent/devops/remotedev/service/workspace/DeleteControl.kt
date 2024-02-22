@@ -287,7 +287,7 @@ class DeleteControl @Autowired constructor(
             if ((workspace.lastStatusUpdateTime ?: LocalDateTime.now()) < limitDay) {
                 logger.info(
                     "ready to delete when not assign " +
-                            "|${workspace.workspaceName}|${workspace.lastStatusUpdateTime}"
+                            "|${workspace.workspaceName}|${workspace.lastStatusUpdateTime}|${workspace.hostName}"
                 )
                 workspaceOpHistoryDao.createWorkspaceHistory(
                     dslContext = dslContext,
@@ -340,7 +340,7 @@ class DeleteControl @Autowired constructor(
             if ((workspace.lastStatusUpdateTime ?: LocalDateTime.now()) < limitDay) {
                 logger.info(
                     "ready to delete when sleep 7 day " +
-                            "|${workspace.workspaceName}|${workspace.lastStatusUpdateTime}"
+                            "|${workspace.workspaceName}|${workspace.lastStatusUpdateTime}|${workspace.hostName}"
                 )
                 workspaceOpHistoryDao.createWorkspaceHistory(
                     dslContext = dslContext,
