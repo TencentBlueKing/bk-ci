@@ -33,9 +33,9 @@ import com.tencent.devops.remotedev.pojo.ShareWorkspace
 import com.tencent.devops.remotedev.pojo.WorkspaceShared
 import com.tencent.devops.remotedev.pojo.WorkspaceSharedOpUse
 import com.tencent.devops.remotedev.pojo.WorkspaceStatus
-import io.swagger.v3.oas.annotations.tags.Tag
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
+import io.swagger.v3.oas.annotations.tags.Tag
 import javax.ws.rs.Consumes
 import javax.ws.rs.DELETE
 import javax.ws.rs.GET
@@ -146,5 +146,17 @@ interface OpWorkspaceResource {
         @Parameter(description = "用户ID", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String
+    ): Result<Boolean>
+
+    @Operation(summary = "手动执行云桌面清理job")
+    @GET
+    @Path("/autoCleanJob4Windows")
+    fun autoCleanJob4Windows(
+        @Parameter(description = "用户ID", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "为true时，只执行自动作业中的销毁作业", required = false)
+        @QueryParam("type")
+        type: String?
     ): Result<Boolean>
 }
