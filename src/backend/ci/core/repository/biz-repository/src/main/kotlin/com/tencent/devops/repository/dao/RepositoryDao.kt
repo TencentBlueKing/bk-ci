@@ -447,7 +447,7 @@ class RepositoryDao {
         with(TRepository.T_REPOSITORY) {
             dslContext.update(this)
                 .set(IS_ATOM, true)
-                .where(REPOSITORY_HASH_ID.eq(repositoryHashId))
+                .where(REPOSITORY_HASH_ID.eq(repositoryHashId).and(PROJECT_ID.eq(projectId)))
                 .execute()
         }
     }
