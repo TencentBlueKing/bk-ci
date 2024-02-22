@@ -334,7 +334,10 @@ class SignServiceImpl @Autowired constructor(
             securityApplicationGroupList = ipaSignInfo.keychainAccessGroups,
             replaceKeyList = ipaSignInfo.replaceKeyList,
             codeSignPath = getCodeSignFile(ipaSignInfo.codeSignVersion),
-            codesignExternalStr = ipaSignInfo.codesignExternalStr
+            codesignExternalStr = ipaSignInfo.codesignExternalStr,
+            bundleId = ipaSignInfo.bundleId,
+            bundleName = ipaSignInfo.bundleName,
+            bundleVersion = ipaSignInfo.bundleVersion
         )
     }
 
@@ -360,7 +363,10 @@ class SignServiceImpl @Autowired constructor(
             wildcardInfo = wildcardInfo,
             replaceKeyList = ipaSignInfo.replaceKeyList,
             codeSignPath = getCodeSignFile(ipaSignInfo.codeSignVersion),
-            codesignExternalStr = ipaSignInfo.codesignExternalStr
+            codesignExternalStr = ipaSignInfo.codesignExternalStr,
+            bundleId = ipaSignInfo.bundleId,
+            bundleName = ipaSignInfo.bundleName,
+            bundleVersion = ipaSignInfo.bundleVersion
         )
     }
 

@@ -77,5 +77,11 @@ data class IpaSignInfo(
     @ApiModelProperty("codesign插件额外参数", required = false)
     var codesignExternalStr: String? = null,
     @ApiModelProperty("钥匙串访问组", required = false)
-    var keychainAccessGroupList: List<String>? = null
+    var keychainAccessGroupList: List<String>? = null,
+    @ApiModelProperty("更换的bundleId", required = false)
+    var bundleId:String? = null,
+    @ApiModelProperty("更换的bundle名", required = false)
+    var bundleName:String? = null,
+    @ApiModelProperty("更换的bundle版本号", required = false)
+    val bundleVersion:String? = null
 )

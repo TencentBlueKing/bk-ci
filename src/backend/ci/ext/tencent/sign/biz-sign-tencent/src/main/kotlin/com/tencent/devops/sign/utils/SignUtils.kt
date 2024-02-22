@@ -74,7 +74,10 @@ object SignUtils {
         wildcardInfo: MobileProvisionInfo,
         codeSignPath: String,
         replaceKeyList: Map<String, String>?,
-        codesignExternalStr: String?
+        codesignExternalStr: String?,
+        bundleId: String?,
+        bundleName: String?,
+        bundleVersion: String?
     ): Boolean {
         if (!appDir.isDirectory || !appDir.extension.contains("app")) {
             logger.warn("App directory $appDir is invalid.")
@@ -82,7 +85,7 @@ object SignUtils {
         }
         return try {
             // 通配符签名统一不做Bundle替换
-            overwriteInfo(appDir, wildcardInfo, false, replaceKeyList)
+            overwriteInfo(appDir, wildcardInfo, false, replaceKeyList, null, null, null)
 
             // 扫描是否有其他待签目录
             val needResignDirs = scanNeedResignFiles(appDir, mutableListOf())
@@ -97,7 +100,10 @@ object SignUtils {
                                 wildcardInfo = wildcardInfo,
                                 codeSignPath = codeSignPath,
                                 replaceKeyList = replaceKeyList,
-                                codesignExternalStr = codesignExternalStr
+                                codesignExternalStr = codesignExternalStr,
+                                bundleId = bundleId,
+                                bundleName = bundleName,
+                                bundleVersion = bundleVersion
                             )
                         }
 
@@ -115,7 +121,15 @@ object SignUtils {
 
                         // 如果不是app或framework目录，则使用主描述文件进行重签
                         else -> {
-                            overwriteInfo(subFile, wildcardInfo, false, replaceKeyList)
+                            overwriteInfo(
+                                subFile,
+                                wildcardInfo,
+                                false,
+                                replaceKeyList,
+                                bundleId,
+                                bundleName,
+                                bundleVersion
+                            )
                             codesignFile(certId, subFile.absolutePath, codeSignPath, codesignExternalStr)
                         }
                     }
@@ -157,7 +171,10 @@ object SignUtils {
         replaceKeyList: Map<String, String>?,
         securityApplicationGroupList: List<String>? = null,
         universalLinks: List<String>? = null,
-        codesignExternalStr: String? = null
+        codesignExternalStr: String? = null,
+        bundleId: String? = null,
+        bundleName: String? = null,
+        bundleVersion: String? = null
     ): Boolean {
         val info = infoMap[appName]
         if (info == null) {
@@ -176,7 +193,7 @@ object SignUtils {
             }
 
             // 用主描述文件对外层app进行信息替换
-            overwriteInfo(appDir, info, replaceBundleId, replaceKeyList)
+            overwriteInfo(appDir, info, replaceBundleId, replaceKeyList, bundleId, bundleName, bundleVersion)
 
             // 扫描是否有其他待签目录
             val needResignDirs = scanNeedResignFiles(appDir, mutableListOf())
@@ -194,7 +211,10 @@ object SignUtils {
                                 securityApplicationGroupList = securityApplicationGroupList,
                                 replaceKeyList = replaceKeyList,
                                 codeSignPath = codeSignPath,
-                                codesignExternalStr = codesignExternalStr
+                                codesignExternalStr = codesignExternalStr,
+                                bundleId = bundleId,
+                                bundleName = bundleName,
+                                bundleVersion = bundleVersion
                             )
                             if (!success) return false
                         }
@@ -213,7 +233,7 @@ object SignUtils {
 
                         // 如果不是app或framework目录，则使用主描述文件进行重签
                         else -> {
-                            overwriteInfo(subFile, info, false, replaceKeyList)
+                            overwriteInfo(subFile, info, false, replaceKeyList, bundleId, bundleName, bundleVersion)
                             codesignFile(certId, subFile.absolutePath, codeSignPath, codesignExternalStr)
                         }
                     }
@@ -249,7 +269,10 @@ object SignUtils {
         info: MobileProvisionInfo,
         codeSignPath: String,
         replaceKeyList: Map<String, String>?,
-        codesignExternalStr: String?
+        codesignExternalStr: String?,
+        bundleId: String? = null,
+        bundleName: String? = null,
+        bundleVersion: String? = null
     ): Boolean {
         if (!frameworkDir.isDirectory || !frameworkDir.extension.contains("framework")) {
             logger.warn("The framework directory $frameworkDir is invalid.")
@@ -261,12 +284,12 @@ object SignUtils {
             needResignDirs.forEach { resignDir ->
                 resignDir.listFiles()?.forEach { subFile ->
                     // 如果是个其他待签文件则使用主描述文件进行重签
-                    overwriteInfo(subFile, info, false, replaceKeyList)
+                    overwriteInfo(subFile, info, false, replaceKeyList, bundleId, bundleName, bundleVersion)
                     codesignFile(certId, subFile.absolutePath, codeSignPath, codesignExternalStr)
                 }
             }
             // 重签当前目录
-            overwriteInfo(frameworkDir, info, false, replaceKeyList)
+            overwriteInfo(frameworkDir, info, false, replaceKeyList, bundleId, bundleName, bundleVersion)
             codesignFile(certId, frameworkDir.absolutePath, codeSignPath, codesignExternalStr)
             true
         } catch (ignore: Throwable) {
@@ -302,7 +325,10 @@ object SignUtils {
         resignDir: File,
         info: MobileProvisionInfo,
         replaceBundle: Boolean,
-        replaceKeyList: Map<String, String>?
+        replaceKeyList: Map<String, String>?,
+        bundleId: String?,
+        bundleName: String?,
+        bundleVersion: String?
     ) {
         if (!resignDir.exists() || !resignDir.isDirectory) return
 
@@ -313,13 +339,14 @@ object SignUtils {
         // 无论是什么目录都将 mobileprovision 文件进行替换
         logger.info(
             "[replace mobileprovision] origin " +
-                "{${originMpFile.absolutePath}} with {${info.mobileProvisionFile.absolutePath}}"
+                    "{${originMpFile.absolutePath}} with {${info.mobileProvisionFile.absolutePath}}"
         )
         info.mobileProvisionFile.copyTo(originMpFile, true)
 
         // plist文件信息的修改
         if (!infoPlist.exists()) return
-        if (replaceBundle) replaceInfoBundle(info.bundleId, infoPlist.absolutePath)
+        val finallyBundleId = if (bundleId.isNullOrBlank()) info.bundleId else bundleId
+        if (replaceBundle) replaceInfoBundle(finallyBundleId, bundleName, bundleVersion, infoPlist.absolutePath)
         if (replaceKeyList?.isNotEmpty() == true) {
             replaceKeyList.forEach {
                 replaceInfoKey(it.key, it.value, infoPlist.absolutePath)
@@ -352,11 +379,11 @@ object SignUtils {
         logger.info("---- scan app directory start -----")
         appDir.listFiles().forEachIndexed { index, it ->
             if (it.isDirectory && resignFilenamesSet.contains(it.name)) {
-                if (it.name.equals("Frameworks")){
+                if (it.name.equals("Frameworks")) {
                     it.listFiles()
-                        .filter {node-> node.isDirectory && node.extension.contains("framework") }.toMutableList()
-                        .forEach {node->
-                            scanNeedResignFiles(node,needResignFiles)
+                        .filter { node -> node.isDirectory && node.extension.contains("framework") }.toMutableList()
+                        .forEach { node ->
+                            scanNeedResignFiles(node, needResignFiles)
                         }
                 }
                 needResignFiles.add(it)
@@ -367,10 +394,27 @@ object SignUtils {
         return needResignFiles
     }
 
-    private fun replaceInfoBundle(bundleId: String, infoPlistPath: String) {
+    private fun replaceInfoBundle(
+        bundleId: String,
+        bundleName: String?,
+        bundleVersion: String?,
+        infoPlistPath: String
+    ) {
         val cmd = "plutil -replace CFBundleIdentifier -string $bundleId ${fixPath(infoPlistPath)}"
         logger.info("[replaceCFBundleId] $cmd")
         runtimeExec(cmd)
+
+        if (!bundleName.isNullOrBlank()) {
+            val bundleNameCmd = "plutil -replace CFBundleName -string $bundleName ${fixPath(infoPlistPath)}"
+            logger.info("[replaceCFBundleName] $bundleNameCmd")
+            runtimeExec(bundleNameCmd)
+        }
+
+        if (!bundleVersion.isNullOrBlank()) {
+            val bundleVersionCmd = "plutil -replace CFBundleVersion -string $bundleVersion ${fixPath(infoPlistPath)}"
+            logger.info("[replaceCFBundleVersion] $bundleVersionCmd")
+            runtimeExec(bundleVersionCmd)
+        }
     }
 
     private fun replaceInfoKey(key: String, value: String, infoPlistPath: String) {
@@ -389,18 +433,23 @@ object SignUtils {
             boolConvert(value) != null -> {
                 "plutil -replace $key -bool $value ${fixPath(infoPlistPath)}"
             }
+
             integerConvert(value) != null -> {
                 "plutil -replace $key -integer $value ${fixPath(infoPlistPath)}"
             }
+
             floatConvert(value) != null -> {
                 "plutil -replace $key -float $value ${fixPath(infoPlistPath)}"
             }
+
             value.startsWith('[') && value.endsWith(']') -> {
                 "plutil -replace $key -array '$value' ${fixPath(infoPlistPath)}"
             }
+
             value.startsWith('{') && value.endsWith('}') -> {
                 "plutil -replace $key -dict '$value' ${fixPath(infoPlistPath)}"
             }
+
             else -> {
                 "plutil -replace $key -string $value ${fixPath(infoPlistPath)}"
             }
@@ -439,7 +488,7 @@ object SignUtils {
             "$codeSignPath -f -s '$cerName' --entitlements '$entitlementsPath' ${fixPath(signFilename)}"
         } else {
             "$codeSignPath -f -s '$cerName' $codesignExternalStr" +
-                " --entitlements '$entitlementsPath' ${fixPath(signFilename)}"
+                    " --entitlements '$entitlementsPath' ${fixPath(signFilename)}"
         }
         logger.info("[codesignFile by entitlements] $cmd")
         runtimeExec(cmd)
@@ -453,7 +502,7 @@ object SignUtils {
             // 将com.apple.developer.associated-domains字段变成数组
             try {
                 val removeCmd = "/usr/bin/plutil -remove " +
-                    "\"com\\.apple\\.developer\\.associated-domains\" $entitlementsFile"
+                        "\"com\\.apple\\.developer\\.associated-domains\" $entitlementsFile"
                 logger.info("[add UniversalLink in entitlements] $removeCmd")
                 runtimeExec(removeCmd)
             } catch (ignore: Throwable) {
@@ -470,7 +519,7 @@ object SignUtils {
                 sb.appendLine("</array>")
 
                 val insertCmd = "/usr/bin/plutil -insert " +
-                    "\"com\\.apple\\.developer\\.associated-domains\" -xml \"$sb\" $entitlementsFile"
+                        "\"com\\.apple\\.developer\\.associated-domains\" -xml \"$sb\" $entitlementsFile"
                 logger.info("[add UniversalLink in entitlements] $insertCmd")
                 runtimeExec(insertCmd)
             }
@@ -485,7 +534,7 @@ object SignUtils {
             // 将com.apple.security.application-groups字段变成数组插入
             try {
                 val removeCmd = "/usr/bin/plutil -remove " +
-                    "\"com\\.apple\\.security\\.application-groups\" $entitlementsFile"
+                        "\"com\\.apple\\.security\\.application-groups\" $entitlementsFile"
                 logger.info("[add UniversalLink in entitlements] $removeCmd")
                 runtimeExec(removeCmd)
             } catch (ignore: Throwable) {
@@ -502,7 +551,7 @@ object SignUtils {
                 sb.appendLine("</array>")
 
                 val insertCmd = "/usr/bin/plutil -insert " +
-                    "\"com\\.apple\\.security\\.application-groups\" -xml \"$sb\" $entitlementsFile"
+                        "\"com\\.apple\\.security\\.application-groups\" -xml \"$sb\" $entitlementsFile"
                 logger.info("[add UniversalLink in entitlements] $insertCmd")
                 runtimeExec(insertCmd)
             }
