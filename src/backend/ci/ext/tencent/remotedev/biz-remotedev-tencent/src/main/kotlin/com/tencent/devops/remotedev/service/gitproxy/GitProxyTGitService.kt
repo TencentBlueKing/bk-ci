@@ -393,7 +393,7 @@ class GitProxyTGitService @Autowired constructor(
             client = okHttpClient,
             gitUrl = tGitUrl,
             accessToken = token.accessToken,
-            projectId = projectId,
+            projectId = repoId.toString(),
             ips = emptySet()
         )
 
@@ -434,7 +434,7 @@ class GitProxyTGitService @Autowired constructor(
                         client = okHttpClient,
                         gitUrl = tGitUrl,
                         accessToken = token!!,
-                        projectId = repo.projectId
+                        projectId = repo.tgitId.toString()
                     )
                     if (config == null) {
                         logger.warn("addOrRemoveAclIp|get $projectId|${repo.projectId} acl config error")
@@ -451,7 +451,7 @@ class GitProxyTGitService @Autowired constructor(
                         client = okHttpClient,
                         gitUrl = tGitUrl,
                         accessToken = token,
-                        projectId = repo.projectId,
+                        projectId = repo.tgitId.toString(),
                         ips = ips
                     )
                 }
