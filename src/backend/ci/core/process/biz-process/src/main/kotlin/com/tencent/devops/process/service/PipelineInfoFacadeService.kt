@@ -637,11 +637,13 @@ class PipelineInfoFacadeService @Autowired constructor(
         newResource.setting.projectId = projectId
         newResource.setting.pipelineId = pipelineId
         // 通过PAC模式创建或保存的流水线均打开PAC
+        val pipelineName = newResource.model.name.ifBlank { yamlFileName }
         val savedSetting = pipelineSettingFacadeService.saveSetting(
             userId = userId,
             projectId = projectId,
             pipelineId = pipelineId,
             setting = newResource.setting.copy(
+                pipelineName = pipelineName,
                 pipelineAsCodeSettings = pipelineAsCodeSettings
             ),
             checkPermission = false,
