@@ -32,7 +32,6 @@ import com.tencent.devops.artifactory.pojo.enums.FileChannelTypeEnum
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.service.utils.CommonUtils
 import com.tencent.devops.common.web.utils.I18nUtil
-import com.tencent.devops.store.service.common.impl.StoreLogoServiceImpl
 import com.tencent.devops.store.utils.StoreUtils
 import java.io.File
 
