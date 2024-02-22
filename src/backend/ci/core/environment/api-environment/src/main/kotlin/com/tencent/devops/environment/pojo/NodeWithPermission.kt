@@ -85,5 +85,7 @@ data class NodeWithPermission(
     @ApiModelProperty("agent hash id")
     val agentHashId: String? = "",
     @ApiModelProperty("云区域ID")
-    val cloudAreaId: Long?
+    val cloudAreaId: Long?,
+    @ApiModelProperty("操作系统类型")
+    val osType: String?
 )

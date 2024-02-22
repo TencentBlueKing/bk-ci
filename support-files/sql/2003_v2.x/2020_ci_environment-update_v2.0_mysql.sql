@@ -85,6 +85,15 @@ BEGIN
     END IF;
 
     IF NOT EXISTS(SELECT 1
+                  FROM information_schema.COLUMNS
+                  WHERE TABLE_SCHEMA = db
+                    AND TABLE_NAME = 'T_NODE'
+                    AND COLUMN_NAME = 'OS_TYPE') THEN
+        ALTER TABLE `T_NODE`
+            ADD COLUMN `OS_TYPE` varchar(64) default null comment '从CC中查到的os类型';
+    END IF;
+
+    IF NOT EXISTS(SELECT 1
                   FROM information_schema.statistics
                   WHERE TABLE_SCHEMA = db
                     AND TABLE_NAME = 'T_NODE'

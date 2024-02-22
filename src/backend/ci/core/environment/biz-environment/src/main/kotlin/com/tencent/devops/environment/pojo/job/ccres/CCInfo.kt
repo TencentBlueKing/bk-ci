@@ -21,8 +21,11 @@ data class CCInfo(
     val bkBakOperator: String?,
     @ApiModelProperty(value = "服务器ID")
     @JsonProperty("svr_id")
-    val svrId: Long?
+    val svrId: Long?,
+    @ApiModelProperty(value = "操作系统类型")
+    @JsonProperty("bk_os_type")
+    val osType: String?
 ) {
-    constructor(bkHostId: Long?, bkHostInnerip: String?, svrId: Long?) :
-        this(bkHostId, 0, bkHostInnerip, "", "", svrId)
+    constructor(bkHostId: Long?, bkCloudId: Int?, bkHostInnerip: String?, svrId: Long?, osType: String?) :
+        this(bkHostId, bkCloudId, bkHostInnerip, "", "", svrId, osType)
 }

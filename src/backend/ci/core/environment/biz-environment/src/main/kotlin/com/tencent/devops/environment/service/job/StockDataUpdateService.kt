@@ -42,7 +42,7 @@ import com.tencent.devops.environment.dao.NodeDao
 import com.tencent.devops.environment.dao.thirdpartyagent.ThirdPartyAgentDao
 import com.tencent.devops.environment.pojo.job.AgentVersionInfo
 import com.tencent.devops.environment.pojo.job.DisplayNameInfo
-import com.tencent.devops.environment.pojo.job.HostIdAndCloudAreaIdInfo
+import com.tencent.devops.environment.pojo.job.CCUpdateInfo
 import com.tencent.devops.environment.pojo.job.UpdateTNodeInfo
 import com.tencent.devops.environment.pojo.job.ccres.CCInfo
 import org.jooq.DSLContext
@@ -200,7 +200,7 @@ class StockDataUpdateService @Autowired constructor(
                         it[T_NODE_CLOUD_AREA_ID] as? Long == ipToCCInfoMap!![it[T_NODE_NODE_IP] as String]
                         ?.bkCloudId?.toLong()
                 }.takeIf { it.isNotEmpty() }!!.map {
-                    HostIdAndCloudAreaIdInfo(
+                    CCUpdateInfo(
                         nodeId = it[T_NODE_NODE_ID] as Long,
                         bkCloudId = ipToCCInfoMap!![it[T_NODE_NODE_IP] as String]?.bkCloudId?.toLong(),
                         bkHostId = ipToCCInfoMap!![it[T_NODE_NODE_IP] as String]?.bkHostId

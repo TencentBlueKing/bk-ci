@@ -37,11 +37,15 @@ import com.tencent.devops.environment.constant.T_NODE_NODE_STATUS
 import com.tencent.devops.environment.constant.T_NODE_PROJECT_ID
 import com.tencent.devops.environment.dao.NodeDao
 import com.tencent.devops.environment.pojo.enums.NodeStatus
+import com.tencent.devops.environment.pojo.enums.OsType
 import com.tencent.devops.environment.pojo.job.AgentVersion
-import com.tencent.devops.environment.pojo.job.HostIdAndCloudAreaIdInfo
+import com.tencent.devops.environment.pojo.job.CCUpdateInfo
 import com.tencent.devops.environment.pojo.job.UpdateTNodeInfo
 import com.tencent.devops.environment.pojo.job.req.OpOperateReq
 import com.tencent.devops.environment.service.CmdbNodeService
+import com.tencent.devops.environment.service.CmdbNodeService.Companion.OS_TYPE_CC_CODE_AIX
+import com.tencent.devops.environment.service.CmdbNodeService.Companion.OS_TYPE_CC_CODE_LINUX
+import com.tencent.devops.environment.service.CmdbNodeService.Companion.OS_TYPE_CC_CODE_WINDOWS
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -221,11 +225,18 @@ class TencentStockDataUpdateService @Autowired constructor(
             val svrIdQueryCCList = svrIdQueryCCRes.data?.info // 所有刚添加到cc中的节点 cc信息
             val hostIdToCCinfo = svrIdQueryCCList?.associateBy { it.bkHostId }
             val addToCCInfoList = ccHostIdList?.mapIndexed { index, value ->
-                HostIdAndCloudAreaIdInfo(
+                val osType = when (hostIdToCCinfo?.get(value)?.osType) {
+                    OS_TYPE_CC_CODE_LINUX -> OsType.LINUX.name
+                    OS_TYPE_CC_CODE_WINDOWS -> OsType.WINDOWS.name
+                    OS_TYPE_CC_CODE_AIX -> OsType.AIX.name
+                    else -> OsType.OTHER.name
+                }
+                CCUpdateInfo(
                     nodeId = nodeIpToNodesRecords[svrIdToCmdbInfoMap[notInCCSvrIdList[index]]?.SvrIp]
                         ?.get(T_NODE_NODE_ID) as Long,
                     bkCloudId = hostIdToCCinfo?.get(value)?.bkCloudId?.toLong(),
-                    bkHostId = value
+                    bkHostId = value,
+                    osType = osType
                 )
             }
             if (!addToCCInfoList.isNullOrEmpty()) {

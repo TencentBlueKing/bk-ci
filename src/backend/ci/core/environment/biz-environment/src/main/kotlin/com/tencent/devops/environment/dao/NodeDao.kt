@@ -36,7 +36,7 @@ import com.tencent.devops.environment.constant.T_NODE_DISPLAY_NAME
 import com.tencent.devops.environment.model.CreateNodeModel
 import com.tencent.devops.environment.pojo.enums.NodeStatus
 import com.tencent.devops.environment.pojo.enums.NodeType
-import com.tencent.devops.environment.pojo.job.HostIdAndCloudAreaIdInfo
+import com.tencent.devops.environment.pojo.job.CCUpdateInfo
 import com.tencent.devops.environment.pojo.job.req.Host
 import com.tencent.devops.model.environment.tables.TNode
 import com.tencent.devops.model.environment.tables.TEnv
@@ -132,11 +132,11 @@ class NodeDao {
 
     fun updateHostIdAndCloudAreaIdByNodeId(
         dslContext: DSLContext,
-        nodeHostIdAndCloudAreaIdInfoList: List<HostIdAndCloudAreaIdInfo>
+        nodeCCUpdateInfoList: List<CCUpdateInfo>
     ) {
         with(TNode.T_NODE) {
             val batchUpdate = dslContext.batch(
-                nodeHostIdAndCloudAreaIdInfoList.map {
+                nodeCCUpdateInfoList.map {
                     dslContext.update(this)
                         .set(HOST_ID, it.bkHostId)
                         .set(CLOUD_AREA_ID, it.bkCloudId)

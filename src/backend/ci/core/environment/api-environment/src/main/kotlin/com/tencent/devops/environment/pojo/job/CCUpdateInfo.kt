@@ -25,32 +25,19 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.environment.model
+package com.tencent.devops.environment.pojo.job
 
-import java.time.LocalDateTime
+import io.swagger.annotations.ApiModelProperty
 
-data class CreateNodeModel(
-    var nodeStringId: String? = "",
-    var projectId: String,
-    var nodeIp: String = "",
-    var nodeName: String = "",
-    var nodeStatus: String = "",
-    var nodeType: String = "",
-    var nodeClusterId: String? = null,
-    var nodeNamespace: String? = null,
-    var createdUser: String = "",
-    var expireTime: LocalDateTime? = null,
-    var osName: String? = null,
-    var operator: String? = null,
-    var bakOperator: String? = null,
-    var agentStatus: Boolean = false,
-    var agentVersion: String? = null,
-    var displayName: String = "",
-    var image: String? = "",
-    var taskId: Long? = null,
-    var pipelineRefCount: Int = 0,
-    var lastBuildTime: LocalDateTime? = null,
-    var hostId: Long?,
-    var cloudAreaId: Long?,
-    var osType: String?
-)
+data class CCUpdateInfo(
+    @ApiModelProperty(value = "节点ID")
+    val nodeId: Long?,
+    @ApiModelProperty(value = "云区域ID")
+    val bkCloudId: Long?,
+    @ApiModelProperty(value = "主机ID")
+    val bkHostId: Long?,
+    @ApiModelProperty(value = "操作系统类型")
+    val osType: String?
+) {
+    constructor(nodeId: Long?, bkCloudId: Long?, bkHostId: Long?) : this(nodeId, bkCloudId, bkHostId, null)
+}

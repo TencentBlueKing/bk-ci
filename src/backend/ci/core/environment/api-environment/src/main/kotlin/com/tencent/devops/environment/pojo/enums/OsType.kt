@@ -25,15 +25,11 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.environment.pojo.job
+package com.tencent.devops.environment.pojo.enums
 
-import io.swagger.annotations.ApiModelProperty
-
-data class HostIdAndCloudAreaIdInfo(
-    @ApiModelProperty(value = "节点ID")
-    val nodeId: Long?,
-    @ApiModelProperty(value = "云区域ID")
-    val bkCloudId: Long?,
-    @ApiModelProperty(value = "主机ID")
-    val bkHostId: Long?
-)
+enum class OsType {
+    LINUX,
+    WINDOWS,
+    AIX,
+    OTHER
+}
