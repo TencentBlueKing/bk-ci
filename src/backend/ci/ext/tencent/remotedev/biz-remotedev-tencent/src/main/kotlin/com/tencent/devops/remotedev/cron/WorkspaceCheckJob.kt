@@ -230,7 +230,12 @@ class WorkspaceCheckJob @Autowired constructor(
                         logger.info("read to notify system manager|$readyDeleteWorkspace")
                         OkhttpUtils.doPost(
                             autoDeletePipeline,
-                            JsonUtil.toJson(mapOf("infos" to readyDeleteWorkspace.joinToString("\n"))),
+                            JsonUtil.toJson(
+                                mapOf(
+                                    "infos" to readyDeleteWorkspace.joinToString("\n"),
+                                    "type" to "delete"
+                                )
+                            ),
                             headers = mapOf(
                                 "Content-Type" to "application/json",
                                 "X-DEVOPS-PROJECT-ID" to "bkci-desktop",
@@ -249,7 +254,26 @@ class WorkspaceCheckJob @Autowired constructor(
                 }
                 // 云桌面通知-未登录7天时自动降配(暂时不做)并关机
                 kotlin.runCatching {
-                    sleepControl.autoSleepWhenNotLogin()
+                    val readySleepWorkspace = mutableListOf<String>()
+                    sleepControl.autoSleepWhenNotLogin(false, readySleepWorkspace)
+
+                    if (readySleepWorkspace.isNotEmpty()) {
+                        logger.info("read to notify system manager|$readySleepWorkspace")
+                        OkhttpUtils.doPost(
+                            autoDeletePipeline,
+                            JsonUtil.toJson(
+                                mapOf(
+                                    "infos" to readySleepWorkspace.joinToString("\n"),
+                                    "type" to "sleep"
+                                )
+                            ),
+                            headers = mapOf(
+                                "Content-Type" to "application/json",
+                                "X-DEVOPS-PROJECT-ID" to "bkci-desktop",
+                                "X-DEVOPS-UID" to "autoJob"
+                            )
+                        )
+                    }
                 }.onFailure {
                     logger.warn("autoSleepWhenNotLogin fail ${it.message}", it)
                 }

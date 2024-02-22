@@ -61,6 +61,7 @@ import com.tencent.devops.remotedev.service.redis.RedisCallLimit
 import com.tencent.devops.remotedev.service.redis.RedisHeartBeat
 import com.tencent.devops.remotedev.service.redis.RedisKeys.REDIS_CALL_LIMIT_KEY_PREFIX
 import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
 import java.util.concurrent.TimeUnit
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
@@ -89,6 +90,7 @@ class SleepControl @Autowired constructor(
     companion object {
         private val logger = LoggerFactory.getLogger(SleepControl::class.java)
         private val expiredTimeInSeconds = TimeUnit.MINUTES.toSeconds(2)
+        val formatter: DateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
     }
 
     @ActionAuditRecord(
@@ -280,7 +282,7 @@ class SleepControl @Autowired constructor(
         }
     }
 
-    fun autoSleepWhenNotLogin() {
+    fun autoSleepWhenNotLogin(onSleep: Boolean = false, readySleepWorkspace: MutableList<String> = mutableListOf()) {
         val limitDay = holidayHelper.getLastWorkingDays(7).last()
         val logins = bkBaseService.fetchOnlineIps(limitDay)
         logger.info("autoDeleteWhenSleep7Day|$limitDay|${logins.size}")
@@ -293,30 +295,37 @@ class SleepControl @Autowired constructor(
                 workspace.hostName != null && workspace.hostName !in logins
             ) {
                 logger.info(
-                    "ready to delete when sleep 7 day " +
+                    "ready to sleep when not login 7 day " +
                             "|${workspace.workspaceName}|${workspace.lastStatusUpdateTime}|${workspace.hostName}"
                 )
-                workspaceOpHistoryDao.createWorkspaceHistory(
-                    dslContext = dslContext,
-                    workspaceName = workspace.workspaceName,
-                    operator = Constansts.ADMIN_NAME,
-                    action = WorkspaceAction.DELETE,
-                    actionMessage = workspaceCommon.getOpHistory(OpHistoryCopyWriting.TIMEOUT_STOP)
+                readySleepWorkspace.add(
+                    "project=${workspace.projectId}, ip=${workspace.hostName}," +
+                            " 原因=超过7天未登陆(最近登陆时间: ${logins[workspace.hostName]}" +
+                            " 早于检测时间 ${limitDay.format(formatter)})"
                 )
-                kotlin.runCatching { heartBeatStopWS(workspace.workspaceName, OpHistoryCopyWriting.TIMEOUT_SLEEP) }
-                    .onFailure { i ->
-                        logger.warn("auto delete fail|${i.message}", i)
-                    }.onSuccess {
-                        notifyControl.notify4UserAndCCRemoteDevManager(
-                            userIds = permissionService.getWorkspaceOwner(workspace.workspaceName).toMutableSet(),
-                            projectId = workspace.projectId,
-                            notifyTemplateCode = NotifyControl.NOT_LOGIN_AUTO_SLEEP_NOTIFY,
-                            notifyType = mutableSetOf(RemoteDevNotifyType.EMAIL),
-                            bodyParams = mapOf(
-                                "cgsIp" to (workspace.hostName ?: "")
+                if (onSleep) {
+                    workspaceOpHistoryDao.createWorkspaceHistory(
+                        dslContext = dslContext,
+                        workspaceName = workspace.workspaceName,
+                        operator = Constansts.ADMIN_NAME,
+                        action = WorkspaceAction.DELETE,
+                        actionMessage = workspaceCommon.getOpHistory(OpHistoryCopyWriting.TIMEOUT_STOP)
+                    )
+                    kotlin.runCatching { heartBeatStopWS(workspace.workspaceName, OpHistoryCopyWriting.TIMEOUT_SLEEP) }
+                        .onFailure { i ->
+                            logger.warn("auto sleep fail|${i.message}", i)
+                        }.onSuccess {
+                            notifyControl.notify4UserAndCCRemoteDevManager(
+                                userIds = permissionService.getWorkspaceOwner(workspace.workspaceName).toMutableSet(),
+                                projectId = workspace.projectId,
+                                notifyTemplateCode = NotifyControl.NOT_LOGIN_AUTO_SLEEP_NOTIFY,
+                                notifyType = mutableSetOf(RemoteDevNotifyType.EMAIL),
+                                bodyParams = mapOf(
+                                    "cgsIp" to (workspace.hostName ?: "")
+                                )
                             )
-                        )
-                    }
+                        }
+                }
             }
         }
     }

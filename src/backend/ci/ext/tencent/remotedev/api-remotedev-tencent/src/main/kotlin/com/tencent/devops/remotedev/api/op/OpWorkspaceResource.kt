@@ -156,7 +156,7 @@ interface OpWorkspaceResource {
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
         @ApiParam(value = "为true时，只执行自动作业中的销毁作业", required = false)
-        @QueryParam("onlyDelete")
-        onlyDelete: Boolean?
+        @QueryParam("type")
+        type: String?
     ): Result<Boolean>
 }

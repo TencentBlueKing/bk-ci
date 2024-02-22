@@ -14,6 +14,7 @@ import com.tencent.devops.remotedev.pojo.WorkspaceStatus
 import com.tencent.devops.remotedev.service.WorkspaceService
 import com.tencent.devops.remotedev.service.workspace.CreateControl
 import com.tencent.devops.remotedev.service.workspace.DeleteControl
+import com.tencent.devops.remotedev.service.workspace.SleepControl
 import com.tencent.devops.remotedev.service.workspace.WorkspaceCommon
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -24,6 +25,7 @@ class OpWorkspaceResourceImpl @Autowired constructor(
     private val workspaceCommon: WorkspaceCommon,
     private val createControl: CreateControl,
     private val deleteControl: DeleteControl,
+    private val sleepControl: SleepControl,
     private val jobService: WorkspaceCheckJob
 ) : OpWorkspaceResource {
 
@@ -97,13 +99,22 @@ class OpWorkspaceResourceImpl @Autowired constructor(
         return Result(true)
     }
 
-    override fun autoCleanJob4Windows(userId: String, onlyDelete: Boolean?): Result<Boolean> {
-        if (onlyDelete == true) {
-            logger.info("read to delete not use workspace")
-            deleteControl.autoDeleteWhenNotAssign(true)
-            deleteControl.autoDeleteWhenSleep7Day(true)
-        } else {
-            jobService.projectWinJob()
+    override fun autoCleanJob4Windows(userId: String, type: String?): Result<Boolean> {
+        when (type) {
+            "delete" -> {
+                logger.info("read to delete not use workspace")
+                deleteControl.autoDeleteWhenNotAssign(true)
+                deleteControl.autoDeleteWhenSleep7Day(true)
+            }
+
+            "sleep" -> {
+                logger.info("read to sleep not login workspace")
+                sleepControl.autoSleepWhenNotLogin(true)
+            }
+
+            else -> {
+                jobService.projectWinJob()
+            }
         }
         return Result(true)
     }

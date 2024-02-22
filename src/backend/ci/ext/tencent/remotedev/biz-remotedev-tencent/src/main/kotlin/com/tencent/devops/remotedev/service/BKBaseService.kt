@@ -157,9 +157,9 @@ class BKBaseService @Autowired constructor(
         date: LocalDateTime,
         limit: Int = 1000,
         offset: Int = 0,
-        result: MutableSet<String> = mutableSetOf()
-    ): Set<String> {
-        val sql = "SELECT node_id " +
+        result: MutableMap<String, String> = mutableMapOf()
+    ): Map<String, String> {
+        val sql = "SELECT node_id, MAX(dtEventTime) " +
                 "FROM 100656_cgs_report_game_all " +
                 "WHERE thedate >= '${date.format(theDateFormat)}' " +
                 "GROUP BY node_id LIMIT $limit OFFSET $offset"
@@ -199,7 +199,7 @@ class BKBaseService @Autowired constructor(
 
         try {
             resp.data?.list?.forEach { l ->
-                result.add(l["inner_ip"] as String)
+                result.put(l["node_id"] as String, l["_col1"] as String)
             } ?: return result
             if (resp.data.list.size == limit) {
                 fetchOnlineIps(
