@@ -37,15 +37,11 @@ import com.tencent.devops.environment.constant.T_NODE_NODE_STATUS
 import com.tencent.devops.environment.constant.T_NODE_PROJECT_ID
 import com.tencent.devops.environment.dao.NodeDao
 import com.tencent.devops.environment.pojo.enums.NodeStatus
-import com.tencent.devops.environment.pojo.enums.OsType
 import com.tencent.devops.environment.pojo.job.AgentVersion
 import com.tencent.devops.environment.pojo.job.CCUpdateInfo
 import com.tencent.devops.environment.pojo.job.UpdateTNodeInfo
 import com.tencent.devops.environment.pojo.job.req.OpOperateReq
 import com.tencent.devops.environment.service.CmdbNodeService
-import com.tencent.devops.environment.service.CmdbNodeService.Companion.OS_TYPE_CC_CODE_AIX
-import com.tencent.devops.environment.service.CmdbNodeService.Companion.OS_TYPE_CC_CODE_LINUX
-import com.tencent.devops.environment.service.CmdbNodeService.Companion.OS_TYPE_CC_CODE_WINDOWS
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
