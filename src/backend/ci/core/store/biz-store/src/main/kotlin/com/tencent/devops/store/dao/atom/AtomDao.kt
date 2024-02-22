@@ -1390,7 +1390,7 @@ class AtomDao : AtomBaseDao() {
         if (!atomCode.isNullOrBlank()) {
             conditions.add(ta.ATOM_CODE.eq(atomCode))
         }
-        return dslContext.select(
+        return dslContext.selectDistinct(
             ta.ATOM_CODE,
             ts.PROJECT_CODE,
             ta.REPOSITORY_HASH_ID
@@ -1401,7 +1401,6 @@ class AtomDao : AtomBaseDao() {
             .limit(limit)
             .offset(offset)
             .fetch()
-            .distinct()
             .map {
                 AtomRefRepositoryInfo(
                     atomCode = it.value1(),
