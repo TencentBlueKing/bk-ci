@@ -21,5 +21,5 @@ interface OpCodeProxyResource {
     @Path("/callback/tgitlink")
     fun tgitlink(
         data: CallbackLinktgitData
-    ): Result<Map<String, Boolean>>
+    ): Result<Map<Long, Boolean>>
 }

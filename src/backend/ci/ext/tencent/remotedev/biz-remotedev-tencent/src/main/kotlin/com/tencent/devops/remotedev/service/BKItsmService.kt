@@ -24,7 +24,7 @@ class BKItsmService @Autowired constructor(
     fun createTicket(
         projectId: String,
         userId: String,
-        urls: Set<String>
+        tData: Map<Long, Pair<String, Boolean>>
     ): String {
         val url = "${bkConfig.itsmHost}/v2/itsm/create_ticket"
         val body = BKItsmCreateTicketReq(
@@ -43,11 +43,15 @@ class BKItsmService @Autowired constructor(
                 ),
                 mapOf(
                     "key" to "url",
-                    "value" to urls.joinToString("\n")
+                    "value" to tData.values.joinToString("\n") { it.first }
                 ),
                 mapOf(
                     "key" to "userId",
                     "value" to userId
+                ),
+                mapOf(
+                    "key" to "tgit_ids",
+                    "value" to tData.map { "${it.key};${it.value.first}" }.toSet().joinToString("\n")
                 )
             )
         )
