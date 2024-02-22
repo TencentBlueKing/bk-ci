@@ -44,9 +44,9 @@ import com.tencent.devops.project.pojo.ProjectExtSystemTagDTO
 import com.tencent.devops.project.pojo.ProjectVO
 import com.tencent.devops.project.pojo.Result
 import com.tencent.devops.project.pojo.enums.ProjectValidateType
-import io.swagger.v3.oas.annotations.tags.Tag
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
+import io.swagger.v3.oas.annotations.tags.Tag
 import javax.ws.rs.Consumes
 import javax.ws.rs.GET
 import javax.ws.rs.HeaderParam
@@ -417,7 +417,7 @@ interface ServiceTxProjectResource {
         addcloudDesktopNum: Int
     ): Result<Boolean>
 
-    @Operation(summary ="按项目扩展系统设置consul Tag")
+    @Operation(summary = "按项目扩展系统设置consul Tag")
     @PUT
     @Path("/ext/system/setTagByProject")
     fun setExtSystemTagByProject(

@@ -38,12 +38,12 @@ open class BkDataBaseRequest(
     @get:Schema(title = "校验方法", required = true, description = "bkdata_authentication_method")
     open val authenticationMethod: String = "token",
     @JsonProperty("bkdata_data_token")
-    @get:Schema(title = "token", required = true, description =  "bkdata_data_token")
+    @get:Schema(title = "token", required = true, description = "bkdata_data_token")
     open val dataToken: String,
     @JsonProperty("bk_app_code")
-    @get:Schema(title = "蓝鲸应用编码", required = true, description =  "bk_app_code")
+    @get:Schema(title = "蓝鲸应用编码", required = true, description = "bk_app_code")
     open val bkAppCode: String,
     @JsonProperty("bk_app_secret")
-    @get:Schema(title = "蓝鲸应用私密key", required = true, description =  "bk_app_secret")
+    @get:Schema(title = "蓝鲸应用私密key", required = true, description = "bk_app_secret")
     open val bkAppSecret: String
 )

@@ -46,9 +46,9 @@ import com.tencent.devops.project.pojo.ProjectWithPermission
 import com.tencent.devops.project.pojo.Result
 import com.tencent.devops.project.pojo.enums.ProjectChannelCode
 import com.tencent.devops.project.pojo.enums.ProjectValidateType
-import io.swagger.v3.oas.annotations.tags.Tag
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
+import io.swagger.v3.oas.annotations.tags.Tag
 import javax.ws.rs.Consumes
 import javax.ws.rs.GET
 import javax.ws.rs.HeaderParam
@@ -337,24 +337,24 @@ interface ServiceProjectResource {
 
     @PUT
     @Path("{projectId}/updateProjectProductId")
-    @Operation(summary ="修改项目关联产品")
+    @Operation(summary = "修改项目关联产品")
     fun updateProjectProductId(
         @Parameter(description = "项目code", required = true)
         @PathParam("projectId")
         projectCode: String,
-        @Parameter(description ="产品名称", required = true)
+        @Parameter(description = "产品名称", required = true)
         @QueryParam("productName")
         productName: String
     ): Result<Boolean>
 
     @PUT
     @Path("{projectId}/updateOrganizationByEnglishName")
-    @Operation(summary ="修改项目组织架构")
+    @Operation(summary = "修改项目组织架构")
     fun updateOrganizationByEnglishName(
         @Parameter(description = "项目code", required = true)
         @PathParam("projectId")
         projectCode: String,
-        @Parameter(description ="产品名称", required = true)
+        @Parameter(description = "产品名称", required = true)
         projectOrganizationInfo: ProjectOrganizationInfo
     ): Result<Boolean>
 }
