@@ -59,4 +59,17 @@ class PipelineTimerBranchDao {
                 .fetchAny()
         }
     }
+
+    fun delete(
+        dslContext: DSLContext,
+        projectId: String,
+        pipelineId: String
+    ) {
+        with(T_PIPELINE_TIMER_BRANCH) {
+            dslContext.deleteFrom(this)
+                .where(PROJECT_ID.eq(projectId))
+                .and(PIPELINE_ID.eq(pipelineId))
+                .execute()
+        }
+    }
 }

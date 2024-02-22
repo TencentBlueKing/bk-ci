@@ -219,4 +219,15 @@ open class PipelineTimerService @Autowired constructor(
             branch = branch
         )
     }
+
+    fun deleteTimerBranch(
+        projectId: String,
+        pipelineId: String
+    ) {
+        pipelineTimerBranchDao.delete(
+            dslContext = dslContext,
+            projectId = projectId,
+            pipelineId = pipelineId
+        )
+    }
 }

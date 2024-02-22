@@ -32,6 +32,8 @@ import com.tencent.devops.common.api.enums.RepositoryType
 import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.event.listener.pipeline.BaseListener
+import com.tencent.devops.common.webhook.pojo.code.BK_REPO_WEBHOOK_HASH_ID
+import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_BRANCH
 import com.tencent.devops.process.api.service.ServiceTimerBuildResource
 import com.tencent.devops.process.plugin.trigger.pojo.event.PipelineTimerBuildEvent
 import com.tencent.devops.process.plugin.trigger.service.PipelineTimerService
@@ -68,14 +70,14 @@ class PipelineTimerBuildListener @Autowired constructor(
         }
     }
 
-    private fun timerTrigger(event: PipelineTimerBuildEvent): String? {
+    private fun timerTrigger(event: PipelineTimerBuildEvent, params: Map<String, String> = emptyMap()): String? {
         with(event) {
             try {
                 val buildResult = serviceTimerBuildResource.timerTrigger(
                     userId = userId,
                     projectId = projectId,
                     pipelineId = pipelineId,
-                    params = emptyMap(),
+                    params = params,
                     channelCode = channelCode
                 )
 
@@ -143,10 +145,14 @@ class PipelineTimerBuildListener @Autowired constructor(
                     repoHashId = repoHashId,
                     branch = branch
                 )
-                if (
-                    (timerBranch == null || timerBranch.revision != revision) &&
-                    !timerTrigger(event = event).isNullOrBlank()
-                ) {
+                if (timerBranch == null || timerBranch.revision != revision) {
+                    timerTrigger(
+                        event = event,
+                        params = mapOf(
+                            BK_REPO_WEBHOOK_HASH_ID to repoHashId,
+                            PIPELINE_WEBHOOK_BRANCH to branch
+                        )
+                    ) ?: return
                     pipelineTimerService.saveTimerBranch(
                         projectId = projectId,
                         pipelineId = pipelineId,

@@ -133,6 +133,7 @@ class TimerTriggerElementBizPlugin constructor(
     override fun beforeDelete(element: TimerTriggerElement, param: BeforeDeleteParam) {
         if (param.pipelineId.isNotBlank()) {
             pipelineTimerService.deleteTimer(param.projectId, param.pipelineId, param.userId)
+            pipelineTimerService.deleteTimerBranch(projectId = param.projectId, pipelineId = param.pipelineId)
         }
     }
 

@@ -338,8 +338,8 @@ class RepositoryDao {
                 .and(PROJECT_ID.eq(projectId))
                 .and(IS_DELETED.eq(false))
                 .fetchAny() ?: throw NotFoundException(
-                I18nUtil.getCodeLanMessage(messageCode = GIT_NOT_FOUND)
-                )
+                I18nUtil.getCodeLanMessage(messageCode = GIT_NOT_FOUND, params = arrayOf(repositoryName))
+            )
         }
     }
 
