@@ -147,4 +147,16 @@ interface OpWorkspaceResource {
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String
     ): Result<Boolean>
+
+    @ApiOperation("手动执行云桌面清理job")
+    @GET
+    @Path("/autoCleanJob4Windows")
+    fun autoCleanJob4Windows(
+        @ApiParam(value = "用户ID", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam(value = "为true时，只执行自动作业中的销毁作业", required = false)
+        @QueryParam("type")
+        type: String?
+    ): Result<Boolean>
 }
