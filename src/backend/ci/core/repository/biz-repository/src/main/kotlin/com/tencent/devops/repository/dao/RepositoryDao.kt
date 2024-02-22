@@ -424,15 +424,15 @@ class RepositoryDao {
         }
     }
 
-    fun get(
+    fun getById(
         dslContext: DSLContext,
         projectId: String,
-        repositoryHashId: String
+        repositoryId: Long
     ): TRepositoryRecord? {
         with(TRepository.T_REPOSITORY) {
             return dslContext.selectFrom(this)
                 .where(
-                    PROJECT_ID.eq(projectId).and(REPOSITORY_HASH_ID.eq(repositoryHashId))
+                    PROJECT_ID.eq(projectId).and(REPOSITORY_ID.eq(repositoryId))
                         .and(IS_DELETED.eq(false))
                 )
                 .fetchAny()

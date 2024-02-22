@@ -1172,10 +1172,10 @@ class RepositoryService @Autowired constructor(
         val repoInfos = mutableListOf <TRepositoryRecord>()
         // 过滤无效数据
         atomRefRepositoryInfo.forEach {
-            val repositoryRecord = repositoryDao.get(
+            val repositoryRecord = repositoryDao.getById(
                 dslContext = dslContext,
                 projectId = it.projectId,
-                repositoryHashId = it.repositoryHashId
+                repositoryId = HashUtil.decodeOtherIdToLong(it.repositoryHashId)
             ) ?: return@forEach
             repoInfos.add(repositoryRecord)
         }
@@ -1184,7 +1184,7 @@ class RepositoryService @Autowired constructor(
             repositoryDao.insertAtomRepoFlag(
                 dslContext = dslContext,
                 projectId = it.projectId,
-                repositoryId = HashUtil.decodeOtherIdToLong(it.repositoryHashId)
+                repositoryId = it.repositoryId
             )
         }
     }
