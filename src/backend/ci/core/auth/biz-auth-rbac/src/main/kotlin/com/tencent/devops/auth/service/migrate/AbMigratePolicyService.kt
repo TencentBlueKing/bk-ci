@@ -532,6 +532,7 @@ abstract class AbMigratePolicyService(
         val managerRoleGroupDTO = ManagerRoleGroupDTO.builder()
             .groups(listOf(managerRoleGroup))
             .createAttributes(false)
+            .syncSubjectTemplate(true)
             .build()
         val groupId = v2ManagerService.batchCreateRoleGroupV2(gradeManagerId, managerRoleGroupDTO)
         val groupConfig = authResourceGroupConfigDao.getByName(
@@ -577,6 +578,7 @@ abstract class AbMigratePolicyService(
         val managerRoleGroupDTO = ManagerRoleGroupDTO.builder()
             .groups(listOf(managerRoleGroup))
             .createAttributes(false)
+            .syncSubjectTemplate(true)
             .build()
         val iamGroupId = v2ManagerService.batchCreateRoleGroupV2(gradeManagerId, managerRoleGroupDTO)
 
