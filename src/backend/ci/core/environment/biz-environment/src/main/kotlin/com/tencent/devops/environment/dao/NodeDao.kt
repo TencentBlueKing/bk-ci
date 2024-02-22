@@ -233,7 +233,7 @@ class NodeDao {
     ): Result<Record4<Long, String, Boolean, String>> {
         with(TNode.T_NODE) {
             return dslContext.select(
-                NODE_ID.`as`(T_NODE_HOST_ID),
+                NODE_ID.`as`(T_NODE_NODE_ID),
                 NODE_IP.`as`(T_NODE_NODE_IP),
                 AGENT_STATUS.`as`(T_NODE_AGENT_STATUS),
                 AGENT_VERSION.`as`(T_NODE_AGENT_VERSION)
