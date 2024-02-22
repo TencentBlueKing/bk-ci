@@ -43,10 +43,10 @@ import com.tencent.devops.store.service.common.StoreNotifyService
 import com.tencent.devops.store.service.common.StoreUserService
 import com.tencent.devops.store.service.common.impl.StoreCommonServiceImpl
 import com.tencent.devops.store.service.common.impl.StoreLogoServiceImpl
-import com.tencent.devops.store.service.common.sample.impl.SampleStoreCommonServiceImpl
-import com.tencent.devops.store.service.common.sample.impl.SampleStoreLogoServiceImpl
-import com.tencent.devops.store.service.common.sample.impl.SampleStoreNotifyServiceImpl
-import com.tencent.devops.store.service.common.sample.impl.SampleStoreUserServiceImpl
+import com.tencent.devops.store.service.common.impl.SampleStoreCommonServiceImpl
+import com.tencent.devops.store.service.common.impl.SampleStoreLogoServiceImpl
+import com.tencent.devops.store.service.common.impl.SampleStoreNotifyServiceImpl
+import com.tencent.devops.store.service.common.impl.SampleStoreUserServiceImpl
 import com.tencent.devops.store.service.container.impl.ContainerServiceImpl
 import com.tencent.devops.store.service.container.impl.SampleContainerServiceImpl
 import com.tencent.devops.store.service.template.TemplateNotifyService
