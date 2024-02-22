@@ -167,7 +167,7 @@
                 searchModel: 'log',
                 stepInstanceData: {},
                 stepResultGroupList: [],
-                jobInstanceFinished: false,
+                jobInstanceFinished: true,
                 stepStatusMap: {},
                 statusStyleMap,
                 checkStatus,

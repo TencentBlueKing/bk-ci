@@ -56,7 +56,7 @@
             show-overflow-tooltip
         >
             <template slot-scope="{ row }">
-                {{ row.bkCloudAreaName || row.bkCloudId || '--' }}
+                {{ row.bkCloudName || row.bkCloudId || '--' }}
             </template>
         </bk-table-column>
         <bk-table-column

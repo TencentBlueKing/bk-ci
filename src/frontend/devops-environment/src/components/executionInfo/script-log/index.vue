@@ -131,7 +131,7 @@
             /**
              * @desc 获取脚本日志
              */
-            fetchLogContent (isLoading = true) {
+            fetchLogContent () {
                 if (!this.ip) {
                     this.isLoading = false
                     if (this.editor) {
@@ -139,7 +139,9 @@
                         this.editor.clearSelection()
                     }
                 }
-                this.isLoading = isLoading
+                if (this.finished) {
+                    this.isLoading = true
+                }
 
                 this.getJobInstanceLogs({
                     projectId: this.projectId,
@@ -154,7 +156,8 @@
                         
                         if (!this.finished) {
                             setTimeout(() => {
-                                this.fetchLogContent(false)
+                                this.autoScrollTimeout()
+                                this.fetchLogContent()
                             }, 5000)
                         }
                     })

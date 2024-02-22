@@ -160,6 +160,7 @@
                                     <!-- 状态icon -->
                                     <StatusIcon v-if="successStatus.includes(props.row.nodeStatus)" status="success" />
                                     <StatusIcon v-else-if="failStatus.includes(props.row.nodeStatus)" status="error" />
+                                    <StatusIcon v-else-if="['NOT_INSTALLED'].includes(props.row.nodeStatus)" status="normal" />
                                 
                                     <div v-else-if="runningStatus.includes(props.row.nodeStatus)"
                                         class="bk-spin-loading bk-spin-loading-mini bk-spin-loading-primary loading-icon"
@@ -181,6 +182,7 @@
                                         </span>
                                         <span
                                             v-if="props.row.nodeStatus === 'RUNNING'"
+                                            v-bk-tooltips="$t('environment.查看日志')"
                                             class="log-icon-box"
                                             @click="handleShowLogDetail(props.row)">
                                             <Icon
@@ -419,8 +421,9 @@
         <!-- 重装/安装Agent -->
         <installAgent
             ref="installAgent"
+            :task-id.sync="taskId"
             :inner-ip="installAgentIp"
-            @install-end="handleInstallEnd"
+            @install="handleInstallEnd"
         />
     </div>
 </template>
@@ -436,7 +439,6 @@
     import StatusIcon from '@/components/status-icon.vue'
     import SearchSelect from '@blueking/search-select'
     import { getQueryString } from '@/utils/util'
-    import webSocketMessage from '../utils/webSocketMessage.js'
     import { NODE_RESOURCE_ACTION, NODE_RESOURCE_TYPE } from '@/utils/permission'
     // import emptyNode from './empty_node'
     import '@blueking/search-select/dist/styles/index.css'
@@ -564,7 +566,8 @@
                 buildNodes: ['DEVCLOUD', 'THIRDPARTY'], // Build 构建用途的节点 - 第三方构建机类型
                 deploymentNodes: ['CC', 'CMDB', 'UNKNOWN', 'OTHER'], // deployment 部署用途的节点
                 installAgentIp: '',
-                isDeleteIng: false
+                isDeleteIng: false,
+                taskId: 0 // 查询安装日志 -> 安装Agent任务Id
             }
         },
         computed: {
@@ -711,8 +714,6 @@
                 this.constructImportForm.model = urlParams
                 this.toImportNode('construct')
             }
-            webSocketMessage.installWsMessage(this.requestList)
-            this.$once('hook:beforeDestroy', webSocketMessage.unInstallWsMessage)
         },
         async mounted () {
             await this.init()
@@ -1080,6 +1081,7 @@
 
             handleShowLogDetail (node) {
                 this.installAgentIp = node.ip
+                this.taskId = node.taskId
                 this.$refs.installAgent.isShow = true
             },
 
@@ -1222,8 +1224,6 @@
                     type: 'warning',
                     subHeader: content,
                     confirmFn: async () => {
-                        clearTimeout(this.timer)
-
                         let message, theme
                         try {
                             await this.$store.dispatch('environment/toDestoryNode', {
@@ -1541,6 +1541,7 @@
               }
             }
             .loading-icon {
+                display: inline-flex;
                 position: relative;
                 top: -2px;
                 margin-right: 5px;

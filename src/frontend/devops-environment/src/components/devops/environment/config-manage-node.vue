@@ -329,7 +329,7 @@
                     return
                 }
                 this.selectedNodeList = selection.filter(i => {
-                    return !this.nodeList.find(val => val.ip === i.ip)
+                    return !this.nodeList.find(val => val.nodeType === 'CMDB' && val.ip === i.ip)
                 })
             },
             toggleAllSelect (selection) {
@@ -338,7 +338,7 @@
                     return
                 }
                 this.selectedNodeList = selection.filter(i => {
-                    return !this.nodeList.find(val => val.ip === i.ip)
+                    return !this.nodeList.find(val => val.nodeType === 'CMDB' && val.ip === i.ip)
                 })
             },
             async confirmFn () {

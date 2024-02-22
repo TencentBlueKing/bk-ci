@@ -408,5 +408,9 @@
     "其他": "Others",
     "关闭": "Close",
     "确认重新导入节点吗？": "Confirm to re-import the [{0}] node?",
-    "只读模式不支持编辑": "You are in readonly mode, edit is not able."
+    "只读模式不支持编辑": "You are in readonly mode, edit is not able.",
+    "查看日志": "View logs",
+    "确认离开当前页？": "Are you sure to leave now?",
+    "离开将会导致未保存信息丢失": "Your changes will be lost if you close without saving.",
+    "离开": "Leave"
 }

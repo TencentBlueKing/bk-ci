@@ -3,7 +3,8 @@
         ext-cls="install-agent-side"
         :is-show.sync="isShow"
         quick-close
-        :width="600"
+        :width="700"
+        :before-close="handleBeforeClose"
     >
         <div class="sideslider-title" slot="header">
             {{ $t('environment.installGseAgent') }}
@@ -21,7 +22,10 @@
                     :required="true"
                     property="os"
                 >
-                    <bk-radio-group v-model="formData.osType">
+                    <bk-radio-group
+                        v-model="formData.osType"
+                        @change="handleChangeData"
+                    >
                         <bk-radio value="LINUX" class="mr20">Linux</bk-radio>
                         <bk-radio value="WINDOWS" class="mr20">Windows</bk-radio>
                         <bk-radio value="AIX" class="mr20">Aix</bk-radio>
@@ -36,6 +40,7 @@
                     <bk-input
                         v-model="formData.account"
                         :placeholder="$t('environment.accountPlaceholder')"
+                        @change="handleChangeData"
                     />
                 </bk-form-item>
                 <bk-form-item
@@ -43,7 +48,10 @@
                     :required="true"
                     property="authType"
                 >
-                    <bk-radio-group v-model="formData.authType">
+                    <bk-radio-group
+                        v-model="formData.authType"
+                        @change="handleChangeData"
+                    >
                         <bk-radio value="PASSWORD" class="mr20">{{ $t('environment.password') }}</bk-radio>
                         <bk-radio value="KEY" class="mr20">{{ $t('environment.key') }}</bk-radio>
                     </bk-radio-group>
@@ -58,6 +66,7 @@
                         v-model="formData.password"
                         type="password"
                         :placeholder="$t('environment.passwordPlaceholder')"
+                        @change="handleChangeData"
                     />
                     <div class="password-tips">{{ $t('environment.passwordTips') }}</div>
                 </bk-form-item>
@@ -86,6 +95,7 @@
                 >
                     <bk-select
                         v-model="formData.installChannelId"
+                        @change="handleChangeData"
                     >
                         <bk-option v-for="option in channelList"
                             :key="option.id"
@@ -162,6 +172,9 @@
             innerIp: {
                 type: String,
                 default: ''
+            },
+            taskId: {
+                type: Number
             }
         },
         data () {
@@ -185,7 +198,7 @@
                 getDefaultFormData,
                 channelList: [],
                 isEditing: true,
-                jobId: -1,
+                jobId: 0,
                 installStatus: '',
                 taskLog: '',
                 keyFileFormData: new FormData()
@@ -202,6 +215,9 @@
                     this.fetchChannelList()
                     this.formData.innerIp = this.innerIp
                 } else {
+                    if (this.jobId) {
+                        this.$emit('install')
+                    }
                     this.handleCancel()
                 }
             },
@@ -210,6 +226,17 @@
                     this.formData.account = 'root'
                 } else {
                     this.formData.account = 'Administrator'
+                }
+            },
+            async taskId (val) {
+                if (val) {
+                    this.$nextTick(() => {
+                        this.initEditor()
+                    })
+                    this.isEditing = false
+                    this.jobId = val
+                    await this.fetchInstallAgentStatus()
+                    await this.fetchInstallAgentTaskLog()
                 }
             }
         },
@@ -284,6 +311,7 @@
                         await this.fetchInstallAgentStatus()
                         await this.fetchInstallAgentTaskLog()
                     }, 1000)
+                    this.$emit('install')
                 } catch (e) {
                     this.$bkMessage({
                         theme: 'error',
@@ -298,10 +326,12 @@
                 this.isLoading = false
                 this.isEditing = true
                 this.installStatus = ''
-                this.jobId = -1
+                this.jobId = 0
                 this.keyFile = null
                 this.keyFileFormData = new FormData()
                 this.formData = this.getDefaultFormData()
+                this.$emit('update:taskId', 0)
+                window.changeFlag = false
             },
             
             async fetchChannelList () {
@@ -321,6 +351,7 @@
             },
 
             async fetchInstallAgentStatus () {
+                if (!this.jobId) return
                 const res = await this.$store.dispatch('environment/getAgentTaskStatus', {
                     projectId: this.projectId,
                     jobId: this.jobId,
@@ -333,16 +364,19 @@
                 this.instanceId = res.list.find(i => i.innerIp === this.innerIp).instanceId
 
                 if (['PENDING', 'RUNNING'].includes(this.installStatus)) {
-                    setTimeout(() => {
-                        this.fetchInstallAgentStatus()
-                        this.fetchInstallAgentTaskLog()
+                    setTimeout(async () => {
+                        await this.fetchInstallAgentStatus()
+                        await this.fetchInstallAgentTaskLog()
                     }, 5000)
                 } else {
-                    this.$emit('install-end')
+                    setTimeout(() => {
+                        this.$emit('install')
+                    }, 5000)
                 }
             },
 
             async fetchInstallAgentTaskLog () {
+                if (!this.jobId) return
                 const res = await this.$store.dispatch('environment/getAgentTaskLog', {
                     projectId: this.projectId,
                     jobId: this.jobId,
@@ -365,7 +399,34 @@
             },
 
             handleUpload (option) {
+                this.handleChangeData()
                 this.keyFileFormData.append('keyFile', option.fileObj.origin)
+            },
+
+            handleChangeData () {
+                window.changeFlag = true
+            },
+
+            handleBeforeClose () {
+                if (window.changeFlag && !this.jobId) {
+                    this.$bkInfo({
+                        title: this.$t('environment.确认离开当前页？'),
+                        subHeader: this.$createElement('p', {
+                            style: {
+                                color: '#63656e',
+                                fontSize: '14px',
+                                textAlign: 'center'
+                            }
+                        }, this.$t('environment.离开将会导致未保存信息丢失')),
+                        okText: this.$t('environment.离开'),
+                        confirmFn: () => {
+                            this.isShow = false
+                            return true
+                        }
+                    })
+                } else {
+                    this.isShow = false
+                }
             }
         }
     }
