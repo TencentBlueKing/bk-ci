@@ -45,7 +45,6 @@ class SwaggerResource : OpenApiResource() {
         "Authorization"
     )
 
-
     override fun getOpenApi(headers: HttpHeaders?, uriInfo: UriInfo?, type: String?): Response {
         val response = super.getOpenApi(headers, uriInfo, type)
         val responseHeaders = response.headers

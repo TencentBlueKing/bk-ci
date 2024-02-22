@@ -85,6 +85,10 @@ import io.swagger.v3.oas.models.media.StringSchema
 import io.swagger.v3.oas.models.parameters.Parameter
 import io.swagger.v3.oas.models.parameters.RequestBody
 import io.swagger.v3.oas.models.responses.ApiResponse
+import org.apache.commons.lang3.StringUtils
+import org.reflections.Reflections
+import org.springframework.beans.factory.annotation.Value
+import org.springframework.stereotype.Service
 import kotlin.jvm.internal.DefaultConstructorMarker
 import kotlin.reflect.KFunction
 import kotlin.reflect.KType
@@ -92,10 +96,6 @@ import kotlin.reflect.full.memberProperties
 import kotlin.reflect.jvm.isAccessible
 import kotlin.reflect.jvm.javaConstructor
 import kotlin.reflect.jvm.javaType
-import org.apache.commons.lang3.StringUtils
-import org.reflections.Reflections
-import org.springframework.beans.factory.annotation.Value
-import org.springframework.stereotype.Service
 import io.swagger.v3.oas.annotations.media.Schema as SchemaAnnotation
 
 @Service
@@ -642,7 +642,6 @@ class DocumentService {
                     )
                 }
             }
-
         }
     }
 
@@ -857,7 +856,6 @@ class DocumentService {
             return res
         }
 
-
         /**
          * 例子:
          * ```java
@@ -891,7 +889,7 @@ class DocumentService {
             if (clazz.isEnum) {
                 return clazz.enumConstants.first()
             }
-            if (clazz.simpleName == "GithubRepository"){
+            if (clazz.simpleName == "GithubRepository") {
                 println()
             }
             println(clazz.name)

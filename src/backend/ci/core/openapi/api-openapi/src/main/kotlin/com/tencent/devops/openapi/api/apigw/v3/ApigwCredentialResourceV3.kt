@@ -214,7 +214,7 @@ interface ApigwCredentialResourceV3 {
                             "v3": "secretKey",
                             "v4": "region"
                         }"""
-                ),
+                )
             ]
         )
         credential: CredentialCreate

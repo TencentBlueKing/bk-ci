@@ -38,9 +38,9 @@ import com.tencent.devops.stream.pojo.StreamProjectCIInfo
 import com.tencent.devops.stream.pojo.enums.StreamProjectType
 import com.tencent.devops.stream.pojo.enums.StreamProjectsOrder
 import com.tencent.devops.stream.pojo.enums.StreamSortAscOrDesc
-import io.swagger.v3.oas.annotations.tags.Tag
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
+import io.swagger.v3.oas.annotations.tags.Tag
 import javax.ws.rs.Consumes
 import javax.ws.rs.GET
 import javax.ws.rs.HeaderParam
@@ -96,35 +96,35 @@ interface UserStreamProjectResource {
         size: Long?
     ): Result<List<StreamProjectCIInfo>>
 
-    @Operation(summary ="获取项目信息")
+    @Operation(summary = "获取项目信息")
     @GET
     @Path("/{english_name}")
     fun getProjectInfo(
-        @Parameter(description ="userId", required = true)
+        @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String,
-        @Parameter(description ="项目ID英文名标识", required = true)
+        @Parameter(description = "项目ID英文名标识", required = true)
         @PathParam("english_name")
         projectId: String
     ): Result<ProjectVO>
 
-    @Operation(summary ="更新项目组织架构和归属")
+    @Operation(summary = "更新项目组织架构和归属")
     @PUT
     @Path("/{english_name}/organization")
     fun updateProjectOrganization(
-        @Parameter(description ="userId", required = true)
+        @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String,
-        @Parameter(description ="项目ID英文名标识", required = true)
+        @Parameter(description = "项目ID英文名标识", required = true)
         @PathParam("english_name")
         projectId: String,
-        @Parameter(description ="产品ID", required = true)
+        @Parameter(description = "产品ID", required = true)
         @QueryParam("productId")
         productId: Int,
-        @Parameter(description ="产品名称", required = true)
+        @Parameter(description = "产品名称", required = true)
         @QueryParam("productName")
         productName: String,
-        @Parameter(description ="项目组织", required = true)
+        @Parameter(description = "项目组织", required = true)
         organization: ProjectOrganizationInfo
     ): Result<Boolean>
 }
