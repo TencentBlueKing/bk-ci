@@ -295,7 +295,8 @@ class NodeService @Autowired constructor(
                 agentVersion = it.agentVersion,
                 agentHashId = HashUtil.encodeLongId(thirdPartyAgent?.id ?: 0L),
                 cloudAreaId = it.cloudAreaId,
-                osType = it.osType
+                osType = it.osType,
+                hostId = it.hostId
             )
         }
     }

@@ -32,6 +32,8 @@ import io.swagger.annotations.ApiModelProperty
 
 @ApiModel("安装agent的请求信息中的 host信息")
 data class HostForInstallAgent(
+    @ApiModelProperty(value = "hostID")
+    val bkHostId: Int?,
     @ApiModelProperty(value = "管控区域ID")
     val bkCloudId: Int?,
     @ApiModelProperty(value = "是否自动选择安装通道，true-自动选择，false-读取installChannelId字段", required = true)

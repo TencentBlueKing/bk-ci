@@ -92,7 +92,8 @@ data class AgentService @Autowired constructor(
     private val fileService: FileService,
     private val dslContext: DSLContext,
     private val nodeDao: NodeDao,
-    private val redisOperation: RedisOperation
+    private val redisOperation: RedisOperation,
+    private val queryFromCCService: QueryFromCCService
 ) {
     @Value("\${environment.cc.bkBizScopeId:#{null}}")
     val bkBizScopeId: Int = 0
@@ -136,13 +137,16 @@ data class AgentService @Autowired constructor(
         NodeManApi.setNodemanOperationName("installAgent")
         val installAgentJson = JSONObject(installAgentReqString)
         val installAgentReq = mapper.readValue<InstallAgentReq>(installAgentJson.toString())
+        val hostIdToqueryCCResDataMap = queryFromCCService.queryCCFindHostBizRelations(
+            installAgentReq.hosts.mapNotNull { it.bkHostId?.toLong() }
+        ).data?.associateBy { it.bkHostId }
         val installAgentRequest = AgentInstallAgentReq(
             jobType = DEFAULT_INSTALL_AGENT_JOB_TYPE,
             hosts = installAgentReq.hosts.map {
                 AgentHostForInstallAgent(
-                    bkBizId = bkBizScopeId,
+                    bkBizId = hostIdToqueryCCResDataMap?.get(it.bkHostId)?.bkBizId ?:bkBizScopeId,
                     bkCloudId = it.bkCloudId ?: DEFAULT_CLOUD_ID,
-                    bkHostId = null, bkAddressing = null,
+                    bkHostId = it.bkHostId, bkAddressing = null,
                     apId = DEFAULT_INSTALL_AGENT_AP_ID,
                     installChannelId = if (it.isAutoChooseInstallChannelId) {
                         chooseAgentInstallChannelIdService.autoChooseAgentInstallChannelId(

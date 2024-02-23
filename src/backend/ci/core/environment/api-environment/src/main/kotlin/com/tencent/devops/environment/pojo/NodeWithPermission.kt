@@ -87,5 +87,7 @@ data class NodeWithPermission(
     @ApiModelProperty("云区域ID")
     val cloudAreaId: Long?,
     @ApiModelProperty("操作系统类型")
-    val osType: String?
+    val osType: String?,
+    @ApiModelProperty("hostID")
+    val hostId: Long? = null,
 )
