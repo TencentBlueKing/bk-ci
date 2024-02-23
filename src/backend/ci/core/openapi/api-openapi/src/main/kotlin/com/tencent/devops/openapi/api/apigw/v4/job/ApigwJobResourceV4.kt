@@ -132,7 +132,10 @@ interface ApigwJobResourceV4 {
         returnIpResult: Boolean?
     ): JobResult<QueryJobInstanceStatusResult>
 
-    @Operation(summary = "批量查询日志的Job接口", tags = ["v4_app_job_query_job_instance_logs", "v4_user_job_query_job_instance_logs"])
+    @Operation(
+        summary = "批量查询日志的Job接口",
+        tags = ["v4_app_job_query_job_instance_logs", "v4_user_job_query_job_instance_logs"]
+    )
     @POST
     @Path("/{projectId}/query_job_instance_logs")
     fun queryJobInstanceLogs(
