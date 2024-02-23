@@ -29,7 +29,6 @@ package com.tencent.devops.environment.pojo.job.agentreq
 
 import com.fasterxml.jackson.annotation.JsonProperty
 
-
 import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "查询agent任务状态的接口的请求信息")

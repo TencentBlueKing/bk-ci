@@ -28,7 +28,7 @@
 package com.tencent.devops.environment.pojo.job.jobcloudreq
 
 import com.fasterxml.jackson.annotation.JsonProperty
-
+import io.swagger.v3.oas.annotations.media.Schema
 
 data class JobCloudIpInfo(
     @get:Schema(title = "云区域ID")

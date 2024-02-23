@@ -3,7 +3,6 @@ package com.tencent.devops.environment.pojo.job.jobcloudres
 import com.fasterxml.jackson.annotation.JsonProperty
 import io.swagger.v3.oas.annotations.media.Schema
 
-
 @Schema(title = "有权限账号")
 data class JobCloudAuthorizedAccount(
     @get:Schema(title = "帐号ID", required = true)

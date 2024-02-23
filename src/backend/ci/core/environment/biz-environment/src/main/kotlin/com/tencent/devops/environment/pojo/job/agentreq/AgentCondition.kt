@@ -29,7 +29,6 @@ package com.tencent.devops.environment.pojo.job.agentreq
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-
 data class AgentCondition<T>(
     @get:Schema(title = "查询类型", description = "1: ip，IP地址 2:instance_id，主机实例ID 3: status，执行状态")
     val key: String,

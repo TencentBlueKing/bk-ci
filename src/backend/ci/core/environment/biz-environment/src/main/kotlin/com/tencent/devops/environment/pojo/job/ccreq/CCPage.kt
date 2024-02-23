@@ -1,7 +1,7 @@
 package com.tencent.devops.environment.pojo.job.ccreq
 
 import com.fasterxml.jackson.annotation.JsonProperty
-
+import io.swagger.v3.oas.annotations.media.Schema
 
 data class CCPage(
     @get:Schema(title = "记录开始位置", required = true)

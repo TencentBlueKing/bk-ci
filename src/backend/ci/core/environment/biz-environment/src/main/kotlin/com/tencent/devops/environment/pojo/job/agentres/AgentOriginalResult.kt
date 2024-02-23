@@ -29,7 +29,6 @@ package com.tencent.devops.environment.pojo.job.agentres
 
 import com.tencent.devops.common.api.annotation.BkFieldI18n
 
-
 import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "Job数据返回包装模型")

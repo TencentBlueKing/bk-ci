@@ -28,7 +28,7 @@
 package com.tencent.devops.environment.pojo.job.jobcloudreq
 
 import com.fasterxml.jackson.annotation.JsonProperty
-
+import io.swagger.v3.oas.annotations.media.Schema
 
 data class JobCloudQueryAgentStatusFromJobReq(
     @get:Schema(title = "主机ID数组，单次查询主机数量不可超过5000")
