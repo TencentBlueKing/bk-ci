@@ -51,8 +51,8 @@ data class ThirdPartyAgentStaticInfo(
     val ip: String,
     @get:Schema(title = "hostName", required = false)
     val hostName: String?,
-    @get:Schema("状态")
+    @get:Schema(title = "状态")
     val status: Int?,
-    @get:Schema("agent版本")
+    @get:Schema(title = "agent版本")
     val masterVersion: String?
 )

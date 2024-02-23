@@ -54,8 +54,8 @@ data class ThirdPartyAgent(
     val createTime: Long,
     @get:Schema(title = "并行执行的个数", required = false)
     val parallelTaskCount: Int? = 4,
-    @get:Schema("Docker构建机并行执行的个数", required = false)
+    @get:Schema(title = "Docker构建机并行执行的个数", required = false)
     val dockerParallelTaskCount: Int? = 4,
-    @get:Schema("agent版本")
+    @get:Schema(title = "agent版本")
     val masterVersion: String?
 )
