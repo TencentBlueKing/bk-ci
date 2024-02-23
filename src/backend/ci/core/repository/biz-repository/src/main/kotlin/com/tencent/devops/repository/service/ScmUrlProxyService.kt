@@ -7,10 +7,7 @@ import org.springframework.stereotype.Service
  *
  * 当repository服务无法直接访问源代码库管理平台时，可以通过代理实现
  */
-@Service
-class ScmUrlProxyService {
+interface ScmUrlProxyService {
 
-    fun getProxyUrl(url: String): String {
-        return url
-    }
+    fun getProxyUrl(url: String): String
 }
