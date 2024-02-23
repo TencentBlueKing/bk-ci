@@ -78,20 +78,22 @@ import com.tencent.devops.remotedev.service.BkTicketService
 import com.tencent.devops.remotedev.service.PermissionService
 import com.tencent.devops.remotedev.service.WhiteListService
 import com.tencent.devops.remotedev.service.WindowsResourceConfigService
+import com.tencent.devops.remotedev.service.gitproxy.GitProxyTGitService
 import com.tencent.devops.remotedev.service.redis.RedisCacheService
 import com.tencent.devops.remotedev.service.redis.RedisHeartBeat
 import com.tencent.devops.remotedev.service.redis.RedisKeys
 import com.tencent.devops.remotedev.service.redis.RedisKeys.REDIS_OFFICIAL_DEVFILE_KEY
+import com.tencent.devops.remotedev.service.tcloud.TCloudCfsService
 import com.tencent.devops.remotedev.service.transfer.RemoteDevGitTransfer
 import com.tencent.devops.remotedev.utils.DevfileUtil
 import com.tencent.devops.scm.utils.code.git.GitUtils
-import java.util.concurrent.Executors
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.slf4j.MDC
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
+import java.util.concurrent.Executors
 
 @Service
 @Suppress("ALL")
@@ -117,7 +119,9 @@ class CreateControl @Autowired constructor(
     private val deliverControl: DeliverControl,
     private val bkccService: BKCCService,
     private val windowsSpecResourceDao: WindowsSpecResourceDao,
-    private val notifyControl: NotifyControl
+    private val notifyControl: NotifyControl,
+    private val tCloudCfsService: TCloudCfsService,
+    private val gitProxyTGitService: GitProxyTGitService
 ) {
     private val executor = Executors.newCachedThreadPool()
 
@@ -129,7 +133,7 @@ class CreateControl @Autowired constructor(
         fun sumResourceVmFree(res: List<ResourceVmRespData>?, zoneShortName: String, size: String): Int? {
             return res?.filter {
                 it.zoneId.startsWith(zoneShortName) &&
-                        it.machineResources?.any { ma -> ma.machineType == size } == true
+                    it.machineResources?.any { ma -> ma.machineType == size } == true
             }?.sumOf {
                 it.machineResources
                     ?.filter { res -> res.machineType == size }
@@ -301,7 +305,8 @@ class CreateControl @Autowired constructor(
                 centerName = projectInfo.centerName,
                 groupName = null,
                 dslContext = dslContext,
-                projectName = projectInfo.projectName
+                projectName = projectInfo.projectName,
+                businessLineNmae = projectInfo.businessLineName ?: ""
             )
 
             // 审计
@@ -499,8 +504,8 @@ class CreateControl @Autowired constructor(
 
             // 创建成功时给 cmdb 添加字段方便监控检索
             val hostIdSub = event.environmentIp?.split(".")
-            if (!hostIdSub.isNullOrEmpty() && ws.workspaceSystemType.checkWindows()) {
-                val ip = hostIdSub.subList(1, hostIdSub.size).joinToString(separator = ".")
+            val ip = hostIdSub?.subList(1, hostIdSub.size)?.joinToString(separator = ".")
+            if (!ip.isNullOrBlank() && ws.workspaceSystemType.checkWindows()) {
                 bkccService.updateHostMonitor(
                     regionId = detail.regionId,
                     workspaceName = null,
@@ -512,7 +517,14 @@ class CreateControl @Autowired constructor(
                 executor.execute {
                     workspaceCommon.makeDiskMount(ip, event.userId)
                 }
+
+                // 给有cfs的机器绑定权限组
+                tCloudCfsService.addOrRemoveCfsPermissionRule(ws.projectId, ip, false)
+
+                // 关联tgit相关
+                gitProxyTGitService.addOrRemoveAclIp(ws.projectId, ip, false)
             }
+
             if (!ws.workspaceSystemType.afterCreateNeedWs(ws.ownerType)) {
                 // 直接return 不做websocket
                 return
@@ -626,7 +638,8 @@ class CreateControl @Autowired constructor(
                 centerName = projectInfo.centerName,
                 groupName = null,
                 dslContext = dslContext,
-                projectName = projectInfo.projectName
+                projectName = projectInfo.projectName,
+                businessLineNmae = projectInfo.businessLineName
             )
         } else {
             val userInfo = kotlin.runCatching {
@@ -641,7 +654,8 @@ class CreateControl @Autowired constructor(
                 centerName = userInfo?.centerName,
                 groupName = userInfo?.groupName,
                 dslContext = dslContext,
-                projectName = ws.projectId ?: ""
+                projectName = ws.projectId ?: "",
+                businessLineNmae = userInfo?.businessLineName
             )
         }
 
@@ -732,7 +746,7 @@ class CreateControl @Autowired constructor(
         if (yaml.isBlank()) {
             logger.warn(
                 "create workspace get devfile blank,return." +
-                        "|useOfficialDevfile=${workspaceCreate.useOfficialDevfile}"
+                    "|useOfficialDevfile=${workspaceCreate.useOfficialDevfile}"
             )
             throw ErrorCodeException(
                 errorCode = ErrorCodeEnum.DEVFILE_ERROR.errorCode,
@@ -936,9 +950,9 @@ class CreateControl @Autowired constructor(
     private fun startCloudResourceCountCheck(type: String, zone: String) =
         workspaceCommon.syncStartCloudResourceList().count {
             it.status == 11 &&
-                    it.machineType == type &&
-                    it.zoneId.replace(Regex("\\d+"), "") == zone &&
-                    it.locked != true
+                it.machineType == type &&
+                it.zoneId.replace(Regex("\\d+"), "") == zone &&
+                it.locked != true
         }
 
     private fun doPreparing(workspace: Workspace) {
@@ -955,7 +969,8 @@ class CreateControl @Autowired constructor(
             centerName = userInfo?.centerName,
             groupName = userInfo?.groupName,
             dslContext = dslContext,
-            projectName = workspace.projectId ?: ""
+            projectName = workspace.projectId ?: "",
+            businessLineNmae = userInfo?.businessLineName
         )
     }
 
@@ -966,7 +981,7 @@ class CreateControl @Autowired constructor(
             userId
         }
         return subUserId.replace(Regex("[@_]"), "-") +
-                "-${UUIDUtil.generate().takeLast(Constansts.workspaceNameSuffixLimitLen)}"
+            "-${UUIDUtil.generate().takeLast(Constansts.workspaceNameSuffixLimitLen)}"
     }
 
     // 判断用户定义的镜像是否在默认镜像白名单列表中

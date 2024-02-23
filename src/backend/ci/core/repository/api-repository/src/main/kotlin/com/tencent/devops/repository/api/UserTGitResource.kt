@@ -35,9 +35,9 @@ import com.tencent.devops.repository.pojo.enums.RedirectUrlTypeEnum
 import com.tencent.devops.scm.code.git.api.GitBranch
 import com.tencent.devops.scm.code.git.api.GitTag
 import com.tencent.devops.scm.pojo.Project
-import io.swagger.annotations.Api
-import io.swagger.annotations.ApiOperation
-import io.swagger.annotations.ApiParam
+import io.swagger.v3.oas.annotations.tags.Tag
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.Parameter
 import javax.ws.rs.Consumes
 import javax.ws.rs.DELETE
 import javax.ws.rs.GET
@@ -47,110 +47,110 @@ import javax.ws.rs.Produces
 import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
-@Api(tags = ["USER_OAUTH_GIT"], description = "用户-git的oauth")
+@Tag(name = "USER_OAUTH_GIT", description = "用户-git的oauth")
 @Path("/user/tgit/")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface UserTGitResource {
 
-    @ApiOperation("根据用户ID, 通过oauth方式获取项目")
+    @Operation(summary = "根据用户ID, 通过oauth方式获取项目")
     @GET
     @Path("/getProject")
     fun getProject(
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam(value = "用户ID", required = true)
+        @Parameter(description = "用户ID", required = true)
         @QueryParam("projectId")
         projectId: String,
-        @ApiParam(value = "repo hash iD", required = false)
+        @Parameter(description = "repo hash iD", required = false)
         @QueryParam("repoHashId")
         repoHashId: String?,
-        @ApiParam(value = "工蜂代码库名字", required = false)
+        @Parameter(description = "工蜂代码库名字", required = false)
         @QueryParam("search")
         search: String? = null
     ): Result<AuthorizeResult>
 
-    @ApiOperation("根据用户ID, 通过oauth方式获取项目")
+    @Operation(summary = "根据用户ID, 通过oauth方式获取项目")
     @GET
     @Path("/getProjectList")
     fun getProjectList(
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam(value = "第几页", required = false)
+        @Parameter(description = "第几页", required = false)
         @QueryParam("page")
         page: Int?,
-        @ApiParam(value = "每页条数", required = false)
+        @Parameter(description = "每页条数", required = false)
         @QueryParam("pageSize")
         pageSize: Int?
     ): Result<List<Project>>
 
-    @ApiOperation("根据用户ID, 通过oauth方式获取项目分支")
+    @Operation(summary = "根据用户ID, 通过oauth方式获取项目分支")
     @GET
     @Path("/getBranch")
     fun getBranch(
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam(value = "仓库标识", required = true)
+        @Parameter(description = "仓库标识", required = true)
         @QueryParam("repository")
         repository: String,
-        @ApiParam(value = "第几页", required = false)
+        @Parameter(description = "第几页", required = false)
         @QueryParam("page")
         page: Int?,
-        @ApiParam(value = "每页条数", required = false)
+        @Parameter(description = "每页条数", required = false)
         @QueryParam("pageSize")
         pageSize: Int?
     ): Result<List<GitBranch>>
 
-    @ApiOperation("根据用户ID, 通过oauth方式获取项目Tag")
+    @Operation(summary = "根据用户ID, 通过oauth方式获取项目Tag")
     @GET
     @Path("/getTag")
     fun getTag(
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam(value = "仓库标识", required = true)
+        @Parameter(description = "仓库标识", required = true)
         @QueryParam("repository")
         repository: String,
-        @ApiParam(value = "第几页", required = false)
+        @Parameter(description = "第几页", required = false)
         @QueryParam("page")
         page: Int?,
-        @ApiParam(value = "每页条数", required = false)
+        @Parameter(description = "每页条数", required = false)
         @QueryParam("pageSize")
         pageSize: Int?
     ): Result<List<GitTag>>
 
-    @ApiOperation("删除用户的token ID")
+    @Operation(summary = "删除用户的token ID")
     @DELETE
     @Path("/deleteToken")
     fun deleteToken(
-        @ApiParam(value = "用户ID", required = true)
+        @Parameter(description = "用户ID", required = true)
         @QueryParam("userId")
         userId: String
     ): Result<Int>
 
-    @ApiOperation("根据用户ID判断用户是否已经oauth认证")
+    @Operation(summary = "根据用户ID判断用户是否已经oauth认证")
     @GET
     @Path("/isOauth")
     fun isOAuth(
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("重定向url类型", required = false)
+        @Parameter(description = "重定向url类型", required = false)
         @QueryParam("redirectUrlType")
         redirectUrlType: RedirectUrlTypeEnum?,
-        @ApiParam(value = "oauth认证成功后重定向到前端的地址", required = false)
+        @Parameter(description = "oauth认证成功后重定向到前端的地址", required = false)
         @QueryParam("redirectUrl")
         redirectUrl: String?,
-        @ApiParam(value = "工蜂项目Id", required = false)
+        @Parameter(description = "工蜂项目Id", required = false)
         @QueryParam("gitProjectId")
         gitProjectId: Long? = null,
-        @ApiParam(value = "是否刷新token", required = false)
+        @Parameter(description = "是否刷新token", required = false)
         @QueryParam("refreshToken")
         refreshToken: Boolean? = false,
-        @ApiParam(value = "是否校验token(refreshToken=true时不做校验)", required = false)
+        @Parameter(description = "是否校验token(refreshToken=true时不做校验)", required = false)
         @QueryParam("validationCheck")
         validationCheck: Boolean? = false
     ): Result<AuthorizeResult>

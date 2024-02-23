@@ -1,12 +1,11 @@
 package com.tencent.devops.dispatch.devcloud.pojo.performance
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("devcloud项目性能配置")
+@Schema(title = "devcloud项目性能配置")
 data class OPPerformanceConfigVO(
-    @ApiModelProperty("蓝盾项目ID")
+    @get:Schema(title = "蓝盾项目ID")
     val projectId: String,
-    @ApiModelProperty("性能基础配置ID")
+    @get:Schema(title = "性能基础配置ID")
     val optionId: Long
 )

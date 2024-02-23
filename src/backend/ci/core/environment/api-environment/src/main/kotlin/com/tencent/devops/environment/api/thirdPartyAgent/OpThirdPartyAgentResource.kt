@@ -35,9 +35,9 @@ import com.tencent.devops.environment.pojo.thirdPartyAgent.UpdateAgentRequest
 import com.tencent.devops.environment.pojo.thirdPartyAgent.pipeline.PipelineCreate
 import com.tencent.devops.environment.pojo.thirdPartyAgent.pipeline.PipelineResponse
 import com.tencent.devops.environment.pojo.thirdPartyAgent.pipeline.PipelineSeqId
-import io.swagger.annotations.Api
-import io.swagger.annotations.ApiOperation
-import io.swagger.annotations.ApiParam
+import io.swagger.v3.oas.annotations.tags.Tag
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.Parameter
 import javax.ws.rs.Consumes
 import javax.ws.rs.DELETE
 import javax.ws.rs.GET
@@ -50,107 +50,107 @@ import javax.ws.rs.Produces
 import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
-@Api(tags = ["OP_ENVIRONMENT_THIRD_PARTY_AGENT"], description = "第三方构建机资源")
+@Tag(name = "OP_ENVIRONMENT_THIRD_PARTY_AGENT", description = "第三方构建机资源")
 @Path("/op/thirdPartyAgent")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface OpThirdPartyAgentResource {
 
-    @ApiOperation("启动或者禁止第三方构建机接入")
+    @Operation(summary = "启动或者禁止第三方构建机接入")
     @PUT
     @Path("/projects/enable")
     fun enableProject(
-        @ApiParam("项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @QueryParam("projectId")
         projectId: String,
-        @ApiParam("启动或禁止", required = true)
+        @Parameter(description = "启动或禁止", required = true)
         @QueryParam("enable")
         enable: Boolean
     ): Result<Boolean>
 
-    @ApiOperation("获取所有启动第三方构建机")
+    @Operation(summary = "获取所有启动第三方构建机")
     @GET
     @Path("/projects")
     fun listEnableProjects(): Result<List<String>>
 
-    @ApiOperation("执行第三方构建机管道")
+    @Operation(summary = "执行第三方构建机管道")
     @POST
     @Path("/agents/{nodeId}/pipelines")
     fun scheduleAgentPipeline(
-        @ApiParam("user id", required = true)
+        @Parameter(description = "user id", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @HeaderParam("projectId")
         projectId: String,
-        @ApiParam("node id", required = true)
+        @Parameter(description = "node id", required = true)
         @PathParam("nodeId")
         nodeId: String,
-        @ApiParam("pipeline", required = true)
+        @Parameter(description = "pipeline", required = true)
         pipeline: PipelineCreate
     ): Result<PipelineSeqId>
 
-    @ApiOperation("获取第三方构建机管道结果")
+    @Operation(summary = "获取第三方构建机管道结果")
     @GET
     @Path("/agents/{nodeId}/pipelines")
     fun getAgentPipelineResponse(
-        @ApiParam("项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @HeaderParam("projectId")
         projectId: String,
-        @ApiParam("node id", required = true)
+        @Parameter(description = "node id", required = true)
         @PathParam("nodeId")
         nodeId: String,
-        @ApiParam("seqId", required = true)
+        @Parameter(description = "seqId", required = true)
         @QueryParam("seqId")
         seqId: String
     ): Result<PipelineResponse>
 
-    @ApiOperation("设置Agent网关")
+    @Operation(summary = "设置Agent网关")
     @POST
     @Path("/agents/updateAgentGateway")
     fun updateAgentGateway(
-        @ApiParam("内容", required = false)
+        @Parameter(description = "内容", required = false)
         updateAgentRequest: UpdateAgentRequest
     ): Result<Boolean>
 
-    @ApiOperation("查询agent下载网关")
+    @Operation(summary = "查询agent下载网关")
     @GET
     @Path("/gateways")
     fun getGateways(): Result<List<SlaveGateway>>
 
-    @ApiOperation("新增agent下载网关")
+    @Operation(summary = "新增agent下载网关")
     @POST
     @Path("/gateways")
     fun addGateway(
-        @ApiParam("gateway", required = true)
+        @Parameter(description = "gateway", required = true)
         gateway: SlaveGateway
     ): Result<Boolean>
 
-    @ApiOperation("修改agent下载网关")
+    @Operation(summary = "修改agent下载网关")
     @PUT
     @Path("/gateways")
     fun updateGateway(
-        @ApiParam("gateway", required = true)
+        @Parameter(description = "gateway", required = true)
         gateway: SlaveGateway
     ): Result<Boolean>
 
-    @ApiOperation("删除agent下载网关")
+    @Operation(summary = "删除agent下载网关")
     @DELETE
     @Path("/gateways/{zoneName}")
     fun deleteGateway(
-        @ApiParam("zoneName", required = true)
+        @Parameter(description = "zoneName", required = true)
         @PathParam("zoneName")
         zoneName: String
     ): Result<Boolean>
 
-    @ApiOperation("新增 agent 分享给项目")
+    @Operation(summary = "新增 agent 分享给项目")
     @POST
     @Path("/shared")
     fun addAgentShared(
         shares: AgentShared
     ): Result<Boolean>
 
-    @ApiOperation("删除 agent 分享给项目")
+    @Operation(summary = "删除 agent 分享给项目")
     @DELETE
     @Path("/shared")
     fun deleteAgentShared(

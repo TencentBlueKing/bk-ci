@@ -27,17 +27,16 @@
 
 package com.tencent.devops.store.pojo.common
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("发布进度")
+@Schema(title = "发布进度")
 data class ReleaseProcessItem(
-    @ApiModelProperty("步骤名称", required = true)
+    @get:Schema(title = "步骤名称", required = true)
     var name: String,
-    @ApiModelProperty("步骤代码", required = true)
+    @get:Schema(title = "步骤代码", required = true)
     var code: String,
-    @ApiModelProperty("步骤号", required = true)
+    @get:Schema(title = "步骤号", required = true)
     val step: Int,
-    @ApiModelProperty("状态", required = true)
+    @get:Schema(title = "状态", required = true)
     var status: String
 )

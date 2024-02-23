@@ -27,13 +27,12 @@
 
 package com.tencent.devops.experience.pojo
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("版本体验-上一次参数")
+@Schema(title = "版本体验-上一次参数")
 data class ExperienceLastParams(
-    @ApiModelProperty("是否存在", required = true)
+    @get:Schema(title = "是否存在", required = true)
     val exist: Boolean,
-    @ApiModelProperty("参数", required = false)
+    @get:Schema(title = "参数", required = false)
     val experienceCreate: ExperienceCreate?
 )

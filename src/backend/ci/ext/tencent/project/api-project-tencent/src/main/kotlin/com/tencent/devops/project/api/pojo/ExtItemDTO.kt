@@ -27,11 +27,11 @@
 
 package com.tencent.devops.project.api.pojo
 
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
 data class ExtItemDTO(
-    @ApiModelProperty("")
+    @get:Schema(title = "")
     val extServiceItem: ExtServiceEntity,
-    @ApiModelProperty("项目子集")
+    @get:Schema(title = "项目子集")
     val childItem: List<ExtServiceEntity>
 )

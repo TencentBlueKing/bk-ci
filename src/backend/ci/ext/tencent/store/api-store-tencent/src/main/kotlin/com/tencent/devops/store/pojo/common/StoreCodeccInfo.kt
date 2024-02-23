@@ -28,25 +28,24 @@
 package com.tencent.devops.store.pojo.common
 
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("store代码扫描信息")
+@Schema(title = "store代码扫描信息")
 data class StoreCodeccInfo(
-    @ApiModelProperty("store组件ID", required = true)
+    @get:Schema(title = "store组件ID", required = true)
     val storeId: String,
-    @ApiModelProperty("store组件编码", required = true)
+    @get:Schema(title = "store组件编码", required = true)
     val storeCode: String,
-    @ApiModelProperty("组件类型", required = true)
+    @get:Schema(title = "组件类型", required = true)
     val storeType: StoreTypeEnum,
-    @ApiModelProperty("构建ID", required = true)
+    @get:Schema(title = "构建ID", required = true)
     val buildId: String,
-    @ApiModelProperty("代码扫描任务ID", required = true)
+    @get:Schema(title = "代码扫描任务ID", required = true)
     val taskId: String,
-    @ApiModelProperty("代码规范评分", required = true)
+    @get:Schema(title = "代码规范评分", required = true)
     val codeStyleScore: Double,
-    @ApiModelProperty("代码安全评分", required = true)
+    @get:Schema(title = "代码安全评分", required = true)
     val codeSecurityScore: Double,
-    @ApiModelProperty("代码度量和检查评分", required = true)
+    @get:Schema(title = "代码度量和检查评分", required = true)
     val codeMeasureScore: Double
 )

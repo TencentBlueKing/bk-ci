@@ -1,15 +1,14 @@
 package com.tencent.devops.dispatch.docker.pojo.devcloud
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("devcloud性能用户选项配置")
+@Schema(title = "devcloud性能用户选项配置")
 data class UserPerformanceOptionsVO(
-    @ApiModelProperty("默认选项")
+    @get:Schema(title = "默认选项")
     val default: String,
-    @ApiModelProperty("是否展示")
+    @get:Schema(title = "是否展示")
     val needShow: Boolean,
-    @ApiModelProperty("性能配置")
+    @get:Schema(title = "性能配置")
     val performanceMaps: List<PerformanceMap>
 )
 

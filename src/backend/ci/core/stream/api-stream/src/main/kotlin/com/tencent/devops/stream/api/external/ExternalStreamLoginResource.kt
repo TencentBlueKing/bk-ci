@@ -29,9 +29,9 @@
 package com.tencent.devops.stream.api.external
 
 import com.tencent.devops.common.api.pojo.Result
-import io.swagger.annotations.Api
-import io.swagger.annotations.ApiOperation
-import io.swagger.annotations.ApiParam
+import io.swagger.v3.oas.annotations.tags.Tag
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.Parameter
 import javax.ws.rs.Consumes
 import javax.ws.rs.GET
 import javax.ws.rs.Path
@@ -39,17 +39,17 @@ import javax.ws.rs.Produces
 import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
-@Api(tags = ["EXTERNAL_STREAM_LOGIN"], description = "External-STREAM_LOGIN")
+@Tag(name = "EXTERNAL_STREAM_LOGIN", description = "External-STREAM_LOGIN")
 @Path("/external/stream/login")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface ExternalStreamLoginResource {
 
-    @ApiOperation("获取登录url")
+    @Operation(summary = "获取登录url")
     @GET
     @Path("url")
     fun loginUrl(
-        @ApiParam(value = "type")
+        @Parameter(description = "type")
         @QueryParam("type")
         type: String
     ): Result<String>

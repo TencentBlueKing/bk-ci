@@ -28,13 +28,12 @@
 package com.tencent.devops.store.pojo.atom
 
 import com.tencent.devops.common.api.enums.FrontendTypeEnum
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("插件配置信息")
+@Schema(title = "插件配置信息")
 data class AtomConfigInfo(
-    @ApiModelProperty(value = "前端UI渲染方式", required = true)
+    @get:Schema(title = "前端UI渲染方式", required = true)
     val frontendType: FrontendTypeEnum = FrontendTypeEnum.NORMAL,
-    @ApiModelProperty(value = "是否为默认插件", required = true)
+    @get:Schema(title = "是否为默认插件", required = true)
     val defaultFlag: Boolean = false
 )

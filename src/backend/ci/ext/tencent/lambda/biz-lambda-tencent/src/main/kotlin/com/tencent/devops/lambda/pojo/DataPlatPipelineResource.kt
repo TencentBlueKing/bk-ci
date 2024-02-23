@@ -27,21 +27,20 @@
 
 package com.tencent.devops.lambda.pojo
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("构建详情")
+@Schema(title = "构建详情")
 data class DataPlatPipelineResource(
-    @ApiModelProperty("清洗时间", required = false)
+    @get:Schema(title = "清洗时间", required = false)
     val washTime: String,
-    @ApiModelProperty("流水线ID", required = true)
+    @get:Schema(title = "流水线ID", required = true)
     val pipelineId: String,
-    @ApiModelProperty("版本号", required = false)
+    @get:Schema(title = "版本号", required = false)
     val version: Int,
-    @ApiModelProperty("构建详情", required = true)
+    @get:Schema(title = "构建详情", required = true)
     val model: String,
-    @ApiModelProperty("创建人", required = false)
+    @get:Schema(title = "创建人", required = false)
     val creator: String?,
-    @ApiModelProperty("创建时间", required = false)
+    @get:Schema(title = "创建时间", required = false)
     val createTime: String?
 )

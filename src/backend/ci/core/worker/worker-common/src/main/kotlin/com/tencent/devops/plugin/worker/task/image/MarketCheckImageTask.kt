@@ -67,7 +67,7 @@ class MarketCheckImageTask : ITask() {
             userId = userId,
             checkDockerImageRequestList = arrayOf(
                 CheckDockerImageRequest(
-                    imageName = imageName.replace("$registryHost/", ""),
+                    imageName = imageName,
                     registryHost = registryHost ?: "",
                     registryUser = registryUser,
                     registryPwd = registryPwd

@@ -31,9 +31,9 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.store.pojo.common.StoreVisibleDeptResp
 import com.tencent.devops.store.pojo.common.VisibleApproveReq
-import io.swagger.annotations.Api
-import io.swagger.annotations.ApiOperation
-import io.swagger.annotations.ApiParam
+import io.swagger.v3.oas.annotations.tags.Tag
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.Parameter
 import javax.ws.rs.Consumes
 import javax.ws.rs.GET
 import javax.ws.rs.HeaderParam
@@ -44,46 +44,46 @@ import javax.ws.rs.Produces
 import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
-@Api(tags = ["OP_PIPELINE_ATOM"], description = "OP-流水线-插件")
+@Tag(name = "OP_PIPELINE_ATOM", description = "OP-流水线-插件")
 @Path("/op/pipeline/atom")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface TxOpAtomResource {
 
-    @ApiOperation("审核可见范围")
+    @Operation(summary = "审核可见范围")
     @PUT
     @Path("/{atomCode}/visible/approve/")
     fun approveVisibleDept(
-        @ApiParam(value = "用户ID", required = true)
+        @Parameter(description = "用户ID", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("插件标识", required = true)
+        @Parameter(description = "插件标识", required = true)
         @PathParam("atomCode")
         atomCode: String,
-        @ApiParam("可见范围审核请求报文", required = true)
+        @Parameter(description = "可见范围审核请求报文", required = true)
         visibleApproveReq: VisibleApproveReq
     ): Result<Boolean>
 
-    @ApiOperation("查看插件可见范围")
+    @Operation(summary = "查看插件可见范围")
     @GET
     @Path("/{atomCode}/visible")
     fun getVisibleDept(
-        @ApiParam("插件代码", required = true)
+        @Parameter(description = "插件代码", required = true)
         @PathParam("atomCode")
         atomCode: String
     ): Result<StoreVisibleDeptResp?>
 
-    @ApiOperation("把项目迁移到指定项目组下")
+    @Operation(summary = "把项目迁移到指定项目组下")
     @PUT
     @Path("/repositories/git/move/codes/{atomCode}/group")
     fun moveGitProjectToGroup(
-        @ApiParam(value = "用户ID", required = true)
+        @Parameter(description = "用户ID", required = true)
         @QueryParam("userId")
         userId: String,
-        @ApiParam("插件插件标识", required = true)
+        @Parameter(description = "插件插件标识", required = true)
         @PathParam("atomCode")
         atomCode: String,
-        @ApiParam(value = "项目组代码", required = false)
+        @Parameter(description = "项目组代码", required = false)
         @QueryParam("groupCode")
         groupCode: String?
     ): Result<Boolean>

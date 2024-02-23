@@ -27,13 +27,12 @@
 
 package com.tencent.devops.store.pojo.common
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("新增修改原因请求")
+@Schema(title = "新增修改原因请求")
 data class ReasonReq(
-    @ApiModelProperty("原因", required = true)
+    @get:Schema(title = "原因", required = true)
     val content: String,
-    @ApiModelProperty("顺序", required = true)
+    @get:Schema(title = "顺序", required = true)
     val order: Int
 )

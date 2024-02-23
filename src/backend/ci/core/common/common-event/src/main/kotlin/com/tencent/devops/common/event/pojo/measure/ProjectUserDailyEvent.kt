@@ -30,15 +30,15 @@ package com.tencent.devops.common.event.pojo.measure
 
 import com.tencent.devops.common.event.annotation.Event
 import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 import java.time.LocalDate
 
 @Event(exchange = MQ.EXCHANGE_PROJECT_USER_DAILY_FANOUT)
 data class ProjectUserDailyEvent(
-    @ApiModelProperty("项目ID")
+    @get:Schema(title = "项目ID")
     override val projectId: String,
-    @ApiModelProperty("用户ID")
+    @get:Schema(title = "用户ID")
     val userId: String,
-    @ApiModelProperty("统计日期")
+    @get:Schema(title = "统计日期")
     val theDate: LocalDate
 ) : IMeasureEvent(projectId = projectId, pipelineId = "", buildId = "")

@@ -27,22 +27,21 @@
 
 package com.tencent.devops.scm.pojo
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("工程仓库模型-Svn-创建类型")
+@Schema(title = "工程仓库模型-Svn-创建类型")
 @Suppress("MaxLineLength")
 class ScmSvnCreate(
-    @ApiModelProperty("repo url", required = true)
+    @get:Schema(title = "repo url", required = true)
     val url: String,
-    @ApiModelProperty("repo addition path", required = false)
+    @get:Schema(title = "repo addition path", required = false)
     val additionPath: String?,
-    @ApiModelProperty("用户名", required = true)
+    @get:Schema(title = "用户名", required = true)
     val username: String,
-    @ApiModelProperty("密码", required = false)
+    @get:Schema(title = "密码", required = false)
     val password: String?,
-    @ApiModelProperty("用户访问私钥(明文)", required = false)
+    @get:Schema(title = "用户访问私钥(明文)", required = false)
     val privateKey: String?, // Just need one from [password, privateKey]. If protocol is svn+ssh, it's privateKey, otherwise it's password
-    @ApiModelProperty("Private Key Passphrase", required = false)
+    @get:Schema(title = "Private Key Passphrase", required = false)
     val passPhrase: String?
 )

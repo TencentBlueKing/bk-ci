@@ -27,17 +27,16 @@
 
 package com.tencent.devops.artifactory.pojo
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("插件市场-重新归档插件包请求报文体")
+@Schema(title = "插件市场-重新归档插件包请求报文体")
 data class PackageFileInfo(
-    @ApiModelProperty("包文件名", required = true)
+    @get:Schema(title = "包文件名", required = true)
     val packageFileName: String,
-    @ApiModelProperty("包文件路径", required = true)
+    @get:Schema(title = "包文件路径", required = true)
     val packageFilePath: String,
-    @ApiModelProperty("包文件大小", required = true)
+    @get:Schema(title = "包文件大小", required = true)
     val packageFileSize: Long,
-    @ApiModelProperty("sha摘要值", required = true)
+    @get:Schema(title = "sha摘要值", required = true)
     val shaContent: String
 )

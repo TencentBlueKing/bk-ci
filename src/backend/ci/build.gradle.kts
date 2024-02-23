@@ -12,10 +12,11 @@ allprojects {
     group = "com.tencent.bk.devops.ci"
     // 版本
     version = (System.getProperty("ci_version") ?: "1.9.0") +
-        if (System.getProperty("snapshot") == "true") "-SNAPSHOT" else ""
+            if (System.getProperty("snapshot") == "true") "-SNAPSHOT" else ""
 
     // 加载boot的插件
     if (name.startsWith("boot-")) {
+        pluginManager.apply("task-sharding-db-table-check") // 分区表检查插件
         pluginManager.apply("org.owasp.dependencycheck") // 检查依赖包漏洞版本
         pluginManager.apply("task-i18n-load") // i18n插件
         if (System.getProperty("devops.assemblyMode") == "KUBERNETES") {
@@ -129,6 +130,15 @@ allprojects {
             dependency("com.jakewharton:disklrucache:${Versions.disklrucache}")
             dependency("org.apache.poi:poi:${Versions.apachepoi}")
             dependency("org.apache.poi:poi-ooxml:${Versions.apachepoi}")
+            dependency("com.mysql:mysql-connector-j:${Versions.MysqlDriver}")
+            dependency("com.tencentcloudapi:tencentcloud-sdk-java-cfs:${Versions.tencentcloudsdkcfs}")
+            // TODO 升级swagger,等升级到spring boot 3.1+后可以去掉
+            dependencySet("io.swagger.core.v3:${Versions.swagger}") {
+                entry("swagger-annotations")
+                entry("swagger-jaxrs2")
+                entry("swagger-core")
+                entry("swagger-models")
+            }
         }
     }
 
@@ -145,6 +155,7 @@ allprojects {
         it.exclude("com.zaxxer", "HikariCP-java7")
         it.exclude("com.tencent.devops", "devops-boot-starter-plugin")
         it.exclude("org.bouncycastle", "bcutil-jdk15on")
+        it.exclude("io.swagger") // TODO 升级swagger,等升级到spring boot 3.1+后可以去掉
         it.exclude("org.bouncycastle", "bcpkix-jdk15on")
     }
     dependencies {

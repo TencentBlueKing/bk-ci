@@ -9,6 +9,7 @@ import com.tencent.devops.model.project.tables.records.TProjectRecord
 import com.tencent.devops.project.dao.ProjectDao
 import com.tencent.devops.project.pojo.ProjectOrganizationInfo
 import com.tencent.devops.project.pojo.enums.OrganizationType
+import com.tencent.devops.project.pojo.user.UserDeptDetail
 import com.tencent.devops.project.service.tof.TOFService
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
@@ -42,34 +43,43 @@ class ProjectExtOrganizationService constructor(
             group = BkAuthGroup.MANAGER
         ).data ?: return false
 
-        val deptInfos = managers.map { tofService.getUserDeptDetail(it) }
-        val deptIds = deptInfos.map { it.deptId }
-        val centerIds = deptInfos.map { it.centerId }
-        val isManagerDepartmentSame = deptIds.distinct().size == 1
-        val isManagerCenterSame = centerIds.distinct().size == 1
+        val managerDeptInfos = mutableListOf<UserDeptDetail>()
+        managers.forEach forEach@{ manager ->
+            val userDeptDetail = try {
+                tofService.getUserDeptDetail(manager)
+            } catch (ex: Exception) {
+                logger.info("$englishName ${ex.message}")
+                return@forEach
+            }
+            managerDeptInfos.add(userDeptDetail)
+        }
+        if (managerDeptInfos.isEmpty())
+            return false
+
+        val managerDeptIds = managerDeptInfos.map { it.deptId }
+        val managerCenterIds = managerDeptInfos.map { it.centerId }
+
+        val isManagerDepartmentSame = managerDeptIds.distinct().size == 1
+        val isManagerCenterSame = managerCenterIds.distinct().size == 1
 
         if (isManagerDepartmentSame) {
+            val managerDeptInfo = managerDeptInfos.first()
+            val centerId = if (isManagerCenterSame) managerDeptInfo.centerId else null
+            val centerName = if (isManagerCenterSame) managerDeptInfo.centerName else null
             logger.info("The manager's department is the same: $englishName|$isManagerDepartmentSame|$isManagerCenterSame")
-            val deptId = deptIds.first()
-            val deptName = deptInfos.first().deptName
-            val parentDeptInfos = tofService.getParentDeptInfo(groupId = deptId, level = 10)
-
-            val bgInfo = parentDeptInfos.firstOrNull { it.typeId.toInt() == OrganizationType.bg.typeId }
-            val businessLineInfo = parentDeptInfos.firstOrNull { it.typeId.toInt() == OrganizationType.businessLine.typeId }
-            val centerId = if (isManagerCenterSame) centerIds.first() else null
-            val centerName = if (isManagerCenterSame) deptInfos.first().centerName else null
-            if (tProjectRecord.deptId?.toString() != deptId || tProjectRecord.centerId?.toString() != centerId) {
+            if (tProjectRecord.deptId?.toString() != managerDeptInfo.deptId ||
+                tProjectRecord.centerId?.toString() != centerId) {
                 logger.info("fix organization by manager: $englishName|$isManagerDepartmentSame|$isManagerCenterSame")
                 projectDao.updateOrganizationByEnglishName(
                     dslContext = dslContext,
                     englishName = englishName,
                     ProjectOrganizationInfo(
-                        bgId = bgInfo?.id?.toLong(),
-                        bgName = bgInfo?.name,
-                        businessLineId = businessLineInfo?.id?.toLong(),
-                        businessLineName = businessLineInfo?.name,
-                        deptId = deptId.toLong(),
-                        deptName = deptName,
+                        bgId = managerDeptInfo.bgId.toLong(),
+                        bgName = managerDeptInfo.bgName,
+                        businessLineId = managerDeptInfo.businessLineId?.toLong(),
+                        businessLineName = managerDeptInfo.businessLineName,
+                        deptId = managerDeptInfo.deptId.toLong(),
+                        deptName = managerDeptInfo.deptName,
                         centerId = centerId?.toLong(),
                         centerName = centerName
                     )

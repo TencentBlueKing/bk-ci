@@ -32,9 +32,9 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.support.model.approval.CompleteMoaWorkItemRequest
 import com.tencent.devops.support.model.approval.CreateMoaApproveRequest
 import com.tencent.devops.support.model.approval.MoaWorkItemElement
-import io.swagger.annotations.Api
-import io.swagger.annotations.ApiOperation
-import io.swagger.annotations.ApiParam
+import io.swagger.v3.oas.annotations.tags.Tag
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.Parameter
 import javax.ws.rs.Consumes
 import javax.ws.rs.HeaderParam
 import javax.ws.rs.POST
@@ -43,45 +43,45 @@ import javax.ws.rs.PathParam
 import javax.ws.rs.Produces
 import javax.ws.rs.core.MediaType
 
-@Api(tags = ["SERVICE_MESSAGE_APPROVE"], description = "消息通知审批")
+@Tag(name = "SERVICE_MESSAGE_APPROVE", description = "消息通知审批")
 @Path("/service/message/approve")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface ServiceMessageApproveResource {
 
-    @ApiOperation("创建MOA审批单")
+    @Operation(summary = "创建MOA审批单")
     @POST
     @Path("/moa/create")
     fun createMoaMessageApproval(
-        @ApiParam("userId", required = true)
+        @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("创建MOA审批单请求报文体", required = true)
+        @Parameter(description = "创建MOA审批单请求报文体", required = true)
         createMoaApproveRequest: CreateMoaApproveRequest
     ): Result<Boolean>
 
-    @ApiOperation("MOA审批结单")
+    @Operation(summary = "MOA审批结单")
     @POST
     @Path("/moa/ids/{taskId}/complete")
     fun moaComplete(
-        @ApiParam(value = "任务ID", required = true)
+        @Parameter(description = "任务ID", required = true)
         @PathParam("taskId")
         taskId: String
     ): Result<Boolean>
 
-    @ApiOperation("创建MOA审批单")
+    @Operation(summary = "创建MOA审批单")
     @POST
     @Path("/moa/create_work_item")
     fun createMoaWorkItemMessageApproval(
-        @ApiParam("创建MOA审批单据请求报文体", required = true)
+        @Parameter(description = "创建MOA审批单据请求报文体", required = true)
         moaWorkItemElementList: List<MoaWorkItemElement>
     ): Result<Boolean>
 
-    @ApiOperation("完成MOA审批单")
+    @Operation(summary = "完成MOA审批单")
     @POST
     @Path("/moa/complete_work_item")
     fun createMoaWorkItemMessageComplete(
-        @ApiParam("创建MOA审批单据请求报文体", required = true)
+        @Parameter(description = "创建MOA审批单据请求报文体", required = true)
         completeMoaWorkItemRequest: CompleteMoaWorkItemRequest
     ): Result<Boolean>
 }

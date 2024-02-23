@@ -27,41 +27,40 @@
 
 package com.tencent.devops.plugin.codecc.pojo
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("codecc度量信息")
+@Schema(title = "codecc度量信息")
 data class CodeccMeasureInfo(
-    @ApiModelProperty("项目ID", required = false)
+    @get:Schema(title = "项目ID", required = false)
     val projectId: String? = null,
-    @ApiModelProperty("任务ID", required = false)
+    @get:Schema(title = "任务ID", required = false)
     val taskId: Long? = null,
-    @ApiModelProperty("代码库提交ID", required = false)
+    @get:Schema(title = "代码库提交ID", required = false)
     val commitId: String? = null,
-    @ApiModelProperty("代码库url地址", required = false)
+    @get:Schema(title = "代码库url地址", required = false)
     val repoUrl: String? = null,
-    @ApiModelProperty("codecc扫描详情url地址", required = false)
+    @get:Schema(title = "codecc扫描详情url地址", required = false)
     val codeccUrl: String? = null,
-    @ApiModelProperty("规范得分", required = false)
+    @get:Schema(title = "规范得分", required = false)
     val codeStyleScore: Double? = null,
-    @ApiModelProperty("安全得分", required = false)
+    @get:Schema(title = "安全得分", required = false)
     val codeSecurityScore: Double? = null,
-    @ApiModelProperty("度量得分", required = false)
+    @get:Schema(title = "度量得分", required = false)
     val codeMeasureScore: Double? = null,
-    @ApiModelProperty("最近一次分析触发时间", required = false)
+    @get:Schema(title = "最近一次分析触发时间", required = false)
     val lastAnalysisTime: Long? = null,
-    @ApiModelProperty("任务状态(失败：1， 执行中: 3， 成功：0, 未执行：2)", required = false)
+    @get:Schema(title = "任务状态(失败：1， 执行中: 3， 成功：0, 未执行：2)", required = false)
     val status: Int? = null,
-    @ApiModelProperty("工具执行信息", required = false)
+    @get:Schema(title = "工具执行信息", required = false)
     val lastAnalysisResultList: List<CodeccToolAnalysisInfo>? = null,
-    @ApiModelProperty("是否合格", required = false)
+    @get:Schema(title = "是否合格", required = false)
     var qualifiedFlag: Boolean? = null,
-    @ApiModelProperty("规范合格分", required = false)
+    @get:Schema(title = "规范合格分", required = false)
     var codeStyleQualifiedScore: Double? = null,
-    @ApiModelProperty("安全合格分", required = false)
+    @get:Schema(title = "安全合格分", required = false)
     var codeSecurityQualifiedScore: Double? = null,
-    @ApiModelProperty("度量合格分", required = false)
+    @get:Schema(title = "度量合格分", required = false)
     var codeMeasureQualifiedScore: Double? = null,
-    @ApiModelProperty("消息内容", required = false)
+    @get:Schema(title = "消息内容", required = false)
     val message: String? = null
 )

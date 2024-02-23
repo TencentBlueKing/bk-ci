@@ -29,9 +29,9 @@ package com.tencent.devops.repository.api
 
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.repository.pojo.commit.CommitData
-import io.swagger.annotations.Api
-import io.swagger.annotations.ApiOperation
-import io.swagger.annotations.ApiParam
+import io.swagger.v3.oas.annotations.tags.Tag
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.Parameter
 import javax.ws.rs.Consumes
 import javax.ws.rs.POST
 import javax.ws.rs.Path
@@ -39,20 +39,20 @@ import javax.ws.rs.PathParam
 import javax.ws.rs.Produces
 import javax.ws.rs.core.MediaType
 
-@Api(tags = ["SERVICE_GIT_REPOSITORY"], description = "服务-git代码库资源")
+@Tag(name = "SERVICE_GIT_REPOSITORY", description = "服务-git代码库资源")
 @Path("/service/commits")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface ServiceGitCommitResource {
 
-    @ApiOperation("根据流水线的CommitId查询提交详情记录")
+    @Operation(summary = "根据流水线的CommitId查询提交详情记录")
     @POST
     @Path("/pipelines/{pipelineId}/commits/{commit}")
     fun queryCommitInfo(
-        @ApiParam("流水线ID", required = false)
+        @Parameter(description = "流水线ID", required = false)
         @PathParam("pipelineId")
         projectCode: String,
-        @ApiParam("代码库名称", required = true)
+        @Parameter(description = "代码库名称", required = true)
         @PathParam("commit")
         commit: String
     ): Result<CommitData?>

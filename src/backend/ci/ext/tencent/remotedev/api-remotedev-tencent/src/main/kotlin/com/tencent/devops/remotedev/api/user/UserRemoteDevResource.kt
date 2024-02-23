@@ -35,9 +35,9 @@ import com.tencent.devops.remotedev.pojo.RemoteDevSettings
 import com.tencent.devops.remotedev.pojo.Watermark
 import com.tencent.devops.remotedev.pojo.WindowsResourceTypeConfig
 import com.tencent.devops.remotedev.pojo.WindowsResourceZoneConfig
-import io.swagger.annotations.Api
-import io.swagger.annotations.ApiOperation
-import io.swagger.annotations.ApiParam
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.Parameter
+import io.swagger.v3.oas.annotations.tags.Tag
 import org.glassfish.jersey.server.ChunkedOutput
 import javax.ws.rs.Consumes
 import javax.ws.rs.DefaultValue
@@ -51,40 +51,40 @@ import javax.ws.rs.core.Context
 import javax.ws.rs.core.HttpHeaders
 import javax.ws.rs.core.MediaType
 
-@Api(tags = ["USER_WORKSPACE"], description = "用户-工作空间,apiType:内网传user，离岸传desktop")
+@Tag(name = "USER_WORKSPACE", description = "用户-工作空间,apiType:内网传user，离岸传desktop")
 @Path("/{apiType:user|desktop}/remotedev")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface UserRemoteDevResource {
 
-    @ApiOperation("获取远程开发环境配置")
+    @Operation(summary = "获取远程开发环境配置")
     @GET
     @Path("/settings")
     fun getRemoteDevSettings(
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String
     ): Result<RemoteDevSettings>
 
-    @ApiOperation("更新远程开发环境配置")
+    @Operation(summary = "更新远程开发环境配置")
     @POST
     @Path("/settings")
     fun updateRemoteDevSettings(
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("工作空间描述", required = false)
+        @Parameter(description = "工作空间描述", required = false)
         remoteDevSettings: RemoteDevSettings
     ): Result<Boolean>
 
-    @ApiOperation("BK-GPT")
+    @Operation(summary = "BK-GPT")
     @POST
     @Path("/bkGPT")
     fun bkGPT(
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam("X-DEVOPS-BK-TICKET")
         bkTicket: String,
         @Context
@@ -92,32 +92,32 @@ interface UserRemoteDevResource {
         data: BKGPT
     ): ChunkedOutput<String>
 
-    @ApiOperation("watermark")
+    @Operation(summary = "watermark")
     @POST
     @Path("/watermark")
     fun getWatermark(
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
         data: Watermark
     ): Result<Any>
 
-    @ApiOperation("上报preci agent id")
+    @Operation(summary = "上报preci agent id")
     @POST
     @Path("/preci_agent")
     fun preCiAgent(
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam(value = "工作空间ID", required = true)
+        @Parameter(description = "工作空间ID", required = true)
         @QueryParam("workspaceName")
         workspaceName: String,
-        @ApiParam(value = "agentId", required = true)
+        @Parameter(description = "agentId", required = true)
         @QueryParam("agentId")
         agentId: String
     ): Result<Boolean>
 
-    @ApiOperation("根据bi_ticket或bk_token获取用户名称")
+    @Operation(summary = "根据bi_ticket或bk_token获取用户名称")
     @GET
     @Path("/get_user")
     fun getUser(
@@ -125,19 +125,19 @@ interface UserRemoteDevResource {
         userId: String
     ): Result<String>
 
-    @ApiOperation("获取所有的WINDOWS GPU资源配置信息")
+    @Operation(summary = "获取所有的WINDOWS GPU资源配置信息")
     @GET
     @Path("/get_all_windows_resource_config")
     fun getAllWindowsResourceConfig(
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam(value = "是否包含不可用机型", required = false)
+        @Parameter(description = "是否包含不可用机型", required = false)
         @QueryParam("withUnavailable")
         @DefaultValue("false")
         withUnavailable: Boolean? = false
     ): Result<List<WindowsResourceTypeConfig>>
 
-    @ApiOperation("获取所有的WINDOWS GPU资源地域信息")
+    @Operation(summary = "获取所有的WINDOWS GPU资源地域信息")
     @GET
     @Path("/get_all_windows_resource_zone")
     fun getAllWindowsResourceZone(
@@ -145,7 +145,7 @@ interface UserRemoteDevResource {
         userId: String
     ): Result<List<WindowsResourceZoneConfig>>
 
-    @ApiOperation("获取所有的WINDOWS 配额")
+    @Operation(summary = "获取所有的WINDOWS 配额")
     @GET
     @Path("/get_all_windows_resource_quota")
     fun allWindowsQuota(
@@ -155,55 +155,55 @@ interface UserRemoteDevResource {
         searchCustom: Boolean?
     ): Result<Map<String, Map<String, Int>>>
 
-    @ApiOperation("获取用户1Password")
+    @Operation(summary = "获取用户1Password")
     @GET
     @Path("/1Password")
     fun onePassword(
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam(value = "工作空间ID", required = true)
+        @Parameter(description = "工作空间ID", required = true)
         @QueryParam("workspaceName")
         workspaceName: String
     ): Result<String>
 
-    @ApiOperation("一键认领求助问题")
+    @Operation(summary = "一键认领求助问题")
     @GET
     @Path("/addExpSup")
     fun addExpSup(
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam(value = "工单id", required = true)
+        @Parameter(description = "工单id", required = true)
         @QueryParam("id")
         id: Long,
-        @ApiParam(value = "工作空间ID", required = true)
+        @Parameter(description = "工作空间ID", required = true)
         @QueryParam("workspaceName")
         workspaceName: String
     ): Result<Boolean>
 
-    @ApiOperation("获取兔小巢用户登录态token")
+    @Operation(summary = "获取兔小巢用户登录态token")
     @GET
     @Path("/txc/token")
     fun getTxcToken(
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("用户唯一标识", required = true)
+        @Parameter(description = "用户唯一标识", required = true)
         @QueryParam("openId")
         openId: String,
-        @ApiParam("用户昵称", required = true)
+        @Parameter(description = "用户昵称", required = true)
         @QueryParam("nickName")
         nickName: String,
-        @ApiParam("用户头像", required = true)
+        @Parameter(description = "用户头像", required = true)
         @QueryParam("avatar")
         avatar: String
     ): Result<String>
 
-    @ApiOperation("一键查询CGS密码")
+    @Operation(summary = "一键查询CGS密码")
     @GET
     @Path("/queryCgsPwd")
     fun queryCgsPwd(
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam(value = "cgsId", required = true)
+        @Parameter(description = "cgsId", required = true)
         @QueryParam("cgsId")
         cgsId: String
     ): Result<Boolean>

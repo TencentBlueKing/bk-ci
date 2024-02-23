@@ -29,19 +29,18 @@ package com.tencent.devops.common.ci.task
 
 import com.tencent.devops.common.ci.CiBuildConfig
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildLessAtomElement
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
 /**
  * marketBuild
  */
-@ApiModel("插件市场-无构建环境")
+@Schema(title = "插件市场-无构建环境")
 data class MarketBuildLessTask(
-    @ApiModelProperty("displayName", required = false)
+    @get:Schema(title = "displayName", required = false)
     override var displayName: String?,
-    @ApiModelProperty("入参", required = true)
+    @get:Schema(title = "入参", required = true)
     override val inputs: MarketBuildInput,
-    @ApiModelProperty("执行条件", required = true)
+    @get:Schema(title = "执行条件", required = true)
     override val condition: String?
 ) : AbstractTask(displayName, inputs, condition) {
     companion object {
