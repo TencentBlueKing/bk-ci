@@ -41,20 +41,18 @@ import com.tencent.devops.common.service.PROFILE_PRODUCTION
 import com.tencent.devops.common.service.PROFILE_STREAM
 import com.tencent.devops.common.service.PROFILE_TEST
 import com.tencent.devops.common.service.Profile
-import com.tencent.devops.common.service.config.CommonConfig
-import java.io.File
-import java.net.Inet4Address
-import java.net.InetAddress
-import java.net.NetworkInterface
-import java.net.SocketException
-import java.util.Enumeration
 import org.apache.commons.lang3.StringUtils
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.context.i18n.LocaleContextHolder
 import org.springframework.web.context.request.RequestContextHolder
 import org.springframework.web.context.request.ServletRequestAttributes
-import java.net.URLEncoder
+import java.io.File
+import java.net.Inet4Address
+import java.net.InetAddress
+import java.net.NetworkInterface
+import java.net.SocketException
+import java.util.Enumeration
 
 object CommonUtils {
 
@@ -268,22 +266,6 @@ object CommonUtils {
             SpringContextUtil.getBean(DSLContext::class.java, archiveDslContextName)
         } else {
             SpringContextUtil.getBean(DSLContext::class.java)
-        }
-    }
-
-    /**
-     * 重定向idc请求
-     *
-     * 重定向请求,请求先跳转到网关,再由网关路由到对应的服务
-     */
-    fun okhttp3.Request.idcProxyRequest(): okhttp3.Request {
-        val devopsIdcProxyGateway = SpringContextUtil.getBean(CommonConfig::class.java).devopsIdcProxyGateway
-        return if (devopsIdcProxyGateway.isNullOrBlank()) {
-            this
-        } else {
-            val encodeUrl = URLEncoder.encode(url.toString(), "UTF-8")
-            val idcProxyUrl = "$devopsIdcProxyGateway/proxy-devnet?url=$encodeUrl"
-            this.newBuilder().url(idcProxyUrl).build()
         }
     }
 }
