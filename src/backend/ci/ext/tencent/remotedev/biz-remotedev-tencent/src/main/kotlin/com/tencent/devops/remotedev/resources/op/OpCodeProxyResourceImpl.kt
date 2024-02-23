@@ -22,4 +22,9 @@ class OpCodeProxyResourceImpl @Autowired constructor(
             )
         )
     }
+
+    override fun migrateTGitData(projectId: String?): Result<Boolean> {
+        gitProxyTGitService.migrateTGitData(projectId)
+        return Result(true)
+    }
 }
