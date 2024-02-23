@@ -1,6 +1,6 @@
 package com.tencent.devops.environment.pojo.job.resp
 
-
+import io.swagger.v3.oas.annotations.media.Schema
 
 data class ScriptStepInfo(
     @get:Schema(title = "脚本类型：1-本地脚本，2-引用业务脚本，3-引用公共脚本")

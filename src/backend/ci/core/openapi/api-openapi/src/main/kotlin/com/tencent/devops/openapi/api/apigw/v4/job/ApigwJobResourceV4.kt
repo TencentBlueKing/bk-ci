@@ -50,13 +50,13 @@ interface ApigwJobResourceV4 {
     fun executeScript(
         @Parameter(name = "appCode", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
-        appCode: String?=AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE,
+        appCode: String? = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE,
         @Parameter(name = "apigw Type", required = true)
         @PathParam("apigwType")
         apigwType: String?,
         @Parameter(name = "用户ID", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
-        userId: String=AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE,
+        userId: String = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE,
         @Parameter(name = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
@@ -70,13 +70,13 @@ interface ApigwJobResourceV4 {
     fun distributeFile(
         @Parameter(name = "appCode", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
-        appCode: String?=AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE,
+        appCode: String? = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE,
         @Parameter(name = "apigw Type", required = true)
         @PathParam("apigwType")
         apigwType: String?,
         @Parameter(name = "用户ID", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String=AUTH_HEADER_USER_ID_DEFAULT_VALUE,
+        userId: String = AUTH_HEADER_USER_ID_DEFAULT_VALUE,
         @Parameter(name = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
@@ -90,13 +90,13 @@ interface ApigwJobResourceV4 {
     fun terminateTask(
         @Parameter(name = "appCode", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
-        appCode: String?=AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE,
+        appCode: String? = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE,
         @Parameter(name = "apigw Type", required = true)
         @PathParam("apigwType")
         apigwType: String?,
         @Parameter(name = "用户ID", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String=AUTH_HEADER_USER_ID_DEFAULT_VALUE,
+        userId: String = AUTH_HEADER_USER_ID_DEFAULT_VALUE,
         @Parameter(name = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
@@ -104,7 +104,8 @@ interface ApigwJobResourceV4 {
         taskTerminateReq: TaskTerminateReq
     ): JobResult<TaskTerminateResult>
 
-    @Operation(summary =
+    @Operation(
+        summary =
         "查询任务状态的Job接口",
         tags = ["v4_app_job_query_job_instance_status", "v4_user_job_query_job_instance_status"]
     )
@@ -113,13 +114,13 @@ interface ApigwJobResourceV4 {
     fun queryJobInstanceStatus(
         @Parameter(name = "appCode", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
-        appCode: String?=AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE,
+        appCode: String? = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE,
         @Parameter(name = "apigw Type", required = true)
         @PathParam("apigwType")
         apigwType: String?,
         @Parameter(name = "用户ID", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String=AUTH_HEADER_USER_ID_DEFAULT_VALUE,
+        userId: String = AUTH_HEADER_USER_ID_DEFAULT_VALUE,
         @Parameter(name = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
@@ -137,13 +138,13 @@ interface ApigwJobResourceV4 {
     fun queryJobInstanceLogs(
         @Parameter(name = "appCode", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
-        appCode: String?=AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE,
+        appCode: String? = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE,
         @Parameter(name = "apigw Type", required = true)
         @PathParam("apigwType")
         apigwType: String?,
         @Parameter(name = "用户ID", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String=AUTH_HEADER_USER_ID_DEFAULT_VALUE,
+        userId: String = AUTH_HEADER_USER_ID_DEFAULT_VALUE,
         @Parameter(name = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
@@ -157,13 +158,13 @@ interface ApigwJobResourceV4 {
     fun createAccount(
         @Parameter(name = "appCode", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
-        appCode: String?=AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE,
+        appCode: String? = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE,
         @Parameter(name = "apigw Type", required = true)
         @PathParam("apigwType")
         apigwType: String?,
         @Parameter(name = "用户ID", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
-        userId: String=AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE,
+        userId: String = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE,
         @Parameter(name = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
@@ -177,13 +178,13 @@ interface ApigwJobResourceV4 {
     fun deleteAccount(
         @Parameter(name = "appCode", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
-        appCode: String?=AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE,
+        appCode: String? = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE,
         @Parameter(name = "apigw Type", required = true)
         @PathParam("apigwType")
         apigwType: String?,
         @Parameter(name = "用户ID", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
-        userId: String=AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE,
+        userId: String = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE,
         @Parameter(name = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
@@ -197,13 +198,13 @@ interface ApigwJobResourceV4 {
     fun getAccountList(
         @Parameter(name = "appCode", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
-        appCode: String?=AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE,
+        appCode: String? = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE,
         @Parameter(name = "apigw Type", required = true)
         @PathParam("apigwType")
         apigwType: String?,
         @Parameter(name = "用户ID", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String=AUTH_HEADER_USER_ID_DEFAULT_VALUE,
+        userId: String = AUTH_HEADER_USER_ID_DEFAULT_VALUE,
         @Parameter(name = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
@@ -230,13 +231,13 @@ interface ApigwJobResourceV4 {
     fun getStepInstanceDetail(
         @Parameter(name = "appCode", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
-        appCode: String?=AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE,
+        appCode: String? = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE,
         @Parameter(name = "apigw Type", required = true)
         @PathParam("apigwType")
         apigwType: String?,
         @Parameter(name = "用户ID", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String=AUTH_HEADER_USER_ID_DEFAULT_VALUE,
+        userId: String = AUTH_HEADER_USER_ID_DEFAULT_VALUE,
         @Parameter(name = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
@@ -254,13 +255,13 @@ interface ApigwJobResourceV4 {
     fun getStepInstanceStatus(
         @Parameter(name = "appCode", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
-        appCode: String?=AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE,
+        appCode: String? = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE,
         @Parameter(name = "apigw Type", required = true)
         @PathParam("apigwType")
         apigwType: String?,
         @Parameter(name = "用户ID", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String=AUTH_HEADER_USER_ID_DEFAULT_VALUE,
+        userId: String = AUTH_HEADER_USER_ID_DEFAULT_VALUE,
         @Parameter(name = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
@@ -299,7 +300,7 @@ interface ApigwJobResourceV4 {
     fun operateOpProject(
         @Parameter(name = "用户ID", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String=AUTH_HEADER_USER_ID_DEFAULT_VALUE,
+        userId: String = AUTH_HEADER_USER_ID_DEFAULT_VALUE,
         @Parameter(name = "op操作请求信息", required = true)
         opOperateReq: OpOperateReq
     ): OpOperateResult
@@ -310,7 +311,7 @@ interface ApigwJobResourceV4 {
     fun writeDisplayName(
         @Parameter(name = "用户ID", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String=AUTH_HEADER_USER_ID_DEFAULT_VALUE
+        userId: String = AUTH_HEADER_USER_ID_DEFAULT_VALUE
     )
 
     @Operation(summary = "蓝盾agent状态版本更新接口", tags = ["v4_app_job_update_devops_agent"])
@@ -319,7 +320,7 @@ interface ApigwJobResourceV4 {
     fun updateDevopsAgent(
         @Parameter(name = "用户ID", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String=AUTH_HEADER_USER_ID_DEFAULT_VALUE
+        userId: String = AUTH_HEADER_USER_ID_DEFAULT_VALUE
     )
 
     @Operation(summary = "部署节点cc状态轮询接口", tags = ["v4_app_job_check_deploy_nodes_in_cc"])
@@ -328,6 +329,6 @@ interface ApigwJobResourceV4 {
     fun checkDeployNodesInCC(
         @Parameter(name = "用户ID", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String=AUTH_HEADER_USER_ID_DEFAULT_VALUE
+        userId: String = AUTH_HEADER_USER_ID_DEFAULT_VALUE
     )
 }

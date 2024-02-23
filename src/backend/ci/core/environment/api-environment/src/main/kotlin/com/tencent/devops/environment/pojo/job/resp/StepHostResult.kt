@@ -2,7 +2,6 @@ package com.tencent.devops.environment.pojo.job.resp
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-
 @Schema(title = "主机任务执行结果")
 data class StepHostResult(
     @get:Schema(title = "IP地址", required = true)

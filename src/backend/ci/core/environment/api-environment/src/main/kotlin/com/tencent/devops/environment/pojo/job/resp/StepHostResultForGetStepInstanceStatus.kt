@@ -2,7 +2,6 @@ package com.tencent.devops.environment.pojo.job.resp
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-
 data class StepHostResultForGetStepInstanceStatus(
     @get:Schema(title = "主机ID")
     val bkHostId: Long?,

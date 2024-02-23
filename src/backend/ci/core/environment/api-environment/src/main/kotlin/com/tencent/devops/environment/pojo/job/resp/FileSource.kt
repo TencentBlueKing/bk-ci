@@ -1,6 +1,6 @@
 package com.tencent.devops.environment.pojo.job.resp
 
-
+import io.swagger.v3.oas.annotations.media.Schema
 
 data class FileSource(
     @get:Schema(title = "文件类型", description = "1-服务器文件，2-本地文件，3-文件源文件")

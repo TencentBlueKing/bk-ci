@@ -1,6 +1,6 @@
 package com.tencent.devops.environment.pojo.job.resp
 
-
+import io.swagger.v3.oas.annotations.media.Schema
 
 data class VariableServer(
     @get:Schema(title = "引用的全局变量名称")

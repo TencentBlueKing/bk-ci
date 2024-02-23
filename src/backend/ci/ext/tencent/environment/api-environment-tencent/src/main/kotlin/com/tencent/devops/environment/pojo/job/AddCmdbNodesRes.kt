@@ -1,6 +1,6 @@
 package com.tencent.devops.environment.pojo.job
 
-
+import io.swagger.v3.oas.annotations.media.Schema
 
 data class AddCmdbNodesRes(
     @get:Schema(title = "节点导入状态")

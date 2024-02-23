@@ -1,6 +1,6 @@
 package com.tencent.devops.environment.pojo.job.resp
 
-
+import io.swagger.v3.oas.annotations.media.Schema
 
 data class FileStepInfo(
     @get:Schema(title = "源文件列表")

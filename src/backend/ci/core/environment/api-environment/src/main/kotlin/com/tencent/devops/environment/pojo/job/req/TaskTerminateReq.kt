@@ -2,7 +2,6 @@ package com.tencent.devops.environment.pojo.job.req
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-
 @Schema(title = "终止任务的信息")
 data class TaskTerminateReq(
     @get:Schema(title = "作业实例ID", required = true)

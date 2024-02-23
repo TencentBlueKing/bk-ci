@@ -1,7 +1,6 @@
 package com.tencent.devops.environment.pojo.job.resp
 
-
-
+import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "文件分发日志内容")
 data class FileLog(

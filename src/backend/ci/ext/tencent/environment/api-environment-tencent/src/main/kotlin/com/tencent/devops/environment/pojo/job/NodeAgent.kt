@@ -1,6 +1,6 @@
 package com.tencent.devops.environment.pojo.job
 
-
+import io.swagger.v3.oas.annotations.media.Schema
 
 data class NodeAgent(
     @get:Schema(title = "节点IP", required = true)

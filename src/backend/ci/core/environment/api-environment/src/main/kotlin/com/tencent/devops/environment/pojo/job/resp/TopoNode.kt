@@ -1,6 +1,6 @@
 package com.tencent.devops.environment.pojo.job.resp
 
-
+import io.swagger.v3.oas.annotations.media.Schema
 
 data class TopoNode(
     @get:Schema(title = "动态topo节点类型", description = "对应CMDB API中的 bk_obj_id，例如module、set等")

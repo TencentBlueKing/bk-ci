@@ -1,7 +1,6 @@
 package com.tencent.devops.environment.pojo.job.resp
 
-
-
+import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "终止任务的结果")
 data class TaskTerminateResult(

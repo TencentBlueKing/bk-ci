@@ -27,7 +27,7 @@
 
 package com.tencent.devops.environment.pojo.job.resp
 
-
+import io.swagger.v3.oas.annotations.media.Schema
 
 data class AgentInfo(
     @get:Schema(title = "主机ID")

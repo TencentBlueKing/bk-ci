@@ -1,7 +1,6 @@
 package com.tencent.devops.environment.pojo.job.resp
 
-
-
+import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "返回值中的主机结构")
 data class HostInRes(

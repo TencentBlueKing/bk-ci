@@ -1,7 +1,7 @@
 package com.tencent.devops.environment.pojo.job.ccres
 
 import com.fasterxml.jackson.annotation.JsonProperty
-
+import io.swagger.v3.oas.annotations.media.Schema
 
 data class CCResp<out T>(
     @get:Schema(title = "状态码", required = true)

@@ -1,6 +1,6 @@
 package com.tencent.devops.environment.pojo.job.resp
 
-
+import io.swagger.v3.oas.annotations.media.Schema
 
 data class GetStepInstanceDetailResult(
     @get:Schema(title = "作业步骤ID")

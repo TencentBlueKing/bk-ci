@@ -1,7 +1,6 @@
 package com.tencent.devops.environment.pojo.job.resp
 
-
-
+import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "查询有权限账号列表")
 data class GetAccountListResult(
