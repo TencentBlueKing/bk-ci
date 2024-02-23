@@ -67,6 +67,7 @@ class RemoteDevService @Autowired constructor(
         private val logger = LoggerFactory.getLogger(RemoteDevService::class.java)
     }
 
+    @Suppress("ComplexMethod")
     fun createWorkspace(userId: String, event: WorkspaceCreateEvent): WorkspaceResponse {
         // 查询是否已经存在记录
         val workspace = dispatchWorkspaceDao.getWorkspaceInfo(
