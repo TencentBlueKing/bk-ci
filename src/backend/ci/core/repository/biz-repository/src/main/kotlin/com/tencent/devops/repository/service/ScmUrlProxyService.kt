@@ -1,7 +1,5 @@
 package com.tencent.devops.repository.service
 
-import org.springframework.stereotype.Service
-
 /**
  * 源代码管理url代理服务
  *
