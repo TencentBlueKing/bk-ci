@@ -50,7 +50,7 @@ interface ExternalJinGangResourece {
     @POST
     @Path("/app/callback")
     fun callback(
-        @Parameter(description = "任务数据", required = true)
+        @Parameter(name = "任务数据", required = true)
         data: JinGangAppCallback
     )
 }

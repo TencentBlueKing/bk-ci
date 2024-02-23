@@ -55,13 +55,13 @@ interface OpMessageCodeResource {
     @GET
     @Path("/")
     fun getMessageCodeDetails(
-        @Parameter(description = "返回码", required = false)
+        @Parameter(name = "返回码", required = false)
         @QueryParam("messageCode")
         messageCode: String?,
-        @Parameter(description = "页码", required = false)
+        @Parameter(name = "页码", required = false)
         @QueryParam("page")
         page: Int?,
-        @Parameter(description = "每页数量", required = false)
+        @Parameter(name = "每页数量", required = false)
         @QueryParam("pageSize")
         pageSize: Int?
     ): Result<MessageCodeResp>
@@ -70,7 +70,7 @@ interface OpMessageCodeResource {
     @GET
     @Path("/{messageCode}")
     fun getMessageCodeDetail(
-        @Parameter(description = "返回码", required = true)
+        @Parameter(name = "返回码", required = true)
         @PathParam("messageCode")
         messageCode: String
     ): Result<MessageCodeDetail?>
@@ -79,7 +79,7 @@ interface OpMessageCodeResource {
     @GET
     @Path("/{messageCode}/refresh")
     fun refreshMessageCodeCache(
-        @Parameter(description = "返回码", required = true)
+        @Parameter(name = "返回码", required = true)
         @PathParam("messageCode")
         messageCode: String
     ): Result<Boolean>
@@ -88,7 +88,7 @@ interface OpMessageCodeResource {
     @POST
     @Path("/")
     fun addMessageCodeDetail(
-        @Parameter(description = "返回码新增请求报文体", required = true)
+        @Parameter(name = "返回码新增请求报文体", required = true)
         addMessageCodeRequest: AddMessageCodeRequest
     ): Result<Boolean>
 
@@ -96,10 +96,10 @@ interface OpMessageCodeResource {
     @PUT
     @Path("/{messageCode}")
     fun updateMessageCodeDetail(
-        @Parameter(description = "返回码", required = true)
+        @Parameter(name = "返回码", required = true)
         @PathParam("messageCode")
         messageCode: String,
-        @Parameter(description = "返回码更新请求报文体", required = true)
+        @Parameter(name = "返回码更新请求报文体", required = true)
         updateMessageCodeRequest: UpdateMessageCodeRequest
     ): Result<Boolean>
 }

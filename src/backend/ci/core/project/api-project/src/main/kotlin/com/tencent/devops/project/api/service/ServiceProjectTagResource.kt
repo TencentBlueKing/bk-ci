@@ -49,7 +49,7 @@ interface ServiceProjectTagResource {
     @Path("/checkProject/{projectId}/router")
     @Operation(summary = "判断项目指向是否一致")
     fun checkProjectRouter(
-        @Parameter(description = "项目id", required = true)
+        @Parameter(name = "项目id", required = true)
         @PathParam("projectId")
         projectId: String
     ): Result<Boolean>
@@ -58,7 +58,7 @@ interface ServiceProjectTagResource {
     @Path("/{projectId}/isRbacPermission")
     @Operation(summary = "获取项目网关路由Tag")
     fun isRbacPermission(
-        @Parameter(description = "项目id", required = true)
+        @Parameter(name = "项目id", required = true)
         @PathParam("projectId")
         projectId: String
     ): Result<Boolean>
@@ -67,10 +67,10 @@ interface ServiceProjectTagResource {
     @Path("/{projectCode}/updateProjectRouteTag")
     @Operation(summary = "更新项目tag")
     fun updateProjectRouteTag(
-        @Parameter(description = "项目id", required = true)
+        @Parameter(name = "项目id", required = true)
         @PathParam("projectCode")
         projectCode: String,
-        @Parameter(description = "项目tag", required = true)
+        @Parameter(name = "项目tag", required = true)
         @QueryParam("tag")
         tag: String
     ): Result<Boolean>

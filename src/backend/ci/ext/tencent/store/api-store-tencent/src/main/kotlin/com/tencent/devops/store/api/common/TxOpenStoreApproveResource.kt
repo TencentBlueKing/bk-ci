@@ -50,19 +50,19 @@ interface TxOpenStoreApproveResource {
     @Path("/moa/tokens/{token}/callBack")
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
     fun moaApproveCallBack(
-        @Parameter(description = "审批人", required = true)
+        @Parameter(name = "审批人", required = true)
         @FormParam("verifier")
         verifier: String,
-        @Parameter(description = "审批状态 0对应驳回，1对应通过", required = true)
+        @Parameter(name = "审批状态 0对应驳回，1对应通过", required = true)
         @FormParam("result")
         result: Int,
-        @Parameter(description = "任务ID", required = true)
+        @Parameter(name = "任务ID", required = true)
         @FormParam("taskid")
         taskId: String,
-        @Parameter(description = "审批信息", required = true)
+        @Parameter(name = "审批信息", required = true)
         @FormParam("message")
         message: String,
-        @Parameter(description = "token", required = true)
+        @Parameter(name = "token", required = true)
         @PathParam("token")
         token: String
     ): Result<Boolean>

@@ -49,10 +49,10 @@ interface TxOpShardingRoutingRuleResource {
     @PUT
     @Path("/syncDbShardingRoutingRuleInfo")
     fun syncDBShardingRoutingRuleInfo(
-        @Parameter(description = "模块代码", required = true)
+        @Parameter(name = "模块代码", required = true)
         @QueryParam("moduleCode")
         moduleCode: SystemModuleEnum,
-        @Parameter(description = "集群名称", required = false)
+        @Parameter(name = "集群名称", required = false)
         @QueryParam("clusterName")
         clusterName: String?
     ): Result<Boolean>

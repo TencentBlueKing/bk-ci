@@ -62,22 +62,22 @@ interface ApigwArtifactoryResourceV4 {
     @Path("/user_download_url")
     @GET
     fun getUserDownloadUrl(
-        @Parameter(description = "appCode", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
+        @Parameter(name = "appCode", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
         appCode: String?,
-        @Parameter(description = "apigw Type", required = true)
+        @Parameter(name = "apigw Type", required = true)
         @PathParam("apigwType")
         apigwType: String?,
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "项目ID(项目英文名)", required = true)
+        @Parameter(name = "项目ID(项目英文名)", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(description = "版本仓库类型", required = true)
+        @Parameter(name = "版本仓库类型", required = true)
         @QueryParam("artifactoryType")
         artifactoryType: ArtifactoryType,
-        @Parameter(description = "路径", required = true)
+        @Parameter(name = "路径", required = true)
         @QueryParam("path")
         path: String
     ): Result<Url>
@@ -89,22 +89,22 @@ interface ApigwArtifactoryResourceV4 {
     @Path("/app_download_url")
     @GET
     fun getAppDownloadUrl(
-        @Parameter(description = "appCode", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
+        @Parameter(name = "appCode", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
         appCode: String?,
-        @Parameter(description = "apigw Type", required = true)
+        @Parameter(name = "apigw Type", required = true)
         @PathParam("apigwType")
         apigwType: String?,
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "项目ID", required = true)
+        @Parameter(name = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(description = "版本仓库类型", required = true)
+        @Parameter(name = "版本仓库类型", required = true)
         @QueryParam("artifactoryType")
         artifactoryType: ArtifactoryType,
-        @Parameter(description = "路径", required = true)
+        @Parameter(name = "路径", required = true)
         @QueryParam("path")
         path: String
     ): Result<Url>
@@ -116,28 +116,28 @@ interface ApigwArtifactoryResourceV4 {
     @Path("/file_info")
     @GET
     fun search(
-        @Parameter(description = "appCode", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
+        @Parameter(name = "appCode", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
         appCode: String?,
-        @Parameter(description = "apigw Type", required = true)
+        @Parameter(name = "apigw Type", required = true)
         @PathParam("apigwType")
         apigwType: String?,
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "项目ID(项目英文名)", required = true)
+        @Parameter(name = "项目ID(项目英文名)", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(description = "流水线ID", required = false)
+        @Parameter(name = "流水线ID", required = false)
         @QueryParam("pipelineId")
         pipelineId: String?,
-        @Parameter(description = "构建ID", required = true)
+        @Parameter(name = "构建ID", required = true)
         @QueryParam("buildId")
         buildId: String,
-        @Parameter(description = "第几页", required = false, example = "1")
+        @Parameter(name = "第几页", required = false, example = "1")
         @QueryParam("page")
         page: Int?,
-        @Parameter(description = "每页多少条(不传默认全部返回)", required = false, example = "20")
+        @Parameter(name = "每页多少条(不传默认全部返回)", required = false, example = "20")
         @QueryParam("pageSize")
         pageSize: Int?
     ): Result<Page<FileInfo>>
@@ -149,22 +149,22 @@ interface ApigwArtifactoryResourceV4 {
     @GET
     @Path("/log")
     fun getPluginLogUrl(
-        @Parameter(description = "userId", required = true)
+        @Parameter(name = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "项目 ID", required = true)
+        @Parameter(name = "项目 ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(description = "流水线 ID", required = true)
+        @Parameter(name = "流水线 ID", required = true)
         @QueryParam("pipelineId")
         pipelineId: String?,
-        @Parameter(description = "构建 ID", required = true)
+        @Parameter(name = "构建 ID", required = true)
         @QueryParam("buildId")
         buildId: String,
-        @Parameter(description = "插件 elementId", required = true)
+        @Parameter(name = "插件 elementId", required = true)
         @QueryParam("elementId")
         elementId: String,
-        @Parameter(description = "执行序号", required = true)
+        @Parameter(name = "执行序号", required = true)
         @QueryParam("executeCount")
         executeCount: String
     ): Result<Url>
@@ -173,34 +173,34 @@ interface ApigwArtifactoryResourceV4 {
     @Path("/custom")
     @GET
     fun listCustomFiles(
-        @Parameter(description = "appCode", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
+        @Parameter(name = "appCode", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
         appCode: String?,
-        @Parameter(description = "apigw Type", required = true)
+        @Parameter(name = "apigw Type", required = true)
         @PathParam("apigwType")
         apigwType: String?,
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "项目ID(项目英文名)", required = true)
+        @Parameter(name = "项目ID(项目英文名)", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(description = "文件路径", required = true)
+        @Parameter(name = "文件路径", required = true)
         @QueryParam("fullPath")
         fullPath: String,
-        @Parameter(description = "是否包含文件夹", required = false, example = "true")
+        @Parameter(name = "是否包含文件夹", required = false, example = "true")
         @QueryParam("includeFolder")
         includeFolder: Boolean?,
-        @Parameter(description = "是否深度查询文件", required = false, example = "false")
+        @Parameter(name = "是否深度查询文件", required = false, example = "false")
         @QueryParam("deep")
         deep: Boolean?,
-        @Parameter(description = "第几页", required = false, example = "1")
+        @Parameter(name = "第几页", required = false, example = "1")
         @QueryParam("page")
         page: Int?,
-        @Parameter(description = "每页多少条", required = false, example = "20")
+        @Parameter(name = "每页多少条", required = false, example = "20")
         @QueryParam("pageSize")
         pageSize: Int?,
-        @Parameter(description = "是否按modifiedTime倒序排列", required = false, example = "false")
+        @Parameter(name = "是否按modifiedTime倒序排列", required = false, example = "false")
         @QueryParam("modifiedTimeDesc")
         modifiedTimeDesc: Boolean?
     ): Result<Page<FileInfo>>

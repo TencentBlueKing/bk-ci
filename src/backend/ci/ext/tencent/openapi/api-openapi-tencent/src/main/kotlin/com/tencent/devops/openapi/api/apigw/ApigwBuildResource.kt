@@ -60,22 +60,22 @@ interface ApigwBuildResource {
     @POST
     @Path("/{projectId}/{pipelineId}/start")
     fun start(
-        @Parameter(description = "appCode", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
+        @Parameter(name = "appCode", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
         appCode: String?,
-        @Parameter(description = "apigw Type", required = true)
+        @Parameter(name = "apigw Type", required = true)
         @PathParam("apigwType")
         apigwType: String?,
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String,
-        @Parameter(description = "项目ID(项目英文名)", required = true)
+        @Parameter(name = "项目ID(项目英文名)", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(description = "流水线ID", required = true)
+        @Parameter(name = "流水线ID", required = true)
         @PathParam("pipelineId")
         pipelineId: String,
-        @Parameter(description = "启动参数", required = true)
+        @Parameter(name = "启动参数", required = true)
         values: Map<String, String>
     ): Result<BuildId>
 
@@ -83,22 +83,22 @@ interface ApigwBuildResource {
     @POST
     @Path("/{projectId}/{pipelineId}/{buildId}/stop")
     fun stop(
-        @Parameter(description = "appCode", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
+        @Parameter(name = "appCode", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
         appCode: String?,
-        @Parameter(description = "apigw Type", required = true)
+        @Parameter(name = "apigw Type", required = true)
         @PathParam("apigwType")
         apigwType: String?,
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String,
-        @Parameter(description = "项目ID(项目英文名)", required = true)
+        @Parameter(name = "项目ID(项目英文名)", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(description = "流水线ID", required = true)
+        @Parameter(name = "流水线ID", required = true)
         @PathParam("pipelineId")
         pipelineId: String,
-        @Parameter(description = "构建ID", required = true)
+        @Parameter(name = "构建ID", required = true)
         @PathParam("buildId")
         buildId: String
     ): Result<Boolean>
@@ -107,22 +107,22 @@ interface ApigwBuildResource {
     @GET
     @Path("/{projectId}/{pipelineId}/{buildId}/status")
     fun getStatus(
-        @Parameter(description = "appCode", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
+        @Parameter(name = "appCode", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
         appCode: String?,
-        @Parameter(description = "apigw Type", required = true)
+        @Parameter(name = "apigw Type", required = true)
         @PathParam("apigwType")
         apigwType: String?,
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String,
-        @Parameter(description = "项目ID(项目英文名)", required = true)
+        @Parameter(name = "项目ID(项目英文名)", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(description = "流水线ID", required = true)
+        @Parameter(name = "流水线ID", required = true)
         @PathParam("pipelineId")
         pipelineId: String,
-        @Parameter(description = "构建ID", required = true)
+        @Parameter(name = "构建ID", required = true)
         @PathParam("buildId")
         buildId: String
     ): Result<BuildHistoryWithVars>
@@ -131,25 +131,25 @@ interface ApigwBuildResource {
     @GET
     @Path("/{projectId}/{pipelineId}/history")
     fun getHistoryBuild(
-        @Parameter(description = "appCode", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
+        @Parameter(name = "appCode", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
         appCode: String?,
-        @Parameter(description = "apigw Type", required = true)
+        @Parameter(name = "apigw Type", required = true)
         @PathParam("apigwType")
         apigwType: String?,
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String,
-        @Parameter(description = "项目ID(项目英文名)", required = true)
+        @Parameter(name = "项目ID(项目英文名)", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(description = "流水线ID", required = true)
+        @Parameter(name = "流水线ID", required = true)
         @PathParam("pipelineId")
         pipelineId: String,
-        @Parameter(description = "第几页", required = false, example = "1")
+        @Parameter(name = "第几页", required = false, example = "1")
         @QueryParam("page")
         page: Int?,
-        @Parameter(description = "每页条数(默认20, 最大100)", required = false, example = "20")
+        @Parameter(name = "每页条数(默认20, 最大100)", required = false, example = "20")
         @QueryParam("pageSize")
         pageSize: Int?
     ): Result<BuildHistoryPage<BuildHistory>>
@@ -158,19 +158,19 @@ interface ApigwBuildResource {
     @GET
     @Path("/{projectId}/{pipelineId}/manualStartupInfo")
     fun manualStartupInfo(
-        @Parameter(description = "appCode", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
+        @Parameter(name = "appCode", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
         appCode: String?,
-        @Parameter(description = "apigw Type", required = true)
+        @Parameter(name = "apigw Type", required = true)
         @PathParam("apigwType")
         apigwType: String?,
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String,
-        @Parameter(description = "项目ID(项目英文名)", required = true)
+        @Parameter(name = "项目ID(项目英文名)", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(description = "流水线ID", required = true)
+        @Parameter(name = "流水线ID", required = true)
         @PathParam("pipelineId")
         pipelineId: String
     ): Result<BuildManualStartupInfo>

@@ -55,13 +55,13 @@ interface OpAppCodeGroupResource {
     @POST
     @Path("{appCode}")
     fun setGroup(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userName: String,
-        @Parameter(description = "appCode", required = true)
+        @Parameter(name = "appCode", required = true)
         @PathParam("appCode")
         appCode: String,
-        @Parameter(description = "appCodeGroup", required = true)
+        @Parameter(name = "appCodeGroup", required = true)
         appCodeGroup: AppCodeGroup
     ): Result<Boolean>
 
@@ -69,10 +69,10 @@ interface OpAppCodeGroupResource {
     @GET
     @Path("{appCode}")
     fun getGroup(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userName: String,
-        @Parameter(description = "appCode", required = true)
+        @Parameter(name = "appCode", required = true)
         @PathParam("appCode")
         appCode: String
     ): Result<AppCodeGroupResponse?>
@@ -81,7 +81,7 @@ interface OpAppCodeGroupResource {
     @GET
     @Path("")
     fun listGroup(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userName: String
     ): Result<List<AppCodeGroupResponse>>
@@ -90,10 +90,10 @@ interface OpAppCodeGroupResource {
     @DELETE
     @Path("{appCode}")
     fun deleteGroup(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userName: String,
-        @Parameter(description = "appCode", required = true)
+        @Parameter(name = "appCode", required = true)
         @PathParam("appCode")
         appCode: String
     ): Result<Boolean>

@@ -28,16 +28,16 @@
 package com.tencent.devops.environment.pojo.job.agentres
 
 import com.fasterxml.jackson.annotation.JsonProperty
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
 data class AgentInstallAgentChannel(
-    @ApiModelProperty(value = "安装通道ID")
+    @get:Schema(title = "安装通道ID")
     val id: Int,
-    @ApiModelProperty(value = "安装通道名称")
+    @get:Schema(title = "安装通道名称")
     val name: String,
-    @ApiModelProperty(value = "安装通道管控区域ID")
+    @get:Schema(title = "安装通道管控区域ID")
     @JsonProperty("bk_cloud_id")
     val bkCloudId: Int,
-    @ApiModelProperty(value = "是否为隐藏安装通道")
+    @get:Schema(title = "是否为隐藏安装通道")
     val hidden: Boolean
 )

@@ -55,22 +55,22 @@ interface ApigwSlaResourceV2 {
     @GET
     @Path("/codecc/queryByBG")
     fun codeccQueryByBG(
-        @Parameter(description = "appCode", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
+        @Parameter(name = "appCode", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
         appCode: String?,
-        @Parameter(description = "apigw Type", required = true)
+        @Parameter(name = "apigw Type", required = true)
         @PathParam("apigwType")
         apigwType: String?,
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String,
-        @Parameter(description = "事业群ID", required = true)
+        @Parameter(name = "事业群ID", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_ORGANIZATION_ID)
         bgId: String,
-        @Parameter(description = "开始时间(时间戳形式)", required = true)
+        @Parameter(name = "开始时间(时间戳形式)", required = true)
         @QueryParam(value = "startTime")
         startTime: Long,
-        @Parameter(description = "结束时间(时间戳形式)", required = true)
+        @Parameter(name = "结束时间(时间戳形式)", required = true)
         @QueryParam(value = "endTime")
         endTime: Long
     ): Result<SlaCodeccResponseData>

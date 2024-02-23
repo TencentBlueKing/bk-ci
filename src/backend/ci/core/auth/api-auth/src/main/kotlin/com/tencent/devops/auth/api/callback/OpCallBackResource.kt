@@ -56,7 +56,7 @@ interface OpCallBackResource {
     @GET
     @Path("/resource/{resourceId}")
     fun get(
-        @Parameter(description = "资源类型")
+        @Parameter(name = "资源类型")
         @PathParam("resourceId")
         resourceId: String
     ): Result<IamCallBackInfo?>
@@ -68,7 +68,7 @@ interface OpCallBackResource {
     @PUT
     @Path("/refresh_gateway")
     fun refreshGateway(
-        @Parameter(description = "新旧网关映射")
+        @Parameter(name = "新旧网关映射")
         oldToNewMap: Map<String, String>
     ): Result<Boolean>
 }

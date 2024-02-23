@@ -58,25 +58,25 @@ interface UserPipelineAtomResource {
     @GET
     @Path("/atoms/{atomCode}/rel/list")
     fun getPipelineAtomRelList(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "插件标识", required = true)
+        @Parameter(name = "插件标识", required = true)
         @PathParam("atomCode")
         atomCode: String,
-        @Parameter(description = "插件版本号", required = false)
+        @Parameter(name = "插件版本号", required = false)
         @QueryParam("version")
         version: String?,
-        @Parameter(description = "查询开始时间，格式yyyy-MM-dd HH:mm:ss", required = true)
+        @Parameter(name = "查询开始时间，格式yyyy-MM-dd HH:mm:ss", required = true)
         @QueryParam("startUpdateTime")
         startUpdateTime: String,
-        @Parameter(description = "查询结束时间，格式yyyy-MM-dd HH:mm:ss", required = true)
+        @Parameter(name = "查询结束时间，格式yyyy-MM-dd HH:mm:ss", required = true)
         @QueryParam("endUpdateTime")
         endUpdateTime: String,
-        @Parameter(description = "第几页", required = true, example = "1")
+        @Parameter(name = "第几页", required = true, example = "1")
         @QueryParam("page")
         page: Int = 1,
-        @Parameter(description = "每页多少条", required = true, example = "10")
+        @Parameter(name = "每页多少条", required = true, example = "10")
         @QueryParam("pageSize")
         pageSize: Int = 10
     ): Result<Page<PipelineAtomRel>?>
@@ -85,19 +85,19 @@ interface UserPipelineAtomResource {
     @POST
     @Path("/atoms/{atomCode}/rel/csv/export")
     fun exportPipelineAtomRelCsv(
-        @Parameter(description = "userId", required = true)
+        @Parameter(name = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "插件标识", required = true)
+        @Parameter(name = "插件标识", required = true)
         @PathParam("atomCode")
         atomCode: String,
-        @Parameter(description = "插件版本号", required = false)
+        @Parameter(name = "插件版本号", required = false)
         @QueryParam("version")
         version: String?,
-        @Parameter(description = "查询开始时间，格式yyyy-MM-dd HH:mm:ss", required = true)
+        @Parameter(name = "查询开始时间，格式yyyy-MM-dd HH:mm:ss", required = true)
         @QueryParam("startUpdateTime")
         startUpdateTime: String,
-        @Parameter(description = "查询结束时间，格式yyyy-MM-dd HH:mm:ss", required = true)
+        @Parameter(name = "查询结束时间，格式yyyy-MM-dd HH:mm:ss", required = true)
         @QueryParam("endUpdateTime")
         endUpdateTime: String,
         @Context
@@ -108,13 +108,13 @@ interface UserPipelineAtomResource {
     @GET
     @Path("/projects/{projectId}/pipelines/{pipelineId}/atom/prop/list")
     fun getPipelineAtomPropList(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "项目ID", required = true)
+        @Parameter(name = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(description = "流水线ID", required = true)
+        @Parameter(name = "流水线ID", required = true)
         @PathParam("pipelineId")
         pipelineId: String
     ): Result<Map<String, AtomProp>?>

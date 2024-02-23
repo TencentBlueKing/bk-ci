@@ -49,10 +49,10 @@ interface ServiceProcessAuthResource {
     @Path("/")
     @Operation(summary = "iam流水线回调接口")
     fun pipelineInfo(
-        @Parameter(description = "回调信息")
+        @Parameter(name = "回调信息")
         callBackInfo: CallbackRequestDTO,
         @HeaderParam(AUTH_HEADER_IAM_TOKEN)
-        @Parameter(description = "token")
+        @Parameter(name = "token")
         token: String
     ): CallbackBaseResponseDTO?
 
@@ -60,10 +60,10 @@ interface ServiceProcessAuthResource {
     @Path("/pipelineGroupInfo")
     @Operation(summary = "iam流水线组回调接口")
     fun pipelineGroupInfo(
-        @Parameter(description = "回调信息")
+        @Parameter(name = "回调信息")
         callBackInfo: CallbackRequestDTO,
         @HeaderParam(AUTH_HEADER_IAM_TOKEN)
-        @Parameter(description = "token")
+        @Parameter(name = "token")
         token: String
     ): CallbackBaseResponseDTO?
 
@@ -71,10 +71,10 @@ interface ServiceProcessAuthResource {
     @Path("/pipelineTemplateInfo")
     @Operation(summary = "iam流水线模板回调接口")
     fun pipelineTemplateInfo(
-        @Parameter(description = "回调信息")
+        @Parameter(name = "回调信息")
         callBackInfo: CallbackRequestDTO,
         @HeaderParam(AUTH_HEADER_IAM_TOKEN)
-        @Parameter(description = "token")
+        @Parameter(name = "token")
         token: String
     ): CallbackBaseResponseDTO?
 
@@ -82,10 +82,10 @@ interface ServiceProcessAuthResource {
     @Path("/byAutoId")
     @Operation(summary = "iam流水线回调接口")
     fun pipelineInfoByAutoId(
-        @Parameter(description = "回调信息")
+        @Parameter(name = "回调信息")
         callBackInfo: CallbackRequestDTO,
         @HeaderParam(AUTH_HEADER_IAM_TOKEN)
-        @Parameter(description = "token")
+        @Parameter(name = "token")
         token: String
     ): CallbackBaseResponseDTO?
 }

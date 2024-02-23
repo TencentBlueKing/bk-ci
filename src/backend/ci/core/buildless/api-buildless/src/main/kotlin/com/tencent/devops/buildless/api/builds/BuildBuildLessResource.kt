@@ -48,7 +48,7 @@ interface BuildBuildLessResource {
     @GET
     @Path("/task/claim")
     fun claimBuildLessTask(
-        @Parameter(description = "containerId", required = true)
+        @Parameter(name = "containerId", required = true)
         @QueryParam("containerId")
         containerId: String
     ): BuildLessTask?

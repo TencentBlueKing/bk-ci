@@ -52,12 +52,12 @@ interface BuildQualityIndicatorResource {
     @Path("/project/{projectId}/upsertIndicator")
     @POST
     fun upsertIndicator(
-        @Parameter(description = "用户Id", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户Id", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
         @PathParam("projectId")
         projectId: String,
-        @Parameter(description = "指标请求报文", required = true)
+        @Parameter(name = "指标请求报文", required = true)
         indicatorCreate: List<IndicatorCreate>
     ): Result<Boolean>
 }

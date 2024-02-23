@@ -55,28 +55,28 @@ interface UserStoreLogResource {
     @GET
     @Path("/types/{storeType}/projects/{projectCode}/pipelines/{pipelineId}/builds/{buildId}/")
     fun getInitLogs(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "研发商店组件类型", required = true)
+        @Parameter(name = "研发商店组件类型", required = true)
         @PathParam("storeType")
         storeType: StoreTypeEnum,
-        @Parameter(description = "项目代码", required = true)
+        @Parameter(name = "项目代码", required = true)
         @PathParam("projectCode")
         projectCode: String,
-        @Parameter(description = "流水线ID", required = true)
+        @Parameter(name = "流水线ID", required = true)
         @PathParam("pipelineId")
         pipelineId: String,
-        @Parameter(description = "构建ID", required = true)
+        @Parameter(name = "构建ID", required = true)
         @PathParam("buildId")
         buildId: String,
-        @Parameter(description = "是否包含调试日志", required = false)
+        @Parameter(name = "是否包含调试日志", required = false)
         @QueryParam("debug")
         debug: Boolean? = false,
-        @Parameter(description = "对应elementId", required = false)
+        @Parameter(name = "对应elementId", required = false)
         @QueryParam("tag")
         tag: String?,
-        @Parameter(description = "执行次数", required = false)
+        @Parameter(name = "执行次数", required = false)
         @QueryParam("executeCount")
         executeCount: Int?
     ): Result<QueryLogs?>
@@ -85,40 +85,40 @@ interface UserStoreLogResource {
     @GET
     @Path("/types/{storeType}/projects/{projectCode}/pipelines/{pipelineId}/builds/{buildId}/more")
     fun getMoreLogs(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "研发商店组件类型", required = true)
+        @Parameter(name = "研发商店组件类型", required = true)
         @PathParam("storeType")
         storeType: StoreTypeEnum,
-        @Parameter(description = "项目代码", required = true)
+        @Parameter(name = "项目代码", required = true)
         @PathParam("projectCode")
         projectCode: String,
-        @Parameter(description = "流水线ID", required = true)
+        @Parameter(name = "流水线ID", required = true)
         @PathParam("pipelineId")
         pipelineId: String,
-        @Parameter(description = "构建ID", required = true)
+        @Parameter(name = "构建ID", required = true)
         @PathParam("buildId")
         buildId: String,
-        @Parameter(description = "是否包含调试日志", required = false)
+        @Parameter(name = "是否包含调试日志", required = false)
         @QueryParam("debug")
         debug: Boolean? = false,
-        @Parameter(description = "日志行数", required = false)
+        @Parameter(name = "日志行数", required = false)
         @QueryParam("num")
         num: Int? = 100,
-        @Parameter(description = "是否正序输出", required = false)
+        @Parameter(name = "是否正序输出", required = false)
         @QueryParam("fromStart")
         fromStart: Boolean? = true,
-        @Parameter(description = "起始行号", required = true)
+        @Parameter(name = "起始行号", required = true)
         @QueryParam("start")
         start: Long,
-        @Parameter(description = "结尾行号", required = true)
+        @Parameter(name = "结尾行号", required = true)
         @QueryParam("end")
         end: Long,
-        @Parameter(description = "对应elementId", required = false)
+        @Parameter(name = "对应elementId", required = false)
         @QueryParam("tag")
         tag: String?,
-        @Parameter(description = "执行次数", required = false)
+        @Parameter(name = "执行次数", required = false)
         @QueryParam("executeCount")
         executeCount: Int?
     ): Result<QueryLogs?>
@@ -127,31 +127,31 @@ interface UserStoreLogResource {
     @GET
     @Path("/types/{storeType}/projects/{projectCode}/pipelines/{pipelineId}/builds/{buildId}/after")
     fun getAfterLogs(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "研发商店组件类型", required = true)
+        @Parameter(name = "研发商店组件类型", required = true)
         @PathParam("storeType")
         storeType: StoreTypeEnum,
-        @Parameter(description = "项目代码", required = true)
+        @Parameter(name = "项目代码", required = true)
         @PathParam("projectCode")
         projectCode: String,
-        @Parameter(description = "流水线ID", required = true)
+        @Parameter(name = "流水线ID", required = true)
         @PathParam("pipelineId")
         pipelineId: String,
-        @Parameter(description = "构建ID", required = true)
+        @Parameter(name = "构建ID", required = true)
         @PathParam("buildId")
         buildId: String,
-        @Parameter(description = "起始行号", required = true)
+        @Parameter(name = "起始行号", required = true)
         @QueryParam("start")
         start: Long,
-        @Parameter(description = "是否包含调试日志", required = false)
+        @Parameter(name = "是否包含调试日志", required = false)
         @QueryParam("debug")
         debug: Boolean? = false,
-        @Parameter(description = "对应elementId", required = false)
+        @Parameter(name = "对应elementId", required = false)
         @QueryParam("tag")
         tag: String?,
-        @Parameter(description = "执行次数", required = false)
+        @Parameter(name = "执行次数", required = false)
         @QueryParam("executeCount")
         executeCount: Int?
     ): Result<QueryLogs?>

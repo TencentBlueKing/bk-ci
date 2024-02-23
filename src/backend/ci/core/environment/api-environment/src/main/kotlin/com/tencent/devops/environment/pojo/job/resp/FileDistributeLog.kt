@@ -1,16 +1,16 @@
 package com.tencent.devops.environment.pojo.job.resp
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
 
-@ApiModel("文件分发任务日志")
+
+
+@Schema(title = "文件分发任务日志")
 data class FileDistributeLog(
-    @ApiModelProperty(value = "云区域ID")
+    @get:Schema(title = "云区域ID")
     val bkCloudId: Long?,
-    @ApiModelProperty(value = "IP地址")
+    @get:Schema(title = "IP地址")
     val ip: String?,
-    @ApiModelProperty(value = "主机ID")
+    @get:Schema(title = "主机ID")
     val bkHostId: Long?,
-    @ApiModelProperty(value = "文件分发日志内容", required = true)
+    @get:Schema(title = "文件分发日志内容", required = true)
     val fileLogList: List<FileLog>
 )

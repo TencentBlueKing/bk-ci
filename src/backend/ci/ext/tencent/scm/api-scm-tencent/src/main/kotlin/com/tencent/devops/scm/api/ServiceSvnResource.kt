@@ -50,25 +50,25 @@ interface ServiceSvnResource {
     @GET
     @Path("/getFileContent")
     fun getFileContent(
-        @Parameter(description = "仓库url")
+        @Parameter(name = "仓库url")
         @QueryParam("url")
         url: String,
-        @Parameter(description = "用户id")
+        @Parameter(name = "用户id")
         @QueryParam("userId")
         userId: String,
-        @Parameter(description = "仓库类型")
+        @Parameter(name = "仓库类型")
         @QueryParam("type")
         svnType: String,
-        @Parameter(description = "文件路径")
+        @Parameter(name = "文件路径")
         @QueryParam("filePath")
         filePath: String,
-        @Parameter(description = "svn版本号")
+        @Parameter(name = "svn版本号")
         @QueryParam("reversion")
         reversion: Long,
-        @Parameter(description = "私钥或用户名")
+        @Parameter(name = "私钥或用户名")
         @QueryParam("credential1")
         credential1: String,
-        @Parameter(description = "密码")
+        @Parameter(name = "密码")
         @QueryParam("credential2")
         credential2: String? = null
     ): Result<String>
@@ -77,28 +77,28 @@ interface ServiceSvnResource {
     @GET
     @Path("/getDir")
     fun getDirectories(
-        @Parameter(description = "仓库url")
+        @Parameter(name = "仓库url")
         @QueryParam("url")
         url: String,
-        @Parameter(description = "用户id")
+        @Parameter(name = "用户id")
         @QueryParam("userId")
         userId: String,
-        @Parameter(description = "仓库类型")
+        @Parameter(name = "仓库类型")
         @QueryParam("type")
         svnType: String,
-        @Parameter(description = "相对路径")
+        @Parameter(name = "相对路径")
         @QueryParam("svnPath")
         svnPath: String?,
-        @Parameter(description = "revision")
+        @Parameter(name = "revision")
         @QueryParam("revision")
         revision: Long,
-        @Parameter(description = "用户名")
+        @Parameter(name = "用户名")
         @QueryParam("credential1")
         credential1: String,
-        @Parameter(description = "密码或私钥")
+        @Parameter(name = "密码或私钥")
         @QueryParam("credential2")
         credential2: String,
-        @Parameter(description = "私钥密码")
+        @Parameter(name = "私钥密码")
         @QueryParam("credential3")
         credential3: String?
     ): Result<List<SvnFileInfo>>
@@ -107,22 +107,22 @@ interface ServiceSvnResource {
     @GET
     @Path("/getSvnRevisionList")
     fun getSvnRevisionList(
-        @Parameter(description = "仓库地址")
+        @Parameter(name = "仓库地址")
         @QueryParam("url")
         url: String,
-        @Parameter(description = "仓库用户")
+        @Parameter(name = "仓库用户")
         @QueryParam("username")
         username: String,
-        @Parameter(description = "私钥")
+        @Parameter(name = "私钥")
         @QueryParam("privateKey")
         privateKey: String,
-        @Parameter(description = "passphrase")
+        @Parameter(name = "passphrase")
         @QueryParam("passPhrase")
         passPhrase: String?,
-        @Parameter(description = "branchName")
+        @Parameter(name = "branchName")
         @QueryParam("branchName")
         branchName: String?,
-        @Parameter(description = "当前版本")
+        @Parameter(name = "当前版本")
         @QueryParam("currentVersion")
         currentVersion: String?
     ): Result<Pair<Long, List<SvnRevisionInfo>>>

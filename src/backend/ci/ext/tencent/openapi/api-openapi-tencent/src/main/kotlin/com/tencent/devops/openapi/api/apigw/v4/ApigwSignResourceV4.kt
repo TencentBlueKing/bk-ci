@@ -58,25 +58,25 @@ interface ApigwSignResourceV4 {
     @GET
     @Path("/sign_history_list")
     fun getHistorySign(
-        @Parameter(description = "appCode", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
+        @Parameter(name = "appCode", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
         appCode: String?,
-        @Parameter(description = "apigw Type", required = true)
+        @Parameter(name = "apigw Type", required = true)
         @PathParam("apigwType")
         apigwType: String?,
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String,
-        @Parameter(description = "起始时间戳（毫秒）", required = false)
+        @Parameter(name = "起始时间戳（毫秒）", required = false)
         @QueryParam("startTime")
         startTime: Long?,
-        @Parameter(description = "截止时间戳（毫秒）", required = false)
+        @Parameter(name = "截止时间戳（毫秒）", required = false)
         @QueryParam("endTime")
         endTime: Long?,
-        @Parameter(description = "第几页", required = false, example = "1")
+        @Parameter(name = "第几页", required = false, example = "1")
         @QueryParam("page")
         page: Int?,
-        @Parameter(description = "每页条数(默认20, 最大100)", required = false, example = "20")
+        @Parameter(name = "每页条数(默认20, 最大100)", required = false, example = "20")
         @QueryParam("pageSize")
         pageSize: Int?
     ): Result<Page<SignHistory>>
@@ -85,22 +85,22 @@ interface ApigwSignResourceV4 {
     @GET
     @Path("/projects/{projectId}/sign_token")
     fun getSignToken(
-        @Parameter(description = "appCode", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
+        @Parameter(name = "appCode", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
         appCode: String?,
-        @Parameter(description = "apigw Type", required = true)
+        @Parameter(name = "apigw Type", required = true)
         @PathParam("apigwType")
         apigwType: String?,
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String,
-        @Parameter(description = "项目ID(项目英文名)", required = true)
+        @Parameter(name = "项目ID(项目英文名)", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(description = "流水线ID", required = false)
+        @Parameter(name = "流水线ID", required = false)
         @QueryParam("pipelineId")
         pipelineId: String?,
-        @Parameter(description = "构建ID", required = true)
+        @Parameter(name = "构建ID", required = true)
         @QueryParam("buildId")
         buildId: String
     ): Result<IpaUploadInfo>
@@ -109,16 +109,16 @@ interface ApigwSignResourceV4 {
     @GET
     @Path("/sign_status")
     fun getStatus(
-        @Parameter(description = "appCode", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
+        @Parameter(name = "appCode", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
         appCode: String?,
-        @Parameter(description = "apigw Type", required = true)
+        @Parameter(name = "apigw Type", required = true)
         @PathParam("apigwType")
         apigwType: String?,
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String,
-        @Parameter(description = "签名任务ID", required = true)
+        @Parameter(name = "签名任务ID", required = true)
         @QueryParam("resignId")
         resignId: String
     ): Result<String>
@@ -127,16 +127,16 @@ interface ApigwSignResourceV4 {
     @GET
     @Path("/sign_detail")
     fun getDetail(
-        @Parameter(description = "appCode", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
+        @Parameter(name = "appCode", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
         appCode: String?,
-        @Parameter(description = "apigw Type", required = true)
+        @Parameter(name = "apigw Type", required = true)
         @PathParam("apigwType")
         apigwType: String?,
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String,
-        @Parameter(description = "签名任务ID", required = true)
+        @Parameter(name = "签名任务ID", required = true)
         @QueryParam("resignId")
         resignId: String
     ): Result<SignDetail>
@@ -145,16 +145,16 @@ interface ApigwSignResourceV4 {
     @GET
     @Path("/sign_download_url")
     fun getDownloadUrl(
-        @Parameter(description = "appCode", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
+        @Parameter(name = "appCode", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
         appCode: String?,
-        @Parameter(description = "apigw Type", required = true)
+        @Parameter(name = "apigw Type", required = true)
         @PathParam("apigwType")
         apigwType: String?,
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String,
-        @Parameter(description = "签名任务ID", required = true)
+        @Parameter(name = "签名任务ID", required = true)
         @QueryParam("resignId")
         resignId: String
     ): Result<String>

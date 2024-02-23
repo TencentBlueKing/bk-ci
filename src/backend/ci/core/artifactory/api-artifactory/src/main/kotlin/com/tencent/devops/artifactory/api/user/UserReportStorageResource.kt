@@ -49,22 +49,22 @@ interface UserReportStorageResource {
     @Path("/{projectId}/{pipelineId}/{buildId}/{elementId}/{path: .*}")
     @GET
     fun get(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "项目ID", required = true)
+        @Parameter(name = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(description = "流水线ID", required = true)
+        @Parameter(name = "流水线ID", required = true)
         @PathParam("pipelineId")
         pipelineId: String,
-        @Parameter(description = "构建ID", required = true)
+        @Parameter(name = "构建ID", required = true)
         @PathParam("buildId")
         buildId: String,
-        @Parameter(description = "原子ID", required = true)
+        @Parameter(name = "原子ID", required = true)
         @PathParam("elementId")
         elementId: String,
-        @Parameter(description = "相对路径", required = true)
+        @Parameter(name = "相对路径", required = true)
         @PathParam("path")
         path: String
     )

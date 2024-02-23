@@ -27,15 +27,14 @@
 
 package com.tencent.devops.environment.pojo.job.agentreq
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("安装agent的请求信息")
+@Schema(title = "安装agent的请求信息")
 data class InstallAgentReq(
-    @ApiModelProperty(value = "主机列表", required = true)
+    @get:Schema(title = "主机列表", required = true)
     val hosts: List<HostForInstallAgent>,
-    @ApiModelProperty(value = "被替换的Proxy主机ID")
+    @get:Schema(title = "被替换的Proxy主机ID")
     val replaceHostId: Int?,
-    @ApiModelProperty(value = "是否安装最新版本插件，默认不安装最新插件")
+    @get:Schema(title = "是否安装最新版本插件，默认不安装最新插件")
     val isInstallLatestPlugins: Boolean?
 )

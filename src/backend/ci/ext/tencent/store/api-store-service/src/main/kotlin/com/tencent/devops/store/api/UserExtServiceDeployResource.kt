@@ -53,13 +53,13 @@ interface UserExtServiceDeployResource {
     @Path("/services/{serviceCode}/status")
     @GET
     fun getExtServiceDeployStatus(
-        @Parameter(description = "userId", required = true)
+        @Parameter(name = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "扩展服务代码", required = true)
+        @Parameter(name = "扩展服务代码", required = true)
         @PathParam("serviceCode")
         serviceCode: String,
-        @Parameter(description = "灰度部署标识", required = false)
+        @Parameter(name = "灰度部署标识", required = false)
         @QueryParam("grayFlag")
         grayFlag: Boolean? = false
     ): Result<DeploymentStatus?>
@@ -68,16 +68,16 @@ interface UserExtServiceDeployResource {
     @Path("/services/{serviceCode}/versions/{version}/deploy")
     @POST
     fun deployExtService(
-        @Parameter(description = "userId", required = true)
+        @Parameter(name = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "扩展服务代码", required = true)
+        @Parameter(name = "扩展服务代码", required = true)
         @PathParam("serviceCode")
         serviceCode: String,
-        @Parameter(description = "扩展服务版本号", required = true)
+        @Parameter(name = "扩展服务版本号", required = true)
         @PathParam("version")
         version: String,
-        @Parameter(description = "灰度部署标识", required = false)
+        @Parameter(name = "灰度部署标识", required = false)
         @QueryParam("grayFlag")
         grayFlag: Boolean? = true
     ): Result<Boolean>

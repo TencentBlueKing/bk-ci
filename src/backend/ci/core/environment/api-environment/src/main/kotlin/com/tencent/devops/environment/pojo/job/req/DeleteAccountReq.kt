@@ -1,8 +1,8 @@
 package com.tencent.devops.environment.pojo.job.req
 
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
 data class DeleteAccountReq(
-    @ApiModelProperty(value = "帐号ID", required = true)
+    @get:Schema(title = "帐号ID", required = true)
     val id: Long
 )

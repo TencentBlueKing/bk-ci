@@ -48,10 +48,10 @@ interface ServiceManagerApprovalResource {
     @Path("/user_renewal")
     @Operation(summary = "用户续期权限")
     fun userRenewalAuth(
-        @Parameter(description = "审批单ID")
+        @Parameter(name = "审批单ID")
         @QueryParam("approvalId")
         approvalId: Int,
-        @Parameter(description = "用户是否续期")
+        @Parameter(name = "用户是否续期")
         @QueryParam("approvalType")
         approvalType: ApprovalType
     ): Result<Boolean>
@@ -60,10 +60,10 @@ interface ServiceManagerApprovalResource {
     @Path("/manager_approval")
     @Operation(summary = "审批人审批")
     fun managerApproval(
-        @Parameter(description = "审批单ID")
+        @Parameter(name = "审批单ID")
         @QueryParam("approvalId")
         approvalId: Int,
-        @Parameter(description = "是否同意用户续期")
+        @Parameter(name = "是否同意用户续期")
         @QueryParam("approvalType")
         approvalType: ApprovalType
     ): Result<Boolean>

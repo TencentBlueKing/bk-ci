@@ -53,18 +53,18 @@ interface ServiceTimerBuildResource {
     @POST
     @Path("/projects/{projectId}/pipelines/{pipelineId}/timer/trigger")
     fun timerTrigger(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "项目ID", required = true)
+        @Parameter(name = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(description = "流水线ID", required = true)
+        @Parameter(name = "流水线ID", required = true)
         @PathParam("pipelineId")
         pipelineId: String,
-        @Parameter(description = "启动参数", required = true)
+        @Parameter(name = "启动参数", required = true)
         params: Map<String, String>,
-        @Parameter(description = "渠道号，默认为BS", required = false)
+        @Parameter(name = "渠道号，默认为BS", required = false)
         @QueryParam("channelCode")
         channelCode: ChannelCode = ChannelCode.BS
     ): Result<String?>

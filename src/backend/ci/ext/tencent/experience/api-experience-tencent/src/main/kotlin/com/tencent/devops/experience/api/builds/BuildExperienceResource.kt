@@ -50,13 +50,13 @@ interface BuildExperienceResource {
     @Path("/projects/{projectId}/users/{userId}/")
     @POST
     fun create(
-        @Parameter(description = "用户ID", required = true)
+        @Parameter(name = "用户ID", required = true)
         @PathParam("userId")
         userId: String,
-        @Parameter(description = "项目ID", required = true)
+        @Parameter(name = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(description = "发布详情", required = true)
+        @Parameter(name = "发布详情", required = true)
         experience: ExperienceServiceCreate
     ): Result<ExperienceCreateResp>
 
@@ -64,10 +64,10 @@ interface BuildExperienceResource {
     @Path("/projects/{projectId}/batchNotification")
     @POST
     fun batchNotification(
-        @Parameter(description = "项目ID", required = true)
+        @Parameter(name = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(description = "通知请求")
+        @Parameter(name = "通知请求")
         req: ExperienceNotificationReq
     ): Result<Boolean>
 }

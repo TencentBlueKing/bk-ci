@@ -51,19 +51,19 @@ interface ServiceManagerResource {
     @Path("/projects/{projectCode}")
     fun validateManagerPermission(
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
-        @Parameter(description = "待校验用户ID", required = true)
+        @Parameter(name = "待校验用户ID", required = true)
         userId: String,
         @HeaderParam(AUTH_HEADER_DEVOPS_BK_TOKEN)
-        @Parameter(description = "认证token", required = true)
+        @Parameter(name = "认证token", required = true)
         token: String,
         @PathParam("projectCode")
-        @Parameter(description = "项目编码", required = true)
+        @Parameter(name = "项目编码", required = true)
         projectCode: String,
         @QueryParam("action")
-        @Parameter(description = "资源类型", required = true)
+        @Parameter(name = "资源类型", required = true)
         action: String,
         @QueryParam("resourceCode")
-        @Parameter(description = "资源编码", required = false)
+        @Parameter(name = "资源编码", required = false)
         resourceCode: String
     ): Result<Boolean>
 }

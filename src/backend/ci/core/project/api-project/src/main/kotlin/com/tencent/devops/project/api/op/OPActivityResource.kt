@@ -57,13 +57,13 @@ interface OPActivityResource {
     @Path("/types/{type}")
     @Operation(summary = "添加")
     fun addActivity(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String,
-        @Parameter(description = "最新动态类型")
+        @Parameter(name = "最新动态类型")
         @PathParam("type")
         type: ActivityType,
-        @Parameter(description = "最新动态")
+        @Parameter(name = "最新动态")
         info: ActivityInfo
     ): Result<Boolean>
 
@@ -71,10 +71,10 @@ interface OPActivityResource {
     @Path("/{fieldName}/enum")
     @Operation(summary = "获取字段常量信息")
     fun getField(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String,
-        @Parameter(description = "最新动态ID")
+        @Parameter(name = "最新动态ID")
         @PathParam("fieldName")
         fieldName: String
     ): Result<List<String>>
@@ -84,10 +84,10 @@ interface OPActivityResource {
 //    @Path("/fields/{fieldName}/enum")
 //    @Operation(summary = "获取字段常量信息")
 //    fun getFieldV2(
-//            @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+//            @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
 //            @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
 //            userId: String,
-//            @Parameter(description = "最新动态ID")
+//            @Parameter(name = "最新动态ID")
 //            @PathParam("fieldName")
 //            fieldName: String
 //    ): Result<List<String>>
@@ -96,13 +96,13 @@ interface OPActivityResource {
     @Path("/{activityId}")
     @Operation(summary = "修改")
     fun upDateActivity(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String,
-        @Parameter(description = "最新动态ID")
+        @Parameter(name = "最新动态ID")
         @PathParam("activityId")
         activityId: Long,
-        @Parameter(description = "最新动态")
+        @Parameter(name = "最新动态")
         opActivityUpdate: OPActivityUpdate
     ): Result<Boolean>
 
@@ -110,10 +110,10 @@ interface OPActivityResource {
     @Path("/{activityId}")
     @Operation(summary = "删除")
     fun deleteActivity(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String,
-        @Parameter(description = "最新动态ID")
+        @Parameter(name = "最新动态ID")
         @PathParam("activityId")
         activityId: Long
     ): Result<Boolean>
@@ -122,10 +122,10 @@ interface OPActivityResource {
     @Path("/{activityId}")
     @Operation(summary = "根据ID查询")
     fun getActivity(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String,
-        @Parameter(description = "最新动态ID")
+        @Parameter(name = "最新动态ID")
         @PathParam("activityId")
         activityId: Long
     ): Result<OPActivityVO>
@@ -134,7 +134,7 @@ interface OPActivityResource {
     @Path("/list")
     @Operation(summary = "查询最新动态列表")
     fun listActivity(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String
     ): Result<List<OPActivityVO>>

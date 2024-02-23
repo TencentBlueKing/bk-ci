@@ -25,7 +25,7 @@ interface ServiceGithubCheckResource {
     @POST
     @Path("/createCheckRun")
     fun createCheckRun(
-        @Parameter(description = "授权token", required = true)
+        @Parameter(name = "授权token", required = true)
         @HeaderParam(AUTH_HEADER_GITHUB_TOKEN)
         token: String,
         request: CreateCheckRunRequest
@@ -35,7 +35,7 @@ interface ServiceGithubCheckResource {
     @POST
     @Path("/createCheckRunByToken")
     fun createCheckRunByToken(
-        @Parameter(description = "授权token", required = true)
+        @Parameter(name = "授权token", required = true)
         @HeaderParam(AUTH_HEADER_GITHUB_TOKEN)
         token: String,
         request: CreateCheckRunRequest
@@ -45,7 +45,7 @@ interface ServiceGithubCheckResource {
     @POST
     @Path("/updateCheckRun")
     fun updateCheckRun(
-        @Parameter(description = "授权token", required = true)
+        @Parameter(name = "授权token", required = true)
         @HeaderParam(AUTH_HEADER_GITHUB_TOKEN)
         token: String,
         request: UpdateCheckRunRequest

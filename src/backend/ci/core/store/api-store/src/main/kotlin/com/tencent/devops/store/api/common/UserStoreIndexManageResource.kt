@@ -59,10 +59,10 @@ interface UserStoreIndexManageResource {
     @POST
     @Path("/add")
     fun add(
-        @Parameter(description = "userId", required = true)
+        @Parameter(name = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "研发商店指标请求报文体", required = true)
+        @Parameter(name = "研发商店指标请求报文体", required = true)
         @Valid
         storeIndexCreateRequest: StoreIndexCreateRequest
     ): Result<Boolean>
@@ -71,10 +71,10 @@ interface UserStoreIndexManageResource {
     @DELETE
     @Path("/indexIds/{indexId}/delete")
     fun delete(
-        @Parameter(description = "userId", required = true)
+        @Parameter(name = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "指标ID", required = true)
+        @Parameter(name = "指标ID", required = true)
         @PathParam("indexId")
         indexId: String
     ): Result<Boolean>
@@ -83,16 +83,16 @@ interface UserStoreIndexManageResource {
     @GET
     @Path("/list")
     fun list(
-        @Parameter(description = "userId", required = true)
+        @Parameter(name = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "查询关键字", required = false)
+        @Parameter(name = "查询关键字", required = false)
         @QueryParam("keyWords")
         keyWords: String? = null,
-        @Parameter(description = "页码", required = true, example = "1")
+        @Parameter(name = "页码", required = true, example = "1")
         @QueryParam("page")
         page: Int,
-        @Parameter(description = "每页数量", required = true, example = "10")
+        @Parameter(name = "每页数量", required = true, example = "10")
         @QueryParam("pageSize")
         @BkField(patternStyle = BkStyleEnum.PAGE_SIZE_STYLE, required = true)
         pageSize: Int

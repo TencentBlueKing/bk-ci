@@ -57,14 +57,14 @@ interface UserStoreStatisticResource {
     @Path("/types/{storeType}/codes/{storeCode}")
     @GET
     fun getStatisticByCode(
-        @Parameter(description = "userId", required = true)
+        @Parameter(name = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "组件类型", required = true)
+        @Parameter(name = "组件类型", required = true)
         @PathParam("storeType")
         @BkField(patternStyle = BkStyleEnum.CODE_STYLE)
         storeType: StoreTypeEnum,
-        @Parameter(description = "插件标识", required = true)
+        @Parameter(name = "插件标识", required = true)
         @PathParam("storeCode")
         storeCode: String
     ): Result<StoreStatistic>
@@ -73,20 +73,20 @@ interface UserStoreStatisticResource {
     @Path("/types/{storeType}/codes/{storeCode}/trend/data")
     @GET
     fun getStatisticTrendDataByCode(
-        @Parameter(description = "userId", required = true)
+        @Parameter(name = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "组件类型", required = true)
+        @Parameter(name = "组件类型", required = true)
         @PathParam("storeType")
         @BkField(patternStyle = BkStyleEnum.CODE_STYLE)
         storeType: StoreTypeEnum,
-        @Parameter(description = "插件标识", required = true)
+        @Parameter(name = "插件标识", required = true)
         @PathParam("storeCode")
         storeCode: String,
-        @Parameter(description = "查询开始时间，格式yyyy-MM-dd HH:mm:ss", required = true)
+        @Parameter(name = "查询开始时间，格式yyyy-MM-dd HH:mm:ss", required = true)
         @QueryParam("startTime")
         startTime: String,
-        @Parameter(description = "查询结束时间，格式yyyy-MM-dd HH:mm:ss", required = true)
+        @Parameter(name = "查询结束时间，格式yyyy-MM-dd HH:mm:ss", required = true)
         @QueryParam("endTime")
         endTime: String
     ): Result<StoreStatisticTrendData>
@@ -95,14 +95,14 @@ interface UserStoreStatisticResource {
     @Path("/types/{storeType}/codes/{storeCode}/errorCode")
     @GET
     fun getStoreErrorCodeInfo(
-        @Parameter(description = "userId", required = true)
+        @Parameter(name = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "组件类型", required = true)
+        @Parameter(name = "组件类型", required = true)
         @PathParam("storeType")
         @BkField(patternStyle = BkStyleEnum.CODE_STYLE)
         storeType: StoreTypeEnum,
-        @Parameter(description = "组件标识", required = true)
+        @Parameter(name = "组件标识", required = true)
         @PathParam("storeCode")
         storeCode: String
     ): Result<StoreErrorCodeInfo>

@@ -53,19 +53,19 @@ interface UserScmResource {
     // @Path("/projects/{projectId}/repositories/{repositoryId}/latestRevision")
     @Path("/{projectId}/{repositoryId}/latestRevision")
     fun getLatestRevision(
-        @Parameter(description = "项目ID", required = true)
+        @Parameter(name = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(description = "repo hash id or repo name", required = true)
+        @Parameter(name = "repo hash id or repo name", required = true)
         @PathParam("repositoryId")
         repositoryId: String,
-        @Parameter(description = "branch name", required = false)
+        @Parameter(name = "branch name", required = false)
         @QueryParam("branchName")
         branchName: String? = null,
-        @Parameter(description = "SVN additional path", required = false)
+        @Parameter(name = "SVN additional path", required = false)
         @QueryParam("additionalPath")
         additionalPath: String? = null,
-        @Parameter(description = "代码库请求类型", required = false)
+        @Parameter(name = "代码库请求类型", required = false)
         @QueryParam("repositoryType")
         repositoryType: RepositoryType?
     ): Result<RevisionInfo>
@@ -75,13 +75,13 @@ interface UserScmResource {
     // @Path("/projects/{projectId}/repositories/{repositoryId}/branches")
     @Path("/{projectId}/{repositoryId}/branches")
     fun listBranches(
-        @Parameter(description = "项目ID", required = true)
+        @Parameter(name = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(description = "repo hash id", required = true)
+        @Parameter(name = "repo hash id", required = true)
         @PathParam("repositoryId")
         repositoryId: String,
-        @Parameter(description = "代码库请求类型", required = true)
+        @Parameter(name = "代码库请求类型", required = true)
         @QueryParam("repositoryType")
         repositoryType: RepositoryType?
     ): Result<List<String>>
@@ -91,13 +91,13 @@ interface UserScmResource {
     // @Path("/projects/{projectId}/repositories/{repositoryId}/tags")
     @Path("/{projectId}/{repositoryId}/tags")
     fun listTags(
-        @Parameter(description = "项目ID", required = true)
+        @Parameter(name = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(description = "repo hash id", required = true)
+        @Parameter(name = "repo hash id", required = true)
         @PathParam("repositoryId")
         repositoryId: String,
-        @Parameter(description = "代码库请求类型", required = true)
+        @Parameter(name = "代码库请求类型", required = true)
         @QueryParam("repositoryType")
         repositoryType: RepositoryType?
     ): Result<List<String>>
@@ -110,16 +110,16 @@ interface UserScmResource {
         message = "流水线下拉参数,统一到UserBuildParametersResource维护"
     )
     fun listRefs(
-        @Parameter(description = "项目ID", required = true)
+        @Parameter(name = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(description = "repo hash id", required = true)
+        @Parameter(name = "repo hash id", required = true)
         @PathParam("repositoryId")
         repositoryId: String,
-        @Parameter(description = "代码库请求类型", required = false)
+        @Parameter(name = "代码库请求类型", required = false)
         @QueryParam("repositoryType")
         repositoryType: RepositoryType?,
-        @Parameter(description = "搜索条件", required = false)
+        @Parameter(name = "搜索条件", required = false)
         @QueryParam("search")
         search: String?
     ): Result<List<BuildFormValue>>

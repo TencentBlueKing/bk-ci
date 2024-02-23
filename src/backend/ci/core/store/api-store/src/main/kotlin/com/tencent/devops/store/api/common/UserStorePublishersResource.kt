@@ -52,13 +52,13 @@ interface UserStorePublishersResource {
     @GET
     @Path("/get")
     fun getPublishers(
-        @Parameter(description = "userId", required = true)
+        @Parameter(name = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "storeCode", required = true)
+        @Parameter(name = "storeCode", required = true)
         @QueryParam("storeCode")
         storeCode: String,
-        @Parameter(description = "storeType", required = true)
+        @Parameter(name = "storeType", required = true)
         @QueryParam("storeType")
         storeType: StoreTypeEnum
     ): Result<List<PublisherInfo>>

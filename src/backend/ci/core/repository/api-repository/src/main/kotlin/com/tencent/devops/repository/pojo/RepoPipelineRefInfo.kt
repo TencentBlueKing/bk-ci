@@ -35,7 +35,7 @@ import io.swagger.v3.oas.annotations.Parameter
 @Schema(title = "流水线引用代码库")
 data class RepoPipelineRefInfo(
     val projectId: String,
-    @Parameter(description = "流水线ID")
+    @Parameter(name = "流水线ID")
     val pipelineId: String,
     @get:Schema(title = "流水线名称")
     val pipelineName: String,

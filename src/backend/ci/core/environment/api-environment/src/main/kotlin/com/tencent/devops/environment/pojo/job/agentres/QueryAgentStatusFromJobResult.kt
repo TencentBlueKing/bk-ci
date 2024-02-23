@@ -29,10 +29,10 @@ package com.tencent.devops.environment.pojo.job.agentres
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.tencent.devops.environment.pojo.job.resp.AgentInfo
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class QueryAgentStatusFromJobResult(
-    @ApiModelProperty(value = "Agent信息列表。若传入的host_id在返回结果的列表中不存在，则表示未查询到该主机的agent信息")
+    @get:Schema(title = "Agent信息列表。若传入的host_id在返回结果的列表中不存在，则表示未查询到该主机的agent信息")
     val agentInfoList: List<AgentInfo>
 )

@@ -53,19 +53,19 @@ interface RemoteDevResource {
     @GET
     @Path("/oauth")
     fun oauth(
-        @Parameter(description = "secretKey签名(sha256)", required = true)
+        @Parameter(name = "secretKey签名(sha256)", required = true)
         @HeaderParam("X-Signature")
         signature: String,
-        @Parameter(description = "public key", required = true)
+        @Parameter(name = "public key", required = true)
         @HeaderParam("X-Key")
         key: String,
-        @Parameter(description = "user id", required = true)
+        @Parameter(name = "user id", required = true)
         @QueryParam("userId")
         userId: String,
-        @Parameter(description = "workspace name", required = true)
+        @Parameter(name = "workspace name", required = true)
         @QueryParam("workspaceName")
         workspaceName: String,
-        @Parameter(description = "时间戳", required = true)
+        @Parameter(name = "时间戳", required = true)
         @QueryParam("timestamp")
         timestamp: String
     ): Result<RemoteDevOauthBack>
@@ -74,16 +74,16 @@ interface RemoteDevResource {
     @POST
     @Path("/workspace/complete_pull_code")
     fun completePullCode(
-        @Parameter(description = "secretKey签名(sha256)", required = true)
+        @Parameter(name = "secretKey签名(sha256)", required = true)
         @HeaderParam("X-Signature")
         signature: String,
-        @Parameter(description = "工作空间ID", required = true)
+        @Parameter(name = "工作空间ID", required = true)
         @QueryParam("workspaceName")
         workspaceName: String,
-        @Parameter(description = "类型", required = false)
+        @Parameter(name = "类型", required = false)
         @QueryParam("type")
         type: WebSocketActionType?,
-        @Parameter(description = "时间戳", required = true)
+        @Parameter(name = "时间戳", required = true)
         @QueryParam("timestamp")
         timestamp: String
     ): Result<Boolean>
@@ -92,13 +92,13 @@ interface RemoteDevResource {
     @POST
     @Path("/workspace/heartbeat")
     fun workspaceHeartbeat(
-        @Parameter(description = "secretKey签名(sha256)", required = true)
+        @Parameter(name = "secretKey签名(sha256)", required = true)
         @HeaderParam("X-Signature")
         signature: String,
-        @Parameter(description = "工作空间ID", required = true)
+        @Parameter(name = "工作空间ID", required = true)
         @QueryParam("workspaceName")
         workspaceName: String,
-        @Parameter(description = "时间戳", required = true)
+        @Parameter(name = "时间戳", required = true)
         @QueryParam("timestamp")
         timestamp: String
     ): Result<Boolean>
@@ -107,13 +107,13 @@ interface RemoteDevResource {
     @GET
     @Path("/workspace-proxy/detail")
     fun getWorkspaceDetail(
-        @Parameter(description = "secretKey签名(sha256)", required = true)
+        @Parameter(name = "secretKey签名(sha256)", required = true)
         @HeaderParam("X-Signature")
         signature: String,
-        @Parameter(description = "工作空间ID", required = true)
+        @Parameter(name = "工作空间ID", required = true)
         @QueryParam("workspaceName")
         workspaceName: String,
-        @Parameter(description = "时间戳", required = true)
+        @Parameter(name = "时间戳", required = true)
         @QueryParam("timestamp")
         timestamp: String
     ): Result<WorkspaceProxyDetail>
@@ -122,13 +122,13 @@ interface RemoteDevResource {
     @GET
     @Path("/workspace/image/spec")
     fun getWorkspaceImageSpec(
-        @Parameter(description = "secretKey签名(sha256)", required = true)
+        @Parameter(name = "secretKey签名(sha256)", required = true)
         @HeaderParam("X-Signature")
         signature: String,
-        @Parameter(description = "工作空间ID", required = true)
+        @Parameter(name = "工作空间ID", required = true)
         @QueryParam("workspaceName")
         workspaceName: String,
-        @Parameter(description = "时间戳", required = true)
+        @Parameter(name = "时间戳", required = true)
         @QueryParam("timestamp")
         timestamp: String
     ): Result<ImageSpec?>

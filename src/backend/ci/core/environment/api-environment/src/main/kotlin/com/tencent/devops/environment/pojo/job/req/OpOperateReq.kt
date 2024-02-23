@@ -27,20 +27,20 @@
 
 package com.tencent.devops.environment.pojo.job.req
 
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
 data class OpOperateReq(
-    @ApiModelProperty(
-        value = "操作标识", required = true,
-        notes = "1：查询所有 灰度项目，2：查询某些 项目灰度状态，3：设置某些 项目灰度状态，4：取消某些 项目灰度状态，5：清空所有 灰度项目"
+    @get:Schema(
+        title = "操作标识", required = true,
+        description = "1：查询所有 灰度项目，2：查询某些 项目灰度状态，3：设置某些 项目灰度状态，4：取消某些 项目灰度状态，5：清空所有 灰度项目"
     )
     val operateFlag: Int,
-    @ApiModelProperty(value = "项目编码集合")
+    @get:Schema(title = "项目编码集合")
     val projectCodeList: List<String>? = null,
-    @ApiModelProperty(value = "当前页数，从1开始。为 -1/null 时返回全量数据。")
+    @get:Schema(title = "当前页数，从1开始。为 -1/null 时返回全量数据。")
     val page: Long? = null,
-    @ApiModelProperty(value = "分页大小")
+    @get:Schema(title = "分页大小")
     val pageSize: Long? = null,
-    @ApiModelProperty(value = "模糊搜索关键词")
+    @get:Schema(title = "模糊搜索关键词")
     val keyword: String? = null
 )

@@ -54,15 +54,15 @@ interface UserPipelineOverviewResource {
     @Path("/summary/data/get")
     @POST
     fun queryPipelineSumInfo(
-        @Parameter(description = "项目ID", required = true)
+        @Parameter(name = "项目ID", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_PROJECT_ID)
         @BkField(required = true)
         projectId: String,
-        @Parameter(description = "userId", required = true)
+        @Parameter(name = "userId", required = true)
         @BkField(required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "查询条件", required = false)
+        @Parameter(name = "查询条件", required = false)
         baseQueryReq: BaseQueryReqVO?
     ): Result<PipelineSumInfoVO>
 
@@ -70,15 +70,15 @@ interface UserPipelineOverviewResource {
     @Path("/trend/info")
     @POST
     fun queryPipelineTrendInfo(
-        @Parameter(description = "项目ID", required = true)
+        @Parameter(name = "项目ID", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_PROJECT_ID)
         @BkField(required = true)
         projectId: String,
-        @Parameter(description = "userId", required = true)
+        @Parameter(name = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         @BkField(required = true)
         userId: String,
-        @Parameter(description = "查询条件", required = false)
+        @Parameter(name = "查询条件", required = false)
         baseQueryReq: BaseQueryReqVO?
     ): Result<PipelineTrendInfoVO>
 }

@@ -48,7 +48,7 @@ interface GwExperienceResource {
     @Path("/downloadUrl")
     @GET
     fun getDownloadUrl(
-        @Parameter(description = "token令牌", required = true)
+        @Parameter(name = "token令牌", required = true)
         @QueryParam("token")
         token: String
     ): Result<DownloadUrl>

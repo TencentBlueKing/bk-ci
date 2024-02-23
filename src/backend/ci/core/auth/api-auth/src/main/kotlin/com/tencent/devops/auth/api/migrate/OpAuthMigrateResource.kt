@@ -51,7 +51,7 @@ interface OpAuthMigrateResource {
     @Path("/v3ToRbac")
     @Operation(summary = "v3权限批量升级到rbac权限")
     fun v3ToRbacAuth(
-        @Parameter(description = "迁移项目", required = true)
+        @Parameter(name = "迁移项目", required = true)
         projectCodes: List<String>
     ): Result<Boolean>
 
@@ -59,7 +59,7 @@ interface OpAuthMigrateResource {
     @Path("/v0ToRbac")
     @Operation(summary = "v0权限批量升级到rbac权限")
     fun v0ToRbacAuth(
-        @Parameter(description = "迁移项目", required = true)
+        @Parameter(name = "迁移项目", required = true)
         projectCodes: List<String>
     ): Result<Boolean>
 
@@ -72,7 +72,7 @@ interface OpAuthMigrateResource {
     @Path("/toRbacAuthByCondition")
     @Operation(summary = "按条件升级到rbac权限")
     fun toRbacAuthByCondition(
-        @Parameter(description = "按条件迁移项目实体", required = true)
+        @Parameter(name = "按条件迁移项目实体", required = true)
         migrateProjectConditionDTO: MigrateProjectConditionDTO
     ): Result<Boolean>
 
@@ -80,7 +80,7 @@ interface OpAuthMigrateResource {
     @Path("/{projectCode}/compareResult")
     @Operation(summary = "对比迁移结果")
     fun compareResult(
-        @Parameter(description = "项目Code", required = true)
+        @Parameter(name = "项目Code", required = true)
         @PathParam("projectCode")
         projectCode: String
     ): Result<Boolean>
@@ -89,7 +89,7 @@ interface OpAuthMigrateResource {
     @Path("/migrateSpecificResource")
     @Operation(summary = "迁移特定资源类型资源")
     fun migrateSpecificResource(
-        @Parameter(description = "迁移资源实体类", required = true)
+        @Parameter(name = "迁移资源实体类", required = true)
         migrateResourceDTO: MigrateResourceDTO
     ): Result<Boolean>
 
@@ -97,7 +97,7 @@ interface OpAuthMigrateResource {
     @Path("/migrateSpecificResourceOfAllProject")
     @Operation(summary = "迁移所有项目的特定资源类型资源")
     fun migrateSpecificResourceOfAllProject(
-        @Parameter(description = "迁移资源实体类", required = true)
+        @Parameter(name = "迁移资源实体类", required = true)
         migrateResourceDTO: MigrateResourceDTO
     ): Result<Boolean>
 
@@ -105,7 +105,7 @@ interface OpAuthMigrateResource {
     @Path("/grantGroupAdditionalAuthorization")
     @Operation(summary = "授予项目下自定义用户组RBAC新增的权限")
     fun grantGroupAdditionalAuthorization(
-        @Parameter(description = "迁移项目", required = true)
+        @Parameter(name = "迁移项目", required = true)
         projectCodes: List<String>
     ): Result<Boolean>
 
@@ -113,7 +113,7 @@ interface OpAuthMigrateResource {
     @Path("/handoverAllPermissions")
     @Operation(summary = "权限交接-全量")
     fun handoverAllPermissions(
-        @Parameter(description = "权限交接请求体", required = true)
+        @Parameter(name = "权限交接请求体", required = true)
         permissionHandoverDTO: PermissionHandoverDTO
     ): Result<Boolean>
 
@@ -121,7 +121,7 @@ interface OpAuthMigrateResource {
     @Path("/handoverPermissions")
     @Operation(summary = "权限交接")
     fun handoverPermissions(
-        @Parameter(description = "权限交接请求体", required = true)
+        @Parameter(name = "权限交接请求体", required = true)
         permissionHandoverDTO: PermissionHandoverDTO
     ): Result<Boolean>
 
@@ -129,7 +129,7 @@ interface OpAuthMigrateResource {
     @Path("/migrateMonitorResource")
     @Operation(summary = "迁移监控空间权限资源")
     fun migrateMonitorResource(
-        @Parameter(description = "迁移项目", required = true)
+        @Parameter(name = "迁移项目", required = true)
         projectCodes: List<String>
     ): Result<Boolean>
 
@@ -137,7 +137,7 @@ interface OpAuthMigrateResource {
     @Path("/autoRenewal")
     @Operation(summary = "自动续期")
     fun autoRenewal(
-        @Parameter(description = "按条件迁移项目实体", required = true)
+        @Parameter(name = "按条件迁移项目实体", required = true)
         migrateProjectConditionDTO: MigrateProjectConditionDTO
     ): Result<Boolean>
 }

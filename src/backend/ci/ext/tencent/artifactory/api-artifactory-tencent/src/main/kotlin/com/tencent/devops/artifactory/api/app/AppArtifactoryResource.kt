@@ -66,16 +66,16 @@ interface AppArtifactoryResource {
     @Path("/{projectId}/ownFileList")
     @GET
     fun getOwnFileList(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "项目ID", required = true)
+        @Parameter(name = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(description = "第几页", required = false, example = "1")
+        @Parameter(name = "第几页", required = false, example = "1")
         @QueryParam("page")
         page: Int?,
-        @Parameter(description = "每页多少条", required = false, example = "20")
+        @Parameter(name = "每页多少条", required = false, example = "20")
         @QueryParam("pageSize")
         pageSize: Int?
     ): Result<FileInfoPage<FileInfo>>
@@ -84,22 +84,22 @@ interface AppArtifactoryResource {
     @Path("/{projectId}/{pipelineId}/{buildId}/fileList")
     @GET
     fun getBuildFileList(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "项目ID", required = true)
+        @Parameter(name = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(description = "流水线ID", required = true)
+        @Parameter(name = "流水线ID", required = true)
         @PathParam("pipelineId")
         pipelineId: String,
-        @Parameter(description = "构建ID", required = true)
+        @Parameter(name = "构建ID", required = true)
         @PathParam("buildId")
         buildId: String,
-        @Parameter(description = "版本号", required = true)
+        @Parameter(name = "版本号", required = true)
         @HeaderParam(AUTH_HEADER_APP_VERSION)
         appVersion: String?,
-        @Parameter(description = "平台", required = true)
+        @Parameter(name = "平台", required = true)
         @HeaderParam(AUTH_HEADER_PLATFORM)
         platform: Int?
     ): Result<List<AppFileInfo>>
@@ -108,19 +108,19 @@ interface AppArtifactoryResource {
     @Path("/{projectId}/search")
     @POST
     fun search(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "项目ID", required = true)
+        @Parameter(name = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(description = "第几页", required = false, example = "1")
+        @Parameter(name = "第几页", required = false, example = "1")
         @QueryParam("page")
         page: Int?,
-        @Parameter(description = "每页多少条(不传默认全部返回)", required = false, example = "20")
+        @Parameter(name = "每页多少条(不传默认全部返回)", required = false, example = "20")
         @QueryParam("pageSize")
         pageSize: Int?,
-        @Parameter(description = "元数据", required = true)
+        @Parameter(name = "元数据", required = true)
         searchProps: SearchProps
     ): Result<FileInfoPage<FileInfo>>
 
@@ -128,13 +128,13 @@ interface AppArtifactoryResource {
     @Path("/{projectId}/searchFileAndProperty")
     @POST
     fun searchFileAndProperty(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "项目ID", required = true)
+        @Parameter(name = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(description = "元数据", required = true)
+        @Parameter(name = "元数据", required = true)
         searchProps: SearchProps
     ): Result<FileInfoPage<FileInfo>>
 
@@ -142,16 +142,16 @@ interface AppArtifactoryResource {
     @Path("/{projectId}/{artifactoryType}/show")
     @GET
     fun show(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "项目ID", required = true)
+        @Parameter(name = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(description = "版本仓库类型", required = true)
+        @Parameter(name = "版本仓库类型", required = true)
         @PathParam("artifactoryType")
         artifactoryType: ArtifactoryType,
-        @Parameter(description = "路径", required = true)
+        @Parameter(name = "路径", required = true)
         @QueryParam("path")
         path: String
     ): Result<FileDetail>
@@ -160,16 +160,16 @@ interface AppArtifactoryResource {
     @Path("/{projectId}/{artifactoryType}/detail")
     @GET
     fun detail(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "项目ID", required = true)
+        @Parameter(name = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(description = "版本仓库类型", required = true)
+        @Parameter(name = "版本仓库类型", required = true)
         @PathParam("artifactoryType")
         artifactoryType: ArtifactoryType,
-        @Parameter(description = "路径", required = true)
+        @Parameter(name = "路径", required = true)
         @QueryParam("path")
         path: String
     ): Result<FileDetailForApp>
@@ -178,16 +178,16 @@ interface AppArtifactoryResource {
     @Path("/{projectId}/{artifactoryType}/properties")
     @GET
     fun properties(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "项目ID", required = true)
+        @Parameter(name = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(description = "版本仓库类型", required = true)
+        @Parameter(name = "版本仓库类型", required = true)
         @PathParam("artifactoryType")
         artifactoryType: ArtifactoryType,
-        @Parameter(description = "路径", required = true)
+        @Parameter(name = "路径", required = true)
         @QueryParam("path")
         path: String
     ): Result<List<Property>>
@@ -196,16 +196,16 @@ interface AppArtifactoryResource {
     @Path("/{projectId}/{artifactoryType}/externalUrl")
     @POST
     fun externalUrl(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "项目ID", required = true)
+        @Parameter(name = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(description = "版本仓库类型", required = true)
+        @Parameter(name = "版本仓库类型", required = true)
         @PathParam("artifactoryType")
         artifactoryType: ArtifactoryType,
-        @Parameter(description = "路径", required = true)
+        @Parameter(name = "路径", required = true)
         @QueryParam("path")
         path: String
     ): Result<Url>
@@ -215,25 +215,25 @@ interface AppArtifactoryResource {
     @Produces(MediaType.APPLICATION_OCTET_STREAM)
     @GET
     fun getFilePlist(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "项目ID", required = true)
+        @Parameter(name = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(description = "版本仓库类型", required = true)
+        @Parameter(name = "版本仓库类型", required = true)
         @PathParam("artifactoryType")
         artifactoryType: ArtifactoryType,
-        @Parameter(description = "路径", required = true)
+        @Parameter(name = "路径", required = true)
         @QueryParam("path")
         path: String,
-        @Parameter(description = "体验id", required = false)
+        @Parameter(name = "体验id", required = false)
         @QueryParam("experienceHashId")
         experienceHashId: String?,
-        @Parameter(description = "组织", required = false)
+        @Parameter(name = "组织", required = false)
         @HeaderParam(AUTH_HEADER_DEVOPS_ORGANIZATION_NAME)
         organization: String? = null,
-        @Parameter(description = "过期时间", required = false)
+        @Parameter(name = "过期时间", required = false)
         @QueryParam("ttl")
         ttl: Int? = null
     ): String
@@ -242,16 +242,16 @@ interface AppArtifactoryResource {
     @Path("/{projectId}/{artifactoryType}/downloadUrl")
     @POST
     fun downloadUrl(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "项目ID", required = true)
+        @Parameter(name = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(description = "版本仓库类型", required = true)
+        @Parameter(name = "版本仓库类型", required = true)
         @PathParam("artifactoryType")
         artifactoryType: ArtifactoryType,
-        @Parameter(description = "路径", required = true)
+        @Parameter(name = "路径", required = true)
         @QueryParam("path")
         path: String
     ): Result<Url>

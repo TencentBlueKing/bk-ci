@@ -57,13 +57,13 @@ interface UserStreamHistoryResource {
     @POST
     @Path("/list/{projectId}")
     fun getHistoryBuildList(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "蓝盾项目ID", required = true)
+        @Parameter(name = "蓝盾项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(description = "搜索参数", required = false)
+        @Parameter(name = "搜索参数", required = false)
         search: StreamBuildHistorySearch?
     ): Result<Page<StreamBuildHistory>>
 
@@ -71,19 +71,19 @@ interface UserStreamHistoryResource {
     @GET
     @Path("/branch/list/{projectId}")
     fun getAllBuildBranchList(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "蓝盾项目ID", required = true)
+        @Parameter(name = "蓝盾项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(description = "第几页", required = false, example = "1")
+        @Parameter(name = "第几页", required = false, example = "1")
         @QueryParam("page")
         page: Int?,
-        @Parameter(description = "每页多少条", required = false, example = "20")
+        @Parameter(name = "每页多少条", required = false, example = "20")
         @QueryParam("pageSize")
         pageSize: Int?,
-        @Parameter(description = "分支关键字(模糊搜索)", required = false)
+        @Parameter(name = "分支关键字(模糊搜索)", required = false)
         @QueryParam("keyword")
         keyword: String?
     ): Result<Page<StreamBuildBranch>>

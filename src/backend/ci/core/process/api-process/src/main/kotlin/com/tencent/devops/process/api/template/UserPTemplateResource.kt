@@ -68,13 +68,13 @@ interface UserPTemplateResource {
     @POST
     @Path("/projects/{projectId}/templates")
     fun createTemplate(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "项目ID", required = true)
+        @Parameter(name = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(description = "模板", required = true)
+        @Parameter(name = "模板", required = true)
         template: Model
     ): Result<TemplateId>
 
@@ -82,13 +82,13 @@ interface UserPTemplateResource {
     @DELETE
     @Path("/projects/{projectId}/templates/{templateId}")
     fun deleteTemplate(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "项目ID", required = true)
+        @Parameter(name = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(description = "模板ID", required = true)
+        @Parameter(name = "模板ID", required = true)
         @PathParam("templateId")
         templateId: String
     ): Result<Boolean>
@@ -97,16 +97,16 @@ interface UserPTemplateResource {
     @DELETE
     @Path("/projects/{projectId}/templates/{templateId}/versions/{version}")
     fun deleteTemplate(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "项目ID", required = true)
+        @Parameter(name = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(description = "模板ID", required = true)
+        @Parameter(name = "模板ID", required = true)
         @PathParam("templateId")
         templateId: String,
-        @Parameter(description = "版本号", required = true)
+        @Parameter(name = "版本号", required = true)
         @PathParam("version")
         version: Long
     ): Result<Boolean>
@@ -115,18 +115,18 @@ interface UserPTemplateResource {
     @DELETE
     @Path("/projects/{projectId}/templates/{templateId}/deletetemplate")
     fun deleteTemplate(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "项目ID", required = true)
+        @Parameter(name = "项目ID", required = true)
         @PathParam("projectId")
         @BkField(minLength = 1, maxLength = 34)
         projectId: String,
-        @Parameter(description = "模板ID", required = true)
+        @Parameter(name = "模板ID", required = true)
         @PathParam("templateId")
         @BkField(minLength = 1, maxLength = 32)
         templateId: String,
-        @Parameter(description = "版本号", required = true)
+        @Parameter(name = "版本号", required = true)
         @QueryParam("versionName")
         @BkField(minLength = 1, maxLength = 64)
         versionName: String
@@ -136,22 +136,22 @@ interface UserPTemplateResource {
     @PUT
     @Path("/projects/{projectId}/templates/{templateId}")
     fun updateTemplate(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "项目ID", required = true)
+        @Parameter(name = "项目ID", required = true)
         @PathParam("projectId")
         @BkField(minLength = 1, maxLength = 34)
         projectId: String,
-        @Parameter(description = "模板ID", required = true)
+        @Parameter(name = "模板ID", required = true)
         @PathParam("templateId")
         @BkField(minLength = 1, maxLength = 32)
         templateId: String,
-        @Parameter(description = "版本名", required = true)
+        @Parameter(name = "版本名", required = true)
         @QueryParam("versionName")
         @BkField(minLength = 1, maxLength = 64)
         versionName: String,
-        @Parameter(description = "模板", required = true)
+        @Parameter(name = "模板", required = true)
         template: Model
     ): Result<Boolean>
 
@@ -159,23 +159,23 @@ interface UserPTemplateResource {
     @GET
     @Path("/projects/{projectId}/templates")
     fun listTemplate(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "项目ID", required = true)
+        @Parameter(name = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(description = "模版类型", required = false)
+        @Parameter(name = "模版类型", required = false)
         @QueryParam("templateType")
         templateType: TemplateType?,
-        @Parameter(description = "是否已关联到store", required = false)
+        @Parameter(name = "是否已关联到store", required = false)
         @QueryParam("storeFlag")
         storeFlag: Boolean?,
-        @Parameter(description = "页码", required = false)
+        @Parameter(name = "页码", required = false)
         @QueryParam("page")
         @BkField(patternStyle = BkStyleEnum.NUMBER_STYLE, required = false)
         page: Int?,
-        @Parameter(description = "每页数量", required = false)
+        @Parameter(name = "每页数量", required = false)
         @QueryParam("pageSize")
         @BkField(patternStyle = BkStyleEnum.NUMBER_STYLE, required = false)
         pageSize: Int?
@@ -185,20 +185,20 @@ interface UserPTemplateResource {
     @GET
     @Path("/projects/{projectId}/allTemplates")
     fun listAllTemplate(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "项目ID", required = true)
+        @Parameter(name = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(description = "模版类型", required = false)
+        @Parameter(name = "模版类型", required = false)
         @QueryParam("templateType")
         templateType: TemplateType?,
-        @Parameter(description = "页码", required = false)
+        @Parameter(name = "页码", required = false)
         @QueryParam("page")
         @BkField(patternStyle = BkStyleEnum.NUMBER_STYLE, required = false)
         page: Int?,
-        @Parameter(description = "每页数量", required = false)
+        @Parameter(name = "每页数量", required = false)
         @QueryParam("pageSize")
         @BkField(patternStyle = BkStyleEnum.NUMBER_STYLE, required = false)
         pageSize: Int?
@@ -208,16 +208,16 @@ interface UserPTemplateResource {
     @GET
     @Path("/projects/{projectId}/templates/{templateId}")
     fun getTemplate(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "项目ID", required = true)
+        @Parameter(name = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(description = "模板ID", required = true)
+        @Parameter(name = "模板ID", required = true)
         @PathParam("templateId")
         templateId: String,
-        @Parameter(description = "模板版本", required = false)
+        @Parameter(name = "模板版本", required = false)
         @QueryParam("version")
         version: Long?
     ): Result<TemplateModelDetail>
@@ -226,16 +226,16 @@ interface UserPTemplateResource {
     @PUT
     @Path("/projects/{projectId}/templates/{templateId}/settings")
     fun updateTemplateSetting(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "项目ID", required = true)
+        @Parameter(name = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(description = "模板ID", required = true)
+        @Parameter(name = "模板ID", required = true)
         @PathParam("templateId")
         templateId: String,
-        @Parameter(description = "模板设置", required = true)
+        @Parameter(name = "模板设置", required = true)
         setting: PipelineSetting
     ): Result<Boolean>
 
@@ -243,13 +243,13 @@ interface UserPTemplateResource {
     @GET
     @Path("/projects/{projectId}/templates/{templateId}/settings")
     fun getTemplateSetting(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "项目ID", required = true)
+        @Parameter(name = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(description = "模板ID", required = true)
+        @Parameter(name = "模板ID", required = true)
         @PathParam("templateId")
         templateId: String
     ): Result<PipelineSetting>
@@ -258,16 +258,16 @@ interface UserPTemplateResource {
     @POST
     @Path("/projects/{projectId}/templates/{templateId}/copy")
     fun copyTemplate(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "项目ID", required = true)
+        @Parameter(name = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(description = "模板ID", required = true)
+        @Parameter(name = "模板ID", required = true)
         @PathParam("templateId")
         templateId: String,
-        @Parameter(description = "复制模版请求包体", required = true)
+        @Parameter(name = "复制模版请求包体", required = true)
         copyTemplateReq: CopyTemplateReq
     ): Result<TemplateId>
 
@@ -275,13 +275,13 @@ interface UserPTemplateResource {
     @POST
     @Path("/projects/{projectId}/templates/saveAsTemplate")
     fun saveAsTemplate(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "项目ID", required = true)
+        @Parameter(name = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(description = "另存为模版包体", required = true)
+        @Parameter(name = "另存为模版包体", required = true)
         saveAsTemplateReq: SaveAsTemplateReq
     ): Result<TemplateId>
 
@@ -289,10 +289,10 @@ interface UserPTemplateResource {
     @GET
     @Path("/projects/{projectId}/templates/hasManagerPermission")
     fun hasManagerPermission(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "项目ID", required = true)
+        @Parameter(name = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String
     ): Result<Boolean>
@@ -301,16 +301,16 @@ interface UserPTemplateResource {
     @GET
     @Path("/projects/{projectId}/templates/{templateId}/hasPipelineTemplatePermission")
     fun hasPipelineTemplatePermission(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "项目ID", required = true)
+        @Parameter(name = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(description = "模板ID", required = true)
+        @Parameter(name = "模板ID", required = true)
         @PathParam("templateId")
         templateId: String?,
-        @Parameter(description = "操作", required = true)
+        @Parameter(name = "操作", required = true)
         @QueryParam("permission")
         permission: AuthPermission
     ): Result<Boolean>
@@ -319,10 +319,10 @@ interface UserPTemplateResource {
     @GET
     @Path("/projects/{projectId}/templates/enableTemplatePermissionManage")
     fun enableTemplatePermissionManage(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "项目ID", required = true)
+        @Parameter(name = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String
     ): Result<Boolean>

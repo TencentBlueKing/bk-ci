@@ -51,13 +51,13 @@ interface UserCredentialGrantResource {
     @Path("/{projectId}/")
     @POST
     fun create(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "项目ID", required = true)
+        @Parameter(name = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(description = "凭据", required = true)
+        @Parameter(name = "凭据", required = true)
         credential: CredentialCreate
     ): Result<Boolean>
 }

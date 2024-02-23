@@ -1,8 +1,8 @@
 package com.tencent.devops.environment.pojo.job.jobcloudres
 
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
 data class JobCloudDynamicGroup(
-    @ApiModelProperty(value = "CMDB动态分组ID")
+    @get:Schema(title = "CMDB动态分组ID")
     val id: String
 )

@@ -56,31 +56,31 @@ interface ExternalMarketIdeAtomResource {
     @GET
     @Path("/list/")
     fun list(
-        @Parameter(description = "IDE类型", required = true)
+        @Parameter(name = "IDE类型", required = true)
         @QueryParam("categoryCode")
         categoryCode: String,
-        @Parameter(description = "插件名称", required = false)
+        @Parameter(name = "插件名称", required = false)
         @QueryParam("atomName")
         atomName: String?,
-        @Parameter(description = "插件分类", required = false)
+        @Parameter(name = "插件分类", required = false)
         @QueryParam("classifyCode")
         classifyCode: String?,
-        @Parameter(description = "功能标签(多个用逗号分隔)", required = false)
+        @Parameter(name = "功能标签(多个用逗号分隔)", required = false)
         @QueryParam("labelCodes")
         labelCodes: String?,
-        @Parameter(description = "评分", required = false)
+        @Parameter(name = "评分", required = false)
         @QueryParam("score")
         score: Int?,
-        @Parameter(description = "研发来源(蓝盾 第三方)", required = false)
+        @Parameter(name = "研发来源(蓝盾 第三方)", required = false)
         @QueryParam("rdType")
         rdType: IdeAtomTypeEnum?,
-        @Parameter(description = "排序", required = false)
+        @Parameter(name = "排序", required = false)
         @QueryParam("sortType")
         sortType: MarketIdeAtomSortTypeEnum? = MarketIdeAtomSortTypeEnum.DOWNLOAD_COUNT,
-        @Parameter(description = "页码", required = false)
+        @Parameter(name = "页码", required = false)
         @QueryParam("page")
         page: Int?,
-        @Parameter(description = "每页数量", required = false)
+        @Parameter(name = "每页数量", required = false)
         @QueryParam("pageSize")
         pageSize: Int?
     ): Result<ExternalIdeAtomResp>
@@ -89,7 +89,7 @@ interface ExternalMarketIdeAtomResource {
     @GET
     @Path("/atomCodes/{atomCode}")
     fun getIdeAtomsByCode(
-        @Parameter(description = "插件代码", required = true)
+        @Parameter(name = "插件代码", required = true)
         @PathParam("atomCode")
         atomCode: String
     ): Result<IdeAtom?>
@@ -98,7 +98,7 @@ interface ExternalMarketIdeAtomResource {
     @POST
     @Path("/install")
     fun installIdeAtom(
-        @Parameter(description = "安装IDE插件请求报文体", required = true)
+        @Parameter(name = "安装IDE插件请求报文体", required = true)
         installIdeAtomReq: InstallIdeAtomReq
     ): Result<InstallIdeAtomResp?>
 }

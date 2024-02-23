@@ -54,13 +54,13 @@ interface ApigwProjectResource {
     @GET
     @Path("/getProjectByUser")
     fun getProjectByUser(
-        @Parameter(description = "appCode", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
+        @Parameter(name = "appCode", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
         appCode: String?,
-        @Parameter(description = "apigw Type", required = true)
+        @Parameter(name = "apigw Type", required = true)
         @PathParam("apigwType")
         apigwType: String?,
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String
     ): Result<List<ProjectVO>>
@@ -69,22 +69,22 @@ interface ApigwProjectResource {
     @Path("/getProjectByGroup")
     @Operation(summary = "根据组织架构查询所有项目")
     fun getProjectByGroup(
-        @Parameter(description = "appCode", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
+        @Parameter(name = "appCode", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
         appCode: String?,
-        @Parameter(description = "apigw Type", required = true)
+        @Parameter(name = "apigw Type", required = true)
         @PathParam("apigwType")
         apigwType: String?,
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String,
-        @Parameter(description = "bgName", required = false)
+        @Parameter(name = "bgName", required = false)
         @QueryParam("bgName")
         bgName: String?,
-        @Parameter(description = "deptName", required = false)
+        @Parameter(name = "deptName", required = false)
         @QueryParam("deptName")
         deptName: String?,
-        @Parameter(description = "centerName", required = false)
+        @Parameter(name = "centerName", required = false)
         @QueryParam("centerName")
         centerName: String
     ): Result<List<ProjectVO>>

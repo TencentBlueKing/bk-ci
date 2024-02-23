@@ -49,16 +49,16 @@ interface ExternalStreamResource {
     @GET
     @Path("/projects/{gitProjectId}/pipelines/badge")
     fun getPipelineBadge(
-        @Parameter(description = "Git仓库ID", required = true)
+        @Parameter(name = "Git仓库ID", required = true)
         @PathParam("gitProjectId")
         gitProjectId: Long,
-        @Parameter(description = "流水线文件名称", required = true)
+        @Parameter(name = "流水线文件名称", required = true)
         @QueryParam("file_path")
         filePath: String,
-        @Parameter(description = "分支名称", required = false)
+        @Parameter(name = "分支名称", required = false)
         @QueryParam("branch")
         branch: String?,
-        @Parameter(description = "触发方式", required = false)
+        @Parameter(name = "触发方式", required = false)
         @QueryParam("object_kind")
         objectKind: String?
     ): String

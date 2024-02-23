@@ -54,16 +54,16 @@ interface BuildBaseTaskResource {
     @GET
     @Path("/task/status")
     fun getTaskStatus(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "projectId", required = true)
+        @Parameter(name = "projectId", required = true)
         @HeaderParam(AUTH_HEADER_PROJECT_ID)
         projectId: String,
-        @Parameter(description = "构建id", required = true)
+        @Parameter(name = "构建id", required = true)
         @HeaderParam(AUTH_HEADER_BUILD_ID)
         buildId: String,
-        @Parameter(description = "taskId", required = true)
+        @Parameter(name = "taskId", required = true)
         @QueryParam("taskId")
         taskId: String
     ): Result<DispatchBuildStatusResp>

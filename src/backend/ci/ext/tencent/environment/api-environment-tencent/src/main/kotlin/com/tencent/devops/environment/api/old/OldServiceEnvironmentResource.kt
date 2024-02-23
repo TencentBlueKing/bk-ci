@@ -56,10 +56,10 @@ interface OldServiceEnvironmentResource {
     @GET
     @Path("/{projectId}")
     fun list(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "项目ID", required = true)
+        @Parameter(name = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String
     ): Result<List<EnvWithPermission>>
@@ -68,13 +68,13 @@ interface OldServiceEnvironmentResource {
     @POST
     @Path("/{projectId}/listNodesByEnvIds")
     fun listNodesByEnvIds(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "项目ID", required = true)
+        @Parameter(name = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(description = "环境 hashId(s)", required = true)
+        @Parameter(name = "环境 hashId(s)", required = true)
         envHashIds: List<String>
     ): Result<List<NodeBaseInfo>>
 
@@ -82,10 +82,10 @@ interface OldServiceEnvironmentResource {
     @GET
     @Path("/{projectId}/listUsableServerEnvs")
     fun listUsableServerEnvs(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "项目ID", required = true)
+        @Parameter(name = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String
     ): Result<List<EnvWithPermission>>
@@ -94,13 +94,13 @@ interface OldServiceEnvironmentResource {
     @POST
     @Path("/{projectId}/listRawByEnvHashIds")
     fun listRawByEnvHashIds(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "项目ID", required = true)
+        @Parameter(name = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(description = "环境 hashId(s)", required = true)
+        @Parameter(name = "环境 hashId(s)", required = true)
         envHashIds: List<String>
     ): Result<List<EnvWithPermission>>
 
@@ -108,13 +108,13 @@ interface OldServiceEnvironmentResource {
     @POST
     @Path("/{projectId}/listRawByEnvNames")
     fun listRawByEnvNames(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "项目ID", required = true)
+        @Parameter(name = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(description = "环境名称(s)", required = true)
+        @Parameter(name = "环境名称(s)", required = true)
         envNames: List<String>
     ): Result<List<EnvWithPermission>>
 
@@ -122,13 +122,13 @@ interface OldServiceEnvironmentResource {
     @GET
     @Path("/{projectId}/buildEnvs")
     fun listBuildEnvs(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "项目ID", required = true)
+        @Parameter(name = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(description = "操作系统", required = true)
+        @Parameter(name = "操作系统", required = true)
         @QueryParam("os")
         os: OS
     ): Result<List<EnvWithNodeCount>>

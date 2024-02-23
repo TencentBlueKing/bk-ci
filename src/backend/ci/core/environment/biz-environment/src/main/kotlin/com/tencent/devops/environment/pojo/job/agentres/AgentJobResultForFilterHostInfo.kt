@@ -28,18 +28,18 @@
 package com.tencent.devops.environment.pojo.job.agentres
 
 import com.fasterxml.jackson.annotation.JsonProperty
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
 data class AgentJobResultForFilterHostInfo(
-    @ApiModelProperty(value = "实例ID")
+    @get:Schema(title = "实例ID")
     @JsonProperty("instance_id")
     val instanceId: String?,
-    @ApiModelProperty(value = "作业ID")
+    @get:Schema(title = "作业ID")
     @JsonProperty("job_id")
     val jobId: Int?,
-    @ApiModelProperty(value = "执行状态")
+    @get:Schema(title = "执行状态")
     val status: String?,
-    @ApiModelProperty(value = "当前步骤名称")
+    @get:Schema(title = "当前步骤名称")
     @JsonProperty("current_step")
     val currentStep: String?
 )

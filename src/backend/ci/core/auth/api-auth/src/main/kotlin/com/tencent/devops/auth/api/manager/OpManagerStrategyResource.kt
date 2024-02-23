@@ -56,13 +56,13 @@ interface OpManagerStrategyResource {
     @Path("/")
     @Operation(summary = "新增管理员权限策略")
     fun createManagerStrategy(
-        @Parameter(description = "userId", required = true)
+        @Parameter(name = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "name", required = true)
+        @Parameter(name = "name", required = true)
         @QueryParam("name")
         name: String,
-        @Parameter(description = "策略内容", required = true)
+        @Parameter(name = "策略内容", required = true)
         strategy: ManageStrategyDTO
     ): Result<String>
 
@@ -70,16 +70,16 @@ interface OpManagerStrategyResource {
     @Path("/{strategyId}")
     @Operation(summary = "修改管理员权限策略")
     fun updateManagerStrategy(
-        @Parameter(description = "策略Id", required = true)
+        @Parameter(name = "策略Id", required = true)
         @PathParam("strategyId")
         strategyId: Int,
-        @Parameter(description = "userId", required = true)
+        @Parameter(name = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "userId", required = false)
+        @Parameter(name = "userId", required = false)
         @QueryParam("name")
         name: String?,
-        @Parameter(description = "策略内容", required = true)
+        @Parameter(name = "策略内容", required = true)
         strategy: ManageStrategyDTO
     ): Result<Boolean>
 
@@ -87,10 +87,10 @@ interface OpManagerStrategyResource {
     @Path("/{strategyId}")
     @Operation(summary = "删除管理员权限策略")
     fun deleteManagerStrategy(
-        @Parameter(description = "策略Id", required = true)
+        @Parameter(name = "策略Id", required = true)
         @PathParam("strategyId")
         strategyId: Int,
-        @Parameter(description = "userId", required = true)
+        @Parameter(name = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String
     ): Result<Boolean>
@@ -99,7 +99,7 @@ interface OpManagerStrategyResource {
     @Path("/{strategyId}")
     @Operation(summary = "获取管理员权限策略")
     fun getManagerStrategy(
-        @Parameter(description = "策略Id", required = true)
+        @Parameter(name = "策略Id", required = true)
         @PathParam("strategyId")
         strategyId: Int
     ): Result<StrategyEntity?>

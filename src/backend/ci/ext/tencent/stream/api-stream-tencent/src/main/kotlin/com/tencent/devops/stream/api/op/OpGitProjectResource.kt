@@ -52,16 +52,16 @@ interface OpGitProjectResource {
     @PUT
     @Path("/create")
     fun create(
-        @Parameter(description = "工蜂项目ID", required = true)
+        @Parameter(name = "工蜂项目ID", required = true)
         @QueryParam("gitProjectId")
         gitProjectId: Long,
-        @Parameter(description = "工蜂项目名称", required = true)
+        @Parameter(name = "工蜂项目名称", required = true)
         @QueryParam("name")
         name: String,
-        @Parameter(description = "工蜂项目URL", required = true)
+        @Parameter(name = "工蜂项目URL", required = true)
         @QueryParam("url")
         url: String,
-        @Parameter(description = "是否可以启用Stream", required = true)
+        @Parameter(name = "是否可以启用Stream", required = true)
         @QueryParam("enable")
         enable: Boolean
     ): Result<Boolean>
@@ -70,16 +70,16 @@ interface OpGitProjectResource {
     @POST
     @Path("/update")
     fun update(
-        @Parameter(description = "工蜂项目ID", required = true)
+        @Parameter(name = "工蜂项目ID", required = true)
         @QueryParam("gitProjectId")
         gitProjectId: Long,
-        @Parameter(description = "工蜂项目名称", required = false)
+        @Parameter(name = "工蜂项目名称", required = false)
         @QueryParam("name")
         name: String?,
-        @Parameter(description = "工蜂项目URL", required = false)
+        @Parameter(name = "工蜂项目URL", required = false)
         @QueryParam("url")
         url: String?,
-        @Parameter(description = "是否可以启用Stream", required = false)
+        @Parameter(name = "是否可以启用Stream", required = false)
         @QueryParam("enable")
         enable: Boolean?
     ): Result<Boolean>
@@ -88,7 +88,7 @@ interface OpGitProjectResource {
     @DELETE
     @Path("/delete")
     fun delete(
-        @Parameter(description = "工蜂项目ID", required = true)
+        @Parameter(name = "工蜂项目ID", required = true)
         @QueryParam("gitProjectId")
         gitProjectId: Long
     ): Result<Boolean>
@@ -97,19 +97,19 @@ interface OpGitProjectResource {
     @GET
     @Path("/project/list")
     fun list(
-        @Parameter(description = "工蜂项目ID", required = false)
+        @Parameter(name = "工蜂项目ID", required = false)
         @QueryParam("gitProjectId")
         gitProjectId: Long?,
-        @Parameter(description = "工蜂项目名称", required = false)
+        @Parameter(name = "工蜂项目名称", required = false)
         @QueryParam("name")
         name: String?,
-        @Parameter(description = "工蜂项目URL", required = false)
+        @Parameter(name = "工蜂项目URL", required = false)
         @QueryParam("url")
         url: String?,
-        @Parameter(description = "第几页，从1开始", required = true)
+        @Parameter(name = "第几页，从1开始", required = true)
         @QueryParam("page")
         page: Int,
-        @Parameter(description = "每页条数", required = true)
+        @Parameter(name = "每页条数", required = true)
         @QueryParam("pageSize")
         pageSize: Int
     ): Result<GitProjectConfWithPage>

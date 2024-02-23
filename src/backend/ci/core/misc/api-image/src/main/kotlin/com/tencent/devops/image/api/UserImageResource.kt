@@ -61,16 +61,16 @@ interface UserImageResource {
     @Path("/{projectId}/upload")
     @POST
     fun upload(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "项目ID", required = true)
+        @Parameter(name = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(description = "是否是构建镜像", required = true)
+        @Parameter(name = "是否是构建镜像", required = true)
         @QueryParam("isBuildImage")
         isBuildImage: Boolean?,
-        @Parameter(description = "文件", required = true)
+        @Parameter(name = "文件", required = true)
         @FormDataParam("file")
         inputStream: InputStream,
         @FormDataParam("file")
@@ -81,13 +81,13 @@ interface UserImageResource {
     @Path("/{projectId}/queryUploadTask")
     @GET
     fun queryUploadTask(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "项目ID", required = true)
+        @Parameter(name = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(description = "任务ID", required = true)
+        @Parameter(name = "任务ID", required = true)
         @QueryParam("taskId")
         taskId: String
     ): Result<UploadImageTask?>
@@ -96,16 +96,16 @@ interface UserImageResource {
     @Path("/listPublicImages")
     @GET
     fun listPublicImages(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "查询关键字", required = false)
+        @Parameter(name = "查询关键字", required = false)
         @QueryParam("searchKey")
         searchKey: String?,
-        @Parameter(description = "分页start", required = false)
+        @Parameter(name = "分页start", required = false)
         @QueryParam("start")
         start: Int?,
-        @Parameter(description = "分页大小", required = false)
+        @Parameter(name = "分页大小", required = false)
         @QueryParam("limit")
         limit: Int?
     ): Result<ImagePageData>
@@ -114,19 +114,19 @@ interface UserImageResource {
     @Path("/{projectId}/listImages")
     @GET
     fun listProjectImages(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "项目ID", required = true)
+        @Parameter(name = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(description = "查询关键字", required = false)
+        @Parameter(name = "查询关键字", required = false)
         @QueryParam("searchKey")
         searchKey: String?,
-        @Parameter(description = "分页start", required = false)
+        @Parameter(name = "分页start", required = false)
         @QueryParam("start")
         start: Int?,
-        @Parameter(description = "分页大小", required = false)
+        @Parameter(name = "分页大小", required = false)
         @QueryParam("limit")
         limit: Int?
     ): Result<ImagePageData>
@@ -135,13 +135,13 @@ interface UserImageResource {
     @Path("/{projectId}/listAllProjectImages")
     @GET
     fun listAllProjectImages(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "项目ID", required = true)
+        @Parameter(name = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(description = "查询关键字", required = false)
+        @Parameter(name = "查询关键字", required = false)
         @QueryParam("searchKey")
         searchKey: String?
     ): Result<ImageListResp>
@@ -150,19 +150,19 @@ interface UserImageResource {
     @Path("/{projectId}/listBuildImages")
     @GET
     fun listProjectBuildImages(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "项目ID", required = true)
+        @Parameter(name = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(description = "查询关键字", required = false)
+        @Parameter(name = "查询关键字", required = false)
         @QueryParam("searchKey")
         searchKey: String?,
-        @Parameter(description = "分页start", required = false)
+        @Parameter(name = "分页start", required = false)
         @QueryParam("start")
         start: Int?,
-        @Parameter(description = "分页大小", required = false)
+        @Parameter(name = "分页大小", required = false)
         @QueryParam("limit")
         limit: Int?
     ): Result<ImagePageData>
@@ -171,10 +171,10 @@ interface UserImageResource {
     @Path("/{projectId}/listDockerBuildImages")
     @GET
     fun listDockerBuildImages(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "项目ID", required = true)
+        @Parameter(name = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String
     ): Result<List<DockerTag>>
@@ -183,13 +183,13 @@ interface UserImageResource {
     @Path("/{projectId}/listDevCloudImages/{public}")
     @GET
     fun listDevCloudImages(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "项目ID", required = true)
+        @Parameter(name = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(description = "是否公共镜像", required = true)
+        @Parameter(name = "是否公共镜像", required = true)
         @PathParam("public")
         public: Boolean
     ): Result<List<DockerTag>>
@@ -198,16 +198,16 @@ interface UserImageResource {
     @Path("/getImageInfo")
     @GET
     fun getImageInfo(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "镜像repo", required = true)
+        @Parameter(name = "镜像repo", required = true)
         @QueryParam("imageRepo")
         imageRepo: String,
-        @Parameter(description = "开始索引", required = false)
+        @Parameter(name = "开始索引", required = false)
         @QueryParam("tagStart")
         tagStart: Int?,
-        @Parameter(description = "页大小", required = false)
+        @Parameter(name = "页大小", required = false)
         @QueryParam("tagLimit")
         tagLimit: Int?
     ): Result<DockerRepo?>
@@ -216,13 +216,13 @@ interface UserImageResource {
     @Path("/getTagInfo")
     @GET
     fun getTagInfo(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "镜像repo", required = true)
+        @Parameter(name = "镜像repo", required = true)
         @QueryParam("imageRepo")
         imageRepo: String,
-        @Parameter(description = "镜像tag", required = true)
+        @Parameter(name = "镜像tag", required = true)
         @QueryParam("imageTag")
         imageTag: String
     ): Result<DockerTag?>
@@ -231,16 +231,16 @@ interface UserImageResource {
     @Path("/{projectId}/setBuildImage")
     @POST
     fun setBuildImage(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "项目ID", required = true)
+        @Parameter(name = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(description = "镜像repo", required = true)
+        @Parameter(name = "镜像repo", required = true)
         @QueryParam("imageRepo")
         imageRepo: String,
-        @Parameter(description = "镜像tag", required = true)
+        @Parameter(name = "镜像tag", required = true)
         @QueryParam("imageTag")
         imageTag: String
     ): Result<Boolean>

@@ -51,10 +51,10 @@ interface ServiceMeasurePipelineResource {
     @GET
     @Path("/list")
     fun list(
-        @Parameter(description = "项目ID", required = true)
+        @Parameter(name = "项目ID", required = true)
         @QueryParam("projectId")
         projectId: Set<String>,
-        @Parameter(description = "渠道号，默认为BS", required = false)
+        @Parameter(name = "渠道号，默认为BS", required = false)
         @QueryParam("channelCode")
         channelCode: ChannelCode
     ): Result<List<Pipeline>>
@@ -63,10 +63,10 @@ interface ServiceMeasurePipelineResource {
     @GET
     @Path("/atom/{atomCode}/count")
     fun getPipelineCountByAtomCode(
-        @Parameter(description = "原子标识", required = true)
+        @Parameter(name = "原子标识", required = true)
         @PathParam("atomCode")
         atomCode: String,
-        @Parameter(description = "项目标识", required = false)
+        @Parameter(name = "项目标识", required = false)
         @QueryParam("projectCode")
         projectCode: String?
     ): Result<Int>
@@ -75,10 +75,10 @@ interface ServiceMeasurePipelineResource {
     @GET
     @Path("/atom/count")
     fun batchGetPipelineCountByAtomCode(
-        @Parameter(description = "原子标识", required = false)
+        @Parameter(name = "原子标识", required = false)
         @QueryParam("atomCodes")
         atomCodes: String,
-        @Parameter(description = "项目标识", required = false)
+        @Parameter(name = "项目标识", required = false)
         @QueryParam("projectCode")
         projectCode: String?
     ): Result<Map<String, Int>>

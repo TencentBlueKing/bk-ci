@@ -59,23 +59,23 @@ interface ApigwTemplateResource {
     @GET
     @Path("/projects/{projectId}/allTemplates")
     fun listAllTemplate(
-        @Parameter(description = "appCode", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
+        @Parameter(name = "appCode", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
         appCode: String?,
-        @Parameter(description = "apigw Type", required = true)
+        @Parameter(name = "apigw Type", required = true)
         @PathParam("apigwType")
         apigwType: String?,
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String,
-        @Parameter(description = "projectId", required = true)
+        @Parameter(name = "projectId", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(description = "页码", required = false)
+        @Parameter(name = "页码", required = false)
         @QueryParam("page")
         @BkField(patternStyle = BkStyleEnum.NUMBER_STYLE, required = false)
         page: Int?,
-        @Parameter(description = "每页条数(默认20, 最大100)", required = false)
+        @Parameter(name = "每页条数(默认20, 最大100)", required = false)
         @QueryParam("pageSize")
         @BkField(patternStyle = BkStyleEnum.NUMBER_STYLE, required = false)
         pageSize: Int?
@@ -85,22 +85,22 @@ interface ApigwTemplateResource {
     @GET
     @Path("/projects/{projectId}/templates/{templateId}")
     fun getTemplate(
-        @Parameter(description = "appCode", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
+        @Parameter(name = "appCode", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
         appCode: String?,
-        @Parameter(description = "apigw Type", required = true)
+        @Parameter(name = "apigw Type", required = true)
         @PathParam("apigwType")
         apigwType: String?,
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String,
-        @Parameter(description = "项目ID(项目英文名)", required = true)
+        @Parameter(name = "项目ID(项目英文名)", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(description = "模板ID", required = true)
+        @Parameter(name = "模板ID", required = true)
         @PathParam("templateId")
         templateId: String,
-        @Parameter(description = "模板版本", required = false)
+        @Parameter(name = "模板版本", required = false)
         @QueryParam("version")
         version: Long?
     ): Result<TemplateModelDetail>
@@ -109,29 +109,29 @@ interface ApigwTemplateResource {
     @GET
     @Path("/projects/{projectId}/templates")
     fun listTemplate(
-        @Parameter(description = "appCode", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
+        @Parameter(name = "appCode", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
         appCode: String?,
-        @Parameter(description = "apigw Type", required = true)
+        @Parameter(name = "apigw Type", required = true)
         @PathParam("apigwType")
         apigwType: String?,
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String,
-        @Parameter(description = "项目ID(项目英文名)", required = true)
+        @Parameter(name = "项目ID(项目英文名)", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(description = "模版类型", required = false)
+        @Parameter(name = "模版类型", required = false)
         @QueryParam("templateType")
         templateType: TemplateType?,
-        @Parameter(description = "是否已关联到store", required = false)
+        @Parameter(name = "是否已关联到store", required = false)
         @QueryParam("storeFlag")
         storeFlag: Boolean?,
-        @Parameter(description = "页码", required = false)
+        @Parameter(name = "页码", required = false)
         @QueryParam("page")
         @BkField(patternStyle = BkStyleEnum.NUMBER_STYLE, required = false)
         page: Int?,
-        @Parameter(description = "每页条数(默认20, 最大100)", required = false)
+        @Parameter(name = "每页条数(默认20, 最大100)", required = false)
         @QueryParam("pageSize")
         @BkField(patternStyle = BkStyleEnum.NUMBER_STYLE, required = false)
         pageSize: Int?

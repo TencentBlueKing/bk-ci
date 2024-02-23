@@ -61,16 +61,16 @@ interface UserGroupResource {
     @Path("/{projectId}/list")
     @GET
     fun list(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "项目ID", required = true)
+        @Parameter(name = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(description = "页目", required = false, example = "1")
+        @Parameter(name = "页目", required = false, example = "1")
         @QueryParam("page")
         page: Int?,
-        @Parameter(description = "每页数目", required = false, example = "20")
+        @Parameter(name = "每页数目", required = false, example = "20")
         @QueryParam("pageSize")
         pageSize: Int?
     ): Result<Page<GroupSummaryWithPermission>>
@@ -79,10 +79,10 @@ interface UserGroupResource {
     @Path("/{projectId}/projectGroupAndUsers")
     @GET
     fun projectGroupAndUsers(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "项目ID", required = true)
+        @Parameter(name = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String
     ): Result<List<ProjectGroupAndUsers>>
@@ -91,13 +91,13 @@ interface UserGroupResource {
     @Path("/{projectId}/")
     @POST
     fun create(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "项目ID", required = true)
+        @Parameter(name = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(description = "用户组", required = true)
+        @Parameter(name = "用户组", required = true)
         group: GroupCreate
     ): Result<Boolean>
 
@@ -105,13 +105,13 @@ interface UserGroupResource {
     @Path("/{projectId}/{groupHashId}")
     @GET
     fun get(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "项目ID", required = true)
+        @Parameter(name = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(description = "用户组HashID", required = true)
+        @Parameter(name = "用户组HashID", required = true)
         @PathParam("groupHashId")
         groupHashId: String
     ): Result<Group>
@@ -120,13 +120,13 @@ interface UserGroupResource {
     @Path("/{projectId}/{groupHashId}/users")
     @GET
     fun getUsers(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "项目ID", required = true)
+        @Parameter(name = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(description = "用户组HashID", required = true)
+        @Parameter(name = "用户组HashID", required = true)
         @PathParam("groupHashId")
         groupHashId: String
     ): Result<GroupUsers>
@@ -135,16 +135,16 @@ interface UserGroupResource {
     @Path("/{projectId}/{groupHashId}")
     @PUT
     fun edit(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "项目ID", required = true)
+        @Parameter(name = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(description = "用户组HashID", required = true)
+        @Parameter(name = "用户组HashID", required = true)
         @PathParam("groupHashId")
         groupHashId: String,
-        @Parameter(description = "用户组", required = true)
+        @Parameter(name = "用户组", required = true)
         group: GroupUpdate
     ): Result<Boolean>
 
@@ -152,13 +152,13 @@ interface UserGroupResource {
     @Path("/{projectId}/{groupHashId}")
     @DELETE
     fun delete(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "项目ID", required = true)
+        @Parameter(name = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(description = "用户组HashID", required = true)
+        @Parameter(name = "用户组HashID", required = true)
         @PathParam("groupHashId")
         groupHashId: String
     ): Result<Boolean>

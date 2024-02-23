@@ -56,15 +56,15 @@ interface UserAtomFailInfoResource {
     @Path("/errorCode/statistics/info")
     @POST
     fun queryAtomErrorCodeStatisticsInfo(
-        @Parameter(description = "项目ID", required = true)
+        @Parameter(name = "项目ID", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_PROJECT_ID)
         @BkField(required = true)
         projectId: String,
-        @Parameter(description = "userId", required = true)
+        @Parameter(name = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         @BkField(required = true)
         userId: String,
-        @Parameter(description = "查询条件", required = true)
+        @Parameter(name = "查询条件", required = true)
         atomFailInfoReq: AtomFailInfoReqVO
     ): Result<List<AtomErrorCodeStatisticsInfoDO>>
 
@@ -72,20 +72,20 @@ interface UserAtomFailInfoResource {
     @Path("/details")
     @POST
     fun queryPipelineFailDetailInfo(
-        @Parameter(description = "项目ID", required = true)
+        @Parameter(name = "项目ID", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_PROJECT_ID)
         @BkField(required = true)
         projectId: String,
-        @Parameter(description = "userId", required = true)
+        @Parameter(name = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         @BkField(required = true)
         userId: String,
-        @Parameter(description = "查询条件", required = true)
+        @Parameter(name = "查询条件", required = true)
         atomFailInfoReq: AtomFailInfoReqVO,
-        @Parameter(description = "页码", required = true, example = "1")
+        @Parameter(name = "页码", required = true, example = "1")
         @QueryParam("page")
         page: Int,
-        @Parameter(description = "每页大小", required = true, example = "10")
+        @Parameter(name = "每页大小", required = true, example = "10")
         @BkField(patternStyle = BkStyleEnum.PAGE_SIZE_STYLE, required = true)
         @QueryParam("pageSize")
         pageSize: Int

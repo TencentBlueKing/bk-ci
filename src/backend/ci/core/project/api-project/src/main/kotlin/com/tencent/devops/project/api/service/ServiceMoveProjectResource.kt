@@ -19,10 +19,10 @@ interface ServiceMoveProjectResource {
     @PUT
     @Path("/{projectCode}/relationIam")
     fun relationIamProject(
-        @Parameter(description = "项目Code", required = true)
+        @Parameter(name = "项目Code", required = true)
         @PathParam("projectCode")
         projectCode: String,
-        @Parameter(description = "IAM关联Id", required = true)
+        @Parameter(name = "IAM关联Id", required = true)
         @QueryParam("relationId")
         relationId: String
     ): Result<Boolean>

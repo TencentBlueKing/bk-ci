@@ -61,16 +61,16 @@ interface UserPipelineQualityResource {
     @GET
     @Path("/project/{projectId}/pipeline/{pipelineId}/getPipelineInfo")
     fun getPipelineInfo(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "项目ID", required = true)
+        @Parameter(name = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(description = "流水线ID", required = true)
+        @Parameter(name = "流水线ID", required = true)
         @PathParam("pipelineId")
         pipelineId: String,
-        @Parameter(description = "渠道号", required = false)
+        @Parameter(name = "渠道号", required = false)
         @QueryParam("channelCode")
         channelCode: ChannelCode?
     ): Result<PipelineInfo>
@@ -80,13 +80,13 @@ interface UserPipelineQualityResource {
     @Path("/{projectId}/")
     @BkApiPermission([BkApiHandleType.API_NO_AUTH_CHECK])
     fun list(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "原子类型", required = true)
+        @Parameter(name = "原子类型", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(description = "流水线ID", required = true)
+        @Parameter(name = "流水线ID", required = true)
         request: PipelineListRequest?
     ): Result<List<Pipeline>>
 
@@ -94,22 +94,22 @@ interface UserPipelineQualityResource {
     @GET
     @Path("/projects/{projectId}/listQualityViewPipelines")
     fun listQualityViewPipelines(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "项目ID", required = true)
+        @Parameter(name = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(description = "流水线名称关键字", required = false)
+        @Parameter(name = "流水线名称关键字", required = false)
         @QueryParam("keywords")
         keywords: String?,
-        @Parameter(description = "第几页", required = false, example = "1")
+        @Parameter(name = "第几页", required = false, example = "1")
         @QueryParam("page")
         page: Int?,
-        @Parameter(description = "每页多少条", required = false, example = "20")
+        @Parameter(name = "每页多少条", required = false, example = "20")
         @QueryParam("pageSize")
         pageSize: Int?,
-        @Parameter(description = "用户视图ID", required = false)
+        @Parameter(name = "用户视图ID", required = false)
         @QueryParam("viewId")
         viewId: String?
     ): Result<PipelineViewPipelinePage<QualityPipeline>>

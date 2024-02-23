@@ -53,7 +53,7 @@ interface OPBuildLessWhiteListResource {
     @Path("/buildless-whitelist/list")
     @Operation(summary = "获取无编译环境配置白名单列表")
     fun getPipelineWhitelist(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String
     ): Result<List<String>>
@@ -62,10 +62,10 @@ interface OPBuildLessWhiteListResource {
     @Path("/buildless-whitelist/projects/{projectId}/add")
     @Operation(summary = "新增无编译环境配置白名单")
     fun addPipelineWhitelist(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String,
-        @Parameter(description = "服务ID", required = true)
+        @Parameter(name = "服务ID", required = true)
         @PathParam("projectId")
         projectId: String
     ): Result<Boolean>
@@ -74,10 +74,10 @@ interface OPBuildLessWhiteListResource {
     @Path("/buildless-whitelist/projects/{projectId}/delete")
     @Operation(summary = "删除无编译环境配置白名单")
     fun deletePipelineWhitelist(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String,
-        @Parameter(description = "服务ID", required = true)
+        @Parameter(name = "服务ID", required = true)
         @PathParam("projectId")
         projectId: String
     ): Result<Boolean>

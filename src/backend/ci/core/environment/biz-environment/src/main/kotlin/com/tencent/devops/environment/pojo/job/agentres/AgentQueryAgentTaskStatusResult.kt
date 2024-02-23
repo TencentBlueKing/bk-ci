@@ -28,43 +28,44 @@
 package com.tencent.devops.environment.pojo.job.agentres
 
 import com.fasterxml.jackson.annotation.JsonProperty
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
 
-@ApiModel("查询agent任务状态的接口的返回结果")
+
+import io.swagger.v3.oas.annotations.media.Schema
+
+@Schema(title = "查询agent任务状态的接口的返回结果")
 data class AgentQueryAgentTaskStatusResult(
-    @ApiModelProperty(value = "", required = true)
+    @get:Schema(title = "", required = true)
     @JsonProperty("job_id")
     val jobId: Int,
-    @ApiModelProperty(value = "", required = true)
+    @get:Schema(title = "", required = true)
     @JsonProperty("created_by")
     val createdBy: String,
-    @ApiModelProperty(value = "", required = true)
+    @get:Schema(title = "", required = true)
     @JsonProperty("job_type")
     val jobType: String,
-    @ApiModelProperty(value = "", required = true)
+    @get:Schema(title = "", required = true)
     @JsonProperty("job_type_display")
     val jobTypeDisplay: String,
-    @ApiModelProperty(value = "", required = true)
+    @get:Schema(title = "", required = true)
     @JsonProperty("ip_filter_list")
     val ipFilterList: List<String>,
-    @ApiModelProperty(value = "")
+    @get:Schema(title = "")
     val total: Int?,
-    @ApiModelProperty(value = "")
+    @get:Schema(title = "")
     val list: List<AgentHostDetail>?,
-    @ApiModelProperty(value = "", required = true)
+    @get:Schema(title = "", required = true)
     val statistics: AgentStatistics,
-    @ApiModelProperty(value = "", required = true)
+    @get:Schema(title = "", required = true)
     val status: String,
-    @ApiModelProperty(value = "")
+    @get:Schema(title = "")
     @JsonProperty("end_time")
     val endTime: String?,
-    @ApiModelProperty(value = "", required = true)
+    @get:Schema(title = "", required = true)
     @JsonProperty("start_time")
     val startTime: String,
-    @ApiModelProperty(value = "", required = true)
+    @get:Schema(title = "", required = true)
     @JsonProperty("cost_time")
     val costTime: String,
-    @ApiModelProperty(value = "", required = true)
+    @get:Schema(title = "", required = true)
     val meta: AgentMeta
 )

@@ -50,10 +50,10 @@ interface OpStoreErrorCodeResource {
     @POST
     @Path("/general/add")
     fun createGeneralErrorCode(
-        @Parameter(description = "userId", required = true)
+        @Parameter(name = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "插件通用错误码信息", required = true)
+        @Parameter(name = "插件通用错误码信息", required = true)
         errorCodeInfo: ErrorCodeInfo
     ): Result<Boolean>
 }

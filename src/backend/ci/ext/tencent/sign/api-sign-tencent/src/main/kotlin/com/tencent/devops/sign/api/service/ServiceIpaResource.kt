@@ -59,19 +59,19 @@ interface ServiceIpaResource {
     // @Path("/projects/{projectId}/pipelines/{pipelineId}/history")
     @Path("/sign/history")
     fun getHistorySign(
-        @Parameter(description = "用户名", required = true)
+        @Parameter(name = "用户名", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "起始时间戳（毫秒）", required = false)
+        @Parameter(name = "起始时间戳（毫秒）", required = false)
         @QueryParam("startTime")
         startTime: Long?,
-        @Parameter(description = "截止时间戳（毫秒）", required = false)
+        @Parameter(name = "截止时间戳（毫秒）", required = false)
         @QueryParam("endTime")
         endTime: Long?,
-        @Parameter(description = "第几页", required = false, example = "1")
+        @Parameter(name = "第几页", required = false, example = "1")
         @QueryParam("page")
         page: Int?,
-        @Parameter(description = "每页多少条", required = false, example = "20")
+        @Parameter(name = "每页多少条", required = false, example = "20")
         @QueryParam("pageSize")
         pageSize: Int?
     ): Result<Page<SignHistory>>
@@ -81,12 +81,12 @@ interface ServiceIpaResource {
     @Path("/sign")
     @Consumes(MediaType.APPLICATION_OCTET_STREAM)
     fun ipaSign(
-        @Parameter(description = "ipaSignInfoHeader", required = false)
+        @Parameter(name = "ipaSignInfoHeader", required = false)
         @HeaderParam(AUTH_HEADER_DEVOPS_SIGN_INFO)
         ipaSignInfoHeader: String,
-        @Parameter(description = "IPA包文件", required = true)
+        @Parameter(name = "IPA包文件", required = true)
         ipaInputStream: InputStream,
-        @Parameter(description = "md5Check", required = false)
+        @Parameter(name = "md5Check", required = false)
         @QueryParam("md5Check")
         md5Check: Boolean = true
     ): Result<String>
@@ -96,16 +96,16 @@ interface ServiceIpaResource {
     @Path("/projects/{projectId}/pipelines/{pipelineId}/builds/{buildId}/getSignToken")
     @Consumes(MediaType.APPLICATION_OCTET_STREAM)
     fun getSignToken(
-        @Parameter(description = "userId", required = true)
+        @Parameter(name = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "项目ID", required = true)
+        @Parameter(name = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(description = "流水线ID", required = true)
+        @Parameter(name = "流水线ID", required = true)
         @PathParam("pipelineId")
         pipelineId: String,
-        @Parameter(description = "构建ID", required = true)
+        @Parameter(name = "构建ID", required = true)
         @PathParam("buildId")
         buildId: String
     ): Result<IpaUploadInfo>
@@ -115,7 +115,7 @@ interface ServiceIpaResource {
     @Path("/sign/{resignId}/status")
     @Consumes(MediaType.APPLICATION_OCTET_STREAM)
     fun getSignStatus(
-        @Parameter(description = "签名任务ID", required = true)
+        @Parameter(name = "签名任务ID", required = true)
         @PathParam("resignId")
         resignId: String
     ): Result<String>
@@ -125,7 +125,7 @@ interface ServiceIpaResource {
     @Path("/sign/{resignId}/detail")
     @Consumes(MediaType.APPLICATION_OCTET_STREAM)
     fun getSignDetail(
-        @Parameter(description = "签名任务ID", required = true)
+        @Parameter(name = "签名任务ID", required = true)
         @PathParam("resignId")
         resignId: String
     ): Result<SignDetail>
@@ -134,7 +134,7 @@ interface ServiceIpaResource {
     @GET
     @Path("/sign/{resignId}/downloadUrl/")
     fun downloadUrl(
-        @Parameter(description = "签名任务ID", required = true)
+        @Parameter(name = "签名任务ID", required = true)
         @PathParam("resignId")
         resignId: String
     ): Result<String>

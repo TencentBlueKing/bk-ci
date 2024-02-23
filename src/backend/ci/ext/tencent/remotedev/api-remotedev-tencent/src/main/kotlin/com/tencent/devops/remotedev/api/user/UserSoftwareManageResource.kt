@@ -56,10 +56,10 @@ interface UserSoftwareManageResource {
     @GET
     @Path("/list")
     fun getProjectSoftwareList(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "项目ID", required = true)
+        @Parameter(name = "项目ID", required = true)
         @QueryParam("project_id")
         projectId: String
     ): Result<List<ProjectSoftware>>
@@ -68,10 +68,10 @@ interface UserSoftwareManageResource {
     @POST
     @Path("/import")
     fun importSoftwareToProject(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "导入软件信息", required = true)
+        @Parameter(name = "导入软件信息", required = true)
         software: ProjectSoftware
     ): Result<Boolean>
 
@@ -79,10 +79,10 @@ interface UserSoftwareManageResource {
     @POST
     @Path("/install")
     fun installSoftwareToUser(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "软件安装列表", required = true)
+        @Parameter(name = "软件安装列表", required = true)
         softwareList: List<UserSoftware>
     ): Result<Boolean>
 
@@ -90,19 +90,19 @@ interface UserSoftwareManageResource {
     @GET
     @Path("/install/history")
     fun getUserSoftwareInstalledRecord(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "项目ID", required = true)
+        @Parameter(name = "项目ID", required = true)
         @QueryParam("project_id")
         projectId: String,
-        @Parameter(description = "用户", required = false)
+        @Parameter(name = "用户", required = false)
         @QueryParam("user")
         user: String?,
-        @Parameter(description = "云桌面", required = false)
+        @Parameter(name = "云桌面", required = false)
         @QueryParam("workspaceName")
         workspaceName: String?,
-        @Parameter(description = "状态", required = false)
+        @Parameter(name = "状态", required = false)
         @QueryParam("status")
         status: SoftwareInstallStatus?
     ): Result<List<UserSoftwareInstalledRecord>>
@@ -111,7 +111,7 @@ interface UserSoftwareManageResource {
     @GET
     @Path("/group")
     fun getSoftwareGroupInfo(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String
     ): Result<Any>

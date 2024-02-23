@@ -1,18 +1,18 @@
 package com.tencent.devops.environment.pojo.job.cmdbres
 
 import com.fasterxml.jackson.annotation.JsonProperty
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
 data class CmdbResp(
-    @ApiModelProperty(value = "状态码", required = true)
+    @get:Schema(title = "状态码", required = true)
     var code: Int,
-    @ApiModelProperty(value = "执行成功失败", required = true)
+    @get:Schema(title = "执行成功失败", required = true)
     var result: Boolean,
-    @ApiModelProperty(value = "请求链ID", required = true)
+    @get:Schema(title = "请求链ID", required = true)
     @JsonProperty("request_id")
     var requestId: String,
-    @ApiModelProperty(value = "结果消息", required = true)
+    @get:Schema(title = "结果消息", required = true)
     var message: String?,
-    @ApiModelProperty(value = "返回数据", required = true)
+    @get:Schema(title = "返回数据", required = true)
     var data: CmdbData
 )

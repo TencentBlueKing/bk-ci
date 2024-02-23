@@ -53,7 +53,7 @@ interface UserImageLabelResource {
     @GET
     @Path("/imageIds/{imageId}/labels")
     fun getImageLabelsByImageId(
-        @Parameter(description = "镜像ID", required = true)
+        @Parameter(name = "镜像ID", required = true)
         @PathParam("imageId")
         imageId: String
     ): Result<List<Label>?>

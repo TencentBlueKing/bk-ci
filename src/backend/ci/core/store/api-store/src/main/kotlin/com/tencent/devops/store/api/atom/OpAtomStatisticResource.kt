@@ -53,7 +53,7 @@ interface OpAtomStatisticResource {
     @PUT
     @Path("/daily/info/async/update")
     fun asyncUpdateDailyInfo(
-        @Parameter(description = "同步日期，格式yyyy-MM-dd", required = true)
+        @Parameter(name = "同步日期，格式yyyy-MM-dd", required = true)
         @QueryParam("date")
         date: String
     ): Result<Boolean>

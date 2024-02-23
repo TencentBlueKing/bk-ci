@@ -23,11 +23,11 @@ interface OpSwaggerDocResource {
     @GET
     @Path("/init")
     fun docInit(
-        @Parameter(description = "checkMetaData", required = false)
+        @Parameter(name = "checkMetaData", required = false)
         @QueryParam("checkMetaData")
         @DefaultValue("false")
         checkMetaData: Boolean,
-        @Parameter(description = "checkMDData", required = false)
+        @Parameter(name = "checkMDData", required = false)
         @QueryParam("checkMDData")
         @DefaultValue("true")
         checkMDData: Boolean

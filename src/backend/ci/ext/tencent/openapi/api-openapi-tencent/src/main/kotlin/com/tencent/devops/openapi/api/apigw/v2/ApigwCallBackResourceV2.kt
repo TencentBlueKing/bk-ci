@@ -60,28 +60,28 @@ interface ApigwCallBackResourceV2 {
     @POST
     @Path("/projects/{projectId}")
     fun create(
-        @Parameter(description = "appCode", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
+        @Parameter(name = "appCode", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
         appCode: String?,
-        @Parameter(description = "apigw Type", required = true)
+        @Parameter(name = "apigw Type", required = true)
         @PathParam("apigwType")
         apigwType: String?,
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "projectId", required = true)
+        @Parameter(name = "projectId", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(description = "url", required = true)
+        @Parameter(name = "url", required = true)
         @QueryParam("url")
         url: String,
-        @Parameter(description = "region", required = true)
+        @Parameter(name = "region", required = true)
         @QueryParam("region")
         region: CallBackNetWorkRegionType,
-        @Parameter(description = "event", required = true)
+        @Parameter(name = "event", required = true)
         @QueryParam("event")
         event: CallBackEvent,
-        @Parameter(description = "secretToken", required = false)
+        @Parameter(name = "secretToken", required = false)
         @QueryParam("secretToken")
         secretToken: String?
     ): Result<Boolean>
@@ -90,22 +90,22 @@ interface ApigwCallBackResourceV2 {
     @GET
     @Path("/projects/{projectId}")
     fun list(
-        @Parameter(description = "appCode", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
+        @Parameter(name = "appCode", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
         appCode: String?,
-        @Parameter(description = "apigw Type", required = true)
+        @Parameter(name = "apigw Type", required = true)
         @PathParam("apigwType")
         apigwType: String?,
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "projectId", required = true)
+        @Parameter(name = "projectId", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(description = "第几页", required = false, example = "1")
+        @Parameter(name = "第几页", required = false, example = "1")
         @QueryParam("page")
         page: Int?,
-        @Parameter(description = "每页条数(默认20, 最大100)", required = false, example = "20")
+        @Parameter(name = "每页条数(默认20, 最大100)", required = false, example = "20")
         @QueryParam("pageSize")
         pageSize: Int?
     ): Result<Page<ProjectPipelineCallBack>>
@@ -114,19 +114,19 @@ interface ApigwCallBackResourceV2 {
     @DELETE
     @Path("/projects/{projectId}/{id}")
     fun remove(
-        @Parameter(description = "appCode", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
+        @Parameter(name = "appCode", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
         appCode: String?,
-        @Parameter(description = "apigw Type", required = true)
+        @Parameter(name = "apigw Type", required = true)
         @PathParam("apigwType")
         apigwType: String?,
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "projectId", required = true)
+        @Parameter(name = "projectId", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(description = "id", required = true)
+        @Parameter(name = "id", required = true)
         @PathParam("id")
         id: Long
     ): Result<Boolean>
@@ -135,34 +135,34 @@ interface ApigwCallBackResourceV2 {
     @GET
     @Path("/history/{projectId}")
     fun listHistory(
-        @Parameter(description = "appCode", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
+        @Parameter(name = "appCode", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
         appCode: String?,
-        @Parameter(description = "apigw Type", required = true)
+        @Parameter(name = "apigw Type", required = true)
         @PathParam("apigwType")
         apigwType: String?,
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "projectId", required = true)
+        @Parameter(name = "projectId", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(description = "回调url", required = true)
+        @Parameter(name = "回调url", required = true)
         @QueryParam("url")
         url: String,
-        @Parameter(description = "事件类型", required = true)
+        @Parameter(name = "事件类型", required = true)
         @QueryParam("event")
         event: CallBackEvent,
-        @Parameter(description = "开始时间(yyyy-MM-dd HH:mm:ss格式)", required = false)
+        @Parameter(name = "开始时间(yyyy-MM-dd HH:mm:ss格式)", required = false)
         @QueryParam("startTime")
         startTime: String?,
-        @Parameter(description = "结束时间(yyyy-MM-dd HH:mm:ss格式)", required = false)
+        @Parameter(name = "结束时间(yyyy-MM-dd HH:mm:ss格式)", required = false)
         @QueryParam("endTime")
         endTime: String?,
-        @Parameter(description = "第几页", required = false, example = "1")
+        @Parameter(name = "第几页", required = false, example = "1")
         @QueryParam("page")
         page: Int?,
-        @Parameter(description = "每页条数(默认20, 最大100)", required = false, example = "20")
+        @Parameter(name = "每页条数(默认20, 最大100)", required = false, example = "20")
         @QueryParam("pageSize")
         pageSize: Int?
     ): Result<Page<ProjectPipelineCallBackHistory>>
@@ -171,19 +171,19 @@ interface ApigwCallBackResourceV2 {
     @POST
     @Path("/history/{projectId}/{id}/retry")
     fun retry(
-        @Parameter(description = "appCode", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
+        @Parameter(name = "appCode", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
         appCode: String?,
-        @Parameter(description = "apigw Type", required = true)
+        @Parameter(name = "apigw Type", required = true)
         @PathParam("apigwType")
         apigwType: String?,
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "projectId", required = true)
+        @Parameter(name = "projectId", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(description = "id", required = true)
+        @Parameter(name = "id", required = true)
         @PathParam("id")
         id: Long
     ): Result<Boolean>

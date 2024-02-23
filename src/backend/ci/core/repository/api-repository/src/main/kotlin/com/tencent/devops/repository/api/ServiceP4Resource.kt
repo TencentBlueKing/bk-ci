@@ -54,16 +54,16 @@ interface ServiceP4Resource {
     @GET
     @Path("/{projectId}/{repositoryId}/getChangelistFiles")
     fun getChangelistFiles(
-        @Parameter(description = "项目ID", required = true)
+        @Parameter(name = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(description = "代码库哈希ID或代代码库名称", required = true)
+        @Parameter(name = "代码库哈希ID或代代码库名称", required = true)
         @PathParam("repositoryId")
         repositoryId: String,
-        @Parameter(description = "代码库请求类型", required = true)
+        @Parameter(name = "代码库请求类型", required = true)
         @QueryParam("repositoryType")
         repositoryType: RepositoryType?,
-        @Parameter(description = "p4 版本号", required = true)
+        @Parameter(name = "p4 版本号", required = true)
         @QueryParam("change")
         change: Int
     ): Result<List<P4FileSpec>>
@@ -72,16 +72,16 @@ interface ServiceP4Resource {
     @GET
     @Path("/{projectId}/{repositoryId}/getShelvedFiles")
     fun getShelvedFiles(
-        @Parameter(description = "项目ID", required = true)
+        @Parameter(name = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(description = "代码库哈希ID或代代码库名称", required = true)
+        @Parameter(name = "代码库哈希ID或代代码库名称", required = true)
         @PathParam("repositoryId")
         repositoryId: String,
-        @Parameter(description = "代码库请求类型", required = true)
+        @Parameter(name = "代码库请求类型", required = true)
         @QueryParam("repositoryType")
         repositoryType: RepositoryType?,
-        @Parameter(description = "p4 版本号", required = true)
+        @Parameter(name = "p4 版本号", required = true)
         @QueryParam("change")
         change: Int
     ): Result<List<P4FileSpec>>
@@ -90,19 +90,19 @@ interface ServiceP4Resource {
     @GET
     @Path("getFileContent")
     fun getFileContent(
-        @Parameter(description = "p4Port")
+        @Parameter(name = "p4Port")
         @QueryParam("p4Port")
         p4Port: String,
-        @Parameter(description = "文件路径")
+        @Parameter(name = "文件路径")
         @QueryParam("filePath")
         filePath: String,
-        @Parameter(description = "版本号")
+        @Parameter(name = "版本号")
         @QueryParam("reversion")
         reversion: Int,
-        @Parameter(description = "username")
+        @Parameter(name = "username")
         @HeaderParam("username")
         username: String,
-        @Parameter(description = "password")
+        @Parameter(name = "password")
         @HeaderParam("password")
         password: String
     ): Result<String>
@@ -111,13 +111,13 @@ interface ServiceP4Resource {
     @GET
     @Path("/{projectId}/{repositoryId}/serverInfo")
     fun getServerInfo(
-        @Parameter(description = "项目ID", required = true)
+        @Parameter(name = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(description = "代码库哈希ID或代代码库名称", required = true)
+        @Parameter(name = "代码库哈希ID或代代码库名称", required = true)
         @PathParam("repositoryId")
         repositoryId: String,
-        @Parameter(description = "代码库请求类型", required = true)
+        @Parameter(name = "代码库请求类型", required = true)
         @QueryParam("repositoryType")
         repositoryType: RepositoryType?
     ): Result<P4ServerInfo>
@@ -126,16 +126,16 @@ interface ServiceP4Resource {
     @GET
     @Path("/{projectId}/{repositoryId}/getChangelist")
     fun getChangelist(
-        @Parameter(description = "项目ID", required = true)
+        @Parameter(name = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(description = "代码库哈希ID或代代码库名称", required = true)
+        @Parameter(name = "代码库哈希ID或代代码库名称", required = true)
         @PathParam("repositoryId")
         repositoryId: String,
-        @Parameter(description = "代码库请求类型", required = true)
+        @Parameter(name = "代码库请求类型", required = true)
         @QueryParam("repositoryType")
         repositoryType: RepositoryType?,
-        @Parameter(description = "p4 版本号", required = true)
+        @Parameter(name = "p4 版本号", required = true)
         @QueryParam("change")
         change: Int
     ): Result<P4ChangeList>
@@ -144,16 +144,16 @@ interface ServiceP4Resource {
     @GET
     @Path("/{projectId}/{repositoryId}/getShelvedChangeList")
     fun getShelvedChangeList(
-        @Parameter(description = "项目ID", required = true)
+        @Parameter(name = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(description = "代码库哈希ID或代代码库名称", required = true)
+        @Parameter(name = "代码库哈希ID或代代码库名称", required = true)
         @PathParam("repositoryId")
         repositoryId: String,
-        @Parameter(description = "代码库请求类型", required = true)
+        @Parameter(name = "代码库请求类型", required = true)
         @QueryParam("repositoryType")
         repositoryType: RepositoryType?,
-        @Parameter(description = "p4 版本号", required = true)
+        @Parameter(name = "p4 版本号", required = true)
         @QueryParam("change")
         change: Int
     ): Result<P4ChangeList>

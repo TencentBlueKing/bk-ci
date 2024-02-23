@@ -57,19 +57,19 @@ interface BuildDevCloudResource {
     @POST
     @Path("/job")
     fun createJob(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "projectId", required = true)
+        @Parameter(name = "projectId", required = true)
         @HeaderParam(AUTH_HEADER_PROJECT_ID)
         projectId: String,
-        @Parameter(description = "projectId", required = true)
+        @Parameter(name = "projectId", required = true)
         @HeaderParam(AUTH_HEADER_PIPELINE_ID)
         pipelineId: String,
-        @Parameter(description = "构建id", required = true)
+        @Parameter(name = "构建id", required = true)
         @HeaderParam(AUTH_HEADER_BUILD_ID)
         buildId: String,
-        @Parameter(description = "Job结构", required = true)
+        @Parameter(name = "Job结构", required = true)
         jobReq: DevCloudJobReq
     ): Result<JobResponse>
 
@@ -77,16 +77,16 @@ interface BuildDevCloudResource {
     @GET
     @Path("/job/{jobName}/status")
     fun getJobStatus(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "projectId", required = true)
+        @Parameter(name = "projectId", required = true)
         @HeaderParam(AUTH_HEADER_PROJECT_ID)
         projectId: String,
-        @Parameter(description = "projectId", required = true)
+        @Parameter(name = "projectId", required = true)
         @HeaderParam(AUTH_HEADER_PIPELINE_ID)
         pipelineId: String,
-        @Parameter(description = "jobName", required = true)
+        @Parameter(name = "jobName", required = true)
         @PathParam("jobName")
         jobName: String
     ): Result<String>
@@ -95,16 +95,16 @@ interface BuildDevCloudResource {
     @GET
     @Path("/job/{jobName}/logs")
     fun getJobLogs(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "projectId", required = true)
+        @Parameter(name = "projectId", required = true)
         @HeaderParam(AUTH_HEADER_PROJECT_ID)
         projectId: String,
-        @Parameter(description = "projectId", required = true)
+        @Parameter(name = "projectId", required = true)
         @HeaderParam(AUTH_HEADER_PIPELINE_ID)
         pipelineId: String,
-        @Parameter(description = "jobName", required = true)
+        @Parameter(name = "jobName", required = true)
         @PathParam("jobName")
         jobName: String
     ): Result<String>
@@ -113,16 +113,16 @@ interface BuildDevCloudResource {
     @GET
     @Path("/task/{taskId}")
     fun getTask(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "projectId", required = true)
+        @Parameter(name = "projectId", required = true)
         @HeaderParam(AUTH_HEADER_PROJECT_ID)
         projectId: String,
-        @Parameter(description = "projectId", required = true)
+        @Parameter(name = "projectId", required = true)
         @HeaderParam(AUTH_HEADER_PIPELINE_ID)
         pipelineId: String,
-        @Parameter(description = "taskId", required = true)
+        @Parameter(name = "taskId", required = true)
         @PathParam("taskId")
         taskId: String
     ): Result<String>

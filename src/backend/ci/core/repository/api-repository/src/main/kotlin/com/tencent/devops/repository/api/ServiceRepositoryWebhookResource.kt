@@ -50,7 +50,7 @@ interface ServiceRepositoryWebhookResource {
     @POST
     @Path("/save")
     fun saveWebhookRequest(
-        @Parameter(description = "代码库触发事件", required = true)
+        @Parameter(name = "代码库触发事件", required = true)
         repositoryWebhookRequest: RepositoryWebhookRequest
     ): Result<Boolean>
 
@@ -58,7 +58,7 @@ interface ServiceRepositoryWebhookResource {
     @GET
     @Path("/{requestId}")
     fun getWebhookRequest(
-        @Parameter(description = "事件ID", required = true)
+        @Parameter(name = "事件ID", required = true)
         @PathParam("requestId")
         requestId: String
     ): Result<RepositoryWebhookRequest?>

@@ -1,18 +1,17 @@
 package com.tencent.devops.environment.pojo.job.resp
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("脚本执行任务日志")
+@Schema(title = "脚本执行任务日志")
 data class ScriptExcuteLog(
-    @ApiModelProperty(value = "云区域ID")
+    @get:Schema(title = "云区域ID")
     val bkCloudId: Long?,
-    @ApiModelProperty(value = "IP地址")
+    @get:Schema(title = "IP地址")
     val ip: String?,
-    @ApiModelProperty(value = "主机ID")
+    @get:Schema(title = "主机ID")
     val bkHostId: Long?,
-    @ApiModelProperty(value = "ipv6地址")
+    @get:Schema(title = "ipv6地址")
     val ipv6: String?,
-    @ApiModelProperty(value = "脚本执行日志内容", required = true)
+    @get:Schema(title = "脚本执行日志内容", required = true)
     val logContent: String
 )

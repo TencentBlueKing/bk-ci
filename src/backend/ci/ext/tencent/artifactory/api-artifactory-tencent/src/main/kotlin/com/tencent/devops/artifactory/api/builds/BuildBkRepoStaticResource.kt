@@ -52,13 +52,13 @@ interface BuildBkRepoStaticResource {
     @Path("/file/upload")
     @Consumes(MediaType.MULTIPART_FORM_DATA)
     fun uploadStaticFile(
-        @Parameter(description = "用户ID", required = true)
+        @Parameter(name = "用户ID", required = true)
         @QueryParam("userId")
         userId: String,
-        @Parameter(description = "目标路径", required = true)
+        @Parameter(name = "目标路径", required = true)
         @QueryParam("destPath")
         destPath: String,
-        @Parameter(description = "文件", required = true)
+        @Parameter(name = "文件", required = true)
         @FormDataParam("file")
         inputStream: InputStream,
         @FormDataParam("file")

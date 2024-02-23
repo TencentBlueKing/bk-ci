@@ -51,7 +51,7 @@ interface ExternalThirdPartyAgentResource {
     @Path("/{agentId}/install")
     @Produces(MediaType.APPLICATION_OCTET_STREAM)
     fun downloadAgentInstallScript(
-        @Parameter(description = "Agent ID", required = true)
+        @Parameter(name = "Agent ID", required = true)
         @PathParam("agentId")
         @BkField(minLength = 3, maxLength = 32)
         agentId: String
@@ -62,14 +62,14 @@ interface ExternalThirdPartyAgentResource {
     @Path("/{agentId}/agent")
     @Produces(MediaType.APPLICATION_OCTET_STREAM)
     fun downloadAgent(
-        @Parameter(description = "Agent ID", required = true)
+        @Parameter(name = "Agent ID", required = true)
         @PathParam("agentId")
         @BkField(minLength = 3, maxLength = 32)
         agentId: String,
-        @Parameter(description = "本地eTag标签", required = false)
+        @Parameter(name = "本地eTag标签", required = false)
         @QueryParam("eTag")
         eTag: String?,
-        @Parameter(description = "本地操作系统架构", required = false)
+        @Parameter(name = "本地操作系统架构", required = false)
         @QueryParam("arch")
         arch: String?
     ): Response
@@ -79,14 +79,14 @@ interface ExternalThirdPartyAgentResource {
     @Path("/{agentId}/jre")
     @Produces(MediaType.APPLICATION_OCTET_STREAM)
     fun downloadJRE(
-        @Parameter(description = "Agent ID", required = true)
+        @Parameter(name = "Agent ID", required = true)
         @PathParam("agentId")
         @BkField(minLength = 3, maxLength = 32)
         agentId: String,
-        @Parameter(description = "本地eTag标签", required = false)
+        @Parameter(name = "本地eTag标签", required = false)
         @QueryParam("eTag")
         eTag: String?,
-        @Parameter(description = "本地操作系统架构", required = false)
+        @Parameter(name = "本地操作系统架构", required = false)
         @QueryParam("arch")
         arch: String?
     ): Response
@@ -96,7 +96,7 @@ interface ExternalThirdPartyAgentResource {
     @Path("/{agentHashId}/batch_zip")
     @Produces(MediaType.APPLICATION_OCTET_STREAM)
     fun downloadNewInstallAgentBatchFile(
-        @Parameter(description = "agentHashId 化身 install Key", required = true)
+        @Parameter(name = "agentHashId 化身 install Key", required = true)
         @PathParam("agentHashId")
         @BkField(minLength = 3, maxLength = 32)
         agentHashId: String

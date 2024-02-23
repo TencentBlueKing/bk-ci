@@ -29,14 +29,14 @@ interface OpenExperienceResource {
     @Path("/outerLogin")
     @POST
     fun outerLogin(
-        @Parameter(description = "平台", required = true)
+        @Parameter(name = "平台", required = true)
         @HeaderParam(AUTH_HEADER_PLATFORM)
         platform: Int,
-        @Parameter(description = "版本号", required = true)
+        @Parameter(name = "版本号", required = true)
         @HeaderParam(AUTH_HEADER_APP_VERSION)
         appVersion: String?,
         @HeaderParam(AUTH_HEADER_DEVOPS_REAL_IP)
-        @Parameter(description = "用户IP", required = true)
+        @Parameter(name = "用户IP", required = true)
         realIp: String,
         params: OuterLoginParam
     ): Result<String>
@@ -45,7 +45,7 @@ interface OpenExperienceResource {
     @Path("/outerAuth")
     @GET
     fun outerAuth(
-        @Parameter(description = "凭证", required = true)
+        @Parameter(name = "凭证", required = true)
         @QueryParam("token")
         token: String
     ): Result<OuterProfileVO>
@@ -54,11 +54,11 @@ interface OpenExperienceResource {
     @Path("/appstore/redirect")
     @GET
     fun appStoreRedirect(
-        @Parameter(description = "公开体验ID", required = true)
+        @Parameter(name = "公开体验ID", required = true)
         @QueryParam("id")
         @BkField(maxLength = 15)
         id: String,
-        @Parameter(description = "用户ID", required = true)
+        @Parameter(name = "用户ID", required = true)
         @QueryParam("userId")
         @BkField(maxLength = 15)
         userId: String

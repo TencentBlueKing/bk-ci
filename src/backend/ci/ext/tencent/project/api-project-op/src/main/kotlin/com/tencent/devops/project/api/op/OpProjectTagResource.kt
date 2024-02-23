@@ -50,7 +50,7 @@ interface OpProjectTagResource {
     @PUT
     @Path("/setTagByProject")
     fun setTagByProject(
-        @Parameter(description = "consulTag请求入参", required = true)
+        @Parameter(name = "consulTag请求入参", required = true)
         projectTagUpdateDTO: ProjectTagUpdateDTO
     ): Result<Boolean>
 
@@ -58,7 +58,7 @@ interface OpProjectTagResource {
     @PUT
     @Path("/setTagByOrg")
     fun setTagByOrg(
-        @Parameter(description = "consulTag请求入参", required = true)
+        @Parameter(name = "consulTag请求入参", required = true)
         projectTagUpdateDTO: ProjectTagUpdateDTO
     ): Result<Boolean>
 
@@ -66,7 +66,7 @@ interface OpProjectTagResource {
     @PUT
     @Path("/setTagByChannel")
     fun setTagByChannel(
-        @Parameter(description = "consulTag请求入参", required = true)
+        @Parameter(name = "consulTag请求入参", required = true)
         projectTagUpdateDTO: ProjectTagUpdateDTO
     ): Result<Boolean>
 
@@ -74,7 +74,7 @@ interface OpProjectTagResource {
     @PUT
     @Path("/ext/system/setTagByProject")
     fun setExtSystemTagByProject(
-        @Parameter(description = "consulTag请求入参", required = true)
+        @Parameter(name = "consulTag请求入参", required = true)
         extSystemTagDTO: ProjectExtSystemTagDTO
     ): Result<Boolean>
 }

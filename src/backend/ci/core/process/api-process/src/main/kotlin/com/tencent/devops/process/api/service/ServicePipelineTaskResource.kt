@@ -59,10 +59,10 @@ interface ServicePipelineTaskResource {
     @Path("/{projectId}/list")
     @BkApiPermission([BkApiHandleType.API_NO_AUTH_CHECK])
     fun list(
-        @Parameter(description = "项目ID", required = true)
+        @Parameter(name = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(description = "流水线id集合", required = true)
+        @Parameter(name = "流水线id集合", required = true)
         pipelineIds: Collection<String>
     ): Result<Map<String, List<PipelineModelTask>>>
 
@@ -70,16 +70,16 @@ interface ServicePipelineTaskResource {
     @GET
     @Path("/atoms/{atomCode}")
     fun listByAtomCode(
-        @Parameter(description = "插件标识", required = true)
+        @Parameter(name = "插件标识", required = true)
         @PathParam("atomCode")
         atomCode: String,
-        @Parameter(description = "项目标识", required = false)
+        @Parameter(name = "项目标识", required = false)
         @QueryParam("projectCode")
         projectCode: String?,
-        @Parameter(description = "第几页", required = false, example = "1")
+        @Parameter(name = "第几页", required = false, example = "1")
         @QueryParam("page")
         page: Int?,
-        @Parameter(description = "每页多少条", required = false, example = "20")
+        @Parameter(name = "每页多少条", required = false, example = "20")
         @QueryParam("pageSize")
         pageSize: Int?
     ): Result<Page<PipelineProjectRel>>
@@ -89,10 +89,10 @@ interface ServicePipelineTaskResource {
     @Path("/listPipelineNumByAtomCodes")
     @BkApiPermission([BkApiHandleType.API_NO_AUTH_CHECK])
     fun listPipelineNumByAtomCodes(
-        @Parameter(description = "项目ID", required = false)
+        @Parameter(name = "项目ID", required = false)
         @QueryParam("projectId")
         projectId: String? = null,
-        @Parameter(description = "插件标识集合", required = true)
+        @Parameter(name = "插件标识集合", required = true)
         atomCodes: List<String>
     ): Result<Map<String, Int>>
 
@@ -100,13 +100,13 @@ interface ServicePipelineTaskResource {
     @GET
     @Path("/projects/{projectId}/builds/{buildId}/tasks/{taskId}")
     fun getTaskStatus(
-        @Parameter(description = "项目ID", required = true)
+        @Parameter(name = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(description = "构建ID", required = true)
+        @Parameter(name = "构建ID", required = true)
         @PathParam("buildId")
         buildId: String,
-        @Parameter(description = "任务ID", required = true)
+        @Parameter(name = "任务ID", required = true)
         @PathParam("taskId")
         taskId: String
     ): Result<BuildStatus?>
@@ -115,16 +115,16 @@ interface ServicePipelineTaskResource {
     @GET
     @Path("/projects/{projectId}/builds/{buildId}/containers/{containerId}/tasks/{taskId}")
     fun getContainerStartupInfo(
-        @Parameter(description = "项目ID", required = true)
+        @Parameter(name = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(description = "构建ID", required = true)
+        @Parameter(name = "构建ID", required = true)
         @PathParam("buildId")
         buildId: String,
-        @Parameter(description = "任务ID", required = true)
+        @Parameter(name = "任务ID", required = true)
         @PathParam("containerId")
         containerId: String,
-        @Parameter(description = "任务ID", required = true)
+        @Parameter(name = "任务ID", required = true)
         @PathParam("taskId")
         taskId: String
     ): Result<ContainerStartInfo?>

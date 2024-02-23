@@ -27,13 +27,14 @@
 
 package com.tencent.devops.environment.pojo.job.agentreq
 
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
+
 
 data class AgentCondition<T>(
-    @ApiModelProperty(value = "查询类型", notes = "1: ip，IP地址 2:instance_id，主机实例ID 3: status，执行状态")
+    @get:Schema(title = "查询类型", description = "1: ip，IP地址 2:instance_id，主机实例ID 3: status，执行状态")
     val key: String,
-    @ApiModelProperty(
-        value = "查询关键词", notes = "1：当key为ip时，可以指定查询IP地址 " +
+    @get:Schema(
+        title = "查询关键词", description = "1：当key为ip时，可以指定查询IP地址 " +
         "2：当key 为instance_id时，可以指定对应的实例ID 3：当key为status时，可以指定查询状态"
     )
     val value: T?

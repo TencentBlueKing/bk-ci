@@ -62,20 +62,20 @@ interface UserArtifactoryResource {
     @POST
     fun search(
         @BkField(minLength = 1, maxLength = 128)
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
         @BkField(minLength = 1, maxLength = 128)
-        @Parameter(description = "项目ID", required = true)
+        @Parameter(name = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(description = "第几页", required = false, example = "1")
+        @Parameter(name = "第几页", required = false, example = "1")
         @QueryParam("page")
         page: Int?,
-        @Parameter(description = "每页多少条(不传默认全部返回)", required = false, example = "20")
+        @Parameter(name = "每页多少条(不传默认全部返回)", required = false, example = "20")
         @QueryParam("pageSize")
         pageSize: Int?,
-        @Parameter(description = "元数据", required = true)
+        @Parameter(name = "元数据", required = true)
         searchProps: SearchProps
     ): Result<Page<FileInfo>>
 
@@ -84,17 +84,17 @@ interface UserArtifactoryResource {
     @GET
     fun show(
         @BkField(minLength = 1, maxLength = 128)
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
         @BkField(minLength = 1, maxLength = 128)
-        @Parameter(description = "项目ID", required = true)
+        @Parameter(name = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(description = "版本仓库类型", required = true)
+        @Parameter(name = "版本仓库类型", required = true)
         @PathParam("artifactoryType")
         artifactoryType: ArtifactoryType,
-        @Parameter(description = "路径", required = true)
+        @Parameter(name = "路径", required = true)
         @QueryParam("path")
         @BkField(minLength = 1)
         path: String
@@ -105,17 +105,17 @@ interface UserArtifactoryResource {
     @POST
     fun downloadUrl(
         @BkField(minLength = 1, maxLength = 128)
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
         @BkField(minLength = 1, maxLength = 128)
-        @Parameter(description = "项目ID", required = true)
+        @Parameter(name = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(description = "版本仓库类型", required = true)
+        @Parameter(name = "版本仓库类型", required = true)
         @PathParam("artifactoryType")
         artifactoryType: ArtifactoryType,
-        @Parameter(description = "路径", required = true)
+        @Parameter(name = "路径", required = true)
         @QueryParam("path")
         @BkField(minLength = 1)
         path: String

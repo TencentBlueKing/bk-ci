@@ -70,10 +70,10 @@ interface UserRepositoryResource {
     @Path("/{projectId}/hasCreatePermission")
     @GET
     fun hasCreatePermission(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "项目ID", required = true)
+        @Parameter(name = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String
     ): Result<Boolean>
@@ -82,16 +82,16 @@ interface UserRepositoryResource {
     @Path("/{projectId}/hasAliasName")
     @GET
     fun hasAliasName(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "项目ID", required = true)
+        @Parameter(name = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(description = "代码库哈希ID", required = false)
+        @Parameter(name = "代码库哈希ID", required = false)
         @QueryParam("repositoryHashId")
         repositoryHashId: String?,
-        @Parameter(description = "代码库别名", required = true)
+        @Parameter(name = "代码库别名", required = true)
         @QueryParam("aliasName")
         aliasName: String
     ): Result<Boolean>
@@ -100,13 +100,13 @@ interface UserRepositoryResource {
     @POST
     @Path("/{projectId}/")
     fun create(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "项目ID", required = true)
+        @Parameter(name = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(description = "代码库模型", required = true)
+        @Parameter(name = "代码库模型", required = true)
         repository: Repository
     ): Result<RepositoryId>
 
@@ -114,16 +114,16 @@ interface UserRepositoryResource {
     @GET
     @Path("/{projectId}/{repositoryId}/")
     fun get(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "项目ID", required = true)
+        @Parameter(name = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(description = "代码库哈希ID", required = true)
+        @Parameter(name = "代码库哈希ID", required = true)
         @PathParam("repositoryId")
         repositoryId: String,
-        @Parameter(description = "代码库请求类型", required = true)
+        @Parameter(name = "代码库请求类型", required = true)
         @QueryParam("repositoryType")
         repositoryType: RepositoryType?
     ): Result<Repository>
@@ -132,16 +132,16 @@ interface UserRepositoryResource {
     @PUT
     @Path("/{projectId}/{repositoryHashId}/")
     fun edit(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "项目ID", required = true)
+        @Parameter(name = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(description = "代码库哈希ID", required = true)
+        @Parameter(name = "代码库哈希ID", required = true)
         @PathParam("repositoryHashId")
         repositoryHashId: String,
-        @Parameter(description = "代码库模型", required = true)
+        @Parameter(name = "代码库模型", required = true)
         repository: Repository
     ): Result<Boolean>
 
@@ -149,19 +149,19 @@ interface UserRepositoryResource {
     @GET
     @Path("/{projectId}/")
     fun list(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "项目ID", required = true)
+        @Parameter(name = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(description = "仓库类型", required = false)
+        @Parameter(name = "仓库类型", required = false)
         @QueryParam("repositoryType")
         repositoryType: ScmType?,
-        @Parameter(description = "第几页", required = false, example = "1")
+        @Parameter(name = "第几页", required = false, example = "1")
         @QueryParam("page")
         page: Int?,
-        @Parameter(description = "每页多少条", required = false, example = "20")
+        @Parameter(name = "每页多少条", required = false, example = "20")
         @QueryParam("pageSize")
         pageSize: Int?
     ): Result<RepositoryPage<RepositoryInfoWithPermission>>
@@ -170,28 +170,28 @@ interface UserRepositoryResource {
     @GET
     @Path("/{projectId}/search/")
     fun fuzzySearchByAliasName(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "项目ID", required = true)
+        @Parameter(name = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(description = "仓库类型", required = false)
+        @Parameter(name = "仓库类型", required = false)
         @QueryParam("repositoryType")
         repositoryType: ScmType?,
-        @Parameter(description = "仓库别名", required = false)
+        @Parameter(name = "仓库别名", required = false)
         @QueryParam("aliasName")
         aliasName: String?,
-        @Parameter(description = "第几页", required = false, example = "1")
+        @Parameter(name = "第几页", required = false, example = "1")
         @QueryParam("page")
         page: Int?,
-        @Parameter(description = "每页多少条", required = false, example = "20")
+        @Parameter(name = "每页多少条", required = false, example = "20")
         @QueryParam("pageSize")
         pageSize: Int?,
-        @Parameter(description = "排序字段", required = false)
+        @Parameter(name = "排序字段", required = false)
         @QueryParam("sortBy")
         sortBy: String? = null,
-        @Parameter(description = "排序方式，升序降序", required = false)
+        @Parameter(name = "排序方式，升序降序", required = false)
         @QueryParam("sortType")
         sortType: String? = null
     ): Result<RepositoryPage<RepositoryInfoWithPermission>>
@@ -200,25 +200,25 @@ interface UserRepositoryResource {
     @GET
     @Path("/{projectId}/hasPermissionList")
     fun hasPermissionList(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "项目ID", required = true)
+        @Parameter(name = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(description = "仓库类型", required = false)
+        @Parameter(name = "仓库类型", required = false)
         @QueryParam("repositoryType")
         repositoryType: String?,
-        @Parameter(description = "对应权限", required = true, example = "")
+        @Parameter(name = "对应权限", required = true, example = "")
         @QueryParam("permission")
         permission: Permission,
-        @Parameter(description = "第几页", required = false, example = "1")
+        @Parameter(name = "第几页", required = false, example = "1")
         @QueryParam("page")
         page: Int?,
-        @Parameter(description = "每页多少条", required = false, example = "20")
+        @Parameter(name = "每页多少条", required = false, example = "20")
         @QueryParam("pageSize")
         pageSize: Int?,
-        @Parameter(description = "别名", required = false)
+        @Parameter(name = "别名", required = false)
         @QueryParam("aliasName")
         aliasName: String? = null
     ): Result<Page<RepositoryInfo>>
@@ -227,13 +227,13 @@ interface UserRepositoryResource {
     @DELETE
     @Path("/{projectId}/{repositoryHashId}")
     fun delete(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "项目ID", required = true)
+        @Parameter(name = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(description = "代码库哈希ID", required = true)
+        @Parameter(name = "代码库哈希ID", required = true)
         @PathParam("repositoryHashId")
         repositoryHashId: String
     ): Result<Boolean>
@@ -242,7 +242,7 @@ interface UserRepositoryResource {
     @GET
     @Path("/{buildId}/commit/get/record")
     fun getCommit(
-        @Parameter(description = "构建ID", required = true)
+        @Parameter(name = "构建ID", required = true)
         @PathParam("buildId")
         buildId: String
     ): Result<List<CommitResponse>>
@@ -251,13 +251,13 @@ interface UserRepositoryResource {
     @PUT
     @Path("/{projectId}/{repositoryHashId}/lock")
     fun lock(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "项目ID", required = true)
+        @Parameter(name = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(description = "代码库哈希ID", required = true)
+        @Parameter(name = "代码库哈希ID", required = true)
         @PathParam("repositoryHashId")
         repositoryHashId: String
     ): Result<Boolean>
@@ -266,13 +266,13 @@ interface UserRepositoryResource {
     @PUT
     @Path("/{projectId}/{repositoryHashId}/unlock")
     fun unlock(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "项目ID", required = true)
+        @Parameter(name = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(description = "代码库哈希ID", required = true)
+        @Parameter(name = "代码库哈希ID", required = true)
         @PathParam("repositoryHashId")
         repositoryHashId: String
     ): Result<Boolean>
@@ -281,25 +281,25 @@ interface UserRepositoryResource {
     @GET
     @Path("/{projectId}/{repositoryHashId}/listRepoPipelineRef")
     fun listRepoPipelineRef(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "项目ID", required = true)
+        @Parameter(name = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(description = "代码库哈希ID", required = true)
+        @Parameter(name = "代码库哈希ID", required = true)
         @PathParam("repositoryHashId")
         repositoryHashId: String,
-        @Parameter(description = "事件类型", required = false)
+        @Parameter(name = "事件类型", required = false)
         @QueryParam("eventType")
         eventType: String?,
-        @Parameter(description = "触发条件MD5", required = false)
+        @Parameter(name = "触发条件MD5", required = false)
         @QueryParam("triggerConditionMd5")
         triggerConditionMd5: String?,
-        @Parameter(description = "第几页", required = false, example = "1")
+        @Parameter(name = "第几页", required = false, example = "1")
         @QueryParam("page")
         page: Int?,
-        @Parameter(description = "每页多少条", required = false, example = "20")
+        @Parameter(name = "每页多少条", required = false, example = "20")
         @QueryParam("pageSize")
         pageSize: Int?
     ): Result<SQLPage<RepoPipelineRefVo>>
@@ -308,25 +308,25 @@ interface UserRepositoryResource {
     @GET
     @Path("/{projectId}/{repositoryHashId}/listTriggerRef")
     fun listTriggerRef(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "项目ID", required = true)
+        @Parameter(name = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(description = "代码库哈希ID", required = true)
+        @Parameter(name = "代码库哈希ID", required = true)
         @PathParam("repositoryHashId")
         repositoryHashId: String,
-        @Parameter(description = "触发类型", required = false)
+        @Parameter(name = "触发类型", required = false)
         @QueryParam("triggerType")
         triggerType: String?,
-        @Parameter(description = "事件类型", required = false)
+        @Parameter(name = "事件类型", required = false)
         @QueryParam("eventType")
         eventType: String?,
-        @Parameter(description = "第几页", required = false, example = "1")
+        @Parameter(name = "第几页", required = false, example = "1")
         @QueryParam("page")
         page: Int?,
-        @Parameter(description = "每页多少条", required = false, example = "20")
+        @Parameter(name = "每页多少条", required = false, example = "20")
         @QueryParam("pageSize")
         pageSize: Int?
     ): Result<SQLPage<RepoTriggerRefVo>>
@@ -335,16 +335,16 @@ interface UserRepositoryResource {
     @PUT
     @Path("/{projectId}/{repositoryHashId}/rename")
     fun rename(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "项目ID", required = true)
+        @Parameter(name = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(description = "代码库哈希ID", required = true)
+        @Parameter(name = "代码库哈希ID", required = true)
         @PathParam("repositoryHashId")
         repositoryHashId: String,
-        @Parameter(description = "代码库重命名")
+        @Parameter(name = "代码库重命名")
         repoRename: RepoRename
     ): Result<Boolean>
 }

@@ -51,7 +51,7 @@ interface BuildPushCommonImageResource {
     @POST
     @Path("/push")
     fun pushImage(
-        @Parameter(description = "推送镜像到指定仓库请求参数", required = true)
+        @Parameter(name = "推送镜像到指定仓库请求参数", required = true)
         pushParam: PushImageParam
     ): Result<PushImageTask?>
 
@@ -59,10 +59,10 @@ interface BuildPushCommonImageResource {
     @Path("/query")
     @GET
     fun queryImageTask(
-        @Parameter(description = "用户ID", required = true)
+        @Parameter(name = "用户ID", required = true)
         @QueryParam("userId")
         userId: String,
-        @Parameter(description = "任务ID", required = true)
+        @Parameter(name = "任务ID", required = true)
         @QueryParam("taskId")
         taskId: String
     ): Result<PushImageTask?>

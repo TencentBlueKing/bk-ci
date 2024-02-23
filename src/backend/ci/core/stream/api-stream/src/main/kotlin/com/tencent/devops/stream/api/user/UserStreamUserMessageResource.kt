@@ -56,28 +56,28 @@ interface UserStreamUserMessageResource {
     @GET
     @Path("")
     fun getUserMessages(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "蓝盾项目ID", required = false)
+        @Parameter(name = "蓝盾项目ID", required = false)
         @QueryParam("projectId")
         projectId: String?,
-        @Parameter(description = "消息类型")
+        @Parameter(name = "消息类型")
         @QueryParam("messageType")
         messageType: UserMessageType?,
-        @Parameter(description = "是否已读")
+        @Parameter(name = "是否已读")
         @QueryParam("haveRead")
         haveRead: Boolean?,
-        @Parameter(description = "消息唯一id")
+        @Parameter(name = "消息唯一id")
         @QueryParam("messageId")
         messageId: String?,
-        @Parameter(description = "触发人")
+        @Parameter(name = "触发人")
         @QueryParam("triggerUserId")
         triggerUserId: String?,
-        @Parameter(description = "页码")
+        @Parameter(name = "页码")
         @QueryParam("page")
         page: Int?,
-        @Parameter(description = "每页数量")
+        @Parameter(name = "每页数量")
         @QueryParam("pageSize")
         pageSize: Int?
     ): Result<Page<UserMessageRecord>>
@@ -86,10 +86,10 @@ interface UserStreamUserMessageResource {
     @GET
     @Path("/noread")
     fun getUserMessagesNoreadCount(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "蓝盾项目ID", required = false)
+        @Parameter(name = "蓝盾项目ID", required = false)
         @QueryParam("projectId")
         projectId: String?
     ): Result<Int>
@@ -98,13 +98,13 @@ interface UserStreamUserMessageResource {
     @PUT
     @Path("/{id}/read")
     fun readMessage(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "消息ID")
+        @Parameter(name = "消息ID")
         @PathParam("id")
         id: Int,
-        @Parameter(description = "蓝盾项目ID", required = false)
+        @Parameter(name = "蓝盾项目ID", required = false)
         @QueryParam("projectId")
         projectCode: String?
     ): Result<Boolean>
@@ -113,10 +113,10 @@ interface UserStreamUserMessageResource {
     @PUT
     @Path("/read")
     fun readAllMessages(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "蓝盾项目ID", required = false)
+        @Parameter(name = "蓝盾项目ID", required = false)
         @QueryParam("projectId")
         projectCode: String?
     ): Result<Boolean>

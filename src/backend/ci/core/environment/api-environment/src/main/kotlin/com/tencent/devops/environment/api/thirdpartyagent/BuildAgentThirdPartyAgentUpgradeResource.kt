@@ -53,19 +53,19 @@ interface BuildAgentThirdPartyAgentUpgradeResource {
     @Path("/files/download")
     @Produces(MediaType.APPLICATION_OCTET_STREAM)
     fun downloadUpgrade(
-        @Parameter(description = "项目ID", required = true)
+        @Parameter(name = "项目ID", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_PROJECT_ID)
         projectId: String,
-        @Parameter(description = "Agent ID", required = true)
+        @Parameter(name = "Agent ID", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_AGENT_ID)
         agentId: String,
-        @Parameter(description = "秘钥", required = true)
+        @Parameter(name = "秘钥", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_AGENT_SECRET_KEY)
         secretKey: String,
-        @Parameter(description = "文件名", required = true)
+        @Parameter(name = "文件名", required = true)
         @QueryParam("file")
         file: String,
-        @Parameter(description = "本地eTag标签", required = false)
+        @Parameter(name = "本地eTag标签", required = false)
         @QueryParam("eTag")
         eTag: String?
     ): Response

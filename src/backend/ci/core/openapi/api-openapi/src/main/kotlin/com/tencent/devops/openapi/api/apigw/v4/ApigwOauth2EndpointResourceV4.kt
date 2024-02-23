@@ -29,19 +29,19 @@ interface ApigwOauth2EndpointResourceV4 {
         tags = ["v4_app_oauth2_access_token"]
     )
     fun getAccessToken(
-        @Parameter(description = "appCode", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
+        @Parameter(name = "appCode", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
         appCode: String?,
-        @Parameter(description = "apigw Type", required = true)
+        @Parameter(name = "apigw Type", required = true)
         @PathParam("apigwType")
         apigwType: String?,
         @HeaderParam(AUTH_HEADER_OAUTH2_CLIENT_ID)
-        @Parameter(description = "客户端id", required = true)
+        @Parameter(name = "客户端id", required = true)
         clientId: String,
         @HeaderParam(AUTH_HEADER_OAUTH2_CLIENT_SECRET)
-        @Parameter(description = "客户端秘钥", required = true)
+        @Parameter(name = "客户端秘钥", required = true)
         clientSecret: String,
-        @Parameter(description = "oauth2获取token请求报文体", required = true)
+        @Parameter(name = "oauth2获取token请求报文体", required = true)
         accessTokenRequest: Oauth2AccessTokenRequest
     ): Result<Any?>
 }

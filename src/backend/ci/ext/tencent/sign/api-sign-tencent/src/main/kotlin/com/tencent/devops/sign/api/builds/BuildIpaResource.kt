@@ -57,19 +57,19 @@ interface BuildIpaResource {
     @Path("/sign")
     @Consumes(MediaType.APPLICATION_OCTET_STREAM)
     fun ipaSign(
-        @Parameter(description = "projectId", required = true)
+        @Parameter(name = "projectId", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_PROJECT_ID)
         projectId: String,
-        @Parameter(description = "pipelineId", required = true)
+        @Parameter(name = "pipelineId", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_PIPELINE_ID)
         pipelineId: String,
-        @Parameter(description = "buildId", required = true)
+        @Parameter(name = "buildId", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_BUILD_ID)
         buildId: String,
-        @Parameter(description = "ipaSignInfoHeader", required = false)
+        @Parameter(name = "ipaSignInfoHeader", required = false)
         @HeaderParam(AUTH_HEADER_DEVOPS_SIGN_INFO)
         ipaSignInfoHeader: String,
-        @Parameter(description = "IPA包文件", required = true)
+        @Parameter(name = "IPA包文件", required = true)
         ipaInputStream: InputStream
     ): Result<String?>
 
@@ -78,16 +78,16 @@ interface BuildIpaResource {
     @Path("/sign/{resignId}/status")
     @Consumes(MediaType.APPLICATION_OCTET_STREAM)
     fun getSignStatus(
-        @Parameter(description = "projectId", required = true)
+        @Parameter(name = "projectId", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_PROJECT_ID)
         projectId: String,
-        @Parameter(description = "pipelineId", required = true)
+        @Parameter(name = "pipelineId", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_PIPELINE_ID)
         pipelineId: String,
-        @Parameter(description = "buildId", required = true)
+        @Parameter(name = "buildId", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_BUILD_ID)
         buildId: String,
-        @Parameter(description = "签名任务ID", required = true)
+        @Parameter(name = "签名任务ID", required = true)
         @PathParam("resignId")
         resignId: String
     ): Result<String>
@@ -97,16 +97,16 @@ interface BuildIpaResource {
     @Path("/sign/{resignId}/detail")
     @Consumes(MediaType.APPLICATION_OCTET_STREAM)
     fun getSignDetail(
-        @Parameter(description = "projectId", required = true)
+        @Parameter(name = "projectId", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_PROJECT_ID)
         projectId: String,
-        @Parameter(description = "pipelineId", required = true)
+        @Parameter(name = "pipelineId", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_PIPELINE_ID)
         pipelineId: String,
-        @Parameter(description = "buildId", required = true)
+        @Parameter(name = "buildId", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_BUILD_ID)
         buildId: String,
-        @Parameter(description = "签名任务ID", required = true)
+        @Parameter(name = "签名任务ID", required = true)
         @PathParam("resignId")
         resignId: String
     ): Result<SignDetail>
@@ -115,16 +115,16 @@ interface BuildIpaResource {
     @GET
     @Path("/sign/{resignId}/downloadUrl")
     fun downloadUrl(
-        @Parameter(description = "projectId", required = true)
+        @Parameter(name = "projectId", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_PROJECT_ID)
         projectId: String,
-        @Parameter(description = "pipelineId", required = true)
+        @Parameter(name = "pipelineId", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_PIPELINE_ID)
         pipelineId: String,
-        @Parameter(description = "buildId", required = true)
+        @Parameter(name = "buildId", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_BUILD_ID)
         buildId: String,
-        @Parameter(description = "签名任务ID", required = true)
+        @Parameter(name = "签名任务ID", required = true)
         @PathParam("resignId")
         resignId: String
     ): Result<String>

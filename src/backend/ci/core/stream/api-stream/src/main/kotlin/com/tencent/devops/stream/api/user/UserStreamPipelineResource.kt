@@ -56,22 +56,22 @@ interface UserStreamPipelineResource {
     @GET
     @Path("/{projectId}/list")
     fun getPipelineList(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "蓝盾项目ID", required = true)
+        @Parameter(name = "蓝盾项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(description = "搜索关键字", required = false)
+        @Parameter(name = "搜索关键字", required = false)
         @QueryParam("keyword")
         keyword: String?,
-        @Parameter(description = "第几页", required = false, example = "1")
+        @Parameter(name = "第几页", required = false, example = "1")
         @QueryParam("page")
         page: Int?,
-        @Parameter(description = "每页多少条", required = false, example = "10")
+        @Parameter(name = "每页多少条", required = false, example = "10")
         @QueryParam("pageSize")
         pageSize: Int?,
-        @Parameter(description = "目录", required = false)
+        @Parameter(name = "目录", required = false)
         @QueryParam("filePath")
         filePath: String?
     ): Result<Page<StreamGitProjectPipeline>>
@@ -80,13 +80,13 @@ interface UserStreamPipelineResource {
     @GET
     @Path("/{projectId}/dir_list")
     fun getPipelineDirList(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "蓝盾项目ID", required = true)
+        @Parameter(name = "蓝盾项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(description = "蓝盾流水线ID", required = false)
+        @Parameter(name = "蓝盾流水线ID", required = false)
         @QueryParam("pipelineId")
         pipelineId: String?
     ): Result<StreamGitPipelineDir>
@@ -95,13 +95,13 @@ interface UserStreamPipelineResource {
     @GET
     @Path("/{projectId}/{pipelineId}/info")
     fun getPipeline(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "蓝盾项目ID", required = true)
+        @Parameter(name = "蓝盾项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(description = "流水线ID", required = true)
+        @Parameter(name = "流水线ID", required = true)
         @PathParam("pipelineId")
         pipelineId: String
     ): Result<StreamGitProjectPipeline?>
@@ -111,16 +111,16 @@ interface UserStreamPipelineResource {
     // @Path("/projects/{projectId}/pipelines/{pipelineId}/builds/{buildId}/elements/{elementId}/review")
     @Path("/{projectId}/{pipelineId}/enable")
     fun enablePipeline(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "蓝盾项目ID", required = true)
+        @Parameter(name = "蓝盾项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(description = "流水线ID", required = true)
+        @Parameter(name = "流水线ID", required = true)
         @PathParam("pipelineId")
         pipelineId: String,
-        @Parameter(description = "是否启用该流水线", required = true)
+        @Parameter(name = "是否启用该流水线", required = true)
         @QueryParam("enabled")
         enabled: Boolean
     ): Result<Boolean>
@@ -129,19 +129,19 @@ interface UserStreamPipelineResource {
     @GET
     @Path("/{projectId}/listInfo")
     fun listPipelineNames(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "蓝盾项目ID", required = true)
+        @Parameter(name = "蓝盾项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(description = "搜索关键字", required = false)
+        @Parameter(name = "搜索关键字", required = false)
         @QueryParam("keyword")
         keyword: String?,
-        @Parameter(description = "第几页", required = false, example = "1")
+        @Parameter(name = "第几页", required = false, example = "1")
         @QueryParam("page")
         page: Int?,
-        @Parameter(description = "每页多少条", required = false, example = "10")
+        @Parameter(name = "每页多少条", required = false, example = "10")
         @QueryParam("pageSize")
         pageSize: Int?
     ): Result<List<StreamGitProjectPipeline>>

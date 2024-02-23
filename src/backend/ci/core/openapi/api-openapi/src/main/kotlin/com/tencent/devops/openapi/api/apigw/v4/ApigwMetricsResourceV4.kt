@@ -51,10 +51,10 @@ interface ApigwMetricsResourceV4 {
     @Operation(summary = "获取看板 summary 数据", tags = ["v4_app_metrics_summary", "v4_user_metrics_summary"])
     @Path("/summary")
     fun getSummaryInfo(
-        @Parameter(description = "项目id", required = true)
+        @Parameter(name = "项目id", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(description = "用户信息", required = true)
+        @Parameter(name = "用户信息", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String
     ): Result<ApigwMetricsSummary>

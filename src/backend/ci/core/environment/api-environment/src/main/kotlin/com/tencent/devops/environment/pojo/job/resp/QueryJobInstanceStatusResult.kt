@@ -1,14 +1,13 @@
 package com.tencent.devops.environment.pojo.job.resp
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("查询任务状态的结果")
+@Schema(title = "查询任务状态的结果")
 data class QueryJobInstanceStatusResult(
-    @ApiModelProperty(value = "作业是否结束", required = true)
+    @get:Schema(title = "作业是否结束", required = true)
     val finished: Boolean,
-    @ApiModelProperty(value = "作业实例基本信息")
+    @get:Schema(title = "作业实例基本信息")
     val jobInstance: JobInstance?,
-    @ApiModelProperty(value = "作业步骤列表")
+    @get:Schema(title = "作业步骤列表")
     val stepInstanceList: List<JobStepInstance>?
 )

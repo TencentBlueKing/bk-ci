@@ -60,10 +60,10 @@ interface UserExtServiceDeskResource {
     @Operation(description = "工作台--初始化扩展服务")
     @Path("/")
     fun initExtensionService(
-        @Parameter(description = "userId", required = true)
+        @Parameter(name = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "扩展服务信息")
+        @Parameter(name = "扩展服务信息")
         extensionInfo: InitExtServiceDTO
     ): Result<Boolean>
 
@@ -71,10 +71,10 @@ interface UserExtServiceDeskResource {
     @Operation(description = "工作台-升级扩展")
     @Path("/")
     fun submitExtensionService(
-        @Parameter(description = "userId", required = true)
+        @Parameter(name = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "扩展服务信息")
+        @Parameter(name = "扩展服务信息")
         extensionInfo: SubmitDTO
     ): Result<String>
 
@@ -82,10 +82,10 @@ interface UserExtServiceDeskResource {
     @Operation(description = "根据扩展ID获取扩展版本进度")
     @Path("/release/process/{serviceId}")
     fun getExtensionServiceInfo(
-        @Parameter(description = "userId", required = true)
+        @Parameter(name = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "扩展服务Id")
+        @Parameter(name = "扩展服务Id")
         @PathParam("serviceId")
         serviceId: String
     ): Result<StoreProcessInfo>
@@ -94,13 +94,13 @@ interface UserExtServiceDeskResource {
     @PUT
     @Path("/{serviceCode}/offline/")
     fun offlineService(
-        @Parameter(description = "userId", required = true)
+        @Parameter(name = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "serviceCode", required = true)
+        @Parameter(name = "serviceCode", required = true)
         @PathParam("serviceCode")
         serviceCode: String,
-        @Parameter(description = "下架请求报文")
+        @Parameter(name = "下架请求报文")
         serviceOffline: ServiceOfflineDTO
     ): Result<Boolean>
 
@@ -108,16 +108,16 @@ interface UserExtServiceDeskResource {
     @Operation(description = "工作台--根据用户获取服务扩展列表")
     @Path("/list")
     fun listDeskExtService(
-        @Parameter(description = "userId", required = true)
+        @Parameter(name = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "扩展服务name", required = false)
+        @Parameter(name = "扩展服务name", required = false)
         @QueryParam("serviceName")
         serviceName: String?,
-        @Parameter(description = "页码", required = false)
+        @Parameter(name = "页码", required = false)
         @QueryParam("page")
         page: Int?,
-        @Parameter(description = "每页数量", required = false)
+        @Parameter(name = "每页数量", required = false)
         @QueryParam("pageSize")
         pageSize: Int?
     ): Result<MyServiceVO>
@@ -126,10 +126,10 @@ interface UserExtServiceDeskResource {
     @DELETE
     @Path("/{serviceCode}/delete")
     fun deleteExtensionService(
-        @Parameter(description = "userId", required = true)
+        @Parameter(name = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "扩展服务Code", required = true)
+        @Parameter(name = "扩展服务Code", required = true)
         @PathParam("serviceCode")
         serviceCode: String
     ): Result<Boolean>
@@ -138,10 +138,10 @@ interface UserExtServiceDeskResource {
     @GET
     @Path("/{serviceId}")
     fun getServiceDetails(
-        @Parameter(description = "userId", required = true)
+        @Parameter(name = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "serviceId", required = true)
+        @Parameter(name = "serviceId", required = true)
         @PathParam("serviceId")
         serviceId: String
     ): Result<ServiceVersionVO?>
@@ -156,10 +156,10 @@ interface UserExtServiceDeskResource {
     @PUT
     @Path("/release/cancel/{serviceId}")
     fun cancelRelease(
-        @Parameter(description = "userId", required = true)
+        @Parameter(name = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "serviceId", required = true)
+        @Parameter(name = "serviceId", required = true)
         @PathParam("serviceId")
         serviceId: String
     ): Result<Boolean>
@@ -169,10 +169,10 @@ interface UserExtServiceDeskResource {
     @PUT
     @Path("/release/passTest/{serviceId}")
     fun passTest(
-        @Parameter(description = "userId", required = true)
+        @Parameter(name = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "serviceId", required = true)
+        @Parameter(name = "serviceId", required = true)
         @PathParam("serviceId")
         serviceId: String
     ): Result<Boolean>
@@ -182,13 +182,13 @@ interface UserExtServiceDeskResource {
     @PUT
     @Path("/release/rebuild/{serviceId}")
     fun rebuild(
-        @Parameter(description = "userId", required = true)
+        @Parameter(name = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "项目代码", required = true)
+        @Parameter(name = "项目代码", required = true)
         @QueryParam("projectCode")
         projectCode: String,
-        @Parameter(description = "serviceId", required = true)
+        @Parameter(name = "serviceId", required = true)
         @PathParam("serviceId")
         serviceId: String
     ): Result<Boolean>

@@ -54,7 +54,7 @@ interface BuildDockerResource {
             ApiResponse(responseCode = "304", description = "本地的构建执行器已是最新，无需下载")
     )
     fun download(
-        @Parameter(description = "本地eTag标签", required = false)
+        @Parameter(name = "本地eTag标签", required = false)
         @QueryParam("eTag")
         eTag: String?
     ): Response

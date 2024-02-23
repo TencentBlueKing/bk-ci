@@ -27,9 +27,9 @@
 
 package com.tencent.devops.environment.pojo.job.agentres
 
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
 data class QueryAgentInstallChannelResult(
-    @ApiModelProperty(value = "安装通道信息列表")
+    @get:Schema(title = "安装通道信息列表")
     val installChannelList: List<InstallAgentChannel>
 )

@@ -53,31 +53,31 @@ interface BuildJinGangAppResource {
     @POST
     @Path("/users/{userId}/app/scan")
     fun scanApp(
-        @Parameter(description = "用户ID", required = true)
+        @Parameter(name = "用户ID", required = true)
         @PathParam("userId")
         userId: String,
-        @Parameter(description = "项目ID", required = true)
+        @Parameter(name = "项目ID", required = true)
         @HeaderParam(AUTH_HEADER_PROJECT_ID)
         projectId: String,
-        @Parameter(description = "流水线ID", required = true)
+        @Parameter(name = "流水线ID", required = true)
         @HeaderParam(AUTH_HEADER_PIPELINE_ID)
         pipelineId: String,
-        @Parameter(description = "流水线构建id", required = true)
+        @Parameter(name = "流水线构建id", required = true)
         @HeaderParam(AUTH_HEADER_BUILD_ID)
         buildId: String,
-        @Parameter(description = "流水线构建No", required = true)
+        @Parameter(name = "流水线构建No", required = true)
         @QueryParam("buildNo")
         buildNo: Int,
-        @Parameter(description = "element ID", required = true)
+        @Parameter(name = "element ID", required = true)
         @QueryParam("elementId")
         elementId: String,
-        @Parameter(description = "文件路径", required = true)
+        @Parameter(name = "文件路径", required = true)
         @QueryParam("file")
         file: String,
-        @Parameter(description = "是否是自定义仓库", required = true)
+        @Parameter(name = "是否是自定义仓库", required = true)
         @QueryParam("isCustom")
         isCustom: Boolean,
-        @Parameter(description = "运行类型（3表示中跑静态，1表示跑静态和跑动态）", required = true)
+        @Parameter(name = "运行类型（3表示中跑静态，1表示跑静态和跑动态）", required = true)
         @QueryParam("runType")
         runType: String
     ): Result<String>
@@ -86,34 +86,34 @@ interface BuildJinGangAppResource {
     @POST
     @Path("/users/{userId}/app/create")
     fun createTask(
-        @Parameter(description = "项目ID", required = true)
+        @Parameter(name = "项目ID", required = true)
         @HeaderParam(AUTH_HEADER_PROJECT_ID)
         projectId: String,
-        @Parameter(description = "流水线ID", required = true)
+        @Parameter(name = "流水线ID", required = true)
         @HeaderParam(AUTH_HEADER_PIPELINE_ID)
         pipelineId: String,
-        @Parameter(description = "流水线构建id", required = true)
+        @Parameter(name = "流水线构建id", required = true)
         @HeaderParam(AUTH_HEADER_BUILD_ID)
         buildId: String,
-        @Parameter(description = "流水线构建No", required = true)
+        @Parameter(name = "流水线构建No", required = true)
         @QueryParam("buildNo")
         buildNo: Int,
-        @Parameter(description = "用户ID", required = true)
+        @Parameter(name = "用户ID", required = true)
         @PathParam("userId")
         userId: String,
-        @Parameter(description = "文件路径", required = true)
+        @Parameter(name = "文件路径", required = true)
         @QueryParam("path")
         path: String,
-        @Parameter(description = "文件MD5", required = true)
+        @Parameter(name = "文件MD5", required = true)
         @QueryParam("md5")
         md5: String,
-        @Parameter(description = "文件大小", required = true)
+        @Parameter(name = "文件大小", required = true)
         @QueryParam("size")
         size: Long,
-        @Parameter(description = "文件版本", required = true)
+        @Parameter(name = "文件版本", required = true)
         @QueryParam("version")
         version: String,
-        @Parameter(description = "文件类型", required = true)
+        @Parameter(name = "文件类型", required = true)
         @QueryParam("type")
         type: Int
     ): Result<Long>
@@ -122,22 +122,22 @@ interface BuildJinGangAppResource {
     @POST
     @Path("/users/{userId}/app/update")
     fun updateTask(
-        @Parameter(description = "流水线构建id", required = true)
+        @Parameter(name = "流水线构建id", required = true)
         @HeaderParam(AUTH_HEADER_BUILD_ID)
         buildId: String,
-        @Parameter(description = "文件MD5", required = true)
+        @Parameter(name = "文件MD5", required = true)
         @QueryParam("md5")
         md5: String,
-        @Parameter(description = "task状态", required = true)
+        @Parameter(name = "task状态", required = true)
         @QueryParam("status")
         status: Int,
-        @Parameter(description = "task Id", required = true)
+        @Parameter(name = "task Id", required = true)
         @QueryParam("taskId")
         taskId: Long,
-        @Parameter(description = "扫描Url", required = true)
+        @Parameter(name = "扫描Url", required = true)
         @QueryParam("scanUrl")
         scanUrl: String,
-        @Parameter(description = "task结果", required = true)
+        @Parameter(name = "task结果", required = true)
         @QueryParam("result")
         result: String
     )

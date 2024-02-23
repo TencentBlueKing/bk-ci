@@ -61,11 +61,11 @@ interface OPShardingRoutingRuleResource {
     @POST
     @Path("/add")
     fun addShardingRoutingRule(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         @BkField(minLength = 1, maxLength = 50)
         userId: String,
-        @Parameter(description = "分片规则信息请求报文体", required = true)
+        @Parameter(name = "分片规则信息请求报文体", required = true)
         @Valid
         shardingRoutingRule: ShardingRoutingRule
     ): Result<Boolean>
@@ -74,15 +74,15 @@ interface OPShardingRoutingRuleResource {
     @PUT
     @Path("/ids/{id}/update")
     fun updateShardingRoutingRule(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         @BkField(minLength = 1, maxLength = 50)
         userId: String,
-        @Parameter(description = "规则ID", required = true)
+        @Parameter(name = "规则ID", required = true)
         @PathParam("id")
         @BkField(patternStyle = BkStyleEnum.ID_STYLE)
         id: String,
-        @Parameter(description = "分片规则信息请求报文体", required = true)
+        @Parameter(name = "分片规则信息请求报文体", required = true)
         @Valid
         shardingRoutingRule: ShardingRoutingRule
     ): Result<Boolean>
@@ -91,7 +91,7 @@ interface OPShardingRoutingRuleResource {
     @GET
     @Path("/ids/{id}/get")
     fun getShardingRoutingRuleById(
-        @Parameter(description = "规则ID", required = true)
+        @Parameter(name = "规则ID", required = true)
         @PathParam("id")
         @BkField(patternStyle = BkStyleEnum.ID_STYLE)
         id: String
@@ -101,17 +101,17 @@ interface OPShardingRoutingRuleResource {
     @GET
     @Path("/names/{routingName}/get")
     fun getShardingRoutingRuleByName(
-        @Parameter(description = "规则名称", required = true)
+        @Parameter(name = "规则名称", required = true)
         @PathParam("routingName")
         @BkField(minLength = 1, maxLength = 128)
         routingName: String,
-        @Parameter(description = "模块标识", required = true)
+        @Parameter(name = "模块标识", required = true)
         @QueryParam("moduleCode")
         moduleCode: SystemModuleEnum,
-        @Parameter(description = "规则类型", required = true)
+        @Parameter(name = "规则类型", required = true)
         @QueryParam("ruleType")
         ruleType: ShardingRuleTypeEnum,
-        @Parameter(description = "数据库表名称", required = false)
+        @Parameter(name = "数据库表名称", required = false)
         @QueryParam("tableName")
         @BkField(minLength = 1, maxLength = 128, required = false)
         tableName: String? = null
@@ -121,11 +121,11 @@ interface OPShardingRoutingRuleResource {
     @DELETE
     @Path("/ids/{id}/delete")
     fun deleteShardingRoutingRuleById(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         @BkField(minLength = 1, maxLength = 50)
         userId: String,
-        @Parameter(description = "规则ID", required = true)
+        @Parameter(name = "规则ID", required = true)
         @PathParam("id")
         @BkField(patternStyle = BkStyleEnum.ID_STYLE)
         id: String

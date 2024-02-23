@@ -57,13 +57,13 @@ interface UserStoreMemberResource {
     @GET
     @Path("/list")
     fun list(
-        @Parameter(description = "userId", required = true)
+        @Parameter(name = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "store组件标识", required = true)
+        @Parameter(name = "store组件标识", required = true)
         @QueryParam("storeCode")
         storeCode: String,
-        @Parameter(description = "store组件类型", required = true)
+        @Parameter(name = "store组件类型", required = true)
         @QueryParam("storeType")
         storeType: StoreTypeEnum
     ): Result<List<StoreMemberItem?>>
@@ -72,10 +72,10 @@ interface UserStoreMemberResource {
     @POST
     @Path("/add")
     fun add(
-        @Parameter(description = "userId", required = true)
+        @Parameter(name = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "添加成员请求报文")
+        @Parameter(name = "添加成员请求报文")
         storeMemberReq: StoreMemberReq
     ): Result<Boolean>
 
@@ -83,16 +83,16 @@ interface UserStoreMemberResource {
     @DELETE
     @Path("/delete")
     fun delete(
-        @Parameter(description = "userId", required = true)
+        @Parameter(name = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "成员ID", required = true)
+        @Parameter(name = "成员ID", required = true)
         @QueryParam("id")
         id: String,
-        @Parameter(description = "store组件标识", required = true)
+        @Parameter(name = "store组件标识", required = true)
         @QueryParam("storeCode")
         storeCode: String,
-        @Parameter(description = "store组件类型", required = true)
+        @Parameter(name = "store组件类型", required = true)
         @QueryParam("storeType")
         storeType: StoreTypeEnum
     ): Result<Boolean>
@@ -101,13 +101,13 @@ interface UserStoreMemberResource {
     @GET
     @Path("/view")
     fun view(
-        @Parameter(description = "userId", required = true)
+        @Parameter(name = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "store组件标识", required = true)
+        @Parameter(name = "store组件标识", required = true)
         @QueryParam("storeCode")
         storeCode: String,
-        @Parameter(description = "store组件类型", required = true)
+        @Parameter(name = "store组件类型", required = true)
         @QueryParam("storeType")
         storeType: StoreTypeEnum
     ): Result<StoreMemberItem?>
@@ -116,19 +116,19 @@ interface UserStoreMemberResource {
     @PUT
     @Path("/test/project/change")
     fun changeMemberTestProjectCode(
-        @Parameter(description = "userId", required = true)
+        @Parameter(name = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "store组件成员", required = true)
+        @Parameter(name = "store组件成员", required = true)
         @QueryParam("storeMember")
         storeMember: String,
-        @Parameter(description = "项目代码", required = true)
+        @Parameter(name = "项目代码", required = true)
         @QueryParam("projectCode")
         projectCode: String,
-        @Parameter(description = "store组件标识", required = true)
+        @Parameter(name = "store组件标识", required = true)
         @QueryParam("storeCode")
         storeCode: String,
-        @Parameter(description = "store组件类型", required = true)
+        @Parameter(name = "store组件类型", required = true)
         @QueryParam("storeType")
         storeType: StoreTypeEnum
     ): Result<Boolean>

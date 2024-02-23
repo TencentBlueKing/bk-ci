@@ -68,7 +68,7 @@ interface ServiceTxProjectResource {
     @Path("/")
     @Operation(summary = "查询所有项目")
     fun list(
-        @Parameter(description = "PAAS_CC Token", required = true)
+        @Parameter(name = "PAAS_CC Token", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_ACCESS_TOKEN)
         accessToken: String
     ): Result<List<ProjectVO>>
@@ -77,16 +77,16 @@ interface ServiceTxProjectResource {
     @Path("/getProjectByGroup")
     @Operation(summary = "根据组织架构查询所有项目")
     fun getProjectByGroup(
-        @Parameter(description = "userId", required = true)
+        @Parameter(name = "userId", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String,
-        @Parameter(description = "bgName", required = false)
+        @Parameter(name = "bgName", required = false)
         @QueryParam("bgName")
         bgName: String?,
-        @Parameter(description = "deptName", required = false)
+        @Parameter(name = "deptName", required = false)
         @QueryParam("deptName")
         deptName: String?,
-        @Parameter(description = "centerName", required = false)
+        @Parameter(name = "centerName", required = false)
         @QueryParam("centerName")
         centerName: String?
     ): Result<List<ProjectVO>>
@@ -95,19 +95,19 @@ interface ServiceTxProjectResource {
     @Path("/getProjectByOrganizationId")
     @Operation(summary = "根据组织架构查询所有项目")
     fun getProjectByName(
-        @Parameter(description = "userId", required = true)
+        @Parameter(name = "userId", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String,
-        @Parameter(description = "组织类型", required = true)
+        @Parameter(name = "组织类型", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_ORGANIZATION_TYPE)
         organizationType: String,
-        @Parameter(description = "组织Id", required = true)
+        @Parameter(name = "组织Id", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_ORGANIZATION_ID)
         organizationId: Long,
-        @Parameter(description = "deptName", required = false)
+        @Parameter(name = "deptName", required = false)
         @QueryParam("deptName")
         deptName: String?,
-        @Parameter(description = "centerName", required = false)
+        @Parameter(name = "centerName", required = false)
         @QueryParam("centerName")
         centerName: String?
     ): Result<List<ProjectVO>>
@@ -116,22 +116,22 @@ interface ServiceTxProjectResource {
     @Path("/getProjectByName")
     @Operation(summary = "根据名称查询项目信息,组织限制")
     fun getProjectByName(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String,
-        @Parameter(description = "组织类型", required = true)
+        @Parameter(name = "组织类型", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_ORGANIZATION_TYPE)
         organizationType: String,
-        @Parameter(description = "组织Id", required = true)
+        @Parameter(name = "组织Id", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_ORGANIZATION_ID)
         organizationId: Long,
-        @Parameter(description = "项目名称,精准匹配", required = true)
+        @Parameter(name = "项目名称,精准匹配", required = true)
         @QueryParam("name")
         name: String,
-        @Parameter(description = "名称类型: 中文名称、英文名称", required = true)
+        @Parameter(name = "名称类型: 中文名称、英文名称", required = true)
         @QueryParam("nameType")
         nameType: ProjectValidateType,
-        @Parameter(description = "是否过滤保密项目", required = false)
+        @Parameter(name = "是否过滤保密项目", required = false)
         @QueryParam("showSecrecy")
         showSecrecy: Boolean?
     ): Result<ProjectVO?>
@@ -140,16 +140,16 @@ interface ServiceTxProjectResource {
     @Path("/getProjectByGroupId")
     @Operation(summary = "根据组织架构查询所有项目")
     fun getProjectByGroupId(
-        @Parameter(description = "userId", required = true)
+        @Parameter(name = "userId", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String,
-        @Parameter(description = "bgId", required = false)
+        @Parameter(name = "bgId", required = false)
         @QueryParam("bgId")
         bgId: Long?,
-        @Parameter(description = "deptId", required = false)
+        @Parameter(name = "deptId", required = false)
         @QueryParam("deptId")
         deptId: Long?,
-        @Parameter(description = "centerId", required = false)
+        @Parameter(name = "centerId", required = false)
         @QueryParam("centerId")
         centerId: Long?
     ): Result<List<ProjectVO>>
@@ -158,10 +158,10 @@ interface ServiceTxProjectResource {
     @Path("/preBuild/userProject/{userId}")
     @Operation(summary = "查询用户项目")
     fun getPreUserProject(
-        @Parameter(description = "用户ID", required = true)
+        @Parameter(name = "用户ID", required = true)
         @PathParam("userId")
         userId: String,
-        @Parameter(description = "accessToken", required = true)
+        @Parameter(name = "accessToken", required = true)
         @QueryParam("accessToken")
         accessToken: String
     ): Result<ProjectVO?>
@@ -170,7 +170,7 @@ interface ServiceTxProjectResource {
     @Path("/remotedev/userProject/{userId}")
     @Operation(summary = "查询用户项目")
     fun getRemoteDevUserProject(
-        @Parameter(description = "用户ID", required = true)
+        @Parameter(name = "用户ID", required = true)
         @PathParam("userId")
         userId: String
     ): Result<ProjectVO?>
@@ -179,16 +179,16 @@ interface ServiceTxProjectResource {
     @Path("/enNames/organization")
     @Operation(summary = "查询用户项目")
     fun getProjectEnNamesByOrganization(
-        @Parameter(description = "用户ID", required = true)
+        @Parameter(name = "用户ID", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String,
-        @Parameter(description = "BG_ID", required = true)
+        @Parameter(name = "BG_ID", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_BG_ID)
         bgId: Long,
-        @Parameter(description = "部门名称", required = true)
+        @Parameter(name = "部门名称", required = true)
         @QueryParam("deptName")
         deptName: String?,
-        @Parameter(description = "中心名称", required = true)
+        @Parameter(name = "中心名称", required = true)
         @QueryParam("centerName")
         centerName: String?
     ): Result<List<String>>
@@ -197,13 +197,13 @@ interface ServiceTxProjectResource {
     @Path("/enNames/dept")
     @Operation(summary = "查询用户项目")
     fun getProjectEnNamesByDeptIdAndCenterName(
-        @Parameter(description = "用户ID", required = true)
+        @Parameter(name = "用户ID", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String,
-        @Parameter(description = "部门ID", required = true)
+        @Parameter(name = "部门ID", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_DEPT_ID)
         deptId: Long?,
-        @Parameter(description = "中心名称", required = true)
+        @Parameter(name = "中心名称", required = true)
         @QueryParam("centerName")
         centerName: String?
     ): Result<List<String>>
@@ -212,10 +212,10 @@ interface ServiceTxProjectResource {
     @Path("/enNames/center")
     @Operation(summary = "查询用户项目")
     fun getProjectEnNamesByCenterId(
-        @Parameter(description = "用户ID", required = true)
+        @Parameter(name = "用户ID", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String,
-        @Parameter(description = "中心ID", required = true)
+        @Parameter(name = "中心ID", required = true)
         @QueryParam("centerId")
         centerId: Long?
     ): Result<List<String>>
@@ -224,13 +224,13 @@ interface ServiceTxProjectResource {
     @Path("/rds/getOrCreate")
     @Operation(summary = "查询用户项目")
     fun getOrCreateRdsProject(
-        @Parameter(description = "userId", required = true)
+        @Parameter(name = "userId", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String,
-        @Parameter(description = "蓝盾项目ID", required = true)
+        @Parameter(name = "蓝盾项目ID", required = true)
         @QueryParam("projectId")
         projectId: String,
-        @Parameter(description = "蓝盾项目名称", required = true)
+        @Parameter(name = "蓝盾项目名称", required = true)
         @QueryParam("projectName")
         projectName: String
     ): Result<ProjectVO?>
@@ -239,13 +239,13 @@ interface ServiceTxProjectResource {
     @Path("/newProject")
     @Operation(summary = "创建项目")
     fun create(
-        @Parameter(description = "userId", required = true)
+        @Parameter(name = "userId", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String,
-        @Parameter(description = "PAAS_CC Token", required = true)
+        @Parameter(name = "PAAS_CC Token", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_ACCESS_TOKEN)
         accessToken: String,
-        @Parameter(description = "项目信息", required = true)
+        @Parameter(name = "项目信息", required = true)
         projectCreateInfo: ProjectCreateInfo,
         @QueryParam("routerTag")
         routerTag: String?
@@ -255,7 +255,7 @@ interface ServiceTxProjectResource {
     @Path("/projects/{projectCode}/managers")
     @Operation(summary = " 查询项目的管理员")
     fun getProjectManagers(
-        @Parameter(description = "项目代码", required = true)
+        @Parameter(name = "项目代码", required = true)
         @PathParam("projectCode")
         projectCode: String
     ): Result<List<String>>
@@ -264,13 +264,13 @@ interface ServiceTxProjectResource {
     @Path("/{projectCode}/users/{userId}/verifyWithToken")
     @Operation(summary = " 校验用户是否项目成员")
     fun verifyUserProjectPermission(
-        @Parameter(description = "PAAS_CC Token", required = true)
+        @Parameter(name = "PAAS_CC Token", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_ACCESS_TOKEN)
         accessToken: String,
-        @Parameter(description = "项目代码", required = true)
+        @Parameter(name = "项目代码", required = true)
         @PathParam("projectCode")
         projectCode: String,
-        @Parameter(description = "用户ID", required = true)
+        @Parameter(name = "用户ID", required = true)
         @PathParam("userId")
         userId: String
     ): Result<Boolean>
@@ -279,13 +279,13 @@ interface ServiceTxProjectResource {
     @Path("/{projectCode}/verifyProjectByOrganization")
     @Operation(summary = " 校验项目是否数据某组织架构")
     fun verifyProjectByOrganization(
-        @Parameter(description = "项目代码", required = true)
+        @Parameter(name = "项目代码", required = true)
         @PathParam("projectCode")
         projectCode: String,
-        @Parameter(description = "组织类型", required = true)
+        @Parameter(name = "组织类型", required = true)
         @QueryParam(AUTH_HEADER_DEVOPS_ORGANIZATION_TYPE)
         organizationType: String,
-        @Parameter(description = "组织ID", required = true)
+        @Parameter(name = "组织ID", required = true)
         @QueryParam(AUTH_HEADER_DEVOPS_ORGANIZATION_ID)
         organizationId: Int
     ): Result<Boolean>
@@ -294,13 +294,13 @@ interface ServiceTxProjectResource {
     @Path("/gitci/{gitProjectId}/{userId}")
     @Operation(summary = "创建gitCI项目")
     fun createGitCIProject(
-        @Parameter(description = "工蜂项目id", required = true)
+        @Parameter(name = "工蜂项目id", required = true)
         @PathParam("gitProjectId")
         gitProjectId: Long,
-        @Parameter(description = "用户名", required = true)
+        @Parameter(name = "用户名", required = true)
         @PathParam("userId")
         userId: String,
-        @Parameter(description = "工蜂项目名称", required = false)
+        @Parameter(name = "工蜂项目名称", required = false)
         @QueryParam("gitProjectName")
         gitProjectName: String?
     ): Result<ProjectVO>
@@ -309,43 +309,43 @@ interface ServiceTxProjectResource {
     @Path("/addManager")
     @Operation(summary = " 为项目添加管理员")
     fun addManagerForProject(
-        @Parameter(description = "用户ID", required = true)
+        @Parameter(name = "用户ID", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String,
-        @Parameter(description = "管理员", required = true)
+        @Parameter(name = "管理员", required = true)
         addManagerRequest: AddManagerRequest
     ): Result<Boolean>
 
     @POST
     @Path("/createProjectUser")
     fun createProjectUser(
-        @Parameter(description = "执行人Id", required = true)
+        @Parameter(name = "执行人Id", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         createUser: String?,
-        @Parameter(description = "是否校验管理员", required = true)
+        @Parameter(name = "是否校验管理员", required = true)
         @QueryParam("checkManager")
         checkManager: Boolean,
-        @Parameter(description = "添加信息", required = true)
+        @Parameter(name = "添加信息", required = true)
         createInfo: ProjectCreateUserDTO
     ): Result<Boolean>
 
     @POST
     @Path("/create/permission/")
     fun createPipelinePermission(
-        @Parameter(description = "执行人Id", required = false)
+        @Parameter(name = "执行人Id", required = false)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         createUser: String?,
-        @Parameter(description = "是否校验管理员", required = true)
+        @Parameter(name = "是否校验管理员", required = true)
         @QueryParam("checkManager")
         checkManager: Boolean,
-        @Parameter(description = "添加信息", required = true)
+        @Parameter(name = "添加信息", required = true)
         createInfo: PipelinePermissionInfo
     ): Result<Boolean>
 
     @GET
     @Path("{projectId}/roles")
     fun getProjectRoles(
-        @Parameter(description = "项目Id", required = true)
+        @Parameter(name = "项目Id", required = true)
         @PathParam("projectId")
         projectCode: String
     ): Result<List<BKAuthProjectRolesResources>>
@@ -353,10 +353,10 @@ interface ServiceTxProjectResource {
     @PUT
     @Path("{projectCode}/relation/bind")
     fun bindRelationSystem(
-        @Parameter(description = "项目Id", required = true)
+        @Parameter(name = "项目Id", required = true)
         @PathParam("projectCode")
         projectCode: String,
-        @Parameter(description = "关联系统ID", required = true)
+        @Parameter(name = "关联系统ID", required = true)
         @QueryParam("relationId")
         relationId: String
     ): Result<Boolean>
@@ -365,13 +365,13 @@ interface ServiceTxProjectResource {
     @Path("{projectCode}/update/name")
     @Operation(summary = "修改项目名称")
     fun updateProjectName(
-        @Parameter(description = "userId", required = true)
+        @Parameter(name = "userId", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String,
-        @Parameter(description = "项目Id", required = true)
+        @Parameter(name = "项目Id", required = true)
         @PathParam("projectCode")
         projectCode: String,
-        @Parameter(description = "关联系统ID", required = true)
+        @Parameter(name = "关联系统ID", required = true)
         @QueryParam("projectName")
         projectName: String
     ): Result<Boolean>
@@ -380,10 +380,10 @@ interface ServiceTxProjectResource {
     @Path("/getProjectInfoByProjectName")
     @Operation(summary = "根据项目名称查询项目信息")
     fun getProjectInfoByProjectName(
-        @Parameter(description = "userId", required = true)
+        @Parameter(name = "userId", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String,
-        @Parameter(description = "项目名称", required = true)
+        @Parameter(name = "项目名称", required = true)
         @QueryParam("projectName")
         projectName: String
     ): Result<ProjectVO>?
@@ -392,13 +392,13 @@ interface ServiceTxProjectResource {
     @Path("/{projectCode}/bind/organization")
     @Operation(summary = "绑定项目组织信息")
     fun bindProjectOrganization(
-        @Parameter(description = "userId", required = true)
+        @Parameter(name = "userId", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String,
-        @Parameter(description = "项目名称", required = true)
+        @Parameter(name = "项目名称", required = true)
         @PathParam("projectCode")
         projectCode: String,
-        @Parameter(description = "项目组织信息", required = true)
+        @Parameter(name = "项目组织信息", required = true)
         projectDeptInfo: ProjectDeptInfo
     ): Result<Boolean>
 
@@ -406,13 +406,13 @@ interface ServiceTxProjectResource {
     @Path("/updateRemotedev")
     @Operation(summary = "修改项目云桌面信息")
     fun updateRemotedev(
-        @Parameter(description = "userId", required = true)
+        @Parameter(name = "userId", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String,
-        @Parameter(description = "项目名称", required = true)
+        @Parameter(name = "项目名称", required = true)
         @QueryParam("projectCode")
         projectCode: String,
-        @Parameter(description = "云桌面配额", required = true)
+        @Parameter(name = "云桌面配额", required = true)
         @QueryParam("desktopNum")
         addcloudDesktopNum: Int
     ): Result<Boolean>
@@ -421,7 +421,7 @@ interface ServiceTxProjectResource {
     @PUT
     @Path("/ext/system/setTagByProject")
     fun setExtSystemTagByProject(
-        @Parameter(description = "consulTag请求入参", required = true)
+        @Parameter(name = "consulTag请求入参", required = true)
         extSystemTagDTO: ProjectExtSystemTagDTO
     ): com.tencent.devops.common.api.pojo.Result<Boolean>
 }

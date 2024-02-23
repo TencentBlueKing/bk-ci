@@ -25,7 +25,7 @@ interface ServiceGithubBranchResource {
     @POST
     @Path("/listBranch")
     fun listBranch(
-        @Parameter(description = "授权token", required = true)
+        @Parameter(name = "授权token", required = true)
         @HeaderParam(AUTH_HEADER_GITHUB_TOKEN)
         token: String,
         request: ListBranchesRequest
@@ -35,7 +35,7 @@ interface ServiceGithubBranchResource {
     @POST
     @Path("/getBranch")
     fun getBranch(
-        @Parameter(description = "授权token", required = true)
+        @Parameter(name = "授权token", required = true)
         @HeaderParam(AUTH_HEADER_GITHUB_TOKEN)
         token: String,
         request: GetBranchRequest

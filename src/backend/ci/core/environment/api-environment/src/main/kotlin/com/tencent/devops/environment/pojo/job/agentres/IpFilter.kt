@@ -28,34 +28,33 @@
 package com.tencent.devops.environment.pojo.job.agentres
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
 @JsonIgnoreProperties(ignoreUnknown = true)
-@ApiModel("安装agent的返回结果中的 主机信息")
+@Schema(title = "安装agent的返回结果中的 主机信息")
 data class IpFilter(
-    @ApiModelProperty(value = "主机业务ID")
+    @get:Schema(title = "主机业务ID")
     val bkBizId: Int,
-    @ApiModelProperty(value = "主机业务名称")
+    @get:Schema(title = "主机业务名称")
     val bkBizName: String,
-    @ApiModelProperty(value = "IP地址")
+    @get:Schema(title = "IP地址")
     val ip: String,
-    @ApiModelProperty(value = "内网IPV4地址")
+    @get:Schema(title = "内网IPV4地址")
     val innerIp: String,
-    @ApiModelProperty(value = "内网IPV6地址")
+    @get:Schema(title = "内网IPV6地址")
     val innerIpv6: String,
-    @ApiModelProperty(value = "主机ID")
+    @get:Schema(title = "主机ID")
     val bkHostId: Int,
-    @ApiModelProperty(value = "管控区域名称")
+    @get:Schema(title = "管控区域名称")
     val bkCloudName: String,
-    @ApiModelProperty(value = "管控区域ID")
+    @get:Schema(title = "管控区域ID")
     val bkCloudId: Int,
-    @ApiModelProperty(value = "执行状态")
+    @get:Schema(title = "执行状态")
     val status: String,
-    @ApiModelProperty(value = "作业ID")
+    @get:Schema(title = "作业ID")
     val jobId: Int,
-    @ApiModelProperty(value = "过滤原因")
+    @get:Schema(title = "过滤原因")
     val exception: String,
-    @ApiModelProperty(value = "失败的具体信息")
+    @get:Schema(title = "失败的具体信息")
     val msg: String
 )

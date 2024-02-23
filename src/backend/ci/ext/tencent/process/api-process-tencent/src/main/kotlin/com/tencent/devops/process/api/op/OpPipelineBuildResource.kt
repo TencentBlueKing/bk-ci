@@ -21,19 +21,19 @@ interface OpPipelineBuildResource {
     @PUT
     @Path("/fix_build_status")
     fun fixPipelineBuildStatus(
-        @Parameter(description = "项目id", required = true)
+        @Parameter(name = "项目id", required = true)
         @QueryParam("projectId")
         projectId: String,
-        @Parameter(description = "流水线id", required = true)
+        @Parameter(name = "流水线id", required = true)
         @QueryParam("pipelineId")
         pipelineId: String,
-        @Parameter(description = "转换前的状态码", required = true)
+        @Parameter(name = "转换前的状态码", required = true)
         @QueryParam("statusFrom")
         statusFrom: Int,
-        @Parameter(description = "转换到的状态码", required = true)
+        @Parameter(name = "转换到的状态码", required = true)
         @QueryParam("statusTo")
         statusTo: Int,
-        @Parameter(description = "构建号", required = false)
+        @Parameter(name = "构建号", required = false)
         @QueryParam("buildIds")
         buildIds: List<String>?
     ): Result<Int>
@@ -42,19 +42,19 @@ interface OpPipelineBuildResource {
     @PUT
     @Path("/fix_build_history")
     fun fixPipelineBuildHistory(
-        @Parameter(description = "项目id", required = true)
+        @Parameter(name = "项目id", required = true)
         @QueryParam("projectId")
         projectId: String,
-        @Parameter(description = "流水线id", required = true)
+        @Parameter(name = "流水线id", required = true)
         @QueryParam("pipelineId")
         pipelineId: String,
-        @Parameter(description = "转换前的状态码", required = true)
+        @Parameter(name = "转换前的状态码", required = true)
         @QueryParam("statusFrom")
         statusFrom: Int,
-        @Parameter(description = "转换到的状态码", required = true)
+        @Parameter(name = "转换到的状态码", required = true)
         @QueryParam("statusTo")
         statusTo: Int,
-        @Parameter(description = "构建号", required = false)
+        @Parameter(name = "构建号", required = false)
         @QueryParam("buildIds")
         buildIds: List<String>?
     ): Result<Int>
@@ -63,19 +63,19 @@ interface OpPipelineBuildResource {
     @PUT
     @Path("/fix_summary_count")
     fun fixPipelineSummaryCount(
-        @Parameter(description = "项目id", required = true)
+        @Parameter(name = "项目id", required = true)
         @QueryParam("projectId")
         projectId: String,
-        @Parameter(description = "流水线id", required = true)
+        @Parameter(name = "流水线id", required = true)
         @QueryParam("pipelineId")
         pipelineId: String,
-        @Parameter(description = "需要变更的完成计数", required = false)
+        @Parameter(name = "需要变更的完成计数", required = false)
         @QueryParam("finishCount")
         finishCount: Int?,
-        @Parameter(description = "需要变更的running计数", required = false)
+        @Parameter(name = "需要变更的running计数", required = false)
         @QueryParam("runningCount")
         runningCount: Int?,
-        @Parameter(description = "需要变更的排队计数", required = false)
+        @Parameter(name = "需要变更的排队计数", required = false)
         @QueryParam("queueCount")
         queueCount: Int?
     ): Result<Int>

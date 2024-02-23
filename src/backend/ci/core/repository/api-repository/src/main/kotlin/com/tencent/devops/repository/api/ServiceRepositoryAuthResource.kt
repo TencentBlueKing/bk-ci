@@ -49,10 +49,10 @@ interface ServiceRepositoryAuthResource {
     @Path("/")
     @Operation(summary = "iam代码库回调接口")
     fun repositoryInfo(
-        @Parameter(description = "回调信息")
+        @Parameter(name = "回调信息")
         callBackInfo: CallbackRequestDTO,
         @HeaderParam(AUTH_HEADER_IAM_TOKEN)
-        @Parameter(description = "token")
+        @Parameter(name = "token")
         token: String
     ): CallbackBaseResponseDTO?
 }

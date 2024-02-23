@@ -28,19 +28,19 @@
 package com.tencent.devops.environment.pojo.job.jobcloudreq
 
 import com.fasterxml.jackson.annotation.JsonProperty
-import io.swagger.annotations.ApiModelProperty
+
 
 data class JobCloudQueryAgentStatusFromJobReq(
-    @ApiModelProperty(value = "主机ID数组，单次查询主机数量不可超过5000")
+    @get:Schema(title = "主机ID数组，单次查询主机数量不可超过5000")
     @JsonProperty("host_id_list")
     val hostIdList: List<Long>,
-    @ApiModelProperty(value = "资源范围类型", notes = "biz - 业务，biz_set - 业务集", required = true)
+    @get:Schema(title = "资源范围类型", description = "biz - 业务，biz_set - 业务集", required = true)
     @JsonProperty("bk_scope_type")
     override var bkScopeType: String? = "",
-    @ApiModelProperty(value = "资源范围ID", notes = "与bk_scope_type对应, 表示业务ID或者业务集ID", required = true)
+    @get:Schema(title = "资源范围ID", description = "与bk_scope_type对应, 表示业务ID或者业务集ID", required = true)
     @JsonProperty("bk_scope_id")
     override var bkScopeId: String? = "",
-    @ApiModelProperty(value = "当前用户用户名", required = true)
+    @get:Schema(title = "当前用户用户名", required = true)
     @JsonProperty("bk_username")
     override var bkUsername: String
 ) : JobCloudPermission(bkScopeType, bkScopeId, bkUsername)

@@ -26,16 +26,16 @@ interface UserCustomRepoResource {
     @GET
     @Path("/{projectId}/dir/tree")
     fun dirTree(
-        @Parameter(description = "用户ID", required = true)
+        @Parameter(name = "用户ID", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "项目ID", required = true)
+        @Parameter(name = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(description = "路径", required = false)
+        @Parameter(name = "路径", required = false)
         @QueryParam("path")
         path: String?,
-        @Parameter(description = "模糊搜索目录名", required = false)
+        @Parameter(name = "模糊搜索目录名", required = false)
         @QueryParam("name")
         name: String?
     ): Result<DirNode>
@@ -44,22 +44,22 @@ interface UserCustomRepoResource {
     @GET
     @Path("/{projectId}/dir/tree/page")
     fun dirTreePage(
-        @Parameter(description = "用户ID", required = true)
+        @Parameter(name = "用户ID", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "项目ID", required = true)
+        @Parameter(name = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(description = "路径", required = false)
+        @Parameter(name = "路径", required = false)
         @QueryParam("path")
         path: String?,
-        @Parameter(description = "模糊搜索目录名", required = false)
+        @Parameter(name = "模糊搜索目录名", required = false)
         @QueryParam("name")
         name: String?,
-        @Parameter(description = "第几页", required = true)
+        @Parameter(name = "第几页", required = true)
         @QueryParam("page")
         page: Int,
-        @Parameter(description = "每页条数", required = true)
+        @Parameter(name = "每页条数", required = true)
         @QueryParam("pageSize")
         pageSize: Int
     ): Result<Page<DirNode>>

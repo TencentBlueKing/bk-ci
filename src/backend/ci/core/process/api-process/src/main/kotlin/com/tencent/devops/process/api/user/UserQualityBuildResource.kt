@@ -54,25 +54,25 @@ interface UserQualityBuildResource {
     @POST
     @Path("/{projectId}/{pipelineId}/{buildId}/{elementId}/qualityGateReview/{action}")
     fun manualQualityGateReview(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "项目ID", required = true)
+        @Parameter(name = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(description = "流水线ID", required = true)
+        @Parameter(name = "流水线ID", required = true)
         @PathParam("pipelineId")
         pipelineId: String,
-        @Parameter(description = "构建ID", required = true)
+        @Parameter(name = "构建ID", required = true)
         @PathParam("buildId")
         buildId: String,
-        @Parameter(description = "步骤Id", required = true)
+        @Parameter(name = "步骤Id", required = true)
         @PathParam("elementId")
         elementId: String,
-        @Parameter(description = "动作", required = true)
+        @Parameter(name = "动作", required = true)
         @PathParam("action")
         action: ManualReviewAction,
-        @Parameter(description = "红线ID", required = false)
+        @Parameter(name = "红线ID", required = false)
         request: QualityReviewRequest?
     ): Result<Boolean>
 }

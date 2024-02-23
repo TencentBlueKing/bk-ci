@@ -49,7 +49,7 @@ interface UserTokenResource {
     @GET
     @Path("/get")
     fun getAccessToken(
-        @Parameter(description = "用户ID", required = true)
+        @Parameter(name = "用户ID", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String
     ): Result<TokenInfo>

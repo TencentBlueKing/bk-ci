@@ -53,10 +53,10 @@ interface ServiceJfrogResource {
     @Path("/{projectId}/getPipelineNames")
     @BkApiPermission([BkApiHandleType.API_NO_AUTH_CHECK])
     fun getPipelineNameByIds(
-        @Parameter(description = "项目id", required = true)
+        @Parameter(name = "项目id", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(description = "流水线id列表", required = true)
+        @Parameter(name = "流水线id列表", required = true)
         pipelineIds: Set<String>
     ): Result<Map<String, String>>
 
@@ -65,9 +65,9 @@ interface ServiceJfrogResource {
     @Path("/getBuildNoByBuildIds")
     @BkApiPermission([BkApiHandleType.API_NO_AUTH_CHECK])
     fun getBuildNoByBuildIdsNew(
-        @Parameter(description = "构建ID集合", required = true)
+        @Parameter(name = "构建ID集合", required = true)
         buildIds: Set<String>,
-        @Parameter(description = "项目ID", required = false)
+        @Parameter(name = "项目ID", required = false)
         @QueryParam("projectId")
         projectId: String? = null
     ): Result<Map<String, String>>

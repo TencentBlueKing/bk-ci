@@ -27,13 +27,13 @@
 
 package com.tencent.devops.environment.pojo.job.resp
 
-import io.swagger.annotations.ApiModelProperty
+
 
 data class AgentInfo(
-    @ApiModelProperty(value = "主机ID")
+    @get:Schema(title = "主机ID")
     val bkHostId: Long,
-    @ApiModelProperty(value = "Agent状态：0-异常，1-正常")
+    @get:Schema(title = "Agent状态：0-异常，1-正常")
     val status: Int,
-    @ApiModelProperty(value = "Agent的版本")
+    @get:Schema(title = "Agent的版本")
     val version: String
 )

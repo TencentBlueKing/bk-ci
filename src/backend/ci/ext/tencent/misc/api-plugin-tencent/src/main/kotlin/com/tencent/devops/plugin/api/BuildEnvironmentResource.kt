@@ -53,10 +53,10 @@ interface BuildEnvironmentResource {
     @GET
     @Path("/listUsableServerEnvs")
     fun listUsableServerEnvs(
-        @Parameter(description = "项目ID", required = true)
+        @Parameter(name = "项目ID", required = true)
         @HeaderParam(AUTH_HEADER_PROJECT_ID)
         projectId: String,
-        @Parameter(description = "构建ID", required = true)
+        @Parameter(name = "构建ID", required = true)
         @HeaderParam(AUTH_HEADER_BUILD_ID)
         buildId: String
     ): Result<List<EnvWithPermission>>
@@ -65,13 +65,13 @@ interface BuildEnvironmentResource {
     @POST
     @Path("/listRawByEnvHashIds")
     fun listRawByEnvHashIds(
-        @Parameter(description = "项目ID", required = true)
+        @Parameter(name = "项目ID", required = true)
         @HeaderParam(AUTH_HEADER_PROJECT_ID)
         projectId: String,
-        @Parameter(description = "构建ID", required = true)
+        @Parameter(name = "构建ID", required = true)
         @HeaderParam(AUTH_HEADER_BUILD_ID)
         buildId: String,
-        @Parameter(description = "环境 hashId(s)", required = true)
+        @Parameter(name = "环境 hashId(s)", required = true)
         envHashIds: List<String>
     ): Result<List<EnvWithPermission>>
 
@@ -79,13 +79,13 @@ interface BuildEnvironmentResource {
     @POST
     @Path("/listRawByEnvNames")
     fun listRawByEnvNames(
-        @Parameter(description = "项目ID", required = true)
+        @Parameter(name = "项目ID", required = true)
         @HeaderParam(AUTH_HEADER_PROJECT_ID)
         projectId: String,
-        @Parameter(description = "构建ID", required = true)
+        @Parameter(name = "构建ID", required = true)
         @HeaderParam(AUTH_HEADER_BUILD_ID)
         buildId: String,
-        @Parameter(description = "环境名称(s)", required = true)
+        @Parameter(name = "环境名称(s)", required = true)
         envNames: List<String>
     ): Result<List<EnvWithPermission>>
 
@@ -93,10 +93,10 @@ interface BuildEnvironmentResource {
     @GET
     @Path("/listPipelineUsableServerEnvs")
     fun listUsableServerEnvsByLastUpdateUser(
-        @Parameter(description = "项目ID", required = true)
+        @Parameter(name = "项目ID", required = true)
         @HeaderParam(AUTH_HEADER_PROJECT_ID)
         projectId: String,
-        @Parameter(description = "构建ID", required = true)
+        @Parameter(name = "构建ID", required = true)
         @HeaderParam(AUTH_HEADER_PIPELINE_ID)
         pipelineId: String
     ): Result<List<EnvWithPermission>>

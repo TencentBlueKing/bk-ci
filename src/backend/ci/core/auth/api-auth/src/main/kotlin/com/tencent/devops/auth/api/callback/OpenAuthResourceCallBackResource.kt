@@ -49,10 +49,10 @@ interface OpenAuthResourceCallBackResource {
     @Path("/projects")
     @Operation(summary = "项目列表")
     fun projectInfo(
-        @Parameter(description = "回调信息")
+        @Parameter(name = "回调信息")
         callBackInfo: CallbackRequestDTO,
         @HeaderParam("Authorization")
-        @Parameter(description = "token")
+        @Parameter(name = "token")
         token: String
     ): CallbackBaseResponseDTO?
 
@@ -60,10 +60,10 @@ interface OpenAuthResourceCallBackResource {
     @Path("/instances/list")
     @Operation(summary = "特定资源列表")
     fun resourceList(
-        @Parameter(description = "回调信息")
+        @Parameter(name = "回调信息")
         callBackInfo: CallbackRequestDTO,
         @HeaderParam("Authorization")
-        @Parameter(description = "token")
+        @Parameter(name = "token")
         token: String
     ): CallbackBaseResponseDTO?
 }

@@ -56,19 +56,19 @@ interface UserCmdbNodeResource {
     @POST
     @Path("/listUserCmdbNodesNew")
     fun listUserCmdbNodesNew(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "true 时为备份负责人，false 时为主负责人", required = true)
+        @Parameter(name = "true 时为备份负责人，false 时为主负责人", required = true)
         @QueryParam("bakOperator")
         bakOperator: Boolean,
-        @Parameter(description = "第几页", required = false, example = "1")
+        @Parameter(name = "第几页", required = false, example = "1")
         @QueryParam("page")
         page: Int = 1,
-        @Parameter(description = "每页多少条", required = false, example = "100")
+        @Parameter(name = "每页多少条", required = false, example = "100")
         @QueryParam("pageSize")
         pageSize: Int = 100,
-        @Parameter(description = "指定IP", required = false)
+        @Parameter(name = "指定IP", required = false)
         ips: List<String>?
     ): Result<Page<CmdbNode>>
 
@@ -76,27 +76,27 @@ interface UserCmdbNodeResource {
     @POST
     @Path("/{projectId}/addCmdbNodes")
     fun addCmdbNodes(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "项目ID", required = true)
+        @Parameter(name = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(description = "CMDB节点 IP", required = true)
+        @Parameter(name = "CMDB节点 IP", required = true)
         nodeIps: List<String>
     ): Result<AddCmdbNodesRes>
 
-    @ApiOperation("重新导入CMDB节点")
+    @Operation(summary = "重新导入CMDB节点")
     @POST
     @Path("/{projectId}/reImportCmdbNodes")
     fun reImportCmdbNodes(
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String,
-        @ApiParam("项目ID", required = true)
+        userId: String = AUTH_HEADER_USER_ID_DEFAULT_VALUE,
+        @Parameter(name = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @ApiParam(value = "CMDB节点ID列表", required = true)
+        @Parameter(name = "CMDB节点ID列表", required = true)
         reImportCmdbNodeInfoList: List<ReImportCmdbNodeInfo>
     ): Result<AddCmdbNodesRes>
 }

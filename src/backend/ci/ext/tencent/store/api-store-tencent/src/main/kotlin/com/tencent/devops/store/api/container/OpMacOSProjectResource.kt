@@ -49,7 +49,7 @@ interface OpMacOSProjectResource {
     @POST
     @Path("/{projectId}")
     fun add(
-        @Parameter(description = "项目ID", required = true)
+        @Parameter(name = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String
     ): Result<Boolean>
@@ -58,7 +58,7 @@ interface OpMacOSProjectResource {
     @DELETE
     @Path("/{projectId}")
     fun delete(
-        @Parameter(description = "项目ID", required = true)
+        @Parameter(name = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String
     ): Result<Boolean>

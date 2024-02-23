@@ -52,7 +52,7 @@ interface OpMTAResource {
     @POST
     @Path("/h5/coreData")
     fun getCoreData(
-        @Parameter(description = "应用历史趋势查询消息", required = true)
+        @Parameter(name = "应用历史趋势查询消息", required = true)
         coreDataMessage: CoreDataMessage
     ): Result<Map<String, IdxResult>?>
 }

@@ -55,27 +55,27 @@ interface ServiceArchiveAtomFileResource {
     @Path("/archiveAtom")
     @Consumes(MediaType.MULTIPART_FORM_DATA)
     fun archiveAtomFile(
-        @Parameter(description = "userId", required = true)
+        @Parameter(name = "userId", required = true)
         @QueryParam("userId")
         userId: String,
-        @Parameter(description = "项目编码", required = true)
+        @Parameter(name = "项目编码", required = true)
         @QueryParam("projectCode")
         projectCode: String,
-        @Parameter(description = "插件代码", required = true)
+        @Parameter(name = "插件代码", required = true)
         @QueryParam("atomCode")
         atomCode: String,
-        @Parameter(description = "插件版本号", required = true)
+        @Parameter(name = "插件版本号", required = true)
         @QueryParam("version")
         version: String,
-        @Parameter(description = "发布类型", required = true)
+        @Parameter(name = "发布类型", required = true)
         @QueryParam("releaseType")
         releaseType: ReleaseTypeEnum,
-        @Parameter(description = "文件", required = true)
+        @Parameter(name = "文件", required = true)
         @FormDataParam("file")
         inputStream: InputStream,
         @FormDataParam("file")
         disposition: FormDataContentDisposition,
-        @Parameter(description = "支持的操作系统", required = true)
+        @Parameter(name = "支持的操作系统", required = true)
         @QueryParam("os")
         os: String
     ): Result<ArchiveAtomResponse?>
@@ -85,23 +85,23 @@ interface ServiceArchiveAtomFileResource {
     @Path("/file/uploadToPath")
     @Consumes(MediaType.MULTIPART_FORM_DATA)
     fun uploadToPath(
-        @Parameter(description = "userId", required = true)
+        @Parameter(name = "userId", required = true)
         @QueryParam("userId")
         @BkField(required = true)
         userId: String,
-        @Parameter(description = "项目代码", required = true)
+        @Parameter(name = "项目代码", required = true)
         @QueryParam("projectId")
         @BkField(required = true)
         projectId: String,
-        @Parameter(description = "文件路径", required = true)
+        @Parameter(name = "文件路径", required = true)
         @QueryParam("path")
         @BkField(required = true)
         path: String,
-        @Parameter(description = "文件类型", required = true)
+        @Parameter(name = "文件类型", required = true)
         @QueryParam("fileType")
         @BkField(required = true)
         fileType: String,
-        @Parameter(description = "文件", required = true)
+        @Parameter(name = "文件", required = true)
         @FormDataParam("file")
         inputStream: InputStream,
         @FormDataParam("file")

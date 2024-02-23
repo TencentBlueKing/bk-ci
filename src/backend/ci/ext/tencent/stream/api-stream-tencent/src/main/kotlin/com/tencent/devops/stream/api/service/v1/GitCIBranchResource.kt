@@ -53,13 +53,13 @@ interface GitCIBranchResource {
     @GET
     @Path("/list/{gitProjectId}")
     fun getBranchBuildList(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "gitProjectId", required = true)
+        @Parameter(name = "gitProjectId", required = true)
         @PathParam("gitProjectId")
         gitProjectId: Long,
-        @Parameter(description = "defaultBranch", required = false)
+        @Parameter(name = "defaultBranch", required = false)
         @QueryParam("defaultBranch")
         defaultBranch: String?
     ): Result<List<V1BranchBuildHistory>>

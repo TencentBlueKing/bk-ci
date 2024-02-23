@@ -51,13 +51,13 @@ interface RemoteNodeResource {
     @GET
     @Path("/projects/{projectId}/list")
     fun listNodeForAuth(
-        @Parameter(description = "项目ID", required = true)
+        @Parameter(name = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(description = "起始位置", required = false)
+        @Parameter(name = "起始位置", required = false)
         @QueryParam("offset")
         offset: Int? = null,
-        @Parameter(description = "步长", required = false)
+        @Parameter(name = "步长", required = false)
         @QueryParam("limit")
         limit: Int? = null
     ): Result<Page<NodeBaseInfo>>
@@ -66,7 +66,7 @@ interface RemoteNodeResource {
     @GET
     @Path("/infos")
     fun getNodeInfos(
-        @Parameter(description = "节点Id串", required = true)
+        @Parameter(name = "节点Id串", required = true)
         @QueryParam("nodeIds")
         nodeIds: List<String>
     ): Result<List<NodeBaseInfo>>
@@ -75,16 +75,16 @@ interface RemoteNodeResource {
     @GET
     @Path("/projects/{projectId}/searchByDisplayName/")
     fun searchByName(
-        @Parameter(description = "项目ID", required = true)
+        @Parameter(name = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(description = "起始位置", required = false)
+        @Parameter(name = "起始位置", required = false)
         @QueryParam("offset")
         offset: Int? = null,
-        @Parameter(description = "步长", required = false)
+        @Parameter(name = "步长", required = false)
         @QueryParam("limit")
         limit: Int? = null,
-        @Parameter(description = "环境名称", required = true)
+        @Parameter(name = "环境名称", required = true)
         @QueryParam("displayName")
         displayName: String
     ): Result<Page<NodeBaseInfo>>

@@ -58,7 +58,7 @@ interface ServiceWechatWorkResource {
     @POST
     @Path("/message/text")
     fun sendTextMessage(
-        @Parameter(description = "文本内容", required = true)
+        @Parameter(name = "文本内容", required = true)
         textMessage: TextMessage
     ): Result<Boolean>
 
@@ -66,7 +66,7 @@ interface ServiceWechatWorkResource {
     @POST
     @Path("/message/richtext")
     fun sendRichtextMessage(
-        @Parameter(description = "富文本文内容", required = true)
+        @Parameter(name = "富文本文内容", required = true)
         richitextMessage: RichtextMessage
     ): Result<Boolean>
 
@@ -74,7 +74,7 @@ interface ServiceWechatWorkResource {
     @POST
     @Path("/message/image")
     fun sendImageMessage(
-        @Parameter(description = "图片内容", required = true)
+        @Parameter(name = "图片内容", required = true)
         imageMessage: ImageMessage
     ): Result<Boolean>
 
@@ -83,13 +83,13 @@ interface ServiceWechatWorkResource {
     @POST
     @Path("/media")
     fun uploadMedia(
-        @Parameter(description = "临时素材类型", required = true)
+        @Parameter(name = "临时素材类型", required = true)
         @QueryParam(value = "mediaType")
         uploadMediaType: UploadMediaType,
-        @Parameter(description = "临时素材名字", required = true)
+        @Parameter(name = "临时素材名字", required = true)
         @QueryParam(value = "mediaName")
         mediaName: String,
-        @Parameter(description = "临时素材文件", required = true)
+        @Parameter(name = "临时素材文件", required = true)
         @FormDataParam("media")
         mediaInputStream: InputStream
     ): Result<UploadMediaResult?>

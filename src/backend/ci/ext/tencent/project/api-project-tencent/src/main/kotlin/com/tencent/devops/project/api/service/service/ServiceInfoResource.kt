@@ -50,7 +50,7 @@ interface ServiceInfoResource {
     @Path("/")
     @Operation(summary = "获取所有服务信息")
     fun getServiceList(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String
     ): Result<List<ServiceVO>?>

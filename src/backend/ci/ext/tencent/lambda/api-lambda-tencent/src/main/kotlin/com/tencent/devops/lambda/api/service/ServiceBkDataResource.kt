@@ -48,7 +48,7 @@ interface ServiceBkDataResource {
     @POST
     @Path("/data/query")
     fun queryData(
-        @Parameter(description = "数据平台查询接口参数", required = true)
+        @Parameter(name = "数据平台查询接口参数", required = true)
         bkDataQueryParam: BkDataQueryParam
     ): BkDataResult<BkDataQueryData>
 }

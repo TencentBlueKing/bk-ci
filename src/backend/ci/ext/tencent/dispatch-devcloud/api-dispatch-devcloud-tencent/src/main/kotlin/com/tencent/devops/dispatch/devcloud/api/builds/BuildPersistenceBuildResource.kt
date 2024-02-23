@@ -53,10 +53,10 @@ interface BuildPersistenceBuildResource {
     @GET
     @Path("/startup")
     fun startBuild(
-        @Parameter(description = "项目ID", required = true)
+        @Parameter(name = "项目ID", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_PROJECT_ID)
         projectId: String,
-        @Parameter(description = "Agent ID", required = true)
+        @Parameter(name = "Agent ID", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_AGENT_ID)
         agentId: String
     ): Result<PersistenceBuildInfo?>
@@ -65,13 +65,13 @@ interface BuildPersistenceBuildResource {
     @POST
     @Path("/workerBuildFinish")
     fun workerBuildFinish(
-        @Parameter(description = "项目ID", required = true)
+        @Parameter(name = "项目ID", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_PROJECT_ID)
         projectId: String,
-        @Parameter(description = "Agent ID", required = true)
+        @Parameter(name = "Agent ID", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_AGENT_ID)
         agentId: String,
-        @Parameter(description = "构建信息", required = true)
+        @Parameter(name = "构建信息", required = true)
         buildInfo: PersistenceBuildWithStatus
     ): Result<Boolean>
 }

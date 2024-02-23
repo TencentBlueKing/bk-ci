@@ -51,22 +51,22 @@ interface ServiceLogFileResource {
     @GET
     @Path("/{projectId}/{pipelineId}/{buildId}/{elementId}/{executeCount}")
     fun getPluginLogUrl(
-        @Parameter(description = "userId", required = true)
+        @Parameter(name = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "项目 ID", required = true)
+        @Parameter(name = "项目 ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(description = "流水线 ID", required = true)
+        @Parameter(name = "流水线 ID", required = true)
         @PathParam("pipelineId")
         pipelineId: String,
-        @Parameter(description = "构建 ID", required = true)
+        @Parameter(name = "构建 ID", required = true)
         @PathParam("buildId")
         buildId: String,
-        @Parameter(description = "插件 elementId", required = true)
+        @Parameter(name = "插件 elementId", required = true)
         @PathParam("elementId")
         elementId: String,
-        @Parameter(description = "执行序号", required = true)
+        @Parameter(name = "执行序号", required = true)
         @PathParam("executeCount")
         executeCount: String
     ): Result<Url>

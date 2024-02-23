@@ -27,9 +27,9 @@
 
 package com.tencent.devops.environment.pojo.job.agentreq
 
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
 data class TerminateAgentInstallTaskReq(
-    @ApiModelProperty(value = "实例ID列表")
+    @get:Schema(title = "实例ID列表")
     val instanceIdList: List<String>
 )

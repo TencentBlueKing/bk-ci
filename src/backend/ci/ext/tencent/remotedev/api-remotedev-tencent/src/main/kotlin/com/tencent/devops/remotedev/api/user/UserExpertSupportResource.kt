@@ -25,10 +25,10 @@ interface UserExpertSupportResource {
     @POST
     @Path("/create")
     fun addExpertSup(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "创建数据")
+        @Parameter(name = "创建数据")
         data: CreateSupportData
     ): Result<Boolean>
 
@@ -36,7 +36,7 @@ interface UserExpertSupportResource {
     @GET
     @Path("/config/list")
     fun fetchExpertSup(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String
     ): Result<List<String>>

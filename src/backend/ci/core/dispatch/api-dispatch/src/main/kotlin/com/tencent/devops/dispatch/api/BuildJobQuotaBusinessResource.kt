@@ -54,19 +54,19 @@ interface BuildJobQuotaBusinessResource {
     @POST
     @Path("/agent/start")
     fun addRunningAgent(
-        @Parameter(description = "项目ID", required = true)
+        @Parameter(name = "项目ID", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_PROJECT_ID)
         projectId: String,
-        @Parameter(description = "流水线ID", required = true)
+        @Parameter(name = "流水线ID", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_PIPELINE_ID)
         pipelineId: String,
-        @Parameter(description = "构建ID", required = true)
+        @Parameter(name = "构建ID", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_BUILD_ID)
         buildId: String,
-        @Parameter(description = "构建job序号", required = true)
+        @Parameter(name = "构建job序号", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_VM_SEQ_ID)
         vmSeqId: String,
-        @Parameter(description = "executeCount", required = true)
+        @Parameter(name = "executeCount", required = true)
         @QueryParam("executeCount")
         executeCount: Int
     ): Result<Boolean>
@@ -75,19 +75,19 @@ interface BuildJobQuotaBusinessResource {
     @DELETE
     @Path("/agent/shutdown")
     fun removeRunningAgent(
-        @Parameter(description = "项目ID", required = true)
+        @Parameter(name = "项目ID", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_PROJECT_ID)
         projectId: String,
-        @Parameter(description = "流水线ID", required = true)
+        @Parameter(name = "流水线ID", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_PIPELINE_ID)
         pipelineId: String,
-        @Parameter(description = "构建ID", required = true)
+        @Parameter(name = "构建ID", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_BUILD_ID)
         buildId: String,
-        @Parameter(description = "构建job序号", required = true)
+        @Parameter(name = "构建job序号", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_VM_SEQ_ID)
         vmSeqId: String,
-        @Parameter(description = "executeCount", required = true)
+        @Parameter(name = "executeCount", required = true)
         @QueryParam("executeCount")
         executeCount: Int
     ): Result<Boolean>

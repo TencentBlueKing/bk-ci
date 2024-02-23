@@ -53,13 +53,13 @@ interface UserStreamProjectGroupResource {
     @GET
     @Path("/list")
     fun getProjects(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "第几页", required = false, example = "1")
+        @Parameter(name = "第几页", required = false, example = "1")
         @QueryParam("page")
         page: Int?,
-        @Parameter(description = "每页多少条", required = false, example = "10")
+        @Parameter(name = "每页多少条", required = false, example = "10")
         @QueryParam("pageSize")
         pageSize: Int?
     ): Result<Pagination<StreamGitGroup>>

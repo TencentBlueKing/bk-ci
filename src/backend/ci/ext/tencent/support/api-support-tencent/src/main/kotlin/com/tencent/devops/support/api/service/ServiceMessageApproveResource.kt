@@ -53,10 +53,10 @@ interface ServiceMessageApproveResource {
     @POST
     @Path("/moa/create")
     fun createMoaMessageApproval(
-        @Parameter(description = "userId", required = true)
+        @Parameter(name = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "创建MOA审批单请求报文体", required = true)
+        @Parameter(name = "创建MOA审批单请求报文体", required = true)
         createMoaApproveRequest: CreateMoaApproveRequest
     ): Result<Boolean>
 
@@ -64,7 +64,7 @@ interface ServiceMessageApproveResource {
     @POST
     @Path("/moa/ids/{taskId}/complete")
     fun moaComplete(
-        @Parameter(description = "任务ID", required = true)
+        @Parameter(name = "任务ID", required = true)
         @PathParam("taskId")
         taskId: String
     ): Result<Boolean>
@@ -73,7 +73,7 @@ interface ServiceMessageApproveResource {
     @POST
     @Path("/moa/create_work_item")
     fun createMoaWorkItemMessageApproval(
-        @Parameter(description = "创建MOA审批单据请求报文体", required = true)
+        @Parameter(name = "创建MOA审批单据请求报文体", required = true)
         moaWorkItemElementList: List<MoaWorkItemElement>
     ): Result<Boolean>
 
@@ -81,7 +81,7 @@ interface ServiceMessageApproveResource {
     @POST
     @Path("/moa/complete_work_item")
     fun createMoaWorkItemMessageComplete(
-        @Parameter(description = "创建MOA审批单据请求报文体", required = true)
+        @Parameter(name = "创建MOA审批单据请求报文体", required = true)
         completeMoaWorkItemRequest: CompleteMoaWorkItemRequest
     ): Result<Boolean>
 }

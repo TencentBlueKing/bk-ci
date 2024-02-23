@@ -27,11 +27,11 @@
 
 package com.tencent.devops.environment.pojo.job
 
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
 data class AgentVersionInfo(
-    @ApiModelProperty(value = "节点ID")
+    @get:Schema(title = "节点ID")
     val nodeId: Long,
-    @ApiModelProperty(value = "节点IP")
+    @get:Schema(title = "节点IP")
     val agentVersion: String?
 )

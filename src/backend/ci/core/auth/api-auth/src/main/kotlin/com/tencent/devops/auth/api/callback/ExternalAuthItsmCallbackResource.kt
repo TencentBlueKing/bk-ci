@@ -49,7 +49,7 @@ interface ExternalAuthItsmCallbackResource {
     @POST
     @Operation(summary = "处理Itsm项目创建回调")
     fun handleItsmProjectCreateCallBack(
-        @Parameter(description = "itsm回调内容", required = true)
+        @Parameter(name = "itsm回调内容", required = true)
         itsmCallBackInfo: ItsmCallBackInfo
     ): Result<Boolean>
 
@@ -57,7 +57,7 @@ interface ExternalAuthItsmCallbackResource {
     @POST
     @Operation(summary = "处理Itsm项目编辑回调")
     fun handleItsmProjectUpdateCallBack(
-        @Parameter(description = "itsm回调内容", required = true)
+        @Parameter(name = "itsm回调内容", required = true)
         itsmCallBackInfo: ItsmCallBackInfo
     ): Result<Boolean>
 }

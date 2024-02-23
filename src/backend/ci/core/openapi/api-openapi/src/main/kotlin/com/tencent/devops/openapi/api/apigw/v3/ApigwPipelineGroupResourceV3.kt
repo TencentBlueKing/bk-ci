@@ -59,10 +59,10 @@ interface ApigwPipelineGroupResourceV3 {
     @GET
     @Path("/groups")
     fun getGroups(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "项目ID(项目英文名)", required = true)
+        @Parameter(name = "项目ID(项目英文名)", required = true)
         @PathParam("projectId")
         projectId: String
     ): Result<List<PipelineGroup>>
@@ -71,10 +71,10 @@ interface ApigwPipelineGroupResourceV3 {
     @POST
     @Path("/groups/")
     fun addGroup(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "流水线标签分组创建请求", required = true)
+        @Parameter(name = "流水线标签分组创建请求", required = true)
         pipelineGroup: PipelineGroupCreate
     ): Result<Boolean>
 
@@ -82,10 +82,10 @@ interface ApigwPipelineGroupResourceV3 {
     @PUT
     @Path("/groups/")
     fun updateGroup(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "流水线标签分组更新请求", required = true)
+        @Parameter(name = "流水线标签分组更新请求", required = true)
         pipelineGroup: PipelineGroupUpdate
     ): Result<Boolean>
 
@@ -93,13 +93,13 @@ interface ApigwPipelineGroupResourceV3 {
     @DELETE
     @Path("/groups/{groupId}")
     fun deleteGroup(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "项目ID(项目英文名)", required = true)
+        @Parameter(name = "项目ID(项目英文名)", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(description = "分组ID", required = true)
+        @Parameter(name = "分组ID", required = true)
         @PathParam("groupId")
         groupId: String
     ): Result<Boolean>
@@ -108,13 +108,13 @@ interface ApigwPipelineGroupResourceV3 {
     @POST
     @Path("/labels/")
     fun addLabel(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "项目ID(项目英文名)", required = true)
+        @Parameter(name = "项目ID(项目英文名)", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(description = "流水线标签创建请求", required = true)
+        @Parameter(name = "流水线标签创建请求", required = true)
         pipelineLabel: PipelineLabelCreate
     ): Result<Boolean>
 
@@ -122,13 +122,13 @@ interface ApigwPipelineGroupResourceV3 {
     @DELETE
     @Path("/labels/{labelId}")
     fun deleteLabel(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "项目ID(项目英文名)", required = true)
+        @Parameter(name = "项目ID(项目英文名)", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(description = "标签ID", required = true)
+        @Parameter(name = "标签ID", required = true)
         @PathParam("labelId")
         labelId: String
     ): Result<Boolean>
@@ -137,13 +137,13 @@ interface ApigwPipelineGroupResourceV3 {
     @PUT
     @Path("/labels/")
     fun updateLabel(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "项目ID(项目英文名)", required = true)
+        @Parameter(name = "项目ID(项目英文名)", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(description = "流水线标签更新请求", required = true)
+        @Parameter(name = "流水线标签更新请求", required = true)
         pipelineLabel: PipelineLabelUpdate
     ): Result<Boolean>
 }

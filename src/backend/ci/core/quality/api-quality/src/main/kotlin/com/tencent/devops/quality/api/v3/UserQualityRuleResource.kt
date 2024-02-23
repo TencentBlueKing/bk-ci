@@ -25,13 +25,13 @@ interface UserQualityRuleResource {
     @Path("/update/{ruleHashId}")
     @PUT
     fun update(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "规则ID", required = true)
+        @Parameter(name = "规则ID", required = true)
         @PathParam("ruleHashId")
         ruleHashId: String,
-        @Parameter(description = "审核操作", required = true)
+        @Parameter(name = "审核操作", required = true)
         @QueryParam("pass")
         pass: Boolean
     ): Result<Boolean>

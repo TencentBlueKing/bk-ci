@@ -58,13 +58,13 @@ interface ServiceQualityInterceptResource {
     @Path("/project/{projectId}/pipeline/{pipelineId}/build/{buildId}/history")
     @GET
     fun listHistory(
-        @Parameter(description = "项目ID", required = true)
+        @Parameter(name = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(description = "流水线ID", required = true)
+        @Parameter(name = "流水线ID", required = true)
         @PathParam("pipelineId")
         pipelineId: String,
-        @Parameter(description = "构建ID", required = true)
+        @Parameter(name = "构建ID", required = true)
         @PathParam("buildId")
         buildId: String
     ): Result<List<QualityRuleIntercept>>
@@ -73,16 +73,16 @@ interface ServiceQualityInterceptResource {
     @Path("/project/{projectId}/pipeline/{pipelineId}/build/{buildId}/history")
     @POST
     fun listRuleHistory(
-        @Parameter(description = "项目ID", required = true)
+        @Parameter(name = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(description = "流水线ID", required = true)
+        @Parameter(name = "流水线ID", required = true)
         @PathParam("pipelineId")
         pipelineId: String,
-        @Parameter(description = "构建ID", required = true)
+        @Parameter(name = "构建ID", required = true)
         @PathParam("buildId")
         buildId: String,
-        @Parameter(description = "红线ID", required = false)
+        @Parameter(name = "红线ID", required = false)
         @QueryParam("ruleIds")
         ruleIds: List<String>?
     ): Result<List<QualityRuleIntercept>>
@@ -91,31 +91,31 @@ interface ServiceQualityInterceptResource {
     @Path("/{projectId}/")
     @GET
     fun list(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "项目ID", required = true)
+        @Parameter(name = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(description = "流水线ID", required = false)
+        @Parameter(name = "流水线ID", required = false)
         @QueryParam("pipelineId")
         pipelineId: String?,
-        @Parameter(description = "规则ID", required = false)
+        @Parameter(name = "规则ID", required = false)
         @QueryParam("ruleHashId")
         ruleHashId: String?,
-        @Parameter(description = "状态", required = false)
+        @Parameter(name = "状态", required = false)
         @QueryParam("interceptResult")
         interceptResult: RuleInterceptResult?,
-        @Parameter(description = "开始时间", required = false)
+        @Parameter(name = "开始时间", required = false)
         @QueryParam("startTime")
         startTime: Long?,
-        @Parameter(description = "截止时间", required = false)
+        @Parameter(name = "截止时间", required = false)
         @QueryParam("endTime")
         endTime: Long?,
-        @Parameter(description = "页号", required = false, example = "1")
+        @Parameter(name = "页号", required = false, example = "1")
         @QueryParam("page")
         page: Int?,
-        @Parameter(description = "页数", required = false, example = "20")
+        @Parameter(name = "页数", required = false, example = "20")
         @QueryParam("pageSize")
         pageSize: Int?
     ): Result<Page<RuleInterceptHistory>>

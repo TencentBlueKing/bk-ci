@@ -54,13 +54,13 @@ interface ServiceDevCloudImageResource {
     @Path("/projects/{projectId}/listDevCloudImages/{public}")
     @GET
     fun listDevCloudImages(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "项目ID", required = true)
+        @Parameter(name = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(description = "是否公共镜像", required = true)
+        @Parameter(name = "是否公共镜像", required = true)
         @PathParam("public")
         public: Boolean
     ): Result<List<DockerTag>>

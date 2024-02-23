@@ -22,10 +22,10 @@ interface ServiceQualityAuthResource {
     @Path("/rule")
     @Operation(summary = "iam质量红线规则回调接口")
     fun qualityRuleInfo(
-        @Parameter(description = "回调信息")
+        @Parameter(name = "回调信息")
         callBackInfo: CallbackRequestDTO,
         @HeaderParam(AUTH_HEADER_IAM_TOKEN)
-        @Parameter(description = "token")
+        @Parameter(name = "token")
         token: String
     ): CallbackBaseResponseDTO?
 
@@ -33,10 +33,10 @@ interface ServiceQualityAuthResource {
     @Path("/group")
     @Operation(summary = "iam质量红线用户组回调接口")
     fun qualityGroupInfo(
-        @Parameter(description = "回调信息")
+        @Parameter(name = "回调信息")
         callBackInfo: CallbackRequestDTO,
         @HeaderParam(AUTH_HEADER_IAM_TOKEN)
-        @Parameter(description = "token")
+        @Parameter(name = "token")
         token: String
     ): CallbackBaseResponseDTO?
 }

@@ -22,10 +22,10 @@ interface OpPipelineCallbackResource {
     @PUT
     @Path("/{projectId}/enableCallback/byId")
     fun enableCallbackByIds(
-        @Parameter(description = "蓝盾项目Id(项目英文名)", required = true)
+        @Parameter(name = "蓝盾项目Id(项目英文名)", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(description = "回调信息ID", required = true)
+        @Parameter(name = "回调信息ID", required = true)
         @QueryParam("callbackIds")
         callbackIds: String
     ): Result<Boolean>
@@ -34,10 +34,10 @@ interface OpPipelineCallbackResource {
     @PUT
     @Path("/{projectId}/enableCallback/byUrl")
     fun enableCallbackByUrl(
-        @Parameter(description = "蓝盾项目Id(项目英文名)", required = true)
+        @Parameter(name = "蓝盾项目Id(项目英文名)", required = true)
         @QueryParam("projectId")
         projectId: String,
-        @Parameter(description = "回调url", required = true)
+        @Parameter(name = "回调url", required = true)
         @QueryParam("url")
         url: String
     ): Result<Boolean>

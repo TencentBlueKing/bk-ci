@@ -59,22 +59,22 @@ interface ApigwArtifactoryResourceV3 {
     @Path("/userDownloadUrl")
     @GET
     fun getUserDownloadUrl(
-        @Parameter(description = "appCode", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
+        @Parameter(name = "appCode", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
         appCode: String?,
-        @Parameter(description = "apigw Type", required = true)
+        @Parameter(name = "apigw Type", required = true)
         @PathParam("apigwType")
         apigwType: String?,
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "项目ID(项目英文名)", required = true)
+        @Parameter(name = "项目ID(项目英文名)", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(description = "版本仓库类型", required = true)
+        @Parameter(name = "版本仓库类型", required = true)
         @QueryParam("artifactoryType")
         artifactoryType: ArtifactoryType,
-        @Parameter(description = "路径", required = true)
+        @Parameter(name = "路径", required = true)
         @QueryParam("path")
         path: String
     ): Result<Url>
@@ -86,28 +86,28 @@ interface ApigwArtifactoryResourceV3 {
     @Path("/")
     @GET
     fun search(
-        @Parameter(description = "appCode", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
+        @Parameter(name = "appCode", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
         appCode: String?,
-        @Parameter(description = "apigw Type", required = true)
+        @Parameter(name = "apigw Type", required = true)
         @PathParam("apigwType")
         apigwType: String?,
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "项目ID(项目英文名)", required = true)
+        @Parameter(name = "项目ID(项目英文名)", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(description = "流水线ID", required = true)
+        @Parameter(name = "流水线ID", required = true)
         @QueryParam("pipelineId")
         pipelineId: String,
-        @Parameter(description = "构建ID", required = true)
+        @Parameter(name = "构建ID", required = true)
         @QueryParam("buildId")
         buildId: String,
-        @Parameter(description = "第几页", required = false, example = "1")
+        @Parameter(name = "第几页", required = false, example = "1")
         @QueryParam("page")
         page: Int?,
-        @Parameter(description = "每页多少条(不传默认全部返回)", required = false, example = "20")
+        @Parameter(name = "每页多少条(不传默认全部返回)", required = false, example = "20")
         @QueryParam("pageSize")
         pageSize: Int?
     ): Result<Page<FileInfo>>
@@ -119,22 +119,22 @@ interface ApigwArtifactoryResourceV3 {
     @GET
     @Path("/log/{pipelineId}/{buildId}/{elementId}/{executeCount}")
     fun getPluginLogUrl(
-        @Parameter(description = "userId", required = true)
+        @Parameter(name = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "项目 ID", required = true)
+        @Parameter(name = "项目 ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(description = "流水线 ID", required = true)
+        @Parameter(name = "流水线 ID", required = true)
         @PathParam("pipelineId")
         pipelineId: String,
-        @Parameter(description = "构建 ID", required = true)
+        @Parameter(name = "构建 ID", required = true)
         @PathParam("buildId")
         buildId: String,
-        @Parameter(description = "插件 elementId", required = true)
+        @Parameter(name = "插件 elementId", required = true)
         @PathParam("elementId")
         elementId: String,
-        @Parameter(description = "执行序号", required = true)
+        @Parameter(name = "执行序号", required = true)
         @PathParam("executeCount")
         executeCount: String
     ): Result<Url>

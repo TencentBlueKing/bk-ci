@@ -59,13 +59,13 @@ interface UserStreamTriggerResource {
     @POST
     @Path("/{pipelineId}/startup")
     fun triggerStartup(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "流水线ID", required = true)
+        @Parameter(name = "流水线ID", required = true)
         @PathParam("pipelineId")
         pipelineId: String,
-        @Parameter(description = "TriggerBuild请求", required = true)
+        @Parameter(name = "TriggerBuild请求", required = true)
         triggerBuildReq: ManualTriggerReq
     ): Result<TriggerBuildResult>
 
@@ -73,19 +73,19 @@ interface UserStreamTriggerResource {
     @GET
     @Path("/{projectId}/{pipelineId}/manual")
     fun getManualTriggerInfo(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "蓝盾项目ID", required = true)
+        @Parameter(name = "蓝盾项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(description = "流水线ID", required = true)
+        @Parameter(name = "流水线ID", required = true)
         @PathParam("pipelineId")
         pipelineId: String,
-        @Parameter(description = "分支名称", required = false)
+        @Parameter(name = "分支名称", required = false)
         @QueryParam("branchName")
         branchName: String,
-        @Parameter(description = "COMMIT_ID", required = false)
+        @Parameter(name = "COMMIT_ID", required = false)
         @QueryParam("commitId")
         commitId: String?
     ): Result<ManualTriggerInfo>
@@ -94,19 +94,19 @@ interface UserStreamTriggerResource {
     @GET
     @Path("/{projectId}/{pipelineId}/manualStartupInfo")
     fun getManualStartupInfo(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "蓝盾项目ID", required = true)
+        @Parameter(name = "蓝盾项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(description = "流水线ID", required = true)
+        @Parameter(name = "流水线ID", required = true)
         @PathParam("pipelineId")
         pipelineId: String,
-        @Parameter(description = "分支名称", required = false)
+        @Parameter(name = "分支名称", required = false)
         @QueryParam("branchName")
         branchName: String,
-        @Parameter(description = "COMMIT_ID", required = false)
+        @Parameter(name = "COMMIT_ID", required = false)
         @QueryParam("commitId")
         commitId: String?
     ): Result<List<DynamicParameterInfo>>
@@ -115,10 +115,10 @@ interface UserStreamTriggerResource {
     @POST
     @Path("/checkYaml")
     fun checkYaml(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "yaml内容", required = true)
+        @Parameter(name = "yaml内容", required = true)
         yaml: StreamGitYamlString
     ): Result<String>
 
@@ -126,13 +126,13 @@ interface UserStreamTriggerResource {
     @GET
     @Path("/getYaml/{projectId}/{buildId}")
     fun getYamlByBuildId(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "蓝盾项目ID", required = true)
+        @Parameter(name = "蓝盾项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(description = "构建ID", required = true)
+        @Parameter(name = "构建ID", required = true)
         @PathParam("buildId")
         buildId: String
     ): Result<V2BuildYaml?>
@@ -142,19 +142,19 @@ interface UserStreamTriggerResource {
     @GET
     @Path("/{projectId}/{pipelineId}/yaml")
     fun getYamlByPipeline(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "蓝盾项目ID", required = true)
+        @Parameter(name = "蓝盾项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(description = "流水线ID", required = true)
+        @Parameter(name = "流水线ID", required = true)
         @PathParam("pipelineId")
         pipelineId: String,
-        @Parameter(description = "分支名称", required = false)
+        @Parameter(name = "分支名称", required = false)
         @QueryParam("branchName")
         branchName: String,
-        @Parameter(description = "COMMIT_ID", required = false)
+        @Parameter(name = "COMMIT_ID", required = false)
         @QueryParam("commitId")
         commitId: String?
     ): Result<String?>

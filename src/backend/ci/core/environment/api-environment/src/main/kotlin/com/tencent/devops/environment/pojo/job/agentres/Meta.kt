@@ -27,17 +27,17 @@
 
 package com.tencent.devops.environment.pojo.job.agentres
 
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
 data class Meta(
-    @ApiModelProperty(value = "任务对象类型，1: AGENT 2：PLUGIN 3：PROXY")
+    @get:Schema(title = "任务对象类型，1: AGENT 2：PLUGIN 3：PROXY")
     val type: String?,
-    @ApiModelProperty(value = "步骤类型")
+    @get:Schema(title = "步骤类型")
     val stepType: String?,
-    @ApiModelProperty(value = "操作类型")
+    @get:Schema(title = "操作类型")
     val opType: String?,
-    @ApiModelProperty(value = "操作类型名称")
+    @get:Schema(title = "操作类型名称")
     val opTypeDisplay: String?,
-    @ApiModelProperty(value = "订阅步骤类型")
+    @get:Schema(title = "订阅步骤类型")
     val stepTypeDisplay: String?
 )

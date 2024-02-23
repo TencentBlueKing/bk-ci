@@ -28,16 +28,16 @@ interface ApigwPermissionMoveResourceV4 {
     @GET
     @Path("/pipeline_id_list")
     fun getProjectPipelineIds(
-        @Parameter(description = "appCode", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
+        @Parameter(name = "appCode", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
         appCode: String?,
-        @Parameter(description = "apigw Type", required = true)
+        @Parameter(name = "apigw Type", required = true)
         @PathParam("apigwType")
         apigwType: String?,
-        @Parameter(description = "userId")
+        @Parameter(name = "userId")
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String?,
-        @Parameter(description = "项目Code", required = true)
+        @Parameter(name = "项目Code", required = true)
         @PathParam("projectId")
         projectId: String
     ): Result<List<PipelineIdInfo>>
@@ -46,19 +46,19 @@ interface ApigwPermissionMoveResourceV4 {
     @PUT
     @Path("/relation_project")
     fun relationProject(
-        @Parameter(description = "appCode", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
+        @Parameter(name = "appCode", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
         appCode: String?,
-        @Parameter(description = "apigw Type", required = true)
+        @Parameter(name = "apigw Type", required = true)
         @PathParam("apigwType")
         apigwType: String?,
-        @Parameter(description = "userId")
+        @Parameter(name = "userId")
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String?,
-        @Parameter(description = "项目Code", required = true)
+        @Parameter(name = "项目Code", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(description = "iam分级管理员ID", required = true)
+        @Parameter(name = "iam分级管理员ID", required = true)
         @QueryParam("relationId")
         relationId: String
     ): Result<Boolean>

@@ -53,7 +53,7 @@ interface OpContainerAppEnvResource {
     @POST
     @Path("/")
     fun addContainerAppEnv(
-        @Parameter(description = "容器编译环境变量请求实体", required = true)
+        @Parameter(name = "容器编译环境变量请求实体", required = true)
          containerAppEnvRequest: ContainerAppEnvCreate
     ): Result<Boolean>
 
@@ -61,7 +61,7 @@ interface OpContainerAppEnvResource {
     @DELETE
     @Path("/{id}")
     fun deleteContainerAppEnvById(
-        @Parameter(description = "编译环境变量ID", required = true)
+        @Parameter(name = "编译环境变量ID", required = true)
         @PathParam("id")
         id: Int
     ): Result<Boolean>
@@ -70,10 +70,10 @@ interface OpContainerAppEnvResource {
     @PUT
     @Path("/{id}")
     fun updateContainerAppEnv(
-        @Parameter(description = "编译环境变量ID", required = true)
+        @Parameter(name = "编译环境变量ID", required = true)
         @PathParam("id")
         id: Int,
-        @Parameter(description = "容器编译环境变量请求实体", required = true)
+        @Parameter(name = "容器编译环境变量请求实体", required = true)
         containerAppEnvRequest: ContainerAppEnvCreate
     ): Result<Boolean>
 
@@ -81,7 +81,7 @@ interface OpContainerAppEnvResource {
     @GET
     @Path("/list/{appId}")
     fun listContainerAppEnvsByAppId(
-        @Parameter(description = "编译环境ID", required = true)
+        @Parameter(name = "编译环境ID", required = true)
         @PathParam("appId")
         appId: Int
     ): Result<List<ContainerAppEnv>>
@@ -90,7 +90,7 @@ interface OpContainerAppEnvResource {
     @GET
     @Path("/{id}")
     fun getContainerAppEnvById(
-        @Parameter(description = "编译环境变量ID", required = true)
+        @Parameter(name = "编译环境变量ID", required = true)
         @PathParam("id")
         id: Int
     ): Result<ContainerAppEnv?>

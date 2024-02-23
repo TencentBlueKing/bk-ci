@@ -28,19 +28,19 @@
 package com.tencent.devops.environment.pojo.job.agentres
 
 import com.fasterxml.jackson.annotation.JsonProperty
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
 data class AgentQueryAgentTaskLog(
-    @ApiModelProperty(value = "节点名称")
+    @get:Schema(title = "节点名称")
     val step: String,
-    @ApiModelProperty(value = "执行状态")
+    @get:Schema(title = "执行状态")
     val status: String,
-    @ApiModelProperty(value = "执行日志")
+    @get:Schema(title = "执行日志")
     val log: String?,
-    @ApiModelProperty(value = "启动时间")
+    @get:Schema(title = "启动时间")
     @JsonProperty("start_time")
     val startTime: String?,
-    @ApiModelProperty(value = "完成时间")
+    @get:Schema(title = "完成时间")
     @JsonProperty("finish_time")
     val finishTime: String?
 )

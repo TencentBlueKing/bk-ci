@@ -28,44 +28,45 @@
 package com.tencent.devops.environment.pojo.job.agentres
 
 import com.fasterxml.jackson.annotation.JsonProperty
-import io.swagger.annotations.ApiModelProperty
+
+import io.swagger.v3.oas.annotations.media.Schema
 
 data class AgentHostDetail(
-    @ApiModelProperty(value = "是否存在过滤的主机")
+    @get:Schema(title = "是否存在过滤的主机")
     @JsonProperty("filter_host")
     val filterHost: Boolean?,
-    @ApiModelProperty(value = "主机ID")
+    @get:Schema(title = "主机ID")
     @JsonProperty("bk_host_id")
     val bkHostId: Int?,
-    @ApiModelProperty(value = "主机IP地址")
+    @get:Schema(title = "主机IP地址")
     val ip: String,
-    @ApiModelProperty(value = "主机内网IPV4地址")
+    @get:Schema(title = "主机内网IPV4地址")
     @JsonProperty("inner_ip")
     val innerIp: String?,
-    @ApiModelProperty(value = "实例ID")
+    @get:Schema(title = "实例ID")
     @JsonProperty("instance_id")
     val instanceId: String?,
-    @ApiModelProperty(value = "主机内网IPV6地址")
+    @get:Schema(title = "主机内网IPV6地址")
     @JsonProperty("inner_ipv6")
     val innerIpv6: String?,
-    @ApiModelProperty(value = "管控区域ID")
+    @get:Schema(title = "管控区域ID")
     @JsonProperty("bk_cloud_id")
     val bkCloudId: Int?,
-    @ApiModelProperty(value = "管控区域名称")
+    @get:Schema(title = "管控区域名称")
     @JsonProperty("bk_cloud_name")
     val bkCloudName: String?,
-    @ApiModelProperty(value = "业务ID")
+    @get:Schema(title = "业务ID")
     @JsonProperty("bk_biz_id")
     val bkBizId: Int?,
-    @ApiModelProperty(value = "业务名称")
+    @get:Schema(title = "业务名称")
     @JsonProperty("bk_biz_name")
     val bkBizName: String?,
-    @ApiModelProperty(value = "任务ID")
+    @get:Schema(title = "任务ID")
     @JsonProperty("job_id")
     val jobId: Int?,
-    @ApiModelProperty(value = "任务执行状态")
+    @get:Schema(title = "任务执行状态")
     val status: String?,
-    @ApiModelProperty(value = "任务执行状态名称")
+    @get:Schema(title = "任务执行状态名称")
     @JsonProperty("status_display")
     val statusDisplay: String?
 )

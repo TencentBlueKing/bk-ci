@@ -52,10 +52,10 @@ interface ServiceFileResource {
     @Path("/upload")
     @Consumes(MediaType.MULTIPART_FORM_DATA)
     fun uploadFile(
-        @Parameter(description = "userId", required = true)
+        @Parameter(name = "userId", required = true)
         @QueryParam("userId")
         userId: String,
-        @Parameter(description = "文件", required = true)
+        @Parameter(name = "文件", required = true)
         @FormDataParam("file")
         inputStream: InputStream,
         @FormDataParam("file")

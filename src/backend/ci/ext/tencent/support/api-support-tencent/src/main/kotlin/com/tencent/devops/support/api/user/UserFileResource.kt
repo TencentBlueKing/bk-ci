@@ -53,10 +53,10 @@ interface UserFileResource {
     @Path("/upload")
     @Consumes(MediaType.MULTIPART_FORM_DATA)
     fun uploadFile(
-        @Parameter(description = "userId", required = true)
+        @Parameter(name = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "文件", required = true)
+        @Parameter(name = "文件", required = true)
         @FormDataParam("file")
         inputStream: InputStream,
         @FormDataParam("file")

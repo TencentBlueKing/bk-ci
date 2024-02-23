@@ -55,10 +55,10 @@ interface OpGitCIServicesResource {
     @POST
     @Path("/create")
     fun create(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String,
-        @Parameter(description = "是否可以启用Stream", required = true)
+        @Parameter(name = "是否可以启用Stream", required = true)
         gitCIServicesConf: GitCIServicesConf
     ): Result<Boolean>
 
@@ -66,13 +66,13 @@ interface OpGitCIServicesResource {
     @PUT
     @Path("/update")
     fun update(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String,
-        @Parameter(description = "服务ID", required = false)
+        @Parameter(name = "服务ID", required = false)
         @QueryParam("id")
         id: Long,
-        @Parameter(description = "是否可以启用Stream", required = false)
+        @Parameter(name = "是否可以启用Stream", required = false)
         @QueryParam("enable")
         enable: Boolean?
     ): Result<Boolean>
@@ -81,10 +81,10 @@ interface OpGitCIServicesResource {
     @DELETE
     @Path("/delete")
     fun delete(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String,
-        @Parameter(description = "服务ID", required = true)
+        @Parameter(name = "服务ID", required = true)
         @QueryParam("id")
         id: Long
     ): Result<Boolean>
@@ -93,7 +93,7 @@ interface OpGitCIServicesResource {
     @GET
     @Path("/list")
     fun list(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String
     ): Result<List<GitCIServicesConf>>

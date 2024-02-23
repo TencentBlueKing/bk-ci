@@ -27,18 +27,19 @@
 
 package com.tencent.devops.environment.pojo.job
 
-import io.swagger.annotations.ApiModelProperty
+
+import io.swagger.v3.oas.annotations.media.Schema
 
 data class AgentVersion(
-    @ApiModelProperty(value = "IP地址")
+    @get:Schema(title = "IP地址")
     val ip: String?,
-    @ApiModelProperty(value = "host id")
+    @get:Schema(title = "host id")
     val bkHostId: Long?,
-    @ApiModelProperty(value = "是否已安装，true-已安装，false-未安装")
+    @get:Schema(title = "是否已安装，true-已安装，false-未安装")
     val installedTag: Boolean?,
-    @ApiModelProperty(value = "agent版本")
+    @get:Schema(title = "agent版本")
     val version: String?,
-    @ApiModelProperty(value = "agent状态", notes = "0-异常，1-正常")
+    @get:Schema(title = "agent状态", description = "0-异常，1-正常")
     val status: Int?
 ) {
     constructor(ip: String?, bkHostId: Long?, installedTag: Boolean?) : this(

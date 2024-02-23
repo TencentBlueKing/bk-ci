@@ -55,10 +55,10 @@ interface ServiceBaseDebugResource {
     @Path("/start")
     @Operation(summary = "获取登录调试ws")
     fun startDebug(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "debug请求体", required = true)
+        @Parameter(name = "debug请求体", required = true)
         startDebugReq: StartDebugReq
     ): Result<DebugResponse>
 
@@ -66,10 +66,10 @@ interface ServiceBaseDebugResource {
     @Path("/stop")
     @Operation(summary = "关闭调试")
     fun stopDebug(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "debug请求体", required = true)
+        @Parameter(name = "debug请求体", required = true)
         stopDebugReq: StopDebugReq
     ): Result<Boolean>
 }

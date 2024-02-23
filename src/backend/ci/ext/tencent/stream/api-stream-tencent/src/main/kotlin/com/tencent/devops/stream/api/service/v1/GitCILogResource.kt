@@ -54,28 +54,28 @@ interface GitCILogResource {
     @GET
     @Path("/{gitProjectId}/{pipelineId}/{buildId}/")
     fun getInitLogs(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "工蜂项目ID", required = true)
+        @Parameter(name = "工蜂项目ID", required = true)
         @PathParam("gitProjectId")
         gitProjectId: Long,
-        @Parameter(description = "流水线ID", required = true)
+        @Parameter(name = "流水线ID", required = true)
         @PathParam("pipelineId")
         pipelineId: String,
-        @Parameter(description = "构建ID", required = true)
+        @Parameter(name = "构建ID", required = true)
         @PathParam("buildId")
         buildId: String,
-        @Parameter(description = "是否包含调试日志", required = false)
+        @Parameter(name = "是否包含调试日志", required = false)
         @QueryParam("debug")
         debug: Boolean? = false,
-        @Parameter(description = "对应elementId", required = false)
+        @Parameter(name = "对应elementId", required = false)
         @QueryParam("tag")
         tag: String?,
-        @Parameter(description = "对应jobId", required = false)
+        @Parameter(name = "对应jobId", required = false)
         @QueryParam("jobId")
         jobId: String?,
-        @Parameter(description = "执行次数", required = false)
+        @Parameter(name = "执行次数", required = false)
         @QueryParam("executeCount")
         executeCount: Int?
     ): Result<QueryLogs>
@@ -84,31 +84,31 @@ interface GitCILogResource {
     @GET
     @Path("/{gitProjectId}/{pipelineId}/{buildId}/after")
     fun getAfterLogs(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "工蜂项目ID", required = true)
+        @Parameter(name = "工蜂项目ID", required = true)
         @PathParam("gitProjectId")
         gitProjectId: Long,
-        @Parameter(description = "流水线ID", required = true)
+        @Parameter(name = "流水线ID", required = true)
         @PathParam("pipelineId")
         pipelineId: String,
-        @Parameter(description = "构建ID", required = true)
+        @Parameter(name = "构建ID", required = true)
         @PathParam("buildId")
         buildId: String,
-        @Parameter(description = "起始行号", required = true)
+        @Parameter(name = "起始行号", required = true)
         @QueryParam("start")
         start: Long,
-        @Parameter(description = "是否包含调试日志", required = false)
+        @Parameter(name = "是否包含调试日志", required = false)
         @QueryParam("debug")
         debug: Boolean? = false,
-        @Parameter(description = "对应elementId", required = false)
+        @Parameter(name = "对应elementId", required = false)
         @QueryParam("tag")
         tag: String?,
-        @Parameter(description = "对应jobId", required = false)
+        @Parameter(name = "对应jobId", required = false)
         @QueryParam("jobId")
         jobId: String?,
-        @Parameter(description = "执行次数", required = false)
+        @Parameter(name = "执行次数", required = false)
         @QueryParam("executeCount")
         executeCount: Int?
     ): Result<QueryLogs>
@@ -118,25 +118,25 @@ interface GitCILogResource {
     @Path("/{gitProjectId}/{pipelineId}/{buildId}/download")
     @Produces(MediaType.APPLICATION_OCTET_STREAM)
     fun downloadLogs(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "工蜂项目ID", required = true)
+        @Parameter(name = "工蜂项目ID", required = true)
         @PathParam("gitProjectId")
         gitProjectId: Long,
-        @Parameter(description = "流水线ID", required = true)
+        @Parameter(name = "流水线ID", required = true)
         @PathParam("pipelineId")
         pipelineId: String,
-        @Parameter(description = "构建ID", required = true)
+        @Parameter(name = "构建ID", required = true)
         @PathParam("buildId")
         buildId: String,
-        @Parameter(description = "对应element ID", required = false)
+        @Parameter(name = "对应element ID", required = false)
         @QueryParam("tag")
         tag: String?,
-        @Parameter(description = "对应jobId", required = false)
+        @Parameter(name = "对应jobId", required = false)
         @QueryParam("jobId")
         jobId: String?,
-        @Parameter(description = "执行次数", required = false)
+        @Parameter(name = "执行次数", required = false)
         @QueryParam("executeCount")
         executeCount: Int?
     ): Response

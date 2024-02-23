@@ -58,13 +58,13 @@ interface OPIndicatorResource {
     @Path("/list")
     @GET
     fun list(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "页号", required = false, example = "1")
+        @Parameter(name = "页号", required = false, example = "1")
         @QueryParam("page")
         page: Int?,
-        @Parameter(description = "页码", required = false, example = "20")
+        @Parameter(name = "页码", required = false, example = "20")
         @QueryParam("pageSize")
         pageSize: Int?
     ): Result<Page<IndicatorData>>
@@ -73,10 +73,10 @@ interface OPIndicatorResource {
     @Path("/getByIds")
     @GET
     fun getByIds(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "指标id，用逗号隔开", required = true)
+        @Parameter(name = "指标id，用逗号隔开", required = true)
         @QueryParam("ids")
         ids: String
     ): Result<List<IndicatorData>>
@@ -85,10 +85,10 @@ interface OPIndicatorResource {
     @Path("/addIndicator")
     @POST
     fun add(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "指标配置参数", required = true)
+        @Parameter(name = "指标配置参数", required = true)
         indicatorUpdate: IndicatorUpdate
     ): Result<Boolean>
 
@@ -96,10 +96,10 @@ interface OPIndicatorResource {
     @Path("/{id}/delete")
     @DELETE
     fun delete(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "质量红线指标配置ID", required = true)
+        @Parameter(name = "质量红线指标配置ID", required = true)
         @PathParam("id")
         id: Long
     ): Result<Boolean>
@@ -108,13 +108,13 @@ interface OPIndicatorResource {
     @Path("/{id}/update")
     @PUT
     fun update(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "质量红线指标配置ID", required = true)
+        @Parameter(name = "质量红线指标配置ID", required = true)
         @PathParam("id")
         id: Long,
-        @Parameter(description = "指标配置参数", required = true)
+        @Parameter(name = "指标配置参数", required = true)
         indicatorUpdate: IndicatorUpdate
     ): Result<Boolean>
 }

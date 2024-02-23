@@ -32,6 +32,6 @@ import io.swagger.v3.oas.annotations.Parameter
 
 @Schema(title = "共享的项目列表")
 data class SharedProjectInfoWrap(
-    @Parameter(description = "共享的项目列表", required = true)
+    @Parameter(name = "共享的项目列表", required = true)
     val sharedProjects: List<AddSharedProjectInfo>
 )

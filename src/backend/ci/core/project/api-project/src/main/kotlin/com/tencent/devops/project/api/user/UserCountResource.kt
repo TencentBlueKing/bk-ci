@@ -49,16 +49,16 @@ interface UserCountResource {
     @POST
     @Operation(summary = "登录统计")
     fun login(
-        @Parameter(description = "userId", required = true)
+        @Parameter(name = "userId", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String,
-        @Parameter(description = "X-Real-IP", required = false)
+        @Parameter(name = "X-Real-IP", required = false)
         @HeaderParam("X-Real-IP")
         xRealIp: String?,
-        @Parameter(description = "X-Forwarded-For", required = false)
+        @Parameter(name = "X-Forwarded-For", required = false)
         @HeaderParam("X-Forwarded-For")
         xForwardedFor: String?,
-        @Parameter(description = "User-Agent", required = true)
+        @Parameter(name = "User-Agent", required = true)
         @HeaderParam("User-Agent")
         userAgent: String?
     ): Result<Boolean>

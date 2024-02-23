@@ -52,16 +52,16 @@ interface AppRepositoryResource {
     @GET
     @Path("/projects/{projectId}/pipelines/{pipelineId}/builds/{buildId}/commit/get/record")
     fun getCommit(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "projectId", required = true)
+        @Parameter(name = "projectId", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(description = "pipelineId", required = true)
+        @Parameter(name = "pipelineId", required = true)
         @PathParam("pipelineId")
         pipelineId: String,
-        @Parameter(description = "构建ID", required = true)
+        @Parameter(name = "构建ID", required = true)
         @PathParam("buildId")
         buildId: String
     ): Result<List<CommitResponse>>

@@ -55,14 +55,14 @@ interface UserDeptResource {
     @Path("/levels/{level}")
     @Operation(summary = "按组织级别获取组织列表")
     fun getDeptByLevel(
-        @Parameter(description = "用户名", required = true)
+        @Parameter(name = "用户名", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "access_token")
+        @Parameter(name = "access_token")
         @HeaderParam(AUTH_HEADER_DEVOPS_ACCESS_TOKEN)
         accessToken: String?,
         @PathParam("level")
-        @Parameter(description = "组织级别", required = true)
+        @Parameter(name = "组织级别", required = true)
         level: Int
     ): Result<DeptInfoVo?>
 
@@ -70,17 +70,17 @@ interface UserDeptResource {
     @Path("/parents/{parentId}")
     @Operation(summary = "按组织级别获取组织列表")
     fun getDeptByParent(
-        @Parameter(description = "用户名", required = true)
+        @Parameter(name = "用户名", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "access_token")
+        @Parameter(name = "access_token")
         @HeaderParam(AUTH_HEADER_DEVOPS_ACCESS_TOKEN)
         accessToken: String?,
         @PathParam("parentId")
-        @Parameter(description = "父组织Id", required = true)
+        @Parameter(name = "父组织Id", required = true)
         parentId: Int,
         @QueryParam("pageSize")
-        @Parameter(description = "父组织Id", required = false)
+        @Parameter(name = "父组织Id", required = false)
         pageSize: Int?
     ): Result<DeptInfoVo?>
 
@@ -88,31 +88,31 @@ interface UserDeptResource {
     @Path("/names/{name}")
     @Operation(summary = "按组织级别获取组织列表")
     fun getUserAndDeptByName(
-        @Parameter(description = "用户名", required = true)
+        @Parameter(name = "用户名", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "access_token")
+        @Parameter(name = "access_token")
         @HeaderParam(AUTH_HEADER_DEVOPS_ACCESS_TOKEN)
         accessToken: String?,
         @PathParam("name")
-        @Parameter(description = "模糊搜索名称", required = true)
+        @Parameter(name = "模糊搜索名称", required = true)
         name: String,
         @QueryParam("type")
-        @Parameter(description = "搜索类型", required = true)
+        @Parameter(name = "搜索类型", required = true)
         type: ManagerScopesEnum
     ): Result<List<UserAndDeptInfoVo?>>
 
     @GET
     @Path("/{deptId}/users")
     fun getDeptUsers(
-        @Parameter(description = "用户名", required = true)
+        @Parameter(name = "用户名", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "access_token")
+        @Parameter(name = "access_token")
         @HeaderParam(AUTH_HEADER_DEVOPS_ACCESS_TOKEN)
         accessToken: String?,
         @PathParam("deptId")
-        @Parameter(description = "组织Id", required = true)
+        @Parameter(name = "组织Id", required = true)
         deptId: Int
     ): Result<List<String>?>
 }

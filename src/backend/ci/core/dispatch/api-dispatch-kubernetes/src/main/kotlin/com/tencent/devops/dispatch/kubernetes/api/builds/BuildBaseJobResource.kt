@@ -60,16 +60,16 @@ interface BuildBaseJobResource {
     @POST
     @Path("/job/create")
     fun createJob(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "projectId", required = true)
+        @Parameter(name = "projectId", required = true)
         @HeaderParam(AUTH_HEADER_PROJECT_ID)
         projectId: String,
-        @Parameter(description = "构建id", required = true)
+        @Parameter(name = "构建id", required = true)
         @HeaderParam(AUTH_HEADER_BUILD_ID)
         buildId: String,
-        @Parameter(description = "Job结构", required = true)
+        @Parameter(name = "Job结构", required = true)
         jobReq: DispatchJobReq
     ): Result<DispatchTaskResp>
 
@@ -77,16 +77,16 @@ interface BuildBaseJobResource {
     @GET
     @Path("/job/{jobName}/status")
     fun getJobStatus(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "projectId", required = true)
+        @Parameter(name = "projectId", required = true)
         @HeaderParam(AUTH_HEADER_PROJECT_ID)
         projectId: String,
-        @Parameter(description = "构建id", required = true)
+        @Parameter(name = "构建id", required = true)
         @HeaderParam(AUTH_HEADER_BUILD_ID)
         buildId: String,
-        @Parameter(description = "jobName", required = true)
+        @Parameter(name = "jobName", required = true)
         @PathParam("jobName")
         jobName: String
     ): Result<DispatchBuildStatusResp>
@@ -95,19 +95,19 @@ interface BuildBaseJobResource {
     @GET
     @Path("/job/{jobName}/logs")
     fun getJobLogs(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "projectId", required = true)
+        @Parameter(name = "projectId", required = true)
         @HeaderParam(AUTH_HEADER_PROJECT_ID)
         projectId: String,
-        @Parameter(description = "构建id", required = true)
+        @Parameter(name = "构建id", required = true)
         @HeaderParam(AUTH_HEADER_BUILD_ID)
         buildId: String,
-        @Parameter(description = "jobName", required = true)
+        @Parameter(name = "jobName", required = true)
         @PathParam("jobName")
         jobName: String,
-        @Parameter(description = "sinceTime", required = true)
+        @Parameter(name = "sinceTime", required = true)
         @QueryParam("sinceTime")
         sinceTime: Int?
     ): Result<DispatchJobLogResp>
@@ -116,16 +116,16 @@ interface BuildBaseJobResource {
     @POST
     @Path("/image/buildPush")
     fun buildAndPushImage(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "projectId", required = true)
+        @Parameter(name = "projectId", required = true)
         @HeaderParam(AUTH_HEADER_PROJECT_ID)
         projectId: String,
-        @Parameter(description = "构建id", required = true)
+        @Parameter(name = "构建id", required = true)
         @HeaderParam(AUTH_HEADER_BUILD_ID)
         buildId: String,
-        @Parameter(description = "构建结构", required = true)
+        @Parameter(name = "构建结构", required = true)
         buildImageReq: DispatchBuildImageReq
     ): Result<DispatchTaskResp>
 }

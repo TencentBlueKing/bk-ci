@@ -63,7 +63,7 @@ interface OPProjectResource {
     @Path("/")
     @Operation(summary = "查询所有项目")
     fun list(
-        @Parameter(description = "userId", required = true)
+        @Parameter(name = "userId", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String
     ): Result<List<ProjectVO>>
@@ -72,13 +72,13 @@ interface OPProjectResource {
     @PUT
     @Path("/")
     fun updateProject(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String,
-        @Parameter(description = "PAAS_CC Token", required = true)
+        @Parameter(name = "PAAS_CC Token", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_ACCESS_TOKEN)
         accessToken: String,
-        @Parameter(description = "项目信息请求实体", required = true)
+        @Parameter(name = "项目信息请求实体", required = true)
         projectInfoRequest: OpProjectUpdateInfoRequest
     ): Result<Int>
 
@@ -93,46 +93,46 @@ interface OPProjectResource {
     @GET
     @Path("/list/project")
     fun getProjectList(
-        @Parameter(description = "项目名称", required = false)
+        @Parameter(name = "项目名称", required = false)
         @QueryParam(value = "project_name")
         projectName: String?,
-        @Parameter(description = "项目简称", required = false)
+        @Parameter(name = "项目简称", required = false)
         @QueryParam(value = "english_name")
         englishName: String?,
-        @Parameter(description = "项目类型", required = false)
+        @Parameter(name = "项目类型", required = false)
         @QueryParam(value = "project_type")
         projectType: Int?,
-        @Parameter(description = "是否保密", required = false)
+        @Parameter(name = "是否保密", required = false)
         @QueryParam(value = "is_secrecy")
         isSecrecy: Boolean?,
-        @Parameter(description = "注册人", required = false)
+        @Parameter(name = "注册人", required = false)
         @QueryParam(value = "creator")
         creator: String?,
-        @Parameter(description = "审批人", required = false)
+        @Parameter(name = "审批人", required = false)
         @QueryParam(value = "approver")
         approver: String?,
-        @Parameter(description = "审核状态", required = false)
+        @Parameter(name = "审核状态", required = false)
         @QueryParam(value = "approval_status")
         approvalStatus: Int?,
-        @Parameter(description = "偏移量", required = true)
+        @Parameter(name = "偏移量", required = true)
         @QueryParam(value = "offset")
         offset: Int,
-        @Parameter(description = "查询数量", required = true)
+        @Parameter(name = "查询数量", required = true)
         @QueryParam(value = "limit")
         limit: Int,
-        @Parameter(description = "是否灰度 true：是 false：否", required = true)
+        @Parameter(name = "是否灰度 true：是 false：否", required = true)
         @QueryParam(value = "is_gray")
         grayFlag: Boolean,
-        @Parameter(description = "是否灰度 true：是 false：否", required = false)
+        @Parameter(name = "是否灰度 true：是 false：否", required = false)
         @QueryParam(value = "is_codecc_gray")
         codeCCGrayFlag: Boolean = false,
-        @Parameter(description = "是否仓库灰度 true：是 false：否", required = true)
+        @Parameter(name = "是否仓库灰度 true：是 false：否", required = true)
         @QueryParam(value = "is_repo_gray")
         repoGrayFlag: Boolean = false,
-        @Parameter(description = "是否是云研发项目 true：是 false：否", required = true)
+        @Parameter(name = "是否是云研发项目 true：是 false：否", required = true)
         @QueryParam(value = "is_remotedev")
         remoteDevFlag: Boolean = false,
-        @Parameter(description = "运营产品ID", required = true)
+        @Parameter(name = "运营产品ID", required = true)
         @QueryParam(value = "product_id")
         productId: Int?,
         @Context request: HttpServletRequest
@@ -142,7 +142,7 @@ interface OPProjectResource {
     @PUT
     @Path("/setGrayProject")
     fun setGrayProject(
-        @Parameter(description = "灰度项目设置请求实体", required = true)
+        @Parameter(name = "灰度项目设置请求实体", required = true)
         projectGraySetRequest: OpProjectGraySetRequest
     ): Result<Boolean>
 
@@ -150,7 +150,7 @@ interface OPProjectResource {
     @PUT
     @Path("/codecc/setGrayProject")
     fun setCodeCCGrayProject(
-        @Parameter(description = "灰度项目设置请求实体", required = true)
+        @Parameter(name = "灰度项目设置请求实体", required = true)
         projectGraySetRequest: OpProjectGraySetRequest
     ): Result<Boolean>
 
@@ -158,10 +158,10 @@ interface OPProjectResource {
     @PUT
     @Path("/{projectId}/syn")
     fun synProject(
-        @Parameter(description = "项目code", required = true)
+        @Parameter(name = "项目code", required = true)
         @PathParam("projectId")
         projectCode: String,
-        @Parameter(description = "是否触发刷数据 true：是 false：否", example = false.toString())
+        @Parameter(name = "是否触发刷数据 true：是 false：否", example = false.toString())
         @QueryParam(value = "isRefresh")
         isRefresh: Boolean
     ): Result<Boolean>
@@ -170,7 +170,7 @@ interface OPProjectResource {
     @PUT
     @Path("/init/syn")
     fun synProjectInit(
-        @Parameter(description = "是否触发刷数据 true：是 false：否", example = false.toString())
+        @Parameter(name = "是否触发刷数据 true：是 false：否", example = false.toString())
         @QueryParam(value = "isRefresh")
         isRefresh: Boolean
     ): Result<List<String>>
@@ -179,13 +179,13 @@ interface OPProjectResource {
     @PUT
     @Path("/{projectId}/setProjectProperties")
     fun setProjectProperties(
-        @Parameter(description = "userId", required = true)
+        @Parameter(name = "userId", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String,
-        @Parameter(description = "项目code", required = true)
+        @Parameter(name = "项目code", required = true)
         @PathParam("projectId")
         projectCode: String,
-        @Parameter(description = "项目其他配置", required = true)
+        @Parameter(name = "项目其他配置", required = true)
         properties: ProjectProperties
     ): Result<Boolean>
 
@@ -193,10 +193,10 @@ interface OPProjectResource {
     @Path("/enable")
     @Operation(summary = "启用或停用项目")
     fun enable(
-        @Parameter(description = "待变更的新状态", required = true)
+        @Parameter(name = "待变更的新状态", required = true)
         @QueryParam("enabled")
         enabled: Boolean,
-        @Parameter(description = "项目ID列表", required = true)
+        @Parameter(name = "项目ID列表", required = true)
         englishNames: List<String>
     ): Result<Boolean>
 
@@ -204,10 +204,10 @@ interface OPProjectResource {
     @Path("{projectId}/updateProjectProductId")
     @Operation(summary = "修改项目关联产品")
     fun updateProjectProductId(
-        @Parameter(description = "项目code", required = true)
+        @Parameter(name = "项目code", required = true)
         @PathParam("projectId")
         projectCode: String,
-        @Parameter(description = "产品名称", required = true)
+        @Parameter(name = "产品名称", required = true)
         @QueryParam("productName")
         productName: String
     ): Result<Boolean>

@@ -56,7 +56,7 @@ interface ServiceNotifyResource {
     @POST
     @Path("/rtx")
     fun sendRtxNotify(
-        @Parameter(description = "RTX信息内容", required = true)
+        @Parameter(name = "RTX信息内容", required = true)
         message: RtxNotifyMessage
     ): Result<Boolean>
 
@@ -95,19 +95,19 @@ interface ServiceNotifyResource {
     @Path("/wework/media")
     @Consumes(MediaType.MULTIPART_FORM_DATA)
     fun sendWeworkMediaNotify(
-        @Parameter(description = "企业微信群Id", required = true)
+        @Parameter(name = "企业微信群Id", required = true)
         @QueryParam("receivers")
         receivers: String,
-        @Parameter(description = "接受人类型", required = true)
+        @Parameter(name = "接受人类型", required = true)
         @QueryParam("receiverType")
         receiverType: WeworkReceiverType,
-        @Parameter(description = "文件类型", required = true)
+        @Parameter(name = "文件类型", required = true)
         @QueryParam("mediaType")
         mediaType: WeworkMediaType,
-        @Parameter(description = "文件名称", required = true)
+        @Parameter(name = "文件名称", required = true)
         @QueryParam("mediaName")
         mediaName: String,
-        @Parameter(description = "文件", required = true)
+        @Parameter(name = "文件", required = true)
         @FormDataParam("file")
         inputStream: InputStream
     ): Result<Boolean>
@@ -116,16 +116,16 @@ interface ServiceNotifyResource {
     @POST
     @Path("/wework/text")
     fun sendWeworkTextNotify(
-        @Parameter(description = "企业微信群Id", required = true)
+        @Parameter(name = "企业微信群Id", required = true)
         @QueryParam("receivers")
         receivers: String,
-        @Parameter(description = "接受人类型", required = true)
+        @Parameter(name = "接受人类型", required = true)
         @QueryParam("receiverType")
         receiverType: WeworkReceiverType,
-        @Parameter(description = "文本类型", required = true)
+        @Parameter(name = "文本类型", required = true)
         @QueryParam("textType")
         textType: WeworkTextType,
-        @Parameter(description = "文件内容", required = true)
+        @Parameter(name = "文件内容", required = true)
         message: String
     ): Result<Boolean>
 
@@ -133,7 +133,7 @@ interface ServiceNotifyResource {
     @POST
     @Path("/wework/robot")
     fun sendWeworkRobotNotify(
-        @Parameter(description = "企微机器人信息内容", required = true)
+        @Parameter(name = "企微机器人信息内容", required = true)
         weworkRobotNotifyMessage: WeworkRobotNotifyMessage
     ): Result<Boolean>
 }

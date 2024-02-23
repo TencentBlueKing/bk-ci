@@ -28,12 +28,12 @@
 package com.tencent.devops.environment.pojo.job.jobcloudreq
 
 import com.fasterxml.jackson.annotation.JsonProperty
-import io.swagger.annotations.ApiModelProperty
+
 
 data class JobCloudIpInfo(
-    @ApiModelProperty(value = "云区域ID")
+    @get:Schema(title = "云区域ID")
     @JsonProperty("bk_cloud_id")
     var bkCloudId: Long?,
-    @ApiModelProperty(value = "IP地址")
+    @get:Schema(title = "IP地址")
     var ip: String? = ""
 )

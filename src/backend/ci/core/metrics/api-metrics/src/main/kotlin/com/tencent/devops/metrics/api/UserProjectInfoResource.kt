@@ -56,24 +56,24 @@ interface UserProjectInfoResource {
     @Path("/atom/list")
     @GET
     fun queryProjectAtomList(
-        @Parameter(description = "项目ID", required = true)
+        @Parameter(name = "项目ID", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_PROJECT_ID)
         @BkField(required = true)
         projectId: String,
-        @Parameter(description = "userId", required = true)
+        @Parameter(name = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         @BkField(required = true)
         userId: String,
-        @Parameter(description = "流水线ID", required = false)
+        @Parameter(name = "流水线ID", required = false)
         pipelineIds: List<String>?,
-        @Parameter(description = "页码", required = true, example = "1")
+        @Parameter(name = "页码", required = true, example = "1")
         @QueryParam("page")
         page: Int,
-        @Parameter(description = "每页大小", required = true, example = "10")
+        @Parameter(name = "每页大小", required = true, example = "10")
         @BkField(patternStyle = BkStyleEnum.PAGE_SIZE_STYLE, required = true)
         @QueryParam("pageSize")
         pageSize: Int,
-        @Parameter(description = "keyword", required = false)
+        @Parameter(name = "keyword", required = false)
         @QueryParam("keyword")
         keyword: String?
     ): Result<Page<AtomBaseInfoDO>>
@@ -82,23 +82,23 @@ interface UserProjectInfoResource {
     @Path("/pipeline/label/list")
     @GET
     fun queryProjectPipelineLabels(
-        @Parameter(description = "项目ID", required = true)
+        @Parameter(name = "项目ID", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_PROJECT_ID)
         @BkField(required = true)
         projectId: String,
-        @Parameter(description = "userId", required = true)
+        @Parameter(name = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         @BkField(required = true)
         userId: String,
-        @Parameter(description = "流水线ID", required = false)
+        @Parameter(name = "流水线ID", required = false)
         pipelineIds: List<String>?,
-        @Parameter(description = "keyword", required = false)
+        @Parameter(name = "keyword", required = false)
         @QueryParam("keyword")
         keyword: String?,
-        @Parameter(description = "页码", required = true, example = "1")
+        @Parameter(name = "页码", required = true, example = "1")
         @QueryParam("page")
         page: Int,
-        @Parameter(description = "每页大小", required = true, example = "10")
+        @Parameter(name = "每页大小", required = true, example = "10")
         @BkField(patternStyle = BkStyleEnum.PAGE_SIZE_STYLE, required = true)
         @QueryParam("pageSize")
         pageSize: Int
@@ -108,18 +108,18 @@ interface UserProjectInfoResource {
     @Path("/pipeline/errorType/list")
     @GET
     fun queryProjectPipelineErrorTypes(
-        @Parameter(description = "userId", required = true)
+        @Parameter(name = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         @BkField(required = true)
         userId: String,
-        @Parameter(description = "页码", required = true, example = "1")
+        @Parameter(name = "页码", required = true, example = "1")
         @QueryParam("page")
         page: Int,
-        @Parameter(description = "每页大小", required = true, example = "10")
+        @Parameter(name = "每页大小", required = true, example = "10")
         @BkField(patternStyle = BkStyleEnum.PAGE_SIZE_STYLE, required = true)
         @QueryParam("pageSize")
         pageSize: Int,
-        @Parameter(description = "keyword", required = false)
+        @Parameter(name = "keyword", required = false)
         @QueryParam("keyword")
         keyword: String?
     ): Result<Page<PipelineErrorTypeInfoDO>>

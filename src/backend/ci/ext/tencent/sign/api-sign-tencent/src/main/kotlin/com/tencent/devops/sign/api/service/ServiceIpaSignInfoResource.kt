@@ -49,7 +49,7 @@ interface ServiceIpaSignInfoResource {
     @POST
     @Path("/base64Encode")
     fun base64Encode(
-        @Parameter(description = "源IPA签名信息", required = true)
+        @Parameter(name = "源IPA签名信息", required = true)
         ipaSignInfo: IpaSignInfo
     ): Result<String?>
 
@@ -57,7 +57,7 @@ interface ServiceIpaSignInfoResource {
     @GET
     @Path("/base64Decode")
     fun base64Decode(
-        @Parameter(description = "源IPA签名信息", required = true)
+        @Parameter(name = "源IPA签名信息", required = true)
         ipaSignInfoEncode: String
     ): Result<IpaSignInfo?>
 }

@@ -51,19 +51,19 @@ interface OpImageDataTransferResource {
     @PUT
     @Path("/initClassifyAndCategory")
     fun initClassifyAndCategory(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "分类代码", required = false)
+        @Parameter(name = "分类代码", required = false)
         @QueryParam("classifyCode")
         classifyCode: String?,
-        @Parameter(description = "分类名称", required = false)
+        @Parameter(name = "分类名称", required = false)
         @QueryParam("classifyName")
         classifyName: String?,
-        @Parameter(description = "范畴代码", required = false)
+        @Parameter(name = "范畴代码", required = false)
         @QueryParam("categoryCode")
         categoryCode: String?,
-        @Parameter(description = "范畴名称", required = false)
+        @Parameter(name = "范畴名称", required = false)
         @QueryParam("categoryName")
         categoryName: String?
     ): Result<Int>
@@ -72,16 +72,16 @@ interface OpImageDataTransferResource {
     @PUT
     @Path("/transferImage")
     fun transferImage(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "项目编码", required = true)
+        @Parameter(name = "项目编码", required = true)
         @QueryParam("projectCode")
         projectCode: String,
-        @Parameter(description = "分类代码", required = false)
+        @Parameter(name = "分类代码", required = false)
         @QueryParam("classifyCode")
         classifyCode: String?,
-        @Parameter(description = "范畴代码", required = false)
+        @Parameter(name = "范畴代码", required = false)
         @QueryParam("categoryCode")
         categoryCode: String?
     ): Result<Int>
@@ -90,10 +90,10 @@ interface OpImageDataTransferResource {
     @PUT
     @Path("/batchRecheckByProject")
     fun batchRecheckByProject(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "项目编码", required = true)
+        @Parameter(name = "项目编码", required = true)
         @QueryParam("projectCode")
         projectCode: String
     ): Result<Int>
@@ -102,7 +102,7 @@ interface OpImageDataTransferResource {
     @PUT
     @Path("/batchRecheckAll")
     fun batchRecheckAll(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String
     ): Result<Int>

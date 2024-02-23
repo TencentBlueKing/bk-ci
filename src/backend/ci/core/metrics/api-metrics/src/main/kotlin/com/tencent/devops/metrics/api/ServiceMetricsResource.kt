@@ -58,15 +58,15 @@ interface ServiceMetricsResource {
     @Path("/summary_pipeline")
     @POST
     fun queryPipelineSumInfo(
-        @Parameter(description = "项目ID", required = true)
+        @Parameter(name = "项目ID", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_PROJECT_ID)
         @BkField(required = true)
         projectId: String,
-        @Parameter(description = "userId", required = true)
+        @Parameter(name = "userId", required = true)
         @BkField(required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "查询条件", required = false)
+        @Parameter(name = "查询条件", required = false)
         baseQueryReq: BaseQueryReqVO?
     ): Result<PipelineSumInfoVO>
 
@@ -74,18 +74,18 @@ interface ServiceMetricsResource {
     @Path("/summary_third_party")
     @GET
     fun queryPipelineSummaryInfo(
-        @Parameter(description = "项目ID", required = true)
+        @Parameter(name = "项目ID", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_PROJECT_ID)
         @BkField(required = true)
         projectId: String,
-        @Parameter(description = "userId", required = true)
+        @Parameter(name = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         @BkField(required = true)
         userId: String,
-        @Parameter(description = "开始时间", required = false)
+        @Parameter(name = "开始时间", required = false)
         @QueryParam("startTime")
         startTime: String?,
-        @Parameter(description = "结束时间", required = false)
+        @Parameter(name = "结束时间", required = false)
         @QueryParam("endTime")
         endTime: String?
     ): Result<ThirdPlatformOverviewInfoVO>
@@ -94,14 +94,14 @@ interface ServiceMetricsResource {
     @Path("/compliance_atom")
     @POST
     fun queryAtomComplianceInfo(
-        @Parameter(description = "userId", required = true)
+        @Parameter(name = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         @BkField(required = true)
         userId: String,
-        @Parameter(description = "插件code", required = true)
+        @Parameter(name = "插件code", required = true)
         @QueryParam("atomCode")
         atomCode: String,
-        @Parameter(description = "查询区间视图", required = true)
+        @Parameter(name = "查询区间视图", required = true)
         queryIntervalVO: QueryIntervalVO
     ): Result<ComplianceInfoDO?>
 }

@@ -54,19 +54,19 @@ interface AppExperienceGroupResource {
     @Path("/{projectId}/list")
     @GET
     fun list(
-        @Parameter(description = "用户Id", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户Id", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "项目Id", required = true)
+        @Parameter(name = "项目Id", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(description = "页数", required = false)
+        @Parameter(name = "页数", required = false)
         @QueryParam("page")
         page: Int?,
-        @Parameter(description = "每页数目(不传默认全部返回)", required = false)
+        @Parameter(name = "每页数目(不传默认全部返回)", required = false)
         @QueryParam("pageSize")
         pageSize: Int?,
-        @Parameter(description = "是否返回公开体验组", required = false, example = "false")
+        @Parameter(name = "是否返回公开体验组", required = false, example = "false")
         @QueryParam("returnPublic")
         returnPublic: Boolean?
     ): Result<Page<GroupSummaryWithPermission>>

@@ -56,10 +56,10 @@ interface ServiceTxUserResource {
     @Path("/projects/{projectCode}/roles")
     @Operation(summary = "获取项目指定角色用户")
     fun getProjectUserRoles(
-        @Parameter(description = "项目ID", required = true)
+        @Parameter(name = "项目ID", required = true)
         @PathParam("projectCode")
         projectCode: String,
-        @Parameter(description = "角色Id", required = true)
+        @Parameter(name = "角色Id", required = true)
         @QueryParam("roleId")
         roleId: BkAuthGroup
     ): Result<List<String>>
@@ -68,7 +68,7 @@ interface ServiceTxUserResource {
     @Path("/detail")
     @Operation(summary = "查询用户基本信息")
     fun get(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String
     ): Result<UserDeptDetail>
@@ -77,7 +77,7 @@ interface ServiceTxUserResource {
     @Path("/users")
     @Operation(summary = "查询用户基本信息")
     fun getUser(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String
     ): Result<Boolean>

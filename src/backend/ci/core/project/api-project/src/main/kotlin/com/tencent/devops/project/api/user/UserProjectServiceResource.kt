@@ -56,7 +56,7 @@ interface UserProjectServiceResource {
     fun getServiceList(
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String,
-        @Parameter(description = "项目ID", required = false)
+        @Parameter(name = "项目ID", required = false)
         @HeaderParam(AUTH_HEADER_DEVOPS_PROJECT_ID)
         projectId: String?
     ): Result<List<ServiceListVO>>
@@ -65,13 +65,13 @@ interface UserProjectServiceResource {
     @Path("/services/{service_id}")
     @Operation(summary = "用户修改关注")
     fun updateCollected(
-        @Parameter(description = "bk Token", required = true)
+        @Parameter(name = "bk Token", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String,
-        @Parameter(description = "服务ID")
+        @Parameter(name = "服务ID")
         @PathParam("service_id")
         serviceId: Long,
-        @Parameter(description = "关注/取消关注")
+        @Parameter(name = "关注/取消关注")
         @QueryParam("collector")
         collector: Boolean
     ): Result<Boolean>

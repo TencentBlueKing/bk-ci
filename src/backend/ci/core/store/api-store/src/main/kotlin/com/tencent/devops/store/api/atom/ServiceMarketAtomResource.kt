@@ -63,19 +63,19 @@ interface ServiceMarketAtomResource {
     @PUT
     @Path("/atomCodes/{atomCode}/versions/{version}")
     fun setAtomBuildStatusByAtomCode(
-        @Parameter(description = "插件代码", required = true)
+        @Parameter(name = "插件代码", required = true)
         @PathParam("atomCode")
         atomCode: String,
-        @Parameter(description = "版本号", required = true)
+        @Parameter(name = "版本号", required = true)
         @PathParam("version")
         version: String,
-        @Parameter(description = "用户Id", required = true)
+        @Parameter(name = "用户Id", required = true)
         @QueryParam("userId")
         userId: String,
-        @Parameter(description = "插件状态", required = true)
+        @Parameter(name = "插件状态", required = true)
         @QueryParam("atomStatus")
         atomStatus: AtomStatusEnum,
-        @Parameter(description = "状态描述", required = false)
+        @Parameter(name = "状态描述", required = false)
         @QueryParam("msg")
         msg: String?
     ): Result<Boolean>
@@ -84,7 +84,7 @@ interface ServiceMarketAtomResource {
     @GET
     @Path("/project/{projectCode}/projectElement")
     fun getProjectElements(
-        @Parameter(description = "项目编码", required = true)
+        @Parameter(name = "项目编码", required = true)
         @PathParam("projectCode")
         projectCode: String
     ): Result<Map<String/* atomCode */, String/* cnName */>>
@@ -93,7 +93,7 @@ interface ServiceMarketAtomResource {
     @GET
     @Path("/project/{projectCode}/projectElementInfo")
     fun getProjectElementsInfo(
-        @Parameter(description = "项目编码", required = true)
+        @Parameter(name = "项目编码", required = true)
         @PathParam("projectCode")
         projectCode: String
     ): Result<Map<String/* atomCode */, String/* installType */>>
@@ -105,10 +105,10 @@ interface ServiceMarketAtomResource {
         keyPrefixNames = ["ATOM", "{data.atomCode}", "{data.version}", "releaseInfo"]
     )
     fun getAtomByCode(
-        @Parameter(description = "插件代码", required = true)
+        @Parameter(name = "插件代码", required = true)
         @PathParam("atomCode")
         atomCode: String,
-        @Parameter(description = "用户名", required = true)
+        @Parameter(name = "用户名", required = true)
         @QueryParam("username")
         username: String
     ): Result<AtomVersion?>
@@ -117,16 +117,16 @@ interface ServiceMarketAtomResource {
     @GET
     @Path("/{atomCode}/pipelines")
     fun getAtomPipelinesByCode(
-        @Parameter(description = "插件代码", required = true)
+        @Parameter(name = "插件代码", required = true)
         @PathParam("atomCode")
         atomCode: String,
-        @Parameter(description = "用户名", required = true)
+        @Parameter(name = "用户名", required = true)
         @QueryParam("username")
         username: String,
-        @Parameter(description = "第几页", required = false, example = "1")
+        @Parameter(name = "第几页", required = false, example = "1")
         @QueryParam("page")
         page: Int?,
-        @Parameter(description = "每页多少条", required = false, example = "20")
+        @Parameter(name = "每页多少条", required = false, example = "20")
         @QueryParam("pageSize")
         pageSize: Int?
     ): Result<Page<AtomPipeline>>
@@ -135,13 +135,13 @@ interface ServiceMarketAtomResource {
     @POST
     @Path("/atom/install")
     fun installAtom(
-        @Parameter(description = "userId", required = true)
+        @Parameter(name = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "渠道类型", required = false)
+        @Parameter(name = "渠道类型", required = false)
         @QueryParam("channelCode")
         channelCode: ChannelCode? = ChannelCode.BS,
-        @Parameter(description = "安装插件到项目请求报文体", required = true)
+        @Parameter(name = "安装插件到项目请求报文体", required = true)
         installAtomReq: InstallAtomReq
     ): Result<Boolean>
 
@@ -149,10 +149,10 @@ interface ServiceMarketAtomResource {
     @POST
     @Path("/project/{projectCode}/getPostAtoms")
     fun getPostAtoms(
-        @Parameter(description = "项目编码", required = true)
+        @Parameter(name = "项目编码", required = true)
         @PathParam("projectCode")
         projectCode: String,
-        @Parameter(description = "查询插件信息", required = true)
+        @Parameter(name = "查询插件信息", required = true)
         atomItems: Set<AtomPostReqItem>
     ): Result<AtomPostResp>
 
@@ -160,7 +160,7 @@ interface ServiceMarketAtomResource {
     @POST
     @Path("/atoms/rely")
     fun getAtomRely(
-        @Parameter(description = "getRelyAtom", required = false)
+        @Parameter(name = "getRelyAtom", required = false)
         getRelyAtom: GetRelyAtom
     ): Result<Map<String, Map<String, Any>>?>
 }

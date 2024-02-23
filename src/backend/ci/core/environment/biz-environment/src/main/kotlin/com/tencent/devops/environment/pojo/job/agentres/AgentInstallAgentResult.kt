@@ -28,18 +28,17 @@
 package com.tencent.devops.environment.pojo.job.agentres
 
 import com.fasterxml.jackson.annotation.JsonProperty
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("安装agent的返回结果")
+@Schema(title = "安装agent的返回结果")
 data class AgentInstallAgentResult(
-    @ApiModelProperty(value = "任务ID")
+    @get:Schema(title = "任务ID")
     @JsonProperty("job_id")
     val jobId: Int,
-    @ApiModelProperty(value = "任务URL")
+    @get:Schema(title = "任务URL")
     @JsonProperty("job_url")
     val jobUrl: String,
-    @ApiModelProperty(value = "过滤失败的主机信息")
+    @get:Schema(title = "过滤失败的主机信息")
     @JsonProperty("ip_filter")
     val ipFilter: List<AgentIpFilter>
 )

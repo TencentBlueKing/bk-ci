@@ -27,29 +27,28 @@
 
 package com.tencent.devops.environment.pojo.job.agentreq
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("安装agent的请求信息中的 host信息")
+@Schema(title = "安装agent的请求信息中的 host信息")
 data class HostForInstallAgent(
-    @ApiModelProperty(value = "hostID")
+    @get:Schema(title = "hostID")
     val bkHostId: Int?,
-    @ApiModelProperty(value = "管控区域ID")
+    @get:Schema(title = "管控区域ID")
     val bkCloudId: Int?,
-    @ApiModelProperty(value = "是否自动选择安装通道，true-自动选择，false-读取installChannelId字段", required = true)
+    @get:Schema(title = "是否自动选择安装通道，true-自动选择，false-读取installChannelId字段", required = true)
     val isAutoChooseInstallChannelId: Boolean = true,
-    @ApiModelProperty(value = "安装通道ID")
+    @get:Schema(title = "安装通道ID")
     val installChannelId: Int?,
-    @ApiModelProperty(value = "内网IPV4地址，inner_ip和inner_ipv6必选其一")
+    @get:Schema(title = "内网IPV4地址，inner_ip和inner_ipv6必选其一")
     val innerIp: String?,
-    @ApiModelProperty(value = "操作系统，1：LINUX 2：WINDOWS 3：AIX 4：SOLARIS")
+    @get:Schema(title = "操作系统，1：LINUX 2：WINDOWS 3：AIX 4：SOLARIS")
     val osType: String?,
-    @ApiModelProperty(value = "认证类型，1：PASSWORD，密码认证 2: KEY，秘钥认证 3：TJJ_PASSWORD，默认为密码认证")
+    @get:Schema(title = "认证类型，1：PASSWORD，密码认证 2: KEY，秘钥认证 3：TJJ_PASSWORD，默认为密码认证")
     val authType: String?,
-    @ApiModelProperty(value = "账户")
+    @get:Schema(title = "账户")
     val account: String?,
-    @ApiModelProperty(value = "密码")
+    @get:Schema(title = "密码")
     val password: String?,
-    @ApiModelProperty(value = "密钥")
+    @get:Schema(title = "密钥")
     val key: String?
 )

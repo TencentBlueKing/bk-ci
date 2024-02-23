@@ -53,10 +53,10 @@ interface ServiceUserBlackListResource {
     @Operation(summary = "添加黑名单用户")
     fun createBlackListUser(
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
-        @Parameter(description = "待拉黑用户Id")
+        @Parameter(name = "待拉黑用户Id")
         userId: String,
         @QueryParam("remark")
-        @Parameter(description = "拉黑原因")
+        @Parameter(name = "拉黑原因")
         remark: String?
     ): Result<Boolean>
 
@@ -69,7 +69,7 @@ interface ServiceUserBlackListResource {
     @Operation(summary = "移出黑名单用户")
     fun removeBlackListUser(
         @QueryParam(AUTH_HEADER_DEVOPS_USER_ID)
-        @Parameter(description = "待移出用户Id")
+        @Parameter(name = "待移出用户Id")
         removeUserId: String
     ): Result<Boolean>
 }

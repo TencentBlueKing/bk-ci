@@ -30,10 +30,10 @@ interface OpExpertSupport {
     @PUT
     @Path("/update")
     fun updateExpertSup(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "更新数据")
+        @Parameter(name = "更新数据")
         data: UpdateSupportData
     ): Result<Boolean>
 
@@ -41,10 +41,10 @@ interface OpExpertSupport {
     @GET
     @Path("/fetchConfig")
     fun fetchSupportConfig(
-        @Parameter(description = "用户ID", required = true)
+        @Parameter(name = "用户ID", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "类型")
+        @Parameter(name = "类型")
         @QueryParam("type")
         type: ExpertSupportConfigType
     ): Result<List<FetchExpertSupResp>>
@@ -53,10 +53,10 @@ interface OpExpertSupport {
     @POST
     @Path("/addConfig")
     fun addSupConfig(
-        @Parameter(description = "用户ID", required = true)
+        @Parameter(name = "用户ID", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "创建数据")
+        @Parameter(name = "创建数据")
         data: CreateExpertSupportConfigData
     ): Result<Boolean>
 
@@ -64,7 +64,7 @@ interface OpExpertSupport {
     @DELETE
     @Path("/deleteConfig")
     fun deleteConfig(
-        @Parameter(description = "用户ID", required = true)
+        @Parameter(name = "用户ID", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
         @QueryParam("id")

@@ -1,13 +1,13 @@
 package com.tencent.devops.environment.pojo.job.jobcloudres
 
 import com.tencent.devops.environment.pojo.job.resp.Account
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
 data class JobCloudFileDestination(
-    @ApiModelProperty(value = "目标路径")
+    @get:Schema(title = "目标路径")
     val path: String,
-    @ApiModelProperty(value = "执行账号")
+    @get:Schema(title = "执行账号")
     val account: Account,
-    @ApiModelProperty(value = "分发目标机器")
+    @get:Schema(title = "分发目标机器")
     val server: JobCloudVariableServer
 )

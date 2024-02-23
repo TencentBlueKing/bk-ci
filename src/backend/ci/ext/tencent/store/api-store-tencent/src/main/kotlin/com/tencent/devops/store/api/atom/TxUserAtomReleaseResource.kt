@@ -53,16 +53,16 @@ interface TxUserAtomReleaseResource {
     @PUT
     @Path("/desk/atom/release/rebuild/{atomId}")
     fun rebuild(
-        @Parameter(description = "userId", required = true)
+        @Parameter(name = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "项目代码", required = true)
+        @Parameter(name = "项目代码", required = true)
         @QueryParam("projectId")
         projectId: String,
-        @Parameter(description = "atomId", required = true)
+        @Parameter(name = "atomId", required = true)
         @PathParam("atomId")
         atomId: String,
-        @Parameter(description = "插件重新构建请求报文体", required = true)
+        @Parameter(name = "插件重新构建请求报文体", required = true)
         atomRebuildRequest: AtomRebuildRequest
     ): Result<Boolean>
 }

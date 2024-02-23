@@ -54,10 +54,10 @@ interface OldServiceNodeResource {
     @GET
     @Path("/{projectId}/listUsableServerNodes")
     fun listUsableServerNodes(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "项目ID", required = true)
+        @Parameter(name = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String
     ): Result<List<NodeWithPermission>>
@@ -66,13 +66,13 @@ interface OldServiceNodeResource {
     @POST
     @Path("/{projectId}/listByHashIds")
     fun listByHashIds(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "项目ID", required = true)
+        @Parameter(name = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(description = "节点 hashIds", required = true)
+        @Parameter(name = "节点 hashIds", required = true)
         nodeHashIds: List<String>
     ): Result<List<NodeWithPermission>>
 
@@ -80,13 +80,13 @@ interface OldServiceNodeResource {
     @POST
     @Path("/{projectId}/listRawByHashIds")
     fun listRawByHashIds(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "项目ID", required = true)
+        @Parameter(name = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(description = "节点 hashIds", required = true)
+        @Parameter(name = "节点 hashIds", required = true)
         nodeHashIds: List<String>
     ): Result<List<NodeBaseInfo>>
 
@@ -94,13 +94,13 @@ interface OldServiceNodeResource {
     @POST
     @Path("/{projectId}/listRawByEnvHashIds")
     fun listRawByEnvHashIds(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "项目ID", required = true)
+        @Parameter(name = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(description = "环境hashIds", required = true)
+        @Parameter(name = "环境hashIds", required = true)
         envHashIds: List<String>
     ): Result<Map<String, List<NodeBaseInfo>>>
 
@@ -108,13 +108,13 @@ interface OldServiceNodeResource {
     @GET
     @Path("/{projectId}/listNodeByType/{type}")
     fun listNodeByType(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "项目ID", required = true)
+        @Parameter(name = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(description = "操作系统", required = true)
+        @Parameter(name = "操作系统", required = true)
         @PathParam("type")
         type: String
     ): Result<List<NodeBaseInfo>>
@@ -123,10 +123,10 @@ interface OldServiceNodeResource {
     @GET
     @Path("/{projectId}/listNodeByNodeType/{nodeType}")
     fun listNodeByNodeType(
-        @Parameter(description = "项目ID", required = true)
+        @Parameter(name = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(description = "节点类型", required = true)
+        @Parameter(name = "节点类型", required = true)
         @PathParam("nodeType")
         nodeType: NodeType
     ): Result<List<NodeBaseInfo>>

@@ -58,10 +58,10 @@ interface ServiceLogPrintResource {
     @POST
     @Path("/")
     fun addLogLine(
-        @Parameter(description = "构建ID", required = true)
+        @Parameter(name = "构建ID", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_BUILD_ID)
         buildId: String,
-        @Parameter(description = "一条日志", required = true)
+        @Parameter(name = "一条日志", required = true)
         logMessage: LogMessage
     ): Result<Boolean>
 
@@ -69,10 +69,10 @@ interface ServiceLogPrintResource {
     @POST
     @Path("/multi")
     fun addLogMultiLine(
-        @Parameter(description = "构建ID", required = true)
+        @Parameter(name = "构建ID", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_BUILD_ID)
         buildId: String,
-        @Parameter(description = "多条日志列表", required = true)
+        @Parameter(name = "多条日志列表", required = true)
         logMessages: List<LogMessage>
     ): Result<Boolean>
 
@@ -80,19 +80,19 @@ interface ServiceLogPrintResource {
     @POST
     @Path("/status")
     fun addLogStatus(
-        @Parameter(description = "构建ID", required = true)
+        @Parameter(name = "构建ID", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_BUILD_ID)
         buildId: String,
-        @Parameter(description = "分辨插件的tag，默认填对应插件id", required = false)
+        @Parameter(name = "分辨插件的tag，默认填对应插件id", required = false)
         @QueryParam("tag")
         tag: String?,
-        @Parameter(description = "插件内的分类的子tag，默认为空", required = false)
+        @Parameter(name = "插件内的分类的子tag，默认为空", required = false)
         @QueryParam("subTag")
         subTag: String?,
-        @Parameter(description = "job id或者container的34位id", required = false)
+        @Parameter(name = "job id或者container的34位id", required = false)
         @QueryParam("jobId")
         jobId: String?,
-        @Parameter(description = "执行次数", required = false)
+        @Parameter(name = "执行次数", required = false)
         @QueryParam("executeCount")
         executeCount: Int?
     ): Result<Boolean>
@@ -101,25 +101,25 @@ interface ServiceLogPrintResource {
     @PUT
     @Path("/status")
     fun updateLogStatus(
-        @Parameter(description = "构建ID", required = true)
+        @Parameter(name = "构建ID", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_BUILD_ID)
         buildId: String,
-        @Parameter(description = "是否已构建完成", required = true)
+        @Parameter(name = "是否已构建完成", required = true)
         @QueryParam("finished")
         finished: Boolean,
-        @Parameter(description = "分辨插件的tag，默认填对应插件id", required = false)
+        @Parameter(name = "分辨插件的tag，默认填对应插件id", required = false)
         @QueryParam("tag")
         tag: String?,
-        @Parameter(description = "插件内的分类的子tag，默认为空", required = false)
+        @Parameter(name = "插件内的分类的子tag，默认为空", required = false)
         @QueryParam("subTag")
         subTag: String?,
-        @Parameter(description = "job id或者container的34位id", required = false)
+        @Parameter(name = "job id或者container的34位id", required = false)
         @QueryParam("jobId")
         jobId: String?,
-        @Parameter(description = "执行次数", required = false)
+        @Parameter(name = "执行次数", required = false)
         @QueryParam("executeCount")
         executeCount: Int?,
-        @Parameter(description = "插件的存储模式", required = false)
+        @Parameter(name = "插件的存储模式", required = false)
         @QueryParam("logStorageMode")
         logStorageMode: LogStorageMode? = LogStorageMode.UPLOAD
     ): Result<Boolean>

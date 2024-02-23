@@ -26,16 +26,16 @@ interface UserRemoteDevSupResource {
     @GET
     @Path("/devcloud/cvmList")
     fun cvmList(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "项目ID", required = true)
+        @Parameter(name = "项目ID", required = true)
         @QueryParam("projectId")
         projectId: String,
-        @Parameter(description = "page", required = true)
+        @Parameter(name = "page", required = true)
         @QueryParam("page")
         page: Int = 1,
-        @Parameter(description = "pageSize", required = true)
+        @Parameter(name = "pageSize", required = true)
         @QueryParam("pageSize")
         pageSize: Int = 20
     ): Result<Page<DevcloudCVMData>?>

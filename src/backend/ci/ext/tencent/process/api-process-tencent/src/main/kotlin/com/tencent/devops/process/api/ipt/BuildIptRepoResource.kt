@@ -56,7 +56,7 @@ interface BuildIptRepoResource {
     fun getCommitBuildArtifactorytInfo(
         @HeaderParam(AUTH_HEADER_PROJECT_ID)
         projectId: String,
-        @Parameter(description = "构建ID", required = true)
+        @Parameter(name = "构建ID", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_BUILD_ID)
         buildId: String,
         @PathParam("pipelineId")
@@ -65,7 +65,7 @@ interface BuildIptRepoResource {
         userId: String,
         @PathParam("commitId")
         commitId: String,
-        @Parameter(description = "路径", required = true)
+        @Parameter(name = "路径", required = true)
         @QueryParam("filePath")
         filePath: String?
     ): Result<IptBuildArtifactoryInfo>

@@ -57,16 +57,16 @@ interface UserTGitResource {
     @GET
     @Path("/getProject")
     fun getProject(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "用户ID", required = true)
+        @Parameter(name = "用户ID", required = true)
         @QueryParam("projectId")
         projectId: String,
-        @Parameter(description = "repo hash iD", required = false)
+        @Parameter(name = "repo hash iD", required = false)
         @QueryParam("repoHashId")
         repoHashId: String?,
-        @Parameter(description = "工蜂代码库名字", required = false)
+        @Parameter(name = "工蜂代码库名字", required = false)
         @QueryParam("search")
         search: String? = null
     ): Result<AuthorizeResult>
@@ -75,13 +75,13 @@ interface UserTGitResource {
     @GET
     @Path("/getProjectList")
     fun getProjectList(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "第几页", required = false)
+        @Parameter(name = "第几页", required = false)
         @QueryParam("page")
         page: Int?,
-        @Parameter(description = "每页条数", required = false)
+        @Parameter(name = "每页条数", required = false)
         @QueryParam("pageSize")
         pageSize: Int?
     ): Result<List<Project>>
@@ -90,16 +90,16 @@ interface UserTGitResource {
     @GET
     @Path("/getBranch")
     fun getBranch(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "仓库标识", required = true)
+        @Parameter(name = "仓库标识", required = true)
         @QueryParam("repository")
         repository: String,
-        @Parameter(description = "第几页", required = false)
+        @Parameter(name = "第几页", required = false)
         @QueryParam("page")
         page: Int?,
-        @Parameter(description = "每页条数", required = false)
+        @Parameter(name = "每页条数", required = false)
         @QueryParam("pageSize")
         pageSize: Int?
     ): Result<List<GitBranch>>
@@ -108,16 +108,16 @@ interface UserTGitResource {
     @GET
     @Path("/getTag")
     fun getTag(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "仓库标识", required = true)
+        @Parameter(name = "仓库标识", required = true)
         @QueryParam("repository")
         repository: String,
-        @Parameter(description = "第几页", required = false)
+        @Parameter(name = "第几页", required = false)
         @QueryParam("page")
         page: Int?,
-        @Parameter(description = "每页条数", required = false)
+        @Parameter(name = "每页条数", required = false)
         @QueryParam("pageSize")
         pageSize: Int?
     ): Result<List<GitTag>>
@@ -126,7 +126,7 @@ interface UserTGitResource {
     @DELETE
     @Path("/deleteToken")
     fun deleteToken(
-        @Parameter(description = "用户ID", required = true)
+        @Parameter(name = "用户ID", required = true)
         @QueryParam("userId")
         userId: String
     ): Result<Int>
@@ -135,22 +135,22 @@ interface UserTGitResource {
     @GET
     @Path("/isOauth")
     fun isOAuth(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "重定向url类型", required = false)
+        @Parameter(name = "重定向url类型", required = false)
         @QueryParam("redirectUrlType")
         redirectUrlType: RedirectUrlTypeEnum?,
-        @Parameter(description = "oauth认证成功后重定向到前端的地址", required = false)
+        @Parameter(name = "oauth认证成功后重定向到前端的地址", required = false)
         @QueryParam("redirectUrl")
         redirectUrl: String?,
-        @Parameter(description = "工蜂项目Id", required = false)
+        @Parameter(name = "工蜂项目Id", required = false)
         @QueryParam("gitProjectId")
         gitProjectId: Long? = null,
-        @Parameter(description = "是否刷新token", required = false)
+        @Parameter(name = "是否刷新token", required = false)
         @QueryParam("refreshToken")
         refreshToken: Boolean? = false,
-        @Parameter(description = "是否校验token(refreshToken=true时不做校验)", required = false)
+        @Parameter(name = "是否校验token(refreshToken=true时不做校验)", required = false)
         @QueryParam("validationCheck")
         validationCheck: Boolean? = false
     ): Result<AuthorizeResult>

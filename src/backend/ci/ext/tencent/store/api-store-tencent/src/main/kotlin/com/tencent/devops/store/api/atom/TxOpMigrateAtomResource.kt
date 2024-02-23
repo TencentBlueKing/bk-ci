@@ -48,7 +48,7 @@ interface TxOpMigrateAtomResource {
     @PUT
     @Path("/pkg/migrate")
     fun migrateAtomPkg(
-        @Parameter(description = "结束时间", required = true)
+        @Parameter(name = "结束时间", required = true)
         @QueryParam("endTime")
         endTime: String
     ): Result<Boolean>

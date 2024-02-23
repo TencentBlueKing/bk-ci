@@ -48,7 +48,7 @@ interface ServiceShortUrlResource {
     @Path("/createShortUrl")
     @POST
     fun createShortUrl(
-        @Parameter(description = "请求", required = true)
+        @Parameter(name = "请求", required = true)
         request: CreateShortUrlRequest
     ): Result<String>
 }

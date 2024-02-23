@@ -55,7 +55,7 @@ interface ServiceArchiveAtomResource {
     @GET
     @Path("/atom/file/content")
     fun getAtomFileContent(
-        @Parameter(description = "文件路径", required = true)
+        @Parameter(name = "文件路径", required = true)
         @QueryParam("filePath")
         filePath: String
     ): Result<String>
@@ -64,7 +64,7 @@ interface ServiceArchiveAtomResource {
     @GET
     @Path("/atom/file/download")
     fun downloadAtomFile(
-        @Parameter(description = "文件路径", required = true)
+        @Parameter(name = "文件路径", required = true)
         @QueryParam("filePath")
         filePath: String,
         @Context
@@ -75,13 +75,13 @@ interface ServiceArchiveAtomResource {
     @DELETE
     @Path("/atom/file/delete")
     fun deleteAtomFile(
-        @Parameter(description = "用户ID", required = true)
+        @Parameter(name = "用户ID", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "项目编码", required = true)
+        @Parameter(name = "项目编码", required = true)
         @QueryParam("projectCode")
         projectCode: String,
-        @Parameter(description = "插件代码", required = true)
+        @Parameter(name = "插件代码", required = true)
         @QueryParam("atomCode")
         atomCode: String
     ): Result<Boolean>
@@ -90,19 +90,19 @@ interface ServiceArchiveAtomResource {
     @PUT
     @Path("/projectCodes/{projectCode}/atoms/{atomCode}/file/content")
     fun updateArchiveFile(
-        @Parameter(description = "项目编码", required = true)
+        @Parameter(name = "项目编码", required = true)
         @PathParam("projectCode")
         projectCode: String,
-        @Parameter(description = "插件编码", required = true)
+        @Parameter(name = "插件编码", required = true)
         @PathParam("atomCode")
         atomCode: String,
-        @Parameter(description = "插件版本号", required = true)
+        @Parameter(name = "插件版本号", required = true)
         @QueryParam("version")
         version: String,
-        @Parameter(description = "文件名", required = true)
+        @Parameter(name = "文件名", required = true)
         @QueryParam("fileName")
         fileName: String,
-        @Parameter(description = "文件内容", required = true)
+        @Parameter(name = "文件内容", required = true)
         content: String
     ): Result<Boolean>
 }

@@ -51,13 +51,13 @@ interface RemoteEnvResource {
     @GET
     @Path("/projects/{projectId}/list/")
     fun listEnvForAuth(
-        @Parameter(description = "项目ID", required = true)
+        @Parameter(name = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(description = "起始位置", required = false)
+        @Parameter(name = "起始位置", required = false)
         @QueryParam("offset")
         offset: Int? = null,
-        @Parameter(description = "步长", required = false)
+        @Parameter(name = "步长", required = false)
         @QueryParam("limit")
         limit: Int? = null
     ): Result<Page<EnvWithPermission>>
@@ -66,7 +66,7 @@ interface RemoteEnvResource {
     @GET
     @Path("/infos")
     fun getEnvInfos(
-        @Parameter(description = "节点Id串", required = true)
+        @Parameter(name = "节点Id串", required = true)
         @QueryParam("envIds")
         envIds: List<String>
     ): Result<List<EnvWithPermission>>
@@ -75,16 +75,16 @@ interface RemoteEnvResource {
     @GET
     @Path("/projects/{projectId}/searchByName/")
     fun searchByName(
-        @Parameter(description = "项目ID", required = true)
+        @Parameter(name = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(description = "起始位置", required = false)
+        @Parameter(name = "起始位置", required = false)
         @QueryParam("offset")
         offset: Int? = null,
-        @Parameter(description = "步长", required = false)
+        @Parameter(name = "步长", required = false)
         @QueryParam("limit")
         limit: Int? = null,
-        @Parameter(description = "环境名称", required = true)
+        @Parameter(name = "环境名称", required = true)
         @QueryParam("envName")
         envName: String
     ): Result<Page<EnvWithPermission>>

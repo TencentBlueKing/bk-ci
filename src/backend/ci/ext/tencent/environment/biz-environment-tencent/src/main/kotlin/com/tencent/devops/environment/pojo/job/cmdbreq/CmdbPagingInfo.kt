@@ -1,16 +1,16 @@
 package com.tencent.devops.environment.pojo.job.cmdbreq
 
 import com.fasterxml.jackson.annotation.JsonProperty
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
 data class CmdbPagingInfo(
-    @ApiModelProperty(value = "起始索引", required = true)
+    @get:Schema(title = "起始索引", required = true)
     @JsonProperty("start_index")
     val startIndex: Int?,
-    @ApiModelProperty(value = "页面大小", required = true)
+    @get:Schema(title = "页面大小", required = true)
     @JsonProperty("page_size")
     val pageSize: Int?,
-    @ApiModelProperty(value = "是否返回TotalRows", notes = "1-返回, 0-不返回（默认）", required = true)
+    @get:Schema(title = "是否返回TotalRows", description = "1-返回, 0-不返回（默认）", required = true)
     @JsonProperty("return_total_rows")
     val returnTotalRows: Int?
 )

@@ -27,46 +27,46 @@ interface ApigwTXEnvironmentResourceV4 {
     @POST
     @Path("/projects/{projectId}/add_cmdb_nodes")
     fun addCmdbNodes(
-        @Parameter(description = "appCode", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
+        @Parameter(name = "appCode", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
         appCode: String?,
-        @Parameter(description = "apigw Type", required = true)
+        @Parameter(name = "apigw Type", required = true)
         @PathParam("apigwType")
         apigwType: String?,
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "项目ID(项目英文名)", required = true)
+        @Parameter(name = "项目ID(项目英文名)", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(description = "CMDB节点 IP", required = true)
+        @Parameter(name = "CMDB节点 IP", required = true)
         nodeIps: List<String>
     ): Result<AddCmdbNodesRes>
 
-    @ApiOperation("部署节点cmdb状态轮询接口", tags = ["v4_app_job_check_deploy_nodes_in_cmdb"])
+    @Operation(summary = "部署节点cmdb状态轮询接口", tags = ["v4_app_job_check_deploy_nodes_in_cmdb"])
     @POST
     @Path("/stock_data_update/check_deploy_nodes_in_cmdb")
     fun checkDeployNodesInCmdb(
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String
+        userId: String = AUTH_HEADER_USER_ID_DEFAULT_VALUE
     )
 
-    @ApiOperation("添加不在cc中的部署节点到cc中的接口", tags = ["v4_app_job_add_nodes_to_cc"])
+    @Operation(summary = "添加不在cc中的部署节点到cc中的接口", tags = ["v4_app_job_add_nodes_to_cc"])
     @POST
     @Path("/stock_data_update/add_nodes_to_cc")
     fun addNodesToCC(
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String
+        userId: String = AUTH_HEADER_USER_ID_DEFAULT_VALUE
     )
 
-    @ApiOperation("gse agent状态版本更新接口", tags = ["v4_app_job_update_gse_agent"])
+    @Operation(summary = "gse agent状态版本更新接口", tags = ["v4_app_job_update_gse_agent"])
     @POST
     @Path("/stock_data_update/update_gse_agent")
     fun updateGseAgent(
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String
+        userId: String = AUTH_HEADER_USER_ID_DEFAULT_VALUE
     )
 }

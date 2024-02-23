@@ -28,14 +28,14 @@
 package com.tencent.devops.environment.pojo.job.agentres
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class ExtraData(
-    @ApiModelProperty(value = "")
+    @get:Schema(title = "")
     val btSpeedLimit: String?,
-    @ApiModelProperty(value = "")
+    @get:Schema(title = "")
     val enableCompression: Boolean?,
-    @ApiModelProperty(value = "")
+    @get:Schema(title = "")
     val peerExchangeSwitchForAgent: Int?
 )

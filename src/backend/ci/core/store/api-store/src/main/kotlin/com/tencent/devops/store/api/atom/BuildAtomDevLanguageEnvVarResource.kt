@@ -51,13 +51,13 @@ interface BuildAtomDevLanguageEnvVarResource {
     @GET
     @Path("/languages/{language}/types/{buildHostType}/oss/{buildHostOs}")
     fun getAtomDevLanguageEnvVars(
-        @Parameter(description = "开发语言", required = true)
+        @Parameter(name = "开发语言", required = true)
         @PathParam("language")
         language: String,
-        @Parameter(description = "适用构建机类型", required = true)
+        @Parameter(name = "适用构建机类型", required = true)
         @PathParam("buildHostType")
         buildHostType: BuildHostTypeEnum,
-        @Parameter(description = "适用构建机操作系统", required = true)
+        @Parameter(name = "适用构建机操作系统", required = true)
         @PathParam("buildHostOs")
         buildHostOs: BuildHostOsEnum
     ): Result<List<AtomDevLanguageEnvVar>?>

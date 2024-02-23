@@ -52,13 +52,13 @@ interface UserExtServiceRepositoryResource {
     @PUT
     @Path("/{serviceCode}")
     fun changeServiceRepositoryUserInfo(
-        @Parameter(description = "userId", required = true)
+        @Parameter(name = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "项目代码", required = true)
+        @Parameter(name = "项目代码", required = true)
         @QueryParam("projectCode")
         projectCode: String,
-        @Parameter(description = "扩展代码", required = true)
+        @Parameter(name = "扩展代码", required = true)
         @PathParam("serviceCode")
         serviceCode: String
     ): Result<Boolean>
@@ -67,10 +67,10 @@ interface UserExtServiceRepositoryResource {
     @GET
     @Path("/serviceCodes/{serviceCode}/readme/")
     fun getReadme(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "扩展服务Code ", required = true)
+        @Parameter(name = "扩展服务Code ", required = true)
         @PathParam("serviceCode")
         serviceCode: String
     ): Result<String?>

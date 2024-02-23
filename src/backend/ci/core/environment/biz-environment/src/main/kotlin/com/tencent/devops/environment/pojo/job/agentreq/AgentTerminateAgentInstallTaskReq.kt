@@ -28,10 +28,10 @@
 package com.tencent.devops.environment.pojo.job.agentreq
 
 import com.fasterxml.jackson.annotation.JsonProperty
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
 data class AgentTerminateAgentInstallTaskReq(
-    @ApiModelProperty(value = "实例ID列表")
+    @get:Schema(title = "实例ID列表")
     @JsonProperty("instance_id_list")
     val instanceIdList: List<String>
 )

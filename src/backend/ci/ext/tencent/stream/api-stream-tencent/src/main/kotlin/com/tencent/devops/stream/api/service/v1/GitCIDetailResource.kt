@@ -59,16 +59,16 @@ interface GitCIDetailResource {
     @GET
     @Path("/detail/{gitProjectId}")
     fun getLatestBuildDetail(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "gitProjectId", required = true)
+        @Parameter(name = "gitProjectId", required = true)
         @PathParam("gitProjectId")
         gitProjectId: Long,
-        @Parameter(description = "pipelineId", required = false)
+        @Parameter(name = "pipelineId", required = false)
         @QueryParam("pipelineId")
         pipelineId: String?,
-        @Parameter(description = "buildId", required = false)
+        @Parameter(name = "buildId", required = false)
         @QueryParam("buildId")
         buildId: String?
     ): Result<V1GitCIModelDetail?>
@@ -77,22 +77,22 @@ interface GitCIDetailResource {
     @Path("/artifactories/projects/{gitProjectId}/search")
     @GET
     fun search(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "gitProjectId", required = true)
+        @Parameter(name = "gitProjectId", required = true)
         @PathParam("gitProjectId")
         gitProjectId: Long,
-        @Parameter(description = "pipelineId", required = true)
+        @Parameter(name = "pipelineId", required = true)
         @QueryParam("pipelineId")
         pipelineId: String,
-        @Parameter(description = "buildId", required = true)
+        @Parameter(name = "buildId", required = true)
         @QueryParam("buildId")
         buildId: String,
-        @Parameter(description = "第几页", required = false, example = "1")
+        @Parameter(name = "第几页", required = false, example = "1")
         @QueryParam("page")
         page: Int?,
-        @Parameter(description = "每页多少条(不传默认全部返回)", required = false, example = "20")
+        @Parameter(name = "每页多少条(不传默认全部返回)", required = false, example = "20")
         @QueryParam("pageSize")
         pageSize: Int?
     ): Result<FileInfoPage<FileInfo>>
@@ -101,19 +101,19 @@ interface GitCIDetailResource {
     @Path("/artifactories/projects/{gitProjectId}/artifactoryType/{artifactoryType}/downloadUrl")
     @POST
     fun downloadUrl(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "工蜂用户ID", required = true, example = "0")
+        @Parameter(name = "工蜂用户ID", required = true, example = "0")
         @HeaderParam("X-GIT-UID")
         gitUserId: String,
-        @Parameter(description = "gitProjectId", required = true)
+        @Parameter(name = "gitProjectId", required = true)
         @PathParam("gitProjectId")
         gitProjectId: Long,
-        @Parameter(description = "版本仓库类型", required = true)
+        @Parameter(name = "版本仓库类型", required = true)
         @PathParam("artifactoryType")
         artifactoryType: ArtifactoryType,
-        @Parameter(description = "路径", required = true)
+        @Parameter(name = "路径", required = true)
         @QueryParam("path")
         path: String
     ): Result<Url>
@@ -122,16 +122,16 @@ interface GitCIDetailResource {
     @Path("/projects/{gitProjectId}/pipelines/{pipelineId}/builds/{buildId}/report")
     @GET
     fun getReports(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "gitProjectId", required = true)
+        @Parameter(name = "gitProjectId", required = true)
         @PathParam("gitProjectId")
         gitProjectId: Long,
-        @Parameter(description = "流水线ID", required = true)
+        @Parameter(name = "流水线ID", required = true)
         @PathParam("pipelineId")
         pipelineId: String,
-        @Parameter(description = "构建ID", required = true)
+        @Parameter(name = "构建ID", required = true)
         @PathParam("buildId")
         buildId: String
     ): Result<List<Report>>

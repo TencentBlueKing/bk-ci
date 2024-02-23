@@ -62,46 +62,46 @@ interface ServicePipelineViewResource {
     @GET
     @Path("/listViewPipelines")
     fun listViewPipelines(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "项目ID", required = true)
+        @Parameter(name = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(description = "第几页", required = false, example = "1")
+        @Parameter(name = "第几页", required = false, example = "1")
         @QueryParam("page")
         page: Int?,
-        @Parameter(description = "每页多少条", required = false, example = "20")
+        @Parameter(name = "每页多少条", required = false, example = "20")
         @QueryParam("pageSize")
         pageSize: Int?,
-        @Parameter(description = "流水线排序", required = false, example = "CREATE_TIME")
+        @Parameter(name = "流水线排序", required = false, example = "CREATE_TIME")
         @QueryParam("sortType")
         sortType: PipelineSortType? = PipelineSortType.CREATE_TIME,
-        @Parameter(description = "按流水线过滤", required = false)
+        @Parameter(name = "按流水线过滤", required = false)
         @QueryParam("filterByPipelineName")
         filterByPipelineName: String?,
-        @Parameter(description = "按创建人过滤", required = false)
+        @Parameter(name = "按创建人过滤", required = false)
         @QueryParam("filterByCreator")
         filterByCreator: String?,
-        @Parameter(description = "按标签过滤", required = false)
+        @Parameter(name = "按标签过滤", required = false)
         @QueryParam("filterByLabels")
         filterByLabels: String?,
-        @Parameter(description = "按视图过滤", required = false)
+        @Parameter(name = "按视图过滤", required = false)
         @QueryParam("filterByViewIds")
         filterByViewIds: String? = null,
-        @Parameter(description = "用户视图ID,表示用户当前所在视图 viewId和viewName 选其一填入", required = false)
+        @Parameter(name = "用户视图ID,表示用户当前所在视图 viewId和viewName 选其一填入", required = false)
         @QueryParam("viewId")
         viewId: String?,
-        @Parameter(description = "用户视图名称,表示用户当前所在视图 viewId和viewName 选其一填入", required = false)
+        @Parameter(name = "用户视图名称,表示用户当前所在视图 viewId和viewName 选其一填入", required = false)
         @QueryParam("viewName")
         viewName: String?,
-        @Parameter(description = "维度是否为项目,和viewName搭配使用", required = false)
+        @Parameter(name = "维度是否为项目,和viewName搭配使用", required = false)
         @QueryParam("isProject")
         isProject: Boolean?,
-        @Parameter(description = "排序规则", required = false)
+        @Parameter(name = "排序规则", required = false)
         @QueryParam("collation")
         collation: PipelineCollation?,
-        @Parameter(description = "是否展示已删除流水线", required = false)
+        @Parameter(name = "是否展示已删除流水线", required = false)
         @QueryParam("showDelete")
         showDelete: Boolean? = false
     ): Result<PipelineViewPipelinePage<Pipeline>>
@@ -110,17 +110,17 @@ interface ServicePipelineViewResource {
     @GET
     @Path("/list")
     fun listView(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "项目ID", required = true)
+        @Parameter(name = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
         @QueryParam("projected")
-        @Parameter(description = "是否为项目流水线组 , 为空时不区分", required = false)
+        @Parameter(name = "是否为项目流水线组 , 为空时不区分", required = false)
         projected: Boolean? = null,
         @QueryParam("viewType")
-        @Parameter(description = "流水线组类型 , 1--动态, 2--静态 , 为空时不区分", required = false)
+        @Parameter(name = "流水线组类型 , 1--动态, 2--静态 , 为空时不区分", required = false)
         viewType: Int? = null
     ): Result<List<PipelineNewViewSummary>>
 
@@ -128,10 +128,10 @@ interface ServicePipelineViewResource {
     @POST
     @Path("")
     fun addView(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "项目ID", required = true)
+        @Parameter(name = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
         pipelineView: PipelineViewForm
@@ -141,18 +141,18 @@ interface ServicePipelineViewResource {
     @GET
     @Path("")
     fun getView(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
         @PathParam("projectId")
         projectId: String,
-        @Parameter(description = "用户视图ID,表示用户当前所在视图 viewId和viewName 选其一填入", required = false)
+        @Parameter(name = "用户视图ID,表示用户当前所在视图 viewId和viewName 选其一填入", required = false)
         @QueryParam("viewId")
         viewId: String?,
-        @Parameter(description = "用户视图名称,表示用户当前所在视图 viewId和viewName 选其一填入", required = false)
+        @Parameter(name = "用户视图名称,表示用户当前所在视图 viewId和viewName 选其一填入", required = false)
         @QueryParam("viewName")
         viewName: String?,
-        @Parameter(description = "维度是否为项目,和viewName搭配使用", required = false)
+        @Parameter(name = "维度是否为项目,和viewName搭配使用", required = false)
         @QueryParam("isProject")
         isProject: Boolean?
     ): Result<PipelineNewView>
@@ -161,19 +161,19 @@ interface ServicePipelineViewResource {
     @DELETE
     @Path("")
     fun deleteView(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "项目ID", required = true)
+        @Parameter(name = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(description = "用户视图ID,表示用户当前所在视图 viewId和viewName 选其一填入", required = false)
+        @Parameter(name = "用户视图ID,表示用户当前所在视图 viewId和viewName 选其一填入", required = false)
         @QueryParam("viewId")
         viewId: String?,
-        @Parameter(description = "用户视图名称,表示用户当前所在视图 viewId和viewName 选其一填入", required = false)
+        @Parameter(name = "用户视图名称,表示用户当前所在视图 viewId和viewName 选其一填入", required = false)
         @QueryParam("viewName")
         viewName: String?,
-        @Parameter(description = "维度是否为项目,和viewName搭配使用", required = false)
+        @Parameter(name = "维度是否为项目,和viewName搭配使用", required = false)
         @QueryParam("isProject")
         isProject: Boolean?
     ): Result<Boolean>
@@ -182,18 +182,18 @@ interface ServicePipelineViewResource {
     @PUT
     @Path("")
     fun updateView(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
         @PathParam("projectId")
         projectId: String,
-        @Parameter(description = "用户视图ID,表示用户当前所在视图 viewId和viewName 选其一填入", required = false)
+        @Parameter(name = "用户视图ID,表示用户当前所在视图 viewId和viewName 选其一填入", required = false)
         @QueryParam("viewId")
         viewId: String?,
-        @Parameter(description = "用户视图名称,表示用户当前所在视图 viewId和viewName 选其一填入", required = false)
+        @Parameter(name = "用户视图名称,表示用户当前所在视图 viewId和viewName 选其一填入", required = false)
         @QueryParam("viewName")
         viewName: String?,
-        @Parameter(description = "维度是否为项目,和viewName搭配使用", required = false)
+        @Parameter(name = "维度是否为项目,和viewName搭配使用", required = false)
         @QueryParam("isProject")
         isProject: Boolean?,
         pipelineView: PipelineViewForm

@@ -51,7 +51,7 @@ interface ServiceGithubUserResource {
     @GET
     @Path("/getUser")
     fun getUser(
-        @Parameter(description = "授权token", required = true)
+        @Parameter(name = "授权token", required = true)
         @HeaderParam(AUTH_HEADER_GITHUB_TOKEN)
         token: String
     ): Result<GetUserResponse?>
@@ -60,7 +60,7 @@ interface ServiceGithubUserResource {
     @GET
     @Path("/get_user_email")
     fun getUserEmail(
-        @Parameter(description = "授权token", required = true)
+        @Parameter(name = "授权token", required = true)
         @HeaderParam(AUTH_HEADER_GITHUB_TOKEN)
         token: String
     ): Result<List<GetUserEmailResponse>>

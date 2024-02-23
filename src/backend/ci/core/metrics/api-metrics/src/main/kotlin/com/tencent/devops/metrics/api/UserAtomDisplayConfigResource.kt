@@ -57,13 +57,13 @@ interface UserAtomDisplayConfigResource {
     @Path("/add")
     @POST
     fun addAtomDisplayConfig(
-        @Parameter(description = "项目ID", required = true)
+        @Parameter(name = "项目ID", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_PROJECT_ID)
         projectId: String,
-        @Parameter(description = "userId", required = true)
+        @Parameter(name = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "项目下展示插件配置报文", required = true)
+        @Parameter(name = "项目下展示插件配置报文", required = true)
         atomDisplayConfig: AtomDisplayConfigVO
     ): Result<Boolean>
 
@@ -71,13 +71,13 @@ interface UserAtomDisplayConfigResource {
     @Path("/delete")
     @POST
     fun deleteAtomDisplayConfig(
-        @Parameter(description = "项目ID", required = true)
+        @Parameter(name = "项目ID", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_PROJECT_ID)
         projectId: String,
-        @Parameter(description = "userId", required = true)
+        @Parameter(name = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "要删除的插件配置插件Code列表", required = true)
+        @Parameter(name = "要删除的插件配置插件Code列表", required = true)
         atomDisplayConfig: AtomDisplayConfigVO
     ): Result<Boolean>
 
@@ -85,13 +85,13 @@ interface UserAtomDisplayConfigResource {
     @Path("/get")
     @GET
     fun getAtomDisplayConfig(
-        @Parameter(description = "项目ID", required = true)
+        @Parameter(name = "项目ID", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_PROJECT_ID)
         projectId: String,
-        @Parameter(description = "userId", required = true)
+        @Parameter(name = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "keyword", required = false)
+        @Parameter(name = "keyword", required = false)
         @QueryParam("keyword")
         keyword: String?
     ): Result<AtomDisplayConfigVO>
@@ -100,19 +100,19 @@ interface UserAtomDisplayConfigResource {
     @Path("/optional/get")
     @GET
     fun getOptionalAtomDisplayConfig(
-        @Parameter(description = "项目ID", required = true)
+        @Parameter(name = "项目ID", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_PROJECT_ID)
         projectId: String,
-        @Parameter(description = "userId", required = true)
+        @Parameter(name = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "keyword", required = false)
+        @Parameter(name = "keyword", required = false)
         @QueryParam("keyword")
         keyword: String?,
-        @Parameter(description = "页码", required = true, example = "1")
+        @Parameter(name = "页码", required = true, example = "1")
         @QueryParam("page")
         page: Int,
-        @Parameter(description = "每页大小", required = true, example = "10")
+        @Parameter(name = "每页大小", required = true, example = "10")
         @BkField(patternStyle = BkStyleEnum.PAGE_SIZE_STYLE, required = true)
         @QueryParam("pageSize")
         pageSize: Int

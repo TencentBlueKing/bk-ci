@@ -59,13 +59,13 @@ interface OpDockerHostZoneResource {
     @POST
     @Path("/create")
     fun create(
-        @Parameter(description = "DockerHost母机", required = true)
+        @Parameter(name = "DockerHost母机", required = true)
         @QueryParam("hostIp")
         hostIp: String,
-        @Parameter(description = "DockerHost母机区域", required = true)
+        @Parameter(name = "DockerHost母机区域", required = true)
         @QueryParam("zone")
         zone: Zone,
-        @Parameter(description = "备注", required = true)
+        @Parameter(name = "备注", required = true)
         @QueryParam("remark")
         remark: String?
     ): Result<Boolean>
@@ -74,7 +74,7 @@ interface OpDockerHostZoneResource {
     @POST
     @Path("/delete")
     fun delete(
-        @Parameter(description = "DockerHost母机IP", required = true)
+        @Parameter(name = "DockerHost母机IP", required = true)
         @QueryParam("hostIp")
         hostIp: String
     ): Result<Boolean>
@@ -83,10 +83,10 @@ interface OpDockerHostZoneResource {
     @GET
     @Path("/list")
     fun list(
-        @Parameter(description = "第几页，从1开始", required = true)
+        @Parameter(name = "第几页，从1开始", required = true)
         @QueryParam("page")
         page: Int,
-        @Parameter(description = "每页条数", required = true)
+        @Parameter(name = "每页条数", required = true)
         @QueryParam("pageSize")
         pageSize: Int
     ): Result<DockerHostZoneWithPage>
@@ -95,10 +95,10 @@ interface OpDockerHostZoneResource {
     @POST
     @Path("/enable")
     fun enable(
-        @Parameter(description = "DockerHost母机IP", required = true)
+        @Parameter(name = "DockerHost母机IP", required = true)
         @QueryParam("hostIp")
         hostIp: String,
-        @Parameter(description = "enable", required = true)
+        @Parameter(name = "enable", required = true)
         @QueryParam("enable")
         enable: Boolean
     ): Result<Boolean>
@@ -107,7 +107,7 @@ interface OpDockerHostZoneResource {
     @Path("/specialDockerHost/list")
     @Operation(summary = "批量新增专机配置")
     fun listSpecialDockerHost(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String
     ): Result<List<SpecialDockerHostVO>>
@@ -116,10 +116,10 @@ interface OpDockerHostZoneResource {
     @Path("/specialDockerHost/add")
     @Operation(summary = "批量新增专机配置")
     fun createSpecialDockerHost(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String,
-        @Parameter(description = "专机配置列表", required = true)
+        @Parameter(name = "专机配置列表", required = true)
         specialDockerHostVOs: List<SpecialDockerHostVO>
     ): Result<Boolean>
 
@@ -127,10 +127,10 @@ interface OpDockerHostZoneResource {
     @Path("/specialDockerHost/update")
     @Operation(summary = "更新专机配置")
     fun updateSpecialDockerHost(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String,
-        @Parameter(description = "专机配置", required = true)
+        @Parameter(name = "专机配置", required = true)
         specialDockerHostVO: SpecialDockerHostVO
     ): Result<Boolean>
 
@@ -138,10 +138,10 @@ interface OpDockerHostZoneResource {
     @Path("/specialDockerHost/delete/{projectId}")
     @Operation(summary = "删除专机配置")
     fun deleteSpecialDockerHost(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String,
-        @Parameter(description = "projectId", required = true)
+        @Parameter(name = "projectId", required = true)
         @PathParam("projectId")
         projectId: String
     ): Result<Boolean>

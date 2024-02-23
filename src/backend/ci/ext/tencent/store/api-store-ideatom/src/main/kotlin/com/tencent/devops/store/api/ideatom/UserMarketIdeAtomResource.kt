@@ -56,13 +56,13 @@ interface UserMarketIdeAtomResource {
     @Path("/list/main")
     @GET
     fun mainPageList(
-        @Parameter(description = "userId", required = true)
+        @Parameter(name = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "页码", required = false)
+        @Parameter(name = "页码", required = false)
         @QueryParam("page")
         page: Int?,
-        @Parameter(description = "每页数量", required = false)
+        @Parameter(name = "每页数量", required = false)
         @QueryParam("pageSize")
         pageSize: Int?
     ): Result<List<MarketIdeAtomMainItem>>
@@ -71,34 +71,34 @@ interface UserMarketIdeAtomResource {
     @GET
     @Path("/atom/list/")
     fun queryIdeAtomList(
-        @Parameter(description = "userId", required = true)
+        @Parameter(name = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "搜索关键字", required = false)
+        @Parameter(name = "搜索关键字", required = false)
         @QueryParam("keyword")
         keyword: String?,
-        @Parameter(description = "插件范畴", required = false)
+        @Parameter(name = "插件范畴", required = false)
         @QueryParam("categoryCode")
         categoryCode: String?,
-        @Parameter(description = "插件分类", required = false)
+        @Parameter(name = "插件分类", required = false)
         @QueryParam("classifyCode")
         classifyCode: String?,
-        @Parameter(description = "功能标签(多个用逗号分隔)", required = false)
+        @Parameter(name = "功能标签(多个用逗号分隔)", required = false)
         @QueryParam("labelCode")
         labelCode: String?,
-        @Parameter(description = "评分", required = false)
+        @Parameter(name = "评分", required = false)
         @QueryParam("score")
         score: Int?,
-        @Parameter(description = "研发来源(蓝盾 第三方)", required = false)
+        @Parameter(name = "研发来源(蓝盾 第三方)", required = false)
         @QueryParam("rdType")
         rdType: IdeAtomTypeEnum?,
-        @Parameter(description = "排序", required = false)
+        @Parameter(name = "排序", required = false)
         @QueryParam("sortType")
         sortType: MarketIdeAtomSortTypeEnum? = MarketIdeAtomSortTypeEnum.DOWNLOAD_COUNT,
-        @Parameter(description = "页码", required = false)
+        @Parameter(name = "页码", required = false)
         @QueryParam("page")
         page: Int?,
-        @Parameter(description = "每页数量", required = false)
+        @Parameter(name = "每页数量", required = false)
         @QueryParam("pageSize")
         pageSize: Int?
     ): Result<MarketIdeAtomResp>
@@ -107,10 +107,10 @@ interface UserMarketIdeAtomResource {
     @GET
     @Path("/atomCodes/{atomCode}")
     fun getIdeAtomByCode(
-        @Parameter(description = "userId", required = true)
+        @Parameter(name = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "atomCode", required = true)
+        @Parameter(name = "atomCode", required = true)
         @PathParam("atomCode")
         atomCode: String
     ): Result<IdeAtomDetail?>

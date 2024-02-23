@@ -51,16 +51,16 @@ interface ServicePublicScanResource {
     @Path("/project/{userId}")
     @Operation(summary = "为开源代码扫描创建项目")
     fun createCodeCCScanProject(
-        @Parameter(description = "用户ID", required = true)
+        @Parameter(name = "用户ID", required = true)
         @PathParam("userId")
         userId: String,
-        @Parameter(description = "TAG", required = false)
+        @Parameter(name = "TAG", required = false)
         @QueryParam("tag")
         tag: String? = null,
-        @Parameter(description = "CodeCC路由Tag", required = false)
+        @Parameter(name = "CodeCC路由Tag", required = false)
         @QueryParam("codeccTag")
         codeccTag: String? = null,
-        @Parameter(description = "项目创建信息", required = true)
+        @Parameter(name = "项目创建信息", required = true)
         projectCreateInfo: ProjectCreateInfo
     ): Result<ProjectVO>
 }

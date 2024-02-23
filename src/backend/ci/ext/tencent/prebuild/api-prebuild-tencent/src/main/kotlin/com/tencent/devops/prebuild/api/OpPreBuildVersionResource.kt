@@ -25,7 +25,7 @@ interface OpPreBuildVersionResource {
     @POST
     @Path("/ide")
     fun creatIdeVersion(
-        @Parameter(description = "版本信息", required = true)
+        @Parameter(name = "版本信息", required = true)
         prePluginVersion: PrePluginVersion
     ): Result<Boolean>
 
@@ -33,7 +33,7 @@ interface OpPreBuildVersionResource {
     @PUT
     @Path("/ide")
     fun updateIdeVersion(
-        @Parameter(description = "版本信息", required = true)
+        @Parameter(name = "版本信息", required = true)
         prePluginVersion: PrePluginVersion
     ): Result<Boolean>
 
@@ -41,7 +41,7 @@ interface OpPreBuildVersionResource {
     @DELETE
     @Path("/ide")
     fun deleteIdeVersion(
-        @Parameter(description = "/版本号", required = true)
+        @Parameter(name = "/版本号", required = true)
         @QueryParam("version")
         version: String
     ): Result<Boolean>

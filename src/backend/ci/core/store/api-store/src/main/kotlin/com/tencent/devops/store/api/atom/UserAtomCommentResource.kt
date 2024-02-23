@@ -57,10 +57,10 @@ interface UserAtomCommentResource {
     @GET
     @Path("/comments/{commentId}")
     fun getStoreComment(
-        @Parameter(description = "userId", required = true)
+        @Parameter(name = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "评论ID", required = true)
+        @Parameter(name = "评论ID", required = true)
         @PathParam("commentId")
         commentId: String
     ): Result<StoreCommentInfo?>
@@ -69,16 +69,16 @@ interface UserAtomCommentResource {
     @GET
     @Path("/atomCodes/{atomCode}/comments")
     fun getStoreComments(
-        @Parameter(description = "userId", required = true)
+        @Parameter(name = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "插件代码", required = true)
+        @Parameter(name = "插件代码", required = true)
         @PathParam("atomCode")
         atomCode: String,
-        @Parameter(description = "页码", required = true)
+        @Parameter(name = "页码", required = true)
         @QueryParam("page")
         page: Int,
-        @Parameter(description = "每页数量", required = true)
+        @Parameter(name = "每页数量", required = true)
         @QueryParam("pageSize")
         pageSize: Int
     ): Result<Page<StoreCommentInfo>?>
@@ -87,7 +87,7 @@ interface UserAtomCommentResource {
     @GET
     @Path("/score/atomCodes/{atomCode}")
     fun getAtomCommentScoreInfo(
-        @Parameter(description = "插件代码", required = true)
+        @Parameter(name = "插件代码", required = true)
         @PathParam("atomCode")
         templateCode: String
     ): Result<StoreCommentScoreInfo>
@@ -96,16 +96,16 @@ interface UserAtomCommentResource {
     @POST
     @Path("/atomIds/{atomId}/atomCodes/{atomCode}/comment")
     fun addAtomComment(
-        @Parameter(description = "userId", required = true)
+        @Parameter(name = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "插件ID", required = true)
+        @Parameter(name = "插件ID", required = true)
         @PathParam("atomId")
         atomId: String,
-        @Parameter(description = "插件代码", required = true)
+        @Parameter(name = "插件代码", required = true)
         @PathParam("atomCode")
         atomCode: String,
-        @Parameter(description = "评论信息请求报文体", required = true)
+        @Parameter(name = "评论信息请求报文体", required = true)
         storeCommentRequest: StoreCommentRequest
     ): Result<StoreCommentInfo?>
 
@@ -113,13 +113,13 @@ interface UserAtomCommentResource {
     @PUT
     @Path("/comments/{commentId}")
     fun updateStoreComment(
-        @Parameter(description = "userId", required = true)
+        @Parameter(name = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "评论ID", required = true)
+        @Parameter(name = "评论ID", required = true)
         @PathParam("commentId")
         commentId: String,
-        @Parameter(description = "评论信息请求报文体", required = true)
+        @Parameter(name = "评论信息请求报文体", required = true)
         storeCommentRequest: StoreCommentRequest
     ): Result<Boolean>
 
@@ -127,10 +127,10 @@ interface UserAtomCommentResource {
     @PUT
     @Path("/praise/{commentId}")
     fun updateStoreCommentPraiseCount(
-        @Parameter(description = "userId", required = true)
+        @Parameter(name = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "评论ID", required = true)
+        @Parameter(name = "评论ID", required = true)
         @PathParam("commentId")
         commentId: String
     ): Result<Int>

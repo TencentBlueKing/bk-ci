@@ -51,10 +51,10 @@ interface BuildDockerImageResource {
     @POST
     @Path("/checkDockerImage")
     fun checkDockerImage(
-        @Parameter(description = "用户ID", required = true)
+        @Parameter(name = "用户ID", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "镜像repo", required = true)
+        @Parameter(name = "镜像repo", required = true)
         checkDockerImageRequestList: List<CheckDockerImageRequest>
     ): Result<List<CheckDockerImageResponse>>
 }

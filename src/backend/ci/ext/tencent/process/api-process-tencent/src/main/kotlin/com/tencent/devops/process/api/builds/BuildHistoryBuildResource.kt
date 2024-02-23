@@ -51,7 +51,7 @@ interface BuildHistoryBuildResource {
     // @Path("/listByBuildId")
     @Path("/id")
     fun getSingleHistoryByBuildId(
-        @Parameter(description = "流水线buildId", required = true)
+        @Parameter(name = "流水线buildId", required = true)
         @HeaderParam(AUTH_HEADER_BUILD_ID)
         buildId: String
     ): Result<BuildHistory?>

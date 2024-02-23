@@ -59,25 +59,25 @@ interface UserQualityTemplateResource {
     @GET
     @Path("/projects/{projectId}/templates")
     fun listTemplate(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "项目ID", required = true)
+        @Parameter(name = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(description = "模版类型", required = false)
+        @Parameter(name = "模版类型", required = false)
         @QueryParam("templateType")
         templateType: TemplateType?,
-        @Parameter(description = "是否已关联到store", required = false)
+        @Parameter(name = "是否已关联到store", required = false)
         @QueryParam("storeFlag")
         storeFlag: Boolean?,
-        @Parameter(description = "页码", required = false)
+        @Parameter(name = "页码", required = false)
         @QueryParam("page")
         page: Int?,
-        @Parameter(description = "每页数量", required = false)
+        @Parameter(name = "每页数量", required = false)
         @QueryParam("pageSize")
         pageSize: Int?,
-        @Parameter(description = "模板名称关键字", required = false)
+        @Parameter(name = "模板名称关键字", required = false)
         @QueryParam("keywords")
         keywords: String?
     ): Result<TemplateListModel>
@@ -86,13 +86,13 @@ interface UserQualityTemplateResource {
     @GET
     @Path("/project/{projectId}/template/{templateId}/getTemplateInfo")
     fun getTemplateInfo(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "项目ID", required = true)
+        @Parameter(name = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(description = "模板ID", required = true)
+        @Parameter(name = "模板ID", required = true)
         @PathParam("templateId")
         templateId: String
     ): Result<TemplateModelDetail>

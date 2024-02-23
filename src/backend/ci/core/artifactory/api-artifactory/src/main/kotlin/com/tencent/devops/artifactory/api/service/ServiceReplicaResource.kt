@@ -24,16 +24,16 @@ interface ServiceReplicaResource {
     @POST
     @Path("/create/{projectId}/{repoName}")
     fun createReplicaTask(
-        @Parameter(description = "userId", required = true)
+        @Parameter(name = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "项目 ID", required = true)
+        @Parameter(name = "项目 ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(description = "仓库名", required = true)
+        @Parameter(name = "仓库名", required = true)
         @PathParam("repoName")
         repoName: String,
-        @Parameter(description = "文件路径", required = true)
+        @Parameter(name = "文件路径", required = true)
         @QueryParam("fullPath")
         fullPath: String
     ): Result<Boolean>

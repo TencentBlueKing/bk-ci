@@ -55,10 +55,10 @@ interface OpClassifyResource {
     @POST
     @Path("/types/{classifyType}")
     fun add(
-        @Parameter(description = "类别", required = true)
+        @Parameter(name = "类别", required = true)
         @PathParam("classifyType")
         classifyType: StoreTypeEnum,
-        @Parameter(description = "分类信息请求报文体", required = true)
+        @Parameter(name = "分类信息请求报文体", required = true)
         classifyRequest: ClassifyRequest
     ): Result<Boolean>
 
@@ -66,13 +66,13 @@ interface OpClassifyResource {
     @PUT
     @Path("/types/{classifyType}/ids/{id}")
     fun update(
-        @Parameter(description = "类别", required = true)
+        @Parameter(name = "类别", required = true)
         @PathParam("classifyType")
         classifyType: StoreTypeEnum,
-        @Parameter(description = "分类ID", required = true)
+        @Parameter(name = "分类ID", required = true)
         @PathParam("id")
         id: String,
-        @Parameter(description = "分类信息请求报文体", required = true)
+        @Parameter(name = "分类信息请求报文体", required = true)
         classifyRequest: ClassifyRequest
     ): Result<Boolean>
 
@@ -80,7 +80,7 @@ interface OpClassifyResource {
     @GET
     @Path("/types/{classifyType}")
     fun listAllClassifys(
-        @Parameter(description = "类别", required = true)
+        @Parameter(name = "类别", required = true)
         @PathParam("classifyType")
         classifyType: StoreTypeEnum
     ): Result<List<Classify>>
@@ -89,7 +89,7 @@ interface OpClassifyResource {
     @GET
     @Path("/{id}")
     fun getClassifyById(
-        @Parameter(description = "分类ID", required = true)
+        @Parameter(name = "分类ID", required = true)
         @QueryParam("id")
         id: String
     ): Result<Classify?>
@@ -98,7 +98,7 @@ interface OpClassifyResource {
     @DELETE
     @Path("/{id}")
     fun deleteClassifyById(
-        @Parameter(description = "分类ID", required = true)
+        @Parameter(name = "分类ID", required = true)
         @PathParam("id")
         id: String
     ): Result<Boolean>

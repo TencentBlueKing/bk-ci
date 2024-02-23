@@ -57,19 +57,19 @@ interface OpNotifyMessageTemplateResource {
     @GET
     @Path("/list/common")
     fun getCommonNotifyMessageTemplates(
-        @Parameter(description = "userId", required = true)
+        @Parameter(name = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "模板代码", required = false)
+        @Parameter(name = "模板代码", required = false)
         @QueryParam("templateCode")
         templateCode: String?,
-        @Parameter(description = "模板名称", required = false)
+        @Parameter(name = "模板名称", required = false)
         @QueryParam("templateName")
         templateName: String?,
-        @Parameter(description = "页码", required = false)
+        @Parameter(name = "页码", required = false)
         @QueryParam("page")
         page: Int?,
-        @Parameter(description = "每页数量", required = false)
+        @Parameter(name = "每页数量", required = false)
         @QueryParam("pageSize")
         pageSize: Int?
     ): Result<Page<NotifyMessageCommonTemplate>>
@@ -78,10 +78,10 @@ interface OpNotifyMessageTemplateResource {
     @GET
     @Path("/list/sub")
     fun getNotifyMessageTemplates(
-        @Parameter(description = "userId", required = true)
+        @Parameter(name = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "模板ID", required = false)
+        @Parameter(name = "模板ID", required = false)
         @QueryParam("templateId")
         templateId: String
     ): Result<Page<SubNotifyMessageTemplate>>
@@ -90,10 +90,10 @@ interface OpNotifyMessageTemplateResource {
     @POST
     @Path("/")
     fun addNotifyMessageTemplate(
-        @Parameter(description = "userId", required = true)
+        @Parameter(name = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "消息通知新增请求报文体", required = true)
+        @Parameter(name = "消息通知新增请求报文体", required = true)
         notifyMessageTemplateRequest: NotifyTemplateMessageRequest
     ): Result<Boolean>
 
@@ -101,13 +101,13 @@ interface OpNotifyMessageTemplateResource {
     @PUT
     @Path("/ids/{templateId}")
     fun updateNotifyMessageTemplate(
-        @Parameter(description = "userId", required = true)
+        @Parameter(name = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "模板ID", required = true)
+        @Parameter(name = "模板ID", required = true)
         @PathParam("templateId")
         templateId: String,
-        @Parameter(description = "消息通知更新请求报文体", required = true)
+        @Parameter(name = "消息通知更新请求报文体", required = true)
         notifyMessageTemplateRequest: NotifyTemplateMessageRequest
     ): Result<Boolean>
 
@@ -115,13 +115,13 @@ interface OpNotifyMessageTemplateResource {
     @PUT
     @Path("/tencent_cloud_ses_template_id")
     fun updateTXSESTemplateId(
-        @Parameter(description = "userId", required = true)
+        @Parameter(name = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "公共模板ID", required = true)
+        @Parameter(name = "公共模板ID", required = true)
         @QueryParam("commonTemplateId")
         templateId: String,
-        @Parameter(description = "腾讯云ses 模板id", required = true)
+        @Parameter(name = "腾讯云ses 模板id", required = true)
         @QueryParam("sesTemplateId")
         sesTemplateId: Int?
     ): Result<Boolean>
@@ -130,10 +130,10 @@ interface OpNotifyMessageTemplateResource {
     @DELETE
     @Path("/ids/sub/{templateId}/{notifyType}")
     fun deleteNotifyMessageTemplate(
-        @Parameter(description = "模板ID", required = true)
+        @Parameter(name = "模板ID", required = true)
         @PathParam("templateId")
         templateId: String,
-        @Parameter(description = "模板通知类型", required = true)
+        @Parameter(name = "模板通知类型", required = true)
         @PathParam("notifyType")
         notifyType: String
     ): Result<Boolean>
@@ -142,7 +142,7 @@ interface OpNotifyMessageTemplateResource {
     @DELETE
     @Path("/commons/ids/{templateId}")
     fun deleteCommonNotifyMessageTemplate(
-        @Parameter(description = "模板ID", required = true)
+        @Parameter(name = "模板ID", required = true)
         @PathParam("templateId")
         templateId: String
     ): Result<Boolean>

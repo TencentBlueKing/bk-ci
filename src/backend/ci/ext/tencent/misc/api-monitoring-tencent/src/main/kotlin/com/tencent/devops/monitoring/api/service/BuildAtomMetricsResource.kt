@@ -21,10 +21,10 @@ interface BuildAtomMetricsResource {
     @POST
     @Path("/report/{atomCode}")
     fun reportAtomMetrics(
-        @Parameter(description = "atomCode", required = true)
+        @Parameter(name = "atomCode", required = true)
         @PathParam("atomCode")
         atomCode: String,
-        @Parameter(description = "上报度量的数据", required = true)
+        @Parameter(name = "上报度量的数据", required = true)
         data: String
     ): Result<Boolean>
 }

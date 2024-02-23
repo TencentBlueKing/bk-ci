@@ -27,9 +27,9 @@
 
 package com.tencent.devops.environment.pojo.job.req
 
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
 data class QueryAgentStatusFromJobReq(
-    @ApiModelProperty(value = "主机ID数组，单次查询主机数量不可超过5000")
+    @get:Schema(title = "主机ID数组，单次查询主机数量不可超过5000")
     val hostIdList: List<Long>
 )

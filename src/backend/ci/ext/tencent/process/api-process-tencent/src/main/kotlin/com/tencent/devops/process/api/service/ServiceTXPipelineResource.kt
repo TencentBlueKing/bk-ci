@@ -56,13 +56,13 @@ interface ServiceTXPipelineResource {
     @GET
     @Path("/streams/pipelines/{pipelineId}/projects/{projectId}/yaml/gitci")
     fun exportPipelineGitCI(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "项目ID", required = true)
+        @Parameter(name = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(description = "流水线Id", required = true)
+        @Parameter(name = "流水线Id", required = true)
         @PathParam("pipelineId")
         pipelineId: String
     ): Result<PipelineExportV2YamlData>
@@ -72,7 +72,7 @@ interface ServiceTXPipelineResource {
     @Path("/streams/pipelines/ids/{id}/info")
     fun getPipelineInfobyId(
         @PathParam("id")
-        @Parameter(description = "流水线自增id", required = true)
+        @Parameter(name = "流水线自增id", required = true)
         id: Long
     ): Result<SimplePipeline>
 
@@ -80,16 +80,16 @@ interface ServiceTXPipelineResource {
     @POST
     @Path("/{projectId}/run_pipeline_with_template")
     fun runPipelineWithTemplate(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "项目ID", required = true)
+        @Parameter(name = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(description = "项目ID", required = true)
+        @Parameter(name = "项目ID", required = true)
         @QueryParam("templateVersionId")
         templateVersionId: Long,
-        @Parameter(description = "实例化所需参数", required = true)
+        @Parameter(name = "实例化所需参数", required = true)
         parameters: Map<String, String>
     ): Result<BuildId>
 }

@@ -51,10 +51,10 @@ interface BuildTaskResource {
     @Path("/getAllBuildTask")
     @GET
     fun getAllBuildTask(
-        @Parameter(description = "项目ID", required = true)
+        @Parameter(name = "项目ID", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_PROJECT_ID)
         projectId: String,
-        @Parameter(description = "构建ID", required = true)
+        @Parameter(name = "构建ID", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_BUILD_ID)
         buildId: String
     ): Result<List<PipelineBuildTaskInfo>>

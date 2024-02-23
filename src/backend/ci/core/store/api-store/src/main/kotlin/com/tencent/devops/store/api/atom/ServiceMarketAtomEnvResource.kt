@@ -50,10 +50,10 @@ interface ServiceMarketAtomEnvResource {
     @POST
     @Path("/project/{projectCode}/run/info/list")
     fun batchGetAtomRunInfos(
-        @Parameter(description = "项目代码", required = true)
+        @Parameter(name = "项目代码", required = true)
         @PathParam("projectCode")
         projectCode: String,
-        @Parameter(description = "插件版本信息", required = true)
+        @Parameter(name = "插件版本信息", required = true)
         atomVersions: Set<StoreVersion>
     ): Result<Map<String, AtomRunInfo>?>
 }

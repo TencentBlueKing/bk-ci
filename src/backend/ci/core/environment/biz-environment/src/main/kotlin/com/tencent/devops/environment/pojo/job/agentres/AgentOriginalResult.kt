@@ -28,20 +28,21 @@
 package com.tencent.devops.environment.pojo.job.agentres
 
 import com.tencent.devops.common.api.annotation.BkFieldI18n
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
 
-@ApiModel("Job数据返回包装模型")
+
+import io.swagger.v3.oas.annotations.media.Schema
+
+@Schema(title = "Job数据返回包装模型")
 data class AgentOriginalResult<out T>(
-    @ApiModelProperty("状态码", required = true)
+    @get:Schema(title = "状态码", required = true)
     val code: Int,
-    @ApiModelProperty("结果bool值")
+    @get:Schema(title = "结果bool值")
     val result: Boolean? = null,
-    @ApiModelProperty("请求失败返回的错误信息")
+    @get:Schema(title = "请求失败返回的错误信息")
     val message: String?,
-    @ApiModelProperty("请求错误信息")
+    @get:Schema(title = "请求错误信息")
     val errors: String?,
-    @ApiModelProperty("数据")
+    @get:Schema(title = "数据")
     @BkFieldI18n
     val data: T? = null
 )

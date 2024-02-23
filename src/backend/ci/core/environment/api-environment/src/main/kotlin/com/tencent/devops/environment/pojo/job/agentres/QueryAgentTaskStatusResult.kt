@@ -27,35 +27,34 @@
 
 package com.tencent.devops.environment.pojo.job.agentres
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("查询agent任务状态的接口的返回结果")
+@Schema(title = "查询agent任务状态的接口的返回结果")
 data class QueryAgentTaskStatusResult(
-    @ApiModelProperty(value = "作业任务ID", required = true)
+    @get:Schema(title = "作业任务ID", required = true)
     val jobId: Int,
-    @ApiModelProperty(value = "创建者", required = true)
+    @get:Schema(title = "创建者", required = true)
     val createdBy: String,
-    @ApiModelProperty(value = "作业类型", required = true)
+    @get:Schema(title = "作业类型", required = true)
     val jobType: String,
-    @ApiModelProperty(value = "作业类型名称", required = true)
+    @get:Schema(title = "作业类型名称", required = true)
     val jobTypeDisplay: String,
-    @ApiModelProperty(value = "过滤的IP列表", required = true)
+    @get:Schema(title = "过滤的IP列表", required = true)
     val ipFilterList: List<String>,
-    @ApiModelProperty(value = "实例记录数量总和")
+    @get:Schema(title = "实例记录数量总和")
     val total: Int?,
-    @ApiModelProperty(value = "过滤的主机详细信息列表")
+    @get:Schema(title = "过滤的主机详细信息列表")
     val list: List<HostDetail>?,
-    @ApiModelProperty(value = "任务统计信息", required = true)
+    @get:Schema(title = "任务统计信息", required = true)
     val statistics: Statistics,
-    @ApiModelProperty(value = "执行状态", required = true)
+    @get:Schema(title = "执行状态", required = true)
     val status: String,
-    @ApiModelProperty(value = "完成时间")
+    @get:Schema(title = "完成时间")
     val endTime: String?,
-    @ApiModelProperty(value = "启动时间时间", required = true)
+    @get:Schema(title = "启动时间时间", required = true)
     val startTime: String,
-    @ApiModelProperty(value = "执行耗时", required = true)
+    @get:Schema(title = "执行耗时", required = true)
     val costTime: String,
-    @ApiModelProperty(value = "执行任务元数据信息", required = true)
+    @get:Schema(title = "执行任务元数据信息", required = true)
     val meta: Meta
 )

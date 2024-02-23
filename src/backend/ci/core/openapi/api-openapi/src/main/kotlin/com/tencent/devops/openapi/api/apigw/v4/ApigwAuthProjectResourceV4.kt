@@ -36,14 +36,14 @@ interface ApigwAuthProjectResourceV4 {
         tags = ["v4_app_get_project_permission_info"]
     )
     fun getProjectPermissionInfo(
-        @Parameter(description = "appCode", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
+        @Parameter(name = "appCode", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
         appCode: String?,
-        @Parameter(description = "apigw Type", required = true)
+        @Parameter(name = "apigw Type", required = true)
         @PathParam("apigwType")
         apigwType: String?,
         @PathParam("projectId")
-        @Parameter(description = "项目ID", required = true)
+        @Parameter(name = "项目ID", required = true)
         projectId: String
     ): Result<ProjectPermissionInfoVO>
 
@@ -66,23 +66,23 @@ interface ApigwAuthProjectResourceV4 {
         tags = ["v4_app_get_project_permission_members"]
     )
     fun getResourceGroupUsers(
-        @Parameter(description = "appCode", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
+        @Parameter(name = "appCode", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
         appCode: String?,
-        @Parameter(description = "apigw Type", required = true)
+        @Parameter(name = "apigw Type", required = true)
         @PathParam("apigwType")
         apigwType: String?,
         @PathParam("projectId")
-        @Parameter(description = "项目Code", required = true)
+        @Parameter(name = "项目Code", required = true)
         projectId: String,
         @QueryParam("resourceType")
-        @Parameter(description = "资源类型", required = false)
+        @Parameter(name = "资源类型", required = false)
         resourceType: AuthResourceType,
         @QueryParam("resourceCode")
-        @Parameter(description = "资源code", required = false)
+        @Parameter(name = "资源code", required = false)
         resourceCode: String,
         @QueryParam("group")
-        @Parameter(description = "资源用户组类型", required = false)
+        @Parameter(name = "资源用户组类型", required = false)
         group: BkAuthGroup? = null
     ): Result<List<String>>
 
@@ -90,19 +90,19 @@ interface ApigwAuthProjectResourceV4 {
     @Path("/batch_add_resource_group_members")
     @Operation(summary = "用户组批量添加成员", tags = ["v4_app_batch_add_resource_group_members"])
     fun batchAddResourceGroupMembers(
-        @Parameter(description = "appCode", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
+        @Parameter(name = "appCode", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
         appCode: String?,
-        @Parameter(description = "apigw Type", required = true)
+        @Parameter(name = "apigw Type", required = true)
         @PathParam("apigwType")
         apigwType: String?,
-        @Parameter(description = "userId")
+        @Parameter(name = "userId")
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String?,
-        @Parameter(description = "projectId", required = true)
+        @Parameter(name = "projectId", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(description = "添加信息", required = true)
+        @Parameter(name = "添加信息", required = true)
         createInfo: ProjectCreateUserInfo
     ): Result<Boolean>
 
@@ -110,19 +110,19 @@ interface ApigwAuthProjectResourceV4 {
     @Path("/batch_delete_resource_group_members")
     @Operation(summary = "用户组批量删除成员", tags = ["v4_app_batch_delete_resource_group_members"])
     fun batchDeleteResourceGroupMembers(
-        @Parameter(description = "appCode", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
+        @Parameter(name = "appCode", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
         appCode: String?,
-        @Parameter(description = "apigw Type", required = true)
+        @Parameter(name = "apigw Type", required = true)
         @PathParam("apigwType")
         apigwType: String?,
-        @Parameter(description = "userId")
+        @Parameter(name = "userId")
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String?,
-        @Parameter(description = "projectId", required = true)
+        @Parameter(name = "projectId", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(description = "删除信息", required = true)
+        @Parameter(name = "删除信息", required = true)
         deleteInfo: ProjectDeleteUserInfo
     ): Result<Boolean>
 }

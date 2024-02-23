@@ -53,7 +53,7 @@ interface OpContainerAppVersionResource {
     @POST
     @Path("/")
     fun addContainerAppVersion(
-        @Parameter(description = "容器编译环境版本请求实体", required = true)
+        @Parameter(name = "容器编译环境版本请求实体", required = true)
          containerAppVersionRequest: ContainerAppVersionCreate
     ): Result<Boolean>
 
@@ -61,7 +61,7 @@ interface OpContainerAppVersionResource {
     @DELETE
     @Path("/{id}")
     fun deleteContainerAppVersionById(
-        @Parameter(description = "编译环境版本ID", required = true)
+        @Parameter(name = "编译环境版本ID", required = true)
         @PathParam("id")
         id: Int
     ): Result<Boolean>
@@ -70,10 +70,10 @@ interface OpContainerAppVersionResource {
     @PUT
     @Path("/{id}")
     fun updateContainerAppVersion(
-        @Parameter(description = "编译环境版本ID", required = true)
+        @Parameter(name = "编译环境版本ID", required = true)
         @PathParam("id")
         id: Int,
-        @Parameter(description = "容器编译环境版本请求实体", required = true)
+        @Parameter(name = "容器编译环境版本请求实体", required = true)
         containerAppVersionRequest: ContainerAppVersionCreate
     ): Result<Boolean>
 
@@ -81,7 +81,7 @@ interface OpContainerAppVersionResource {
     @GET
     @Path("/list/{appId}")
     fun listContainerAppVersionsByAppId(
-        @Parameter(description = "编译环境ID", required = true)
+        @Parameter(name = "编译环境ID", required = true)
         @PathParam("appId")
         appId: Int
     ): Result<List<ContainerAppVersion>>
@@ -90,7 +90,7 @@ interface OpContainerAppVersionResource {
     @GET
     @Path("/{id}")
     fun getContainerAppVersionById(
-        @Parameter(description = "编译环境版本ID", required = true)
+        @Parameter(name = "编译环境版本ID", required = true)
         @PathParam("id")
         id: Int
     ): Result<ContainerAppVersion?>

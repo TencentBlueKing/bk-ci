@@ -54,10 +54,10 @@ interface UserProjectWorkspaceImageResource {
     @GET
     @Path("/list")
     fun getProjectImageList(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "项目ID", required = true)
+        @Parameter(name = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String
     ): Result<List<ProjectImage>>
@@ -66,13 +66,13 @@ interface UserProjectWorkspaceImageResource {
     @DELETE
     @Path("/{imageId}/delete")
     fun deleteProjectImage(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "项目ID", required = true)
+        @Parameter(name = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(description = "镜像ID", required = true)
+        @Parameter(name = "镜像ID", required = true)
         @PathParam("imageId")
         imageId: String
     ): Result<Boolean>
@@ -81,10 +81,10 @@ interface UserProjectWorkspaceImageResource {
     @GET
     @Path("/list/standard")
     fun getVmStandardImages(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "项目ID", required = true)
+        @Parameter(name = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String
     ): Result<List<StandardVmImage>>

@@ -61,16 +61,16 @@ interface TencentBuildArtifactoryResource : BuildArtifactoryResource {
     @Path("/properties")
     @GET
     fun getProperties(
-        @Parameter(description = "项目ID", required = true)
+        @Parameter(name = "项目ID", required = true)
         @HeaderParam(AUTH_HEADER_PROJECT_ID)
         projectId: String,
-        @Parameter(description = "流水线ID", required = true)
+        @Parameter(name = "流水线ID", required = true)
         @HeaderParam(AUTH_HEADER_PIPELINE_ID)
         pipelineId: String,
-        @Parameter(description = "版本仓库类型", required = true)
+        @Parameter(name = "版本仓库类型", required = true)
         @QueryParam("artifactoryType")
         artifactoryType: ArtifactoryType,
-        @Parameter(description = "路径", required = true)
+        @Parameter(name = "路径", required = true)
         @QueryParam(value = "path")
         path: String
     ): Result<List<Property>>
@@ -79,19 +79,19 @@ interface TencentBuildArtifactoryResource : BuildArtifactoryResource {
     @Path("/properties")
     @POST
     fun setProperties(
-        @Parameter(description = "项目ID", required = true)
+        @Parameter(name = "项目ID", required = true)
         @HeaderParam(AUTH_HEADER_PROJECT_ID)
         projectId: String,
-        @Parameter(description = "流水线ID", required = true)
+        @Parameter(name = "流水线ID", required = true)
         @HeaderParam(AUTH_HEADER_PIPELINE_ID)
         pipelineId: String,
-        @Parameter(description = "版本仓库类型", required = true)
+        @Parameter(name = "版本仓库类型", required = true)
         @QueryParam("artifactoryType")
         artifactoryType: ArtifactoryType,
-        @Parameter(description = "路径", required = true)
+        @Parameter(name = "路径", required = true)
         @QueryParam("path")
         path: String,
-        @Parameter(description = "元数据", required = true)
+        @Parameter(name = "元数据", required = true)
         properties: Map<String, String>
     ): Result<Boolean>
 
@@ -99,28 +99,28 @@ interface TencentBuildArtifactoryResource : BuildArtifactoryResource {
     @Path("/getPropertiesByRegex")
     @GET
     fun getPropertiesByRegex(
-        @Parameter(description = "项目ID", required = true)
+        @Parameter(name = "项目ID", required = true)
         @HeaderParam(AUTH_HEADER_PROJECT_ID)
         projectId: String,
-        @Parameter(description = "流水线ID", required = true)
+        @Parameter(name = "流水线ID", required = true)
         @HeaderParam(AUTH_HEADER_PIPELINE_ID)
         pipelineId: String,
-        @Parameter(description = "构建ID", required = true)
+        @Parameter(name = "构建ID", required = true)
         @HeaderParam(AUTH_HEADER_BUILD_ID)
         buildId: String,
-        @Parameter(description = "版本仓库类型", required = true)
+        @Parameter(name = "版本仓库类型", required = true)
         @QueryParam("artifactoryType")
         artifactoryType: ArtifactoryType,
-        @Parameter(description = "路径", required = true)
+        @Parameter(name = "路径", required = true)
         @QueryParam("path")
         path: String,
-        @Parameter(description = "项目ID", required = false)
+        @Parameter(name = "项目ID", required = false)
         @QueryParam("projectId")
         crossProjectId: String?,
-        @Parameter(description = "流水线ID", required = false)
+        @Parameter(name = "流水线ID", required = false)
         @QueryParam("pipelineId")
         crossPipineId: String?,
-        @Parameter(description = "构建No", required = false)
+        @Parameter(name = "构建No", required = false)
         @QueryParam("buildNo")
         crossBuildNo: String?
     ): Result<List<FileDetail>>
@@ -129,34 +129,34 @@ interface TencentBuildArtifactoryResource : BuildArtifactoryResource {
     @Path("/thirdPartyDownloadUrl")
     @GET
     fun getThirdPartyDownloadUrl(
-        @Parameter(description = "项目ID", required = true)
+        @Parameter(name = "项目ID", required = true)
         @HeaderParam(AUTH_HEADER_PROJECT_ID)
         projectId: String,
-        @Parameter(description = "流水线ID", required = true)
+        @Parameter(name = "流水线ID", required = true)
         @HeaderParam(AUTH_HEADER_PIPELINE_ID)
         pipelineId: String,
-        @Parameter(description = "构建ID", required = true)
+        @Parameter(name = "构建ID", required = true)
         @HeaderParam(AUTH_HEADER_BUILD_ID)
         buildId: String,
-        @Parameter(description = "版本仓库类型", required = true)
+        @Parameter(name = "版本仓库类型", required = true)
         @QueryParam("artifactoryType")
         artifactoryType: ArtifactoryType,
-        @Parameter(description = "路径", required = true)
+        @Parameter(name = "路径", required = true)
         @QueryParam("path")
         path: String,
-        @Parameter(description = "有效时间(s)", required = true)
+        @Parameter(name = "有效时间(s)", required = true)
         @QueryParam("ttl")
         ttl: Int?,
-        @Parameter(description = "项目ID", required = false)
+        @Parameter(name = "项目ID", required = false)
         @QueryParam("projectId")
         crossProjectId: String?,
-        @Parameter(description = "流水线ID", required = false)
+        @Parameter(name = "流水线ID", required = false)
         @QueryParam("pipelineId")
         crossPipineId: String?,
-        @Parameter(description = "构建No", required = false)
+        @Parameter(name = "构建No", required = false)
         @QueryParam("buildNo")
         crossBuildNo: String?,
-        @Parameter(description = "客户端区域", required = false)
+        @Parameter(name = "客户端区域", required = false)
         @HeaderParam(AUTH_HEADER_REGION)
         region: String?
     ): Result<List<String>>
@@ -165,19 +165,19 @@ interface TencentBuildArtifactoryResource : BuildArtifactoryResource {
     @Path("/project/{projectId}/pipeline/{pipelineId}/buildId/{buildId}/getFileDownloadUrl")
     @GET
     fun getFileDownloadUrl(
-        @Parameter(description = "项目ID", required = true)
+        @Parameter(name = "项目ID", required = true)
         @HeaderParam(AUTH_HEADER_PROJECT_ID)
         projectId: String,
-        @Parameter(description = "流水线ID", required = true)
+        @Parameter(name = "流水线ID", required = true)
         @HeaderParam(AUTH_HEADER_PIPELINE_ID)
         pipelineId: String,
-        @Parameter(description = "构建ID", required = true)
+        @Parameter(name = "构建ID", required = true)
         @HeaderParam(AUTH_HEADER_BUILD_ID)
         buildId: String,
-        @Parameter(description = "版本仓库类型", required = true)
+        @Parameter(name = "版本仓库类型", required = true)
         @QueryParam("artifactoryType")
         artifactoryType: ArtifactoryType,
-        @Parameter(description = "路径", required = true)
+        @Parameter(name = "路径", required = true)
         @QueryParam("path")
         path: String
     ): Result<List<String>>
@@ -186,10 +186,10 @@ interface TencentBuildArtifactoryResource : BuildArtifactoryResource {
     @Path("/users/{userId}/ownFileList")
     @GET
     fun getOwnFileList(
-        @Parameter(description = "用户ID", required = true)
+        @Parameter(name = "用户ID", required = true)
         @PathParam("userId")
         userId: String,
-        @Parameter(description = "项目ID", required = true)
+        @Parameter(name = "项目ID", required = true)
         @HeaderParam(AUTH_HEADER_PROJECT_ID)
         projectId: String
     ): Result<FileInfoPage<FileInfo>>
@@ -198,16 +198,16 @@ interface TencentBuildArtifactoryResource : BuildArtifactoryResource {
     @Path("/projects/{projectId}/fileCheck")
     @GET
     fun check(
-        @Parameter(description = "流水线ID", required = true)
+        @Parameter(name = "流水线ID", required = true)
         @HeaderParam(AUTH_HEADER_PIPELINE_ID)
         pipelineId: String,
-        @Parameter(description = "项目ID", required = true)
+        @Parameter(name = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(description = "版本仓库类型", required = true)
+        @Parameter(name = "版本仓库类型", required = true)
         @QueryParam("artifactoryType")
         artifactoryType: ArtifactoryType,
-        @Parameter(description = "路径", required = true)
+        @Parameter(name = "路径", required = true)
         @QueryParam("path")
         path: String
     ): Result<Boolean>
@@ -216,7 +216,7 @@ interface TencentBuildArtifactoryResource : BuildArtifactoryResource {
     @Path("/checkRepoGray")
     @GET
     fun checkRepoGray(
-        @Parameter(description = "项目ID", required = true)
+        @Parameter(name = "项目ID", required = true)
         @HeaderParam("X-DEVOPS-PROJECT-ID")
         projectId: String
     ): Result<Boolean>
@@ -225,7 +225,7 @@ interface TencentBuildArtifactoryResource : BuildArtifactoryResource {
     @Path("/checkGrayProject")
     @GET
     fun checkGrayProject(
-        @Parameter(description = "项目ID", required = true)
+        @Parameter(name = "项目ID", required = true)
         @HeaderParam("X-DEVOPS-PROJECT-ID")
         projectId: String
     ): Result<Boolean>
@@ -234,19 +234,19 @@ interface TencentBuildArtifactoryResource : BuildArtifactoryResource {
     @Path("/{artifactoryType}/externalUrl")
     @GET
     fun externalUrl(
-        @Parameter(description = "项目ID", required = true)
+        @Parameter(name = "项目ID", required = true)
         @HeaderParam(AUTH_HEADER_PROJECT_ID)
         projectId: String,
-        @Parameter(description = "流水线ID", required = true)
+        @Parameter(name = "流水线ID", required = true)
         @HeaderParam(AUTH_HEADER_PIPELINE_ID)
         pipelineId: String,
-        @Parameter(description = "构建ID", required = true)
+        @Parameter(name = "构建ID", required = true)
         @HeaderParam(AUTH_HEADER_BUILD_ID)
         buildId: String,
-        @Parameter(description = "版本仓库类型", required = true)
+        @Parameter(name = "版本仓库类型", required = true)
         @PathParam("artifactoryType")
         artifactoryType: ArtifactoryType,
-        @Parameter(description = "完整路径", required = true)
+        @Parameter(name = "完整路径", required = true)
         @QueryParam("path")
         path: String
     ): Result<Url>

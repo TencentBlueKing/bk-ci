@@ -1,12 +1,12 @@
 package com.tencent.devops.environment.pojo.job.req
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("终止任务的信息")
+
+@Schema(title = "终止任务的信息")
 data class TaskTerminateReq(
-    @ApiModelProperty(value = "作业实例ID", required = true)
+    @get:Schema(title = "作业实例ID", required = true)
     val jobInstanceId: Long,
-    @ApiModelProperty(value = "操作类型", notes = "1 - 终止作业(也是默认)")
+    @get:Schema(title = "操作类型", description = "1 - 终止作业(也是默认)")
     val operationCode: Int = 1
 )

@@ -52,19 +52,19 @@ interface OPRepositoryResource {
     @POST
     @Path("/updateGitDomain")
     fun updateGitDomain(
-        @Parameter(description = "git老域名", required = true)
+        @Parameter(name = "git老域名", required = true)
         @QueryParam("oldGitDomain")
         oldGitDomain: String,
-        @Parameter(description = "git新域名", required = true)
+        @Parameter(name = "git新域名", required = true)
         @QueryParam("newGitDomain")
         newGitDomain: String,
-        @Parameter(description = "灰度项目列表,多个用,分割", required = true)
+        @Parameter(name = "灰度项目列表,多个用,分割", required = true)
         @QueryParam("grayProject")
         grayProject: String?,
-        @Parameter(description = "灰度权重", required = true)
+        @Parameter(name = "灰度权重", required = true)
         @QueryParam("grayWeight")
         grayWeight: Int?,
-        @Parameter(description = "灰度白名单,多个用,分割", required = true)
+        @Parameter(name = "灰度白名单,多个用,分割", required = true)
         @QueryParam("grayWhiteProject")
         grayWhiteProject: String?
     ): Result<Boolean>
@@ -83,10 +83,10 @@ interface OPRepositoryResource {
     @PUT
     @Path("/{projectId}/{repositoryId}/setGrayGitHookUrl")
     fun setGrayGitHookUrl(
-        @Parameter(description = "项目ID", required = true)
+        @Parameter(name = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(description = "代码库ID", required = true)
+        @Parameter(name = "代码库ID", required = true)
         @PathParam("repositoryId")
         repositoryId: Long
     ): Result<Boolean>
@@ -95,10 +95,10 @@ interface OPRepositoryResource {
     @PUT
     @Path("/{projectId}/{repositoryId}/removeGrayGitHookUrl")
     fun removeGrayGitHookUrl(
-        @Parameter(description = "项目ID", required = true)
+        @Parameter(name = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(description = "代码库ID", required = true)
+        @Parameter(name = "代码库ID", required = true)
         @PathParam("repositoryId")
         repositoryId: Long
     ): Result<Boolean>

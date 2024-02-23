@@ -57,16 +57,16 @@ interface UserProjectRoleResource {
     @Path("/projectIds/{projectId}/")
     @Operation(summary = "项目下添加指定组")
     fun createProjectRole(
-        @Parameter(description = "用户名", required = true)
+        @Parameter(name = "用户名", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "项目标识", required = true)
+        @Parameter(name = "项目标识", required = true)
         @PathParam("projectId")
         projectId: Int,
-        @Parameter(description = "项目标识", required = true)
+        @Parameter(name = "项目标识", required = true)
         @QueryParam("projectCode")
         projectCode: String,
-        @Parameter(description = "用户组信息", required = true)
+        @Parameter(name = "用户组信息", required = true)
         groupInfo: ProjectRoleDTO
     ): Result<String>
 
@@ -74,16 +74,16 @@ interface UserProjectRoleResource {
     @Path("/projectIds/{projectId}/roleIds/{roleId}")
     @Operation(summary = "用户组重命名")
     fun updateProjectRole(
-        @Parameter(description = "用户名", required = true)
+        @Parameter(name = "用户名", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "项目标识", required = true)
+        @Parameter(name = "项目标识", required = true)
         @PathParam("projectId")
         projectId: Int,
-        @Parameter(description = "角色Id", required = true)
+        @Parameter(name = "角色Id", required = true)
         @PathParam("roleId")
         roleId: Int,
-        @Parameter(description = "用户组信息", required = true)
+        @Parameter(name = "用户组信息", required = true)
         groupInfo: ProjectRoleDTO
     ): Result<Boolean>
 
@@ -91,10 +91,10 @@ interface UserProjectRoleResource {
     @Path("/projectIds/{projectId}")
     @Operation(summary = "获取用户组")
     fun getProjectRoles(
-        @Parameter(description = "用户名", required = true)
+        @Parameter(name = "用户名", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "项目标识", required = true)
+        @Parameter(name = "项目标识", required = true)
         @PathParam("projectId")
         projectId: Int
     ): Result<List<GroupInfoVo>>
@@ -103,13 +103,13 @@ interface UserProjectRoleResource {
     @Path("/projectIds/{projectId}/roles/{roleId}")
     @Operation(summary = "删除用户组")
     fun deleteProjectRole(
-        @Parameter(description = "用户名", required = true)
+        @Parameter(name = "用户名", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "项目标识", required = true)
+        @Parameter(name = "项目标识", required = true)
         @PathParam("projectId")
         projectId: Int,
-        @Parameter(description = "角色Id", required = true)
+        @Parameter(name = "角色Id", required = true)
         @PathParam("roleId")
         roleId: Int
     ): Result<Boolean>
@@ -118,10 +118,10 @@ interface UserProjectRoleResource {
     @Path("/projects/{projectId}/manager/hasPermission")
     @Operation(summary = "是否有项目管理操作的权限")
     fun hashPermission(
-        @Parameter(description = "用户名", required = true)
+        @Parameter(name = "用户名", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "项目标识", required = true)
+        @Parameter(name = "项目标识", required = true)
         @PathParam("projectId")
         projectId: Int
     ): Result<Boolean>
@@ -129,7 +129,7 @@ interface UserProjectRoleResource {
     @GET
     @Path("/default/role")
     fun getDefaultRole(
-        @Parameter(description = "用户名", required = true)
+        @Parameter(name = "用户名", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String
     ): Result<List<DefaultGroup>>

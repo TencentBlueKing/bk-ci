@@ -58,13 +58,13 @@ interface OPTemplateResource {
     @Path("/list")
     @GET
     fun list(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "页号", required = false, example = "1")
+        @Parameter(name = "页号", required = false, example = "1")
         @QueryParam("page")
         page: Int?,
-        @Parameter(description = "页码", required = false, example = "20")
+        @Parameter(name = "页码", required = false, example = "20")
         @QueryParam("pageSize")
         pageSize: Int?
     ): Result<Page<TemplateData>>
@@ -73,10 +73,10 @@ interface OPTemplateResource {
     @Path("/add")
     @POST
     fun add(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "(模板/指标集)配置信息", required = true)
+        @Parameter(name = "(模板/指标集)配置信息", required = true)
         templateUpdateData: TemplateUpdateData
     ): Result<Boolean>
 
@@ -84,10 +84,10 @@ interface OPTemplateResource {
     @Path("/{id}/delete")
     @DELETE
     fun delete(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "(模板/指标集)配置ID", required = true)
+        @Parameter(name = "(模板/指标集)配置ID", required = true)
         @PathParam("id")
         id: Long
     ): Result<Boolean>
@@ -96,13 +96,13 @@ interface OPTemplateResource {
     @Path("/{id}/update")
     @PUT
     fun update(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "质量红线指标配置ID", required = true)
+        @Parameter(name = "质量红线指标配置ID", required = true)
         @PathParam("id")
         id: Long,
-        @Parameter(description = "(模板/指标集)配置信息", required = true)
+        @Parameter(name = "(模板/指标集)配置信息", required = true)
         templateUpdateData: TemplateUpdateData
     ): Result<Boolean>
 }

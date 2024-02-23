@@ -26,13 +26,13 @@ interface Oauth2DesktopEndpointResource {
     @Operation(summary = "获取授权信息")
     fun getAuthorizationInformation(
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
-        @Parameter(description = "待校验用户ID", required = true)
+        @Parameter(name = "待校验用户ID", required = true)
         userId: String,
         @QueryParam("clientId")
-        @Parameter(description = "客户端ID", required = true)
+        @Parameter(name = "客户端ID", required = true)
         clientId: String,
         @QueryParam("redirectUri")
-        @Parameter(description = "跳转链接", required = true)
+        @Parameter(name = "跳转链接", required = true)
         redirectUri: String
     ): Result<Oauth2AuthorizationInfoVo>
 
@@ -41,15 +41,15 @@ interface Oauth2DesktopEndpointResource {
     @Operation(summary = "获取授权码")
     fun getAuthorizationCode(
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
-        @Parameter(description = "待校验用户ID", required = true)
+        @Parameter(name = "待校验用户ID", required = true)
         userId: String,
         @QueryParam("clientId")
-        @Parameter(description = "客户端ID", required = true)
+        @Parameter(name = "客户端ID", required = true)
         clientId: String,
         @QueryParam("redirectUri")
-        @Parameter(description = "跳转链接", required = true)
+        @Parameter(name = "跳转链接", required = true)
         redirectUri: String,
-        @Parameter(description = "oauth2获取授权码请求报文体", required = true)
+        @Parameter(name = "oauth2获取授权码请求报文体", required = true)
         authorizationCodeDTO: Oauth2AuthorizationCodeDTO
     ): Result<String>
 }

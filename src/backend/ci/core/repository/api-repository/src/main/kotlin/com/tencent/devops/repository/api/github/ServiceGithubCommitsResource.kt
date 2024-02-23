@@ -27,7 +27,7 @@ interface ServiceGithubCommitsResource {
     @POST
     @Path("/listCommits")
     fun listCommits(
-        @Parameter(description = "授权token", required = true)
+        @Parameter(name = "授权token", required = true)
         @HeaderParam(AUTH_HEADER_GITHUB_TOKEN)
         token: String,
         request: ListCommitRequest
@@ -37,7 +37,7 @@ interface ServiceGithubCommitsResource {
     @POST
     @Path("/getCommit")
     fun getCommit(
-        @Parameter(description = "授权token", required = true)
+        @Parameter(name = "授权token", required = true)
         @HeaderParam(AUTH_HEADER_GITHUB_TOKEN)
         token: String,
         request: GetCommitRequest
@@ -47,7 +47,7 @@ interface ServiceGithubCommitsResource {
     @POST
     @Path("/compareTwoCommits")
     fun compareTwoCommits(
-        @Parameter(description = "授权token", required = true)
+        @Parameter(name = "授权token", required = true)
         @HeaderParam(AUTH_HEADER_GITHUB_TOKEN)
         token: String,
         request: CompareTwoCommitsRequest

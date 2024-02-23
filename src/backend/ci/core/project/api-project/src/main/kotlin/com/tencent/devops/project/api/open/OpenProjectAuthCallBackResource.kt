@@ -50,9 +50,9 @@ interface OpenProjectAuthCallBackResource {
     @Operation(summary = "iam项目回调接口")
     fun projectInfo(
         @HeaderParam(AUTH_HEADER_IAM_TOKEN)
-        @Parameter(description = "token")
+        @Parameter(name = "token")
         token: String,
-        @Parameter(description = "回调信息")
+        @Parameter(name = "回调信息")
         callBackInfo: CallbackRequestDTO
     ): CallbackBaseResponseDTO?
 }

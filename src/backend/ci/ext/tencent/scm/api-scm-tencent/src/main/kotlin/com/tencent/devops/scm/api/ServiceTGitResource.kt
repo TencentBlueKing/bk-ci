@@ -62,10 +62,10 @@ interface ServiceTGitResource {
     @GET
     @Path("/getToken")
     fun getToken(
-        @Parameter(description = "userId", required = true)
+        @Parameter(name = "userId", required = true)
         @QueryParam("userId")
         userId: String,
-        @Parameter(description = "code", required = true)
+        @Parameter(name = "code", required = true)
         @QueryParam("code")
         code: String
     ): Result<GitToken>
@@ -74,10 +74,10 @@ interface ServiceTGitResource {
     @GET
     @Path("/getUserInfoByToken")
     fun getUserInfoByToken(
-        @Parameter(description = "用户id", required = true)
+        @Parameter(name = "用户id", required = true)
         @QueryParam("token")
         token: String,
-        @Parameter(description = "是否使用access token", required = true)
+        @Parameter(name = "是否使用access token", required = true)
         @QueryParam("tokenType")
         tokenType: TokenTypeEnum
     ): Result<GitUserInfo>
@@ -86,10 +86,10 @@ interface ServiceTGitResource {
     @PUT
     @Path("/refreshToken")
     fun refreshToken(
-        @Parameter(description = "用户id", required = true)
+        @Parameter(name = "用户id", required = true)
         @QueryParam("userId")
         userId: String,
-        @Parameter(description = "accessToken", required = true)
+        @Parameter(name = "accessToken", required = true)
         accessToken: GitToken
     ): Result<GitToken>
 
@@ -97,22 +97,22 @@ interface ServiceTGitResource {
     @GET
     @Path("/getBranch")
     fun getBranch(
-        @Parameter(description = "accessToken", required = true)
+        @Parameter(name = "accessToken", required = true)
         @QueryParam("accessToken")
         accessToken: String,
-        @Parameter(description = "用户id", required = true)
+        @Parameter(name = "用户id", required = true)
         @QueryParam("userId")
         userId: String,
-        @Parameter(description = "仓库ID", required = true)
+        @Parameter(name = "仓库ID", required = true)
         @QueryParam("repository")
         repository: String,
-        @Parameter(description = "第几页", required = true)
+        @Parameter(name = "第几页", required = true)
         @QueryParam("page")
         page: Int?,
-        @Parameter(description = "每页数据条数", required = true)
+        @Parameter(name = "每页数据条数", required = true)
         @QueryParam("pageSize")
         pageSize: Int?,
-        @Parameter(description = "搜索条件", required = true)
+        @Parameter(name = "搜索条件", required = true)
         @QueryParam("search")
         search: String?
     ): Result<List<GitBranch>>
@@ -121,19 +121,19 @@ interface ServiceTGitResource {
     @GET
     @Path("/getTag")
     fun getTag(
-        @Parameter(description = "accessToken", required = true)
+        @Parameter(name = "accessToken", required = true)
         @QueryParam("accessToken")
         accessToken: String,
-        @Parameter(description = "用户id", required = true)
+        @Parameter(name = "用户id", required = true)
         @QueryParam("userId")
         userId: String,
-        @Parameter(description = "仓库ID", required = true)
+        @Parameter(name = "仓库ID", required = true)
         @QueryParam("repository")
         repository: String,
-        @Parameter(description = "第几页", required = true)
+        @Parameter(name = "第几页", required = true)
         @QueryParam("page")
         page: Int?,
-        @Parameter(description = "每页数据条数", required = true)
+        @Parameter(name = "每页数据条数", required = true)
         @QueryParam("pageSize")
         pageSize: Int?
     ): Result<List<GitTag>>
@@ -142,19 +142,19 @@ interface ServiceTGitResource {
     @GET
     @Path("/getGitFileContent")
     fun getGitFileContent(
-        @Parameter(description = "仓库名字")
+        @Parameter(name = "仓库名字")
         @QueryParam("repoName")
         repoName: String,
-        @Parameter(description = "文件路径")
+        @Parameter(name = "文件路径")
         @QueryParam("filePath")
         filePath: String,
-        @Parameter(description = "认证方式")
+        @Parameter(name = "认证方式")
         @QueryParam("authType")
         authType: RepoAuthType?,
-        @Parameter(description = "token")
+        @Parameter(name = "token")
         @QueryParam("token")
         token: String,
-        @Parameter(description = "提交id 或者 分支")
+        @Parameter(name = "提交id 或者 分支")
         @QueryParam("ref")
         ref: String
     ): Result<String>
@@ -163,19 +163,19 @@ interface ServiceTGitResource {
     @GET
     @Path("/downloadGitFile")
     fun downloadGitFile(
-        @Parameter(description = "仓库名字")
+        @Parameter(name = "仓库名字")
         @QueryParam("repoName")
         repoName: String,
-        @Parameter(description = "文件路径")
+        @Parameter(name = "文件路径")
         @QueryParam("filePath")
         filePath: String,
-        @Parameter(description = "认证方式")
+        @Parameter(name = "认证方式")
         @QueryParam("authType")
         authType: RepoAuthType?,
-        @Parameter(description = "token")
+        @Parameter(name = "token")
         @QueryParam("token")
         token: String,
-        @Parameter(description = "提交id 或者 分支")
+        @Parameter(name = "提交id 或者 分支")
         @QueryParam("ref")
         ref: String,
         @Context
@@ -186,22 +186,22 @@ interface ServiceTGitResource {
     @GET
     @Path("/getFileTree")
     fun getFileTree(
-        @Parameter(description = "gitProjectId")
+        @Parameter(name = "gitProjectId")
         @QueryParam("gitProjectId")
         gitProjectId: String,
-        @Parameter(description = "目录路径")
+        @Parameter(name = "目录路径")
         @QueryParam("path")
         path: String,
-        @Parameter(description = "token")
+        @Parameter(name = "token")
         @QueryParam("token")
         token: String,
-        @Parameter(description = "提交id 或者 分支")
+        @Parameter(name = "提交id 或者 分支")
         @QueryParam("ref")
         ref: String?,
-        @Parameter(description = "是否支持递归目录结构")
+        @Parameter(name = "是否支持递归目录结构")
         @QueryParam("recursive")
         recursive: Boolean? = false,
-        @Parameter(description = "token类型 0：oauth 1:privateKey", required = true)
+        @Parameter(name = "token类型 0：oauth 1:privateKey", required = true)
         @QueryParam("tokenType")
         tokenType: TokenTypeEnum = TokenTypeEnum.OAUTH
     ): Result<List<GitFileInfo>>
@@ -210,28 +210,28 @@ interface ServiceTGitResource {
     @GET
     @Path("/getProjectList")
     fun getProjectList(
-        @Parameter(description = "accessToken", required = true)
+        @Parameter(name = "accessToken", required = true)
         @QueryParam("accessToken")
         accessToken: String,
-        @Parameter(description = "第几页", required = true)
+        @Parameter(name = "第几页", required = true)
         @QueryParam("page")
         page: Int?,
-        @Parameter(description = "每页数据条数", required = true)
+        @Parameter(name = "每页数据条数", required = true)
         @QueryParam("pageSize")
         pageSize: Int?,
-        @Parameter(description = "搜索条件，模糊匹配path,name")
+        @Parameter(name = "搜索条件，模糊匹配path,name")
         @QueryParam("search")
         search: String?,
-        @Parameter(description = "排序字段")
+        @Parameter(name = "排序字段")
         @QueryParam("orderBy")
         orderBy: GitCodeProjectsOrder?,
-        @Parameter(description = "排序方式")
+        @Parameter(name = "排序方式")
         @QueryParam("sort")
         sort: GitCodeBranchesSort?,
-        @Parameter(description = "若为true，返回的是当前用户个人namespace下的project，以及owner为当前用户的group下的所有project")
+        @Parameter(name = "若为true，返回的是当前用户个人namespace下的project，以及owner为当前用户的group下的所有project")
         @QueryParam("owned")
         owned: Boolean?,
-        @Parameter(description = "指定最小访问级别，返回的project列表中，当前用户的project访问级别大于或者等于指定值")
+        @Parameter(name = "指定最小访问级别，返回的project列表中，当前用户的project访问级别大于或者等于指定值")
         @QueryParam("minAccessLevel")
         minAccessLevel: GitAccessLevelEnum?
     ): Result<List<GitCodeProjectInfo>>

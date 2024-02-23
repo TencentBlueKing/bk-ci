@@ -55,28 +55,28 @@ interface UserJinGangAppResource {
     @POST
     @Path("/{projectId}/{pipelineId}/{buildId}/app/scan")
     fun scanApp(
-        @Parameter(description = "用户ID", required = true)
+        @Parameter(name = "用户ID", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "项目ID", required = true)
+        @Parameter(name = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(description = "流水线ID", required = true)
+        @Parameter(name = "流水线ID", required = true)
         @PathParam("pipelineId")
         pipelineId: String,
-        @Parameter(description = "流水线构建id", required = true)
+        @Parameter(name = "流水线构建id", required = true)
         @PathParam("buildId")
         buildId: String,
-        @Parameter(description = "流水线构建No", required = true)
+        @Parameter(name = "流水线构建No", required = true)
         @QueryParam("buildNo")
         buildNo: Int,
-        @Parameter(description = "文件路径", required = true)
+        @Parameter(name = "文件路径", required = true)
         @QueryParam("file")
         file: String,
-        @Parameter(description = "是否是自定义仓库", required = true)
+        @Parameter(name = "是否是自定义仓库", required = true)
         @QueryParam("isCustom")
         isCustom: Boolean,
-        @Parameter(description = "运行类型（3表示中跑静态，1表示跑静态和跑动态）", required = true)
+        @Parameter(name = "运行类型（3表示中跑静态，1表示跑静态和跑动态）", required = true)
         @QueryParam("runType")
         runType: String
     ): Result<String>
@@ -85,13 +85,13 @@ interface UserJinGangAppResource {
     @GET
     @Path("/{projectId}/app")
     fun getList(
-        @Parameter(description = "产品ID", required = true)
+        @Parameter(name = "产品ID", required = true)
         @PathParam(value = "projectId")
         projectId: String,
-        @Parameter(description = "开始页数，从1开始", required = false, example = "1")
+        @Parameter(name = "开始页数，从1开始", required = false, example = "1")
         @QueryParam("page")
         page: Int,
-        @Parameter(description = "每页数据条数", required = false, example = "12")
+        @Parameter(name = "每页数据条数", required = false, example = "12")
         @QueryParam("pageSize")
         pageSize: Int
     ): Result<JinGangAppResponse?>
@@ -100,10 +100,10 @@ interface UserJinGangAppResource {
     @GET
     @Path("/app/result/{taskId}")
     fun getAppResult(
-        @Parameter(description = "用户ID", required = true)
+        @Parameter(name = "用户ID", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "任务ID", required = true)
+        @Parameter(name = "任务ID", required = true)
         @PathParam(value = "taskId")
         taskId: Long
     ): Result<JinGangAppResultReponse?>

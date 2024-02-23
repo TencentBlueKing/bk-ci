@@ -49,10 +49,10 @@ interface ServiceTicketAuthResource {
     @Path("/cert")
     @Operation(summary = "iam证书回调接口")
     fun certInfo(
-        @Parameter(description = "回调信息")
+        @Parameter(name = "回调信息")
         callBackInfo: CallbackRequestDTO,
         @HeaderParam(AUTH_HEADER_IAM_TOKEN)
-        @Parameter(description = "token")
+        @Parameter(name = "token")
         token: String
     ): CallbackBaseResponseDTO?
 
@@ -60,10 +60,10 @@ interface ServiceTicketAuthResource {
     @Path("/credential")
     @Operation(summary = "iam凭证回调接口")
     fun credentialInfo(
-        @Parameter(description = "回调信息")
+        @Parameter(name = "回调信息")
         callBackInfo: CallbackRequestDTO,
         @HeaderParam(AUTH_HEADER_IAM_TOKEN)
-        @Parameter(description = "token")
+        @Parameter(name = "token")
         token: String
     ): CallbackBaseResponseDTO?
 }

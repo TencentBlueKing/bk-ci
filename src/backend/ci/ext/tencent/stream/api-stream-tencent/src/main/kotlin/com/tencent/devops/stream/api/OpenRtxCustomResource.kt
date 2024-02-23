@@ -51,16 +51,16 @@ interface OpenRtxCustomResource {
     @POST
     @Path("/push")
     fun getCustomInfo(
-        @Parameter(description = "消息体签名", required = true)
+        @Parameter(name = "消息体签名", required = true)
         @QueryParam(value = "msg_signature")
         signature: String,
-        @Parameter(description = "时间戳", required = true)
+        @Parameter(name = "时间戳", required = true)
         @QueryParam(value = "timestamp")
         timestamp: Long,
-        @Parameter(description = "随机数字串", required = true)
+        @Parameter(name = "随机数字串", required = true)
         @QueryParam(value = "nonce")
         nonce: String,
-        @Parameter(description = "回调密文", required = true)
+        @Parameter(name = "回调密文", required = true)
         reqData: String?
     ): Result<Boolean>
 
@@ -70,19 +70,19 @@ interface OpenRtxCustomResource {
     @GET
     @Path("/push")
     fun getCustomInfo(
-        @Parameter(description = "消息体签名", required = true)
+        @Parameter(name = "消息体签名", required = true)
         @QueryParam(value = "msg_signature")
         signature: String,
-        @Parameter(description = "时间戳", required = true)
+        @Parameter(name = "时间戳", required = true)
         @QueryParam(value = "timestamp")
         timestamp: Long,
-        @Parameter(description = "随机数字串", required = true)
+        @Parameter(name = "随机数字串", required = true)
         @QueryParam(value = "nonce")
         nonce: String,
-        @Parameter(description = "随机加密字符串", required = true)
+        @Parameter(name = "随机加密字符串", required = true)
         @QueryParam(value = "echostr")
         echoStr: String,
-        @Parameter(description = "回调密文", required = false)
+        @Parameter(name = "回调密文", required = false)
         reqData: String?
     ): Result<String>
 }

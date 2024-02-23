@@ -28,25 +28,26 @@
 package com.tencent.devops.environment.pojo.job.agentreq
 
 import com.fasterxml.jackson.annotation.JsonProperty
-import io.swagger.annotations.ApiModelProperty
+
+import io.swagger.v3.oas.annotations.media.Schema
 
 data class AgentQueryAgentStatusFromNodemanReq(
-    @ApiModelProperty(value = "主机ID")
+    @get:Schema(title = "主机ID")
     @JsonProperty("bk_host_id")
     val bkHostId: List<Long>?,
-    @ApiModelProperty(value = "搜索条件")
+    @get:Schema(title = "搜索条件")
     val conditions: List<AgentCondition<List<String>>>?,
-    @ApiModelProperty(value = "展示额外信息")
+    @get:Schema(title = "展示额外信息")
     @JsonProperty("extra_data")
     val extraData: List<String>?,
-    @ApiModelProperty(value = "分页大小，默认为10")
+    @get:Schema(title = "分页大小，默认为10")
     val pagesize: Int?,
-    @ApiModelProperty(value = "当前页数，默认为1")
+    @get:Schema(title = "当前页数，默认为1")
     val page: Int?,
-    @ApiModelProperty(value = "只返回IP，不返回其他字段")
+    @get:Schema(title = "只返回IP，不返回其他字段")
     @JsonProperty("only_ip")
     val onlyIp: Boolean?,
-    @ApiModelProperty(value = "是否只返回运行状态统计")
+    @get:Schema(title = "是否只返回运行状态统计")
     @JsonProperty("running_count")
     val runningCount: Boolean?
 )

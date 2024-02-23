@@ -52,22 +52,22 @@ interface BuildQualityMetadataResource {
     @Path("/saveHisMetadata")
     @POST
     fun saveHisMetadata(
-        @Parameter(description = "项目ID", required = true)
+        @Parameter(name = "项目ID", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_PROJECT_ID)
         projectId: String,
-        @Parameter(description = "构建ID", required = true)
+        @Parameter(name = "构建ID", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_PIPELINE_ID)
         pipelineId: String,
-        @Parameter(description = "构建ID", required = true)
+        @Parameter(name = "构建ID", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_BUILD_ID)
         buildId: String,
-        @Parameter(description = "原子类型", required = true)
+        @Parameter(name = "原子类型", required = true)
         @QueryParam("elementType")
         elementType: String,
-        @Parameter(description = "任务节点ID", required = false)
+        @Parameter(name = "任务节点ID", required = false)
         @QueryParam("taskId")
         taskId: String?,
-        @Parameter(description = "任务节点名称", required = false)
+        @Parameter(name = "任务节点名称", required = false)
         @QueryParam("taskName")
         taskName: String?,
         data: Map<String, String>

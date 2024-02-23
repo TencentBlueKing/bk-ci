@@ -26,19 +26,19 @@ interface BuildPasswordResource {
     @Path("/")
     @Operation(summary = "获取vm列表")
     fun get(
-        @Parameter(description = "projectId", required = true)
+        @Parameter(name = "projectId", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_PROJECT_ID)
         projectId: String,
-        @Parameter(description = "pipelineId", required = true)
+        @Parameter(name = "pipelineId", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_PIPELINE_ID)
         pipelineId: String,
-        @Parameter(description = "buildId", required = true)
+        @Parameter(name = "buildId", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_BUILD_ID)
         buildId: String,
-        @Parameter(description = "realIp", required = true)
+        @Parameter(name = "realIp", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_REAL_IP)
         realIp: String,
-        @Parameter(description = "Base64编码的加密公钥", required = true)
+        @Parameter(name = "Base64编码的加密公钥", required = true)
         @QueryParam("publicKey")
         publicKey: String
     ): Result<PasswordInfo?>

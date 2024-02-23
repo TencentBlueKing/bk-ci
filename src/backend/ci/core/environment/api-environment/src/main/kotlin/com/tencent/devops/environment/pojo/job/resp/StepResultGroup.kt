@@ -27,17 +27,17 @@
 
 package com.tencent.devops.environment.pojo.job.resp
 
-import io.swagger.annotations.ApiModelProperty
+
 
 data class StepResultGroup(
-    @ApiModelProperty(value = "分组类型", required = true)
+    @get:Schema(title = "分组类型", required = true)
     val resultType: Int,
-    @ApiModelProperty(value = "分组类型描述", required = true)
+    @get:Schema(title = "分组类型描述", required = true)
     val resultTypeDesc: String,
-    @ApiModelProperty(value = "分组标签", required = true)
+    @get:Schema(title = "分组标签", required = true)
     val tag: String,
-    @ApiModelProperty(value = "分组内主机总量", required = true)
+    @get:Schema(title = "分组内主机总量", required = true)
     val hostSize: Int,
-    @ApiModelProperty(value = "每个分组内的主机任务执行结果列表", required = true)
+    @get:Schema(title = "每个分组内的主机任务执行结果列表", required = true)
     val hostResultList: List<StepHostResultForGetStepInstanceStatus>
 )

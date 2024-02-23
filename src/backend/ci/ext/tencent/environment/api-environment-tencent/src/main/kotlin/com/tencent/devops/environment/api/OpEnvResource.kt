@@ -51,7 +51,7 @@ interface OpEnvResource {
     @POST
     @Path("/project/saveProjectConfig")
     fun saveProjectConfig(
-        @Parameter(description = "项目配置", required = true)
+        @Parameter(name = "项目配置", required = true)
         projectConfigParam: ProjectConfigParam
     ): Result<Boolean>
 
@@ -64,13 +64,13 @@ interface OpEnvResource {
     @GET
     @Path("/projectConfig/list")
     fun list(
-        @Parameter(description = "第几页，从1开始", required = true)
+        @Parameter(name = "第几页，从1开始", required = true)
         @QueryParam("page")
         page: Int,
-        @Parameter(description = "每页条数", required = true)
+        @Parameter(name = "每页条数", required = true)
         @QueryParam("pageSize")
         pageSize: Int,
-        @Parameter(description = "项目ID", required = false)
+        @Parameter(name = "项目ID", required = false)
         @QueryParam("projectId")
         projectId: String?
     ): Result<ProjectConfigPage>

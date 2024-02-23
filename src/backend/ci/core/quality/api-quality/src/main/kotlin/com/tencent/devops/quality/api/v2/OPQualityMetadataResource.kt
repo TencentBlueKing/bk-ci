@@ -57,22 +57,22 @@ interface OPQualityMetadataResource {
     @Path("/list")
     @GET
     fun list(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "产出原子", required = false)
+        @Parameter(name = "产出原子", required = false)
         @QueryParam("elementName")
         elementName: String?,
-        @Parameter(description = "工具/原子子类", required = false)
+        @Parameter(name = "工具/原子子类", required = false)
         @QueryParam("elementDetail")
         elementDetail: String?,
-        @Parameter(description = "搜索条件", required = false)
+        @Parameter(name = "搜索条件", required = false)
         @QueryParam("searchString")
         searchString: String?,
-        @Parameter(description = "页号", required = false, example = "1")
+        @Parameter(name = "页号", required = false, example = "1")
         @QueryParam("page")
         page: Int?,
-        @Parameter(description = "页码", required = false, example = "20")
+        @Parameter(name = "页码", required = false, example = "20")
         @QueryParam("pageSize")
         pageSize: Int?
     ): Result<Page<QualityMetaData>>
@@ -81,7 +81,7 @@ interface OPQualityMetadataResource {
     @Path("/listElementNames")
     @GET
     fun getElementNames(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String
     ): Result<List<ElementNameData>>
@@ -90,7 +90,7 @@ interface OPQualityMetadataResource {
     @Path("/listElementDetails")
     @GET
     fun getElementDetails(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String
     ): Result<List<String>>
@@ -99,7 +99,7 @@ interface OPQualityMetadataResource {
     @Path("/batchSaveMetadata")
     @POST
     fun batchSaveMetadata(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
         metadataItemList: List<Map<String, String>>

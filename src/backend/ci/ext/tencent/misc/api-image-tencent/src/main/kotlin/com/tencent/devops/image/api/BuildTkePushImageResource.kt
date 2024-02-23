@@ -51,7 +51,7 @@ interface BuildTkePushImageResource {
     @POST
     @Path("/pushImage")
     fun pushImage(
-        @Parameter(description = "推送镜像到TKE镜像仓库请求参数", required = true)
+        @Parameter(name = "推送镜像到TKE镜像仓库请求参数", required = true)
         pushParam: TkePushImageParam
     ): Result<PushImageTask?>
 
@@ -59,7 +59,7 @@ interface BuildTkePushImageResource {
     @Path("/queryPushImageTask")
     @GET
     fun queryUploadTask(
-        @Parameter(description = "任务ID", required = true)
+        @Parameter(name = "任务ID", required = true)
         @QueryParam("taskId")
         taskId: String
     ): Result<PushImageTask?>

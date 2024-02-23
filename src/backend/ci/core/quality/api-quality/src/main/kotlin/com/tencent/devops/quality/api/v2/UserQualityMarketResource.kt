@@ -49,7 +49,7 @@ interface UserQualityMarketResource {
     @Path("/atom/{atomCode}/indicator/list")
     @GET
     fun getAuditUserList(
-        @Parameter(description = "atomCode", required = true)
+        @Parameter(name = "atomCode", required = true)
         @PathParam("atomCode")
         atomCode: String
     ): Result<List<QualityIndicator>>

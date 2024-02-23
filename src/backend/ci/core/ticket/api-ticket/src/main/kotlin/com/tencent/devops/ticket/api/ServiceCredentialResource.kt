@@ -61,13 +61,13 @@ interface ServiceCredentialResource {
     @Path("/{projectId}/")
     @POST
     fun create(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "项目ID", required = true)
+        @Parameter(name = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(description = "凭据", required = true)
+        @Parameter(name = "凭据", required = true)
         credential: CredentialCreate
     ): Result<Boolean>
 
@@ -75,13 +75,13 @@ interface ServiceCredentialResource {
     @Path("/{projectId}/{credentialId}/")
     @GET
     fun get(
-        @Parameter(description = "项目ID", required = true)
+        @Parameter(name = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(description = "凭据ID", required = true)
+        @Parameter(name = "凭据ID", required = true)
         @PathParam("credentialId")
         credentialId: String,
-        @Parameter(description = "Base64编码的加密公钥", required = true)
+        @Parameter(name = "Base64编码的加密公钥", required = true)
         @QueryParam("publicKey")
         publicKey: String
     ): Result<CredentialInfo?>
@@ -90,10 +90,10 @@ interface ServiceCredentialResource {
     @Path("/{projectId}/{credentialId}/")
     @OPTIONS
     fun check(
-        @Parameter(description = "项目ID", required = true)
+        @Parameter(name = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(description = "凭据ID", required = true)
+        @Parameter(name = "凭据ID", required = true)
         @PathParam("credentialId")
         credentialId: String
     )
@@ -102,13 +102,13 @@ interface ServiceCredentialResource {
     @Path("/{projectId}/")
     @GET
     fun list(
-        @Parameter(description = "项目ID", required = true)
+        @Parameter(name = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(description = "第几页", required = false, example = "1")
+        @Parameter(name = "第几页", required = false, example = "1")
         @QueryParam("page")
         page: Int?,
-        @Parameter(description = "每页多少条", required = false, example = "20")
+        @Parameter(name = "每页多少条", required = false, example = "20")
         @QueryParam("pageSize")
         pageSize: Int?
     ): Result<Page<Credential>>
@@ -117,25 +117,25 @@ interface ServiceCredentialResource {
     @Path("/{projectId}/hasPermissionList")
     @GET
     fun hasPermissionList(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "项目ID", required = true)
+        @Parameter(name = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(description = "凭证类型列表，用逗号分隔", required = false, example = "")
+        @Parameter(name = "凭证类型列表，用逗号分隔", required = false, example = "")
         @QueryParam("credentialTypes")
         credentialTypesString: String?,
-        @Parameter(description = "对应权限", required = true, example = "")
+        @Parameter(name = "对应权限", required = true, example = "")
         @QueryParam("permission")
         permission: Permission,
-        @Parameter(description = "第几页", required = false, example = "1")
+        @Parameter(name = "第几页", required = false, example = "1")
         @QueryParam("page")
         page: Int?,
-        @Parameter(description = "每页多少条", required = false, example = "20")
+        @Parameter(name = "每页多少条", required = false, example = "20")
         @QueryParam("pageSize")
         pageSize: Int?,
-        @Parameter(description = "关键字", required = false)
+        @Parameter(name = "关键字", required = false)
         @QueryParam("keyword")
         keyword: String?
     ): Result<Page<Credential>>
@@ -144,16 +144,16 @@ interface ServiceCredentialResource {
     @Path("/projects/{projectId}/credentials/{credentialId}/")
     @PUT
     fun edit(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String? = null,
-        @Parameter(description = "项目ID", required = true)
+        @Parameter(name = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(description = "凭据ID", required = true)
+        @Parameter(name = "凭据ID", required = true)
         @PathParam("credentialId")
         credentialId: String,
-        @Parameter(description = "凭据", required = true)
+        @Parameter(name = "凭据", required = true)
         credential: CredentialUpdate
     ): Result<Boolean>
 }

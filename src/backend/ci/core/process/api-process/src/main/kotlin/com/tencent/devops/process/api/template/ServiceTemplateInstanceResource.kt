@@ -64,22 +64,22 @@ interface ServiceTemplateInstanceResource {
     @POST
     @Path("/projects/{projectId}/templates/{templateId}")
     fun createTemplateInstances(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "项目ID", required = true)
+        @Parameter(name = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(description = "模板ID", required = true)
+        @Parameter(name = "模板ID", required = true)
         @PathParam("templateId")
         templateId: String,
-        @Parameter(description = "模板版本", required = true)
+        @Parameter(name = "模板版本", required = true)
         @QueryParam("version")
         version: Long,
-        @Parameter(description = "是否应用模板设置")
+        @Parameter(name = "是否应用模板设置")
         @QueryParam("useTemplateSettings")
         useTemplateSettings: Boolean,
-        @Parameter(description = "创建实例", required = true)
+        @Parameter(name = "创建实例", required = true)
         instances: List<TemplateInstanceCreate>
     ): TemplateOperationRet
 
@@ -87,22 +87,22 @@ interface ServiceTemplateInstanceResource {
     @PUT
     @Path("/projects/{projectId}/templates/{templateId}")
     fun updateTemplate(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "项目ID", required = true)
+        @Parameter(name = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(description = "模板ID", required = true)
+        @Parameter(name = "模板ID", required = true)
         @PathParam("templateId")
         templateId: String,
-        @Parameter(description = "版本名", required = true)
+        @Parameter(name = "版本名", required = true)
         @QueryParam("version")
         version: Long,
-        @Parameter(description = "是否应用模板设置")
+        @Parameter(name = "是否应用模板设置")
         @QueryParam("useTemplateSettings")
         useTemplateSettings: Boolean,
-        @Parameter(description = "模板实例", required = true)
+        @Parameter(name = "模板实例", required = true)
         instances: List<TemplateInstanceUpdate>
     ): TemplateOperationRet
 
@@ -110,22 +110,22 @@ interface ServiceTemplateInstanceResource {
     @PUT
     @Path("/projects/{projectId}/templates/{templateId}/updateTemplate")
     fun updateTemplate(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "项目ID", required = true)
+        @Parameter(name = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(description = "模板ID", required = true)
+        @Parameter(name = "模板ID", required = true)
         @PathParam("templateId")
         templateId: String,
-        @Parameter(description = "版本名", required = true)
+        @Parameter(name = "版本名", required = true)
         @QueryParam("versionName")
         versionName: String,
-        @Parameter(description = "是否应用模板设置")
+        @Parameter(name = "是否应用模板设置")
         @QueryParam("useTemplateSettings")
         useTemplateSettings: Boolean,
-        @Parameter(description = "模板实例", required = true)
+        @Parameter(name = "模板实例", required = true)
         instances: List<TemplateInstanceUpdate>
     ): TemplateOperationRet
 
@@ -134,19 +134,19 @@ interface ServiceTemplateInstanceResource {
     @Path("/projects/{projectId}/templates/{templateId}/pipelines")
     @BkApiPermission([BkApiHandleType.API_NO_AUTH_CHECK])
     fun listTemplateInstancesParams(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "项目ID", required = true)
+        @Parameter(name = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(description = "模板ID", required = true)
+        @Parameter(name = "模板ID", required = true)
         @PathParam("templateId")
         templateId: String,
-        @Parameter(description = "模板版本", required = true)
+        @Parameter(name = "模板版本", required = true)
         @QueryParam("version")
         version: Long,
-        @Parameter(description = "创建实例", required = true)
+        @Parameter(name = "创建实例", required = true)
         pipelineIds: List<PipelineId>
     ): Result<Map<String/*pipelineId*/, TemplateInstanceParams>>
 
@@ -154,28 +154,28 @@ interface ServiceTemplateInstanceResource {
     @GET
     @Path("/projects/{projectId}/templates/{templateId}")
     fun listTemplate(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "项目ID", required = true)
+        @Parameter(name = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(description = "模板ID", required = true)
+        @Parameter(name = "模板ID", required = true)
         @PathParam("templateId")
         templateId: String,
-        @Parameter(description = "第几页", required = false, example = "1")
+        @Parameter(name = "第几页", required = false, example = "1")
         @QueryParam("page")
         page: Int,
-        @Parameter(description = "每页多少条", required = false, example = "30")
+        @Parameter(name = "每页多少条", required = false, example = "30")
         @QueryParam("pageSize")
         pageSize: Int,
-        @Parameter(description = "名字搜索的关键字", required = false)
+        @Parameter(name = "名字搜索的关键字", required = false)
         @QueryParam("searchKey")
         searchKey: String?,
-        @Parameter(description = "排序字段", required = false)
+        @Parameter(name = "排序字段", required = false)
         @QueryParam("sortType")
         sortType: TemplateSortTypeEnum?,
-        @Parameter(description = "是否降序", required = false)
+        @Parameter(name = "是否降序", required = false)
         @QueryParam("desc")
         desc: Boolean?
     ): Result<TemplateInstancePage>
@@ -185,10 +185,10 @@ interface ServiceTemplateInstanceResource {
     @Path("/projects/{projectId}/countTemplateInstance")
     @BkApiPermission([BkApiHandleType.API_NO_AUTH_CHECK])
     fun countTemplateInstance(
-        @Parameter(description = "项目ID", required = true)
+        @Parameter(name = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(description = "模板ID", required = true)
+        @Parameter(name = "模板ID", required = true)
         templateIds: Collection<String>
     ): Result<Int>
 
@@ -197,10 +197,10 @@ interface ServiceTemplateInstanceResource {
     @Path("/projects/{projectId}/countTemplateInstanceDetail")
     @BkApiPermission([BkApiHandleType.API_NO_AUTH_CHECK])
     fun countTemplateInstanceDetail(
-        @Parameter(description = "项目ID", required = true)
+        @Parameter(name = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(description = "模板ID", required = true)
+        @Parameter(name = "模板ID", required = true)
         templateIds: Collection<String>
     ): Result<Map<String, Int>>
 }

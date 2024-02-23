@@ -61,13 +61,13 @@ interface BuildFileResource {
     @GET
     @Path("/file/download")
     fun downloadFile(
-        @Parameter(description = "projectCode", required = false)
+        @Parameter(name = "projectCode", required = false)
         @HeaderParam(AUTH_HEADER_DEVOPS_PROJECT_ID)
         projectCode: String,
-        @Parameter(description = "pipelineId", required = false)
+        @Parameter(name = "pipelineId", required = false)
         @HeaderParam(AUTH_HEADER_DEVOPS_PIPELINE_ID)
         pipelineId: String,
-        @Parameter(description = "文件路径", required = true)
+        @Parameter(name = "文件路径", required = true)
         @QueryParam("filePath")
         filePath: String,
         @Context
@@ -79,22 +79,22 @@ interface BuildFileResource {
     @Path("/file/archive")
     @Consumes(MediaType.MULTIPART_FORM_DATA)
     fun archiveFile(
-        @Parameter(description = "projectCode", required = false)
+        @Parameter(name = "projectCode", required = false)
         @HeaderParam(AUTH_HEADER_DEVOPS_PROJECT_ID)
         projectCode: String,
-        @Parameter(description = "pipelineId", required = false)
+        @Parameter(name = "pipelineId", required = false)
         @HeaderParam(AUTH_HEADER_DEVOPS_PIPELINE_ID)
         pipelineId: String,
-        @Parameter(description = "buildId", required = false)
+        @Parameter(name = "buildId", required = false)
         @HeaderParam(AUTH_HEADER_DEVOPS_BUILD_ID)
         buildId: String,
-        @Parameter(description = "文件类型", required = true)
+        @Parameter(name = "文件类型", required = true)
         @QueryParam("fileType")
         fileType: FileTypeEnum,
-        @Parameter(description = "自定义文件路径", required = false)
+        @Parameter(name = "自定义文件路径", required = false)
         @QueryParam("customFilePath")
         customFilePath: String?,
-        @Parameter(description = "文件", required = true)
+        @Parameter(name = "文件", required = true)
         @FormDataParam("file")
         inputStream: InputStream,
         @FormDataParam("file")
@@ -105,19 +105,19 @@ interface BuildFileResource {
     @GET
     @Path("/file/archive/download")
     fun downloadArchiveFile(
-        @Parameter(description = "projectCode", required = true)
+        @Parameter(name = "projectCode", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_PROJECT_ID)
         projectCode: String,
-        @Parameter(description = "pipelineId", required = true)
+        @Parameter(name = "pipelineId", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_PIPELINE_ID)
         pipelineId: String,
-        @Parameter(description = "buildId", required = true)
+        @Parameter(name = "buildId", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_BUILD_ID)
         buildId: String,
-        @Parameter(description = "文件类型", required = true)
+        @Parameter(name = "文件类型", required = true)
         @QueryParam("fileType")
         fileType: FileTypeEnum,
-        @Parameter(description = "自定义文件路径", required = true)
+        @Parameter(name = "自定义文件路径", required = true)
         @QueryParam("customFilePath")
         customFilePath: String,
         @Context
@@ -128,19 +128,19 @@ interface BuildFileResource {
     @GET
     @Path("/pipeline/{pipelineId}/build/{buildId}/file/download/urls/get")
     fun getFileDownloadUrls(
-        @Parameter(description = "projectCode", required = true)
+        @Parameter(name = "projectCode", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_PROJECT_ID)
         projectCode: String,
-        @Parameter(description = "流水线ID", required = true)
+        @Parameter(name = "流水线ID", required = true)
         @PathParam("pipelineId")
         pipelineId: String,
-        @Parameter(description = "构建ID", required = true)
+        @Parameter(name = "构建ID", required = true)
         @PathParam("buildId")
         buildId: String,
-        @Parameter(description = "文件类型", required = true)
+        @Parameter(name = "文件类型", required = true)
         @QueryParam("fileType")
         fileType: FileTypeEnum,
-        @Parameter(description = "自定义文件路径", required = false)
+        @Parameter(name = "自定义文件路径", required = false)
         @QueryParam("customFilePath")
         customFilePath: String?
     ): Result<GetFileDownloadUrlsResponse?>

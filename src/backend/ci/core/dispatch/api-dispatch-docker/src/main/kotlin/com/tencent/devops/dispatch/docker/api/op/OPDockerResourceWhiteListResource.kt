@@ -53,7 +53,7 @@ interface OPDockerResourceWhiteListResource {
     @Path("/resource-whitelist/list")
     @Operation(summary = "获取资源配置白名单列表")
     fun getResourceWhitelist(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String
     ): Result<List<String>>
@@ -62,10 +62,10 @@ interface OPDockerResourceWhiteListResource {
     @Path("/resource-whitelist/projects/{projectId}/add")
     @Operation(summary = "新增资源配置白名单")
     fun addResourceWhitelist(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String,
-        @Parameter(description = "服务ID", required = true)
+        @Parameter(name = "服务ID", required = true)
         @PathParam("projectId")
         projectId: String
     ): Result<Boolean>
@@ -74,10 +74,10 @@ interface OPDockerResourceWhiteListResource {
     @Path("/resource-whitelist/projects/{projectId}/delete")
     @Operation(summary = "删除资源配置白名单")
     fun deleteResourceWhitelist(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String,
-        @Parameter(description = "服务ID", required = true)
+        @Parameter(name = "服务ID", required = true)
         @PathParam("projectId")
         projectId: String
     ): Result<Boolean>

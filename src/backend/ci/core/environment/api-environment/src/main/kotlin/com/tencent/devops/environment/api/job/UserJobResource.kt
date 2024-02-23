@@ -18,9 +18,9 @@ import com.tencent.devops.environment.pojo.job.resp.QueryJobInstanceStatusResult
 import com.tencent.devops.environment.pojo.job.resp.QueryJobInstanceLogsResult
 import com.tencent.devops.environment.pojo.job.agentres.RetryAgentInstallTaskResult
 import com.tencent.devops.environment.pojo.job.agentres.TerminalAgentInstallTaskResult
-import io.swagger.annotations.Api
-import io.swagger.annotations.ApiOperation
-import io.swagger.annotations.ApiParam
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.Parameter
+import io.swagger.v3.oas.annotations.tags.Tag
 import org.glassfish.jersey.media.multipart.FormDataParam
 import java.io.InputStream
 import javax.ws.rs.Consumes
@@ -33,199 +33,199 @@ import javax.ws.rs.Produces
 import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
-@Api(tags = ["USER_JOB"], description = "用户-JOB")
+@Tag(name = "USER_JOB", description = "用户-JOB")
 @Path("/user/job")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface UserJobResource {
-    @ApiOperation("查询任务状态的Job接口")
+    @Operation(summary = "查询任务状态的Job接口")
     @GET
     @Path("/{projectId}/query_job_instance_status")
     fun queryJobInstanceStatus(
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String,
-        @ApiParam(value = "项目ID", required = true)
+        userId: String = AUTH_HEADER_USER_ID_DEFAULT_VALUE,
+        @Parameter(name = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @ApiParam(value = "作业实例ID", required = true)
+        @Parameter(name = "作业实例ID", required = true)
         @QueryParam("jobInstanceId")
         jobInstanceId: Long,
-        @ApiParam(value = "是否返回每个ip上的任务详情，默认false", required = true)
+        @Parameter(name = "是否返回每个ip上的任务详情，默认false", required = true)
         @QueryParam("returnIpResult")
         returnIpResult: Boolean? = false
     ): JobResult<QueryJobInstanceStatusResult>
 
-    @ApiOperation("批量查询日志的Job接口")
+    @Operation(summary = "批量查询日志的Job接口")
     @POST
     @Path("/{projectId}/query_job_instance_logs")
     fun queryJobInstanceLogs(
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String,
-        @ApiParam(value = "项目ID", required = true)
+        userId: String = AUTH_HEADER_USER_ID_DEFAULT_VALUE,
+        @Parameter(name = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @ApiParam(value = "批量查询日志的请求信息", required = true)
+        @Parameter(name = "批量查询日志的请求信息", required = true)
         queryJobInstanceLogsReq: QueryJobInstanceLogsReq
     ): JobResult<QueryJobInstanceLogsResult>
 
-    @ApiOperation("请求上云版job - 获取步骤实例详情数据")
+    @Operation(summary = "请求上云版job - 获取步骤实例详情数据")
     @GET
     @Path("/{projectId}/get_step_instance_detail")
     fun getStepInstanceDetail(
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String,
-        @ApiParam(value = "项目ID", required = true)
+        userId: String = AUTH_HEADER_USER_ID_DEFAULT_VALUE,
+        @Parameter(name = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @ApiParam(value = "作业实例ID")
+        @Parameter(name = "作业实例ID")
         @QueryParam("jobInstanceId")
         jobInstanceId: Long,
-        @ApiParam(value = "步骤实例ID")
+        @Parameter(name = "步骤实例ID")
         @QueryParam("stepInstanceId")
         stepInstanceId: Long
     ): JobResult<GetStepInstanceDetailResult>
 
-    @ApiOperation("请求上云版job - 获取步骤实例中各主机的任务执行状态数据")
+    @Operation(summary = "请求上云版job - 获取步骤实例中各主机的任务执行状态数据")
     @GET
     @Path("/{projectId}/get_step_instance_status")
     fun getStepInstanceStatus(
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String,
-        @ApiParam(value = "项目ID", required = true)
+        userId: String = AUTH_HEADER_USER_ID_DEFAULT_VALUE,
+        @Parameter(name = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @ApiParam(value = "作业实例ID", required = true)
+        @Parameter(name = "作业实例ID", required = true)
         @QueryParam("jobInstanceId")
         jobInstanceId: Long,
-        @ApiParam(value = "步骤实例ID", required = true)
+        @Parameter(name = "步骤实例ID", required = true)
         @QueryParam("stepInstanceId")
         stepInstanceId: Long,
-        @ApiParam(value = "步骤重试次数")
+        @Parameter(name = "步骤重试次数")
         @QueryParam("executeCount")
         executeCount: Int?,
-        @ApiParam(value = "滚动批次")
+        @Parameter(name = "滚动批次")
         @QueryParam("batch")
         batch: Int?,
-        @ApiParam(value = "每个分组里的最大主机数量，不传则返回全量数据。")
+        @Parameter(name = "每个分组里的最大主机数量，不传则返回全量数据。")
         @QueryParam("maxHostNumPerGroup")
         maxHostNumPerGroup: Int?,
-        @ApiParam(value = "日志搜索关键字")
+        @Parameter(name = "日志搜索关键字")
         @QueryParam("keyword")
         keyword: String?,
-        @ApiParam(value = "主机IP/IPv6搜索关键字")
+        @Parameter(name = "主机IP/IPv6搜索关键字")
         @QueryParam("searchIp")
         searchIp: String?,
-        @ApiParam(value = "执行状态")
+        @Parameter(name = "执行状态")
         @QueryParam("status")
         status: Int?,
-        @ApiParam(value = "结果标签")
+        @Parameter(name = "结果标签")
         @QueryParam("tag")
         tag: String?
     ): JobResult<GetStepInstanceStatusResult>
 
-    @ApiOperation("安装agent的接口")
+    @Operation(summary = "安装agent的接口")
     @POST
     @Path("/{projectId}/install_agent")
     @Consumes(MediaType.MULTIPART_FORM_DATA)
     fun installAgent(
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String,
-        @ApiParam(value = "项目ID", required = true)
+        userId: String = AUTH_HEADER_USER_ID_DEFAULT_VALUE,
+        @Parameter(name = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @ApiParam(value = "密钥文件")
+        @Parameter(name = "密钥文件")
         @FormDataParam("keyFile")
         keyFile: InputStream?,
-        @ApiParam(value = "安装agent的请求信息", required = true)
+        @Parameter(name = "安装agent的请求信息", required = true)
         @FormDataParam("installAgentReq")
         installAgentReq: String
     ): AgentResult<InstallAgentResult>
 
-    @ApiOperation("查询agent任务状态的接口")
+    @Operation(summary = "查询agent任务状态的接口")
     @POST
     @Path("/{projectId}/{jobId}/query_agent_task_status")
     fun queryAgentTaskStatus(
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String,
-        @ApiParam(value = "项目ID", required = true)
+        userId: String = AUTH_HEADER_USER_ID_DEFAULT_VALUE,
+        @Parameter(name = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @ApiParam(value = "JOB ID", required = true)
+        @Parameter(name = "JOB ID", required = true)
         @PathParam("jobId")
         jobId: Int,
-        @ApiParam(value = "查询agent任务状态的请求信息", required = true)
+        @Parameter(name = "查询agent任务状态的请求信息", required = true)
         queryAgentTaskStatusReq: QueryAgentTaskStatusReq
     ): AgentResult<QueryAgentTaskStatusResult>
 
-    @ApiOperation("查询agent任务具体日志")
+    @Operation(summary = "查询agent任务具体日志")
     @GET
     @Path("/{projectId}/{jobId}/query_agent_task_log")
     fun queryAgentTaskLog(
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String,
-        @ApiParam(value = "项目ID", required = true)
+        userId: String = AUTH_HEADER_USER_ID_DEFAULT_VALUE,
+        @Parameter(name = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @ApiParam(value = "JOB ID", required = true)
+        @Parameter(name = "JOB ID", required = true)
         @PathParam("jobId")
         jobId: Int,
-        @ApiParam(value = "实例ID")
+        @Parameter(name = "实例ID")
         @QueryParam("instanceId")
         instanceId: String
     ): AgentResult<QueryAgentTaskLogResult>
 
-    @ApiOperation("终止agent安装任务的接口")
+    @Operation(summary = "终止agent安装任务的接口")
     @POST
     @Path("/{projectId}/{jobId}/terminal_agent_install_task")
     fun terminalAgentInstallTask(
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String,
-        @ApiParam(value = "项目ID", required = true)
+        userId: String = AUTH_HEADER_USER_ID_DEFAULT_VALUE,
+        @Parameter(name = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @ApiParam(value = "JOB ID", required = true)
+        @Parameter(name = "JOB ID", required = true)
         @PathParam("jobId")
         jobId: Int,
-        @ApiParam(value = "终止agent安装任务的请求信息", required = true)
+        @Parameter(name = "终止agent安装任务的请求信息", required = true)
         terminateAgentInstallTaskReq: TerminateAgentInstallTaskReq
     ): AgentResult<TerminalAgentInstallTaskResult>
 
-    @ApiOperation("重试agent安装任务的接口")
+    @Operation(summary = "重试agent安装任务的接口")
     @POST
     @Path("/{projectId}/{jobId}/retry_agent_install_task")
     fun retryAgentInstallTask(
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String,
-        @ApiParam(value = "项目ID", required = true)
+        userId: String = AUTH_HEADER_USER_ID_DEFAULT_VALUE,
+        @Parameter(name = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @ApiParam(value = "JOB ID", required = true)
+        @Parameter(name = "JOB ID", required = true)
         @PathParam("jobId")
         jobId: Int,
-        @ApiParam(value = "重试agent安装任务的请求信息", required = true)
+        @Parameter(name = "重试agent安装任务的请求信息", required = true)
         retryAgentInstallTaskReq: RetryAgentInstallTaskReq
     ): AgentResult<RetryAgentInstallTaskResult>
 
-    @ApiOperation("查询agent安装通道")
+    @Operation(summary = "查询agent安装通道")
     @GET
     @Path("/{projectId}/query_agent_install_channel")
     fun queryAgentInstallChannel(
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String,
-        @ApiParam(value = "项目ID", required = true)
+        userId: String = AUTH_HEADER_USER_ID_DEFAULT_VALUE,
+        @Parameter(name = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @ApiParam(value = "是否包括隐藏安装通道")
+        @Parameter(name = "是否包括隐藏安装通道")
         @QueryParam("withHidden")
         withHidden: Boolean
     ): AgentResult<QueryAgentInstallChannelResult>

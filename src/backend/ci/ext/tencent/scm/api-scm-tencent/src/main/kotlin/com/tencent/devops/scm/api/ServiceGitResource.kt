@@ -94,10 +94,10 @@ interface ServiceGitResource {
     @GET
     @Path("/getProject")
     fun getProject(
-        @Parameter(description = "accessToken", required = true)
+        @Parameter(name = "accessToken", required = true)
         @QueryParam("accessToken")
         accessToken: String,
-        @Parameter(description = "用户id", required = true)
+        @Parameter(name = "用户id", required = true)
         @QueryParam("userId")
         userId: String
     ): Result<List<Project>>
@@ -106,10 +106,10 @@ interface ServiceGitResource {
     @GET
     @Path("/getProjectInfo")
     fun getProjectInfo(
-        @Parameter(description = "accessToken", required = true)
+        @Parameter(name = "accessToken", required = true)
         @QueryParam("accessToken")
         accessToken: String,
-        @Parameter(description = "工蜂项目id", required = true)
+        @Parameter(name = "工蜂项目id", required = true)
         @QueryParam("gitProjectId")
         gitProjectId: Long
     ): Result<GitCIProjectInfo?>
@@ -118,31 +118,31 @@ interface ServiceGitResource {
     @GET
     @Path("/getProjectList")
     fun getProjectList(
-        @Parameter(description = "accessToken", required = true)
+        @Parameter(name = "accessToken", required = true)
         @QueryParam("accessToken")
         accessToken: String,
-        @Parameter(description = "用户id", required = true)
+        @Parameter(name = "用户id", required = true)
         @QueryParam("userId")
         userId: String,
-        @Parameter(description = "第几页", required = true)
+        @Parameter(name = "第几页", required = true)
         @QueryParam("page")
         page: Int?,
-        @Parameter(description = "每页数据条数", required = true)
+        @Parameter(name = "每页数据条数", required = true)
         @QueryParam("pageSize")
         pageSize: Int?,
-        @Parameter(description = "搜索条件，模糊匹配path,name")
+        @Parameter(name = "搜索条件，模糊匹配path,name")
         @QueryParam("search")
         search: String? = null,
-        @Parameter(description = "排序字段")
+        @Parameter(name = "排序字段")
         @QueryParam("orderBy")
         orderBy: GitProjectsOrderBy? = null,
-        @Parameter(description = "排序方式")
+        @Parameter(name = "排序方式")
         @QueryParam("sort")
         sort: GitSortAscOrDesc? = null,
-        @Parameter(description = "若为true，返回的是当前用户个人namespace下的project，以及owner为当前用户的group下的所有project")
+        @Parameter(name = "若为true，返回的是当前用户个人namespace下的project，以及owner为当前用户的group下的所有project")
         @QueryParam("owned")
         owned: Boolean? = null,
-        @Parameter(description = "指定最小访问级别，返回的project列表中，当前用户的project访问级别大于或者等于指定值")
+        @Parameter(name = "指定最小访问级别，返回的project列表中，当前用户的project访问级别大于或者等于指定值")
         @QueryParam("minAccessLevel")
         minAccessLevel: GitAccessLevelEnum? = null
     ): Result<List<Project>>
@@ -151,22 +151,22 @@ interface ServiceGitResource {
     @GET
     @Path("/getBranch")
     fun getBranch(
-        @Parameter(description = "accessToken", required = true)
+        @Parameter(name = "accessToken", required = true)
         @QueryParam("accessToken")
         accessToken: String,
-        @Parameter(description = "用户id", required = true)
+        @Parameter(name = "用户id", required = true)
         @QueryParam("userId")
         userId: String,
-        @Parameter(description = "仓库ID", required = true)
+        @Parameter(name = "仓库ID", required = true)
         @QueryParam("repository")
         repository: String,
-        @Parameter(description = "第几页", required = true)
+        @Parameter(name = "第几页", required = true)
         @QueryParam("page")
         page: Int?,
-        @Parameter(description = "每页数据条数", required = true)
+        @Parameter(name = "每页数据条数", required = true)
         @QueryParam("pageSize")
         pageSize: Int?,
-        @Parameter(description = "搜索条件", required = true)
+        @Parameter(name = "搜索条件", required = true)
         @QueryParam("search")
         search: String?
     ): Result<List<GitBranch>>
@@ -175,19 +175,19 @@ interface ServiceGitResource {
     @GET
     @Path("/getTag")
     fun getTag(
-        @Parameter(description = "accessToken", required = true)
+        @Parameter(name = "accessToken", required = true)
         @QueryParam("accessToken")
         accessToken: String,
-        @Parameter(description = "用户id", required = true)
+        @Parameter(name = "用户id", required = true)
         @QueryParam("userId")
         userId: String,
-        @Parameter(description = "仓库ID", required = true)
+        @Parameter(name = "仓库ID", required = true)
         @QueryParam("repository")
         repository: String,
-        @Parameter(description = "第几页", required = true)
+        @Parameter(name = "第几页", required = true)
         @QueryParam("page")
         page: Int?,
-        @Parameter(description = "每页数据条数", required = true)
+        @Parameter(name = "每页数据条数", required = true)
         @QueryParam("pageSize")
         pageSize: Int?
     ): Result<List<GitTag>>
@@ -196,10 +196,10 @@ interface ServiceGitResource {
     @PUT
     @Path("/refreshToken")
     fun refreshToken(
-        @Parameter(description = "用户id", required = true)
+        @Parameter(name = "用户id", required = true)
         @QueryParam("userId")
         userId: String,
-        @Parameter(description = "accessToken", required = true)
+        @Parameter(name = "accessToken", required = true)
         accessToken: GitToken
     ): Result<GitToken>
 
@@ -207,7 +207,7 @@ interface ServiceGitResource {
     @GET
     @Path("/getAuthUrl")
     fun getAuthUrl(
-        @Parameter(description = "参数json串", required = true)
+        @Parameter(name = "参数json串", required = true)
         @QueryParam("authParamJsonStr")
         authParamJsonStr: String
     ): Result<String>
@@ -216,10 +216,10 @@ interface ServiceGitResource {
     @GET
     @Path("/getToken")
     fun getToken(
-        @Parameter(description = "用户id", required = true)
+        @Parameter(name = "用户id", required = true)
         @QueryParam("userId")
         userId: String,
-        @Parameter(description = "code", required = true)
+        @Parameter(name = "code", required = true)
         @QueryParam("code")
         code: String
     ): Result<GitToken>
@@ -228,10 +228,10 @@ interface ServiceGitResource {
     @GET
     @Path("/getUserInfoByToken")
     fun getUserInfoByToken(
-        @Parameter(description = "用户id", required = true)
+        @Parameter(name = "用户id", required = true)
         @QueryParam("token")
         token: String,
-        @Parameter(description = "是否使用access token", required = true)
+        @Parameter(name = "是否使用access token", required = true)
         @QueryParam("useAccessToken")
         useAccessToken: Boolean = true
     ): Result<GitUserInfo>
@@ -240,13 +240,13 @@ interface ServiceGitResource {
     @GET
     @Path("/getUserInfoById")
     fun getUserInfoById(
-        @Parameter(description = "用户id", required = true)
+        @Parameter(name = "用户id", required = true)
         @QueryParam("userId")
         userId: String,
-        @Parameter(description = "token", required = true)
+        @Parameter(name = "token", required = true)
         @QueryParam("token")
         token: String,
-        @Parameter(description = "token类型 0：oauth 1:privateKey", required = true)
+        @Parameter(name = "token类型 0：oauth 1:privateKey", required = true)
         @QueryParam("tokenType")
         tokenType: TokenTypeEnum = TokenTypeEnum.OAUTH
     ): Result<GitUserInfo>
@@ -255,7 +255,7 @@ interface ServiceGitResource {
     @GET
     @Path("/stream/getToken")
     fun getToken(
-        @Parameter(description = "gitProjectId", required = true)
+        @Parameter(name = "gitProjectId", required = true)
         @QueryParam("gitProjectId")
         gitProjectId: Long
     ): Result<GitToken>
@@ -264,7 +264,7 @@ interface ServiceGitResource {
 //    @DELETE
 //    @Path("/stream/clearToken")
 //    fun clearToken(
-//        @Parameter(description = "token", required = true)
+//        @Parameter(name = "token", required = true)
 //        @QueryParam("token")
 //        token: String
 //    ): Result<Boolean>
@@ -273,16 +273,16 @@ interface ServiceGitResource {
     @GET
     @Path("/stream/getGitCIFileContent")
     fun getGitCIFileContent(
-        @Parameter(description = "gitProjectId")
+        @Parameter(name = "gitProjectId")
         @QueryParam("gitProjectId")
         gitProjectId: Long,
-        @Parameter(description = "文件路径")
+        @Parameter(name = "文件路径")
         @QueryParam("filePath")
         filePath: String,
-        @Parameter(description = "token")
+        @Parameter(name = "token")
         @QueryParam("token")
         token: String,
-        @Parameter(description = "提交id 或者 分支")
+        @Parameter(name = "提交id 或者 分支")
         @QueryParam("ref")
         ref: String
     ): Result<String>
@@ -291,22 +291,22 @@ interface ServiceGitResource {
     @GET
     @Path("/stream/getGitCIFileTree")
     fun getGitCIFileTree(
-        @Parameter(description = "gitProjectId")
+        @Parameter(name = "gitProjectId")
         @QueryParam("gitProjectId")
         gitProjectId: String,
-        @Parameter(description = "目录路径")
+        @Parameter(name = "目录路径")
         @QueryParam("path")
         path: String,
-        @Parameter(description = "token")
+        @Parameter(name = "token")
         @QueryParam("token")
         token: String,
-        @Parameter(description = "提交id 或者 分支")
+        @Parameter(name = "提交id 或者 分支")
         @QueryParam("ref")
         ref: String?,
-        @Parameter(description = "是否支持递归目录结构")
+        @Parameter(name = "是否支持递归目录结构")
         @QueryParam("recursive")
         recursive: Boolean? = false,
-        @Parameter(description = "token类型 0：oauth 1:privateKey", required = true)
+        @Parameter(name = "token类型 0：oauth 1:privateKey", required = true)
         @QueryParam("tokenType")
         tokenType: TokenTypeEnum = TokenTypeEnum.OAUTH
     ): Result<List<GitFileInfo>>
@@ -315,13 +315,13 @@ interface ServiceGitResource {
     @GET
     @Path("/stream/getGitCIMrChanges")
     fun getGitCIMrChanges(
-        @Parameter(description = "gitProjectId")
+        @Parameter(name = "gitProjectId")
         @QueryParam("gitProjectId")
         gitProjectId: Long,
-        @Parameter(description = "mergeRequestId")
+        @Parameter(name = "mergeRequestId")
         @QueryParam("mergeRequestId")
         mergeRequestId: Long,
-        @Parameter(description = "token")
+        @Parameter(name = "token")
         @QueryParam("token")
         token: String
     ): Result<GitMrChangeInfo>
@@ -330,13 +330,13 @@ interface ServiceGitResource {
     @GET
     @Path("/stream/getGitCIMrInfo")
     fun getGitCIMrInfo(
-        @Parameter(description = "gitProjectId")
+        @Parameter(name = "gitProjectId")
         @QueryParam("gitProjectId")
         gitProjectId: Long,
-        @Parameter(description = "mergeRequestId")
+        @Parameter(name = "mergeRequestId")
         @QueryParam("mergeRequestId")
         mergeRequestId: Long,
-        @Parameter(description = "token")
+        @Parameter(name = "token")
         @QueryParam("token")
         token: String
     ): Result<GitCIMrInfo>
@@ -345,16 +345,16 @@ interface ServiceGitResource {
     @GET
     @Path("/stream/getFileCommits")
     fun getFileCommits(
-        @Parameter(description = "gitProjectId")
+        @Parameter(name = "gitProjectId")
         @QueryParam("gitProjectId")
         gitProjectId: Long,
-        @Parameter(description = "filePath")
+        @Parameter(name = "filePath")
         @QueryParam("filePath")
         filePath: String,
-        @Parameter(description = "branch")
+        @Parameter(name = "branch")
         @QueryParam("branch")
         branch: String,
-        @Parameter(description = "token")
+        @Parameter(name = "token")
         @QueryParam("token")
         token: String
     ): Result<List<GitCIFileCommit>>
@@ -363,31 +363,31 @@ interface ServiceGitResource {
     @GET
     @Path("/stream/commits")
     fun getCommits(
-        @Parameter(description = "gitProjectId")
+        @Parameter(name = "gitProjectId")
         @QueryParam("gitProjectId")
         gitProjectId: Long,
-        @Parameter(description = "filePath")
+        @Parameter(name = "filePath")
         @QueryParam("filePath")
         filePath: String?,
-        @Parameter(description = "branch")
+        @Parameter(name = "branch")
         @QueryParam("branch")
         branch: String?,
-        @Parameter(description = "token")
+        @Parameter(name = "token")
         @QueryParam("token")
         token: String,
-        @Parameter(description = "在这之后的时间的提交")
+        @Parameter(name = "在这之后的时间的提交")
         @QueryParam("since")
         since: String?,
-        @Parameter(description = "在这之前的时间的提交")
+        @Parameter(name = "在这之前的时间的提交")
         @QueryParam("until")
         until: String?,
-        @Parameter(description = "页码", example = "1")
+        @Parameter(name = "页码", example = "1")
         @QueryParam("page")
         page: Int,
-        @Parameter(description = "每页数量,最大100", example = "20")
+        @Parameter(name = "每页数量,最大100", example = "20")
         @QueryParam("perPage")
         perPage: Int,
-        @Parameter(description = "token类型 0：oauth 1:privateKey", required = true)
+        @Parameter(name = "token类型 0：oauth 1:privateKey", required = true)
         @QueryParam("tokenType")
         tokenType: TokenTypeEnum = TokenTypeEnum.OAUTH
     ): Result<List<Commit>>
@@ -396,13 +396,13 @@ interface ServiceGitResource {
     @POST
     @Path("/stream/create/file")
     fun gitCICreateFile(
-        @Parameter(description = "gitProjectId")
+        @Parameter(name = "gitProjectId")
         @QueryParam("gitProjectId")
         gitProjectId: String,
-        @Parameter(description = "token")
+        @Parameter(name = "token")
         @QueryParam("token")
         token: String,
-        @Parameter(description = "创建文件内容")
+        @Parameter(name = "创建文件内容")
         gitCreateFile: GitCICreateFile
     ): Result<Boolean>
 
@@ -410,16 +410,16 @@ interface ServiceGitResource {
     @GET
     @Path("/stream/commitRefs")
     fun getCommitRefs(
-        @Parameter(description = "gitProjectId")
+        @Parameter(name = "gitProjectId")
         @QueryParam("gitProjectId")
         gitProjectId: Long,
-        @Parameter(description = "commitId")
+        @Parameter(name = "commitId")
         @QueryParam("commitId")
         commitId: String,
-        @Parameter(description = "branch/tag/all")
+        @Parameter(name = "branch/tag/all")
         @QueryParam("type")
         type: String,
-        @Parameter(description = "token")
+        @Parameter(name = "token")
         @QueryParam("token")
         token: String
     ): Result<List<GitCICommitRef>>
@@ -428,7 +428,7 @@ interface ServiceGitResource {
     @GET
     @Path("/getRedirectUrl")
     fun getRedirectUrl(
-        @Parameter(description = "参数json串", required = true)
+        @Parameter(name = "参数json串", required = true)
         @QueryParam("authParamJsonStr")
         authParamJsonStr: String
     ): Result<String>
@@ -437,22 +437,22 @@ interface ServiceGitResource {
     @GET
     @Path("/getGitFileContent")
     fun getGitFileContent(
-        @Parameter(description = "仓库url")
+        @Parameter(name = "仓库url")
         @QueryParam("repoUrl")
         repoUrl: String? = null,
-        @Parameter(description = "仓库名字")
+        @Parameter(name = "仓库名字")
         @QueryParam("repoName")
         repoName: String,
-        @Parameter(description = "文件路径")
+        @Parameter(name = "文件路径")
         @QueryParam("filePath")
         filePath: String,
-        @Parameter(description = "认证方式")
+        @Parameter(name = "认证方式")
         @QueryParam("authType")
         authType: RepoAuthType?,
-        @Parameter(description = "token")
+        @Parameter(name = "token")
         @QueryParam("token")
         token: String,
-        @Parameter(description = "提交id 或者 分支")
+        @Parameter(name = "提交id 或者 分支")
         @QueryParam("ref")
         ref: String
     ): Result<String>
@@ -461,19 +461,19 @@ interface ServiceGitResource {
     @GET
     @Path("/getGitlabFileContent")
     fun getGitlabFileContent(
-        @Parameter(description = "仓库url")
+        @Parameter(name = "仓库url")
         @QueryParam("repoUrl")
         repoUrl: String? = null,
-        @Parameter(description = "仓库名字")
+        @Parameter(name = "仓库名字")
         @QueryParam("repoName")
         repoName: String,
-        @Parameter(description = "文件路径")
+        @Parameter(name = "文件路径")
         @QueryParam("filePath")
         filePath: String,
-        @Parameter(description = "提交id 或者 分支")
+        @Parameter(name = "提交id 或者 分支")
         @QueryParam("ref")
         ref: String,
-        @Parameter(description = "accessToken")
+        @Parameter(name = "accessToken")
         @QueryParam("accessToken")
         accessToken: String
     ): Result<String>
@@ -482,28 +482,28 @@ interface ServiceGitResource {
     @POST
     @Path("/createGitCodeRepository")
     fun createGitCodeRepository(
-        @Parameter(description = "用户id", required = true)
+        @Parameter(name = "用户id", required = true)
         @QueryParam("userId")
         userId: String,
-        @Parameter(description = "token", required = true)
+        @Parameter(name = "token", required = true)
         @QueryParam("token")
         token: String,
-        @Parameter(description = "代码库名称", required = true)
+        @Parameter(name = "代码库名称", required = true)
         @QueryParam("repositoryName")
         repositoryName: String,
-        @Parameter(description = "样例工程路径", required = false)
+        @Parameter(name = "样例工程路径", required = false)
         @QueryParam("sampleProjectPath")
         sampleProjectPath: String?,
-        @Parameter(description = "命名空间ID", required = false)
+        @Parameter(name = "命名空间ID", required = false)
         @QueryParam("namespaceId")
         namespaceId: Int?,
-        @Parameter(description = "项目可视范围", required = false)
+        @Parameter(name = "项目可视范围", required = false)
         @QueryParam("visibilityLevel")
         visibilityLevel: VisibilityLevelEnum?,
-        @Parameter(description = "token类型 0：oauth 1:privateKey", required = true)
+        @Parameter(name = "token类型 0：oauth 1:privateKey", required = true)
         @QueryParam("tokenType")
         tokenType: TokenTypeEnum,
-        @Parameter(description = "前端UI渲染方式", required = false)
+        @Parameter(name = "前端UI渲染方式", required = false)
         @QueryParam("frontendType")
         frontendType: FrontendTypeEnum?
     ): Result<GitRepositoryResp?>
@@ -512,15 +512,15 @@ interface ServiceGitResource {
     @PUT
     @Path("/updateGitCodeRepository")
     fun updateGitCodeRepository(
-        @Parameter(description = "token", required = true)
+        @Parameter(name = "token", required = true)
         @QueryParam("token")
         token: String,
-        @Parameter(description = "项目名称", required = true)
+        @Parameter(name = "项目名称", required = true)
         @QueryParam("projectName")
         projectName: String,
-        @Parameter(description = "更新git项目信息", required = true)
+        @Parameter(name = "更新git项目信息", required = true)
         updateGitProjectInfo: UpdateGitProjectInfo,
-        @Parameter(description = "token类型 0：oauth 1:privateKey", required = true)
+        @Parameter(name = "token类型 0：oauth 1:privateKey", required = true)
         @QueryParam("tokenType")
         tokenType: TokenTypeEnum
     ): Result<Boolean>
@@ -529,22 +529,22 @@ interface ServiceGitResource {
     @GET
     @Path("/getGitRepositoryTreeInfo")
     fun getGitRepositoryTreeInfo(
-        @Parameter(description = "用户id", required = true)
+        @Parameter(name = "用户id", required = true)
         @QueryParam("userId")
         userId: String,
-        @Parameter(description = "仓库名字", required = true)
+        @Parameter(name = "仓库名字", required = true)
         @QueryParam("repoName")
         repoName: String,
-        @Parameter(description = "commit hash值、分支 或 tag，默认：默认分支", required = false)
+        @Parameter(name = "commit hash值、分支 或 tag，默认：默认分支", required = false)
         @QueryParam("refName")
         refName: String?,
-        @Parameter(description = "文件路径", required = false)
+        @Parameter(name = "文件路径", required = false)
         @QueryParam("path")
         path: String?,
-        @Parameter(description = "token", required = true)
+        @Parameter(name = "token", required = true)
         @QueryParam("token")
         token: String,
-        @Parameter(description = "token类型 0：oauth 1:privateKey", required = true)
+        @Parameter(name = "token类型 0：oauth 1:privateKey", required = true)
         @QueryParam("tokenType")
         tokenType: TokenTypeEnum
     ): Result<List<GitRepositoryDirItem>?>
@@ -553,16 +553,16 @@ interface ServiceGitResource {
     @POST
     @Path("/moveProjectToGroup")
     fun moveProjectToGroup(
-        @Parameter(description = "token", required = true)
+        @Parameter(name = "token", required = true)
         @QueryParam("token")
         token: String,
-        @Parameter(description = "项目组代码", required = true)
+        @Parameter(name = "项目组代码", required = true)
         @QueryParam("groupCode")
         groupCode: String,
-        @Parameter(description = "代码库名称", required = true)
+        @Parameter(name = "代码库名称", required = true)
         @QueryParam("repositoryName")
         repositoryName: String,
-        @Parameter(description = "token类型 0：oauth 1:privateKey", required = true)
+        @Parameter(name = "token类型 0：oauth 1:privateKey", required = true)
         @QueryParam("tokenType")
         tokenType: TokenTypeEnum
     ): Result<GitProjectInfo?>
@@ -571,19 +571,19 @@ interface ServiceGitResource {
     @POST
     @Path("/addGitProjectMember")
     fun addGitProjectMember(
-        @Parameter(description = "增加的用户列表", required = true)
+        @Parameter(name = "增加的用户列表", required = true)
         @QueryParam("userIdList")
         userIdList: List<String>,
-        @Parameter(description = "代码库命名空间名称", required = true)
+        @Parameter(name = "代码库命名空间名称", required = true)
         @QueryParam("repositorySpaceName")
         repositorySpaceName: String,
-        @Parameter(description = "git访问权限", required = true)
+        @Parameter(name = "git访问权限", required = true)
         @QueryParam("gitAccessLevel")
         gitAccessLevel: GitAccessLevelEnum,
-        @Parameter(description = "token", required = true)
+        @Parameter(name = "token", required = true)
         @QueryParam("token")
         token: String,
-        @Parameter(description = "token类型 0：oauth 1:privateKey", required = true)
+        @Parameter(name = "token类型 0：oauth 1:privateKey", required = true)
         @QueryParam("tokenType")
         tokenType: TokenTypeEnum
     ): Result<Boolean>
@@ -592,16 +592,16 @@ interface ServiceGitResource {
     @DELETE
     @Path("/deleteGitProjectMember")
     fun deleteGitProjectMember(
-        @Parameter(description = "删除的用户列表", required = true)
+        @Parameter(name = "删除的用户列表", required = true)
         @QueryParam("userIdList")
         userIdList: List<String>,
-        @Parameter(description = "代码库命名空间名称", required = true)
+        @Parameter(name = "代码库命名空间名称", required = true)
         @QueryParam("repositorySpaceName")
         repositorySpaceName: String,
-        @Parameter(description = "token", required = true)
+        @Parameter(name = "token", required = true)
         @QueryParam("token")
         token: String,
-        @Parameter(description = "token类型 0：oauth 1:privateKey", required = true)
+        @Parameter(name = "token类型 0：oauth 1:privateKey", required = true)
         @QueryParam("tokenType")
         tokenType: TokenTypeEnum
     ): Result<Boolean>
@@ -610,13 +610,13 @@ interface ServiceGitResource {
     @DELETE
     @Path("/deleteGitProject")
     fun deleteGitProject(
-        @Parameter(description = "代码库命名空间名称", required = true)
+        @Parameter(name = "代码库命名空间名称", required = true)
         @QueryParam("repositorySpaceName")
         repositorySpaceName: String,
-        @Parameter(description = "token", required = true)
+        @Parameter(name = "token", required = true)
         @QueryParam("token")
         token: String,
-        @Parameter(description = "token类型 0：oauth 1:privateKey", required = true)
+        @Parameter(name = "token类型 0：oauth 1:privateKey", required = true)
         @QueryParam("tokenType")
         tokenType: TokenTypeEnum
     ): Result<Boolean>
@@ -625,19 +625,19 @@ interface ServiceGitResource {
     @GET
     @Path("/getMergeRequestInfo")
     fun getMergeRequestInfo(
-        @Parameter(description = "项目唯一标识或NAMESPACE_PATH/PROJECT_PATH", required = true)
+        @Parameter(name = "项目唯一标识或NAMESPACE_PATH/PROJECT_PATH", required = true)
         @QueryParam("repoName")
         repoName: String,
-        @Parameter(description = "合并请求的 id", required = true)
+        @Parameter(name = "合并请求的 id", required = true)
         @QueryParam("mrId")
         mrId: Long,
-        @Parameter(description = "token类型 0：oauth 1:privateKey", required = true)
+        @Parameter(name = "token类型 0：oauth 1:privateKey", required = true)
         @QueryParam("tokenType")
         tokenType: TokenTypeEnum,
-        @Parameter(description = "token", required = true)
+        @Parameter(name = "token", required = true)
         @QueryParam("token")
         token: String,
-        @Parameter(description = "仓库url", required = true)
+        @Parameter(name = "仓库url", required = true)
         @QueryParam("repoUrl")
         repoUrl: String? = null
     ): Result<GitMrInfo>
@@ -646,25 +646,25 @@ interface ServiceGitResource {
     @GET
     @Path("/downloadGitRepoFile")
     fun downloadGitRepoFile(
-        @Parameter(description = "项目唯一标识或NAMESPACE_PATH/PROJECT_PATH", required = true)
+        @Parameter(name = "项目唯一标识或NAMESPACE_PATH/PROJECT_PATH", required = true)
         @QueryParam("repoName")
         repoName: String,
-        @Parameter(description = "commit hash值、分支名或tag", required = false)
+        @Parameter(name = "commit hash值、分支名或tag", required = false)
         @QueryParam("sha")
         sha: String?,
-        @Parameter(description = "token", required = true)
+        @Parameter(name = "token", required = true)
         @QueryParam("token")
         token: String,
-        @Parameter(description = "token类型 0：oauth 1:privateKey", required = true)
+        @Parameter(name = "token类型 0：oauth 1:privateKey", required = true)
         @QueryParam("tokenType")
         tokenType: TokenTypeEnum,
-        @Parameter(description = "限定为下载指定路径的文件", required = false)
+        @Parameter(name = "限定为下载指定路径的文件", required = false)
         @QueryParam("filePath")
         filePath: String?,
-        @Parameter(description = "支持的 format 格式有:zip、tar、tar.gz、tar.xz、tar.bz2(默认为.zip 格式)", required = false)
+        @Parameter(name = "支持的 format 格式有:zip、tar、tar.gz、tar.xz、tar.bz2(默认为.zip 格式)", required = false)
         @QueryParam("format")
         format: String?,
-        @Parameter(description = "将项目名作为目录打包进去 (默认：false)", required = false)
+        @Parameter(name = "将项目名作为目录打包进去 (默认：false)", required = false)
         @QueryParam("isProjectPathWrapped")
         isProjectPathWrapped: Boolean?,
         @Context
@@ -675,19 +675,19 @@ interface ServiceGitResource {
     @GET
     @Path("/getMergeRequestReviewersInfo")
     fun getMergeRequestReviewersInfo(
-        @Parameter(description = "项目唯一标识或NAMESPACE_PATH/PROJECT_PATH", required = true)
+        @Parameter(name = "项目唯一标识或NAMESPACE_PATH/PROJECT_PATH", required = true)
         @QueryParam("repoName")
         repoName: String,
-        @Parameter(description = "合并请求的 id", required = true)
+        @Parameter(name = "合并请求的 id", required = true)
         @QueryParam("mrId")
         mrId: Long,
-        @Parameter(description = "token类型 0：oauth 1:privateKey", required = true)
+        @Parameter(name = "token类型 0：oauth 1:privateKey", required = true)
         @QueryParam("tokenType")
         tokenType: TokenTypeEnum,
-        @Parameter(description = "token", required = true)
+        @Parameter(name = "token", required = true)
         @QueryParam("token")
         token: String,
-        @Parameter(description = "仓库url", required = true)
+        @Parameter(name = "仓库url", required = true)
         @QueryParam("repoUrl")
         repoUrl: String? = null
     ): Result<GitMrReviewInfo>
@@ -696,19 +696,19 @@ interface ServiceGitResource {
     @GET
     @Path("/getMergeRequestChangeInfo")
     fun getMergeRequestChangeInfo(
-        @Parameter(description = "项目唯一标识或NAMESPACE_PATH/PROJECT_PATH", required = true)
+        @Parameter(name = "项目唯一标识或NAMESPACE_PATH/PROJECT_PATH", required = true)
         @QueryParam("repoName")
         repoName: String,
-        @Parameter(description = "合并请求的 id", required = true)
+        @Parameter(name = "合并请求的 id", required = true)
         @QueryParam("mrId")
         mrId: Long,
-        @Parameter(description = "token类型 0：oauth 1:privateKey", required = true)
+        @Parameter(name = "token类型 0：oauth 1:privateKey", required = true)
         @QueryParam("tokenType")
         tokenType: TokenTypeEnum,
-        @Parameter(description = "token", required = true)
+        @Parameter(name = "token", required = true)
         @QueryParam("token")
         token: String,
-        @Parameter(description = "仓库url", required = true)
+        @Parameter(name = "仓库url", required = true)
         @QueryParam("repoUrl")
         repoUrl: String? = null
     ): Result<GitMrChangeInfo>
@@ -717,13 +717,13 @@ interface ServiceGitResource {
     @GET
     @Path("/getRepoMembers")
     fun getRepoMembers(
-        @Parameter(description = "项目唯一标识或NAMESPACE_PATH/PROJECT_PATH", required = true)
+        @Parameter(name = "项目唯一标识或NAMESPACE_PATH/PROJECT_PATH", required = true)
         @QueryParam("repoName")
         repoName: String,
-        @Parameter(description = "token类型 0：oauth 1:privateKey", required = true)
+        @Parameter(name = "token类型 0：oauth 1:privateKey", required = true)
         @QueryParam("tokenType")
         tokenType: TokenTypeEnum,
-        @Parameter(description = "token", required = true)
+        @Parameter(name = "token", required = true)
         @QueryParam("token")
         token: String
     ): Result<List<GitMember>>
@@ -732,16 +732,16 @@ interface ServiceGitResource {
     @GET
     @Path("/getRepoMemberInfo")
     fun getRepoMemberInfo(
-        @Parameter(description = "token")
+        @Parameter(name = "token")
         @QueryParam("token")
         token: String,
-        @Parameter(description = "userId", required = true)
+        @Parameter(name = "userId", required = true)
         @QueryParam("userId")
         userId: String,
-        @Parameter(description = "gitProjectId", required = true)
+        @Parameter(name = "gitProjectId", required = true)
         @QueryParam("gitProjectId")
         gitProjectId: String,
-        @Parameter(description = "token类型 0：oauth 1:privateKey", required = true)
+        @Parameter(name = "token类型 0：oauth 1:privateKey", required = true)
         @QueryParam("tokenType")
         tokenType: TokenTypeEnum
     ): Result<GitMember>
@@ -750,13 +750,13 @@ interface ServiceGitResource {
     @GET
     @Path("/getRepoMembers/all")
     fun getRepoAllMembers(
-        @Parameter(description = "项目唯一标识或NAMESPACE_PATH/PROJECT_PATH", required = true)
+        @Parameter(name = "项目唯一标识或NAMESPACE_PATH/PROJECT_PATH", required = true)
         @QueryParam("repoName")
         repoName: String,
-        @Parameter(description = "token类型 0：oauth 1:privateKey", required = true)
+        @Parameter(name = "token类型 0：oauth 1:privateKey", required = true)
         @QueryParam("tokenType")
         tokenType: TokenTypeEnum,
-        @Parameter(description = "token", required = true)
+        @Parameter(name = "token", required = true)
         @QueryParam("token")
         token: String
     ): Result<List<GitMember>>
@@ -772,16 +772,16 @@ interface ServiceGitResource {
     @GET
     @Path("/getRepoRecentCommitInfo")
     fun getRepoRecentCommitInfo(
-        @Parameter(description = "项目唯一标识或NAMESPACE_PATH/PROJECT_PATH", required = true)
+        @Parameter(name = "项目唯一标识或NAMESPACE_PATH/PROJECT_PATH", required = true)
         @QueryParam("repoName")
         repoName: String,
-        @Parameter(description = "hash值、分支名或tag", required = true)
+        @Parameter(name = "hash值、分支名或tag", required = true)
         @QueryParam("sha")
         sha: String,
-        @Parameter(description = "token", required = true)
+        @Parameter(name = "token", required = true)
         @QueryParam("token")
         token: String,
-        @Parameter(description = "token类型 0：oauth 1:privateKey", required = true)
+        @Parameter(name = "token类型 0：oauth 1:privateKey", required = true)
         @QueryParam("tokenType")
         tokenType: TokenTypeEnum
     ): Result<GitCommit?>
@@ -790,13 +790,13 @@ interface ServiceGitResource {
     @POST
     @Path("/unLockHookLock")
     fun unLockHookLock(
-        @Parameter(description = "项目ID", required = true)
+        @Parameter(name = "项目ID", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_PROJECT_ID)
         projectId: String? = "",
-        @Parameter(description = "项目唯一标识或NAMESPACE_PATH/PROJECT_PATH", required = true)
+        @Parameter(name = "项目唯一标识或NAMESPACE_PATH/PROJECT_PATH", required = true)
         @QueryParam("repoName")
         repoName: String,
-        @Parameter(description = "合并请求的 id", required = true)
+        @Parameter(name = "合并请求的 id", required = true)
         @QueryParam("mrId")
         mrId: Long
     ): Result<Boolean>
@@ -805,19 +805,19 @@ interface ServiceGitResource {
     @POST
     @Path("/createGitTag")
     fun createGitTag(
-        @Parameter(description = "项目唯一标识或NAMESPACE_PATH/PROJECT_PATH", required = true)
+        @Parameter(name = "项目唯一标识或NAMESPACE_PATH/PROJECT_PATH", required = true)
         @QueryParam("repoName")
         repoName: String,
-        @Parameter(description = "tag名称", required = true)
+        @Parameter(name = "tag名称", required = true)
         @QueryParam("tagName")
         tagName: String,
-        @Parameter(description = "关联项", required = true)
+        @Parameter(name = "关联项", required = true)
         @QueryParam("ref")
         ref: String,
-        @Parameter(description = "token", required = true)
+        @Parameter(name = "token", required = true)
         @QueryParam("token")
         token: String,
-        @Parameter(description = "token类型 0：oauth 1:privateKey", required = true)
+        @Parameter(name = "token类型 0：oauth 1:privateKey", required = true)
         @QueryParam("tokenType")
         tokenType: TokenTypeEnum
     ): Result<Boolean>
@@ -826,16 +826,16 @@ interface ServiceGitResource {
     @GET
     @Path("/getProjectGroupInfo")
     fun getProjectGroupInfo(
-        @Parameter(description = "git项目组id", required = true)
+        @Parameter(name = "git项目组id", required = true)
         @QueryParam("id")
         id: String,
-        @Parameter(description = "是否包含subgroup项目", required = false)
+        @Parameter(name = "是否包含subgroup项目", required = false)
         @QueryParam("includeSubgroups")
         includeSubgroups: Boolean?,
-        @Parameter(description = "token", required = true)
+        @Parameter(name = "token", required = true)
         @QueryParam("token")
         token: String,
-        @Parameter(description = "token类型 0：oauth 1:privateKey", required = true)
+        @Parameter(name = "token类型 0：oauth 1:privateKey", required = true)
         @QueryParam("tokenType")
         tokenType: TokenTypeEnum
     ): Result<GitProjectGroupInfo>
@@ -844,28 +844,28 @@ interface ServiceGitResource {
     @GET
     @Path("/getChangeFileList")
     fun getChangeFileList(
-        @Parameter(description = "token")
+        @Parameter(name = "token")
         @QueryParam("token")
         token: String,
-        @Parameter(description = "token类型 0：oauth 1:privateKey", required = true)
+        @Parameter(name = "token类型 0：oauth 1:privateKey", required = true)
         @QueryParam("tokenType")
         tokenType: TokenTypeEnum,
-        @Parameter(description = "gitProjectId")
+        @Parameter(name = "gitProjectId")
         @QueryParam("gitProjectId")
         gitProjectId: String,
-        @Parameter(description = "旧commit")
+        @Parameter(name = "旧commit")
         @QueryParam("from")
         from: String,
-        @Parameter(description = "新commit")
+        @Parameter(name = "新commit")
         @QueryParam("to")
         to: String,
-        @Parameter(description = "true：两个点比较差异，false：三个点比较差异。默认是 false")
+        @Parameter(name = "true：两个点比较差异，false：三个点比较差异。默认是 false")
         @QueryParam("straight")
         straight: Boolean? = false,
-        @Parameter(description = "页码")
+        @Parameter(name = "页码")
         @QueryParam("page")
         page: Int,
-        @Parameter(description = "每页大小")
+        @Parameter(name = "每页大小")
         @QueryParam("pageSize")
         pageSize: Int
     ): Result<List<ChangeFileInfo>>
@@ -874,13 +874,13 @@ interface ServiceGitResource {
     @GET
     @Path("/getGitProjectInfo")
     fun getGitProjectInfo(
-        @Parameter(description = "token")
+        @Parameter(name = "token")
         @QueryParam("token")
         token: String,
-        @Parameter(description = "token类型 0：oauth 1:privateKey", required = true)
+        @Parameter(name = "token类型 0：oauth 1:privateKey", required = true)
         @QueryParam("tokenType")
         tokenType: TokenTypeEnum,
-        @Parameter(description = "gitProjectId")
+        @Parameter(name = "gitProjectId")
         @QueryParam("gitProjectId")
         gitProjectId: String
     ): Result<GitProjectInfo?>
@@ -889,22 +889,22 @@ interface ServiceGitResource {
     @GET
     @Path("/getProjectGroupsList")
     fun getProjectGroupsList(
-        @Parameter(description = "oauth accessToken", required = true)
+        @Parameter(name = "oauth accessToken", required = true)
         @QueryParam("accessToken")
         accessToken: String,
-        @Parameter(description = "第几页", required = true)
+        @Parameter(name = "第几页", required = true)
         @QueryParam("page")
         page: Int?,
-        @Parameter(description = "每页数据条数,最大值100", required = true)
+        @Parameter(name = "每页数据条数,最大值100", required = true)
         @QueryParam("pageSize")
         pageSize: Int?,
-        @Parameter(description = "若为true则只返回owner为当前用户的group")
+        @Parameter(name = "若为true则只返回owner为当前用户的group")
         @QueryParam("owned")
         owned: Boolean?,
-        @Parameter(description = "指定最小访问级别，返回的group列表中，当前用户的group访问级别大于或者等于指定值")
+        @Parameter(name = "指定最小访问级别，返回的group列表中，当前用户的group访问级别大于或者等于指定值")
         @QueryParam("minAccessLevel")
         minAccessLevel: GitAccessLevelEnum?,
-        @Parameter(description = "token类型 0：oauth 1:privateKey", required = true)
+        @Parameter(name = "token类型 0：oauth 1:privateKey", required = true)
         @QueryParam("tokenType")
         tokenType: TokenTypeEnum
     ): Result<List<GitCodeGroup>>
@@ -913,22 +913,22 @@ interface ServiceGitResource {
     @GET
     @Path("/getMembers")
     fun getMembers(
-        @Parameter(description = "token", required = true)
+        @Parameter(name = "token", required = true)
         @QueryParam("token")
         token: String,
-        @Parameter(description = "项目ID或者全路径", required = true)
+        @Parameter(name = "项目ID或者全路径", required = true)
         @QueryParam("gitProjectId")
         gitProjectId: String,
-        @Parameter(description = "page", required = true)
+        @Parameter(name = "page", required = true)
         @QueryParam("page")
         page: Int = 1,
-        @Parameter(description = "pageSize", required = true)
+        @Parameter(name = "pageSize", required = true)
         @QueryParam("pageSize")
         pageSize: Int = 20,
-        @Parameter(description = "搜索用户关键字", required = false)
+        @Parameter(name = "搜索用户关键字", required = false)
         @QueryParam("search")
         search: String?,
-        @Parameter(description = "token类型 0：oauth 1:privateKey", required = true)
+        @Parameter(name = "token类型 0：oauth 1:privateKey", required = true)
         @QueryParam("tokenType")
         tokenType: TokenTypeEnum
     ): Result<List<GitMember>>
@@ -937,16 +937,16 @@ interface ServiceGitResource {
     @GET
     @Path("/getUserId")
     fun getGitUserId(
-        @Parameter(description = "userId", required = true)
+        @Parameter(name = "userId", required = true)
         @QueryParam("userId")
         rtxUserId: String,
-        @Parameter(description = "gitProjectId", required = true)
+        @Parameter(name = "gitProjectId", required = true)
         @QueryParam("gitProjectId")
         gitProjectId: String,
-        @Parameter(description = "token类型 0：oauth 1:privateKey", required = true)
+        @Parameter(name = "token类型 0：oauth 1:privateKey", required = true)
         @QueryParam("tokenType")
         tokenType: TokenTypeEnum,
-        @Parameter(description = "token", required = true)
+        @Parameter(name = "token", required = true)
         @QueryParam("token")
         token: String
     ): Result<String?>
@@ -955,22 +955,22 @@ interface ServiceGitResource {
     @GET
     @Path("/projects/members/all")
     fun getProjectMembersAll(
-        @Parameter(description = "gitProjectId")
+        @Parameter(name = "gitProjectId")
         @QueryParam("gitProjectId")
         gitProjectId: String,
-        @Parameter(description = "page", required = true)
+        @Parameter(name = "page", required = true)
         @QueryParam("page")
         page: Int = 1,
-        @Parameter(description = "pageSize", required = true)
+        @Parameter(name = "pageSize", required = true)
         @QueryParam("pageSize")
         pageSize: Int = 20,
-        @Parameter(description = "搜索用户关键字", required = true)
+        @Parameter(name = "搜索用户关键字", required = true)
         @QueryParam("search")
         search: String?,
-        @Parameter(description = "token类型 0：oauth 1:privateKey", required = true)
+        @Parameter(name = "token类型 0：oauth 1:privateKey", required = true)
         @QueryParam("tokenType")
         tokenType: TokenTypeEnum,
-        @Parameter(description = "token", required = true)
+        @Parameter(name = "token", required = true)
         @QueryParam("token")
         token: String
     ): Result<List<GitMember>>
@@ -979,19 +979,19 @@ interface ServiceGitResource {
     @GET
     @Path("/getGitFileInfo")
     fun getGitFileInfo(
-        @Parameter(description = "gitProjectId")
+        @Parameter(name = "gitProjectId")
         @QueryParam("gitProjectId")
         gitProjectId: String,
-        @Parameter(description = "文件路径")
+        @Parameter(name = "文件路径")
         @QueryParam("filePath")
         filePath: String?,
-        @Parameter(description = "token")
+        @Parameter(name = "token")
         @QueryParam("token")
         token: String,
-        @Parameter(description = "提交id 或者 分支")
+        @Parameter(name = "提交id 或者 分支")
         @QueryParam("ref")
         ref: String?,
-        @Parameter(description = "token类型 0：oauth 1:privateKey", required = true)
+        @Parameter(name = "token类型 0：oauth 1:privateKey", required = true)
         @QueryParam("tokenType")
         tokenType: TokenTypeEnum
     ): Result<GitCodeFileInfo>
@@ -1000,18 +1000,18 @@ interface ServiceGitResource {
     @POST
     @Path("/addMrComment")
     fun addMrComment(
-        @Parameter(description = "token")
+        @Parameter(name = "token")
         @QueryParam("token")
         token: String,
-        @Parameter(description = "gitProjectId")
+        @Parameter(name = "gitProjectId")
         @QueryParam("gitProjectId")
         gitProjectId: String,
-        @Parameter(description = "mrId")
+        @Parameter(name = "mrId")
         @QueryParam("mrId")
         mrId: Long,
-        @Parameter(description = "mr评论请求体")
+        @Parameter(name = "mr评论请求体")
         mrBody: String,
-        @Parameter(description = "token类型 0：oauth 1:privateKey", required = true)
+        @Parameter(name = "token类型 0：oauth 1:privateKey", required = true)
         @QueryParam("tokenType")
         tokenType: TokenTypeEnum
     )
@@ -1020,28 +1020,28 @@ interface ServiceGitResource {
     @GET
     @Path("/getGitCodeProjectList")
     fun getGitCodeProjectList(
-        @Parameter(description = "accessToken", required = true)
+        @Parameter(name = "accessToken", required = true)
         @QueryParam("accessToken")
         accessToken: String,
-        @Parameter(description = "第几页", required = true)
+        @Parameter(name = "第几页", required = true)
         @QueryParam("page")
         page: Int?,
-        @Parameter(description = "每页数据条数", required = true)
+        @Parameter(name = "每页数据条数", required = true)
         @QueryParam("pageSize")
         pageSize: Int?,
-        @Parameter(description = "搜索条件，模糊匹配path,name")
+        @Parameter(name = "搜索条件，模糊匹配path,name")
         @QueryParam("search")
         search: String?,
-        @Parameter(description = "排序字段")
+        @Parameter(name = "排序字段")
         @QueryParam("orderBy")
         orderBy: GitCodeProjectsOrder?,
-        @Parameter(description = "排序方式")
+        @Parameter(name = "排序方式")
         @QueryParam("sort")
         sort: GitCodeBranchesSort?,
-        @Parameter(description = "若为true，返回的是当前用户个人namespace下的project，以及owner为当前用户的group下的所有project")
+        @Parameter(name = "若为true，返回的是当前用户个人namespace下的project，以及owner为当前用户的group下的所有project")
         @QueryParam("owned")
         owned: Boolean?,
-        @Parameter(description = "指定最小访问级别，返回的project列表中，当前用户的project访问级别大于或者等于指定值")
+        @Parameter(name = "指定最小访问级别，返回的project列表中，当前用户的project访问级别大于或者等于指定值")
         @QueryParam("minAccessLevel")
         minAccessLevel: GitAccessLevelEnum?
     ): Result<List<GitCodeProjectInfo>>
@@ -1050,7 +1050,7 @@ interface ServiceGitResource {
     @GET
     @Path("/gitcode/gitEnableCi")
     fun enableCi(
-        @Parameter(description = "仓库id或编码过的仓库path")
+        @Parameter(name = "仓库id或编码过的仓库path")
         @QueryParam("projectName")
         projectName: String,
         @QueryParam("token")
@@ -1065,15 +1065,15 @@ interface ServiceGitResource {
     @POST
     @Path("/gitcode/create/file")
     fun gitCreateFile(
-        @Parameter(description = "gitProjectId")
+        @Parameter(name = "gitProjectId")
         @QueryParam("gitProjectId")
         gitProjectId: String,
-        @Parameter(description = "token")
+        @Parameter(name = "token")
         @QueryParam("token")
         token: String,
-        @Parameter(description = "创建文件内容")
+        @Parameter(name = "创建文件内容")
         gitOperationFile: GitOperationFile,
-        @Parameter(description = "token类型 0：oauth 1:privateKey", required = true)
+        @Parameter(name = "token类型 0：oauth 1:privateKey", required = true)
         @QueryParam("tokenType")
         tokenType: TokenTypeEnum
     ): Result<Boolean>
@@ -1082,18 +1082,18 @@ interface ServiceGitResource {
     @POST
     @Path("/gitcode/update/file")
     fun tGitUpdateFile(
-        @Parameter(description = "repoUrl")
+        @Parameter(name = "repoUrl")
         @QueryParam("repoUrl")
         repoUrl: String?,
-        @Parameter(description = "repoName")
+        @Parameter(name = "repoName")
         @QueryParam("repoName")
         repoName: String,
-        @Parameter(description = "token")
+        @Parameter(name = "token")
         @QueryParam("token")
         token: String,
-        @Parameter(description = "更新文件内容")
+        @Parameter(name = "更新文件内容")
         gitOperationFile: GitOperationFile,
-        @Parameter(description = "token类型 0：oauth 1:privateKey", required = true)
+        @Parameter(name = "token类型 0：oauth 1:privateKey", required = true)
         @QueryParam("tokenType")
         tokenType: TokenTypeEnum
     ): Result<Boolean>
@@ -1102,19 +1102,19 @@ interface ServiceGitResource {
     @GET
     @Path("/getTapdWorkItems")
     fun getTapdWorkItems(
-        @Parameter(description = "accessToken", required = true)
+        @Parameter(name = "accessToken", required = true)
         @QueryParam("accessToken")
         accessToken: String,
-        @Parameter(description = "token类型 0：oauth 1:privateKey", required = true)
+        @Parameter(name = "token类型 0：oauth 1:privateKey", required = true)
         @QueryParam("tokenType")
         tokenType: TokenTypeEnum = TokenTypeEnum.OAUTH,
-        @Parameter(description = "gitProjectId")
+        @Parameter(name = "gitProjectId")
         @QueryParam("gitProjectId")
         gitProjectId: String,
-        @Parameter(description = "类型,可选mr,cr,issue")
+        @Parameter(name = "类型,可选mr,cr,issue")
         @QueryParam("type")
         type: String,
-        @Parameter(description = "iid,类型对应的iid")
+        @Parameter(name = "iid,类型对应的iid")
         @QueryParam("iid")
         iid: Long
     ): Result<List<TapdWorkItem>>
@@ -1123,22 +1123,22 @@ interface ServiceGitResource {
     @GET
     @Path("/get_commit_diff")
     fun getCommitDiff(
-        @Parameter(description = "accessToken", required = true)
+        @Parameter(name = "accessToken", required = true)
         @QueryParam("accessToken")
         accessToken: String,
-        @Parameter(description = "token类型 0：oauth 1:privateKey", required = true)
+        @Parameter(name = "token类型 0：oauth 1:privateKey", required = true)
         @QueryParam("tokenType")
         tokenType: TokenTypeEnum = TokenTypeEnum.OAUTH,
-        @Parameter(description = "项目 ID 或 项目全路径 project_full_path")
+        @Parameter(name = "项目 ID 或 项目全路径 project_full_path")
         @QueryParam("gitProjectId")
         gitProjectId: String,
-        @Parameter(description = "commit hash 值、分支名或 tag")
+        @Parameter(name = "commit hash 值、分支名或 tag")
         @QueryParam("sha")
         sha: String,
-        @Parameter(description = "文件路径")
+        @Parameter(name = "文件路径")
         @QueryParam("path")
         path: String?,
-        @Parameter(description = "有差异的内容是否忽略空白符，默认不忽略")
+        @Parameter(name = "有差异的内容是否忽略空白符，默认不忽略")
         @QueryParam("ignore_white_space")
         ignoreWhiteSpace: Boolean?
     ): Result<List<GitDiff>>

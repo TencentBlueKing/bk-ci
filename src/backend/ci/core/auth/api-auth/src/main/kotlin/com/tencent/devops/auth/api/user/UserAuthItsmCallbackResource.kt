@@ -50,7 +50,7 @@ interface UserAuthItsmCallbackResource {
     @Path("/{projectId}")
     @Operation(summary = "获取项目审批信息")
     fun get(
-        @Parameter(description = "项目ID", required = true)
+        @Parameter(name = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String
     ): Result<AuthItsmCallbackInfo?>

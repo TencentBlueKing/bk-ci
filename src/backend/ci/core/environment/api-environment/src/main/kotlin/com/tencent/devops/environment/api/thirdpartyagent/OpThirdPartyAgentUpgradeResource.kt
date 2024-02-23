@@ -53,7 +53,7 @@ interface OpThirdPartyAgentUpgradeResource {
     @PUT
     @Path("/agents/set_jdk_version_list")
     fun setJDKVersionList(
-        @Parameter(description = "osArchJDKVersionList", required = true)
+        @Parameter(name = "osArchJDKVersionList", required = true)
         osArchJDKVersionSet: Set<JDKInfo>
     ): Result<Boolean>
 
@@ -61,7 +61,7 @@ interface OpThirdPartyAgentUpgradeResource {
     @PUT
     @Path("/agents/setMaxParallelUpgradeCount")
     fun setMaxParallelUpgradeCount(
-        @Parameter(description = "maxParallelUpgradeCount", required = true)
+        @Parameter(name = "maxParallelUpgradeCount", required = true)
         maxParallelUpgradeCount: Int
     ): Result<Boolean>
 
@@ -74,7 +74,7 @@ interface OpThirdPartyAgentUpgradeResource {
     @PUT
     @Path("/agents/upgrade/{version}")
     fun setAgentWorkerVersion(
-        @Parameter(description = "版本号", required = true)
+        @Parameter(name = "版本号", required = true)
         @PathParam("version")
         version: String
     ): Result<Boolean>
@@ -83,7 +83,7 @@ interface OpThirdPartyAgentUpgradeResource {
     @PUT
     @Path("/agents/masterVersion/{version}")
     fun setMasterVersion(
-        @Parameter(description = "版本号", required = true)
+        @Parameter(name = "版本号", required = true)
         @PathParam("version")
         version: String
     ): Result<Boolean>
@@ -102,7 +102,7 @@ interface OpThirdPartyAgentUpgradeResource {
     @PUT
     @Path("/agents/setForceUpdateAgents")
     fun setForceUpdateAgents(
-        @Parameter(description = "agent long id", required = true)
+        @Parameter(name = "agent long id", required = true)
         agentIds: List<Long>,
         @QueryParam("upgradeType")
         agentUpgradeType: String?
@@ -112,7 +112,7 @@ interface OpThirdPartyAgentUpgradeResource {
     @DELETE
     @Path("/agents/unsetForceUpdateAgents")
     fun unsetForceUpdateAgents(
-        @Parameter(description = "agent long id", required = true)
+        @Parameter(name = "agent long id", required = true)
         agentIds: List<Long>,
         @QueryParam("upgradeType")
         agentUpgradeType: String?
@@ -138,7 +138,7 @@ interface OpThirdPartyAgentUpgradeResource {
     @PUT
     @Path("/agents/setLockUpdateAgents")
     fun setLockUpdateAgents(
-        @Parameter(description = "agent long id", required = true)
+        @Parameter(name = "agent long id", required = true)
         agentIds: List<Long>,
         @QueryParam("upgradeType")
         agentUpgradeType: String?
@@ -148,7 +148,7 @@ interface OpThirdPartyAgentUpgradeResource {
     @DELETE
     @Path("/agents/unsetLockUpdateAgents")
     fun unsetLockUpdateAgents(
-        @Parameter(description = "agent long id", required = true)
+        @Parameter(name = "agent long id", required = true)
         agentIds: List<Long>,
         @QueryParam("upgradeType")
         agentUpgradeType: String?
@@ -174,7 +174,7 @@ interface OpThirdPartyAgentUpgradeResource {
     @PUT
     @Path("/agents/set_priority_upgrade_projects")
     fun setPriorityUpgradeAgentProjects(
-        @Parameter(description = "projectIds", required = true)
+        @Parameter(name = "projectIds", required = true)
         projectIds: List<String>
     ): Result<Boolean>
 
@@ -182,7 +182,7 @@ interface OpThirdPartyAgentUpgradeResource {
     @DELETE
     @Path("/agents/unset_priority_upgrade_projects")
     fun unsetPriorityUpgradeAgentProjects(
-        @Parameter(description = "projectIds", required = true)
+        @Parameter(name = "projectIds", required = true)
         projectIds: List<String>
     ): Result<Boolean>
 
@@ -200,7 +200,7 @@ interface OpThirdPartyAgentUpgradeResource {
     @PUT
     @Path("/agents/set_deny_upgrade_projects")
     fun setDenyUpgradeAgentProjects(
-        @Parameter(description = "projectIds", required = true)
+        @Parameter(name = "projectIds", required = true)
         projectIds: List<String>
     ): Result<Boolean>
 
@@ -208,7 +208,7 @@ interface OpThirdPartyAgentUpgradeResource {
     @DELETE
     @Path("/agents/unset_deny_upgrade_projects")
     fun unsetDenyUpgradeAgentProjects(
-        @Parameter(description = "agentIds", required = true)
+        @Parameter(name = "agentIds", required = true)
         projectIds: List<String>
     ): Result<Boolean>
 

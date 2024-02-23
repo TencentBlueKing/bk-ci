@@ -58,7 +58,7 @@ interface UserBuildParametersResource {
     @GET
     @Path("/")
     fun getCommonBuildParams(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String
     ): Result<List<BuildEnvParameters>>
@@ -67,25 +67,25 @@ interface UserBuildParametersResource {
     @GET
     @Path("/repository/{projectId}/aliasName")
     fun listRepositoryAliasName(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "项目ID", required = true)
+        @Parameter(name = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(description = "仓库类型", required = false)
+        @Parameter(name = "仓库类型", required = false)
         @QueryParam("repositoryType")
         repositoryType: String?,
-        @Parameter(description = "对应权限", required = true, example = "")
+        @Parameter(name = "对应权限", required = true, example = "")
         @QueryParam("permission")
         permission: Permission,
-        @Parameter(description = "别名", required = false)
+        @Parameter(name = "别名", required = false)
         @QueryParam("aliasName")
         aliasName: String? = null,
-        @Parameter(description = "第几页", required = false, example = "1")
+        @Parameter(name = "第几页", required = false, example = "1")
         @QueryParam("page")
         page: Int?,
-        @Parameter(description = "每页多少条", required = false, example = "20")
+        @Parameter(name = "每页多少条", required = false, example = "20")
         @QueryParam("pageSize")
         pageSize: Int?
     ): Result<List<BuildFormValue>>
@@ -94,25 +94,25 @@ interface UserBuildParametersResource {
     @GET
     @Path("/repository/{projectId}/hashId")
     fun listRepositoryHashId(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "项目ID", required = true)
+        @Parameter(name = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(description = "仓库类型", required = false)
+        @Parameter(name = "仓库类型", required = false)
         @QueryParam("repositoryType")
         repositoryType: String?,
-        @Parameter(description = "对应权限", required = true, example = "")
+        @Parameter(name = "对应权限", required = true, example = "")
         @QueryParam("permission")
         permission: Permission,
-        @Parameter(description = "别名", required = false)
+        @Parameter(name = "别名", required = false)
         @QueryParam("aliasName")
         aliasName: String? = null,
-        @Parameter(description = "第几页", required = false, example = "1")
+        @Parameter(name = "第几页", required = false, example = "1")
         @QueryParam("page")
         page: Int?,
-        @Parameter(description = "每页多少条", required = false, example = "20")
+        @Parameter(name = "每页多少条", required = false, example = "20")
         @QueryParam("pageSize")
         pageSize: Int?
     ): Result<List<BuildFormRepositoryValue>>
@@ -121,25 +121,25 @@ interface UserBuildParametersResource {
     @GET
     @Path("/{projectId}/subPipeline")
     fun listPermissionPipeline(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "项目ID", required = true)
+        @Parameter(name = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(description = "对应权限", required = true, example = "")
+        @Parameter(name = "对应权限", required = true, example = "")
         @QueryParam("permission")
         permission: com.tencent.devops.process.pojo.Permission,
-        @Parameter(description = "排除流水线ID", required = false, example = "")
+        @Parameter(name = "排除流水线ID", required = false, example = "")
         @QueryParam("excludePipelineId")
         excludePipelineId: String?,
-        @Parameter(description = "流水线名称", required = false)
+        @Parameter(name = "流水线名称", required = false)
         @QueryParam("pipelineName")
         pipelineName: String? = null,
-        @Parameter(description = "第几页", required = false, example = "1")
+        @Parameter(name = "第几页", required = false, example = "1")
         @QueryParam("page")
         page: Int?,
-        @Parameter(description = "每页多少条", required = false, example = "20")
+        @Parameter(name = "每页多少条", required = false, example = "20")
         @QueryParam("pageSize")
         pageSize: Int?
     ): Result<List<BuildFormValue>>
@@ -148,16 +148,16 @@ interface UserBuildParametersResource {
     @GET
     @Path("/{projectId}/{repositoryId}/gitRefs")
     fun listGitRefs(
-        @Parameter(description = "项目ID", required = true)
+        @Parameter(name = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(description = "repo hash id", required = true)
+        @Parameter(name = "repo hash id", required = true)
         @PathParam("repositoryId")
         repositoryId: String,
-        @Parameter(description = "代码库请求类型", required = false)
+        @Parameter(name = "代码库请求类型", required = false)
         @QueryParam("repositoryType")
         repositoryType: RepositoryType?,
-        @Parameter(description = "搜索条件", required = false)
+        @Parameter(name = "搜索条件", required = false)
         @QueryParam("search")
         search: String?
     ): Result<List<BuildFormValue>>

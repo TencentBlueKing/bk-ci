@@ -62,29 +62,29 @@ interface BuildCredentialResource {
     @Path("/{credentialId}/")
     @GET
     fun get(
-        @Parameter(description = "项目ID", required = true)
+        @Parameter(name = "项目ID", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_PROJECT_ID)
         projectId: String,
-        @Parameter(description = "构建ID", required = true)
+        @Parameter(name = "构建ID", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_BUILD_ID)
         buildId: String,
-        @Parameter(description = "构建环境ID", required = true)
+        @Parameter(name = "构建环境ID", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_VM_SEQ_ID)
         vmSeqId: String,
-        @Parameter(description = "构建机名称", required = true)
+        @Parameter(name = "构建机名称", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_VM_NAME)
         vmName: String,
-        @Parameter(description = "凭据ID", required = true)
+        @Parameter(name = "凭据ID", required = true)
         @PathParam("credentialId")
         credentialId: String,
-        @Parameter(description = "Base64编码的加密公钥", required = true)
+        @Parameter(name = "Base64编码的加密公钥", required = true)
         @QueryParam("publicKey")
         @BkField(required = true)
         publicKey: String,
-        @Parameter(description = "插件ID", required = true)
+        @Parameter(name = "插件ID", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_CI_TASK_ID)
         taskId: String?,
-        @Parameter(description = "插件ID(旧版本的，为了兼容旧版本插件不用更新sdk来使用)", required = true)
+        @Parameter(name = "插件ID(旧版本的，为了兼容旧版本插件不用更新sdk来使用)", required = true)
         @HeaderParam("X-DEVOPS-TASK-ID")
         oldTaskId: String?
     ): Result<CredentialInfo?>
@@ -93,25 +93,25 @@ interface BuildCredentialResource {
     @Path("/{credentialId}/across/")
     @GET
     fun getAcrossProject(
-        @Parameter(description = "项目ID", required = true)
+        @Parameter(name = "项目ID", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_PROJECT_ID)
         projectId: String,
-        @Parameter(description = "构建ID", required = true)
+        @Parameter(name = "构建ID", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_BUILD_ID)
         buildId: String,
-        @Parameter(description = "构建环境ID", required = true)
+        @Parameter(name = "构建环境ID", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_VM_SEQ_ID)
         vmSeqId: String,
-        @Parameter(description = "构建机名称", required = true)
+        @Parameter(name = "构建机名称", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_VM_NAME)
         vmName: String,
-        @Parameter(description = "凭据ID", required = true)
+        @Parameter(name = "凭据ID", required = true)
         @PathParam("credentialId")
         credentialId: String,
-        @Parameter(description = "项目ID", required = true)
+        @Parameter(name = "项目ID", required = true)
         @QueryParam("targetProjectId")
         targetProjectId: String,
-        @Parameter(description = "Base64编码的加密公钥", required = true)
+        @Parameter(name = "Base64编码的加密公钥", required = true)
         @QueryParam("publicKey")
         @BkField(required = true)
         publicKey: String
@@ -121,25 +121,25 @@ interface BuildCredentialResource {
     @Path("/{credentialId}/detail")
     @GET
     fun getDetail(
-        @Parameter(description = "项目ID", required = true)
+        @Parameter(name = "项目ID", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_PROJECT_ID)
         projectId: String,
-        @Parameter(description = "构建ID", required = true)
+        @Parameter(name = "构建ID", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_BUILD_ID)
         buildId: String,
-        @Parameter(description = "构建环境ID", required = true)
+        @Parameter(name = "构建环境ID", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_VM_SEQ_ID)
         vmSeqId: String,
-        @Parameter(description = "构建机名称", required = true)
+        @Parameter(name = "构建机名称", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_VM_NAME)
         vmName: String,
-        @Parameter(description = "插件ID", required = true)
+        @Parameter(name = "插件ID", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_CI_TASK_ID)
         taskId: String?,
-        @Parameter(description = "插件ID(旧版本的，为了兼容旧版本插件不用更新sdk来使用)", required = true)
+        @Parameter(name = "插件ID(旧版本的，为了兼容旧版本插件不用更新sdk来使用)", required = true)
         @HeaderParam("X-DEVOPS-TASK-ID")
         oldTaskId: String?,
-        @Parameter(description = "凭据ID", required = true)
+        @Parameter(name = "凭据ID", required = true)
         @PathParam("credentialId")
         credentialId: String
     ): Result<Map<String, String>>
@@ -148,13 +148,13 @@ interface BuildCredentialResource {
     @Path("/{projectId}/")
     @POST
     fun create(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "项目ID", required = true)
+        @Parameter(name = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(description = "凭据", required = true)
+        @Parameter(name = "凭据", required = true)
         credential: CredentialCreate
     ): Result<Boolean>
 }

@@ -27,16 +27,16 @@
 
 package com.tencent.devops.environment.pojo.job
 
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
 data class CCUpdateInfo(
-    @ApiModelProperty(value = "节点ID")
+    @get:Schema(title = "节点ID")
     val nodeId: Long?,
-    @ApiModelProperty(value = "云区域ID")
+    @get:Schema(title = "云区域ID")
     val bkCloudId: Long?,
-    @ApiModelProperty(value = "主机ID")
+    @get:Schema(title = "主机ID")
     val bkHostId: Long?,
-    @ApiModelProperty(value = "操作系统类型")
+    @get:Schema(title = "操作系统类型")
     val osType: String?
 ) {
     constructor(nodeId: Long?, bkCloudId: Long?, bkHostId: Long?) : this(nodeId, bkCloudId, bkHostId, null)

@@ -27,11 +27,11 @@
 
 package com.tencent.devops.environment.pojo.job
 
-import io.swagger.annotations.ApiModelProperty
+
 
 data class ReImportCmdbNodeInfo(
-    @ApiModelProperty(value = "节点IP", required = true)
+    @get:Schema(title = "节点IP", required = true)
     val nodeIp: String,
-    @ApiModelProperty(value = "节点ID", required = true)
+    @get:Schema(title = "节点ID", required = true)
     val nodeId: Long
 )

@@ -63,24 +63,24 @@ interface ServiceFileResource {
     @Path("/file/upload")
     @Consumes(MediaType.MULTIPART_FORM_DATA)
     fun uploadFile(
-        @Parameter(description = "userId", required = true)
+        @Parameter(name = "userId", required = true)
         @QueryParam("userId")
         userId: String,
-        @Parameter(description = "文件", required = true)
+        @Parameter(name = "文件", required = true)
         @FormDataParam("file")
         inputStream: InputStream,
         @FormDataParam("file")
         disposition: FormDataContentDisposition,
-        @Parameter(description = "项目代码", required = false)
+        @Parameter(name = "项目代码", required = false)
         @QueryParam("projectCode")
         projectCode: String? = null,
-        @Parameter(description = "渠道类型", required = true)
+        @Parameter(name = "渠道类型", required = true)
         @QueryParam("fileChannelType")
         fileChannelType: FileChannelTypeEnum = FileChannelTypeEnum.SERVICE,
-        @Parameter(description = "是否静态文件", required = false)
+        @Parameter(name = "是否静态文件", required = false)
         @QueryParam("staticFlag")
         staticFlag: Boolean? = false,
-        @Parameter(description = "文件类型", required = false)
+        @Parameter(name = "文件类型", required = false)
         @QueryParam("fileType")
         fileType: FileTypeEnum? = null
     ): Result<String?>
@@ -89,10 +89,10 @@ interface ServiceFileResource {
     @GET
     @Path("/file/download")
     fun downloadFile(
-        @Parameter(description = "用户ID", required = true)
+        @Parameter(name = "用户ID", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "文件路径", required = true)
+        @Parameter(name = "文件路径", required = true)
         @QueryParam("filePath")
         filePath: String,
         @Context

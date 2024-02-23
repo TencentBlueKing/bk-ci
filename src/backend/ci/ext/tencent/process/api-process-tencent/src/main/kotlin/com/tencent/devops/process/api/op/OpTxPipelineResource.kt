@@ -22,10 +22,10 @@ interface OpTxPipelineResource {
     @PUT
     @Path("/{pipelineId}/creator")
     fun updatePipelineCreator(
-        @Parameter(description = "流水线Id", required = true)
+        @Parameter(name = "流水线Id", required = true)
         @PathParam("pipelineId")
         pipelineId: String,
-        @Parameter(description = "新创建人", required = true)
+        @Parameter(name = "新创建人", required = true)
         @QueryParam("creator")
         creator: String
     ): Result<Boolean>
@@ -34,10 +34,10 @@ interface OpTxPipelineResource {
     @PUT
     @Path("/{pipelineId}/fixCheckOut")
     fun fixPipelineCheckOut(
-        @Parameter(description = "stage数据失效时间", required = false)
+        @Parameter(name = "stage数据失效时间", required = false)
         @QueryParam("stageTimeoutDays")
         stageTimeoutDays: Long?,
-        @Parameter(description = "构建数据失效时间", required = false)
+        @Parameter(name = "构建数据失效时间", required = false)
         @QueryParam("buildTimeoutDays")
         buildTimeoutDays: Long?
     ): Result<Int>

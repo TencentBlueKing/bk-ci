@@ -57,19 +57,19 @@ interface UserContainerResource {
     @GET
     @Path("/projects/{projectCode}/containers/{containerId}/oss/{os}")
     fun getContainerResource(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "项目编码", required = true)
+        @Parameter(name = "项目编码", required = true)
         @PathParam("projectCode")
         projectCode: String,
-        @Parameter(description = "容器ID", required = true)
+        @Parameter(name = "容器ID", required = true)
         @PathParam("containerId")
         containerId: String,
-        @Parameter(description = "操作系统", required = true)
+        @Parameter(name = "操作系统", required = true)
         @PathParam("os")
         os: OS,
-        @Parameter(description = "资源类型", required = false)
+        @Parameter(name = "资源类型", required = false)
         @QueryParam("buildType")
         buildType: BuildType
     ): Result<ContainerResource?>
@@ -78,16 +78,16 @@ interface UserContainerResource {
     @GET
     @Path("/projects/{projectCode}/oss/{os}")
     fun getContainerResource(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "项目编码", required = true)
+        @Parameter(name = "项目编码", required = true)
         @PathParam("projectCode")
         projectCode: String,
-        @Parameter(description = "操作系统", required = true)
+        @Parameter(name = "操作系统", required = true)
         @PathParam("os")
         os: OS,
-        @Parameter(description = "资源类型", required = false)
+        @Parameter(name = "资源类型", required = false)
         @QueryParam("buildType")
         buildType: BuildType
     ): Result<ContainerResource?>
@@ -96,10 +96,10 @@ interface UserContainerResource {
     @GET
     @Path("/{projectCode}")
     fun getAllContainerInfos(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "项目编码", required = true)
+        @Parameter(name = "项目编码", required = true)
         @PathParam("projectCode")
         projectCode: String
     ): Result<List<ContainerResp>>
@@ -108,13 +108,13 @@ interface UserContainerResource {
     @GET
     @Path("/{projectCode}/{type}")
     fun getContainerInfoByType(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "项目编码", required = true)
+        @Parameter(name = "项目编码", required = true)
         @PathParam("projectCode")
         projectCode: String,
-        @Parameter(description = "容器类型(trigger:触发器 vmBuild:构建环境 normal:无编译环境)", required = true)
+        @Parameter(name = "容器类型(trigger:触发器 vmBuild:构建环境 normal:无编译环境)", required = true)
         @PathParam("type")
         type: String
     ): Result<List<ContainerResp>>
@@ -123,16 +123,16 @@ interface UserContainerResource {
     @GET
     @Path("/{projectCode}/{type}/{os}")
     fun getContainerInfoByTypeAndOs(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "项目编码", required = true)
+        @Parameter(name = "项目编码", required = true)
         @PathParam("projectCode")
         projectCode: String,
-        @Parameter(description = "容器类型(trigger:触发器 vmBuild:构建环境 normal:无编译环境)", required = true)
+        @Parameter(name = "容器类型(trigger:触发器 vmBuild:构建环境 normal:无编译环境)", required = true)
         @PathParam("type")
         type: String,
-        @Parameter(description = "操作系统", required = true)
+        @Parameter(name = "操作系统", required = true)
         @PathParam("os")
         os: OS
     ): Result<List<ContainerResp>>

@@ -52,15 +52,15 @@ interface OpenStoreResource {
     @Operation(summary = "校验项目是否有使用该组件的权限")
     fun validateProjectAtomPermission(
         @HeaderParam(AUTH_HEADER_DEVOPS_BK_TOKEN)
-        @Parameter(description = "认证token", required = true)
+        @Parameter(name = "认证token", required = true)
         token: String,
         @PathParam("projectCode")
-        @Parameter(description = "项目编码", required = true)
+        @Parameter(name = "项目编码", required = true)
         projectCode: String,
-        @Parameter(description = "标识", required = true)
+        @Parameter(name = "标识", required = true)
         @PathParam("storeCode")
         storeCode: String,
-        @Parameter(description = "类型", required = true)
+        @Parameter(name = "类型", required = true)
         @PathParam("storeType")
         storeType: StoreTypeEnum
     ): Result<Boolean>

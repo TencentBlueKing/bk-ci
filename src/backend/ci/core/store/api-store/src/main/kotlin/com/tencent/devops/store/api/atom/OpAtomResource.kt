@@ -71,10 +71,10 @@ interface OpAtomResource {
     @POST
     @Path("/")
     fun add(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "流水线插件请求报文体", required = true)
+        @Parameter(name = "流水线插件请求报文体", required = true)
         atomCreateRequest: AtomCreateRequest
     ): Result<Boolean>
 
@@ -82,13 +82,13 @@ interface OpAtomResource {
     @PUT
     @Path("/{id}")
     fun update(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "流水线插件ID", required = true)
+        @Parameter(name = "流水线插件ID", required = true)
         @PathParam("id")
         id: String,
-        @Parameter(description = "流水线插件请求报文体", required = true)
+        @Parameter(name = "流水线插件请求报文体", required = true)
         atomUpdateRequest: AtomUpdateRequest
     ): Result<Boolean>
 
@@ -99,40 +99,40 @@ interface OpAtomResource {
         keyPrefixNames = ["ATOM", "{data.records[*].atomCode}", "{data.records[*].version}", "releaseInfo"]
     )
     fun listAllPipelineAtoms(
-        @Parameter(description = "插件名称", required = false)
+        @Parameter(name = "插件名称", required = false)
         @QueryParam("atomName")
         atomName: String?,
-        @Parameter(description = "插件标识", required = false)
+        @Parameter(name = "插件标识", required = false)
         @QueryParam("atomCode")
         atomCode: String?,
-        @Parameter(description = "插件类型，SELF_DEVELOPED：自研 THIRD_PARTY：第三方开发", required = false)
+        @Parameter(name = "插件类型，SELF_DEVELOPED：自研 THIRD_PARTY：第三方开发", required = false)
         @QueryParam("atomType")
         atomType: AtomTypeEnum?,
-        @Parameter(description = "支持的服务范围（pipeline/quality/all 分别表示流水线/质量红线/全部）", required = false)
+        @Parameter(name = "支持的服务范围（pipeline/quality/all 分别表示流水线/质量红线/全部）", required = false)
         @QueryParam("serviceScope")
         serviceScope: String?,
-        @Parameter(description = "操作系统（ALL/WINDOWS/LINUX/MACOS）", required = false)
+        @Parameter(name = "操作系统（ALL/WINDOWS/LINUX/MACOS）", required = false)
         @QueryParam("os")
         os: String?,
-        @Parameter(description = "插件所属范畴，TRIGGER：触发器类插件 TASK：任务类插件", required = false)
+        @Parameter(name = "插件所属范畴，TRIGGER：触发器类插件 TASK：任务类插件", required = false)
         @QueryParam("category")
         category: String?,
-        @Parameter(description = "插件分类id", required = false)
+        @Parameter(name = "插件分类id", required = false)
         @QueryParam("classifyId")
         classifyId: String?,
-        @Parameter(description = "插件状态", required = false)
+        @Parameter(name = "插件状态", required = false)
         @QueryParam("atomStatus")
         atomStatus: AtomStatusEnum?,
-        @Parameter(description = "排序", required = false)
+        @Parameter(name = "排序", required = false)
         @QueryParam("sortType")
         sortType: OpSortTypeEnum? = OpSortTypeEnum.UPDATE_TIME,
-        @Parameter(description = "排序", required = false)
+        @Parameter(name = "排序", required = false)
         @QueryParam("desc")
         desc: Boolean?,
-        @Parameter(description = "页码", required = false)
+        @Parameter(name = "页码", required = false)
         @QueryParam("page")
         page: Int = 1,
-        @Parameter(description = "每页数量", required = false)
+        @Parameter(name = "每页数量", required = false)
         @QueryParam("pageSize")
         @BkField(patternStyle = BkStyleEnum.PAGE_SIZE_STYLE)
         pageSize: Int = 10
@@ -143,7 +143,7 @@ interface OpAtomResource {
     @Path("/{id}")
     @BkInterfaceI18n(keyPrefixNames = ["ATOM", "{data.atomCode}", "{data.version}", "releaseInfo"])
     fun getPipelineAtomById(
-        @Parameter(description = "流水线插件ID", required = true)
+        @Parameter(name = "流水线插件ID", required = true)
         @QueryParam("id")
         id: String
     ): Result<Atom?>
@@ -152,7 +152,7 @@ interface OpAtomResource {
     @DELETE
     @Path("/{id}")
     fun deletePipelineAtomById(
-        @Parameter(description = "流水线插件ID", required = true)
+        @Parameter(name = "流水线插件ID", required = true)
         @PathParam("id")
         id: String
     ): Result<Boolean>
@@ -161,13 +161,13 @@ interface OpAtomResource {
     @Path("/{atomId}/approve")
     @PUT
     fun approveAtom(
-        @Parameter(description = "用户ID", required = true)
+        @Parameter(name = "用户ID", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "插件ID", required = true)
+        @Parameter(name = "插件ID", required = true)
         @PathParam("atomId")
         atomId: String,
-        @Parameter(description = "审核插件请求报文")
+        @Parameter(name = "审核插件请求报文")
         approveReq: ApproveReq
     ): Result<Boolean>
 
@@ -175,16 +175,16 @@ interface OpAtomResource {
     @GET
     @Path("/gitci/generate")
     fun generateCiYaml(
-        @Parameter(description = "原子插件标识", required = false)
+        @Parameter(name = "原子插件标识", required = false)
         @QueryParam("atomCode")
         atomCode: String?,
-        @Parameter(description = "操作系统", required = false)
+        @Parameter(name = "操作系统", required = false)
         @QueryParam("os")
         os: String?,
-        @Parameter(description = "插件类型 marketBuild:有编译环境,marketBuildLess:无编译环境", required = false)
+        @Parameter(name = "插件类型 marketBuild:有编译环境,marketBuildLess:无编译环境", required = false)
         @QueryParam("classType")
         classType: String?,
-        @Parameter(description = "是否展示系统自带的yml信息", required = false)
+        @Parameter(name = "是否展示系统自带的yml信息", required = false)
         @QueryParam("defaultShowFlag")
         defaultShowFlag: Boolean?
     ): Result<String>
@@ -193,13 +193,13 @@ interface OpAtomResource {
     @PUT
     @Path("/offline/atomCodes/{atomCode}/versions")
     fun offlineAtom(
-        @Parameter(description = "userId", required = true)
+        @Parameter(name = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "atomCode", required = true)
+        @Parameter(name = "atomCode", required = true)
         @PathParam("atomCode")
         atomCode: String,
-        @Parameter(description = "下架插件请求报文")
+        @Parameter(name = "下架插件请求报文")
         atomOfflineReq: AtomOfflineReq
     ): Result<Boolean>
 
@@ -208,24 +208,24 @@ interface OpAtomResource {
     @Path("/deploy")
     @Consumes(MediaType.MULTIPART_FORM_DATA)
     fun releaseAtom(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "atomCode", required = true)
+        @Parameter(name = "atomCode", required = true)
         @FormDataParam("atomCode")
         atomCode: String,
-        @Parameter(description = "文件", required = true)
+        @Parameter(name = "文件", required = true)
         @FormDataParam("file")
         inputStream: InputStream,
         @FormDataParam("file")
         disposition: FormDataContentDisposition,
-        @Parameter(description = "发布者", required = false)
+        @Parameter(name = "发布者", required = false)
         @QueryParam("publisher")
         publisher: String? = null,
-        @Parameter(description = "发布类型", required = false)
+        @Parameter(name = "发布类型", required = false)
         @QueryParam("releaseType")
         releaseType: ReleaseTypeEnum? = null,
-        @Parameter(description = "插件版本", required = false)
+        @Parameter(name = "插件版本", required = false)
         @QueryParam("version")
         version: String? = null
     ): Result<Boolean>
@@ -234,10 +234,10 @@ interface OpAtomResource {
     @POST
     @Path("/default/atomCodes/{atomCode}")
     fun setDefault(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "atomCode", required = true)
+        @Parameter(name = "atomCode", required = true)
         @PathParam("atomCode")
         atomCode: String
     ): Result<Boolean>

@@ -63,13 +63,13 @@ interface UserExtServiceResource {
     @Path("/service/list/main")
     @GET
     fun mainPageList(
-        @Parameter(description = "userId", required = true)
+        @Parameter(name = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "页码", required = false)
+        @Parameter(name = "页码", required = false)
         @QueryParam("page")
         page: Int?,
-        @Parameter(description = "每页数量", required = false)
+        @Parameter(name = "每页数量", required = false)
         @QueryParam("pageSize")
         pageSize: Int?
     ): Result<List<ExtServiceMainItemVo>>
@@ -78,34 +78,34 @@ interface UserExtServiceResource {
     @GET
     @Path("/service/list/")
     fun list(
-        @Parameter(description = "userId", required = true)
+        @Parameter(name = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "搜索关键字", required = false)
+        @Parameter(name = "搜索关键字", required = false)
         @QueryParam("keyword")
         keyword: String?,
-        @Parameter(description = "服务扩展分类", required = false)
+        @Parameter(name = "服务扩展分类", required = false)
         @QueryParam("classifyCode")
         classifyCode: String?,
-        @Parameter(description = "功能标签", required = false)
+        @Parameter(name = "功能标签", required = false)
         @QueryParam("labelCode")
         labelCode: String?,
-        @Parameter(description = "BK服务ID", required = false)
+        @Parameter(name = "BK服务ID", required = false)
         @QueryParam("bkServiceId")
         bkServiceId: Long?,
-        @Parameter(description = "评分", required = false)
+        @Parameter(name = "评分", required = false)
         @QueryParam("score")
         score: Int?,
-        @Parameter(description = "研发来源", required = false)
+        @Parameter(name = "研发来源", required = false)
         @QueryParam("rdType")
         rdType: ServiceTypeEnum?,
-        @Parameter(description = "排序", required = false)
+        @Parameter(name = "排序", required = false)
         @QueryParam("sortType")
         sortType: ExtServiceSortTypeEnum? = ExtServiceSortTypeEnum.CREATE_TIME,
-        @Parameter(description = "页码", required = false)
+        @Parameter(name = "页码", required = false)
         @QueryParam("page")
         page: Int?,
-        @Parameter(description = "每页数量", required = false)
+        @Parameter(name = "每页数量", required = false)
         @QueryParam("pageSize")
         pageSize: Int?
     ): Result<SearchExtServiceVO>
@@ -114,13 +114,13 @@ interface UserExtServiceResource {
     @GET
     @Path("/service/{serviceCode}")
     fun getServiceByCode(
-        @Parameter(description = "userId", required = true)
+        @Parameter(name = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "bk ticket", required = true)
+        @Parameter(name = "bk ticket", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_BK_TICKET)
         bk_ticket: String,
-        @Parameter(description = "serviceCode", required = true)
+        @Parameter(name = "serviceCode", required = true)
         @PathParam("serviceCode")
         serviceCode: String
     ): Result<ServiceVersionVO?>
@@ -129,16 +129,16 @@ interface UserExtServiceResource {
     @GET
     @Path("/service/version/list/")
     fun getServiceVersionsByCode(
-        @Parameter(description = "userId", required = true)
+        @Parameter(name = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "serviceCode", required = true)
+        @Parameter(name = "serviceCode", required = true)
         @QueryParam("serviceCode")
         serviceCode: String,
-        @Parameter(description = "页码", required = true)
+        @Parameter(name = "页码", required = true)
         @QueryParam("page")
         page: Int = 1,
-        @Parameter(description = "每页数量", required = true)
+        @Parameter(name = "每页数量", required = true)
         @QueryParam("pageSize")
         pageSize: Int = 10
     ): Result<Page<ServiceVersionListItem>>
@@ -147,13 +147,13 @@ interface UserExtServiceResource {
     @POST
     @Path("/serviceIds/{serviceId}/ext/submitInfo")
     fun createMediaAndVisible(
-        @Parameter(description = "userId", required = true)
+        @Parameter(name = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "serviceId", required = true)
+        @Parameter(name = "serviceId", required = true)
         @PathParam("serviceId")
         serviceId: String,
-        @Parameter(description = "媒体、可见范围信息")
+        @Parameter(name = "媒体、可见范围信息")
         submitInfo: ExtSubmitDTO
     ): Result<Boolean>
 
@@ -161,10 +161,10 @@ interface UserExtServiceResource {
     @POST
     @Path("/serviceIds/{serviceId}/ext/back")
     fun createMediaAndVisible(
-        @Parameter(description = "userId", required = true)
+        @Parameter(name = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "serviceId", required = true)
+        @Parameter(name = "serviceId", required = true)
         @PathParam("serviceId")
         serviceId: String
     ): Result<Boolean>
@@ -173,16 +173,16 @@ interface UserExtServiceResource {
     @PUT
     @Path("/baseInfo/serviceCodes/{serviceCode}/serviceIds/{serviceId}")
     fun updateServiceBaseInfo(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "扩展服务编码 ", required = true)
+        @Parameter(name = "扩展服务编码 ", required = true)
         @PathParam("serviceCode")
         serviceCode: String,
-        @Parameter(description = "扩展服务Id ", required = true)
+        @Parameter(name = "扩展服务Id ", required = true)
         @PathParam("serviceId")
         serviceId: String,
-        @Parameter(description = "扩展服务基本信息修改请求报文体", required = true)
+        @Parameter(name = "扩展服务基本信息修改请求报文体", required = true)
         serviceBaseInfoUpdateRequest: ServiceBaseInfoUpdateRequest
     ): Result<Boolean>
 }

@@ -54,22 +54,22 @@ interface ExternalCodeccRepoResource {
     @GET
     @Path("/{repoId}/getFileContent")
     fun getFileContent(
-        @Parameter(description = "仓库id")
+        @Parameter(name = "仓库id")
         @PathParam("repoId")
         repoId: String,
-        @Parameter(description = "文件路径")
+        @Parameter(name = "文件路径")
         @QueryParam("filePath")
         filePath: String,
-        @Parameter(description = "版本号（svn）")
+        @Parameter(name = "版本号（svn）")
         @QueryParam("reversion")
         reversion: String?,
-        @Parameter(description = "分支（git）")
+        @Parameter(name = "分支（git）")
         @QueryParam("branch")
         branch: String?,
-        @Parameter(description = "子模块项目名称")
+        @Parameter(name = "子模块项目名称")
         @QueryParam("subModule")
         subModule: String? = null,
-        @Parameter(description = "代码库请求类型", required = true)
+        @Parameter(name = "代码库请求类型", required = true)
         @QueryParam("repositoryType")
         repositoryType: RepositoryType?
     ): Result<String>
@@ -78,22 +78,22 @@ interface ExternalCodeccRepoResource {
     @GET
     @Path("/repositories/{repoId}/v2/getFileContent")
     fun getFileContentV2(
-        @Parameter(description = "仓库id")
+        @Parameter(name = "仓库id")
         @PathParam("repoId")
         repoId: String,
-        @Parameter(description = "文件路径")
+        @Parameter(name = "文件路径")
         @QueryParam("filePath")
         filePath: String,
-        @Parameter(description = "版本号（svn）")
+        @Parameter(name = "版本号（svn）")
         @QueryParam("reversion")
         reversion: String?,
-        @Parameter(description = "分支（git）")
+        @Parameter(name = "分支（git）")
         @QueryParam("branch")
         branch: String?,
-        @Parameter(description = "子模块项目名称")
+        @Parameter(name = "子模块项目名称")
         @QueryParam("subModule")
         subModule: String? = null,
-        @Parameter(description = "代码库请求类型", required = true)
+        @Parameter(name = "代码库请求类型", required = true)
         @QueryParam("repositoryType")
         repositoryType: RepositoryType?
     ): Result<String>
@@ -102,22 +102,22 @@ interface ExternalCodeccRepoResource {
     @GET
     @Path("/getGitFileContentCommon")
     fun getGitFileContentCommon(
-        @Parameter(description = "代码库url")
+        @Parameter(name = "代码库url")
         @QueryParam("repoUrl")
         repoUrl: String,
-        @Parameter(description = "文件路径")
+        @Parameter(name = "文件路径")
         @QueryParam("filePath")
         filePath: String,
-        @Parameter(description = "分支或者commit id（git）")
+        @Parameter(name = "分支或者commit id（git）")
         @QueryParam("branch")
         ref: String?,
-        @Parameter(description = "调用api的token")
+        @Parameter(name = "调用api的token")
         @QueryParam("token")
         token: String,
-        @Parameter(description = "代码块认证方式，默认http")
+        @Parameter(name = "代码块认证方式，默认http")
         @QueryParam("authType")
         authType: RepoAuthType? = RepoAuthType.HTTP,
-        @Parameter(description = "子模块项目名称")
+        @Parameter(name = "子模块项目名称")
         @QueryParam("subModule")
         subModule: String? = null
     ): Result<String>
@@ -126,16 +126,16 @@ interface ExternalCodeccRepoResource {
     @GET
     @Path("/oauth/git_file_content")
     fun getGitFileContentOAuth(
-        @Parameter(description = "用户id")
+        @Parameter(name = "用户id")
         @QueryParam("userId")
         userId: String,
-        @Parameter(description = "代码库url")
+        @Parameter(name = "代码库url")
         @QueryParam("repoName")
         repoName: String,
-        @Parameter(description = "文件路径")
+        @Parameter(name = "文件路径")
         @QueryParam("filePath")
         filePath: String,
-        @Parameter(description = "分支或者commit id（git）")
+        @Parameter(name = "分支或者commit id（git）")
         @QueryParam("ref")
         ref: String?
     ): Result<String>
@@ -144,10 +144,10 @@ interface ExternalCodeccRepoResource {
     @GET
     @Path("/members")
     fun getRepoMembers(
-        @Parameter(description = "代码库url")
+        @Parameter(name = "代码库url")
         @QueryParam("repoName")
         repoUrl: String,
-        @Parameter(description = "用户id")
+        @Parameter(name = "用户id")
         @QueryParam("userId")
         userId: String
     ): Result<List<GitMember>>
@@ -156,10 +156,10 @@ interface ExternalCodeccRepoResource {
     @GET
     @Path("/members/all")
     fun getRepoAllMembers(
-        @Parameter(description = "代码库url")
+        @Parameter(name = "代码库url")
         @QueryParam("repoName")
         repoUrl: String,
-        @Parameter(description = "用户id")
+        @Parameter(name = "用户id")
         @QueryParam("userId")
         userId: String
     ): Result<List<GitMember>>
@@ -168,10 +168,10 @@ interface ExternalCodeccRepoResource {
     @GET
     @Path("/isProjectMember")
     fun isProjectMember(
-        @Parameter(description = "代码库url")
+        @Parameter(name = "代码库url")
         @QueryParam("repoName")
         repoUrl: String,
-        @Parameter(description = "用户id")
+        @Parameter(name = "用户id")
         @QueryParam("userId")
         userId: String
     ): Result<Boolean>
@@ -180,28 +180,28 @@ interface ExternalCodeccRepoResource {
     @GET
     @Path("/{projectId}/getFileContentByUrl")
     fun getFileContentByUrl(
-        @Parameter(description = "项目ID", required = true)
+        @Parameter(name = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(description = "代码库url")
+        @Parameter(name = "代码库url")
         @QueryParam("repoUrl")
         repoUrl: String,
-        @Parameter(description = "代码库类型")
+        @Parameter(name = "代码库类型")
         @QueryParam("scmType")
         scmType: ScmType,
-        @Parameter(description = "文件路径")
+        @Parameter(name = "文件路径")
         @QueryParam("filePath")
         filePath: String,
-        @Parameter(description = "版本号（svn/p4）")
+        @Parameter(name = "版本号（svn/p4）")
         @QueryParam("reversion")
         reversion: String?,
-        @Parameter(description = "分支（git）")
+        @Parameter(name = "分支（git）")
         @QueryParam("branch")
         branch: String?,
-        @Parameter(description = "子模块项目名称")
+        @Parameter(name = "子模块项目名称")
         @QueryParam("subModule")
         subModule: String? = null,
-        @Parameter(description = "代码库ticketId")
+        @Parameter(name = "代码库ticketId")
         @QueryParam("credentialId")
         credentialId: String
     ): Result<String>

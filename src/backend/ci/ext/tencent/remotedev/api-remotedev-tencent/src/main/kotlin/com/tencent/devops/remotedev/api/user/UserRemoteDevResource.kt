@@ -61,7 +61,7 @@ interface UserRemoteDevResource {
     @GET
     @Path("/settings")
     fun getRemoteDevSettings(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String
     ): Result<RemoteDevSettings>
@@ -70,10 +70,10 @@ interface UserRemoteDevResource {
     @POST
     @Path("/settings")
     fun updateRemoteDevSettings(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "工作空间描述", required = false)
+        @Parameter(name = "工作空间描述", required = false)
         remoteDevSettings: RemoteDevSettings
     ): Result<Boolean>
 
@@ -81,10 +81,10 @@ interface UserRemoteDevResource {
     @POST
     @Path("/bkGPT")
     fun bkGPT(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam("X-DEVOPS-BK-TICKET")
         bkTicket: String,
         @Context
@@ -96,7 +96,7 @@ interface UserRemoteDevResource {
     @POST
     @Path("/watermark")
     fun getWatermark(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
         data: Watermark
@@ -106,13 +106,13 @@ interface UserRemoteDevResource {
     @POST
     @Path("/preci_agent")
     fun preCiAgent(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "工作空间ID", required = true)
+        @Parameter(name = "工作空间ID", required = true)
         @QueryParam("workspaceName")
         workspaceName: String,
-        @Parameter(description = "agentId", required = true)
+        @Parameter(name = "agentId", required = true)
         @QueryParam("agentId")
         agentId: String
     ): Result<Boolean>
@@ -131,7 +131,7 @@ interface UserRemoteDevResource {
     fun getAllWindowsResourceConfig(
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "是否包含不可用机型", required = false)
+        @Parameter(name = "是否包含不可用机型", required = false)
         @QueryParam("withUnavailable")
         @DefaultValue("false")
         withUnavailable: Boolean? = false
@@ -161,7 +161,7 @@ interface UserRemoteDevResource {
     fun onePassword(
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "工作空间ID", required = true)
+        @Parameter(name = "工作空间ID", required = true)
         @QueryParam("workspaceName")
         workspaceName: String
     ): Result<String>
@@ -172,10 +172,10 @@ interface UserRemoteDevResource {
     fun addExpSup(
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "工单id", required = true)
+        @Parameter(name = "工单id", required = true)
         @QueryParam("id")
         id: Long,
-        @Parameter(description = "工作空间ID", required = true)
+        @Parameter(name = "工作空间ID", required = true)
         @QueryParam("workspaceName")
         workspaceName: String
     ): Result<Boolean>
@@ -186,13 +186,13 @@ interface UserRemoteDevResource {
     fun getTxcToken(
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "用户唯一标识", required = true)
+        @Parameter(name = "用户唯一标识", required = true)
         @QueryParam("openId")
         openId: String,
-        @Parameter(description = "用户昵称", required = true)
+        @Parameter(name = "用户昵称", required = true)
         @QueryParam("nickName")
         nickName: String,
-        @Parameter(description = "用户头像", required = true)
+        @Parameter(name = "用户头像", required = true)
         @QueryParam("avatar")
         avatar: String
     ): Result<String>
@@ -203,7 +203,7 @@ interface UserRemoteDevResource {
     fun queryCgsPwd(
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "cgsId", required = true)
+        @Parameter(name = "cgsId", required = true)
         @QueryParam("cgsId")
         cgsId: String
     ): Result<Boolean>

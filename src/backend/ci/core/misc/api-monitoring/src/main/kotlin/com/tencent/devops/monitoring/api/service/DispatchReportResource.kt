@@ -49,7 +49,7 @@ interface DispatchReportResource {
     @POST
     @Path("/dispatch/status")
     fun dispatch(
-        @Parameter(description = "构建机开机关机状态", required = true)
+        @Parameter(name = "构建机开机关机状态", required = true)
         dispatchStatus: DispatchStatus
     ): Result<Boolean>
 }

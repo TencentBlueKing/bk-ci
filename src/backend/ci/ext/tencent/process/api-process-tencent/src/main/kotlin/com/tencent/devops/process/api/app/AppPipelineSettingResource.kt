@@ -54,13 +54,13 @@ interface AppPipelineSettingResource {
     // @Path("/projects/{projectId}/pipelines/{pipelineId}/setting")
     @Path("/{projectId}/{pipelineId}/setting")
     fun getPipelineSetting(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "项目ID", required = true)
+        @Parameter(name = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(description = "流水线id")
+        @Parameter(name = "流水线id")
         @PathParam("pipelineId")
         pipelineId: String
     ): Result<PipelineSetting>
@@ -70,16 +70,16 @@ interface AppPipelineSettingResource {
     // @Path("/projects/{projectId}/pipelines/{pipelineId}/save")
     @Path("/{projectId}/{pipelineId}/save")
     fun saveSetting(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "项目Id")
+        @Parameter(name = "项目Id")
         @PathParam("projectId")
         projectId: String,
-        @Parameter(description = "流水线Id")
+        @Parameter(name = "流水线Id")
         @PathParam("pipelineId")
         pipelineId: String,
-        @Parameter(description = "setting内容")
+        @Parameter(name = "setting内容")
         setting: PipelineSetting
     ): Result<String>
 }

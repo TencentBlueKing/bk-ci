@@ -55,16 +55,16 @@ interface ServiceContainerResource {
     @GET
     @Path("/projects/{projectCode}")
     fun getContainers(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "项目代码", required = true)
+        @Parameter(name = "项目代码", required = true)
         @PathParam("projectCode")
         projectCode: String,
-        @Parameter(description = "构建类型", required = true)
+        @Parameter(name = "构建类型", required = true)
         @QueryParam("buildType")
         buildType: BuildType,
-        @Parameter(description = "操作系统", required = true)
+        @Parameter(name = "操作系统", required = true)
         @QueryParam("os")
         os: OS
     ): Result<ContainerResourceValue?>

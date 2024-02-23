@@ -54,7 +54,7 @@ interface UserExtServiceLableResource {
     @GET
     @Path("/serviceIds/{serviceId}/labels")
     fun getServiceLabelsByServiceId(
-        @Parameter(description = "扩展服务Id", required = true)
+        @Parameter(name = "扩展服务Id", required = true)
         @PathParam("serviceId")
         serviceId: String
     ): Result<List<Label>?>

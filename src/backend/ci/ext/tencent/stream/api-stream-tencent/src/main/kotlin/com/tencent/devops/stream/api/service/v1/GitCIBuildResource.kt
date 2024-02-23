@@ -55,19 +55,19 @@ interface GitCIBuildResource {
     @POST
     @Path("/{gitProjectId}/{pipelineId}/{buildId}/retry")
     fun retry(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "工蜂项目ID", required = true)
+        @Parameter(name = "工蜂项目ID", required = true)
         @PathParam("gitProjectId")
         gitProjectId: Long,
-        @Parameter(description = "流水线ID", required = true)
+        @Parameter(name = "流水线ID", required = true)
         @PathParam("pipelineId")
         pipelineId: String,
-        @Parameter(description = "构建ID", required = true)
+        @Parameter(name = "构建ID", required = true)
         @PathParam("buildId")
         buildId: String,
-        @Parameter(description = "要重试的原子任务ID", required = false)
+        @Parameter(name = "要重试的原子任务ID", required = false)
         @QueryParam("taskId")
         taskId: String? = null
     ): Result<BuildId>
@@ -76,16 +76,16 @@ interface GitCIBuildResource {
     @DELETE
     @Path("/{gitProjectId}/{pipelineId}/{buildId}/")
     fun manualShutdown(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "工蜂项目ID", required = true)
+        @Parameter(name = "工蜂项目ID", required = true)
         @PathParam("gitProjectId")
         gitProjectId: Long,
-        @Parameter(description = "流水线ID", required = true)
+        @Parameter(name = "流水线ID", required = true)
         @PathParam("pipelineId")
         pipelineId: String,
-        @Parameter(description = "构建ID", required = true)
+        @Parameter(name = "构建ID", required = true)
         @PathParam("buildId")
         buildId: String
     ): Result<Boolean>
@@ -94,10 +94,10 @@ interface GitCIBuildResource {
     @POST
     @Path("/pipeline/startup")
     fun gitCIStartupPipeline(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "启动信息", required = true)
+        @Parameter(name = "启动信息", required = true)
         v1GitCIStartupVO: V1GitCIStartupVO
     ): Result<BuildId?>
 }

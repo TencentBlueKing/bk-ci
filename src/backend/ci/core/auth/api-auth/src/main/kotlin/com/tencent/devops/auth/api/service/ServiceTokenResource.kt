@@ -52,7 +52,7 @@ interface ServiceTokenResource {
     @Path("/validate")
     @Operation(summary = "校验用户是否有action的权限")
     fun validateToken(
-        @Parameter(description = "权限Token", required = false)
+        @Parameter(name = "权限Token", required = false)
         @QueryParam("access_token")
         accessToken: String
     ): Result<TokenInfo>
@@ -61,7 +61,7 @@ interface ServiceTokenResource {
     @GET
     @Path("/get")
     fun getAccessToken(
-        @Parameter(description = "用户ID", required = true)
+        @Parameter(name = "用户ID", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String
     ): Result<TokenInfo>

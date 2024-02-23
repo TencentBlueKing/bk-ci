@@ -60,16 +60,16 @@ interface UserCustomDirResource {
     @POST
     @Consumes(MediaType.MULTIPART_FORM_DATA)
     fun deploy(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "项目ID", required = true)
+        @Parameter(name = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(description = "文件夹路径", required = false)
+        @Parameter(name = "文件夹路径", required = false)
         @QueryParam("path")
         path: String,
-        @Parameter(description = "文件", required = true)
+        @Parameter(name = "文件", required = true)
         @FormDataParam("file")
         inputStream: InputStream,
         @FormDataParam("file")
@@ -81,13 +81,13 @@ interface UserCustomDirResource {
     @Path("/{projectId}/dir")
     @POST
     fun mkdir(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "项目ID", required = true)
+        @Parameter(name = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(description = "文件夹路径", required = false)
+        @Parameter(name = "文件夹路径", required = false)
         @QueryParam("path")
         path: String
     ): Result<Boolean>
@@ -97,13 +97,13 @@ interface UserCustomDirResource {
     @Path("/{projectId}/rename")
     @POST
     fun rename(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "项目ID", required = true)
+        @Parameter(name = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(description = "文件路径组合", required = false)
+        @Parameter(name = "文件路径组合", required = false)
         pathPair: PathPair
     ): Result<Boolean>
 
@@ -112,13 +112,13 @@ interface UserCustomDirResource {
     @Path("/{projectId}/copy")
     @POST
     fun copy(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "项目ID", required = true)
+        @Parameter(name = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(description = "组合路径", required = false)
+        @Parameter(name = "组合路径", required = false)
         combinationPath: CombinationPath
     ): Result<Boolean>
 
@@ -127,13 +127,13 @@ interface UserCustomDirResource {
     @Path("/{projectId}/move")
     @POST
     fun move(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "项目ID", required = true)
+        @Parameter(name = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(description = "组合路径", required = false)
+        @Parameter(name = "组合路径", required = false)
         combinationPath: CombinationPath
     ): Result<Boolean>
 
@@ -142,13 +142,13 @@ interface UserCustomDirResource {
     @Path("/{projectId}/")
     @DELETE
     fun delete(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "项目ID", required = true)
+        @Parameter(name = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(description = "多个路径", required = false)
+        @Parameter(name = "多个路径", required = false)
         pathList: PathList
     ): Result<Boolean>
 }

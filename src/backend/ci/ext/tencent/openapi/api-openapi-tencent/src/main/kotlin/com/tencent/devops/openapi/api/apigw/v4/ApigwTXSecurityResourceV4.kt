@@ -25,16 +25,16 @@ interface ApigwTXSecurityResourceV4 {
     @GET
     @Path("/{projectId}/verifyProjectUser")
     fun verifyProjectUser(
-        @Parameter(description = "appCode", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
+        @Parameter(name = "appCode", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
         appCode: String?,
-        @Parameter(description = "apigw Type", required = true)
+        @Parameter(name = "apigw Type", required = true)
         @PathParam("apigwType")
         apigwType: String?,
-        @Parameter(description = "项目ID", required = true)
+        @Parameter(name = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(description = "凭据", required = true)
+        @Parameter(name = "凭据", required = true)
         @QueryParam("credentialKey")
         credentialKey: String
     ): Result<Boolean?>
@@ -43,16 +43,16 @@ interface ApigwTXSecurityResourceV4 {
     @GET
     @Path("/{projectId}/getUserWaterMark")
     fun getUserWaterMark(
-        @Parameter(description = "appCode", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
+        @Parameter(name = "appCode", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
         appCode: String?,
-        @Parameter(description = "apigw Type", required = true)
+        @Parameter(name = "apigw Type", required = true)
         @PathParam("apigwType")
         apigwType: String?,
-        @Parameter(description = "项目ID", required = true)
+        @Parameter(name = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(description = "凭据", required = true)
+        @Parameter(name = "凭据", required = true)
         @QueryParam("credentialKey")
         credentialKey: String
     ): Result<String?>

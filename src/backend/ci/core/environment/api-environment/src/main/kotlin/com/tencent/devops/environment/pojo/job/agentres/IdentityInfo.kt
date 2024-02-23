@@ -28,16 +28,16 @@
 package com.tencent.devops.environment.pojo.job.agentres
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class IdentityInfo(
-    @ApiModelProperty(value = "用户名")
+    @get:Schema(title = "用户名")
     val account: String?,
-    @ApiModelProperty(value = "认证方式")
+    @get:Schema(title = "认证方式")
     val authType: String?,
-    @ApiModelProperty(value = "端口")
+    @get:Schema(title = "端口")
     val port: Int?,
-    @ApiModelProperty(value = "")
+    @get:Schema(title = "")
     val reCertification: Boolean?
 )

@@ -54,10 +54,10 @@ interface UserMarketImageVisibleDeptResource {
     @POST
     @Path("/")
     fun addVisibleDept(
-        @Parameter(description = "userId", required = true)
+        @Parameter(name = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "镜像市场-镜像可见范围请求报文体", required = true)
+        @Parameter(name = "镜像市场-镜像可见范围请求报文体", required = true)
         imageVisibleDeptRequest: ImageVisibleDeptReq
     ): Result<Boolean>
 
@@ -65,7 +65,7 @@ interface UserMarketImageVisibleDeptResource {
     @GET
     @Path("/{imageCode}")
     fun getVisibleDept(
-        @Parameter(description = "镜像代码", required = true)
+        @Parameter(name = "镜像代码", required = true)
         @PathParam("imageCode")
         imageCode: String
     ): Result<StoreVisibleDeptResp?>
@@ -74,13 +74,13 @@ interface UserMarketImageVisibleDeptResource {
     @DELETE
     @Path("/{imageCode}")
     fun deleteVisibleDept(
-        @Parameter(description = "userId", required = true)
+        @Parameter(name = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "镜像代码", required = true)
+        @Parameter(name = "镜像代码", required = true)
         @PathParam("imageCode")
         imageCode: String,
-        @Parameter(description = "机构Id集合，用\",\"分隔进行拼接（如1,2,3）", required = true)
+        @Parameter(name = "机构Id集合，用\",\"分隔进行拼接（如1,2,3）", required = true)
         @QueryParam("deptIds")
         deptIds: String
     ): Result<Boolean>

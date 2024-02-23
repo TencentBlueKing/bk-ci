@@ -54,13 +54,13 @@ interface UserDockerResourceConfigResource {
     @Path("/resource-config/projects/{projectId}/list")
     @Operation(summary = "获取docker性能配置列表")
     fun getDockerResourceConfigList(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String,
-        @Parameter(description = "projectId", required = true)
+        @Parameter(name = "projectId", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(description = "buildType", required = false)
+        @Parameter(name = "buildType", required = false)
         @QueryParam("buildType")
         buildType: String? = BuildType.DOCKER.name
     ): Result<UserDockerResourceOptionsVO>

@@ -75,13 +75,13 @@ interface UserMarketAtomResource {
         keyPrefixNames = ["ATOM", "{data[*].records[*].code}", "{data[*].records[*].version}", "releaseInfo"]
     )
     fun mainPageList(
-        @Parameter(description = "userId", required = true)
+        @Parameter(name = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "页码", required = false)
+        @Parameter(name = "页码", required = false)
         @QueryParam("page")
         page: Int?,
-        @Parameter(description = "每页数量", required = false)
+        @Parameter(name = "每页数量", required = false)
         @QueryParam("pageSize")
         pageSize: Int?
     ): Result<List<MarketMainItem>>
@@ -93,40 +93,40 @@ interface UserMarketAtomResource {
         keyPrefixNames = ["ATOM", "{data.records[*].code}", "{data.records[*].version}", "releaseInfo"]
     )
     fun list(
-        @Parameter(description = "userId", required = true)
+        @Parameter(name = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "搜索关键字", required = false)
+        @Parameter(name = "搜索关键字", required = false)
         @QueryParam("keyword")
         keyword: String?,
-        @Parameter(description = "插件分类", required = false)
+        @Parameter(name = "插件分类", required = false)
         @QueryParam("classifyCode")
         classifyCode: String?,
-        @Parameter(description = "功能标签", required = false)
+        @Parameter(name = "功能标签", required = false)
         @QueryParam("labelCode")
         labelCode: String?,
-        @Parameter(description = "评分", required = false)
+        @Parameter(name = "评分", required = false)
         @QueryParam("score")
         score: Int?,
-        @Parameter(description = "研发来源", required = false)
+        @Parameter(name = "研发来源", required = false)
         @QueryParam("rdType")
         rdType: AtomTypeEnum?,
-        @Parameter(description = "yaml是否可用", required = false)
+        @Parameter(name = "yaml是否可用", required = false)
         @QueryParam("yamlFlag")
         yamlFlag: Boolean?,
-        @Parameter(description = "是否推荐标识 true：推荐，false：不推荐", required = false)
+        @Parameter(name = "是否推荐标识 true：推荐，false：不推荐", required = false)
         @QueryParam("recommendFlag")
         recommendFlag: Boolean?,
-        @Parameter(description = "是否有红线指标", required = false)
+        @Parameter(name = "是否有红线指标", required = false)
         @QueryParam("qualityFlag")
         qualityFlag: Boolean?,
-        @Parameter(description = "排序", required = false)
+        @Parameter(name = "排序", required = false)
         @QueryParam("sortType")
         sortType: MarketAtomSortTypeEnum? = MarketAtomSortTypeEnum.CREATE_TIME,
-        @Parameter(description = "页码", required = false)
+        @Parameter(name = "页码", required = false)
         @QueryParam("page")
         page: Int?,
-        @Parameter(description = "每页数量", required = false)
+        @Parameter(name = "每页数量", required = false)
         @QueryParam("pageSize")
         pageSize: Int?
     ): Result<MarketAtomResp>
@@ -138,16 +138,16 @@ interface UserMarketAtomResource {
         keyPrefixNames = ["ATOM", "{data.records[*].atomCode}", "{data.records[*].version}", "releaseInfo"]
     )
     fun listMyAtoms(
-        @Parameter(description = "userId", required = true)
+        @Parameter(name = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "插件名称", required = false)
+        @Parameter(name = "插件名称", required = false)
         @QueryParam("atomName")
         atomName: String?,
-        @Parameter(description = "页码", required = true)
+        @Parameter(name = "页码", required = true)
         @QueryParam("page")
         page: Int = 1,
-        @Parameter(description = "每页数量", required = true)
+        @Parameter(name = "每页数量", required = true)
         @QueryParam("pageSize")
         @BkField(patternStyle = BkStyleEnum.PAGE_SIZE_STYLE, required = true)
         pageSize: Int = 10
@@ -160,10 +160,10 @@ interface UserMarketAtomResource {
         keyPrefixNames = ["ATOM", "{data.atomCode}", "{data.version}", "releaseInfo"]
     )
     fun getAtomById(
-        @Parameter(description = "userId", required = true)
+        @Parameter(name = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "atomId", required = true)
+        @Parameter(name = "atomId", required = true)
         @PathParam("atomId")
         atomId: String
     ): Result<AtomVersion?>
@@ -175,10 +175,10 @@ interface UserMarketAtomResource {
         keyPrefixNames = ["ATOM", "{data.atomCode}", "{data.version}", "releaseInfo"]
     )
     fun getAtomByCode(
-        @Parameter(description = "userId", required = true)
+        @Parameter(name = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "atomCode", required = true)
+        @Parameter(name = "atomCode", required = true)
         @PathParam("atomCode")
         atomCode: String
     ): Result<AtomVersion?>
@@ -190,16 +190,16 @@ interface UserMarketAtomResource {
         keyPrefixNames = ["ATOM", "{data.records[*].atomCode}", "{data.records[*].version}", "releaseInfo"]
     )
     fun getAtomVersionsByCode(
-        @Parameter(description = "userId", required = true)
+        @Parameter(name = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "atomCode", required = true)
+        @Parameter(name = "atomCode", required = true)
         @QueryParam("atomCode")
         atomCode: String,
-        @Parameter(description = "页码", required = true)
+        @Parameter(name = "页码", required = true)
         @QueryParam("page")
         page: Int = 1,
-        @Parameter(description = "每页数量", required = true)
+        @Parameter(name = "每页数量", required = true)
         @QueryParam("pageSize")
         @BkField(patternStyle = BkStyleEnum.PAGE_SIZE_STYLE, required = true)
         pageSize: Int = 10
@@ -209,10 +209,10 @@ interface UserMarketAtomResource {
     @POST
     @Path("/atom/install")
     fun installAtom(
-        @Parameter(description = "userId", required = true)
+        @Parameter(name = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "安装插件到项目请求报文体", required = true)
+        @Parameter(name = "安装插件到项目请求报文体", required = true)
         installAtomReq: InstallAtomReq
     ): Result<Boolean>
 
@@ -220,10 +220,10 @@ interface UserMarketAtomResource {
     @GET
     @Path("/atom/installedProjects/{atomCode}")
     fun getInstalledProjects(
-        @Parameter(description = "userId", required = true)
+        @Parameter(name = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "atomCode", required = true)
+        @Parameter(name = "atomCode", required = true)
         @PathParam("atomCode")
         atomCode: String
     ): Result<List<InstalledProjRespItem?>>
@@ -237,10 +237,10 @@ interface UserMarketAtomResource {
     @DELETE
     @Path("/desk/atoms/{atomCode}")
     fun deleteAtom(
-        @Parameter(description = "userId", required = true)
+        @Parameter(name = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "插件代码", required = true)
+        @Parameter(name = "插件代码", required = true)
         @PathParam("atomCode")
         atomCode: String
     ): Result<Boolean>
@@ -249,10 +249,10 @@ interface UserMarketAtomResource {
     @GET
     @Path("/atoms/{atomCode}/showVersionInfo")
     fun getAtomShowVersionInfo(
-        @Parameter(description = "userId", required = true)
+        @Parameter(name = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "atomCode", required = true)
+        @Parameter(name = "atomCode", required = true)
         @PathParam("atomCode")
         atomCode: String
     ): Result<StoreShowVersionInfo>
@@ -261,13 +261,13 @@ interface UserMarketAtomResource {
     @GET
     @Path("/atoms/{atomCode}/yml/detail")
     fun getAtomYmlInfo(
-        @Parameter(description = "userId", required = true)
+        @Parameter(name = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "atomCode", required = true)
+        @Parameter(name = "atomCode", required = true)
         @PathParam("atomCode")
         atomCode: String,
-        @Parameter(description = "是否展示系统自带的yml信息", required = false)
+        @Parameter(name = "是否展示系统自带的yml信息", required = false)
         @QueryParam("defaultShowFlag")
         defaultShowFlag: Boolean?
     ): Result<String?>
@@ -276,13 +276,13 @@ interface UserMarketAtomResource {
     @GET
     @Path("/atoms/{atomCode}/yml/2.0/detail")
     fun getAtomYmlV2Info(
-        @Parameter(description = "userId", required = true)
+        @Parameter(name = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "atomCode", required = true)
+        @Parameter(name = "atomCode", required = true)
         @PathParam("atomCode")
         atomCode: String,
-        @Parameter(description = "是否展示系统自带的yml信息", required = false)
+        @Parameter(name = "是否展示系统自带的yml信息", required = false)
         @QueryParam("defaultShowFlag")
         defaultShowFlag: Boolean?
     ): Result<String?>
@@ -291,10 +291,10 @@ interface UserMarketAtomResource {
     @GET
     @Path("/atoms/{atomCode}/output")
     fun getAtomOutput(
-        @Parameter(description = "userId", required = true)
+        @Parameter(name = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "atomCode", required = true)
+        @Parameter(name = "atomCode", required = true)
         @PathParam("atomCode")
         atomCode: String
     ): Result<List<AtomOutput>>
@@ -303,13 +303,13 @@ interface UserMarketAtomResource {
     @PUT
     @Path("/{projectCode}/atom/errorCodeInfo")
     fun updateAtomErrorCodeInfo(
-        @Parameter(description = "userId", required = true)
+        @Parameter(name = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "projectCode", required = true)
+        @Parameter(name = "projectCode", required = true)
         @PathParam("projectCode")
         projectCode: String,
-        @Parameter(description = "插件自定义错误码信息", required = true)
+        @Parameter(name = "插件自定义错误码信息", required = true)
         storeErrorCodeInfo: StoreErrorCodeInfo
     ): Result<Boolean>
 }

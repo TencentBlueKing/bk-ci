@@ -30,19 +30,19 @@ interface ApigwAuthResourceV3 {
     @POST
     @Path("/{projectId}/group/brach")
     fun batchCreateGroup(
-        @Parameter(description = "appCode", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
+        @Parameter(name = "appCode", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
         appCode: String?,
-        @Parameter(description = "apigw Type", required = true)
+        @Parameter(name = "apigw Type", required = true)
         @PathParam("apigwType")
         apigwType: String?,
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String,
         @Parameter(name = "项目标识", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(description = "用户组信息", required = true)
+        @Parameter(name = "用户组信息", required = true)
         groupInfos: List<GroupDTO>
     ): Result<Boolean>
 
@@ -50,26 +50,26 @@ interface ApigwAuthResourceV3 {
     @Path("/projects/{projectId}/resource/validate")
     @Operation(summary = "校验用户是否有action的权限", tags = ["v3_app_auth_validate"])
     fun validateUserResourcePermission(
-        @Parameter(description = "appCode", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
+        @Parameter(name = "appCode", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
         appCode: String?,
-        @Parameter(description = "apigw Type", required = true)
+        @Parameter(name = "apigw Type", required = true)
         @PathParam("apigwType")
         apigwType: String?,
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
-        @Parameter(description = "待校验用户ID", required = true)
+        @Parameter(name = "待校验用户ID", required = true)
         userId: String,
         @QueryParam("action")
-        @Parameter(description = "资源类型", required = true)
+        @Parameter(name = "资源类型", required = true)
         action: String,
         @PathParam("projectId")
-        @Parameter(description = "项目编码", required = true)
+        @Parameter(name = "项目编码", required = true)
         projectId: String,
         @QueryParam("resourceCode")
-        @Parameter(description = "资源编码", required = false)
+        @Parameter(name = "资源编码", required = false)
         resourceCode: String,
         @QueryParam("resourceType")
-        @Parameter(description = "资源编码", required = false)
+        @Parameter(name = "资源编码", required = false)
         resourceType: String
     ): Result<Boolean>
 
@@ -77,10 +77,10 @@ interface ApigwAuthResourceV3 {
     @POST
     @Path("/blackList/")
     fun blackListUser(
-        @Parameter(description = "appCode", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
+        @Parameter(name = "appCode", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
         appCode: String?,
-        @Parameter(description = "apigw Type", required = true)
+        @Parameter(name = "apigw Type", required = true)
         @PathParam("apigwType")
         apigwType: String?,
         blackList: BlackListInfo
@@ -90,10 +90,10 @@ interface ApigwAuthResourceV3 {
     @GET
     @Path("/blackList/")
     fun blackListUser(
-        @Parameter(description = "appCode", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
+        @Parameter(name = "appCode", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
         appCode: String?,
-        @Parameter(description = "apigw Type", required = true)
+        @Parameter(name = "apigw Type", required = true)
         @PathParam("apigwType")
         apigwType: String?
     ): WesecResult

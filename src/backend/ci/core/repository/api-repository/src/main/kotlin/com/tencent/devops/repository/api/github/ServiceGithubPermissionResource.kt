@@ -49,10 +49,10 @@ interface ServiceGithubPermissionResource {
     @GET
     @Path("isPublicProject")
     fun isPublicProject(
-        @Parameter(description = "授权用户ID", required = true)
+        @Parameter(name = "授权用户ID", required = true)
         @QueryParam("authUserId")
         authUserId: String,
-        @Parameter(description = "github项目名", required = true)
+        @Parameter(name = "github项目名", required = true)
         @QueryParam("gitProjectId")
         gitProjectId: String
     ): Result<Boolean>
@@ -61,13 +61,13 @@ interface ServiceGithubPermissionResource {
     @GET
     @Path("isProjectMember")
     fun isProjectMember(
-        @Parameter(description = "授权用户ID", required = true)
+        @Parameter(name = "授权用户ID", required = true)
         @QueryParam("authUserId")
         authUserId: String,
-        @Parameter(description = "授权用户ID", required = true)
+        @Parameter(name = "授权用户ID", required = true)
         @QueryParam("userId")
         userId: String,
-        @Parameter(description = "github项目名", required = true)
+        @Parameter(name = "github项目名", required = true)
         @QueryParam("gitProjectId")
         gitProjectId: String
     ): Result<Boolean>
@@ -76,16 +76,16 @@ interface ServiceGithubPermissionResource {
     @GET
     @Path("checkUserAuth")
     fun checkUserAuth(
-        @Parameter(description = "授权用户ID", required = true)
+        @Parameter(name = "授权用户ID", required = true)
         @QueryParam("authUserId")
         authUserId: String,
-        @Parameter(description = "userId", required = true)
+        @Parameter(name = "userId", required = true)
         @QueryParam("userId")
         userId: String,
-        @Parameter(description = "gitProjectId", required = true)
+        @Parameter(name = "gitProjectId", required = true)
         @QueryParam("gitProjectId")
         gitProjectId: String,
-        @Parameter(description = "accessLevel", required = true)
+        @Parameter(name = "accessLevel", required = true)
         @QueryParam("accessLevel")
         accessLevel: Int
     ): Result<Boolean>

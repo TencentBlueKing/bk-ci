@@ -61,16 +61,16 @@ interface BuildAgentBuildResource {
     @GET
     @Path("/startup")
     fun startBuild(
-        @Parameter(description = "项目ID", required = true)
+        @Parameter(name = "项目ID", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_PROJECT_ID)
         projectId: String,
-        @Parameter(description = "Agent ID", required = true)
+        @Parameter(name = "Agent ID", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_AGENT_ID)
         agentId: String,
-        @Parameter(description = "秘钥", required = true)
+        @Parameter(name = "秘钥", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_AGENT_SECRET_KEY)
         secretKey: String,
-        @Parameter(description = "尝试启动构建的类型", required = false)
+        @Parameter(name = "尝试启动构建的类型", required = false)
         @QueryParam("buildType")
         buildType: String?
     ): AgentResult<ThirdPartyBuildInfo?>
@@ -79,20 +79,20 @@ interface BuildAgentBuildResource {
     @GET
     @Path("/upgrade")
     fun upgrade(
-        @Parameter(description = "项目ID", required = true)
+        @Parameter(name = "项目ID", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_PROJECT_ID)
         @BkField(required = true)
         projectId: String,
-        @Parameter(description = "Agent ID", required = true)
+        @Parameter(name = "Agent ID", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_AGENT_ID)
         agentId: String,
-        @Parameter(description = "秘钥", required = true)
+        @Parameter(name = "秘钥", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_AGENT_SECRET_KEY)
         secretKey: String,
-        @Parameter(description = "Agent 版本号", required = false)
+        @Parameter(name = "Agent 版本号", required = false)
         @QueryParam("version")
         version: String?,
-        @Parameter(description = "masterAgent 版本号", required = false)
+        @Parameter(name = "masterAgent 版本号", required = false)
         @QueryParam("masterVersion")
         masterVersion: String?
     ): AgentResult<Boolean>
@@ -101,17 +101,17 @@ interface BuildAgentBuildResource {
     @POST
     @Path("/upgradeNew")
     fun upgradeNew(
-        @Parameter(description = "项目ID", required = true)
+        @Parameter(name = "项目ID", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_PROJECT_ID)
         @BkField(required = true)
         projectId: String,
-        @Parameter(description = "Agent ID", required = true)
+        @Parameter(name = "Agent ID", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_AGENT_ID)
         agentId: String,
-        @Parameter(description = "秘钥", required = true)
+        @Parameter(name = "秘钥", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_AGENT_SECRET_KEY)
         secretKey: String,
-        @Parameter(description = "检查版本升级上报的信息", required = false)
+        @Parameter(name = "检查版本升级上报的信息", required = false)
         info: ThirdPartyAgentUpgradeByVersionInfo
     ): AgentResult<UpgradeItem>
 
@@ -119,16 +119,16 @@ interface BuildAgentBuildResource {
     @DELETE
     @Path("/upgrade")
     fun finishUpgrade(
-        @Parameter(description = "项目ID", required = true)
+        @Parameter(name = "项目ID", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_PROJECT_ID)
         projectId: String,
-        @Parameter(description = "Agent ID", required = true)
+        @Parameter(name = "Agent ID", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_AGENT_ID)
         agentId: String,
-        @Parameter(description = "秘钥", required = true)
+        @Parameter(name = "秘钥", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_AGENT_SECRET_KEY)
         secretKey: String,
-        @Parameter(description = "升级是否成功", required = true)
+        @Parameter(name = "升级是否成功", required = true)
         @QueryParam("success")
         success: Boolean
     ): AgentResult<Boolean>
@@ -137,16 +137,16 @@ interface BuildAgentBuildResource {
     @POST
     @Path("/workerBuildFinish")
     fun workerBuildFinish(
-        @Parameter(description = "项目ID", required = true)
+        @Parameter(name = "项目ID", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_PROJECT_ID)
         projectId: String,
-        @Parameter(description = "Agent ID", required = true)
+        @Parameter(name = "Agent ID", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_AGENT_ID)
         agentId: String,
-        @Parameter(description = "秘钥", required = true)
+        @Parameter(name = "秘钥", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_AGENT_SECRET_KEY)
         secretKey: String,
-        @Parameter(description = "构建信息", required = true)
+        @Parameter(name = "构建信息", required = true)
         buildInfo: ThirdPartyBuildWithStatus
     ): Result<Boolean>
 
@@ -154,13 +154,13 @@ interface BuildAgentBuildResource {
     @GET
     @Path("/docker/startupDebug")
     fun dockerStartDebug(
-        @Parameter(description = "项目ID", required = true)
+        @Parameter(name = "项目ID", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_PROJECT_ID)
         projectId: String,
-        @Parameter(description = "Agent ID", required = true)
+        @Parameter(name = "Agent ID", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_AGENT_ID)
         agentId: String,
-        @Parameter(description = "秘钥", required = true)
+        @Parameter(name = "秘钥", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_AGENT_SECRET_KEY)
         secretKey: String
     ): AgentResult<ThirdPartyDockerDebugInfo?>
@@ -169,16 +169,16 @@ interface BuildAgentBuildResource {
     @POST
     @Path("/docker/startupDebug")
     fun dockerStartDebugDone(
-        @Parameter(description = "项目ID", required = true)
+        @Parameter(name = "项目ID", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_PROJECT_ID)
         projectId: String,
-        @Parameter(description = "Agent ID", required = true)
+        @Parameter(name = "Agent ID", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_AGENT_ID)
         agentId: String,
-        @Parameter(description = "秘钥", required = true)
+        @Parameter(name = "秘钥", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_AGENT_SECRET_KEY)
         secretKey: String,
-        @Parameter(description = "构建信息", required = true)
+        @Parameter(name = "构建信息", required = true)
         debugInfo: ThirdPartyDockerDebugDoneInfo
     ): Result<Boolean>
 
@@ -186,16 +186,16 @@ interface BuildAgentBuildResource {
     @GET
     @Path("/docker/debug/status")
     fun dockerDebugStatus(
-        @Parameter(description = "项目ID", required = true)
+        @Parameter(name = "项目ID", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_PROJECT_ID)
         projectId: String,
-        @Parameter(description = "Agent ID", required = true)
+        @Parameter(name = "Agent ID", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_AGENT_ID)
         agentId: String,
-        @Parameter(description = "秘钥", required = true)
+        @Parameter(name = "秘钥", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_AGENT_SECRET_KEY)
         secretKey: String,
-        @Parameter(description = "debugId", required = true)
+        @Parameter(name = "debugId", required = true)
         @QueryParam("debugId")
         debugId: Long
     ): Result<String?>
@@ -204,16 +204,16 @@ interface BuildAgentBuildResource {
     @POST
     @Path("/ask")
     fun thirdPartyAgentAsk(
-        @Parameter(description = "项目ID", required = true)
+        @Parameter(name = "项目ID", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_PROJECT_ID)
         projectId: String,
-        @Parameter(description = "Agent ID", required = true)
+        @Parameter(name = "Agent ID", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_AGENT_ID)
         agentId: String,
-        @Parameter(description = "秘钥", required = true)
+        @Parameter(name = "秘钥", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_AGENT_SECRET_KEY)
         secretKey: String,
-        @Parameter(description = "ask信息", required = true)
+        @Parameter(name = "ask信息", required = true)
         data: ThirdPartyAskInfo
     ): AgentResult<ThirdPartyAskResp>
 }

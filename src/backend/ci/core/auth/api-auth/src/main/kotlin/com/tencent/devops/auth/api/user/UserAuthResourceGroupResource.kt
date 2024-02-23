@@ -58,16 +58,16 @@ interface UserAuthResourceGroupResource {
     @Operation(summary = "获取组策略详情")
     @BkInterfaceI18n(keyPrefixNames = ["{data[*].action}"])
     fun getGroupPolicies(
-        @Parameter(description = "用户名", required = true)
+        @Parameter(name = "用户名", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "项目ID", required = true)
+        @Parameter(name = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(description = "资源类型")
+        @Parameter(name = "资源类型")
         @PathParam("resourceType")
         resourceType: String,
-        @Parameter(description = "用户组Id")
+        @Parameter(name = "用户组Id")
         @PathParam("groupId")
         groupId: Int
     ): Result<List<IamGroupPoliciesVo>>
@@ -76,16 +76,16 @@ interface UserAuthResourceGroupResource {
     @Path("{groupId}/member/renewal")
     @Operation(summary = "用户续期")
     fun renewal(
-        @Parameter(description = "用户名", required = true)
+        @Parameter(name = "用户名", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "项目ID", required = true)
+        @Parameter(name = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(description = "资源类型")
+        @Parameter(name = "资源类型")
         @PathParam("resourceType")
         resourceType: String,
-        @Parameter(description = "用户组Id")
+        @Parameter(name = "用户组Id")
         @PathParam("groupId")
         groupId: Int,
         memberRenewalDTO: GroupMemberRenewalDTO
@@ -95,16 +95,16 @@ interface UserAuthResourceGroupResource {
     @Path("{groupId}/member")
     @Operation(summary = "用户退出")
     fun deleteMember(
-        @Parameter(description = "用户名", required = true)
+        @Parameter(name = "用户名", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "项目ID", required = true)
+        @Parameter(name = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(description = "资源类型")
+        @Parameter(name = "资源类型")
         @PathParam("resourceType")
         resourceType: String,
-        @Parameter(description = "用户组Id")
+        @Parameter(name = "用户组Id")
         @PathParam("groupId")
         groupId: Int
     ): Result<Boolean>
@@ -113,16 +113,16 @@ interface UserAuthResourceGroupResource {
     @Path("{groupId}")
     @Operation(summary = "删除组")
     fun deleteGroup(
-        @Parameter(description = "用户名", required = true)
+        @Parameter(name = "用户名", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "项目ID", required = true)
+        @Parameter(name = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(description = "资源类型")
+        @Parameter(name = "资源类型")
         @PathParam("resourceType")
         resourceType: String,
-        @Parameter(description = "用户组Id")
+        @Parameter(name = "用户组Id")
         @PathParam("groupId")
         groupId: Int
     ): Result<Boolean>
@@ -131,16 +131,16 @@ interface UserAuthResourceGroupResource {
     @Path("{groupId}/rename")
     @Operation(summary = "重命名组")
     fun rename(
-        @Parameter(description = "用户名", required = true)
+        @Parameter(name = "用户名", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "项目ID", required = true)
+        @Parameter(name = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(description = "资源类型")
+        @Parameter(name = "资源类型")
         @PathParam("resourceType")
         resourceType: String,
-        @Parameter(description = "用户组Id")
+        @Parameter(name = "用户组Id")
         @PathParam("groupId")
         groupId: Int,
         renameGroupDTO: RenameGroupDTO

@@ -56,22 +56,22 @@ interface AppExperienceSearchResource {
     @Path("/{experienceName}")
     @GET
     fun search(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "平台", required = true)
+        @Parameter(name = "平台", required = true)
         @HeaderParam(AUTH_HEADER_PLATFORM)
         platform: Int?,
-        @Parameter(description = "组织", required = false)
+        @Parameter(name = "组织", required = false)
         @HeaderParam(AUTH_HEADER_DEVOPS_ORGANIZATION_NAME)
         organization: String? = null,
-        @Parameter(description = "搜索内容(UrlEncode)", required = true)
+        @Parameter(name = "搜索内容(UrlEncode)", required = true)
         @PathParam("experienceName")
         experienceName: String,
-        @Parameter(description = "是否搜索公开体验", required = true)
+        @Parameter(name = "是否搜索公开体验", required = true)
         @QueryParam("experiencePublic")
         experiencePublic: Boolean,
-        @Parameter(description = "是否搜索minigame", required = true)
+        @Parameter(name = "是否搜索minigame", required = true)
         @QueryParam("minigame")
         minigame: Boolean? = null
     ): Result<List<SearchAppInfoVO>>
@@ -80,10 +80,10 @@ interface AppExperienceSearchResource {
     @Path("/recommends")
     @GET
     fun recommends(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "平台", required = true)
+        @Parameter(name = "平台", required = true)
         @HeaderParam(AUTH_HEADER_PLATFORM)
         platform: Int?
     ): Result<List<SearchRecommendVO>>

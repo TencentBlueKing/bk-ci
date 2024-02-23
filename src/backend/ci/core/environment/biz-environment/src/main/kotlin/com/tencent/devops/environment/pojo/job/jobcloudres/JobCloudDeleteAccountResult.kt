@@ -1,44 +1,44 @@
 package com.tencent.devops.environment.pojo.job.jobcloudres
 
 import com.fasterxml.jackson.annotation.JsonProperty
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
 data class JobCloudDeleteAccountResult(
-    @ApiModelProperty(value = "帐号ID", required = true)
+    @get:Schema(title = "帐号ID", required = true)
     val id: Long,
-    @ApiModelProperty(value = "帐号名称", required = true)
+    @get:Schema(title = "帐号名称", required = true)
     val account: String,
-    @ApiModelProperty(value = "账号类型", notes = "1：Linux，2：Windows", required = true)
+    @get:Schema(title = "账号类型", description = "1：Linux，2：Windows", required = true)
     val type: Int,
-    @ApiModelProperty(value = "账号用途", notes = "1：系统账号", required = true)
+    @get:Schema(title = "账号用途", description = "1：系统账号", required = true)
     val category: Int,
-    @ApiModelProperty(value = "账号别名", notes = "不传则以账号名称作为别名")
+    @get:Schema(title = "账号别名", description = "不传则以账号名称作为别名")
     val alias: String?,
-    @ApiModelProperty(value = "帐号对应OS", notes = "账号用途为系统账号时该字段生效")
+    @get:Schema(title = "帐号对应OS", description = "账号用途为系统账号时该字段生效")
     val os: String?,
-    @ApiModelProperty(value = "帐号描述")
+    @get:Schema(title = "帐号描述")
     val description: String?,
-    @ApiModelProperty(value = "创建人")
+    @get:Schema(title = "创建人")
     val creator: String,
-    @ApiModelProperty(value = "创建时间", notes = "Unix时间戳，单位ms")
+    @get:Schema(title = "创建时间", description = "Unix时间戳，单位ms")
     @JsonProperty("create_time")
     val createTime: Long,
-    @ApiModelProperty(value = "最近一次修改人")
+    @get:Schema(title = "最近一次修改人")
     @JsonProperty("last_modify_user")
     val lastModifyUser: String,
-    @ApiModelProperty(value = "最近一次修改时间", notes = "Unix时间戳，单位ms")
+    @get:Schema(title = "最近一次修改时间", description = "Unix时间戳，单位ms")
     @JsonProperty("last_modify_time")
     val lastModifyTime: Long,
-    @ApiModelProperty(value = "数据库账号对应的系统账号ID", notes = "账号用途为数据库账号时该字段生效")
+    @get:Schema(title = "数据库账号对应的系统账号ID", description = "账号用途为数据库账号时该字段生效")
     @JsonProperty("db_system_account_id")
     val dbSystemAccountId: Long?,
-    @ApiModelProperty(value = "业务ID")
+    @get:Schema(title = "业务ID")
     @JsonProperty("bk_biz_id")
     val bkBizId: Long?,
-    @ApiModelProperty(value = "资源范围类型", notes = "biz - 业务，biz_set - 业务集")
+    @get:Schema(title = "资源范围类型", description = "biz - 业务，biz_set - 业务集")
     @JsonProperty("bk_scope_type")
     var bkScopeType: String?,
-    @ApiModelProperty(value = "资源范围ID", notes = "与bk_scope_type对应, 表示业务ID或者业务集ID")
+    @get:Schema(title = "资源范围ID", description = "与bk_scope_type对应, 表示业务ID或者业务集ID")
     @JsonProperty("bk_scope_id")
     var bkScopeId: String?
 ) {

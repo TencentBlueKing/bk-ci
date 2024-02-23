@@ -27,13 +27,12 @@
 
 package com.tencent.devops.environment.pojo.job.agentreq
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("查询agent任务状态的接口的请求信息")
+@Schema(title = "查询agent任务状态的接口的请求信息")
 data class QueryAgentTaskStatusReq(
-    @ApiModelProperty(value = "当前页数，默认为1")
+    @get:Schema(title = "当前页数，默认为1")
     val page: Int?,
-    @ApiModelProperty(value = "分页大小，默认为10")
+    @get:Schema(title = "分页大小，默认为10")
     val pageSize: Int?
 )

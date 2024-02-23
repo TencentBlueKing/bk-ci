@@ -52,19 +52,19 @@ interface UserPipelineTrendResource {
     @Path("/construct/{pipelineId}/trend")
     @GET
     fun constructApkAndIpaTrend(
-        @Parameter(description = "流水线Id", required = true)
+        @Parameter(name = "流水线Id", required = true)
         @PathParam("pipelineId")
         pipelineId: String,
-        @Parameter(description = "起始时间", required = true)
+        @Parameter(name = "起始时间", required = true)
         @QueryParam("startTime")
         startTime: Long,
-        @Parameter(description = "结束时间", required = true)
+        @Parameter(name = "结束时间", required = true)
         @QueryParam("endTime")
         endTime: Long,
-        @Parameter(description = "页数", required = false, example = "1")
+        @Parameter(name = "页数", required = false, example = "1")
         @QueryParam("page")
         page: Int,
-        @Parameter(description = "每页多少条", required = false, example = "1000")
+        @Parameter(name = "每页多少条", required = false, example = "1000")
         @QueryParam("pageSize")
         pageSize: Int
     ): Result<TrendInfoDto>

@@ -27,20 +27,20 @@
 
 package com.tencent.devops.environment.pojo.job.resp
 
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
 data class OpOperateResult(
-    @ApiModelProperty(value = "状态码：0 - 成功，其他 - 失败", required = true)
+    @get:Schema(title = "状态码：0 - 成功，其他 - 失败", required = true)
     val code: Int,
-    @ApiModelProperty("结果布尔值：true - 操作执行成功，false - 操作执行失败", required = true)
+    @get:Schema(title = "结果布尔值：true - 操作执行成功，false - 操作执行失败", required = true)
     val result: Boolean = false,
-    @ApiModelProperty("结果提示消息", required = true)
+    @get:Schema(title = "结果提示消息", required = true)
     val msg: String,
-    @ApiModelProperty(value = "灰度项目的总数量", required = true)
+    @get:Schema(title = "灰度项目的总数量", required = true)
     val grayProjNumber: Long,
-    @ApiModelProperty("灰度项目englishName集合")
+    @get:Schema(title = "灰度项目englishName集合")
     val grayProjList: Set<String>?,
-    @ApiModelProperty("项目灰度状态集合")
+    @get:Schema(title = "项目灰度状态集合")
     val projGrayStatus: List<ProjectOpInfo>?
 ) {
     constructor(code: Int, result: Boolean, msg: String, grayProjNumber: Long) : this(

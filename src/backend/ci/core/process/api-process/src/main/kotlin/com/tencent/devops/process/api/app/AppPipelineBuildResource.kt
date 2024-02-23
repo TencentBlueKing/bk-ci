@@ -67,13 +67,13 @@ interface AppPipelineBuildResource {
     // @Path("/projects/{projectId}/pipelines/{pipelineId}/manualStartupInfo")
     @Path("/{projectId}/{pipelineId}/manualStartupInfo")
     fun manualStartupInfo(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "项目ID", required = true)
+        @Parameter(name = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(description = "流水线ID", required = true)
+        @Parameter(name = "流水线ID", required = true)
         @PathParam("pipelineId")
         pipelineId: String
     ): Result<BuildManualStartupInfo>
@@ -83,16 +83,16 @@ interface AppPipelineBuildResource {
     // @Path("/projects/{projectId}/pipelines/{pipelineId}/manualStartup")
     @Path("/{projectId}/{pipelineId}/")
     fun manualStartup(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "项目ID", required = true)
+        @Parameter(name = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(description = "流水线ID", required = true)
+        @Parameter(name = "流水线ID", required = true)
         @PathParam("pipelineId")
         pipelineId: String,
-        @Parameter(description = "启动参数", required = true)
+        @Parameter(name = "启动参数", required = true)
         values: Map<String, String>
     ): Result<BuildId>
 
@@ -101,16 +101,16 @@ interface AppPipelineBuildResource {
     // @Path("/projects/{projectId}/pipelines/{pipelineId}/builds/{buildId}/stop")
     @Path("/{projectId}/{pipelineId}/{buildId}/")
     fun manualShutdown(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "项目ID", required = true)
+        @Parameter(name = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(description = "流水线ID", required = true)
+        @Parameter(name = "流水线ID", required = true)
         @PathParam("pipelineId")
         pipelineId: String,
-        @Parameter(description = "构建ID", required = true)
+        @Parameter(name = "构建ID", required = true)
         @PathParam("buildId")
         buildId: String
     ): Result<Boolean>
@@ -120,25 +120,25 @@ interface AppPipelineBuildResource {
     // @Path("/projects/{projectId}/pipelines/{pipelineId}/builds/{buildId}/retry")
     @Path("/{projectId}/{pipelineId}/{buildId}/retry")
     fun retry(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "项目ID", required = true)
+        @Parameter(name = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(description = "流水线ID", required = true)
+        @Parameter(name = "流水线ID", required = true)
         @PathParam("pipelineId")
         pipelineId: String,
-        @Parameter(description = "构建ID", required = true)
+        @Parameter(name = "构建ID", required = true)
         @PathParam("buildId")
         buildId: String,
-        @Parameter(description = "要重试的原子任务ID", required = false)
+        @Parameter(name = "要重试的原子任务ID", required = false)
         @QueryParam("taskId")
         taskId: String? = null,
-        @Parameter(description = "仅重试所有失败Job", required = false)
+        @Parameter(name = "仅重试所有失败Job", required = false)
         @QueryParam("failedContainer")
         failedContainer: Boolean? = false,
-        @Parameter(description = "跳过失败插件，为true时需要传taskId值（值为stageId则表示跳过Stage下所有失败插件）", required = false)
+        @Parameter(name = "跳过失败插件，为true时需要传taskId值（值为stageId则表示跳过Stage下所有失败插件）", required = false)
         @QueryParam("skip")
         skipFailedTask: Boolean? = false
     ): Result<BuildId>
@@ -147,25 +147,25 @@ interface AppPipelineBuildResource {
     @POST
     @Path("/{projectId}/{pipelineId}/{buildId}/{elementId}/qualityGateReview/{action}")
     fun manualQualityGateReview(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "项目ID", required = true)
+        @Parameter(name = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(description = "流水线ID", required = true)
+        @Parameter(name = "流水线ID", required = true)
         @PathParam("pipelineId")
         pipelineId: String,
-        @Parameter(description = "构建ID", required = true)
+        @Parameter(name = "构建ID", required = true)
         @PathParam("buildId")
         buildId: String,
-        @Parameter(description = "步骤Id", required = true)
+        @Parameter(name = "步骤Id", required = true)
         @PathParam("elementId")
         elementId: String,
-        @Parameter(description = "动作", required = true)
+        @Parameter(name = "动作", required = true)
         @PathParam("action")
         action: ManualReviewAction,
-        @Parameter(description = "红线ID", required = false)
+        @Parameter(name = "红线ID", required = false)
         request: QualityReviewRequest? = null
     ): Result<Boolean>
 
@@ -173,22 +173,22 @@ interface AppPipelineBuildResource {
     @POST
     @Path("/{projectId}/{pipelineId}/{buildId}/{elementId}/review")
     fun manualReview(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "项目ID", required = true)
+        @Parameter(name = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(description = "流水线ID", required = true)
+        @Parameter(name = "流水线ID", required = true)
         @PathParam("pipelineId")
         pipelineId: String,
-        @Parameter(description = "构建ID", required = true)
+        @Parameter(name = "构建ID", required = true)
         @PathParam("buildId")
         buildId: String,
-        @Parameter(description = "原子ID", required = true)
+        @Parameter(name = "原子ID", required = true)
         @PathParam("elementId")
         elementId: String,
-        @Parameter(description = "审核信息", required = true)
+        @Parameter(name = "审核信息", required = true)
         params: ReviewParam
     ): Result<Boolean>
 
@@ -196,19 +196,19 @@ interface AppPipelineBuildResource {
     @GET
     @Path("/{projectId}/{pipelineId}/{buildId}/{elementId}/toReview")
     fun goToReview(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "项目ID", required = true)
+        @Parameter(name = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(description = "流水线ID", required = true)
+        @Parameter(name = "流水线ID", required = true)
         @PathParam("pipelineId")
         pipelineId: String,
-        @Parameter(description = "构建ID", required = true)
+        @Parameter(name = "构建ID", required = true)
         @PathParam("buildId")
         buildId: String,
-        @Parameter(description = "步骤Id", required = true)
+        @Parameter(name = "步骤Id", required = true)
         @PathParam("elementId")
         elementId: String
     ): Result<ReviewParam>
@@ -217,22 +217,22 @@ interface AppPipelineBuildResource {
     @POST
     @Path("/projects/{projectId}/pipelines/{pipelineId}/builds/{buildId}/review")
     fun buildTriggerReview(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "项目ID", required = true)
+        @Parameter(name = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(description = "流水线ID", required = true)
+        @Parameter(name = "流水线ID", required = true)
         @PathParam("pipelineId")
         pipelineId: String,
-        @Parameter(description = "构建ID", required = true)
+        @Parameter(name = "构建ID", required = true)
         @PathParam("buildId")
         buildId: String,
-        @Parameter(description = "是否通过审核", required = true)
+        @Parameter(name = "是否通过审核", required = true)
         @QueryParam("approve")
         approve: Boolean,
-        @Parameter(description = "渠道号，默认为BS", required = false)
+        @Parameter(name = "渠道号，默认为BS", required = false)
         @QueryParam("channelCode")
         channelCode: ChannelCode
     ): Result<Boolean>
@@ -241,25 +241,25 @@ interface AppPipelineBuildResource {
     @POST
     @Path("/projects/{projectId}/pipelines/{pipelineId}/builds/{buildId}/stages/{stageId}/manualStart")
     fun manualStartStage(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "项目ID", required = true)
+        @Parameter(name = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(description = "流水线ID", required = true)
+        @Parameter(name = "流水线ID", required = true)
         @PathParam("pipelineId")
         pipelineId: String,
-        @Parameter(description = "构建ID", required = true)
+        @Parameter(name = "构建ID", required = true)
         @PathParam("buildId")
         buildId: String,
-        @Parameter(description = "阶段ID", required = true)
+        @Parameter(name = "阶段ID", required = true)
         @PathParam("stageId")
         stageId: String,
-        @Parameter(description = "取消执行", required = false)
+        @Parameter(name = "取消执行", required = false)
         @QueryParam("cancel")
         cancel: Boolean?,
-        @Parameter(description = "审核请求体", required = false)
+        @Parameter(name = "审核请求体", required = false)
         reviewRequest: StageReviewRequest? = null
     ): Result<Boolean>
 
@@ -267,76 +267,76 @@ interface AppPipelineBuildResource {
     @GET
     @Path("/{projectId}/{pipelineId}/history/new")
     fun getHistoryBuildNew(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "项目ID", required = true)
+        @Parameter(name = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(description = "流水线ID", required = true)
+        @Parameter(name = "流水线ID", required = true)
         @PathParam("pipelineId")
         pipelineId: String,
-        @Parameter(description = "第几页", required = false, example = "1")
+        @Parameter(name = "第几页", required = false, example = "1")
         @QueryParam("page")
         page: Int?,
-        @Parameter(description = "每页多少条", required = false, example = "20")
+        @Parameter(name = "每页多少条", required = false, example = "20")
         @QueryParam("pageSize")
         pageSize: Int?,
-        @Parameter(description = "代码库别名", required = false)
+        @Parameter(name = "代码库别名", required = false)
         @QueryParam("materialAlias")
         materialAlias: List<String>?,
-        @Parameter(description = "代码库URL", required = false)
+        @Parameter(name = "代码库URL", required = false)
         @QueryParam("materialUrl")
         materialUrl: String?,
-        @Parameter(description = "分支", required = false)
+        @Parameter(name = "分支", required = false)
         @QueryParam("materialBranch")
         materialBranch: List<String>?,
-        @Parameter(description = "commitId", required = false)
+        @Parameter(name = "commitId", required = false)
         @QueryParam("materialCommitId")
         materialCommitId: String?,
-        @Parameter(description = "commitMessage", required = false)
+        @Parameter(name = "commitMessage", required = false)
         @QueryParam("materialCommitMessage")
         materialCommitMessage: String?,
-        @Parameter(description = "状态", required = false)
+        @Parameter(name = "状态", required = false)
         @QueryParam("status")
         status: List<BuildStatus>?,
-        @Parameter(description = "触发方式", required = false)
+        @Parameter(name = "触发方式", required = false)
         @QueryParam("trigger")
         trigger: List<StartType>?,
-        @Parameter(description = "排队于-开始时间(时间戳形式)", required = false)
+        @Parameter(name = "排队于-开始时间(时间戳形式)", required = false)
         @QueryParam("queueTimeStartTime")
         queueTimeStartTime: Long?,
-        @Parameter(description = "排队于-结束时间(时间戳形式)", required = false)
+        @Parameter(name = "排队于-结束时间(时间戳形式)", required = false)
         @QueryParam("queueTimeEndTime")
         queueTimeEndTime: Long?,
-        @Parameter(description = "开始于-开始时间(时间戳形式)", required = false)
+        @Parameter(name = "开始于-开始时间(时间戳形式)", required = false)
         @QueryParam("startTimeStartTime")
         startTimeStartTime: Long?,
-        @Parameter(description = "开始于-结束时间(时间戳形式)", required = false)
+        @Parameter(name = "开始于-结束时间(时间戳形式)", required = false)
         @QueryParam("startTimeEndTime")
         startTimeEndTime: Long?,
-        @Parameter(description = "结束于-开始时间(时间戳形式)", required = false)
+        @Parameter(name = "结束于-开始时间(时间戳形式)", required = false)
         @QueryParam("endTimeStartTime")
         endTimeStartTime: Long?,
-        @Parameter(description = "结束于-结束时间(时间戳形式)", required = false)
+        @Parameter(name = "结束于-结束时间(时间戳形式)", required = false)
         @QueryParam("endTimeEndTime")
         endTimeEndTime: Long?,
-        @Parameter(description = "耗时最小值", required = false)
+        @Parameter(name = "耗时最小值", required = false)
         @QueryParam("totalTimeMin")
         totalTimeMin: Long?,
-        @Parameter(description = "耗时最大值", required = false)
+        @Parameter(name = "耗时最大值", required = false)
         @QueryParam("totalTimeMax")
         totalTimeMax: Long?,
-        @Parameter(description = "备注", required = false)
+        @Parameter(name = "备注", required = false)
         @QueryParam("remark")
         remark: String?,
-        @Parameter(description = "构件号起始", required = false)
+        @Parameter(name = "构件号起始", required = false)
         @QueryParam("buildNoStart")
         buildNoStart: Int?,
-        @Parameter(description = "构件号结束", required = false)
+        @Parameter(name = "构件号结束", required = false)
         @QueryParam("buildNoEnd")
         buildNoEnd: Int?,
-        @Parameter(description = "构建信息", required = false)
+        @Parameter(name = "构建信息", required = false)
         @QueryParam("buildMsg")
         buildMsg: String?
     ): Result<BuildHistoryPage<BuildHistory>>

@@ -27,11 +27,11 @@
 
 package com.tencent.devops.environment.pojo.job.resp
 
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
 data class ProjectOpInfo(
-    @ApiModelProperty("项目englishName", required = true)
+    @get:Schema(title = "项目englishName", required = true)
     val englishName: String,
-    @ApiModelProperty(value = "项目灰度状态: true - 已灰度，false - 未灰度", required = true)
+    @get:Schema(title = "项目灰度状态: true - 已灰度，false - 未灰度", required = true)
     val projGrayStatus: Boolean?
 )

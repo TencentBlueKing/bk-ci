@@ -63,9 +63,9 @@ interface ServiceRoleMemberResource {
         @Parameter(name = "是否为管理员分组", required = true)
         @QueryParam("managerGroup")
         managerGroup: Boolean,
-        @Parameter(description = "添加用户集合", required = true)
+        @Parameter(name = "添加用户集合", required = true)
         members: List<RoleMemberDTO>,
-        @Parameter(description = "是否需要分级管理员校验")
+        @Parameter(name = "是否需要分级管理员校验")
         @QueryParam("managerGroup")
         checkGradeManager: Boolean? = false
     ): Result<Boolean>

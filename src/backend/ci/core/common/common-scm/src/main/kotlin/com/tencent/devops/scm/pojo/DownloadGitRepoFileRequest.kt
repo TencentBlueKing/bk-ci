@@ -30,14 +30,14 @@ package com.tencent.devops.scm.pojo
 import io.swagger.v3.oas.annotations.Parameter
 
 data class DownloadGitRepoFileRequest(
-    @Parameter(description = "仓库名称", required = true)
+    @Parameter(name = "仓库名称", required = true)
     val repoName: String,
-    @Parameter(description = "commit hash值、分支名或tag", required = false)
+    @Parameter(name = "commit hash值、分支名或tag", required = false)
     val sha: String?,
-    @Parameter(description = "限定为下载指定路径的文件", required = false)
+    @Parameter(name = "限定为下载指定路径的文件", required = false)
     val filePath: String?,
-    @Parameter(description = "支持的 format 格式有:zip、tar、tar.gz、tar.xz、tar.bz2(默认为.zip 格式)", required = false)
+    @Parameter(name = "支持的 format 格式有:zip、tar、tar.gz、tar.xz、tar.bz2(默认为.zip 格式)", required = false)
     val format: String?,
-    @Parameter(description = "将项目名作为目录打包进去 (默认：false)", required = false)
+    @Parameter(name = "将项目名作为目录打包进去 (默认：false)", required = false)
     val isProjectPathWrapped: Boolean?
 )

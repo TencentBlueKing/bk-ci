@@ -54,13 +54,13 @@ interface GitCITriggerResource {
     @POST
     @Path("/{pipelineId}/startup")
     fun triggerStartup(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "流水线ID", required = true)
+        @Parameter(name = "流水线ID", required = true)
         @PathParam("pipelineId")
         pipelineId: String,
-        @Parameter(description = "TriggerBuild请求", required = true)
+        @Parameter(name = "TriggerBuild请求", required = true)
         v1TriggerBuildReq: V1TriggerBuildReq
     ): Result<Boolean>
 
@@ -68,10 +68,10 @@ interface GitCITriggerResource {
     @POST
     @Path("/checkYaml")
     fun checkYaml(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "yaml内容", required = true)
+        @Parameter(name = "yaml内容", required = true)
         yaml: V1GitYamlString
     ): Result<String>
 
@@ -79,7 +79,7 @@ interface GitCITriggerResource {
     @GET
     @Path("/getYamlSchema")
     fun getYamlSchema(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String
     ): Result<String>
@@ -88,13 +88,13 @@ interface GitCITriggerResource {
     @GET
     @Path("/getYaml/{gitProjectId}/{buildId}")
     fun getYamlByBuildId(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "工蜂项目ID", required = true)
+        @Parameter(name = "工蜂项目ID", required = true)
         @PathParam("gitProjectId")
         gitProjectId: Long,
-        @Parameter(description = "构建ID", required = true)
+        @Parameter(name = "构建ID", required = true)
         @PathParam("buildId")
         buildId: String
     ): Result<String>

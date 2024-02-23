@@ -54,7 +54,7 @@ interface UserIdeAtomLabelResource {
     @GET
     @Path("/atomIds/{atomId}/labels")
     fun getAtomLabelsByAtomId(
-        @Parameter(description = "IDE插件ID", required = true)
+        @Parameter(name = "IDE插件ID", required = true)
         @PathParam("atomId")
         atomId: String
     ): Result<List<Label>?>

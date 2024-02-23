@@ -55,7 +55,7 @@ interface OpJobQuotaProjectResource {
     @GET
     @Path("/list/project/quota")
     fun list(
-        @Parameter(description = "项目ID", required = false)
+        @Parameter(name = "项目ID", required = false)
         @QueryParam(value = "projectId")
         projectId: String?
     ): Result<List<JobQuotaProject>>
@@ -64,13 +64,13 @@ interface OpJobQuotaProjectResource {
     @GET
     @Path("/{projectId}/{vmType}")
     fun get(
-        @Parameter(description = "项目ID", required = true)
+        @Parameter(name = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(description = "构建机类型", required = true)
+        @Parameter(name = "构建机类型", required = true)
         @PathParam("vmType")
         vmType: JobQuotaVmType,
-        @Parameter(description = "构建来源", required = false)
+        @Parameter(name = "构建来源", required = false)
         @QueryParam("channelCode")
         channelCode: String = ChannelCode.BS.name
     ): Result<JobQuotaProject>
@@ -79,10 +79,10 @@ interface OpJobQuotaProjectResource {
     @PUT
     @Path("/{projectId}")
     fun add(
-        @Parameter(description = "项目ID", required = true)
+        @Parameter(name = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(description = "Job配额信息", required = true)
+        @Parameter(name = "Job配额信息", required = true)
         jobQuota: JobQuotaProject
     ): Result<Boolean>
 
@@ -90,13 +90,13 @@ interface OpJobQuotaProjectResource {
     @DELETE
     @Path("/{projectId}/{vmType}")
     fun delete(
-        @Parameter(description = "项目ID", required = true)
+        @Parameter(name = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(description = "构建机类型", required = true)
+        @Parameter(name = "构建机类型", required = true)
         @PathParam("vmType")
         vmType: JobQuotaVmType,
-        @Parameter(description = "构建来源", required = false)
+        @Parameter(name = "构建来源", required = false)
         @QueryParam("channelCode")
         channelCode: String = ChannelCode.BS.name
     ): Result<Boolean>
@@ -105,13 +105,13 @@ interface OpJobQuotaProjectResource {
     @POST
     @Path("/{projectId}/{vmType}")
     fun update(
-        @Parameter(description = "项目ID", required = true)
+        @Parameter(name = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(description = "构建机类型", required = true)
+        @Parameter(name = "构建机类型", required = true)
         @PathParam("vmType")
         vmType: JobQuotaVmType,
-        @Parameter(description = "Job配额信息", required = true)
+        @Parameter(name = "Job配额信息", required = true)
         jobQuota: JobQuotaProject
     ): Result<Boolean>
 
@@ -119,13 +119,13 @@ interface OpJobQuotaProjectResource {
     @POST
     @Path("/project/{projectId}/vm/{vmType}")
     fun restore(
-        @Parameter(description = "项目ID", required = true)
+        @Parameter(name = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(description = "构建机类型", required = true)
+        @Parameter(name = "构建机类型", required = true)
         @PathParam("vmType")
         vmType: JobQuotaVmType,
-        @Parameter(description = "构建来源", required = false)
+        @Parameter(name = "构建来源", required = false)
         @QueryParam("channelCode")
         channelCode: String = ChannelCode.BS.name
     ): Result<Boolean>

@@ -52,16 +52,16 @@ interface BuildArtifactoryReportResource {
     @Path("/{taskId}/root")
     @GET
     fun getRootUrl(
-        @Parameter(description = "projectId", required = true)
+        @Parameter(name = "projectId", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_PROJECT_ID)
         projectId: String,
-        @Parameter(description = "pipelineId", required = true)
+        @Parameter(name = "pipelineId", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_PIPELINE_ID)
         pipelineId: String,
-        @Parameter(description = "buildId", required = true)
+        @Parameter(name = "buildId", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_BUILD_ID)
         buildId: String,
-        @Parameter(description = "taskId", required = true)
+        @Parameter(name = "taskId", required = true)
         @PathParam("taskId")
         taskId: String
     ): Result<String>

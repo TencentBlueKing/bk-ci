@@ -58,7 +58,7 @@ interface OPItemResource {
     @Path("/")
     @Operation(summary = "获取扩展点完整列表")
     fun getItemList(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String
     ): Result<List<ServiceItem>?>
@@ -67,16 +67,16 @@ interface OPItemResource {
     @Path("/list")
     @Operation(summary = "列表查询")
     fun list(
-        @Parameter(description = "扩展名称")
+        @Parameter(name = "扩展名称")
         @QueryParam("itemName")
         itemName: String?,
-        @Parameter(description = "蓝盾服务Id")
+        @Parameter(name = "蓝盾服务Id")
         @QueryParam("pid")
         pid: String?,
-        @Parameter(description = "页码", required = false)
+        @Parameter(name = "页码", required = false)
         @QueryParam("page")
         page: Int,
-        @Parameter(description = "每页数量", required = false)
+        @Parameter(name = "每页数量", required = false)
         @QueryParam("pageSize")
         pageSize: Int
     ): Result<ItemListVO>
@@ -85,10 +85,10 @@ interface OPItemResource {
     @Path("/")
     @Operation(summary = "添加扩展点")
     fun create(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String,
-        @Parameter(description = "扩展点信息", required = true)
+        @Parameter(name = "扩展点信息", required = true)
         createInfo: ItemInfoResponse
     ): Result<Boolean>
 
@@ -96,13 +96,13 @@ interface OPItemResource {
     @Path("/{itemId}")
     @Operation(summary = "修改扩展点")
     fun update(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String,
-        @Parameter(description = "扩展点Id", required = true)
+        @Parameter(name = "扩展点Id", required = true)
         @PathParam("itemId")
         itemId: String,
-        @Parameter(description = "扩展点信息", required = true)
+        @Parameter(name = "扩展点信息", required = true)
         updateInfo: ItemInfoResponse
     ): Result<Boolean>
 
@@ -110,7 +110,7 @@ interface OPItemResource {
     @Path("/{itemId}")
     @Operation(summary = "获取扩展点")
     fun get(
-        @Parameter(description = "扩展点Id", required = true)
+        @Parameter(name = "扩展点Id", required = true)
         @PathParam("itemId")
         itemId: String
     ): Result<ServiceItem?>
@@ -119,10 +119,10 @@ interface OPItemResource {
     @Path("/{itemId}")
     @Operation(summary = "删除扩展点")
     fun delete(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String,
-        @Parameter(description = "扩展点Id", required = true)
+        @Parameter(name = "扩展点Id", required = true)
         @PathParam("itemId")
         itemId: String
     ): Result<Boolean>
@@ -131,10 +131,10 @@ interface OPItemResource {
     @Path("/{itemId}/forbidden")
     @Operation(summary = "禁用扩展点")
     fun disable(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String,
-        @Parameter(description = "扩展点Id", required = true)
+        @Parameter(name = "扩展点Id", required = true)
         @PathParam("itemId")
         itemId: String
     ): Result<Boolean>
@@ -143,10 +143,10 @@ interface OPItemResource {
     @Path("/{itemId}/enable")
     @Operation(summary = "启用扩展点")
     fun enable(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String,
-        @Parameter(description = "扩展点Id", required = true)
+        @Parameter(name = "扩展点Id", required = true)
         @PathParam("itemId")
         itemId: String
     ): Result<Boolean>

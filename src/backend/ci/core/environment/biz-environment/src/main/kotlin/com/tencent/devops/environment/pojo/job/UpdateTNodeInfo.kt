@@ -27,27 +27,28 @@
 
 package com.tencent.devops.environment.pojo.job
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+
+
+import io.swagger.v3.oas.annotations.media.Schema
 import java.time.LocalDateTime
 
-@ApiModel("对应T_NODE表同名字段")
+@Schema(title = "对应T_NODE表同名字段")
 data class UpdateTNodeInfo(
-    @ApiModelProperty(value = "节点id")
+    @get:Schema(title = "节点id")
     val nodeId: Long?,
-    @ApiModelProperty(value = "节点状态")
+    @get:Schema(title = "节点状态")
     val nodeStatus: String?,
-    @ApiModelProperty(value = "agent状态")
+    @get:Schema(title = "agent状态")
     val agentStatus: Boolean?,
-    @ApiModelProperty(value = "agent版本")
+    @get:Schema(title = "agent版本")
     val agentVersion: String?,
-    @ApiModelProperty(value = "节点名称")
+    @get:Schema(title = "节点名称")
     val displayName: String?,
-    @ApiModelProperty(value = "节点CC host_id")
+    @get:Schema(title = "节点CC host_id")
     val hostId: Long?,
-    @ApiModelProperty(value = "节点CC 云区域id")
+    @get:Schema(title = "节点CC 云区域id")
     val cloudAreaId: Long?,
-    @ApiModelProperty(value = "最后修改时间")
+    @get:Schema(title = "最后修改时间")
     val lastModifyTime: LocalDateTime?
 ) {
     constructor(

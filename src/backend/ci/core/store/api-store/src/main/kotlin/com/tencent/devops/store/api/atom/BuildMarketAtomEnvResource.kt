@@ -52,25 +52,25 @@ interface BuildMarketAtomEnvResource {
     @GET
     @Path("/{projectCode}/{atomCode}/{version}")
     fun getAtomEnv(
-        @Parameter(description = "项目代码", required = true)
+        @Parameter(name = "项目代码", required = true)
         @PathParam("projectCode")
         projectCode: String,
-        @Parameter(description = "插件代码", required = true)
+        @Parameter(name = "插件代码", required = true)
         @PathParam("atomCode")
         atomCode: String,
-        @Parameter(description = "版本号", required = true)
+        @Parameter(name = "版本号", required = true)
         @PathParam("version")
         version: String,
-        @Parameter(description = "插件状态", required = false)
+        @Parameter(name = "插件状态", required = false)
         @QueryParam("atomStatus")
         atomStatus: Byte? = null,
-        @Parameter(description = "操作系统名称", required = false)
+        @Parameter(name = "操作系统名称", required = false)
         @QueryParam("osName")
         osName: String? = null,
-        @Parameter(description = "操作系统架构", required = false)
+        @Parameter(name = "操作系统架构", required = false)
         @QueryParam("osArch")
         osArch: String? = null,
-        @Parameter(description = "是否需要转换操作系统相关信息", required = false)
+        @Parameter(name = "是否需要转换操作系统相关信息", required = false)
         @QueryParam("convertOsFlag")
         convertOsFlag: Boolean? = null
     ): Result<AtomEnv?>
@@ -79,16 +79,16 @@ interface BuildMarketAtomEnvResource {
     @PUT
     @Path("/{projectCode}/{atomCode}/{version}")
     fun updateMarketAtom(
-        @Parameter(description = "项目代码", required = true)
+        @Parameter(name = "项目代码", required = true)
         @PathParam("projectCode")
         projectCode: String,
-        @Parameter(description = "插件代码", required = true)
+        @Parameter(name = "插件代码", required = true)
         @PathParam("atomCode")
         atomCode: String,
-        @Parameter(description = "版本号", required = true)
+        @Parameter(name = "版本号", required = true)
         @PathParam("version")
         version: String,
-        @Parameter(description = "插件市场工作台-更新插件执行环境信息请求报文体", required = true)
+        @Parameter(name = "插件市场工作台-更新插件执行环境信息请求报文体", required = true)
         atomEnvRequest: AtomEnvRequest
     ): Result<Boolean>
 }

@@ -29,13 +29,13 @@ interface ServiceExperienceGroupResource {
     @Path("/{projectId}/")
     @POST
     fun create(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "项目ID", required = true)
+        @Parameter(name = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(description = "体验组", required = true)
+        @Parameter(name = "体验组", required = true)
         group: GroupCreate
     ): Result<String>
 
@@ -43,16 +43,16 @@ interface ServiceExperienceGroupResource {
     @Path("/{projectId}/{groupHashId}")
     @PUT
     fun edit(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "项目ID", required = true)
+        @Parameter(name = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(description = "体验组HashID", required = true)
+        @Parameter(name = "体验组HashID", required = true)
         @PathParam("groupHashId")
         groupHashId: String,
-        @Parameter(description = "体验组", required = true)
+        @Parameter(name = "体验组", required = true)
         group: GroupUpdate
     ): Result<Boolean>
 
@@ -60,13 +60,13 @@ interface ServiceExperienceGroupResource {
     @Path("/{projectId}/{groupHashId}")
     @DELETE
     fun delete(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "项目ID", required = true)
+        @Parameter(name = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(description = "体验组HashID", required = true)
+        @Parameter(name = "体验组HashID", required = true)
         @PathParam("groupHashId")
         groupHashId: String
     ): Result<Boolean>
@@ -75,13 +75,13 @@ interface ServiceExperienceGroupResource {
     @Path("/{projectId}/{groupHashId}/users")
     @GET
     fun getUsers(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "项目ID", required = true)
+        @Parameter(name = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(description = "体验组HashID", required = true)
+        @Parameter(name = "体验组HashID", required = true)
         @PathParam("groupHashId")
         groupHashId: String
     ): Result<GroupUsers>

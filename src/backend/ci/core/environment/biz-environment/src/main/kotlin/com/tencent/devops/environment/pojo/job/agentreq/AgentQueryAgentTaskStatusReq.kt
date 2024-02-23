@@ -28,14 +28,15 @@
 package com.tencent.devops.environment.pojo.job.agentreq
 
 import com.fasterxml.jackson.annotation.JsonProperty
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
 
-@ApiModel("查询agent任务状态的接口的请求信息")
+
+import io.swagger.v3.oas.annotations.media.Schema
+
+@Schema(title = "查询agent任务状态的接口的请求信息")
 data class AgentQueryAgentTaskStatusReq(
-    @ApiModelProperty(value = "当前页数，默认为1")
+    @get:Schema(title = "当前页数，默认为1")
     val page: Int?,
-    @ApiModelProperty(value = "分页大小，默认为10")
+    @get:Schema(title = "分页大小，默认为10")
     @JsonProperty("pagesize")
     val pageSize: Int?
 )

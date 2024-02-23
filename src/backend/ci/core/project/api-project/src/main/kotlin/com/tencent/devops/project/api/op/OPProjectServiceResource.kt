@@ -65,13 +65,13 @@ interface OPProjectServiceResource {
     @Path("/types/{title}")
     @Operation(summary = "创建服务类型")
     fun createServiceType(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String,
-        @Parameter(description = "服务类型名", required = true)
+        @Parameter(name = "服务类型名", required = true)
         @PathParam("title")
         title: String,
-        @Parameter(description = "权重", required = false)
+        @Parameter(name = "权重", required = false)
         @QueryParam("weight")
         weight: Int = 0
     ): Result<ServiceType>
@@ -80,10 +80,10 @@ interface OPProjectServiceResource {
     @Path("/types/{serviceTypeId}")
     @Operation(summary = "删除服务类型")
     fun deleteServiceType(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String,
-        @Parameter(description = "服务类型ID", required = true)
+        @Parameter(name = "服务类型ID", required = true)
         @PathParam("serviceTypeId")
         serviceTypeId: Long
     ): Result<Boolean>
@@ -92,13 +92,13 @@ interface OPProjectServiceResource {
     @Path("/types/{serviceTypeId}")
     @Operation(summary = "修改服务类型")
     fun updateServiceType(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String,
-        @Parameter(description = "服务类型ID", required = true)
+        @Parameter(name = "服务类型ID", required = true)
         @PathParam("serviceTypeId")
         serviceTypeId: Long,
-        @Parameter(description = "修改服务类型所需信息", required = true)
+        @Parameter(name = "修改服务类型所需信息", required = true)
         serviceTypeModify: ServiceTypeModify
     ): Result<Boolean>
 
@@ -106,7 +106,7 @@ interface OPProjectServiceResource {
     @Path("/types")
     @Operation(summary = "查询所有服务类型")
     fun listServiceType(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String
     ): Result<List<ServiceType>>
@@ -115,10 +115,10 @@ interface OPProjectServiceResource {
     @Path("/types/{serviceTypeId}")
     @Operation(summary = "根据ID查找服务类型")
     fun getServiceTypeById(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String,
-        @Parameter(description = "服务ID", required = true)
+        @Parameter(name = "服务ID", required = true)
         @PathParam("serviceTypeId")
         serviceTypeId: Long
     ): Result<ServiceType>
@@ -127,7 +127,7 @@ interface OPProjectServiceResource {
     @Path("/services")
     @Operation(summary = "查询所有服务")
     fun listOPService(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String
     ): Result<List<OPPServiceVO>>
@@ -136,10 +136,10 @@ interface OPProjectServiceResource {
     @Path("/")
     @Operation(summary = "创建服务")
     fun createService(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String,
-        @Parameter(description = "创建服务所需信息", required = true)
+        @Parameter(name = "创建服务所需信息", required = true)
         serviceCreateInfo: ServiceCreateInfo
     ): Result<OPPServiceVO>
 
@@ -147,10 +147,10 @@ interface OPProjectServiceResource {
     @Path("/{serviceId}")
     @Operation(summary = "删除服务")
     fun deleteService(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String,
-        @Parameter(description = "服务ID", required = true)
+        @Parameter(name = "服务ID", required = true)
         @PathParam("serviceId")
         serviceId: Long
     ): Result<Boolean>
@@ -159,13 +159,13 @@ interface OPProjectServiceResource {
     @Path("/{serviceId}")
     @Operation(summary = "根据ServiceId来修改服务信息")
     fun updateService(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String,
-        @Parameter(description = "服务ID", required = true)
+        @Parameter(name = "服务ID", required = true)
         @PathParam("serviceId")
         serviceId: Long,
-        @Parameter(description = "修改服务所需信息", required = true)
+        @Parameter(name = "修改服务所需信息", required = true)
         serviceUpdateInfo: ServiceUpdateInfo
     ): Result<Boolean>
 
@@ -173,13 +173,13 @@ interface OPProjectServiceResource {
     @Path("/update/{englishName}")
     @Operation(summary = "根据服务英文名称修改服务信息")
     fun updateServiceByName(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String,
-        @Parameter(description = "服务英文名（唯一)", required = true)
+        @Parameter(name = "服务英文名（唯一)", required = true)
         @PathParam("englishName")
         englishName: String,
-        @Parameter(description = "修改服务所需信息", required = true)
+        @Parameter(name = "修改服务所需信息", required = true)
         serviceUpdateInfo: ServiceUpdateInfo
     ): Result<Boolean>
 
@@ -187,10 +187,10 @@ interface OPProjectServiceResource {
     @Path("/{serviceId}")
     @Operation(summary = "查询服务")
     fun getService(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String,
-        @Parameter(description = "服务ID", required = true)
+        @Parameter(name = "服务ID", required = true)
         @PathParam("serviceId")
         serviceId: Long
     ): Result<ServiceVO>
@@ -199,10 +199,10 @@ interface OPProjectServiceResource {
     @Path("/grayTest")
     @Operation(summary = "新增用户对服务权限（灰度）")
     fun addUserAuth(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String,
-        @Parameter(description = "创建信息", required = true)
+        @Parameter(name = "创建信息", required = true)
         grayTestInfo: GrayTestInfo
     ): Result<GrayTestInfo>
 
@@ -210,13 +210,13 @@ interface OPProjectServiceResource {
     @Path("/grayTest/{id}")
     @Operation(summary = "修改用户对服务权限状态（灰度）")
     fun updateUserAuth(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String,
-        @Parameter(description = "服务ID", required = true)
+        @Parameter(name = "服务ID", required = true)
         @PathParam("id")
         id: Long,
-        @Parameter(description = "状态", required = true)
+        @Parameter(name = "状态", required = true)
         grayTestInfo: GrayTestInfo
     ): Result<Boolean>
 
@@ -224,10 +224,10 @@ interface OPProjectServiceResource {
     @Path("/grayTest/{id}")
     @Operation(summary = "删除用户对服务权限状态（灰度）")
     fun deleteUserAuth(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String,
-        @Parameter(description = "灰度表ID", required = true)
+        @Parameter(name = "灰度表ID", required = true)
         @PathParam("id")
         grayTestId: Long
     ): Result<Boolean>
@@ -236,10 +236,10 @@ interface OPProjectServiceResource {
     @Path("/grayTest/{id}")
     @Operation(summary = "根据ID列出GrayTest")
     fun listGrayTestById(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String,
-        @Parameter(description = "灰度表ID", required = true)
+        @Parameter(name = "灰度表ID", required = true)
         @PathParam("id")
         id: Long
     ): Result<GrayTestInfo>
@@ -248,22 +248,22 @@ interface OPProjectServiceResource {
     @Path("/grayTest")
     @Operation(summary = "根据条件查询服务权限(灰度)")
     fun listByCondition(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String,
-        @Parameter(description = "用户列表(多个参数用逗号隔开)")
+        @Parameter(name = "用户列表(多个参数用逗号隔开)")
         @QueryParam("userNames")
         userNames: String?,
-        @Parameter(description = "服务列表(多个参数用逗号隔开)")
+        @Parameter(name = "服务列表(多个参数用逗号隔开)")
         @QueryParam("serviceIds")
         serviceIds: String?,
-        @Parameter(description = "状态列表(多个参数用逗号隔开)")
+        @Parameter(name = "状态列表(多个参数用逗号隔开)")
         @QueryParam("status")
         status: String?,
-        @Parameter(description = "每页数量")
+        @Parameter(name = "每页数量")
         @QueryParam("pageSize")
         pageSize: Int?,
-        @Parameter(description = "页码(起始页码为 1)")
+        @Parameter(name = "页码(起始页码为 1)")
         @QueryParam("pageNum")
         pageNum: Int?
     ): Result<List<GrayTestListInfo>>
@@ -272,7 +272,7 @@ interface OPProjectServiceResource {
     @Path("/grayAllUsers")
     @Operation(summary = "查询灰度列表中所有用户与服务(灰度)")
     fun listUsers(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String
     ): Result<Map<String, List<Any>>>
@@ -281,10 +281,10 @@ interface OPProjectServiceResource {
     @Path("/syncService")
     @Operation(summary = "同步所有的服务")
     fun syncService(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String,
-        @Parameter(description = "服务列表")
+        @Parameter(name = "服务列表")
         services: List<ServiceListVO>
     ): Result<Boolean>
 }

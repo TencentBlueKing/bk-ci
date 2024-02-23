@@ -59,16 +59,16 @@ interface UserSensitiveApiResource {
     @Path("unApprovalApiList")
     @GET
     fun unApprovalApiList(
-        @Parameter(description = "userId", required = true)
+        @Parameter(name = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "组件类型", required = true)
+        @Parameter(name = "组件类型", required = true)
         @PathParam("storeType")
         storeType: StoreTypeEnum,
-        @Parameter(description = "组件标识", required = true)
+        @Parameter(name = "组件标识", required = true)
         @PathParam("storeCode")
         storeCode: String,
-        @Parameter(description = "组件标识", required = true)
+        @Parameter(name = "组件标识", required = true)
         @QueryParam("language")
         language: String
     ): Result<List<SensitiveApiNameInfo>>
@@ -77,16 +77,16 @@ interface UserSensitiveApiResource {
     @Path("apply")
     @POST
     fun apply(
-        @Parameter(description = "userId", required = true)
+        @Parameter(name = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "组件类型", required = true)
+        @Parameter(name = "组件类型", required = true)
         @PathParam("storeType")
         storeType: StoreTypeEnum,
-        @Parameter(description = "组件标识", required = true)
+        @Parameter(name = "组件标识", required = true)
         @PathParam("storeCode")
         storeCode: String,
-        @Parameter(description = "申请API请求体")
+        @Parameter(name = "申请API请求体")
         sensitiveApiApplyReq: SensitiveApiApplyReq
     ): Result<Boolean>
 
@@ -94,22 +94,22 @@ interface UserSensitiveApiResource {
     @Path("list")
     @GET
     fun list(
-        @Parameter(description = "userId", required = true)
+        @Parameter(name = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "组件类型", required = true)
+        @Parameter(name = "组件类型", required = true)
         @PathParam("storeType")
         storeType: StoreTypeEnum,
-        @Parameter(description = "组件标识", required = true)
+        @Parameter(name = "组件标识", required = true)
         @PathParam("storeCode")
         storeCode: String,
-        @Parameter(description = "API名", required = false)
+        @Parameter(name = "API名", required = false)
         @QueryParam("apiName")
         apiName: String?,
-        @Parameter(description = "第几页", required = false)
+        @Parameter(name = "第几页", required = false)
         @QueryParam("page")
         page: Int?,
-        @Parameter(description = "每页条数", required = false)
+        @Parameter(name = "每页条数", required = false)
         @QueryParam("pageSize")
         pageSize: Int?
     ): Result<Page<SensitiveApiInfo>>
@@ -118,16 +118,16 @@ interface UserSensitiveApiResource {
     @Path("cancel/{id}")
     @PUT
     fun cancel(
-        @Parameter(description = "userId", required = true)
+        @Parameter(name = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "组件类型", required = true)
+        @Parameter(name = "组件类型", required = true)
         @PathParam("storeType")
         storeType: StoreTypeEnum,
-        @Parameter(description = "组件标识", required = true)
+        @Parameter(name = "组件标识", required = true)
         @PathParam("storeCode")
         storeCode: String,
-        @Parameter(description = "敏感API名称", required = true)
+        @Parameter(name = "敏感API名称", required = true)
         @PathParam("id")
         id: String
     ): Result<Boolean>

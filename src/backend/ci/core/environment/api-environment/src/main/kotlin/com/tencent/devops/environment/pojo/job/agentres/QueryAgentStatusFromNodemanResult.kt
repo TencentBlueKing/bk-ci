@@ -28,16 +28,16 @@
 package com.tencent.devops.environment.pojo.job.agentres
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class QueryAgentStatusFromNodemanResult(
-    @ApiModelProperty(value = "实例记录数量总和")
+    @get:Schema(title = "实例记录数量总和")
     val total: Int?,
-    @ApiModelProperty(value = "过滤的主机详细信息列表")
+    @get:Schema(title = "过滤的主机详细信息列表")
     val list: List<FilterHostInfo?>?,
-    @ApiModelProperty(value = "正在运行机器的数量")
+    @get:Schema(title = "正在运行机器的数量")
     val runningCount: Int?,
-    @ApiModelProperty(value = "没有操作权限的主机数量")
+    @get:Schema(title = "没有操作权限的主机数量")
     val noPermissionCount: Int?
 )

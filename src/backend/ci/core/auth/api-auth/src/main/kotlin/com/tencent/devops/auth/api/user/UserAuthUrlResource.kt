@@ -50,17 +50,17 @@ interface UserAuthUrlResource {
     @Path("/permissionUrl")
     @Operation(summary = "权限申请重定向Url")
     fun permissionUrl(
-        @Parameter(description = "待申请实例信息")
+        @Parameter(name = "待申请实例信息")
         permissionUrlDTO: List<PermissionUrlDTO>
     ): Result<String?>
 
     @GET
     @Path("/group/permission/url")
     fun getRolePermissionUrl(
-        @Parameter(description = "待分配权限用户组所属项目")
+        @Parameter(name = "待分配权限用户组所属项目")
         @QueryParam("projectId")
         projectId: String,
-        @Parameter(description = "用户组Id")
+        @Parameter(name = "用户组Id")
         @QueryParam("roleId")
         roleId: String?
     ): Result<String?>

@@ -56,10 +56,10 @@ interface ServicePipelineSettingResource {
     @PUT
     @Path("/pipeline/model/update")
     fun updatePipelineModel(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "更新流水线模型请求报文")
+        @Parameter(name = "更新流水线模型请求报文")
         updatePipelineModelRequest: UpdatePipelineModelRequest
     ): Result<Boolean>
 
@@ -67,13 +67,13 @@ interface ServicePipelineSettingResource {
     @GET
     @Path("/{projectId}/{pipelineId}/get_setting")
     fun getPipelineSetting(
-        @Parameter(description = "项目ID", required = true)
+        @Parameter(name = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(description = "流水线ID", required = true)
+        @Parameter(name = "流水线ID", required = true)
         @PathParam("pipelineId")
         pipelineId: String,
-        @Parameter(description = "渠道号，默认为BS", required = false)
+        @Parameter(name = "渠道号，默认为BS", required = false)
         @QueryParam("channelCode")
         channelCode: ChannelCode
     ): Result<PipelineSetting?>

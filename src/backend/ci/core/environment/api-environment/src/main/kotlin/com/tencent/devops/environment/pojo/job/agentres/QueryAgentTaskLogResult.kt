@@ -27,9 +27,9 @@
 
 package com.tencent.devops.environment.pojo.job.agentres
 
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
 data class QueryAgentTaskLogResult(
-    @ApiModelProperty(value = "agent任务日志接口返回结果")
+    @get:Schema(title = "agent任务日志接口返回结果")
     val queryAgentTaskLogResult: List<QueryAgentTaskLog>
 )

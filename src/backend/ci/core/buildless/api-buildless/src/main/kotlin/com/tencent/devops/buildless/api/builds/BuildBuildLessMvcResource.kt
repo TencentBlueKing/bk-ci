@@ -41,7 +41,7 @@ interface BuildBuildLessMvcResource {
 
     @GetMapping("/task/claim", produces = [org.springframework.http.MediaType.APPLICATION_JSON_VALUE])
     fun claimBuildLessTask(
-        @Parameter(description = "containerId", required = true)
+        @Parameter(name = "containerId", required = true)
         @QueryParam("containerId")
         containerId: String
     ): DeferredResult<BuildLessTask?>

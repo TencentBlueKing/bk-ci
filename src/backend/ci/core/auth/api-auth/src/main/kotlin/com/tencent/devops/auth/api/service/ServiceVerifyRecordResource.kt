@@ -26,9 +26,9 @@ interface ServiceVerifyRecordResource {
     @Operation(summary = "记录鉴权结果")
     fun createOrUpdate(
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
-        @Parameter(description = "用户ID")
+        @Parameter(name = "用户ID")
         userId: String,
-        @Parameter(description = "鉴权记录实体")
+        @Parameter(name = "鉴权记录实体")
         verifyRecordDTO: VerifyRecordDTO
     ): Result<Boolean>
 
@@ -36,13 +36,13 @@ interface ServiceVerifyRecordResource {
     @Path("/")
     @Operation(summary = "删除鉴权结果")
     fun delete(
-        @Parameter(description = "项目ID")
+        @Parameter(name = "项目ID")
         @QueryParam("projectCode")
         projectCode: String,
-        @Parameter(description = "资源类型")
+        @Parameter(name = "资源类型")
         @QueryParam("resourceType")
         resourceType: String,
-        @Parameter(description = "资源Code")
+        @Parameter(name = "资源Code")
         @QueryParam("resourceCode")
         resourceCode: String
     ): Result<Boolean>

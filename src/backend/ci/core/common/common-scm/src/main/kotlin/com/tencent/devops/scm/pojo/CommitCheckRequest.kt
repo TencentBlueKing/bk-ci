@@ -33,39 +33,39 @@ import com.tencent.devops.scm.enums.CodeSvnRegion
 import io.swagger.v3.oas.annotations.Parameter
 
 data class CommitCheckRequest(
-    @Parameter(description = "项目名称", required = true)
+    @Parameter(name = "项目名称", required = true)
     val projectName: String,
-    @Parameter(description = "仓库地址", required = true)
+    @Parameter(name = "仓库地址", required = true)
     val url: String,
-    @Parameter(description = "仓库类型", required = true)
+    @Parameter(name = "仓库类型", required = true)
     val type: ScmType,
-    @Parameter(description = "privateKey", required = true)
+    @Parameter(name = "privateKey", required = true)
     @SkipLogField
     val privateKey: String?,
-    @Parameter(description = "passPhrase", required = false)
+    @Parameter(name = "passPhrase", required = false)
     @SkipLogField
     val passPhrase: String?,
-    @Parameter(description = "token", required = true)
+    @Parameter(name = "token", required = true)
     @SkipLogField
     val token: String?,
-    @Parameter(description = "仓库区域前缀（只有svn用到）", required = false)
+    @Parameter(name = "仓库区域前缀（只有svn用到）", required = false)
     val region: CodeSvnRegion?,
-    @Parameter(description = "CommitId", required = false)
+    @Parameter(name = "CommitId", required = false)
     val commitId: String,
-    @Parameter(description = "状态", required = true)
+    @Parameter(name = "状态", required = true)
     val state: String,
-    @Parameter(description = "详情链接", required = true)
+    @Parameter(name = "详情链接", required = true)
     val targetUrl: String,
-    @Parameter(description = "区分标志", required = true)
+    @Parameter(name = "区分标志", required = true)
     val context: String,
-    @Parameter(description = "详情链接", required = true)
+    @Parameter(name = "详情链接", required = true)
     val description: String,
-    @Parameter(description = "是否锁mr", required = true)
+    @Parameter(name = "是否锁mr", required = true)
     val block: Boolean,
-    @Parameter(description = "mr对应的requestId", required = true)
+    @Parameter(name = "mr对应的requestId", required = true)
     val mrRequestId: Long?,
-    @Parameter(description = "报表数据", required = true)
+    @Parameter(name = "报表数据", required = true)
     val reportData: Pair<List<String>, MutableMap<String, MutableList<List<String>>>>,
-    @Parameter(description = "检查结果关联的MR", required = true)
+    @Parameter(name = "检查结果关联的MR", required = true)
     val targetBranch: List<String>? = null
 )

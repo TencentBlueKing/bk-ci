@@ -27,15 +27,15 @@
 
 package com.tencent.devops.environment.pojo.job
 
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
 data class DisplayNameInfo(
-    @ApiModelProperty(value = "节点ID")
+    @get:Schema(title = "节点ID")
     val nodeId: Long?,
-    @ApiModelProperty(value = "节点类型")
+    @get:Schema(title = "节点类型")
     val nodeType: String?,
-    @ApiModelProperty(value = "节点HASH ID")
+    @get:Schema(title = "节点HASH ID")
     val nodeHashId: String?,
-    @ApiModelProperty(value = "前端显示名称")
+    @get:Schema(title = "前端显示名称")
     val displayName: String?
 )

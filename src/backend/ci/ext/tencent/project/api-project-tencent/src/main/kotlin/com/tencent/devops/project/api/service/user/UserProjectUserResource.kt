@@ -56,10 +56,10 @@ interface UserProjectUserResource {
     @Path("/")
     @Operation(summary = "查询用户基本信息")
     fun get(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String,
-        @Parameter(description = "bk TOKEN", required = true)
+        @Parameter(name = "bk TOKEN", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_BK_TOKEN)
         bkToken: String?
     ): Result<ProjectUser>
@@ -68,10 +68,10 @@ interface UserProjectUserResource {
     @Path("/detail")
     @Operation(summary = "查询用户详细信息")
     fun getDetail(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String,
-        @Parameter(description = "bk_token", required = true)
+        @Parameter(name = "bk_token", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_BK_TOKEN)
         bkToken: String
     ): Result<UserDeptDetail>
@@ -80,13 +80,13 @@ interface UserProjectUserResource {
     @Path("/projects/{projectCode}/list")
     @Operation(summary = "查看项目下的成员列表")
     fun getProjectUsers(
-        @Parameter(description = "PAAS_CC Token", required = true)
+        @Parameter(name = "PAAS_CC Token", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_ACCESS_TOKEN)
         accessToken: String,
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String,
-        @Parameter(description = "项目代码", required = true)
+        @Parameter(name = "项目代码", required = true)
         @PathParam("projectCode")
         projectCode: String
     ): Result<List<String>?>
@@ -95,13 +95,13 @@ interface UserProjectUserResource {
     @Path("/projects/{projectCode}/roles/list")
     @Operation(summary = "查看项目下的成员列表")
     fun getProjectUserRoles(
-        @Parameter(description = "PAAS_CC Token", required = true)
+        @Parameter(name = "PAAS_CC Token", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_ACCESS_TOKEN)
         accessToken: String,
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String,
-        @Parameter(description = "项目ID", required = true)
+        @Parameter(name = "项目ID", required = true)
         @PathParam("projectCode")
         projectCode: String
     ): Result<List<UserRole>>
@@ -110,10 +110,10 @@ interface UserProjectUserResource {
     @Path("/projects/{projectCode}/manager/role/check")
     @Operation(summary = "判断是否为项目管理员")
     fun mangerRoleCheck(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String,
-        @Parameter(description = "项目ID", required = true)
+        @Parameter(name = "项目ID", required = true)
         @PathParam("projectCode")
         projectCode: String
     ): Result<Boolean>

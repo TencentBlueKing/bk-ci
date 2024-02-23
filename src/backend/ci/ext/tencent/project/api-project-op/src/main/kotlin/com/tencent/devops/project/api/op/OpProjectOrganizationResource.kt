@@ -51,10 +51,10 @@ interface OpProjectOrganizationResource {
     @GET
     @Path("/types/{type}/ids/{id}")
     fun getOrganizations(
-        @Parameter(description = "bg, 部门或者中心")
+        @Parameter(name = "bg, 部门或者中心")
         @PathParam("type")
         type: OrganizationType,
-        @Parameter(description = "ID")
+        @Parameter(name = "ID")
         @PathParam("id")
         id: Int
     ): Result<List<OrganizationInfo>>
@@ -64,9 +64,9 @@ interface OpProjectOrganizationResource {
     @Operation(summary = "修改组织架构")
     fun updateProjectOrganization(
         @PathParam("englishName")
-        @Parameter(description = "项目ID", required = true)
+        @Parameter(name = "项目ID", required = true)
         englishName: String,
-        @Parameter(description = "项目组织", required = true)
+        @Parameter(name = "项目组织", required = true)
         organization: ProjectOrganizationInfo
     ): Result<Boolean>
 
@@ -74,7 +74,7 @@ interface OpProjectOrganizationResource {
     @Path("/fixProjectOrganization")
     @Operation(summary = "修正项目组织架构")
     fun fixProjectOrganization(
-        @Parameter(description = "项目ID列表", required = true)
+        @Parameter(name = "项目ID列表", required = true)
         englishNames: List<String>
     ): Result<Boolean>
 
@@ -82,7 +82,7 @@ interface OpProjectOrganizationResource {
     @Path("/fixProjectOrganizationByChannel")
     @Operation(summary = "根据渠道修正项目组织架构")
     fun fixAllProjectOrganization(
-        @Parameter(description = "渠道", required = true)
+        @Parameter(name = "渠道", required = true)
         @QueryParam("channelCode")
         channelCode: String
     ): Result<Boolean>

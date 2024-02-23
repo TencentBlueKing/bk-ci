@@ -60,22 +60,22 @@ interface ServiceCallBackResource {
     @POST
     @Path("/projects/{projectId}")
     fun create(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "projectId", required = true)
+        @Parameter(name = "projectId", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(description = "url", required = true)
+        @Parameter(name = "url", required = true)
         @QueryParam("url")
         url: String,
-        @Parameter(description = "region", required = true)
+        @Parameter(name = "region", required = true)
         @QueryParam("region")
         region: CallBackNetWorkRegionType?,
-        @Parameter(description = "event", required = true)
+        @Parameter(name = "event", required = true)
         @QueryParam("event")
         event: CallBackEvent,
-        @Parameter(description = "secretToken", required = false)
+        @Parameter(name = "secretToken", required = false)
         @QueryParam("secretToken")
         secretToken: String?
     ): Result<Boolean>
@@ -84,22 +84,22 @@ interface ServiceCallBackResource {
     @POST
     @Path("/projects/{projectId}/batch")
     fun batchCreate(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "projectId", required = true)
+        @Parameter(name = "projectId", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(description = "url", required = true)
+        @Parameter(name = "url", required = true)
         @QueryParam("url")
         url: String,
-        @Parameter(description = "region", required = true)
+        @Parameter(name = "region", required = true)
         @QueryParam("region")
         region: CallBackNetWorkRegionType?,
-        @Parameter(description = "event", required = true)
+        @Parameter(name = "event", required = true)
         @QueryParam("event")
         event: String,
-        @Parameter(description = "secretToken", required = false)
+        @Parameter(name = "secretToken", required = false)
         @QueryParam("secretToken")
         secretToken: String?
     ): Result<CreateCallBackResult>
@@ -108,16 +108,16 @@ interface ServiceCallBackResource {
     @GET
     @Path("/projects/{projectId}")
     fun list(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "projectId", required = true)
+        @Parameter(name = "projectId", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(description = "第几页", required = false, example = "1")
+        @Parameter(name = "第几页", required = false, example = "1")
         @QueryParam("page")
         page: Int?,
-        @Parameter(description = "每页多少条", required = false, example = "20")
+        @Parameter(name = "每页多少条", required = false, example = "20")
         @QueryParam("pageSize")
         pageSize: Int?
     ): Result<Page<ProjectPipelineCallBack>>
@@ -126,13 +126,13 @@ interface ServiceCallBackResource {
     @DELETE
     @Path("/projects/{projectId}/{id}")
     fun remove(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "projectId", required = true)
+        @Parameter(name = "projectId", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(description = "id", required = true)
+        @Parameter(name = "id", required = true)
         @PathParam("id")
         id: Long
     ): Result<Boolean>
@@ -141,28 +141,28 @@ interface ServiceCallBackResource {
     @GET
     @Path("/history/{projectId}")
     fun listHistory(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "projectId", required = true)
+        @Parameter(name = "projectId", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(description = "回调url", required = true)
+        @Parameter(name = "回调url", required = true)
         @QueryParam("url")
         url: String,
-        @Parameter(description = "事件类型", required = true)
+        @Parameter(name = "事件类型", required = true)
         @QueryParam("event")
         event: CallBackEvent,
-        @Parameter(description = "开始时间(时间戳形式)", required = false)
+        @Parameter(name = "开始时间(时间戳形式)", required = false)
         @QueryParam("startTime")
         startTime: Long?,
-        @Parameter(description = "结束时间(时间戳形式)", required = false)
+        @Parameter(name = "结束时间(时间戳形式)", required = false)
         @QueryParam("endTime")
         endTime: Long?,
-        @Parameter(description = "第几页", required = false, example = "1")
+        @Parameter(name = "第几页", required = false, example = "1")
         @QueryParam("page")
         page: Int?,
-        @Parameter(description = "每页多少条", required = false, example = "20")
+        @Parameter(name = "每页多少条", required = false, example = "20")
         @QueryParam("pageSize")
         pageSize: Int?
     ): Result<Page<ProjectPipelineCallBackHistory>>
@@ -171,13 +171,13 @@ interface ServiceCallBackResource {
     @POST
     @Path("/history/{projectId}/{id}/retry")
     fun retry(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "projectId", required = true)
+        @Parameter(name = "projectId", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(description = "id", required = true)
+        @Parameter(name = "id", required = true)
         @PathParam("id")
         id: Long
     ): Result<Boolean>
@@ -186,13 +186,13 @@ interface ServiceCallBackResource {
     @POST
     @Path("/projects/{projectId}/pipelines/{pipelineId}")
     fun createPipelineCallBack(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "projectId", required = true)
+        @Parameter(name = "projectId", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(description = "pipelineId", required = true)
+        @Parameter(name = "pipelineId", required = true)
         @PathParam("pipelineId")
         pipelineId: String,
         callbackInfo: PipelineCallbackEvent

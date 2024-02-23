@@ -49,7 +49,7 @@ interface TxExternalAtomRegionResource {
     @GET
     @Path("")
     fun getRegion(
-        @Parameter(description = "客户端区域", required = false)
+        @Parameter(name = "客户端区域", required = false)
         @HeaderParam(AUTH_HEADER_REGION)
         region: String?
     ): Result<String>

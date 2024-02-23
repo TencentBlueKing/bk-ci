@@ -55,25 +55,25 @@ interface ServiceGitCIProjectResource {
     @GET
     @Path("/list")
     fun getProjects(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "项目列表类型", required = false)
+        @Parameter(name = "项目列表类型", required = false)
         @QueryParam("type")
         type: GitCIProjectType?,
-        @Parameter(description = "搜索条件，模糊匹配path,name", required = false)
+        @Parameter(name = "搜索条件，模糊匹配path,name", required = false)
         @QueryParam("search")
         search: String?,
-        @Parameter(description = "第几页", required = false, example = "1")
+        @Parameter(name = "第几页", required = false, example = "1")
         @QueryParam("page")
         page: Int?,
-        @Parameter(description = "每页多少条", required = false, example = "10")
+        @Parameter(name = "每页多少条", required = false, example = "10")
         @QueryParam("pageSize")
         pageSize: Int?,
-        @Parameter(description = "排序条件", required = false)
+        @Parameter(name = "排序条件", required = false)
         @QueryParam("orderBy")
         orderBy: GitCodeProjectsOrder?,
-        @Parameter(description = "排序类型", required = false)
+        @Parameter(name = "排序类型", required = false)
         @QueryParam("sort")
         sort: GitCodeBranchesSort?
     ): Result<List<ProjectCIInfo>>

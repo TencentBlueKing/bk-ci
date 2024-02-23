@@ -63,22 +63,22 @@ interface ServiceDockerHostResource {
     @POST
     @Path("/build/{projectId}/{pipelineId}/{vmSeqId}/{buildId}/{elementId}")
     fun dockerBuild(
-        @Parameter(description = "项目ID", required = true)
+        @Parameter(name = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(description = "流水线Id", required = true)
+        @Parameter(name = "流水线Id", required = true)
         @PathParam("pipelineId")
         pipelineId: String,
-        @Parameter(description = "vmSeqId", required = true)
+        @Parameter(name = "vmSeqId", required = true)
         @PathParam("vmSeqId")
         vmSeqId: String,
-        @Parameter(description = "buildId", required = true)
+        @Parameter(name = "buildId", required = true)
         @PathParam("buildId")
         buildId: String,
-        @Parameter(description = "elementId", required = true)
+        @Parameter(name = "elementId", required = true)
         @PathParam("elementId")
         elementId: String?,
-        @Parameter(description = "镜像名称", required = true)
+        @Parameter(name = "镜像名称", required = true)
         dockerBuildParam: DockerBuildParam,
         @Context request: HttpServletRequest
     ): Result<Boolean>
@@ -87,10 +87,10 @@ interface ServiceDockerHostResource {
     @GET
     @Path("/build/{vmSeqId}/{buildId}")
     fun getDockerBuildStatus(
-        @Parameter(description = "vmSeqId", required = true)
+        @Parameter(name = "vmSeqId", required = true)
         @PathParam("vmSeqId")
         vmSeqId: String,
-        @Parameter(description = "buildId", required = true)
+        @Parameter(name = "buildId", required = true)
         @PathParam("buildId")
         buildId: String,
         @Context request: HttpServletRequest
@@ -100,15 +100,15 @@ interface ServiceDockerHostResource {
     @POST
     @Path("/build/image/buildIds/{buildId}/check")
     fun checkImage(
-        @Parameter(description = "buildId", required = true)
+        @Parameter(name = "buildId", required = true)
         @PathParam("buildId")
         buildId: String,
-        @Parameter(description = "验证镜像合法性请求报文体", required = true)
+        @Parameter(name = "验证镜像合法性请求报文体", required = true)
         checkImageRequest: CheckImageRequest,
-        @Parameter(description = "containerId", required = false)
+        @Parameter(name = "containerId", required = false)
         @QueryParam("containerId")
         containerId: String?,
-        @Parameter(description = "containerHashId", required = false)
+        @Parameter(name = "containerHashId", required = false)
         @QueryParam("containerHashId")
         containerHashId: String?
     ): Result<CheckImageResponse?>
@@ -117,22 +117,22 @@ interface ServiceDockerHostResource {
     @POST
     @Path("/run/{projectId}/{pipelineId}/{vmSeqId}/{buildId}")
     fun dockerRun(
-        @Parameter(description = "项目ID", required = true)
+        @Parameter(name = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(description = "流水线Id", required = true)
+        @Parameter(name = "流水线Id", required = true)
         @PathParam("pipelineId")
         pipelineId: String,
-        @Parameter(description = "vmSeqId", required = true)
+        @Parameter(name = "vmSeqId", required = true)
         @PathParam("vmSeqId")
         vmSeqId: String,
-        @Parameter(description = "buildId", required = true)
+        @Parameter(name = "buildId", required = true)
         @PathParam("buildId")
         buildId: String,
-        @Parameter(description = "插件ID", required = false)
+        @Parameter(name = "插件ID", required = false)
         @QueryParam("taskId")
         pipelineTaskId: String?,
-        @Parameter(description = "镜像名称", required = true)
+        @Parameter(name = "镜像名称", required = true)
         dockerRunParam: DockerRunParam,
         @Context request: HttpServletRequest
     ): Result<DockerRunResponse>
@@ -141,25 +141,25 @@ interface ServiceDockerHostResource {
     @GET
     @Path("/runlog/{projectId}/{pipelineId}/{vmSeqId}/{buildId}/{containerId}/{logStartTimeStamp}")
     fun getDockerRunLogs(
-        @Parameter(description = "项目ID", required = true)
+        @Parameter(name = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(description = "流水线Id", required = true)
+        @Parameter(name = "流水线Id", required = true)
         @PathParam("pipelineId")
         pipelineId: String,
-        @Parameter(description = "vmSeqId", required = true)
+        @Parameter(name = "vmSeqId", required = true)
         @PathParam("vmSeqId")
         vmSeqId: String,
-        @Parameter(description = "buildId", required = true)
+        @Parameter(name = "buildId", required = true)
         @PathParam("buildId")
         buildId: String,
-        @Parameter(description = "containerId", required = true)
+        @Parameter(name = "containerId", required = true)
         @PathParam("containerId")
         containerId: String,
-        @Parameter(description = "logStartTimeStamp", required = true)
+        @Parameter(name = "logStartTimeStamp", required = true)
         @PathParam("logStartTimeStamp")
         logStartTimeStamp: Int,
-        @Parameter(description = "printLog", required = false)
+        @Parameter(name = "printLog", required = false)
         @QueryParam("printLog")
         printLog: Boolean? = true,
         @Context request: HttpServletRequest
@@ -169,19 +169,19 @@ interface ServiceDockerHostResource {
     @DELETE
     @Path("/run/{projectId}/{pipelineId}/{vmSeqId}/{buildId}/{containerId}")
     fun dockerStop(
-        @Parameter(description = "项目ID", required = true)
+        @Parameter(name = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(description = "流水线Id", required = true)
+        @Parameter(name = "流水线Id", required = true)
         @PathParam("pipelineId")
         pipelineId: String,
-        @Parameter(description = "vmSeqId", required = true)
+        @Parameter(name = "vmSeqId", required = true)
         @PathParam("vmSeqId")
         vmSeqId: String,
-        @Parameter(description = "buildId", required = true)
+        @Parameter(name = "buildId", required = true)
         @PathParam("buildId")
         buildId: String,
-        @Parameter(description = "containerId", required = true)
+        @Parameter(name = "containerId", required = true)
         @PathParam("containerId")
         containerId: String,
         @Context request: HttpServletRequest
@@ -191,7 +191,7 @@ interface ServiceDockerHostResource {
     @POST
     @Path("/build/start")
     fun startBuild(
-        @Parameter(description = "构建任务", required = true)
+        @Parameter(name = "构建任务", required = true)
         dockerHostBuildInfo: DockerHostBuildInfo
     ): Result<String>
 
@@ -199,7 +199,7 @@ interface ServiceDockerHostResource {
     @DELETE
     @Path("/build/end")
     fun endBuild(
-        @Parameter(description = "构建任务", required = true)
+        @Parameter(name = "构建任务", required = true)
         dockerHostBuildInfo: DockerHostBuildInfo
     ): Result<Boolean>
 
@@ -212,7 +212,7 @@ interface ServiceDockerHostResource {
     @GET
     @Path("/container/{containerId}/status")
     fun getContainerStatus(
-        @Parameter(description = "容器ID", required = true)
+        @Parameter(name = "容器ID", required = true)
         @PathParam("containerId")
         containerId: String
     ): Result<Boolean>

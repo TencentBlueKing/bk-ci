@@ -57,16 +57,16 @@ interface UserSensitiveConfResource {
     @POST
     @Path("/")
     fun create(
-        @Parameter(description = "userId", required = true)
+        @Parameter(name = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "组件类型", required = true)
+        @Parameter(name = "组件类型", required = true)
         @PathParam("storeType")
         storeType: StoreTypeEnum,
-        @Parameter(description = "组件标识", required = true)
+        @Parameter(name = "组件标识", required = true)
         @PathParam("storeCode")
         storeCode: String,
-        @Parameter(description = "插件工作台-新增敏感数据报文体", required = true)
+        @Parameter(name = "插件工作台-新增敏感数据报文体", required = true)
         sensitiveConfReq: SensitiveConfReq
     ): Result<Boolean>
 
@@ -74,19 +74,19 @@ interface UserSensitiveConfResource {
     @PUT
     @Path("/{id}")
     fun edit(
-        @Parameter(description = "userId", required = true)
+        @Parameter(name = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "组件类型", required = true)
+        @Parameter(name = "组件类型", required = true)
         @PathParam("storeType")
         storeType: StoreTypeEnum,
-        @Parameter(description = "组件标识", required = true)
+        @Parameter(name = "组件标识", required = true)
         @PathParam("storeCode")
         storeCode: String,
-        @Parameter(description = "敏感配置ID", required = true)
+        @Parameter(name = "敏感配置ID", required = true)
         @PathParam("id")
         id: String,
-        @Parameter(description = "插件工作台-编辑敏感数据报文体", required = true)
+        @Parameter(name = "插件工作台-编辑敏感数据报文体", required = true)
         sensitiveConfReq: SensitiveConfReq
     ): Result<Boolean>
 
@@ -94,16 +94,16 @@ interface UserSensitiveConfResource {
     @DELETE
     @Path("/")
     fun delete(
-        @Parameter(description = "userId", required = true)
+        @Parameter(name = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "组件类型", required = true)
+        @Parameter(name = "组件类型", required = true)
         @PathParam("storeType")
         storeType: StoreTypeEnum,
-        @Parameter(description = "组件标识", required = true)
+        @Parameter(name = "组件标识", required = true)
         @PathParam("storeCode")
         storeCode: String,
-        @Parameter(description = "敏感数据ID集合，用\",\"分隔进行拼接（如1,2,3）", required = true)
+        @Parameter(name = "敏感数据ID集合，用\",\"分隔进行拼接（如1,2,3）", required = true)
         @QueryParam("ids")
         ids: String
     ): Result<Boolean>
@@ -112,16 +112,16 @@ interface UserSensitiveConfResource {
     @GET
     @Path("/{id}")
     fun get(
-        @Parameter(description = "userId", required = true)
+        @Parameter(name = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "组件类型", required = true)
+        @Parameter(name = "组件类型", required = true)
         @PathParam("storeType")
         storeType: StoreTypeEnum,
-        @Parameter(description = "组件标识", required = true)
+        @Parameter(name = "组件标识", required = true)
         @PathParam("storeCode")
         storeCode: String,
-        @Parameter(description = "ID", required = true)
+        @Parameter(name = "ID", required = true)
         @PathParam("id")
         id: String
     ): Result<SensitiveConfResp?>
@@ -130,16 +130,16 @@ interface UserSensitiveConfResource {
     @GET
     @Path("/list")
     fun list(
-        @Parameter(description = "userId", required = true)
+        @Parameter(name = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "组件类型", required = true)
+        @Parameter(name = "组件类型", required = true)
         @PathParam("storeType")
         storeType: StoreTypeEnum,
-        @Parameter(description = "组件标识", required = true)
+        @Parameter(name = "组件标识", required = true)
         @PathParam("storeCode")
         storeCode: String,
-        @Parameter(description = "字段类型集合，用\",\"分隔进行拼接（如BACKEND,FRONTEND,ALL）", required = false)
+        @Parameter(name = "字段类型集合，用\",\"分隔进行拼接（如BACKEND,FRONTEND,ALL）", required = false)
         @QueryParam("types")
         types: String?
     ): Result<List<SensitiveConfResp>?>

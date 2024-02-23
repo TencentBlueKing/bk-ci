@@ -28,20 +28,20 @@
 package com.tencent.devops.environment.pojo.job.agentres
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class Statistics(
-    @ApiModelProperty(value = "任务实例总数")
+    @get:Schema(title = "任务实例总数")
     val totalCount: Int,
-    @ApiModelProperty(value = "失败实例数量")
+    @get:Schema(title = "失败实例数量")
     val failedCount: Int,
-    @ApiModelProperty(value = "忽略实例数量")
+    @get:Schema(title = "忽略实例数量")
     val ignoredCount: Int,
-    @ApiModelProperty(value = "等待执行实例数量")
+    @get:Schema(title = "等待执行实例数量")
     val pendingCount: Int,
-    @ApiModelProperty(value = "正在执行实例数量")
+    @get:Schema(title = "正在执行实例数量")
     val runningCount: Int,
-    @ApiModelProperty(value = "执行成功实例数量")
+    @get:Schema(title = "执行成功实例数量")
     val successCount: Int
 )

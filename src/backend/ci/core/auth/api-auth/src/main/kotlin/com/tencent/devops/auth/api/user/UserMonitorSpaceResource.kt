@@ -49,11 +49,11 @@ interface UserMonitorSpaceResource {
     @GET
     @Path("/")
     fun getMonitorSpaceBizId(
-        @Parameter(description = "用户ID", required = true)
+        @Parameter(name = "用户ID", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
         @QueryParam("projectCode")
-        @Parameter(description = "项目ID", required = false)
+        @Parameter(name = "项目ID", required = false)
         projectCode: String
     ): Result<String>
 }

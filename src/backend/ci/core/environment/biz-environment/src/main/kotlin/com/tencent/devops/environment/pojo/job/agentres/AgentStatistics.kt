@@ -28,25 +28,26 @@
 package com.tencent.devops.environment.pojo.job.agentres
 
 import com.fasterxml.jackson.annotation.JsonProperty
-import io.swagger.annotations.ApiModelProperty
+
+import io.swagger.v3.oas.annotations.media.Schema
 
 data class AgentStatistics(
-    @ApiModelProperty(value = "任务实例总数")
+    @get:Schema(title = "任务实例总数")
     @JsonProperty("total_count")
     val totalCount: Int,
-    @ApiModelProperty(value = "失败实例数量")
+    @get:Schema(title = "失败实例数量")
     @JsonProperty("failed_count")
     val failedCount: Int,
-    @ApiModelProperty(value = "忽略实例数量")
+    @get:Schema(title = "忽略实例数量")
     @JsonProperty("ignored_count")
     val ignoredCount: Int,
-    @ApiModelProperty(value = "等待执行实例数量")
+    @get:Schema(title = "等待执行实例数量")
     @JsonProperty("pending_count")
     val pendingCount: Int,
-    @ApiModelProperty(value = "正在执行实例数量")
+    @get:Schema(title = "正在执行实例数量")
     @JsonProperty("running_count")
     val runningCount: Int,
-    @ApiModelProperty(value = "执行成功实例数量")
+    @get:Schema(title = "执行成功实例数量")
     @JsonProperty("success_count")
     val successCount: Int
 )

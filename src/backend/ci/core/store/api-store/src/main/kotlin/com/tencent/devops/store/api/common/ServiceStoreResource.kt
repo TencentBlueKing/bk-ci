@@ -56,13 +56,13 @@ interface ServiceStoreResource {
     @DELETE
     @Path("/codes/{storeCode}/uninstall")
     fun uninstall(
-        @Parameter(description = "标识", required = true)
+        @Parameter(name = "标识", required = true)
         @PathParam("storeCode")
         storeCode: String,
-        @Parameter(description = "类型", required = true)
+        @Parameter(name = "类型", required = true)
         @QueryParam("storeType")
         storeType: StoreTypeEnum,
-        @Parameter(description = "项目", required = true)
+        @Parameter(name = "项目", required = true)
         @QueryParam("projectCode")
         projectCode: String
     ): Result<Boolean>
@@ -71,10 +71,10 @@ interface ServiceStoreResource {
     @GET
     @Path("/getSensitiveConf")
     fun getSensitiveConf(
-        @Parameter(description = "组件类型", required = true)
+        @Parameter(name = "组件类型", required = true)
         @QueryParam("storeType")
         storeType: StoreTypeEnum,
-        @Parameter(description = "组件标识", required = true)
+        @Parameter(name = "组件标识", required = true)
         @QueryParam("storeCode")
         storeCode: String
     ): Result<List<SensitiveConfResp>?>
@@ -83,13 +83,13 @@ interface ServiceStoreResource {
     @PUT
     @Path("/pipelineIds/{pipelineId}/buildIds/{buildId}/build/handle")
     fun handleStoreBuildResult(
-        @Parameter(description = "流水线ID", required = true)
+        @Parameter(name = "流水线ID", required = true)
         @PathParam("pipelineId")
         pipelineId: String,
-        @Parameter(description = "构建ID", required = true)
+        @Parameter(name = "构建ID", required = true)
         @PathParam("buildId")
         buildId: String,
-        @Parameter(description = "store组件内置流水线构建结果请求报文体", required = true)
+        @Parameter(name = "store组件内置流水线构建结果请求报文体", required = true)
         storeBuildResultRequest: StoreBuildResultRequest
     ): Result<Boolean>
 
@@ -97,13 +97,13 @@ interface ServiceStoreResource {
     @GET
     @Path("/codes/{storeCode}/user/validate")
     fun isStoreMember(
-        @Parameter(description = "标识", required = true)
+        @Parameter(name = "标识", required = true)
         @PathParam("storeCode")
         storeCode: String,
-        @Parameter(description = "类型", required = true)
+        @Parameter(name = "类型", required = true)
         @QueryParam("storeType")
         storeType: StoreTypeEnum,
-        @Parameter(description = "用户ID", required = true)
+        @Parameter(name = "用户ID", required = true)
         @QueryParam("userId")
         userId: String
     ): Result<Boolean>
@@ -112,16 +112,16 @@ interface ServiceStoreResource {
     @POST
     @Path("/codes/{storeCode}/errorCode/compliance")
     fun isComplianceErrorCode(
-        @Parameter(description = "标识", required = true)
+        @Parameter(name = "标识", required = true)
         @PathParam("storeCode")
         storeCode: String,
-        @Parameter(description = "类型", required = true)
+        @Parameter(name = "类型", required = true)
         @QueryParam("storeType")
         storeType: StoreTypeEnum,
-        @Parameter(description = "错误码", required = true)
+        @Parameter(name = "错误码", required = true)
         @QueryParam("errorCode")
         errorCode: Int,
-        @Parameter(description = "错误码类型", required = true)
+        @Parameter(name = "错误码类型", required = true)
         @QueryParam("errorCodeType")
         errorCodeType: ErrorCodeTypeEnum
     ): Result<Boolean>

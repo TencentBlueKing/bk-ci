@@ -55,13 +55,13 @@ interface OpAppCodeProjectResource {
     @POST
     @Path("{appCode}")
     fun addProject(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userName: String,
-        @Parameter(description = "appCode", required = true)
+        @Parameter(name = "appCode", required = true)
         @PathParam("appCode")
         appCode: String,
-        @Parameter(description = "项目ID(项目英文名)", required = true)
+        @Parameter(name = "项目ID(项目英文名)", required = true)
         @QueryParam("projectId")
         projectId: String
     ): Result<Boolean>
@@ -70,7 +70,7 @@ interface OpAppCodeProjectResource {
     @GET
     @Path("")
     fun listProject(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userName: String
     ): Result<List<AppCodeProjectResponse>>
@@ -79,10 +79,10 @@ interface OpAppCodeProjectResource {
     @GET
     @Path("{appCode}")
     fun listProjectByAppCode(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userName: String,
-        @Parameter(description = "appCode", required = true)
+        @Parameter(name = "appCode", required = true)
         @PathParam("appCode")
         appCode: String
     ): Result<List<AppCodeProjectResponse>>
@@ -91,13 +91,13 @@ interface OpAppCodeProjectResource {
     @GET
     @Path("{appCode}/{projectId}")
     fun getProject(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userName: String,
-        @Parameter(description = "appCode", required = true)
+        @Parameter(name = "appCode", required = true)
         @PathParam("appCode")
         appCode: String,
-        @Parameter(description = "项目ID(项目英文名)", required = true)
+        @Parameter(name = "项目ID(项目英文名)", required = true)
         @PathParam("projectId")
         projectId: String
     ): Result<AppCodeProjectResponse?>
@@ -106,13 +106,13 @@ interface OpAppCodeProjectResource {
     @DELETE
     @Path("{appCode}/{projectId}")
     fun deleteProject(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userName: String,
-        @Parameter(description = "appCode", required = true)
+        @Parameter(name = "appCode", required = true)
         @PathParam("appCode")
         appCode: String,
-        @Parameter(description = "项目ID(项目英文名)", required = true)
+        @Parameter(name = "项目ID(项目英文名)", required = true)
         @PathParam("projectId")
         projectId: String
     ): Result<Boolean>

@@ -52,7 +52,7 @@ interface ServiceProjectApprovalResource {
     @Path("/{projectId}")
     @Operation(summary = "查询指定项目审批信息")
     fun get(
-        @Parameter(description = "项目ID", required = true)
+        @Parameter(name = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String
     ): Result<ProjectApprovalInfo?>
@@ -61,13 +61,13 @@ interface ServiceProjectApprovalResource {
     @Path("/{projectId}/createApproved")
     @Operation(summary = "创建审批通过")
     fun createApproved(
-        @Parameter(description = "项目ID", required = true)
+        @Parameter(name = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(description = "审批人", required = true)
+        @Parameter(name = "审批人", required = true)
         @QueryParam("applicant")
         applicant: String,
-        @Parameter(description = "审批人", required = true)
+        @Parameter(name = "审批人", required = true)
         @QueryParam("approver")
         approver: String
     ): Result<Boolean>
@@ -76,16 +76,16 @@ interface ServiceProjectApprovalResource {
     @Path("/{projectId}/createRejectOrRevoke")
     @Operation(summary = "创建审批拒绝/驳回")
     fun createRejectOrRevoke(
-        @Parameter(description = "项目ID", required = true)
+        @Parameter(name = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(description = "审批单状态", required = true)
+        @Parameter(name = "审批单状态", required = true)
         @QueryParam("itsmTicketStatus")
         itsmTicketStatus: String,
-        @Parameter(description = "审批人", required = true)
+        @Parameter(name = "审批人", required = true)
         @QueryParam("applicant")
         applicant: String,
-        @Parameter(description = "审批人", required = true)
+        @Parameter(name = "审批人", required = true)
         @QueryParam("approver")
         approver: String
     ): Result<Boolean>
@@ -94,13 +94,13 @@ interface ServiceProjectApprovalResource {
     @Path("/{projectId}/updateApproved")
     @Operation(summary = "更新审批通过")
     fun updateApproved(
-        @Parameter(description = "项目ID", required = true)
+        @Parameter(name = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(description = "审批人", required = true)
+        @Parameter(name = "审批人", required = true)
         @QueryParam("applicant")
         applicant: String,
-        @Parameter(description = "审批人", required = true)
+        @Parameter(name = "审批人", required = true)
         @QueryParam("approver")
         approver: String
     ): Result<Boolean>
@@ -109,16 +109,16 @@ interface ServiceProjectApprovalResource {
     @Path("/{projectId}/updateRejectOrRevoke")
     @Operation(summary = "更新审批拒绝/撤销")
     fun updateRejectOrRevoke(
-        @Parameter(description = "项目ID", required = true)
+        @Parameter(name = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(description = "审批单状态", required = true)
+        @Parameter(name = "审批单状态", required = true)
         @QueryParam("itsmTicketStatus")
         itsmTicketStatus: String,
-        @Parameter(description = "审批人", required = true)
+        @Parameter(name = "审批人", required = true)
         @QueryParam("applicant")
         applicant: String,
-        @Parameter(description = "审批人", required = true)
+        @Parameter(name = "审批人", required = true)
         @QueryParam("approver")
         approver: String
     ): Result<Boolean>
@@ -126,7 +126,7 @@ interface ServiceProjectApprovalResource {
     @PUT
     @Path("/{projectId}/createMigration")
     fun createMigration(
-        @Parameter(description = "项目ID", required = true)
+        @Parameter(name = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String
     ): Result<Boolean>

@@ -53,16 +53,16 @@ interface ExternalPipelineResource {
     @POST
     @Path("/{token}/build")
     fun remoteBuild(
-        @Parameter(description = "远程认证信息", required = true)
+        @Parameter(name = "远程认证信息", required = true)
         @PathParam("token")
         token: String,
-        @Parameter(description = "请求Ip", required = true)
+        @Parameter(name = "请求Ip", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_REAL_IP)
         realIp: String?,
-        @Parameter(description = "启动用户", required = true)
+        @Parameter(name = "启动用户", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         startUser: String?,
-        @Parameter(description = "启动参数", required = true)
+        @Parameter(name = "启动参数", required = true)
         values: Map<String, String>
     ): Result<BuildId>
 
@@ -71,10 +71,10 @@ interface ExternalPipelineResource {
     @GET
     @Path("projects/{projectId}/{pipelineId}/badge")
     fun getBadge(
-        @Parameter(description = "项目IS", required = true)
+        @Parameter(name = "项目IS", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(description = "流水线ID", required = true)
+        @Parameter(name = "流水线ID", required = true)
         @PathParam("pipelineId")
         pipelineId: String
     ): String

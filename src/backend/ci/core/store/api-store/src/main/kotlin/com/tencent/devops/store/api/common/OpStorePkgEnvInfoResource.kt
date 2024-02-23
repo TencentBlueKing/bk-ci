@@ -55,10 +55,10 @@ interface OpStorePkgEnvInfoResource {
     @POST
     @Path("/create")
     fun create(
-        @Parameter(description = "userId", required = true)
+        @Parameter(name = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "环境变量请求报文体", required = true)
+        @Parameter(name = "环境变量请求报文体", required = true)
         @Valid
         storePkgRunEnvRequest: StorePkgRunEnvRequest
     ): Result<Boolean>
@@ -67,14 +67,14 @@ interface OpStorePkgEnvInfoResource {
     @POST
     @Path("/ids/{id}/update")
     fun update(
-        @Parameter(description = "userId", required = true)
+        @Parameter(name = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "主键ID", required = true)
+        @Parameter(name = "主键ID", required = true)
         @PathParam("id")
         @BkField(patternStyle = BkStyleEnum.ID_STYLE)
         id: String,
-        @Parameter(description = "安装包运行时环境信息请求报文体", required = true)
+        @Parameter(name = "安装包运行时环境信息请求报文体", required = true)
         @Valid
         storePkgRunEnvRequest: StorePkgRunEnvRequest
     ): Result<Boolean>
@@ -83,14 +83,14 @@ interface OpStorePkgEnvInfoResource {
     @DELETE
     @Path("/ids/{id}/delete")
     fun delete(
-        @Parameter(description = "userId", required = true)
+        @Parameter(name = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "主键ID", required = true)
+        @Parameter(name = "主键ID", required = true)
         @PathParam("id")
         @BkField(patternStyle = BkStyleEnum.ID_STYLE)
         id: String,
-        @Parameter(description = "安装包运行时环境信息请求报文体", required = true)
+        @Parameter(name = "安装包运行时环境信息请求报文体", required = true)
         @Valid
         storePkgRunEnvRequest: StorePkgRunEnvRequest
     ): Result<Boolean>

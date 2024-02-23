@@ -60,7 +60,7 @@ interface ServiceGithubRepositoryResource {
     @POST
     @Path("/createOrUpdateFile")
     fun createOrUpdateFile(
-        @Parameter(description = "授权token", required = true)
+        @Parameter(name = "授权token", required = true)
         @HeaderParam(AUTH_HEADER_GITHUB_TOKEN)
         token: String,
         request: CreateOrUpdateFileContentsRequest
@@ -70,7 +70,7 @@ interface ServiceGithubRepositoryResource {
     @POST
     @Path("/getRepositoryContent")
     fun getRepositoryContent(
-        @Parameter(description = "授权token", required = true)
+        @Parameter(name = "授权token", required = true)
         @HeaderParam(AUTH_HEADER_GITHUB_TOKEN)
         token: String,
         request: GetRepositoryContentRequest
@@ -80,7 +80,7 @@ interface ServiceGithubRepositoryResource {
     @POST
     @Path("/getRepositoryPermissions")
     fun getRepositoryPermissions(
-        @Parameter(description = "授权token", required = true)
+        @Parameter(name = "授权token", required = true)
         @HeaderParam(AUTH_HEADER_GITHUB_TOKEN)
         token: String,
         request: GetRepositoryPermissionsRequest
@@ -90,7 +90,7 @@ interface ServiceGithubRepositoryResource {
     @POST
     @Path("/getRepository")
     fun getRepository(
-        @Parameter(description = "授权token", required = true)
+        @Parameter(name = "授权token", required = true)
         @HeaderParam(AUTH_HEADER_GITHUB_TOKEN)
         token: String,
         request: GetRepositoryRequest
@@ -100,7 +100,7 @@ interface ServiceGithubRepositoryResource {
     @POST
     @Path("/listRepositories")
     fun listRepositories(
-        @Parameter(description = "授权token", required = true)
+        @Parameter(name = "授权token", required = true)
         @HeaderParam(AUTH_HEADER_GITHUB_TOKEN)
         token: String,
         request: ListRepositoriesRequest
@@ -110,7 +110,7 @@ interface ServiceGithubRepositoryResource {
     @POST
     @Path("/listRepositoryCollaborators")
     fun listRepositoryCollaborators(
-        @Parameter(description = "授权token", required = true)
+        @Parameter(name = "授权token", required = true)
         @HeaderParam(AUTH_HEADER_GITHUB_TOKEN)
         token: String,
         request: ListRepositoryCollaboratorsRequest
@@ -120,7 +120,7 @@ interface ServiceGithubRepositoryResource {
     @POST
     @Path("/searchRepositories")
     fun searchRepositories(
-        @Parameter(description = "授权token", required = true)
+        @Parameter(name = "授权token", required = true)
         @HeaderParam(AUTH_HEADER_GITHUB_TOKEN)
         token: String,
         request: SearchRepositoriesRequest

@@ -53,7 +53,7 @@ interface OpBusinessConfigResource {
     @POST
     @Path("/")
     fun add(
-        @Parameter(description = "业务配置信息请求报文体", required = true)
+        @Parameter(name = "业务配置信息请求报文体", required = true)
         businessConfigRequest: BusinessConfigRequest
     ): Result<Boolean>
 
@@ -61,10 +61,10 @@ interface OpBusinessConfigResource {
     @PUT
     @Path("/ids/{id}")
     fun update(
-        @Parameter(description = "业务配置ID", required = true)
+        @Parameter(name = "业务配置ID", required = true)
         @PathParam("id")
         id: Int,
-        @Parameter(description = "业务配置信息请求报文体", required = true)
+        @Parameter(name = "业务配置信息请求报文体", required = true)
         businessConfigRequest: BusinessConfigRequest
     ): Result<Int>
 
@@ -77,7 +77,7 @@ interface OpBusinessConfigResource {
     @GET
     @Path("/{id}")
     fun getBusinessConfigById(
-        @Parameter(description = "业务配置ID", required = true)
+        @Parameter(name = "业务配置ID", required = true)
         @PathParam("id")
         id: Int
     ): Result<BusinessConfigResponse?>
@@ -86,7 +86,7 @@ interface OpBusinessConfigResource {
     @DELETE
     @Path("/{id}")
     fun deleteBusinessConfigById(
-        @Parameter(description = "业务配置ID", required = true)
+        @Parameter(name = "业务配置ID", required = true)
         @PathParam("id")
         id: Int
     ): Result<Int>

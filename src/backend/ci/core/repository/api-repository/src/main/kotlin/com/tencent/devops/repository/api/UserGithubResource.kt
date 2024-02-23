@@ -54,13 +54,13 @@ interface UserGithubResource {
     @GET
     @Path("/getProject")
     fun getProject(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "用户ID", required = true)
+        @Parameter(name = "用户ID", required = true)
         @QueryParam("projectId")
         projectId: String,
-        @Parameter(description = "repo hash iD", required = false)
+        @Parameter(name = "repo hash iD", required = false)
         @QueryParam("repoHashId")
         repoHashId: String?
     ): Result<AuthorizeResult>
@@ -69,7 +69,7 @@ interface UserGithubResource {
     @DELETE
     @Path("/deleteToken")
     fun deleteToken(
-        @Parameter(description = "用户ID", required = true)
+        @Parameter(name = "用户ID", required = true)
         @QueryParam("userId")
         userId: String
     ): Result<Boolean>
@@ -83,16 +83,16 @@ interface UserGithubResource {
     @GET
     @Path("/isOauth")
     fun isOAuth(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "蓝盾项目", required = true)
+        @Parameter(name = "蓝盾项目", required = true)
         @QueryParam("projectId")
         projectId: String,
-        @Parameter(description = "是否刷新token", required = false)
+        @Parameter(name = "是否刷新token", required = false)
         @QueryParam("refreshToken")
         refreshToken: Boolean? = false,
-        @Parameter(description = "重置授权类型,前端根据不同代码库类型,在重置授权时跳转不同的弹框", required = false)
+        @Parameter(name = "重置授权类型,前端根据不同代码库类型,在重置授权时跳转不同的弹框", required = false)
         @QueryParam("resetType")
         resetType: String?
     ): Result<AuthorizeResult>

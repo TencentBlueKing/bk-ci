@@ -28,13 +28,13 @@ interface ServiceRemoteDevResource {
     @GET
     @Path("/ticket/validate")
     fun validateUserTicket(
-        @Parameter(description = "userId", required = true)
+        @Parameter(name = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "区分是否离岸外包场景", required = true)
+        @Parameter(name = "区分是否离岸外包场景", required = true)
         @QueryParam("is_offshore")
         isOffshore: Boolean,
-        @Parameter(description = "登录Ticket，内网传BkTicket，离岸登录传BkToken", required = true)
+        @Parameter(name = "登录Ticket，内网传BkTicket，离岸登录传BkToken", required = true)
         @QueryParam("ticket")
         ticket: String
     ): Result<Boolean>
@@ -43,10 +43,10 @@ interface ServiceRemoteDevResource {
     @GET
     @Path("/project/workspace")
     fun getProjectWorkspace(
-        @Parameter(description = "project_id", required = false)
+        @Parameter(name = "project_id", required = false)
         @QueryParam("project_id")
         projectId: String?,
-        @Parameter(description = "ip", required = false)
+        @Parameter(name = "ip", required = false)
         @QueryParam("ip")
         ip: String?
     ): Result<List<WeSecProjectWorkspace>>
@@ -55,7 +55,7 @@ interface ServiceRemoteDevResource {
     @GET
     @Path("/project/list")
     fun getRemotedevProjects(
-        @Parameter(description = "project_id", required = false)
+        @Parameter(name = "project_id", required = false)
         @QueryParam("project_id")
         projectId: String?
     ): Result<List<RemotedevProject>>
@@ -64,7 +64,7 @@ interface ServiceRemoteDevResource {
     @GET
     @Path("/project/cvm")
     fun queryProjectRemoteDevCvm(
-        @Parameter(description = "project_id", required = false)
+        @Parameter(name = "project_id", required = false)
         @QueryParam("project_id")
         projectId: String?
     ): Result<List<RemotedevCvmData>>
@@ -73,10 +73,10 @@ interface ServiceRemoteDevResource {
     @GET
     @Path("/checkWorkspaceProject")
     fun checkWorkspaceProject(
-        @Parameter(description = "projectId", required = true)
+        @Parameter(name = "projectId", required = true)
         @QueryParam("projectId")
         projectId: String,
-        @Parameter(description = "ip", required = true)
+        @Parameter(name = "ip", required = true)
         @QueryParam("ip")
         ip: String
     ): Result<Boolean>
@@ -85,10 +85,10 @@ interface ServiceRemoteDevResource {
     @GET
     @Path("/checkUserIpPermission")
     fun checkUserIpPermission(
-        @Parameter(description = "user", required = true)
+        @Parameter(name = "user", required = true)
         @QueryParam("user")
         user: String,
-        @Parameter(description = "ip", required = true)
+        @Parameter(name = "ip", required = true)
         @QueryParam("ip")
         ip: String
     ): Result<Boolean>
@@ -97,16 +97,16 @@ interface ServiceRemoteDevResource {
     @POST
     @Path("/create_win_workspace_by_vm")
     fun createWinWorkspaceByVm(
-        @Parameter(description = "用户ID", required = true)
+        @Parameter(name = "用户ID", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "老workspace记录，可以为空，如果填写将会做清理", required = true)
+        @Parameter(name = "老workspace记录，可以为空，如果填写将会做清理", required = true)
         @QueryParam("oldWorkspaceName")
         oldWorkspaceName: String?,
-        @Parameter(description = "项目ID，可以为空，如果填写就是团队空间，否则个人空间", required = true)
+        @Parameter(name = "项目ID，可以为空，如果填写就是团队空间，否则个人空间", required = true)
         @QueryParam("projectId")
         projectId: String?,
-        @Parameter(description = "机器uid", required = true)
+        @Parameter(name = "机器uid", required = true)
         @QueryParam("uid")
         uid: String
     ): Result<Boolean>
@@ -115,13 +115,13 @@ interface ServiceRemoteDevResource {
     @POST
     @Path("/assignWorkspace")
     fun assignWorkspace(
-        @Parameter(description = "操作人，必填", required = true)
+        @Parameter(name = "操作人，必填", required = true)
         @QueryParam("operator")
         operator: String,
-        @Parameter(description = "拥有者，为空则表示不分配，只交付项目", required = false)
+        @Parameter(name = "拥有者，为空则表示不分配，只交付项目", required = false)
         @QueryParam("owner")
         owner: String?,
-        @Parameter(description = "分配数据，必填", required = true)
+        @Parameter(name = "分配数据，必填", required = true)
         data: OpProjectWorkspaceAssignData
     ): Result<Boolean>
 
@@ -129,10 +129,10 @@ interface ServiceRemoteDevResource {
     @POST
     @Path("/notify")
     fun notifyWorkspaceInfo(
-        @Parameter(description = "操作人，必填", required = true)
+        @Parameter(name = "操作人，必填", required = true)
         @QueryParam("operator")
         operator: String,
-        @Parameter(description = "通知信息", required = true)
+        @Parameter(name = "通知信息", required = true)
         notifyData: WorkspaceNotifyData
     ): Result<Boolean>
 }

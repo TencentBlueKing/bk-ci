@@ -33,10 +33,10 @@ interface ServiceDispatchDcResource {
     @Path("/project/{projectId}/performanceConfig/list")
     @Operation(summary = "获取devcloud性能配置列表")
     fun getDcPerformanceConfigList(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String,
-        @Parameter(description = "projectId", required = true)
+        @Parameter(name = "projectId", required = true)
         @PathParam("projectId")
         projectId: String
     ): Result<UserPerformanceOptionsVO>
@@ -45,19 +45,19 @@ interface ServiceDispatchDcResource {
     @Path("/startDebug/projects/{projectId}/pipeline/{pipelineId}/vmSeq/{vmSeqId}")
     @Operation(summary = "devcloud获取登录调试ws")
     fun startDebug(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "projectId", required = true)
+        @Parameter(name = "projectId", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(description = "pipelineId", required = true)
+        @Parameter(name = "pipelineId", required = true)
         @PathParam("pipelineId")
         pipelineId: String,
-        @Parameter(description = "vmSeqId", required = true)
+        @Parameter(name = "vmSeqId", required = true)
         @PathParam("vmSeqId")
         vmSeqId: String,
-        @Parameter(description = "构建id", required = false)
+        @Parameter(name = "构建id", required = false)
         @QueryParam("buildId")
         buildId: String?
     ): Result<DevCloudDebugResponse>
@@ -66,16 +66,16 @@ interface ServiceDispatchDcResource {
     @Path("/stopDebug/pipeline/{pipelineId}/vmSeq/{vmSeqId}")
     @Operation(summary = "关闭调试")
     fun stopDebug(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "pipelineId", required = true)
+        @Parameter(name = "pipelineId", required = true)
         @PathParam("pipelineId")
         pipelineId: String,
-        @Parameter(description = "vmSeqId", required = true)
+        @Parameter(name = "vmSeqId", required = true)
         @PathParam("vmSeqId")
         vmSeqId: String,
-        @Parameter(description = "容器名称", required = false)
+        @Parameter(name = "容器名称", required = false)
         @QueryParam("containerName")
         containerName: String
     ): Result<Boolean>
@@ -84,10 +84,10 @@ interface ServiceDispatchDcResource {
     @Path("/container/destroy")
     @Operation(summary = "销毁devcloud容器")
     fun destroyContainer(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "请求报文", required = true)
+        @Parameter(name = "请求报文", required = true)
         destroyContainerReq: DestroyContainerReq
     ): Result<Boolean>
 }

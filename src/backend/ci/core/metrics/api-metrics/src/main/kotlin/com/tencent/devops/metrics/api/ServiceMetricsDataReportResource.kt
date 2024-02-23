@@ -50,7 +50,7 @@ interface ServiceMetricsDataReportResource {
     @Path("/quality/data/report")
     @POST
     fun metricsQualityDataReport(
-        @Parameter(description = "质量红线数据上报传输对象", required = true)
+        @Parameter(name = "质量红线数据上报传输对象", required = true)
         qualityDataReportDTO: QualityDataReportDTO
     ): Result<Boolean>
 
@@ -58,7 +58,7 @@ interface ServiceMetricsDataReportResource {
     @Path("/codecc/data/report")
     @POST
     fun metricsCodeccDataReport(
-        @Parameter(description = "codecc数据上报传输对象", required = true)
+        @Parameter(name = "codecc数据上报传输对象", required = true)
         codeccDataReportDTO: CodeccDataReportDTO
     ): Result<Boolean>
 
@@ -66,7 +66,7 @@ interface ServiceMetricsDataReportResource {
     @Path("/turbo/data/report")
     @POST
     fun metricsTurboDataReport(
-        @Parameter(description = "编译加速数据上报传输对象", required = true)
+        @Parameter(name = "编译加速数据上报传输对象", required = true)
         turboDataReportDTO: TurboDataReportDTO
     ): Result<Boolean>
 }

@@ -55,13 +55,13 @@ interface ServiceSubPipelineResource {
     @GET
     @Path("/pipelines/{pipelineId}/manualStartupInfo")
     fun subpipManualStartupInfo(
-        @Parameter(description = "用户ID", required = true)
+        @Parameter(name = "用户ID", required = true)
         @QueryParam("userId")
         userId: String,
-        @Parameter(description = "项目ID", required = true)
+        @Parameter(name = "项目ID", required = true)
         @HeaderParam(AUTH_HEADER_PROJECT_ID)
         projectId: String,
-        @Parameter(description = "流水线ID", required = false, example = "")
+        @Parameter(name = "流水线ID", required = false, example = "")
         @PathParam("pipelineId")
         pipelineId: String
     ): Result<List<SubPipelineStartUpInfo>>
@@ -70,31 +70,31 @@ interface ServiceSubPipelineResource {
     @POST
     @Path("/pipelines/{callPipelineId}/atoms/{atomCode}/startByPipeline")
     fun callOtherProjectPipelineStartup(
-        @Parameter(description = "要启动的流水线ID", required = true)
+        @Parameter(name = "要启动的流水线ID", required = true)
         @HeaderParam(AUTH_HEADER_PROJECT_ID)
         callProjectId: String,
-        @Parameter(description = "要启动的流水线ID", required = true)
+        @Parameter(name = "要启动的流水线ID", required = true)
         @PathParam("callPipelineId")
         callPipelineId: String,
-        @Parameter(description = "插件标识", required = true)
+        @Parameter(name = "插件标识", required = true)
         @PathParam("atomCode")
         atomCode: String,
-        @Parameter(description = "父项目ID", required = true)
+        @Parameter(name = "父项目ID", required = true)
         @QueryParam("parentProjectId")
         parentProjectId: String,
-        @Parameter(description = "父流水线ID", required = true)
+        @Parameter(name = "父流水线ID", required = true)
         @QueryParam("parentPipelineId")
         parentPipelineId: String,
-        @Parameter(description = "构建ID", required = true)
+        @Parameter(name = "构建ID", required = true)
         @QueryParam("buildId")
         buildId: String,
-        @Parameter(description = "插件ID", required = true)
+        @Parameter(name = "插件ID", required = true)
         @QueryParam("taskId")
         taskId: String,
-        @Parameter(description = "运行方式", required = true)
+        @Parameter(name = "运行方式", required = true)
         @QueryParam("runMode")
         runMode: String,
-        @Parameter(description = "启动参数", required = true)
+        @Parameter(name = "启动参数", required = true)
         values: Map<String, String>
     ): Result<ProjectBuildId>
 }

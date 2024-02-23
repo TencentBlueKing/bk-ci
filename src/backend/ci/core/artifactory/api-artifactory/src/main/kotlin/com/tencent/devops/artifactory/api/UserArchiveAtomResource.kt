@@ -57,30 +57,30 @@ interface UserArchiveAtomResource {
     @Path("/projects/{projectCode}/ids/{atomId}/codes/{atomCode}/versions/{version}/types/{releaseType}/archive")
     @Consumes(MediaType.MULTIPART_FORM_DATA)
     fun archiveAtom(
-        @Parameter(description = "userId", required = true)
+        @Parameter(name = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "项目编码", required = true)
+        @Parameter(name = "项目编码", required = true)
         @PathParam("projectCode")
         projectCode: String,
-        @Parameter(description = "插件ID", required = true)
+        @Parameter(name = "插件ID", required = true)
         @PathParam("atomId")
         atomId: String,
-        @Parameter(description = "插件代码", required = true)
+        @Parameter(name = "插件代码", required = true)
         @PathParam("atomCode")
         atomCode: String,
-        @Parameter(description = "插件版本号", required = true)
+        @Parameter(name = "插件版本号", required = true)
         @PathParam("version")
         version: String,
-        @Parameter(description = "发布类型", required = true)
+        @Parameter(name = "发布类型", required = true)
         @PathParam("releaseType")
         releaseType: ReleaseTypeEnum,
-        @Parameter(description = "文件", required = true)
+        @Parameter(name = "文件", required = true)
         @FormDataParam("file")
         inputStream: InputStream,
         @FormDataParam("file")
         disposition: FormDataContentDisposition,
-        @Parameter(description = "支持的操作系统", required = true)
+        @Parameter(name = "支持的操作系统", required = true)
         @FormDataParam("os")
         os: String
     ): Result<ArchiveAtomResponse?>
@@ -90,27 +90,27 @@ interface UserArchiveAtomResource {
     @Path("/projects/{projectCode}/ids/{atomId}/codes/{atomCode}/versions/{version}/re/archive")
     @Consumes(MediaType.MULTIPART_FORM_DATA)
     fun reArchiveAtom(
-        @Parameter(description = "userId", required = true)
+        @Parameter(name = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "项目编码", required = true)
+        @Parameter(name = "项目编码", required = true)
         @PathParam("projectCode")
         projectCode: String,
-        @Parameter(description = "插件ID", required = true)
+        @Parameter(name = "插件ID", required = true)
         @PathParam("atomId")
         atomId: String,
-        @Parameter(description = "插件代码", required = true)
+        @Parameter(name = "插件代码", required = true)
         @PathParam("atomCode")
         atomCode: String,
-        @Parameter(description = "插件版本号", required = true)
+        @Parameter(name = "插件版本号", required = true)
         @PathParam("version")
         version: String,
-        @Parameter(description = "文件", required = true)
+        @Parameter(name = "文件", required = true)
         @FormDataParam("file")
         inputStream: InputStream,
         @FormDataParam("file")
         disposition: FormDataContentDisposition,
-        @Parameter(description = "插件字段校验确认标识", required = false)
+        @Parameter(name = "插件字段校验确认标识", required = false)
         @QueryParam("fieldCheckConfirmFlag")
         fieldCheckConfirmFlag: Boolean?
     ): Result<ArchiveAtomResponse?>

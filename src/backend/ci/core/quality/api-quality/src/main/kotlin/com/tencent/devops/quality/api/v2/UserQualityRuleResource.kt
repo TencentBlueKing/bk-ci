@@ -68,10 +68,10 @@ interface UserQualityRuleResource {
     @Path("/{projectId}/hasCreatePermission")
     @GET
     fun hasCreatePermission(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "项目ID", required = true)
+        @Parameter(name = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String
     ): Result<Boolean>
@@ -80,13 +80,13 @@ interface UserQualityRuleResource {
     @Path("/{projectId}/")
     @POST
     fun create(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "项目ID", required = true)
+        @Parameter(name = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(description = "规则内容", required = true)
+        @Parameter(name = "规则内容", required = true)
         rule: RuleCreateRequest
     ): Result<String>
 
@@ -94,16 +94,16 @@ interface UserQualityRuleResource {
     @Path("/{projectId}/{ruleHashId}")
     @PUT
     fun update(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "项目ID", required = true)
+        @Parameter(name = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(description = "规则ID", required = true)
+        @Parameter(name = "规则ID", required = true)
         @PathParam("ruleHashId")
         ruleHashId: String,
-        @Parameter(description = "规则内容", required = true)
+        @Parameter(name = "规则内容", required = true)
         rule: RuleUpdateRequest
     ): Result<Boolean>
 
@@ -111,13 +111,13 @@ interface UserQualityRuleResource {
     @Path("/{projectId}/{ruleHashId}/enable")
     @PUT
     fun enable(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "项目ID", required = true)
+        @Parameter(name = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(description = "规则ID", required = true)
+        @Parameter(name = "规则ID", required = true)
         @PathParam("ruleHashId")
         ruleHashId: String
     ): Result<Boolean>
@@ -126,13 +126,13 @@ interface UserQualityRuleResource {
     @Path("/{projectId}/{ruleHashId}/disable")
     @PUT
     fun disable(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "项目ID", required = true)
+        @Parameter(name = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(description = "规则ID", required = true)
+        @Parameter(name = "规则ID", required = true)
         @PathParam("ruleHashId")
         ruleHashId: String
     ): Result<Boolean>
@@ -141,13 +141,13 @@ interface UserQualityRuleResource {
     @Path("/{projectId}/{ruleHashId}")
     @DELETE
     fun delete(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "项目ID", required = true)
+        @Parameter(name = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(description = "规则ID", required = true)
+        @Parameter(name = "规则ID", required = true)
         @PathParam("ruleHashId")
         ruleHashId: String
     ): Result<Boolean>
@@ -156,13 +156,13 @@ interface UserQualityRuleResource {
     @Path("/{projectId}/{ruleHashId}")
     @GET
     fun get(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "项目ID", required = true)
+        @Parameter(name = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(description = "规则ID", required = true)
+        @Parameter(name = "规则ID", required = true)
         @PathParam("ruleHashId")
         ruleHashId: String
     ): Result<UserQualityRule>
@@ -171,19 +171,19 @@ interface UserQualityRuleResource {
     @Path("/{projectId}/{ruleHashId}/interceptHistory")
     @GET
     fun getInterceptHistory(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "项目ID", required = true)
+        @Parameter(name = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(description = "规则ID", required = true)
+        @Parameter(name = "规则ID", required = true)
         @PathParam("ruleHashId")
         ruleHashId: String,
-        @Parameter(description = "页目", required = false)
+        @Parameter(name = "页目", required = false)
         @QueryParam("page")
         page: Int?,
-        @Parameter(description = "每页数目(不传默认全部返回)", required = false)
+        @Parameter(name = "每页数目(不传默认全部返回)", required = false)
         @QueryParam("pageSize")
         pageSize: Int?
     ): Result<Page<RuleInterceptHistory>>
@@ -192,16 +192,16 @@ interface UserQualityRuleResource {
     @Path("/{projectId}/list")
     @GET
     fun list(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "项目ID", required = true)
+        @Parameter(name = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(description = "页目", required = false, example = "1")
+        @Parameter(name = "页目", required = false, example = "1")
         @QueryParam("page")
         page: Int?,
-        @Parameter(description = "每页数目", required = false, example = "20")
+        @Parameter(name = "每页数目", required = false, example = "20")
         @QueryParam("pageSize")
         pageSize: Int?
     ): Result<Page<QualityRuleSummaryWithPermission>>
@@ -210,13 +210,13 @@ interface UserQualityRuleResource {
     @Path("/{projectId}/matchRuleList")
     @GET
     fun matchRuleList(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "项目ID", required = true)
+        @Parameter(name = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(description = "流水线ID", required = false, example = "1")
+        @Parameter(name = "流水线ID", required = false, example = "1")
         @QueryParam("pipelineId")
         pipelineId: String
     ): Result<List<QualityRuleMatchTask>>
@@ -225,13 +225,13 @@ interface UserQualityRuleResource {
     @Path("/{projectId}/matchTemplateRuleList")
     @GET
     fun matchTemplateRuleList(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "项目ID", required = true)
+        @Parameter(name = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(description = "流水线模板ID", required = false, example = "1")
+        @Parameter(name = "流水线模板ID", required = false, example = "1")
         @QueryParam("templateId")
         templateId: String?
     ): Result<List<QualityRuleMatchTask>>
@@ -240,7 +240,7 @@ interface UserQualityRuleResource {
     @Path("/listTemplates")
     @GET
     fun listTemplates(
-        @Parameter(description = "项目ID", required = false)
+        @Parameter(name = "项目ID", required = false)
         @HeaderParam(AUTH_HEADER_DEVOPS_PROJECT_ID)
         projectId: String
     ): Result<List<RuleTemplate>>
@@ -249,7 +249,7 @@ interface UserQualityRuleResource {
     @Path("/project/{projectId}/listTemplates")
     @GET
     fun listProjectTemplates(
-        @Parameter(description = "项目ID", required = true)
+        @Parameter(name = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String
     ): Result<List<RuleTemplate>>
@@ -272,19 +272,19 @@ interface UserQualityRuleResource {
     @Path("/project/{projectId}/pipeline/{pipelineId}/listAtomRule")
     @GET
     fun listAtomRule(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "项目ID", required = true)
+        @Parameter(name = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(description = "项目ID", required = true)
+        @Parameter(name = "项目ID", required = true)
         @PathParam("pipelineId")
         pipelineId: String,
-        @Parameter(description = "插件code", required = false, example = "1")
+        @Parameter(name = "插件code", required = false, example = "1")
         @QueryParam("atomCode")
         atomCode: String,
-        @Parameter(description = "插件版本", required = false, example = "1")
+        @Parameter(name = "插件版本", required = false, example = "1")
         @QueryParam("atomVersion")
         atomVersion: String
     ): Result<AtomRuleResponse>
@@ -293,19 +293,19 @@ interface UserQualityRuleResource {
     @Path("/project/{projectId}/template/{templateId}/listTemplateAtomRule")
     @GET
     fun listTemplateAtomRule(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "项目ID", required = true)
+        @Parameter(name = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(description = "模板ID", required = true)
+        @Parameter(name = "模板ID", required = true)
         @PathParam("templateId")
         templateId: String,
-        @Parameter(description = "插件code", required = false, example = "1")
+        @Parameter(name = "插件code", required = false, example = "1")
         @QueryParam("atomCode")
         atomCode: String,
-        @Parameter(description = "插件版本", required = false, example = "1")
+        @Parameter(name = "插件版本", required = false, example = "1")
         @QueryParam("atomVersion")
         atomVersion: String
     ): Result<AtomRuleResponse>

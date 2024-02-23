@@ -54,7 +54,7 @@ interface OpContainerAppResource {
     @POST
     @Path("/")
     fun addContainerApp(
-        @Parameter(description = "容器编译环境请求实体", required = true)
+        @Parameter(name = "容器编译环境请求实体", required = true)
         containerAppRequest: ContainerAppRequest
     ): Result<Boolean>
 
@@ -62,7 +62,7 @@ interface OpContainerAppResource {
     @DELETE
     @Path("/{id}")
     fun deleteContainerAppById(
-        @Parameter(description = "编译环境ID", required = true)
+        @Parameter(name = "编译环境ID", required = true)
         @PathParam("id")
         id: Int
     ): Result<Boolean>
@@ -71,10 +71,10 @@ interface OpContainerAppResource {
     @PUT
     @Path("/{id}")
     fun updateContainerApp(
-        @Parameter(description = "编译环境ID", required = true)
+        @Parameter(name = "编译环境ID", required = true)
         @PathParam("id")
         id: Int,
-        @Parameter(description = "容器编译环境请求实体", required = true)
+        @Parameter(name = "容器编译环境请求实体", required = true)
         containerAppRequest: ContainerAppRequest
     ): Result<Boolean>
 
@@ -87,7 +87,7 @@ interface OpContainerAppResource {
     @GET
     @Path("/{id}")
     fun getContainerAppById(
-        @Parameter(description = "编译环境ID", required = true)
+        @Parameter(name = "编译环境ID", required = true)
         @PathParam("id")
         id: Int
     ): Result<ContainerAppInfo?>

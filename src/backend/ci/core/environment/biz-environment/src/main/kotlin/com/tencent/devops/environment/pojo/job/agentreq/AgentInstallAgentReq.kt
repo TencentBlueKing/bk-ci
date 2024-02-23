@@ -29,21 +29,21 @@ package com.tencent.devops.environment.pojo.job.agentreq
 
 import com.fasterxml.jackson.annotation.JsonInclude
 import com.fasterxml.jackson.annotation.JsonProperty
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
 
-@ApiModel("安装agent的请求信息")
+
+
+@Schema(title = "安装agent的请求信息")
 data class AgentInstallAgentReq(
-    @ApiModelProperty(value = "任务类型", required = true)
+    @get:Schema(title = "任务类型", required = true)
     @JsonProperty("job_type")
     val jobType: String,
-    @ApiModelProperty(value = "主机列表", required = true)
+    @get:Schema(title = "主机列表", required = true)
     val hosts: List<AgentHostForInstallAgent>,
-    @ApiModelProperty(value = "被替换的Proxy主机ID")
+    @get:Schema(title = "被替换的Proxy主机ID")
     @JsonProperty("replace_host_id")
     @JsonInclude(JsonInclude.Include.NON_NULL)
     val replaceHostId: Int?,
-    @ApiModelProperty(value = "是否安装最新版本插件，默认不安装最新插件")
+    @get:Schema(title = "是否安装最新版本插件，默认不安装最新插件")
     @JsonProperty("is_install_latest_plugins")
     @JsonInclude(JsonInclude.Include.NON_NULL)
     val isInstallLatestPlugins: Boolean?

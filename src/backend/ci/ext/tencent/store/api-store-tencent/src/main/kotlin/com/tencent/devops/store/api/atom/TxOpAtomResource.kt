@@ -54,13 +54,13 @@ interface TxOpAtomResource {
     @PUT
     @Path("/{atomCode}/visible/approve/")
     fun approveVisibleDept(
-        @Parameter(description = "用户ID", required = true)
+        @Parameter(name = "用户ID", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "插件标识", required = true)
+        @Parameter(name = "插件标识", required = true)
         @PathParam("atomCode")
         atomCode: String,
-        @Parameter(description = "可见范围审核请求报文", required = true)
+        @Parameter(name = "可见范围审核请求报文", required = true)
         visibleApproveReq: VisibleApproveReq
     ): Result<Boolean>
 
@@ -68,7 +68,7 @@ interface TxOpAtomResource {
     @GET
     @Path("/{atomCode}/visible")
     fun getVisibleDept(
-        @Parameter(description = "插件代码", required = true)
+        @Parameter(name = "插件代码", required = true)
         @PathParam("atomCode")
         atomCode: String
     ): Result<StoreVisibleDeptResp?>
@@ -77,13 +77,13 @@ interface TxOpAtomResource {
     @PUT
     @Path("/repositories/git/move/codes/{atomCode}/group")
     fun moveGitProjectToGroup(
-        @Parameter(description = "用户ID", required = true)
+        @Parameter(name = "用户ID", required = true)
         @QueryParam("userId")
         userId: String,
-        @Parameter(description = "插件插件标识", required = true)
+        @Parameter(name = "插件插件标识", required = true)
         @PathParam("atomCode")
         atomCode: String,
-        @Parameter(description = "项目组代码", required = false)
+        @Parameter(name = "项目组代码", required = false)
         @QueryParam("groupCode")
         groupCode: String?
     ): Result<Boolean>

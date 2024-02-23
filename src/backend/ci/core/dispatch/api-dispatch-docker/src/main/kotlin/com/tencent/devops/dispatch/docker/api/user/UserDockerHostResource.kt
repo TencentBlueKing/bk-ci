@@ -57,10 +57,10 @@ interface UserDockerHostResource {
     @POST
     @Path("/startDebug")
     fun startDebug(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         debugStartParam: DebugStartParam
     ): Result<Boolean>?
 
@@ -68,16 +68,16 @@ interface UserDockerHostResource {
     @GET
     @Path("/getDebugStatus/{projectId}/{pipelineId}/{vmSeqId}")
     fun getDebugStatus(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "项目id", required = true)
+        @Parameter(name = "项目id", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(description = "pipelineId", required = true)
+        @Parameter(name = "pipelineId", required = true)
         @PathParam("pipelineId")
         pipelineId: String,
-        @Parameter(description = "vmSeqId", required = true)
+        @Parameter(name = "vmSeqId", required = true)
         @PathParam("vmSeqId")
         vmSeqId: String
     ): Result<ContainerInfo>?
@@ -86,16 +86,16 @@ interface UserDockerHostResource {
     @POST
     @Path("/stopDebug/{projectId}/{pipelineId}/{vmSeqId}")
     fun stopDebug(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "项目id", required = true)
+        @Parameter(name = "项目id", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(description = "流水线Id", required = true)
+        @Parameter(name = "流水线Id", required = true)
         @PathParam("pipelineId")
         pipelineId: String,
-        @Parameter(description = "vmSeqId", required = true)
+        @Parameter(name = "vmSeqId", required = true)
         @PathParam("vmSeqId")
         vmSeqId: String
     ): Result<Boolean>?
@@ -104,19 +104,19 @@ interface UserDockerHostResource {
     @GET
     @Path("/getContainerInfo/{projectId}/{pipelineId}/{buildId}/{vmSeqId}")
     fun getContainerInfo(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "项目id", required = true)
+        @Parameter(name = "项目id", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(description = "流水线Id", required = true)
+        @Parameter(name = "流水线Id", required = true)
         @PathParam("pipelineId")
         pipelineId: String,
-        @Parameter(description = "容器Id", required = true)
+        @Parameter(name = "容器Id", required = true)
         @PathParam("buildId")
         buildId: String,
-        @Parameter(description = "vmSeqId", required = true)
+        @Parameter(name = "vmSeqId", required = true)
         @PathParam("vmSeqId")
         vmSeqId: String
     ): Result<ContainerInfo>?
@@ -125,7 +125,7 @@ interface UserDockerHostResource {
     @GET
     @Path("/getGreyWebConsoleProject")
     fun getGreyWebConsoleProject(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String
     ): Result<List<String>>
@@ -134,16 +134,16 @@ interface UserDockerHostResource {
     @POST
     @Path("/cleanIp/{projectId}/{pipelineId}/{vmSeqId}")
     fun cleanIp(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "项目id", required = true)
+        @Parameter(name = "项目id", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(description = "流水线Id", required = true)
+        @Parameter(name = "流水线Id", required = true)
         @PathParam("pipelineId")
         pipelineId: String,
-        @Parameter(description = "vmSeqId", required = true)
+        @Parameter(name = "vmSeqId", required = true)
         @PathParam("vmSeqId")
         vmSeqId: String
     ): Result<Boolean>?
@@ -152,7 +152,7 @@ interface UserDockerHostResource {
     @Path("/dockerhost-load")
     @Operation(summary = "获取dockerhost集群平均负载信息")
     fun getDockerHostLoad(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String
     ): Result<DockerHostLoad>

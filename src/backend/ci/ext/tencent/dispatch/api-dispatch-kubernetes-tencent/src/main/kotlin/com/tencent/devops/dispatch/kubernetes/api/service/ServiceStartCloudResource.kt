@@ -59,7 +59,7 @@ interface ServiceStartCloudResource {
     @GET
     @Path("/startCloud/user/create")
     fun createStartCloudUser(
-        @Parameter(description = "user", required = true)
+        @Parameter(name = "user", required = true)
         @QueryParam("user")
         user: String
     ): Result<Boolean>
@@ -73,7 +73,7 @@ interface ServiceStartCloudResource {
     @POST
     @Path("/startCloud/cgs")
     fun getCgsData(
-        @Parameter(description = "查询数据")
+        @Parameter(name = "查询数据")
         data: FetchWinPoolData
     ): Result<List<EnvironmentResourceData>>
 
@@ -81,10 +81,10 @@ interface ServiceStartCloudResource {
     @GET
     @Path("/workspace/check")
     fun checkCgsRunning(
-        @Parameter(description = "cgsId", required = true)
+        @Parameter(name = "cgsId", required = true)
         @QueryParam("cgsId")
         cgsId: String,
-        @Parameter(description = "status", required = true)
+        @Parameter(name = "status", required = true)
         @QueryParam("status")
         status: EnvStatusEnum? = EnvStatusEnum.running
     ): Result<Boolean>
@@ -98,10 +98,10 @@ interface ServiceStartCloudResource {
     @POST
     @Path("/workspace/share")
     fun shareWorkspace(
-        @Parameter(description = "operator", required = true)
+        @Parameter(name = "operator", required = true)
         @QueryParam("operator")
         operator: String,
-        @Parameter(description = "cgsId", required = false)
+        @Parameter(name = "cgsId", required = false)
         @QueryParam("cgsId")
         cgsId: String,
         receivers: List<String>
@@ -111,10 +111,10 @@ interface ServiceStartCloudResource {
     @POST
     @Path("/workspace/unShare")
     fun unShareWorkspace(
-        @Parameter(description = "operator", required = true)
+        @Parameter(name = "operator", required = true)
         @QueryParam("operator")
         operator: String,
-        @Parameter(description = "resourceId", required = true)
+        @Parameter(name = "resourceId", required = true)
         @QueryParam("resourceId")
         resourceId: String,
         receivers: List<String>
@@ -131,7 +131,7 @@ interface ServiceStartCloudResource {
     @GET
     @Path("/workspace/eid")
     fun getWorkspaceInfoByEid(
-        @Parameter(description = "uid", required = true)
+        @Parameter(name = "uid", required = true)
         @QueryParam("eid")
         eid: String
     ): Result<WorkspaceInfo>
@@ -140,7 +140,7 @@ interface ServiceStartCloudResource {
     @GET
     @Path("/workspace/uid")
     fun getTaskInfoByUid(
-        @Parameter(description = "uid", required = true)
+        @Parameter(name = "uid", required = true)
         @QueryParam("uid")
         uid: String
     ): Result<TaskStatus?>

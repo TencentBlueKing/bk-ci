@@ -56,10 +56,10 @@ interface OpPipelineRuleResource {
     @GET
     @Path("/{ruleId}")
     fun getPipelineRule(
-        @Parameter(description = "userId", required = true)
+        @Parameter(name = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "规则ID", required = true)
+        @Parameter(name = "规则ID", required = true)
         @PathParam("ruleId")
         ruleId: String
     ): Result<PipelineRule?>
@@ -68,19 +68,19 @@ interface OpPipelineRuleResource {
     @GET
     @Path("/list")
     fun getPipelineRules(
-        @Parameter(description = "userId", required = true)
+        @Parameter(name = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "规则名称", required = false)
+        @Parameter(name = "规则名称", required = false)
         @QueryParam("ruleName")
         ruleName: String?,
-        @Parameter(description = "业务标识", required = false)
+        @Parameter(name = "业务标识", required = false)
         @QueryParam("busCode")
         busCode: String?,
-        @Parameter(description = "页码", required = true)
+        @Parameter(name = "页码", required = true)
         @QueryParam("page")
         page: Int,
-        @Parameter(description = "每页数量", required = true)
+        @Parameter(name = "每页数量", required = true)
         @QueryParam("pageSize")
         pageSize: Int
     ): Result<Page<PipelineRule>?>
@@ -89,10 +89,10 @@ interface OpPipelineRuleResource {
     @POST
     @Path("/save")
     fun savePipelineRule(
-        @Parameter(description = "userId", required = true)
+        @Parameter(name = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "流水线规则请求报文", required = true)
+        @Parameter(name = "流水线规则请求报文", required = true)
         pipelineRule: PipelineRule
     ): Result<Boolean>
 
@@ -100,13 +100,13 @@ interface OpPipelineRuleResource {
     @PUT
     @Path("/{ruleId}/update")
     fun updatePipelineRule(
-        @Parameter(description = "userId", required = true)
+        @Parameter(name = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "规则ID", required = true)
+        @Parameter(name = "规则ID", required = true)
         @PathParam("ruleId")
         ruleId: String,
-        @Parameter(description = "流水线规则请求报文", required = true)
+        @Parameter(name = "流水线规则请求报文", required = true)
         pipelineRule: PipelineRule
     ): Result<Boolean>
 
@@ -114,10 +114,10 @@ interface OpPipelineRuleResource {
     @DELETE
     @Path("/{ruleId}")
     fun deletePipelineRuleById(
-        @Parameter(description = "userId", required = true)
+        @Parameter(name = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "规则ID", required = true)
+        @Parameter(name = "规则ID", required = true)
         @PathParam("ruleId")
         ruleId: String
     ): Result<Boolean>

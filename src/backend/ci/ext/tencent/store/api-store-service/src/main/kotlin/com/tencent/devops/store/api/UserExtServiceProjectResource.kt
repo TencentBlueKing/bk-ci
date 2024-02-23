@@ -55,10 +55,10 @@ interface UserExtServiceProjectResource {
     @POST
     @Path("/install")
     fun installImage(
-        @Parameter(description = "userId", required = true)
+        @Parameter(name = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "安装扩展服务到项目请求报文体", required = true)
+        @Parameter(name = "安装扩展服务到项目请求报文体", required = true)
         installExtServiceReq: InstallExtServiceReq
     ): Result<Boolean>
 
@@ -66,10 +66,10 @@ interface UserExtServiceProjectResource {
     @GET
     @Path("/installedProjects/{serviceCode}")
     fun getInstalledProjects(
-        @Parameter(description = "userId", required = true)
+        @Parameter(name = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "微扩展代码", required = true)
+        @Parameter(name = "微扩展代码", required = true)
         @PathParam("serviceCode")
         serviceCode: String
     ): Result<List<InstalledProjRespItem>>
@@ -78,10 +78,10 @@ interface UserExtServiceProjectResource {
     @GET
     @Path("/{projectCode}/installed/service")
     fun getServiceByInstalledProject(
-        @Parameter(description = "userId", required = true)
+        @Parameter(name = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "项目代码", required = true)
+        @Parameter(name = "项目代码", required = true)
         @PathParam("projectCode")
         projectCode: String
     ): Result<List<ExtServiceRespItem>>
@@ -90,16 +90,16 @@ interface UserExtServiceProjectResource {
     @PUT
     @Path("{projectCode}/serviceCodes/{serviceCode}/uninstalled/")
     fun unInstallService(
-        @Parameter(description = "userId", required = true)
+        @Parameter(name = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "服务Code", required = true)
+        @Parameter(name = "服务Code", required = true)
         @PathParam("serviceCode")
         serviceCode: String,
-        @Parameter(description = "项目代码", required = true)
+        @Parameter(name = "项目代码", required = true)
         @PathParam("projectCode")
         projectCode: String,
-        @Parameter(description = "卸载扩展请求包体", required = true)
+        @Parameter(name = "卸载扩展请求包体", required = true)
         unInstallReq: UnInstallReq
     ): Result<Boolean>
 }

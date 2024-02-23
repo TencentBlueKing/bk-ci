@@ -49,7 +49,7 @@ interface OpProjectInfoResource {
     @Path("/pipeline/label/sync")
     @GET
     fun syncPipelineLabelData(
-        @Parameter(description = "userId", required = true)
+        @Parameter(name = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String
     ): Result<Boolean>
@@ -58,7 +58,7 @@ interface OpProjectInfoResource {
     @Path("/atom/error/sync")
     @GET
     fun syncAtomErrorCodeRel(
-        @Parameter(description = "userId", required = true)
+        @Parameter(name = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String
     ): Result<Boolean>
@@ -67,7 +67,7 @@ interface OpProjectInfoResource {
     @Path("/atom/relevancy/sync")
     @GET
     fun syncProjectAtomData(
-        @Parameter(description = "userId", required = true)
+        @Parameter(name = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String
     ): Boolean

@@ -53,13 +53,13 @@ interface OPDockerRoutingResource {
     @Path("/docker-routing/projects/{projectId}/add")
     @Operation(summary = "新增构建类型调度路由")
     fun addDockerRouting(
-        @Parameter(description = "项目ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "项目ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String,
-        @Parameter(description = "服务ID", required = true)
+        @Parameter(name = "服务ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(description = "请求入参", required = true)
+        @Parameter(name = "请求入参", required = true)
         dockerRoutingVO: DockerRoutingVO
     ): Result<Boolean>
 
@@ -67,10 +67,10 @@ interface OPDockerRoutingResource {
     @Path("/docker-routing/projects/{projectId}/delete")
     @Operation(summary = "删除构建类型调度路由")
     fun deleteDockerRouting(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String,
-        @Parameter(description = "项目ID", required = true)
+        @Parameter(name = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String
     ): Result<Boolean>

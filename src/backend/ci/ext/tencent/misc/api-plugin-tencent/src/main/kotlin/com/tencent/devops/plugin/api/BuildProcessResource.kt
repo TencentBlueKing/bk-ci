@@ -49,10 +49,10 @@ interface BuildProcessResource {
     @POST
     @Path("/getLastUpdateUser/{pipelineId}/")
     fun getUpdateUser(
-        @Parameter(description = "项目ID", required = true)
+        @Parameter(name = "项目ID", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_PROJECT_ID)
         projectId: String,
-        @Parameter(description = "渠道号，默认为DS", required = false)
+        @Parameter(name = "渠道号，默认为DS", required = false)
         @PathParam("pipelineId")
         pipelineId: String
     ): Result<String>

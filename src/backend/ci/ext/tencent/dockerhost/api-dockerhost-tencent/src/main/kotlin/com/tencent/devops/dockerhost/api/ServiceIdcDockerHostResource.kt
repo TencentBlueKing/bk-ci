@@ -50,7 +50,7 @@ interface ServiceIdcDockerHostResource {
     @POST
     @Path("/build/start")
     fun startBuild(
-        @Parameter(description = "构建任务", required = true)
+        @Parameter(name = "构建任务", required = true)
         dockerHostBuildInfo: DockerHostBuildInfo
     ): Result<String>
 
@@ -58,7 +58,7 @@ interface ServiceIdcDockerHostResource {
     @DELETE
     @Path("/build/end")
     fun endBuild(
-        @Parameter(description = "构建任务", required = true)
+        @Parameter(name = "构建任务", required = true)
         dockerHostBuildInfo: DockerHostBuildInfo
     ): Result<Boolean>
 

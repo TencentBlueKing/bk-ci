@@ -59,15 +59,15 @@ interface UserFileResource {
     @Path("/file/uploadToPath")
     @Consumes(MediaType.MULTIPART_FORM_DATA)
     fun uploadToPath(
-        @Parameter(description = "userId", required = true)
+        @Parameter(name = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "项目代码", required = false)
+        @Parameter(name = "项目代码", required = false)
         @FormDataParam("projectId")
         projectId: String,
         @FormDataParam("path")
         path: String,
-        @Parameter(description = "文件", required = true)
+        @Parameter(name = "文件", required = true)
         @FormDataParam("file")
         inputStream: InputStream,
         @FormDataParam("file")
@@ -78,10 +78,10 @@ interface UserFileResource {
     @GET
     @Path("/file/download/local")
     fun downloadFileToLocal(
-        @Parameter(description = "userId", required = true)
+        @Parameter(name = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "文件路径", required = true)
+        @Parameter(name = "文件路径", required = true)
         @QueryParam("filePath")
         filePath: String,
         @Context
@@ -92,13 +92,13 @@ interface UserFileResource {
     @GET
     @Path("/file/download")
     fun downloadFile(
-        @Parameter(description = "userId", required = true)
+        @Parameter(name = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "文件路径", required = true)
+        @Parameter(name = "文件路径", required = true)
         @QueryParam("filePath")
         filePath: String,
-        @Parameter(description = "是否为logo文件", required = false)
+        @Parameter(name = "是否为logo文件", required = false)
         @QueryParam("logo")
         logo: Boolean?,
         @Context
@@ -109,13 +109,13 @@ interface UserFileResource {
     @GET
     @Path("/file/download/{filePath}")
     fun downloadFileExt(
-        @Parameter(description = "userId", required = true)
+        @Parameter(name = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "文件路径", required = true)
+        @Parameter(name = "文件路径", required = true)
         @PathParam("filePath")
         filePath: String,
-        @Parameter(description = "是否为logo文件", required = false)
+        @Parameter(name = "是否为logo文件", required = false)
         @QueryParam("logo")
         logo: Boolean?,
         @Context
@@ -126,10 +126,10 @@ interface UserFileResource {
     @POST
     @Path("/file/copy")
     fun copy(
-        @Parameter(description = "userId", required = true)
+        @Parameter(name = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "复制文件请求体", required = true)
+        @Parameter(name = "复制文件请求体", required = true)
         copyFileRequest: CopyFileRequest
     ): Result<Boolean>
 }

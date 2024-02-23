@@ -93,12 +93,12 @@ interface UserQualityIndicatorResource {
     @Path("/project/{projectId}/create")
     @POST
     fun create(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
         @PathParam("projectId")
         projectId: String,
-        @Parameter(description = "指标请求报文", required = true)
+        @Parameter(name = "指标请求报文", required = true)
         indicatorCreate: IndicatorCreate
     ): Result<Boolean>
 
@@ -106,15 +106,15 @@ interface UserQualityIndicatorResource {
     @Path("/project/{projectId}/indicator/{indicatorId}/update")
     @PUT
     fun update(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
         @PathParam("projectId")
         projectId: String,
-        @Parameter(description = "指标ID", required = true)
+        @Parameter(name = "指标ID", required = true)
         @PathParam("indicatorId")
         indicatorId: String,
-        @Parameter(description = "指标请求报文", required = true)
+        @Parameter(name = "指标请求报文", required = true)
         indicatorCreate: IndicatorCreate
     ): Result<Boolean>
 
@@ -122,12 +122,12 @@ interface UserQualityIndicatorResource {
     @Path("/project/{projectId}/indicator/{indicatorId}/delete")
     @DELETE
     fun delete(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
         @PathParam("projectId")
         projectId: String,
-        @Parameter(description = "指标hash ID", required = true)
+        @Parameter(name = "指标hash ID", required = true)
         @PathParam("indicatorId")
         indicatorId: String
     ): Result<Boolean>

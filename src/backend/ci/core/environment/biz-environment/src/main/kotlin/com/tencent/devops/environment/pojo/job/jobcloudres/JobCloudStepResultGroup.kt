@@ -28,21 +28,21 @@
 package com.tencent.devops.environment.pojo.job.jobcloudres
 
 import com.fasterxml.jackson.annotation.JsonProperty
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
 data class JobCloudStepResultGroup(
-    @ApiModelProperty(value = "分组类型", required = true)
+    @get:Schema(title = "分组类型", required = true)
     @JsonProperty("result_type")
     val resultType: Int,
-    @ApiModelProperty(value = "分组类型描述", required = true)
+    @get:Schema(title = "分组类型描述", required = true)
     @JsonProperty("result_type_desc")
     val resultTypeDesc: String,
-    @ApiModelProperty(value = "分组标签", required = true)
+    @get:Schema(title = "分组标签", required = true)
     val tag: String,
-    @ApiModelProperty(value = "分组内主机总量", required = true)
+    @get:Schema(title = "分组内主机总量", required = true)
     @JsonProperty("host_size")
     val hostSize: Int,
-    @ApiModelProperty(value = "每个分组内的主机任务执行结果列表", required = true)
+    @get:Schema(title = "每个分组内的主机任务执行结果列表", required = true)
     @JsonProperty("host_result_list")
     val hostResultList: List<JobCloudStepHostResultForGetStepInstanceStatus>
 )

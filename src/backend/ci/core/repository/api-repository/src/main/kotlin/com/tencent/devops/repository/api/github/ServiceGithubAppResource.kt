@@ -37,10 +37,10 @@ interface ServiceGithubAppResource {
     @POST
     @Path("/isInstallApp")
     fun isInstallApp(
-        @Parameter(description = "授权token", required = true)
+        @Parameter(name = "授权token", required = true)
         @HeaderParam(AUTH_HEADER_GITHUB_TOKEN)
         token: String,
-        @Parameter(description = "仓库Id")
+        @Parameter(name = "仓库Id")
         @QueryParam("repoName")
         repoName: String
     ): Result<AppInstallationResult>

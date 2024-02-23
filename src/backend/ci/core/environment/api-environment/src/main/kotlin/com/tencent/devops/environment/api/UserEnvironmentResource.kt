@@ -64,10 +64,10 @@ interface UserEnvironmentResource {
     @Path("/{projectId}/hasCreatePermission")
     @GET
     fun hasCreatePermission(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "项目ID", required = true)
+        @Parameter(name = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String
     ): Result<Boolean>
@@ -76,13 +76,13 @@ interface UserEnvironmentResource {
     @POST
     @Path("/{projectId}")
     fun create(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "项目ID", required = true)
+        @Parameter(name = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(description = "环境信息", required = true)
+        @Parameter(name = "环境信息", required = true)
         environment: EnvCreateInfo
     ): Result<EnvironmentId>
 
@@ -90,16 +90,16 @@ interface UserEnvironmentResource {
     @POST
     @Path("/{projectId}/{envHashId}")
     fun update(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "项目ID", required = true)
+        @Parameter(name = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(description = "环境 hashId", required = true)
+        @Parameter(name = "环境 hashId", required = true)
         @PathParam("envHashId")
         envHashId: String,
-        @Parameter(description = "环境修改信息", required = true)
+        @Parameter(name = "环境修改信息", required = true)
         environment: EnvUpdateInfo
     ): Result<Boolean>
 
@@ -107,10 +107,10 @@ interface UserEnvironmentResource {
     @GET
     @Path("/{projectId}")
     fun list(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "项目ID", required = true)
+        @Parameter(name = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String
     ): Result<List<EnvWithPermission>>
@@ -119,13 +119,13 @@ interface UserEnvironmentResource {
     @GET
     @Path("/{projectId}/types/{envType}")
     fun listByType(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "项目ID", required = true)
+        @Parameter(name = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(description = "环境类型", required = true)
+        @Parameter(name = "环境类型", required = true)
         @PathParam("envType")
         envType: EnvType
     ): Result<List<EnvWithNodeCount>>
@@ -134,13 +134,13 @@ interface UserEnvironmentResource {
     @GET
     @Path("/{projectId}/buildEnvs")
     fun listBuildEnvs(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "项目ID", required = true)
+        @Parameter(name = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(description = "操作系统", required = true)
+        @Parameter(name = "操作系统", required = true)
         @QueryParam("os")
         os: OS
     ): Result<List<EnvWithNodeCount>>
@@ -149,13 +149,13 @@ interface UserEnvironmentResource {
     @GET
     @Path("/{projectId}/{envHashId}")
     fun get(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "项目ID", required = true)
+        @Parameter(name = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(description = "环境 hashId", required = true)
+        @Parameter(name = "环境 hashId", required = true)
         @PathParam("envHashId")
         envHashId: String
     ): Result<EnvWithPermission>
@@ -164,13 +164,13 @@ interface UserEnvironmentResource {
     @DELETE
     @Path("/{projectId}/{envHashId}")
     fun delete(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "项目ID", required = true)
+        @Parameter(name = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(description = "环境 hashId", required = true)
+        @Parameter(name = "环境 hashId", required = true)
         @PathParam("envHashId")
         envHashId: String
     ): Result<Boolean>
@@ -179,13 +179,13 @@ interface UserEnvironmentResource {
     @POST
     @Path("/{projectId}/{envHashId}/listNodes")
     fun listNodes(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "项目ID", required = true)
+        @Parameter(name = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(description = "环境 hashId", required = true)
+        @Parameter(name = "环境 hashId", required = true)
         @PathParam("envHashId")
         envHashId: String
     ): Result<List<NodeBaseInfo>>
@@ -194,16 +194,16 @@ interface UserEnvironmentResource {
     @POST
     @Path("/{projectId}/{envHashId}/addNodes")
     fun addNodes(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "项目ID", required = true)
+        @Parameter(name = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(description = "环境 hashId", required = true)
+        @Parameter(name = "环境 hashId", required = true)
         @PathParam("envHashId")
         envHashId: String,
-        @Parameter(description = "节点 HashId", required = true)
+        @Parameter(name = "节点 HashId", required = true)
         nodeHashIds: List<String>
     ): Result<Boolean>
 
@@ -211,16 +211,16 @@ interface UserEnvironmentResource {
     @POST
     @Path("/{projectId}/{envHashId}/deleteNodes")
     fun deleteNodes(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "项目ID", required = true)
+        @Parameter(name = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(description = "环境 hashId", required = true)
+        @Parameter(name = "环境 hashId", required = true)
         @PathParam("envHashId")
         envHashId: String,
-        @Parameter(description = "节点 HashId", required = true)
+        @Parameter(name = "节点 HashId", required = true)
         nodeHashIds: List<String>
     ): Result<Boolean>
 
@@ -228,10 +228,10 @@ interface UserEnvironmentResource {
     @GET
     @Path("/{projectId}/listUsableServerEnvs")
     fun listUsableServerEnvs(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "项目ID", required = true)
+        @Parameter(name = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String
     ): Result<List<EnvWithPermission>>
@@ -240,22 +240,22 @@ interface UserEnvironmentResource {
     @GET
     @Path("/{projectId}/{envHashId}/list_user_project")
     fun listUserShareEnv(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "项目ID", required = true)
+        @Parameter(name = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(description = "环境 hashId", required = true)
+        @Parameter(name = "环境 hashId", required = true)
         @PathParam("envHashId")
         envHashId: String,
-        @Parameter(description = "关键字搜索", required = false)
+        @Parameter(name = "关键字搜索", required = false)
         @QueryParam("search")
         search: String? = null,
-        @Parameter(description = "页码", required = false)
+        @Parameter(name = "页码", required = false)
         @QueryParam("page")
         page: Int? = null,
-        @Parameter(description = "步长", required = false)
+        @Parameter(name = "步长", required = false)
         @QueryParam("pageSize")
         pageSize: Int? = null
     ): Result<Page<SharedProjectInfo>>
@@ -264,22 +264,22 @@ interface UserEnvironmentResource {
     @GET
     @Path("/{projectId}/{envHashId}/list")
     fun listShareEnv(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "项目ID", required = true)
+        @Parameter(name = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(description = "环境 hashId", required = true)
+        @Parameter(name = "环境 hashId", required = true)
         @PathParam("envHashId")
         envHashId: String,
-        @Parameter(description = "项目名称", required = false)
+        @Parameter(name = "项目名称", required = false)
         @QueryParam("name")
         name: String? = null,
-        @Parameter(description = "页码", required = false)
+        @Parameter(name = "页码", required = false)
         @QueryParam("page")
         page: Int? = null,
-        @Parameter(description = "步长", required = false)
+        @Parameter(name = "步长", required = false)
         @QueryParam("pageSize")
         pageSize: Int? = null
     ): Result<Page<SharedProjectInfo>>
@@ -288,16 +288,16 @@ interface UserEnvironmentResource {
     @POST
     @Path("/{projectId}/{envHashId}/share")
     fun setShareEnv(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "项目ID", required = true)
+        @Parameter(name = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(description = "环境 hashId", required = true)
+        @Parameter(name = "环境 hashId", required = true)
         @PathParam("envHashId")
         envHashId: String,
-        @Parameter(description = "共享的项目列表", required = true)
+        @Parameter(name = "共享的项目列表", required = true)
         sharedProjects: SharedProjectInfoWrap
     ): Result<Boolean>
 
@@ -305,13 +305,13 @@ interface UserEnvironmentResource {
     @DELETE
     @Path("/{projectId}/{envHashId}/share")
     fun deleteShareEnv(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "项目ID", required = true)
+        @Parameter(name = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(description = "环境 hashId", required = true)
+        @Parameter(name = "环境 hashId", required = true)
         @PathParam("envHashId")
         envHashId: String
     ): Result<Boolean>
@@ -320,16 +320,16 @@ interface UserEnvironmentResource {
     @DELETE
     @Path("/{projectId}/{envHashId}/{sharedProjectId}/sharedProject")
     fun deleteShareEnvBySharedProj(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "项目ID", required = true)
+        @Parameter(name = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(description = "环境 hashId", required = true)
+        @Parameter(name = "环境 hashId", required = true)
         @PathParam("envHashId")
         envHashId: String,
-        @Parameter(description = "共享的项目id", required = true)
+        @Parameter(name = "共享的项目id", required = true)
         @PathParam("sharedProjectId")
         sharedProjectId: String
     ): Result<Boolean>

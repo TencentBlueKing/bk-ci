@@ -27,11 +27,11 @@
 
 package com.tencent.devops.environment.pojo.job.req
 
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
 data class IpInfo(
-    @ApiModelProperty(value = "云区域ID")
+    @get:Schema(title = "云区域ID")
     var bkCloudId: Long?,
-    @ApiModelProperty(value = "IP地址")
+    @get:Schema(title = "IP地址")
     var ip: String? = ""
 )

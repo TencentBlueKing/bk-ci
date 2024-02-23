@@ -53,10 +53,10 @@ interface UserLambdaResource {
     @POST
     @Path("/makeup-build-his")
     fun manualMakeUpBuildHistory(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "补录列表", required = true)
+        @Parameter(name = "补录列表", required = true)
         makeUpBuildVOs: List<MakeUpBuildVO>
     ): Result<Boolean>
 
@@ -64,10 +64,10 @@ interface UserLambdaResource {
     @POST
     @Path("/makeup-build-task")
     fun manualMakeUpBuildTasks(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "补录列表", required = true)
+        @Parameter(name = "补录列表", required = true)
         makeUpBuildVOs: List<MakeUpBuildVO>
     ): Result<Boolean>
 
@@ -75,10 +75,10 @@ interface UserLambdaResource {
     @POST
     @Path("/makeup-projects")
     fun manualMakeUpAllProjects(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "补录列表", required = true)
+        @Parameter(name = "补录列表", required = true)
         makeUpProjectListVO: MakeUpProjectListVO
     ): Result<Boolean>
 
@@ -86,10 +86,10 @@ interface UserLambdaResource {
     @POST
     @Path("/makeup-pipelines")
     fun manualMakeUpAllPipelines(
-        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "补录列表", required = true)
+        @Parameter(name = "补录列表", required = true)
         makeUpPipelineListVO: MakeUpPipelineListVO
     ): Result<Boolean>
 }

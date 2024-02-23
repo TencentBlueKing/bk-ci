@@ -57,10 +57,10 @@ interface BuildPipelineResource {
     @Path("/{projectId}/getPipelineNames")
     @BkApiPermission([BkApiHandleType.API_NO_AUTH_CHECK])
     fun getPipelineNameByIds(
-        @Parameter(description = "项目id", required = true)
+        @Parameter(name = "项目id", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(description = "流水线id列表", required = true)
+        @Parameter(name = "流水线id列表", required = true)
         pipelineIds: Set<String>
     ): Result<Map<String, String>>
 
@@ -76,16 +76,16 @@ interface BuildPipelineResource {
         )
         @QueryParam("currentBuildId")
         currentBuildId: String,
-        @Parameter(description = "项目ID", required = true)
+        @Parameter(name = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(description = "流水线ID", required = true)
+        @Parameter(name = "流水线ID", required = true)
         @PathParam("pipelineId")
         pipelineId: String,
-        @Parameter(description = "第几页", required = false, example = "1")
+        @Parameter(name = "第几页", required = false, example = "1")
         @QueryParam("page")
         page: Int?,
-        @Parameter(description = "每页多少条", required = false, example = "20")
+        @Parameter(name = "每页多少条", required = false, example = "20")
         @QueryParam("pageSize")
         pageSize: Int?
     ): Result<BuildHistoryPage<BuildHistory>>
@@ -102,10 +102,10 @@ interface BuildPipelineResource {
         )
         @QueryParam("currentBuildId")
         currentBuildId: String,
-        @Parameter(description = "原子类型", required = true)
+        @Parameter(name = "原子类型", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(description = "筛选流水线逗号分隔", required = false)
+        @Parameter(name = "筛选流水线逗号分隔", required = false)
         @QueryParam("pipelineIdList")
         pipelineIdListString: String?
     ): Result<List<Pipeline>>
