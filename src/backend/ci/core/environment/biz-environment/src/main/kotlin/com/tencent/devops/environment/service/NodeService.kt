@@ -261,14 +261,15 @@ class NodeService @Autowired constructor(
                         NodeStatus.ABNORMAL.name
                     }
                 }
-            if (logger.isDebugEnabled) logger.debug("[formatNodeWithPermissions] nodeStatus: $nodeStatus")
+            if (logger.isDebugEnabled)
+                logger.debug("[formatNodeWithPermissions] ${it.nodeIp} getAgentStatus: ${getAgentStatus(it)}")
             val nodeStringId = NodeStringIdUtils.getNodeStringId(it)
             NodeWithPermission(
                 nodeHashId = HashUtil.encodeLongId(it.nodeId),
                 nodeId = it.nodeId,
                 name = it.nodeName,
                 ip = it.nodeIp,
-                nodeStatus = nodeStatus,
+                nodeStatus = it.nodeStatus,
                 taskId = it.taskId,
                 nodeType = it.nodeType,
                 osName = it.osName,
