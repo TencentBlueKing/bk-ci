@@ -168,6 +168,7 @@ class CmdbNodeService @Autowired constructor(
                 AgentVersion(ip = it?.bkHostInnerip, bkHostId = it?.bkHostId)
             }
         )?.associateBy { it.ip }
+        if (logger.isDebugEnabled) logger.debug("[reImportCmdbNodes]ipToAgentVersionInfoMap:$ipToAgentVersionInfoMap")
         val agentStatusMap = ipToAgentVersionInfoMap.takeIf { !it.isNullOrEmpty() }.run {
             esbAgentClient.getAgentStatus(userId, ipToAgentVersionInfoMap!!.keys.filterNotNull().toList())
         }
