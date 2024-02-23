@@ -37,7 +37,7 @@ class HolidayHelper @Autowired constructor(
         var now = LocalDateTime.now()
         val result = mutableListOf<LocalDateTime>()
         var max = 32
-        while (max-- > 0 && result.size < days) {
+        while (max-- > 0 && result.size < days + 1) {
             if (isWorkingDay(now)) {
                 result.add(now)
             }
