@@ -1,6 +1,5 @@
 package com.tencent.devops.remotedev.service.gitproxy
 
-import com.sun.org.slf4j.internal.LoggerFactory
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.client.Client
@@ -20,6 +19,7 @@ import com.tencent.devops.repository.pojo.oauth.GitToken
 import okhttp3.Dns
 import okhttp3.OkHttpClient
 import org.jooq.DSLContext
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
