@@ -27,8 +27,8 @@
 
 package com.tencent.devops.common.event.dispatcher.pipeline
 
-import com.tencent.devops.common.event.dispatcher.EventDispatcher
 import com.tencent.devops.common.event.pojo.pipeline.IPipelineEvent
+import com.tencent.devops.common.event.dispatcher.EventDispatcher
 
 /**
  * 流水线事件派发

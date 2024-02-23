@@ -1,9 +1,15 @@
 package com.tencent.devops.log.util
 
 import com.github.benmanes.caffeine.cache.Caffeine
-import java.util.concurrent.TimeUnit
+import com.tencent.devops.common.event.annotation.EventConsumer
+import com.tencent.devops.common.event.annotation.Event
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
+import org.reflections.Reflections
+import org.reflections.scanners.Scanners
+import org.reflections.util.ClasspathHelper
+import org.reflections.util.ConfigurationBuilder
+import java.util.concurrent.TimeUnit
 
 class IndexNameUtilsTest {
 
@@ -31,5 +37,41 @@ class IndexNameUtilsTest {
             assertEquals(index, indexMap[buildId])
         }
         println(indexCache.stats())
+    }
+
+    @Test
+    fun testReflections() {
+        val definition = mutableListOf<String>()
+        val eventClasses = Reflections(
+            ConfigurationBuilder()
+                .addUrls(ClasspathHelper.forPackage("com.tencent.devops"))
+                .setExpandSuperTypes(true)
+        ).getTypesAnnotatedWith(Event::class.java)
+        eventClasses.forEach { clazz ->
+            val event = clazz.getAnnotation(Event::class.java)
+            println(
+                "Found StreamEvent class: ${clazz.name}, " +
+                    "with destination[${event.destination}]"
+            )
+            val bindingName = "${clazz.simpleName.decapitalize()}Out"
+            definition.add(bindingName)
+        }
+        val consumerBeans = Reflections(
+            ConfigurationBuilder()
+                .addUrls(ClasspathHelper.forPackage("com.tencent.devops"))
+                .setExpandSuperTypes(true)
+                .setScanners(Scanners.MethodsAnnotated)
+        ).getMethodsAnnotatedWith(EventConsumer::class.java)
+        consumerBeans.forEach { method ->
+            val eventConsumer = method.getAnnotation(EventConsumer::class.java)
+            println(
+                "Found StreamConsumer class: ${method.name}, " +
+                    "with destination[${eventConsumer.destination}] group[${eventConsumer.group}]"
+            )
+            definition.add("${method.name}In")
+            // 如果注解中指定了订阅组，则直接设置
+            // 如果未指定则取当前服务名作为订阅组，保证所有分布式服务再同一个组内
+        }
+        println(definition)
     }
 }

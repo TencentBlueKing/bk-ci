@@ -31,7 +31,7 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.dispatch.sdk.pojo.docker.DockerConstants.BK_JOB_REACHED_MAX_QUOTA_AND_ALREADY_DELAYED
 import com.tencent.devops.common.dispatch.sdk.pojo.docker.DockerConstants.BK_JOB_REACHED_MAX_QUOTA_AND_SOON_DELAYED
 import com.tencent.devops.common.dispatch.sdk.pojo.docker.DockerConstants.BK_JOB_REACHED_MAX_QUOTA_SOON_RETRY
-import com.tencent.devops.common.event.pojo.pipeline.IPipelineEvent
+import com.tencent.devops.common.event.pojo.IEvent
 import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.common.web.utils.I18nUtil
@@ -39,7 +39,7 @@ import com.tencent.devops.dispatch.api.ServiceJobQuotaBusinessResource
 import com.tencent.devops.dispatch.pojo.enums.JobQuotaVmType
 import com.tencent.devops.process.engine.common.VMUtils
 import com.tencent.devops.process.pojo.mq.PipelineAgentStartupEvent
-import com.tencent.devops.process.pojo.mq.PipelineBuildLessStartupDispatchEvent
+import com.tencent.devops.process.pojo.mq.PipelineBuildLessStartupEvent
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 
@@ -107,7 +107,7 @@ class JobQuotaService constructor(
         executeCount: Int?,
         jobType: JobQuotaVmType,
         demoteQueueRouteKeySuffix: String,
-        startupEvent: IPipelineEvent
+        startupEvent: IEvent
     ) {
         val dispatchService = SpringContextUtil.getBean(DispatchService::class.java)
 
@@ -175,7 +175,7 @@ class JobQuotaService constructor(
     }
 
     fun checkAndAddRunningJob(
-        agentLessStartupEvent: PipelineBuildLessStartupDispatchEvent,
+        agentLessStartupEvent: PipelineBuildLessStartupEvent,
         vmType: JobQuotaVmType?
     ): Boolean {
         if (null == vmType || !jobQuotaEnable) {

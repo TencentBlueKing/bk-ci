@@ -36,7 +36,7 @@ import com.tencent.devops.common.service.BkTag
 import com.tencent.devops.dispatch.docker.client.context.BuildLessStartHandlerContext
 import com.tencent.devops.process.api.service.ServicePipelineTaskResource
 import com.tencent.devops.process.engine.common.VMUtils
-import com.tencent.devops.process.pojo.mq.PipelineBuildLessStartupDispatchEvent
+import com.tencent.devops.process.pojo.mq.PipelineBuildLessStartupEvent
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
@@ -76,7 +76,7 @@ class BuildLessStartPrepareHandler @Autowired constructor(
         }
     }
 
-    private fun checkPipelineRunning(event: PipelineBuildLessStartupDispatchEvent) {
+    private fun checkPipelineRunning(event: PipelineBuildLessStartupEvent) {
         // 判断流水线当前container是否在运行中
         val statusResult = client.get(ServicePipelineTaskResource::class).getTaskStatus(
             projectId = event.projectId,

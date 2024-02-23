@@ -176,40 +176,31 @@ signing {
     sign(publishing.publications["mavenJava"])
 }
 
+val shouldPublish = project.the<SourceSetContainer>()["main"].allSource.files.isNotEmpty()
+        || project.name == "common-dependencies"
+
 tasks.getByName("publish") {
-    onlyIf {
-        project.the<SourceSetContainer>()["main"].allSource.files.isNotEmpty()
-    }
+    onlyIf { shouldPublish }
 }
 
 tasks.getByName("generateMetadataFileForMavenJavaPublication") {
-    onlyIf {
-        project.the<SourceSetContainer>()["main"].allSource.files.isNotEmpty()
-    }
+    onlyIf { shouldPublish }
 }
 
 tasks.getByName("generatePomFileForMavenJavaPublication") {
-    onlyIf {
-        project.the<SourceSetContainer>()["main"].allSource.files.isNotEmpty()
-    }
+    onlyIf { shouldPublish }
 }
 
 tasks.getByName("publishMavenJavaPublicationToOssRepository") {
-    onlyIf {
-        project.the<SourceSetContainer>()["main"].allSource.files.isNotEmpty()
-    }
+    onlyIf { shouldPublish }
 }
 
 tasks.getByName("publishMavenJavaPublicationToMavenLocal") {
-    onlyIf {
-        project.the<SourceSetContainer>()["main"].allSource.files.isNotEmpty()
-    }
+    onlyIf { shouldPublish }
 }
 
 tasks.getByName("publishToMavenLocal") {
-    onlyIf {
-        project.the<SourceSetContainer>()["main"].allSource.files.isNotEmpty()
-    }
+    onlyIf { shouldPublish }
 }
 
 tasks.getByName("signMavenJavaPublication") {

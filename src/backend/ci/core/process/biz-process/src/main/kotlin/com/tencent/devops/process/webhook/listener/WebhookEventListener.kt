@@ -43,12 +43,13 @@ import com.tencent.devops.process.webhook.pojo.event.commit.TGitWebhookEvent
 import com.tencent.devops.process.webhook.pojo.event.commit.enum.CommitEventType
 import org.slf4j.LoggerFactory
 import org.slf4j.MDC
-import org.springframework.amqp.rabbit.core.RabbitTemplate
+import org.springframework.cloud.stream.function.StreamBridge
 import org.springframework.stereotype.Component
 
 @Component
+@Suppress("ComplexMethod")
 class WebhookEventListener constructor(
-    private val rabbitTemplate: RabbitTemplate,
+    private val streamBridge: StreamBridge,
     private val webhookRequestService: WebhookRequestService
 ) {
 
@@ -134,7 +135,7 @@ class WebhookEventListener constructor(
             logger.warn("Retry to handle the event [${event.retryTime}]")
             with(event) {
                 CodeWebhookEventDispatcher.dispatchEvent(
-                    rabbitTemplate,
+                    streamBridge,
                     when (event.commitEventType) {
                         CommitEventType.SVN -> SvnWebhookEvent(
                             requestContent = requestContent,
@@ -216,7 +217,7 @@ class WebhookEventListener constructor(
             if (!result && event.retryTime >= 0) {
                 logger.warn("Retry to handle the Github event [${event.retryTime}]")
                 CodeWebhookEventDispatcher.dispatchGithubEvent(
-                    rabbitTemplate,
+                    streamBridge,
                     GithubWebhookEvent(
                         thisGithubWebhook,
                         retryTime = event.retryTime - 1,
@@ -249,8 +250,8 @@ class WebhookEventListener constructor(
                 logger.warn("Retry to handle the Github event [${replayEvent.retryTime}]")
                 with(replayEvent) {
                     CodeWebhookEventDispatcher.dispatchReplayEvent(
-                        rabbitTemplate = rabbitTemplate,
-                        event = ReplayWebhookEvent(
+                        streamBridge,
+                        ReplayWebhookEvent(
                             userId = userId,
                             projectId = projectId,
                             eventId = eventId,

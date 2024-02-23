@@ -28,6 +28,7 @@
 package com.tencent.devops.process.engine.control
 
 import com.tencent.devops.common.api.util.Watcher
+import com.tencent.devops.common.event.dispatcher.SampleEventDispatcher
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.event.enums.ActionType
 import com.tencent.devops.common.log.utils.BuildLogPrinter
@@ -59,7 +60,7 @@ import com.tencent.devops.process.engine.service.measure.MeasureService
 import com.tencent.devops.process.engine.service.record.ContainerBuildRecordService
 import com.tencent.devops.process.engine.utils.BuildUtils
 import com.tencent.devops.process.pojo.mq.PipelineAgentShutdownEvent
-import com.tencent.devops.process.pojo.mq.PipelineBuildLessShutdownDispatchEvent
+import com.tencent.devops.process.pojo.mq.PipelineBuildLessShutdownEvent
 import com.tencent.devops.process.service.BuildVariableService
 import com.tencent.devops.process.util.TaskUtils
 import org.slf4j.LoggerFactory
@@ -73,6 +74,7 @@ class BuildCancelControl @Autowired constructor(
     private val mutexControl: MutexControl,
     private val redisOperation: RedisOperation,
     private val pipelineMQEventDispatcher: PipelineEventDispatcher,
+    private val routeEventDispatcher: SampleEventDispatcher,
     private val pipelineRuntimeService: PipelineRuntimeService,
     private val pipelineContainerService: PipelineContainerService,
     private val pipelineStageService: PipelineStageService,
@@ -365,8 +367,8 @@ class BuildCancelControl @Autowired constructor(
     }
 
     private fun NormalContainer.shutdown(event: PipelineBuildCancelEvent, executeCount: Int) {
-        pipelineMQEventDispatcher.dispatch(
-            PipelineBuildLessShutdownDispatchEvent(
+        routeEventDispatcher.dispatch(
+            PipelineBuildLessShutdownEvent(
                 source = "BuildCancelControl",
                 projectId = event.projectId,
                 pipelineId = event.pipelineId,
@@ -380,7 +382,7 @@ class BuildCancelControl @Autowired constructor(
     }
 
     private fun VMBuildContainer.shutdown(event: PipelineBuildCancelEvent, executeCount: Int) {
-        pipelineMQEventDispatcher.dispatch(
+        routeEventDispatcher.dispatch(
             PipelineAgentShutdownEvent(
                 source = "BuildCancelControl",
                 projectId = event.projectId,
@@ -390,7 +392,8 @@ class BuildCancelControl @Autowired constructor(
                 buildResult = false, // #5046 取消不是成功
                 vmSeqId = id,
                 routeKeySuffix = dispatchType?.routeKeySuffix?.routeKeySuffix,
-                executeCount = executeCount
+                executeCount = executeCount,
+                dispatchType = dispatchType!!
             )
         )
     }

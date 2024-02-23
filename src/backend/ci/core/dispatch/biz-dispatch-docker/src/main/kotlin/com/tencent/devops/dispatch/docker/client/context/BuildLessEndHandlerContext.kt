@@ -27,13 +27,13 @@
 
 package com.tencent.devops.dispatch.docker.client.context
 
-import com.tencent.devops.process.pojo.mq.PipelineBuildLessShutdownDispatchEvent
+import com.tencent.devops.process.pojo.mq.PipelineBuildLessShutdownEvent
 
 class BuildLessEndHandlerContext(
     var buildLogKey: String = "",
     val containerId: String = "",
     var buildLessHost: String = "",
-    val event: PipelineBuildLessShutdownDispatchEvent,
+    val event: PipelineBuildLessShutdownEvent,
     override var grayEnv: Boolean = false,
     override var agentId: String = "",
     override var secretKey: String = ""

@@ -29,7 +29,7 @@ package com.tencent.devops.misc.listener
 
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.exception.ErrorCodeException
-import com.tencent.devops.common.event.listener.Listener
+import com.tencent.devops.common.event.listener.EventListener
 import com.tencent.devops.common.event.pojo.pipeline.PipelineArchiveEvent
 import com.tencent.devops.misc.service.process.ProcessArchivePipelineDataMigrateService
 import org.slf4j.LoggerFactory
@@ -39,7 +39,7 @@ import org.springframework.stereotype.Component
 @Component
 class PipelineArchiveListener @Autowired constructor(
     private val processArchivePipelineDataMigrateService: ProcessArchivePipelineDataMigrateService
-) : Listener<PipelineArchiveEvent> {
+) : EventListener<PipelineArchiveEvent> {
 
     override fun execute(event: PipelineArchiveEvent) {
         val projectId = event.projectId

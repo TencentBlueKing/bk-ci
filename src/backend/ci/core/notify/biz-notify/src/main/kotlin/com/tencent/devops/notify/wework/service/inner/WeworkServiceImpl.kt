@@ -35,8 +35,6 @@ import com.tencent.devops.common.notify.enums.WeworkMediaType
 import com.tencent.devops.common.notify.enums.WeworkReceiverType
 import com.tencent.devops.common.notify.enums.WeworkTextType
 import com.tencent.devops.common.redis.RedisOperation
-import com.tencent.devops.notify.EXCHANGE_NOTIFY
-import com.tencent.devops.notify.ROUTE_WEWORK
 import com.tencent.devops.notify.dao.WeworkNotifyDao
 import com.tencent.devops.notify.model.WeworkNotifyMessageWithOperation
 import com.tencent.devops.notify.pojo.WeworkNotifyMediaMessage
@@ -55,7 +53,7 @@ import com.tencent.devops.notify.wework.pojo.UploadMediaResp
 import com.tencent.devops.notify.wework.pojo.VideoSendMessageRequest
 import com.tencent.devops.notify.wework.pojo.VoiceSendMessageRequest
 import org.slf4j.LoggerFactory
-import org.springframework.amqp.rabbit.core.RabbitTemplate
+import org.springframework.cloud.stream.function.StreamBridge
 import java.io.InputStream
 import java.nio.file.Files
 import java.nio.file.Paths
@@ -67,7 +65,7 @@ import java.util.concurrent.TimeUnit
 class WeworkServiceImpl(
     private val weWorkConfiguration: WeworkConfiguration,
     private val weworkNotifyDao: WeworkNotifyDao,
-    private val rabbitTemplate: RabbitTemplate,
+    private val streamBridge: StreamBridge,
     private val redisOperation: RedisOperation
 ) : WeworkService {
 
@@ -80,7 +78,7 @@ class WeworkServiceImpl(
     }
 
     override fun sendMqMsg(message: WeworkNotifyMessageWithOperation) {
-        rabbitTemplate.convertAndSend(EXCHANGE_NOTIFY, ROUTE_WEWORK, message)
+        message.sendTo(streamBridge)
     }
 
     override fun sendMediaMessage(weworkNotifyMediaMessage: WeworkNotifyMediaMessage) {

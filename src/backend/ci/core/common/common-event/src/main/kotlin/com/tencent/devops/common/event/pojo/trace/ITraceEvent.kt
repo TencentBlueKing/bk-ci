@@ -28,6 +28,7 @@
 
 package com.tencent.devops.common.event.pojo.trace
 
+import com.tencent.devops.common.event.pojo.IEvent
 import com.tencent.devops.common.service.trace.TraceTag
 import org.slf4j.MDC
 
@@ -35,7 +36,7 @@ import org.slf4j.MDC
  * 需要traceId事件
  */
 open class ITraceEvent(
-    open var delayMills: Int = 0,
-    open var retryTime: Int = 1,
+    override var delayMills: Int = 0,
+    override var retryTime: Int = 1,
     open var traceId: String? = MDC.get(TraceTag.BIZID)
-)
+) : IEvent(delayMills, retryTime)

@@ -26,11 +26,15 @@
  */
 package com.tencent.devops.notify.pojo
 
+import com.tencent.devops.common.event.pojo.IEvent
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
 @ApiModel("基础消息类型")
-open class BaseMessage {
+open class BaseMessage(
+    override var delayMills: Int = 0,
+    override var retryTime: Int = 0
+) : IEvent(delayMills, retryTime) {
 
     @ApiModelProperty("频率限制，单位分钟，即 frequencyLimit 分钟内限制不重发相同内容的消息")
     var frequencyLimit: Int = 0

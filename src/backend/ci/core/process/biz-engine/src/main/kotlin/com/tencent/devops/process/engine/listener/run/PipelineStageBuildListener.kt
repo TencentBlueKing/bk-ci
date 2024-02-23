@@ -28,7 +28,7 @@
 package com.tencent.devops.process.engine.listener.run
 
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
-import com.tencent.devops.common.event.listener.pipeline.BaseListener
+import com.tencent.devops.common.event.listener.pipeline.PipelineEventListener
 import com.tencent.devops.process.engine.control.StageControl
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildStageEvent
 import org.springframework.beans.factory.annotation.Autowired
@@ -43,7 +43,7 @@ import org.springframework.stereotype.Component
 class PipelineStageBuildListener @Autowired constructor(
     private val stageControl: StageControl,
     pipelineEventDispatcher: PipelineEventDispatcher
-) : BaseListener<PipelineBuildStageEvent>(pipelineEventDispatcher) {
+) : PipelineEventListener<PipelineBuildStageEvent>(pipelineEventDispatcher) {
 
     override fun run(event: PipelineBuildStageEvent) {
         stageControl.handle(event)

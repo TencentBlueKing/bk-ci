@@ -28,9 +28,9 @@
 package com.tencent.devops.websocket.servcie
 
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.event.dispatcher.SampleEventDispatcher
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
-import com.tencent.devops.common.websocket.dispatch.TransferDispatch
 import com.tencent.devops.common.websocket.utils.WsRedisUtils
 import com.tencent.devops.websocket.event.ChangePageTransferEvent
 import com.tencent.devops.websocket.event.ClearSessionEvent
@@ -49,7 +49,7 @@ import java.util.concurrent.TimeUnit
 @Suppress("ALL")
 class WebsocketService @Autowired constructor(
     private val redisOperation: RedisOperation,
-    private val transferDispatch: TransferDispatch,
+    private val transferDispatch: SampleEventDispatcher,
     private val projectProxyService: ProjectProxyService
 ) {
     companion object {
@@ -149,7 +149,11 @@ class WebsocketService @Autowired constructor(
         }
     }
 
-    fun clearUserSession(userId: String, sessionId: String, transferData: Map<String, Any>?) {
+    fun clearUserSession(
+        userId: String,
+        sessionId: String,
+        transferData: Map<String, Any>?
+    ) {
         val redisLock = lockUser(sessionId)
         try {
             redisLock.lock()
@@ -171,7 +175,10 @@ class WebsocketService @Autowired constructor(
         }
     }
 
-    fun clearAllBySession(userId: String, sessionId: String): Result<Boolean> {
+    fun clearAllBySession(
+        userId: String,
+        sessionId: String
+    ): Result<Boolean> {
         logger.info("clearSession| $userId| $sessionId")
         val page = WsRedisUtils.getPageFromSessionPageBySession(redisOperation, sessionId)
         clearUserSession(userId, sessionId, null)

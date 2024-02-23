@@ -28,7 +28,7 @@
 package com.tencent.devops.process.engine.listener.run
 
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
-import com.tencent.devops.common.event.listener.pipeline.BaseListener
+import com.tencent.devops.common.event.listener.pipeline.PipelineEventListener
 import com.tencent.devops.process.engine.control.TaskControl
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildAtomTaskEvent
 import org.springframework.beans.factory.annotation.Autowired
@@ -43,7 +43,7 @@ import org.springframework.stereotype.Component
 class PipelineAtomTaskBuildListener @Autowired constructor(
     private val taskControl: TaskControl,
     pipelineEventDispatcher: PipelineEventDispatcher
-) : BaseListener<PipelineBuildAtomTaskEvent>(pipelineEventDispatcher) {
+) : PipelineEventListener<PipelineBuildAtomTaskEvent>(pipelineEventDispatcher) {
 
     override fun run(event: PipelineBuildAtomTaskEvent) {
         taskControl.handle(event)

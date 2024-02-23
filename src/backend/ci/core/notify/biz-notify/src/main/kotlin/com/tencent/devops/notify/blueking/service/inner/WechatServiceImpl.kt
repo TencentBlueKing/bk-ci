@@ -36,8 +36,6 @@ import com.tencent.devops.common.notify.pojo.WechatNotifyPost
 import com.tencent.devops.common.notify.utils.Configuration
 import com.tencent.devops.common.notify.utils.NotifyDigestUtils
 import com.tencent.devops.model.notify.tables.records.TNotifyWechatRecord
-import com.tencent.devops.notify.EXCHANGE_NOTIFY
-import com.tencent.devops.notify.ROUTE_WECHAT
 import com.tencent.devops.notify.blueking.utils.NotifyService
 import com.tencent.devops.notify.blueking.utils.NotifyService.Companion.WECHAT_URL
 import com.tencent.devops.notify.dao.WechatNotifyDao
@@ -47,22 +45,22 @@ import com.tencent.devops.notify.pojo.NotificationResponseWithPage
 import com.tencent.devops.notify.pojo.WechatNotifyMessage
 import com.tencent.devops.notify.service.WechatService
 import org.slf4j.LoggerFactory
-import org.springframework.amqp.rabbit.core.RabbitTemplate
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.cloud.stream.function.StreamBridge
 import java.util.stream.Collectors
 
 @Suppress("ALL")
 class WechatServiceImpl @Autowired constructor(
     private val notifyService: NotifyService,
     private val wechatNotifyDao: WechatNotifyDao,
-    private val rabbitTemplate: RabbitTemplate,
+    private val streamBridge: StreamBridge,
     private val configuration: Configuration
 ) : WechatService {
 
     private val logger = LoggerFactory.getLogger(WechatServiceImpl::class.java)
 
     override fun sendMqMsg(message: WechatNotifyMessage) {
-        rabbitTemplate.convertAndSend(EXCHANGE_NOTIFY, ROUTE_WECHAT, message)
+        message.sendTo(streamBridge)
     }
 
     /**
@@ -135,19 +133,16 @@ class WechatServiceImpl @Autowired constructor(
             tofSysId = post.tofSysId
             fromSysId = post.fromSysId
         }
-
-        rabbitTemplate.convertAndSend(EXCHANGE_NOTIFY, ROUTE_WECHAT, wechatNotifyMessageWithOperation) { message ->
-            var delayTime = 0
-            when (retryCount) {
-                1 -> delayTime = 30000
-                2 -> delayTime = 120000
-                3 -> delayTime = 300000
-            }
-            if (delayTime > 0) {
-                message.messageProperties.setHeader("x-delay", delayTime)
-            }
-            message
+        var delayTime = 0
+        when (retryCount) {
+            1 -> delayTime = 30000
+            2 -> delayTime = 120000
+            3 -> delayTime = 300000
         }
+        if (delayTime > 0) {
+            wechatNotifyMessageWithOperation.delayMills = delayTime
+        }
+        wechatNotifyMessageWithOperation.sendTo(streamBridge)
     }
 
     private fun generateWechatNotifyPost(wechatNotifyMessage: WechatNotifyMessage): WechatNotifyPost? {

@@ -28,7 +28,7 @@
 package com.tencent.devops.process.engine.listener.run.finish
 
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
-import com.tencent.devops.common.event.listener.pipeline.BaseListener
+import com.tencent.devops.common.event.listener.pipeline.PipelineEventListener
 import com.tencent.devops.process.engine.control.BuildEndControl
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildFinishEvent
 import org.springframework.beans.factory.annotation.Autowired
@@ -43,7 +43,7 @@ import org.springframework.stereotype.Component
 class PipelineBuildFinishListener @Autowired constructor(
     private val buildEndControl: BuildEndControl,
     pipelineEventDispatcher: PipelineEventDispatcher
-) : BaseListener<PipelineBuildFinishEvent>(pipelineEventDispatcher) {
+) : PipelineEventListener<PipelineBuildFinishEvent>(pipelineEventDispatcher) {
 
     override fun run(event: PipelineBuildFinishEvent) {
         buildEndControl.handle(event)

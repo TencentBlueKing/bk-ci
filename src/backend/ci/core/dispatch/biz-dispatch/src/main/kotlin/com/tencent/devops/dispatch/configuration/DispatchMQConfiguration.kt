@@ -27,116 +27,38 @@
 
 package com.tencent.devops.dispatch.configuration
 
-import com.fasterxml.jackson.databind.ObjectMapper
-import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
-import com.tencent.devops.common.event.dispatcher.pipeline.mq.Tools
+import com.tencent.devops.common.event.annotation.EventConsumer
+import com.tencent.devops.common.stream.constants.StreamBinding
 import com.tencent.devops.dispatch.listener.ThirdPartyBuildListener
-import org.springframework.amqp.core.Binding
-import org.springframework.amqp.core.BindingBuilder
-import org.springframework.amqp.core.DirectExchange
-import org.springframework.amqp.core.Queue
-import org.springframework.amqp.rabbit.connection.ConnectionFactory
-import org.springframework.amqp.rabbit.core.RabbitAdmin
-import org.springframework.amqp.rabbit.listener.SimpleMessageListenerContainer
-import org.springframework.amqp.rabbit.listener.adapter.MessageListenerAdapter
-import org.springframework.amqp.support.converter.Jackson2JsonMessageConverter
+import com.tencent.devops.process.pojo.mq.PipelineAgentShutdownEvent
+import com.tencent.devops.process.pojo.mq.PipelineAgentStartupEvent
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
+import org.springframework.messaging.Message
+import java.util.function.Consumer
 
 @Configuration
 class DispatchMQConfiguration @Autowired constructor() {
 
-    @Bean
-    fun rabbitAdmin(connectionFactory: ConnectionFactory): RabbitAdmin {
-        return RabbitAdmin(connectionFactory)
+    companion object {
+        const val STREAM_CONSUMER_GROUP = "dispatch-service"
     }
 
-    @Bean
-    fun messageConverter(objectMapper: ObjectMapper) = Jackson2JsonMessageConverter(objectMapper)
-
-    /**
-     * 第三方构建机启动交换机
-     */
-    @Bean
-    fun dispatchExchange(): DirectExchange {
-        val directExchange = DirectExchange(MQ.EXCHANGE_AGENT_LISTENER_DIRECT, true, false)
-        directExchange.isDelayed = true
-        return directExchange
+    @EventConsumer(StreamBinding.QUEUE_AGENT_STARTUP, STREAM_CONSUMER_GROUP)
+    fun thirdAgentDispatchStartListener(
+        @Autowired thirdPartyAgentListener: ThirdPartyBuildListener
+    ): Consumer<Message<PipelineAgentStartupEvent>> {
+        return Consumer { event: Message<PipelineAgentStartupEvent> ->
+            thirdPartyAgentListener.handleStartup(event.payload)
+        }
     }
 
-    @Bean
-    fun thirdAgentDispatchStartQueue() = Queue(MQ.QUEUE_AGENT_STARTUP)
-
-    @Bean
-    fun thirdAgentDispatchStartQueueBind(
-        @Autowired thirdAgentDispatchStartQueue: Queue,
-        @Autowired dispatchExchange: DirectExchange
-    ): Binding {
-        return BindingBuilder.bind(thirdAgentDispatchStartQueue).to(dispatchExchange)
-            .with(MQ.ROUTE_AGENT_STARTUP)
-    }
-
-    @Bean
-    fun thirdAgentDispatchStartListenerContainer(
-        @Autowired connectionFactory: ConnectionFactory,
-        @Autowired thirdAgentDispatchStartQueue: Queue,
-        @Autowired rabbitAdmin: RabbitAdmin,
-        @Autowired thirdPartyBuildListener: ThirdPartyBuildListener,
-        @Autowired messageConverter: Jackson2JsonMessageConverter
-    ): SimpleMessageListenerContainer {
-        val adapter = MessageListenerAdapter(
-            thirdPartyBuildListener,
-            thirdPartyBuildListener::handleStartup.name
-        )
-        adapter.setMessageConverter(messageConverter)
-        return Tools.createSimpleMessageListenerContainerByAdapter(
-            connectionFactory = connectionFactory,
-            queue = thirdAgentDispatchStartQueue,
-            rabbitAdmin = rabbitAdmin,
-            startConsumerMinInterval = 10000,
-            consecutiveActiveTrigger = 5,
-            concurrency = 50,
-            maxConcurrency = 100,
-            adapter = adapter,
-            prefetchCount = 1
-        )
-    }
-
-    @Bean
-    fun thirdAgentDispatchShutdownQueue() = Queue(MQ.QUEUE_AGENT_SHUTDOWN)
-
-    @Bean
-    fun thirdAgentDispatchShutdownQueueBind(
-        @Autowired thirdAgentDispatchShutdownQueue: Queue,
-        @Autowired dispatchExchange: DirectExchange
-    ): Binding {
-        return BindingBuilder.bind(thirdAgentDispatchShutdownQueue).to(dispatchExchange)
-            .with(MQ.ROUTE_AGENT_SHUTDOWN)
-    }
-
-    @Bean
+    @EventConsumer(StreamBinding.QUEUE_AGENT_SHUTDOWN, STREAM_CONSUMER_GROUP)
     fun thirdAgentDispatchShutdownListenerContainer(
-        @Autowired connectionFactory: ConnectionFactory,
-        @Autowired thirdAgentDispatchShutdownQueue: Queue,
-        @Autowired rabbitAdmin: RabbitAdmin,
-        @Autowired thirdPartyBuildListener: ThirdPartyBuildListener,
-        @Autowired messageConverter: Jackson2JsonMessageConverter
-    ): SimpleMessageListenerContainer {
-        val adapter = MessageListenerAdapter(
-            thirdPartyBuildListener,
-            thirdPartyBuildListener::handleShutdownMessage.name)
-        adapter.setMessageConverter(messageConverter)
-        return Tools.createSimpleMessageListenerContainerByAdapter(
-            connectionFactory = connectionFactory,
-            queue = thirdAgentDispatchShutdownQueue,
-            rabbitAdmin = rabbitAdmin,
-            startConsumerMinInterval = 10000,
-            consecutiveActiveTrigger = 5,
-            concurrency = 50,
-            maxConcurrency = 100,
-            adapter = adapter,
-            prefetchCount = 1
-        )
+        @Autowired thirdPartyAgentListener: ThirdPartyBuildListener
+    ): Consumer<Message<PipelineAgentShutdownEvent>> {
+        return Consumer { event: Message<PipelineAgentShutdownEvent> ->
+            thirdPartyAgentListener.handleShutdownMessage(event.payload)
+        }
     }
 }

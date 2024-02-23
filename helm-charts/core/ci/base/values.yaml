@@ -265,6 +265,44 @@ mongodb:
   # extraEnvVars:
   # - name: MONGODB_CLIENT_EXTRA_FLAGS
   #   value: "--ipv6"
+pulsar:
+  enabled: false
+  ## deployed withh emptyDir
+  volumes:
+    persistence: false
+  # disabled AntiAffinity
+  affinity:
+    anti_affinity: false
+  # disable auto recovery
+  components:
+    autorecovery: false
+    pulsar_manager: false
+    # functions: false
+  zookeeper:
+    replicaCount: 1
+  bookkeeper:
+    replicaCount: 1
+  broker:
+    replicaCount: 1
+    configData:
+      ## Enable `autoSkipNonRecoverableData` since bookkeeper is running
+      ## without persistence
+      autoSkipNonRecoverableData: "true"
+      # storage settings
+      managedLedgerDefaultEnsembleSize: "1"
+      managedLedgerDefaultWriteQuorum: "1"
+      managedLedgerDefaultAckQuorum: "1"
+  proxy:
+    replicaCount: 1
+  monitoring:
+    # monitoring - prometheus
+    prometheus: false
+    # monitoring - grafana
+    grafana: false
+    # monitoring - node_exporter
+    node_exporter: false
+    # alerting - alert-manager
+    alert_manager: false
 kubernetes-manager:
   # 是否部署kubernetes-manager
   enabled: true
@@ -447,6 +485,11 @@ externalRabbitmq:
   username: bkci
   password: bkci
   vhost: bkci
+externalPulsar:
+  serviceUrl: bkci
+  namespace: bkci
+  tenant: bkci
+  tokenAuthValue: bkci
 externalInfluxdb:
   host: localhost
   port: 8086

@@ -27,10 +27,10 @@
 
 package com.tencent.devops.project.config
 
+import com.tencent.devops.common.event.dispatcher.SampleEventDispatcher
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.project.dao.ProjectDao
 import com.tencent.devops.project.dao.ProjectLabelRelDao
-import com.tencent.devops.project.dispatch.ProjectDispatcher
 import com.tencent.devops.project.service.OpProjectService
 import com.tencent.devops.project.service.ProjectService
 import com.tencent.devops.project.service.impl.DefaultOpProjectServiceImpl
@@ -50,7 +50,7 @@ class OpConfig {
         @Autowired dslContext: DSLContext,
         @Autowired projectDao: ProjectDao,
         @Autowired projectLabelRelDao: ProjectLabelRelDao,
-        @Autowired projectDispatcher: ProjectDispatcher,
+        @Autowired projectDispatcher: SampleEventDispatcher,
         @Autowired redisOperation: RedisOperation,
         @Autowired projectService: ProjectService
     ) = DefaultOpProjectServiceImpl(

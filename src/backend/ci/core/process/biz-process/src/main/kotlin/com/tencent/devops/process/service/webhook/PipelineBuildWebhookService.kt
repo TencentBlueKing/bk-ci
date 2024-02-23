@@ -30,8 +30,8 @@ package com.tencent.devops.process.service.webhook
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.event.dispatcher.SampleEventDispatcher
 import com.tencent.devops.common.event.pojo.measure.ProjectUserDailyEvent
-import com.tencent.devops.common.event.dispatcher.pipeline.mq.MeasureEventDispatcher
 import com.tencent.devops.common.log.pojo.message.LogMessage
 import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.pipeline.container.TriggerContainer
@@ -87,7 +87,7 @@ abstract class PipelineBuildWebhookService : ApplicationContextAware {
         pipelineBuildCommitService = applicationContext.getBean(PipelineBuildCommitService::class.java)
         webhookBuildParameterService = applicationContext.getBean(WebhookBuildParameterService::class.java)
         pipelineTriggerEventService = applicationContext.getBean(PipelineTriggerEventService::class.java)
-        measureEventDispatcher = applicationContext.getBean(MeasureEventDispatcher::class.java)
+        measureEventDispatcher = applicationContext.getBean(SampleEventDispatcher::class.java)
     }
 
     companion object {
@@ -104,7 +104,7 @@ abstract class PipelineBuildWebhookService : ApplicationContextAware {
         lateinit var pipelineBuildCommitService: PipelineBuildCommitService
         lateinit var webhookBuildParameterService: WebhookBuildParameterService
         lateinit var pipelineTriggerEventService: PipelineTriggerEventService
-        lateinit var measureEventDispatcher: MeasureEventDispatcher
+        lateinit var measureEventDispatcher: SampleEventDispatcher
         private val logger = LoggerFactory.getLogger(PipelineBuildWebhookService::class.java)
     }
 

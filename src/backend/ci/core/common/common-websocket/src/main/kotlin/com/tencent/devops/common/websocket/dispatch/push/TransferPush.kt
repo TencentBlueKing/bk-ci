@@ -27,10 +27,12 @@
 
 package com.tencent.devops.common.websocket.dispatch.push
 
+import com.tencent.devops.common.event.pojo.IEvent
+
 open class TransferPush(
     open val eventName: String?,
     open val userId: String,
     open var page: String?,
-    open var delayMills: Int? = 0,
+    override var delayMills: Int = 0,
     open val transferData: Map<String, Any>
-)
+) : IEvent(delayMills = delayMills)

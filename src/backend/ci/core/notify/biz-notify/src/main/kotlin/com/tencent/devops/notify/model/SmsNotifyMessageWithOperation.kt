@@ -26,8 +26,11 @@
  */
 package com.tencent.devops.notify.model
 
+import com.tencent.devops.common.event.annotation.Event
+import com.tencent.devops.notify.QUEUE_NOTIFY_SMS
 import com.tencent.devops.notify.pojo.SmsNotifyMessage
 
+@Event(QUEUE_NOTIFY_SMS)
 class SmsNotifyMessageWithOperation : SmsNotifyMessage() {
     var id: String? = null
     var batchId: String? = null

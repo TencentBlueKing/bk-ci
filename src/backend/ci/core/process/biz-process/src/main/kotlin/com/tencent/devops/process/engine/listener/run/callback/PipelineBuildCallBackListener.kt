@@ -27,9 +27,9 @@
 
 package com.tencent.devops.process.engine.listener.run.callback
 
-import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
-import com.tencent.devops.common.event.listener.pipeline.BaseListener
+import com.tencent.devops.common.event.listener.pipeline.PipelineEventListener
 import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildStatusBroadCastEvent
+import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.process.engine.control.CallBackControl
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
@@ -43,7 +43,7 @@ import org.springframework.stereotype.Component
 class PipelineBuildCallBackListener @Autowired constructor(
     private val callBackControl: CallBackControl,
     pipelineEventDispatcher: PipelineEventDispatcher
-) : BaseListener<PipelineBuildStatusBroadCastEvent>(pipelineEventDispatcher) {
+) : PipelineEventListener<PipelineBuildStatusBroadCastEvent>(pipelineEventDispatcher) {
 
     override fun run(event: PipelineBuildStatusBroadCastEvent) {
         callBackControl.callBackBuildEvent(event)

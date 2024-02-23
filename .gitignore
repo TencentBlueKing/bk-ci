@@ -38,6 +38,7 @@ build.yml
 *.ipa
 build/
 bkci-slim.tar.gz
+*.log.gz
 
 # 容器化忽略文件
 helm-charts/core/ci/bk-ci*.tgz

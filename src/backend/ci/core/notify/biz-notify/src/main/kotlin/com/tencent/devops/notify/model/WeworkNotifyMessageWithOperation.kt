@@ -26,9 +26,12 @@
  */
 package com.tencent.devops.notify.model
 
+import com.tencent.devops.common.event.annotation.Event
+import com.tencent.devops.notify.QUEUE_NOTIFY_WEWORK
 import com.tencent.devops.notify.pojo.WechatNotifyMessage
 
 @Suppress("ALL")
+@Event(QUEUE_NOTIFY_WEWORK)
 class WeworkNotifyMessageWithOperation : WechatNotifyMessage() {
     var id: String? = null
     var retryCount: Int = 0

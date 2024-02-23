@@ -27,10 +27,14 @@
 
 package com.tencent.devops.metrics.pojo.message
 
+import com.tencent.devops.common.event.annotation.Event
+import com.tencent.devops.common.event.pojo.IEvent
+import com.tencent.devops.common.stream.constants.StreamBinding.EXCHANGE_METRICS_STATISTIC_TURBO_DAILY
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
 @ApiModel("Turbo上报消息")
+@Event(destination = EXCHANGE_METRICS_STATISTIC_TURBO_DAILY)
 data class TurboReportEvent(
     @ApiModelProperty("统计日期")
     val statisticsTime: String,
@@ -38,4 +42,4 @@ data class TurboReportEvent(
     val projectId: String,
     @ApiModelProperty("编译加速节省时间，单位：秒")
     val turboSaveTime: Double
-)
+) : IEvent()
