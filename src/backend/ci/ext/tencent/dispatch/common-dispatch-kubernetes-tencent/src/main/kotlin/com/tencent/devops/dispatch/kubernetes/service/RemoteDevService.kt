@@ -32,6 +32,7 @@ import com.tencent.devops.common.dispatch.sdk.BuildFailureException
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.dispatch.kubernetes.dao.DispatchWorkspaceDao
 import com.tencent.devops.dispatch.kubernetes.dao.DispatchWorkspaceOpHisDao
+import com.tencent.devops.dispatch.kubernetes.pojo.BK_CREATE_WORKSPACE_ERROR
 import com.tencent.devops.dispatch.kubernetes.pojo.BK_WORKSPACE_STATE_NOT_RUNNING
 import com.tencent.devops.dispatch.kubernetes.pojo.EnvironmentAction
 import com.tencent.devops.dispatch.kubernetes.pojo.EnvironmentActionStatus
@@ -67,6 +68,26 @@ class RemoteDevService @Autowired constructor(
     }
 
     fun createWorkspace(userId: String, event: WorkspaceCreateEvent): WorkspaceResponse {
+        // 查询是否已经存在记录
+        val workspace = dispatchWorkspaceDao.getWorkspaceInfo(
+            dslContext = dslContext,
+            workspaceName = event.workspaceName
+        )
+        if (workspace != null) {
+            logger.warn("Repeated creation, return failure")
+            dispatchWorkspaceOpHisDao.updateStatusByWorkspaceName(
+                dslContext = dslContext,
+                status = EnvironmentActionStatus.FAILED,
+                fStatus = EnvironmentActionStatus.PENDING,
+                workspaceName = event.workspaceName
+            )
+            throw BuildFailureException(
+                ErrorCodeEnum.BASE_CREATE_VM_ERROR.errorType,
+                ErrorCodeEnum.BASE_CREATE_VM_ERROR.errorCode,
+                ErrorCodeEnum.BASE_CREATE_VM_ERROR.getErrorMessage(),
+                I18nUtil.getCodeLanMessage(BK_CREATE_WORKSPACE_ERROR)
+            )
+        }
         val mountType = event.mountType ?: event.devFile.checkWorkspaceMountType()
         val result = remoteDevServiceFactory.loadRemoteDevService(mountType)
             .createWorkspace(userId, event)
