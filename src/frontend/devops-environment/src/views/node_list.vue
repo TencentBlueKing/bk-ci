@@ -1311,21 +1311,20 @@
                     nodeIp: row.ip,
                     nodeId: row.nodeId
                 })
-                const confirmFn = () => {
+                const confirmFn = async () => {
                     let theme, message, agentAbnormalNodesCount, agentNotInstallNodesCount
                     try {
-                        const res = this.$store.dispatch('environment/reImportCmdbNode', {
+                        const res = await this.$store.dispatch('environment/reImportCmdbNode', {
                             projectId: this.projectId,
                             params
                         })
                         agentAbnormalNodesCount = res.agentAbnormalNodesCount
                         agentNotInstallNodesCount = res.agentNotInstallNodesCount
                         theme = 'success'
+                        await this.confirmCmdbFn({ theme, message, agentAbnormalNodesCount, agentNotInstallNodesCount })
                     } catch (e) {
                         theme = 'error'
                         message = e.message || e
-                    } finally {
-                        this.confirmCmdbFn({ theme, message, agentAbnormalNodesCount, agentNotInstallNodesCount })
                     }
                 }
                 this.$bkInfo({
