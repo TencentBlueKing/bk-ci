@@ -96,6 +96,9 @@ class CmdbNodeService @Autowired constructor(
         const val OS_TYPE_CC_CODE_LINUX = "1"
         const val OS_TYPE_CC_CODE_WINDOWS = "2"
         const val OS_TYPE_CC_CODE_AIX = "3"
+        const val OS_TYPE_CC_CODE_UNIX = "4"
+        const val OS_TYPE_CC_CODE_SOLARIS = "5"
+        const val OS_TYPE_CC_CODE_FREEBSD = "7"
     }
 
     fun getUserCmdbNodesNew(
@@ -390,6 +393,9 @@ class CmdbNodeService @Autowired constructor(
             OS_TYPE_CC_CODE_LINUX -> OsType.LINUX.name
             OS_TYPE_CC_CODE_WINDOWS -> OsType.WINDOWS.name
             OS_TYPE_CC_CODE_AIX -> OsType.AIX.name
+            OS_TYPE_CC_CODE_UNIX -> OsType.UNIX.name
+            OS_TYPE_CC_CODE_SOLARIS -> OsType.SOLARIS.name
+            OS_TYPE_CC_CODE_FREEBSD -> OsType.FREEBSD.name
             else -> OsType.OTHER.name
         }
     }

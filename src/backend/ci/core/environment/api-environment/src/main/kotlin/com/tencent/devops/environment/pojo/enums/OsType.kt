@@ -31,5 +31,8 @@ enum class OsType {
     LINUX,
     WINDOWS,
     AIX,
+    UNIX,
+    SOLARIS,
+    FREEBSD,
     OTHER
 }
