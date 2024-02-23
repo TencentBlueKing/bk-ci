@@ -247,7 +247,7 @@ class NodeService @Autowired constructor(
             val deployNodeType = listOf(NodeType.CMDB.name, NodeType.UNKNOWN.name, NodeType.OTHER.name)
             val deployNodeStatus = listOf(
                 NodeStatus.NOT_IN_CC.name, NodeStatus.NOT_IN_CMDB.name, NodeStatus.NOT_INSTALLED.name,
-                NodeStatus.RUNNING.name
+                NodeStatus.RUNNING.name, NodeStatus.NORMAL.name, NodeStatus.ABNORMAL.name
             )
             val nodeStatus =
                 if (it.nodeType in buildNodeType) {
@@ -261,6 +261,7 @@ class NodeService @Autowired constructor(
                         NodeStatus.ABNORMAL.name
                     }
                 }
+            if (logger.isDebugEnabled) logger.debug("[formatNodeWithPermissions] nodeStatus: $nodeStatus")
             val nodeStringId = NodeStringIdUtils.getNodeStringId(it)
             NodeWithPermission(
                 nodeHashId = HashUtil.encodeLongId(it.nodeId),
