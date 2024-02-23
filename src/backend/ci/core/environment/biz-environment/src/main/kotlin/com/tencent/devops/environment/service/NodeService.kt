@@ -242,27 +242,6 @@ class NodeService @Autowired constructor(
                 slaveGatewayService.getShowName(thirdPartyAgent.gateway)
             } else ""
 
-            // 如果是构建机类型，则取蓝盾Node状态，否则取gseAgent状态
-            val buildNodeType = listOf(NodeType.THIRDPARTY.name, NodeType.DEVCLOUD.name)
-            val deployNodeType = listOf(NodeType.CMDB.name, NodeType.UNKNOWN.name, NodeType.OTHER.name)
-            val deployNodeStatus = listOf(
-                NodeStatus.NOT_IN_CC.name, NodeStatus.NOT_IN_CMDB.name, NodeStatus.NOT_INSTALLED.name,
-                NodeStatus.RUNNING.name, NodeStatus.NORMAL.name, NodeStatus.ABNORMAL.name
-            )
-            val nodeStatus =
-                if (it.nodeType in buildNodeType) {
-                    it.nodeStatus
-                } else if (it.nodeType in deployNodeType && it.nodeStatus in deployNodeStatus) {
-                    it.nodeStatus
-                } else {
-                    if (getAgentStatus(it)) {
-                        NodeStatus.NORMAL.name
-                    } else {
-                        NodeStatus.ABNORMAL.name
-                    }
-                }
-            if (logger.isDebugEnabled)
-                logger.debug("[formatNodeWithPermissions] ${it.nodeIp} getAgentStatus: ${getAgentStatus(it)}")
             val nodeStringId = NodeStringIdUtils.getNodeStringId(it)
             NodeWithPermission(
                 nodeHashId = HashUtil.encodeLongId(it.nodeId),
