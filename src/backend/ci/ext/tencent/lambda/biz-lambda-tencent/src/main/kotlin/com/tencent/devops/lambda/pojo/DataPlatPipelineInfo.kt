@@ -28,9 +28,9 @@
 package com.tencent.devops.lambda.pojo
 
 import com.tencent.devops.process.pojo.Pipeline
-import io.swagger.annotations.ApiModel
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("流水线信息")
+@Schema(title = "流水线信息")
 data class DataPlatPipelineInfo(
     val washTime: String,
     val pipelineInfo: Pipeline

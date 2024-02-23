@@ -27,20 +27,19 @@
 
 package com.tencent.devops.metrics.pojo.po
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 import java.time.LocalDateTime
 
-@ApiModel("更新流水线失败汇总数据")
+@Schema(title = "更新流水线失败汇总数据")
 data class UpdatePipelineFailSummaryDataPO(
-    @ApiModelProperty("主键ID")
+    @get:Schema(title = "主键ID")
     val id: Long,
-    @ApiModelProperty("项目ID")
+    @get:Schema(title = "项目ID")
     val projectId: String,
-    @ApiModelProperty("错误次数")
+    @get:Schema(title = "错误次数")
     val errorCount: Int,
-    @ApiModelProperty("修改人")
+    @get:Schema(title = "修改人")
     val modifier: String,
-    @ApiModelProperty("更新时间")
+    @get:Schema(title = "更新时间")
     val updateTime: LocalDateTime
 )

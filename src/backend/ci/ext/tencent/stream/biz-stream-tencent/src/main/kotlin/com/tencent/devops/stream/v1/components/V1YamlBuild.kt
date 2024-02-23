@@ -67,7 +67,8 @@ import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildAtomEle
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildLessAtomElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.ManualTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeEventType
-import com.tencent.devops.common.pipeline.type.gitci.GitCIDispatchType
+import com.tencent.devops.common.pipeline.type.devcloud.PublicDevCloudDispathcType
+import com.tencent.devops.common.pipeline.type.docker.ImageType
 import com.tencent.devops.common.pipeline.type.macos.MacOSDispatchType
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.web.utils.I18nUtil
@@ -341,7 +342,11 @@ class V1YamlBuild @Autowired constructor(
                     xcodeVersion = containerPool.macOS!!.xcodeVersion!!
                 )
             } else {
-                GitCIDispatchType(objectMapper.writeValueAsString(containerPool))
+                PublicDevCloudDispathcType(
+                    image = objectMapper.writeValueAsString(containerPool),
+                    imageType = ImageType.THIRD,
+                    performanceConfigId = "0"
+                )
             }
         )
         containerList.add(vmContainer)

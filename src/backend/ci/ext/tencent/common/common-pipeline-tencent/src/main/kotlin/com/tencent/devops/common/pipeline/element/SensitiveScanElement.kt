@@ -28,18 +28,17 @@
 package com.tencent.devops.common.pipeline.element
 
 import com.tencent.devops.common.pipeline.pojo.element.Element
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("敏感信息检查", description = SensitiveScanElement.classType)
+@Schema(title = "敏感信息检查")
 data class SensitiveScanElement(
-    @ApiModelProperty("任务名称", required = true)
+    @get:Schema(title = "任务名称", required = true)
     override val name: String = "执行脚本",
-    @ApiModelProperty("id", required = false)
+    @get:Schema(title = "id", required = false)
     override var id: String? = null,
-    @ApiModelProperty("状态", required = false)
+    @get:Schema(title = "状态", required = false)
     override var status: String? = null,
-    @ApiModelProperty("扫描需要排除的路径，多个以分号分隔", required = false)
+    @get:Schema(title = "扫描需要排除的路径，多个以分号分隔", required = false)
     val excludePath: String? = ""
 ) : Element(name, id, status) {
 

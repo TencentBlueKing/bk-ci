@@ -28,7 +28,6 @@ import com.tencent.devops.dispatch.devcloud.utils.RedisUtils
 import com.tencent.devops.model.dispatch.devcloud.tables.records.TDevcloudBuildHisRecord
 import com.tencent.devops.process.api.service.ServicePipelineTaskResource
 import org.jooq.DSLContext
-import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
@@ -44,7 +43,8 @@ class DevcloudDebugService @Autowired constructor(
     private val devCloudBuildHisDao: DevCloudBuildHisDao,
     private val bkAuthPermissionApi: AuthPermissionApi,
     private val pipelineAuthServiceCode: PipelineAuthServiceCode,
-    private val dcPersistenceContainerDao: DcPersistenceContainerDao
+    private val dcPersistenceContainerDao: DcPersistenceContainerDao,
+    private val dcContainerShutdownHandler: DcContainerShutdownHandler
 ) {
     @Value("\${devCloud.cpu}")
     var cpu: Int = 32
@@ -104,8 +104,7 @@ class DevcloudDebugService @Autowired constructor(
             projectId, pipelineId, buildId ?: "", vmSeqId, userId, containerName)
         val actionCode = statusResponse.optInt("actionCode")
         if (actionCode == 200) {
-            val status = statusResponse.optString("data")
-            when (status) {
+            when (val status = statusResponse.optString("data")) {
                 "stopped", "stop" -> {
                     // 处于关机状态，开机
                     logger.info("Update container status stop to running, containerName: $containerName")
@@ -117,7 +116,7 @@ class DevcloudDebugService @Autowired constructor(
                 }
                 "starting" -> {
                     // 容器正在启动中，等待启动成功
-                    val status = dispatchDevCloudClient.waitContainerRunning(
+                    val devCloudContainerStatus = dispatchDevCloudClient.waitContainerRunning(
                         projectId,
                         pipelineId,
                         buildId ?: "",
@@ -125,8 +124,9 @@ class DevcloudDebugService @Autowired constructor(
                         userId,
                         containerName
                     )
-                    if (status != DevCloudContainerStatus.RUNNING) {
-                        logger.error("Status exception, containerName: $containerName, status: $status")
+                    if (devCloudContainerStatus != DevCloudContainerStatus.RUNNING) {
+                        logger.error("Status exception, containerName: $containerName, " +
+                                "status: $devCloudContainerStatus")
                         throw ErrorCodeException(
                             errorCode = BK_CONTAINER_STATUS_EXCEPTION,
                             defaultMessage = "Status exception, please try rebuild the pipeline",
@@ -156,82 +156,41 @@ class DevcloudDebugService @Autowired constructor(
         userId: String,
         pipelineId: String,
         containerName: String,
-        vmSeqId: String,
-        needCheckPermission: Boolean = true
+        vmSeqId: String
     ): Boolean {
         val debugContainerName = containerName.ifBlank {
             redisUtils.getDebugContainerName(userId, pipelineId, vmSeqId) ?: ""
         }
 
         logger.info("$userId|$pipelineId|$vmSeqId stop debug container:$debugContainerName")
+        val devcloudBuild = devCloudBuildDao.getContainerStatus(dslContext, pipelineId, vmSeqId, debugContainerName)
+        if (devcloudBuild != null) {
+            // 先更新debug状态
+            devCloudBuildDao.updateDebugStatus(
+                dslContext = dslContext,
+                pipelineId = pipelineId,
+                vmSeqId = vmSeqId,
+                containerName = devcloudBuild.containerName,
+                debugStatus = false
+            )
 
-        dslContext.transaction { configuration ->
-            val transactionContext = DSL.using(configuration)
-            val devcloudBuild =
-                devCloudBuildDao.getContainerStatus(transactionContext, pipelineId, vmSeqId, debugContainerName)
-            if (devcloudBuild != null) {
-                // 先更新debug状态
-                devCloudBuildDao.updateDebugStatus(
-                    transactionContext,
-                    pipelineId,
-                    vmSeqId,
-                    devcloudBuild.containerName,
-                    false
-                )
-
-                // 当前JOB是否为持久化构建,持久化容器登录调试结束后不关闭容器
-                if (devcloudBuild.status == 0 &&
-                    devcloudBuild.debugStatus &&
-                    !persistenceContainer(pipelineId, vmSeqId)
-                ) {
-                    // 关闭容器
-                    val taskId = dispatchDevCloudClient.operateContainer(
-                        projectId = devcloudBuild.projectId,
-                        pipelineId = devcloudBuild.pipelineId,
-                        buildId = "",
-                        vmSeqId = vmSeqId,
-                        userId = userId,
-                        name = debugContainerName,
-                        action = Action.STOP
-                    )
-                    val opResult = dispatchDevCloudClient.waitTaskFinish(
-                        userId,
-                        devcloudBuild.projectId,
-                        devcloudBuild.pipelineId,
-                        taskId
-                    )
-                    if (opResult.first == TaskStatus.SUCCEEDED) {
-                        logger.info("stopDebug stop dev cloud vm success.")
-                    } else {
-                        // 停不掉，尝试删除
-                        logger.info("stopDebug stop dev cloud vm failed, msg: ${opResult.second}")
-                        logger.info(
-                            "stopDebug stop dev cloud vm failed, try to delete it, " +
-                                "containerName:${devcloudBuild.containerName}"
-                        )
-                        dispatchDevCloudClient.operateContainer(
-                            projectId = devcloudBuild.projectId,
-                            pipelineId = devcloudBuild.pipelineId,
-                            buildId = "",
-                            vmSeqId = vmSeqId,
-                            userId = userId,
-                            name = debugContainerName,
-                            action = Action.DELETE
-                        )
-                        devCloudBuildDao.delete(dslContext, pipelineId, vmSeqId, devcloudBuild.poolNo)
-                    }
-                } else {
-                    logger.info(
-                        "stopDebug pipelineId: $pipelineId, vmSeqId: $vmSeqId " +
-                            "containerName:$debugContainerName container is idle or not in debug."
-                    )
-                }
+            // 当前JOB是否为持久化构建,持久化容器登录调试结束后不关闭容器
+            if (devcloudBuild.status == 0 &&
+                devcloudBuild.debugStatus &&
+                !persistenceContainer(pipelineId, vmSeqId)
+            ) {
+                dcContainerShutdownHandler.forceStopContainer(devcloudBuild)
             } else {
                 logger.info(
                     "stopDebug pipelineId: $pipelineId, vmSeqId: $vmSeqId " +
-                        "containerName:$debugContainerName container no longer exists."
+                            "containerName:$debugContainerName container is idle or not in debug."
                 )
             }
+        } else {
+            logger.info(
+                "stopDebug pipelineId: $pipelineId, vmSeqId: $vmSeqId " +
+                        "containerName:$debugContainerName container no longer exists."
+            )
         }
 
         redisUtils.deleteDebugContainerName(userId, pipelineId, vmSeqId)

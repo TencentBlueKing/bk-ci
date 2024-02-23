@@ -25,16 +25,16 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.pipeline.type.exsi
+package com.tencent.devops.remotedev.pojo.project
 
-import com.tencent.devops.common.pipeline.type.BuildType
-import com.tencent.devops.common.pipeline.type.DispatchType
+import com.fasterxml.jackson.annotation.JsonProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-// value is empty
-class ESXiDispatchType : DispatchType("") {
-    override fun cleanDataBeforeSave() = Unit
-
-    override fun replaceField(variables: Map<String, String>) = Unit
-
-    override fun buildType() = BuildType.valueOf(BuildType.ESXi.name)
-}
+@Schema(title = "工作空间属性")
+data class WorkspaceProperty(
+    @get:Schema(title = "别名")
+    @JsonProperty("display_name")
+    val displayName: String? = "",
+    @get:Schema(title = "备注")
+    val remark: String? = ""
+)

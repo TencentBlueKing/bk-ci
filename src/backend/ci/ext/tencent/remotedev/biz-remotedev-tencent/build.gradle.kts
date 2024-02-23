@@ -41,5 +41,6 @@ dependencies {
     implementation("org.apache.poi:poi")
     implementation("org.apache.poi:poi-ooxml")
     api(project(":core:common:common-audit"))
+    implementation("com.tencentcloudapi:tencentcloud-sdk-java-cfs")
     testImplementation(project(":core:common:common-test"))
 }

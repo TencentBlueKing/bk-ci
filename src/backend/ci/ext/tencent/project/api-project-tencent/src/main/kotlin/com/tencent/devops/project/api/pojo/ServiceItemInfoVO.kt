@@ -28,25 +28,24 @@
 package com.tencent.devops.project.api.pojo
 
 import com.tencent.devops.project.api.pojo.enums.HtmlComponentTypeEnum
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("扩展服务功能点信息")
+@Schema(title = "扩展服务功能点信息")
 data class ServiceItemInfoVO(
-    @ApiModelProperty("扩展点ID", required = true)
+    @get:Schema(title = "扩展点ID", required = true)
     val itemId: String,
-    @ApiModelProperty("扩展点标识", required = true)
+    @get:Schema(title = "扩展点标识", required = true)
     val itemCode: String,
-    @ApiModelProperty("扩展点名称", required = true)
+    @get:Schema(title = "扩展点名称", required = true)
     val itemName: String,
-    @ApiModelProperty("扩展点对应的页面路径信息", required = true)
+    @get:Schema(title = "扩展点对应的页面路径信息", required = true)
     val htmlPath: String,
-    @ApiModelProperty("扩展点对应的前端组件类型", required = true)
+    @get:Schema(title = "扩展点对应的前端组件类型", required = true)
     val htmlComponentType: HtmlComponentTypeEnum,
-    @ApiModelProperty("扩展点提示信息", required = false)
+    @get:Schema(title = "扩展点提示信息", required = false)
     val tooltip: String?,
-    @ApiModelProperty("扩展点对应的图标地址", required = false)
+    @get:Schema(title = "扩展点对应的图标地址", required = false)
     val iconUrl: String?,
-    @ApiModelProperty("自定义扩展点前端表单属性配置Json串", required = false)
+    @get:Schema(title = "自定义扩展点前端表单属性配置Json串", required = false)
     val props: Map<String, Any>?
 )

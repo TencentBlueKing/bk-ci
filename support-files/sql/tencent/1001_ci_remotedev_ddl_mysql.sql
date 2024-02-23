@@ -43,6 +43,7 @@ CREATE TABLE IF NOT EXISTS `T_WORKSPACE` (
 	`WIN_CONFIG_ID` int(11) NULL COMMENT 'windows资源配置id',
     `PROJECT_NAME` varchar(64) NOT NULL DEFAULT '' COMMENT '项目名称',
     `BUSINESS_LINE_NAME` varchar(255) NOT NULL DEFAULT '' COMMENT '业务线名称',
+    `REMARK` varchar(255) NULL DEFAULT '' COMMENT '备注',
     PRIMARY KEY (`ID`),
     UNIQUE INDEX `NAME`(`NAME`)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
@@ -517,6 +518,43 @@ CREATE TABLE IF NOT EXISTS `T_WINDOWS_SPEC_RESOURCE` (
 	`QUOTA` INT NOT NULL COMMENT '配额',
     PRIMARY KEY (`PROJECT_ID`, `SIZE`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='windows特殊机型配额表';
+
+-- ----------------------------
+-- Table structure for T_PROJECT_TCLOUD_CFS 项目和腾讯云cfs关联表
+-- ----------------------------
+CREATE TABLE IF NOT EXISTS `T_PROJECT_TCLOUD_CFS` (
+	PROJECT_ID varchar(64) NOT NULL COMMENT '蓝盾项目ID',
+	CFS_ID varchar(64) NOT NULL,
+	PG_ID varchar(64) NULL COMMENT '权限组ID',
+    REGION varchar(32) NOT NULL COMMENT '区域',
+	PRIMARY KEY (`PROJECT_ID`, `CFS_ID`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- ----------------------------
+-- Table structure for T_PROJECT_TGIT_LINK 蓝盾项目和工蜂关联表
+-- ----------------------------
+CREATE TABLE IF NOT EXISTS `T_PROJECT_TGIT_LINK`(
+	`PROJECT_ID` varchar(64) NOT NULL COMMENT '蓝盾项目ID',
+    `URL` varchar(255) NOT NULL COMMENT '工蜂url地址',
+    `STATUS` varchar(32) NOT NULL COMMENT '仓库状态',
+    `OAUTH_USER` varchar(32) NOT NULL COMMENT '授予oauth权限的用户',
+	PRIMARY KEY (`PROJECT_ID`, `URL`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- ----------------------------
+-- Table structure for T_WORKSPACE_NOTIFY
+-- ----------------------------
+CREATE TABLE IF NOT EXISTS `T_WORKSPACE_NOTIFY` (
+    `ID` bigint(20) NOT NULL AUTO_INCREMENT,
+    `OPERATOR` varchar(64) NOT NULL DEFAULT '' COMMENT '操作人',
+    `PROJECT_IDS` varchar(1024) NOT NULL DEFAULT '' COMMENT '项目ID列表',
+    `IPS` mediumtext NOT NULL COMMENT 'IP列表',
+    `TITLE` varchar(256) NOT NULL DEFAULT '' COMMENT '标题',
+    `DESC` varchar(1024) NOT NULL DEFAULT '' COMMENT '描述内容',
+    `CREATED_TIME` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    PRIMARY KEY (`ID`),
+    KEY `uni_1` (`OPERATOR`)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT '云桌面消息通知记录';
 
 
 SET FOREIGN_KEY_CHECKS = 1;

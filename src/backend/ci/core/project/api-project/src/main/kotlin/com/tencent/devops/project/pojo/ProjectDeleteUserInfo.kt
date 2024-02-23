@@ -23,28 +23,25 @@
  * NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ *
  */
 
-package com.tencent.devops.common.pipeline.type.gitci
+package com.tencent.devops.project.pojo
 
-import com.fasterxml.jackson.annotation.JsonProperty
-import com.tencent.devops.common.api.util.EnvUtils
-import com.tencent.devops.common.pipeline.type.BuildType
-import com.tencent.devops.common.pipeline.type.DispatchRouteKeySuffix
-import com.tencent.devops.common.pipeline.type.DispatchType
+import io.swagger.v3.oas.annotations.media.Schema
 
-data class GitCIDispatchType(@JsonProperty("value") var image: String) :
-    DispatchType(
-    image,
-    DispatchRouteKeySuffix.GITCI
-) {
-    override fun cleanDataBeforeSave() {
-        this.image = this.image.trim()
-    }
-
-    override fun replaceField(variables: Map<String, String>) {
-        image = EnvUtils.parseEnv(image, variables)
-    }
-
-    override fun buildType() = BuildType.valueOf(BuildType.GIT_CI.name)
-}
+@Schema
+data class ProjectDeleteUserInfo(
+    @get:Schema(title = "操作人")
+    val operator: String,
+    @get:Schema(title = "待分配的角色名称")
+    val roleName: String?,
+    @get:Schema(title = "角色Id")
+    val roleId: Int?,
+    @get:Schema(title = "组ID")
+    val groupId: Int?,
+    @get:Schema(title = "目标用户")
+    val userIds: List<String>? = emptyList(),
+    @get:Schema(title = "目标部门")
+    val deptIds: List<String>? = emptyList()
+)

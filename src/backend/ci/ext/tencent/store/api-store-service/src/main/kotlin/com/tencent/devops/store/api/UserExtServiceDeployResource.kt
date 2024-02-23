@@ -30,9 +30,9 @@ package com.tencent.devops.store.api
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.pojo.Result
 import io.fabric8.kubernetes.api.model.apps.DeploymentStatus
-import io.swagger.annotations.Api
-import io.swagger.annotations.ApiOperation
-import io.swagger.annotations.ApiParam
+import io.swagger.v3.oas.annotations.tags.Tag
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.Parameter
 import javax.ws.rs.Consumes
 import javax.ws.rs.GET
 import javax.ws.rs.HeaderParam
@@ -43,41 +43,41 @@ import javax.ws.rs.Produces
 import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
-@Api(tags = ["USER_EXTENSION_SERVICE_DEPLOY"], description = "服务扩展-扩展服务部署")
+@Tag(name = "USER_EXTENSION_SERVICE_DEPLOY", description = "服务扩展-扩展服务部署")
 @Path("/user/ext/services/deployment")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface UserExtServiceDeployResource {
 
-    @ApiOperation("获取扩展服务部署状态信息")
+    @Operation(summary = "获取扩展服务部署状态信息")
     @Path("/services/{serviceCode}/status")
     @GET
     fun getExtServiceDeployStatus(
-        @ApiParam("userId", required = true)
+        @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("扩展服务代码", required = true)
+        @Parameter(description = "扩展服务代码", required = true)
         @PathParam("serviceCode")
         serviceCode: String,
-        @ApiParam("灰度部署标识", required = false)
+        @Parameter(description = "灰度部署标识", required = false)
         @QueryParam("grayFlag")
         grayFlag: Boolean? = false
     ): Result<DeploymentStatus?>
 
-    @ApiOperation("部署扩展服务")
+    @Operation(summary = "部署扩展服务")
     @Path("/services/{serviceCode}/versions/{version}/deploy")
     @POST
     fun deployExtService(
-        @ApiParam("userId", required = true)
+        @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("扩展服务代码", required = true)
+        @Parameter(description = "扩展服务代码", required = true)
         @PathParam("serviceCode")
         serviceCode: String,
-        @ApiParam("扩展服务版本号", required = true)
+        @Parameter(description = "扩展服务版本号", required = true)
         @PathParam("version")
         version: String,
-        @ApiParam("灰度部署标识", required = false)
+        @Parameter(description = "灰度部署标识", required = false)
         @QueryParam("grayFlag")
         grayFlag: Boolean? = true
     ): Result<Boolean>

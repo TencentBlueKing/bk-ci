@@ -32,9 +32,9 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.store.pojo.common.StoreProcessInfo
 import com.tencent.devops.store.pojo.template.MarketTemplateRelRequest
 import com.tencent.devops.store.pojo.template.MarketTemplateUpdateRequest
-import io.swagger.annotations.Api
-import io.swagger.annotations.ApiOperation
-import io.swagger.annotations.ApiParam
+import io.swagger.v3.oas.annotations.tags.Tag
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.Parameter
 import javax.ws.rs.Consumes
 import javax.ws.rs.GET
 import javax.ws.rs.HeaderParam
@@ -46,75 +46,75 @@ import javax.ws.rs.Produces
 import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
-@Api(tags = ["USER_MARKET_TEMPLATE"], description = "模板")
+@Tag(name = "USER_MARKET_TEMPLATE", description = "模板")
 @Path("/user/market")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface UserTemplateReleaseResource {
 
-    @ApiOperation("关联模板")
+    @Operation(summary = "关联模板")
     @POST
     @Path("/templates/{templateCode}/store/rel")
     fun addMarketTemplate(
-        @ApiParam("userId", required = true)
+        @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("模板代码", required = true)
+        @Parameter(description = "模板代码", required = true)
         @PathParam("templateCode")
         templateCode: String,
-        @ApiParam("关联模板请求报文体", required = true)
+        @Parameter(description = "关联模板请求报文体", required = true)
         marketTemplateRelRequest: MarketTemplateRelRequest
     ): Result<Boolean>
 
-    @ApiOperation("上架模板")
+    @Operation(summary = "上架模板")
     @PUT
     @Path("/desk/template/release")
     fun updateMarketTemplate(
-        @ApiParam("userId", required = true)
+        @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("上架模板请求报文体", required = true)
+        @Parameter(description = "上架模板请求报文体", required = true)
         marketTemplateUpdateRequest: MarketTemplateUpdateRequest
     ): Result<String?>
 
-    @ApiOperation("根据模板版本ID获取模板版本进度")
+    @Operation(summary = "根据模板版本ID获取模板版本进度")
     @GET
     @Path("/desk/template/release/process/{templateId}")
     fun getProcessInfo(
-        @ApiParam("userId", required = true)
+        @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("templateId", required = true)
+        @Parameter(description = "templateId", required = true)
         @PathParam("templateId")
         templateId: String
     ): Result<StoreProcessInfo>
 
-    @ApiOperation("取消发布")
+    @Operation(summary = "取消发布")
     @PUT
     @Path("/desk/template/release/cancel/templateIds/{templateId}")
     fun cancelRelease(
-        @ApiParam("userId", required = true)
+        @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("templateId", required = true)
+        @Parameter(description = "templateId", required = true)
         @PathParam("templateId")
         templateId: String
     ): Result<Boolean>
 
-    @ApiOperation("下架模板")
+    @Operation(summary = "下架模板")
     @PUT
     @Path("/desk/template/offline/templateCodes/{templateCode}/versions")
     fun offlineTemplate(
-        @ApiParam("userId", required = true)
+        @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("模版代码", required = true)
+        @Parameter(description = "模版代码", required = true)
         @PathParam("templateCode")
         templateCode: String,
-        @ApiParam("版本号", required = false)
+        @Parameter(description = "版本号", required = false)
         @QueryParam("version")
         version: String?,
-        @ApiParam("原因", required = false)
+        @Parameter(description = "原因", required = false)
         @QueryParam("reason")
         reason: String?
     ): Result<Boolean>

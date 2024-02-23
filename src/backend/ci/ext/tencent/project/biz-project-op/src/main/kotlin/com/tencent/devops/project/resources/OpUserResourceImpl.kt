@@ -30,14 +30,17 @@ package com.tencent.devops.project.resources
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.project.api.op.OpUserResource
+import com.tencent.devops.project.pojo.SeniorUserDTO
 import com.tencent.devops.project.pojo.UserInfo
 import com.tencent.devops.project.pojo.user.UserDeptDetail
 import com.tencent.devops.project.service.ProjectUserRefreshService
+import com.tencent.devops.project.service.ProjectUserService
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 class OpUserResourceImpl @Autowired constructor(
-    val projectUserRefreshService: ProjectUserRefreshService
+    val projectUserRefreshService: ProjectUserRefreshService,
+    val projectUserService: ProjectUserService
 ) : OpUserResource {
 
     override fun refreshUserGroup(userId: String): Result<UserDeptDetail?> {
@@ -53,14 +56,32 @@ class OpUserResourceImpl @Autowired constructor(
     }
 
     override fun fixGitCIProjectInfo(start: Long?, limit: Int?, sleep: Long?): Result<Int> {
-        return Result(projectUserRefreshService.fixGitCIProjectInfo(
-            start = start ?: 0L,
-            limitCount = limit ?: 5,
-            sleepTime = sleep ?: 500
-        ))
+        return Result(
+            projectUserRefreshService.fixGitCIProjectInfo(
+                start = start ?: 0L,
+                limitCount = limit ?: 5,
+                sleepTime = sleep ?: 500
+            )
+        )
     }
 
     override fun createPublicAccount(userInfo: UserInfo): Result<Boolean> {
         return Result(projectUserRefreshService.createPublicAccount(userInfo))
+    }
+
+    override fun createSeniorUsers(seniorUserList: List<SeniorUserDTO>): Result<Boolean> {
+        return Result(
+            projectUserService.creatSeniorUser(
+                seniorUserList = seniorUserList
+            )
+        )
+    }
+
+    override fun deleteSeniorUsers(userId: String): Result<Boolean> {
+        return Result(
+            projectUserService.deleteSeniorUser(
+                userId = userId
+            )
+        )
     }
 }

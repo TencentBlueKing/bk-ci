@@ -33,9 +33,9 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.support.model.app.pojo.AppVersion
-import io.swagger.annotations.Api
-import io.swagger.annotations.ApiOperation
-import io.swagger.annotations.ApiParam
+import io.swagger.v3.oas.annotations.tags.Tag
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.Parameter
 import javax.ws.rs.Consumes
 import javax.ws.rs.GET
 import javax.ws.rs.HeaderParam
@@ -48,35 +48,35 @@ import javax.ws.rs.core.MediaType
  * Created by Freyzheng on 2018/9/26.
  */
 
-@Api(tags = ["APP_APP_VERSION"], description = "APP-APP-VERSION")
+@Tag(name = "APP_APP_VERSION", description = "APP-APP-VERSION")
 @Path("/app/app/version")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface AppAppVersionResource {
 
-    @ApiOperation("获取最新的app版本号")
+    @Operation(summary = "获取最新的app版本号")
     @GET
     @Path("/last")
     fun getLastAppVersion(
-        @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("版本号", required = true)
+        @Parameter(description = "版本号", required = true)
         @HeaderParam(AUTH_HEADER_APP_VERSION)
         appVersion: String?,
-        @ApiParam("组织", required = false)
+        @Parameter(description = "组织", required = false)
         @HeaderParam(AUTH_HEADER_DEVOPS_ORGANIZATION_NAME)
         organization: String? = null,
-        @ApiParam(value = "渠道类型（1:\"安卓\", 2:\"IOS\", 3:\"WEB\"）", required = true)
+        @Parameter(description = "渠道类型（1:\"安卓\", 2:\"IOS\", 3:\"WEB\"）", required = true)
         @QueryParam(value = "channelType")
         channelType: Byte
     ): Result<AppVersion?>
 
-    @ApiOperation("获取所有的app版本号")
+    @Operation(summary = "获取所有的app版本号")
     @GET
     @Path("/")
     fun getAllAppVersion(
-        @ApiParam(value = "渠道类型（1:\"安卓\", 2:\"IOS\", 3:\"WEB\"）", required = true)
+        @Parameter(description = "渠道类型（1:\"安卓\", 2:\"IOS\", 3:\"WEB\"）", required = true)
         @QueryParam(value = "channelType")
         channelType: Byte
     ): Result<List<AppVersion>>

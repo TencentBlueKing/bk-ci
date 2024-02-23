@@ -27,9 +27,9 @@
 
 package com.tencent.devops.support.api.op
 
-import io.swagger.annotations.Api
-import io.swagger.annotations.ApiOperation
-import io.swagger.annotations.ApiParam
+import io.swagger.v3.oas.annotations.tags.Tag
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.Parameter
 import javax.ws.rs.core.MediaType
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.support.model.mta.h5.base.IdxResult
@@ -43,16 +43,16 @@ import javax.ws.rs.Produces
  * Created by Freyzheng on 2018/8/2.
  */
 
-@Api(tags = ["OP_MTA"], description = "OP-MTA")
+@Tag(name = "OP_MTA", description = "OP-MTA")
 @Path("/op/mta")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface OpMTAResource {
-    @ApiOperation("应用历史趋势")
+    @Operation(summary = "应用历史趋势")
     @POST
     @Path("/h5/coreData")
     fun getCoreData(
-        @ApiParam(value = "应用历史趋势查询消息", required = true)
+        @Parameter(description = "应用历史趋势查询消息", required = true)
         coreDataMessage: CoreDataMessage
     ): Result<Map<String, IdxResult>?>
 }

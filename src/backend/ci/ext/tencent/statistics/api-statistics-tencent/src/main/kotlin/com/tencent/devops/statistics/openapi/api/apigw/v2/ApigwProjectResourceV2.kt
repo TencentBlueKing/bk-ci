@@ -35,9 +35,9 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VAL
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.auth.api.pojo.BKAuthProjectRolesResources
 import com.tencent.devops.project.pojo.ProjectVO
-import io.swagger.annotations.Api
-import io.swagger.annotations.ApiOperation
-import io.swagger.annotations.ApiParam
+import io.swagger.v3.oas.annotations.tags.Tag
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.Parameter
 import javax.ws.rs.Consumes
 import javax.ws.rs.GET
 import javax.ws.rs.HeaderParam
@@ -47,7 +47,7 @@ import javax.ws.rs.Produces
 import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
-@Api(tags = ["OPEN_API_PROJECT_V2"], description = "OPEN-API-项目资源V2")
+@Tag(name = "OPEN_API_PROJECT_V2", description = "OPEN-API-项目资源V2")
 @Path("/{apigwType:apigw-user|apigw-app|apigw}/v2/projects")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
@@ -55,27 +55,27 @@ interface ApigwProjectResourceV2 {
 
     @GET
     @Path("/getProjectByOrganizationId")
-    @ApiOperation("根据组织架构查询所有项目")
+    @Operation(summary = "根据组织架构查询所有项目")
     fun getProjectByOrganizationId(
-        @ApiParam(value = "appCode", required = true, defaultValue = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
+        @Parameter(description = "appCode", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
         appCode: String?,
-        @ApiParam(value = "apigw Type", required = true)
+        @Parameter(description = "apigw Type", required = true)
         @PathParam("apigwType")
         apigwType: String?,
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String,
-        @ApiParam(value = "组织类型", required = true)
+        @Parameter(description = "组织类型", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_ORGANIZATION_TYPE)
         organizationType: String,
-        @ApiParam(value = "组织Id", required = true)
+        @Parameter(description = "组织Id", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_ORGANIZATION_ID)
         organizationId: Long,
-        @ApiParam("deptName", required = false)
+        @Parameter(description = "deptName", required = false)
         @QueryParam("deptName")
         deptName: String?,
-        @ApiParam("centerName", required = false)
+        @Parameter(description = "centerName", required = false)
         @QueryParam("centerName")
         centerName: String?
     ): Result<List<ProjectVO>?>
@@ -83,19 +83,19 @@ interface ApigwProjectResourceV2 {
     @GET
     @Path("/{projectId}/roles")
     fun getProjectRoles(
-        @ApiParam(value = "appCode", required = true, defaultValue = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
+        @Parameter(description = "appCode", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
         appCode: String?,
-        @ApiParam(value = "apigw Type", required = true)
+        @Parameter(description = "apigw Type", required = true)
         @PathParam("apigwType")
         apigwType: String?,
-        @ApiParam("组织类型", required = true)
+        @Parameter(description = "组织类型", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_ORGANIZATION_TYPE)
         organizationType: String,
-        @ApiParam("组织Id", required = true)
+        @Parameter(description = "组织Id", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_ORGANIZATION_ID)
         organizationId: Long,
-        @ApiParam("项目code", required = true)
+        @Parameter(description = "项目code", required = true)
         @PathParam("projectId")
         projectId: String
     ): Result<List<BKAuthProjectRolesResources>?>

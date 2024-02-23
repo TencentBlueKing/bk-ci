@@ -526,7 +526,6 @@ class WorkspaceCommon @Autowired constructor(
             if (it.type == WorkspaceShared.AssignType.OWNER) {
                 notifyControl.notify4User(
                     userIds = mutableSetOf(it.userId),
-                    workspaceName = workspaceName,
                     notifyTemplateCode = WINDOWS_GPU_OWNER_CHANGE_NOTIFY,
                     notifyType = mutableSetOf(RemoteDevNotifyType.EMAIL),
                     bodyParams = mapOf(

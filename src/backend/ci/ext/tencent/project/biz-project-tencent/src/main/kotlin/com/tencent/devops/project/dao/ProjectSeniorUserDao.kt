@@ -25,29 +25,49 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.pipeline.type.codecc
+package com.tencent.devops.project.dao
 
-import com.tencent.devops.common.api.util.JsonUtil
-import com.tencent.devops.common.pipeline.type.BuildType
-import com.tencent.devops.common.pipeline.type.DispatchRouteKeySuffix
-import com.tencent.devops.common.pipeline.type.DispatchType
+import com.tencent.devops.model.project.tables.TSeniorUser
+import com.tencent.devops.model.project.tables.records.TSeniorUserRecord
+import com.tencent.devops.project.pojo.SeniorUserDTO
+import org.jooq.DSLContext
+import org.jooq.Result
+import org.springframework.stereotype.Repository
 
-data class CodeCCDispatchType(
-    val codeccTaskId: Long,
-    val extraInfo: Map<String, Any>? = emptyMap()
-) : DispatchType("", DispatchRouteKeySuffix.CODECC) {
-    override fun cleanDataBeforeSave() = Unit
-
-    override fun buildType(): BuildType {
-        return BuildType.valueOf(BuildType.DOCKER.name)
+@Repository
+class ProjectSeniorUserDao {
+    fun list(
+        dslContext: DSLContext
+    ): Result<TSeniorUserRecord> {
+        return with(TSeniorUser.T_SENIOR_USER) {
+            dslContext.selectFrom(this).fetch()
+        }
     }
 
-    override fun replaceField(variables: Map<String, String>) {
-        val valueMap = mutableMapOf<String, Any?>()
-        valueMap["codeccTaskId"] = codeccTaskId
-        if (extraInfo != null && extraInfo.isNotEmpty()) {
-            valueMap.putAll(extraInfo)
+    fun delete(
+        dslContext: DSLContext,
+        userId: String
+    ) {
+        with(TSeniorUser.T_SENIOR_USER) {
+            dslContext.delete(this).where(USER_ID.eq(userId)).execute()
         }
-        value = JsonUtil.toJson(valueMap)
+    }
+
+    fun create(
+        dslContext: DSLContext,
+        seniorUserDTO: SeniorUserDTO
+    ) {
+        with(TSeniorUser.T_SENIOR_USER) {
+            dslContext.insertInto(
+                this,
+                USER_ID,
+                NAME,
+                BG_NAME
+            ).values(
+                seniorUserDTO.userId,
+                seniorUserDTO.name,
+                seniorUserDTO.bgName
+            ).execute()
+        }
     }
 }

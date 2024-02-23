@@ -1,20 +1,19 @@
 package com.tencent.devops.auth.pojo
 
 import com.fasterxml.jackson.annotation.JsonProperty
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("监控空间更新实体类")
+@Schema(title = "监控空间更新实体类")
 data class MonitorSpaceUpdateInfo(
-    @ApiModelProperty("空间名称")
+    @get:Schema(title = "空间名称")
     @JsonProperty("space_name")
     val spaceName: String,
-    @ApiModelProperty("空间类型")
+    @get:Schema(title = "空间类型")
     @JsonProperty("space_type_id")
     val spaceTypeId: String,
-    @ApiModelProperty("空间UID")
+    @get:Schema(title = "空间UID")
     @JsonProperty("space_uid")
     val spaceUid: String,
-    @ApiModelProperty("更新人")
+    @get:Schema(title = "更新人")
     val updater: String
 )

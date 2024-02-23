@@ -27,25 +27,24 @@
 
 package com.tencent.devops.store.pojo.common
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("每日统计信息")
+@Schema(title = "每日统计信息")
 data class StoreDailyStatistic(
-    @ApiModelProperty("总下载量")
+    @get:Schema(title = "总下载量")
     val totalDownloads: Int,
-    @ApiModelProperty("每日下载量")
+    @get:Schema(title = "每日下载量")
     val dailyDownloads: Int,
-    @ApiModelProperty("每日执行成功数")
+    @get:Schema(title = "每日执行成功数")
     val dailySuccessNum: Int,
-    @ApiModelProperty("每日执行成功率")
+    @get:Schema(title = "每日执行成功率")
     val dailySuccessRate: Double?,
-    @ApiModelProperty("每日执行失败数")
+    @get:Schema(title = "每日执行失败数")
     val dailyFailNum: Int,
-    @ApiModelProperty("每日执行失败率")
+    @get:Schema(title = "每日执行失败率")
     val dailyFailRate: Double?,
-    @ApiModelProperty("每日执行失败详情")
+    @get:Schema(title = "每日执行失败详情")
     val dailyFailDetail: Map<String, Any>?,
-    @ApiModelProperty("统计时间，格式yyyy-MM-dd HH:mm:ss")
+    @get:Schema(title = "统计时间，格式yyyy-MM-dd HH:mm:ss")
     val statisticsTime: String
 )

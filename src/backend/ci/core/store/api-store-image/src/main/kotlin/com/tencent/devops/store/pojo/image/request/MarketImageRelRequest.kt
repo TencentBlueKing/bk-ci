@@ -29,18 +29,17 @@ package com.tencent.devops.store.pojo.image.request
 import com.tencent.devops.common.pipeline.type.docker.ImageType
 import com.tencent.devops.common.web.annotation.BkField
 import com.tencent.devops.common.web.constant.BkStyleEnum
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("关联镜像请求报文体")
+@Schema(title = "关联镜像请求报文体")
 data class MarketImageRelRequest(
-    @ApiModelProperty("项目编码", required = true)
+    @get:Schema(title = "项目编码", required = true)
     val projectCode: String,
-    @ApiModelProperty("镜像名称", required = true)
+    @get:Schema(title = "镜像名称", required = true)
     @field:BkField(patternStyle = BkStyleEnum.NAME_STYLE)
     val imageName: String,
-    @ApiModelProperty("镜像来源 BKDEVOPS:蓝盾，THIRD:第三方", required = true)
+    @get:Schema(title = "镜像来源 BKDEVOPS:蓝盾，THIRD:第三方", required = true)
     val imageSourceType: ImageType,
-    @ApiModelProperty("ticket身份ID", required = false)
+    @get:Schema(title = "ticket身份ID", required = false)
     val ticketId: String?
 )
