@@ -133,7 +133,7 @@ data class BuildRecordContainer(
                         resourceVersion = context.resourceVersion,
                         taskSeq = index,
                         status = buildStatus?.name,
-                        taskVar = mutableMapOf(),
+                        taskVar = element.initTaskVar(),
                         timestamps = mapOf(),
                         elementPostInfo = element.additionalOptions?.elementPostInfo?.takeIf { info ->
                             info.parentElementId != element.id

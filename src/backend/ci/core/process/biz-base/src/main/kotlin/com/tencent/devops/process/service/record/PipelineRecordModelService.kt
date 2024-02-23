@@ -35,6 +35,8 @@ import com.tencent.devops.common.pipeline.container.Stage
 import com.tencent.devops.common.pipeline.container.VMBuildContainer
 import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.common.pipeline.pojo.element.ElementAdditionalOptions
+import com.tencent.devops.common.pipeline.pojo.element.quality.QualityGateInElement
+import com.tencent.devops.common.pipeline.pojo.element.quality.QualityGateOutElement
 import com.tencent.devops.common.pipeline.utils.ModelUtils
 import com.tencent.devops.process.dao.record.BuildRecordContainerDao
 import com.tencent.devops.process.dao.record.BuildRecordStageDao
@@ -43,6 +45,7 @@ import com.tencent.devops.process.engine.service.PipelinePostElementService
 import com.tencent.devops.process.pojo.pipeline.record.BuildRecordContainer
 import com.tencent.devops.process.pojo.pipeline.record.BuildRecordTask
 import com.tencent.devops.process.pojo.pipeline.record.MergeBuildRecordParam
+import com.tencent.devops.store.pojo.common.KEY_ATOM_CODE
 import org.jooq.DSLContext
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
@@ -250,6 +253,12 @@ class PipelineRecordModelService @Autowired constructor(
                 val taskName = taskBaseMap[Element::name.name]?.toString() ?: ""
                 taskVarMap[Element::name.name] = pipelinePostElementService.getPostElementName(taskName)
                 taskVarMap = ModelUtils.generateBuildModelDetail(taskBaseMap.deepCopy(), taskVarMap)
+            }
+            val classType = containerRecordTask.classType
+            if (classType in listOf(QualityGateInElement.classType, QualityGateOutElement.classType)) {
+                // 补充质量红线相关信息以便详情页模型数据组装合并
+                taskVarMap["@type"] = classType
+                taskVarMap[KEY_ATOM_CODE] = containerRecordTask.atomCode
             }
             if (matrixTaskFlag && elementPostInfo == null) {
                 // 生成矩阵task的变量模型
