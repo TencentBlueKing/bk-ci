@@ -63,6 +63,8 @@
                     <bk-input
                         :placeholder="$t('settings.itemPlaceholder')"
                         :disabled="!editable"
+                        :max-length="128"
+                        :maxlength="128"
                         v-model="pipelineSetting.concurrencyGroup"
                     />
                 </bk-form-item>
