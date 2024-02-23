@@ -158,6 +158,7 @@ class ElementTransfer @Autowired(required = false) constructor(
                         } else {
                             element.advanceExpression
                         },
+                        repoId = element.repoHashId,
                         repoName = element.repoName,
                         branches = element.branches,
                         always = (element.noScm != true).nullIfDefault(false),

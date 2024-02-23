@@ -25,17 +25,24 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.engine.pojo
+package com.tencent.devops.scm.exception
 
-import com.tencent.devops.common.pipeline.enums.ChannelCode
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.web.annotation.BkExceptionMapper
+import org.slf4j.LoggerFactory
+import javax.ws.rs.core.MediaType
+import javax.ws.rs.core.Response
+import javax.ws.rs.ext.ExceptionMapper
 
-data class PipelineTimer(
-    val projectId: String,
-    val pipelineId: String,
-    val startUser: String,
-    val crontabExpressions: List<String>,
-    val channelCode: ChannelCode,
-    val repoHashId: String?,
-    val branchs: List<String>?,
-    val noScm: Boolean?
-)
+@BkExceptionMapper
+class GitApiExceptionMapper : ExceptionMapper<GitApiException> {
+    companion object {
+        val logger = LoggerFactory.getLogger(GitApiException::class.java)!!
+    }
+
+    override fun toResponse(exception: GitApiException): Response {
+        logger.warn("Failed with git api exception: $exception", exception)
+        return Response.status(exception.code).type(MediaType.APPLICATION_JSON_TYPE)
+            .entity(Result<Void>(exception.code, exception.message)).build()
+    }
+}

@@ -120,8 +120,15 @@ class PipelineViewGroupService @Autowired constructor(
         return result
     }
 
-    fun addViewGroup(projectId: String, userId: String, pipelineView: PipelineViewForm): String {
-        checkPermission(userId, projectId, pipelineView.projected)
+    fun addViewGroup(
+        projectId: String,
+        userId: String,
+        pipelineView: PipelineViewForm,
+        checkPermission: Boolean = true
+    ): String {
+        if (checkPermission) {
+            checkPermission(userId, projectId, pipelineView.projected)
+        }
         var viewId = 0L
         dslContext.transaction { t ->
             val context = DSL.using(t)

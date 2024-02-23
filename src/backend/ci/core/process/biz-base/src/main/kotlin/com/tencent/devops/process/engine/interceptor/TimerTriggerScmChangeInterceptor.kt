@@ -101,6 +101,11 @@ class TimerTriggerScmChangeInterceptor @Autowired constructor(
                                 if (!noScm) {
                                     return@outer
                                 }
+                                // 如果插件配置代码库信息,已在PipelineTimerBuildListener已校验源代码是否有变更
+                                if (!ele.repoHashId.isNullOrBlank() || !ele.repoName.isNullOrBlank()) {
+                                    noScm = false
+                                    return@outer
+                                }
                             }
                         }
                         // 解析变量
