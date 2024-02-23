@@ -314,7 +314,7 @@ class CodeSvnScmImpl constructor(
      */
     private fun addWebhookByToken(hookUrl: String, projectName: String = this.projectName) {
         // 兜底，若token为空，尝试获取用户会话信息
-        if (token.isNullOrBlank() && !SvnUtils.isSSHProtocol(SVNURL.parseURIEncoded(url).protocol)){
+        if (token.isNullOrBlank() && !SvnUtils.isSSHProtocol(SVNURL.parseURIEncoded(url).protocol)) {
             token = getLoginSession()?.privateToken
         }
         val hooks = svnApi.getWebhooks(

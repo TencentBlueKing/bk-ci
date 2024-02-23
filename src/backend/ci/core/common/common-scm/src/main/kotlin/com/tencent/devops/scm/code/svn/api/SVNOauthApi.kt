@@ -30,7 +30,7 @@ package com.tencent.devops.scm.code.svn.api
 import okhttp3.Request
 
 @Suppress("ALL")
-open class SVNOauthApi : SVNApi(){
+open class SVNOauthApi : SVNApi() {
 
     override fun request(host: String, token: String, url: String, page: String): Request.Builder {
         return if (page.isEmpty())
