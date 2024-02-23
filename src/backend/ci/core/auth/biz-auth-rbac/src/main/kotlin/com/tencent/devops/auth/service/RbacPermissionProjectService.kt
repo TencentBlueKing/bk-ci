@@ -165,33 +165,16 @@ class RbacPermissionProjectService(
     ): Boolean {
         logger.info("batchCreateProjectUser:$userId|$projectCode|$roleCode|$members")
         // 根据roleCode获取到对应的iam组ID
-        val iamGroupId = if (roleCode == BkAuthGroup.CI_MANAGER.value) {
-            authResourceGroupDao.getByGroupName(
-                dslContext = dslContext,
-                projectCode = projectCode,
-                resourceType = AuthResourceType.PROJECT.value,
-                resourceCode = projectCode,
-                groupName = BkAuthGroup.CI_MANAGER.groupName
-            )?.relationId
-        } else {
-            authResourceGroupDao.get(
-                dslContext = dslContext,
-                projectCode = projectCode,
-                resourceType = AuthResourceType.PROJECT.value,
-                resourceCode = projectCode,
-                groupCode = roleCode
-            )?.relationId
-        } ?: throw ErrorCodeException(
-            errorCode = AuthMessageCode.ERROR_AUTH_GROUP_NOT_EXIST,
-            params = arrayOf(roleCode),
-            defaultMessage = "group $roleCode not exist"
+        val iamGroupId = resourceGroupMemberService.roleCodeToIamGroupId(
+            projectCode = projectCode,
+            roleCode = roleCode
         )
         logger.info("batch add project user:$userId|$projectCode|$roleCode|$members")
         val expiredTime = System.currentTimeMillis() / 1000 + TimeUnit.DAYS.toSeconds(expiredAt)
         resourceMemberService.batchAddResourceGroupMembers(
             userId = userId,
             projectCode = projectCode,
-            iamGroupId = iamGroupId.toInt(),
+            iamGroupId = iamGroupId,
             expiredTime = expiredTime,
             members = members
         )

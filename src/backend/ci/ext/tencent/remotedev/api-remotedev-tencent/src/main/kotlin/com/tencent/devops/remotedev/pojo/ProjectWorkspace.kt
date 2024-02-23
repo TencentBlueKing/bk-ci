@@ -76,5 +76,7 @@ data class ProjectWorkspace(
     @ApiModelProperty("专家协助")
     val expertSupportList: List<FetchSupportResp>?,
     @ApiModelProperty("云桌面对应的mac地址")
-    val macAddress: String? = null
+    val macAddress: String? = null,
+    @ApiModelProperty("工作空间备注")
+    val remark: String? = null
 ) : IWorkspace

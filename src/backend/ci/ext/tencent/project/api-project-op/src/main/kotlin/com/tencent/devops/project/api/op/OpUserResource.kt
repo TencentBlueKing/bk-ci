@@ -28,18 +28,20 @@
 package com.tencent.devops.project.api.op
 
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.project.pojo.SeniorUserDTO
 import com.tencent.devops.project.pojo.UserInfo
 import com.tencent.devops.project.pojo.user.UserDeptDetail
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
 import javax.ws.rs.Consumes
+import javax.ws.rs.DELETE
 import javax.ws.rs.GET
 import javax.ws.rs.POST
 import javax.ws.rs.PUT
 import javax.ws.rs.Path
-import javax.ws.rs.Produces
 import javax.ws.rs.PathParam
+import javax.ws.rs.Produces
 import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
@@ -88,5 +90,22 @@ interface OpUserResource {
     @Path("/ext/public/account")
     fun createPublicAccount(
         userInfo: UserInfo
+    ): Result<Boolean>
+
+    @ApiOperation("添加高级用户")
+    @POST
+    @Path("/senior/user/add")
+    fun createSeniorUsers(
+        @ApiParam("高级用户列表", required = true)
+        seniorUserList: List<SeniorUserDTO>
+    ): Result<Boolean>
+
+    @ApiOperation("删除高级用户")
+    @DELETE
+    @Path("/senior/user/delete/{userId}")
+    fun deleteSeniorUsers(
+        @ApiParam("用户ID", required = true)
+        @PathParam("userId")
+        userId: String
     ): Result<Boolean>
 }

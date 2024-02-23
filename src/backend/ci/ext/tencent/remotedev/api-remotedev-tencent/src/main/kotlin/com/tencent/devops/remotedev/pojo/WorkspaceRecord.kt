@@ -65,6 +65,7 @@ interface WorkspaceRecordInf {
     val preciAgentId: String?
     val workspaceMountType: WorkspaceMountType
     val ownerType: WorkspaceOwnerType
+    val remark: String?
 }
 
 @ApiModel("工作空间信息")
@@ -130,7 +131,9 @@ data class WorkspaceRecord(
     @ApiModelProperty("操作系统类型")
     override val workspaceSystemType: WorkspaceSystemType,
     @ApiModelProperty("工作空间归属")
-    override val ownerType: WorkspaceOwnerType
+    override val ownerType: WorkspaceOwnerType,
+    @ApiModelProperty("工作空间备注")
+    override val remark: String?
 ) : WorkspaceRecordInf
 
 /**
@@ -200,5 +203,7 @@ data class WorkspaceRecordWithDetail(
     @ApiModelProperty("工作空间归属")
     override val ownerType: WorkspaceOwnerType,
     @ApiModelProperty(" 工作空间详情")
-    val workSpaceDetail: String
+    val workSpaceDetail: String,
+    @ApiModelProperty("工作空间备注")
+    override val remark: String?
 ) : WorkspaceRecordInf

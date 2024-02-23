@@ -137,6 +137,7 @@ class RemoteDevSettingDao {
         limit: SQLLimit? = null,
         userIds: Set<String>? = null
     ): Map<String, Pair<String, String>> {
+        if (userIds?.isEmpty() == true) return emptyMap()
         return with(TRemoteDevSettings.T_REMOTE_DEV_SETTINGS) {
             dslContext.select(USER_ID, USER_NAME, COMPANY_NAME).from(this)
                 .let {
