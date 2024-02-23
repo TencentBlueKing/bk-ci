@@ -77,7 +77,6 @@ class NodeDao {
                 dslContext.update(this)
                     .set(NODE_STATUS, nodeStatus)
                     .set(TASK_ID, jobId)
-                    .set(LAST_MODIFY_TIME, LocalDateTime.now())
                     .where(NODE_IP.`in`(nodeIpList))
                     .and(NODE_TYPE.eq(NodeType.CMDB.name))
             )
@@ -94,7 +93,6 @@ class NodeDao {
                 buildNodeAgentVersionInfoList.map {
                     dslContext.update(this)
                         .set(AGENT_VERSION, it.agentVersion)
-                        .set(LAST_MODIFY_TIME, LocalDateTime.now())
                         .where(NODE_ID.eq(it.nodeId))
                 }
             )
@@ -140,7 +138,6 @@ class NodeDao {
                     dslContext.update(this)
                         .set(HOST_ID, it.bkHostId)
                         .set(CLOUD_AREA_ID, it.bkCloudId)
-                        .set(LAST_MODIFY_TIME, LocalDateTime.now())
                         .where(NODE_ID.eq(it.nodeId))
                 }
             )
@@ -156,7 +153,6 @@ class NodeDao {
                         .set(NODE_STATUS, it.nodeStatus)
                         .set(AGENT_STATUS, it.agentStatus)
                         .set(AGENT_VERSION, it.agentVersion)
-                        .set(LAST_MODIFY_TIME, LocalDateTime.now())
                         .where(NODE_ID.eq(it.nodeId))
                 }
             )
@@ -170,7 +166,6 @@ class NodeDao {
                 updateAgentInfo.map {
                     dslContext.update(this)
                         .set(DISPLAY_NAME, it.displayName)
-                        .set(LAST_MODIFY_TIME, LocalDateTime.now())
                         .where(NODE_ID.eq(it.nodeId))
                 }
             )
@@ -335,7 +330,6 @@ class NodeDao {
         with(TNode.T_NODE) {
             dslContext.update(this)
                 .set(NODE_STATUS, NodeStatus.NOT_IN_CC.name)
-                .set(LAST_MODIFY_TIME, LocalDateTime.now())
                 .set(HOST_ID, hostIdDefault)
                 .set(CLOUD_AREA_ID, cloudAreaIdDefault)
                 .where(NODE_IP.`in`(notInCCIpList))
@@ -349,7 +343,6 @@ class NodeDao {
         with(TNode.T_NODE) {
             dslContext.update(this)
                 .set(NODE_STATUS, NodeStatus.NORMAL.name)
-                .set(LAST_MODIFY_TIME, LocalDateTime.now())
                 .where(NODE_IP.`in`(inCCIpList))
                 .and(NODE_TYPE.`in`(NodeType.CMDB.name, NodeType.UNKNOWN.name, NodeType.OTHER.name))
                 .and(NODE_STATUS.notEqual(NodeStatus.NORMAL.name))
@@ -363,7 +356,6 @@ class NodeDao {
         with(TNode.T_NODE) {
             dslContext.update(this)
                 .set(NODE_STATUS, NodeStatus.NOT_IN_CMDB.name)
-                .set(LAST_MODIFY_TIME, LocalDateTime.now())
                 .set(HOST_ID, hostIdDefault)
                 .set(CLOUD_AREA_ID, cloudAreaIdDefault)
                 .where(NODE_IP.`in`(ipList))
