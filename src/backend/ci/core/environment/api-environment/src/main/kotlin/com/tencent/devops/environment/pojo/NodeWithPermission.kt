@@ -89,5 +89,5 @@ data class NodeWithPermission(
     @ApiModelProperty("操作系统类型")
     val osType: String?,
     @ApiModelProperty("hostID")
-    val hostId: Long? = null,
+    val hostId: Long? = null
 )

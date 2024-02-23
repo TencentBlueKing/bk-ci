@@ -144,7 +144,7 @@ data class AgentService @Autowired constructor(
             jobType = DEFAULT_INSTALL_AGENT_JOB_TYPE,
             hosts = installAgentReq.hosts.map {
                 AgentHostForInstallAgent(
-                    bkBizId = hostIdToqueryCCResDataMap?.get(it.bkHostId)?.bkBizId ?:bkBizScopeId,
+                    bkBizId = hostIdToqueryCCResDataMap?.get(it.bkHostId)?.bkBizId ?: bkBizScopeId,
                     bkCloudId = it.bkCloudId ?: DEFAULT_CLOUD_ID,
                     bkHostId = it.bkHostId, bkAddressing = null,
                     apId = DEFAULT_INSTALL_AGENT_AP_ID,
