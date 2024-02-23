@@ -125,11 +125,8 @@ class StartCloudRemoteDevService @Autowired constructor(
             zoneId = random.zoneId
             machineType = random.machineType
         } else {
-            val resourceInAvailable = resourceInType.filter {
-                it.status == 11
-            }
 
-            val random = resourceInAvailable.toList().randomOrNull() ?: throw BuildFailureException(
+            val random = resourceInType.toList().randomOrNull() ?: throw BuildFailureException(
                 ErrorCodeEnum.CREATE_ENVIRONMENT_INTERFACE_FAIL.errorType,
                 ErrorCodeEnum.CREATE_ENVIRONMENT_INTERFACE_FAIL.errorCode,
                 ErrorCodeEnum.CREATE_ENVIRONMENT_INTERFACE_FAIL.formatErrorMessage,
