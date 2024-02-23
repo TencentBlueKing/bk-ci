@@ -26,17 +26,16 @@
  */
 package com.tencent.devops.monitoring.pojo
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("插件执行失败详情统计数据")
+@Schema(title = "插件执行失败详情统计数据")
 data class AtomMonitorFailDetailData(
-    @ApiModelProperty("系统运行错误执行失败数", required = true)
+    @get:Schema(title = "系统运行错误执行失败数", required = true)
     val totalSystemFailNum: Int,
-    @ApiModelProperty("用户配置错误执行失败数", required = true)
+    @get:Schema(title = "用户配置错误执行失败数", required = true)
     val totalUserFailNum: Int,
-    @ApiModelProperty("第三方系统接入错误执行失败数", required = true)
+    @get:Schema(title = "第三方系统接入错误执行失败数", required = true)
     val totalThirdFailNum: Int,
-    @ApiModelProperty("组件自身原因执行失败数", required = true)
+    @get:Schema(title = "组件自身原因执行失败数", required = true)
     val totalComponentFailNum: Int
 )

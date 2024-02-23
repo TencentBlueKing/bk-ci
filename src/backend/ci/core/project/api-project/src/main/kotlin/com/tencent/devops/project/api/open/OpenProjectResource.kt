@@ -31,9 +31,9 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_BK_TOKEN
 import com.tencent.devops.project.pojo.OperationalProductVO
 import com.tencent.devops.project.pojo.ProjectVO
 import com.tencent.devops.project.pojo.Result
-import io.swagger.annotations.Api
-import io.swagger.annotations.ApiOperation
-import io.swagger.annotations.ApiParam
+import io.swagger.v3.oas.annotations.tags.Tag
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.Parameter
 import javax.ws.rs.Consumes
 import javax.ws.rs.GET
 import javax.ws.rs.HeaderParam
@@ -43,40 +43,40 @@ import javax.ws.rs.PathParam
 import javax.ws.rs.Produces
 import javax.ws.rs.core.MediaType
 
-@Api(tags = ["OPEN_PROJECT"], description = "项目OPEN接口")
+@Tag(name = "OPEN_PROJECT", description = "项目OPEN接口")
 @Path("/open/project/")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface OpenProjectResource {
     @GET
     @Path("/{projectId}")
-    @ApiOperation("获取项目信息")
+    @Operation(summary = "获取项目信息")
     fun get(
         @HeaderParam(AUTH_HEADER_DEVOPS_BK_TOKEN)
-        @ApiParam("token")
+        @Parameter(description = "token")
         token: String,
-        @ApiParam(value = "项目ID")
+        @Parameter(description = "项目ID")
         @PathParam("projectId")
         projectId: String
     ): Result<ProjectVO>
 
     @POST
     @Path("/listByProjectCodes")
-    @ApiOperation("查询指定项目")
+    @Operation(summary = "查询指定项目")
     fun listByProjectCodes(
         @HeaderParam(AUTH_HEADER_DEVOPS_BK_TOKEN)
-        @ApiParam("token")
+        @Parameter(description = "token")
         token: String,
-        @ApiParam(value = "项目id", required = true)
+        @Parameter(description = "项目id", required = true)
         projectCodes: Set<String>
     ): Result<List<ProjectVO>>
 
     @GET
     @Path("/getOperationalProducts")
-    @ApiOperation("查询运营产品")
+    @Operation(summary = "查询运营产品")
     fun getOperationalProducts(
         @HeaderParam(AUTH_HEADER_DEVOPS_BK_TOKEN)
-        @ApiParam("token")
+        @Parameter(description = "token")
         token: String
     ): Result<List<OperationalProductVO>>
 }

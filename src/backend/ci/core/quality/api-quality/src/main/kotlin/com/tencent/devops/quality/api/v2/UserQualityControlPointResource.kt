@@ -33,9 +33,9 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.quality.api.v2.pojo.QualityControlPoint
 import com.tencent.devops.quality.api.v2.pojo.response.ControlPointStageGroup
-import io.swagger.annotations.Api
-import io.swagger.annotations.ApiOperation
-import io.swagger.annotations.ApiParam
+import io.swagger.v3.oas.annotations.tags.Tag
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.Parameter
 import javax.ws.rs.Consumes
 import javax.ws.rs.GET
 import javax.ws.rs.HeaderParam
@@ -45,69 +45,69 @@ import javax.ws.rs.Produces
 import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
-@Api(tags = ["USER_CONTROL_POINT_V2"], description = "质量红线-拦截点v2")
+@Tag(name = "USER_CONTROL_POINT_V2", description = "质量红线-拦截点v2")
 @Path("/user/controlPoints/v2")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface UserQualityControlPointResource {
-    @ApiOperation("获取控制点列表")
+    @Operation(summary = "获取控制点列表")
     @Path("/list")
     @GET
     fun list(
-        @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("项目ID", required = false)
+        @Parameter(description = "项目ID", required = false)
         @QueryParam("projectId")
         projectId: String
     ): Result<List<ControlPointStageGroup>>
 
-    @ApiOperation("获取控制点的原子类型列表")
+    @Operation(summary = "获取控制点的原子类型列表")
     @Path("/list/elementType")
     @GET
     fun listElementType(
-        @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("项目ID", required = false)
+        @Parameter(description = "项目ID", required = false)
         @HeaderParam(AUTH_HEADER_DEVOPS_PROJECT_ID)
         projectId: String
     ): Result<List<String>>
 
-    @ApiOperation("获取控制点信息")
+    @Operation(summary = "获取控制点信息")
     @Path("/elementType/{elementType}/get")
     @GET
     fun get(
-        @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("项目ID", required = false)
+        @Parameter(description = "项目ID", required = false)
         @HeaderParam(AUTH_HEADER_DEVOPS_PROJECT_ID)
         projectId: String,
         @PathParam("elementType")
         elementType: String
     ): Result<QualityControlPoint>
 
-    @ApiOperation("获取项目中控制点的原子类型列表")
+    @Operation(summary = "获取项目中控制点的原子类型列表")
     @Path("/list/{projectId}/elementType")
     @GET
     fun listProjectElementType(
-        @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String
     ): Result<List<String>>
 
-    @ApiOperation("获取项目中控制点信息")
+    @Operation(summary = "获取项目中控制点信息")
     @Path("/project/{projectId}/elementType/{elementType}/get")
     @GET
     fun getProjectControlPoint(
-        @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
         @PathParam("elementType")

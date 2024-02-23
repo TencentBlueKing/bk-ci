@@ -27,13 +27,12 @@
 
 package com.tencent.devops.metrics.pojo.`do`
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("错误码合规信息")
+@Schema(title = "错误码合规信息")
 data class ComplianceInfoDO(
-    @ApiModelProperty("失败执行次数")
+    @get:Schema(title = "失败执行次数")
     val failExecuteCount: Int,
-    @ApiModelProperty("失败合规次数")
+    @get:Schema(title = "失败合规次数")
     val failComplianceCount: Int
 )

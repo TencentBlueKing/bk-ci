@@ -27,9 +27,9 @@
 
 package com.tencent.devops.quality.api.v2.pojo.request
 
-import io.swagger.annotations.ApiModel
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("流水线模板范围请求")
+@Schema(title = "流水线模板范围请求")
 data class TemplateRangeDetailRequest(
     val projectId: String,
     val templateIds: Set<String>,

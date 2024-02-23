@@ -35,94 +35,94 @@ import com.tencent.devops.store.pojo.common.Label
 import com.tencent.devops.store.pojo.common.StoreDailyStatistic
 import com.tencent.devops.store.pojo.common.index.StoreIndexInfo
 import com.tencent.devops.store.pojo.common.StoreUserCommentInfo
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
 data class AtomVersion(
-    @ApiModelProperty("插件ID")
+    @get:Schema(title = "插件ID")
     val atomId: String,
-    @ApiModelProperty("插件标识")
+    @get:Schema(title = "插件标识")
     val atomCode: String,
-    @ApiModelProperty("插件名称")
+    @get:Schema(title = "插件名称")
     @BkFieldI18n(source = I18nSourceEnum.DB)
     val name: String,
-    @ApiModelProperty("logo地址")
+    @get:Schema(title = "logo地址")
     val logoUrl: String?,
-    @ApiModelProperty("插件分类code")
+    @get:Schema(title = "插件分类code")
     val classifyCode: String?,
-    @ApiModelProperty("插件分类名称")
+    @get:Schema(title = "插件分类名称")
     val classifyName: String?,
-    @ApiModelProperty("插件范畴")
+    @get:Schema(title = "插件范畴")
     val category: String?,
-    @ApiModelProperty("插件说明文档链接")
+    @get:Schema(title = "插件说明文档链接")
     val docsLink: String?,
-    @ApiModelProperty("前端渲染模板版本（1.0代表历史存量插件渲染模板版本）")
+    @get:Schema(title = "前端渲染模板版本（1.0代表历史存量插件渲染模板版本）")
     val htmlTemplateVersion: String,
-    @ApiModelProperty("插件类型")
+    @get:Schema(title = "插件类型")
     val atomType: String?,
-    @ApiModelProperty("适用Job类型")
+    @get:Schema(title = "适用Job类型")
     val jobType: String?,
-    @ApiModelProperty("操作系统")
+    @get:Schema(title = "操作系统")
     val os: List<String>?,
-    @ApiModelProperty("插件简介")
+    @get:Schema(title = "插件简介")
     @BkFieldI18n(source = I18nSourceEnum.DB)
     val summary: String?,
-    @ApiModelProperty("插件描述")
+    @get:Schema(title = "插件描述")
     @BkFieldI18n(source = I18nSourceEnum.DB)
     val description: String?,
-    @ApiModelProperty("版本号")
+    @get:Schema(title = "版本号")
     val version: String?,
-    @ApiModelProperty("插件状态", required = true)
+    @get:Schema(title = "插件状态", required = true)
     val atomStatus: String,
-    @ApiModelProperty("发布类型")
+    @get:Schema(title = "发布类型")
     val releaseType: String?,
-    @ApiModelProperty("版本日志")
+    @get:Schema(title = "版本日志")
     @BkFieldI18n(source = I18nSourceEnum.DB, keyPrefixName = "versionInfo")
     val versionContent: String?,
-    @ApiModelProperty("开发语言")
+    @get:Schema(title = "开发语言")
     val language: String?,
-    @ApiModelProperty("代码库链接")
+    @get:Schema(title = "代码库链接")
     val codeSrc: String?,
-    @ApiModelProperty("发布者")
+    @get:Schema(title = "发布者")
     @BkFieldI18n(source = I18nSourceEnum.DB, keyPrefixName = "versionInfo")
     val publisher: String?,
-    @ApiModelProperty("创建人")
+    @get:Schema(title = "创建人")
     val creator: String,
-    @ApiModelProperty("修改人")
+    @get:Schema(title = "修改人")
     val modifier: String,
-    @ApiModelProperty("创建时间")
+    @get:Schema(title = "创建时间")
     val createTime: String,
-    @ApiModelProperty("修改时间")
+    @get:Schema(title = "修改时间")
     val updateTime: String,
-    @ApiModelProperty("是否为默认插件（默认插件默认所有项目可见）true：默认插件 false：普通插件")
+    @get:Schema(title = "是否为默认插件（默认插件默认所有项目可见）true：默认插件 false：普通插件")
     val defaultFlag: Boolean?,
-    @ApiModelProperty("是否可安装标识")
+    @get:Schema(title = "是否可安装标识")
     val flag: Boolean?,
-    @ApiModelProperty("插件代码库授权者")
+    @get:Schema(title = "插件代码库授权者")
     val repositoryAuthorizer: String?,
-    @ApiModelProperty("插件的调试项目")
+    @get:Schema(title = "插件的调试项目")
     val projectCode: String?,
-    @ApiModelProperty("插件的初始化项目")
+    @get:Schema(title = "插件的初始化项目")
     val initProjectCode: String?,
-    @ApiModelProperty("标签列表", required = false)
+    @get:Schema(title = "标签列表", required = false)
     val labelList: List<Label>?,
-    @ApiModelProperty("用户评论信息")
+    @get:Schema(title = "用户评论信息")
     val userCommentInfo: StoreUserCommentInfo,
-    @ApiModelProperty("项目可视范围,PRIVATE:私有 LOGIN_PUBLIC:登录用户开源")
+    @get:Schema(title = "项目可视范围,PRIVATE:私有 LOGIN_PUBLIC:登录用户开源")
     val visibilityLevel: String?,
-    @ApiModelProperty("插件代码库不开源原因")
+    @get:Schema(title = "插件代码库不开源原因")
     val privateReason: String?,
-    @ApiModelProperty("是否推荐标识 true：推荐，false：不推荐", required = false)
+    @get:Schema(title = "是否推荐标识 true：推荐，false：不推荐", required = false)
     val recommendFlag: Boolean? = null,
-    @ApiModelProperty(value = "前端UI渲染方式", required = false)
+    @get:Schema(title = "前端UI渲染方式", required = false)
     val frontendType: FrontendTypeEnum?,
-    @ApiModelProperty("yaml可用标识 true：是，false：否")
+    @get:Schema(title = "yaml可用标识 true：是，false：否")
     val yamlFlag: Boolean? = null,
-    @ApiModelProperty("是否可编辑")
+    @get:Schema(title = "是否可编辑")
     val editFlag: Boolean? = null,
-    @ApiModelProperty("每日统计信息列表")
+    @get:Schema(title = "每日统计信息列表")
     val dailyStatisticList: List<StoreDailyStatistic>? = null,
-    @ApiModelProperty("荣誉信息", required = false)
+    @get:Schema(title = "荣誉信息", required = false)
     val honorInfos: List<HonorInfo>? = null,
-    @ApiModelProperty("指标信息列表")
+    @get:Schema(title = "指标信息列表")
     val indexInfos: List<StoreIndexInfo>? = null
 )

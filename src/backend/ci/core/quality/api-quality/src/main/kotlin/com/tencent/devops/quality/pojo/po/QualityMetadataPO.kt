@@ -27,36 +27,35 @@
 
 package com.tencent.devops.quality.pojo.po
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 import java.time.LocalDateTime
 
-@ApiModel("质量红线基础数据PO")
+@Schema(title = "质量红线基础数据PO")
 data class QualityMetadataPO(
-    @ApiModelProperty("ID")
+    @get:Schema(title = "ID")
     val id: Long,
-    @ApiModelProperty("数据ID")
+    @get:Schema(title = "数据ID")
     val dataId: String?,
-    @ApiModelProperty("基础数据名称")
+    @get:Schema(title = "基础数据名称")
     var dataName: String?,
-    @ApiModelProperty("原子的classType")
+    @get:Schema(title = "原子的classType")
     val elementType: String?,
-    @ApiModelProperty("产出原子")
+    @get:Schema(title = "产出原子")
     var elementName: String?,
-    @ApiModelProperty("工具/原子子类")
+    @get:Schema(title = "工具/原子子类")
     val elementDetail: String?,
-    @ApiModelProperty("数值类型")
+    @get:Schema(title = "数值类型")
     val valueType: String?,
-    @ApiModelProperty("说明")
+    @get:Schema(title = "说明")
     var desc: String?,
-    @ApiModelProperty("额外的一些字段")
+    @get:Schema(title = "额外的一些字段")
     val extra: String?,
-    @ApiModelProperty("创建用户")
+    @get:Schema(title = "创建用户")
     val createUser: String?,
-    @ApiModelProperty("更新用户")
+    @get:Schema(title = "更新用户")
     val updateUser: String?,
-    @ApiModelProperty("创建时间")
+    @get:Schema(title = "创建时间")
     val createTime: LocalDateTime?,
-    @ApiModelProperty("更新时间")
+    @get:Schema(title = "更新时间")
     val updateTime: LocalDateTime?
 )
