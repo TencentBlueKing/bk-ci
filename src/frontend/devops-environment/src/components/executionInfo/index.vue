@@ -71,6 +71,7 @@
                 ref="view"
                 :key="activePanel"
                 :is="renderCom"
+                :ip="ip"
                 :step-instance-id="stepInstanceId"
                 :font-size="fontSize"
                 :mode="activePanel"

@@ -278,7 +278,7 @@
              * @description: 获取步骤执行结果
              */
             fetchJobInstanceStatus () {
-                if (!this.jobInstanceFinished) {
+                if (this.jobInstanceFinished) {
                     this.isLoading = true
                 }
                 this.getJobInstanceStatus({

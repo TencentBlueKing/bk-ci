@@ -6,7 +6,7 @@
             opacity: .1
         }">
         <div class="log-wraper">
-            <div id="executeScriptLog" style="height: 100%;" />
+            <div v-once id="executeScriptLog" style="height: 100%;" />
         </div>
         <div class="log-action-box">
             <div class="action-item" v-bk-tooltips="backTopTips" @click="handleScrollTop">
@@ -151,14 +151,13 @@
                 })
                     .then(res => {
                         const logContent = res.scriptTaskLogs[0].logContent || ''
-                        this.editor.setValue(logContent)
-                        this.editor.clearSelection()
                         
+                        this.editor.getSession().setValue(logContent)
+                        this.editor.scrollToLine(Infinity)
                         if (!this.finished) {
                             setTimeout(() => {
-                                this.autoScrollTimeout()
                                 this.fetchLogContent()
-                            }, 5000)
+                            }, 2000)
                         }
                     })
                     .finally(() => {
@@ -167,7 +166,7 @@
             },
             initEditor () {
                 const editor = ace.edit('executeScriptLog')
-                editor.getSession().setMode('ace/mode/text')
+                // editor.getSession().setMode('ace/mode/text')
                 editor.setTheme('ace/theme/monokai')
                 editor.setOptions({
                     fontSize: this.fontSize,
@@ -185,6 +184,7 @@
                 const editorSession = editor.getSession()
                 // 自动换行时不添加缩进
                 editorSession.$indentedSoftWrap = false
+                editorSession.setUseWrapMode(true)
                 editorSession.on('changeScrollTop', (scrollTop) => {
                     const {
                         height,

@@ -173,6 +173,12 @@
                 type: String,
                 default: ''
             },
+            hostId: {
+                type: Number
+            },
+            osType: {
+                type: String
+            },
             taskId: {
                 type: Number
             }
@@ -185,7 +191,8 @@
                     authType: 'PASSWORD',
                     password: '',
                     installChannelId: 'auto',
-                    innerIp: ''
+                    innerIp: '',
+                    hostId: null
                 }
             }
             return {
@@ -214,6 +221,10 @@
                 if (val) {
                     this.fetchChannelList()
                     this.formData.innerIp = this.innerIp
+                    this.formData.hostId = this.hostId
+                    if (['LINUX', 'AIX', 'SOLARIS', 'WINDOWS'].includes(this.osType)) {
+                        this.formData.osType = this.osType
+                    }
                 } else {
                     if (this.jobId) {
                         this.$emit('install')
