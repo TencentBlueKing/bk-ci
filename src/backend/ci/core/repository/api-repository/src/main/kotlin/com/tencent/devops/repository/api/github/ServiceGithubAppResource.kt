@@ -6,9 +6,9 @@ import com.tencent.devops.repository.pojo.AppInstallationResult
 import com.tencent.devops.repository.sdk.github.request.GetAppInstallationForOrgRequest
 import com.tencent.devops.repository.sdk.github.request.GetAppInstallationForRepoRequest
 import com.tencent.devops.repository.sdk.github.response.GetAppInstallationResponse
-import io.swagger.v3.oas.annotations.tags.Tag
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
+import io.swagger.v3.oas.annotations.tags.Tag
 import javax.ws.rs.Consumes
 import javax.ws.rs.HeaderParam
 import javax.ws.rs.POST
