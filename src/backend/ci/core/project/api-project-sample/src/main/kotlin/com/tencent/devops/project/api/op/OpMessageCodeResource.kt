@@ -32,9 +32,9 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.project.pojo.code.AddMessageCodeRequest
 import com.tencent.devops.project.pojo.code.MessageCodeResp
 import com.tencent.devops.project.pojo.code.UpdateMessageCodeRequest
-import io.swagger.annotations.Api
-import io.swagger.annotations.ApiOperation
-import io.swagger.annotations.ApiParam
+import io.swagger.v3.oas.annotations.tags.Tag
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.Parameter
 import javax.ws.rs.Consumes
 import javax.ws.rs.GET
 import javax.ws.rs.POST
@@ -45,61 +45,61 @@ import javax.ws.rs.Produces
 import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
-@Api(tags = ["OP_MESSAGE_CODE"], description = "OP-返回码")
+@Tag(name = "OP_MESSAGE_CODE", description = "OP-返回码")
 @Path("/op/message/codes")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface OpMessageCodeResource {
 
-    @ApiOperation("获取返回码信息")
+    @Operation(summary = "获取返回码信息")
     @GET
     @Path("/")
     fun getMessageCodeDetails(
-        @ApiParam(value = "返回码", required = false)
+        @Parameter(description = "返回码", required = false)
         @QueryParam("messageCode")
         messageCode: String?,
-        @ApiParam("页码", required = false)
+        @Parameter(description = "页码", required = false)
         @QueryParam("page")
         page: Int?,
-        @ApiParam("每页数量", required = false)
+        @Parameter(description = "每页数量", required = false)
         @QueryParam("pageSize")
         pageSize: Int?
     ): Result<MessageCodeResp>
 
-    @ApiOperation("获取返回码信息")
+    @Operation(summary = "获取返回码信息")
     @GET
     @Path("/{messageCode}")
     fun getMessageCodeDetail(
-        @ApiParam(value = "返回码", required = true)
+        @Parameter(description = "返回码", required = true)
         @PathParam("messageCode")
         messageCode: String
     ): Result<MessageCodeDetail?>
 
-    @ApiOperation("刷新返回码在redis的缓存")
+    @Operation(summary = "刷新返回码在redis的缓存")
     @GET
     @Path("/{messageCode}/refresh")
     fun refreshMessageCodeCache(
-        @ApiParam(value = "返回码", required = true)
+        @Parameter(description = "返回码", required = true)
         @PathParam("messageCode")
         messageCode: String
     ): Result<Boolean>
 
-    @ApiOperation("新增返回码信息")
+    @Operation(summary = "新增返回码信息")
     @POST
     @Path("/")
     fun addMessageCodeDetail(
-        @ApiParam(value = "返回码新增请求报文体", required = true)
+        @Parameter(description = "返回码新增请求报文体", required = true)
         addMessageCodeRequest: AddMessageCodeRequest
     ): Result<Boolean>
 
-    @ApiOperation("更新返回码信息")
+    @Operation(summary = "更新返回码信息")
     @PUT
     @Path("/{messageCode}")
     fun updateMessageCodeDetail(
-        @ApiParam(value = "返回码", required = true)
+        @Parameter(description = "返回码", required = true)
         @PathParam("messageCode")
         messageCode: String,
-        @ApiParam(value = "返回码更新请求报文体", required = true)
+        @Parameter(description = "返回码更新请求报文体", required = true)
         updateMessageCodeRequest: UpdateMessageCodeRequest
     ): Result<Boolean>
 }

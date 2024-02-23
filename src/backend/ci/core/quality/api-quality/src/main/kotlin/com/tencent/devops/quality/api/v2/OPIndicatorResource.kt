@@ -33,9 +33,9 @@ import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.quality.api.v2.pojo.op.IndicatorData
 import com.tencent.devops.quality.api.v2.pojo.op.IndicatorUpdate
-import io.swagger.annotations.Api
-import io.swagger.annotations.ApiOperation
-import io.swagger.annotations.ApiParam
+import io.swagger.v3.oas.annotations.tags.Tag
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.Parameter
 import javax.ws.rs.core.MediaType
 import javax.ws.rs.Consumes
 import javax.ws.rs.DELETE
@@ -48,73 +48,73 @@ import javax.ws.rs.PathParam
 import javax.ws.rs.Produces
 import javax.ws.rs.QueryParam
 
-@Api(tags = ["OP_INDICATOR"], description = "质量红线-指标配置")
+@Tag(name = "OP_INDICATOR", description = "质量红线-指标配置")
 @Path("/op/indicator")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface OPIndicatorResource {
 
-    @ApiOperation("获取质量红线指标配置列表")
+    @Operation(summary = "获取质量红线指标配置列表")
     @Path("/list")
     @GET
     fun list(
-        @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("页号", required = false, defaultValue = "1")
+        @Parameter(description = "页号", required = false, example = "1")
         @QueryParam("page")
         page: Int?,
-        @ApiParam("页码", required = false, defaultValue = "20")
+        @Parameter(description = "页码", required = false, example = "20")
         @QueryParam("pageSize")
         pageSize: Int?
     ): Result<Page<IndicatorData>>
 
-    @ApiOperation("根据指标id获取质量红线指标配置")
+    @Operation(summary = "根据指标id获取质量红线指标配置")
     @Path("/getByIds")
     @GET
     fun getByIds(
-        @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("指标id，用逗号隔开", required = true)
+        @Parameter(description = "指标id，用逗号隔开", required = true)
         @QueryParam("ids")
         ids: String
     ): Result<List<IndicatorData>>
 
-    @ApiOperation("新增质量红线指标配置")
+    @Operation(summary = "新增质量红线指标配置")
     @Path("/addIndicator")
     @POST
     fun add(
-        @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("指标配置参数", required = true)
+        @Parameter(description = "指标配置参数", required = true)
         indicatorUpdate: IndicatorUpdate
     ): Result<Boolean>
 
-    @ApiOperation("删除质量红线指标配置")
+    @Operation(summary = "删除质量红线指标配置")
     @Path("/{id}/delete")
     @DELETE
     fun delete(
-        @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("质量红线指标配置ID", required = true)
+        @Parameter(description = "质量红线指标配置ID", required = true)
         @PathParam("id")
         id: Long
     ): Result<Boolean>
 
-    @ApiOperation("修改质量红线指标配置")
+    @Operation(summary = "修改质量红线指标配置")
     @Path("/{id}/update")
     @PUT
     fun update(
-        @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("质量红线指标配置ID", required = true)
+        @Parameter(description = "质量红线指标配置ID", required = true)
         @PathParam("id")
         id: Long,
-        @ApiParam("指标配置参数", required = true)
+        @Parameter(description = "指标配置参数", required = true)
         indicatorUpdate: IndicatorUpdate
     ): Result<Boolean>
 }

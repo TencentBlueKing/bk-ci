@@ -28,9 +28,9 @@
 package com.tencent.devops.store.api
 
 import com.tencent.devops.common.api.pojo.Result
-import io.swagger.annotations.Api
-import io.swagger.annotations.ApiOperation
-import io.swagger.annotations.ApiParam
+import io.swagger.v3.oas.annotations.tags.Tag
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.Parameter
 import javax.ws.rs.Consumes
 import javax.ws.rs.GET
 import javax.ws.rs.Path
@@ -38,20 +38,20 @@ import javax.ws.rs.PathParam
 import javax.ws.rs.Produces
 import javax.ws.rs.core.MediaType
 
-@Api(tags = ["SERVICE_MARKET_SERVICE"], description = "扩展服务市场-扩展服务")
+@Tag(name = "SERVICE_MARKET_SERVICE", description = "扩展服务市场-扩展服务")
 @Path("/service/market/services/")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface ServiceExtServiceArchiveResource {
 
-    @ApiOperation("校验用户上传的扩展服务包是否合法")
+    @Operation(summary = "校验用户上传的扩展服务包是否合法")
     @GET
     @Path("/users/{userId}/services/{serviceCode}/package/verify")
     fun verifyExtServicePackageByUserId(
-        @ApiParam("用户ID", required = true)
+        @Parameter(description = "用户ID", required = true)
         @PathParam("userId")
         userId: String,
-        @ApiParam("扩展服务代码", required = true)
+        @Parameter(description = "扩展服务代码", required = true)
         @PathParam("serviceCode")
         serviceCode: String
     ): Result<Boolean>

@@ -32,9 +32,9 @@ import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.remotedev.pojo.op.RemotedevCvmData
 import com.tencent.devops.remotedev.pojo.op.RemotedevCvmFetchData
-import io.swagger.annotations.Api
-import io.swagger.annotations.ApiOperation
-import io.swagger.annotations.ApiParam
+import io.swagger.v3.oas.annotations.tags.Tag
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.Parameter
 import javax.ws.rs.Consumes
 import javax.ws.rs.HeaderParam
 import javax.ws.rs.POST
@@ -45,56 +45,56 @@ import javax.ws.rs.Produces
 import javax.ws.rs.PathParam
 import javax.ws.rs.core.MediaType
 
-@Api(tags = ["OP_REMOTE_DEV_CVM"], description = "OP-REMOTE-DEV-CVM")
+@Tag(name = "OP_REMOTE_DEV_CVM", description = "OP-REMOTE-DEV-CVM")
 @Path("/op/remotedev/cvm")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface OpRemoteDevCvmResource {
 
-    @ApiOperation("新增CVM")
+    @Operation(summary = "新增CVM")
     @POST
     @Path("/add")
     fun addRemotedevCvm(
-        @ApiParam(value = "用户ID", required = true)
+        @Parameter(description = "用户ID", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam(value = "cvm信息", required = true)
+        @Parameter(description = "cvm信息", required = true)
         cvmData: List<RemotedevCvmData>
     ): Result<Boolean>
 
-    @ApiOperation("获取cvm")
+    @Operation(summary = "获取cvm")
     @POST
     @Path("/list")
     fun getRemotedevCvmList(
-        @ApiParam(value = "用户ID", required = true)
+        @Parameter(description = "用户ID", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("查询参数")
+        @Parameter(description = "查询参数")
         data: RemotedevCvmFetchData
     ): Result<Page<RemotedevCvmData>>
 
-    @ApiOperation("更新cvm")
+    @Operation(summary = "更新cvm")
     @PUT
     @Path("/update/{cvmId}")
     fun updateRemotedevCvm(
-        @ApiParam(value = "用户ID", required = true)
+        @Parameter(description = "用户ID", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam(value = "模板ID", required = true)
+        @Parameter(description = "模板ID", required = true)
         @PathParam("cvmId")
         cvmId: Long,
-        @ApiParam(value = "模板信息", required = true)
+        @Parameter(description = "模板信息", required = true)
         remotedevCvmData: RemotedevCvmData
     ): Result<Boolean>
 
-    @ApiOperation("删除cvm")
+    @Operation(summary = "删除cvm")
     @DELETE
     @Path("/delete/{cvmId}")
     fun deleteRemotedevCvm(
-        @ApiParam(value = "用户ID", required = true)
+        @Parameter(description = "用户ID", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam(value = "模板信息", required = true)
+        @Parameter(description = "模板信息", required = true)
         @PathParam("cvmId")
         cvmId: Long
     ): Result<Boolean>

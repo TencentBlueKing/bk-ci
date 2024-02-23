@@ -35,9 +35,9 @@ import com.tencent.devops.store.pojo.image.request.MarketImageRelRequest
 import com.tencent.devops.store.pojo.image.request.MarketImageUpdateRequest
 import com.tencent.devops.store.pojo.image.request.OfflineMarketImageReq
 import com.tencent.devops.store.pojo.image.response.ImageAgentTypeInfo
-import io.swagger.annotations.Api
-import io.swagger.annotations.ApiOperation
-import io.swagger.annotations.ApiParam
+import io.swagger.v3.oas.annotations.tags.Tag
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.Parameter
 import javax.validation.Valid
 import javax.ws.rs.Consumes
 import javax.ws.rs.GET
@@ -49,106 +49,106 @@ import javax.ws.rs.PathParam
 import javax.ws.rs.Produces
 import javax.ws.rs.core.MediaType
 
-@Api(tags = ["USER_MARKET_IMAGE"], description = "研发商店-镜像")
+@Tag(name = "USER_MARKET_IMAGE", description = "研发商店-镜像")
 @Path("/user/market")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface UserImageReleaseResource {
 
-    @ApiOperation("关联镜像")
+    @Operation(summary = "关联镜像")
     @POST
     @Path("/image/imageCodes/{imageCode}/store/rel")
     fun addMarketImage(
-        @ApiParam("userId", required = true)
+        @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("镜像代码", required = true)
+        @Parameter(description = "镜像代码", required = true)
         @BkField(patternStyle = BkStyleEnum.CODE_STYLE)
         @PathParam("imageCode")
         imageCode: String,
-        @ApiParam("关联镜像请求报文体", required = true)
+        @Parameter(description = "关联镜像请求报文体", required = true)
         @Valid
         marketImageRelRequest: MarketImageRelRequest
     ): Result<String>
 
-    @ApiOperation("上架/升级镜像")
+    @Operation(summary = "上架/升级镜像")
     @PUT
     @Path("/desk/image/release")
     fun updateMarketImage(
-        @ApiParam("userId", required = true)
+        @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("上架镜像请求报文体", required = true)
+        @Parameter(description = "上架镜像请求报文体", required = true)
         marketImageUpdateRequest: MarketImageUpdateRequest
     ): Result<String?>
 
-    @ApiOperation("下架镜像")
+    @Operation(summary = "下架镜像")
     @PUT
     @Path("/desk/image/offline/imageCodes/{imageCode}/versions")
     fun offlineMarketImage(
-        @ApiParam("userId", required = true)
+        @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("镜像Code", required = true)
+        @Parameter(description = "镜像Code", required = true)
         @PathParam("imageCode")
         imageCode: String,
-        @ApiParam("下架镜像请求报文体", required = true)
+        @Parameter(description = "下架镜像请求报文体", required = true)
         offlineMarketImageReq: OfflineMarketImageReq
     ): Result<Boolean>
 
-    @ApiOperation("根据镜像ID获取镜像版本进度")
+    @Operation(summary = "根据镜像ID获取镜像版本进度")
     @GET
     @Path("/desk/image/release/process/imageIds/{imageId}")
     fun getProcessInfo(
-        @ApiParam("userId", required = true)
+        @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("镜像Id", required = true)
+        @Parameter(description = "镜像Id", required = true)
         @PathParam("imageId")
         imageId: String
     ): Result<StoreProcessInfo>
 
-    @ApiOperation("取消发布镜像")
+    @Operation(summary = "取消发布镜像")
     @PUT
     @Path("/desk/image/release/cancel/imageIds/{imageId}")
     fun cancelRelease(
-        @ApiParam("userId", required = true)
+        @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("镜像Id", required = true)
+        @Parameter(description = "镜像Id", required = true)
         @PathParam("imageId")
         imageId: String
     ): Result<Boolean>
 
-    @ApiOperation("重新验证镜像")
+    @Operation(summary = "重新验证镜像")
     @PUT
     @Path("/desk/image/release/recheck/imageIds/{imageId}")
     fun recheck(
-        @ApiParam("userId", required = true)
+        @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("镜像Id", required = true)
+        @Parameter(description = "镜像Id", required = true)
         @PathParam("imageId")
         imageId: String
     ): Result<Boolean>
 
-    @ApiOperation("确认镜像通过测试")
+    @Operation(summary = "确认镜像通过测试")
     @PUT
     @Path("/desk/image/release/passTest/imageIds/{imageId}")
     fun passTest(
-        @ApiParam("userId", required = true)
+        @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("镜像Id", required = true)
+        @Parameter(description = "镜像Id", required = true)
         @PathParam("imageId")
         imageId: String
     ): Result<Boolean>
 
-    @ApiOperation("获取镜像支持的机器类型列表")
+    @Operation(summary = "获取镜像支持的机器类型列表")
     @GET
     @Path("/image/agentType/list")
     fun getImageAgentTypes(
-        @ApiParam("userId", required = true)
+        @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String
     ): Result<List<ImageAgentTypeInfo>>

@@ -27,15 +27,14 @@
 
 package com.tencent.devops.auth.pojo.dto
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel
+@Schema
 data class ManagerUserDTO(
-    @ApiModelProperty("管理员策略Id")
+    @get:Schema(title = "管理员策略Id")
     val managerId: Int,
-    @ApiModelProperty("用户名，支持用“,”隔开")
+    @get:Schema(title = "用户名，支持用“,”隔开")
     val userId: String,
-    @ApiModelProperty("X分钟后超时")
+    @get:Schema(title = "X分钟后超时")
     val timeout: Int?
 )

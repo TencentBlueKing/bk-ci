@@ -38,9 +38,9 @@ import com.tencent.devops.remotedev.pojo.windows.FetchOwnerAndAdminData
 import com.tencent.devops.remotedev.pojo.op.OpUpdateCCHostData
 import com.tencent.devops.remotedev.pojo.op.WorkspaceNotifyData
 import com.tencent.devops.remotedev.pojo.op.WorkspaceNotifyListData
-import io.swagger.annotations.Api
-import io.swagger.annotations.ApiOperation
-import io.swagger.annotations.ApiParam
+import io.swagger.v3.oas.annotations.tags.Tag
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.Parameter
 import javax.ws.rs.Consumes
 import javax.ws.rs.GET
 import javax.ws.rs.HeaderParam
@@ -51,95 +51,95 @@ import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 import javax.ws.rs.core.Response
 
-@Api(tags = ["OP_PROJECT_WORKSPACE"], description = "OP_PROJECT_WORKSPACE")
+@Tag(name = "OP_PROJECT_WORKSPACE", description = "OP_PROJECT_WORKSPACE")
 @Path("/op/project/workspace")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface OpProjectWorkspaceResource {
 
-    @ApiOperation("分配云桌面")
+    @Operation(summary = "分配云桌面")
     @POST
     @Path("/assign")
     fun assignWorkspace(
-        @ApiParam(value = "用户ID", required = true)
+        @Parameter(description = "用户ID", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam(value = "分配数据")
+        @Parameter(description = "分配数据")
         data: OpProjectWorkspaceAssignData
     ): Result<Boolean>
 
-    @ApiOperation("获取项目下空间列表实例列表")
+    @Operation(summary = "获取项目下空间列表实例列表")
     @POST
     @Path("/list")
     fun getProjectWorkspaceList(
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("查询参数")
+        @Parameter(description = "查询参数")
         data: ProjectWorkspaceFetchData
     ): Result<Page<ProjectWorkspace>>
 
-    @ApiOperation("批量获取指定项目的云桌面的云研发管理员和拥有者")
+    @Operation(summary = "批量获取指定项目的云桌面的云研发管理员和拥有者")
     @POST
     @Path("/fetchOwnerAndAdmin")
     fun fetchOwnerAndAdmin(
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("获取数据")
+        @Parameter(description = "获取数据")
         data: FetchOwnerAndAdminData
     ): Result<Set<String>>
 
-    @ApiOperation("修改云研发机器在 CMDB 的属性")
+    @Operation(summary = "修改云研发机器在 CMDB 的属性")
     @POST
     @Path("/updateCCHost")
     fun updateCCHost(
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("修改数据")
+        @Parameter(description = "修改数据")
         data: OpUpdateCCHostData
     ): Result<Boolean>
 
-    @ApiOperation("刷新 codeproxy 数据")
+    @Operation(summary = "刷新 codeproxy 数据")
     @POST
     @Path("/refreshCodeProxy")
     fun refreshCodeProxy(
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
         @QueryParam("projectId")
         projectId: String
     )
 
-    @ApiOperation("导出实例页面查询结果")
+    @Operation(summary = "导出实例页面查询结果")
     @POST
     @Path("/list/export")
     @Produces(MediaType.APPLICATION_OCTET_STREAM)
     fun exportProjectWorkspaceList(
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("查询参数")
+        @Parameter(description = "查询参数")
         data: ProjectWorkspaceFetchData
     ): Response
 
-    @ApiOperation("云桌面通知")
+    @Operation(summary = "云桌面通知")
     @POST
     @Path("/notify")
     fun notify(
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam(value = "通知信息", required = true)
+        @Parameter(description = "通知信息", required = true)
         notifyData: WorkspaceNotifyData
     ): Result<Boolean>
 
-    @ApiOperation("查询云桌面通知列表")
+    @Operation(summary = "查询云桌面通知列表")
     @GET
     @Path("/notify/list")
     fun fetchNotifyList(
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
         @QueryParam("page")

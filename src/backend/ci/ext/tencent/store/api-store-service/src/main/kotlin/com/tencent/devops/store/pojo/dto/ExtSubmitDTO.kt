@@ -29,11 +29,11 @@ package com.tencent.devops.store.pojo.dto
 
 import com.tencent.devops.store.pojo.common.DeptInfo
 import com.tencent.devops.store.pojo.common.MediaInfoReq
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
 data class ExtSubmitDTO(
-    @ApiModelProperty("媒体信息", required = true)
+    @get:Schema(title = "媒体信息", required = true)
     val mediaInfoList: List<MediaInfoReq>,
-    @ApiModelProperty("机构列表", required = true)
+    @get:Schema(title = "机构列表", required = true)
     val deptInfoList: List<DeptInfo>
 )

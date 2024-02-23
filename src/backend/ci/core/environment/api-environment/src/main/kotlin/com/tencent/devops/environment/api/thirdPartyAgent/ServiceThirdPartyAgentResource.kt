@@ -52,9 +52,9 @@ import com.tencent.devops.environment.pojo.thirdPartyAgent.ThirdPartyAgentUpgrad
 import com.tencent.devops.environment.pojo.thirdPartyAgent.pipeline.PipelineCreate
 import com.tencent.devops.environment.pojo.thirdPartyAgent.pipeline.PipelineResponse
 import com.tencent.devops.environment.pojo.thirdPartyAgent.pipeline.PipelineSeqId
-import io.swagger.annotations.Api
-import io.swagger.annotations.ApiOperation
-import io.swagger.annotations.ApiParam
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.Parameter
+import io.swagger.v3.oas.annotations.tags.Tag
 import javax.ws.rs.Consumes
 import javax.ws.rs.GET
 import javax.ws.rs.HeaderParam
@@ -65,353 +65,353 @@ import javax.ws.rs.Produces
 import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
-@Api(tags = ["SERVICE_ENVIRONMENT_THIRD_PARTY_AGENT"], description = "第三方构建机资源")
+@Tag(name = "SERVICE_ENVIRONMENT_THIRD_PARTY_AGENT", description = "第三方构建机资源")
 @Path("/service/environment/thirdPartyAgent")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface ServiceThirdPartyAgentResource {
 
-    @ApiOperation("根据ID获取Agent信息")
+    @Operation(summary = "根据ID获取Agent信息")
     @GET
     @Path("/projects/{projectId}/agents/{agentId}")
     fun getAgentById(
-        @ApiParam("项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @ApiParam("Agent Hash ID", required = true)
+        @Parameter(description = "Agent Hash ID", required = true)
         @PathParam("agentId")
         agentId: String
     ): AgentResult<ThirdPartyAgent?>
 
-    @ApiOperation("根据ID获取Agent信息,全局")
+    @Operation(summary = "根据ID获取Agent信息,全局")
     @GET
     @Path("/projects/{projectId}/agents/{agentId}/global")
     @Deprecated("getAgentById")
     fun getAgentByIdGlobal(
-        @ApiParam("项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @ApiParam("Agent Hash ID", required = true)
+        @Parameter(description = "Agent Hash ID", required = true)
         @PathParam("agentId")
         agentId: String
     ): AgentResult<ThirdPartyAgent?>
 
-    @ApiOperation("根据环境名称获取Agent信息")
+    @Operation(summary = "根据环境名称获取Agent信息")
     @GET
     @Path("/projects/{projectId}/displayNames")
     fun getAgentByDisplayName(
-        @ApiParam("项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @ApiParam("Display Name", required = true)
+        @Parameter(description = "Display Name", required = true)
         @QueryParam("displayName")
         displayName: String
     ): AgentResult<ThirdPartyAgent?>
 
-    @ApiOperation("根据环境ID获取Agent列表")
+    @Operation(summary = "根据环境ID获取Agent列表")
     @GET
     @Path("/projects/{projectId}/envs/{envId}")
     fun getAgentsByEnvId(
-        @ApiParam("项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @ApiParam("Environment Hash ID", required = true)
+        @Parameter(description = "Environment Hash ID", required = true)
         @PathParam("envId")
         envId: String
     ): Result<List<ThirdPartyAgent>>
 
-    @ApiOperation("根据环境名称获取Agent列表")
+    @Operation(summary = "根据环境名称获取Agent列表")
     @GET
     @Path("/projects/{projectId}/envNames/{envName}")
     fun getAgentsByEnvName(
-        @ApiParam("项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @ApiParam("Environment name", required = true)
+        @Parameter(description = "Environment name", required = true)
         @PathParam("envName")
         envName: String
     ): Result<List<ThirdPartyAgent>>
 
-    @ApiOperation("Agent是否能升级")
+    @Operation(summary = "Agent是否能升级")
     @GET
     @Path("/projects/{projectId}/agents/{agentId}/upgrade")
     fun upgrade(
-        @ApiParam("项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @ApiParam("Agent Hash ID", required = true)
+        @Parameter(description = "Agent Hash ID", required = true)
         @PathParam("agentId")
         agentId: String,
-        @ApiParam("Agent secret key", required = true)
+        @Parameter(description = "Agent secret key", required = true)
         @QueryParam("secretKey")
         secretKey: String,
-        @ApiParam("agent.jar的MD5", required = true)
+        @Parameter(description = "agent.jar的MD5", required = true)
         @QueryParam("tag")
         tag: String
     ): AgentResult<Boolean>
 
-    @ApiOperation("Agent是否能升级")
+    @Operation(summary = "Agent是否能升级")
     @GET
     @Path("/projects/{projectId}/agents/{agentId}/upgradeByVersion")
     fun upgradeByVersion(
-        @ApiParam("项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @ApiParam("Agent Hash ID", required = true)
+        @Parameter(description = "Agent Hash ID", required = true)
         @PathParam("agentId")
         agentId: String,
-        @ApiParam("Agent secret key", required = true)
+        @Parameter(description = "Agent secret key", required = true)
         @QueryParam("secretKey")
         secretKey: String,
-        @ApiParam("agent版本号", required = false)
+        @Parameter(description = "agent版本号", required = false)
         @QueryParam("version")
         version: String?,
-        @ApiParam("masterAgent版本号", required = false)
+        @Parameter(description = "masterAgent版本号", required = false)
         @QueryParam("masterVersion")
         masterVersion: String?
     ): AgentResult<Boolean>
 
-    @ApiOperation("Agent是否能升级new")
+    @Operation(summary = "Agent是否能升级new")
     @POST
     @Path("/projects/{projectId}/agents/{agentId}/upgradeByVersionNew")
     fun upgradeByVersionNew(
-        @ApiParam("项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @ApiParam("Agent Hash ID", required = true)
+        @Parameter(description = "Agent Hash ID", required = true)
         @PathParam("agentId")
         agentId: String,
-        @ApiParam("Agent secret key", required = true)
+        @Parameter(description = "Agent secret key", required = true)
         @QueryParam("secretKey")
         secretKey: String,
-        @ApiParam("检查版本升级上报的信息", required = false)
+        @Parameter(description = "检查版本升级上报的信息", required = false)
         info: ThirdPartyAgentUpgradeByVersionInfo
     ): AgentResult<UpgradeItem>
 
-    @ApiOperation("执行第三方构建机管道")
+    @Operation(summary = "执行第三方构建机管道")
     @POST
     @Path("/projects/{projectId}/agents/{nodeId}/pipelines")
     fun scheduleAgentPipeline(
-        @ApiParam("user id", required = true)
+        @Parameter(description = "user id", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @ApiParam("node id", required = true)
+        @Parameter(description = "node id", required = true)
         @PathParam("nodeId")
         nodeId: String,
-        @ApiParam("pipeline", required = true)
+        @Parameter(description = "pipeline", required = true)
         pipeline: PipelineCreate
     ): Result<PipelineSeqId>
 
-    @ApiOperation("获取第三方构建机管道结果")
+    @Operation(summary = "获取第三方构建机管道结果")
     @GET
     @Path("/projects/{projectId}/agents/{nodeId}/pipelines")
     fun getAgentPipelineResponse(
-        @ApiParam("项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @ApiParam("node id", required = true)
+        @Parameter(description = "node id", required = true)
         @PathParam("nodeId")
         nodeId: String,
-        @ApiParam("seqId", required = true)
+        @Parameter(description = "seqId", required = true)
         @QueryParam("seqId")
         seqId: String
     ): Result<PipelineResponse>
 
-    @ApiOperation("查看所有的Agent")
+    @Operation(summary = "查看所有的Agent")
     @GET
     @Path("/projects/{projectId}/os/{os}/list")
     fun listAgents(
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         @BkField(minLength = 1, maxLength = 128)
         userId: String,
-        @ApiParam("项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         @BkField(minLength = 1, maxLength = 128)
         projectId: String,
-        @ApiParam("操作系统", required = true)
+        @Parameter(description = "操作系统", required = true)
         @PathParam("os")
         os: OS
     ): Result<List<ThirdPartyAgentInfo>>
 
-    @ApiOperation("构建任务已认领")
+    @Operation(summary = "构建任务已认领")
     @POST
     @Path("/projects/{projectId}/agents/{agentId}/taskStarted")
     fun agentTaskStarted(
-        @ApiParam("项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @ApiParam("pipeline ID", required = true)
+        @Parameter(description = "pipeline ID", required = true)
         @QueryParam("pipelineId")
         pipelineId: String,
-        @ApiParam("build ID", required = true)
+        @Parameter(description = "build ID", required = true)
         @QueryParam("buildId")
         buildId: String,
-        @ApiParam("VM SEQ ID", required = true)
+        @Parameter(description = "VM SEQ ID", required = true)
         @QueryParam("vmSeqId")
         vmSeqId: String,
-        @ApiParam("agent Hash ID", required = true)
+        @Parameter(description = "agent Hash ID", required = true)
         @PathParam("agentId")
         agentId: String
     ): Result<Boolean>
 
-    @ApiOperation("获取构建机流水线引用信息")
+    @Operation(summary = "获取构建机流水线引用信息")
     @GET
     @Path("/projects/{projectId}/agents/{nodeHashId}/listPipelineRef")
     fun listPipelineRef(
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         @BkField(minLength = 1, maxLength = 128)
         userId: String,
-        @ApiParam("项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         @BkField(minLength = 1, maxLength = 128)
         projectId: String,
-        @ApiParam("Node Hash ID", required = true)
+        @Parameter(description = "Node Hash ID", required = true)
         @PathParam("nodeHashId")
         @BkField(minLength = 1, maxLength = 128)
         nodeHashId: String,
-        @ApiParam("排序字段, pipelineName|lastBuildTime", required = true)
+        @Parameter(description = "排序字段, pipelineName|lastBuildTime", required = true)
         @QueryParam("sortBy")
         sortBy: String? = null,
-        @ApiParam("排序方向, ASC|DESC", required = true)
+        @Parameter(description = "排序方向, ASC|DESC", required = true)
         @QueryParam("sortDirection")
         sortDirection: String? = null
     ): Result<List<AgentPipelineRef>>
 
-    @ApiOperation("更新构建机流水线引用信息")
+    @Operation(summary = "更新构建机流水线引用信息")
     @POST
     @Path("/projects/{projectId}/updatePipelineRef")
     fun updatePipelineRef(
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @ApiParam("流水线引用信息", required = true)
+        @Parameter(description = "流水线引用信息", required = true)
         request: AgentPipelineRefRequest
     ): Result<Boolean>
 
-    @ApiOperation("获取构建机详情")
+    @Operation(summary = "获取构建机详情")
     @GET
     @Path("/projects/{projectId}/agents/{agentId}/detail")
     fun getAgentDetail(
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         @BkField(minLength = 1, maxLength = 128)
         userId: String,
-        @ApiParam("项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         @BkField(minLength = 1, maxLength = 128)
         projectId: String,
-        @ApiParam("Node Hash ID/Agent Id", required = true)
+        @Parameter(description = "Node Hash ID/Agent Id", required = true)
         @PathParam("agentId")
         @BkField(minLength = 3, maxLength = 32)
         agentHashId: String
     ): Result<ThirdPartyAgentDetail?>
 
-    @ApiOperation("获取Gateway列表")
+    @Operation(summary = "获取Gateway列表")
     @GET
     @Path("/gateways")
     fun getGateways(): Result<List<SlaveGateway>>
 
-    @ApiOperation("获取构建机详情(by node id)")
+    @Operation(summary = "获取构建机详情(by node id)")
     @GET
     @Path("/projects/{projectId}/agent_detail_by_node_id")
     fun getNodeDetail(
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         @BkField(minLength = 1, maxLength = 128)
         userId: String,
-        @ApiParam("项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         @BkField(minLength = 1, maxLength = 128)
         projectId: String,
-        @ApiParam("Node Hash ID", required = false)
+        @Parameter(description = "Node Hash ID", required = false)
         @QueryParam("nodeHashId")
         nodeHashId: String?,
-        @ApiParam("Node 别名", required = false)
+        @Parameter(description = "Node 别名", required = false)
         @QueryParam("nodeName")
         nodeName: String?
     ): Result<ThirdPartyAgentDetail?>
 
-    @ApiOperation("获取第三方构建机任务")
+    @Operation(summary = "获取第三方构建机任务")
     @GET
     @Path("/projects/{projectId}/listAgentBuilds")
     fun listAgentBuilds(
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @ApiParam("Node Hash ID", required = false)
+        @Parameter(description = "Node Hash ID", required = false)
         @QueryParam("nodeHashId")
         nodeHashId: String?,
-        @ApiParam("Node 别名", required = false)
+        @Parameter(description = "Node 别名", required = false)
         @QueryParam("nodeName")
         nodeName: String?,
-        @ApiParam("agent Hash ID", required = false)
+        @Parameter(description = "agent Hash ID", required = false)
         @QueryParam("agentHashId")
         agentHashId: String?,
-        @ApiParam("筛选此状态，支持4种输入(QUEUE,RUNNING,DONE,FAILURE)", required = false)
+        @Parameter(description = "筛选此状态，支持4种输入(QUEUE,RUNNING,DONE,FAILURE)", required = false)
         @QueryParam("status")
         status: String?,
-        @ApiParam("筛选此pipelineId", required = false)
+        @Parameter(description = "筛选此pipelineId", required = false)
         @QueryParam("pipelineId")
         pipelineId: String?,
-        @ApiParam("第几页", required = false)
+        @Parameter(description = "第几页", required = false)
         @QueryParam("page")
         page: Int?,
-        @ApiParam("每页条数", required = false)
+        @Parameter(description = "每页条数", required = false)
         @QueryParam("pageSize")
         pageSize: Int?
     ): Result<Page<AgentBuildDetail>>
 
-    @ApiOperation("上报Agent心跳")
+    @Operation(summary = "上报Agent心跳")
     @POST
     @Path("/agents/newHeartbeat")
     fun newHeartbeat(
-        @ApiParam("项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_PROJECT_ID)
         projectId: String,
-        @ApiParam("Agent ID", required = true)
+        @Parameter(description = "Agent ID", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_AGENT_ID)
         agentId: String,
-        @ApiParam("秘钥", required = true)
+        @Parameter(description = "秘钥", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_AGENT_SECRET_KEY)
         secretKey: String,
-        @ApiParam("内容", required = false)
+        @Parameter(description = "内容", required = false)
         heartbeatInfo: NewHeartbeatInfo
     ): Result<AskHeartbeatResponse>
 
-    @ApiOperation("查询Agent的管道")
+    @Operation(summary = "查询Agent的管道")
     @GET
     @Path("/agents/pipelines")
     fun getPipelines(
-        @ApiParam("项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_PROJECT_ID)
         projectId: String,
-        @ApiParam("Agent ID", required = true)
+        @Parameter(description = "Agent ID", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_AGENT_ID)
         agentId: String,
-        @ApiParam("秘钥", required = true)
+        @Parameter(description = "秘钥", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_AGENT_SECRET_KEY)
         secretKey: String
     ): Result<ThirdPartyAgentPipeline?>
 
-    @ApiOperation("根据环境名称获取Agent列表,并返回环境ID")
+    @Operation(summary = "根据环境名称获取Agent列表,并返回环境ID")
     @GET
     @Path("/projects/{projectId}/envNames/{envName}/withId")
     fun getAgentsByEnvNameWithId(
-        @ApiParam("项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @ApiParam("Environment name", required = true)
+        @Parameter(description = "Environment name", required = true)
         @PathParam("envName")
         envName: String
     ): Result<Pair<Long?, List<ThirdPartyAgent>>>

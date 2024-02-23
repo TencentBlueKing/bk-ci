@@ -28,55 +28,54 @@
 package com.tencent.devops.remotedev.pojo
 
 import com.tencent.devops.remotedev.pojo.expert.FetchSupportResp
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("工作空间信息")
+@Schema(title = "工作空间信息")
 data class ProjectWorkspace(
-    @ApiModelProperty("工作空间ID<只读>", accessMode = ApiModelProperty.AccessMode.READ_ONLY)
+    @get:Schema(title = "工作空间ID<只读>", readOnly = true)
     override val workspaceId: Long?,
-    @ApiModelProperty("工作空间名称")
+    @get:Schema(title = "工作空间名称")
     override val workspaceName: String,
-    @ApiModelProperty("项目ID")
+    @get:Schema(title = "项目ID")
     override val projectId: String?,
-    @ApiModelProperty("工作空间备注名称")
+    @get:Schema(title = "工作空间备注名称")
     override val displayName: String? = null,
-    @ApiModelProperty("工作空间状态<只读>", accessMode = ApiModelProperty.AccessMode.READ_ONLY)
+    @get:Schema(title = "工作空间状态<只读>", readOnly = true)
     override val status: WorkspaceStatus? = null,
-    @ApiModelProperty("状态最近更新时间<只读>", accessMode = ApiModelProperty.AccessMode.READ_ONLY)
+    @get:Schema(title = "状态最近更新时间<只读>", readOnly = true)
     override val lastStatusUpdateTime: Long? = null,
-    @ApiModelProperty("休眠时间<只读>", accessMode = ApiModelProperty.AccessMode.READ_ONLY)
+    @get:Schema(title = "休眠时间<只读>", readOnly = true)
     override val sleepingTime: Long? = null,
-    @ApiModelProperty("工作空间创建人<只读>", accessMode = ApiModelProperty.AccessMode.READ_ONLY)
+    @get:Schema(title = "工作空间创建人<只读>", readOnly = true)
     override val createUserId: String,
-    @ApiModelProperty("工作空间对应的IP")
+    @get:Schema(title = "工作空间对应的IP")
     override val hostName: String? = null,
-    @ApiModelProperty("挂载平台类型")
+    @get:Schema(title = "挂载平台类型")
     override val workspaceMountType: WorkspaceMountType,
-    @ApiModelProperty("操作系统类型")
+    @get:Schema(title = "操作系统类型")
     override val workspaceSystemType: WorkspaceSystemType,
-    @ApiModelProperty("windows 资源配置")
+    @get:Schema(title = "windows 资源配置")
     override val winConfig: WindowsResourceTypeConfig? = null,
-    @ApiModelProperty("拥有者")
+    @get:Schema(title = "拥有者")
     override val owner: String? = null,
-    @ApiModelProperty("拥有者_CN")
+    @get:Schema(title = "拥有者_CN")
     override val ownerCN: String? = null,
-    @ApiModelProperty("查看者")
+    @get:Schema(title = "查看者")
     override val viewers: List<String>? = emptyList(),
-    @ApiModelProperty("查看者_CN")
+    @get:Schema(title = "查看者_CN")
     override val viewersCN: List<String>? = emptyList(),
     override val gpu: Int = 0,
     override val cpu: Int = 8,
     override val memory: Int = 32,
     override val disk: Int = 100,
-    @ApiModelProperty("当前登陆者信息")
+    @get:Schema(title = "当前登陆者信息")
     override var currentLoginUsers: List<String>,
-    @ApiModelProperty("windows 地域配置")
+    @get:Schema(title = "windows 地域配置")
     val zoneConfig: WindowsResourceZoneConfig? = null,
-    @ApiModelProperty("专家协助")
+    @get:Schema(title = "专家协助")
     val expertSupportList: List<FetchSupportResp>?,
-    @ApiModelProperty("云桌面对应的mac地址")
+    @get:Schema(title = "云桌面对应的mac地址")
     val macAddress: String? = null,
-    @ApiModelProperty("工作空间备注")
+    @get:Schema(title = "工作空间备注")
     val remark: String? = null
 ) : IWorkspace

@@ -28,21 +28,20 @@
 
 package com.tencent.devops.project.pojo
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel
+@Schema
 data class ProjectDeleteUserInfo(
-    @ApiModelProperty("操作人")
+    @get:Schema(title = "操作人")
     val operator: String,
-    @ApiModelProperty("待分配的角色名称")
+    @get:Schema(title = "待分配的角色名称")
     val roleName: String?,
-    @ApiModelProperty("角色Id")
+    @get:Schema(title = "角色Id")
     val roleId: Int?,
-    @ApiModelProperty("组ID")
+    @get:Schema(title = "组ID")
     val groupId: Int?,
-    @ApiModelProperty("目标用户")
+    @get:Schema(title = "目标用户")
     val userIds: List<String>? = emptyList(),
-    @ApiModelProperty("目标部门")
+    @get:Schema(title = "目标部门")
     val deptIds: List<String>? = emptyList()
 )

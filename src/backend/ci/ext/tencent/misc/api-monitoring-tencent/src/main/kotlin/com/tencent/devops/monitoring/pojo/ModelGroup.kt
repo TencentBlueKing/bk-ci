@@ -26,13 +26,12 @@
  */
 package com.tencent.devops.monitoring.pojo
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("模块可用性")
+@Schema(title = "模块可用性")
 data class ModelGroup(
-    @ApiModelProperty("模块名", required = true)
+    @get:Schema(title = "模块名", required = true)
     val modelName: String,
-    @ApiModelProperty("详情", required = true)
+    @get:Schema(title = "详情", required = true)
     val detail: List<Incident>
 )

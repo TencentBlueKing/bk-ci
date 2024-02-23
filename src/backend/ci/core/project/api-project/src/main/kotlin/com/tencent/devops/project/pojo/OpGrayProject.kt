@@ -28,12 +28,11 @@
 package com.tencent.devops.project.pojo
 
 import com.fasterxml.jackson.annotation.JsonProperty
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("灰度项目列表查询响应实体")
+@Schema(title = "灰度项目列表查询响应实体")
 data class OpGrayProject(
     @JsonProperty(value = "projectCodeList", required = true)
-    @ApiModelProperty("项目编码集合", name = "projectCodeList")
+    @get:Schema(title = "项目编码集合", description = "projectCodeList")
     val projectCodeList: List<String>
 )

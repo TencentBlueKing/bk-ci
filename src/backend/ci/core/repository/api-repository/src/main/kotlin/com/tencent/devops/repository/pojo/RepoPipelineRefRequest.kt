@@ -28,14 +28,13 @@
 
 package com.tencent.devops.repository.pojo
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("代码库流水线引用请求")
+@Schema(title = "代码库流水线引用请求")
 data class RepoPipelineRefRequest(
-    @ApiModelProperty("action", required = true)
+    @get:Schema(title = "action", required = true)
     val action: String,
-    @ApiModelProperty("pipelineId", required = true)
+    @get:Schema(title = "pipelineId", required = true)
     val pipelineId: String,
     val pipelineRefInfos: List<RepoPipelineRefInfo>
 )

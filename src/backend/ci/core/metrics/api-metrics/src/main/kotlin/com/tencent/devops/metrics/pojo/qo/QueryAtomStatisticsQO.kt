@@ -28,21 +28,20 @@
 package com.tencent.devops.metrics.pojo.qo
 
 import com.tencent.devops.metrics.pojo.vo.BaseQueryReqVO
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("查询插件汇总信息传输对象")
+@Schema(title = "查询插件汇总信息传输对象")
 data class QueryAtomStatisticsQO(
-    @ApiModelProperty("项目ID")
+    @get:Schema(title = "项目ID")
     val projectId: String,
-    @ApiModelProperty("查询条件请求信息")
+    @get:Schema(title = "查询条件请求信息")
     val baseQueryReq: BaseQueryReqVO,
-    @ApiModelProperty("错误类型")
+    @get:Schema(title = "错误类型")
     val errorTypes: List<Int>?,
-    @ApiModelProperty("插件代码")
+    @get:Schema(title = "插件代码")
     val atomCodes: List<String>,
-    @ApiModelProperty("页码")
+    @get:Schema(title = "页码")
     val page: Int = 1,
-    @ApiModelProperty("页数")
+    @get:Schema(title = "页数")
     val pageSize: Int = 10
 )

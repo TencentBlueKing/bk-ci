@@ -34,9 +34,9 @@ import com.tencent.devops.remotedev.pojo.software.ProjectSoftware
 import com.tencent.devops.remotedev.pojo.software.SoftwareInstallStatus
 import com.tencent.devops.remotedev.pojo.software.UserSoftware
 import com.tencent.devops.remotedev.pojo.software.UserSoftwareInstalledRecord
-import io.swagger.annotations.Api
-import io.swagger.annotations.ApiOperation
-import io.swagger.annotations.ApiParam
+import io.swagger.v3.oas.annotations.tags.Tag
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.Parameter
 import javax.ws.rs.Consumes
 import javax.ws.rs.GET
 import javax.ws.rs.HeaderParam
@@ -46,72 +46,72 @@ import javax.ws.rs.Produces
 import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
-@Api(tags = ["USER_SOFTWARE_MANAGE"], description = "用户-软件管理")
+@Tag(name = "USER_SOFTWARE_MANAGE", description = "用户-软件管理")
 @Path("/user/software")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface UserSoftwareManageResource {
 
-    @ApiOperation("获取项目下软件列表")
+    @Operation(summary = "获取项目下软件列表")
     @GET
     @Path("/list")
     fun getProjectSoftwareList(
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @QueryParam("project_id")
         projectId: String
     ): Result<List<ProjectSoftware>>
 
-    @ApiOperation("导入软件到项目列表")
+    @Operation(summary = "导入软件到项目列表")
     @POST
     @Path("/import")
     fun importSoftwareToProject(
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("导入软件信息", required = true)
+        @Parameter(description = "导入软件信息", required = true)
         software: ProjectSoftware
     ): Result<Boolean>
 
-    @ApiOperation("安装软件到用户")
+    @Operation(summary = "安装软件到用户")
     @POST
     @Path("/install")
     fun installSoftwareToUser(
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("软件安装列表", required = true)
+        @Parameter(description = "软件安装列表", required = true)
         softwareList: List<UserSoftware>
     ): Result<Boolean>
 
-    @ApiOperation("获取用户的安装软件记录")
+    @Operation(summary = "获取用户的安装软件记录")
     @GET
     @Path("/install/history")
     fun getUserSoftwareInstalledRecord(
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @QueryParam("project_id")
         projectId: String,
-        @ApiParam("用户", required = false)
+        @Parameter(description = "用户", required = false)
         @QueryParam("user")
         user: String?,
-        @ApiParam("云桌面", required = false)
+        @Parameter(description = "云桌面", required = false)
         @QueryParam("workspaceName")
         workspaceName: String?,
-        @ApiParam("状态", required = false)
+        @Parameter(description = "状态", required = false)
         @QueryParam("status")
         status: SoftwareInstallStatus?
     ): Result<List<UserSoftwareInstalledRecord>>
 
-    @ApiOperation("获取行云软件分组")
+    @Operation(summary = "获取行云软件分组")
     @GET
     @Path("/group")
     fun getSoftwareGroupInfo(
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String
     ): Result<Any>

@@ -31,7 +31,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.annotation.JsonInclude
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.tencent.devops.process.yaml.v2.models.RepositoryHook
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
 /**
  * model
@@ -47,7 +47,7 @@ data class TriggerOn(
     val issue: IssueRule? = null,
     val review: ReviewRule? = null,
     val note: NoteRule? = null,
-    @ApiModelProperty(name = "repo_hook")
+    @get:Schema(title = "repo_hook")
     @JsonProperty("repo_hook")
     val repoHook: RepositoryHook? = null,
     val manual: String? = null,
@@ -65,7 +65,7 @@ data class PreTriggerOn(
     val issue: IssueRule? = null,
     val review: ReviewRule? = null,
     val note: NoteRule? = null,
-    @ApiModelProperty(name = "repo_hook")
+    @get:Schema(title = "repo_hook")
     @JsonProperty("repo_hook")
     val repoHook: List<Any>? = null,
     val manual: String? = null,

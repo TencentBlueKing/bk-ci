@@ -27,25 +27,24 @@
 
 package com.tencent.devops.prebuild.pojo
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("用户项目")
+@Schema(title = "用户项目")
 data class UserProject(
-    @ApiModelProperty("主键ID")
+    @get:Schema(title = "主键ID")
     val id: Long,
-    @ApiModelProperty("prebuild项目ID")
+    @get:Schema(title = "prebuild项目ID")
     val preProjectId: String,
-    @ApiModelProperty("prebuild项目名称")
+    @get:Schema(title = "prebuild项目名称")
     val preProjectName: String,
-    @ApiModelProperty("蓝盾项目代码")
+    @get:Schema(title = "蓝盾项目代码")
     val projectCode: String,
-    @ApiModelProperty("创建人")
+    @get:Schema(title = "创建人")
     val creator: String?,
-    @ApiModelProperty("描述")
+    @get:Schema(title = "描述")
     val description: String?,
-    @ApiModelProperty("英文缩写")
+    @get:Schema(title = "英文缩写")
     val english_name: String,
-    @ApiModelProperty("修改时间")
+    @get:Schema(title = "修改时间")
     val updated_at: String?
 )

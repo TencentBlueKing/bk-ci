@@ -35,9 +35,9 @@ import com.tencent.devops.process.pojo.classify.PipelineGroupCreate
 import com.tencent.devops.process.pojo.classify.PipelineGroupUpdate
 import com.tencent.devops.process.pojo.classify.PipelineLabelCreate
 import com.tencent.devops.process.pojo.classify.PipelineLabelUpdate
-import io.swagger.annotations.Api
-import io.swagger.annotations.ApiOperation
-import io.swagger.annotations.ApiParam
+import io.swagger.v3.oas.annotations.tags.Tag
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.Parameter
 import javax.ws.rs.Consumes
 import javax.ws.rs.DELETE
 import javax.ws.rs.GET
@@ -49,116 +49,116 @@ import javax.ws.rs.Produces
 import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
-@Api(tags = ["USER_PIPELINE_GROUP"], description = "用户-流水线分组")
+@Tag(name = "USER_PIPELINE_GROUP", description = "用户-流水线分组")
 @Path("/user/pipelineGroups")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface UserPipelineGroupResource {
 
-    @ApiOperation("获取所有分组信息")
+    @Operation(summary = "获取所有分组信息")
     @GET
     @Path("/groups")
     fun getGroups(
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @QueryParam("projectId")
         projectId: String
     ): Result<List<PipelineGroup>>
 
-    @ApiOperation("添加分组")
+    @Operation(summary = "添加分组")
     @POST
     @Path("/groups/")
     fun addGroup(
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
         pipelineGroup: PipelineGroupCreate
     ): Result<Boolean>
 
-    @ApiOperation("更改分组")
+    @Operation(summary = "更改分组")
     @PUT
     @Path("/groups/")
     fun updateGroup(
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
         pipelineGroup: PipelineGroupUpdate
     ): Result<Boolean>
 
-    @ApiOperation("删除分组")
+    @Operation(summary = "删除分组")
     @DELETE
     @Path("/groups/")
     fun deleteGroup(
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @QueryParam("projectId")
         projectId: String,
-        @ApiParam("分组ID", required = true)
+        @Parameter(description = "分组ID", required = true)
         @QueryParam("groupId")
         groupId: String
     ): Result<Boolean>
 
-    @ApiOperation("添加标签")
+    @Operation(summary = "添加标签")
     @POST
     @Path("/labels/")
     fun addLabel(
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @QueryParam("projectId")
         projectId: String,
-        @ApiParam("添加标签请求报文", required = true)
+        @Parameter(description = "添加标签请求报文", required = true)
         pipelineLabel: PipelineLabelCreate
     ): Result<Boolean>
 
-    @ApiOperation("删除标签")
+    @Operation(summary = "删除标签")
     @DELETE
     @Path("/labels/")
     fun deleteLabel(
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @QueryParam("projectId")
         projectId: String,
-        @ApiParam("标签ID", required = true)
+        @Parameter(description = "标签ID", required = true)
         @QueryParam("labelId")
         labelId: String
     ): Result<Boolean>
 
-    @ApiOperation("更改标签")
+    @Operation(summary = "更改标签")
     @PUT
     @Path("/labels/")
     fun updateLabel(
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @QueryParam("projectId")
         projectId: String,
-        @ApiParam("更改标签请求报文", required = true)
+        @Parameter(description = "更改标签请求报文", required = true)
         pipelineLabel: PipelineLabelUpdate
     ): Result<Boolean>
 
-    @ApiOperation("添加流水线ids")
+    @Operation(summary = "添加流水线ids")
     @POST
     @Path("/pipeline/labels/")
     fun updatePipelineLabel(
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @QueryParam("projectId")
         projectId: String,
-        @ApiParam("流水线ID", required = true)
+        @Parameter(description = "流水线ID", required = true)
         @QueryParam("pipelineId")
         pipelineId: String,
-        @ApiParam("流水线ids", required = true)
+        @Parameter(description = "流水线ids", required = true)
         labelIds: List<String>
     ): Result<Boolean>
 }
