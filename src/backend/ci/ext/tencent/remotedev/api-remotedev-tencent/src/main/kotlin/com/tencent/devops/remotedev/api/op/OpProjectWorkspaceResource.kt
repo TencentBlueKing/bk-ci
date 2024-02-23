@@ -36,10 +36,13 @@ import com.tencent.devops.remotedev.pojo.ProjectWorkspaceFetchData
 import com.tencent.devops.remotedev.pojo.op.OpProjectWorkspaceAssignData
 import com.tencent.devops.remotedev.pojo.windows.FetchOwnerAndAdminData
 import com.tencent.devops.remotedev.pojo.op.OpUpdateCCHostData
+import com.tencent.devops.remotedev.pojo.op.WorkspaceNotifyData
+import com.tencent.devops.remotedev.pojo.op.WorkspaceNotifyListData
 import io.swagger.v3.oas.annotations.tags.Tag
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
 import javax.ws.rs.Consumes
+import javax.ws.rs.GET
 import javax.ws.rs.HeaderParam
 import javax.ws.rs.POST
 import javax.ws.rs.Path
@@ -120,4 +123,28 @@ interface OpProjectWorkspaceResource {
         @Parameter(description = "查询参数")
         data: ProjectWorkspaceFetchData
     ): Response
+
+    @Operation(summary = "云桌面通知")
+    @POST
+    @Path("/notify")
+    fun notify(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "通知信息", required = true)
+        notifyData: WorkspaceNotifyData
+    ): Result<Boolean>
+
+    @Operation(summary = "查询云桌面通知列表")
+    @GET
+    @Path("/notify/list")
+    fun fetchNotifyList(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @QueryParam("page")
+        page: Int,
+        @QueryParam("pageSize")
+        pageSize: Int
+    ): Result<List<WorkspaceNotifyListData>>
 }

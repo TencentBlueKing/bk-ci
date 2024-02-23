@@ -129,6 +129,9 @@ interface ServiceRemoteDevResource {
     @POST
     @Path("/notify")
     fun notifyWorkspaceInfo(
+        @Parameter(description = "操作人，必填", required = true)
+        @QueryParam("operator")
+        operator: String,
         @Parameter(description = "通知信息", required = true)
         notifyData: WorkspaceNotifyData
     ): Result<Boolean>

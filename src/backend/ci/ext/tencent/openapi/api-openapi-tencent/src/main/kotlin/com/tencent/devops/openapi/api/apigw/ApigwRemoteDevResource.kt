@@ -160,6 +160,9 @@ interface ApigwRemoteDevResource {
         @Parameter(description = "apigw Type", required = true)
         @PathParam("apigwType")
         apigwType: String?,
+        @Parameter(description = "操作人，必填", required = true)
+        @QueryParam("operator")
+        operator: String,
         @Parameter(description = "通知信息", required = true)
         notifyData: WorkspaceNotifyData
     ): Result<Boolean>

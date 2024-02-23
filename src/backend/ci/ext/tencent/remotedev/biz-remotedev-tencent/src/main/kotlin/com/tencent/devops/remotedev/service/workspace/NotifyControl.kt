@@ -28,6 +28,7 @@
 package com.tencent.devops.remotedev.service.workspace
 
 import com.tencent.devops.common.api.exception.ErrorCodeException
+import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.notify.enums.NotifyType
 import com.tencent.devops.common.notify.utils.NotifyUtils
@@ -43,6 +44,7 @@ import com.tencent.devops.project.constant.ProjectMessageCode
 import com.tencent.devops.remotedev.common.Constansts.ADMIN_NAME
 import com.tencent.devops.remotedev.common.exception.ErrorCodeEnum
 import com.tencent.devops.remotedev.dao.RemoteDevSettingDao
+import com.tencent.devops.remotedev.dao.ProjectNotifyDao
 import com.tencent.devops.remotedev.dao.WorkspaceDao
 import com.tencent.devops.remotedev.pojo.WebSocketActionType
 import com.tencent.devops.remotedev.pojo.WorkspaceAction
@@ -53,6 +55,7 @@ import com.tencent.devops.remotedev.pojo.WorkspaceShared
 import com.tencent.devops.remotedev.pojo.WorkspaceSystemType
 import com.tencent.devops.remotedev.pojo.common.RemoteDevNotifyType
 import com.tencent.devops.remotedev.pojo.op.WorkspaceNotifyData
+import com.tencent.devops.remotedev.pojo.op.WorkspaceNotifyListData
 import com.tencent.devops.remotedev.service.client.TaiClient
 import com.tencent.devops.remotedev.service.client.TaiUserInfoRequest
 import com.tencent.devops.remotedev.websocket.page.WorkspacePageBuild
@@ -72,7 +75,8 @@ class NotifyControl @Autowired constructor(
     private val redisOperation: RedisOperation,
     private val webSocketDispatcher: WebSocketDispatcher,
     private val remoteDevSettingDao: RemoteDevSettingDao,
-    private val taiClient: TaiClient
+    private val taiClient: TaiClient,
+    private val notifyDao: ProjectNotifyDao
 ) {
 
     @Value("\${notice.wework:#{null}}")
@@ -110,13 +114,14 @@ class NotifyControl @Autowired constructor(
     }
 
     fun notifyWorkspaceInfo(
+        userId: String,
         notifyData: WorkspaceNotifyData
     ) {
         val workspace = workspaceDao.fetchNotifyWorkspaces(
             dslContext = dslContext,
             mountType = WorkspaceMountType.START,
             ips = notifyData.ip?.toSet(),
-            projectIds = setOf(notifyData.projectId)
+            projectIds = notifyData.projectId?.toSet()
         ) ?: throw ErrorCodeException(
             errorCode = ErrorCodeEnum.WORKSPACE_NOT_FIND.errorCode,
             params = arrayOf(notifyData.ip?.joinToString(";") ?: "")
@@ -138,6 +143,7 @@ class NotifyControl @Autowired constructor(
                 projectId = ws["PROJECT_ID"] as String
             )
         }
+        notifyDao.add(dslContext, userId, notifyData)
     }
 
     fun notify4RemoteDevManager(
@@ -361,6 +367,22 @@ class NotifyControl @Autowired constructor(
             client.get(ServiceNotifyMessageTemplateResource::class).sendNotifyMessageByTemplate(request)
         }.onFailure {
             logger.warn("notify WINDOWS_GPU_SAFE_INIT_FAILED fail ${it.message}")
+        }
+    }
+
+    fun fetchNotifyList(
+        page: Int,
+        pageSize: Int
+    ): List<WorkspaceNotifyListData> {
+        val sqlLimit = PageUtil.convertPageSizeToSQLLimit(page, pageSize)
+        return notifyDao.fetch(dslContext, sqlLimit).map {
+            WorkspaceNotifyListData(
+                projectId = it.projectIds,
+                ip = it.ips,
+                title = it.title,
+                desc = it.desc,
+                createTime = it.createdTime.toString()
+            )
         }
     }
 }
