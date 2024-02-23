@@ -28,15 +28,14 @@
 package com.tencent.devops.metrics.pojo.`do`
 
 import com.fasterxml.jackson.annotation.JsonFormat
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 import java.time.LocalDate
 
-@ApiModel("流水线错误每日统计信息")
+@Schema(title = "流水线错误每日统计信息")
 data class PipelineFailStatisticsInfoDO(
-    @ApiModelProperty("统计时间")
+    @get:Schema(title = "统计时间")
     @JsonFormat(pattern = "yyyy-MM-dd")
     val statisticsTime: LocalDate,
-    @ApiModelProperty("错误次数")
+    @get:Schema(title = "错误次数")
     val errorCount: Int
 )

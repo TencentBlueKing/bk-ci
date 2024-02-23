@@ -26,15 +26,14 @@
  */
 package com.tencent.devops.store.pojo.image.response
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("镜像支持的机器类型详情")
+@Schema(title = "镜像支持的机器类型详情")
 data class ImageAgentTypeInfo(
 
-    @ApiModelProperty("类型代码", required = true)
+    @get:Schema(title = "类型代码", required = true)
     val code: String,
 
-    @ApiModelProperty("类型名称", required = true)
+    @get:Schema(title = "类型名称", required = true)
     val name: String
 )

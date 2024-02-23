@@ -28,12 +28,12 @@
 package com.tencent.devops.dispatch.docker.pojo
 
 import com.tencent.devops.common.pipeline.type.BuildType
-import io.swagger.annotations.ApiModel
+import io.swagger.v3.oas.annotations.media.Schema
 
 /**
  * DebugResponse
  */
-@ApiModel("启动webConsole调试返回结构")
+@Schema(title = "启动webConsole调试返回结构")
 data class DebugResponse(
     val websocketUrl: String,
     val containerName: String?,

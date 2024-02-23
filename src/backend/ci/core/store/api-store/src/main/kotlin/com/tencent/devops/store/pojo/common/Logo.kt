@@ -27,27 +27,26 @@
 
 package com.tencent.devops.store.pojo.common
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("logo信息")
+@Schema(title = "logo信息")
 data class Logo(
-    @ApiModelProperty("logoID", required = true)
+    @get:Schema(title = "logoID", required = true)
     val id: String,
-    @ApiModelProperty("logo链接", required = true)
+    @get:Schema(title = "logo链接", required = true)
     val logoUrl: String,
-    @ApiModelProperty("类别 ATOM:原子 TEMPLATE:模板 BANNER:banner", required = true)
+    @get:Schema(title = "类别 ATOM:原子 TEMPLATE:模板 BANNER:banner", required = true)
     val logoType: String,
-    @ApiModelProperty("展示顺序", required = true)
+    @get:Schema(title = "展示顺序", required = true)
     val order: Int,
-    @ApiModelProperty("点击logo后的跳转链接")
+    @get:Schema(title = "点击logo后的跳转链接")
     val link: String?,
-    @ApiModelProperty("创建日期")
+    @get:Schema(title = "创建日期")
     val createTime: String,
-    @ApiModelProperty("更新日期")
+    @get:Schema(title = "更新日期")
     val updateTime: String,
-    @ApiModelProperty("创建人", required = true)
+    @get:Schema(title = "创建人", required = true)
     val creator: String,
-    @ApiModelProperty("最近修改人", required = true)
+    @get:Schema(title = "最近修改人", required = true)
     val modifier: String
 )

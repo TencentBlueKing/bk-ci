@@ -28,21 +28,20 @@
 package com.tencent.devops.metrics.pojo.`do`
 
 import com.fasterxml.jackson.annotation.JsonFormat
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 import java.time.LocalDateTime
 
-@ApiModel("流水线趋势信息")
+@Schema(title = "流水线趋势信息")
 data class PipelineTrendInfoDO(
-    @ApiModelProperty("统计时间")
+    @get:Schema(title = "统计时间")
     @JsonFormat(pattern = "yyyy-MM-dd")
     val statisticsTime: LocalDateTime,
-    @ApiModelProperty("流水线总执行次数")
+    @get:Schema(title = "流水线总执行次数")
     val totalExecuteCount: Long,
-    @ApiModelProperty("流水线执行失败数")
+    @get:Schema(title = "流水线执行失败数")
     val failedExecuteCount: Long,
-    @ApiModelProperty("总平均耗时，单位：min")
+    @get:Schema(title = "总平均耗时，单位：min")
     val totalAvgCostTime: Double,
-    @ApiModelProperty("失败平均耗时，单位：min")
+    @get:Schema(title = "失败平均耗时，单位：min")
     val failAvgCostTime: Double
 )

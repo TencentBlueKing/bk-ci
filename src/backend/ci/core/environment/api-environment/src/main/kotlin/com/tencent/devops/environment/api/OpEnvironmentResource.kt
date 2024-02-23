@@ -28,9 +28,9 @@
 package com.tencent.devops.environment.api
 
 import com.tencent.devops.common.api.pojo.Result
-import io.swagger.annotations.Api
-import io.swagger.annotations.ApiOperation
-import io.swagger.annotations.ApiParam
+import io.swagger.v3.oas.annotations.tags.Tag
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.Parameter
 import javax.ws.rs.Consumes
 import javax.ws.rs.POST
 import javax.ws.rs.PUT
@@ -38,7 +38,7 @@ import javax.ws.rs.Path
 import javax.ws.rs.Produces
 import javax.ws.rs.core.MediaType
 
-@Api(tags = ["OP_ENVIRONMENT"], description = "OP-环境服务数据刷新")
+@Tag(name = "OP_ENVIRONMENT", description = "OP-环境服务数据刷新")
 @Path("/op/env")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
@@ -47,11 +47,11 @@ interface OpEnvironmentResource {
     @PUT
     @Path("/refresh_gateway")
     fun refreshGateway(
-        @ApiParam("新旧网关映射")
+        @Parameter(description = "新旧网关映射")
         oldToNewMap: Map<String, String>
     ): Result<Boolean>
 
-    @ApiOperation("用于对数据库表填充哈希值")
+    @Operation(summary = "用于对数据库表填充哈希值")
     @POST
     @Path("/addhashid")
     fun addHashId()

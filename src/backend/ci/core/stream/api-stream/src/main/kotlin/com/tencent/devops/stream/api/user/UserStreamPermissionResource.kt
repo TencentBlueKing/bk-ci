@@ -29,9 +29,9 @@ package com.tencent.devops.stream.api.user
 
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID
 import com.tencent.devops.common.api.pojo.Result
-import io.swagger.annotations.Api
-import io.swagger.annotations.ApiOperation
-import io.swagger.annotations.ApiParam
+import io.swagger.v3.oas.annotations.tags.Tag
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.Parameter
 import javax.ws.rs.Consumes
 import javax.ws.rs.GET
 import javax.ws.rs.HeaderParam
@@ -40,7 +40,7 @@ import javax.ws.rs.PathParam
 import javax.ws.rs.Produces
 import javax.ws.rs.core.MediaType
 
-@Api(tags = ["USER_STREAM_BUILD"], description = "user-permission资源")
+@Tag(name = "USER_STREAM_BUILD", description = "user-permission资源")
 @Path("/user/permission")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
@@ -48,13 +48,13 @@ interface UserStreamPermissionResource {
 
     @GET
     @Path("/projects/{projectId}/resource/validate")
-    @ApiOperation("校验用户是否有action的权限，忽略oatuh验证")
+    @Operation(summary = "校验用户是否有action的权限，忽略oatuh验证")
     fun validateUserResourcePermission(
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
-        @ApiParam("待校验用户ID", required = true)
+        @Parameter(description = "待校验用户ID", required = true)
         userId: String,
         @PathParam("projectId")
-        @ApiParam("项目编码", required = true)
+        @Parameter(description = "项目编码", required = true)
         projectId: String
     ): Result<Boolean>
 }
