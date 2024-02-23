@@ -719,6 +719,7 @@ class PipelineBuildFacadeService(
         projectId: String,
         pipelineId: String,
         parameters: Map<String, String> = emptyMap(),
+        startValues: Map<String, String>? = null,
         checkPermission: Boolean = true
     ): String? {
 
@@ -767,6 +768,7 @@ class PipelineBuildFacadeService(
                 model = model,
                 signPipelineVersion = null,
                 frequencyLimit = false,
+                startValues = startValues,
                 versionNum = resource.versionNum,
                 versionName = resource.versionName
             ).id

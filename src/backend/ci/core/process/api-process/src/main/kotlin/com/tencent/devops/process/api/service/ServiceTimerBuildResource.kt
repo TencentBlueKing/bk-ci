@@ -64,6 +64,8 @@ interface ServiceTimerBuildResource {
         pipelineId: String,
         @ApiParam("启动参数", required = true)
         params: Map<String, String>,
+        @ApiParam("启动变量", required = true)
+        startValues: Map<String, String>? = null,
         @ApiParam("渠道号，默认为BS", required = false)
         @QueryParam("channelCode")
         channelCode: ChannelCode = ChannelCode.BS

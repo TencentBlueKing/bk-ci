@@ -43,6 +43,7 @@ class ServiceTimerBuildResourceImpl @Autowired constructor(
         projectId: String,
         pipelineId: String,
         params: Map<String, String>,
+        startValues: Map<String, String>?,
         channelCode: ChannelCode
     ): Result<String?> {
 
@@ -51,6 +52,7 @@ class ServiceTimerBuildResourceImpl @Autowired constructor(
             projectId = projectId,
             pipelineId = pipelineId,
             parameters = params,
+            startValues = startValues,
             checkPermission = ChannelCode.isNeedAuth(channelCode)
         )
 
