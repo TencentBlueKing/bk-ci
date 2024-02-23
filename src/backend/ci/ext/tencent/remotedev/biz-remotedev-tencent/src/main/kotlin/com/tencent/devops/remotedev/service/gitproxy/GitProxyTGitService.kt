@@ -470,6 +470,8 @@ class GitProxyTGitService @Autowired constructor(
         }
 
         recordData.forEach { (projectId, records) ->
+            val recordsMap = records.associateBy { it.url.trim() }
+
             val svnData = mutableMapOf<String, MutableSet<String>>()
             records.filter { it.url.removeHttpPrefix().startsWith(tSvnUrl.removeHttpPrefix()) }.forEach {
                 if (svnData[it.oauthUser] == null) {
@@ -514,10 +516,14 @@ class GitProxyTGitService @Autowired constructor(
                     urls = result.map {
                         TGitRepoDaoData(
                             tgitId = it.key,
-                            status = if (it.value.second) {
-                                TGitRepoStatus.TO_BE_MIGRATED
+                            status = if (it.value.first.trim() in recordsMap) {
+                                TGitRepoStatus.fromStr(recordsMap[it.value.first.trim()]?.status ?: "")
                             } else {
-                                TGitRepoStatus.ABNORMAL
+                                if (it.value.second) {
+                                    TGitRepoStatus.AVAILABLE
+                                } else {
+                                    TGitRepoStatus.ABNORMAL
+                                }
                             },
                             oauthUser = userId,
                             gitType = if (it.value.first.removeHttpPrefix().startsWith(tSvnUrl.removeHttpPrefix())) {
@@ -553,10 +559,14 @@ class GitProxyTGitService @Autowired constructor(
                     urls = result.map {
                         TGitRepoDaoData(
                             tgitId = it.key,
-                            status = if (it.value.second) {
-                                TGitRepoStatus.TO_BE_MIGRATED
+                            status = if (it.value.first.trim() in recordsMap) {
+                                TGitRepoStatus.fromStr(recordsMap[it.value.first.trim()]?.status ?: "")
                             } else {
-                                TGitRepoStatus.ABNORMAL
+                                if (it.value.second) {
+                                    TGitRepoStatus.AVAILABLE
+                                } else {
+                                    TGitRepoStatus.ABNORMAL
+                                }
                             },
                             oauthUser = userId,
                             gitType = if (it.value.first.removeHttpPrefix().startsWith(tSvnUrl.removeHttpPrefix())) {
