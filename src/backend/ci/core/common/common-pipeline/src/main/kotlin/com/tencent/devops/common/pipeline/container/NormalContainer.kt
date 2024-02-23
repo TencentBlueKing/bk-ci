@@ -129,6 +129,13 @@ data class NormalContainer(
         return matrixContext
     }
 
+    override fun isContainerEnable(): Boolean {
+        if (jobControlOption == null) {
+            return true
+        }
+        return jobControlOption!!.enable
+    }
+
     override fun transformCompatibility() {
         if (jobControlOption?.timeoutVar.isNullOrBlank()) {
             jobControlOption?.timeoutVar = jobControlOption?.timeout.toString()

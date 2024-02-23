@@ -103,4 +103,6 @@ interface Container {
     fun fetchGroupContainers(): List<Container>?
 
     fun fetchMatrixContext(): Map<String, String>?
+
+    fun isContainerEnable(): Boolean
 }

@@ -33,6 +33,7 @@ import com.tencent.devops.common.pipeline.container.VMBuildContainer
 import com.tencent.devops.common.pipeline.enums.BuildRecordTimeStamp
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.pojo.time.BuildTimestampType
+import com.tencent.devops.common.pipeline.utils.ElementUtils
 import com.tencent.devops.process.pojo.app.StartBuildContext
 import io.swagger.v3.oas.annotations.media.Schema
 import java.time.LocalDateTime
@@ -78,6 +79,7 @@ data class BuildRecordContainer(
         @Suppress("ComplexMethod")
         fun MutableList<BuildRecordContainer>.addRecords(
             stageId: String,
+            stageEnableFlag: Boolean,
             container: Container,
             context: StartBuildContext,
             buildStatus: BuildStatus?,
@@ -119,6 +121,15 @@ data class BuildRecordContainer(
             )
             if (taskBuildRecords == null) return
             container.elements.forEachIndexed { index, element ->
+                if (buildStatus == BuildStatus.SKIP && !ElementUtils.getTaskAddFlag(
+                        element = element,
+                        stageEnableFlag = stageEnableFlag,
+                        containerEnableFlag = container.isContainerEnable()
+                    )
+                ) {
+                    // 不保存跳过的非post任务记录或非质量红线记录
+                    return@forEachIndexed
+                }
                 taskBuildRecords.add(
                     BuildRecordTask(
                         projectId = context.projectId,
@@ -131,7 +142,7 @@ data class BuildRecordContainer(
                         atomCode = element.getTaskAtom(),
                         executeCount = context.executeCount,
                         resourceVersion = context.resourceVersion,
-                        taskSeq = index,
+                        taskSeq = index + 2, // model中的插件在数据库表的顺序是从2开始
                         status = buildStatus?.name,
                         taskVar = element.initTaskVar(),
                         timestamps = mapOf(),

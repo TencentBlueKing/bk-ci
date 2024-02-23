@@ -55,7 +55,7 @@ import com.tencent.devops.common.pipeline.pojo.element.trigger.ManualTriggerElem
 import com.tencent.devops.common.pipeline.pojo.element.trigger.RemoteTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.TimerTriggerElement
 import com.tencent.devops.common.pipeline.pojo.time.BuildRecordTimeCost
-import com.tencent.devops.common.pipeline.utils.SkipElementUtils
+import com.tencent.devops.common.pipeline.utils.ElementUtils
 import io.swagger.v3.oas.annotations.media.Schema
 
 @JsonTypeInfo(
@@ -191,7 +191,7 @@ abstract class Element(
         val postFlag = elementPostInfo != null
         // post插件的父插件如果跳过执行，则其自身也需要跳过执行
         val elementId = if (postFlag) elementPostInfo?.parentElementId else id
-        if (variables[SkipElementUtils.getSkipElementVariableName(elementId)] == "true") { // 参数中指明要求跳过
+        if (variables[ElementUtils.getSkipElementVariableName(elementId)] == "true") { // 参数中指明要求跳过
             if (additionalOptions == null) {
                 additionalOptions = ElementAdditionalOptions(runCondition = RunCondition.PRE_TASK_SUCCESS)
             }
