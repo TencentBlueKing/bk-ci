@@ -177,7 +177,18 @@ class CmdbNodeService @Autowired constructor(
             val nodeId = it[T_NODE_NODE_ID] as Long
             UpdateTNodeInfo(
                 nodeId = nodeId,
-                nodeStatus = NodeStatus.NORMAL.name,
+                nodeStatus = if (
+                    AGENT_NOT_INSTALLED_TAG == ipToAgentVersionInfoMap?.get(it[T_NODE_NODE_IP] as String)?.installedTag
+                )
+                    NodeStatus.NOT_INSTALLED.name
+                else if (
+                    AGENT_ABNORMAL_NODE_STATUS == ipToAgentVersionInfoMap?.get(it[T_NODE_NODE_IP] as String)?.status
+                )
+                    NodeStatus.ABNORMAL.name
+                else if (AGENT_NORMAL_NODE_STATUS == ipToAgentVersionInfoMap?.get(it[T_NODE_NODE_IP] as String)?.status)
+                    NodeStatus.NORMAL.name
+                else
+                    "",
                 hostId = nodeIdToCCInfoMap[nodeId]?.bkHostId,
                 cloudAreaId = nodeIdToCCInfoMap[nodeId]?.bkCloudId?.toLong(),
                 agentStatus = if (grayTag) {
