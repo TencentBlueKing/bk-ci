@@ -29,9 +29,9 @@ package com.tencent.devops.repository.api
 
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.repository.pojo.RepositoryWebhookRequest
-import io.swagger.annotations.Api
-import io.swagger.annotations.ApiOperation
-import io.swagger.annotations.ApiParam
+import io.swagger.v3.oas.annotations.tags.Tag
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.Parameter
 import javax.ws.rs.Consumes
 import javax.ws.rs.GET
 import javax.ws.rs.POST
@@ -40,25 +40,25 @@ import javax.ws.rs.PathParam
 import javax.ws.rs.Produces
 import javax.ws.rs.core.MediaType
 
-@Api(tags = ["SERVICE_REPOSITORY_WEBHOOK"], description = "服务-代码库webhook")
+@Tag(name = "SERVICE_REPOSITORY_WEBHOOK", description = "服务-代码库webhook")
 @Path("/service/repository/webhook")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface ServiceRepositoryWebhookResource {
 
-    @ApiOperation("保存代码库触发事件")
+    @Operation(summary = "保存代码库触发事件")
     @POST
     @Path("/save")
     fun saveWebhookRequest(
-        @ApiParam(value = "代码库触发事件", required = true)
+        @Parameter(description = "代码库触发事件", required = true)
         repositoryWebhookRequest: RepositoryWebhookRequest
     ): Result<Boolean>
 
-    @ApiOperation("获取代码库事件请求")
+    @Operation(summary = "获取代码库事件请求")
     @GET
     @Path("/{requestId}")
     fun getWebhookRequest(
-        @ApiParam(value = "事件ID", required = true)
+        @Parameter(description = "事件ID", required = true)
         @PathParam("requestId")
         requestId: String
     ): Result<RepositoryWebhookRequest?>

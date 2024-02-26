@@ -27,19 +27,18 @@
 
 package com.tencent.devops.repository.pojo.github
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("白名单信息")
+@Schema(title = "白名单信息")
 data class GithubWhitelist(
-    @ApiModelProperty("ID")
+    @get:Schema(title = "ID")
     val id: Long = 0,
-    @ApiModelProperty("项目ID")
+    @get:Schema(title = "项目ID")
     val projectId: String = "",
-    @ApiModelProperty("代码库链接")
+    @get:Schema(title = "代码库链接")
     val url: String = "",
-    @ApiModelProperty("创建人")
+    @get:Schema(title = "创建人")
     val creator: String = "",
-    @ApiModelProperty("创建时间")
+    @get:Schema(title = "创建时间")
     val createdTime: String = ""
 )

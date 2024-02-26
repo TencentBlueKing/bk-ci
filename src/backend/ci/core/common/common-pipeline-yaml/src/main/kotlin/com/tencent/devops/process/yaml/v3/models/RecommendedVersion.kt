@@ -31,33 +31,32 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.annotation.JsonInclude
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.tencent.devops.common.pipeline.pojo.BuildNoType
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonIgnoreProperties(ignoreUnknown = true)
-@ApiModel("推荐版本号 Code 定义")
+@Schema(title = "推荐版本号 Code 定义")
 data class RecommendedVersion(
-    @ApiModelProperty("是否启用")
+    @get:Schema(title = "是否启用")
     val enabled: Boolean,
     @JsonProperty("allow-modify-at-startup")
-    @ApiModelProperty("是否为入参")
+    @get:Schema(title = "是否为入参")
     val allowModifyAtStartup: Boolean? = true,
-    @ApiModelProperty("主版本")
+    @get:Schema(title = "主版本")
     var major: Int = 0,
-    @ApiModelProperty("特性版本")
+    @get:Schema(title = "特性版本")
     var minor: Int = 0,
-    @ApiModelProperty("修正版本")
+    @get:Schema(title = "修正版本")
     var fix: Int = 0,
-    @ApiModelProperty("构建号")
+    @get:Schema(title = "构建号")
     @JsonProperty("build-no")
     val buildNo: BuildNo
 ) {
     data class BuildNo(
-        @ApiModelProperty("初始值")
+        @get:Schema(title = "初始值")
         @JsonProperty("initial-value")
         val initialValue: Int = 0,
-        @ApiModelProperty("自增策略")
+        @get:Schema(title = "自增策略")
         val strategy: String = Strategy.PLUS1_EVERYTIME.alis
     )
 

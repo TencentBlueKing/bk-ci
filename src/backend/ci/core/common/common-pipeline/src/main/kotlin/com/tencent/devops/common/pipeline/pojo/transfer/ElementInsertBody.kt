@@ -28,16 +28,15 @@
 package com.tencent.devops.common.pipeline.pojo.transfer
 
 import com.tencent.devops.common.pipeline.pojo.element.Element
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("yaml中插入插件入口")
+@Schema(title = "yaml中插入插件入口")
 data class ElementInsertBody(
-    @ApiModelProperty("当前yaml内容")
+    @get:Schema(title = "当前yaml内容")
     val yaml: String = "",
-    @ApiModelProperty("需要插入的插件")
+    @get:Schema(title = "需要插入的插件")
     val data: Element,
-    @ApiModelProperty("操作类型,INSERT为插入,UPDATE为更新")
+    @get:Schema(title = "操作类型,INSERT为插入,UPDATE为更新")
     val type: ElementInsertType
 ) {
     enum class ElementInsertType {

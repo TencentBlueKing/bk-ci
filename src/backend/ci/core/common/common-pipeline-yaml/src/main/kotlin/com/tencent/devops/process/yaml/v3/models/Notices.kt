@@ -35,7 +35,7 @@ import com.tencent.devops.common.pipeline.pojo.setting.Subscription
 import com.tencent.devops.common.pipeline.pojo.transfer.IfType
 import com.tencent.devops.process.yaml.transfer.VariableDefault.nullIfDefault
 import com.tencent.devops.process.yaml.v3.enums.ContentFormat
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
 /**
  * model Stream 通知类型基类
@@ -61,10 +61,10 @@ data class GitNotices(
     val title: String?,
     val content: String?,
     val ccs: Set<String>?,
-    @ApiModelProperty(name = "if")
+    @get:Schema(title = "if")
     @JsonProperty("if")
     val ifField: String?,
-    @ApiModelProperty(name = "chat-id")
+    @get:Schema(title = "chat-id")
     @JsonProperty("chat-id")
     val chatId: Set<String>?
 ) : Notices {
@@ -107,20 +107,20 @@ data class GitNotices(
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class PacNotices(
-    @ApiModelProperty(name = "if")
+    @get:Schema(title = "if")
     @JsonProperty("if")
     val ifField: String?,
     val type: Any,
     val receivers: List<String>?,
     val groups: List<String>?,
     val content: String?,
-    @ApiModelProperty(name = "chat-id")
+    @get:Schema(title = "chat-id")
     @JsonProperty("chat-id")
     val chatId: List<String>?,
-    @ApiModelProperty(name = "content-format")
+    @get:Schema(title = "content-format")
     @JsonProperty("content-format")
     val notifyMarkdown: String?,
-    @ApiModelProperty(name = "attach-build-url")
+    @get:Schema(title = "attach-build-url")
     @JsonProperty("attach-build-url")
     val notifyDetail: Boolean?
 ) : Notices {

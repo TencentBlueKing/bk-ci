@@ -31,17 +31,16 @@ package com.tencent.devops.process.pojo.code
 import com.tencent.devops.process.engine.pojo.PipelineInfo
 import com.tencent.devops.process.pojo.BuildId
 import com.tencent.devops.process.pojo.trigger.PipelineTriggerReasonDetail
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("webhook触发结果")
+@Schema(title = "webhook触发结果")
 data class WebhookBuildResult(
-    @ApiModelProperty("触发结果")
+    @get:Schema(title = "触发结果")
     val result: Boolean,
-    @ApiModelProperty("流水线信息")
+    @get:Schema(title = "流水线信息")
     val pipelineInfo: PipelineInfo? = null,
-    @ApiModelProperty("触发buildId")
+    @get:Schema(title = "触发buildId")
     val buildId: BuildId? = null,
-    @ApiModelProperty("触发失败原因")
+    @get:Schema(title = "触发失败原因")
     val reasonDetail: PipelineTriggerReasonDetail? = null
 )

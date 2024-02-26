@@ -29,8 +29,7 @@ package com.tencent.devops.repository.pojo.github
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.annotation.JsonProperty
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
 /**
  * {
@@ -45,27 +44,27 @@ import io.swagger.annotations.ApiModelProperty
  * }
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
-@ApiModel("获取tag返回模型")
+@Schema(title = "获取tag返回模型")
 data class GithubTag(
-    @ApiModelProperty("远程引用")
+    @get:Schema(title = "远程引用")
     val ref: String,
     @JsonProperty("node_id")
-    @ApiModelProperty("节点id", name = "node_id")
+    @get:Schema(title = "节点id", description = "node_id")
     val nodeId: String,
-    @ApiModelProperty("url地址")
+    @get:Schema(title = "url地址")
     val url: String,
-    @ApiModelProperty("tag数据", name = "object")
+    @get:Schema(title = "tag数据", description = "object")
     @JsonProperty("object")
     val tagObject: GithubObject?
 )
 
 @JsonIgnoreProperties(ignoreUnknown = true)
-@ApiModel("")
+@Schema(title = "")
 data class GithubObject(
-    @ApiModelProperty("sha值")
+    @get:Schema(title = "sha值")
     val sha: String,
-    @ApiModelProperty("类型")
+    @get:Schema(title = "类型")
     val type: String,
-    @ApiModelProperty("url地址")
+    @get:Schema(title = "url地址")
     val url: String
 )

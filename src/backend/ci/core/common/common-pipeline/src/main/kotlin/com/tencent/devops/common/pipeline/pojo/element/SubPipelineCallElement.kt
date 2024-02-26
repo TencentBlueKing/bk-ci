@@ -28,26 +28,25 @@
 package com.tencent.devops.common.pipeline.pojo.element
 
 import com.tencent.devops.common.pipeline.pojo.element.atom.SubPipelineType
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("子流水线调用", description = SubPipelineCallElement.classType)
+@Schema(title = "子流水线调用", description = SubPipelineCallElement.classType)
 data class SubPipelineCallElement(
-    @ApiModelProperty("任务名称", required = true)
+    @get:Schema(title = "任务名称", required = true)
     override val name: String = "自流水线调用",
-    @ApiModelProperty("id", required = false)
+    @get:Schema(title = "id", required = false)
     override var id: String? = null,
-    @ApiModelProperty("状态", required = false)
+    @get:Schema(title = "状态", required = false)
     override var status: String? = null,
-    @ApiModelProperty("子流水线ID", required = true)
+    @get:Schema(title = "子流水线ID", required = true)
     val subPipelineId: String = "",
-    @ApiModelProperty("是否异步", required = true)
+    @get:Schema(title = "是否异步", required = true)
     val asynchronous: Boolean,
-    @ApiModelProperty("新版的子流水线原子的类型")
+    @get:Schema(title = "新版的子流水线原子的类型")
     val subPipelineType: SubPipelineType? = SubPipelineType.ID,
-    @ApiModelProperty("新版的子流水线名")
+    @get:Schema(title = "新版的子流水线名")
     val subPipelineName: String? = null,
-    @ApiModelProperty("启动参数", required = false)
+    @get:Schema(title = "启动参数", required = false)
     val parameters: Map<String, String>?
 ) : Element(name, id, status) {
     companion object {

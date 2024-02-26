@@ -648,8 +648,8 @@ class ServiceBuildResourceImpl @Autowired constructor(
         nodeHashId: String?,
         executeCount: Int?,
         simpleResult: SimpleResult
-    ): Result<Boolean> {
-        pipelineBuildFacadeService.workerBuildFinish(
+    ): Result<String?> {
+        val starter = pipelineBuildFacadeService.workerBuildFinish(
             projectCode = projectId,
             pipelineId = pipelineId,
             buildId = buildId,
@@ -658,7 +658,7 @@ class ServiceBuildResourceImpl @Autowired constructor(
             executeCount = executeCount,
             simpleResult = simpleResult
         )
-        return Result(true)
+        return Result(starter)
     }
 
     override fun manualStartStage(

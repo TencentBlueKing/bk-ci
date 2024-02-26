@@ -30,16 +30,16 @@ package com.tencent.devops.process.yaml.v3.models.on
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.annotation.JsonInclude
 import com.fasterxml.jackson.annotation.JsonProperty
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class ManualRule(
     val enable: Boolean? = true,
-    @ApiModelProperty("手动触发执行时可跳过插件 ", name = "can-skip-step", required = false)
+    @get:Schema(title = "手动触发执行时可跳过插件 ", name = "can-skip-step", required = false)
     @JsonProperty("can-skip-step")
     var canElementSkip: Boolean? = true,
-    @ApiModelProperty("手动触发执行时使用最近一次构建参数值 ", name = "use-latest-inputs", required = false)
+    @get:Schema(title = "手动触发执行时使用最近一次构建参数值 ", name = "use-latest-inputs", required = false)
     @JsonProperty("use-latest-inputs")
     var useLatestParameters: Boolean? = false
 ) {

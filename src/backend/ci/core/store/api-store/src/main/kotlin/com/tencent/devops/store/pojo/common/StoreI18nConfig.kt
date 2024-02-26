@@ -27,25 +27,24 @@
 
 package com.tencent.devops.store.pojo.common
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("研发商店组件国际化配置")
+@Schema(title = "研发商店组件国际化配置")
 data class StoreI18nConfig(
-    @ApiModelProperty("项目标识")
+    @get:Schema(title = "项目标识")
     val projectCode: String,
-    @ApiModelProperty("组件标识")
+    @get:Schema(title = "组件标识")
     val storeCode: String,
-    @ApiModelProperty("资源文件目录")
+    @get:Schema(title = "资源文件目录")
     val fileDir: String,
-    @ApiModelProperty("国际化目录")
+    @get:Schema(title = "国际化目录")
     val i18nDir: String,
-    @ApiModelProperty("map字段在properties中key的前缀")
+    @get:Schema(title = "map字段在properties中key的前缀")
     val propertiesKeyPrefix: String? = null,
-    @ApiModelProperty("map字段在db中key的前缀")
+    @get:Schema(title = "map字段在db中key的前缀")
     val dbKeyPrefix: String? = null,
-    @ApiModelProperty("代码库哈希ID")
+    @get:Schema(title = "代码库哈希ID")
     val repositoryHashId: String? = null,
-    @ApiModelProperty("代码库分支")
+    @get:Schema(title = "代码库分支")
     val branch: String? = null
 )

@@ -86,7 +86,7 @@ class MigrateV3PolicyServiceTest : AbMigratePolicyServiceTest() {
                 projectName = projectCode,
                 managerGroupId = 1,
                 result = taskDataResult
-            )
+            ).first
 
             Assertions.assertTrue(rbacAuthorizationScopeList.isEmpty())
         }

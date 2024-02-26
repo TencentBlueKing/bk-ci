@@ -28,15 +28,15 @@
 package com.tencent.devops.scm.pojo
 
 import com.tencent.devops.common.api.enums.ScmType
-import io.swagger.annotations.ApiParam
+import io.swagger.v3.oas.annotations.Parameter
 
 data class RepoSessionRequest(
-    @ApiParam("仓库类型", required = true)
+    @Parameter(description = "仓库类型", required = true)
     val type: ScmType,
-    @ApiParam("username", required = true)
+    @Parameter(description = "username", required = true)
     val username: String,
-    @ApiParam("password", required = true)
+    @Parameter(description = "password", required = true)
     val password: String,
-    @ApiParam("url", required = true)
+    @Parameter(description = "url", required = true)
     val url: String
 )

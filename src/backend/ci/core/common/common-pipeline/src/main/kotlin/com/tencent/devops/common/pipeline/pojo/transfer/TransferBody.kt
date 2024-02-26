@@ -28,13 +28,12 @@
 package com.tencent.devops.common.pipeline.pojo.transfer
 
 import com.tencent.devops.common.pipeline.pojo.PipelineModelAndSetting
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("互转入口")
+@Schema(title = "互转入口")
 data class TransferBody(
-    @ApiModelProperty("当前modelAndSetting,model转yaml时需带上")
+    @get:Schema(title = "当前modelAndSetting,model转yaml时需带上")
     val modelAndSetting: PipelineModelAndSetting? = null,
-    @ApiModelProperty("当前yaml内容，model转yaml以及yaml转model都需要带上,如果首次互转没有就传空")
+    @get:Schema(title = "当前yaml内容，model转yaml以及yaml转model都需要带上,如果首次互转没有就传空")
     val oldYaml: String = ""
 )

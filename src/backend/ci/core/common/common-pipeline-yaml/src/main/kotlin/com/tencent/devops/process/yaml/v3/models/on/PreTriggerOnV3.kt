@@ -31,13 +31,13 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.annotation.JsonInclude
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.tencent.devops.process.yaml.pojo.YamlVersion
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class PreTriggerOnV3(
     @JsonProperty("repo-name")
-    @ApiModelProperty(name = "repo-name")
+    @get:Schema(title = "repo-name")
     var repoName: String? = null,
     var type: String? = null,
     override val push: Any? = null,
@@ -48,7 +48,7 @@ data class PreTriggerOnV3(
     override val issue: IssueRule? = null,
     override val review: ReviewRule? = null,
     override val note: NoteRule? = null,
-    @ApiModelProperty(name = "repo_hook")
+    @get:Schema(title = "repo_hook")
     @JsonProperty("repo_hook")
     override val repoHook: List<Any>? = null,
     override var manual: Any? = null,

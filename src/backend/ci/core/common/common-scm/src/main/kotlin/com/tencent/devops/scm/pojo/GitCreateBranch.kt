@@ -29,17 +29,16 @@
 package com.tencent.devops.scm.pojo
 
 import com.fasterxml.jackson.annotation.JsonProperty
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("创建分支")
+@Schema(title = "创建分支")
 data class GitCreateBranch(
-    @ApiModelProperty("分支名")
+    @get:Schema(title = "分支名")
     @JsonProperty("branch_name")
     val branchName: String,
-    @ApiModelProperty("ref可以是已存在的SHA, branch name, tag name")
+    @get:Schema(title = "ref可以是已存在的SHA, branch name, tag name")
     val ref: String,
-    @ApiModelProperty("分支描述")
+    @get:Schema(title = "分支描述")
     val description: String? = null,
     val branchType: String? = null
 )

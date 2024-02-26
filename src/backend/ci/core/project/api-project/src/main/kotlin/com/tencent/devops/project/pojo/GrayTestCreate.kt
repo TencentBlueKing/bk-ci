@@ -27,10 +27,10 @@
 
 package com.tencent.devops.project.pojo.service
 
-import io.swagger.annotations.ApiModel
+import io.swagger.v3.oas.annotations.media.Schema
 
 @Suppress("ALL")
-@ApiModel("灰度测试-创建模型")
+@Schema(title = "灰度测试-创建模型")
 data class GrayTestCreate(
     val server_id: List<Long>,
     val userName: List<String>,

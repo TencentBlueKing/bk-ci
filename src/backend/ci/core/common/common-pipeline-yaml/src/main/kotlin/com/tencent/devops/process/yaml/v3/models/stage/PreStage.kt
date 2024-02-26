@@ -30,7 +30,7 @@ package com.tencent.devops.process.yaml.v3.models.stage
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.tencent.devops.process.yaml.v3.models.job.PreJob
 import com.tencent.devops.process.yaml.v3.check.PreStageCheck
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
 interface IPreStage
 
@@ -41,20 +41,20 @@ data class PreStage(
     var enable: Boolean? = null,
     val name: String?,
     val label: Any? = null,
-    @ApiModelProperty(name = "if")
+    @get:Schema(title = "if")
     @JsonProperty("if")
     val ifField: String? = null,
-    @ApiModelProperty(name = "if-modify")
+    @get:Schema(title = "if-modify")
     @JsonProperty("if-modify")
     val ifModify: List<String>? = null,
-    @ApiModelProperty(name = "fast-kill")
+    @get:Schema(title = "fast-kill")
     @JsonProperty("fast-kill")
     val fastKill: Boolean? = false,
     val jobs: LinkedHashMap<String, PreJob>?,
-    @ApiModelProperty(name = "check-in")
+    @get:Schema(title = "check-in")
     @JsonProperty("check-in")
     val checkIn: PreStageCheck?,
-    @ApiModelProperty(name = "check-out")
+    @get:Schema(title = "check-out")
     @JsonProperty("check-out")
     val checkOut: PreStageCheck?
 ) : IPreStage

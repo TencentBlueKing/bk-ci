@@ -41,6 +41,8 @@ end
 -- 服务重写
 if service_name == "dispatch-docker" or service_name == "dispatch-kubernetes" then
     service_name = "dispatch"
+elseif service_name == "image" or service_name == "monitoring" or service_name == "plugin" then
+    service_name = "misc"
 end
 
 -- 获取灰度设置

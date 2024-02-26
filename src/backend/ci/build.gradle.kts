@@ -12,7 +12,7 @@ allprojects {
     group = "com.tencent.bk.devops.ci"
     // 版本
     version = (System.getProperty("ci_version") ?: "1.9.0") +
-        if (System.getProperty("snapshot") == "true") "-SNAPSHOT" else ""
+            if (System.getProperty("snapshot") == "true") "-SNAPSHOT" else ""
 
     // 加载boot的插件
     if (name.startsWith("boot-")) {
@@ -130,6 +130,13 @@ allprojects {
             dependency("com.tencent.bk.sdk:spring-boot-bk-audit-starter:${Versions.audit}")
             dependency("com.jakewharton:disklrucache:${Versions.disklrucache}")
             dependency("com.mysql:mysql-connector-j:${Versions.MysqlDriver}")
+            // TODO 升级swagger,等升级到spring boot 3.1+后可以去掉
+            dependencySet("io.swagger.core.v3:${Versions.swagger}") {
+                entry("swagger-annotations")
+                entry("swagger-jaxrs2")
+                entry("swagger-core")
+                entry("swagger-models")
+            }
         }
     }
 
@@ -146,6 +153,7 @@ allprojects {
         it.exclude("com.zaxxer", "HikariCP-java7")
         it.exclude("com.tencent.devops", "devops-boot-starter-plugin")
         it.exclude("org.bouncycastle", "bcutil-jdk15on")
+        it.exclude("io.swagger") // TODO 升级swagger,等升级到spring boot 3.1+后可以去掉
     }
     dependencies {
         // 兼容dom4j 的 bug : https://github.com/gradle/gradle/issues/13656

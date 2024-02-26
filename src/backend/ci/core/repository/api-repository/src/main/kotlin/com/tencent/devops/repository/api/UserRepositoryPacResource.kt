@@ -33,9 +33,9 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.api.pojo.IdValue
 import com.tencent.devops.common.api.pojo.Result
-import io.swagger.annotations.Api
-import io.swagger.annotations.ApiOperation
-import io.swagger.annotations.ApiParam
+import io.swagger.v3.oas.annotations.tags.Tag
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.Parameter
 import javax.ws.rs.Consumes
 import javax.ws.rs.GET
 import javax.ws.rs.HeaderParam
@@ -46,117 +46,117 @@ import javax.ws.rs.Produces
 import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
-@Api(tags = ["USER_PAC_REPOSITORY"], description = "用户-PAC-代码库")
+@Tag(name = "USER_PAC_REPOSITORY", description = "用户-PAC-代码库")
 @Path("/user/repositories/pac")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface UserRepositoryPacResource {
-    @ApiOperation("根据代码库url获取关联的项目ID")
+    @Operation(summary = "根据代码库url获取关联的项目ID")
     @GET
     @Path("/getPacProjectId")
     fun getPacProjectId(
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("代码库url", required = false)
+        @Parameter(description = "代码库url", required = false)
         @QueryParam("repoUrl")
         repoUrl: String,
-        @ApiParam("仓库类型", required = false)
+        @Parameter(description = "仓库类型", required = false)
         @QueryParam("repositoryType")
         repositoryType: ScmType
     ): Result<String?>
 
-    @ApiOperation("开启pac")
+    @Operation(summary = "开启pac")
     @PUT
     @Path("/{projectId}/{repositoryHashId}/enable")
     fun enablePac(
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @ApiParam("代码库哈希ID", required = true)
+        @Parameter(description = "代码库哈希ID", required = true)
         @PathParam("repositoryHashId")
         repositoryHashId: String
     ): Result<Boolean>
 
-    @ApiOperation("获取yaml同步状态")
+    @Operation(summary = "获取yaml同步状态")
     @GET
     @Path("/{projectId}/{repositoryHashId}/getYamlSyncStatus")
     fun getYamlSyncStatus(
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @ApiParam("代码库哈希ID", required = true)
+        @Parameter(description = "代码库哈希ID", required = true)
         @PathParam("repositoryHashId")
         repositoryHashId: String
     ): Result<String?>
 
-    @ApiOperation("重试")
+    @Operation(summary = "重试")
     @PUT
     @Path("/{projectId}/{repositoryHashId}/retry")
     fun retry(
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @ApiParam("代码库哈希ID", required = true)
+        @Parameter(description = "代码库哈希ID", required = true)
         @PathParam("repositoryHashId")
         repositoryHashId: String
     ): Result<Boolean>
 
-    @ApiOperation("关闭pac")
+    @Operation(summary = "关闭pac")
     @PUT
     @Path("/{projectId}/{repositoryHashId}/disable")
     fun disablePac(
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @ApiParam("代码库哈希ID", required = true)
+        @Parameter(description = "代码库哈希ID", required = true)
         @PathParam("repositoryHashId")
         repositoryHashId: String
     ): Result<Boolean>
 
-    @ApiOperation("关闭PAC-检查是否存在ci文件夹")
+    @Operation(summary = "关闭PAC-检查是否存在ci文件夹")
     @PUT
     @Path("/{projectId}/{repositoryHashId}/checkCiDirExists")
     fun checkCiDirExists(
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @ApiParam("代码库哈希ID", required = true)
+        @Parameter(description = "代码库哈希ID", required = true)
         @PathParam("repositoryHashId")
         repositoryHashId: String
     ): Result<Boolean>
 
-    @ApiOperation("获取ci子目录")
+    @Operation(summary = "获取ci子目录")
     @GET
     @Path("/{projectId}/{repositoryHashId}/ciSubDir")
     fun getCiSubDir(
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @ApiParam("代码库哈希ID", required = true)
+        @Parameter(description = "代码库哈希ID", required = true)
         @PathParam("repositoryHashId")
         repositoryHashId: String
     ): Result<List<String>>
 
-    @ApiOperation("获取支持的pac代码库类型")
+    @Operation(summary = "获取支持的pac代码库类型")
     @GET
     @Path("supportScmType")
     fun supportScmType(): Result<List<IdValue>>

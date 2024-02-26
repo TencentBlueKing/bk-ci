@@ -27,15 +27,14 @@
 
 package com.tencent.devops.process.pojo
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("自定义报告-报告信息")
+@Schema(title = "自定义报告-报告信息")
 data class Report(
-    @ApiModelProperty("名称", required = true)
+    @get:Schema(title = "名称", required = true)
     val name: String,
-    @ApiModelProperty("首页地址", required = true)
+    @get:Schema(title = "首页地址", required = true)
     val indexFileUrl: String,
-    @ApiModelProperty("报告类型", required = true)
+    @get:Schema(title = "报告类型", required = true)
     val type: String
 )
