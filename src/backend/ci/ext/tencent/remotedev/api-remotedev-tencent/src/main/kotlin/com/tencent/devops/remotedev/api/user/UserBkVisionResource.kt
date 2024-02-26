@@ -7,9 +7,9 @@ import com.tencent.devops.remotedev.pojo.bkvision.BkVisionDatasetQueryBody
 import com.tencent.devops.remotedev.pojo.bkvision.BkVisionResp
 import com.tencent.devops.remotedev.pojo.bkvision.QueryFieldDataBody
 import com.tencent.devops.remotedev.pojo.bkvision.QueryVariableDataBody
-import io.swagger.annotations.Api
-import io.swagger.annotations.ApiOperation
-import io.swagger.annotations.ApiParam
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.Parameter
+import io.swagger.v3.oas.annotations.tags.Tag
 import javax.ws.rs.Consumes
 import javax.ws.rs.GET
 import javax.ws.rs.HeaderParam
@@ -20,20 +20,20 @@ import javax.ws.rs.Produces
 import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
-@Api(tags = ["USER_BK_VISION"], description = "用户-BK-VISION")
+@Tag(name = "USER_BK_VISION", description = "用户-BK-VISION")
 @Path("/user/bkvision")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface UserBkVisionResource {
 
-    @ApiOperation("query_meta")
+    @Operation(summary = "query_meta")
     @GET
     @Path("/bkvision/api/v1/meta/query")
     fun metaQuery(
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam(value = "projectId", required = true)
+        @Parameter(description = "projectId", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_PROJECT_ID)
         projectId: String,
         @QueryParam("share_uid")
@@ -42,27 +42,27 @@ interface UserBkVisionResource {
         type: String
     ): BkVisionResp
 
-    @ApiOperation("query_dataset")
+    @Operation(summary = "query_dataset")
     @POST
     @Path("/bkvision/api/v1/dataset/query")
     fun datasetQuery(
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam(value = "projectId", required = true)
+        @Parameter(description = "projectId", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_PROJECT_ID)
         projectId: String,
         data: BkVisionDatasetQueryBody
     ): BkVisionResp
 
-    @ApiOperation("query_field_data")
+    @Operation(summary = "query_field_data")
     @POST
     @Path("/bkvision/api/v1/field/{uid}/preview_data")
     fun queryFieldData(
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam(value = "projectId", required = true)
+        @Parameter(description = "projectId", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_PROJECT_ID)
         projectId: String,
         @PathParam("uid")
@@ -70,14 +70,14 @@ interface UserBkVisionResource {
         data: QueryFieldDataBody
     ): BkVisionResp
 
-    @ApiOperation("query_variable_data")
+    @Operation(summary = "query_variable_data")
     @POST
     @Path("/bkvision/api/v1/variable/query")
     fun queryVariableData(
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam(value = "projectId", required = true)
+        @Parameter(description = "projectId", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_PROJECT_ID)
         projectId: String,
         data: QueryVariableDataBody
