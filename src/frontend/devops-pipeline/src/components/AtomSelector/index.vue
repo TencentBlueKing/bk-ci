@@ -349,12 +349,12 @@
         right: 660px;
         position: absolute;
         width: 600px;
-        height: calc(100% - 48px);
+        height: calc(100% - 80px);
         background: white;
         z-index: 10000;
         border: 1px solid $borderColor;
         border-radius: 5px;
-        top: 48px;
+        top: 64px;
         &:before {
             content: '';
             display: block;

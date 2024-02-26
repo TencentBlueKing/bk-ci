@@ -9,16 +9,21 @@
                     <label class="base-info-block-row-label">{{ $t(row.key) }}</label>
                     <span class="base-info-block-row-value">
                         <template v-if="['label', 'pipelineGroup'].includes(row.key)">
-                            <bk-tag
-                                v-for="label in row.value"
-                                :key="label"
-                                class="base-info-block-row-value-label"
-                            >
-                                {{ label }}
-                            </bk-tag>
+                            <template v-if="row.value.length > 0">
+                                <bk-tag
+                                    v-for="label in row.value"
+                                    :key="label"
+                                    class="base-info-block-row-value-label"
+                                >
+                                    {{ label }}
+                                </bk-tag>
+                            </template>
+                            <template v-else>
+                                --
+                            </template>
                         </template>
                         <template v-else>
-                            {{ row.value }}
+                            {{ row.value || '--' }}
                         </template>
                     </span>
                 </p>

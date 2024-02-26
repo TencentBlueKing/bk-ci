@@ -249,6 +249,7 @@
         flex-shrink: 0;
 
         .pipeline-history-search-select {
+            background-color: white;
             ::placeholder {
                 color: #c4c6cc;
             }
