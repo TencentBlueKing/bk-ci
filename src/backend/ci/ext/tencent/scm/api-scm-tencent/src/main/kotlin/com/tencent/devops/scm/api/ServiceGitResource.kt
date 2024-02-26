@@ -1146,49 +1146,49 @@ interface ServiceGitResource {
         ignoreWhiteSpace: Boolean?
     ): Result<List<GitDiff>>
 
-    @ApiOperation("创建分支")
+    @Operation(summary = "创建分支")
     @POST
     @Path("/createBranch")
     fun createBranch(
-        @ApiParam("token", required = true)
+        @Parameter(description = "token", required = true)
         @QueryParam("token")
         token: String,
-        @ApiParam(value = "token类型 0：oauth 1:privateKey", required = true)
+        @Parameter(description = "token类型 0：oauth 1:privateKey", required = true)
         @QueryParam("tokenType")
         tokenType: TokenTypeEnum = TokenTypeEnum.OAUTH,
-        @ApiParam(value = "项目 ID 或 项目全路径 project_full_path")
+        @Parameter(description = "项目 ID 或 项目全路径 project_full_path")
         @QueryParam("gitProjectId")
         gitProjectId: String,
         gitCreateBranch: GitCreateBranch
     ): Result<Boolean>
 
-    @ApiOperation("获取合并请求列表")
+    @Operation(summary = "获取合并请求列表")
     @POST
     @Path("/listMergeRequest")
     fun listMergeRequest(
-        @ApiParam("token", required = true)
+        @Parameter(description = "token", required = true)
         @QueryParam("token")
         token: String,
-        @ApiParam(value = "token类型 0：oauth 1:privateKey", required = true)
+        @Parameter(description = "token类型 0：oauth 1:privateKey", required = true)
         @QueryParam("tokenType")
         tokenType: TokenTypeEnum = TokenTypeEnum.OAUTH,
-        @ApiParam(value = "项目 ID 或 项目全路径 project_full_path")
+        @Parameter(description = "项目 ID 或 项目全路径 project_full_path")
         @QueryParam("gitProjectId")
         gitProjectId: String,
         gitListMergeRequest: GitListMergeRequest
     ): Result<List<GitMrInfo>>
 
-    @ApiOperation("创建合并请求")
+    @Operation(summary = "创建合并请求")
     @POST
     @Path("/createMergeRequest")
     fun createMergeRequest(
-        @ApiParam("token", required = true)
+        @Parameter(description = "token", required = true)
         @QueryParam("token")
         token: String,
-        @ApiParam(value = "token类型 0：oauth 1:privateKey", required = true)
+        @Parameter(description = "token类型 0：oauth 1:privateKey", required = true)
         @QueryParam("tokenType")
         tokenType: TokenTypeEnum = TokenTypeEnum.OAUTH,
-        @ApiParam(value = "项目 ID 或 项目全路径 project_full_path")
+        @Parameter(description = "项目 ID 或 项目全路径 project_full_path")
         @QueryParam("gitProjectId")
         gitProjectId: String,
         gitCreateMergeRequest: GitCreateMergeRequest

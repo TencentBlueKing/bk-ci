@@ -139,7 +139,7 @@ interface AppPipelineResource {
         @Parameter(description = "分支", required = false)
         @QueryParam("materialBranch")
         materialBranch: List<String>?,
-        @ApiParam("指定草稿版本（为调试构建）", required = false)
+        @Parameter(description = "指定草稿版本（为调试构建）", required = false)
         @QueryParam("version")
         debugVersion: Int?
     ): Result<Page<AppPipelineHistory>>
@@ -160,7 +160,7 @@ interface AppPipelineResource {
         @Parameter(description = "仓库", required = false)
         @QueryParam("alias")
         alias: List<String>?,
-        @ApiParam("指定草稿版本（为调试构建）", required = false)
+        @Parameter(description = "指定草稿版本（为调试构建）", required = false)
         @QueryParam("version")
         debugVersion: Int?
     ): Result<List<String>>
@@ -193,7 +193,7 @@ interface AppPipelineResource {
         @Parameter(description = "流水线ID", required = true)
         @PathParam("pipelineId")
         pipelineId: String,
-        @ApiParam("指定草稿版本（为调试构建）", required = false)
+        @Parameter(description = "指定草稿版本（为调试构建）", required = false)
         @QueryParam("version")
         debugVersion: Int?
     ): Result<List<String>>
