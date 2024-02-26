@@ -159,7 +159,6 @@
         align-items: center;
         height: 60px;
         width: calc(100% - 30px);
-        border-bottom: 1px solid #e6e6e6;
 
         .atom-name-edit {
             display: flex;
