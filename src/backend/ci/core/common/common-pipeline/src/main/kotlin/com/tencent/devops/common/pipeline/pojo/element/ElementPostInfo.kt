@@ -27,19 +27,18 @@
 
 package com.tencent.devops.common.pipeline.pojo.element
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("元素post信息")
+@Schema(title = "元素post信息")
 data class ElementPostInfo(
-    @ApiModelProperty("入口参数")
+    @get:Schema(title = "入口参数")
     val postEntryParam: String,
-    @ApiModelProperty("执行条件")
+    @get:Schema(title = "执行条件")
     val postCondition: String,
-    @ApiModelProperty("父元素ID")
+    @get:Schema(title = "父元素ID")
     var parentElementId: String,
-    @ApiModelProperty("父元素名称")
+    @get:Schema(title = "父元素名称")
     val parentElementName: String,
-    @ApiModelProperty("父元素在job中的位置")
+    @get:Schema(title = "父元素在job中的位置")
     val parentElementJobIndex: Int
 )

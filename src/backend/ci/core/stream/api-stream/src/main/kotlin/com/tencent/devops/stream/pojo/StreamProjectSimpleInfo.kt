@@ -28,29 +28,29 @@
 package com.tencent.devops.stream.pojo
 
 import com.fasterxml.jackson.annotation.JsonProperty
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
 data class StreamProjectSimpleInfo(
     @JsonProperty("id")
-    @ApiModelProperty(name = "id")
+    @get:Schema(title = "id")
     val id: Long,
     @JsonProperty("path_with_namespace")
-    @ApiModelProperty(name = "path_with_namespace")
+    @get:Schema(title = "path_with_namespace")
     val pathWithNamespace: String?,
     @JsonProperty("description")
-    @ApiModelProperty(name = "description")
+    @get:Schema(title = "description")
     val description: String?,
     @JsonProperty("avatar_url")
-    @ApiModelProperty(name = "avatar_url")
+    @get:Schema(title = "avatar_url")
     val avatarUrl: String?,
     val enabledCi: Boolean?,
     val projectCode: String?,
-    @ApiModelProperty("是否为stream 公共项目")
+    @get:Schema(title = "是否为stream 公共项目")
     val public: Boolean?,
-    @ApiModelProperty("stream 项目名称")
+    @get:Schema(title = "stream 项目名称")
     val name: String?,
-    @ApiModelProperty("https-git链接")
+    @get:Schema(title = "https-git链接")
     val httpsUrlToRepo: String?,
-    @ApiModelProperty("项目网页链接")
+    @get:Schema(title = "项目网页链接")
     val webUrl: String?
 )

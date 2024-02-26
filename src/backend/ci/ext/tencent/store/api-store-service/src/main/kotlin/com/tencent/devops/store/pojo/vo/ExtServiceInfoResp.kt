@@ -27,15 +27,15 @@
 
 package com.tencent.devops.store.pojo.vo
 
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
 data class ExtServiceInfoResp(
-    @ApiModelProperty("总记录数", required = true)
+    @get:Schema(title = "总记录数", required = true)
     val count: Int,
-    @ApiModelProperty("当前页码值", required = false)
+    @get:Schema(title = "当前页码值", required = false)
     val page: Int?,
-    @ApiModelProperty("每页记录大小", required = false)
+    @get:Schema(title = "每页记录大小", required = false)
     val pageSize: Int?,
-    @ApiModelProperty("数据集合", required = false)
+    @get:Schema(title = "数据集合", required = false)
     val records: Set<ExtensionServiceVO?>
 )

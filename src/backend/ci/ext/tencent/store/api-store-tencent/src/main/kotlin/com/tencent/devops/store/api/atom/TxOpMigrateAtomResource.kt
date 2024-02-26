@@ -28,9 +28,9 @@
 package com.tencent.devops.store.api.atom
 
 import com.tencent.devops.common.api.pojo.Result
-import io.swagger.annotations.Api
-import io.swagger.annotations.ApiOperation
-import io.swagger.annotations.ApiParam
+import io.swagger.v3.oas.annotations.tags.Tag
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.Parameter
 import javax.ws.rs.Consumes
 import javax.ws.rs.PUT
 import javax.ws.rs.Path
@@ -38,22 +38,22 @@ import javax.ws.rs.Produces
 import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
-@Api(tags = ["OP_PIPELINE_ATOM"], description = "OP-流水线-插件")
+@Tag(name = "OP_PIPELINE_ATOM", description = "OP-流水线-插件")
 @Path("/op/pipeline/atom")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface TxOpMigrateAtomResource {
 
-    @ApiOperation("迁移插件包")
+    @Operation(summary = "迁移插件包")
     @PUT
     @Path("/pkg/migrate")
     fun migrateAtomPkg(
-        @ApiParam(value = "结束时间", required = true)
+        @Parameter(description = "结束时间", required = true)
         @QueryParam("endTime")
         endTime: String
     ): Result<Boolean>
 
-    @ApiOperation("迁移插件静态文件")
+    @Operation(summary = "迁移插件静态文件")
     @PUT
     @Path("/static/file/migrate")
     fun migrateAtomStaticFile(): Result<Boolean>

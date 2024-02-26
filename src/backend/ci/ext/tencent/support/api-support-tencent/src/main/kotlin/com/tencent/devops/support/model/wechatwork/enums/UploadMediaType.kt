@@ -27,17 +27,16 @@
 
 package com.tencent.devops.support.model.wechatwork.enums
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("素材类型")
+@Schema(title = "素材类型")
 enum class UploadMediaType(private val type: String) {
-    @ApiModelProperty("图片")
+    @Schema(title = "图片")
     image("image"),
-    @ApiModelProperty("语音")
+    @Schema(title = "语音")
     voice("voice"),
-    @ApiModelProperty("视频")
+    @Schema(title = "视频")
     video("video"),
-    @ApiModelProperty("普通文件")
+    @Schema(title = "普通文件")
     file("file")
 }

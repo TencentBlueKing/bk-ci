@@ -33,9 +33,9 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.lambda.pojo.MakeUpBuildVO
 import com.tencent.devops.lambda.pojo.MakeUpPipelineListVO
 import com.tencent.devops.lambda.pojo.MakeUpProjectListVO
-import io.swagger.annotations.Api
-import io.swagger.annotations.ApiOperation
-import io.swagger.annotations.ApiParam
+import io.swagger.v3.oas.annotations.tags.Tag
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.Parameter
 import javax.ws.rs.Consumes
 import javax.ws.rs.HeaderParam
 import javax.ws.rs.POST
@@ -43,53 +43,53 @@ import javax.ws.rs.Path
 import javax.ws.rs.Produces
 import javax.ws.rs.core.MediaType
 
-@Api(tags = ["USER_LAMBDA"], description = "用户-大数据接口")
+@Tag(name = "USER_LAMBDA", description = "用户-大数据接口")
 @Path("/user/lambda")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface UserLambdaResource {
 
-    @ApiOperation("手动补录流水线流水线构建历史")
+    @Operation(summary = "手动补录流水线流水线构建历史")
     @POST
     @Path("/makeup-build-his")
     fun manualMakeUpBuildHistory(
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("补录列表", required = true)
+        @Parameter(description = "补录列表", required = true)
         makeUpBuildVOs: List<MakeUpBuildVO>
     ): Result<Boolean>
 
-    @ApiOperation("手动补录流水线流水线构建历史")
+    @Operation(summary = "手动补录流水线流水线构建历史")
     @POST
     @Path("/makeup-build-task")
     fun manualMakeUpBuildTasks(
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("补录列表", required = true)
+        @Parameter(description = "补录列表", required = true)
         makeUpBuildVOs: List<MakeUpBuildVO>
     ): Result<Boolean>
 
-    @ApiOperation("补录流水线项目信息")
+    @Operation(summary = "补录流水线项目信息")
     @POST
     @Path("/makeup-projects")
     fun manualMakeUpAllProjects(
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("补录列表", required = true)
+        @Parameter(description = "补录列表", required = true)
         makeUpProjectListVO: MakeUpProjectListVO
     ): Result<Boolean>
 
-    @ApiOperation("补录流水线信息")
+    @Operation(summary = "补录流水线信息")
     @POST
     @Path("/makeup-pipelines")
     fun manualMakeUpAllPipelines(
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("补录列表", required = true)
+        @Parameter(description = "补录列表", required = true)
         makeUpPipelineListVO: MakeUpPipelineListVO
     ): Result<Boolean>
 }

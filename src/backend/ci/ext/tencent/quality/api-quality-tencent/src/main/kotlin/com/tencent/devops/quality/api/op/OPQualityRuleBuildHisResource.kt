@@ -28,9 +28,9 @@
 package com.tencent.devops.quality.api.op
 
 import com.tencent.devops.common.api.pojo.Result
-import io.swagger.annotations.Api
-import io.swagger.annotations.ApiOperation
-import io.swagger.annotations.ApiParam
+import io.swagger.v3.oas.annotations.tags.Tag
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.Parameter
 import javax.ws.rs.Consumes
 import javax.ws.rs.GET
 import javax.ws.rs.Path
@@ -38,28 +38,28 @@ import javax.ws.rs.Produces
 import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
-@Api(tags = ["OP_RULE_BUILD_HIS"], description = "质量红线-红线构建")
+@Tag(name = "OP_RULE_BUILD_HIS", description = "质量红线-红线构建")
 @Path("/op/qualityRuleBuildHis")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface OPQualityRuleBuildHisResource {
 
-    @ApiOperation("修改红线状态")
+    @Operation(summary = "修改红线状态")
     @Path("/updateStatus")
     @GET
     fun updateStatus(): Result<Int>
 
-    @ApiOperation("数据清理")
+    @Operation(summary = "数据清理")
     @Path("/cleanHisDetailMeta")
     @GET
     fun cleanHisDetailMeta(
-        @ApiParam("清理轮数", required = true)
+        @Parameter(description = "清理轮数", required = true)
         @QueryParam("cleanRound")
         cleanRound: Int,
-        @ApiParam("每轮大小", required = true)
+        @Parameter(description = "每轮大小", required = true)
         @QueryParam("roundSize")
         roundSize: Int,
-        @ApiParam("缓冲时间", required = true)
+        @Parameter(description = "缓冲时间", required = true)
         @QueryParam("roundGap")
         roundGap: Int
     ): Result<Int>

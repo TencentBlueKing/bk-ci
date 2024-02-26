@@ -31,9 +31,9 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_BUILD_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_PROJECT_ID
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.process.pojo.ipt.IptBuildArtifactoryInfo
-import io.swagger.annotations.Api
-import io.swagger.annotations.ApiOperation
-import io.swagger.annotations.ApiParam
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.Parameter
+import io.swagger.v3.oas.annotations.tags.Tag
 import javax.ws.rs.Consumes
 import javax.ws.rs.GET
 import javax.ws.rs.HeaderParam
@@ -44,19 +44,19 @@ import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
 @Suppress("LongParameterList")
-@Api(tags = ["BUILD_IPT_REPO_RESOURCE"], description = "IPT插件构建资源")
+@Tag(name = "BUILD_IPT_REPO_RESOURCE", description = "IPT插件构建资源")
 @Path("/build/ipt/repo")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface BuildIptRepoResource {
 
-    @ApiOperation("")
+    @Operation(description = "")
     @GET
     @Path("/pipeline/{pipelineId}/commit/{commitId}/artifactorytInfo")
     fun getCommitBuildArtifactorytInfo(
         @HeaderParam(AUTH_HEADER_PROJECT_ID)
         projectId: String,
-        @ApiParam(value = "构建ID", required = true)
+        @Parameter(description = "构建ID", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_BUILD_ID)
         buildId: String,
         @PathParam("pipelineId")
@@ -65,7 +65,7 @@ interface BuildIptRepoResource {
         userId: String,
         @PathParam("commitId")
         commitId: String,
-        @ApiParam("路径", required = true)
+        @Parameter(description = "路径", required = true)
         @QueryParam("filePath")
         filePath: String?
     ): Result<IptBuildArtifactoryInfo>

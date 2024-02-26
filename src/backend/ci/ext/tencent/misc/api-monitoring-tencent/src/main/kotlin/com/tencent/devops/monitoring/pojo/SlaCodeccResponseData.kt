@@ -27,18 +27,17 @@
 
 package com.tencent.devops.monitoring.pojo
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("SLA--CodeCC--统计数据")
+@Schema(title = "SLA--CodeCC--统计数据")
 data class SlaCodeccResponseData(
-    @ApiModelProperty("执行次数")
+    @get:Schema(title = "执行次数")
     val count: Int,
-    @ApiModelProperty("耗时")
+    @get:Schema(title = "耗时")
     val costTime: Long,
-    @ApiModelProperty("成功率")
+    @get:Schema(title = "成功率")
     val successRate: Double,
-    @ApiModelProperty("错误码分布")
+    @get:Schema(title = "错误码分布")
     val errorPie: List<ErrorPie>
 ) {
     companion object {
@@ -51,12 +50,12 @@ data class SlaCodeccResponseData(
     }
 }
 
-@ApiModel("SLA--CodeCC--错误码分布")
+@Schema(title = "SLA--CodeCC--错误码分布")
 data class ErrorPie(
-    @ApiModelProperty("错误码")
+    @get:Schema(title = "错误码")
     val code: String?,
-    @ApiModelProperty("错误信息")
+    @get:Schema(title = "错误信息")
     val message: String?,
-    @ApiModelProperty("次数")
+    @get:Schema(title = "次数")
     val count: Int
 )

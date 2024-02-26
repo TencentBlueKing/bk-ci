@@ -42,9 +42,9 @@ import com.tencent.devops.experience.pojo.group.GroupSummaryWithPermission
 import com.tencent.devops.experience.pojo.group.GroupUpdate
 import com.tencent.devops.experience.pojo.group.GroupUsers
 import com.tencent.devops.experience.pojo.group.GroupV2
-import io.swagger.annotations.Api
-import io.swagger.annotations.ApiOperation
-import io.swagger.annotations.ApiParam
+import io.swagger.v3.oas.annotations.tags.Tag
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.Parameter
 import javax.ws.rs.Consumes
 import javax.ws.rs.DELETE
 import javax.ws.rs.GET
@@ -57,74 +57,74 @@ import javax.ws.rs.Produces
 import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
-@Api(tags = ["USER_GROUP"], description = "版本体验-体验组列表")
+@Tag(name = "USER_GROUP", description = "版本体验-体验组列表")
 @Path("/user/groups")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface UserGroupResource {
-    @ApiOperation("获取体验组列表")
+    @Operation(summary = "获取体验组列表")
     @Path("/{projectId}/list")
     @GET
     fun list(
-        @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @ApiParam("页目", required = false)
+        @Parameter(description = "页目", required = false)
         @QueryParam("page")
         page: Int?,
-        @ApiParam("每页数目(不传默认全部返回)", required = false)
+        @Parameter(description = "每页数目(不传默认全部返回)", required = false)
         @QueryParam("pageSize")
         pageSize: Int?,
-        @ApiParam("是否返回公开体验组", required = false, defaultValue = "false")
+        @Parameter(description = "是否返回公开体验组", required = false, example = "false")
         @QueryParam("returnPublic")
         returnPublic: Boolean?
     ): Result<Page<GroupSummaryWithPermission>>
 
-    @ApiOperation("获取项目用户组人员")
+    @Operation(summary = "获取项目用户组人员")
     @Path("/{projectId}/projectUsers")
     @GET
     fun getProjectUsers(
-        @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @ApiParam("用户组", required = false)
+        @Parameter(description = "用户组", required = false)
         @QueryParam("projectGroup")
         projectGroup: ProjectGroup?
     ): Result<List<String>>
 
-    @ApiOperation("获取项目用户组信息和组所有人员")
+    @Operation(summary = "获取项目用户组信息和组所有人员")
     @Path("/{projectId}/projectGroupAndUsers")
     @GET
     fun projectGroupAndUsers(
-        @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String
     ): Result<List<ProjectGroupAndUsers>>
 
-    @ApiOperation("创建体验组")
+    @Operation(summary = "创建体验组")
     @Path("/{projectId}/")
     @POST
     fun create(
-        @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @ApiParam("体验组", required = true)
+        @Parameter(description = "体验组", required = true)
         group: GroupCreate
     ): Result<Boolean>
 
-    @ApiOperation("获取体验组")
+    @Operation(summary = "获取体验组")
     @Path("/{projectId}/{groupHashId}")
     @GET
     @Deprecated(
@@ -133,96 +133,96 @@ interface UserGroupResource {
         level = DeprecationLevel.WARNING
     )
     fun get(
-        @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @ApiParam("体验组HashID", required = true)
+        @Parameter(description = "体验组HashID", required = true)
         @PathParam("groupHashId")
         groupHashId: String
     ): Result<Group>
 
-    @ApiOperation("获取体验组v2")
+    @Operation(summary = "获取体验组v2")
     @Path("/project/{projectId}/group/{groupHashId}")
     @GET
     fun getV2(
-        @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @ApiParam("体验组HashID", required = true)
+        @Parameter(description = "体验组HashID", required = true)
         @PathParam("groupHashId")
         groupHashId: String
     ): Result<GroupV2>
 
-    @ApiOperation("根据名字查询组织全称")
+    @Operation(summary = "根据名字查询组织全称")
     @Path("batchDeptFullName")
     @POST
     fun batchDeptFullName(
         groupBatchName: GroupBatchName
     ): Result<List<GroupDeptFullName>>
 
-    @ApiOperation("体验组数据提交")
+    @Operation(summary = "体验组数据提交")
     @Path("/projects/{projectId}/commit")
     @POST
     fun commit(
-        @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @ApiParam("提交内容", required = true)
+        @Parameter(description = "提交内容", required = true)
         groupCommit: GroupCommit
     ): Result<Boolean>
 
-    @ApiOperation("获取体验组用户")
+    @Operation(summary = "获取体验组用户")
     @Path("/{projectId}/{groupHashId}/users")
     @GET
     fun getUsers(
-        @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @ApiParam("体验组HashID", required = true)
+        @Parameter(description = "体验组HashID", required = true)
         @PathParam("groupHashId")
         groupHashId: String
     ): Result<GroupUsers>
 
-    @ApiOperation("修改体验组")
+    @Operation(summary = "修改体验组")
     @Path("/{projectId}/{groupHashId}")
     @PUT
     fun edit(
-        @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @ApiParam("体验组HashID", required = true)
+        @Parameter(description = "体验组HashID", required = true)
         @PathParam("groupHashId")
         groupHashId: String,
-        @ApiParam("体验组", required = true)
+        @Parameter(description = "体验组", required = true)
         group: GroupUpdate
     ): Result<Boolean>
 
-    @ApiOperation("删除体验组")
+    @Operation(summary = "删除体验组")
     @Path("/{projectId}/{groupHashId}")
     @DELETE
     fun delete(
-        @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @ApiParam("体验组HashID", required = true)
+        @Parameter(description = "体验组HashID", required = true)
         @PathParam("groupHashId")
         groupHashId: String
     ): Result<Boolean>

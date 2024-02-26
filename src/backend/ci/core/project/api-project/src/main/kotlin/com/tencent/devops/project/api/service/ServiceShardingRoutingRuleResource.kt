@@ -33,9 +33,9 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.pojo.ShardingRoutingRule
 import com.tencent.devops.common.api.pojo.ShardingRuleTypeEnum
 import com.tencent.devops.common.web.annotation.BkField
-import io.swagger.annotations.Api
-import io.swagger.annotations.ApiOperation
-import io.swagger.annotations.ApiParam
+import io.swagger.v3.oas.annotations.tags.Tag
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.Parameter
 import javax.ws.rs.Consumes
 import javax.ws.rs.GET
 import javax.ws.rs.HeaderParam
@@ -46,27 +46,27 @@ import javax.ws.rs.Produces
 import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
-@Api(tags = ["SERVICE_SHARDING_ROUTING_RULE"], description = "SERVICE-DB分片规则")
+@Tag(name = "SERVICE_SHARDING_ROUTING_RULE", description = "SERVICE-DB分片规则")
 @Path("/service/sharding/routing/rules")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface ServiceShardingRoutingRuleResource {
 
-    @ApiOperation("根据名称获取分片规则信息")
+    @Operation(summary = "根据名称获取分片规则信息")
     @GET
     @Path("/names/{routingName}/get")
     fun getShardingRoutingRuleByName(
-        @ApiParam("规则名称", required = true)
+        @Parameter(description = "规则名称", required = true)
         @PathParam("routingName")
         @BkField(minLength = 1, maxLength = 128)
         routingName: String,
-        @ApiParam("模块标识", required = true)
+        @Parameter(description = "模块标识", required = true)
         @QueryParam("moduleCode")
         moduleCode: SystemModuleEnum,
-        @ApiParam("规则类型", required = true)
+        @Parameter(description = "规则类型", required = true)
         @QueryParam("ruleType")
         ruleType: ShardingRuleTypeEnum,
-        @ApiParam("数据库表名称", required = false)
+        @Parameter(description = "数据库表名称", required = false)
         @QueryParam("tableName")
         @BkField(minLength = 1, maxLength = 128, required = false)
         tableName: String? = null
@@ -74,12 +74,12 @@ interface ServiceShardingRoutingRuleResource {
 
     @PUT
     @Path("/update")
-    @ApiOperation("更新项目DB分片路由规则")
+    @Operation(summary = "更新项目DB分片路由规则")
     fun updateShardingRoutingRule(
-        @ApiParam("userId", required = true)
+        @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String,
-        @ApiParam(value = "路由规则", required = true)
+        @Parameter(description = "路由规则", required = true)
         shardingRoutingRule: ShardingRoutingRule
     ): Result<Boolean>
 }

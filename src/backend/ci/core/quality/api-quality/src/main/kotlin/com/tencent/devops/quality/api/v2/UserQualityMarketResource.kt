@@ -29,9 +29,9 @@ package com.tencent.devops.quality.api.v2
 
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.quality.api.v2.pojo.QualityIndicator
-import io.swagger.annotations.Api
-import io.swagger.annotations.ApiOperation
-import io.swagger.annotations.ApiParam
+import io.swagger.v3.oas.annotations.tags.Tag
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.Parameter
 import javax.ws.rs.Consumes
 import javax.ws.rs.GET
 import javax.ws.rs.Path
@@ -39,17 +39,17 @@ import javax.ws.rs.PathParam
 import javax.ws.rs.Produces
 import javax.ws.rs.core.MediaType
 
-@Api(tags = ["USER_METADATA_MARKET"], description = "用户-质量红线-插件市场")
+@Tag(name = "USER_METADATA_MARKET", description = "用户-质量红线-插件市场")
 @Path("/user/metadata/market")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface UserQualityMarketResource {
 
-    @ApiOperation("获取插件的质量红线")
+    @Operation(summary = "获取插件的质量红线")
     @Path("/atom/{atomCode}/indicator/list")
     @GET
     fun getAuditUserList(
-        @ApiParam("atomCode", required = true)
+        @Parameter(description = "atomCode", required = true)
         @PathParam("atomCode")
         atomCode: String
     ): Result<List<QualityIndicator>>

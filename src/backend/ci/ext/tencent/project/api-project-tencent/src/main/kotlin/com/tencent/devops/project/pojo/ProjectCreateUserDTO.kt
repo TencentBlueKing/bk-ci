@@ -27,17 +27,17 @@
 
 package com.tencent.devops.project.pojo
 
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
 data class ProjectCreateUserDTO(
-    @ApiModelProperty("目标项目Id")
+    @get:Schema(title = "目标项目Id")
     val projectId: String,
-    @ApiModelProperty("目标用户id")
+    @get:Schema(title = "目标用户id")
     val userId: String? = "",
-    @ApiModelProperty("角色名称")
+    @get:Schema(title = "角色名称")
     val roleName: String?,
-    @ApiModelProperty("角色Id")
+    @get:Schema(title = "角色Id")
     val roleId: Int?,
-    @ApiModelProperty("多目标用户id")
+    @get:Schema(title = "多目标用户id")
     val userIds: List<String>? = emptyList()
 )

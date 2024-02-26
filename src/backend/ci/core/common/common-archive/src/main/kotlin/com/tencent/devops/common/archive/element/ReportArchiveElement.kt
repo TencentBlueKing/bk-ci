@@ -28,28 +28,27 @@
 package com.tencent.devops.common.archive.element
 
 import com.tencent.devops.common.pipeline.pojo.element.Element
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("自定义产出物报告", description = ReportArchiveElement.classType)
+@Schema(title = "自定义产出物报告", description = ReportArchiveElement.classType)
 data class ReportArchiveElement(
-    @ApiModelProperty("任务名称", required = true)
+    @get:Schema(title = "任务名称", required = true)
     override val name: String = "python文件编译",
-    @ApiModelProperty("id", required = false)
+    @get:Schema(title = "id", required = false)
     override var id: String? = null,
-    @ApiModelProperty("状态", required = false)
+    @get:Schema(title = "状态", required = false)
     override var status: String? = null,
-    @ApiModelProperty("待上传文件夹）", required = true)
+    @get:Schema(title = "待上传文件夹）", required = true)
     val fileDir: String = "",
-    @ApiModelProperty("入口文件）", required = false)
+    @get:Schema(title = "入口文件）", required = false)
     val indexFile: String = "",
-    @ApiModelProperty("标签别名", required = true)
+    @get:Schema(title = "标签别名", required = true)
     val reportName: String = "",
-    @ApiModelProperty("开启邮件", required = false)
+    @get:Schema(title = "开启邮件", required = false)
     val enableEmail: Boolean?,
-    @ApiModelProperty("邮件接收者", required = false)
+    @get:Schema(title = "邮件接收者", required = false)
     val emailReceivers: Set<String>?,
-    @ApiModelProperty("邮件标题", required = false)
+    @get:Schema(title = "邮件标题", required = false)
     val emailTitle: String?
 ) : Element(name, id, status) {
     companion object {

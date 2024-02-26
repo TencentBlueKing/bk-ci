@@ -27,17 +27,17 @@
 
 package com.tencent.devops.store.pojo
 
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
 data class ExtServiceItemRelCreateInfo(
-    @ApiModelProperty("扩展服务ID")
+    @get:Schema(title = "扩展服务ID")
     val serviceId: String,
-    @ApiModelProperty("服务功能项ID")
+    @get:Schema(title = "服务功能项ID")
     val itemId: String,
-    @ApiModelProperty("bkServiceId")
+    @get:Schema(title = "bkServiceId")
     val bkServiceId: Long,
-    @ApiModelProperty("添加用户")
+    @get:Schema(title = "添加用户")
     val creatorUser: String,
-    @ApiModelProperty("修改用户")
+    @get:Schema(title = "修改用户")
     val modifierUser: String
 )

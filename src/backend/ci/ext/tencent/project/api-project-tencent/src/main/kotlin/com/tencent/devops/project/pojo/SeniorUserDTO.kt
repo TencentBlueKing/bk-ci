@@ -1,14 +1,13 @@
 package com.tencent.devops.project.pojo
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("高级用户实体")
+@Schema(title = "高级用户实体")
 data class SeniorUserDTO(
-    @ApiModelProperty("用户ID")
+    @get:Schema(title = "用户ID")
     val userId: String,
-    @ApiModelProperty("用户名称")
+    @get:Schema(title = "用户名称")
     val name: String,
-    @ApiModelProperty("bg名称")
+    @get:Schema(title = "bg名称")
     val bgName: String
 )

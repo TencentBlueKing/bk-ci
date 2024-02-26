@@ -29,9 +29,9 @@ package com.tencent.devops.store.api.atom
 
 import com.tencent.devops.common.api.auth.AUTH_HEADER_REGION
 import com.tencent.devops.common.api.pojo.Result
-import io.swagger.annotations.Api
-import io.swagger.annotations.ApiOperation
-import io.swagger.annotations.ApiParam
+import io.swagger.v3.oas.annotations.tags.Tag
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.Parameter
 import javax.ws.rs.Consumes
 import javax.ws.rs.GET
 import javax.ws.rs.HeaderParam
@@ -39,17 +39,17 @@ import javax.ws.rs.Path
 import javax.ws.rs.Produces
 import javax.ws.rs.core.MediaType
 
-@Api(tags = ["EXTERNAL_ATOM_REGION"], description = "EXTERNAL-插件-区域")
+@Tag(name = "EXTERNAL_ATOM_REGION", description = "EXTERNAL-插件-区域")
 @Path("/external/atomRegion/")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface TxExternalAtomRegionResource {
 
-    @ApiOperation("插件执行区域")
+    @Operation(summary = "插件执行区域")
     @GET
     @Path("")
     fun getRegion(
-        @ApiParam("客户端区域", required = false)
+        @Parameter(description = "客户端区域", required = false)
         @HeaderParam(AUTH_HEADER_REGION)
         region: String?
     ): Result<String>

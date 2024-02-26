@@ -32,9 +32,9 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.process.pojo.BuildId
 import com.tencent.devops.stream.v1.pojo.V1GitCIStartupVO
-import io.swagger.annotations.Api
-import io.swagger.annotations.ApiOperation
-import io.swagger.annotations.ApiParam
+import io.swagger.v3.oas.annotations.tags.Tag
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.Parameter
 import javax.ws.rs.Consumes
 import javax.ws.rs.DELETE
 import javax.ws.rs.HeaderParam
@@ -45,59 +45,59 @@ import javax.ws.rs.Produces
 import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
-@Api(tags = ["SERVICE_STREAM_BUILD"], description = "服务-构建资源")
+@Tag(name = "SERVICE_STREAM_BUILD", description = "服务-构建资源")
 @Path("/service/builds")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface GitCIBuildResource {
 
-    @ApiOperation("重试流水线")
+    @Operation(summary = "重试流水线")
     @POST
     @Path("/{gitProjectId}/{pipelineId}/{buildId}/retry")
     fun retry(
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("工蜂项目ID", required = true)
+        @Parameter(description = "工蜂项目ID", required = true)
         @PathParam("gitProjectId")
         gitProjectId: Long,
-        @ApiParam("流水线ID", required = true)
+        @Parameter(description = "流水线ID", required = true)
         @PathParam("pipelineId")
         pipelineId: String,
-        @ApiParam("构建ID", required = true)
+        @Parameter(description = "构建ID", required = true)
         @PathParam("buildId")
         buildId: String,
-        @ApiParam("要重试的原子任务ID", required = false)
+        @Parameter(description = "要重试的原子任务ID", required = false)
         @QueryParam("taskId")
         taskId: String? = null
     ): Result<BuildId>
 
-    @ApiOperation("手动停止流水线")
+    @Operation(summary = "手动停止流水线")
     @DELETE
     @Path("/{gitProjectId}/{pipelineId}/{buildId}/")
     fun manualShutdown(
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("工蜂项目ID", required = true)
+        @Parameter(description = "工蜂项目ID", required = true)
         @PathParam("gitProjectId")
         gitProjectId: Long,
-        @ApiParam("流水线ID", required = true)
+        @Parameter(description = "流水线ID", required = true)
         @PathParam("pipelineId")
         pipelineId: String,
-        @ApiParam("构建ID", required = true)
+        @Parameter(description = "构建ID", required = true)
         @PathParam("buildId")
         buildId: String
     ): Result<Boolean>
 
-    @ApiOperation("stream启动流水线")
+    @Operation(summary = "stream启动流水线")
     @POST
     @Path("/pipeline/startup")
     fun gitCIStartupPipeline(
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("启动信息", required = true)
+        @Parameter(description = "启动信息", required = true)
         v1GitCIStartupVO: V1GitCIStartupVO
     ): Result<BuildId?>
 }

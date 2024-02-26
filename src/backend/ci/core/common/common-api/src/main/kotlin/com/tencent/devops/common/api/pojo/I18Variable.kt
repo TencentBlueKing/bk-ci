@@ -29,16 +29,15 @@
 package com.tencent.devops.common.api.pojo
 
 import com.tencent.devops.common.api.util.JsonUtil
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("国际化变量")
+@Schema(title = "国际化变量")
 data class I18Variable(
-    @ApiModelProperty("国际化变量名")
+    @get:Schema(title = "国际化变量名")
     val code: String,
-    @ApiModelProperty("国际化参数")
+    @get:Schema(title = "国际化参数")
     val params: List<String>,
-    @ApiModelProperty("默认信息")
+    @get:Schema(title = "默认信息")
     val defaultMessage: String? = null
 ) {
     fun toJsonStr() = JsonUtil.toJson(this, false)
