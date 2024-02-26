@@ -229,7 +229,7 @@ class WorkspaceCheckJob @Autowired constructor(
                 }.onFailure {
                     logger.warn("autoDeleteWhenNotAssign fail ${it.message}", it)
                 }
-                // 云桌面通知-关机超过7天时自动销毁
+                // 云桌面通知-关机超过14天时自动销毁
                 kotlin.runCatching {
                     deleteControl.autoDeleteWhenSleep7Day(false, readyDeleteWorkspace)
                     if (readyDeleteWorkspace.isNotEmpty()) {
