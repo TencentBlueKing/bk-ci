@@ -234,14 +234,14 @@ interface ServiceRepositoryResource {
         request: RepoPipelineRefRequest
     ): Result<Boolean>
 
-    @ApiOperation("添加插件库的标志位")
+    @Operation(summary = "添加插件库的标志位")
     @POST
     @Path("/insertAtomRepoFlag")
     fun insertAtomRepoFlag(
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam(value = "插件代码库关联关系")
+        @Parameter(description = "插件代码库关联关系")
         atomRefRepositoryInfo: List<AtomRefRepositoryInfo>
     ): Result<Boolean>
 }

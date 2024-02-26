@@ -242,14 +242,14 @@ interface OpAtomResource {
         atomCode: String
     ): Result<Boolean>
 
-    @ApiOperation("补充插件仓库标识")
+    @Operation(summary = "补充插件仓库标识")
     @POST
     @Path("/insertAtomRepoFlag")
     fun insertAtomRepoFlag(
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("atomCode", required = false)
+        @Parameter(description = "atomCode", required = false)
         @QueryParam("atomCode")
         atomCode: String?
     ): Result<Boolean>
