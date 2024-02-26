@@ -1,5 +1,7 @@
 <template>
-    <div class="pipeline-detail-entry">
+    <div :class="['pipeline-detail-entry', {
+        'show-pipeline-var': activeChild.showVar
+    }]">
         <aside class="pipeline-detail-entry-aside">
             <ul v-for="item in asideNav" :key="item.name">
                 <li class="nav-item-title">
@@ -27,6 +29,7 @@
         <main class="pipeline-detail-entry-main">
             <component :is="activeChild.component" />
         </main>
+        <show-variable v-if="activeChild.showVar" :editable="false" :pipeline="pipeline" />
     </div>
 </template>
 
@@ -39,7 +42,7 @@
         PipelineConfig,
         ChangeLog
     } from '@/components/PipelineDetailTabs'
-    import { AuthorityTab } from '@/components/PipelineEditTabs/'
+    import { ShowVariable, AuthorityTab } from '@/components/PipelineEditTabs/'
 
     export default {
         components: {
@@ -48,10 +51,11 @@
             PipelineConfig,
             AuthorityTab,
             ChangeLog,
-            Logo
+            Logo,
+            ShowVariable
         },
         computed: {
-            ...mapState('atom', ['pipelineInfo']),
+            ...mapState('atom', ['pipelineInfo', 'pipeline']),
             activeMenuItem () {
                 return this.$route.params.type || 'history'
             },
@@ -143,7 +147,8 @@
                     case 'notice':
                     case 'setting':
                         return {
-                            component: 'PipelineConfig'
+                            component: 'PipelineConfig',
+                            showVar: true
                         }
                     case 'permission':
                         return {
@@ -180,19 +185,19 @@
 @import "./../../scss/conf";
 
 .pipeline-detail-entry.biz-content {
-  margin: 24px;
   height: 100%;
   overflow: hidden;
-  display: grid;
-  grid-auto-flow: column;
-  grid-template-columns: 220px 1fr;
+  display: flex;
   box-shadow: 0 2px 2px 0 #00000026;
   background: #f6f7fa;
   .pipeline-detail-entry-aside {
+    width: 220px;
+    flex-shrink: 0;
     background: #fafbfd;
     border-right: 1px solid #dcdee5;
     padding: 4px 0;
     height: 100%;
+    margin: 24px 0 24px 24px;
     overflow: auto;
     overflow: overlay;
 
@@ -244,7 +249,10 @@
   }
   .pipeline-detail-entry-main {
     background: #fff;
+    margin: 24px 24px 24px 0;
     overflow: hidden;
+    flex: 1;
+
   }
 }
 </style>

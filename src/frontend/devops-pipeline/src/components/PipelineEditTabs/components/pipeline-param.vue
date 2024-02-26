@@ -2,8 +2,10 @@
     <div class="variable-container">
         <bk-alert type="info" :title="$t('newui.pipelineParam.useTips')" closable></bk-alert>
         <div class="operate-row">
-            <bk-button class="var-btn" v-enStyle="'min-width:100px'" :disabled="!editable" @click="handleAdd">{{$t('newui.pipelineParam.addVar')}}</bk-button>
-            <bk-button class="var-btn" v-enStyle="'min-width:100px'" :disabled="!editable" @click="handleAdd('constant')">{{$t('newui.pipelineParam.addConst')}}</bk-button>
+            <template v-if="editable">
+                <bk-button class="var-btn" v-enStyle="'min-width:100px'" @click="handleAdd">{{$t('newui.pipelineParam.addVar')}}</bk-button>
+                <bk-button class="var-btn" v-enStyle="'min-width:100px'" @click="handleAdd('constant')">{{$t('newui.pipelineParam.addConst')}}</bk-button>
+            </template>
             <bk-input
                 v-model="searchStr"
                 :clearable="true"

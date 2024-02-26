@@ -7,18 +7,16 @@
             v-on="$listeners"
         >
         </pipeline>
-        <show-variable :editable="false" :pipeline="pipeline" />
     </div>
 </template>
 
 <script>
     import { mapState } from 'vuex'
     import Pipeline from '@/components/Pipeline'
-    import { ShowVariable } from '@/components/PipelineEditTabs/'
+
     export default {
         components: {
-            Pipeline,
-            ShowVariable
+            Pipeline
         },
         computed: {
             ...mapState('atom', ['pipelineWithoutTrigger', 'pipeline'])

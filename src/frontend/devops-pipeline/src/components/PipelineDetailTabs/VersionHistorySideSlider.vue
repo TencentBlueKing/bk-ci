@@ -31,7 +31,7 @@
                             <div :class="['pipeline-version-name-cell', {
                                 'active-version-name': row.version === releaseVersion
                             }]">
-                                <i class="devops-icon icon-draft" v-if="row.status === 'COMMITTING'" />
+                                <i class="devops-icon icon-edit-line" v-if="row.status === 'COMMITTING'" />
                                 <logo v-else-if="row.isBranchVersion" name="branch" size="14" />
                                 <i v-else class="devops-icon icon-check-circle" />
                                 {{ row.versionName }}
