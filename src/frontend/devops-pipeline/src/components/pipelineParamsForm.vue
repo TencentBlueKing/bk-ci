@@ -15,6 +15,9 @@
                     :show-select-all="true"
                     :handle-change="handleParamUpdate"
                     v-bind="Object.assign({}, param, { id: undefined, name: 'devops' + param.name })"
+                    :class="{
+                        'is-diff-param': highlightChangedParam && param.isChanged
+                    }"
                     :disabled="disabled"
                     :placeholder="param.placeholder"
                 />
@@ -92,7 +95,8 @@
             handleParamChange: {
                 type: Function,
                 default: () => () => {}
-            }
+            },
+            highlightChangedParam: Boolean
         },
         computed: {
             paramList () {
@@ -290,5 +294,8 @@
     }
     .params-desc-styles {
         margin-top: 32px;
+    }
+    .is-diff-param {
+        border-color: #FF9C01 !important;
     }
 </style>

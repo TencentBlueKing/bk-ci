@@ -1360,6 +1360,8 @@
   "pickTimeRange": "选择日期时间范围",
   "mainMinorPatch": "（主版本.特性版本.修正版本）",
   "debugParamsTips": "调试过程中，将自动为您填充上一次调试使用的参数值。可选择恢复至默认值",
+  "restoreDetaulParamsTips": "已默认填充最近一次构建参数值，若无需填充请修改触发器[手动触发]插件配置",
+  "paramChangeTips": "填入上一次参数值后，有 {0} 个参数发生了变更，请关注变更项是否满足预期",
   "resetDefault": "恢复默认",
   "useLastParams": "使用上一次参数值",
   "next": "下一步",

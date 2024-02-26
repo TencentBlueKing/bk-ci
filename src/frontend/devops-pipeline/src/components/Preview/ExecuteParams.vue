@@ -37,7 +37,7 @@
                         <span class="collapse-trigger-divider">|</span>
                         <span v-if="useLastParams" class="text-link" @click.stop="updateParams()">
                             {{ $t('resetDefault') }}
-                            <i class="devops-icon icon-question-circle" v-bk-tooltips="$t('debugParamsTips')" />
+                            <i class="devops-icon icon-question-circle" v-bk-tooltips="resetDefaultParamsTips" />
                         </span>
                         <span v-else class="text-link" @click.stop="updateParams('value')">
                             {{ $t('useLastParams') }}
@@ -45,10 +45,18 @@
                     </template>
                 </header>
                 <div slot="content" class="params-collapse-content">
+                    <bk-alert
+                        v-if="showChangedParamsAlert"
+                        type="warning"
+                        :title="$t('paramChangeTips', [changedParams.length])"
+                        closable
+                    >
+                    </bk-alert>
                     <pipeline-params-form
                         v-if="paramList.length > 0"
                         ref="paramsForm"
                         :param-values="paramsValues"
+                        :highlight-changed-param="showChangedParamsAlert"
                         :handle-param-change="handleParamChange"
                         :params="paramList"
                     />
@@ -125,7 +133,8 @@
                 constantParams: [],
                 constantValues: {},
                 otherParams: [],
-                otherValues: {}
+                otherValues: {},
+                showChangedParamsAlert: false
             }
         },
         computed: {
@@ -143,6 +152,12 @@
             },
             hasParams () {
                 return this.startupInfo?.properties?.length > 0 || this.isVisibleVersion
+            },
+            changedParams () {
+                return this.paramList.filter(p => p.isChanged)
+            },
+            resetDefaultParamsTips () {
+                return this.$t(this.isDebug ? 'debugParamsTips' : 'restoreDetaulParamsTips')
             }
         },
         watch: {
@@ -168,12 +183,14 @@
             init (startupInfo) {
                 if (startupInfo.canManualStartup) {
                     const values = this.getExecuteParams(this.pipelineId)
+                    console.log(values)
                     if (startupInfo.buildNo) {
                         this.buildNo = startupInfo.buildNo
                         this.isVisibleVersion = startupInfo.buildNo.required
                     }
                     this.paramList = startupInfo.properties.filter(p => p.required && !allVersionKeyList.includes(p.id) && p.propertyType !== 'BUILD').map(p => ({
                         ...p,
+                        isChanged: p.defaultValue !== p.value,
                         readOnly: false
                     }))
                     this.versionParamList = startupInfo.properties.filter(p => allVersionKeyList.includes(p.id))
@@ -212,6 +229,7 @@
                 console.log(this.paramsValues, 'sssss', this.paramList)
             },
             updateParams (valueKey = 'defaultValue') {
+                this.showChangedParamsAlert = true
                 this.paramsValues = getParamsValuesMap(this.paramList, valueKey)
                 this.setExecuteParams({
                     pipelineId: this.pipelineId,
