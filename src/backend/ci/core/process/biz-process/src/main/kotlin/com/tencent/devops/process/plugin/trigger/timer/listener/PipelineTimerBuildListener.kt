@@ -74,7 +74,7 @@ class PipelineTimerBuildListener @Autowired constructor(
         }
     }
 
-    private fun timerTrigger(event: PipelineTimerBuildEvent, startValues: Map<String, String> = emptyMap()): String? {
+    private fun timerTrigger(event: PipelineTimerBuildEvent, params: Map<String, String> = emptyMap()): String? {
         with(event) {
             try {
                 val buildResult = serviceTimerBuildResource.timerTrigger(
@@ -82,7 +82,6 @@ class PipelineTimerBuildListener @Autowired constructor(
                     projectId = projectId,
                     pipelineId = pipelineId,
                     params = emptyMap(),
-                    startValues = startValues,
                     channelCode = channelCode
                 )
 
@@ -167,7 +166,7 @@ class PipelineTimerBuildListener @Autowired constructor(
                 if (timerBranch == null || timerBranch.revision != revision) {
                     timerTrigger(
                         event = event,
-                        startValues = mapOf(
+                        params = mapOf(
                             BK_REPO_WEBHOOK_HASH_ID to repoHashId,
                             PIPELINE_WEBHOOK_BRANCH to branch
                         )
