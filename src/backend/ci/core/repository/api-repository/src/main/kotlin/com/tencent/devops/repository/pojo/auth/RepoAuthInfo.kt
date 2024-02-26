@@ -26,16 +26,15 @@
  */
 package com.tencent.devops.repository.pojo.auth
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 import org.apache.commons.lang3.StringUtils
 
-@ApiModel("代码库授权信息")
+@Schema(title = "代码库授权信息")
 data class RepoAuthInfo(
-    @ApiModelProperty("授权类型", required = true)
+    @get:Schema(title = "授权类型", required = true)
     val authType: String,
-    @ApiModelProperty("授权凭证ID", required = true)
+    @get:Schema(title = "授权凭证ID", required = true)
     val credentialId: String,
-    @ApiModelProperty("SVN类型", required = false)
+    @get:Schema(title = "SVN类型", required = false)
     val svnType: String? = StringUtils.EMPTY
 )

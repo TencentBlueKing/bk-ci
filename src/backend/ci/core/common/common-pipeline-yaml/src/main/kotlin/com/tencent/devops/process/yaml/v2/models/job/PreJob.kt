@@ -33,7 +33,7 @@ import com.tencent.devops.process.yaml.v2.models.MetaData
 import com.tencent.devops.process.yaml.v2.models.YAME_META_DATA_JSON_FILTER
 import com.tencent.devops.process.yaml.v2.models.YamlMetaData
 import com.tencent.devops.process.yaml.v2.models.step.PreStep
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
 /**
  * WARN: 请谨慎修改这个类 , 不要随意添加或者删除变量 , 否则可能导致依赖yaml的功能(gitci,prebuild等)异常
@@ -44,27 +44,27 @@ data class PreJob(
     val name: String?,
     @JsonProperty("mutex")
     val mutex: Mutex? = null,
-    @ApiModelProperty(name = "runs-on")
+    @get:Schema(title = "runs-on")
     @JsonProperty("runs-on")
     val runsOn: Any?,
     val container: Container?,
     val services: Map<String, Service>? = null,
-    @ApiModelProperty(name = "if")
+    @get:Schema(title = "if")
     @JsonProperty("if")
     val ifField: String? = null,
-    @ApiModelProperty(name = "if-modify")
+    @get:Schema(title = "if-modify")
     @JsonProperty("if-modify")
     val ifModify: List<String>? = null,
     val steps: List<PreStep>?,
-    @ApiModelProperty(name = "timeout-minutes")
+    @get:Schema(title = "timeout-minutes")
     @JsonProperty("timeout-minutes")
     val timeoutMinutes: Int? = null,
     val env: Map<String, String>? = emptyMap(),
-    @ApiModelProperty(name = "continue-on-error")
+    @get:Schema(title = "continue-on-error")
     @JsonProperty("continue-on-error")
     val continueOnError: Boolean? = null,
     val strategy: Strategy? = null,
-    @ApiModelProperty(name = "depend-on")
+    @get:Schema(title = "depend-on")
     @JsonProperty("depend-on")
     val dependOn: List<String>? = null,
     override val yamlMetaData: MetaData? = null

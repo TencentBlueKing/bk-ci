@@ -27,18 +27,18 @@
 
 package com.tencent.devops.project.pojo
 
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
 data class OrganizationInfo(
-    @ApiModelProperty(name = "组织ID")
+    @get:Schema(title = "组织ID")
     val id: String?,
-    @ApiModelProperty(name = "组织名称")
+    @get:Schema(title = "组织名称")
     val name: String?,
-    @ApiModelProperty(name = "组织类型")
+    @get:Schema(title = "组织类型")
     val type: String? = null,
-    @ApiModelProperty(name = "是否有叶子节点")
+    @get:Schema(title = "是否有叶子节点")
     val leaf: Boolean? = null,
-    @ApiModelProperty(name = "组织父ID")
+    @get:Schema(title = "组织父ID")
     val parentId: String? = null
 ) {
     override fun toString(): String {

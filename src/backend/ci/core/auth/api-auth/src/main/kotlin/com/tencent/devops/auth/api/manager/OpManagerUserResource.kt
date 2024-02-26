@@ -35,9 +35,9 @@ import com.tencent.devops.auth.pojo.enum.UrlType
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
-import io.swagger.annotations.Api
-import io.swagger.annotations.ApiOperation
-import io.swagger.annotations.ApiParam
+import io.swagger.v3.oas.annotations.tags.Tag
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.Parameter
 import javax.ws.rs.Consumes
 import javax.ws.rs.DELETE
 import javax.ws.rs.GET
@@ -49,7 +49,7 @@ import javax.ws.rs.Produces
 import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
-@Api(tags = ["AUTH_MANAGER_USER"], description = "权限-管理员")
+@Tag(name = "AUTH_MANAGER_USER", description = "权限-管理员")
 @Path("/op/auth/manager/users")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
@@ -57,9 +57,9 @@ interface OpManagerUserResource {
 
     @POST
     @Path("/")
-    @ApiOperation("新增管理员到组织")
+    @Operation(summary = "新增管理员到组织")
     fun createManagerUser(
-        @ApiParam(name = "用户名", required = true)
+        @Parameter(description = "用户名", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
         managerUserDTO: ManagerUserDTO
@@ -67,123 +67,123 @@ interface OpManagerUserResource {
 
     @POST
     @Path("/batch/create")
-    @ApiOperation("批量新增管理员到组织")
+    @Operation(summary = "批量新增管理员到组织")
     fun batchCreateManagerUser(
-        @ApiParam(name = "用户名", required = true)
+        @Parameter(description = "用户名", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam(name = "目标用户,支持以“,”隔开", required = true)
+        @Parameter(description = "目标用户,支持以“,”隔开", required = true)
         @QueryParam("managerUserId")
         managerUserId: String,
-        @ApiParam(name = "timeout", required = true)
+        @Parameter(description = "timeout", required = true)
         @QueryParam("timeout")
         timeout: Int,
-        @ApiParam(name = "授权Id,支持以“,”隔开", required = true)
+        @Parameter(description = "授权Id,支持以“,”隔开", required = true)
         @QueryParam("managerIds")
         managerIds: String
     ): Result<Boolean>
 
     @DELETE
     @Path("/managers/{managerId}")
-    @ApiOperation("删除管理员")
+    @Operation(summary = "删除管理员")
     fun deleteManagerUser(
-        @ApiParam(name = "用户名", required = true)
+        @Parameter(description = "用户名", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam(name = "授权Id", required = true)
+        @Parameter(description = "授权Id", required = true)
         @PathParam("managerId")
         managerId: Int,
-        @ApiParam(name = "待回收用户", required = true)
+        @Parameter(description = "待回收用户", required = true)
         @QueryParam("deleteUser")
         deleteUser: String
     ): Result<Boolean>
 
     @DELETE
     @Path("/batch/delete")
-    @ApiOperation("批量删除管理员")
+    @Operation(summary = "批量删除管理员")
     fun batchDeleteManagerUser(
-        @ApiParam(name = "用户名", required = true)
+        @Parameter(description = "用户名", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam(name = "授权Id,支持以“,”隔开", required = true)
+        @Parameter(description = "授权Id,支持以“,”隔开", required = true)
         @QueryParam("managerIds")
         managerIds: String,
-        @ApiParam(name = "待回收用户,支持以“,”隔开", required = true)
+        @Parameter(description = "待回收用户,支持以“,”隔开", required = true)
         @QueryParam("deleteUsers")
         deleteUsers: String
     ): Result<Boolean>
 
     @GET
     @Path("/managers/{managerId}/alive/list")
-    @ApiOperation("有效期内管理员列表")
+    @Operation(summary = "有效期内管理员列表")
     fun managerAliveUserList(
-        @ApiParam(name = "授权Id", required = true)
+        @Parameter(description = "授权Id", required = true)
         @PathParam("managerId")
         managerId: Int
     ): Result<List<ManagerUserEntity>?>
 
     @GET
     @Path("/managers/{managerId}/history/list")
-    @ApiOperation("已超时管理员列表")
+    @Operation(summary = "已超时管理员列表")
     fun managerHistoryUserList(
-        @ApiParam(name = "授权Id", required = true)
+        @Parameter(description = "授权Id", required = true)
         @PathParam("managerId")
         managerId: Int,
-        @ApiParam(name = "页数", required = true)
+        @Parameter(description = "页数", required = true)
         @QueryParam("page")
         page: Int?,
-        @ApiParam(name = "页大小", required = true)
+        @Parameter(description = "页大小", required = true)
         @QueryParam("pageSize")
         pageSize: Int?
     ): Result<Page<ManagerUserEntity>?>
 
     @GET
     @Path("/{userId}")
-    @ApiOperation("用户管理员信息,并刷新内存信息")
+    @Operation(summary = "用户管理员信息,并刷新内存信息")
     fun getManagerInfo(
-        @ApiParam(name = "用户Id", required = true)
+        @Parameter(description = "用户Id", required = true)
         @PathParam("userId")
         userId: String
     ): Result<Map<String/*organizationId*/, UserPermissionInfo>?>
 
     @POST
     @Path("/white")
-    @ApiOperation("添加管理授权白名单用户")
+    @Operation(summary = "添加管理授权白名单用户")
     fun createWhiteUser(
-        @ApiParam(name = "授权Id", required = true)
+        @Parameter(description = "授权Id", required = true)
         @QueryParam("managerId")
         managerId: Int,
-        @ApiParam(name = "用户Id串, 支持以“,”分割", required = true)
+        @Parameter(description = "用户Id串, 支持以“,”分割", required = true)
         @QueryParam("userId")
         userId: String
     ): Result<Boolean>
 
     @DELETE
     @Path("/white")
-    @ApiOperation("删除管理授权白名单用户")
+    @Operation(summary = "删除管理授权白名单用户")
     fun deleteWhiteUser(
-        @ApiParam(name = "白名单Id, 支持以“,”分割", required = true)
+        @Parameter(description = "白名单Id, 支持以“,”分割", required = true)
         @QueryParam("ids")
         ids: String
     ): Result<Boolean>
 
     @GET
     @Path("/white/managerIds/{managerId}/list/")
-    @ApiOperation("获取管理员策略下白名单列表")
+    @Operation(summary = "获取管理员策略下白名单列表")
     fun listWhiteUser(
-        @ApiParam(name = "管理员策略Id", required = true)
+        @Parameter(description = "管理员策略Id", required = true)
         @PathParam("managerId")
         managerId: Int
     ): Result<List<WhiteEntify>?>
 
     @GET
     @Path("/manager/url/types/{type}/managerIds/{managerId}")
-    @ApiOperation("获取授权/取消授权链接")
+    @Operation(summary = "获取授权/取消授权链接")
     fun getUrl(
-        @ApiParam(name = "获取链接类型: 授权链接, 取消授权链接", required = true)
+        @Parameter(description = "获取链接类型: 授权链接, 取消授权链接", required = true)
         @PathParam("type")
         type: UrlType,
-        @ApiParam(name = "管理员策略Id", required = true)
+        @Parameter(description = "管理员策略Id", required = true)
         @PathParam("managerId")
         managerId: Int
     ): Result<String>

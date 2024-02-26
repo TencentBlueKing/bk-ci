@@ -27,11 +27,10 @@
 
 package com.tencent.devops.environment.pojo
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("环境-ID")
+@Schema(title = "环境-ID")
 data class EnvironmentId(
-    @ApiModelProperty("环境哈希ID", required = true)
+    @get:Schema(title = "环境哈希ID", required = true)
     val hashId: String
 )

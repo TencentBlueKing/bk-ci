@@ -28,38 +28,37 @@
 package com.tencent.devops.artifactory.pojo
 
 import com.tencent.devops.artifactory.pojo.enums.ArtifactoryType
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("版本仓库-文件信息")
+@Schema(title = "版本仓库-文件信息")
 data class FileInfo(
-    @ApiModelProperty("文件名", required = true)
+    @get:Schema(title = "文件名", required = true)
     val name: String,
-    @ApiModelProperty("文件全名", required = true)
+    @get:Schema(title = "文件全名", required = true)
     val fullName: String,
-    @ApiModelProperty("文件路径", required = true)
+    @get:Schema(title = "文件路径", required = true)
     val path: String,
-    @ApiModelProperty("文件全路径", required = true)
+    @get:Schema(title = "文件全路径", required = true)
     val fullPath: String,
-    @ApiModelProperty("文件大小(byte)", required = true)
+    @get:Schema(title = "文件大小(byte)", required = true)
     val size: Long,
-    @ApiModelProperty("是否文件夹", required = true)
+    @get:Schema(title = "是否文件夹", required = true)
     val folder: Boolean,
-    @ApiModelProperty("更新时间", required = true)
+    @get:Schema(title = "更新时间", required = true)
     val modifiedTime: Long,
-    @ApiModelProperty("仓库类型", required = true)
+    @get:Schema(title = "仓库类型", required = true)
     val artifactoryType: ArtifactoryType,
-    @ApiModelProperty("元数据", required = true)
+    @get:Schema(title = "元数据", required = true)
     val properties: List<Property>?,
-    @ApiModelProperty("app版本", required = true)
+    @get:Schema(title = "app版本", required = true)
     val appVersion: String? = null,
-    @ApiModelProperty("下载短链接", required = true)
+    @get:Schema(title = "下载短链接", required = true)
     val shortUrl: String? = null,
-    @ApiModelProperty("下载链接", required = false)
+    @get:Schema(title = "下载链接", required = false)
     var downloadUrl: String? = null,
-    @ApiModelProperty("MD5", required = false)
+    @get:Schema(title = "MD5", required = false)
     var md5: String? = null,
-    @ApiModelProperty("docker registry", required = false)
+    @get:Schema(title = "docker registry", required = false)
     var registry: String? = null
 ) : Comparable<FileInfo> {
     constructor(
