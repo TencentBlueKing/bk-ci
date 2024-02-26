@@ -7,7 +7,7 @@ data class TGitRepoData(
     @get:Schema(title = "工蜂仓库ID")
     val repoId: Long,
     @get:Schema(title = "仓库URL")
-    val url: String,
+    var url: String,
     @get:Schema(title = "关联状态 TO_BE_MIGRATED|AVAILABLE|ABNORMAL")
     val status: TGitRepoStatus
 )

@@ -111,10 +111,10 @@ interface UserProjectGitProxyResource {
         @Parameter(description = "项目ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_PROJECT_ID)
         projectId: String,
-        @Parameter(value = "工蜂仓库ID", required = true)
+        @Parameter(description = "工蜂仓库ID", required = true)
         @QueryParam("repoId")
         repoId: Long,
-        @Parameter(value = "仓库链接", required = true)
+        @Parameter(description = "仓库链接", required = true)
         @QueryParam("url")
         url: String
     ): Result<Boolean>

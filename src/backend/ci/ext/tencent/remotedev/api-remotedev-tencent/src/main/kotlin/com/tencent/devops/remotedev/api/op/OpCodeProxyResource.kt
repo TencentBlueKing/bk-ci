@@ -24,7 +24,7 @@ interface OpCodeProxyResource {
         data: CallbackLinktgitData
     ): Result<Map<Long, Boolean>>
 
-    @ApiOperation("迁移TGit旧表数据")
+    @Operation(summary = "迁移TGit旧表数据")
     @POST
     @Path("/migrateTGitData")
     fun migrateTGitData(
