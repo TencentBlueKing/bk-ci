@@ -1469,5 +1469,6 @@
   "badgeTips": "Badge can be added to the README.md of the project to facilitate visitors to quickly understand the construction status, test results or deployment status of the project",
   "dealMR": "Processing MR",
   "copyTempConf": "Clone Template Configuration",
-  "tempWithoutConf": "Template does not include this setting"
+  "tempWithoutConf": "Template does not include this setting",
+  "noPipelineStageTips": "The pipeline has not been configured with stages"
 }

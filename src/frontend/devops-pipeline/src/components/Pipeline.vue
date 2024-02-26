@@ -8,7 +8,7 @@
                 <slot name="pipeline-bar"></slot>
             </div>
         </header>
-        <div v-if="pipeline && pipeline.stages && pipeline.stages.length" class="scroll-container">
+        <div v-if="hasPipelineModel" class="scroll-container">
             <div class="scroll-wraper">
                 <bk-pipeline
                     :pipeline="pipeline"
@@ -26,12 +26,16 @@
                 </bk-pipeline>
             </div>
         </div>
-        <div v-else :class="['empty-pipeline-stage', {
+        <div v-else-if="pipelineEditable" :class="['empty-pipeline-stage', {
             'empty-pipeline-stage-disabled': !pipelineEditable
         }]" @click="handleAddStage({ stageIndex: 0, isParallel: false, isFinally: false })">
             <i class="bk-icon left-icon icon-devops-icon icon-plus"></i>
             <span>{{$t('点击添加第一个流水线Stage')}}</span>
         </div>
+
+        <bk-exception v-else type="empty" scene="part">
+            {{$t('noPipelineStageTips')}}
+        </bk-exception>
 
         <bk-dialog
             v-if="pipelineEditable"
@@ -163,6 +167,9 @@
             },
             routeParams () {
                 return this.$route.params
+            },
+            hasPipelineModel () {
+                return this.pipeline?.stages?.length > 0
             },
             isStageShow: {
                 get () {

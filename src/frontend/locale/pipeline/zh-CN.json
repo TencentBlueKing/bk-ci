@@ -1470,5 +1470,6 @@
   "badgeTips": "徽章可以添加到项目的 README.md 中，方便访问者快速了解项目的构建状态、测试结果或部署状态等信息",
   "dealMR": "处理合并请求",
   "copyTempConf": "克隆模板配置",
-  "tempWithoutConf": "模板未包含此设置"
+  "tempWithoutConf": "模板未包含此设置",
+  "noPipelineStageTips": "暂未添加流水线Stage"
 }
