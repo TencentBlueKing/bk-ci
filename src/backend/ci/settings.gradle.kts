@@ -174,13 +174,7 @@ include(":core:ticket:model-ticket")
 
 include(":core:store")
 include(":core:store:api-store")
-include(":core:store:api-store-sample")
-include(":core:store:api-store-image")
-include(":core:store:api-store-image-sample")
 include(":core:store:biz-store")
-include(":core:store:biz-store-sample")
-include(":core:store:biz-store-image")
-include(":core:store:biz-store-image-sample")
 include(":core:store:boot-store")
 include(":core:store:model-store")
 
