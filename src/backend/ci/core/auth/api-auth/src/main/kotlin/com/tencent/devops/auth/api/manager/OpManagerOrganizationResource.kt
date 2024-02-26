@@ -31,9 +31,9 @@ import com.tencent.devops.auth.pojo.ManageOrganizationEntity
 import com.tencent.devops.auth.pojo.dto.ManageOrganizationDTO
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.pojo.Result
-import io.swagger.annotations.Api
-import io.swagger.annotations.ApiOperation
-import io.swagger.annotations.ApiParam
+import io.swagger.v3.oas.annotations.tags.Tag
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.Parameter
 import javax.ws.rs.Consumes
 import javax.ws.rs.DELETE
 import javax.ws.rs.GET
@@ -45,7 +45,7 @@ import javax.ws.rs.PathParam
 import javax.ws.rs.Produces
 import javax.ws.rs.core.MediaType
 
-@Api(tags = ["AUTH_MANAGER_ORGANIZATION"], description = "权限-管理员-授权")
+@Tag(name = "AUTH_MANAGER_ORGANIZATION", description = "权限-管理员-授权")
 @Path("/op/auth/manager/organizations")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
@@ -53,9 +53,9 @@ interface OpManagerOrganizationResource {
 
     @POST
     @Path("/")
-    @ApiOperation("新增策略关联组织")
+    @Operation(summary = "新增策略关联组织")
     fun createManagerOrganization(
-        @ApiParam(name = "userId", required = true)
+        @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
         managerOrganization: ManageOrganizationDTO
@@ -63,12 +63,12 @@ interface OpManagerOrganizationResource {
 
     @PUT
     @Path("/{managerId}")
-    @ApiOperation("修改策略关联组织")
+    @Operation(summary = "修改策略关联组织")
     fun updateManagerOrganization(
-        @ApiParam(name = "userId", required = true)
+        @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam(name = "组织策略Id", required = true)
+        @Parameter(description = "组织策略Id", required = true)
         @PathParam("managerId")
         managerId: Int,
         managerOrganization: ManageOrganizationDTO
@@ -76,33 +76,33 @@ interface OpManagerOrganizationResource {
 
     @DELETE
     @Path("/{managerId}")
-    @ApiOperation("删除策略关联组织")
+    @Operation(summary = "删除策略关联组织")
     fun deleteManagerOrganization(
-        @ApiParam(name = "用户名", required = true)
+        @Parameter(description = "用户名", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam(name = "组织策略Id", required = true)
+        @Parameter(description = "组织策略Id", required = true)
         @PathParam("managerId")
         managerId: Int
     ): Result<Boolean>
 
     @GET
     @Path("/{managerId}")
-    @ApiOperation("获取策略关联组织")
+    @Operation(summary = "获取策略关联组织")
     fun getManagerOrganization(
-        @ApiParam(name = "用户名", required = true)
+        @Parameter(description = "用户名", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam(name = "组织策略Id", required = true)
+        @Parameter(description = "组织策略Id", required = true)
         @PathParam("managerId")
         managerId: Int
     ): Result<ManageOrganizationEntity?>
 
     @GET
     @Path("/list")
-    @ApiOperation("获取策略关联组织列表")
+    @Operation(summary = "获取策略关联组织列表")
     fun listManagerOrganization(
-        @ApiParam(name = "用户名", required = true)
+        @Parameter(description = "用户名", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String
     ): Result<List<ManageOrganizationEntity>?>

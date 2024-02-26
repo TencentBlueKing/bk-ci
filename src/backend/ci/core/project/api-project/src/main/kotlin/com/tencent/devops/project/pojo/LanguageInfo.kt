@@ -25,13 +25,12 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 package com.tencent.devops.project.pojo
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("语言信息")
+@Schema(title = "语言信息")
 data class LanguageInfo(
-    @ApiModelProperty("语言")
+    @get:Schema(title = "语言")
     val language: String,
-    @ApiModelProperty("语言名称")
+    @get:Schema(title = "语言名称")
     val name: String
 )

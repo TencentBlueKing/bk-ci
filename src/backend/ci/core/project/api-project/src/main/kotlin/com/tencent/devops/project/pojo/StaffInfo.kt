@@ -28,30 +28,29 @@
 package com.tencent.devops.project.pojo
 
 import com.fasterxml.jackson.annotation.JsonProperty
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("用户信息")
+@Schema(title = "用户信息")
 data class StaffInfo(
-    @ApiModelProperty("登录名")
+    @get:Schema(title = "登录名")
     @JsonProperty("LoginName")
     val loginName: String,
-    @ApiModelProperty("部门名称")
+    @get:Schema(title = "部门名称")
     @JsonProperty("DepartmentName")
     val departmentName: String,
-    @ApiModelProperty("英文全名")
+    @get:Schema(title = "英文全名")
     @JsonProperty("FullName")
     val fullName: String,
-    @ApiModelProperty("中文名")
+    @get:Schema(title = "中文名")
     @JsonProperty("ChineseName")
     val chineseName: String,
-    @ApiModelProperty("组ID")
+    @get:Schema(title = "组ID")
     @JsonProperty("GroupId")
     val groupId: String,
-    @ApiModelProperty("组名称")
+    @get:Schema(title = "组名称")
     @JsonProperty("GroupName")
     val groupName: String,
-    @ApiModelProperty("当前状态")
+    @get:Schema(title = "当前状态")
     @JsonProperty("StatusId")
     val statusId: String
 )

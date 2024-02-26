@@ -1,4 +1,7 @@
 <!-- BEGIN MUNGE: GENERATED_TOC -->
+- [v2.1.0-rc.2](#v210-rc2)
+   - [Changelog since v2.1.0-rc.1](#changelog-since-v210-rc1)
+
 - [v2.1.0-rc.1](#v210-rc1)
    - [Changelog since v2.0.0](#changelog-since-v200)
 
@@ -7,6 +10,32 @@
 
 
 <!-- NEW RELEASE NOTES ENTRY -->
+# v2.1.0-rc.2
+## Changelog since v2.1.0-rc.1
+#### 新增
+- [新增] 迁移逻辑优化 [链接](http://github.com/TencentBlueKing/bk-ci/issues/10014)
+- [新增] 用户组添加成员优化 [链接](http://github.com/TencentBlueKing/bk-ci/issues/9909)
+- [新增] op界面组织架构优化 [链接](http://github.com/TencentBlueKing/bk-ci/issues/9950)
+- [新增] GoAgent遇到环境中节点启动问题时切换至环境中另一个节点执行 [链接](http://github.com/TencentBlueKing/bk-ci/issues/9910)
+- [新增] 推动项目关联运营产品 - 提醒项目管理员关联运营产品 [链接](http://github.com/TencentBlueKing/bk-ci/issues/9981)
+- [新增] sql doc 文档更新 [链接](http://github.com/TencentBlueKing/bk-ci/issues/9974)
+- [新增] kubernetes构建机支持专机配置 [链接](http://github.com/TencentBlueKing/bk-ci/issues/8858)
+- [新增] 离线安装蓝盾 [链接](http://github.com/TencentBlueKing/bk-ci/issues/9881)
+- [新增] 将清理任务的参数暴露出来 [链接](http://github.com/TencentBlueKing/bk-ci/issues/9955)
+- [新增] [stream] 项目支持关联到运营产品 [链接](http://github.com/TencentBlueKing/bk-ci/issues/9948)
+- [新增] 优化构建类型枚举值，修复旧版dispatchType shutdown [链接](http://github.com/TencentBlueKing/bk-ci/issues/9894)
+- [新增] [bugfix] stream跨库触发commit check概率丢失 [链接](http://github.com/TencentBlueKing/bk-ci/issues/9941)
+- [新增] 根据moa票据校验用户权限并返回安全信息 [链接](http://github.com/TencentBlueKing/bk-ci/issues/9795)
+
+#### 优化
+- [优化] 增加对分区表的表结构进行校验的gradle插件 [链接](http://github.com/TencentBlueKing/bk-ci/issues/9931)
+
+#### 修复
+- [修复] rbac权限支持按照项目自动续期 [链接](http://github.com/TencentBlueKing/bk-ci/issues/9992)
+- [修复] 质量红线和质量红线组更新接口需要带项目ID [链接](http://github.com/TencentBlueKing/bk-ci/issues/9989)
+- [修复] 镜像发布检查镜像时镜像名不完整导致非dockerHub仓库镜像请求失败 [链接](http://github.com/TencentBlueKing/bk-ci/issues/9958)
+- [修复] 开启了新表达式矩阵变量没有替换 [链接](http://github.com/TencentBlueKing/bk-ci/issues/9914)
+- [修复] 插件暂停依赖的redis缓存失效时功能异常 [链接](http://github.com/TencentBlueKing/bk-ci/issues/9913)
 # v2.1.0-rc.1
 ## Changelog since v2.0.0
 #### 新增

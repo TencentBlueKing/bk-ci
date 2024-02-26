@@ -27,19 +27,18 @@
 
 package com.tencent.devops.artifactory.pojo
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("插件市场-重新归档插件包请求报文体")
+@Schema(title = "插件市场-重新归档插件包请求报文体")
 data class ReArchiveAtomRequest(
-    @ApiModelProperty("项目编码", required = true)
+    @get:Schema(title = "项目编码", required = true)
     val projectCode: String,
-    @ApiModelProperty("插件ID", required = true)
+    @get:Schema(title = "插件ID", required = true)
     val atomId: String,
-    @ApiModelProperty("插件代码", required = true)
+    @get:Schema(title = "插件代码", required = true)
     val atomCode: String,
-    @ApiModelProperty("插件版本号", required = true)
+    @get:Schema(title = "插件版本号", required = true)
     val version: String,
-    @ApiModelProperty(value = "插件字段校验确认标识", required = false)
+    @get:Schema(title = "插件字段校验确认标识", required = false)
     val fieldCheckConfirmFlag: Boolean? = false
 )

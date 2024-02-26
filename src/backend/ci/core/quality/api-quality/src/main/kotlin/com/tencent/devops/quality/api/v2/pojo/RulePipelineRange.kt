@@ -28,9 +28,9 @@
 package com.tencent.devops.quality.api.v2.pojo
 
 import com.tencent.devops.quality.api.v2.pojo.response.RangeExistElement
-import io.swagger.annotations.ApiModel
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("流水线生效范围")
+@Schema(title = "流水线生效范围")
 data class RulePipelineRange(
     val pipelineId: String,
     val pipelineName: String,

@@ -26,17 +26,16 @@
  */
 package com.tencent.devops.notify.pojo.messageTemplate
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("模板配置信息")
+@Schema(title = "模板配置信息")
 data class WechatMessageTemplate(
-    @ApiModelProperty("模板ID", required = true)
+    @get:Schema(title = "模板ID", required = true)
     val id: String,
-    @ApiModelProperty("标题", required = false)
+    @get:Schema(title = "标题", required = false)
     var title: String?,
-    @ApiModelProperty("内容", required = true)
+    @get:Schema(title = "内容", required = true)
     var body: String,
-    @ApiModelProperty("发送者", required = true)
+    @get:Schema(title = "发送者", required = true)
     val sender: String
 )
