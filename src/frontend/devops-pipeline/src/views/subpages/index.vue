@@ -41,6 +41,7 @@
     background-color: white;
     width: 100%;
     box-shadow: 0 2px 5px 0 rgba(51, 60, 72, 0.03);
+    border-bottom: 1px solid #DCDEE5;
   }
 }
 

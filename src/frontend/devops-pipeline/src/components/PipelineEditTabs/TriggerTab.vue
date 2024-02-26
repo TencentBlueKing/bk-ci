@@ -5,7 +5,7 @@
             <bk-table :data="triggerList">
                 <bk-table-column :label="$t('settings.trigger')" prop="name" show-overflow-tooltip>
                     <template slot-scope="props">
-                        <span @click="editTriggerAtom(props.$index)" :class="{ 'is-error': !props.row.name || props.row.isError }">
+                        <span @click="editTriggerAtom(props.$index)" :class="{ 'text-link': true, 'is-error': !props.row.name || props.row.isError }">
                             {{ props.row.name || $t('settings.selectTrigger') }}
                         </span>
                     </template>
