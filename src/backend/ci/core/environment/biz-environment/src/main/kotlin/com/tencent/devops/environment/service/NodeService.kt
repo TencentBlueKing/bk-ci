@@ -51,6 +51,7 @@ import com.tencent.devops.environment.pojo.NodeBaseInfo
 import com.tencent.devops.environment.pojo.NodeWithPermission
 import com.tencent.devops.environment.pojo.enums.NodeStatus
 import com.tencent.devops.environment.pojo.enums.NodeType
+import com.tencent.devops.environment.pojo.enums.OsType
 import com.tencent.devops.environment.pojo.job.req.Host
 import com.tencent.devops.environment.service.job.QueryFromCCService
 import com.tencent.devops.environment.service.node.NodeActionFactory
@@ -276,7 +277,11 @@ class NodeService @Autowired constructor(
                 agentVersion = it.agentVersion,
                 agentHashId = HashUtil.encodeLongId(thirdPartyAgent?.id ?: 0L),
                 cloudAreaId = it.cloudAreaId,
-                osType = it.osType,
+                osType = if (OsType.UNIX.name == it.osType || OsType.FREEBSD.name == it.osType) {
+                    OsType.LINUX.name // 节点管理中 UNIX，FREEBSD 这两种状态归属于LINUX
+                } else {
+                    it.osType
+                },
                 hostId = it.hostId
             )
         }
