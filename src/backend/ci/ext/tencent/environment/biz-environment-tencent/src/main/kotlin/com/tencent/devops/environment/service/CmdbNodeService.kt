@@ -233,7 +233,7 @@ class CmdbNodeService @Autowired constructor(
             .map { it.nodeIp }.toSet() // 已存在 节点ip
         val toAddIpList = nodeIps.filterNot { existIpList.contains(it) }.filterNot { it.isEmpty() } // 要添加的 节点ip
             .toSet() // 去重
-        if (logger.isDebugEnabled) logger.debug("[addCmdbNodes]T1: ${Duration.between(startTime, LocalDateTime.now())}")
+        val time1 = LocalDateTime.now()
         val toAddIpToCmdbNodeMap = cmdbIpToNodeMap.filter { toAddIpList.contains(it.key) } // 要添加的 节点ip - cmdb记录映射
         ImportServerNodeUtils.checkImportCount(
             dslContext = dslContext,
@@ -243,16 +243,16 @@ class CmdbNodeService @Autowired constructor(
             userId = userId,
             toAddNodeCount = toAddIpList.size
         )
-        if (logger.isDebugEnabled) logger.debug("[addCmdbNodes]T2: ${Duration.between(startTime, LocalDateTime.now())}")
+        val time2 = LocalDateTime.now()
         val queryCCIpToCCInfoMap = addNodeToCC(toAddIpToCmdbNodeMap)
-        if (logger.isDebugEnabled) logger.debug("[addCmdbNodes]T3: ${Duration.between(startTime, LocalDateTime.now())}")
+        val time3 = LocalDateTime.now()
         val agentStatusMap = esbAgentClient.getAgentStatus(userId, toAddIpList)
-        if (logger.isDebugEnabled) logger.debug("[addCmdbNodes]T4: ${Duration.between(startTime, LocalDateTime.now())}")
+        val time4 = LocalDateTime.now()
         val ipAndHostIdList = queryCCIpToCCInfoMap.values.map {
             AgentVersion(ip = it.bkHostInnerip, bkHostId = it.bkHostId)
         }
         val agentVersionList = queryAgentStatusService.getAgentVersions(ipAndHostIdList)
-        if (logger.isDebugEnabled) logger.debug("[addCmdbNodes]T5: ${Duration.between(startTime, LocalDateTime.now())}")
+        val time5 = LocalDateTime.now()
         val ipToAgentVersionMap = agentVersionList?.associateBy { it.ip }
         if (logger.isDebugEnabled) logger.debug("[addCmdbNodes]ipToAgentVersionMap:$ipToAgentVersionMap")
         val toAddNodeList = toAddIpList.map {
@@ -288,9 +288,8 @@ class CmdbNodeService @Autowired constructor(
                 osType = queryCCIpToCCInfoMap[cmdbNode.ip]?.osType
             )
         }
-        if (logger.isDebugEnabled) logger.debug("[addCmdbNodes]T6: ${Duration.between(startTime, LocalDateTime.now())}")
+        val time6 = LocalDateTime.now()
         if (logger.isDebugEnabled) logger.debug("[addCmdbNodes]toAddNodeList:$toAddNodeList")
-
         dslContext.transaction { configuration ->
             val context = DSL.using(configuration)
             nodeDao.batchAddNode(context, toAddNodeList)
@@ -301,7 +300,18 @@ class CmdbNodeService @Autowired constructor(
             )
             batchRegisterNodePermission(insertedNodeList = insertedNodeList, userId = userId, projectId = projectId)
         }
-        if (logger.isDebugEnabled) logger.debug("[addCmdbNodes]T7: ${Duration.between(startTime, LocalDateTime.now())}")
+        val time7 = LocalDateTime.now()
+        if (logger.isDebugEnabled)
+            logger.debug(
+                "[addCmdbNodes]Total: ${Duration.between(startTime, time7).toMillis() / 1000}s, " +
+                    "checkUserOperator(query cmdb): ${Duration.between(startTime, time1).toMillis() / 1000}s, }" +
+                    "checkImportCount: ${Duration.between(time1, time2).toMillis() / 1000}s, }" +
+                    "addNodeToCC: ${Duration.between(time2, time3).toMillis() / 1000}s, }" +
+                    "query agent status from esb: ${Duration.between(time3, time4).toMillis() / 1000}s, }" +
+                    "query agent versions from nodeman/job: ${Duration.between(time4, time5).toMillis() / 1000}s, }" +
+                    "toAddNodeList: ${Duration.between(time5, time6).toMillis() / 1000}s, }" +
+                    "batchAddNode: ${Duration.between(time6, time7).toMillis() / 1000}s, }"
+            )
         return AddCmdbNodesRes(
             nodeStatus = true,
             nodesAgentList = toAddNodeList.map {
