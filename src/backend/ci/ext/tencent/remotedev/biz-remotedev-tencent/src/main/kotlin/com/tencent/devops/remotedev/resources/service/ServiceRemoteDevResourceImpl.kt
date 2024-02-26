@@ -177,8 +177,9 @@ class ServiceRemoteDevResourceImpl(
         return Result(true)
     }
 
-    override fun notifyWorkspaceInfo(notifyData: WorkspaceNotifyData): Result<Boolean> {
+    override fun notifyWorkspaceInfo(operator: String, notifyData: WorkspaceNotifyData): Result<Boolean> {
         notifyControl.notifyWorkspaceInfo(
+            userId = operator,
             notifyData = notifyData
         )
         return Result(true)

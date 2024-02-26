@@ -28,8 +28,8 @@
 package com.tencent.devops.log.api
 
 import com.tencent.devops.common.api.pojo.Result
-import io.swagger.annotations.Api
-import io.swagger.annotations.ApiParam
+import io.swagger.v3.oas.annotations.tags.Tag
+import io.swagger.v3.oas.annotations.Parameter
 import javax.ws.rs.Consumes
 import javax.ws.rs.PUT
 import javax.ws.rs.Path
@@ -40,13 +40,13 @@ import javax.ws.rs.core.MediaType
  *
  * Powered By Tencent
  */
-@Api(tags = ["OP_LOG"], description = "管理-日志资源")
+@Tag(name = "OP_LOG", description = "管理-日志资源")
 @Path("/op")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface OpLogResource {
 
-    @ApiParam("执行搬冷任务")
+    @Parameter(description = "执行搬冷任务")
     @PUT
     @Path("/es/index/cold")
     fun makeIndexCold(): Result<Boolean>

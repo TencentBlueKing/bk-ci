@@ -29,20 +29,19 @@ package com.tencent.devops.metrics.pojo.dto
 
 import com.tencent.devops.common.web.annotation.BkField
 import com.tencent.devops.common.web.constant.BkStyleEnum
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("查询插件错误码信息传输对象")
+@Schema(title = "查询插件错误码信息传输对象")
 data class QueryErrorCodeInfoDTO(
-    @ApiModelProperty("插件代码")
+    @get:Schema(title = "插件代码")
     val atomCode: String,
-    @ApiModelProperty("错误类型")
+    @get:Schema(title = "错误类型")
     val errorTypes: List<Int>?,
-    @ApiModelProperty("搜索关键字")
+    @get:Schema(title = "搜索关键字")
     val keyword: String?,
-    @ApiModelProperty("页码")
+    @get:Schema(title = "页码")
     val page: Int = 1,
-    @ApiModelProperty("页数")
+    @get:Schema(title = "页数")
     @BkField(patternStyle = BkStyleEnum.PAGE_SIZE_STYLE, required = true)
     val pageSize: Int = 10
 )

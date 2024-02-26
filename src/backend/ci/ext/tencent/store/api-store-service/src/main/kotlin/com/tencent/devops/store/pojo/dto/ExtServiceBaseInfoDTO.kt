@@ -28,21 +28,20 @@
 package com.tencent.devops.store.pojo.dto
 
 import com.tencent.devops.dispatch.pojo.DeployApp
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("扩展服务基本信息")
+@Schema(title = "扩展服务基本信息")
 data class ExtServiceBaseInfoDTO(
-    @ApiModelProperty("扩展服务Id", required = true)
+    @get:Schema(title = "扩展服务Id", required = true)
     val serviceId: String,
-    @ApiModelProperty("扩展服务代码", required = true)
+    @get:Schema(title = "扩展服务代码", required = true)
     val serviceCode: String,
-    @ApiModelProperty("扩展服务版本号", required = true)
+    @get:Schema(title = "扩展服务版本号", required = true)
     val version: String,
-    @ApiModelProperty("扩展服务镜像信息", required = true)
+    @get:Schema(title = "扩展服务镜像信息", required = true)
     val extServiceImageInfo: ExtServiceImageInfoDTO,
-    @ApiModelProperty("扩展服务部署信息", required = true)
+    @get:Schema(title = "扩展服务部署信息", required = true)
     val extServiceDeployInfo: DeployApp,
-    @ApiModelProperty("分支", required = false)
+    @get:Schema(title = "分支", required = false)
     val branch: String? = null
 )

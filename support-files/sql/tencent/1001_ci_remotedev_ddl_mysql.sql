@@ -43,6 +43,7 @@ CREATE TABLE IF NOT EXISTS `T_WORKSPACE` (
 	`WIN_CONFIG_ID` int(11) NULL COMMENT 'windows资源配置id',
     `PROJECT_NAME` varchar(64) NOT NULL DEFAULT '' COMMENT '项目名称',
     `BUSINESS_LINE_NAME` varchar(255) NOT NULL DEFAULT '' COMMENT '业务线名称',
+    `REMARK` varchar(255) NULL DEFAULT '' COMMENT '备注',
     PRIMARY KEY (`ID`),
     UNIQUE INDEX `NAME`(`NAME`)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
@@ -539,6 +540,21 @@ CREATE TABLE IF NOT EXISTS `T_PROJECT_TGIT_LINK`(
     `OAUTH_USER` varchar(32) NOT NULL COMMENT '授予oauth权限的用户',
 	PRIMARY KEY (`PROJECT_ID`, `URL`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- ----------------------------
+-- Table structure for T_WORKSPACE_NOTIFY
+-- ----------------------------
+CREATE TABLE IF NOT EXISTS `T_WORKSPACE_NOTIFY` (
+    `ID` bigint(20) NOT NULL AUTO_INCREMENT,
+    `OPERATOR` varchar(64) NOT NULL DEFAULT '' COMMENT '操作人',
+    `PROJECT_IDS` varchar(1024) NOT NULL DEFAULT '' COMMENT '项目ID列表',
+    `IPS` mediumtext NOT NULL COMMENT 'IP列表',
+    `TITLE` varchar(256) NOT NULL DEFAULT '' COMMENT '标题',
+    `DESC` varchar(1024) NOT NULL DEFAULT '' COMMENT '描述内容',
+    `CREATED_TIME` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    PRIMARY KEY (`ID`),
+    KEY `uni_1` (`OPERATOR`)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT '云桌面消息通知记录';
 
 
 SET FOREIGN_KEY_CHECKS = 1;

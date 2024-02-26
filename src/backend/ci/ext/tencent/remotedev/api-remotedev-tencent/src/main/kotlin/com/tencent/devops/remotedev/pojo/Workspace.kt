@@ -27,8 +27,7 @@
 
 package com.tencent.devops.remotedev.pojo
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
 interface IWorkspace {
     val workspaceId: Long?
@@ -54,68 +53,68 @@ interface IWorkspace {
     var currentLoginUsers: List<String>
 }
 
-@ApiModel("工作空间信息")
+@Schema(title = "工作空间信息")
 data class Workspace(
-    @ApiModelProperty("工作空间ID<只读>", accessMode = ApiModelProperty.AccessMode.READ_ONLY)
+    @get:Schema(title = "工作空间ID<只读>", readOnly = true)
     override val workspaceId: Long?,
-    @ApiModelProperty("工作空间名称")
+    @get:Schema(title = "工作空间名称")
     override val workspaceName: String,
-    @ApiModelProperty("项目ID")
+    @get:Schema(title = "项目ID")
     override val projectId: String?,
-    @ApiModelProperty("工作空间备注名称")
+    @get:Schema(title = "工作空间备注名称")
     override val displayName: String? = null,
-    @ApiModelProperty("工作空间状态<只读>", accessMode = ApiModelProperty.AccessMode.READ_ONLY)
+    @get:Schema(title = "工作空间状态<只读>", readOnly = true)
     override val status: WorkspaceStatus? = null,
-    @ApiModelProperty("状态最近更新时间<只读>", accessMode = ApiModelProperty.AccessMode.READ_ONLY)
+    @get:Schema(title = "状态最近更新时间<只读>", readOnly = true)
     override val lastStatusUpdateTime: Long? = null,
-    @ApiModelProperty("休眠时间<只读>", accessMode = ApiModelProperty.AccessMode.READ_ONLY)
+    @get:Schema(title = "休眠时间<只读>", readOnly = true)
     override val sleepingTime: Long? = null,
-    @ApiModelProperty("工作空间创建人<只读>", accessMode = ApiModelProperty.AccessMode.READ_ONLY)
+    @get:Schema(title = "工作空间创建人<只读>", readOnly = true)
     override val createUserId: String,
-    @ApiModelProperty("工作空间拥有人<只读>", accessMode = ApiModelProperty.AccessMode.READ_ONLY)
+    @get:Schema(title = "工作空间拥有人<只读>", readOnly = true)
     override val owner: String? = null,
-    @ApiModelProperty("工作空间拥有人CN<只读>", accessMode = ApiModelProperty.AccessMode.READ_ONLY)
+    @get:Schema(title = "工作空间拥有人CN<只读>", readOnly = true)
     override val ownerCN: String? = null,
-    @ApiModelProperty("查看者")
+    @get:Schema(title = "查看者")
     override val viewers: List<String>? = null,
-    @ApiModelProperty("查看者_CN")
+    @get:Schema(title = "查看者_CN")
     override val viewersCN: List<String>? = null,
-    @ApiModelProperty("工作空间对应的IP")
+    @get:Schema(title = "工作空间对应的IP")
     override val hostName: String? = null,
-    @ApiModelProperty("挂载平台类型")
+    @get:Schema(title = "挂载平台类型")
     override val workspaceMountType: WorkspaceMountType,
-    @ApiModelProperty("操作系统类型")
+    @get:Schema(title = "操作系统类型")
     override val workspaceSystemType: WorkspaceSystemType,
-    @ApiModelProperty("windows 资源配置")
+    @get:Schema(title = "windows 资源配置")
     override val winConfig: WindowsResourceTypeConfig? = null,
     override val gpu: Int = 0,
     override val cpu: Int = 8,
     override val memory: Int = 32,
     override val disk: Int = 100,
-    @ApiModelProperty("当前登陆者信息")
+    @get:Schema(title = "当前登陆者信息")
     override var currentLoginUsers: List<String> = emptyList(),
-    @ApiModelProperty("windows 地域配置")
+    @get:Schema(title = "windows 地域配置")
     val zoneConfig: WindowsResourceZoneConfig? = null,
-    @ApiModelProperty("远程开发仓库地址")
+    @get:Schema(title = "远程开发仓库地址")
     val repositoryUrl: String? = null,
-    @ApiModelProperty("仓库分支")
+    @get:Schema(title = "仓库分支")
     val branch: String? = null,
-    @ApiModelProperty("devfile配置路径")
+    @get:Schema(title = "devfile配置路径")
     val devFilePath: String? = null,
-    @ApiModelProperty("devfile 内容")
+    @get:Schema(title = "devfile 内容")
     val yaml: String? = null,
-    @ApiModelProperty("工作空间模板ID")
+    @get:Schema(title = "工作空间模板ID")
     val wsTemplateId: Int? = null,
-    @ApiModelProperty("工作空间操作路径")
+    @get:Schema(title = "工作空间操作路径")
     val workPath: String? = null,
-    @ApiModelProperty("工作空间默认打开工程相对路径，默认根目录")
+    @get:Schema(title = "工作空间默认打开工程相对路径，默认根目录")
     val workspaceFolder: String? = null,
-    @ApiModelProperty("镜像id")
+    @get:Schema(title = "镜像id")
     val imageId: String = "",
-    @ApiModelProperty("工作空间归属")
+    @get:Schema(title = "工作空间归属")
     val ownerType: WorkspaceOwnerType,
-    @ApiModelProperty("当前用户在此工作空间分配的人员类型")
+    @get:Schema(title = "当前用户在此工作空间分配的人员类型")
     val assignType: WorkspaceShared.AssignType = WorkspaceShared.AssignType.OWNER,
-    @ApiModelProperty("windows资源配置id")
+    @get:Schema(title = "windows资源配置id")
     val winConfigId: Int? = null
 ) : IWorkspace

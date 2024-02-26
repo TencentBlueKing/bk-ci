@@ -27,19 +27,18 @@
 
 package com.tencent.devops.project.pojo
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("服务-更新Urls模型")
+@Schema(title = "服务-更新Urls模型")
 data class ServiceUpdateUrls(
-    @ApiModelProperty("服务名称", required = true)
+    @get:Schema(title = "服务名称", required = true)
     val name: String,
-    @ApiModelProperty("cssUrl")
+    @get:Schema(title = "cssUrl")
     val cssUrl: String?,
-    @ApiModelProperty("jsUrl")
+    @get:Schema(title = "jsUrl")
     val jsUrl: String?,
-    @ApiModelProperty("grayCssUrl")
+    @get:Schema(title = "grayCssUrl")
     val grayCssUrl: String?,
-    @ApiModelProperty("grayJsUrl")
+    @get:Schema(title = "grayJsUrl")
     val grayJsUrl: String?
 )

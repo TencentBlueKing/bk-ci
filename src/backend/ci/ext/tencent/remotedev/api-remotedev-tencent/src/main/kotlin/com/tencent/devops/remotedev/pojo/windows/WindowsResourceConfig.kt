@@ -27,33 +27,32 @@
 
 package com.tencent.devops.remotedev.pojo.windows
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("WINDOWS GPU资源配置表")
+@Schema(title = "WINDOWS GPU资源配置表")
 data class WindowsResourceConfig(
-    @ApiModelProperty("Id")
+    @get:Schema(title = "Id")
     val id: Long?,
-    @ApiModelProperty("是否可用")
+    @get:Schema(title = "是否可用")
     val available: Boolean?,
-    @ApiModelProperty("区域，深圳，南京等")
+    @get:Schema(title = "区域，深圳，南京等")
     val zone: String,
-    @ApiModelProperty("区域简称，SZ,NJ")
+    @get:Schema(title = "区域简称，SZ,NJ")
     var zoneShortName: String,
-    @ApiModelProperty("资源类型：M，L，XL，S")
+    @get:Schema(title = "资源类型：M，L，XL，S")
     val size: String,
-    @ApiModelProperty("GPU卡类型")
+    @get:Schema(title = "GPU卡类型")
     val type: String? = null,
-    @ApiModelProperty("vGPU")
+    @get:Schema(title = "vGPU")
     val gpu: Int,
-    @ApiModelProperty("CPU")
+    @get:Schema(title = "CPU")
     val cpu: Int,
-    @ApiModelProperty("内存")
+    @get:Schema(title = "内存")
     val memory: Int,
-    @ApiModelProperty("本地SSD盘")
+    @get:Schema(title = "本地SSD盘")
     val disk: Int,
-    @ApiModelProperty("云SSD盘")
+    @get:Schema(title = "云SSD盘")
     val hdisk: Int? = 1,
-    @ApiModelProperty("描述")
+    @get:Schema(title = "描述")
     val description: String
 )

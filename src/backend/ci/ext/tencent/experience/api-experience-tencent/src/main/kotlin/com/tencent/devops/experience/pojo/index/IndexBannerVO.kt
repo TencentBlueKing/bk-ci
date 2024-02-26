@@ -27,17 +27,16 @@
 
 package com.tencent.devops.experience.pojo.index
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("版本体验-首页-Banner")
+@Schema(title = "版本体验-首页-Banner")
 data class IndexBannerVO(
-    @ApiModelProperty("版本体验ID", required = true)
+    @get:Schema(title = "版本体验ID", required = true)
     val experienceHashId: String,
-    @ApiModelProperty("BannerUrl", required = true)
+    @get:Schema(title = "BannerUrl", required = true)
     val bannerUrl: String,
-    @ApiModelProperty("类型", required = true)
+    @get:Schema(title = "类型", required = true)
     val type: Int,
-    @ApiModelProperty("外部链接", required = false)
+    @get:Schema(title = "外部链接", required = false)
     val externalUrl: String
 )

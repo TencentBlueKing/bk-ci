@@ -29,37 +29,36 @@ package com.tencent.devops.common.pipeline.pojo.element.agent
 
 import com.tencent.devops.common.pipeline.enums.BuildScriptType
 import com.tencent.devops.common.pipeline.pojo.element.Element
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
 @Suppress("UNUSED")
-@ApiModel("CodeCC代码检查任务(service端)", description = LinuxCodeCCScriptElement.classType)
+@Schema(title = "CodeCC代码检查任务(service端)")
 open class LinuxCodeCCScriptElement(
-    @ApiModelProperty("任务名称", required = true)
+    @get:Schema(title = "任务名称", required = true)
     override var name: String = "执行Linux脚本",
-    @ApiModelProperty("id", required = false)
+    @get:Schema(title = "id", required = false)
     override var id: String? = null,
-    @ApiModelProperty("状态", required = false)
+    @get:Schema(title = "状态", required = false)
     override var status: String? = null,
-    @ApiModelProperty("脚本类型", required = true)
+    @get:Schema(title = "脚本类型", required = true)
     open var scriptType: BuildScriptType = BuildScriptType.SHELL,
-    @ApiModelProperty("脚本内容", required = true)
+    @get:Schema(title = "脚本内容", required = true)
     open var script: String = "",
-    @ApiModelProperty("CodeCC Task Name", required = false, hidden = true)
+    @get:Schema(title = "CodeCC Task Name", required = false, hidden = true)
     open var codeCCTaskName: String? = null,
-    @ApiModelProperty("CodeCC Task CN Name", required = false, hidden = true)
+    @get:Schema(title = "CodeCC Task CN Name", required = false, hidden = true)
     open var codeCCTaskCnName: String? = null,
-    @ApiModelProperty("工程语言", required = true)
+    @get:Schema(title = "工程语言", required = true)
     open var languages: List<ProjectLanguage> = listOf(),
-    @ApiModelProperty("是否异步", required = false)
+    @get:Schema(title = "是否异步", required = false)
     open var asynchronous: Boolean? = false,
-    @ApiModelProperty("扫描类型（0：全量, 1：增量）", required = false)
+    @get:Schema(title = "扫描类型（0：全量, 1：增量）", required = false)
     open var scanType: String? = "",
-    @ApiModelProperty("代码存放路径", required = false)
+    @get:Schema(title = "代码存放路径", required = false)
     open var path: String? = null,
-    @ApiModelProperty("codecc原子执行环境，例如WINDOWS，LINUX，MACOS等", required = true)
+    @get:Schema(title = "codecc原子执行环境，例如WINDOWS，LINUX，MACOS等", required = true)
     var compilePlat: String? = null,
-    @ApiModelProperty(
+    @get:Schema(title =
         "JSONArray格式的字符串\n" +
             "eg：\"[\"COVERITY\",\"CPPLINT\",\"PYLINT\",\"TSCLUA\",\"CCN\",\"DUPC\",\"ESLINT\",\"GOML\"" +
             ",\"KLOCWORK\"]\"，其中\n COVERITY：Coverity工具\n" +
@@ -74,24 +73,24 @@ open class LinuxCodeCCScriptElement(
             "STYLECOP: STYLECOP工具", required = true
     )
     var tools: List<String>? = null,
-    @ApiModelProperty(
+    @get:Schema(title =
         "非必填，当tools列表中有PYLINT时必填；值类型有且仅有两种：“py2”、“py3”，\n" +
             "其中“py2”表示使用python2版本，“py3”表示使用python3版本", required = false
     )
     var pyVersion: String? = null,
-    @ApiModelProperty("eslint项目框架, React, Vue, Other", required = false)
+    @get:Schema(title = "eslint项目框架, React, Vue, Other", required = false)
     var eslintRc: String? = null,
-    @ApiModelProperty("PHP标准", required = false)
+    @get:Schema(title = "PHP标准", required = false)
     var phpcsStandard: String? = null,
-    @ApiModelProperty("go语言WORKSPACE下相对路径", required = false)
+    @get:Schema(title = "go语言WORKSPACE下相对路径", required = false)
     var goPath: String? = null,
-    @ApiModelProperty("spotbugs相关参数", required = false)
+    @get:Schema(title = "spotbugs相关参数", required = false)
     var projectBuildType: String? = null,
-    @ApiModelProperty("spotbugs相关参数", required = false)
+    @get:Schema(title = "spotbugs相关参数", required = false)
     var projectBuildCommand: String? = null,
-    @ApiModelProperty("圈复杂度阈值", required = false)
+    @get:Schema(title = "圈复杂度阈值", required = false)
     var ccnThreshold: String? = null,
-    @ApiModelProperty("是否隐藏代码内容，字符串的false和true", required = false)
+    @get:Schema(title = "是否隐藏代码内容，字符串的false和true", required = false)
     var needCodeContent: String? = null,
     var coverityToolSetId: String? = null,
     var klocworkToolSetId: String? = null,

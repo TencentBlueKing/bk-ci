@@ -1,8 +1,8 @@
 package com.tencent.devops.dispatch.macos.pojo.devcloud
 
-import io.swagger.annotations.ApiModel
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("DevCloud创建VM")
+@Schema(title = "DevCloud创建VM")
 data class DevCloudMacosVmCreate(
     val project: String,
     val pipelineId: String,

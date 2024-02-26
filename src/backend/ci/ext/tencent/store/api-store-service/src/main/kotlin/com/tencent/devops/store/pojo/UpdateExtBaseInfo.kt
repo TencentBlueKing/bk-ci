@@ -29,24 +29,24 @@ package com.tencent.devops.store.pojo
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.tencent.devops.store.pojo.enums.DescInputTypeEnum
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class UpdateExtBaseInfo(
-    @ApiModelProperty("扩展服务Name")
+    @get:Schema(title = "扩展服务Name")
     val serviceName: String?,
-    @ApiModelProperty("扩展点")
+    @get:Schema(title = "扩展点")
     val itemIds: Set<String>?,
-    @ApiModelProperty("标签")
+    @get:Schema(title = "标签")
     val labels: List<String>?,
-    @ApiModelProperty("简介")
+    @get:Schema(title = "简介")
     val summary: String? = null,
-    @ApiModelProperty("LOGO url")
+    @get:Schema(title = "LOGO url")
     val logoUrl: String?,
-    @ApiModelProperty("icon图标base64字符串", required = false)
+    @get:Schema(title = "icon图标base64字符串", required = false)
     val iconData: String?,
-    @ApiModelProperty("扩展服务描述")
+    @get:Schema(title = "扩展服务描述")
     val description: String? = null,
-    @ApiModelProperty("描述录入类型")
+    @get:Schema(title = "描述录入类型")
     val descInputType: DescInputTypeEnum? = DescInputTypeEnum.MANUAL
 )

@@ -27,21 +27,20 @@
 
 package com.tencent.devops.support.model.app.pojo
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("App版本日志")
+@Schema(title = "App版本日志")
 data class AppVersion(
-    @ApiModelProperty("ID")
+    @get:Schema(title = "ID")
     val id: Long = 0,
-    @ApiModelProperty("版本号")
+    @get:Schema(title = "版本号")
     val versionId: String = "",
-    @ApiModelProperty("发布日志")
+    @get:Schema(title = "发布日志")
     val releaseDate: Long = 0,
-    @ApiModelProperty("发布内容")
+    @get:Schema(title = "发布内容")
     val releaseContent: String = "",
-    @ApiModelProperty("渠道类型（1:\"安卓\", 2:\"IOS\"）")
+    @get:Schema(title = "渠道类型（1:\"安卓\", 2:\"IOS\"）")
     val channelType: Byte = 1,
-    @ApiModelProperty("更新类型(1:强更新 , 2:软更新)")
+    @get:Schema(title = "更新类型(1:强更新 , 2:软更新)")
     val updateType: Int = 1
 )

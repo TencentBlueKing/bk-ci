@@ -31,18 +31,17 @@ import com.tencent.devops.common.web.annotation.BkField
 import com.tencent.devops.common.web.constant.BkStyleEnum
 import com.tencent.devops.store.pojo.common.enums.StoreMemberTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("添加成员请求报文")
+@Schema(title = "添加成员请求报文")
 data class StoreMemberReq(
-    @ApiModelProperty("添加的成员列表")
+    @get:Schema(title = "添加的成员列表")
     val member: List<String>,
-    @ApiModelProperty("成员类型")
+    @get:Schema(title = "成员类型")
     @field:BkField(patternStyle = BkStyleEnum.STORE_MEMBER_TYPE_STYLE)
     val type: StoreMemberTypeEnum,
-    @ApiModelProperty("store组件标识")
+    @get:Schema(title = "store组件标识")
     val storeCode: String,
-    @ApiModelProperty("store组件类型")
+    @get:Schema(title = "store组件类型")
     val storeType: StoreTypeEnum
 )

@@ -27,19 +27,18 @@
 
 package com.tencent.devops.metrics.pojo.qo
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("获取项目下信息列表信息查询条件对象")
+@Schema(title = "获取项目下信息列表信息查询条件对象")
 data class QueryProjectInfoQO(
-    @ApiModelProperty("项目ID")
+    @get:Schema(title = "项目ID")
     val projectId: String,
-    @ApiModelProperty("流水线ID")
+    @get:Schema(title = "流水线ID")
     val pipelineIds: List<String>?,
-    @ApiModelProperty("搜索关键字")
+    @get:Schema(title = "搜索关键字")
     val keyword: String?,
-    @ApiModelProperty("页码")
+    @get:Schema(title = "页码")
     val page: Int,
-    @ApiModelProperty("页数")
+    @get:Schema(title = "页数")
     val pageSize: Int
 )

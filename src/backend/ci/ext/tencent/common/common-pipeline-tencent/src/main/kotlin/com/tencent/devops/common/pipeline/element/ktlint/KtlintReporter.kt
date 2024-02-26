@@ -27,15 +27,14 @@
 
 package com.tencent.devops.common.pipeline.element.ktlint
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("ktlint reporter")
+@Schema(title = "ktlint reporter")
 data class KtlintReporter(
-    @ApiModelProperty("reporter", required = true)
+    @get:Schema(title = "reporter", required = true)
     val reporter: KtlintReporterType,
-    @ApiModelProperty("报告保存路径", required = false)
+    @get:Schema(title = "报告保存路径", required = false)
     val reportOutput: String?,
-    @ApiModelProperty("报告在构件详情中显示的名字", required = false)
+    @get:Schema(title = "报告在构件详情中显示的名字", required = false)
     val reportName: String?
 )

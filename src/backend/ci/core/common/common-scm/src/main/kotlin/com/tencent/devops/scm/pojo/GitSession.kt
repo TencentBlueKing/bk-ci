@@ -27,15 +27,14 @@
 package com.tencent.devops.scm.pojo
 
 import com.fasterxml.jackson.annotation.JsonProperty
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("工蜂会话信息")
+@Schema(title = "工蜂会话信息")
 data class GitSession(
     val id: String,
-    @ApiModelProperty("邮箱地址")
+    @get:Schema(title = "邮箱地址")
     val email: String,
-    @ApiModelProperty("用户名")
+    @get:Schema(title = "用户名")
     val username: String,
     @JsonProperty("private_token")
     val privateToken: String

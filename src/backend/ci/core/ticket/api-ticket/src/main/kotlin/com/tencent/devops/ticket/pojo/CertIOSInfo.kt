@@ -27,19 +27,18 @@
 
 package com.tencent.devops.ticket.pojo
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("证书-ios证书")
+@Schema(title = "证书-ios证书")
 data class CertIOSInfo(
-    @ApiModelProperty("证书ID", required = true)
+    @get:Schema(title = "证书ID", required = true)
     val certId: String,
-    @ApiModelProperty("p12证书名", required = true)
+    @get:Schema(title = "p12证书名", required = true)
     val p12FileName: String,
-    @ApiModelProperty("mobileProvision描述文件名", required = true)
+    @get:Schema(title = "mobileProvision描述文件名", required = true)
     val mobileProvisionFileName: String,
-    @ApiModelProperty("p12证书密码", required = false)
+    @get:Schema(title = "p12证书密码", required = false)
     val credentialId: String?,
-    @ApiModelProperty("备注", required = false)
+    @get:Schema(title = "备注", required = false)
     val remark: String?
 )

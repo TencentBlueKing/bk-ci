@@ -28,21 +28,21 @@
 package com.tencent.devops.process.api.op
 
 import com.tencent.devops.common.api.pojo.Result
-import io.swagger.annotations.Api
-import io.swagger.annotations.ApiOperation
+import io.swagger.v3.oas.annotations.tags.Tag
+import io.swagger.v3.oas.annotations.Operation
 import javax.ws.rs.Consumes
 import javax.ws.rs.PUT
 import javax.ws.rs.Path
 import javax.ws.rs.Produces
 import javax.ws.rs.core.MediaType
 
-@Api(tags = ["OP_PIPELINE_TASKS"], description = "OP-流水线-任务")
+@Tag(name = "OP_PIPELINE_TASKS", description = "OP-流水线-任务")
 @Path("/op/pipeline/tasks")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface OpPipelineTaskResource {
 
-    @ApiOperation("更新任务表插件版本")
+    @Operation(summary = "更新任务表插件版本")
     @PUT
     @Path("/atomVersion/async/update")
     fun asyncUpdateTaskAtomVersion(): Result<Boolean>

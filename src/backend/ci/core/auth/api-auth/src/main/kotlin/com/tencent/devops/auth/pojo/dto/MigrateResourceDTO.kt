@@ -1,18 +1,17 @@
 package com.tencent.devops.auth.pojo.dto
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("迁移资源请求实体")
+@Schema(title = "迁移资源请求实体")
 data class MigrateResourceDTO(
-    @ApiModelProperty("资源类型")
+    @get:Schema(title = "资源类型")
     val resourceType: String? = null,
-    @ApiModelProperty("项目ID列表")
+    @get:Schema(title = "项目ID列表")
     val projectCodes: List<String>? = null,
-    @ApiModelProperty("是否迁移项目级资源")
+    @get:Schema(title = "是否迁移项目级资源")
     val migrateProjectResource: Boolean? = false,
-    @ApiModelProperty("是否迁移项目级默认用户组")
+    @get:Schema(title = "是否迁移项目级默认用户组")
     val migrateProjectDefaultGroup: Boolean? = false,
-    @ApiModelProperty("是否迁移其他资源类型的资源")
+    @get:Schema(title = "是否迁移其他资源类型的资源")
     val migrateOtherResource: Boolean? = false
 )

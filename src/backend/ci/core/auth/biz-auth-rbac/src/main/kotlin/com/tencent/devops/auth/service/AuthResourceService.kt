@@ -193,7 +193,7 @@ class AuthResourceService @Autowired constructor(
 
     fun list(
         projectCode: String,
-        resourceType: String,
+        resourceType: String?,
         resourceName: String?,
         limit: Int,
         offset: Int
