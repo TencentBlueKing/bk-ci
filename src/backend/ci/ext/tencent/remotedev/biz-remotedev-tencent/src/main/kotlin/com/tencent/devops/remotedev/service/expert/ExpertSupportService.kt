@@ -136,6 +136,7 @@ class ExpertSupportService @Autowired constructor(
                 info.buildParam.forEach { (k, v) ->
                     when (v) {
                         "ip" -> newParam[k] = ip
+                        "projectId" -> newParam[k] = data.projectId
                         else -> newParam[k] = v
                     }
                 }

@@ -30,9 +30,9 @@ package com.tencent.devops.process.api.service
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.annotation.BkApiPermission
 import com.tencent.devops.common.web.constant.BkApiHandleType
-import io.swagger.annotations.Api
-import io.swagger.annotations.ApiOperation
-import io.swagger.annotations.ApiParam
+import io.swagger.v3.oas.annotations.tags.Tag
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.Parameter
 import javax.ws.rs.Consumes
 import javax.ws.rs.POST
 import javax.ws.rs.Path
@@ -41,33 +41,33 @@ import javax.ws.rs.Produces
 import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
-@Api(tags = ["SERVICE_JFROG"], description = "服务-Artifactory对接Process接口的资源")
+@Tag(name = "SERVICE_JFROG", description = "服务-Artifactory对接Process接口的资源")
 @Path("/service/jfrog")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface ServiceJfrogResource {
 
-    @ApiOperation("根据流水线id获取流水线名字")
+    @Operation(summary = "根据流水线id获取流水线名字")
     @POST
     // @Path("/projects/{projectId}/getPipelineNames")
     @Path("/{projectId}/getPipelineNames")
     @BkApiPermission([BkApiHandleType.API_NO_AUTH_CHECK])
     fun getPipelineNameByIds(
-        @ApiParam("项目id", required = true)
+        @Parameter(description = "项目id", required = true)
         @PathParam("projectId")
         projectId: String,
-        @ApiParam("流水线id列表", required = true)
+        @Parameter(description = "流水线id列表", required = true)
         pipelineIds: Set<String>
     ): Result<Map<String, String>>
 
-    @ApiOperation("根据构建id对，获取build num")
+    @Operation(summary = "根据构建id对，获取build num")
     @POST
     @Path("/getBuildNoByBuildIds")
     @BkApiPermission([BkApiHandleType.API_NO_AUTH_CHECK])
     fun getBuildNoByBuildIdsNew(
-        @ApiParam("构建ID集合", required = true)
+        @Parameter(description = "构建ID集合", required = true)
         buildIds: Set<String>,
-        @ApiParam("项目ID", required = false)
+        @Parameter(description = "项目ID", required = false)
         @QueryParam("projectId")
         projectId: String? = null
     ): Result<Map<String, String>>

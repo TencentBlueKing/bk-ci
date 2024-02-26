@@ -1,14 +1,13 @@
 package com.tencent.devops.remotedev.pojo
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("更新bkticket信息")
+@Schema(title = "更新bkticket信息")
 data class BkTicketInfo(
-    @ApiModelProperty("bkTicket")
+    @get:Schema(title = "bkTicket")
     val bkTicket: String,
-    @ApiModelProperty("hostName")
+    @get:Schema(title = "hostName")
     val hostName: String,
-    @ApiModelProperty("mountType")
+    @get:Schema(title = "mountType")
     val mountType: WorkspaceMountType
 )

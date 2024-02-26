@@ -27,11 +27,10 @@
 
 package com.tencent.devops.experience.pojo
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("订阅参数")
+@Schema(title = "订阅参数")
 data class SubscribeParam(
-    @ApiModelProperty("experienceHashId", required = true)
+    @get:Schema(title = "experienceHashId", required = true)
     val experienceHashId: String
 )

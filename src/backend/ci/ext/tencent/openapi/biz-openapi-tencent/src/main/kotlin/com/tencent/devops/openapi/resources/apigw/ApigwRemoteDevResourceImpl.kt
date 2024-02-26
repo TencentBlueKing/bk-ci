@@ -106,11 +106,26 @@ class ApigwRemoteDevResourceImpl @Autowired constructor(private val client: Clie
     override fun notifyWorkspaceInfo(
         appCode: String?,
         apigwType: String?,
+        operator: String,
         notifyData: WorkspaceNotifyData
     ): Result<Boolean> {
         logger.info("notify workspace|notifyData|$notifyData")
         return client.get(ServiceRemoteDevResource::class).notifyWorkspaceInfo(
+            operator = operator,
             notifyData = notifyData
+        )
+    }
+
+    override fun checkWorkspaceProject(
+        appCode: String?,
+        apigwType: String?,
+        projectId: String,
+        ip: String
+    ): Result<Boolean> {
+        logger.info("check  project workspace ,projectId:$projectId,ip:$ip")
+        return client.get(ServiceRemoteDevResource::class).checkWorkspaceProject(
+            projectId = projectId,
+            ip = ip
         )
     }
 }

@@ -29,9 +29,9 @@ package com.tencent.devops.project.api.service
 
 import com.tencent.devops.common.api.enums.SystemModuleEnum
 import com.tencent.devops.common.api.pojo.Result
-import io.swagger.annotations.Api
-import io.swagger.annotations.ApiOperation
-import io.swagger.annotations.ApiParam
+import io.swagger.v3.oas.annotations.tags.Tag
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.Parameter
 import javax.ws.rs.Consumes
 import javax.ws.rs.PUT
 import javax.ws.rs.Path
@@ -39,20 +39,20 @@ import javax.ws.rs.Produces
 import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
-@Api(tags = ["OP_PROJECT_SHARDING_ROUTING_RULE"], description = "OP-项目-分片路由规则")
+@Tag(name = "OP_PROJECT_SHARDING_ROUTING_RULE", description = "OP-项目-分片路由规则")
 @Path("/op/project/sharding/routing/rules")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface TxOpShardingRoutingRuleResource {
 
-    @ApiOperation("同步DB分片规则信息")
+    @Operation(summary = "同步DB分片规则信息")
     @PUT
     @Path("/syncDbShardingRoutingRuleInfo")
     fun syncDBShardingRoutingRuleInfo(
-        @ApiParam("模块代码", required = true)
+        @Parameter(description = "模块代码", required = true)
         @QueryParam("moduleCode")
         moduleCode: SystemModuleEnum,
-        @ApiParam("集群名称", required = false)
+        @Parameter(description = "集群名称", required = false)
         @QueryParam("clusterName")
         clusterName: String?
     ): Result<Boolean>

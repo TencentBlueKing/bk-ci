@@ -38,9 +38,9 @@ import com.tencent.devops.process.pojo.app.PipelinePage
 import com.tencent.devops.process.pojo.app.pipeline.AppPipeline
 import com.tencent.devops.process.pojo.app.pipeline.AppPipelineHistory
 import com.tencent.devops.process.pojo.app.pipeline.AppProject
-import io.swagger.annotations.Api
-import io.swagger.annotations.ApiOperation
-import io.swagger.annotations.ApiParam
+import io.swagger.v3.oas.annotations.tags.Tag
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.Parameter
 import javax.ws.rs.Consumes
 import javax.ws.rs.GET
 import javax.ws.rs.HeaderParam
@@ -51,27 +51,27 @@ import javax.ws.rs.Produces
 import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
-@Api(tags = ["APP_PIPELINE"], description = "app流水线相关接口")
+@Tag(name = "APP_PIPELINE", description = "app流水线相关接口")
 @Path("/app/pipeline")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 @SuppressWarnings("LongParameterList")
 interface AppPipelineResource {
 
-    @ApiOperation("列出用户的所有项目")
+    @Operation(summary = "列出用户的所有项目")
     @GET
     @Path("/project/list")
     fun listProjects(
-        @ApiParam("用户ID", required = true)
+        @Parameter(description = "用户ID", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("第几页", required = false)
+        @Parameter(description = "第几页", required = false)
         @QueryParam("page")
         page: Int?,
-        @ApiParam("每页条数", required = false)
+        @Parameter(description = "每页条数", required = false)
         @QueryParam("pageSize")
         pageSize: Int?,
-        @ApiParam("渠道号，默认为BS", required = false)
+        @Parameter(description = "渠道号，默认为BS", required = false)
         @QueryParam("channelCode")
         channelCode: ChannelCode?
     ): Result<Page<AppProject>>
@@ -83,26 +83,26 @@ interface AppPipelineResource {
             imports = ["com.tencent.devops.process.api.app.AppPipelineViewResource"]
         )
     )
-    @ApiOperation("列出用户某项目下的所有流水线")
+    @Operation(summary = "列出用户某项目下的所有流水线")
     @GET
     @Path("/{projectId}/listPipelines")
     fun listPipelines(
-        @ApiParam("用户ID", required = true)
+        @Parameter(description = "用户ID", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @ApiParam("第几页", required = false)
+        @Parameter(description = "第几页", required = false)
         @QueryParam("page")
         page: Int?,
-        @ApiParam("每页条数", required = false)
+        @Parameter(description = "每页条数", required = false)
         @QueryParam("pageSize")
         pageSize: Int?,
-        @ApiParam("渠道号，默认为BS", required = false)
+        @Parameter(description = "渠道号，默认为BS", required = false)
         @QueryParam("channelCode")
         channelCode: ChannelCode?,
-        @ApiParam("流水线排序", required = false, defaultValue = "CREATE_TIME")
+        @Parameter(description = "流水线排序", required = false, example = "CREATE_TIME")
         @QueryParam("sortType")
         sortType: PipelineSortType? = PipelineSortType.CREATE_TIME
     ): Result<PipelinePage<AppPipeline>>
@@ -114,29 +114,29 @@ interface AppPipelineResource {
             imports = ["com.tencent.devops.process.api.app.AppPipelineViewResource"]
         )
     )
-    @ApiOperation("列出用户某项目下的流水线的所有构建历史")
+    @Operation(summary = "列出用户某项目下的流水线的所有构建历史")
     @GET
     @Path("/{projectId}/{pipelineId}/history")
     fun listPipelineHistory(
-        @ApiParam("用户ID", required = true)
+        @Parameter(description = "用户ID", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @ApiParam("流水线ID", required = true)
+        @Parameter(description = "流水线ID", required = true)
         @PathParam("pipelineId")
         pipelineId: String,
-        @ApiParam("第几页", required = false)
+        @Parameter(description = "第几页", required = false)
         @QueryParam("page")
         page: Int?,
-        @ApiParam("每页条数", required = false)
+        @Parameter(description = "每页条数", required = false)
         @QueryParam("pageSize")
         pageSize: Int?,
-        @ApiParam("渠道号，默认为BS", required = false)
+        @Parameter(description = "渠道号，默认为BS", required = false)
         @QueryParam("channelCode")
         channelCode: ChannelCode?,
-        @ApiParam("分支", required = false)
+        @Parameter(description = "分支", required = false)
         @QueryParam("materialBranch")
         materialBranch: List<String>?,
         @ApiParam("指定草稿版本（为调试构建）", required = false)
@@ -144,20 +144,20 @@ interface AppPipelineResource {
         debugVersion: Int?
     ): Result<Page<AppPipelineHistory>>
 
-    @ApiOperation("获取流水线构建中的查询条件-分支")
+    @Operation(summary = "获取流水线构建中的查询条件-分支")
     @GET
     @Path("/{projectId}/{pipelineId}/historyCondition/branchName")
     fun getHistoryConditionBranch(
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @ApiParam("流水线ID", required = true)
+        @Parameter(description = "流水线ID", required = true)
         @PathParam("pipelineId")
         pipelineId: String,
-        @ApiParam("仓库", required = false)
+        @Parameter(description = "仓库", required = false)
         @QueryParam("alias")
         alias: List<String>?,
         @ApiParam("指定草稿版本（为调试构建）", required = false)
@@ -165,32 +165,32 @@ interface AppPipelineResource {
         debugVersion: Int?
     ): Result<List<String>>
 
-    @ApiOperation("获取流水线构建中的查询条件-状态")
+    @Operation(summary = "获取流水线构建中的查询条件-状态")
     @GET
     @Path("/{projectId}/{pipelineId}/historyCondition/status")
     fun getHistoryConditionStatus(
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @ApiParam("流水线ID", required = true)
+        @Parameter(description = "流水线ID", required = true)
         @PathParam("pipelineId")
         pipelineId: String
     ): Result<List<IdValue>>
 
-    @ApiOperation("获取流水线构建中的查询条件-代码库")
+    @Operation(summary = "获取流水线构建中的查询条件-代码库")
     @GET
     @Path("/{projectId}/{pipelineId}/historyCondition/repo")
     fun getHistoryConditionRepo(
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @ApiParam("流水线ID", required = true)
+        @Parameter(description = "流水线ID", required = true)
         @PathParam("pipelineId")
         pipelineId: String,
         @ApiParam("指定草稿版本（为调试构建）", required = false)
@@ -198,35 +198,35 @@ interface AppPipelineResource {
         debugVersion: Int?
     ): Result<List<String>>
 
-    @ApiOperation("列出用户某项目下的流水线的所有收藏")
+    @Operation(summary = "列出用户某项目下的流水线的所有收藏")
     @GET
     @Path("/collect/list")
     fun listUserCollect(
-        @ApiParam("用户ID", required = true)
+        @Parameter(description = "用户ID", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("第几页", required = false)
+        @Parameter(description = "第几页", required = false)
         @QueryParam("page")
         page: Int?,
-        @ApiParam("每页条数", required = false)
+        @Parameter(description = "每页条数", required = false)
         @QueryParam("pageSize")
         pageSize: Int?
     ): Result<Page<AppPipeline>>
 
-    @ApiOperation("收藏流水线")
+    @Operation(summary = "收藏流水线")
     @POST
     @Path("/{projectId}/{pipelineId}/collect")
     fun collectPipeline(
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @ApiParam(value = "流水线id", required = true)
+        @Parameter(description = "流水线id", required = true)
         @PathParam("pipelineId")
         pipelineId: String,
-        @ApiParam(value = "是否收藏（false表示取消收藏）", required = true)
+        @Parameter(description = "是否收藏（false表示取消收藏）", required = true)
         @QueryParam("isCollect")
         isCollect: Boolean
     ): Result<Boolean>

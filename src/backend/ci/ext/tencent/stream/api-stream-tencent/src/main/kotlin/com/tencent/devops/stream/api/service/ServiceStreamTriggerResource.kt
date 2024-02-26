@@ -37,9 +37,9 @@ import com.tencent.devops.stream.pojo.StreamGitProjectPipeline
 import com.tencent.devops.stream.pojo.TriggerBuildResult
 import com.tencent.devops.stream.pojo.openapi.StreamTriggerBuildReq
 import com.tencent.devops.stream.pojo.openapi.StreamYamlCheck
-import io.swagger.annotations.Api
-import io.swagger.annotations.ApiOperation
-import io.swagger.annotations.ApiParam
+import io.swagger.v3.oas.annotations.tags.Tag
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.Parameter
 import javax.ws.rs.Consumes
 import javax.ws.rs.GET
 import javax.ws.rs.HeaderParam
@@ -50,89 +50,89 @@ import javax.ws.rs.Produces
 import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
-@Api(tags = ["SERVICE_STREAM_TRIGGER"], description = "service-trigger调用")
+@Tag(name = "SERVICE_STREAM_TRIGGER", description = "service-trigger调用")
 @Path("/service/trigger")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface ServiceStreamTriggerResource {
 
-    @ApiOperation("人工TriggerBuild启动构建")
+    @Operation(summary = "人工TriggerBuild启动构建")
     @POST
     @Path("/projects/{projectId}/pipelines/{pipelineId}/startup")
     fun triggerStartup(
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam(value = "项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @ApiParam(value = "流水线ID", required = true)
+        @Parameter(description = "流水线ID", required = true)
         @PathParam("pipelineId")
         pipelineId: String,
-        @ApiParam("TriggerBuild请求", required = true)
+        @Parameter(description = "TriggerBuild请求", required = true)
         streamTriggerBuildReq: StreamTriggerBuildReq
     ): Result<TriggerBuildResult>
 
-    @ApiOperation("人工TriggerBuild拿启动信息")
+    @Operation(summary = "人工TriggerBuild拿启动信息")
     @GET
     @Path("/projects/{projectId}/pipelines/{pipelineId}/manual")
     fun getManualTriggerInfo(
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam(value = "蓝盾项目ID", required = true)
+        @Parameter(description = "蓝盾项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @ApiParam("流水线ID", required = true)
+        @Parameter(description = "流水线ID", required = true)
         @PathParam("pipelineId")
         pipelineId: String,
-        @ApiParam("分支名称", required = false)
+        @Parameter(description = "分支名称", required = false)
         @QueryParam("branchName")
         branchName: String,
-        @ApiParam("COMMIT_ID", required = false)
+        @Parameter(description = "COMMIT_ID", required = false)
         @QueryParam("commitId")
         commitId: String?
     ): Result<ManualTriggerInfo>
 
-    @ApiOperation("openapi 触发")
+    @Operation(summary = "openapi 触发")
     @POST
     @Path("/projects/{projectId}/pipelines/{pipelineId}/openapi_trigger")
     fun openapiTrigger(
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam(value = "工蜂项目ID", required = true)
+        @Parameter(description = "工蜂项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @ApiParam(value = "流水线ID", required = true)
+        @Parameter(description = "流水线ID", required = true)
         @PathParam("pipelineId")
         pipelineId: String,
-        @ApiParam("TriggerBuild请求", required = true)
+        @Parameter(description = "TriggerBuild请求", required = true)
         triggerBuildReq: OpenapiTriggerReq
     ): Result<TriggerBuildResult>
 
-    @ApiOperation("yaml schema check")
+    @Operation(summary = "yaml schema check")
     @POST
     @Path("/check_yaml")
     fun checkYaml(
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam(value = "yaml 文件体", required = true)
+        @Parameter(description = "yaml 文件体", required = true)
         yamlCheck: StreamYamlCheck
     ): Result<String>
 
-    @ApiOperation("通过yaml文件的路径获取到流水线信息")
+    @Operation(summary = "通过yaml文件的路径获取到流水线信息")
     @GET
     @Path("/projects/{projectId}/name_to_pipelineInfo")
     fun nameToPipelineId(
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam(value = "蓝盾项目ID(带前缀 如git_xxx)", required = true)
+        @Parameter(description = "蓝盾项目ID(带前缀 如git_xxx)", required = true)
         @PathParam("projectId")
         projectId: String,
-        @ApiParam(value = "yaml文件地址", required = true)
+        @Parameter(description = "yaml文件地址", required = true)
         @QueryParam("yamlPath")
         yamlPath: String
     ): Result<StreamGitProjectPipeline>

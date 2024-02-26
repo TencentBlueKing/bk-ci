@@ -28,21 +28,21 @@
 package com.tencent.devops.project.api.service
 
 import com.tencent.devops.common.api.pojo.Result
-import io.swagger.annotations.Api
-import io.swagger.annotations.ApiOperation
+import io.swagger.v3.oas.annotations.tags.Tag
+import io.swagger.v3.oas.annotations.Operation
 import javax.ws.rs.Consumes
 import javax.ws.rs.PUT
 import javax.ws.rs.Path
 import javax.ws.rs.Produces
 import javax.ws.rs.core.MediaType
 
-@Api(tags = ["OP_PROJECT_LOGO"], description = "OP-项目-logo")
+@Tag(name = "OP_PROJECT_LOGO", description = "OP-项目-logo")
 @Path("/op/project/logo")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface TxOpMigrateProjectLogoResource {
 
-    @ApiOperation("迁移logo")
+    @Operation(summary = "迁移logo")
     @PUT
     @Path("/migrate")
     fun migrateProjectLogo(): Result<Boolean>

@@ -2,6 +2,8 @@ package com.tencent.devops.remotedev.cron
 
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.DateTimeUtil
+import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.BkTag
@@ -17,9 +19,11 @@ import com.tencent.devops.remotedev.service.redis.RedisHeartBeat
 import com.tencent.devops.remotedev.service.workspace.DeleteControl
 import com.tencent.devops.remotedev.service.workspace.SleepControl
 import com.tencent.devops.remotedev.service.workspace.WorkspaceCommon
+import java.time.LocalDateTime
 import org.slf4j.LoggerFactory
 import org.slf4j.MDC
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Component
 
@@ -32,7 +36,8 @@ class WorkspaceCheckJob @Autowired constructor(
     private val bkTag: BkTag,
     private val sleepControl: SleepControl,
     private val workspaceCommon: WorkspaceCommon,
-    private val deleteControl: DeleteControl
+    private val deleteControl: DeleteControl,
+    private val holidayHelper: HolidayHelper
 ) {
     companion object {
         private val logger = LoggerFactory.getLogger(WorkspaceCheckJob::class.java)
@@ -44,12 +49,16 @@ class WorkspaceCheckJob @Autowired constructor(
         private const val stopJobLockKeyD = "dispatch_devcloud_cron_workspace_clear_job_duration"
         private const val deleteJobLockKey = "dispatch_devcloud_cron_workspace_delete_job"
         private const val nofityJobLockKey = "dispatch_devcloud_cron_workspace_nofity_job"
+        private const val winJobLockKey = "dispatch_devcloud_cron_workspace_win_job"
         private const val billJobLockKey = "dispatch_devcloud_cron_workspace_init_bill"
         private const val syncJobLockKey = "remotedev_cron_sync_start_resource_job"
         private const val computeAllUserWinUsageTime = "dispatch_devcloud_cron_workspace_computeAllUserWinUsageTime"
         private const val notifyWinBeforeSleep = "dispatch_devcloud_cron_notify_win_before_sleep"
         private const val backupCgsDataLockKey = "remotedev_cron_backup_csg_data_job"
     }
+
+    @Value("\${remoteDev.autoDeletePipeline:}")
+    val autoDeletePipeline = ""
 
     /**
      * 每5min检测一次 30min内没有心跳上报的工作空间，主动stop
@@ -126,10 +135,10 @@ class WorkspaceCheckJob @Autowired constructor(
                     MDC.put(TraceTag.BIZID, TraceTag.buildBiz())
                     logger.info(
                         "workspace $workspaceName last active is ${
-                        DateTimeUtil.formatMilliTime(
-                            time.toLong(),
-                            DateTimeUtil.YYYY_MM_DD_HH_MM_SS
-                        )
+                            DateTimeUtil.formatMilliTime(
+                                time.toLong(),
+                                DateTimeUtil.YYYY_MM_DD_HH_MM_SS
+                            )
                         } ready to sleep"
                     )
                     kotlin.runCatching {
@@ -139,9 +148,9 @@ class WorkspaceCheckJob @Autowired constructor(
                         // 针对已经休眠或销毁的容器，删除上报心跳记录。
                         if (it is ErrorCodeException &&
                             (
-                                it.errorCode == ErrorCodeEnum.WORKSPACE_STATUS_CHANGE_FAIL.errorCode ||
-                                    it.errorCode == ErrorCodeEnum.WORKSPACE_NOT_FIND.errorCode
-                                )
+                                    it.errorCode == ErrorCodeEnum.WORKSPACE_STATUS_CHANGE_FAIL.errorCode ||
+                                            it.errorCode == ErrorCodeEnum.WORKSPACE_NOT_FIND.errorCode
+                                    )
                         ) {
                             redisHeartBeat.deleteWorkspaceHeartbeat(ADMIN_NAME, workspaceName)
                         }
@@ -195,6 +204,94 @@ class WorkspaceCheckJob @Autowired constructor(
             }
         } catch (e: Throwable) {
             logger.error("send idle workspace notify failed", e)
+        }
+    }
+
+    /**
+     * 每天10点触发，执行云桌面专项空闲工作空间检测
+     */
+    @Scheduled(cron = "0 0 10 * * ?")
+    fun projectWinJob() {
+        logger.info("=========>> projectWinJob <<=========")
+
+        val redisLock = RedisLock(redisOperation, winJobLockKey, 60L)
+        try {
+            val lockSuccess = redisLock.tryLock()
+            if (!holidayHelper.isWorkingDay(LocalDateTime.now())) {
+                logger.warn("not working day, so ignore.")
+                return
+            }
+            if (lockSuccess) {
+                val readyDeleteWorkspace = mutableListOf<String>()
+                // 云桌面处于待分配超过3天的自动回收，并邮件提醒
+                kotlin.runCatching {
+                    deleteControl.autoDeleteWhenNotAssign(false, readyDeleteWorkspace)
+                }.onFailure {
+                    logger.warn("autoDeleteWhenNotAssign fail ${it.message}", it)
+                }
+                // 云桌面通知-关机超过14天时自动销毁
+                kotlin.runCatching {
+                    deleteControl.autoDeleteWhenSleep7Day(false, readyDeleteWorkspace)
+                    if (readyDeleteWorkspace.isNotEmpty()) {
+                        logger.info("read to notify system manager|$readyDeleteWorkspace")
+                        OkhttpUtils.doPost(
+                            autoDeletePipeline,
+                            JsonUtil.toJson(
+                                mapOf(
+                                    "infos" to readyDeleteWorkspace.joinToString("\n"),
+                                    "type" to "delete"
+                                )
+                            ),
+                            headers = mapOf(
+                                "Content-Type" to "application/json",
+                                "X-DEVOPS-PROJECT-ID" to "bkci-desktop",
+                                "X-DEVOPS-UID" to "autoJob"
+                            )
+                        )
+                    }
+                }.onFailure {
+                    logger.warn("autoDeleteWhenSleep7Day fail ${it.message}", it)
+                }
+                // 云桌面通知-关机超过3天时提醒
+                kotlin.runCatching {
+                    workspaceService.notifyWinSleep3Day()
+                }.onFailure {
+                    logger.warn("notifyWinSleep3Day fail ${it.message}", it)
+                }
+                // 云桌面通知-未登录7天时自动降配(暂时不做)并关机
+                kotlin.runCatching {
+                    val readySleepWorkspace = mutableListOf<String>()
+                    sleepControl.autoSleepWhenNotLogin(false, readySleepWorkspace)
+
+                    if (readySleepWorkspace.isNotEmpty()) {
+                        logger.info("read to notify system manager|$readySleepWorkspace")
+                        OkhttpUtils.doPost(
+                            autoDeletePipeline,
+                            JsonUtil.toJson(
+                                mapOf(
+                                    "infos" to readySleepWorkspace.joinToString("\n"),
+                                    "type" to "sleep"
+                                )
+                            ),
+                            headers = mapOf(
+                                "Content-Type" to "application/json",
+                                "X-DEVOPS-PROJECT-ID" to "bkci-desktop",
+                                "X-DEVOPS-UID" to "autoJob"
+                            )
+                        )
+                    }
+                }.onFailure {
+                    logger.warn("autoSleepWhenNotLogin fail ${it.message}", it)
+                }
+                // 云桌面通知-未登录3天时提醒
+                kotlin.runCatching {
+                    workspaceService.notifyWinNotLogin3Day()
+                }.onFailure {
+                    logger.warn("notifyWinNotLogin3Day fail ${it.message}", it)
+                }
+            }
+        } catch (e: Throwable) {
+            logger.error("projectWinJob failed", e)
         }
     }
 

@@ -1,14 +1,13 @@
 package com.tencent.devops.remotedev.pojo
 
 import com.fasterxml.jackson.annotation.JsonProperty
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("bk-chat")
+@Schema(title = "bk-chat")
 data class BKGPT(
-    @ApiModelProperty("插件透传")
+    @get:Schema(title = "插件透传")
     val data: Any,
-    @ApiModelProperty("插件透传")
+    @get:Schema(title = "插件透传")
     val config: Any,
     @JsonProperty("bkdata_authentication_method")
     var method: String?,

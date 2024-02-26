@@ -1,8 +1,8 @@
 package com.tencent.devops.dispatch.windows.pojo
 
-import io.swagger.annotations.ApiModel
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("DevCloud删除VM")
+@Schema(title = "DevCloud删除VM")
 data class DevCloudWindowsDelete(
     val taskGuid: String
 )
