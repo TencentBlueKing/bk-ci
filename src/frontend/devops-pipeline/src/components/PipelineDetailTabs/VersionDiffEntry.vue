@@ -17,10 +17,9 @@
             :draggable="false"
             ext-cls="diff-version-dialog"
             width="90%"
-            height="90"
             :title="$t('diff')"
         >
-            <div v-bkloading="{ isLoading: isLoadYaml, color: '#1d1d1d' }">
+            <div class="diff-version-dialog-content" v-bkloading="{ isLoading: isLoadYaml, color: '#1d1d1d' }">
                 <header class="diff-version-header">
                     <span>
                         {{ latestVersionName }}
@@ -46,10 +45,13 @@
                         </bk-select>
                     </span>
                 </header>
-                <yaml-diff
-                    :old-yaml="currentYaml"
-                    :new-yaml="activeYaml"
-                />
+                <div class="pipeline-yaml-diff-wrapper">
+                    <yaml-diff
+                        :old-yaml="currentYaml"
+                        height="100%"
+                        :new-yaml="activeYaml"
+                    />
+                </div>
             </div>
 
             <footer slot="footer">
@@ -184,7 +186,26 @@
         transition: none;
         .bk-dialog {
             transition: all .3s;
-            margin: 0;
+            margin: 0 auto;
+            top: 10%;
+            .bk-dialog-content {
+                height: 80vh;
+                .bk-dialog-body {
+                    height: calc(100% - 100px);
+                    .diff-version-dialog-content {
+                        display: flex;
+                        flex-direction: column;
+                        height: 100%;
+                        .diff-version-header {
+                            flex-shrink: 0;
+                        }
+                        .pipeline-yaml-diff-wrapper {
+                            flex: 1;
+                            overflow: hidden;
+                        }
+                    }
+                }
+            }
         }
     }
 </style>
