@@ -27,12 +27,12 @@
 
 package com.tencent.devops.environment.pojo.enums
 
-enum class OsType {
+enum class OsType { // CC中能查到的所有os类型+OTHER
     LINUX,
     WINDOWS,
     AIX,
-    UNIX,
     SOLARIS,
+    UNIX,
     FREEBSD,
     OTHER
 }

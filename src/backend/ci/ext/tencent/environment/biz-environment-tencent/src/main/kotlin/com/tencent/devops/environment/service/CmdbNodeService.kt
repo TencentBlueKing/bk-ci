@@ -405,9 +405,9 @@ class CmdbNodeService @Autowired constructor(
             OS_TYPE_CC_CODE_LINUX -> OsType.LINUX.name
             OS_TYPE_CC_CODE_WINDOWS -> OsType.WINDOWS.name
             OS_TYPE_CC_CODE_AIX -> OsType.AIX.name
-            OS_TYPE_CC_CODE_UNIX -> OsType.UNIX.name
             OS_TYPE_CC_CODE_SOLARIS -> OsType.SOLARIS.name
-            OS_TYPE_CC_CODE_FREEBSD -> OsType.FREEBSD.name
+            OS_TYPE_CC_CODE_UNIX -> OsType.LINUX.name
+            OS_TYPE_CC_CODE_FREEBSD -> OsType.LINUX.name // 节点管理中 UNIX，FREEBSD 这两种状态归属于LINUX
             else -> OsType.OTHER.name
         }
     }
