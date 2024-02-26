@@ -189,7 +189,7 @@ class CmdbNodeService @Autowired constructor(
                 else if (AGENT_NORMAL_NODE_STATUS == ipToAgentVersionInfoMap?.get(it[T_NODE_NODE_IP] as String)?.status)
                     NodeStatus.NORMAL.name
                 else
-                    "",
+                    NodeStatus.NOT_INSTALLED.name,
                 hostId = nodeIdToCCInfoMap[nodeId]?.bkHostId,
                 cloudAreaId = nodeIdToCCInfoMap[nodeId]?.bkCloudId?.toLong(),
                 agentStatus = if (grayTag) {
@@ -264,7 +264,7 @@ class CmdbNodeService @Autowired constructor(
                 else if (AGENT_NORMAL_NODE_STATUS == ipToAgentVersionMap?.get(cmdbNode.ip)?.status)
                     NodeStatus.NORMAL.name
                 else
-                    "",
+                    NodeStatus.NOT_INSTALLED.name,
                 nodeType = NodeType.CMDB.name,
                 createdUser = userId,
                 osName = cmdbNode.osName,
