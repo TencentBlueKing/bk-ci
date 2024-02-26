@@ -84,5 +84,13 @@
         .bk-pipeline {
             padding-left: 50px;
         }
+        .scroll-container {
+            .scroll-wraper {
+                padding: 0 0 0 6px;
+            }
+            &:before {
+                top: 24px;
+            }
+        }
     }
 </style>

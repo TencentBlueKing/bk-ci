@@ -1352,7 +1352,7 @@
   "requiredParams": "Required",
   "requiredItem": "Required",
   "requiredSelectItem": "Required",
-  "readonlyParams": "Readonly",
+  "readonlyParams": "readOnly",
   "refParamsTips": "Variables can be referenced in the plugin through the expression ${{ xxx }}",
   "pickTimeRange": "Select Date Time Range",
   "mainMinorPatch": " ( Major.Minor.Patch ) ",

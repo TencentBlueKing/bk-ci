@@ -24,7 +24,7 @@
                             </div>
                             <div class="value-operate-row" style="justify-content: space-between;">
                                 <div class="param-value">
-                                    <span v-if="param.readOnly" class="read-only">{{$t('readOnly')}}</span>
+                                    <span v-if="param.readOnly" class="read-only">{{$t('readonlyParams')}}</span>
                                     <span class="default-value">{{ param.defaultValue || '--' }}</span>
                                 </div>
                                 <div v-if="editable" class="var-operate">

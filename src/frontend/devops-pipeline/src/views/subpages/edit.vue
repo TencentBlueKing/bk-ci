@@ -11,7 +11,7 @@
         <YamlPipelineEditor v-else-if="isCodeMode" />
         <template v-else>
             <show-variable v-if="currentTab === 'pipeline'" :pipeline="pipeline" />
-            <header class="choose-type-switcher">
+            <header class="choose-type-switcher" :class="{ 'when-show-variable': currentTab === 'pipeline' && showVariable }">
                 <span
                     v-for="panel in panels"
                     :key="panel.name"
@@ -27,7 +27,7 @@
                 </span>
             </header>
 
-            <div :class="['edit-content-area']">
+            <div class="edit-content-area" :class="{ 'when-show-variable': currentTab === 'pipeline' && showVariable }">
                 <component
                     :is="curPanel.component"
                     v-bind="curPanel.bindData"
@@ -112,7 +112,8 @@
                 'pipelineWithoutTrigger',
                 'pipelineYaml',
                 'pipelineSetting',
-                'editfromImport'
+                'editfromImport',
+                'showVariable'
             ]),
             ...mapGetters({
                 isCodeMode: 'isCodeMode',
@@ -370,7 +371,6 @@
   margin-top: 24px;
 }
 .bkdevops-pipeline-edit-wrapper {
-  /* display: flex; */
   .choose-type-switcher {
     background: #f0f1f5;
     height: 42px;
@@ -378,11 +378,9 @@
     display: flex;
     align-items: center;
     margin: 24px 24px 0;
-    /* margin: 0 24px;
-            position: sticky;
-            top: 56px;
-            z-index: 8; */
-
+    &.when-show-variable {
+        margin-right: 496px;
+    }
     .choose-type-switcher-tab {
       padding: 0 18px;
       height: 42px;
@@ -428,7 +426,7 @@
       }
     }
   }
-
+  
   .edit-content-area {
     position: relative;
     background: white;
@@ -438,6 +436,9 @@
     overflow-y: auto;
     flex: 1;
     box-shadow: 0 2px 2px 0 #00000026;
+    &.when-show-variable {
+        margin-right: 496px;
+    }
   }
   .choose-type-container {
     margin: 26px 24px 20px;
