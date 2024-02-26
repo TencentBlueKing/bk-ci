@@ -111,6 +111,8 @@ data class Pipeline(
     var lastBuildTotalCount: Int? = null,
     @get:Schema(title = "最后一次构建已完成的任务个数", required = false)
     var lastBuildFinishCount: Int? = null,
+    @get:Schema(title = "启动类型(新)", required = false)
+    var startType: String? = null,
     @get:Schema(title = "触发方式", required = false)
     var trigger: String? = null,
     @get:Schema(title = "webhook仓库别名", required = false)

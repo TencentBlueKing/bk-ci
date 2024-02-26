@@ -56,9 +56,11 @@ data class PipelineDetail(
     @get:Schema(title = "草稿或最新的发布版本名称")
     val versionName: String?,
     @get:Schema(title = "基准版本的状态", required = false)
+    val baseVersion: Int?,
+    @get:Schema(title = "基准版本的状态", required = false)
     val baseVersionStatus: VersionStatus,
-    @get:Schema(title = "基准版本的分支名")
-    val baseVersionBranch: String?,
+    @get:Schema(title = "基准版本的版本名称")
+    val baseVersionName: String?,
     @get:Schema(title = "草稿或最新的发布版本")
     val releaseVersion: Int?,
     @get:Schema(title = "草稿或最新的发布版本名称")

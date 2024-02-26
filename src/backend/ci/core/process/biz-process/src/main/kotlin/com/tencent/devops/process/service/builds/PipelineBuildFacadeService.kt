@@ -671,7 +671,6 @@ class PipelineBuildFacadeService(
                 triggerReviewers = triggerReviewers,
                 signPipelineVersion = version,
                 debug = debug,
-                versionNum = resource.versionNum,
                 versionName = resource.versionName
             )
         } finally {
@@ -771,7 +770,6 @@ class PipelineBuildFacadeService(
                 signPipelineVersion = null,
                 frequencyLimit = false,
                 startValues = startValues,
-                versionNum = resource.versionNum,
                 versionName = resource.versionName
             ).id
         } finally {
@@ -850,7 +848,6 @@ class PipelineBuildFacadeService(
                 frequencyLimit = false,
                 startValues = startValues,
                 triggerReviewers = triggerReviewers,
-                versionNum = resource.versionNum,
                 versionName = resource.versionName
             ).id
             if (buildId.isNotBlank()) {

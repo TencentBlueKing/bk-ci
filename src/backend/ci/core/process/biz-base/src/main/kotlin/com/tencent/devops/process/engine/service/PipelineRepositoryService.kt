@@ -752,7 +752,9 @@ class PipelineRepositoryService constructor(
                 versionName = if (versionStatus == VersionStatus.BRANCH) {
                     branchName
                 } else {
-                    PipelineVersionUtils.getVersionName(pipelineVersion, triggerVersion, settingVersion)
+                    PipelineVersionUtils.getVersionName(
+                        versionNum, pipelineVersion, triggerVersion, settingVersion
+                    )
                 }
                 val yaml = yamlStr ?: try {
                     transferService.transfer(
@@ -1012,13 +1014,15 @@ class PipelineRepositoryService constructor(
                             newModel = model
                         )
                         operationLogType = OperationLogType.RELEASE_MASTER_VERSION
-                        val newVersionName = PipelineVersionUtils.getVersionName(
-                            pipelineVersion, triggerVersion, settingVersion
-                        )
                         // 数据分离：发布记录的版本自增，旧数据保留和版本表中version一致，后续单独用于前端展示
-                        versionNum = (releaseResource.versionNum ?: 0) + 1
-                        versionName = newVersionName
-                        operationLogParams = newVersionName
+                        versionNum = (releaseResource.versionNum ?: releaseResource.version) + 1
+                        val newVersionName = PipelineVersionUtils.getVersionName(
+                            versionNum!!, pipelineVersion, triggerVersion, settingVersion
+                        )
+                        newVersionName?.let {
+                            versionName = newVersionName
+                            operationLogParams = newVersionName
+                        }
                         version = if (draftVersion == null) {
                             // 兼容逻辑：没有已有草稿保存正式版本时，直接增加正式版本，基准为上一个发布版本
                             // 创建新版本记录
@@ -1068,6 +1072,13 @@ class PipelineRepositoryService constructor(
                             triggerVersion = triggerVersion,
                             settingVersion = settingVersion
                         )
+                        watcher.start("updatePipelineModelTask")
+                        pipelineModelTaskDao.deletePipelineTasks(
+                            dslContext = transactionContext,
+                            projectId = projectId,
+                            pipelineId = pipelineId
+                        )
+                        pipelineModelTaskDao.batchSave(transactionContext, modelTasks)
                     }
                 }
 
@@ -1092,11 +1103,6 @@ class PipelineRepositoryService constructor(
                     baseVersion = realBaseVersion ?: (version - 1)
                 )
                 watcher.start("deleteEarlyVersion")
-                pipelineModelTaskDao.deletePipelineTasks(
-                    dslContext = transactionContext,
-                    projectId = projectId,
-                    pipelineId = pipelineId
-                )
                 setting?.maxPipelineResNum?.let {
                     pipelineResourceVersionDao.deleteEarlyVersion(
                         dslContext = transactionContext,
@@ -1106,7 +1112,6 @@ class PipelineRepositoryService constructor(
                         maxPipelineResNum = it
                     )
                 }
-                pipelineModelTaskDao.batchSave(transactionContext, modelTasks)
             }
         } finally {
             watcher.stop()
@@ -1205,13 +1210,11 @@ class PipelineRepositoryService constructor(
         includeDraft: Boolean? = false
     ): PipelineResourceVersion? {
         val resource = if (version == null) { // 取最新版，直接从旧版本表读
-            includeDraft?.let {
-                if (includeDraft) pipelineResourceVersionDao.getDraftVersionResource(
-                    dslContext = dslContext,
-                    projectId = projectId,
-                    pipelineId = pipelineId
-                ) else null
-            }
+            if (includeDraft == true) pipelineResourceVersionDao.getDraftVersionResource(
+                dslContext = dslContext,
+                projectId = projectId,
+                pipelineId = pipelineId
+            ) else null
         } else {
             pipelineResourceVersionDao.getVersionResource(
                 dslContext = dslContext,

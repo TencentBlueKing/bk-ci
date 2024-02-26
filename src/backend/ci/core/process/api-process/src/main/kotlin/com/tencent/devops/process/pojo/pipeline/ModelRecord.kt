@@ -68,8 +68,6 @@ data class ModelRecord(
     val cancelUserId: String?,
     @get:Schema(title = "本次执行的编排版本号", required = true)
     val curVersion: Int,
-    @get:Schema(title = "发布版本号", required = false)
-    val versionNum: Int?,
     @get:Schema(title = "流水线当前最新版本号", required = true)
     val latestVersion: Int,
     @get:Schema(title = "最新一次的构建buildNo", required = true)

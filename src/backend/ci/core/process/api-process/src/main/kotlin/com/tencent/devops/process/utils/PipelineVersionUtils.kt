@@ -32,14 +32,28 @@ import com.tencent.devops.process.pojo.setting.PipelineSettingVersion
 
 object PipelineVersionUtils {
 
+    fun getVersionNameByModel(
+        currPipelineVersion: Int,
+        currTriggerVersion: Int,
+        settingVersion: Int,
+        versionNum: Int,
+        originModel: Model,
+        newModel: Model
+    ): String {
+        val pipelineVersion = getPipelineVersion(currPipelineVersion, originModel, newModel)
+        val triggerVersion = getTriggerVersion(currTriggerVersion, originModel, newModel)
+        return "V$versionNum(P$pipelineVersion.T$triggerVersion.$settingVersion)"
+    }
+
     fun getVersionName(
+        versionNum: Int,
         pipelineVersion: Int?,
         triggerVersion: Int?,
         settingVersion: Int?
-    ): String {
+    ): String? {
         return if (pipelineVersion == null || triggerVersion == null || settingVersion == null) {
-            "init"
-        } else "P$pipelineVersion.T$triggerVersion.$settingVersion"
+            null
+        } else "V$versionNum(P$pipelineVersion.T$triggerVersion.$settingVersion)"
     }
 
     /**

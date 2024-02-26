@@ -62,7 +62,7 @@ data class PipelineVersionWithInfo(
     @get:Schema(title = "任务数")
     val taskCount: Int,
     @get:Schema(title = "版本名称")
-    var versionName: String = "init",
+    var versionName: String = "",
     @get:Schema(title = "ID")
     val id: Long?,
     @get:Schema(title = "流水线组名称列表", required = false)

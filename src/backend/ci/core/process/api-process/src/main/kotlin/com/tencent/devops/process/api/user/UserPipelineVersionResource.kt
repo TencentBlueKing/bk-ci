@@ -41,6 +41,7 @@ import com.tencent.devops.process.pojo.pipeline.DeployPipelineResult
 import com.tencent.devops.process.pojo.setting.PipelineVersionSimple
 import com.tencent.devops.common.pipeline.pojo.transfer.PreviewResponse
 import com.tencent.devops.process.pojo.PipelineVersionReleaseRequest
+import com.tencent.devops.process.pojo.pipeline.PrefetchReleaseResult
 import io.swagger.v3.oas.annotations.tags.Tag
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
@@ -77,6 +78,24 @@ interface UserPipelineVersionResource {
         @PathParam("pipelineId")
         pipelineId: String
     ): Result<PipelineDetail>
+
+    @Operation(summary = "将当前草稿发布为正式版本")
+    @GET
+    @Path("/projects/{projectId}/pipelines/{pipelineId}/releaseVersion/{version}/prefetch")
+    fun preFetchDraftVersion(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @Parameter(description = "流水线ID", required = true)
+        @PathParam("pipelineId")
+        pipelineId: String,
+        @Parameter(description = "流水线编排版本", required = true)
+        @PathParam("version")
+        version: Int
+    ): Result<PrefetchReleaseResult>
 
     @Operation(summary = "将当前草稿发布为正式版本")
     @POST

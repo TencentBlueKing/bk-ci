@@ -59,6 +59,7 @@ import com.tencent.devops.process.engine.service.PipelineRepositoryVersionServic
 import com.tencent.devops.process.pojo.PipelineDetail
 import com.tencent.devops.process.pojo.PipelineVersionReleaseRequest
 import com.tencent.devops.process.pojo.pipeline.DeployPipelineResult
+import com.tencent.devops.process.pojo.pipeline.PrefetchReleaseResult
 import com.tencent.devops.process.pojo.setting.PipelineVersionSimple
 import com.tencent.devops.process.service.label.PipelineGroupService
 import com.tencent.devops.process.service.pipeline.PipelineSettingFacadeService
@@ -66,6 +67,7 @@ import com.tencent.devops.process.service.pipeline.PipelineTransferYamlService
 import com.tencent.devops.process.service.template.TemplateFacadeService
 import com.tencent.devops.process.service.view.PipelineViewGroupService
 import com.tencent.devops.process.template.service.TemplateService
+import com.tencent.devops.process.utils.PipelineVersionUtils
 import com.tencent.devops.process.yaml.PipelineYamlFacadeService
 import com.tencent.devops.process.yaml.transfer.PipelineTransferException
 import org.jooq.DSLContext
@@ -125,18 +127,20 @@ class PipelineVersionFacadeService @Autowired constructor(
         )
         val yamlInfo = pipelineYamlFacadeService.getPipelineYamlInfo(projectId, pipelineId, releaseVersion.version)
         val canRelease = draftVersion != null
+        var baseVersion: Int? = null
+        var baseVersionName: String? = null
         var baseVersionStatus = VersionStatus.RELEASED
-        var baseVersionBranch: String? = null
         draftVersion?.let { draft ->
-            val baseVersion = draft.baseVersion?.let { base ->
+            val baseResource = draft.baseVersion?.let { base ->
                 pipelineRepositoryService.getPipelineResourceVersion(
                     projectId = projectId,
                     pipelineId = pipelineId,
                     version = base
                 )
             }
-            baseVersion?.status?.let { baseVersionStatus = it }
-            baseVersion?.versionName?.let { baseVersionBranch = it }
+            baseResource?.let { baseVersion = it.version }
+            baseResource?.status?.let { baseVersionStatus = it }
+            baseResource?.versionName?.let { baseVersionName = it }
         }
         val releaseSetting = pipelineSettingFacadeService.userGetSetting(
             userId = userId,
@@ -170,10 +174,66 @@ class PipelineVersionFacadeService @Autowired constructor(
             versionName = versionName,
             releaseVersion = releaseVersion.version,
             releaseVersionName = releaseVersion.versionName,
+            baseVersion = baseVersion,
             baseVersionStatus = baseVersionStatus,
-            baseVersionBranch = baseVersionBranch,
+            baseVersionName = baseVersionName,
             pipelineAsCodeSettings = PipelineAsCodeSettings(enable = yamlInfo != null),
             yamlInfo = yamlInfo
+        )
+    }
+
+    fun preFetchDraftVersion(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        version: Int
+    ): PrefetchReleaseResult {
+        if (templateService.isTemplatePipeline(projectId, pipelineId)) {
+            throw ErrorCodeException(
+                errorCode = ProcessMessageCode.ERROR_PIPELINE_TEMPLATE_CAN_NOT_EDIT
+            )
+        }
+        val draftVersion = pipelineRepositoryService.getPipelineResourceVersion(
+            projectId = projectId,
+            pipelineId = pipelineId,
+            version = version,
+            includeDraft = true
+        ) ?: throw ErrorCodeException(
+            errorCode = ProcessMessageCode.ERROR_NO_PIPELINE_DRAFT_EXISTS
+        )
+        val draftSetting = draftVersion.settingVersion?.let {
+            pipelineSettingFacadeService.userGetSetting(
+                userId = userId,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                version = it
+            )
+        } ?: pipelineSettingFacadeService.userGetSetting(
+            userId = userId,
+            projectId = projectId,
+            pipelineId = pipelineId
+        )
+        val releaseVersion = pipelineRepositoryService.getPipelineResourceVersion(projectId, pipelineId)
+            ?: throw ErrorCodeException(
+                errorCode = ProcessMessageCode.ERROR_NO_PIPELINE_EXISTS_BY_ID,
+                params = arrayOf(pipelineId)
+            )
+        val newVersionNum = (releaseVersion.versionNum ?: releaseVersion.version) + 1
+        val prefetchVersionName = PipelineVersionUtils.getVersionNameByModel(
+            currPipelineVersion = releaseVersion.pipelineVersion ?: 1,
+            currTriggerVersion = releaseVersion.triggerVersion ?: 1,
+            settingVersion = draftSetting.version,
+            versionNum = newVersionNum,
+            originModel = releaseVersion.model,
+            newModel = draftVersion.model
+
+        )
+        return PrefetchReleaseResult(
+            pipelineId = pipelineId,
+            pipelineName = draftVersion.model.name,
+            version = draftVersion.version,
+            newVersionNum = newVersionNum,
+            newVersionName = prefetchVersionName
         )
     }
 
@@ -439,11 +499,11 @@ class PipelineVersionFacadeService @Autowired constructor(
         } catch (e: PipelineTransferException) {
             Triple(
                 false, null, I18nUtil.getCodeLanMessage(
-                    messageCode = e.errorCode,
-                    params = e.params,
-                    language = I18nUtil.getLanguage(I18nUtil.getRequestUserId()),
-                    defaultMessage = e.defaultMessage
-                )
+                messageCode = e.errorCode,
+                params = e.params,
+                language = I18nUtil.getLanguage(I18nUtil.getRequestUserId()),
+                defaultMessage = e.defaultMessage
+            )
             )
         }
         return PipelineModelWithYaml(
@@ -630,7 +690,7 @@ class PipelineVersionFacadeService @Autowired constructor(
             createTime = resource.createTime.timestampmilli(),
             updateTime = resource.updateTime?.timestampmilli(),
             version = resource.version,
-            versionName = resource.versionName ?: "init",
+            versionName = resource.versionName ?: "",
             referFlag = resource.referFlag,
             referCount = resource.referCount,
             versionNum = resource.versionNum,

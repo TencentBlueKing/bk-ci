@@ -144,7 +144,7 @@ class PipelineRepositoryVersionService(
             taskCount = pipelineInfo.taskCount,
             templateId = pipelineInfo.templateId,
             version = resource.version,
-            versionName = resource.versionName ?: "init",
+            versionName = resource.versionName ?: "",
             versionNum = resource.versionNum,
             pipelineVersion = resource.pipelineVersion,
             triggerVersion = resource.triggerVersion,

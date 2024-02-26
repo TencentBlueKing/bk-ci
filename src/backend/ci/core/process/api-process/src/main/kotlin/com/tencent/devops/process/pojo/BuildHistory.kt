@@ -45,8 +45,6 @@ data class BuildHistory(
     val buildNum: Int?,
     @get:Schema(title = "编排文件版本号", required = true)
     val pipelineVersion: Int,
-    @get:Schema(title = "发布版本号（草稿没有值）", required = false)
-    val versionNum: Int?,
     @get:Schema(title = "流水线的执行开始时间", required = true)
     val startTime: Long,
     @get:Schema(title = "流水线的执行结束时间", required = true)
