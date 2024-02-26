@@ -20,6 +20,7 @@
 | T_PROJECT_DATA_MIGRATE_HISTORY | 项目数据迁移历史表 |
 | T_PROJECT_LABEL |  |
 | T_PROJECT_LABEL_REL |  |
+| T_SENIOR_USER | 高级用户表 |
 | T_SERVICE | 服务信息表 |
 | T_SERVICE_TYPE | 服务类型表 |
 | T_SHARDING_ROUTING_RULE | DB 分片路由规则 |
@@ -301,6 +302,19 @@
 |  3   | PROJECT_ID |   varchar   | 32 |   0    |    N     |  N   |       | 项目 ID  |
 |  4   | CREATE_TIME |   datetime   | 19 |   0    |    N     |  N   |   CURRENT_TIMESTAMP    | 创建时间  |
 |  5   | UPDATE_TIME |   datetime   | 19 |   0    |    N     |  N   |   CURRENT_TIMESTAMP    | 修改时间  |
+
+**表名：** <a>T_SENIOR_USER</a>
+
+**说明：** 高级用户表
+
+**数据列：**
+
+| 序号 | 名称 | 数据类型 |  长度  | 小数位 | 允许空值 | 主键 | 默认值 | 说明 |
+| :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
+|  1   | USER_ID |   varchar   | 64 |   0    |    N     |  Y   |       |   |
+|  2   | NAME |   varchar   | 64 |   0    |    N     |  N   |       |   |
+|  3   | BG_NAME |   varchar   | 64 |   0    |    N     |  N   |       |   |
+|  4   | CREATE_TIME |   datetime   | 19 |   0    |    N     |  N   |   CURRENT_TIMESTAMP    |   |
 
 **表名：** <a>T_SERVICE</a>
 
