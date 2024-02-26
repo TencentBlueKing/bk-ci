@@ -724,77 +724,77 @@ class NodeDao {
     }
 
     fun batchAddNode(dslContext: DSLContext, nodes: List<CreateNodeModel>) {
-        if (nodes.isEmpty()) {
-            return
-        }
+        if (nodes.isEmpty()) return
         val now = LocalDateTime.now()
         with(TNode.T_NODE) {
-            nodes.map {
-                dslContext.insertInto(
-                    this,
-                    NODE_STRING_ID,
-                    PROJECT_ID,
-                    NODE_IP,
-                    NODE_NAME,
-                    NODE_STATUS,
-                    NODE_TYPE,
-                    NODE_CLUSTER_ID,
-                    NODE_NAMESPACE,
-                    CREATED_USER,
-                    CREATED_TIME,
-                    EXPIRE_TIME,
-                    OS_NAME,
-                    OPERATOR,
-                    BAK_OPERATOR,
-                    AGENT_STATUS,
-                    AGENT_VERSION,
-                    DISPLAY_NAME,
-                    IMAGE,
-                    TASK_ID,
-                    LAST_MODIFY_TIME,
-                    LAST_MODIFY_USER,
-                    PIPELINE_REF_COUNT,
-                    LAST_BUILD_TIME,
-                    HOST_ID,
-                    CLOUD_AREA_ID,
-                    OS_TYPE
-                ).values(
-                    it.nodeStringId,
-                    it.projectId,
-                    it.nodeIp,
-                    it.nodeName,
-                    it.nodeStatus,
-                    it.nodeType,
-                    it.nodeClusterId,
-                    it.nodeNamespace,
-                    it.createdUser,
-                    now,
-                    it.expireTime,
-                    it.osName,
-                    it.operator,
-                    it.bakOperator,
-                    it.agentStatus,
-                    it.agentVersion,
-                    it.displayName,
-                    it.image,
-                    it.taskId,
-                    now,
-                    it.createdUser,
-                    it.pipelineRefCount,
-                    it.lastBuildTime,
-                    it.hostId,
-                    it.cloudAreaId,
-                    it.osType
-                ).returning(NODE_ID).fetchOne()!!.let { newRecord ->
-                    val hashId = HashUtil.encodeLongId(newRecord.nodeId)
-                    val displayName = it.nodeType + "-" + hashId + "-" + newRecord.nodeId
-                    dslContext.update(this)
-                        .set(NODE_HASH_ID, hashId)
-                        .set(DISPLAY_NAME, displayName)
-                        .where(NODE_ID.eq(newRecord.nodeId))
-                        .execute()
+            val batchInsert = dslContext.batch(
+                nodes.map {
+                    dslContext.insertInto(
+                        this,
+                        NODE_STRING_ID,
+                        PROJECT_ID,
+                        NODE_IP,
+                        NODE_NAME,
+                        NODE_STATUS,
+                        NODE_TYPE,
+                        NODE_CLUSTER_ID,
+                        NODE_NAMESPACE,
+                        CREATED_USER,
+                        CREATED_TIME,
+                        EXPIRE_TIME,
+                        OS_NAME,
+                        OPERATOR,
+                        BAK_OPERATOR,
+                        AGENT_STATUS,
+                        AGENT_VERSION,
+                        DISPLAY_NAME,
+                        IMAGE,
+                        TASK_ID,
+                        LAST_MODIFY_TIME,
+                        LAST_MODIFY_USER,
+                        PIPELINE_REF_COUNT,
+                        LAST_BUILD_TIME,
+                        HOST_ID,
+                        CLOUD_AREA_ID,
+                        OS_TYPE
+                    ).values(
+                        it.nodeStringId,
+                        it.projectId,
+                        it.nodeIp,
+                        it.nodeName,
+                        it.nodeStatus,
+                        it.nodeType,
+                        it.nodeClusterId,
+                        it.nodeNamespace,
+                        it.createdUser,
+                        now,
+                        it.expireTime,
+                        it.osName,
+                        it.operator,
+                        it.bakOperator,
+                        it.agentStatus,
+                        it.agentVersion,
+                        it.displayName,
+                        it.image,
+                        it.taskId,
+                        now,
+                        it.createdUser,
+                        it.pipelineRefCount,
+                        it.lastBuildTime,
+                        it.hostId,
+                        it.cloudAreaId,
+                        it.osType
+                    ).returning(NODE_ID).fetchOne()!!.let { newRecord ->
+                        val hashId = HashUtil.encodeLongId(newRecord.nodeId)
+                        val displayName = it.nodeType + "-" + hashId + "-" + newRecord.nodeId
+                        dslContext.update(this)
+                            .set(NODE_HASH_ID, hashId)
+                            .set(DISPLAY_NAME, displayName)
+                            .where(NODE_ID.eq(newRecord.nodeId))
+                    }
                 }
-            }
+            )
+            batchInsert.execute()
         }
     }
 
