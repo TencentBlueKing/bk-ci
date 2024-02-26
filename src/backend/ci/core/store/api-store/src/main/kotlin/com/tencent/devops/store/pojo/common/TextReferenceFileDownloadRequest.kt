@@ -27,21 +27,20 @@
 
 package com.tencent.devops.store.pojo.common
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("文本引用文件下载请求")
+@Schema(title = "文本引用文件下载请求")
 data class TextReferenceFileDownloadRequest(
-    @ApiModelProperty("项目代码", required = true)
+    @get:Schema(title = "项目代码", required = true)
     val projectCode: String,
-    @ApiModelProperty("组件标识")
+    @get:Schema(title = "组件标识")
     val storeCode: String,
-    @ApiModelProperty("引用文件名列表")
+    @get:Schema(title = "引用文件名列表")
     val fileNames: Set<String>,
-    @ApiModelProperty("插件包文件路径", required = true)
+    @get:Schema(title = "插件包文件路径", required = true)
     val fileDir: String,
-    @ApiModelProperty("仓库哈希ID", required = false)
+    @get:Schema(title = "仓库哈希ID", required = false)
     val repositoryHashId: String? = null,
-    @ApiModelProperty("分支", required = false)
+    @get:Schema(title = "分支", required = false)
     val branch: String? = null
 )

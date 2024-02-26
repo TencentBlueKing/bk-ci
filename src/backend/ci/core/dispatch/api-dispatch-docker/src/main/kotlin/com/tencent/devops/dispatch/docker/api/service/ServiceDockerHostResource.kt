@@ -35,9 +35,9 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.dispatch.docker.pojo.DockerHostZone
 import com.tencent.devops.dispatch.docker.pojo.DockerIpInfoVO
 import com.tencent.devops.dispatch.docker.pojo.SpecialDockerHostVO
-import io.swagger.annotations.Api
-import io.swagger.annotations.ApiOperation
-import io.swagger.annotations.ApiParam
+import io.swagger.v3.oas.annotations.tags.Tag
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.Parameter
 import javax.ws.rs.Consumes
 import javax.ws.rs.GET
 import javax.ws.rs.HeaderParam
@@ -49,59 +49,59 @@ import javax.ws.rs.Produces
 import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
-@Api(tags = ["SERVICE_DOCKER_HOST"], description = "服务-获取构建容器信息")
+@Tag(name = "SERVICE_DOCKER_HOST", description = "服务-获取构建容器信息")
 @Path("/service/dockerhost")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 @ServiceInterface("dispatch") // 指明接入到哪个微服务
 interface ServiceDockerHostResource {
 
-    @ApiOperation("获取dockerhost列表")
+    @Operation(summary = "获取dockerhost列表")
     @GET
     @Path("/list")
     fun list(
-        @ApiParam("第几页", required = false)
+        @Parameter(description = "第几页", required = false)
         @QueryParam("page")
         page: Int?,
-        @ApiParam("每页条数", required = false)
+        @Parameter(description = "每页条数", required = false)
         @QueryParam("pageSize")
         pageSize: Int?
     ): Page<DockerHostZone>
 
-    @ApiOperation("更新构建信息")
+    @Operation(summary = "更新构建信息")
     @PUT
     @Path("/builds/{buildId}/vmseqs/{vmSeqId}")
     fun updateContainerId(
-        @ApiParam("buildId", required = true)
+        @Parameter(description = "buildId", required = true)
         @PathParam("buildId")
         buildId: String,
-        @ApiParam("vmSeqId", required = true)
+        @Parameter(description = "vmSeqId", required = true)
         @PathParam("vmSeqId")
         vmSeqId: Int,
-        @ApiParam("容器信息", required = true)
+        @Parameter(description = "容器信息", required = true)
         @QueryParam("containerId")
         containerId: String
     ): Result<Boolean>
 
     @POST
     @Path("/dockerIp/{dockerIp}/refresh")
-    @ApiOperation("刷新Docker构建机状态")
+    @Operation(summary = "刷新Docker构建机状态")
     fun refresh(
-        @ApiParam("构建机信息", required = true)
+        @Parameter(description = "构建机信息", required = true)
         @PathParam("dockerIp")
         dockerIp: String,
-        @ApiParam("构建机信息", required = true)
+        @Parameter(description = "构建机信息", required = true)
         dockerIpInfoVO: DockerIpInfoVO
     ): Result<Boolean>
 
     @POST
     @Path("/specialDockerHost/add")
-    @ApiOperation("批量新增专机配置")
+    @Operation(summary = "批量新增专机配置")
     fun createSpecialDockerHost(
-        @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String,
-        @ApiParam("专机配置列表", required = true)
+        @Parameter(description = "专机配置列表", required = true)
         specialDockerHostVOs: List<SpecialDockerHostVO>
     ): Result<Boolean>
 }

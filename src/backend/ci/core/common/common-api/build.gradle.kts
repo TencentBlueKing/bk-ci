@@ -27,7 +27,7 @@
 
 dependencies {
     api("javax.ws.rs:javax.ws.rs-api")
-    api("io.swagger:swagger-annotations")
+    api("io.swagger.core.v3:swagger-annotations")
     api("org.hashids:hashids")
     api("com.fasterxml.jackson.module:jackson-module-kotlin")
     api("com.fasterxml.jackson.core:jackson-databind")

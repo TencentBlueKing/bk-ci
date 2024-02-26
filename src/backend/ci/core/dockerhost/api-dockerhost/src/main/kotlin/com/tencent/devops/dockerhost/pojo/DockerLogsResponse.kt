@@ -27,15 +27,14 @@
 
 package com.tencent.devops.dockerhost.pojo
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("DockerLogsResponse")
+@Schema(title = "DockerLogsResponse")
 data class DockerLogsResponse(
-    @ApiModelProperty("是否结束", required = true)
+    @get:Schema(title = "是否结束", required = true)
     val running: Boolean,
-    @ApiModelProperty("退出码", required = true)
+    @get:Schema(title = "退出码", required = true)
     val exitCode: Int?,
-    @ApiModelProperty("日志", required = true)
+    @get:Schema(title = "日志", required = true)
     val logs: List<String>
 )

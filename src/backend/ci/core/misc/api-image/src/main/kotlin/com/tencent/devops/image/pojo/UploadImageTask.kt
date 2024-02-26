@@ -27,25 +27,24 @@
 
 package com.tencent.devops.image.pojo
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("上传镜像任务返回模型")
+@Schema(title = "上传镜像任务返回模型")
 data class UploadImageTask(
-    @ApiModelProperty("任务id")
+    @get:Schema(title = "任务id")
     var taskId: String,
-    @ApiModelProperty("项目id")
+    @get:Schema(title = "项目id")
     var projectId: String,
-    @ApiModelProperty("操作者")
+    @get:Schema(title = "操作者")
     var operator: String,
-    @ApiModelProperty("创建时间戳")
+    @get:Schema(title = "创建时间戳")
     var createdTime: Long,
-    @ApiModelProperty("更新时间戳")
+    @get:Schema(title = "更新时间戳")
     var updatedTime: Long,
-    @ApiModelProperty("任务状态")
+    @get:Schema(title = "任务状态")
     val taskStatus: String,
-    @ApiModelProperty("任务返回信息")
+    @get:Schema(title = "任务返回信息")
     val taskMessage: String,
-    @ApiModelProperty("镜像列表")
+    @get:Schema(title = "镜像列表")
     val imageData: List<DockerImage>
 )

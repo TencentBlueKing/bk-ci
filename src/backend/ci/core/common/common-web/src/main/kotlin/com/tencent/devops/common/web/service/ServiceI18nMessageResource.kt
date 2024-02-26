@@ -32,9 +32,9 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.I18nMessage
 import com.tencent.devops.common.api.pojo.Result
-import io.swagger.annotations.Api
-import io.swagger.annotations.ApiOperation
-import io.swagger.annotations.ApiParam
+import io.swagger.v3.oas.annotations.tags.Tag
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.Parameter
 import javax.ws.rs.Consumes
 import javax.ws.rs.DELETE
 import javax.ws.rs.GET
@@ -46,82 +46,82 @@ import javax.ws.rs.Produces
 import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
-@Api(tags = ["SERVICE_I18N_MESSAGE"], description = "SERVICE-国际化信息")
+@Tag(name = "SERVICE_I18N_MESSAGE", description = "SERVICE-国际化信息")
 @Path("/service/i18n/messages")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 @ServiceInterface("project")
 interface ServiceI18nMessageResource {
 
-    @ApiOperation("批量添加国际化信息")
+    @Operation(summary = "批量添加国际化信息")
     @POST
     @Path("/batchAdd")
     fun batchAddI18nMessage(
-        @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String = "",
-        @ApiParam(value = "国际化信息集合", required = true)
+        @Parameter(description = "国际化信息集合", required = true)
         i18nMessages: List<I18nMessage>
     ): Result<Boolean>
 
-    @ApiOperation("删除用户国际化信息")
+    @Operation(summary = "删除用户国际化信息")
     @DELETE
     @Path("/keys/{key}/delete")
     fun deleteI18nMessage(
-        @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String = "",
-        @ApiParam("国际化变量名", required = true)
+        @Parameter(description = "国际化变量名", required = true)
         @PathParam("key")
         key: String,
-        @ApiParam("模块标识", required = true)
+        @Parameter(description = "模块标识", required = true)
         @QueryParam("moduleCode")
         moduleCode: String,
-        @ApiParam("国际化语言信息", required = false)
+        @Parameter(description = "国际化语言信息", required = false)
         @QueryParam("language")
         language: String?
     ): Result<Boolean>
 
-    @ApiOperation("获取国际化信息")
+    @Operation(summary = "获取国际化信息")
     @GET
     @Path("/keys/{key}/get")
     fun getI18nMessage(
-        @ApiParam("国际化变量名", required = true)
+        @Parameter(description = "国际化变量名", required = true)
         @PathParam("key")
         key: String,
-        @ApiParam("模块标识", required = true)
+        @Parameter(description = "模块标识", required = true)
         @QueryParam("moduleCode")
         moduleCode: String,
-        @ApiParam("国际化语言信息", required = true)
+        @Parameter(description = "国际化语言信息", required = true)
         @QueryParam("language")
         language: String
     ): Result<I18nMessage?>
 
-    @ApiOperation("批量获取国际化信息")
+    @Operation(summary = "批量获取国际化信息")
     @POST
     @Path("/list")
     fun getI18nMessages(
-        @ApiParam(value = "国际化变量名列表", required = true)
+        @Parameter(description = "国际化变量名列表", required = true)
         keys: List<String>,
-        @ApiParam("模块标识", required = true)
+        @Parameter(description = "模块标识", required = true)
         @QueryParam("moduleCode")
         moduleCode: String,
-        @ApiParam("国际化语言信息", required = true)
+        @Parameter(description = "国际化语言信息", required = true)
         @QueryParam("language")
         language: String
     ): Result<List<I18nMessage>?>
 
-    @ApiOperation("根据key的前缀批量获取国际化信息")
+    @Operation(summary = "根据key的前缀批量获取国际化信息")
     @GET
     @Path("/listByKeyPrefix")
     fun getI18nMessagesByKeyPrefix(
-        @ApiParam(value = "key前缀", required = true)
+        @Parameter(description = "key前缀", required = true)
         @QueryParam("keyPrefix")
         keyPrefix: String,
-        @ApiParam("模块标识", required = true)
+        @Parameter(description = "模块标识", required = true)
         @QueryParam("moduleCode")
         moduleCode: String,
-        @ApiParam("国际化语言信息", required = true)
+        @Parameter(description = "国际化语言信息", required = true)
         @QueryParam("language")
         language: String
     ): Result<List<I18nMessage>?>

@@ -27,20 +27,19 @@
 
 package com.tencent.devops.store.pojo.atom
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 import java.time.LocalDateTime
 
-@ApiModel("插件市场-更新插件对象")
+@Schema(title = "插件市场-更新插件对象")
 data class UpdateAtomInfo(
-    @ApiModelProperty("插件状态", required = false)
+    @get:Schema(title = "插件状态", required = false)
     val atomStatus: Byte? = null,
-    @ApiModelProperty("插件状态信息", required = false)
+    @get:Schema(title = "插件状态信息", required = false)
     val atomStatusMsg: String? = null,
-    @ApiModelProperty("是否为最新版本", required = false)
+    @get:Schema(title = "是否为最新版本", required = false)
     val latestFlag: Boolean? = null,
-    @ApiModelProperty("发布时间", required = false)
+    @get:Schema(title = "发布时间", required = false)
     val pubTime: LocalDateTime? = null,
-    @ApiModelProperty("删除标识", required = false)
+    @get:Schema(title = "删除标识", required = false)
     val deleteFlag: Boolean? = null
 )
