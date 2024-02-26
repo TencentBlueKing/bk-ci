@@ -21,7 +21,6 @@
             </header>
             <section class="pipeline-version-history-content">
                 <bk-table
-                    height="100%"
                     :data="pipelineVersionList"
                     :pagination="pagination"
                     size="small"
@@ -42,7 +41,7 @@
                             </div>
                         </template>
                     </bk-table-column>
-                    <bk-table-column width="300" :label="$t('operate')">
+                    <bk-table-column width="266" :label="$t('operate')">
                         <template slot-scope="props">
                             <rollback-entry
                                 v-if="props.row.canRollback"
@@ -123,13 +122,15 @@
                 return [{
                     prop: 'versionName',
                     label: this.$t('versionNum'),
-                    width: 360
+                    showOverflowTooltip: true
                 }, {
                     prop: 'description',
-                    label: this.$t('versionDesc')
+                    label: this.$t('versionDesc'),
+                    showOverflowTooltip: true
                 }, {
                     prop: 'createTime',
                     label: this.$t('createTime'),
+                    showOverflowTooltip: true,
                     formatter: (row) => {
                         return convertTime(row.createTime)
                     }

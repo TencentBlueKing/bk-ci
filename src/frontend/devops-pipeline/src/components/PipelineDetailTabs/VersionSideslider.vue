@@ -7,7 +7,7 @@
             :clearable="false"
             :popover-width="320"
             ext-cls="pipeline-version-selector"
-            :remote-method="handlePipelineVersionList"
+            :remote-method="searchVersion"
             @change="switchVersion"
         >
             <div slot="trigger" class="pipeline-version-dropmenu-trigger">
@@ -200,8 +200,11 @@
             isCurrentVersion (version) {
                 return version?.version === this.pipelineInfo?.releaseVersion
             },
-            searchVersion () {
-                this.handlePipelineVersionList()
+            searchVersion (keyword) {
+                this.searchKeyword = keyword
+                this.$nextTick(() => {
+                    this.handlePipelineVersionList()
+                })
             },
             focusSearchInput () {
                 this.$nextTick(() => {

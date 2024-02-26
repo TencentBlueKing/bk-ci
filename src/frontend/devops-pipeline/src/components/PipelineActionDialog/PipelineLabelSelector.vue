@@ -49,7 +49,6 @@
         data () {
             return {
                 isLoading: false,
-                labelIdMap: {},
                 labelMap: {},
                 labelSet: new Set(this.value)
             }
@@ -86,27 +85,27 @@
                 this.isLoading = false
             },
             updateValue (val = []) {
-                this.labelIdMap = this.tagGroupList.map(tag => tag.labels).flat().reduce((acc, label) => {
+                const labelIdMap = this.tagGroupList.map(tag => tag.labels).flat().reduce((acc, label) => {
                     acc[label.id] = label
                     return acc
                 }, {})
-                this.labelMap = val.reduce((acc, labelId) => {
-                    const label = this.labelIdMap[labelId]
-                    if (label?.groupId) {
-                        if (!Array.isArray(acc[label.groupId])) {
-                            acc[label.groupId] = []
-                        }
-                        acc[label.groupId].push(labelId)
-                    }
+                this.labelMap = this.tagGroupList.reduce((acc, tag) => {
+                    acc[tag.id] = val.filter(id => labelIdMap[id]?.groupId === tag.id)
                     return acc
                 }, {})
             },
             handleChange (groupId, labelIds) {
+                if (labelIds.length === 0) {
+                    this.labelMap[groupId].forEach(id => {
+                        this.labelSet.delete(id)
+                    })
+                } else {
+                    this.labelSet = new Set([
+                        ...this.labelSet,
+                        ...labelIds
+                    ])
+                }
                 this.labelMap[groupId] = labelIds
-                this.labelSet = new Set([
-                    ...this.labelSet,
-                    ...labelIds
-                ])
 
                 this.emitChange(Array.from(this.labelSet), this.labelMap)
             },
