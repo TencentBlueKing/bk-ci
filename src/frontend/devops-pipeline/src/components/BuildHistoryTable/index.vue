@@ -10,11 +10,14 @@
         >
             <div class="no-build-history-box">
                 <span>{{ $t(isDebug ? 'noDebugRecords' : 'noBuildHistory') }}</span>
-                <div v-if="!isReleasePipeline && !isDebug" class="no-build-history-box-tip">
-                    <p>{{ $t('onlyDraftBuildHistoryTips') }}</p>
-                    <p>{{ $t('onlyDraftBuildHistoryIdTips') }}</p>
-                    <p>{{ $t('buildHistoryIdTips') }}</p>
+                <div class="no-build-history-box-tip">
+                    <div class="no-build-history-box-rows">
+                        <p v-for="(row, index) in emptyTips" :key="index">
+                            {{ $t(row) }}
+                        </p>
+                    </div>
                     <bk-button
+                        v-if="!isReleasePipeline && !isDebug"
                         @click="goEdit"
                         theme="primary"
                         size="large"
@@ -31,11 +34,7 @@
                     >
                         {{$t('goEdit')}}
                     </bk-button>
-                </div>
-                <div v-else class="no-build-history-box-tip">
-                    <p v-if="canManualStartup">{{ $t('noBuildHistoryTips')}}</p>
-                    <p>{{ $t('buildHistoryIdTips') }}</p>
-                    <span v-bk-tooltips="tooltip">
+                    <span v-else v-bk-tooltips="tooltip">
                         <bk-button
                             :disabled="!executable"
                             @click="buildNow"
@@ -501,6 +500,20 @@
             },
             executable () {
                 return !this.isCurPipelineLocked && ((this.canManualStartup && this.isReleasePipeline) || this.isDebug)
+            },
+            emptyTips () {
+                return [...(
+                    !this.isReleasePipeline && !this.isDebug
+                        ? [
+                            'onlyDraftBuildHistoryTips',
+                            'onlyDraftBuildHistoryIdTips'
+                        ]
+                        : this.canManualStartup
+                            ? [
+                                'noBuildHistoryTips'
+                            ]
+                            : []
+                ), 'buildHistoryIdTips']
             },
             tooltip () {
                 return this.executable
@@ -1035,12 +1048,14 @@
         .no-build-history-box-tip {
             background: #FAFBFD;
             padding: 24px;
-            > p {
-                text-align: left;
-                line-height: 24px;
-                margin-bottom: 24px;
-            }
 
+            .no-build-history-box-rows {
+                margin-bottom: 24px;
+                > p {
+                    text-align: left;
+                    line-height: 24px;
+                }
+            }
         }
 
     }

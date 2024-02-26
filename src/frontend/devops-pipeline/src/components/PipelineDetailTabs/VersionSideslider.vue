@@ -11,7 +11,7 @@
             @change="switchVersion"
         >
             <div slot="trigger" class="pipeline-version-dropmenu-trigger">
-                <i v-if="isActiveDraft" class="devops-icon icon-draft" />
+                <i v-if="isActiveDraft" class="devops-icon icon-edit-line" />
                 <logo v-else-if="isActiveBranchVersion" name="branch" size="14" />
                 <i v-else :class="['devops-icon icon-check-circle', {
                     'is-release-version-icon': isCurrentVersion(activeVersion)
@@ -33,7 +33,7 @@
                 }"
             >
                 <p class="pipeline-version-option-item-name">
-                    <i v-if="item.isDraft" class="devops-icon icon-draft" style="font-size: 14px" />
+                    <i v-if="item.isDraft" class="devops-icon icon-edit-line" />
                     <logo v-else-if="item.isBranchVersion" name="branch" size="14" />
                     <i v-else :class="['devops-icon icon-check-circle', {
                         'is-release-version-icon': isCurrentVersion(item)
@@ -239,14 +239,13 @@
     background: #F0F1F5;
     padding: 0 8px;
     min-width: 200px;
-    .icon-draft,
+    .icon-edit-line,
     .icon-check-circle {
-        &.icon-check-circle {
-            font-size: 18px;
-            &.is-release-version-icon {
-                color: $successColor;
-            }
+        &.icon-check-circle.is-release-version-icon {
+            color: $successColor;
         }
+
+        color: #979BA5;
         font-size: 14px;
     }
     > span {
@@ -280,7 +279,7 @@
         align-items: center;
         grid-gap: 4px;
         .devops-icon {
-            font-size: 18px;
+            font-size: 14px;
             color: #979BA5;
             flex-shrink: 0;
             &.icon-check-circle.is-release-version-icon {

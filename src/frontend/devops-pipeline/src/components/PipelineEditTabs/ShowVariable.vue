@@ -1,5 +1,7 @@
 <template>
-    <section class="variable-version-wrapper">
+    <section :class="['variable-version-wrapper', {
+        'variable-panel-show': showVariable
+    }]">
         <div
             class="variable-entry"
             :class="{ 'is-close': !showVariable }"
@@ -143,6 +145,9 @@
 <style lang="scss">
 @import "@/scss/mixins/ellipsis.scss";
 @import "@/scss/mixins/scroller.scss";
+.variable-version-wrapper.variable-panel-show {
+    width: 480px;
+}
 .variable-entry {
   z-index: 2020;
   position: absolute;
@@ -171,11 +176,11 @@
 }
 .variable-version-container {
   z-index: 2018;
-  width: 480px;
   position: absolute;
   top: 0;
   right: 0;
   height: 100%;
+  width: 480px;
   background-color: #fafbfd;
   border: 1px solid #dcdee5;
   .select-tab-container {

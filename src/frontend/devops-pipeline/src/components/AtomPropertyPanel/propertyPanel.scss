@@ -44,16 +44,23 @@
 }
 
 .pipeline-config-wrapper {
+
     .bkci-property-panel {
+        top: 48px;
+        height: calc(100vh - 48px);
+        border-top: 1px solid #DCDEE5;
         .bk-sideslider-wrapper {
             right: 24px;
+        }
+        .bk-sideslider-wrapper {
+            top: 0;
+            right: 0;
         }
         &.with-variable-open {
 
             .bk-sideslider-wrapper {
-                right: 504px;
-                top: 72px;
-                height: calc(100vh - 96px);
+                top: 0;
+                right: 480px;
             }
         }
     }
