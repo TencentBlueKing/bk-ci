@@ -8,6 +8,9 @@ import com.tencent.devops.auth.api.service.ServiceMonitorSpaceResource
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.notify.enums.NotifyType
+import com.tencent.devops.notify.api.service.ServiceNotifyMessageTemplateResource
+import com.tencent.devops.notify.pojo.SendNotifyMessageTemplateRequest
 import com.tencent.devops.project.dao.ProjectDao
 import com.tencent.devops.project.pojo.ProjectProperties
 import okhttp3.Headers.Companion.toHeaders
@@ -47,6 +50,9 @@ class ProjectRemoteDevService @Autowired constructor(
 
     @Value("\${remoteDev.bkrepoDevxSha256Key:}")
     val bkrepoDevxSha256Key = ""
+
+    @Value("\${remoteDev.enableRemotedevNotifyCode:}")
+    val enableRemotedevNotifyCode = ""
 
     // 开启 remotedev 相关逻辑
     fun enableRemoteDev(
@@ -167,6 +173,32 @@ class ProjectRemoteDevService @Autowired constructor(
         val prop = JsonUtil.to(record.properties, ProjectProperties::class.java)
         val newProp = prop.copy(cloudDesktopNum = prop.cloudDesktopNum + addcloudDesktopNum)
         return projectDao.updatePropertiesByCode(dslContext, projectCode, newProp) > 0
+    }
+
+    fun sendEnableRemoteDevNotify(
+        sendNotifyUser: Set<String>,
+        projectCode: String,
+        projectName: String,
+        cloudDesktopNum: Int
+    ) {
+        if (sendNotifyUser.isEmpty()) {
+            return
+        }
+        client.get(ServiceNotifyMessageTemplateResource::class).sendNotifyMessageByTemplate(
+            SendNotifyMessageTemplateRequest(
+                templateCode = enableRemotedevNotifyCode,
+                receivers = sendNotifyUser.toMutableSet(),
+                notifyType = mutableSetOf(NotifyType.EMAIL.name),
+                titleParams = mapOf(
+                    "projectName" to projectName
+                ),
+                bodyParams = mapOf(
+                    "projectCode" to projectCode,
+                    "projectName" to projectName,
+                    "cloudDesktopNum" to cloudDesktopNum.toString()
+                )
+            )
+        )
     }
 
     companion object {
