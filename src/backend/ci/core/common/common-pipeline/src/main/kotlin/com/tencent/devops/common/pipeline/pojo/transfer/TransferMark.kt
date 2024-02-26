@@ -27,20 +27,19 @@
 
 package com.tencent.devops.common.pipeline.pojo.transfer
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("互转yaml定位")
+@Schema(title = "互转yaml定位")
 data class TransferMark(
-    @ApiModelProperty("标记头")
+    @get:Schema(title = "标记头")
     val startMark: Mark,
-    @ApiModelProperty("标记尾")
+    @get:Schema(title = "标记尾")
     val endMark: Mark
 ) {
     data class Mark(
-        @ApiModelProperty("行数 0开始")
+        @get:Schema(title = "行数 0开始")
         val line: Int,
-        @ApiModelProperty("列数 0开始")
+        @get:Schema(title = "列数 0开始")
         val column: Int
     )
 }

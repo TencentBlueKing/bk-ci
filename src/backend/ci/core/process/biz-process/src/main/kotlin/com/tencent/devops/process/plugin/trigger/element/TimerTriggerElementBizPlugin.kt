@@ -28,23 +28,29 @@
 package com.tencent.devops.process.plugin.trigger.element
 
 import com.tencent.devops.common.api.exception.ErrorCodeException
+import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.container.Container
 import com.tencent.devops.common.pipeline.container.TriggerContainer
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.pojo.element.atom.BeforeDeleteParam
 import com.tencent.devops.common.pipeline.pojo.element.trigger.TimerTriggerElement
+import com.tencent.devops.common.pipeline.utils.RepositoryConfigUtils
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.plugin.ElementBizPlugin
 import com.tencent.devops.process.plugin.annotation.ElementBiz
 import com.tencent.devops.process.plugin.trigger.service.PipelineTimerService
 import com.tencent.devops.process.plugin.trigger.util.CronExpressionUtils
 import com.tencent.devops.process.utils.PIPELINE_TIMER_DISABLE
+import com.tencent.devops.process.yaml.PipelineYamlService
+import com.tencent.devops.repository.api.ServiceRepositoryResource
 import org.quartz.CronExpression
 import org.slf4j.LoggerFactory
 
 @ElementBiz
 class TimerTriggerElementBizPlugin constructor(
-    private val pipelineTimerService: PipelineTimerService
+    private val pipelineTimerService: PipelineTimerService,
+    private val pipelineYamlService: PipelineYamlService,
+    private val client: Client
 ) : ElementBizPlugin<TimerTriggerElement> {
 
     override fun elementClass(): Class<TimerTriggerElement> {
@@ -95,14 +101,17 @@ class TimerTriggerElementBizPlugin constructor(
                 crontabExpressions.add(cron)
             }
         }
-
+        val repoHashId = getRepoHashId(projectId = projectId, element = element)
         if (crontabExpressions.isNotEmpty()) {
             val result = pipelineTimerService.saveTimer(
                 projectId = projectId,
                 pipelineId = pipelineId,
                 userId = userId,
                 crontabExpressions = crontabExpressions,
-                channelCode = channelCode
+                channelCode = channelCode,
+                repoHashId = repoHashId,
+                branchs = element.branches?.toSet(),
+                noScm = element.noScm
             )
             logger.info("[$pipelineId]|$userId| Update pipeline timer|crontab=$crontabExpressions")
             if (result.isNotOk()) {
@@ -119,6 +128,28 @@ class TimerTriggerElementBizPlugin constructor(
     override fun beforeDelete(element: TimerTriggerElement, param: BeforeDeleteParam) {
         if (param.pipelineId.isNotBlank()) {
             pipelineTimerService.deleteTimer(param.projectId, param.pipelineId, param.userId)
+            pipelineTimerService.deleteTimerBranch(projectId = param.projectId, pipelineId = param.pipelineId)
+        }
+    }
+
+    private fun getRepoHashId(projectId: String, element: TimerTriggerElement): String? {
+        return when {
+            !element.repoHashId.isNullOrBlank() || !element.repoName.isNullOrBlank() -> {
+                val repositoryConfig = with(element) {
+                    RepositoryConfigUtils.getRepositoryConfig(
+                        repoHashId = repoHashId,
+                        repoName = repoName,
+                        repoType = repoType,
+                        variables = variables
+                    )
+                }
+                client.get(ServiceRepositoryResource::class).get(
+                    projectId = projectId,
+                    repositoryId = repositoryConfig.getURLEncodeRepositoryId(),
+                    repositoryType = repositoryConfig.repositoryType
+                ).data?.repoHashId
+            }
+            else -> null
         }
     }
 

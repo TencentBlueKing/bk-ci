@@ -27,19 +27,18 @@
 
 package com.tencent.devops.common.pipeline.pojo.transfer
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("流水线 yaml 带定位信息")
+@Schema(title = "流水线 yaml 带定位信息")
 data class PreviewResponse(
-    @ApiModelProperty("yaml内容")
+    @get:Schema(title = "yaml内容")
     val yaml: String,
-    @ApiModelProperty("流水线编排")
+    @get:Schema(title = "流水线编排")
     val pipeline: List<TransferMark>? = listOf(),
-    @ApiModelProperty("触发器配置")
+    @get:Schema(title = "触发器配置")
     val trigger: List<TransferMark>? = listOf(),
-    @ApiModelProperty("通知配置")
+    @get:Schema(title = "通知配置")
     val notice: List<TransferMark>? = listOf(),
-    @ApiModelProperty("基础设置")
+    @get:Schema(title = "基础设置")
     val setting: List<TransferMark>? = listOf()
 )

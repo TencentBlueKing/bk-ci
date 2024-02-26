@@ -29,27 +29,27 @@ package com.tencent.devops.common.pipeline
 
 import com.tencent.devops.common.pipeline.pojo.PipelineModelAndSetting
 import com.tencent.devops.common.pipeline.pojo.transfer.PreviewResponse
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
 data class PipelineModelWithYaml(
-    @ApiModelProperty("版本号（流水线唯一递增）", required = true)
+    @get:Schema(title = "版本号（流水线唯一递增）", required = true)
     val version: Int,
-    @ApiModelProperty("版本名称", required = true)
+    @get:Schema(title = "版本名称", required = true)
     val versionName: String?,
-    @ApiModelProperty("该版本的源版本号", required = true)
+    @get:Schema(title = "该版本的源版本号", required = true)
     val baseVersion: Int?,
-    @ApiModelProperty("该版本的版本号名", required = true)
+    @get:Schema(title = "该版本的版本号名", required = true)
     val baseVersionName: String?,
-    @ApiModelProperty("流水线模型", required = true)
+    @get:Schema(title = "流水线模型", required = true)
     val modelAndSetting: PipelineModelAndSetting,
-    @ApiModelProperty("流水线YAML编排（含高亮）", required = false)
+    @get:Schema(title = "流水线YAML编排（含高亮）", required = false)
     val yamlPreview: PreviewResponse?,
-    @ApiModelProperty("是否处在可以调试状态", required = false)
+    @get:Schema(title = "是否处在可以调试状态", required = false)
     val canDebug: Boolean?,
-    @ApiModelProperty("版本变更说明", required = false)
+    @get:Schema(title = "版本变更说明", required = false)
     val description: String?,
-    @ApiModelProperty("是否支持YAML解析", required = true)
+    @get:Schema(title = "是否支持YAML解析", required = true)
     val yamlSupported: Boolean,
-    @ApiModelProperty("YAML解析异常信息")
+    @get:Schema(title = "YAML解析异常信息")
     val yamlInvalidMsg: String?
 )

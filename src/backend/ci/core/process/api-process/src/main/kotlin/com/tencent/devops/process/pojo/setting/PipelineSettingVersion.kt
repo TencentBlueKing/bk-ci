@@ -32,46 +32,45 @@ import com.tencent.devops.common.pipeline.pojo.setting.PipelineSetting
 import com.tencent.devops.common.pipeline.pojo.setting.Subscription
 import com.tencent.devops.common.web.annotation.BkField
 import com.tencent.devops.common.web.constant.BkStyleEnum
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("流水线版本记录")
+@Schema(title = "流水线版本记录")
 data class PipelineSettingVersion(
-    @ApiModelProperty("项目id", required = false)
+    @get:Schema(title = "项目id", required = false)
     val projectId: String,
-    @ApiModelProperty("流水线id", required = false)
+    @get:Schema(title = "流水线id", required = false)
     val pipelineId: String,
 
     // 流水线基础配置
-    @ApiModelProperty("流水线名称", required = false)
+    @get:Schema(title = "流水线名称", required = false)
     var pipelineName: String? = "",
-    @ApiModelProperty("版本", required = false)
+    @get:Schema(title = "版本", required = false)
     var version: Int,
-    @ApiModelProperty("描述", required = false)
+    @get:Schema(title = "描述", required = false)
     val desc: String?,
-    @ApiModelProperty("标签列表", required = false)
+    @get:Schema(title = "标签列表", required = false)
     var labels: List<String>?,
     @field:BkField(patternStyle = BkStyleEnum.BUILD_NUM_RULE_STYLE, required = false)
-    @ApiModelProperty("构建号生成规则", required = false)
+    @get:Schema(title = "构建号生成规则", required = false)
     val buildNumRule: String?, // 构建号生成规则
 
     // 通知订阅相关配置
-    @ApiModelProperty("订阅成功通知组", required = false)
+    @get:Schema(title = "订阅成功通知组", required = false)
     var successSubscriptionList: List<Subscription>?,
-    @ApiModelProperty("订阅失败通知组", required = false)
+    @get:Schema(title = "订阅失败通知组", required = false)
     var failSubscriptionList: List<Subscription>?,
 
     // 运行控制、流水线禁用相关配置
-    @ApiModelProperty("Lock 类型", required = false)
+    @get:Schema(title = "Lock 类型", required = false)
     val runLockType: PipelineRunLockType = PipelineRunLockType.MULTIPLE,
-    @ApiModelProperty("最大排队时长", required = false)
+    @get:Schema(title = "最大排队时长", required = false)
     val waitQueueTimeMinute: Int?,
-    @ApiModelProperty("最大排队数量", required = false)
+    @get:Schema(title = "最大排队数量", required = false)
     val maxQueueSize: Int?,
     @field:BkField(patternStyle = BkStyleEnum.PIPELINE_CONCURRENCY_GROUP_STYLE, required = false)
-    @ApiModelProperty("并发时,设定的group", required = false)
+    @get:Schema(title = "并发时,设定的group", required = false)
     var concurrencyGroup: String?,
-    @ApiModelProperty("并发时,是否相同group取消正在执行的流水线", required = false)
+    @get:Schema(title = "并发时,是否相同group取消正在执行的流水线", required = false)
     var concurrencyCancelInProgress: Boolean?
 ) {
     companion object {

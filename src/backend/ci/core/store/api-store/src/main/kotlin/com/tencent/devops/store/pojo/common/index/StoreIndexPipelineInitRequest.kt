@@ -29,19 +29,18 @@ package com.tencent.devops.store.pojo.common.index
 
 import com.tencent.devops.store.pojo.common.enums.IndexExecuteTimeTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("新增指标请求报文体")
+@Schema(title = "新增指标请求报文体")
 data class StoreIndexPipelineInitRequest(
-    @ApiModelProperty("指标代码", required = true)
+    @get:Schema(title = "指标代码", required = true)
     val indexCode: String,
-    @ApiModelProperty("指标对应的插件件代码", required = true)
+    @get:Schema(title = "指标对应的插件件代码", required = true)
     val atomCode: String,
-    @ApiModelProperty("指标对应的插件版本", required = true)
+    @get:Schema(title = "指标对应的插件版本", required = true)
     val atomVersion: String = "1.*",
-    @ApiModelProperty("指标执行时机类型", required = true)
+    @get:Schema(title = "指标执行时机类型", required = true)
     val executeTimeType: IndexExecuteTimeTypeEnum,
-    @ApiModelProperty("store组件类型", required = true)
+    @get:Schema(title = "store组件类型", required = true)
     val storeType: StoreTypeEnum
 )

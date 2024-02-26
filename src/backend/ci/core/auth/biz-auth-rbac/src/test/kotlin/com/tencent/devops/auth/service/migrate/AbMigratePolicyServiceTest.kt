@@ -46,10 +46,10 @@ import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.test.BkCiAbstractTest
 import io.mockk.every
 import io.mockk.mockk
-import java.nio.charset.Charset
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.BeforeEach
 import org.springframework.core.io.ClassPathResource
+import java.nio.charset.Charset
 
 open class AbMigratePolicyServiceTest : BkCiAbstractTest() {
     val v2ManagerService: V2ManagerService = mockk()
@@ -87,6 +87,16 @@ open class AbMigratePolicyServiceTest : BkCiAbstractTest() {
         every {
             iamConfiguration.systemId
         } returns "bk_ci_rbac"
+
+        every {
+            authResourceGroupDao.get(
+                dslContext = any(),
+                projectCode = any(),
+                resourceType = any(),
+                resourceCode = any(),
+                groupCode = any()
+            )?.relationId
+        } returns "1"
     }
 
     fun buildRbacAuthorizationScopeListTest(
@@ -106,7 +116,7 @@ open class AbMigratePolicyServiceTest : BkCiAbstractTest() {
             projectName = projectCode,
             managerGroupId = 1,
             result = taskDataResult
-        )
+        ).first
 
         val expectedClassPathResource = ClassPathResource(expectedFilePath)
         val expectedRbacAuthorizationScopes =

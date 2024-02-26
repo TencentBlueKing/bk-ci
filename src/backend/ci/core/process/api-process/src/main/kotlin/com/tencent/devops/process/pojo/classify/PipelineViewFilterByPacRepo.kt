@@ -28,16 +28,15 @@
 package com.tencent.devops.process.pojo.classify
 
 import com.tencent.devops.process.pojo.classify.enums.Condition
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("流水线视图-通过PAC仓库过滤", description = PipelineViewFilterByPacRepo.classType)
+@Schema(title = "流水线视图-通过PAC仓库过滤", description = PipelineViewFilterByPacRepo.classType)
 data class PipelineViewFilterByPacRepo(
-    @ApiModelProperty("条件", required = false)
+    @get:Schema(title = "条件", required = false)
     val condition: Condition,
-    @ApiModelProperty("代码库HashId", required = false)
+    @get:Schema(title = "代码库HashId", required = false)
     val repoHashId: String,
-    @ApiModelProperty("文件夹名称", required = false)
+    @get:Schema(title = "文件夹名称", required = false)
     val directory: String? = null
 ) : PipelineViewFilter() {
     companion object {

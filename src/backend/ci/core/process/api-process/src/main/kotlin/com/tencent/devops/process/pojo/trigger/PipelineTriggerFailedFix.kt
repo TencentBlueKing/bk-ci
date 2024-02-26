@@ -4,9 +4,9 @@ import com.fasterxml.jackson.core.type.TypeReference
 import com.tencent.devops.common.api.pojo.I18Variable
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.web.utils.I18nUtil.getCodeLanMessage
-import io.swagger.annotations.ApiModel
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("流水线触发事件原因详情-兼容历史数据")
+@Schema(title = "流水线触发事件原因详情-兼容历史数据")
 class PipelineTriggerFailedFix(
     private val reasonDetailList: List<String>?
 ) : PipelineTriggerReasonDetail {

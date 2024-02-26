@@ -28,17 +28,16 @@
 
 package com.tencent.devops.process.pojo.pipeline
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("yaml流水线组")
+@Schema(title = "yaml流水线组")
 data class PipelineYamlView(
-    @ApiModelProperty("项目ID")
+    @get:Schema(title = "项目ID")
     val projectId: String,
-    @ApiModelProperty("代码库ID")
+    @get:Schema(title = "代码库ID")
     val repoHashId: String,
-    @ApiModelProperty("ci文件路径")
+    @get:Schema(title = "ci文件路径")
     val directory: String,
-    @ApiModelProperty("流水线组ID")
+    @get:Schema(title = "流水线组ID")
     val viewId: Long
 )

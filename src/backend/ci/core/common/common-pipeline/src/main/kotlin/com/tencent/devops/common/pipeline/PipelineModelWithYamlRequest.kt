@@ -29,19 +29,19 @@ package com.tencent.devops.common.pipeline
 
 import com.tencent.devops.common.pipeline.enums.PipelineStorageType
 import com.tencent.devops.common.pipeline.pojo.PipelineModelAndSetting
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
 data class PipelineModelWithYamlRequest(
-    @ApiModelProperty("流水线ID（为空时导入并创建流水线）", required = false)
+    @get:Schema(title = "流水线ID（为空时导入并创建流水线）", required = false)
     val pipelineId: String?,
-    @ApiModelProperty("草稿的来源版本（前端保存时传递）", required = true)
+    @get:Schema(title = "草稿的来源版本（前端保存时传递）", required = true)
     val baseVersion: Int,
-    @ApiModelProperty("流水线模型", required = true)
+    @get:Schema(title = "流水线模型", required = true)
     val modelAndSetting: PipelineModelAndSetting,
-    @ApiModelProperty("流水线YAML编排（不为空时以YAML为准）", required = false)
+    @get:Schema(title = "流水线YAML编排（不为空时以YAML为准）", required = false)
     val yaml: String?,
-    @ApiModelProperty("存储格式", required = false)
+    @get:Schema(title = "存储格式", required = false)
     val storageType: PipelineStorageType? = PipelineStorageType.MODEL,
-    @ApiModelProperty("版本变更说明", required = false)
+    @get:Schema(title = "版本变更说明", required = false)
     val description: String? = null
 )

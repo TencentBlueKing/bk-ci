@@ -33,7 +33,7 @@ import com.fasterxml.jackson.annotation.JsonProperty
 import com.tencent.devops.common.api.pojo.OS
 import com.tencent.devops.common.pipeline.enums.BuildFormPropertyType
 import com.tencent.devops.common.pipeline.type.BuildType
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
 // @JsonDeserialize(using = IVariableDeserializer::class)
 interface IVariable
@@ -109,18 +109,18 @@ data class VariableProps(
     val multiple: Boolean? = null,
     val required: Boolean? = null,
     @JsonProperty("repo-id")
-    @ApiModelProperty(name = "repo-id")
+    @get:Schema(title = "repo-id")
     val repoHashId: String? = null,
     @JsonProperty("scm-type")
-    @ApiModelProperty(name = "scm-type")
+    @get:Schema(title = "scm-type")
     val scmType: String? = null,
     @JsonProperty("container-type")
-    @ApiModelProperty(name = "container-type")
+    @get:Schema(title = "container-type")
     val containerType: BuildContainerTypeYaml? = null,
-    @ApiModelProperty("自定义仓库通配符", required = false)
+    @get:Schema(title = "自定义仓库通配符", required = false)
     @JsonProperty("filter-rule")
     val glob: String? = null,
-    @ApiModelProperty("文件元数据", required = false)
+    @get:Schema(title = "文件元数据", required = false)
     @JsonProperty("metadata")
     val properties: Map<String, String>? = null,
     val payload: Any? = null
@@ -141,7 +141,7 @@ data class VariablePropOption(
 )
 data class BuildContainerTypeYaml(
     @JsonProperty("build-type")
-    @ApiModelProperty(name = "build-type")
+    @get:Schema(title = "build-type")
     val buildType: BuildType,
     val os: OS
 )

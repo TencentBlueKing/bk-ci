@@ -27,15 +27,14 @@
 
 package com.tencent.devops.common.pipeline.pojo.transfer
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("流水线互转操作类型")
+@Schema(title = "流水线互转操作类型")
 enum class TransferActionType {
-    @ApiModelProperty("完整转换：model -> yaml")
+    @Schema(title = "完整转换：model -> yaml")
     FULL_MODEL2YAML,
-    @ApiModelProperty("完整转换：yaml -> model")
+    @Schema(title = "完整转换：yaml -> model")
     FULL_YAML2MODEL,
-    @ApiModelProperty("yaml 中插入的插件")
+    @Schema(title = "yaml 中插入的插件")
     YAML_INSERT_TASK;
 }

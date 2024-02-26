@@ -27,11 +27,10 @@
 
 package com.tencent.devops.common.pipeline.pojo.transfer
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("定位入口")
+@Schema(title = "定位入口")
 data class PositionBody(
-    @ApiModelProperty("当前yaml内容")
+    @get:Schema(title = "当前yaml内容")
     val yaml: String = ""
 )

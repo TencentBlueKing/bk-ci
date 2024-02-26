@@ -27,26 +27,26 @@
 
 package com.tencent.devops.process.pojo.setting
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
+
 import java.time.LocalDateTime
 
-@ApiModel("")
+@Schema(title = "")
 data class PipelineBranchVersion(
-    @ApiModelProperty("项目id", required = false)
+    @get:Schema(title = "项目id", required = false)
     val projectId: String,
-    @ApiModelProperty("流水线id", required = false)
+    @get:Schema(title = "流水线id", required = false)
     val pipelineId: String,
-    @ApiModelProperty("分支名", required = false)
+    @get:Schema(title = "分支名", required = false)
     var branch: String,
-    @ApiModelProperty("版本号", required = false)
+    @get:Schema(title = "版本号", required = false)
     var version: Int,
-    @ApiModelProperty("创建者", required = false)
+    @get:Schema(title = "创建者", required = false)
     var creator: String,
-    @ApiModelProperty("更新者", required = false)
+    @get:Schema(title = "更新者", required = false)
     var updater: String,
-    @ApiModelProperty("创建时间", required = false)
+    @get:Schema(title = "创建时间", required = false)
     var createTime: LocalDateTime,
-    @ApiModelProperty("更新时间", required = false)
+    @get:Schema(title = "更新时间", required = false)
     var updateTime: LocalDateTime
 )

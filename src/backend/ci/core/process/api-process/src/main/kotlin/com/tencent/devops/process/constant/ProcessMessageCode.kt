@@ -324,7 +324,11 @@ object ProcessMessageCode {
     const val ERROR_DELETE_YAML_PIPELINE_IN_DEFAULT_BRANCH = "2101210" // 已开启PAC模式,不能删除默认分支yaml关联的流水线
     const val ERROR_YAML_CONTENT_IS_EMPTY = "2101211" // yaml文件内容不能为空
     const val ERROR_YAML_FILE_NAME_FORMAT = "2101212" // yaml文件名格式错误,仅支持yaml、yml后缀和一级子目录
-    const val ERROR_YAML_BOUND_PIPELINE = "2101213" // yaml文件已绑定流水线{0},不能重复绑定
+    const val ERROR_PIPELINE_BOUND_YAML = "2101213" // 流水线已绑定文件{0},不能修改
+    const val ERROR_PIPELINE_BOUND_REPO = "2101214" // 流水线已绑定代码库{0},不能修改
+    const val ERROR_YAML_BOUND_PIPELINE = "2101215" // 文件{0}已绑定流水线{1}
+    const val ERROR_YAML_PUSH_NO_REPO_PERMISSION = "2101216" // 发布必须仓库developer以上权限
+    const val ERROR_REPO_NO_INIT = "2101217" // 默认分支不存在,请先初始化代码库
 
     const val BK_SUCCESSFULLY_DISTRIBUTED = "bkSuccessfullyDistributed" // 跨项目构件分发成功，共分发了{0}个文件
     const val BK_SUCCESSFULLY_FAILED = "bkSuccessfullyFailed" // 跨项目构件分发失败，

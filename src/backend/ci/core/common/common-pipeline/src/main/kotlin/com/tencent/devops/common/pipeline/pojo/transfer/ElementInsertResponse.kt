@@ -27,13 +27,12 @@
 
 package com.tencent.devops.common.pipeline.pojo.transfer
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("yaml中插入插件返回")
+@Schema(title = "yaml中插入插件返回")
 data class ElementInsertResponse(
-    @ApiModelProperty("yaml内容")
+    @get:Schema(title = "yaml内容")
     val yaml: String = "",
-    @ApiModelProperty("插入的插件定位坐标")
+    @get:Schema(title = "插入的插件定位坐标")
     val mark: TransferMark?
 )

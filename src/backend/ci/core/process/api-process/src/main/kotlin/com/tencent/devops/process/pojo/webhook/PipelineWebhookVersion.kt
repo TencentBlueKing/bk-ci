@@ -30,29 +30,29 @@ package com.tencent.devops.process.pojo.webhook
 
 import com.tencent.devops.common.api.enums.RepositoryType
 import com.tencent.devops.common.api.enums.ScmType
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
 data class PipelineWebhookVersion(
-    @ApiModelProperty("项目id", required = false)
+    @get:Schema(title = "项目id", required = false)
     val projectId: String,
-    @ApiModelProperty("流水线id", required = false)
+    @get:Schema(title = "流水线id", required = false)
     val pipelineId: String,
-    @ApiModelProperty("流水线版本", required = false)
+    @get:Schema(title = "流水线版本", required = false)
     val version: Int,
-    @ApiModelProperty("插件ID", required = false)
+    @get:Schema(title = "插件ID", required = false)
     val taskId: String,
-    @ApiModelProperty("插件参数", required = false)
+    @get:Schema(title = "插件参数", required = false)
     val taskParams: String,
-    @ApiModelProperty("插件代码库类型配置， ID 代码库HashId / NAME 别名", required = false)
+    @get:Schema(title = "插件代码库类型配置， ID 代码库HashId / NAME 别名", required = false)
     val taskRepoType: RepositoryType?,
-    @ApiModelProperty("插件配置的代码库HashId，repoHashId与repoName 不能同时为空，如果两个都不为空就用repoName", required = false)
+    @get:Schema(title = "插件配置的代码库HashId，repoHashId与repoName 不能同时为空，如果两个都不为空就用repoName", required = false)
     var taskRepoHashId: String?, // repoHashId 与 repoName 不能同时为空，如果两个都不为空就用repoName
-    @ApiModelProperty("代码库别名", required = false)
+    @get:Schema(title = "代码库别名", required = false)
     val taskRepoName: String?,
-    @ApiModelProperty("代码库类型，见ScmType枚举", required = false)
+    @get:Schema(title = "代码库类型，见ScmType枚举", required = false)
     val repositoryType: ScmType,
-    @ApiModelProperty("代码库hashId,插件配置解析后的代码库ID", required = false)
+    @get:Schema(title = "代码库hashId,插件配置解析后的代码库ID", required = false)
     var repositoryHashId: String,
-    @ApiModelProperty("事件类型", required = false)
+    @get:Schema(title = "事件类型", required = false)
     var eventType: String
 )

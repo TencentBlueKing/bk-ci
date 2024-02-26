@@ -28,22 +28,21 @@
 package com.tencent.devops.store.pojo.common
 
 import com.tencent.devops.common.web.annotation.BkField
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 import java.time.LocalDateTime
 
-@ApiModel("荣誉信息")
+@Schema(title = "荣誉信息")
 data class HonorInfo(
-    @ApiModelProperty("荣誉ID")
+    @get:Schema(title = "荣誉ID")
     val honorId: String,
-    @ApiModelProperty("荣誉头衔")
+    @get:Schema(title = "荣誉头衔")
     @BkField(maxLength = 4)
     val honorTitle: String,
-    @ApiModelProperty("荣誉名称")
+    @get:Schema(title = "荣誉名称")
     @BkField(maxLength = 40)
     val honorName: String,
-    @ApiModelProperty("是否佩戴")
+    @get:Schema(title = "是否佩戴")
     val mountFlag: Boolean,
-    @ApiModelProperty("创建时间")
+    @get:Schema(title = "创建时间")
     val createTime: LocalDateTime
 )

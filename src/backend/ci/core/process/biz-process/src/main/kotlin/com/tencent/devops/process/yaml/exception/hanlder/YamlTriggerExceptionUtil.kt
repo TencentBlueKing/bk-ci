@@ -28,6 +28,7 @@
 
 package com.tencent.devops.process.yaml.exception.hanlder
 
+import com.tencent.bkrepo.common.api.exception.NotFoundException
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.process.pojo.trigger.PipelineTriggerFailedErrorCode
 import com.tencent.devops.process.pojo.trigger.PipelineTriggerFailedMsg
@@ -46,6 +47,10 @@ object YamlTriggerExceptionUtil {
             is ErrorCodeException -> Pair(
                 PipelineTriggerStatus.FAILED.name,
                 PipelineTriggerFailedErrorCode(errorCode = exception.errorCode, params = exception.params?.toList())
+            )
+            is NotFoundException -> Pair(
+                PipelineTriggerStatus.FAILED.name,
+                PipelineTriggerFailedMsg(exception.message ?: PipelineTriggerReason.UNKNOWN_ERROR.detail)
             )
             else -> Pair(
                 PipelineTriggerReason.UNKNOWN_ERROR.name,

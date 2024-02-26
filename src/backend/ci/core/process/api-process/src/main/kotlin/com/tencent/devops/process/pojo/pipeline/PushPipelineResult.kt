@@ -28,19 +28,18 @@
 
 package com.tencent.devops.process.pojo.pipeline
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("推送流水线结果")
+@Schema(title = "推送流水线结果")
 data class PushPipelineResult(
-    @ApiModelProperty("项目ID")
+    @get:Schema(title = "项目ID")
     val projectId: String,
-    @ApiModelProperty("代码库ID")
+    @get:Schema(title = "代码库ID")
     val repoHashId: String,
-    @ApiModelProperty("ci文件路径")
+    @get:Schema(title = "ci文件路径")
     val filePath: String,
-    @ApiModelProperty("分支名")
+    @get:Schema(title = "分支名")
     val branch: String,
-    @ApiModelProperty("mr url")
+    @get:Schema(title = "mr url")
     val mrUrl: String?
 )

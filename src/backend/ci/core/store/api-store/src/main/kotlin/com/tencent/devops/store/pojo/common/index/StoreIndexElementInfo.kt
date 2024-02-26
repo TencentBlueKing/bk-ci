@@ -27,15 +27,14 @@
 
 package com.tencent.devops.store.pojo.common.index
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("组件指标要素信息")
+@Schema(title = "组件指标要素信息")
 data class StoreIndexElementInfo(
-    @ApiModelProperty("指标要素名称", required = true)
+    @get:Schema(title = "指标要素名称", required = true)
     val elementName: String,
-    @ApiModelProperty("指标要素值", required = true)
+    @get:Schema(title = "指标要素值", required = true)
     val elementValue: String,
-    @ApiModelProperty("备注", required = false)
+    @get:Schema(title = "备注", required = false)
     val remark: String? = null
 )

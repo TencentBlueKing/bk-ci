@@ -133,6 +133,7 @@ class PipelineYamlManualAction : BaseAction {
 
     fun pushYamlFile(
         pipelineId: String,
+        pipelineName: String,
         filePath: String,
         content: String,
         commitMessage: String,
@@ -148,6 +149,7 @@ class PipelineYamlManualAction : BaseAction {
             commitMessage = commitMessage,
             targetAction = targetAction,
             pipelineId = pipelineId,
+            pipelineName = pipelineName,
             versionName = versionName
         )
     }

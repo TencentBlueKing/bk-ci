@@ -48,6 +48,7 @@ import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_ISSUE_STA
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_ISSUE_TITLE
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_ISSUE_URL
 import com.tencent.devops.common.webhook.pojo.code.CI_BRANCH
+import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_BRANCH
 import com.tencent.devops.common.webhook.pojo.code.WebHookParams
 import com.tencent.devops.common.webhook.pojo.code.git.GitIssueEvent
 import com.tencent.devops.common.webhook.service.code.EventCacheService
@@ -195,6 +196,7 @@ class TGitIssueTriggerHandler(
                 eventCacheService.getDefaultBranchLatestCommitInfo(projectId = projectId, repo = repository)
             startParams[PIPELINE_GIT_REF] = defaultBranch ?: ""
             startParams[CI_BRANCH] = defaultBranch ?: ""
+            startParams[PIPELINE_WEBHOOK_BRANCH] = defaultBranch ?: ""
 
             startParams[PIPELINE_GIT_COMMIT_AUTHOR] = commitInfo?.author_name ?: ""
             startParams[PIPELINE_GIT_SHA] = commitInfo?.id ?: ""

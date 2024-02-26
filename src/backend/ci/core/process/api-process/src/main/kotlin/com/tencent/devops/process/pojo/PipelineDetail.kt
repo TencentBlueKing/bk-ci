@@ -31,61 +31,60 @@ import com.tencent.devops.common.api.pojo.PipelineAsCodeSettings
 import com.tencent.devops.common.pipeline.enums.VersionStatus
 import com.tencent.devops.common.pipeline.pojo.setting.PipelineRunLockType
 import com.tencent.devops.process.pojo.pipeline.PipelineYamlVo
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("流水线预览页完整信息")
+@Schema(title = "流水线预览页完整信息")
 data class PipelineDetail(
-    @ApiModelProperty("流水线Id")
+    @get:Schema(title = "流水线Id")
     val pipelineId: String,
-    @ApiModelProperty("流水线名称")
+    @get:Schema(title = "流水线名称")
     val pipelineName: String,
-    @ApiModelProperty("是否收藏")
+    @get:Schema(title = "是否收藏")
     val hasCollect: Boolean,
-    @ApiModelProperty("是否可以手动触发")
+    @get:Schema(title = "是否可以手动触发")
     val canManualStartup: Boolean,
-    @ApiModelProperty("是否可以调试")
+    @get:Schema(title = "是否可以调试")
     val canDebug: Boolean,
-    @ApiModelProperty("是否可以发布")
+    @get:Schema(title = "是否可以发布")
     val canRelease: Boolean,
-    @ApiModelProperty("是否从模板实例化")
+    @get:Schema(title = "是否从模板实例化")
     val instanceFromTemplate: Boolean,
-    @ApiModelProperty("当前模板的ID", required = false)
+    @get:Schema(title = "当前模板的ID", required = false)
     var templateId: String?,
-    @ApiModelProperty("草稿或最新的发布版本")
+    @get:Schema(title = "草稿或最新的发布版本")
     val version: Int,
-    @ApiModelProperty("草稿或最新的发布版本名称")
+    @get:Schema(title = "草稿或最新的发布版本名称")
     val versionName: String?,
-    @ApiModelProperty("基准版本的状态", required = false)
+    @get:Schema(title = "基准版本的状态", required = false)
     val baseVersion: Int?,
-    @ApiModelProperty("基准版本的状态", required = false)
+    @get:Schema(title = "基准版本的状态", required = false)
     val baseVersionStatus: VersionStatus,
-    @ApiModelProperty("基准版本的版本名称")
+    @get:Schema(title = "基准版本的版本名称")
     val baseVersionName: String?,
-    @ApiModelProperty("草稿或最新的发布版本")
+    @get:Schema(title = "草稿或最新的发布版本")
     val releaseVersion: Int?,
-    @ApiModelProperty("草稿或最新的发布版本名称")
+    @get:Schema(title = "草稿或最新的发布版本名称")
     val releaseVersionName: String?,
-    @ApiModelProperty("是否有编辑权限")
+    @get:Schema(title = "是否有编辑权限")
     val hasPermission: Boolean,
-    @ApiModelProperty("流水线描述")
+    @get:Schema(title = "流水线描述")
     val pipelineDesc: String,
-    @ApiModelProperty("创建者")
+    @get:Schema(title = "创建者")
     val creator: String,
-    @ApiModelProperty("创建时间")
+    @get:Schema(title = "创建时间")
     val createTime: Long = 0,
-    @ApiModelProperty("更新时间")
+    @get:Schema(title = "更新时间")
     val updateTime: Long = 0,
-    @ApiModelProperty("流水线组名称列表", required = false)
+    @get:Schema(title = "流水线组名称列表", required = false)
     var viewNames: List<String>?,
-    @ApiModelProperty("流水线权限", required = false)
+    @get:Schema(title = "流水线权限", required = false)
     val permissions: PipelinePermissions?,
-    @ApiModelProperty("Lock 类型", required = false)
+    @get:Schema(title = "Lock 类型", required = false)
     val runLockType: PipelineRunLockType? = null,
-    @ApiModelProperty("仅存在草稿", required = false)
+    @get:Schema(title = "仅存在草稿", required = false)
     var onlyDraft: Boolean? = false,
-    @ApiModelProperty("PAC配置", required = false)
+    @get:Schema(title = "PAC配置", required = false)
     val pipelineAsCodeSettings: PipelineAsCodeSettings?,
-    @ApiModelProperty("流水线YAML信息", required = false)
+    @get:Schema(title = "流水线YAML信息", required = false)
     val yamlInfo: PipelineYamlVo?
 )

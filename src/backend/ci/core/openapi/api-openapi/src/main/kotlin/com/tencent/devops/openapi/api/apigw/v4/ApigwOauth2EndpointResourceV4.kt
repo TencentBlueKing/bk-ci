@@ -6,9 +6,9 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VA
 import com.tencent.devops.common.api.auth.AUTH_HEADER_OAUTH2_CLIENT_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_OAUTH2_CLIENT_SECRET
 import com.tencent.devops.common.api.pojo.Result
-import io.swagger.annotations.Api
-import io.swagger.annotations.ApiOperation
-import io.swagger.annotations.ApiParam
+import io.swagger.v3.oas.annotations.tags.Tag
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.Parameter
 import javax.ws.rs.Consumes
 import javax.ws.rs.HeaderParam
 import javax.ws.rs.POST
@@ -17,31 +17,31 @@ import javax.ws.rs.PathParam
 import javax.ws.rs.Produces
 import javax.ws.rs.core.MediaType
 
-@Api(tags = ["OPENAPI_OAUTH2_V4"], description = "OPENAPI-OAUTH2相关")
+@Tag(name = "OPENAPI_OAUTH2_V4", description = "OPENAPI-OAUTH2相关")
 @Path("/{apigwType:apigw-user|apigw-app|apigw}/v4/auth/oauth2/endpoint/")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface ApigwOauth2EndpointResourceV4 {
     @POST
     @Path("/getAccessToken")
-    @ApiOperation(
-        "oauth2获取accessToken",
+    @Operation(
+        summary = "oauth2获取accessToken",
         tags = ["v4_app_oauth2_access_token"]
     )
     fun getAccessToken(
-        @ApiParam(value = "appCode", required = true, defaultValue = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
+        @Parameter(description = "appCode", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
         appCode: String?,
-        @ApiParam(value = "apigw Type", required = true)
+        @Parameter(description = "apigw Type", required = true)
         @PathParam("apigwType")
         apigwType: String?,
         @HeaderParam(AUTH_HEADER_OAUTH2_CLIENT_ID)
-        @ApiParam("客户端id", required = true)
+        @Parameter(description = "客户端id", required = true)
         clientId: String,
         @HeaderParam(AUTH_HEADER_OAUTH2_CLIENT_SECRET)
-        @ApiParam("客户端秘钥", required = true)
+        @Parameter(description = "客户端秘钥", required = true)
         clientSecret: String,
-        @ApiParam("oauth2获取token请求报文体", required = true)
+        @Parameter(description = "oauth2获取token请求报文体", required = true)
         accessTokenRequest: Oauth2AccessTokenRequest
     ): Result<Any?>
 }

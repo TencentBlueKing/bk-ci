@@ -32,9 +32,9 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.api.pojo.Result
-import io.swagger.annotations.Api
-import io.swagger.annotations.ApiOperation
-import io.swagger.annotations.ApiParam
+import io.swagger.v3.oas.annotations.tags.Tag
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.Parameter
 import javax.ws.rs.Consumes
 import javax.ws.rs.HeaderParam
 import javax.ws.rs.POST
@@ -44,44 +44,44 @@ import javax.ws.rs.Produces
 import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
-@Api(tags = ["SERVICE_PAC"], description = "服务-pac资源")
+@Tag(name = "SERVICE_PAC", description = "服务-pac资源")
 @Path("/service/pipeline/yaml/")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface ServicePipelineYamlResource {
 
-    @ApiOperation("开启PAC")
+    @Operation(summary = "开启PAC")
     @POST
     @Path("/{projectId}/{repoHashId}/enable")
     fun enable(
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @ApiParam("代码库hashId", required = true)
+        @Parameter(description = "代码库hashId", required = true)
         @PathParam("repoHashId")
         repoHashId: String,
-        @ApiParam("代码库类型", required = true)
+        @Parameter(description = "代码库类型", required = true)
         @QueryParam("scmType")
         scmType: ScmType
     ): Result<Boolean>
 
-    @ApiOperation("关闭PAC")
+    @Operation(summary = "关闭PAC")
     @POST
     @Path("/{projectId}/{repoHashId}/disable")
     fun disable(
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @ApiParam("代码库hashId", required = true)
+        @Parameter(description = "代码库hashId", required = true)
         @PathParam("repoHashId")
         repoHashId: String,
-        @ApiParam("代码库类型", required = true)
+        @Parameter(description = "代码库类型", required = true)
         @QueryParam("scmType")
         scmType: ScmType
     ): Result<Boolean>

@@ -30,51 +30,51 @@ package com.tencent.devops.process.pojo.pipeline
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.enums.BranchVersionAction
 import com.tencent.devops.common.pipeline.enums.VersionStatus
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
+
 import java.time.LocalDateTime
 
 @Suppress("LongParameterList", "LongMethod")
-@ApiModel("流水线版本-详细内容")
+@Schema(title = "流水线版本-详细内容")
 data class PipelineResourceVersion(
-    @ApiModelProperty("项目ID", required = true)
+    @get:Schema(title = "项目ID", required = true)
     val projectId: String,
-    @ApiModelProperty("流水线ID", required = true)
+    @get:Schema(title = "流水线ID", required = true)
     val pipelineId: String,
-    @ApiModelProperty("记录版本号", required = true)
+    @get:Schema(title = "记录版本号", required = true)
     val version: Int,
-    @ApiModelProperty("JSON编排内容（POJO）", required = true)
+    @get:Schema(title = "JSON编排内容（POJO）", required = true)
     val model: Model,
-    @ApiModelProperty("YAML编排内容", required = false)
+    @get:Schema(title = "YAML编排内容", required = false)
     var yaml: String?,
-    @ApiModelProperty("创建者", required = true)
+    @get:Schema(title = "创建者", required = true)
     val creator: String,
-    @ApiModelProperty("版本名称", required = true)
+    @get:Schema(title = "版本名称", required = true)
     val versionName: String?,
-    @ApiModelProperty("版本创建时间", required = true)
+    @get:Schema(title = "版本创建时间", required = true)
     val createTime: LocalDateTime,
-    @ApiModelProperty("版本修改时间", required = true)
+    @get:Schema(title = "版本修改时间", required = true)
     val updateTime: LocalDateTime?,
-    @ApiModelProperty("发布版本号", required = false)
+    @get:Schema(title = "发布版本号", required = false)
     val versionNum: Int?,
-    @ApiModelProperty("编排版本号", required = false)
+    @get:Schema(title = "编排版本号", required = false)
     val pipelineVersion: Int?,
-    @ApiModelProperty("触发器版本号", required = false)
+    @get:Schema(title = "触发器版本号", required = false)
     val triggerVersion: Int?,
-    @ApiModelProperty("设置版本号", required = false)
+    @get:Schema(title = "设置版本号", required = false)
     val settingVersion: Int?,
-    @ApiModelProperty("是否还有构建记录引用该版本标识", required = false)
+    @get:Schema(title = "是否还有构建记录引用该版本标识", required = false)
     val referFlag: Boolean? = null,
-    @ApiModelProperty("关联构建记录总数", required = false)
+    @get:Schema(title = "关联构建记录总数", required = false)
     val referCount: Int? = null,
-    @ApiModelProperty("草稿版本标识", required = false)
+    @get:Schema(title = "草稿版本标识", required = false)
     val status: VersionStatus? = VersionStatus.RELEASED,
-    @ApiModelProperty("分支版本状态", required = false)
+    @get:Schema(title = "分支版本状态", required = false)
     val branchAction: BranchVersionAction? = null,
-    @ApiModelProperty("版本变更说明", required = false)
+    @get:Schema(title = "版本变更说明", required = false)
     val description: String? = null,
-    @ApiModelProperty("调试构建ID", required = false)
+    @get:Schema(title = "调试构建ID", required = false)
     val debugBuildId: String? = null,
-    @ApiModelProperty("该版本的来源版本（空时一定为主路径）", required = false)
+    @get:Schema(title = "该版本的来源版本（空时一定为主路径）", required = false)
     val baseVersion: Int? = null
 )

@@ -28,25 +28,24 @@
 package com.tencent.devops.ticket.pojo
 
 import com.tencent.devops.ticket.pojo.enums.CredentialType
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("凭据-创建时内容")
+@Schema(title = "凭据-创建时内容")
 data class CredentialCreate(
-    @ApiModelProperty("凭据ID", required = true)
+    @get:Schema(title = "凭据ID", required = true)
     val credentialId: String,
-    @ApiModelProperty("凭据名称", required = true)
+    @get:Schema(title = "凭据名称", required = true)
     val credentialName: String? = null,
-    @ApiModelProperty("凭据类型", required = true)
+    @get:Schema(title = "凭据类型", required = true)
     val credentialType: CredentialType,
-    @ApiModelProperty("凭据描述", required = false)
+    @get:Schema(title = "凭据描述", required = false)
     val credentialRemark: String? = null,
-    @ApiModelProperty("凭据内容", required = true)
+    @get:Schema(title = "凭据内容", required = true)
     val v1: String,
-    @ApiModelProperty("凭据内容", required = true)
+    @get:Schema(title = "凭据内容", required = true)
     val v2: String? = null,
-    @ApiModelProperty("凭据内容", required = true)
+    @get:Schema(title = "凭据内容", required = true)
     val v3: String? = null,
-    @ApiModelProperty("凭据内容", required = true)
+    @get:Schema(title = "凭据内容", required = true)
     val v4: String? = null
 )

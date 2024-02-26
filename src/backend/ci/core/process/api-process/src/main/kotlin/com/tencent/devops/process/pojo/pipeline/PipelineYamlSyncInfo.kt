@@ -29,17 +29,16 @@
 package com.tencent.devops.process.pojo.pipeline
 
 import com.tencent.devops.repository.pojo.enums.RepoYamlSyncStatusEnum
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("pac同步文件信息")
+@Schema(title = "pac同步文件信息")
 data class PipelineYamlSyncInfo(
-    @ApiModelProperty("文件路径", required = true)
+    @get:Schema(title = "文件路径", required = true)
     val filePath: String,
-    @ApiModelProperty("同步状态", required = true)
+    @get:Schema(title = "同步状态", required = true)
     val syncStatus: RepoYamlSyncStatusEnum = RepoYamlSyncStatusEnum.SYNC,
-    @ApiModelProperty("原因", required = false)
+    @get:Schema(title = "原因", required = false)
     var reason: String? = null,
-    @ApiModelProperty("原因详情", required = false)
+    @get:Schema(title = "原因详情", required = false)
     var reasonDetail: String? = null
 )

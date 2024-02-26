@@ -1,5 +1,6 @@
 package com.tencent.devops.process.yaml
 
+import com.tencent.devops.common.api.constant.coerceAtMaxLength
 import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.process.constant.PipelineViewType
@@ -75,7 +76,7 @@ class PipelineYamlViewService(
             path
         } else {
             "$path-${directory.removePrefix(".ci/")}"
-        }
+        }.coerceAtMaxLength(PipelineViewService.PIPELINE_VIEW_NAME_LENGTH_MAX)
         val pipelineView = PipelineViewForm(
             name = name,
             projected = true,
@@ -89,10 +90,12 @@ class PipelineYamlViewService(
                 )
             )
         )
+        // 系统创建流水线组不需要校验权限
         val viewHashId = pipelineViewGroupService.addViewGroup(
             projectId = projectId,
             userId = userId,
-            pipelineView = pipelineView
+            pipelineView = pipelineView,
+            checkPermission = false
         )
         pipelineYamlViewDao.save(
             dslContext = dslContext,

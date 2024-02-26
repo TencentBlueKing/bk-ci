@@ -29,23 +29,22 @@
 package com.tencent.devops.process.pojo.pipeline
 
 import com.tencent.devops.common.api.enums.ScmType
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("流水线yaml展示信息")
+@Schema(title = "流水线yaml展示信息")
 data class PipelineYamlVo(
-    @ApiModelProperty("代码库hashId", required = true)
+    @get:Schema(title = "代码库hashId", required = true)
     val repoHashId: String,
-    @ApiModelProperty("代码库类型", required = true)
+    @get:Schema(title = "代码库类型", required = true)
     val scmType: ScmType,
-    @ApiModelProperty("yaml文件路径", required = true)
+    @get:Schema(title = "yaml文件路径", required = true)
     val filePath: String,
-    @ApiModelProperty("代码库项目路径", required = false)
+    @get:Schema(title = "代码库项目路径", required = false)
     val pathWithNamespace: String? = null,
-    @ApiModelProperty("仓库网页url", required = false)
+    @get:Schema(title = "仓库网页url", required = false)
     val webUrl: String? = null,
-    @ApiModelProperty("yaml文件url", required = false)
+    @get:Schema(title = "yaml文件url", required = false)
     val fileUrl: String? = null,
-    @ApiModelProperty("yaml文件状态", required = false)
+    @get:Schema(title = "yaml文件状态", required = false)
     val status: String? = null
 )

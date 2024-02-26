@@ -2,21 +2,20 @@ package com.tencent.devops.project.pojo
 
 import com.tencent.devops.common.auth.api.pojo.SubjectScopeInfo
 import com.tencent.devops.project.pojo.user.UserDeptDetail
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("项目-资源创建模型")
+@Schema(title = "项目-资源创建模型")
 data class AuthProjectCreateInfo(
-    @ApiModelProperty("用户id")
+    @get:Schema(title = "用户id")
     val userId: String,
-    @ApiModelProperty("accessToken")
+    @get:Schema(title = "accessToken")
     val accessToken: String?,
-    @ApiModelProperty("用户部门详细")
+    @get:Schema(title = "用户部门详细")
     val userDeptDetail: UserDeptDetail?,
-    @ApiModelProperty("iamSubjectScopes")
+    @get:Schema(title = "iamSubjectScopes")
     val subjectScopes: List<SubjectScopeInfo>,
-    @ApiModelProperty("projectCreateInfo")
+    @get:Schema(title = "projectCreateInfo")
     val projectCreateInfo: ProjectCreateInfo,
-    @ApiModelProperty("审批状态")
+    @get:Schema(title = "审批状态")
     val approvalStatus: Int
 )

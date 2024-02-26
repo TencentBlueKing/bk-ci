@@ -29,24 +29,23 @@
 package com.tencent.devops.scm.pojo
 
 import com.fasterxml.jackson.annotation.JsonProperty
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("合并请求列表")
+@Schema(title = "合并请求列表")
 data class GitListMergeRequest(
-    @ApiModelProperty("源分支")
+    @get:Schema(title = "源分支")
     @JsonProperty("source_branch")
     val sourceBranch: String? = null,
-    @ApiModelProperty("目标分支")
+    @get:Schema(title = "目标分支")
     @JsonProperty("target_branch")
     val targetBranch: String? = null,
-    @ApiModelProperty("mr状态")
+    @get:Schema(title = "mr状态")
     @JsonProperty("state")
     val state: String? = null,
-    @ApiModelProperty("mr状态")
+    @get:Schema(title = "mr状态")
     @JsonProperty("page")
     val page: Int = 1,
-    @ApiModelProperty("mr状态")
+    @get:Schema(title = "mr状态")
     @JsonProperty("perPage")
     val perPage: Int = 10
 )

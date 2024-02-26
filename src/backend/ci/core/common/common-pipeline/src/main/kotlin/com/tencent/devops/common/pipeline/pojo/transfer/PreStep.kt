@@ -29,7 +29,7 @@ package com.tencent.devops.common.pipeline.pojo.transfer
 
 import com.fasterxml.jackson.annotation.JsonFilter
 import com.fasterxml.jackson.annotation.JsonProperty
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
 interface IPreStep
 
@@ -42,27 +42,27 @@ data class PreStep(
     val checkout: String? = null,
     val name: String?,
     val id: String?,
-    @ApiModelProperty(name = "if")
+    @get:Schema(title = "if")
     @JsonProperty("if")
     val ifFiled: String?,
-    @ApiModelProperty(name = "if-modify")
+    @get:Schema(title = "if-modify")
     @JsonProperty("if-modify")
     val ifModify: List<String>? = null,
     val uses: String?,
     val with: Map<String, Any?>?,
-    @ApiModelProperty(name = "timeout-minutes")
+    @get:Schema(title = "timeout-minutes")
     @JsonProperty("timeout-minutes")
     var timeoutMinutes: String? = null,
-    @ApiModelProperty(name = "continue-on-error")
+    @get:Schema(title = "continue-on-error")
     @JsonProperty("continue-on-error")
     var continueOnError: Any? = null,
-    @ApiModelProperty(name = "retry-times")
+    @get:Schema(title = "retry-times")
     @JsonProperty("retry-times")
     var retryTimes: Int? = null,
     var env: Map<String, Any?>? = emptyMap(),
     val run: String? = null,
     val shell: String? = null,
-    @ApiModelProperty(name = "can-manually-retry")
+    @get:Schema(title = "can-manually-retry")
     @JsonProperty("can-manually-retry")
     var manualRetry: Boolean? = null,
     override val yamlMetaData: MetaData? = null
