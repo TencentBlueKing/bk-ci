@@ -166,8 +166,7 @@ class BKVisionService @Autowired constructor(
                     "bk_app_code" to bkConfig.appCode,
                     "bk_app_secret" to bkConfig.appSecret
                 )
-            ),
-
+            )
         ).toHeaders()
     }
 
