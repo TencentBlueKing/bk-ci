@@ -512,7 +512,7 @@ class ThirdPartyAgentService @Autowired constructor(
             null
         }
 
-        val starter = client.get(ServiceBuildResource::class).workerBuildFinish(
+        val (starter, sendNotify) = client.get(ServiceBuildResource::class).workerBuildFinish(
             projectId = buildInfo.projectId,
             pipelineId = if (buildInfo.pipelineId.isNullOrBlank()) "dummyPipelineId" else buildInfo.pipelineId!!,
             buildId = buildInfo.buildId,
@@ -526,14 +526,15 @@ class ThirdPartyAgentService @Autowired constructor(
                 // #9910 环境构建时遇到启动错误时调度到一个新的Agent
                 ignoreAgentIds = ignoreAgentIds
             )
-        ).data
+        ).data ?: return
 
         // #9910 构建机worker失败时发送通知
         if (workerErrorRtxTemplate.isNullOrBlank() ||
             buildRecord == null ||
             buildInfo.success ||
             buildInfo.error == null ||
-            buildInfo.error?.errorCode != 2128040
+            buildInfo.error?.errorCode != 2128040 ||
+            !sendNotify
         ) {
             return
         }
