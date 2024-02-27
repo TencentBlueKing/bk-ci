@@ -30,9 +30,9 @@ package com.tencent.devops.image.api
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.image.pojo.PushImageParam
 import com.tencent.devops.image.pojo.PushImageTask
-import io.swagger.annotations.Api
-import io.swagger.annotations.ApiOperation
-import io.swagger.annotations.ApiParam
+import io.swagger.v3.oas.annotations.tags.Tag
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.Parameter
 import javax.ws.rs.Consumes
 import javax.ws.rs.GET
 import javax.ws.rs.POST
@@ -41,28 +41,28 @@ import javax.ws.rs.Produces
 import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
-@Api(tags = ["BUILD_IMAGE"], description = "构建-推送镜像相关接口")
+@Tag(name = "BUILD_IMAGE", description = "构建-推送镜像相关接口")
 @Path("/build/image/common")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface BuildPushCommonImageResource {
 
-    @ApiOperation("推送镜像到指定镜像仓库")
+    @Operation(summary = "推送镜像到指定镜像仓库")
     @POST
     @Path("/push")
     fun pushImage(
-        @ApiParam("推送镜像到指定仓库请求参数", required = true)
+        @Parameter(description = "推送镜像到指定仓库请求参数", required = true)
         pushParam: PushImageParam
     ): Result<PushImageTask?>
 
-    @ApiOperation("查询推送镜像到指定镜像仓库任务详情")
+    @Operation(summary = "查询推送镜像到指定镜像仓库任务详情")
     @Path("/query")
     @GET
     fun queryImageTask(
-        @ApiParam("用户ID", required = true)
+        @Parameter(description = "用户ID", required = true)
         @QueryParam("userId")
         userId: String,
-        @ApiParam("任务ID", required = true)
+        @Parameter(description = "任务ID", required = true)
         @QueryParam("taskId")
         taskId: String
     ): Result<PushImageTask?>

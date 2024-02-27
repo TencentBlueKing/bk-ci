@@ -29,12 +29,12 @@ package com.tencent.devops.misc.pojo.process
 
 import com.tencent.devops.misc.dao.process.ProcessDao
 import com.tencent.devops.misc.dao.process.ProcessDataMigrateDao
-import io.swagger.annotations.ApiModel
+import io.swagger.v3.oas.annotations.media.Schema
 import org.jooq.DSLContext
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.Semaphore
 
-@ApiModel("迁移流水线数据参数")
+@Schema(title = "迁移流水线数据参数")
 data class MigratePipelineDataParam(
     val projectId: String,
     val pipelineId: String,

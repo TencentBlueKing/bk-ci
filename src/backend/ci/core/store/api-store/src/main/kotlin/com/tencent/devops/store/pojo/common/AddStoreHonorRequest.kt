@@ -29,19 +29,18 @@ package com.tencent.devops.store.pojo.common
 
 import com.tencent.devops.common.web.annotation.BkField
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("添加组件荣誉信息请求报文")
+@Schema(title = "添加组件荣誉信息请求报文")
 data class AddStoreHonorRequest(
-    @ApiModelProperty("荣誉头衔", required = true)
+    @get:Schema(title = "荣誉头衔", required = true)
     @BkField(maxLength = 4)
     val honorTitle: String,
-    @ApiModelProperty("荣誉名称", required = true)
+    @get:Schema(title = "荣誉名称", required = true)
     @BkField(maxLength = 40)
     val honorName: String,
-    @ApiModelProperty("组件范畴", required = true)
+    @get:Schema(title = "组件范畴", required = true)
     val storeType: StoreTypeEnum,
-    @ApiModelProperty("组件代码列表", required = true)
+    @get:Schema(title = "组件代码列表", required = true)
     val storeCodes: List<String>
 )

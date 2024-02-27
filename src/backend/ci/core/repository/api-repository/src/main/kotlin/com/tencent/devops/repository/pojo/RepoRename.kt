@@ -28,13 +28,12 @@
 
 package com.tencent.devops.repository.pojo
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("代码库重命名")
+@Schema(title = "代码库重命名")
 data class RepoRename(
-    @ApiModelProperty("代码库修改后的名称", required = true)
+    @get:Schema(title = "代码库修改后的名称", required = true)
     val name: String,
-    @ApiModelProperty("代码库修改前的名称", required = false)
+    @get:Schema(title = "代码库修改前的名称", required = false)
     val oldName: String = ""
 )

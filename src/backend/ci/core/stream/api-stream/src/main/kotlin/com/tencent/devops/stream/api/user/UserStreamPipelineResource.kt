@@ -33,9 +33,9 @@ import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.stream.pojo.StreamGitPipelineDir
 import com.tencent.devops.stream.pojo.StreamGitProjectPipeline
-import io.swagger.annotations.Api
-import io.swagger.annotations.ApiOperation
-import io.swagger.annotations.ApiParam
+import io.swagger.v3.oas.annotations.tags.Tag
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.Parameter
 import javax.ws.rs.Consumes
 import javax.ws.rs.GET
 import javax.ws.rs.HeaderParam
@@ -46,102 +46,102 @@ import javax.ws.rs.Produces
 import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
-@Api(tags = ["USER_STREAM_PIPELINE"], description = "user-pipeline页面")
+@Tag(name = "USER_STREAM_PIPELINE", description = "user-pipeline页面")
 @Path("/user/pipelines")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface UserStreamPipelineResource {
 
-    @ApiOperation("项目下所有流水线概览")
+    @Operation(summary = "项目下所有流水线概览")
     @GET
     @Path("/{projectId}/list")
     fun getPipelineList(
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam(value = "蓝盾项目ID", required = true)
+        @Parameter(description = "蓝盾项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @ApiParam("搜索关键字", required = false)
+        @Parameter(description = "搜索关键字", required = false)
         @QueryParam("keyword")
         keyword: String?,
-        @ApiParam("第几页", required = false, defaultValue = "1")
+        @Parameter(description = "第几页", required = false, example = "1")
         @QueryParam("page")
         page: Int?,
-        @ApiParam("每页多少条", required = false, defaultValue = "10")
+        @Parameter(description = "每页多少条", required = false, example = "10")
         @QueryParam("pageSize")
         pageSize: Int?,
-        @ApiParam("目录", required = false)
+        @Parameter(description = "目录", required = false)
         @QueryParam("filePath")
         filePath: String?
     ): Result<Page<StreamGitProjectPipeline>>
 
-    @ApiOperation("项目下所有流水线文件路径目录")
+    @Operation(summary = "项目下所有流水线文件路径目录")
     @GET
     @Path("/{projectId}/dir_list")
     fun getPipelineDirList(
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam(value = "蓝盾项目ID", required = true)
+        @Parameter(description = "蓝盾项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @ApiParam(value = "蓝盾流水线ID", required = false)
+        @Parameter(description = "蓝盾流水线ID", required = false)
         @QueryParam("pipelineId")
         pipelineId: String?
     ): Result<StreamGitPipelineDir>
 
-    @ApiOperation("获取指定流水线信息")
+    @Operation(summary = "获取指定流水线信息")
     @GET
     @Path("/{projectId}/{pipelineId}/info")
     fun getPipeline(
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam(value = "蓝盾项目ID", required = true)
+        @Parameter(description = "蓝盾项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @ApiParam("流水线ID", required = true)
+        @Parameter(description = "流水线ID", required = true)
         @PathParam("pipelineId")
         pipelineId: String
     ): Result<StreamGitProjectPipeline?>
 
-    @ApiOperation("开启或关闭流水线")
+    @Operation(summary = "开启或关闭流水线")
     @POST
     // @Path("/projects/{projectId}/pipelines/{pipelineId}/builds/{buildId}/elements/{elementId}/review")
     @Path("/{projectId}/{pipelineId}/enable")
     fun enablePipeline(
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam(value = "蓝盾项目ID", required = true)
+        @Parameter(description = "蓝盾项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @ApiParam("流水线ID", required = true)
+        @Parameter(description = "流水线ID", required = true)
         @PathParam("pipelineId")
         pipelineId: String,
-        @ApiParam(value = "是否启用该流水线", required = true)
+        @Parameter(description = "是否启用该流水线", required = true)
         @QueryParam("enabled")
         enabled: Boolean
     ): Result<Boolean>
 
-    @ApiOperation("获取流水线列表")
+    @Operation(summary = "获取流水线列表")
     @GET
     @Path("/{projectId}/listInfo")
     fun listPipelineNames(
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam(value = "蓝盾项目ID", required = true)
+        @Parameter(description = "蓝盾项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @ApiParam("搜索关键字", required = false)
+        @Parameter(description = "搜索关键字", required = false)
         @QueryParam("keyword")
         keyword: String?,
-        @ApiParam("第几页", required = false, defaultValue = "1")
+        @Parameter(description = "第几页", required = false, example = "1")
         @QueryParam("page")
         page: Int?,
-        @ApiParam("每页多少条", required = false, defaultValue = "10")
+        @Parameter(description = "每页多少条", required = false, example = "10")
         @QueryParam("pageSize")
         pageSize: Int?
     ): Result<List<StreamGitProjectPipeline>>
