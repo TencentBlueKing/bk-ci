@@ -29,8 +29,6 @@ import focus from './directives/focus/index.js'
 import createRouter from './router'
 import store from './store'
 
-import '@icon-cool/bk-icon-devops'
-import '@icon-cool/bk-icon-devops/src/index'
 import mavonEditor from 'mavon-editor'
 import 'mavon-editor/dist/css/index.css'
 import PortalVue from "portal-vue"; // eslint-disable-line
