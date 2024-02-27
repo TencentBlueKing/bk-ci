@@ -408,12 +408,20 @@ object SignUtils {
             val bundleNameCmd = "plutil -replace CFBundleName -string $bundleName ${fixPath(infoPlistPath)}"
             logger.info("[replaceCFBundleName] $bundleNameCmd")
             runtimeExec(bundleNameCmd)
+
+            val bundleDisplayNameCmd = "plutil -replace CFBundleDisplayName -string $bundleName ${fixPath(infoPlistPath)}"
+            logger.info("[replaceCFBundleDisplayName] $bundleDisplayNameCmd")
+            runtimeExec(bundleDisplayNameCmd)
         }
 
         if (!bundleVersion.isNullOrBlank()) {
             val bundleVersionCmd = "plutil -replace CFBundleVersion -string $bundleVersion ${fixPath(infoPlistPath)}"
             logger.info("[replaceCFBundleVersion] $bundleVersionCmd")
             runtimeExec(bundleVersionCmd)
+
+            val shortVersionCmd = "plutil -replace CFBundleShortVersionString -string $bundleVersion ${fixPath(infoPlistPath)}"
+            logger.info("[replaceCFBundleShortVersionString] $shortVersionCmd")
+            runtimeExec(shortVersionCmd)
         }
     }
 
