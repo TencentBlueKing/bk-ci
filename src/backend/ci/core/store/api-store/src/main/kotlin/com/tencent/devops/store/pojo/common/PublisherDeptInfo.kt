@@ -25,42 +25,32 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.project.pojo.user
+package com.tencent.devops.store.pojo.common
 
-import com.tencent.devops.project.pojo.BkDeptInfo
 import io.swagger.v3.oas.annotations.media.Schema
 
-/**
- * 用户机构信息
- *
- * since: 2018-12-09
- */
-@Schema(title = "用户部门信息")
-data class UserDeptDetail(
-    @get:Schema(title = "bg名称")
-    val bgName: String,
-    @get:Schema(title = "bgID")
-    val bgId: String,
-    @get:Schema(title = "业务线名称")
-    val businessLineName: String? = null,
-    @get:Schema(title = "业务线ID")
-    val businessLineId: String? = null,
-    @get:Schema(title = "部门名称")
-    val deptName: String,
-    @get:Schema(title = "部门ID")
-    val deptId: String,
-    @get:Schema(title = "中心名称")
-    val centerName: String,
-    @get:Schema(title = "中心ID")
-    val centerId: String,
-    @get:Schema(title = "组ID")
-    val groupId: String,
-    @get:Schema(title = "组名称")
-    val groupName: String,
-    @get:Schema(title = "用户ID")
-    val userId: String? = null,
-    @get:Schema(title = "用户名称")
-    var name: String? = null,
-    @get:Schema(title = "部门及以上层级")
-    val deptInfos: List<BkDeptInfo>? = emptyList()
+@Schema(title = "发布者机构信息报文体")
+data class PublisherDeptInfo(
+    @get:Schema(title = "发布者标识")
+    val publisherCode: String,
+    @get:Schema(title = "一级部门ID")
+    val firstLevelDeptId: Long,
+    @get:Schema(title = "一级部门名称")
+    val firstLevelDeptName: String,
+    @get:Schema(title = "二级部门ID")
+    val secondLevelDeptId: Long,
+    @get:Schema(title = "二级部门名称")
+    val secondLevelDeptName: String,
+    @get:Schema(title = "三级部门ID")
+    val thirdLevelDeptId: Long,
+    @get:Schema(title = "三级部门名称")
+    val thirdLevelDeptName: String,
+    @get:Schema(title = "四级部门ID")
+    val fourthLevelDeptId: Long? = null,
+    @get:Schema(title = "四级部门名称")
+    val fourthLevelDeptName: String? = null,
+    @get:Schema(title = "实体组织架构")
+    var organizationName: String = "",
+    @get:Schema(title = "所属工作组BG")
+    val bgName: String
 )
