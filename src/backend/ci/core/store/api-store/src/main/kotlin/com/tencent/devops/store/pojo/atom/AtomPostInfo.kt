@@ -27,17 +27,16 @@
 
 package com.tencent.devops.store.pojo.atom
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("插件post信息")
+@Schema(title = "插件post信息")
 data class AtomPostInfo(
-    @ApiModelProperty("插件代码")
+    @get:Schema(title = "插件代码")
     val atomCode: String,
-    @ApiModelProperty("插件版本号")
+    @get:Schema(title = "插件版本号")
     val version: String,
-    @ApiModelProperty("入口参数")
+    @get:Schema(title = "入口参数")
     val postEntryParam: String,
-    @ApiModelProperty("执行条件")
+    @get:Schema(title = "执行条件")
     val postCondition: String
 )

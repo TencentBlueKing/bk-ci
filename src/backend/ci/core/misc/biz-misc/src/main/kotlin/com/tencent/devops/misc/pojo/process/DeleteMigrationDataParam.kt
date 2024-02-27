@@ -28,26 +28,25 @@
 package com.tencent.devops.misc.pojo.process
 
 import com.tencent.devops.misc.lock.MigrationLock
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 import org.jooq.DSLContext
 
-@ApiModel("删除迁移数据参数")
+@Schema(title = "删除迁移数据参数")
 data class DeleteMigrationDataParam(
-    @ApiModelProperty("jooq上下文", required = true)
+    @get:Schema(title = "jooq上下文", required = true)
     val dslContext: DSLContext,
-    @ApiModelProperty("项目ID", required = true)
+    @get:Schema(title = "项目ID", required = true)
     val projectId: String,
-    @ApiModelProperty("迁移集群名称", required = true)
+    @get:Schema(title = "迁移集群名称", required = true)
     val targetClusterName: String,
-    @ApiModelProperty("迁移数据源名称", required = true)
+    @get:Schema(title = "迁移数据源名称", required = true)
     val targetDataSourceName: String,
-    @ApiModelProperty("流水线ID", required = false)
+    @get:Schema(title = "流水线ID", required = false)
     val pipelineId: String? = null,
-    @ApiModelProperty("迁移锁", required = false)
+    @get:Schema(title = "迁移锁", required = false)
     val migrationLock: MigrationLock? = null,
-    @ApiModelProperty("广播表删除标识", required = false)
+    @get:Schema(title = "广播表删除标识", required = false)
     val broadcastTableDeleteFlag: Boolean? = true,
-    @ApiModelProperty("归档流水线标识", required = false)
+    @get:Schema(title = "归档流水线标识", required = false)
     val archivePipelineFlag: Boolean? = null
 )

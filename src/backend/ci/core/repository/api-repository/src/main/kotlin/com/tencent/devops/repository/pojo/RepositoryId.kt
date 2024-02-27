@@ -27,11 +27,10 @@
 
 package com.tencent.devops.repository.pojo
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("代码库模型-ID")
+@Schema(title = "代码库模型-ID")
 data class RepositoryId(
-    @ApiModelProperty("代码库哈希ID", required = true)
+    @get:Schema(title = "代码库哈希ID", required = true)
     val hashId: String
 )

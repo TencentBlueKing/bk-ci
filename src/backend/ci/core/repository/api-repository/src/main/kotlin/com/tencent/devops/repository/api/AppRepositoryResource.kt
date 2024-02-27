@@ -31,9 +31,9 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.repository.pojo.commit.CommitResponse
-import io.swagger.annotations.Api
-import io.swagger.annotations.ApiOperation
-import io.swagger.annotations.ApiParam
+import io.swagger.v3.oas.annotations.tags.Tag
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.Parameter
 import javax.ws.rs.Consumes
 import javax.ws.rs.GET
 import javax.ws.rs.HeaderParam
@@ -42,26 +42,26 @@ import javax.ws.rs.PathParam
 import javax.ws.rs.Produces
 import javax.ws.rs.core.MediaType
 
-@Api(tags = ["USER_REPOSITORY"], description = "App-代码库")
+@Tag(name = "USER_REPOSITORY", description = "App-代码库")
 @Path("/app/repositories")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface AppRepositoryResource {
 
-    @ApiOperation("根据构建ID获取提交记录")
+    @Operation(summary = "根据构建ID获取提交记录")
     @GET
     @Path("/projects/{projectId}/pipelines/{pipelineId}/builds/{buildId}/commit/get/record")
     fun getCommit(
-        @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam(value = "projectId", required = true)
+        @Parameter(description = "projectId", required = true)
         @PathParam("projectId")
         projectId: String,
-        @ApiParam(value = "pipelineId", required = true)
+        @Parameter(description = "pipelineId", required = true)
         @PathParam("pipelineId")
         pipelineId: String,
-        @ApiParam(value = "构建ID", required = true)
+        @Parameter(description = "构建ID", required = true)
         @PathParam("buildId")
         buildId: String
     ): Result<List<CommitResponse>>

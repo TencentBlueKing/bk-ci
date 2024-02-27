@@ -1,5 +1,6 @@
 package com.tencent.devops.auth.dao
 
+import com.tencent.devops.common.db.utils.skipCheck
 import com.tencent.devops.model.auth.tables.TAuthAction
 import com.tencent.devops.model.auth.tables.records.TAuthActionRecord
 import java.time.LocalDateTime
@@ -38,6 +39,7 @@ class AuthActionDao {
             dslContext.selectFrom(this)
                 .orderBy(CREATE_TIME.desc(), ACTION)
                 .limit(pageSize).offset((page - 1) * pageSize)
+                .skipCheck()
                 .fetch()
         }
     }

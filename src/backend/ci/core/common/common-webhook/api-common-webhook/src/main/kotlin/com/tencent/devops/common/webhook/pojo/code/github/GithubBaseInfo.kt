@@ -28,17 +28,16 @@
 package com.tencent.devops.common.webhook.pojo.code.github
 
 import com.fasterxml.jackson.annotation.JsonProperty
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("Github 基础信息")
+@Schema(title = "Github 基础信息")
 open class GithubBaseInfo(
-    @ApiModelProperty("ID")
+    @get:Schema(title = "ID")
     open val id: Long,
-    @ApiModelProperty("链接[API链接]")
+    @get:Schema(title = "链接[API链接]")
     open val url: String? = "",
     @JsonProperty("html_url")
-    @ApiModelProperty("链接[网页链接]")
+    @get:Schema(title = "链接[网页链接]")
     open val htmlUrl: String? = "",
     @JsonProperty("node_id")
     open val nodeId: String,
