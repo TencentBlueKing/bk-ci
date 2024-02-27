@@ -77,46 +77,12 @@ class ApigwJobCloudApi {
         }
     }
 
-    private fun getAuthHeaderMap(bkAuthorization: String): MutableMap<String, String> {
-        return mutableMapOf(
-            "accept" to "*/*",
-            "Content-Type" to "application/json",
-            "X-Bkapi-Authorization" to bkAuthorization
-        )
-    }
-
-    private fun getJobCloudAuthReq(): JobCloudAuthenticationReq {
-        val bkAuthorization = "{\"bk_app_code\": \"${bkAppCode}\", " +
-            "\"bk_app_secret\": \"${bkAppSecret}\", \"bk_username\": \"$AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE\"}"
-        val operationName = getJobOperationName()
-        if (logger.isDebugEnabled) logger.debug("[getJobCloudAuthReq] operationName: $operationName")
-        val url = jobCloudApiBaseUrl + postPathMap[operationName]
-        if (logger.isDebugEnabled) logger.debug("[getJobCloudAuthReq] url: $url")
-        return JobCloudAuthenticationReq(
-            url = url,
-            bkAuthorization = bkAuthorization,
-            bkScopeType = bkScopeType,
-            bkScopeId = bkScopeId
-        )
-    }
-
-    private fun logWithLengthLimit(logOrigin: String): String {
-        return if (logOrigin.length > LOG_OUTPUT_MAX_LENGTH)
-            logOrigin.substring(0, LOG_OUTPUT_MAX_LENGTH)
-        else
-            logOrigin
-    }
-
     fun <T : JobCloudPermission, U : Any> executePostRequest(jobCloud: T, classOfU: Class<U>): JobCloudResult<U> {
         val jobCloudAuthenticationReq: JobCloudAuthenticationReq = getJobCloudAuthReq()
         jobCloud.bkScopeType = jobCloudAuthenticationReq.bkScopeType
         jobCloud.bkScopeId = jobCloudAuthenticationReq.bkScopeId
         val headers = getAuthHeaderMap(jobCloudAuthenticationReq.bkAuthorization)
         val requestContent = mapper.writeValueAsString(jobCloud)
-        if (logger.isDebugEnabled)
-            logger.debug(
-                "[${getJobOperationName()}]url: ${jobCloudAuthenticationReq.url}, body: $requestContent"
-            )
         logger.info(
             "[${getJobOperationName()}]POST url: ${jobCloudAuthenticationReq.url}, " +
                 "body: ${logWithLengthLimit(requestContent)}"
@@ -134,8 +100,6 @@ class ApigwJobCloudApi {
             jobCloudAuthenticationReq.bkScopeId,
             *args
         )
-        if (logger.isDebugEnabled)
-            logger.debug("[$operationName] headers: ${logWithLengthLimit(headers.toString())}, url: $url")
         logger.info("[$operationName]GET url: $url")
         return getResultFromRes(OkhttpUtils.doGet(url, headers), classOfT)
     }
@@ -145,17 +109,8 @@ class ApigwJobCloudApi {
         removeJobOperationName()
         try {
             val responseBody = response.body?.string()
-            val responseLog = logWithLengthLimit(responseBody.toString())
-            if (logger.isDebugEnabled) {
-                logger.debug("[$operationName] response body(origin): $responseLog")
-            }
-            logger.info("[$operationName] response body(origin): $responseLog")
+            logger.info("[$operationName] response body(origin): ${logWithLengthLimit(responseBody.toString())}")
             val jobCloudResp = mapper.readValue<JobCloudResp<T>>(responseBody!!)
-            if (logger.isDebugEnabled)
-                logger.debug(
-                    "[$operationName] response body(deserialized JobCloudResp<T>): " +
-                        logWithLengthLimit(jobCloudResp.toString())
-                )
             if (!jobCloudResp.result) {
                 logger.error(
                     "[$operationName] Execute failed! Req ID: ${jobCloudResp.jobRequestId}, " +
@@ -177,26 +132,46 @@ class ApigwJobCloudApi {
                         null
                     }
                 if (logger.isDebugEnabled) {
-                    logger.debug("[$operationName] operationResult type: " + operationResult!!::class)
                     logger.debug("[$operationName] serialized jsonData: ${logWithLengthLimit(jsonData)}")
-                    logger.debug(
-                        "[$operationName] ${operationName}Result: " +
-                            logWithLengthLimit(operationResult.toString())
-                    )
                 }
-                val jobCloudResult = JobCloudResult(
+                return JobCloudResult(
                     code = jobCloudResp.code,
                     result = jobCloudResp.result,
                     jobRequestId = jobCloudResp.jobRequestId,
                     data = operationResult
                 )
-                if (logger.isDebugEnabled)
-                    logger.debug("[$operationName] jobCloudResult: " + logWithLengthLimit(jobCloudResult.toString()))
-                return jobCloudResult
             }
         } catch (exception: Exception) {
             logger.warn("[executeHttpRequest] Failed to execute the HTTP request. Exception:", exception)
             throw exception
         }
+    }
+
+    private fun getAuthHeaderMap(bkAuthorization: String): MutableMap<String, String> {
+        return mutableMapOf(
+            "accept" to "*/*",
+            "Content-Type" to "application/json",
+            "X-Bkapi-Authorization" to bkAuthorization
+        )
+    }
+
+    private fun getJobCloudAuthReq(): JobCloudAuthenticationReq {
+        val bkAuthorization = "{\"bk_app_code\": \"${bkAppCode}\", \"bk_app_secret\": \"${bkAppSecret}\", " +
+            "\"bk_username\": \"$AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE\"}"
+        val operationName = getJobOperationName()
+        val url = jobCloudApiBaseUrl + postPathMap[operationName]
+        return JobCloudAuthenticationReq(
+            url = url,
+            bkAuthorization = bkAuthorization,
+            bkScopeType = bkScopeType,
+            bkScopeId = bkScopeId
+        )
+    }
+
+    private fun logWithLengthLimit(logOrigin: String): String {
+        return if (logOrigin.length > LOG_OUTPUT_MAX_LENGTH)
+            logOrigin.substring(0, LOG_OUTPUT_MAX_LENGTH)
+        else
+            logOrigin
     }
 }
