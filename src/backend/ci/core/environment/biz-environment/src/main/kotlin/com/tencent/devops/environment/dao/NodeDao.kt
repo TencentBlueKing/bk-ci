@@ -101,12 +101,12 @@ class NodeDao {
         }
     }
 
-    fun getBuildNodesLimit(dslContext: DSLContext, offset: Int, limit: Int): Result<Record1<Long>> {
+    fun getBuildNodesLimit(dslContext: DSLContext, page: Int, pageSize: Int): Result<Record1<Long>> {
         with(TNode.T_NODE) {
             return dslContext.select(NODE_ID.`as`(T_NODE_NODE_ID)).from(this)
                 .where(NODE_TYPE.`in`(NodeType.DEVCLOUD.name, NodeType.THIRDPARTY.name))
                 .orderBy(NODE_ID.desc())
-                .limit(limit).offset(offset)
+                .limit(pageSize).offset((page - 1) * pageSize)
                 .fetch()
         }
     }
@@ -190,7 +190,7 @@ class NodeDao {
         }
     }
 
-    fun getDeployNodesLimit(dslContext: DSLContext, offset: Int, limit: Int): Result<Record5<Long, String, String, Long, Long>> {
+    fun getDeployNodesLimit(dslContext: DSLContext, page: Int, pageSize: Int): Result<Record5<Long, String, String, Long, Long>> {
         with(TNode.T_NODE) {
             return dslContext.select(
                 NODE_ID.`as`(T_NODE_NODE_ID),
@@ -201,12 +201,12 @@ class NodeDao {
             ).from(this)
                 .where(NODE_TYPE.`in`(NodeType.CMDB.name, NodeType.UNKNOWN.name, NodeType.OTHER.name))
                 .orderBy(NODE_ID.desc())
-                .limit(limit).offset(offset)
+                .limit(pageSize).offset((page - 1) * pageSize)
                 .fetch()
         }
     }
 
-    fun getDeployNodesInCmdbLimit(dslContext: DSLContext, offset: Int, limit: Int): Result<Record5<Long, String, String, Long, Long>> {
+    fun getDeployNodesInCmdbLimit(dslContext: DSLContext, page: Int, pageSize: Int): Result<Record5<Long, String, String, Long, Long>> {
         with(TNode.T_NODE) {
             return dslContext.select(
                 NODE_ID.`as`(T_NODE_NODE_ID),
@@ -218,7 +218,7 @@ class NodeDao {
                 .where(NODE_TYPE.`in`(NodeType.CMDB.name, NodeType.UNKNOWN.name, NodeType.OTHER.name))
                 .and(NODE_STATUS.notEqual(NodeStatus.NOT_IN_CMDB.name))
                 .orderBy(NODE_ID.desc())
-                .limit(limit).offset(offset)
+                .limit(pageSize).offset((page - 1) * pageSize)
                 .fetch()
         }
     }
@@ -270,8 +270,8 @@ class NodeDao {
 
     fun getCmdbNodes(
         dslContext: DSLContext,
-        offset: Int,
-        limit: Int
+        page: Int,
+        pageSize: Int
     ): Result<Record7<String, Long, String, String, Boolean, String, Long>> {
         with(TNode.T_NODE) {
             return dslContext.select(
@@ -284,7 +284,7 @@ class NodeDao {
                 NODE_ID.`as`(T_NODE_NODE_ID)
             ).from(this)
                 .where(NODE_TYPE.eq(NodeType.CMDB.name))
-                .limit(limit).offset(offset)
+                .limit(pageSize).offset((page - 1) * pageSize)
                 .fetch()
         }
     }
@@ -299,7 +299,7 @@ class NodeDao {
         }
     }
 
-    fun getNodesWhoseDisplayNameIsEmpty(dslContext: DSLContext, offset: Int, limit: Int): Result<Record3<Long, String, String>> {
+    fun getNodesWhoseDisplayNameIsEmpty(dslContext: DSLContext, page: Int, pageSize: Int): Result<Record3<Long, String, String>> {
         with(TNode.T_NODE) {
             return dslContext.select(
                 NODE_ID.`as`(T_NODE_NODE_ID),
@@ -309,7 +309,7 @@ class NodeDao {
                 .where(DISPLAY_NAME.isNull)
                 .or(DISPLAY_NAME.eq(""))
                 .orderBy(NODE_ID.desc())
-                .limit(limit).offset(offset)
+                .limit(pageSize).offset((page - 1) * pageSize)
                 .fetch()
         }
     }
@@ -340,14 +340,17 @@ class NodeDao {
         }
     }
 
-    fun updateNodeInCCByIp(dslContext: DSLContext, inCCIpList: List<String>) {
+    fun updateNodeInCCByIp(dslContext: DSLContext, ipToNodeStatus: Map<String, String>) {
         with(TNode.T_NODE) {
-            dslContext.update(this)
-                .set(NODE_STATUS, NodeStatus.NORMAL.name)
-                .where(NODE_IP.`in`(inCCIpList))
-                .and(NODE_TYPE.`in`(NodeType.CMDB.name, NodeType.UNKNOWN.name, NodeType.OTHER.name))
-                .and(NODE_STATUS.notEqual(NodeStatus.NORMAL.name))
-                .execute()
+            val batchUpdate = dslContext.batch(
+                ipToNodeStatus.map { (ip,nodeStatus) ->
+                    dslContext.update(this)
+                        .set(NODE_STATUS, nodeStatus)
+                        .where(NODE_IP.eq(ip))
+                        .and(NODE_TYPE.`in`(NodeType.CMDB.name, NodeType.UNKNOWN.name, NodeType.OTHER.name))
+                }
+            )
+            batchUpdate.execute()
         }
     }
 
@@ -366,7 +369,7 @@ class NodeDao {
         }
     }
 
-    fun getCmdbNodesHostIdNullLimit(dslContext: DSLContext, offset: Int, limit: Int): Result<Record2<String, Long>> {
+    fun getCmdbNodesHostIdNullLimit(dslContext: DSLContext, page: Int, pageSize: Int): Result<Record2<String, Long>> {
         with(TNode.T_NODE) {
             return dslContext.select(
                 NODE_IP.`as`(T_NODE_NODE_IP),
@@ -374,7 +377,7 @@ class NodeDao {
             ).from(this)
                 .where(NODE_TYPE.`in`(NodeType.CMDB.name, NodeType.UNKNOWN.name, NodeType.OTHER.name))
                 .and(HOST_ID.isNull)
-                .limit(limit).offset(offset)
+                .limit(pageSize).offset((page - 1) * pageSize)
                 .fetch()
         }
     }

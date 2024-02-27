@@ -40,6 +40,8 @@ import com.tencent.devops.environment.constant.T_NODE_NODE_IP
 import com.tencent.devops.environment.constant.T_NODE_NODE_TYPE
 import com.tencent.devops.environment.dao.NodeDao
 import com.tencent.devops.environment.dao.thirdpartyagent.ThirdPartyAgentDao
+import com.tencent.devops.environment.pojo.enums.NodeStatus
+import com.tencent.devops.environment.pojo.job.AgentVersion
 import com.tencent.devops.environment.pojo.job.AgentVersionInfo
 import com.tencent.devops.environment.pojo.job.DisplayNameInfo
 import com.tencent.devops.environment.pojo.job.CCUpdateInfo
@@ -57,7 +59,8 @@ class StockDataUpdateService @Autowired constructor(
     private val nodeDao: NodeDao,
     private val queryFromCCService: QueryFromCCService,
     private val thirdPartyAgentDao: ThirdPartyAgentDao,
-    private val redisOperation: RedisOperation
+    private val redisOperation: RedisOperation,
+    private val queryAgentStatusService: QueryAgentStatusService
 ) : IStockDataUpdateService {
 
     companion object {
@@ -67,6 +70,10 @@ class StockDataUpdateService @Autowired constructor(
 
         private const val DEFAULT_PAGE_SIZE = 100
         private const val EXPIRATION_TIME_OF_THE_LOCK = 200L
+
+        const val AGENT_ABNORMAL_NODE_STATUS = 0
+        const val AGENT_NORMAL_NODE_STATUS = 1
+        const val AGENT_NOT_INSTALLED_TAG = false
     }
 
     /**
@@ -107,7 +114,7 @@ class StockDataUpdateService @Autowired constructor(
         countBuildNodes.takeIf { it > 0 }.run {
             val totalPages = PageUtil.calTotalPage(DEFAULT_PAGE_SIZE, countBuildNodes.toLong())
             for (page in 1..totalPages) {
-                val buildNodeRecords = nodeDao.getBuildNodesLimit(dslContext, page - 1, DEFAULT_PAGE_SIZE)
+                val buildNodeRecords = nodeDao.getBuildNodesLimit(dslContext, page, DEFAULT_PAGE_SIZE)
                 val buildNodeIdList = buildNodeRecords.mapNotNull { it[T_NODE_NODE_ID] as? Long }
                 val buildNodesAgentVersionRecords = thirdPartyAgentDao.getAgentByNodeIdAllProj(
                     dslContext = dslContext,
@@ -131,7 +138,7 @@ class StockDataUpdateService @Autowired constructor(
             val totalPages = PageUtil.calTotalPage(DEFAULT_PAGE_SIZE, countDisplayNameEmptyNodes.toLong())
             for (page in 1..totalPages) {
                 val displayNameNullNodeRecords =
-                    nodeDao.getNodesWhoseDisplayNameIsEmpty(dslContext, page - 1, DEFAULT_PAGE_SIZE)
+                    nodeDao.getNodesWhoseDisplayNameIsEmpty(dslContext, page, DEFAULT_PAGE_SIZE)
                 val nodeDisplayNameInfoList = displayNameNullNodeRecords.map {
                     DisplayNameInfo(
                         nodeId = it[T_NODE_NODE_ID] as Long,
@@ -187,10 +194,27 @@ class StockDataUpdateService @Autowired constructor(
         nodeCCInfoList.takeIf { !it.isNullOrEmpty() }.run {
             // ip - cc记录 映射
             ipToCCInfoMap = nodeCCInfoList!!.associateBy { it.bkHostInnerip }
-            // 2.1 在CC - 改为NORMAL
+            // 2.1 在CC（且状态此时为NOT_IN_CC/NOT_IN_CMDB） - 查询节点agent状态并更新
             val inCCIpList = nodeCCInfoList.mapNotNull { it.bkHostInnerip }
             inCCIpList.takeIf { it.isNotEmpty() }.run {
-                nodeDao.updateNodeInCCByIp(dslContext, inCCIpList)
+                val ipToAgentVersionInfoMap = queryAgentStatusService.getAgentVersions(
+                    nodeCCInfoList.map {
+                        AgentVersion(ip = it.bkHostInnerip, bkHostId = it.bkHostId)
+                    }
+                )?.associateBy { it.ip }
+                val ipToNodeStatus = mutableMapOf<String, String>()
+                inCCIpList.map {
+                    ipToNodeStatus[it] =
+                        if (AGENT_NOT_INSTALLED_TAG == ipToAgentVersionInfoMap?.get(it)?.installedTag)
+                            NodeStatus.NOT_INSTALLED.name
+                        else if (AGENT_ABNORMAL_NODE_STATUS == ipToAgentVersionInfoMap?.get(it)?.status)
+                            NodeStatus.ABNORMAL.name
+                        else if (AGENT_NORMAL_NODE_STATUS == ipToAgentVersionInfoMap?.get(it)?.status)
+                            NodeStatus.NORMAL.name
+                        else
+                            NodeStatus.NOT_INSTALLED.name
+                }
+                nodeDao.updateNodeInCCByIp(dslContext, ipToNodeStatus)
                 // 4. CC中信息（host_id和云区域id）改变 - 更新信息，不变 - 不操作
                 val nodeUpdateInfoList = nodeRecords.filterNot {
                     it[T_NODE_HOST_ID] as? Long == ipToCCInfoMap!![it[T_NODE_NODE_IP] as String]?.bkHostId &&

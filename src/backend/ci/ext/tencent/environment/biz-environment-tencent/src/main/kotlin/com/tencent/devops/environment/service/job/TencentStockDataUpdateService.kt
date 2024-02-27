@@ -114,7 +114,7 @@ class TencentStockDataUpdateService @Autowired constructor(
         countCmdbNodes.takeIf { it > 0 }?.run {
             val totalPages = PageUtil.calTotalPage(DEFAULT_PAGE_SIZE, countCmdbNodes.toLong())
             for (page in 1..totalPages) {
-                val cmdbNodesRecords = nodeDao.getCmdbNodes(dslContext, page - 1, DEFAULT_PAGE_SIZE)
+                val cmdbNodesRecords = nodeDao.getCmdbNodes(dslContext, page, DEFAULT_PAGE_SIZE)
                 val existNodeIdToAgentVersionMap = cmdbNodesRecords.filter {
                     val opInfo = opService.operateOpProject(
                         "", OpOperateReq(2, listOf(it[T_NODE_PROJECT_ID] as String))
@@ -206,7 +206,7 @@ class TencentStockDataUpdateService @Autowired constructor(
 
     private fun addNodeToCCByPage(page: Int) {
         val cmdbNodesRecords =
-            nodeDao.getCmdbNodesHostIdNullLimit(dslContext, page - 1, DEFAULT_PAGE_SIZE) // 所有"部署"节点 record
+            nodeDao.getCmdbNodesHostIdNullLimit(dslContext, page, DEFAULT_PAGE_SIZE) // 所有"部署"节点 record
         val cmdbNodesIp = cmdbNodesRecords.map { it[T_NODE_NODE_IP] as String }.toSet() // 所有"部署"节点 ip
         val nodeIpToNodesRecords = cmdbNodesRecords.associateBy { it[T_NODE_NODE_IP] as String } // 所有"部署"节点 ip - record
         val ipToCmdbInfoMap = tencentQueryFromCmdbService.queryCmdbInfoFromIp(cmdbNodesIp) // 所有"部署"节点 ip - cmdb信息
