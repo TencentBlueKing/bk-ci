@@ -27,7 +27,7 @@
 
 package com.tencent.devops.common.pipeline.pojo.element.trigger
 
-import com.tencent.devops.common.api.enums.RepositoryType
+import com.tencent.devops.common.api.enums.TriggerRepositoryType
 import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.common.pipeline.pojo.element.ElementProp
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeEventType
@@ -49,7 +49,7 @@ data class CodeGitlabWebHookTriggerElement(
     @get:Schema(title = "分支名称", required = false)
     val branchName: String? = null,
     @get:Schema(title = "新版的gitlab原子的类型")
-    val repositoryType: RepositoryType? = null,
+    val repositoryType: TriggerRepositoryType? = null,
     @get:Schema(title = "新版的gitlab代码库名")
     val repositoryName: String? = null,
     @get:Schema(title = "事件类型", required = false)

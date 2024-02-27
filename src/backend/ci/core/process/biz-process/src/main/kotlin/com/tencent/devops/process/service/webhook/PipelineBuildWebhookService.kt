@@ -40,6 +40,7 @@ import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.common.pipeline.pojo.BuildParameters
 import com.tencent.devops.common.pipeline.pojo.element.trigger.WebHookTriggerElement
+import com.tencent.devops.common.pipeline.utils.RepositoryConfigUtils
 import com.tencent.devops.common.webhook.pojo.code.PIPELINE_START_WEBHOOK_USER_ID
 import com.tencent.devops.common.webhook.service.code.loader.WebhookElementParamsRegistrar
 import com.tencent.devops.common.webhook.service.code.loader.WebhookStartParamsRegistrar
@@ -70,6 +71,7 @@ import com.tencent.devops.process.trigger.PipelineTriggerEventService
 import com.tencent.devops.process.utils.PIPELINE_START_TASK_ID
 import com.tencent.devops.process.utils.PipelineVarUtil
 import com.tencent.devops.process.webhook.PipelineBuildPermissionService
+import com.tencent.devops.process.yaml.PipelineYamlService
 import com.tencent.devops.repository.api.ServiceRepositoryResource
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -90,7 +92,8 @@ class PipelineBuildWebhookService @Autowired constructor(
     private val webhookBuildParameterService: WebhookBuildParameterService,
     private val pipelineTriggerEventService: PipelineTriggerEventService,
     private val measureEventDispatcher: MeasureEventDispatcher,
-    private val pipelineBuildPermissionService: PipelineBuildPermissionService
+    private val pipelineBuildPermissionService: PipelineBuildPermissionService,
+    private val pipelineYamlService: PipelineYamlService
 ) {
     companion object {
         private val logger = LoggerFactory.getLogger(PipelineBuildWebhookService::class.java)
@@ -217,6 +220,10 @@ class PipelineBuildWebhookService @Autowired constructor(
         // 解析变量
         container.params.forEach { param ->
             variables[param.id] = param.defaultValue.toString()
+        }
+        // 补充yaml流水线代码库信息
+        pipelineYamlService.getPipelineYamlInfo(projectId = projectId, pipelineId = pipelineId)?.let {
+            variables[RepositoryConfigUtils.PIPELINE_SELF_REPO_HASH_ID] = it.repoHashId
         }
 
         val failedMatchElements = mutableListOf<PipelineTriggerFailedMatchElement>()
@@ -386,6 +393,10 @@ class PipelineBuildWebhookService @Autowired constructor(
         // 解析变量
         container.params.forEach { param ->
             variables[param.id] = param.defaultValue.toString()
+        }
+        // 补充yaml流水线代码库信息
+        pipelineYamlService.getPipelineYamlInfo(projectId = projectId, pipelineId = pipelineId)?.let {
+            variables[RepositoryConfigUtils.PIPELINE_SELF_REPO_HASH_ID] = it.repoHashId
         }
         val triggerElementMap =
             container.elements.filterIsInstance<WebHookTriggerElement>()

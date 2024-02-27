@@ -47,6 +47,9 @@ import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeEventTy
 
 object RepositoryConfigUtils {
 
+    // PAC流水线所属代码库hashId
+    const val PIPELINE_SELF_REPO_HASH_ID = "PIPELINE_SELF_REPO_HASH_ID"
+
     @Suppress("ALL")
     fun buildConfig(element: Element): RepositoryConfig {
         return when (element) {
@@ -58,7 +61,8 @@ object RepositoryConfigUtils {
             is CodeGitWebHookTriggerElement -> RepositoryConfig(
                 repositoryHashId = element.repositoryHashId,
                 repositoryName = element.repositoryName,
-                repositoryType = element.repositoryType ?: RepositoryType.ID
+                triggerRepositoryType = element.repositoryType,
+                selfRepoHashId = null
             )
             is CodeSvnElement -> RepositoryConfig(
                 repositoryHashId = element.repositoryHashId,
@@ -68,7 +72,8 @@ object RepositoryConfigUtils {
             is CodeSVNWebHookTriggerElement -> RepositoryConfig(
                 repositoryHashId = element.repositoryHashId,
                 repositoryName = element.repositoryName,
-                repositoryType = element.repositoryType ?: RepositoryType.ID
+                triggerRepositoryType = element.repositoryType,
+                selfRepoHashId = null
             )
             is CodeGitlabElement -> RepositoryConfig(
                 repositoryHashId = element.repositoryHashId,
@@ -78,7 +83,8 @@ object RepositoryConfigUtils {
             is CodeGitlabWebHookTriggerElement -> RepositoryConfig(
                 repositoryHashId = element.repositoryHashId,
                 repositoryName = element.repositoryName,
-                repositoryType = element.repositoryType ?: RepositoryType.ID
+                triggerRepositoryType = element.repositoryType,
+                selfRepoHashId = null
             )
             is GithubElement -> RepositoryConfig(
                 repositoryHashId = element.repositoryHashId,
@@ -88,17 +94,20 @@ object RepositoryConfigUtils {
             is CodeGithubWebHookTriggerElement -> RepositoryConfig(
                 repositoryHashId = element.repositoryHashId,
                 repositoryName = element.repositoryName,
-                repositoryType = element.repositoryType ?: RepositoryType.ID
+                triggerRepositoryType = element.repositoryType,
+                selfRepoHashId = null
             )
             is CodeTGitWebHookTriggerElement -> RepositoryConfig(
                 repositoryHashId = element.data.input.repositoryHashId,
                 repositoryName = element.data.input.repositoryName,
-                repositoryType = element.data.input.repositoryType ?: RepositoryType.ID
+                triggerRepositoryType = element.data.input.repositoryType,
+                selfRepoHashId = null
             )
             is CodeP4WebHookTriggerElement -> RepositoryConfig(
                 repositoryHashId = element.data.input.repositoryHashId,
                 repositoryName = element.data.input.repositoryName,
-                repositoryType = element.data.input.repositoryType ?: RepositoryType.ID
+                triggerRepositoryType = element.data.input.repositoryType,
+                selfRepoHashId = null
             )
             else -> throw InvalidParamException("Unknown code element -> $element")
         }
@@ -145,7 +154,8 @@ object RepositoryConfigUtils {
                 val repositoryConfig = RepositoryConfig(
                     repositoryHashId = element.repositoryHashId,
                     repositoryName = EnvUtils.parseEnv(element.repositoryName, variables),
-                    repositoryType = element.repositoryType ?: RepositoryType.ID
+                    triggerRepositoryType = element.repositoryType,
+                    selfRepoHashId = variables[PIPELINE_SELF_REPO_HASH_ID]
                 )
                 val eventType = if (element.eventType == CodeEventType.MERGE_REQUEST_ACCEPT) {
                     CodeEventType.MERGE_REQUEST
@@ -159,7 +169,8 @@ object RepositoryConfigUtils {
                 val repositoryConfig = RepositoryConfig(
                     repositoryHashId = element.repositoryHashId,
                     repositoryName = EnvUtils.parseEnv(element.repositoryName, variables),
-                    repositoryType = element.repositoryType ?: RepositoryType.ID
+                    triggerRepositoryType = element.repositoryType,
+                    selfRepoHashId = variables[PIPELINE_SELF_REPO_HASH_ID]
                 )
                 Triple(ScmType.CODE_SVN, CodeEventType.POST_COMMIT, repositoryConfig)
             }
@@ -168,7 +179,8 @@ object RepositoryConfigUtils {
                 val repositoryConfig = RepositoryConfig(
                     repositoryHashId = element.repositoryHashId,
                     repositoryName = EnvUtils.parseEnv(element.repositoryName, variables),
-                    repositoryType = element.repositoryType ?: RepositoryType.ID
+                    triggerRepositoryType = element.repositoryType,
+                    selfRepoHashId = variables[PIPELINE_SELF_REPO_HASH_ID]
                 )
                 val eventType = if (element.eventType == CodeEventType.MERGE_REQUEST_ACCEPT) {
                     CodeEventType.MERGE_REQUEST
@@ -182,7 +194,8 @@ object RepositoryConfigUtils {
                 val repositoryConfig = RepositoryConfig(
                     repositoryHashId = element.repositoryHashId,
                     repositoryName = EnvUtils.parseEnv(element.repositoryName, variables),
-                    repositoryType = element.repositoryType ?: RepositoryType.ID
+                    triggerRepositoryType = element.repositoryType,
+                    selfRepoHashId = variables[PIPELINE_SELF_REPO_HASH_ID]
                 )
                 Triple(ScmType.GITHUB, element.eventType, repositoryConfig)
             }
@@ -191,7 +204,8 @@ object RepositoryConfigUtils {
                 val repositoryConfig = RepositoryConfig(
                     repositoryHashId = element.data.input.repositoryHashId,
                     repositoryName = EnvUtils.parseEnv(element.data.input.repositoryName, variables),
-                    repositoryType = element.data.input.repositoryType ?: RepositoryType.ID
+                    triggerRepositoryType = element.data.input.repositoryType,
+                    selfRepoHashId = variables[PIPELINE_SELF_REPO_HASH_ID]
                 )
                 val eventType = if (element.data.input.eventType == CodeEventType.MERGE_REQUEST_ACCEPT) {
                     CodeEventType.MERGE_REQUEST
@@ -205,7 +219,8 @@ object RepositoryConfigUtils {
                 val repositoryConfig = RepositoryConfig(
                     repositoryHashId = element.data.input.repositoryHashId,
                     repositoryName = EnvUtils.parseEnv(element.data.input.repositoryName, variables),
-                    repositoryType = element.data.input.repositoryType ?: RepositoryType.ID
+                    triggerRepositoryType = element.data.input.repositoryType,
+                    selfRepoHashId = variables[PIPELINE_SELF_REPO_HASH_ID]
                 )
                 Triple(ScmType.CODE_P4, element.data.input.eventType, repositoryConfig)
             }

@@ -36,6 +36,7 @@ import com.tencent.devops.common.pipeline.enums.BranchVersionAction
 import com.tencent.devops.common.pipeline.enums.CodeTargetAction
 import com.tencent.devops.common.pipeline.pojo.element.trigger.WebHookTriggerElement
 import com.tencent.devops.common.pipeline.utils.RepositoryConfigUtils
+import com.tencent.devops.common.pipeline.utils.RepositoryConfigUtils.PIPELINE_SELF_REPO_HASH_ID
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.engine.service.PipelineWebhookService
@@ -202,7 +203,9 @@ class PipelineYamlRepositoryService @Autowired constructor(
         )
         val pipelineId = deployPipelineResult.pipelineId
         val version = deployPipelineResult.version
-        val webhooks = getWebhooks(projectId = projectId, pipelineId = pipelineId, version = version)
+        val webhooks = getWebhooks(
+            projectId = projectId, pipelineId = pipelineId, version = version, repoHashId = repoHashId
+        )
         pipelineYamlService.save(
             projectId = projectId,
             repoHashId = repoHashId,
@@ -259,7 +262,9 @@ class PipelineYamlRepositoryService @Autowired constructor(
         )
         val version = deployPipelineResult.version
         val repoHashId = action.data.setting.repoHashId
-        val webhooks = getWebhooks(projectId = projectId, pipelineId = pipelineId, version = version)
+        val webhooks = getWebhooks(
+            projectId = projectId, pipelineId = pipelineId, version = version, repoHashId = repoHashId
+        )
         pipelineYamlService.update(
             projectId = projectId,
             repoHashId = repoHashId,
@@ -361,7 +366,9 @@ class PipelineYamlRepositoryService @Autowired constructor(
         targetAction: CodeTargetAction
     ): PacGitPushResult {
         val repoHashId = action.data.setting.repoHashId
-        val webhooks = getWebhooks(projectId = projectId, pipelineId = pipelineId, version = version)
+        val webhooks = getWebhooks(
+            projectId = projectId, pipelineId = pipelineId, version = version, repoHashId = repoHashId
+        )
         PipelineYamlTriggerLock(
             redisOperation = redisOperation,
             projectId = projectId,
@@ -516,7 +523,8 @@ class PipelineYamlRepositoryService @Autowired constructor(
     private fun getWebhooks(
         projectId: String,
         pipelineId: String,
-        version: Int
+        version: Int,
+        repoHashId: String
     ): List<PipelineWebhookVersion> {
         val model = pipelineRepositoryService.getPipelineResourceVersion(
             projectId = projectId,
@@ -531,7 +539,10 @@ class PipelineYamlRepositoryService @Autowired constructor(
         val triggerContainer = model.stages[0].containers[0] as TriggerContainer
         val variables = triggerContainer.params.associate { param ->
             param.id to param.defaultValue.toString()
-        }
+        }.toMutableMap()
+        // 补充yaml流水线代码库信息
+        variables[PIPELINE_SELF_REPO_HASH_ID] = repoHashId
+
         val elements = triggerContainer.elements.filterIsInstance<WebHookTriggerElement>()
         val webhooks = mutableListOf<PipelineWebhookVersion>()
         elements.forEach { element ->

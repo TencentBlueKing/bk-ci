@@ -27,7 +27,7 @@
 
 package com.tencent.devops.common.pipeline.pojo.element.trigger
 
-import com.tencent.devops.common.api.enums.RepositoryType
+import com.tencent.devops.common.api.enums.TriggerRepositoryType
 import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.common.pipeline.pojo.element.ElementProp
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.PathFilterType
@@ -56,7 +56,7 @@ data class CodeSVNWebHookTriggerElement(
     @get:Schema(title = "用户白名单", required = false)
     val includeUsers: List<String>?,
     @get:Schema(title = "新版的svn原子的类型")
-    val repositoryType: RepositoryType? = null,
+    val repositoryType: TriggerRepositoryType? = null,
     @get:Schema(title = "新版的svn代码库名")
     val repositoryName: String? = null
 ) : WebHookTriggerElement(name, id, status) {

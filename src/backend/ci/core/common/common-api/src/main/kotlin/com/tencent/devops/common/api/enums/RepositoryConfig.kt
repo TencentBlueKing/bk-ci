@@ -44,6 +44,25 @@ class RepositoryConfig(
     @get:Schema(title = "新版的git插件的类型")
     val repositoryType: RepositoryType
 ) {
+
+    constructor(
+        repositoryHashId: String?,
+        repositoryName: String?,
+        triggerRepositoryType: TriggerRepositoryType?,
+        selfRepoHashId: String?
+    ) : this(
+        repositoryHashId =
+        if (triggerRepositoryType == TriggerRepositoryType.SELF) {
+            selfRepoHashId
+        } else {
+            repositoryHashId
+        },
+        repositoryName = repositoryName,
+        repositoryType = TriggerRepositoryType.toRepositoryType(
+            triggerRepositoryType
+        ) ?: RepositoryType.ID
+    )
+
     @JsonIgnore
     fun getRepositoryId(): String {
         return when (repositoryType) {

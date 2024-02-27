@@ -27,7 +27,7 @@
 
 package com.tencent.devops.process.yaml.transfer.pojo
 
-import com.tencent.devops.common.api.enums.RepositoryType
+import com.tencent.devops.common.api.enums.TriggerRepositoryType
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGitWebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGithubWebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGitlabWebHookTriggerElement
@@ -62,7 +62,7 @@ data class WebHookTriggerElementChanger(
     @get:Schema(title = "是否为block", required = false)
     val block: Boolean? = null,
     @get:Schema(title = "新版的git原子的类型")
-    val repositoryType: RepositoryType? = null,
+    val repositoryType: TriggerRepositoryType? = null,
     @get:Schema(title = "新版的git代码库名")
     val repositoryName: String? = null,
     @get:Schema(title = "tag名称", required = false)
