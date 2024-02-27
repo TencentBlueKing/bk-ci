@@ -637,7 +637,7 @@ class ServiceBuildResourceImpl @Autowired constructor(
         nodeHashId: String?,
         executeCount: Int?,
         simpleResult: SimpleResult
-    ): Result<String?> {
+    ): Result<Pair<String?, Boolean>> {
         val starter = pipelineBuildFacadeService.workerBuildFinish(
             projectCode = projectId,
             pipelineId = pipelineId,
@@ -741,17 +741,17 @@ class ServiceBuildResourceImpl @Autowired constructor(
         checkUserId(userId)
         checkParam(projectId, pipelineId)
         return Result(
-                pipelineBuildFacadeService.buildManualStartup(
-                    userId = userId,
-                    startType = startType,
-                    projectId = projectId,
-                    pipelineId = pipelineId,
-                    values = values,
-                    channelCode = channelCode,
-                    buildNo = buildNo,
-                    checkPermission = ChannelCode.isNeedAuth(channelCode),
-                    frequencyLimit = true
-                )
+            pipelineBuildFacadeService.buildManualStartup(
+                userId = userId,
+                startType = startType,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                values = values,
+                channelCode = channelCode,
+                buildNo = buildNo,
+                checkPermission = ChannelCode.isNeedAuth(channelCode),
+                frequencyLimit = true
+            )
         )
     }
 
