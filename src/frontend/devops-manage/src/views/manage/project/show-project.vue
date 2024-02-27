@@ -569,7 +569,7 @@ onMounted(async () => {
         :is-show="showFailedEnableDialog"
         :width="600"
         header-position="left"
-        ext-cls="toggle-enable-dialog"
+        ext-cls="enable-project-dialog"
         :title="$t('启用项目失败')"
         :confirm-text="$t('去关联运营产品')"
         @confirm="() => handleEdit()"
@@ -579,7 +579,7 @@ onMounted(async () => {
     <bk-dialog
         :is-show="showDisableProjectDialog"
         :width="600"
-        ext-cls="toggle-enable-dialog"
+        ext-cls="disable-project-dialog"
         header-position="left"
         :title="$t('确定停用项目吗？')"
         @confirm="() => toggleEnable()"
@@ -719,7 +719,12 @@ onMounted(async () => {
   }
 </style>
 <style lang="postcss">
-  .toggle-enable-dialog {
+  .enable-project-dialog {
+    .bk-modal-content {
+      min-height: 60px !important;
+    }
+  }
+  .disable-project-dialog {
     .bk-modal-content {
       min-height: 50px !important;
     }
