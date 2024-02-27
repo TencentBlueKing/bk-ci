@@ -183,7 +183,6 @@ class RepoPipelineService @Autowired constructor(
         repositoryHashId: String,
         eventType: String?,
         triggerConditionMd5: String?,
-        channel: String? = "BS",
         limit: Int,
         offset: Int
     ): SQLPage<RepoPipelineRefVo> {
@@ -195,7 +194,7 @@ class RepoPipelineService @Autowired constructor(
             repositoryId = repositoryId,
             eventType = eventType,
             triggerConditionMd5 = triggerConditionMd5,
-            channel = channel
+            channel = "BS"
         )
         val records = repoPipelineRefDao.listByRepo(
             dslContext = dslContext,
@@ -203,7 +202,7 @@ class RepoPipelineService @Autowired constructor(
             repositoryId = repositoryId,
             eventType = eventType,
             triggerConditionMd5 = triggerConditionMd5,
-            channel = channel,
+            channel = "BS",
             limit = limit,
             offset = offset
         )
