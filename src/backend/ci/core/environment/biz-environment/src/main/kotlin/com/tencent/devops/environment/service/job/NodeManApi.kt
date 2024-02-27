@@ -97,12 +97,8 @@ class NodeManApi {
         val (bkAuthorization, url) = getAgentAuthReq(jobId)
         val headers = getAuthHeaderMap(bkAuthorization)
         val requestContent = mapper.writeValueAsString(req)
-        if (logger.isDebugEnabled)
-            logger.debug("[${getNodemanOperationName()}] headers: $headers, url: $url, body: $requestContent")
         logger.info("[${getNodemanOperationName()}]POST url: $url, body: ${logWithLengthLimit(requestContent)}")
-        val resultFromRes = getResultFromRes(OkhttpUtils.doPost(url, requestContent, headers), classOfU)
-        if (logger.isDebugEnabled) logger.debug("[${getNodemanOperationName()}] resultFromRes: $resultFromRes")
-        return resultFromRes
+        return getResultFromRes(OkhttpUtils.doPost(url, requestContent, headers), classOfU)
     }
 
     fun <T, U> executeGetRequest(classOfT: Class<T>, jobId: Int? = null, vararg args: U): AgentOriginalResult<T> {
@@ -110,8 +106,6 @@ class NodeManApi {
         val (bkAuthorization, url) = getAgentAuthReq(jobId)
         val headers = getAuthHeaderMap(bkAuthorization)
         val urlWithSuffix = url + String.format(suffix[operationName] ?: "", *args)
-        if (logger.isDebugEnabled)
-            logger.debug("[$operationName] headers: ${logWithLengthLimit(headers.toString())}, url: $urlWithSuffix")
         logger.info("[$operationName]GET url: $urlWithSuffix")
         return getResultFromRes(OkhttpUtils.doGet(urlWithSuffix, headers), classOfT)
     }
@@ -121,19 +115,8 @@ class NodeManApi {
         removeNodemanOperationName()
         try {
             val responseBody = response.body?.string()
-            val responseLog = logWithLengthLimit(responseBody.toString())
-            if (logger.isDebugEnabled) {
-                logger.debug("[$operationName] response: $response")
-                logger.debug("[$operationName] responseBody: $responseBody")
-                logger.debug("[$operationName] response body(origin): $responseLog")
-            }
-            logger.info("[$operationName] response body(origin): $responseLog")
+            logger.info("[$operationName] response body(origin): ${logWithLengthLimit(responseBody.toString())}")
             val agentResp = mapper.readValue<AgentOriginalResult<T>>(responseBody!!)
-            if (logger.isDebugEnabled)
-                logger.debug(
-                    "[$operationName] response body(deserialized AgentResult<T>): " +
-                        logWithLengthLimit(agentResp.toString())
-                )
             if (!agentResp.result!!) {
                 logger.error(
                     "[$operationName] Execute failed! Error code: ${agentResp.code}, " +
@@ -152,27 +135,18 @@ class NodeManApi {
                     } else {
                         null
                     }
-                if (logger.isDebugEnabled) {
-                    logger.debug("[$operationName] operationResult type: " + operationResult!!::class)
+                if (logger.isDebugEnabled)
                     logger.debug("[$operationName] serialized jsonData: ${logWithLengthLimit(jsonData)}")
-                    logger.debug(
-                        "[$operationName] ${operationName}Result: " +
-                            logWithLengthLimit(operationResult.toString())
-                    )
-                }
-                val agentOriginalResult = AgentOriginalResult(
+                return AgentOriginalResult(
                     code = agentResp.code,
                     result = agentResp.result,
                     message = agentResp.message,
                     errors = agentResp.errors,
                     data = operationResult
                 )
-                if (logger.isDebugEnabled)
-                    logger.debug("[$operationName]agentResult: " + logWithLengthLimit(agentOriginalResult.toString()))
-                return agentOriginalResult
             }
         } catch (exception: Exception) {
-            logger.warn("[executeHttpRequest] Failed to execute the HTTP request. Exception:", exception)
+            logger.warn("Failed to execute the HTTP request. Exception:", exception)
             throw exception
         }
     }
@@ -196,12 +170,10 @@ class NodeManApi {
         val bkAuthorization = "{\"bk_app_code\": \"${bkAppCode}\", " +
             "\"bk_app_secret\": \"${bkAppSecret}\", \"bk_username\": \"$AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE\"}"
         val operationName = getNodemanOperationName()
-        if (logger.isDebugEnabled) logger.debug("[getAgentAuthReq]operationName: $operationName")
         val reqUrl = nodemanApiBaseUrl + String.format(
             url[operationName] ?: "",
             jobId?.toString() ?: ""
         )
-        if (logger.isDebugEnabled) logger.debug("[getAgentAuthReq]url: $reqUrl")
         return Pair(bkAuthorization, reqUrl)
     }
 }
