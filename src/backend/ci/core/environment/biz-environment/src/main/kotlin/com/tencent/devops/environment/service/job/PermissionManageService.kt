@@ -10,14 +10,11 @@ import com.tencent.devops.environment.dao.NodeDao
 import com.tencent.devops.environment.dao.job.JobDao
 import com.tencent.devops.environment.permission.EnvironmentPermissionService
 import com.tencent.devops.environment.pojo.job.req.Host
-import com.tencent.devops.model.environment.tables.records.TNodeRecord
 import org.jooq.DSLContext
-import org.jooq.Record3
 import org.jooq.Record5
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
-import kotlin.math.log
 
 @Service("PermissionManageService")
 class PermissionManageService @Autowired constructor(
