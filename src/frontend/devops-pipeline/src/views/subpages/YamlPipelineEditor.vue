@@ -174,7 +174,6 @@
             },
             handleYamlChange (yaml) {
                 this.$store.commit('atom/SET_PIPELINE_YAML', yaml)
-
                 this.yamlHighlightBlock = []
                 this.setPipelineEditing(true)
             },

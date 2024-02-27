@@ -193,7 +193,7 @@
                 required: true
             }
         },
-        inject: ['reactiveData'],
+        inject: ['reactiveData', 'emitPipelineChange'],
         emits: [CLICK_EVENT_NAME, ADD_STAGE, DELETE_EVENT_NAME, COPY_EVENT_NAME],
         data () {
             return {
@@ -436,6 +436,7 @@
             },
             handleCopyContainer ({ containerIndex, container }) {
                 this.stage.containers.splice(containerIndex + 1, 0, container)
+                this.emitPipelineChange()
             },
             handleDeleteContainer ({ containerIndex }) {
                 if (Number.isInteger(containerIndex)) {
@@ -443,6 +444,7 @@
                 } else {
                     this.deleteStageHandler()
                 }
+                this.emitPipelineChange()
             },
             copyStage () {
                 try {

@@ -236,13 +236,32 @@ export default {
             }
         }
     },
-    async transfer (_, { projectId, pipelineId, actionType, ...params }) {
-        const { data } = await request.post(`${PROCESS_API_URL_PREFIX}/user/transfer/projects/${projectId}`, params, {
-            params: {
-                pipelineId,
-                actionType
-            }
-        })
+    async transfer ({ getters }, { projectId, pipelineId, actionType, ...params }) {
+        const apis = [
+            request.post(`${PROCESS_API_URL_PREFIX}/user/transfer/projects/${projectId}`, params, {
+                params: {
+                    pipelineId,
+                    actionType
+                }
+            })
+        ]
+        if (actionType === 'FULL_YAML2MODEL') {
+            apis.push(
+                request.get(`/${PROCESS_API_URL_PREFIX}/user/pipeline/projects/${projectId}/pipelines/${pipelineId}/atom/prop/list`, {
+                    params: params.version ? { version: params.version } : {}
+                })
+            )
+        }
+        const [{ data }, atomPropRes] = await Promise.all(apis)
+        if (actionType === 'FULL_YAML2MODEL' && atomPropRes?.data) {
+            const atomProp = atomPropRes.data
+            const elements = getters.getAllElements(data.modelAndSetting?.model.stages)
+            elements.forEach(element => { // 将os属性设置到model内
+                Object.assign(element, {
+                    ...atomProp[element.atomCode]
+                })
+            })
+        }
         if (data.yamlInvalidMsg) {
             throw new Error(data.yamlInvalidMsg)
         }
@@ -573,8 +592,12 @@ export default {
         commit(SET_PIPELINE_EDITING, true)
     },
     updateAtomType: PipelineEditActionCreator(UPDATE_ATOM_TYPE),
-    updateAtom: (action, { element: atom, newParam }) => {
-        PipelineEditActionCreator(UPDATE_ATOM)(action, { atom, newParam })
+    updateAtom: (action, { element: atom, newParam, changeEditStatus }) => {
+        if (changeEditStatus) {
+            PipelineEditActionCreator(UPDATE_ATOM)(action, { atom, newParam })
+        } else {
+            action.commit(UPDATE_ATOM, { atom, newParam })
+        }
     },
     updateAtomInput: PipelineEditActionCreator(UPDATE_ATOM_INPUT),
     updateWholeAtomInput: PipelineEditActionCreator(UPDATE_WHOLE_ATOM_INPUT),

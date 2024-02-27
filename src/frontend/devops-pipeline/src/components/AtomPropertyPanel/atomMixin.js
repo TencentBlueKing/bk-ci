@@ -130,9 +130,10 @@ const atomMixin = {
                 propKey
             })
         },
-        handleUpdateElement (name, value) {
+        handleUpdateElement (name, value, changeEditStatus = true) {
             this.updateAtom({
                 element: this.element,
+                changeEditStatus,
                 newParam: {
                     [name]: value
                 }

@@ -145,7 +145,7 @@
             stageLength: Number,
             updateCruveConnectHeight: Function
         },
-        inject: ['reactiveData'],
+        inject: ['reactiveData', 'emitPipelineChange'],
         emits: [DELETE_EVENT_NAME, COPY_EVENT_NAME],
         data () {
             return {

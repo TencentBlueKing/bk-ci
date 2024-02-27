@@ -12,7 +12,7 @@
         >
             <div slot="trigger" class="pipeline-version-dropmenu-trigger">
                 <i v-if="isActiveDraft" class="devops-icon icon-edit-line" />
-                <logo v-else-if="isActiveBranchVersion" name="branch" size="14" />
+                <logo v-else-if="isActiveBranchVersion" class="pipeline-branch-version-icon" name="branch" size="14" />
                 <i v-else :class="['devops-icon icon-check-circle', {
                     'is-release-version-icon': isCurrentVersion(activeVersion)
                 }]" />
@@ -34,7 +34,7 @@
             >
                 <p class="pipeline-version-option-item-name">
                     <i v-if="item.isDraft" class="devops-icon icon-edit-line" />
-                    <logo v-else-if="item.isBranchVersion" name="branch" size="14" />
+                    <logo v-else-if="item.isBranchVersion" class="pipeline-branch-version-icon" name="branch" size="14" />
                     <i v-else :class="['devops-icon icon-check-circle', {
                         'is-release-version-icon': isCurrentVersion(item)
                     }]" />
@@ -244,9 +244,11 @@
         &.icon-check-circle.is-release-version-icon {
             color: $successColor;
         }
-
         color: #979BA5;
         font-size: 14px;
+    }
+    .pipeline-branch-version-icon {
+        color: #FF9C01;
     }
     > span {
         line-height: 24px;
@@ -285,6 +287,9 @@
             &.icon-check-circle.is-release-version-icon {
                 color: $successColor;
             }
+        }
+        .pipeline-branch-version-icon {
+            color: #FF9C01;
         }
         .pipeline-version-main-branch {
             color: $successColor;
