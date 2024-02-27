@@ -39,20 +39,20 @@ import java.io.InputStreamReader
 
 @Suppress("TooManyFunctions", "LongParameterList")
 object SignUtils {
-
     private val logger = LoggerFactory.getLogger(SignUtils::class.java)
-    private val resignFilenamesSet = listOf(
-        "Wrapper",
-        "Executables",
-        "Java Resources",
-        "Frameworks",
-        "Framework",
-        "Shared Frameworks",
-        "Shared Support",
-        "PlugIns",
-        "XPC Services",
-        "Watch"
-    )
+    private val resignFilenamesSet =
+        listOf(
+            "Wrapper",
+            "Executables",
+            "Java Resources",
+            "Frameworks",
+            "Framework",
+            "Shared Frameworks",
+            "Shared Support",
+            "PlugIns",
+            "XPC Services",
+            "Watch",
+        )
 
     const val MAIN_APP_FILENAME = "MAIN_APP"
     const val APP_INFO_PLIST_FILENAME = "Info.plist"
@@ -77,7 +77,7 @@ object SignUtils {
         codesignExternalStr: String?,
         bundleId: String?,
         bundleName: String?,
-        bundleVersion: String?
+        bundleVersion: String?,
     ): Boolean {
         if (!appDir.isDirectory || !appDir.extension.contains("app")) {
             logger.warn("App directory $appDir is invalid.")
@@ -103,7 +103,7 @@ object SignUtils {
                                 codesignExternalStr = codesignExternalStr,
                                 bundleId = bundleId,
                                 bundleName = bundleName,
-                                bundleVersion = bundleVersion
+                                bundleVersion = bundleVersion,
                             )
                         }
 
@@ -115,7 +115,7 @@ object SignUtils {
                                 info = wildcardInfo,
                                 replaceKeyList = replaceKeyList,
                                 codeSignPath = codeSignPath,
-                                codesignExternalStr = codesignExternalStr
+                                codesignExternalStr = codesignExternalStr,
                             )
                         }
 
@@ -128,7 +128,7 @@ object SignUtils {
                                 replaceKeyList,
                                 bundleId,
                                 bundleName,
-                                bundleVersion
+                                bundleVersion,
                             )
                             codesignFile(certId, subFile.absolutePath, codeSignPath, codesignExternalStr)
                         }
@@ -141,7 +141,7 @@ object SignUtils {
                 signFilename = appDir.absolutePath,
                 entitlementsPath = wildcardInfo.entitlementFile.absolutePath,
                 codeSignPath = codeSignPath,
-                codesignExternalStr = codesignExternalStr
+                codesignExternalStr = codesignExternalStr,
             )
             true
         } catch (ignore: Throwable) {
@@ -174,7 +174,7 @@ object SignUtils {
         codesignExternalStr: String? = null,
         bundleId: String? = null,
         bundleName: String? = null,
-        bundleVersion: String? = null
+        bundleVersion: String? = null,
     ): Boolean {
         val info = infoMap[appName]
         if (info == null) {
@@ -202,20 +202,21 @@ object SignUtils {
                     when {
                         // 如果是个拓展则递归进入进行重签，存在拓展必然是替换bundle的重签
                         subFile.isDirectory && subFile.extension.contains("app") -> {
-                            val success = resignApp(
-                                appDir = subFile,
-                                certId = certId,
-                                infoMap = infoMap,
-                                appName = subFile.nameWithoutExtension,
-                                replaceBundleId = replaceBundleId,
-                                securityApplicationGroupList = securityApplicationGroupList,
-                                replaceKeyList = replaceKeyList,
-                                codeSignPath = codeSignPath,
-                                codesignExternalStr = codesignExternalStr,
-                                bundleId = bundleId,
-                                bundleName = bundleName,
-                                bundleVersion = bundleVersion
-                            )
+                            val success =
+                                resignApp(
+                                    appDir = subFile,
+                                    certId = certId,
+                                    infoMap = infoMap,
+                                    appName = subFile.nameWithoutExtension,
+                                    replaceBundleId = replaceBundleId,
+                                    securityApplicationGroupList = securityApplicationGroupList,
+                                    replaceKeyList = replaceKeyList,
+                                    codeSignPath = codeSignPath,
+                                    codesignExternalStr = codesignExternalStr,
+                                    bundleId = bundleId,
+                                    bundleName = bundleName,
+                                    bundleVersion = bundleVersion,
+                                )
                             if (!success) return false
                         }
 
@@ -227,7 +228,7 @@ object SignUtils {
                                 info = info,
                                 replaceKeyList = replaceKeyList,
                                 codeSignPath = codeSignPath,
-                                codesignExternalStr = codesignExternalStr
+                                codesignExternalStr = codesignExternalStr,
                             )
                         }
 
@@ -245,7 +246,7 @@ object SignUtils {
                 signFilename = appDir.absolutePath,
                 entitlementsPath = info.entitlementFile.absolutePath,
                 codeSignPath = codeSignPath,
-                codesignExternalStr = codesignExternalStr
+                codesignExternalStr = codesignExternalStr,
             )
             true
         } catch (ignore: Throwable) {
@@ -272,7 +273,7 @@ object SignUtils {
         codesignExternalStr: String?,
         bundleId: String? = null,
         bundleName: String? = null,
-        bundleVersion: String? = null
+        bundleVersion: String? = null,
     ): Boolean {
         if (!frameworkDir.isDirectory || !frameworkDir.extension.contains("framework")) {
             logger.warn("The framework directory $frameworkDir is invalid.")
@@ -298,13 +299,19 @@ object SignUtils {
         }
     }
 
-    fun unzipIpa(ipaFile: File, unzipIpaDir: File) {
+    fun unzipIpa(
+        ipaFile: File,
+        unzipIpaDir: File,
+    ) {
         val cmd = "/usr/bin/jar -xvf ${ipaFile.canonicalPath}"
         logger.info("[unzipIpa] $cmd")
         CommandLineUtils.execute(cmd, unzipIpaDir, true)
     }
 
-    fun zipIpaFile(unzipDir: File, ipaPath: String): File? {
+    fun zipIpaFile(
+        unzipDir: File,
+        ipaPath: String,
+    ): File? {
         val cmd = "zip -r -X $ipaPath ."
         logger.info("[unzipIpa] $cmd")
         CommandLineUtils.execute(cmd, unzipDir, true)
@@ -328,7 +335,7 @@ object SignUtils {
         replaceKeyList: Map<String, String>?,
         bundleId: String?,
         bundleName: String?,
-        bundleVersion: String?
+        bundleVersion: String?,
     ) {
         if (!resignDir.exists() || !resignDir.isDirectory) return
 
@@ -339,7 +346,7 @@ object SignUtils {
         // 无论是什么目录都将 mobileprovision 文件进行替换
         logger.info(
             "[replace mobileprovision] origin " +
-                    "{${originMpFile.absolutePath}} with {${info.mobileProvisionFile.absolutePath}}"
+                "{${originMpFile.absolutePath}} with {${info.mobileProvisionFile.absolutePath}}",
         )
         info.mobileProvisionFile.copyTo(originMpFile, true)
 
@@ -360,7 +367,7 @@ object SignUtils {
     @Suppress("RECEIVER_NULLABILITY_MISMATCH_BASED_ON_JAVA_ANNOTATIONS")
     fun getAllAppsInDir(
         appDir: File,
-        appList: MutableList<File>
+        appList: MutableList<File>,
     ) {
         // 扫描是否有待签目录
         val needResignFiles = scanNeedResignFiles(appDir, mutableListOf())
@@ -375,7 +382,10 @@ object SignUtils {
     }
 
     @Suppress("RECEIVER_NULLABILITY_MISMATCH_BASED_ON_JAVA_ANNOTATIONS")
-    private fun scanNeedResignFiles(appDir: File, needResignFiles: MutableList<File>): List<File> {
+    private fun scanNeedResignFiles(
+        appDir: File,
+        needResignFiles: MutableList<File>,
+    ): List<File> {
         logger.info("---- scan app directory start -----")
         appDir.listFiles().forEachIndexed { index, it ->
             if (it.isDirectory && resignFilenamesSet.contains(it.name)) {
@@ -398,7 +408,7 @@ object SignUtils {
         bundleId: String,
         bundleName: String?,
         bundleVersion: String?,
-        infoPlistPath: String
+        infoPlistPath: String,
     ) {
         val cmd = "plutil -replace CFBundleIdentifier -string $bundleId ${fixPath(infoPlistPath)}"
         logger.info("[replaceCFBundleId] $cmd")
@@ -425,7 +435,11 @@ object SignUtils {
         }
     }
 
-    private fun replaceInfoKey(key: String, value: String, infoPlistPath: String) {
+    private fun replaceInfoKey(
+        key: String,
+        value: String,
+        infoPlistPath: String,
+    ) {
 //        val rootDict = PropertyListParser.parse(infoPlistPath) as NSDictionary
 //        val keyLevels = key.split('.')
 //        val keyPrefix = keyLevels.subList(0, keyLevels.lastIndex)
@@ -437,31 +451,32 @@ object SignUtils {
 //            println("[replaceKey: $key] Could not find this key in $infoPlistPath")
 //            return
 //        }
-        val cmd = when {
-            boolConvert(value) != null -> {
-                "plutil -replace $key -bool $value ${fixPath(infoPlistPath)}"
-            }
+        val cmd =
+            when {
+                boolConvert(value) != null -> {
+                    "plutil -replace $key -bool $value ${fixPath(infoPlistPath)}"
+                }
 
-            integerConvert(value) != null -> {
-                "plutil -replace $key -integer $value ${fixPath(infoPlistPath)}"
-            }
+                integerConvert(value) != null -> {
+                    "plutil -replace $key -integer $value ${fixPath(infoPlistPath)}"
+                }
 
-            floatConvert(value) != null -> {
-                "plutil -replace $key -float $value ${fixPath(infoPlistPath)}"
-            }
+                floatConvert(value) != null -> {
+                    "plutil -replace $key -float $value ${fixPath(infoPlistPath)}"
+                }
 
-            value.startsWith('[') && value.endsWith(']') -> {
-                "plutil -replace $key -array '$value' ${fixPath(infoPlistPath)}"
-            }
+                value.startsWith('[') && value.endsWith(']') -> {
+                    "plutil -replace $key -array '$value' ${fixPath(infoPlistPath)}"
+                }
 
-            value.startsWith('{') && value.endsWith('}') -> {
-                "plutil -replace $key -dict '$value' ${fixPath(infoPlistPath)}"
-            }
+                value.startsWith('{') && value.endsWith('}') -> {
+                    "plutil -replace $key -dict '$value' ${fixPath(infoPlistPath)}"
+                }
 
-            else -> {
-                "plutil -replace $key -string $value ${fixPath(infoPlistPath)}"
+                else -> {
+                    "plutil -replace $key -string $value ${fixPath(infoPlistPath)}"
+                }
             }
-        }
         logger.info("[replaceKey: ] $cmd")
         try {
             runtimeExec(cmd)
@@ -474,13 +489,14 @@ object SignUtils {
         cerName: String,
         signFilename: String,
         codeSignPath: String,
-        codesignExternalStr: String? = ""
+        codesignExternalStr: String? = "",
     ) {
-        val cmd = if (codesignExternalStr.isNullOrBlank()) {
-            "$codeSignPath -f -s '$cerName' ${fixPath(signFilename)}"
-        } else {
-            "$codeSignPath -f -s '$cerName' $codesignExternalStr ${fixPath(signFilename)}"
-        }
+        val cmd =
+            if (codesignExternalStr.isNullOrBlank()) {
+                "$codeSignPath -f -s '$cerName' ${fixPath(signFilename)}"
+            } else {
+                "$codeSignPath -f -s '$cerName' $codesignExternalStr ${fixPath(signFilename)}"
+            }
         logger.info("[codesignFile] $cmd")
         runtimeExec(cmd)
     }
@@ -490,33 +506,37 @@ object SignUtils {
         signFilename: String,
         entitlementsPath: String,
         codeSignPath: String,
-        codesignExternalStr: String? = ""
+        codesignExternalStr: String? = "",
     ) {
-        val cmd = if (codesignExternalStr.isNullOrBlank()) {
-            "$codeSignPath -f -s '$cerName' --entitlements '$entitlementsPath' ${fixPath(signFilename)}"
-        } else {
-            "$codeSignPath -f -s '$cerName' $codesignExternalStr" +
+        val cmd =
+            if (codesignExternalStr.isNullOrBlank()) {
+                "$codeSignPath -f -s '$cerName' --entitlements '$entitlementsPath' ${fixPath(signFilename)}"
+            } else {
+                "$codeSignPath -f -s '$cerName' $codesignExternalStr" +
                     " --entitlements '$entitlementsPath' ${fixPath(signFilename)}"
-        }
+            }
         logger.info("[codesignFile by entitlements] $cmd")
         runtimeExec(cmd)
     }
 
-    private fun addUniversalLink(ul: List<String>, entitlementsFile: File) {
+    private fun addUniversalLink(
+        ul: List<String>,
+        entitlementsFile: File,
+    ) {
         // 如果存在com.apple.developer.associated-domains字段则可以添加UL
         val rootDict = PropertyListParser.parse(entitlementsFile) as NSDictionary
         if (rootDict.containsKey("com.apple.developer.associated-domains")) {
-
             // 将com.apple.developer.associated-domains字段变成数组
             try {
-                val removeCmd = "/usr/bin/plutil -remove " +
+                val removeCmd =
+                    "/usr/bin/plutil -remove " +
                         "\"com\\.apple\\.developer\\.associated-domains\" $entitlementsFile"
                 logger.info("[add UniversalLink in entitlements] $removeCmd")
                 runtimeExec(removeCmd)
             } catch (ignore: Throwable) {
                 logger.warn(
                     "entitlement <$entitlementsFile> does not have com.apple.developer.associated-domains",
-                    ignore
+                    ignore,
                 )
             } finally {
                 val sb = StringBuilder()
@@ -526,7 +546,8 @@ object SignUtils {
                 }
                 sb.appendLine("</array>")
 
-                val insertCmd = "/usr/bin/plutil -insert " +
+                val insertCmd =
+                    "/usr/bin/plutil -insert " +
                         "\"com\\.apple\\.developer\\.associated-domains\" -xml \"$sb\" $entitlementsFile"
                 logger.info("[add UniversalLink in entitlements] $insertCmd")
                 runtimeExec(insertCmd)
@@ -534,21 +555,24 @@ object SignUtils {
         }
     }
 
-    private fun addSecurityApplicationGroups(groups: List<String>, entitlementsFile: File) {
+    private fun addSecurityApplicationGroups(
+        groups: List<String>,
+        entitlementsFile: File,
+    ) {
         // 如果存在com.apple.security.application-groups字段则可以添加UL
         val rootDict = PropertyListParser.parse(entitlementsFile) as NSDictionary
         if (rootDict.containsKey("com.apple.security.application-groups")) {
-
             // 将com.apple.security.application-groups字段变成数组插入
             try {
-                val removeCmd = "/usr/bin/plutil -remove " +
+                val removeCmd =
+                    "/usr/bin/plutil -remove " +
                         "\"com\\.apple\\.security\\.application-groups\" $entitlementsFile"
                 logger.info("[add UniversalLink in entitlements] $removeCmd")
                 runtimeExec(removeCmd)
             } catch (ignore: Throwable) {
                 logger.warn(
                     "entitlement <$entitlementsFile> does not have com.apple.developer.associated-domains",
-                    ignore
+                    ignore,
                 )
             } finally {
                 val sb = StringBuilder()
@@ -558,7 +582,8 @@ object SignUtils {
                 }
                 sb.appendLine("</array>")
 
-                val insertCmd = "/usr/bin/plutil -insert " +
+                val insertCmd =
+                    "/usr/bin/plutil -insert " +
                         "\"com\\.apple\\.security\\.application-groups\" -xml \"$sb\" $entitlementsFile"
                 logger.info("[add UniversalLink in entitlements] $insertCmd")
                 runtimeExec(insertCmd)
@@ -595,7 +620,10 @@ object SignUtils {
         }
     }
 
-    private fun getSubDictionary(nsObject: NSObject?, key: String): NSDictionary? {
+    private fun getSubDictionary(
+        nsObject: NSObject?,
+        key: String,
+    ): NSDictionary? {
         if (nsObject == null || nsObject !is NSDictionary) {
             return null
         }

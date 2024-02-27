@@ -49,7 +49,10 @@ object EncryptUtil {
      * AES 加密.
      */
     @Throws(GeneralSecurityException::class)
-    fun encrypt(original: ByteArray?, key: String): ByteArray {
+    fun encrypt(
+        original: ByteArray?,
+        key: String,
+    ): ByteArray {
         val keyBytes = key.toByteArray(StandardCharsets.UTF_8)
         val iv = Arrays.copyOf(keyBytes, 16)
         val cipher = Cipher.getInstance(ALGORITHM)
@@ -61,7 +64,10 @@ object EncryptUtil {
      * AES 加密.
      */
     @Throws(GeneralSecurityException::class)
-    fun encrypt(originalContent: String, key: String): String {
+    fun encrypt(
+        originalContent: String,
+        key: String,
+    ): String {
         val original = originalContent.toByteArray(StandardCharsets.UTF_8)
         val encrypted = encrypt(original, key)
         return Base64.getEncoder().encodeToString(encrypted)
@@ -71,7 +77,10 @@ object EncryptUtil {
      * AES 解密.
      */
     @Throws(GeneralSecurityException::class)
-    fun decrypt(encrypted: ByteArray?, key: String): ByteArray {
+    fun decrypt(
+        encrypted: ByteArray?,
+        key: String,
+    ): ByteArray {
         val keyBytes = key.toByteArray(StandardCharsets.UTF_8)
         val iv = Arrays.copyOf(keyBytes, 16)
         val cipher = Cipher.getInstance(ALGORITHM)
@@ -83,7 +92,10 @@ object EncryptUtil {
      * AES 解密.
      */
     @Throws(GeneralSecurityException::class)
-    fun decrypt(encryptedContent: String?, key: String): String {
+    fun decrypt(
+        encryptedContent: String?,
+        key: String,
+    ): String {
         val encrypted = Base64.getDecoder().decode(encryptedContent)
         val decrypted = decrypt(encrypted, key)
         return String(decrypted, StandardCharsets.UTF_8)
@@ -93,7 +105,10 @@ object EncryptUtil {
      * AES 解密.
      */
     @Throws(GeneralSecurityException::class)
-    fun decryptToBytes(encryptedContent: String?, key: String): ByteArray {
+    fun decryptToBytes(
+        encryptedContent: String?,
+        key: String,
+    ): ByteArray {
         val encrypted = Base64.getDecoder().decode(encryptedContent)
         return decrypt(encrypted, key)
     }
