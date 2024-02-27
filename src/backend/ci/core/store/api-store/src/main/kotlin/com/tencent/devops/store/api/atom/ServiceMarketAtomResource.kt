@@ -166,14 +166,14 @@ interface ServiceMarketAtomResource {
         getRelyAtom: GetRelyAtom
     ): Result<Map<String, Map<String, Any>>?>
 
-    @ApiOperation("分页查询组件代码库哈希ID")
+    @Operation(summary = "分页查询组件代码库哈希ID")
     @GET
     @Path("/atom/repo/list")
     fun getAtomRepositoryHashId(
-        @ApiParam("第几页", required = true, defaultValue = "1")
+        @Parameter(description = "第几页", required = true)
         @QueryParam("page")
         page: Int,
-        @ApiParam("每页多少条", required = true, defaultValue = "20")
+        @Parameter(description = "每页多少条", required = true)
         @BkField(patternStyle = BkStyleEnum.PAGE_SIZE_STYLE, required = true)
         @QueryParam("pageSize")
         pageSize: Int
