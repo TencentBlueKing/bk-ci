@@ -525,7 +525,8 @@
                     scmType: this.scmType,
                     id: this.selectId,
                     page: this.page,
-                    limit: this.pagination.limit
+                    limit: this.pagination.limit,
+                    projectId: this.projectId
                 }))
             },
 
