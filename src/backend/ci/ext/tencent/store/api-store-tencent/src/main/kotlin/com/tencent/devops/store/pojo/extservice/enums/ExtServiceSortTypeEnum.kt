@@ -25,17 +25,28 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.pojo.pipeline
+package com.tencent.devops.store.pojo.extservice.enums
 
-import com.tencent.devops.store.pojo.extservice.dto.ExtServiceBaseInfoDTO
-import io.swagger.v3.oas.annotations.media.Schema
+enum class ExtServiceSortTypeEnum() {
+    NAME,
+    CREATOR,
+    MODIFIER,
+    PUBLISHER,
+    CREATE_TIME,
+    UPDATE_TIME,
+    DOWNLOAD_COUNT;
 
-@Schema(title = "扩展服务构建初始化流水线请求报文体")
-data class ExtServiceBuildInitPipelineReq(
-    @get:Schema(title = "流水线模型", required = true)
-    val pipelineModel: String,
-    @get:Schema(title = "脚本任务插件Shell执行脚本", required = true)
-    val script: String,
-    @get:Schema(title = "扩展服务基本信息", required = true)
-    val extServiceBaseInfo: ExtServiceBaseInfoDTO
-)
+    companion object {
+        fun getSortType(type: String?): String {
+            return when (type) {
+                NAME.name -> "SERVICE_NAME"
+                UPDATE_TIME.name -> UPDATE_TIME.name
+                PUBLISHER.name -> PUBLISHER.name
+                DOWNLOAD_COUNT.name -> DOWNLOAD_COUNT.name
+                CREATOR.name -> CREATOR.name
+                MODIFIER.name -> MODIFIER.name
+                else -> CREATE_TIME.name
+            }
+        }
+    }
+}

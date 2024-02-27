@@ -25,17 +25,39 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.pojo.pipeline
+package com.tencent.devops.store.api.extservice
 
-import com.tencent.devops.store.pojo.extservice.dto.ExtServiceBaseInfoDTO
-import io.swagger.v3.oas.annotations.media.Schema
+import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
+import com.tencent.devops.common.api.pojo.Result
+import io.swagger.v3.oas.annotations.tags.Tag
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.Parameter
+import javax.ws.rs.Consumes
+import javax.ws.rs.HeaderParam
+import javax.ws.rs.PUT
+import javax.ws.rs.Path
+import javax.ws.rs.PathParam
+import javax.ws.rs.Produces
+import javax.ws.rs.QueryParam
+import javax.ws.rs.core.MediaType
 
-@Schema(title = "扩展服务构建初始化流水线请求报文体")
-data class ExtServiceBuildInitPipelineReq(
-    @get:Schema(title = "流水线模型", required = true)
-    val pipelineModel: String,
-    @get:Schema(title = "脚本任务插件Shell执行脚本", required = true)
-    val script: String,
-    @get:Schema(title = "扩展服务基本信息", required = true)
-    val extServiceBaseInfo: ExtServiceBaseInfoDTO
-)
+@Tag(name = "SERVICE_ITEM_REL", description = "扩展服务市场-扩展点中间信息")
+@Path("/service/item/rel/")
+@Produces(MediaType.APPLICATION_JSON)
+@Consumes(MediaType.APPLICATION_JSON)
+interface ServiceItemRelResource {
+    @Operation(summary = "修改扩展点关联服务信息")
+    @PUT
+    @Path("items/{itemId}")
+    fun updateItemService(
+        @Parameter(description = "userId", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "扩展点Id", required = true)
+        @PathParam("itemId")
+        itemId: String,
+        @Parameter(description = "服务ID", required = true)
+        @QueryParam("serviceId")
+        serviceId: String
+    ): Result<Boolean>
+}

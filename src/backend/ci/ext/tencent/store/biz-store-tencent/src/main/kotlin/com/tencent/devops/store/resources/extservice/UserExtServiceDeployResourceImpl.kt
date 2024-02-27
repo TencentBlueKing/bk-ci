@@ -25,17 +25,39 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.pojo.pipeline
+package com.tencent.devops.store.resources.extservice
 
-import com.tencent.devops.store.pojo.extservice.dto.ExtServiceBaseInfoDTO
-import io.swagger.v3.oas.annotations.media.Schema
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.store.api.extservice.UserExtServiceDeployResource
+import com.tencent.devops.store.service.extservice.ExtServiceBcsService
+import io.fabric8.kubernetes.api.model.apps.DeploymentStatus
+import org.springframework.beans.factory.annotation.Autowired
 
-@Schema(title = "扩展服务构建初始化流水线请求报文体")
-data class ExtServiceBuildInitPipelineReq(
-    @get:Schema(title = "流水线模型", required = true)
-    val pipelineModel: String,
-    @get:Schema(title = "脚本任务插件Shell执行脚本", required = true)
-    val script: String,
-    @get:Schema(title = "扩展服务基本信息", required = true)
-    val extServiceBaseInfo: ExtServiceBaseInfoDTO
-)
+@RestResource
+class UserExtServiceDeployResourceImpl @Autowired constructor(
+    val extServiceBcsService: ExtServiceBcsService
+) : UserExtServiceDeployResource {
+
+    override fun getExtServiceDeployStatus(
+        userId: String,
+        serviceCode: String,
+        grayFlag: Boolean?
+    ): Result<DeploymentStatus?> {
+        return extServiceBcsService.getExtServiceDeployStatus(userId, serviceCode, grayFlag)
+    }
+
+    override fun deployExtService(
+        userId: String,
+        serviceCode: String,
+        version: String,
+        grayFlag: Boolean?
+    ): Result<Boolean> {
+        return extServiceBcsService.deployExtService(
+            userId = userId,
+            grayFlag = grayFlag ?: true,
+            serviceCode = serviceCode,
+            version = version
+        )
+    }
+}

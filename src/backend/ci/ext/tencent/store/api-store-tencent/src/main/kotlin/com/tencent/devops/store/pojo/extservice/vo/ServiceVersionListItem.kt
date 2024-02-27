@@ -25,17 +25,32 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.pojo.pipeline
+package com.tencent.devops.store.pojo.extservice.vo
 
-import com.tencent.devops.store.pojo.extservice.dto.ExtServiceBaseInfoDTO
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(title = "扩展服务构建初始化流水线请求报文体")
-data class ExtServiceBuildInitPipelineReq(
-    @get:Schema(title = "流水线模型", required = true)
-    val pipelineModel: String,
-    @get:Schema(title = "脚本任务插件Shell执行脚本", required = true)
-    val script: String,
-    @get:Schema(title = "扩展服务基本信息", required = true)
-    val extServiceBaseInfo: ExtServiceBaseInfoDTO
+@Schema(title = "扩展版本列表")
+data class ServiceVersionListItem(
+    @get:Schema(title = "扩展服务ID")
+    val serviceId: String,
+    @get:Schema(title = "扩展服务标识")
+    val serviceCode: String,
+    @get:Schema(title = "名称")
+    val serviceName: String,
+    @get:Schema(title = "版本号")
+    val version: String,
+    @get:Schema(title = "版本内容")
+    val versionContent: String?,
+    @get:Schema(
+        title =
+        "扩展服务状态，INIT：初始化|COMMITTING：提交中|BUILDING：构建中|BUILD_FAIL：构建失败|TESTING：测试中|AUDITING：审核中|" +
+                "AUDIT_REJECT：审核驳回|RELEASED：已发布|GROUNDING_SUSPENSION：上架中止|UNDERCARRIAGING：下架中|" +
+                "UNDERCARRIAGED：已下架",
+        required = true
+    )
+    val serviceStatus: String,
+    @get:Schema(title = "创建人")
+    val creator: String,
+    @get:Schema(title = "创建时间")
+    val createTime: String
 )

@@ -25,17 +25,41 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.pojo.pipeline
+package com.tencent.devops.store.api.extservice
 
-import com.tencent.devops.store.pojo.extservice.dto.ExtServiceBaseInfoDTO
-import io.swagger.v3.oas.annotations.media.Schema
+import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.store.pojo.extservice.vo.ExtItemServiceVO
+import io.swagger.v3.oas.annotations.tags.Tag
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.Parameter
+import javax.ws.rs.Consumes
+import javax.ws.rs.GET
+import javax.ws.rs.HeaderParam
+import javax.ws.rs.Path
+import javax.ws.rs.PathParam
+import javax.ws.rs.Produces
+import javax.ws.rs.QueryParam
+import javax.ws.rs.core.MediaType
 
-@Schema(title = "扩展服务构建初始化流水线请求报文体")
-data class ExtServiceBuildInitPipelineReq(
-    @get:Schema(title = "流水线模型", required = true)
-    val pipelineModel: String,
-    @get:Schema(title = "脚本任务插件Shell执行脚本", required = true)
-    val script: String,
-    @get:Schema(title = "扩展服务基本信息", required = true)
-    val extServiceBaseInfo: ExtServiceBaseInfoDTO
-)
+@Tag(name = "USER_EXTENSION_ITEM_SERVICE", description = "服务扩展-扩展点对应的扩展服务")
+@Path("/user/ext/services")
+@Produces(MediaType.APPLICATION_JSON)
+@Consumes(MediaType.APPLICATION_JSON)
+interface UserExtItemServiceResource {
+
+    @Operation(summary = "获取扩展点下项目对应的扩展服务信息列表")
+    @Path("/items/projects/{projectCode}/list")
+    @GET
+    fun getExtItemServiceList(
+        @Parameter(description = "userId", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "项目代码", required = true)
+        @PathParam("projectCode")
+        projectCode: String,
+        @Parameter(description = "扩展点ID（如果存在多个请用逗号分隔拼接）", required = true)
+        @QueryParam("itemIds")
+        itemIds: String
+    ): Result<List<ExtItemServiceVO>>
+}

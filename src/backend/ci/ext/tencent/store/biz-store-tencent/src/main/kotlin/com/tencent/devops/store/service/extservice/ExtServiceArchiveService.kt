@@ -25,17 +25,37 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.pojo.pipeline
+package com.tencent.devops.store.service.extservice
 
-import com.tencent.devops.store.pojo.extservice.dto.ExtServiceBaseInfoDTO
-import io.swagger.v3.oas.annotations.media.Schema
+import com.tencent.devops.common.api.constant.CommonMessageCode
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.web.utils.I18nUtil
+import com.tencent.devops.store.dao.common.StoreMemberDao
+import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
+import org.jooq.DSLContext
+import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.stereotype.Service
 
-@Schema(title = "扩展服务构建初始化流水线请求报文体")
-data class ExtServiceBuildInitPipelineReq(
-    @get:Schema(title = "流水线模型", required = true)
-    val pipelineModel: String,
-    @get:Schema(title = "脚本任务插件Shell执行脚本", required = true)
-    val script: String,
-    @get:Schema(title = "扩展服务基本信息", required = true)
-    val extServiceBaseInfo: ExtServiceBaseInfoDTO
-)
+@Service
+class ExtServiceArchiveService {
+
+    @Autowired
+    private lateinit var dslContext: DSLContext
+    @Autowired
+    private lateinit var storeMemberDao: StoreMemberDao
+
+    private val logger = LoggerFactory.getLogger(ExtServiceArchiveService::class.java)
+
+    fun verifyExtServicePackageByUserId(userId: String, serviceCode: String): Result<Boolean> {
+        logger.info("verifyExtServicePackageByUserId userId is:$userId,serviceCode is :$serviceCode")
+        // 校验用户是否是该扩展服务的开发成员
+        val flag = storeMemberDao.isStoreMember(dslContext, userId, serviceCode, StoreTypeEnum.SERVICE.type.toByte())
+        if (!flag) {
+            return I18nUtil.generateResponseDataObject(
+                messageCode = CommonMessageCode.PERMISSION_DENIED,
+                language = I18nUtil.getLanguage(userId))
+        }
+        return Result(true)
+    }
+}

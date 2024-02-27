@@ -25,17 +25,20 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.pojo.pipeline
+package com.tencent.devops.store.pojo.extservice
 
-import com.tencent.devops.store.pojo.extservice.dto.ExtServiceBaseInfoDTO
+import com.tencent.devops.store.pojo.extservice.enums.ServiceTypeEnum
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(title = "扩展服务构建初始化流水线请求报文体")
-data class ExtServiceBuildInitPipelineReq(
-    @get:Schema(title = "流水线模型", required = true)
-    val pipelineModel: String,
-    @get:Schema(title = "脚本任务插件Shell执行脚本", required = true)
-    val script: String,
-    @get:Schema(title = "扩展服务基本信息", required = true)
-    val extServiceBaseInfo: ExtServiceBaseInfoDTO
+data class UpdateSettingInfo(
+    @get:Schema(title = "扩展服务类型：0：官方自研，1：第三方", required = true)
+    val type: ServiceTypeEnum? = ServiceTypeEnum.SELF_DEVELOPED,
+    @get:Schema(title = "是否公共", required = true)
+    val publicFlag: Boolean?,
+    @get:Schema(title = "是否推荐", required = true)
+    val recommendFlag: Boolean?,
+    @get:Schema(title = "是否官方认证", required = true)
+    val certificationFlag: Boolean?,
+    @get:Schema(title = "权重", required = true)
+    val weight: Int?
 )

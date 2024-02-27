@@ -25,17 +25,38 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.pojo.pipeline
+package com.tencent.devops.store.pojo.extservice
 
-import com.tencent.devops.store.pojo.extservice.dto.ExtServiceBaseInfoDTO
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(title = "扩展服务构建初始化流水线请求报文体")
-data class ExtServiceBuildInitPipelineReq(
-    @get:Schema(title = "流水线模型", required = true)
-    val pipelineModel: String,
-    @get:Schema(title = "脚本任务插件Shell执行脚本", required = true)
-    val script: String,
-    @get:Schema(title = "扩展服务基本信息", required = true)
-    val extServiceBaseInfo: ExtServiceBaseInfoDTO
+@Schema(title = "扩展服务首页信息")
+data class ExtServiceItem(
+    @get:Schema(title = "ID")
+    val id: String,
+    @get:Schema(title = "名称")
+    val name: String,
+    @get:Schema(title = "标识")
+    val code: String,
+    @get:Schema(title = "分类")
+    val classifyCode: String?,
+    @get:Schema(title = "logo链接")
+    val logoUrl: String?,
+    @get:Schema(title = "发布者")
+    val publisher: String,
+    @get:Schema(title = "下载量")
+    val downloads: Int?,
+    @get:Schema(title = "评分")
+    val score: Double?,
+    @get:Schema(title = "简介")
+    val summary: String?,
+    @get:Schema(title = "是否有权限安装标识")
+    val flag: Boolean,
+    @get:Schema(title = "是否公共标识")
+    val publicFlag: Boolean,
+    @get:Schema(title = "修改人")
+    val modifier: String,
+    @get:Schema(title = "修改时间")
+    val updateTime: String,
+    @get:Schema(title = "是否推荐标识 true：推荐，false：不推荐", required = false)
+    val recommendFlag: Boolean? = null
 )

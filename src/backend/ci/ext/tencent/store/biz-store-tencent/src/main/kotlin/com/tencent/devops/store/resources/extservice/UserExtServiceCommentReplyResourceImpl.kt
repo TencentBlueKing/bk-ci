@@ -25,17 +25,30 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.pojo.pipeline
+package com.tencent.devops.store.resources.extservice
 
-import com.tencent.devops.store.pojo.extservice.dto.ExtServiceBaseInfoDTO
-import io.swagger.v3.oas.annotations.media.Schema
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.store.api.extservice.UserExtServiceCommentReplyResource
+import com.tencent.devops.store.pojo.common.StoreCommentReplyInfo
+import com.tencent.devops.store.pojo.common.StoreCommentReplyRequest
+import com.tencent.devops.store.service.common.StoreCommentReplyService
+import org.springframework.beans.factory.annotation.Autowired
 
-@Schema(title = "扩展服务构建初始化流水线请求报文体")
-data class ExtServiceBuildInitPipelineReq(
-    @get:Schema(title = "流水线模型", required = true)
-    val pipelineModel: String,
-    @get:Schema(title = "脚本任务插件Shell执行脚本", required = true)
-    val script: String,
-    @get:Schema(title = "扩展服务基本信息", required = true)
-    val extServiceBaseInfo: ExtServiceBaseInfoDTO
-)
+@RestResource
+class UserExtServiceCommentReplyResourceImpl @Autowired constructor(
+    private val storeCommentReplyService: StoreCommentReplyService
+) : UserExtServiceCommentReplyResource {
+
+    override fun getStoreCommentReplysByCommentId(commentId: String): Result<List<StoreCommentReplyInfo>?> {
+        return storeCommentReplyService.getStoreCommentReplysByCommentId(commentId)
+    }
+
+    override fun addStoreCommentReply(
+        userId: String,
+        commentId: String,
+        storeCommentReplyRequest: StoreCommentReplyRequest
+    ): Result<StoreCommentReplyInfo?> {
+        return storeCommentReplyService.addStoreCommentReply(userId, commentId, storeCommentReplyRequest)
+    }
+}

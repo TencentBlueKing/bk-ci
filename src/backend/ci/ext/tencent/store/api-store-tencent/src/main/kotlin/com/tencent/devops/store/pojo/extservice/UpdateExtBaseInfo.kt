@@ -25,17 +25,28 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.pojo.pipeline
+package com.tencent.devops.store.pojo.extservice
 
-import com.tencent.devops.store.pojo.extservice.dto.ExtServiceBaseInfoDTO
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties
+import com.tencent.devops.store.pojo.extservice.enums.DescInputTypeEnum
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(title = "扩展服务构建初始化流水线请求报文体")
-data class ExtServiceBuildInitPipelineReq(
-    @get:Schema(title = "流水线模型", required = true)
-    val pipelineModel: String,
-    @get:Schema(title = "脚本任务插件Shell执行脚本", required = true)
-    val script: String,
-    @get:Schema(title = "扩展服务基本信息", required = true)
-    val extServiceBaseInfo: ExtServiceBaseInfoDTO
+@JsonIgnoreProperties(ignoreUnknown = true)
+data class UpdateExtBaseInfo(
+    @get:Schema(title = "扩展服务Name")
+    val serviceName: String?,
+    @get:Schema(title = "扩展点")
+    val itemIds: Set<String>?,
+    @get:Schema(title = "标签")
+    val labels: List<String>?,
+    @get:Schema(title = "简介")
+    val summary: String? = null,
+    @get:Schema(title = "LOGO url")
+    val logoUrl: String?,
+    @get:Schema(title = "icon图标base64字符串", required = false)
+    val iconData: String?,
+    @get:Schema(title = "扩展服务描述")
+    val description: String? = null,
+    @get:Schema(title = "描述录入类型")
+    val descInputType: DescInputTypeEnum? = DescInputTypeEnum.MANUAL
 )

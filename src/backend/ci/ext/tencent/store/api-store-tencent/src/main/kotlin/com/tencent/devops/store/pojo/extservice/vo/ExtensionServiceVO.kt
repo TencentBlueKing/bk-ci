@@ -25,17 +25,27 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.pojo.pipeline
+package com.tencent.devops.store.pojo.extservice.vo
 
-import com.tencent.devops.store.pojo.extservice.dto.ExtServiceBaseInfoDTO
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(title = "扩展服务构建初始化流水线请求报文体")
-data class ExtServiceBuildInitPipelineReq(
-    @get:Schema(title = "流水线模型", required = true)
-    val pipelineModel: String,
-    @get:Schema(title = "脚本任务插件Shell执行脚本", required = true)
-    val script: String,
-    @get:Schema(title = "扩展服务基本信息", required = true)
-    val extServiceBaseInfo: ExtServiceBaseInfoDTO
+@JsonIgnoreProperties(ignoreUnknown = true)
+data class ExtensionServiceVO(
+    @get:Schema(title = "扩展服务Id")
+    val serviceId: String,
+    @get:Schema(title = "扩展服务名称")
+    val serviceName: String,
+    @get:Schema(title = "扩展服务code")
+    val serviceCode: String,
+    @get:Schema(title = "版本")
+    val version: String,
+    @get:Schema(title = "调试项目Code")
+    val projectCode: String? = null,
+    @get:Schema(title = "状态")
+    val serviceStatus: Int,
+    @get:Schema(title = "扩展服务发布者")
+    val publisher: String?,
+    @get:Schema(title = "修改时间")
+    val modifierTime: String
 )

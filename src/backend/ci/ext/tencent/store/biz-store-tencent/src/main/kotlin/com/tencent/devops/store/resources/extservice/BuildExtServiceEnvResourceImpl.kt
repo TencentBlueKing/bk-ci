@@ -25,17 +25,26 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.pojo.pipeline
+package com.tencent.devops.store.resources.extservice
 
-import com.tencent.devops.store.pojo.extservice.dto.ExtServiceBaseInfoDTO
-import io.swagger.v3.oas.annotations.media.Schema
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.store.api.extservice.BuildExtServiceEnvResource
+import com.tencent.devops.store.pojo.extservice.dto.UpdateExtServiceEnvInfoDTO
+import com.tencent.devops.store.service.extservice.ExtServiceEnvService
+import org.springframework.beans.factory.annotation.Autowired
 
-@Schema(title = "扩展服务构建初始化流水线请求报文体")
-data class ExtServiceBuildInitPipelineReq(
-    @get:Schema(title = "流水线模型", required = true)
-    val pipelineModel: String,
-    @get:Schema(title = "脚本任务插件Shell执行脚本", required = true)
-    val script: String,
-    @get:Schema(title = "扩展服务基本信息", required = true)
-    val extServiceBaseInfo: ExtServiceBaseInfoDTO
-)
+@RestResource
+class BuildExtServiceEnvResourceImpl @Autowired constructor(
+    private val extServiceEnvService: ExtServiceEnvService
+) : BuildExtServiceEnvResource {
+
+    override fun updateExtServiceEnv(
+        projectCode: String,
+        serviceCode: String,
+        version: String,
+        updateExtServiceEnvInfo: UpdateExtServiceEnvInfoDTO
+    ): Result<Boolean> {
+        return extServiceEnvService.updateExtServiceEnvInfo(projectCode, serviceCode, version, updateExtServiceEnvInfo)
+    }
+}

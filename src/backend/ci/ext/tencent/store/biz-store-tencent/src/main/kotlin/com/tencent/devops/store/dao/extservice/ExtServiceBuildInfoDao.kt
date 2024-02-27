@@ -25,17 +25,28 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.pojo.pipeline
+package com.tencent.devops.store.dao.extservice
 
-import com.tencent.devops.store.pojo.extservice.dto.ExtServiceBaseInfoDTO
-import io.swagger.v3.oas.annotations.media.Schema
+import com.tencent.devops.model.store.tables.TExtensionServiceEnvInfo
+import com.tencent.devops.model.store.tables.TStoreBuildInfo
+import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
+import org.jooq.DSLContext
+import org.jooq.Record2
+import org.springframework.stereotype.Repository
 
-@Schema(title = "扩展服务构建初始化流水线请求报文体")
-data class ExtServiceBuildInitPipelineReq(
-    @get:Schema(title = "流水线模型", required = true)
-    val pipelineModel: String,
-    @get:Schema(title = "脚本任务插件Shell执行脚本", required = true)
-    val script: String,
-    @get:Schema(title = "扩展服务基本信息", required = true)
-    val extServiceBaseInfo: ExtServiceBaseInfoDTO
-)
+@Repository
+class ExtServiceBuildInfoDao {
+
+    fun getServiceBuildInfo(dslContext: DSLContext, serviceId: String): Record2<String, String> {
+        val a = TExtensionServiceEnvInfo.T_EXTENSION_SERVICE_ENV_INFO.`as`("a")
+        val b = TStoreBuildInfo.T_STORE_BUILD_INFO.`as`("b")
+        return dslContext.select(
+            b.SCRIPT.`as`("script"),
+            b.REPOSITORY_PATH.`as`("repositoryPath")
+        ).from(a)
+            .join(b)
+            .on(a.LANGUAGE.eq(b.LANGUAGE))
+            .where(a.SERVICE_ID.eq(serviceId)).and(b.STORE_TYPE.eq(StoreTypeEnum.SERVICE.type.toByte()))
+            .fetchOne()!!
+    }
+}

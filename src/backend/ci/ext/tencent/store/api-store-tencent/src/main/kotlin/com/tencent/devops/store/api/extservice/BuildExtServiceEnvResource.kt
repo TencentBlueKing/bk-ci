@@ -25,17 +25,40 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.pojo.pipeline
+package com.tencent.devops.store.api.extservice
 
-import com.tencent.devops.store.pojo.extservice.dto.ExtServiceBaseInfoDTO
-import io.swagger.v3.oas.annotations.media.Schema
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.store.pojo.extservice.dto.UpdateExtServiceEnvInfoDTO
+import io.swagger.v3.oas.annotations.tags.Tag
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.Parameter
+import javax.ws.rs.Consumes
+import javax.ws.rs.PUT
+import javax.ws.rs.Path
+import javax.ws.rs.PathParam
+import javax.ws.rs.Produces
+import javax.ws.rs.core.MediaType
 
-@Schema(title = "扩展服务构建初始化流水线请求报文体")
-data class ExtServiceBuildInitPipelineReq(
-    @get:Schema(title = "流水线模型", required = true)
-    val pipelineModel: String,
-    @get:Schema(title = "脚本任务插件Shell执行脚本", required = true)
-    val script: String,
-    @get:Schema(title = "扩展服务基本信息", required = true)
-    val extServiceBaseInfo: ExtServiceBaseInfoDTO
-)
+@Tag(name = "BUILD_EXTENSION_SERVICE_ENV", description = "扩展服务-扩展服务执行环境")
+@Path("/build/ext/services/env/")
+@Produces(MediaType.APPLICATION_JSON)
+@Consumes(MediaType.APPLICATION_JSON)
+interface BuildExtServiceEnvResource {
+
+    @Operation(summary = "更新扩展服务环境信息")
+    @PUT
+    @Path("/projects/{projectCode}/services/{serviceCode}/versions/{version}")
+    fun updateExtServiceEnv(
+        @Parameter(description = "项目代码", required = true)
+        @PathParam("projectCode")
+        projectCode: String,
+        @Parameter(description = "扩展服务代码", required = true)
+        @PathParam("serviceCode")
+        serviceCode: String,
+        @Parameter(description = "版本号", required = true)
+        @PathParam("version")
+        version: String,
+        @Parameter(description = "更新扩展服务环境信息请求报文体", required = true)
+        updateExtServiceEnvInfo: UpdateExtServiceEnvInfoDTO
+    ): Result<Boolean>
+}

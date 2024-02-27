@@ -25,17 +25,35 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.pojo.pipeline
+package com.tencent.devops.store.pojo.extservice
 
-import com.tencent.devops.store.pojo.extservice.dto.ExtServiceBaseInfoDTO
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(title = "扩展服务构建初始化流水线请求报文体")
-data class ExtServiceBuildInitPipelineReq(
-    @get:Schema(title = "流水线模型", required = true)
-    val pipelineModel: String,
-    @get:Schema(title = "脚本任务插件Shell执行脚本", required = true)
-    val script: String,
-    @get:Schema(title = "扩展服务基本信息", required = true)
-    val extServiceBaseInfo: ExtServiceBaseInfoDTO
+data class ExtServiceUpdateInfo(
+    @get:Schema(title = "扩展服务Name")
+    val serviceName: String? = null,
+    @get:Schema(title = "所属分类")
+    val category: String? = null,
+    @get:Schema(title = "服务版本")
+    val version: String? = null,
+    @get:Schema(title = "状态")
+    val status: Int?,
+    @get:Schema(title = "状态对应的描述")
+    val statusMsg: String? = null,
+    @get:Schema(title = "LOGO url")
+    val logoUrl: String? = null,
+    @get:Schema(title = "icon图标base64字符串")
+    val iconData: String? = null,
+    @get:Schema(title = "扩展服务简介")
+    val summary: String? = null,
+    @get:Schema(title = "扩展服务描述")
+    val description: String? = null,
+    @get:Schema(title = "扩展服务发布者")
+    val publisher: String? = null,
+    @get:Schema(title = "发布时间")
+    val publishTime: Long? = 0,
+    @get:Schema(title = "是否是最后版本")
+    val latestFlag: Boolean?,
+    @get:Schema(title = "修改用户")
+    val modifierUser: String
 )

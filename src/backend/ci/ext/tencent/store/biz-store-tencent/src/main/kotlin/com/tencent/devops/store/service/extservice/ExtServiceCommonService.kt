@@ -25,17 +25,36 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.pojo.pipeline
+package com.tencent.devops.store.service.extservice
 
+import com.tencent.devops.common.api.constant.CommonMessageCode
+import com.tencent.devops.common.api.exception.ErrorCodeException
+import com.tencent.devops.store.dao.extservice.ExtServiceDao
 import com.tencent.devops.store.pojo.extservice.enums.ExtServiceStatusEnum
-import io.swagger.v3.oas.annotations.media.Schema
+import org.jooq.DSLContext
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.stereotype.Service
 
-@Schema(title = "扩展服务初始化构建流水线报文响应体")
-data class ExtServiceBuildInitPipelineResp(
-    @get:Schema(title = "流水线ID", required = true)
-    val pipelineId: String,
-    @get:Schema(title = "构建ID", required = false)
-    val buildId: String?,
-    @get:Schema(title = "构建状态", required = true)
-    val extServiceStatus: ExtServiceStatusEnum
-)
+@Service
+class ExtServiceCommonService @Autowired constructor(
+    private val dslContext: DSLContext,
+    private val extServiceDao: ExtServiceDao
+) {
+
+    fun checkEditCondition(serviceCode: String): Boolean {
+        // 查询微扩展的最新记录
+        val newestServiceRecord = extServiceDao.getNewestServiceByCode(dslContext, serviceCode)
+            ?: throw ErrorCodeException(
+                errorCode = CommonMessageCode.PARAMETER_IS_INVALID,
+                params = arrayOf(serviceCode)
+            )
+        val serviceFinalStatusList = listOf(
+            ExtServiceStatusEnum.AUDIT_REJECT.status.toByte(),
+            ExtServiceStatusEnum.RELEASED.status.toByte(),
+            ExtServiceStatusEnum.GROUNDING_SUSPENSION.status.toByte(),
+            ExtServiceStatusEnum.UNDERCARRIAGED.status.toByte()
+        )
+        // 判断最近一个微扩展版本的状态，只有处于审核驳回、已发布、上架中止和已下架的状态才允许修改基本信息
+        return serviceFinalStatusList.contains(newestServiceRecord.serviceStatus)
+    }
+}

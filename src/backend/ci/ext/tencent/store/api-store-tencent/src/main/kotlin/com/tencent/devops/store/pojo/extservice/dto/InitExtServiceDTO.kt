@@ -25,17 +25,29 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.pojo.pipeline
+package com.tencent.devops.store.pojo.extservice.dto
 
-import com.tencent.devops.store.pojo.extservice.dto.ExtServiceBaseInfoDTO
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties
+import com.tencent.devops.repository.pojo.enums.TokenTypeEnum
+import com.tencent.devops.repository.pojo.enums.VisibilityLevelEnum
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(title = "扩展服务构建初始化流水线请求报文体")
-data class ExtServiceBuildInitPipelineReq(
-    @get:Schema(title = "流水线模型", required = true)
-    val pipelineModel: String,
-    @get:Schema(title = "脚本任务插件Shell执行脚本", required = true)
-    val script: String,
-    @get:Schema(title = "扩展服务基本信息", required = true)
-    val extServiceBaseInfo: ExtServiceBaseInfoDTO
+@JsonIgnoreProperties(ignoreUnknown = true)
+data class InitExtServiceDTO(
+    @get:Schema(title = "扩展服务code")
+    val serviceCode: String,
+    @get:Schema(title = "扩展服务Name")
+    val serviceName: String,
+    @get:Schema(title = "调试项目Code")
+    val projectCode: String,
+    @get:Schema(title = "服务语言")
+    val language: String? = "java",
+    @get:Schema(title = "认证方式", required = false)
+    val authType: String? = TokenTypeEnum.OAUTH.toString(),
+    @get:Schema(title = "插件代码库不开源原因", required = false)
+    val privateReason: String? = null,
+    @get:Schema(title = "扩展点列表")
+    val extensionItemList: Set<String>,
+    @get:Schema(title = "项目可视范围", required = false)
+    val visibilityLevel: VisibilityLevelEnum? = VisibilityLevelEnum.LOGIN_PUBLIC
 )

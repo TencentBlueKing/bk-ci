@@ -25,17 +25,47 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.pojo.pipeline
+package com.tencent.devops.store.dao.extservice
 
-import com.tencent.devops.store.pojo.extservice.dto.ExtServiceBaseInfoDTO
-import io.swagger.v3.oas.annotations.media.Schema
+import com.tencent.devops.model.store.tables.TStoreProjectRel
+import com.tencent.devops.model.store.tables.records.TStoreProjectRelRecord
+import com.tencent.devops.store.pojo.common.enums.StoreProjectTypeEnum
+import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
+import java.time.Instant
+import java.time.LocalDateTime
+import java.time.ZoneId
+import org.jooq.DSLContext
+import org.jooq.Result
+import org.springframework.stereotype.Repository
 
-@Schema(title = "扩展服务构建初始化流水线请求报文体")
-data class ExtServiceBuildInitPipelineReq(
-    @get:Schema(title = "流水线模型", required = true)
-    val pipelineModel: String,
-    @get:Schema(title = "脚本任务插件Shell执行脚本", required = true)
-    val script: String,
-    @get:Schema(title = "扩展服务基本信息", required = true)
-    val extServiceBaseInfo: ExtServiceBaseInfoDTO
-)
+@Repository
+class ExtStoreProjectRelDao {
+
+    /**
+     * 获取项目的调试组件
+     */
+    fun getStoreInstall(
+        dslContext: DSLContext,
+        storeCode: String,
+        storeType: StoreTypeEnum,
+        startTime: Long
+    ): Result<TStoreProjectRelRecord>? {
+        return with(TStoreProjectRel.T_STORE_PROJECT_REL) {
+            val where = dslContext.selectFrom(this).where(
+                STORE_TYPE.eq(storeType.type.toByte()).and(STORE_CODE.eq(storeCode).and(TYPE.eq(StoreProjectTypeEnum.COMMON.type.toByte())))
+            )
+            if (startTime > 0) {
+                where.and(
+                    CREATE_TIME.ge(
+                        LocalDateTime.ofInstant(
+                            Instant.ofEpochSecond(startTime),
+                            ZoneId.systemDefault()
+                        )
+                    )
+                )
+            }
+            where.orderBy(CREATE_TIME.desc())
+                .fetch()
+        }
+    }
+}

@@ -25,17 +25,21 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.pojo.pipeline
+package com.tencent.devops.store.pojo.extservice.enums
 
-import com.tencent.devops.store.pojo.extservice.dto.ExtServiceBaseInfoDTO
-import io.swagger.v3.oas.annotations.media.Schema
+enum class ServiceTypeEnum(val type: Int) {
+    SELF_DEVELOPED(0), // 自研
+    THIRD_PARTY(1); // 第三方
 
-@Schema(title = "扩展服务构建初始化流水线请求报文体")
-data class ExtServiceBuildInitPipelineReq(
-    @get:Schema(title = "流水线模型", required = true)
-    val pipelineModel: String,
-    @get:Schema(title = "脚本任务插件Shell执行脚本", required = true)
-    val script: String,
-    @get:Schema(title = "扩展服务基本信息", required = true)
-    val extServiceBaseInfo: ExtServiceBaseInfoDTO
-)
+    override fun toString() = type.toString()
+
+    companion object {
+        fun getServiceType(type: Int): String {
+            return when (type) {
+                0 -> SELF_DEVELOPED.name
+                1 -> THIRD_PARTY.name
+                else -> THIRD_PARTY.name
+            }
+        }
+    }
+}

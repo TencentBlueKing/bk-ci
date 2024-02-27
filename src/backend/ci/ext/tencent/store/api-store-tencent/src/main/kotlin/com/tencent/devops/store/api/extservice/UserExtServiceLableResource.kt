@@ -25,17 +25,37 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.pojo.pipeline
+package com.tencent.devops.store.api.extservice
 
-import com.tencent.devops.store.pojo.extservice.dto.ExtServiceBaseInfoDTO
-import io.swagger.v3.oas.annotations.media.Schema
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.store.pojo.common.Label
+import io.swagger.v3.oas.annotations.tags.Tag
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.Parameter
+import javax.ws.rs.Consumes
+import javax.ws.rs.GET
+import javax.ws.rs.Path
+import javax.ws.rs.PathParam
+import javax.ws.rs.Produces
+import javax.ws.rs.core.MediaType
 
-@Schema(title = "扩展服务构建初始化流水线请求报文体")
-data class ExtServiceBuildInitPipelineReq(
-    @get:Schema(title = "流水线模型", required = true)
-    val pipelineModel: String,
-    @get:Schema(title = "脚本任务插件Shell执行脚本", required = true)
-    val script: String,
-    @get:Schema(title = "扩展服务基本信息", required = true)
-    val extServiceBaseInfo: ExtServiceBaseInfoDTO
-)
+@Tag(name = "USER_EXT_SERVICE_LABEL", description = "流水线-插件标签")
+@Path("/user/market/service/label")
+@Produces(MediaType.APPLICATION_JSON)
+@Consumes(MediaType.APPLICATION_JSON)
+interface UserExtServiceLableResource {
+
+    @Operation(summary = "获取所有插件标签信息")
+    @GET
+    @Path("/labels")
+    fun getAllServiceLabels(): Result<List<Label>?>
+
+    @Operation(summary = "根据扩展服务ID获取服务标签信息")
+    @GET
+    @Path("/serviceIds/{serviceId}/labels")
+    fun getServiceLabelsByServiceId(
+        @Parameter(description = "扩展服务Id", required = true)
+        @PathParam("serviceId")
+        serviceId: String
+    ): Result<List<Label>?>
+}

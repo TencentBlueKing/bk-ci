@@ -25,17 +25,22 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.pojo.pipeline
+package com.tencent.devops.store.resources.extservice
 
-import com.tencent.devops.store.pojo.extservice.dto.ExtServiceBaseInfoDTO
-import io.swagger.v3.oas.annotations.media.Schema
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.store.api.extservice.UserExtServiceClassifyResource
+import com.tencent.devops.store.pojo.common.Classify
+import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
+import com.tencent.devops.store.service.common.ClassifyService
+import org.springframework.beans.factory.annotation.Autowired
 
-@Schema(title = "扩展服务构建初始化流水线请求报文体")
-data class ExtServiceBuildInitPipelineReq(
-    @get:Schema(title = "流水线模型", required = true)
-    val pipelineModel: String,
-    @get:Schema(title = "脚本任务插件Shell执行脚本", required = true)
-    val script: String,
-    @get:Schema(title = "扩展服务基本信息", required = true)
-    val extServiceBaseInfo: ExtServiceBaseInfoDTO
-)
+@RestResource
+class UserExtServiceClassifyResourceImpl @Autowired constructor(
+    private val classfiyService: ClassifyService
+) : UserExtServiceClassifyResource {
+
+    override fun getAllAtomClassifys(): Result<List<Classify>> {
+        return classfiyService.getAllClassify(StoreTypeEnum.SERVICE.type.toByte())
+    }
+}

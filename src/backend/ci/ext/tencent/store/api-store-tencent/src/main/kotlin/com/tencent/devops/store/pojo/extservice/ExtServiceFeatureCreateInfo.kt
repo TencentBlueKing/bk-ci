@@ -25,17 +25,34 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.pojo.pipeline
+package com.tencent.devops.store.pojo.extservice
 
-import com.tencent.devops.store.pojo.extservice.dto.ExtServiceBaseInfoDTO
+import com.tencent.devops.store.pojo.extservice.enums.DescInputTypeEnum
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(title = "扩展服务构建初始化流水线请求报文体")
-data class ExtServiceBuildInitPipelineReq(
-    @get:Schema(title = "流水线模型", required = true)
-    val pipelineModel: String,
-    @get:Schema(title = "脚本任务插件Shell执行脚本", required = true)
-    val script: String,
-    @get:Schema(title = "扩展服务基本信息", required = true)
-    val extServiceBaseInfo: ExtServiceBaseInfoDTO
+data class ExtServiceFeatureCreateInfo(
+    @get:Schema(title = "扩展服务code")
+    val serviceCode: String,
+    @get:Schema(title = "是否为公共扩展服务， TRUE：是 FALSE：不是  ")
+    val publicFlag: Boolean? = false,
+    @get:Schema(title = "是否推荐， TRUE：是 FALSE：不是 ")
+    val recommentFlag: Boolean? = false,
+    @get:Schema(title = "是否官方认证， TRUE：是 FALSE：不是  ")
+    val certificationFlag: Boolean? = false,
+    @get:Schema(title = "权重（数值越大代表权重越高）")
+    val weight: Int? = null,
+    @get:Schema(title = "扩展服务可见范围 0：私有 10：登录用户开源")
+    val visibilityLevel: Int? = 10,
+    @get:Schema(title = "描述录入类型")
+    val descInputType: DescInputTypeEnum? = DescInputTypeEnum.MANUAL,
+    @get:Schema(title = "代码库hashId")
+    val repositoryHashId: String? = null,
+    @get:Schema(title = "代码库地址")
+    val codeSrc: String? = null,
+    @get:Schema(title = "删除标签")
+    val deleteFlag: Boolean? = false,
+    @get:Schema(title = "添加用户")
+    val creatorUser: String,
+    @get:Schema(title = "修改用户")
+    val modifierUser: String
 )

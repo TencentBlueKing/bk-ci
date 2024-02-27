@@ -25,17 +25,31 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.pojo.pipeline
+package com.tencent.devops.store.resources.extService
 
-import com.tencent.devops.store.pojo.extservice.dto.ExtServiceBaseInfoDTO
-import io.swagger.v3.oas.annotations.media.Schema
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.store.api.extservice.UserExtServiceVisibleDeptResource
+import com.tencent.devops.store.pojo.common.StoreVisibleDeptResp
+import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
+import com.tencent.devops.store.pojo.extservice.requests.ExtsionServiceVisibleDeptReq
+import com.tencent.devops.store.service.common.StoreVisibleDeptService
+import org.springframework.beans.factory.annotation.Autowired
 
-@Schema(title = "扩展服务构建初始化流水线请求报文体")
-data class ExtServiceBuildInitPipelineReq(
-    @get:Schema(title = "流水线模型", required = true)
-    val pipelineModel: String,
-    @get:Schema(title = "脚本任务插件Shell执行脚本", required = true)
-    val script: String,
-    @get:Schema(title = "扩展服务基本信息", required = true)
-    val extServiceBaseInfo: ExtServiceBaseInfoDTO
-)
+@RestResource
+class UserExtServiceVisibleDeptResourceImpl @Autowired constructor(
+    val storeVisibleDeptService: StoreVisibleDeptService
+) : UserExtServiceVisibleDeptResource {
+
+    override fun addVisibleDept(userId: String, serviceVisibleDeptRequest: ExtsionServiceVisibleDeptReq): Result<Boolean> {
+        return storeVisibleDeptService.addVisibleDept(userId, serviceVisibleDeptRequest.serviceCode, serviceVisibleDeptRequest.deptInfos, StoreTypeEnum.SERVICE)
+    }
+
+    override fun deleteVisibleDept(userId: String, serviceCode: String, deptIds: String): Result<Boolean> {
+        return storeVisibleDeptService.deleteVisibleDept(userId, serviceCode, deptIds, StoreTypeEnum.SERVICE)
+    }
+
+    override fun getVisibleDept(serviceCode: String): Result<StoreVisibleDeptResp?> {
+        return storeVisibleDeptService.getVisibleDept(serviceCode, StoreTypeEnum.SERVICE, null)
+    }
+}
