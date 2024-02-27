@@ -303,7 +303,7 @@ interface ServiceTxProjectResource {
         @Parameter(description = "工蜂项目名称", required = false)
         @QueryParam("gitProjectName")
         gitProjectName: String?,
-        @ApiParam("项目运营归属", required = false)
+        @Parameter(description = "项目运营归属", required = false)
         @QueryParam("productName")
         productName: String? = null
     ): Result<ProjectVO>
