@@ -235,11 +235,13 @@ class ServiceProjectResourceImpl @Autowired constructor(
 
     override fun updateProjectProductId(
         projectCode: String,
-        productName: String
+        productName: String?,
+        productId: Int?
     ): Result<Boolean> {
         projectService.updateProjectProductId(
             englishName = projectCode,
-            productName = productName
+            productName = productName,
+            productId = productId
         )
         return Result(true)
     }

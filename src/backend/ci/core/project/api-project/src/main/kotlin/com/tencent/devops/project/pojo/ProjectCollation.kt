@@ -25,18 +25,15 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.project.pojo.mq
+package com.tencent.devops.project.pojo
 
-import com.tencent.devops.common.event.annotation.Event
-import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
-import com.tencent.devops.project.pojo.ProjectUpdateHistoryInfo
-import com.tencent.devops.project.pojo.ProjectUpdateInfo
+/**
+ * 项目排序规则
+ */
+enum class ProjectCollation {
+    DEFAULT,
 
-@Event(exchange = MQ.EXCHANGE_PROJECT_UPDATE_FANOUT)
-data class ProjectUpdateBroadCastEvent(
-    override val userId: String,
-    override val projectId: String,
-    override var retryCount: Int = 0,
-    override var delayMills: Int = 0,
-    val projectInfo: ProjectUpdateInfo
-) : ProjectBroadCastEvent(userId, projectId, retryCount, delayMills)
+    ASC,
+
+    DESC;
+}
