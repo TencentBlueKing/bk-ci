@@ -2226,6 +2226,9 @@ class PipelineBuildFacadeService(
         return pipelineRuntimeService.getLatestBuild(projectId, pipelineIds)
     }
 
+    /**
+     * @return <启动人，#9910 环境构建时遇到启动错误时调度到一个新的Agent 是否重新调度>
+     */
     fun workerBuildFinish(
         projectCode: String,
         pipelineId: String, /* pipelineId在agent请求的数据有值前不可用 */
