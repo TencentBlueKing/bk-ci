@@ -32,9 +32,9 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
 import com.tencent.devops.project.pojo.Result
 import com.tencent.devops.project.pojo.user.UserDeptDetail
-import io.swagger.v3.oas.annotations.tags.Tag
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
+import io.swagger.v3.oas.annotations.tags.Tag
 import javax.ws.rs.Consumes
 import javax.ws.rs.GET
 import javax.ws.rs.HeaderParam
@@ -73,9 +73,9 @@ interface ServiceUserResource {
 
     @POST
     @Path("/cachedDetail/list")
-    @ApiOperation("从缓存中查询用户详细信息列表")
+    @Operation(summary = "从缓存中查询用户详细信息列表")
     fun listDetailFromCache(
-        @ApiParam("用户ID列表", required = true)
+        @Parameter(description = "用户ID列表", required = true)
         userIds: List<String>
     ): Result<List<UserDeptDetail>>
 }
