@@ -33,15 +33,14 @@ import com.tencent.devops.sign.api.constant.SignMessageCode
 import com.tencent.devops.sign.api.pojo.IpaSignInfo
 import com.tencent.devops.sign.service.FileService
 import com.tencent.devops.sign.utils.IpaFileUtil
-import java.io.File
-import java.io.InputStream
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
+import java.io.File
+import java.io.InputStream
 
 @Service
 class FileServiceImpl : FileService {
-
     @Value("\${bkci.sign.tmpDir:/data/enterprise_sign_tmp}")
     val tmpDir: String = "/data/enterprise_sign_tmp"
 
@@ -53,7 +52,7 @@ class FileServiceImpl : FileService {
         ipaInputStream: InputStream,
         ipaSignInfo: IpaSignInfo,
         md5Check: Boolean,
-        resignId: String?
+        resignId: String?,
     ): File {
         val ipaTmpDirFile = getIpaTmpDir(ipaSignInfo, resignId)
         val ipaFile = getIpaFile(ipaSignInfo, resignId)
@@ -65,13 +64,13 @@ class FileServiceImpl : FileService {
                 md5 == null -> {
                     logger.warn("copy file and calculate file md5 is failed.")
                     throw ErrorCodeException(
-                        errorCode = SignMessageCode.ERROR_COPY_FILE
+                        errorCode = SignMessageCode.ERROR_COPY_FILE,
                     )
                 }
                 md5 != ipaSignInfo.md5 -> {
                     logger.warn("copy file success, but md5 is diff.")
                     throw ErrorCodeException(
-                        errorCode = SignMessageCode.ERROR_COPY_FILE
+                        errorCode = SignMessageCode.ERROR_COPY_FILE,
                     )
                 }
                 else -> {
@@ -85,30 +84,32 @@ class FileServiceImpl : FileService {
 
     override fun getIpaFile(
         ipaSignInfo: IpaSignInfo,
-        resignId: String?
+        resignId: String?,
     ): File {
         return File("${getIpaTmpDir(ipaSignInfo, resignId).canonicalPath}/${ipaSignInfo.fileName}")
     }
 
     override fun getIpaUnzipDir(
         ipaSignInfo: IpaSignInfo,
-        resignId: String?
+        resignId: String?,
     ): File {
         return File("${getIpaFile(ipaSignInfo, resignId).canonicalPath}.unzipDir")
     }
 
     override fun getMobileProvisionDir(
         ipaSignInfo: IpaSignInfo,
-        resignId: String?
+        resignId: String?,
     ): File {
         return File("${getIpaFile(ipaSignInfo, resignId).canonicalPath}.mobileProvisionDir")
     }
 
     override fun getIpaTmpDir(
         ipaSignInfo: IpaSignInfo,
-        resignId: String?
+        resignId: String?,
     ): File {
-        return File("$tmpDir/${ipaSignInfo.projectId}/${ipaSignInfo.pipelineId}" +
-            "/${ipaSignInfo.buildId}/$resignId/")
+        return File(
+            "$tmpDir/${ipaSignInfo.projectId}/${ipaSignInfo.pipelineId}" +
+                "/${ipaSignInfo.buildId}/$resignId/",
+        )
     }
 }

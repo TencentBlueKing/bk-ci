@@ -33,5 +33,5 @@ data class MobileProvisionInfo(
     val mobileProvisionFile: File,
     val plistFile: File,
     val entitlementFile: File,
-    val bundleId: String
+    val bundleId: String,
 )

@@ -38,5 +38,5 @@ data class IpaUploadInfo(
     @get:Schema(title = "构建ID", required = true)
     var buildId: String = "",
     @get:Schema(title = "鉴权token", required = true)
-    var token: String = ""
+    var token: String = "",
 )

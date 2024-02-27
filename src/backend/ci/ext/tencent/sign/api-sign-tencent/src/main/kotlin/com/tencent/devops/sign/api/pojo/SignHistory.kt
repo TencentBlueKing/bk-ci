@@ -72,5 +72,5 @@ data class SignHistory(
     @get:Schema(title = "错误信息", required = false)
     val errorMessage: String?,
     @get:Schema(title = "签名任务请求原文", required = false)
-    var ipaSignInfoStr: String?
+    var ipaSignInfoStr: String?,
 )

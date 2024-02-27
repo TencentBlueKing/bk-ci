@@ -34,5 +34,5 @@ data class AppexSignInfo(
     @get:Schema(title = "appex拓展应用名", required = true)
     val appexName: String,
     @get:Schema(title = "扩展App对应描述文件ID", required = true)
-    val mobileProvisionId: String
+    val mobileProvisionId: String,
 )

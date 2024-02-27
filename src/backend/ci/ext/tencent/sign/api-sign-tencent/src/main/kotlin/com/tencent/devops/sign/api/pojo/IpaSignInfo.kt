@@ -78,9 +78,9 @@ data class IpaSignInfo(
     @get:Schema(title = "钥匙串访问组", required = false)
     var keychainAccessGroupList: List<String>? = null,
     @get:Schema(title = "更换的bundleId", required = false)
-    var bundleId:String? = null,
+    var bundleId: String? = null,
     @get:Schema(title = "更换的bundle名", required = false)
-    var bundleName:String? = null,
+    var bundleName: String? = null,
     @get:Schema(title = "更换的bundle版本号", required = false)
-    var bundleVersion:String? = null
+    var bundleVersion: String? = null,
 )
