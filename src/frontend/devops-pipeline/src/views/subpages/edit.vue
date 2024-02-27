@@ -223,6 +223,7 @@
                     await this.transferPipeline({
                         projectId: this.$route.params.projectId,
                         pipelineId: this.$route.params.pipelineId,
+                        version: this.pipelineVersion,
                         actionType: val ? 'FULL_MODEL2YAML' : 'FULL_YAML2MODEL',
                         modelAndSetting: {
                             model: pipeline,
@@ -432,7 +433,7 @@
       }
     }
   }
-  
+
   .edit-content-area {
     position: relative;
     background: white;

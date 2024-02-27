@@ -4,7 +4,6 @@ export default {
     install (Vue) {
         Vue.directive('enStyle', {
             bind (el, binding) {
-                console.log(0, el.style.cssText, 1, binding.value, 1111, jsCookie.get('blueking_language'))
                 if (jsCookie.get('blueking_language') !== 'en' || (typeof binding.value === 'string' && el.style.cssText?.includes(binding.value))) {
                     return
                 }

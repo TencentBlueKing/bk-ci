@@ -77,7 +77,7 @@
             Logo,
             Atom
         },
-        inject: ['reactiveData'],
+        inject: ['reactiveData', 'emitPipelineChange'],
         mixins: [localeMixins],
         props: {
             stage: {
@@ -206,9 +206,11 @@
             },
             handleCopy ({ elementIndex, element }) {
                 this.container.elements.splice(elementIndex + 1, 0, element)
+                this.emitPipelineChange()
             },
             handleDelete ({ elementIndex }) {
                 this.container.elements.splice(elementIndex, 1)
+                this.emitPipelineChange()
             },
             checkMove (event) {
                 const dragContext = event.draggedContext || {}

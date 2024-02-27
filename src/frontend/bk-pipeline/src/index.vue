@@ -131,7 +131,10 @@
             })
 
             return {
-                reactiveData
+                reactiveData,
+                emitPipelineChange: () => {
+                    this.emitPipelineChange(this.pipeline)
+                }
             }
         },
         data () {
@@ -187,15 +190,14 @@
             pipeline: {
                 handler: function (newVal, oldVal) {
                     if (this.editable && !areDeeplyEqual(newVal, oldVal)) {
-                        this.$emit('input', newVal)
-                        this.$emit('change', newVal)
+                        console.log('pipeline change', newVal, oldVal)
+                        // this.emitPipelineChange(newVal)
                     }
                 }
             },
             'pipeline.name': {
                 handler: function () {
-                    this.$emit('input', this.pipeline)
-                    this.$emit('change', this.pipeline)
+                    this.emitPipelineChange(this.pipeline)
                 }
             }
         },
@@ -207,6 +209,10 @@
             this.registeCustomEvent(true)
         },
         methods: {
+            emitPipelineChange (newVal) {
+                this.$emit('input', newVal)
+                this.$emit('change', newVal)
+            },
             registeCustomEvent (destory = false) {
                 customEvents.forEach((eventName) => {
                     const fn = (destory ? eventBus.$off : eventBus.$on).bind(eventBus)
@@ -248,9 +254,11 @@
             },
             handleCopyStage ({ stageIndex, stage }) {
                 this.pipeline.stages.splice(stageIndex + 1, 0, stage)
+                this.emitPipelineChange()
             },
             handleDeleteStage (stageId) {
                 this.pipeline.stages = this.pipeline.stages.filter(stage => stage.id !== stageId)
+                this.emitPipelineChange()
             },
             expandPostAction (stageId, matrixId, containerId) {
                 return new Promise((resolve, reject) => {

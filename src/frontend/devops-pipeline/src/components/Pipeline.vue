@@ -251,7 +251,7 @@
                 handler (val, old) {
                     if (this.pipelineEditable) {
                         console.log(areDeeplyEqual(val, old))
-                        this.setPipelineEditing(true)
+                        // this.setPipelineEditing(true)
                     }
                 },
                 deep: true
@@ -309,10 +309,7 @@
             handlePipelineChange (pipeline) {
                 if (!this.editable) return
                 console.log('11111, handlePipelineChange')
-                if (!areDeeplyEqual(this.pipeline, pipeline)) {
-                    Object.assign(this.pipeline, pipeline)
-                    this.setPipelineEditing(true)
-                }
+                this.setPipelineEditing(true)
             },
             resetInsertStageState () {
                 this.setInsertStageState({

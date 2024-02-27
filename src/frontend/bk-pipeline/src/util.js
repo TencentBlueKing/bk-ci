@@ -197,8 +197,10 @@ export function areDeeplyEqual (obj1, obj2) {
             return false
         }
 
-        const leftKeys = Object.keys(left)
-        const rightKeys = Object.keys(right)
+        const ignoreKeys = ['isError', 'id', 'pipelineCreator', 'containerHashId', 'containerId', 'executeCount']
+        // 排除 isError 字段
+        const leftKeys = Object.keys(left).filter(key => !ignoreKeys.includes(key))
+        const rightKeys = Object.keys(right).filter(key => !ignoreKeys.includes(key))
         if (leftKeys.length !== rightKeys.length) {
             return false
         }
