@@ -70,7 +70,10 @@ class RepoPipelineService @Autowired constructor(
         projectId: String,
         request: RepoPipelineRefRequest
     ) {
-        logger.info("updatePipelineRef: [$userId|$projectId|${request.action}|${request.pipelineId}}]")
+        logger.info(
+            "updatePipelineRef: [$userId|$projectId|${request.action}" +
+                    "|${request.pipelineId}|${request.channel}]"
+        )
         when (request.action) {
             "create_pipeline", "update_pipeline", "restore_pipeline", "op" -> {
                 if (request.pipelineRefInfos.isEmpty()) {
@@ -92,7 +95,7 @@ class RepoPipelineService @Autowired constructor(
         projectId: String,
         pipelineId: String,
         pipelineRefInfos: List<RepoPipelineRefInfo>,
-        channel: String
+        channel: String?
     ) {
         val repoPipelineRefs = mutableListOf<RepoPipelineRef>()
         val repoBuffer = mutableMapOf<String, Repository>()
@@ -135,7 +138,7 @@ class RepoPipelineService @Autowired constructor(
                     triggerConditionMd5 = refInfo.triggerCondition?.let {
                         DigestUtils.md5Hex(JsonUtil.toJson(it))
                     },
-                    channel = channel
+                    channel = channel ?: "BS"
                 )
             )
         }
@@ -180,7 +183,7 @@ class RepoPipelineService @Autowired constructor(
         repositoryHashId: String,
         eventType: String?,
         triggerConditionMd5: String?,
-        channel: String?,
+        channel: String? = "BS",
         limit: Int,
         offset: Int
     ): SQLPage<RepoPipelineRefVo> {

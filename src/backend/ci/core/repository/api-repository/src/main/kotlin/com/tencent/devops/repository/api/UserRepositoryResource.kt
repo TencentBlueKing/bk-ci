@@ -296,9 +296,6 @@ interface UserRepositoryResource {
         @Parameter(description = "触发条件MD5", required = false)
         @QueryParam("triggerConditionMd5")
         triggerConditionMd5: String?,
-        @Parameter(description = "渠道", required = false)
-        @QueryParam("channel")
-        channel: String?,
         @Parameter(description = "第几页", required = false, example = "1")
         @QueryParam("page")
         page: Int?,

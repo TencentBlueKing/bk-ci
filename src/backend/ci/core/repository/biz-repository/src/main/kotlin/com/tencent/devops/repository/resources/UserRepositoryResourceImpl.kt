@@ -304,7 +304,6 @@ class UserRepositoryResourceImpl @Autowired constructor(
         repositoryHashId: String,
         eventType: String?,
         triggerConditionMd5: String?,
-        channel: String?,
         page: Int?,
         pageSize: Int?
     ): Result<SQLPage<RepoPipelineRefVo>> {
@@ -317,7 +316,6 @@ class UserRepositoryResourceImpl @Autowired constructor(
                 repositoryHashId = repositoryHashId,
                 eventType = eventType,
                 triggerConditionMd5 = triggerConditionMd5,
-                channel = channel,
                 limit = limit.limit,
                 offset = limit.offset
             )

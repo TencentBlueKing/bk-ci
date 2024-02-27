@@ -38,5 +38,5 @@ data class RepoPipelineRefRequest(
     val pipelineId: String,
     val pipelineRefInfos: List<RepoPipelineRefInfo>,
     @get:Schema(title = "创建渠道", required = true)
-    val channel: String
+    val channel: String?
 )

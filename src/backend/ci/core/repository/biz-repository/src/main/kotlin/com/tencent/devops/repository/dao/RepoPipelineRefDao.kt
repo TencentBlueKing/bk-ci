@@ -144,16 +144,18 @@ class RepoPipelineRefDao {
         repositoryId: Long,
         eventType: String?,
         triggerConditionMd5: String?,
-        channel: String? = "BS",
+        channel: String?,
         limit: Int,
         offset: Int
     ): List<RepoPipelineRefVo> {
         return with(TRepositoryPipelineRef.T_REPOSITORY_PIPELINE_REF) {
             val conditions = mutableListOf(
                 PROJECT_ID.eq(projectId),
-                REPOSITORY_ID.eq(repositoryId),
-                CHANNEL.eq(channel)
+                REPOSITORY_ID.eq(repositoryId)
             )
+            if (!channel.isNullOrBlank()) {
+                conditions.add(CHANNEL.eq(channel))
+            }
             if (!triggerConditionMd5.isNullOrBlank()) {
                 conditions.add(TRIGGER_CONDITION_MD5.eq(triggerConditionMd5))
             }
@@ -182,14 +184,16 @@ class RepoPipelineRefDao {
         repositoryId: Long,
         eventType: String?,
         triggerConditionMd5: String?,
-        channel: String? = "BS"
+        channel: String?
     ): Long {
         return with(TRepositoryPipelineRef.T_REPOSITORY_PIPELINE_REF) {
             val conditions = mutableListOf(
                 PROJECT_ID.eq(projectId),
                 REPOSITORY_ID.eq(repositoryId),
-                CHANNEL.eq(channel)
             )
+            if (!channel.isNullOrBlank()) {
+                conditions.add(CHANNEL.eq(channel))
+            }
             if (!triggerConditionMd5.isNullOrBlank()) {
                 conditions.add(TRIGGER_CONDITION_MD5.eq(triggerConditionMd5))
             }
