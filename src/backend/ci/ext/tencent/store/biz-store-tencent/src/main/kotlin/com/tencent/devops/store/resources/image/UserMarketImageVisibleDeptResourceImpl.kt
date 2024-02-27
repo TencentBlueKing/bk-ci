@@ -36,8 +36,9 @@ import com.tencent.devops.store.service.common.StoreVisibleDeptService
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
-class UserMarketImageVisibleDeptResourceImpl @Autowired constructor(private val storeVisibleDeptService: StoreVisibleDeptService) :
-    UserMarketImageVisibleDeptResource {
+class UserMarketImageVisibleDeptResourceImpl @Autowired constructor(
+    private val storeVisibleDeptService: StoreVisibleDeptService
+) : UserMarketImageVisibleDeptResource {
 
     override fun deleteVisibleDept(userId: String, imageCode: String, deptIds: String): Result<Boolean> {
         return storeVisibleDeptService.deleteVisibleDept(

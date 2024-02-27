@@ -41,8 +41,16 @@ class UserExtServiceVisibleDeptResourceImpl @Autowired constructor(
     val storeVisibleDeptService: StoreVisibleDeptService
 ) : UserExtServiceVisibleDeptResource {
 
-    override fun addVisibleDept(userId: String, serviceVisibleDeptRequest: ExtsionServiceVisibleDeptReq): Result<Boolean> {
-        return storeVisibleDeptService.addVisibleDept(userId, serviceVisibleDeptRequest.serviceCode, serviceVisibleDeptRequest.deptInfos, StoreTypeEnum.SERVICE)
+    override fun addVisibleDept(
+        userId: String,
+        serviceVisibleDeptRequest: ExtsionServiceVisibleDeptReq
+    ): Result<Boolean> {
+        return storeVisibleDeptService.addVisibleDept(
+            userId = userId,
+            storeCode = serviceVisibleDeptRequest.serviceCode,
+            deptInfos = serviceVisibleDeptRequest.deptInfos,
+            storeType = StoreTypeEnum.SERVICE
+        )
     }
 
     override fun deleteVisibleDept(userId: String, serviceCode: String, deptIds: String): Result<Boolean> {

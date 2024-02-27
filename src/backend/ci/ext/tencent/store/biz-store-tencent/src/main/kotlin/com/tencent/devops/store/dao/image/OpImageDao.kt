@@ -95,8 +95,10 @@ class OpImageDao @Autowired constructor() {
             tImage.IMAGE_CODE.`as`(Constants.KEY_IMAGE_CODE),
             tImage.CREATE_TIME.max().`as`(KEY_CREATE_TIME)
         ).from(tImage).groupBy(tImage.IMAGE_CODE)
-        val t = dslContext.select(tImage.IMAGE_CODE.`as`(Constants.KEY_IMAGE_CODE), tImage.IMAGE_STATUS.`as`(Constants.KEY_IMAGE_STATUS))
-            .from(tImage).join(tmp)
+        val t = dslContext.select(
+            tImage.IMAGE_CODE.`as`(Constants.KEY_IMAGE_CODE),
+            tImage.IMAGE_STATUS.`as`(Constants.KEY_IMAGE_STATUS)
+        ).from(tImage).join(tmp)
             .on(
                 tImage.IMAGE_CODE.eq(tmp.field(Constants.KEY_IMAGE_CODE, String::class.java)).and(
                     tImage.CREATE_TIME.eq(
@@ -176,8 +178,10 @@ class OpImageDao @Autowired constructor() {
             tImage.IMAGE_CODE.`as`(Constants.KEY_IMAGE_CODE),
             tImage.CREATE_TIME.max().`as`(KEY_CREATE_TIME)
         ).from(tImage).groupBy(tImage.IMAGE_CODE)
-        val t = dslContext.select(tImage.IMAGE_CODE.`as`(Constants.KEY_IMAGE_CODE), tImage.IMAGE_STATUS.`as`(Constants.KEY_IMAGE_STATUS))
-            .from(tImage).join(tmp)
+        val t = dslContext.select(
+            tImage.IMAGE_CODE.`as`(Constants.KEY_IMAGE_CODE),
+            tImage.IMAGE_STATUS.`as`(Constants.KEY_IMAGE_STATUS)
+        ).from(tImage).join(tmp)
             .on(
                 tImage.IMAGE_CODE.eq(tmp.field(Constants.KEY_IMAGE_CODE, String::class.java)).and(
                     tImage.CREATE_TIME.eq(
@@ -355,7 +359,12 @@ class OpImageDao @Autowired constructor() {
             .fetchOne(0, Int::class.java)!!
     }
 
-    fun getImagesByRepoInfo(dslContext: DSLContext, repoUrl: String?, repoName: String?, tag: String?): Result<TImageRecord>? {
+    fun getImagesByRepoInfo(
+        dslContext: DSLContext,
+        repoUrl: String?,
+        repoName: String?,
+        tag: String?
+    ): Result<TImageRecord>? {
         val tImage = TImage.T_IMAGE.`as`("tImage")
         val conditions = mutableListOf<Condition>()
         conditions.add(tImage.DELETE_FLAG.eq(false))

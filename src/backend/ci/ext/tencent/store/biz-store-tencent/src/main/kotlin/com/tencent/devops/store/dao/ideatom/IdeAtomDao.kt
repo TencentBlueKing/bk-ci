@@ -43,6 +43,7 @@ import com.tencent.devops.store.pojo.ideatom.IdeAtomUpdateRequest
 import com.tencent.devops.store.pojo.ideatom.enums.IdeAtomStatusEnum
 import com.tencent.devops.store.pojo.ideatom.enums.IdeAtomTypeEnum
 import com.tencent.devops.store.utils.VersionUtils
+import java.time.LocalDateTime
 import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.Record
@@ -50,7 +51,6 @@ import org.jooq.Record2
 import org.jooq.Result
 import org.jooq.SelectHavingStep
 import org.springframework.stereotype.Repository
-import java.time.LocalDateTime
 
 @Repository
 class IdeAtomDao {
@@ -241,7 +241,10 @@ class IdeAtomDao {
     ) {
         val a = TClassify.T_CLASSIFY.`as`("a")
         val classifyId = dslContext.select(a.ID).from(a)
-            .where(a.CLASSIFY_CODE.eq(ideAtomCreateRequest.classifyCode).and(a.TYPE.eq(StoreTypeEnum.IDE_ATOM.type.toByte())))
+            .where(
+                a.CLASSIFY_CODE.eq(ideAtomCreateRequest.classifyCode)
+                    .and(a.TYPE.eq(StoreTypeEnum.IDE_ATOM.type.toByte()))
+            )
             .fetchOne(0, String::class.java)
         with(TIdeAtom.T_IDE_ATOM) {
             dslContext.insertInto(this,
@@ -282,7 +285,12 @@ class IdeAtomDao {
         }
     }
 
-    fun updateAtomFromOp(dslContext: DSLContext, userId: String, atomId: String, atomUpdateRequest: IdeAtomUpdateRequest) {
+    fun updateAtomFromOp(
+        dslContext: DSLContext,
+        userId: String,
+        atomId: String,
+        atomUpdateRequest: IdeAtomUpdateRequest
+    ) {
         with(TIdeAtom.T_IDE_ATOM) {
             val baseStep = dslContext.update(this)
             if (null != atomUpdateRequest.atomName) {
@@ -291,7 +299,8 @@ class IdeAtomDao {
             if (null != atomUpdateRequest.classifyCode) {
                 val a = TClassify.T_CLASSIFY.`as`("a")
                 val classifyId = dslContext.select(a.ID).from(a)
-                    .where(a.CLASSIFY_CODE.eq(atomUpdateRequest.classifyCode).and(a.TYPE.eq(StoreTypeEnum.IDE_ATOM.type.toByte())))
+                    .where(a.CLASSIFY_CODE.eq(atomUpdateRequest.classifyCode)
+                        .and(a.TYPE.eq(StoreTypeEnum.IDE_ATOM.type.toByte())))
                     .fetchOne(0, String::class.java)
                 baseStep.set(CLASSIFY_ID, classifyId)
             }
@@ -340,7 +349,8 @@ class IdeAtomDao {
             a.CREATE_TIME.max().`as`("createTime")
         ).from(a).groupBy(a.ATOM_CODE)
         val t = dslContext.select(a.ATOM_CODE.`as`("atomCode"), a.ATOM_STATUS.`as`("atomStatus")).from(a).join(tmp)
-            .on(a.ATOM_CODE.eq(tmp.field("atomCode", String::class.java)).and(a.CREATE_TIME.eq(tmp.field("createTime", LocalDateTime::class.java))))
+            .on(a.ATOM_CODE.eq(tmp.field("atomCode", String::class.java))
+                .and(a.CREATE_TIME.eq(tmp.field("createTime", LocalDateTime::class.java))))
         val conditions = generateQueryOpIdeAtomCondition(a, atomName, atomType, tiaf, classifyCode, b, processFlag, t)
         val baseStep = dslContext.select(a.ID.countDistinct()).from(a)
             .join(tiaf)
@@ -392,7 +402,8 @@ class IdeAtomDao {
             a.CREATE_TIME.max().`as`("createTime")
         ).from(a).groupBy(a.ATOM_CODE)
         val t = dslContext.select(a.ATOM_CODE.`as`("atomCode"), a.ATOM_STATUS.`as`("atomStatus")).from(a).join(tmp)
-            .on(a.ATOM_CODE.eq(tmp.field("atomCode", String::class.java)).and(a.CREATE_TIME.eq(tmp.field("createTime", LocalDateTime::class.java))))
+            .on(a.ATOM_CODE.eq(tmp.field("atomCode", String::class.java))
+                .and(a.CREATE_TIME.eq(tmp.field("createTime", LocalDateTime::class.java))))
         val conditions = generateQueryOpIdeAtomCondition(a, atomName, atomType, tiaf, classifyCode, b, processFlag, t)
         val baseStep = dslContext.select(
             a.ID.`as`("atomId"),

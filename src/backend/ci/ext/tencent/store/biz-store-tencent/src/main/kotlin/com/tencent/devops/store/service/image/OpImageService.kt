@@ -237,8 +237,13 @@ class OpImageService @Autowired constructor(
                 modifier = userId
             )
             // 若更新已发布、下架中、已下架版本，需要更新最终agentType
-            if (imageRecord.imageStatus in setOf(ImageStatusEnum.RELEASED, ImageStatusEnum.UNDERCARRIAGING, ImageStatusEnum.UNDERCARRIAGED).map { it.status.toByte() }) {
-                imageReleaseService.saveImageAgentTypeToFeature(dslContext, imageRecord.imageCode, imageUpdateRequest.agentTypeScope)
+            if (imageRecord.imageStatus in setOf(ImageStatusEnum.RELEASED, ImageStatusEnum.UNDERCARRIAGING,
+                    ImageStatusEnum.UNDERCARRIAGED).map { it.status.toByte() }) {
+                imageReleaseService.saveImageAgentTypeToFeature(
+                    dslContext,
+                    imageRecord.imageCode,
+                    imageUpdateRequest.agentTypeScope
+                )
             }
             // 更新范畴
             val categoryIdList = imageUpdateRequest.categoryIdList
@@ -278,7 +283,11 @@ class OpImageService @Autowired constructor(
         pageSize: Int?,
         interfaceName: String? = "Anon interface"
     ): Result<OpImageResp> {
-        logger.info("$interfaceName:list:Input($userId,$imageName,$imageSourceType,$processFlag,$classifyCode,${categoryCodes?.size}$categoryCodes,${labelCodes?.size}$labelCodes,$sortType,$desc,$page,$pageSize)")
+        logger.info(
+            "$interfaceName:list:Input($userId,$imageName,$imageSourceType,$processFlag,$classifyCode," +
+                    "${categoryCodes?.size}$categoryCodes,${labelCodes?.size}$labelCodes,$sortType," +
+                    "$desc,$page,$pageSize)"
+        )
         val validPage = PageUtil.getValidPage(page)
         val validPageSize = pageSize ?: -1
 
@@ -380,7 +389,9 @@ class OpImageService @Autowired constructor(
             )
         } ?: emptyList<OpImageItem>()
 
-        logger.info("$interfaceName:list:Output:OpImageResp($count,$validPage,$validPageSize,records.size=${records.size})")
+        logger.info(
+            "$interfaceName:list:Output:OpImageResp($count,$validPage,$validPageSize,records.size=${records.size})"
+        )
         return Result(
             OpImageResp(
                 count = count,

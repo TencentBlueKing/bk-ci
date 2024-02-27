@@ -55,11 +55,21 @@ class UserIdeAtomCommentResourceImpl @Autowired constructor(
         return storeCommentService.getStoreComment(userId, commentId)
     }
 
-    override fun getStoreComments(userId: String, atomCode: String, page: Int, pageSize: Int): Result<Page<StoreCommentInfo>?> {
+    override fun getStoreComments(
+        userId: String,
+        atomCode: String,
+        page: Int,
+        pageSize: Int
+    ): Result<Page<StoreCommentInfo>?> {
         return storeCommentService.getStoreComments(userId, atomCode, StoreTypeEnum.IDE_ATOM, page, pageSize)
     }
 
-    override fun addAtomComment(userId: String, atomId: String, atomCode: String, storeCommentRequest: StoreCommentRequest): Result<StoreCommentInfo?> {
+    override fun addAtomComment(
+        userId: String,
+        atomId: String,
+        atomCode: String,
+        storeCommentRequest: StoreCommentRequest
+    ): Result<StoreCommentInfo?> {
         // 判断atomId和atomCode是否真实有效
         val result = marketIdeAtomService.judgeAtomExistByIdAndCode(atomId, atomCode)
         if (result.isNotOk()) {
@@ -68,7 +78,11 @@ class UserIdeAtomCommentResourceImpl @Autowired constructor(
         return storeCommentService.addStoreComment(userId, atomId, atomCode, storeCommentRequest, StoreTypeEnum.IDE_ATOM)
     }
 
-    override fun updateStoreComment(userId: String, commentId: String, storeCommentRequest: StoreCommentRequest): Result<Boolean> {
+    override fun updateStoreComment(
+        userId: String,
+        commentId: String,
+        storeCommentRequest: StoreCommentRequest
+    ): Result<Boolean> {
         return storeCommentService.updateStoreComment(userId, commentId, storeCommentRequest)
     }
 

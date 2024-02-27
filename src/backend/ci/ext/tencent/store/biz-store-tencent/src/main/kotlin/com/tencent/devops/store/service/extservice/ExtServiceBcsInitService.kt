@@ -108,7 +108,9 @@ class ExtServiceBcsInitService @Autowired constructor(
             secretName = secretName,
             createImagePullSecretRequest = createImagePullSecretRequest
         )
-        logger.info("createReleaseNsImagePullSecret secretName:$secretName result is:$createReleaseNsImagePullSecretResult")
+        logger.info(
+            "createReleaseNsImagePullSecret secretName:$secretName result is:$createReleaseNsImagePullSecretResult"
+        )
         // 创建已发布扩展服务版本的命名空间拉取镜像secret
         val graySecretName = extServiceImageSecretConfig.graySecretName
         val createGrayNsImagePullSecretResult = client.get(ServiceBcsResource::class).createImagePullSecretTest(
@@ -116,7 +118,9 @@ class ExtServiceBcsInitService @Autowired constructor(
             secretName = graySecretName,
             createImagePullSecretRequest = createImagePullSecretRequest
         )
-        logger.info("createGrayNsImagePullSecretResult secretName:$graySecretName result is:$createGrayNsImagePullSecretResult")
+        logger.info(
+            "createGrayNsImagePullSecretResult secretName:$graySecretName result is:$createGrayNsImagePullSecretResult"
+        )
         logger.info("end execute initBcsImagePullSecret")
     }
 }

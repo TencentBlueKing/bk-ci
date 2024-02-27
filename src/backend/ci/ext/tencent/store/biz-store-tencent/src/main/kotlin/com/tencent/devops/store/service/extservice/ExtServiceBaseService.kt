@@ -398,12 +398,19 @@ abstract class ExtServiceBaseService @Autowired constructor() {
 
         var serviceId = UUIDUtil.generate()
         val serviceStatus =
-            if (extPackageSourceType == ExtServicePackageSourceTypeEnum.REPO) ExtServiceStatusEnum.COMMITTING else ExtServiceStatusEnum.TESTING
+            if (extPackageSourceType == ExtServicePackageSourceTypeEnum.REPO) {
+                ExtServiceStatusEnum.COMMITTING
+            } else {
+                ExtServiceStatusEnum.TESTING
+            }
 
         dslContext.transaction { t ->
             val context = DSL.using(t)
-            logger.info("updateExtService cancelFlag[$cancelFlag] releaseType[$releaseType] version[${serviceRecord.version}]")
-            if (StringUtils.isEmpty(serviceRecord.version) || (cancelFlag && releaseType == ReleaseTypeEnum.CANCEL_RE_RELEASE)) {
+            logger.info(
+                "updateExtService cancelFlag[$cancelFlag] releaseType[$releaseType] version[${serviceRecord.version}]"
+            )
+            if (StringUtils.isEmpty(serviceRecord.version)
+                || (cancelFlag && releaseType == ReleaseTypeEnum.CANCEL_RE_RELEASE)) {
                 // 首次创建版本或者取消发布后不变更版本号重新上架，则在该版本的记录上做更新操作
                 serviceId = serviceRecord.id
                 val finalReleaseType = if (releaseType == ReleaseTypeEnum.CANCEL_RE_RELEASE) {
@@ -602,7 +609,9 @@ abstract class ExtServiceBaseService @Autowired constructor() {
         itemRecordList?.forEach {
             itemInfoMap[it.itemId] = it
         }
-        logger.info("the getMyService userId is :$userId,itemRecordList is :$itemRecordList, itemInfoMap is :$itemInfoMap")
+        logger.info(
+            "the getMyService userId is :$userId,itemRecordList is :$itemRecordList, itemInfoMap is :$itemInfoMap"
+        )
 
         val myService = mutableListOf<ExtServiceRespItem?>()
         records?.forEach {
@@ -1032,14 +1041,20 @@ abstract class ExtServiceBaseService @Autowired constructor() {
     }
 
     fun getCompleteEditStatus(isNormalUpgrade: Boolean): Byte {
-        return if (isNormalUpgrade) ExtServiceStatusEnum.RELEASE_DEPLOYING.status.toByte() else ExtServiceStatusEnum.AUDITING.status.toByte()
+        return if (isNormalUpgrade) {
+            ExtServiceStatusEnum.RELEASE_DEPLOYING.status.toByte()
+        } else {
+            ExtServiceStatusEnum.AUDITING.status.toByte()
+        }
     }
 
     fun createMediaAndVisible(userId: String, serviceId: String, submitInfo: ExtSubmitDTO): Result<Boolean> {
         val mediaList = submitInfo.mediaInfoList
         val deptList = submitInfo.deptInfoList
 
-        val serviceInfo = extServiceDao.getServiceById(dslContext, serviceId) ?: throw ErrorCodeException(errorCode = StoreMessageCode.USER_SERVICE_NOT_EXIST)
+        val serviceInfo = extServiceDao.getServiceById(dslContext, serviceId) ?: throw ErrorCodeException(
+            errorCode = StoreMessageCode.USER_SERVICE_NOT_EXIST
+        )
         val serviceCode = serviceInfo.serviceCode
 
         val oldStatus = serviceInfo.serviceStatus
@@ -1340,7 +1355,9 @@ abstract class ExtServiceBaseService @Autowired constructor() {
             ExtServiceStatusEnum.INIT.status -> {
                 storeCommonService.setProcessInfo(processInfo, totalStep, NUM_ONE, DOING)
             }
-            ExtServiceStatusEnum.BUILDING.status, ExtServiceStatusEnum.COMMITTING.status, ExtServiceStatusEnum.DEPLOYING.status -> {
+            ExtServiceStatusEnum.BUILDING.status,
+            ExtServiceStatusEnum.COMMITTING.status,
+            ExtServiceStatusEnum.DEPLOYING.status -> {
                 storeCommonService.setProcessInfo(processInfo, totalStep, NUM_TWO, DOING)
             }
             ExtServiceStatusEnum.BUILD_FAIL.status, ExtServiceStatusEnum.DEPLOY_FAIL.status -> {
@@ -1359,10 +1376,18 @@ abstract class ExtServiceBaseService @Autowired constructor() {
                 storeCommonService.setProcessInfo(processInfo, totalStep, NUM_FIVE, FAIL)
             }
             ExtServiceStatusEnum.RELEASE_DEPLOYING.status -> {
-                storeCommonService.setProcessInfo(processInfo, totalStep, if (isNormalUpgrade) NUM_FIVE else NUM_SIX, DOING)
+                storeCommonService.setProcessInfo(
+                    processInfo,
+                    totalStep,
+                    if (isNormalUpgrade) NUM_FIVE else NUM_SIX, DOING
+                )
             }
             ExtServiceStatusEnum.RELEASE_DEPLOY_FAIL.status -> {
-                storeCommonService.setProcessInfo(processInfo, totalStep, if (isNormalUpgrade) NUM_FIVE else NUM_SIX, FAIL)
+                storeCommonService.setProcessInfo(
+                    processInfo,
+                    totalStep,
+                    if (isNormalUpgrade) NUM_FIVE else NUM_SIX, FAIL
+                )
             }
 
             ExtServiceStatusEnum.RELEASED.status -> {
@@ -1440,7 +1465,9 @@ abstract class ExtServiceBaseService @Autowired constructor() {
         val fileServiceCode = taskDataMap.serviceCode
         val fileItemList = taskDataMap.itemList
         if (fileServiceCode != serviceCode) {
-            logger.warn("getServiceProps input serviceCode[$serviceCode], extension.json serviceCode[$fileServiceCode] ")
+            logger.warn(
+                "getServiceProps input serviceCode[$serviceCode], extension.json serviceCode[$fileServiceCode] "
+            )
             throw ErrorCodeException(errorCode = StoreMessageCode.USER_SERVICE_CODE_DIFF)
         }
 
@@ -1635,7 +1662,10 @@ abstract class ExtServiceBaseService @Autowired constructor() {
         }
         // 查询扩展的最新记录
         val newestServiceRecord = extServiceDao.getNewestServiceByCode(dslContext, serviceCode)
-            ?: throw ErrorCodeException(errorCode = CommonMessageCode.PARAMETER_IS_INVALID, params = arrayOf(serviceCode))
+            ?: throw ErrorCodeException(
+                errorCode = CommonMessageCode.PARAMETER_IS_INVALID,
+                params = arrayOf(serviceCode)
+            )
         val editFlag = extServiceCommonService.checkEditCondition(serviceCode)
         if (!editFlag) {
             throw ErrorCodeException(

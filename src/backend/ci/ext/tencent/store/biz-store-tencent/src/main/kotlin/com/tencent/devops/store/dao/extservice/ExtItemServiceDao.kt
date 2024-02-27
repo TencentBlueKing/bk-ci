@@ -218,7 +218,8 @@ class ExtItemServiceDao {
         tes: TExtensionService,
         tesir: TExtensionServiceItemRel,
         tesf: TExtensionServiceFeature
-    ): SelectOnConditionStep<Record10<String, String, String, String, String, String?, String, String?, Int, Boolean?>> {
+    ): SelectOnConditionStep<Record10<String, String, String, String, String, String?, String, String?, Int, Boolean?>>
+    {
         return dslContext.select(
             tes.ID.`as`("serviceId"),
             tes.SERVICE_CODE.`as`("serviceCode"),

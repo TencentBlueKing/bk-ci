@@ -27,7 +27,7 @@
 
 package com.tencent.devops.store.pojo.extservice.enums
 
-enum class DescInputTypeEnum() {
+enum class DescInputTypeEnum {
     FILE,
     MANUAL
 }

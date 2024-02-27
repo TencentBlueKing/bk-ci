@@ -382,7 +382,9 @@ class ExtServiceDao {
         timeDescFlag: Boolean? = null
     ): Result<TExtensionServiceRecord>? {
         with(TExtensionService.T_EXTENSION_SERVICE) {
-            val baseStep = dslContext.selectFrom(this).where(DELETE_FLAG.eq(false)).and(SERVICE_STATUS.eq(serviceStatus.status.toByte()))
+            val baseStep = dslContext.selectFrom(this)
+                .where(DELETE_FLAG.eq(false))
+                .and(SERVICE_STATUS.eq(serviceStatus.status.toByte()))
             if (timeDescFlag != null && timeDescFlag) {
                 baseStep.orderBy(CREATE_TIME.desc())
             } else {
@@ -544,8 +546,12 @@ class ExtServiceDao {
             a.SERVICE_CODE.`as`("serviceCode"),
             DSL.max(a.CREATE_TIME).`as`("createTime")
         ).from(a).groupBy(a.SERVICE_CODE)
-        val ta = dslContext.select(a.SERVICE_CODE.`as`("serviceCode"), a.SERVICE_STATUS.`as`("serviceStatus")).from(a).join(tmp)
-            .on(a.SERVICE_CODE.eq(tmp.field("serviceCode", String::class.java)).and(a.CREATE_TIME.eq(tmp.field("createTime", LocalDateTime::class.java))))
+        val ta = dslContext.select(
+            a.SERVICE_CODE.`as`("serviceCode"),
+            a.SERVICE_STATUS.`as`("serviceStatus")
+        ).from(a).join(tmp)
+            .on(a.SERVICE_CODE.eq(tmp.field("serviceCode", String::class.java))
+                .and(a.CREATE_TIME.eq(tmp.field("createTime", LocalDateTime::class.java))))
         val selectField = dslContext.select(
             a.ID.`as`("itemId"),
             a.SERVICE_STATUS.`as`("serviceStatus"),
@@ -657,7 +663,11 @@ class ExtServiceDao {
 
     fun getLatestFlag(dslContext: DSLContext, serviceCode: String): Boolean {
         with(TExtensionService.T_EXTENSION_SERVICE) {
-            val count = dslContext.selectCount().from(this).where(SERVICE_CODE.eq(serviceCode).and(SERVICE_STATUS.eq(ExtServiceStatusEnum.RELEASED.status.toByte())))
+            val count = dslContext.selectCount()
+                .from(this)
+                .where(
+                    SERVICE_CODE.eq(serviceCode).and(SERVICE_STATUS.eq(ExtServiceStatusEnum.RELEASED.status.toByte()))
+                )
                 .fetchOne(0, Int::class.java)!!
             if (count > 0) {
                 return false
@@ -788,7 +798,11 @@ class ExtServiceDao {
             sp.CREATE_TIME.`as`("projectInstallTime"),
             sp.CREATOR.`as`("projectInstallUser"),
             sp.TYPE.`as`("projectType")
-        ).from(sa).leftOuterJoin(sp).on(sa.SERVICE_CODE.eq(sp.STORE_CODE)).leftJoin(sf).on(sa.SERVICE_CODE.eq(sf.SERVICE_CODE))
+        ).from(sa)
+            .leftOuterJoin(sp)
+            .on(sa.SERVICE_CODE.eq(sp.STORE_CODE))
+            .leftJoin(sf)
+            .on(sa.SERVICE_CODE.eq(sf.SERVICE_CODE))
         val condition = mutableListOf<Condition>()
         condition.add(sa.LATEST_FLAG.eq(true))
         condition.add(sp.PROJECT_CODE.eq(projectCode))

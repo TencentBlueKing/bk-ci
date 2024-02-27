@@ -37,7 +37,11 @@ import org.springframework.stereotype.Repository
 @Repository
 class IdeAtomEnvInfoDao {
 
-    fun addIdeAtomEnvInfo(dslContext: DSLContext, userId: String, ideAtomEnvInfoCreateRequest: IdeAtomEnvInfoCreateRequest) {
+    fun addIdeAtomEnvInfo(
+        dslContext: DSLContext,
+        userId: String,
+        ideAtomEnvInfoCreateRequest: IdeAtomEnvInfoCreateRequest
+    ) {
         with(TIdeAtomEnvInfo.T_IDE_ATOM_ENV_INFO) {
             dslContext.insertInto(this,
                 ID,

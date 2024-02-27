@@ -52,7 +52,9 @@ class ExtStoreProjectRelDao {
     ): Result<TStoreProjectRelRecord>? {
         return with(TStoreProjectRel.T_STORE_PROJECT_REL) {
             val where = dslContext.selectFrom(this).where(
-                STORE_TYPE.eq(storeType.type.toByte()).and(STORE_CODE.eq(storeCode).and(TYPE.eq(StoreProjectTypeEnum.COMMON.type.toByte())))
+                STORE_TYPE.eq(storeType.type.toByte())
+                    .and(STORE_CODE.eq(storeCode)
+                        .and(TYPE.eq(StoreProjectTypeEnum.COMMON.type.toByte())))
             )
             if (startTime > 0) {
                 where.and(

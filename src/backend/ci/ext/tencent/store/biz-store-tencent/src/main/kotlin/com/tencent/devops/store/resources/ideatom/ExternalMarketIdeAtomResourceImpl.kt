@@ -57,7 +57,19 @@ class ExternalMarketIdeAtomResourceImpl @Autowired constructor(
         page: Int?,
         pageSize: Int?
     ): Result<ExternalIdeAtomResp> {
-        return Result(externalMarketIdeAtomService.list(categoryCode, atomName, classifyCode, labelCodes, score, rdType, sortType, page, pageSize))
+        return Result(
+            externalMarketIdeAtomService.list(
+                categoryCode = categoryCode,
+                atomName = atomName,
+                classifyCode = classifyCode,
+                labelCode = labelCodes,
+                score = score,
+                rdType = rdType,
+                sortType = sortType,
+                page = page,
+                pageSize = pageSize
+            )
+        )
     }
 
     override fun getIdeAtomsByCode(atomCode: String): Result<IdeAtom?> {

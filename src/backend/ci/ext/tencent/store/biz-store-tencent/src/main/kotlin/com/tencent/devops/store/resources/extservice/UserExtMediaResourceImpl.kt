@@ -62,7 +62,12 @@ class UserExtMediaResourceImpl @Autowired constructor(
         return Result(true)
     }
 
-    override fun updateSericeMedia(userId: String, mediaId: String, serviceCode: String, mediaInfoReq: MediaInfoReq): Result<Boolean> {
+    override fun updateSericeMedia(
+        userId: String,
+        mediaId: String,
+        serviceCode: String,
+        mediaInfoReq: MediaInfoReq
+    ): Result<Boolean> {
         return storeMediaService.update(
             userId = userId,
             id = mediaId,

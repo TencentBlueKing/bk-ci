@@ -144,7 +144,14 @@ class OpExtServiceService @Autowired constructor(
             )
         }
         val totalPages = PageUtil.calTotalPage(pageSize, count.toLong())
-        return Result(Page(count = count.toLong(), page = page ?: 1, pageSize = pageSize ?: -1, totalPages = totalPages, records = extensionServiceInfoList))
+        return Result(
+            Page(
+                count = count.toLong(),
+                page = page ?: 1,
+                pageSize = pageSize ?: -1,
+                totalPages = totalPages,
+                records = extensionServiceInfoList)
+        )
     }
 
 //    fun editExtInfo(userId: String, serviceId: String, serviceCode: String, infoResp: EditInfoDTO): Result<Boolean> {
@@ -307,7 +314,11 @@ class OpExtServiceService @Autowired constructor(
         }
         // 审核失败通知发布者
         if (!auditFlag) {
-            serviceNotifyService.sendServiceReleaseNotifyMessage(serviceId, false, EXTENSION_RELEASE_AUDIT_REFUSE_TEMPLATE)
+            serviceNotifyService.sendServiceReleaseNotifyMessage(
+                serviceId,
+                false,
+                EXTENSION_RELEASE_AUDIT_REFUSE_TEMPLATE
+            )
         }
         return Result(true)
     }

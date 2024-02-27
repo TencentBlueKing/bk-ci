@@ -27,7 +27,7 @@
 
 package com.tencent.devops.store.pojo.extservice.enums
 
-enum class ExtServiceSortTypeEnum() {
+enum class ExtServiceSortTypeEnum {
     NAME,
     CREATOR,
     MODIFIER,

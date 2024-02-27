@@ -51,7 +51,11 @@ class OpIdeAtomResourceImpl @Autowired constructor(
         return opIdeAtomService.addIdeAtom(userId, ideAtomCreateRequest)
     }
 
-    override fun updateIdeAtom(userId: String, atomId: String, ideAtomUpdateRequest: IdeAtomUpdateRequest): Result<Boolean> {
+    override fun updateIdeAtom(
+        userId: String,
+        atomId: String,
+        ideAtomUpdateRequest: IdeAtomUpdateRequest
+    ): Result<Boolean> {
         return opIdeAtomService.updateIdeAtom(userId, atomId, ideAtomUpdateRequest)
     }
 
@@ -85,10 +89,22 @@ class OpIdeAtomResourceImpl @Autowired constructor(
         page: Int,
         pageSize: Int
     ): Result<Page<OpIdeAtomItem>?> {
-        return opIdeAtomService.listIdeAtoms(atomName, atomType, classifyCode, categoryCodes, labelCodes, processFlag, page, pageSize)
+        return opIdeAtomService.listIdeAtoms(
+            atomName = atomName,
+            atomType = atomType,
+            classifyCode = classifyCode,
+            categoryCodes = categoryCodes,
+            labelCodes = labelCodes,
+            processFlag = processFlag,
+            page = page,
+            pageSize = pageSize
+        )
     }
 
-    override fun releaseIdeAtom(userId: String, atomId: String, ideAtomReleaseRequest: IdeAtomReleaseRequest): Result<Boolean> {
+    override fun releaseIdeAtom(
+        userId: String,
+        atomId: String,
+        ideAtomReleaseRequest: IdeAtomReleaseRequest): Result<Boolean> {
         return opIdeAtomService.releaseIdeAtom(userId, atomId, ideAtomReleaseRequest)
     }
 

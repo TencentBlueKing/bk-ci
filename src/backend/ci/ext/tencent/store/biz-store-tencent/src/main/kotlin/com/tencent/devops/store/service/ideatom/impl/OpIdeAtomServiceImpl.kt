@@ -313,7 +313,8 @@ class OpIdeAtomServiceImpl @Autowired constructor(
                 atomId = atomId,
                 atomName = it["atomName"] as String,
                 atomCode = it["atomCode"] as String,
-                atomType = if (null != it["atomType"]) IdeAtomTypeEnum.getAtomTypeObj((it["atomType"] as Byte).toInt()) else null,
+                atomType =
+                if (null != it["atomType"]) IdeAtomTypeEnum.getAtomTypeObj((it["atomType"] as Byte).toInt()) else null,
                 atomVersion = it["atomVersion"] as String,
                 atomStatus = IdeAtomStatusEnum.getIdeAtomStatusObj((it["atomStatus"] as Byte).toInt())!!,
                 classifyCode = atomClassifyCode,
