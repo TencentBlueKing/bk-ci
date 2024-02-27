@@ -75,7 +75,13 @@ class UserIdeAtomCommentResourceImpl @Autowired constructor(
         if (result.isNotOk()) {
             return Result(status = result.status, message = result.message ?: "")
         }
-        return storeCommentService.addStoreComment(userId, atomId, atomCode, storeCommentRequest, StoreTypeEnum.IDE_ATOM)
+        return storeCommentService.addStoreComment(
+            userId = userId,
+            storeId = atomId,
+            storeCode = atomCode,
+            storeCommentRequest = storeCommentRequest,
+            storeType = StoreTypeEnum.IDE_ATOM
+        )
     }
 
     override fun updateStoreComment(
