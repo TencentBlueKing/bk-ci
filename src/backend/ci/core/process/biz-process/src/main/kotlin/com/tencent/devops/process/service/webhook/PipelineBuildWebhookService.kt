@@ -40,7 +40,7 @@ import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.common.pipeline.pojo.BuildParameters
 import com.tencent.devops.common.pipeline.pojo.element.trigger.WebHookTriggerElement
-import com.tencent.devops.common.pipeline.utils.RepositoryConfigUtils
+import com.tencent.devops.common.pipeline.utils.PIPELINE_PAC_REPO_HASH_ID
 import com.tencent.devops.common.webhook.pojo.code.PIPELINE_START_WEBHOOK_USER_ID
 import com.tencent.devops.common.webhook.service.code.loader.WebhookElementParamsRegistrar
 import com.tencent.devops.common.webhook.service.code.loader.WebhookStartParamsRegistrar
@@ -58,9 +58,9 @@ import com.tencent.devops.process.pojo.BuildId
 import com.tencent.devops.process.pojo.code.WebhookBuildResult
 import com.tencent.devops.process.pojo.code.WebhookCommit
 import com.tencent.devops.process.pojo.trigger.PipelineTriggerDetailBuilder
-import com.tencent.devops.process.pojo.trigger.PipelineTriggerFailedMatchElement
 import com.tencent.devops.process.pojo.trigger.PipelineTriggerEvent
 import com.tencent.devops.process.pojo.trigger.PipelineTriggerFailedMatch
+import com.tencent.devops.process.pojo.trigger.PipelineTriggerFailedMatchElement
 import com.tencent.devops.process.pojo.trigger.PipelineTriggerFailedMsg
 import com.tencent.devops.process.pojo.trigger.PipelineTriggerReason
 import com.tencent.devops.process.pojo.trigger.PipelineTriggerStatus
@@ -223,7 +223,7 @@ class PipelineBuildWebhookService @Autowired constructor(
         }
         // 补充yaml流水线代码库信息
         pipelineYamlService.getPipelineYamlInfo(projectId = projectId, pipelineId = pipelineId)?.let {
-            variables[RepositoryConfigUtils.PIPELINE_SELF_REPO_HASH_ID] = it.repoHashId
+            variables[PIPELINE_PAC_REPO_HASH_ID] = it.repoHashId
         }
 
         val failedMatchElements = mutableListOf<PipelineTriggerFailedMatchElement>()
@@ -396,7 +396,7 @@ class PipelineBuildWebhookService @Autowired constructor(
         }
         // 补充yaml流水线代码库信息
         pipelineYamlService.getPipelineYamlInfo(projectId = projectId, pipelineId = pipelineId)?.let {
-            variables[RepositoryConfigUtils.PIPELINE_SELF_REPO_HASH_ID] = it.repoHashId
+            variables[PIPELINE_PAC_REPO_HASH_ID] = it.repoHashId
         }
         val triggerElementMap =
             container.elements.filterIsInstance<WebHookTriggerElement>()

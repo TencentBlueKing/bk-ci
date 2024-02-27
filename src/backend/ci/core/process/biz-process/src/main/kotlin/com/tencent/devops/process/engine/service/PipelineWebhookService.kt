@@ -56,7 +56,6 @@ import com.tencent.devops.process.pojo.PipelineNotifyTemplateEnum
 import com.tencent.devops.process.pojo.webhook.PipelineWebhook
 import com.tencent.devops.process.pojo.webhook.WebhookTriggerPipeline
 import com.tencent.devops.process.service.scm.ScmProxyService
-import com.tencent.devops.process.yaml.PipelineYamlService
 import com.tencent.devops.repository.api.ServiceRepositoryResource
 import com.tencent.devops.repository.pojo.Repository
 import org.jooq.DSLContext
@@ -75,7 +74,6 @@ class PipelineWebhookService @Autowired constructor(
     private val dslContext: DSLContext,
     private val pipelineWebhookDao: PipelineWebhookDao,
     private val pipelineResourceDao: PipelineResourceDao,
-    private val pipelineYamlService: PipelineYamlService,
     private val objectMapper: ObjectMapper,
     private val client: Client,
     private val pipelinePermissionService: PipelinePermissionService,
@@ -100,10 +98,6 @@ class PipelineWebhookService @Autowired constructor(
         val variables = triggerContainer.params.associate { param ->
             param.id to param.defaultValue.toString()
         }.toMutableMap()
-        // 补充yaml流水线代码库信息
-        pipelineYamlService.getPipelineYamlInfo(projectId = projectId, pipelineId = pipelineId)?.let {
-            variables[RepositoryConfigUtils.PIPELINE_SELF_REPO_HASH_ID] = it.repoHashId
-        }
         val elements = triggerContainer.elements.filterIsInstance<WebHookTriggerElement>()
         val failedElementNames = mutableListOf<String>()
         elements.forEach { element ->

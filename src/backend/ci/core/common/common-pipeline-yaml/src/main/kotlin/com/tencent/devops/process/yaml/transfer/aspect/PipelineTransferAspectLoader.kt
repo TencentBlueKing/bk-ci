@@ -1,10 +1,7 @@
 package com.tencent.devops.process.yaml.transfer.aspect
 
-import com.tencent.devops.process.yaml.v3.models.PreTemplateScriptBuildYamlV3
-import com.tencent.devops.process.yaml.v3.models.on.PreTriggerOnV3
 import java.util.LinkedList
 import java.util.concurrent.ConcurrentHashMap
-
 import java.util.concurrent.ConcurrentMap
 
 object PipelineTransferAspectLoader {
