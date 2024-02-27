@@ -26,7 +26,7 @@ BEGIN
                     AND TABLE_NAME = 'T_REPOSITORY_PIPELINE_REF'
                     AND COLUMN_NAME = 'CHANNEL') THEN
     ALTER TABLE `T_REPOSITORY_PIPELINE_REF`
-        ADD COLUMN `CHANNEL` varchar(32) DEFAULT NULL COMMENT '流水线渠道';
+        ADD COLUMN `CHANNEL` varchar(32) DEFAULT 'BS' COMMENT '流水线渠道';
     END IF;
     
     COMMIT;

@@ -105,7 +105,7 @@ class RepoPipelineRefService @Autowired constructor(
             dslContext = dslContext,
             projectId = projectId,
             pipelineId = pipelineId
-        )?.channel ?: ""
+        )?.channel ?: return
         if (action != "delete_pipeline") {
             val modelString = pipelineResDao.getLatestVersionModelString(dslContext, projectId, pipelineId)
             if (modelString.isNullOrBlank()) {
