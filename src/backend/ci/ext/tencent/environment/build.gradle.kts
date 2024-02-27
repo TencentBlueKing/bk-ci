@@ -25,7 +25,6 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-
 subprojects {
     group = "com.tencent.bk.devops.ci.environment"
 }
