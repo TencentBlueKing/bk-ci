@@ -28,21 +28,21 @@
 package com.tencent.devops.store.api.common
 
 import com.tencent.devops.common.api.pojo.Result
-import io.swagger.annotations.Api
-import io.swagger.annotations.ApiOperation
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.tags.Tag
 import javax.ws.rs.Consumes
 import javax.ws.rs.PUT
 import javax.ws.rs.Path
 import javax.ws.rs.Produces
 import javax.ws.rs.core.MediaType
 
-@Api(tags = ["OP_STORE_PUBLISHERS"], description = "OP-研发商店-发布者")
+@Tag(name = "OP_STORE_PUBLISHERS", description = "OP-研发商店-发布者")
 @Path("/op/store/publishers")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface OpStorePublishersResource {
 
-    @ApiOperation("同步所有个人发布者组织架构信息")
+    @Operation(summary = "同步所有个人发布者组织架构信息")
     @PUT
     @Path("/refresh/person")
     fun refreshPersonPublisherGroup(): Result<Boolean>

@@ -27,31 +27,30 @@
 
 package com.tencent.devops.store.pojo.common
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("发布者机构信息报文体")
+@Schema(title = "发布者机构信息报文体")
 data class PublisherDeptInfo(
-    @ApiModelProperty("发布者标识")
+    @get:Schema(title = "发布者标识")
     val publisherCode: String,
-    @ApiModelProperty("一级部门ID")
+    @get:Schema(title = "一级部门ID")
     val firstLevelDeptId: Long,
-    @ApiModelProperty("一级部门名称")
+    @get:Schema(title = "一级部门名称")
     val firstLevelDeptName: String,
-    @ApiModelProperty("二级部门ID")
+    @get:Schema(title = "二级部门ID")
     val secondLevelDeptId: Long,
-    @ApiModelProperty("二级部门名称")
+    @get:Schema(title = "二级部门名称")
     val secondLevelDeptName: String,
-    @ApiModelProperty("三级部门ID")
+    @get:Schema(title = "三级部门ID")
     val thirdLevelDeptId: Long,
-    @ApiModelProperty("三级部门名称")
+    @get:Schema(title = "三级部门名称")
     val thirdLevelDeptName: String,
-    @ApiModelProperty("四级部门ID")
+    @get:Schema(title = "四级部门ID")
     val fourthLevelDeptId: Long? = null,
-    @ApiModelProperty("四级部门名称")
+    @get:Schema(title = "四级部门名称")
     val fourthLevelDeptName: String? = null,
-    @ApiModelProperty("实体组织架构")
+    @get:Schema(title = "实体组织架构")
     var organizationName: String = "",
-    @ApiModelProperty("所属工作组BG")
+    @get:Schema(title = "所属工作组BG")
     val bgName: String
 )
