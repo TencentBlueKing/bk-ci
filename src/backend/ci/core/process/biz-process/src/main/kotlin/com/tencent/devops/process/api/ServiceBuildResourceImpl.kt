@@ -637,7 +637,7 @@ class ServiceBuildResourceImpl @Autowired constructor(
         nodeHashId: String?,
         executeCount: Int?,
         simpleResult: SimpleResult
-    ): Result<String?> {
+    ): Result<Pair<String?, Boolean>> {
         val starter = pipelineBuildFacadeService.workerBuildFinish(
             projectCode = projectId,
             pipelineId = pipelineId,
