@@ -81,7 +81,7 @@ class PipelineTimerBuildListener @Autowired constructor(
                     userId = userId,
                     projectId = projectId,
                     pipelineId = pipelineId,
-                    params = emptyMap(),
+                    params = params,
                     channelCode = channelCode
                 )
 
