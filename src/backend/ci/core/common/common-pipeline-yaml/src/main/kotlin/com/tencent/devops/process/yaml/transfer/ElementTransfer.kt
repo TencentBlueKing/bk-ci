@@ -123,7 +123,7 @@ class ElementTransfer @Autowired(required = false) constructor(
             if (element is ManualTriggerElement) {
                 triggerOn.value.manual = ManualRule(
                     enable = element.isElementEnable().nullIfDefault(true),
-                    canElementSkip = element.canElementSkip.nullIfDefault(true),
+                    canElementSkip = element.canElementSkip.nullIfDefault(false),
                     useLatestParameters = element.useLatestParameters.nullIfDefault(false)
                 )
                 return@forEach
