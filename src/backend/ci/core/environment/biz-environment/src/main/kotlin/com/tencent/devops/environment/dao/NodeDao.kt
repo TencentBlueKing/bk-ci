@@ -343,7 +343,7 @@ class NodeDao {
     fun updateNodeInCCByIp(dslContext: DSLContext, ipToNodeStatus: Map<String, String>) {
         with(TNode.T_NODE) {
             val batchUpdate = dslContext.batch(
-                ipToNodeStatus.map { (ip,nodeStatus) ->
+                ipToNodeStatus.map { (ip, nodeStatus) ->
                     dslContext.update(this)
                         .set(NODE_STATUS, nodeStatus)
                         .where(NODE_IP.eq(ip))
