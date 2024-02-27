@@ -102,9 +102,6 @@ data class Stage(
     }
 
     fun isStageEnable(): Boolean {
-        if (stageControlOption == null) {
-            return true
-        }
-        return stageControlOption!!.enable
+        return stageControlOption?.enable ?: true
     }
 }

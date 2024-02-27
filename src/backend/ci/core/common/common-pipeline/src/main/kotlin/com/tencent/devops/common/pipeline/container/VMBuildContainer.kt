@@ -156,10 +156,7 @@ data class VMBuildContainer(
     }
 
     override fun isContainerEnable(): Boolean {
-        if (jobControlOption == null) {
-            return true
-        }
-        return jobControlOption!!.enable
+        return jobControlOption?.enable ?: true
     }
 
     override fun transformCompatibility() {

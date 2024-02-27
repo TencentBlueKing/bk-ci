@@ -149,11 +149,7 @@ abstract class Element(
     open fun cleanUp() {}
 
     open fun isElementEnable(): Boolean {
-        if (additionalOptions == null) {
-            return true
-        }
-
-        return additionalOptions!!.enable
+        return additionalOptions?.enable ?: true
     }
 
     /**
