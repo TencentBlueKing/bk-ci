@@ -87,7 +87,7 @@ interface UserProjectGitProxyResource {
         @HeaderParam(AUTH_HEADER_PROJECT_ID)
         projectId: String,
         data: LinktgitData
-    ): Result<Map<String, Boolean>>
+    ): Result<Map<Long, Pair<String, Boolean>>>
 
     @Operation(summary = "获取已经关联的仓库")
     @GET
@@ -111,6 +111,9 @@ interface UserProjectGitProxyResource {
         @Parameter(description = "项目ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_PROJECT_ID)
         projectId: String,
+        @Parameter(description = "工蜂仓库ID", required = true)
+        @QueryParam("repoId")
+        repoId: Long,
         @Parameter(description = "仓库链接", required = true)
         @QueryParam("url")
         url: String
