@@ -38,7 +38,7 @@ data class ManualRule(
     val enable: Boolean? = true,
     @ApiModelProperty("手动触发执行时可跳过插件 ", name = "can-skip-step", required = false)
     @JsonProperty("can-skip-step")
-    var canElementSkip: Boolean? = true,
+    var canElementSkip: Boolean? = false,
     @ApiModelProperty("手动触发执行时使用最近一次构建参数值 ", name = "use-latest-inputs", required = false)
     @JsonProperty("use-latest-inputs")
     var useLatestParameters: Boolean? = false
