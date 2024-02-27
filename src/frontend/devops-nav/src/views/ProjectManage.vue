@@ -42,7 +42,7 @@
                 >
                     <bk-table-column
                         :label="$t('projectName')"
-                        sortable
+                        sortable="custom"
                         prop="projectName"
                         width="300"
                     >
@@ -88,7 +88,7 @@
                     </bk-table-column>
                     <bk-table-column
                         :label="$t('projectId')"
-                        sortable
+                        sortable="custom"
                         prop="englishName"
                     />
                     <bk-table-column
