@@ -244,8 +244,7 @@ data class AgentService @Autowired constructor(
                 queryAgentTaskStatusRes.data?.list?.filter {
                     it.ip in runningIpList
                 }?.map {
-                    if (logger.isDebugEnabled)
-                        logger.debug("Agent install task: ip: ${it.ip}, status: ${it.status}")
+                    logger.info("Agent install task: ip: ${it.ip}, status: ${it.status}")
                     if (it.status in agentTaskEndStatusList) { // agent安装结束(成功/失败)
                         val nodeStatus =
                             if (AGENT_INSTALL_NORMAL == it.status) NodeStatus.NORMAL.name

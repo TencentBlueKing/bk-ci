@@ -131,9 +131,8 @@ class ApigwJobCloudApi {
                     } else {
                         null
                     }
-                if (logger.isDebugEnabled) {
+                if (logger.isDebugEnabled)
                     logger.debug("[$operationName] serialized jsonData: ${logWithLengthLimit(jsonData)}")
-                }
                 return JobCloudResult(
                     code = jobCloudResp.code,
                     result = jobCloudResp.result,
@@ -142,7 +141,7 @@ class ApigwJobCloudApi {
                 )
             }
         } catch (exception: Exception) {
-            logger.warn("[executeHttpRequest] Failed to execute the HTTP request. Exception:", exception)
+            logger.warn("Failed to execute the HTTP request. Exception:", exception)
             throw exception
         }
     }
