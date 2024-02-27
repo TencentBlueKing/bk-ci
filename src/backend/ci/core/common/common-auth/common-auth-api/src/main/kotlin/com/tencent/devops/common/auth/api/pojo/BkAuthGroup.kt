@@ -74,5 +74,9 @@ enum class BkAuthGroup(
             }
             throw IllegalArgumentException("roleId($roleId) does not exist!")
         }
+
+        fun roleNameToRoleId(roleName: String): Int {
+            return get(roleName).roleId!!
+        }
     }
 }

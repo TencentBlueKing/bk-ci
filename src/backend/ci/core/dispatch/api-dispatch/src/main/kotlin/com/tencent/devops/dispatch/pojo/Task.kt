@@ -27,23 +27,22 @@
 
 package com.tencent.devops.dispatch.pojo
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
 /**
  */
-@ApiModel("虚拟机主机任务信息")
+@Schema(title = "虚拟机主机任务信息")
 data class Task(
-    @ApiModelProperty("主机任务 ID", required = true)
+    @get:Schema(title = "主机任务 ID", required = true)
     val id: Int,
-    @ApiModelProperty("主机任务名字", required = true)
+    @get:Schema(title = "主机任务名字", required = true)
     val name: String,
-    @ApiModelProperty("主机任务 脚本", required = true)
+    @get:Schema(title = "主机任务 脚本", required = true)
     val script: String,
-    @ApiModelProperty("主机任务 开始时间", required = true)
+    @get:Schema(title = "主机任务 开始时间", required = true)
     val beginTime: Long,
-    @ApiModelProperty("主机任务 结束时间", required = true)
+    @get:Schema(title = "主机任务 结束时间", required = true)
     val endTime: Long?,
-    @ApiModelProperty("主机任务 状态", required = true)
+    @get:Schema(title = "主机任务 状态", required = true)
     val status: Byte
 )

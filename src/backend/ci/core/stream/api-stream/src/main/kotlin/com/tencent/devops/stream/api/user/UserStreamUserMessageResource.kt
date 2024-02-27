@@ -33,9 +33,9 @@ import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.stream.pojo.message.UserMessageRecord
 import com.tencent.devops.stream.pojo.message.UserMessageType
-import io.swagger.annotations.Api
-import io.swagger.annotations.ApiOperation
-import io.swagger.annotations.ApiParam
+import io.swagger.v3.oas.annotations.tags.Tag
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.Parameter
 import javax.ws.rs.Consumes
 import javax.ws.rs.GET
 import javax.ws.rs.HeaderParam
@@ -46,77 +46,77 @@ import javax.ws.rs.Produces
 import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
-@Api(tags = ["USER_STREAM_USER_MESSAGE"], description = "user-消息中心页面")
+@Tag(name = "USER_STREAM_USER_MESSAGE", description = "user-消息中心页面")
 @Path("/user/messages")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface UserStreamUserMessageResource {
 
-    @ApiOperation("获取用户消息")
+    @Operation(summary = "获取用户消息")
     @GET
     @Path("")
     fun getUserMessages(
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam(value = "蓝盾项目ID", required = false)
+        @Parameter(description = "蓝盾项目ID", required = false)
         @QueryParam("projectId")
         projectId: String?,
-        @ApiParam(value = "消息类型")
+        @Parameter(description = "消息类型")
         @QueryParam("messageType")
         messageType: UserMessageType?,
-        @ApiParam(value = "是否已读")
+        @Parameter(description = "是否已读")
         @QueryParam("haveRead")
         haveRead: Boolean?,
-        @ApiParam(value = "消息唯一id")
+        @Parameter(description = "消息唯一id")
         @QueryParam("messageId")
         messageId: String?,
-        @ApiParam(value = "触发人")
+        @Parameter(description = "触发人")
         @QueryParam("triggerUserId")
         triggerUserId: String?,
-        @ApiParam(value = "页码")
+        @Parameter(description = "页码")
         @QueryParam("page")
         page: Int?,
-        @ApiParam(value = "每页数量")
+        @Parameter(description = "每页数量")
         @QueryParam("pageSize")
         pageSize: Int?
     ): Result<Page<UserMessageRecord>>
 
-    @ApiOperation("获取用户未读消息数量")
+    @Operation(summary = "获取用户未读消息数量")
     @GET
     @Path("/noread")
     fun getUserMessagesNoreadCount(
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam(value = "蓝盾项目ID", required = false)
+        @Parameter(description = "蓝盾项目ID", required = false)
         @QueryParam("projectId")
         projectId: String?
     ): Result<Int>
 
-    @ApiOperation("读取消息")
+    @Operation(summary = "读取消息")
     @PUT
     @Path("/{id}/read")
     fun readMessage(
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam(value = "消息ID")
+        @Parameter(description = "消息ID")
         @PathParam("id")
         id: Int,
-        @ApiParam(value = "蓝盾项目ID", required = false)
+        @Parameter(description = "蓝盾项目ID", required = false)
         @QueryParam("projectId")
         projectCode: String?
     ): Result<Boolean>
 
-    @ApiOperation("读取所有消息")
+    @Operation(summary = "读取所有消息")
     @PUT
     @Path("/read")
     fun readAllMessages(
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam(value = "蓝盾项目ID", required = false)
+        @Parameter(description = "蓝盾项目ID", required = false)
         @QueryParam("projectId")
         projectCode: String?
     ): Result<Boolean>
