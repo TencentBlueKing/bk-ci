@@ -409,8 +409,8 @@ abstract class ExtServiceBaseService @Autowired constructor() {
             logger.info(
                 "updateExtService cancelFlag[$cancelFlag] releaseType[$releaseType] version[${serviceRecord.version}]"
             )
-            if (StringUtils.isEmpty(serviceRecord.version)
-                || (cancelFlag && releaseType == ReleaseTypeEnum.CANCEL_RE_RELEASE)) {
+            if (StringUtils.isEmpty(serviceRecord.version) ||
+                (cancelFlag && releaseType == ReleaseTypeEnum.CANCEL_RE_RELEASE)) {
                 // 首次创建版本或者取消发布后不变更版本号重新上架，则在该版本的记录上做更新操作
                 serviceId = serviceRecord.id
                 val finalReleaseType = if (releaseType == ReleaseTypeEnum.CANCEL_RE_RELEASE) {

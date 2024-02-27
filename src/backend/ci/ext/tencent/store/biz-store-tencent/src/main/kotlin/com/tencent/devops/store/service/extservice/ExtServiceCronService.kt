@@ -122,8 +122,9 @@ class ExtServiceCronService @Autowired constructor(
                         val bcsFirstDeployTime = redisOperation.get(bcsDeployRedisKey)
                         if (bcsFirstDeployTime != null) {
                             // 轮询超时则把状态置为部署失败
-                            if ((System.currentTimeMillis() - bcsFirstDeployTime.toLong()) > deployTimeOut * 60 * 1000)
-                            {
+                            if (
+                                (System.currentTimeMillis() - bcsFirstDeployTime.toLong()) > deployTimeOut * 60 * 1000
+                            ) {
                                 it.serviceStatus = ExtServiceStatusEnum.RELEASE_DEPLOY_FAIL.status.toByte()
                                 redisOperation.delete(bcsDeployRedisKey)
                                 // 发送版本发布邮件

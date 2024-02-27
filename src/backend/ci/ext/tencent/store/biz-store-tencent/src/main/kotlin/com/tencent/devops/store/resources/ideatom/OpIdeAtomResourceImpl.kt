@@ -104,7 +104,8 @@ class OpIdeAtomResourceImpl @Autowired constructor(
     override fun releaseIdeAtom(
         userId: String,
         atomId: String,
-        ideAtomReleaseRequest: IdeAtomReleaseRequest): Result<Boolean> {
+        ideAtomReleaseRequest: IdeAtomReleaseRequest
+    ): Result<Boolean> {
         return opIdeAtomService.releaseIdeAtom(userId, atomId, ideAtomReleaseRequest)
     }
 
