@@ -27,13 +27,12 @@
 
 package com.tencent.devops.quality.pojo
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("质量红线-用户组权限")
+@Schema(title = "质量红线-用户组权限")
 data class GroupPermission(
-    @ApiModelProperty("是否可编辑", required = true)
+    @get:Schema(title = "是否可编辑", required = true)
     val canEdit: Boolean,
-    @ApiModelProperty("是否可删除", required = true)
+    @get:Schema(title = "是否可删除", required = true)
     val canDelete: Boolean
 )

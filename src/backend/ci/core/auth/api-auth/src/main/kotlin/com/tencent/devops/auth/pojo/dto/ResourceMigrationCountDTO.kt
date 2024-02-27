@@ -28,18 +28,17 @@
 
 package com.tencent.devops.auth.pojo.dto
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
 /**
  * 资源迁移数
  */
-@ApiModel("资源迁移数")
+@Schema(title = "资源迁移数")
 class ResourceMigrationCountDTO(
-    @ApiModelProperty("资源类型")
+    @get:Schema(title = "资源类型")
     val resourceType: String,
-    @ApiModelProperty("资源数")
+    @get:Schema(title = "资源数")
     val count: Int,
-    @ApiModelProperty("资源用户组数")
+    @get:Schema(title = "资源用户组数")
     val groupCount: Int
 )

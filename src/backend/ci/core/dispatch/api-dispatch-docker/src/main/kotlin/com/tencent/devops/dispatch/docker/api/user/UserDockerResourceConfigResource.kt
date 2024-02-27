@@ -32,9 +32,9 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VAL
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.pipeline.type.BuildType
 import com.tencent.devops.dispatch.docker.pojo.resource.UserDockerResourceOptionsVO
-import io.swagger.annotations.Api
-import io.swagger.annotations.ApiOperation
-import io.swagger.annotations.ApiParam
+import io.swagger.v3.oas.annotations.tags.Tag
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.Parameter
 import javax.ws.rs.Consumes
 import javax.ws.rs.GET
 import javax.ws.rs.HeaderParam
@@ -44,7 +44,7 @@ import javax.ws.rs.Produces
 import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
-@Api(tags = ["USER_DOCKER_HOST"], description = "用户-获取构建容器信息")
+@Tag(name = "USER_DOCKER_HOST", description = "用户-获取构建容器信息")
 @Path("/user/dispatch-docker")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
@@ -52,15 +52,15 @@ interface UserDockerResourceConfigResource {
 
     @GET
     @Path("/resource-config/projects/{projectId}/list")
-    @ApiOperation("获取docker性能配置列表")
+    @Operation(summary = "获取docker性能配置列表")
     fun getDockerResourceConfigList(
-        @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String,
-        @ApiParam("projectId", required = true)
+        @Parameter(description = "projectId", required = true)
         @PathParam("projectId")
         projectId: String,
-        @ApiParam("buildType", required = false)
+        @Parameter(description = "buildType", required = false)
         @QueryParam("buildType")
         buildType: String? = BuildType.DOCKER.name
     ): Result<UserDockerResourceOptionsVO>

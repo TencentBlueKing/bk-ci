@@ -26,23 +26,22 @@
  */
 package com.tencent.devops.common.api.pojo
 import com.tencent.devops.common.api.enums.SystemModuleEnum
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("DB分片路由规则")
+@Schema(title = "DB分片路由规则")
 data class ShardingRoutingRule(
-    @ApiModelProperty("集群名称")
+    @get:Schema(title = "集群名称")
     val clusterName: String,
-    @ApiModelProperty("模块标识")
+    @get:Schema(title = "模块标识")
     val moduleCode: SystemModuleEnum,
-    @ApiModelProperty("数据源名称")
+    @get:Schema(title = "数据源名称")
     val dataSourceName: String,
-    @ApiModelProperty("数据库表名称")
+    @get:Schema(title = "数据库表名称")
     val tableName: String? = null,
-    @ApiModelProperty("规则类型")
+    @get:Schema(title = "规则类型")
     val type: ShardingRuleTypeEnum,
-    @ApiModelProperty("路由规则名称")
+    @get:Schema(title = "路由规则名称")
     val routingName: String,
-    @ApiModelProperty("路由规则值")
+    @get:Schema(title = "路由规则值")
     val routingRule: String
 )

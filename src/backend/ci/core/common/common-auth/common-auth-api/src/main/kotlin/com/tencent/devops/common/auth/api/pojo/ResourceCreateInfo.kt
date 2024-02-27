@@ -28,17 +28,16 @@
 
 package com.tencent.devops.common.auth.api.pojo
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("资源创建信息")
+@Schema(title = "资源创建信息")
 data class ResourceCreateInfo(
-    @ApiModelProperty("是否需要审批")
+    @get:Schema(title = "是否需要审批")
     val needApproval: Boolean? = false,
-    @ApiModelProperty("资源最大授权范围,目前只有rbac需要使用")
+    @get:Schema(title = "资源最大授权范围,目前只有rbac需要使用")
     val subjectScopes: List<SubjectScopeInfo>,
-    @ApiModelProperty("资源描述")
+    @get:Schema(title = "资源描述")
     val description: String? = null,
-    @ApiModelProperty("是否私有资源")
+    @get:Schema(title = "是否私有资源")
     val authSecrecy: Boolean = false
 )

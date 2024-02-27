@@ -29,9 +29,9 @@ package com.tencent.devops.store.api.image.service
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.store.pojo.image.response.ImageRepoInfo
-import io.swagger.annotations.Api
-import io.swagger.annotations.ApiOperation
-import io.swagger.annotations.ApiParam
+import io.swagger.v3.oas.annotations.tags.Tag
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.Parameter
 import javax.ws.rs.Consumes
 import javax.ws.rs.GET
 import javax.ws.rs.HeaderParam
@@ -41,63 +41,63 @@ import javax.ws.rs.Produces
 import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
-@Api(tags = ["SERVICE_MARKET_IMAGE"], description = "SERVICE-研发商店-镜像")
+@Tag(name = "SERVICE_MARKET_IMAGE", description = "SERVICE-研发商店-镜像")
 @Path("/service/market")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface ServiceStoreImageResource {
-    @ApiOperation("查询镜像是否已安装到项目")
+    @Operation(summary = "查询镜像是否已安装到项目")
     @GET
     @Path("/image/projectCodes/{projectCode}/imageCodes/{imageCode}/isInstalled")
     fun isInstalled(
-        @ApiParam("userId", required = true)
+        @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("镜像标识", required = true)
+        @Parameter(description = "镜像标识", required = true)
         @PathParam("projectCode")
         projectCode: String,
-        @ApiParam("镜像标识", required = true)
+        @Parameter(description = "镜像标识", required = true)
         @PathParam("imageCode")
         imageCode: String
     ): Result<Boolean>
 
-    @ApiOperation("根据code查询镜像详情")
+    @Operation(summary = "根据code查询镜像详情")
     @GET
     @Path("/image/projectCodes/{projectCode}/imageCodes/{imageCode}/imageVersions/{imageVersion}")
     fun getImageRepoInfoByCodeAndVersion(
-        @ApiParam("userId", required = true)
+        @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("项目标识", required = true)
+        @Parameter(description = "项目标识", required = true)
         @PathParam("projectCode")
         projectCode: String,
-        @ApiParam("镜像标识", required = true)
+        @Parameter(description = "镜像标识", required = true)
         @PathParam("imageCode")
         imageCode: String,
-        @ApiParam("镜像版本", required = false)
+        @Parameter(description = "镜像版本", required = false)
         @PathParam("imageVersion")
         imageVersion: String?,
-        @ApiParam("流水线Id", required = true)
+        @Parameter(description = "流水线Id", required = true)
         @QueryParam("pipelineId")
         pipelineId: String?,
-        @ApiParam("构建Id", required = true)
+        @Parameter(description = "构建Id", required = true)
         @QueryParam("buildId")
         buildId: String?
     ): Result<ImageRepoInfo>
 
-    @ApiOperation("获取所有的自研公共镜像")
+    @Operation(summary = "获取所有的自研公共镜像")
     @GET
     @Path("/image/self_develop/public_images")
     fun getSelfDevelopPublicImages(): Result<List<ImageRepoInfo>>
 
-    @ApiOperation("根据code和版本号查询镜像状态")
+    @Operation(summary = "根据code和版本号查询镜像状态")
     @GET
     @Path("/image/imageCodes/{imageCode}/imageVersions/{imageVersion}/imageStatus")
     fun getImageStatusByCodeAndVersion(
-        @ApiParam("镜像标识", required = true)
+        @Parameter(description = "镜像标识", required = true)
         @PathParam("imageCode")
         imageCode: String,
-        @ApiParam("镜像版本", required = false)
+        @Parameter(description = "镜像版本", required = false)
         @PathParam("imageVersion")
         imageVersion: String
     ): Result<String>

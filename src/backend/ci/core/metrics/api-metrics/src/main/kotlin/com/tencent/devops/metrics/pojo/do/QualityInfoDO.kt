@@ -27,15 +27,14 @@
 
 package com.tencent.devops.metrics.pojo.`do`
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("质量红线度量信息")
+@Schema(title = "质量红线度量信息")
 data class QualityInfoDO(
-    @ApiModelProperty("质量红线拦截比例")
+    @get:Schema(title = "质量红线拦截比例")
     val qualityInterceptionRate: Double?,
-    @ApiModelProperty("使用质量红线的流水线执行被拦截次数")
+    @get:Schema(title = "使用质量红线的流水线执行被拦截次数")
     val interceptionCount: Int?,
-    @ApiModelProperty("使用质量红线的流水线执行总次数")
+    @get:Schema(title = "使用质量红线的流水线执行总次数")
     val totalExecuteCount: Int?
 )

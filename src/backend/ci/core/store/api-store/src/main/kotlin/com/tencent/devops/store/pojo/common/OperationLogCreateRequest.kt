@@ -27,19 +27,18 @@
 
 package com.tencent.devops.store.pojo.common
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("新增操作日志")
+@Schema(title = "新增操作日志")
 data class OperationLogCreateRequest(
-    @ApiModelProperty("store组件代码", required = true)
+    @get:Schema(title = "store组件代码", required = true)
     val storeCode: String,
-    @ApiModelProperty("store组件类型", required = true)
+    @get:Schema(title = "store组件类型", required = true)
     val storeType: Byte,
-    @ApiModelProperty("操作类型", required = true)
+    @get:Schema(title = "操作类型", required = true)
     val optType: String,
-    @ApiModelProperty("操作用户", required = true)
+    @get:Schema(title = "操作用户", required = true)
     val optUser: String,
-    @ApiModelProperty("操作内容", required = true)
+    @get:Schema(title = "操作内容", required = true)
     val optDesc: String
 )

@@ -28,17 +28,16 @@
 package com.tencent.devops.environment.pojo.thirdPartyAgent
 
 import com.tencent.devops.common.api.enums.AgentStatus
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("第三方构建机UI查询状态")
+@Schema(title = "第三方构建机UI查询状态")
 data class ThirdPartyAgentStatusWithInfo(
-    @ApiModelProperty("状态")
+    @get:Schema(title = "状态")
     val status: AgentStatus,
-    @ApiModelProperty("主机名")
+    @get:Schema(title = "主机名")
     val hostname: String,
-    @ApiModelProperty("IP")
+    @get:Schema(title = "IP")
     val ip: String,
-    @ApiModelProperty("操作系统")
+    @get:Schema(title = "操作系统")
     val os: String
 )

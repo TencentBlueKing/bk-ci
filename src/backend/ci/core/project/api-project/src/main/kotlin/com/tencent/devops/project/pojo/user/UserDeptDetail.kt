@@ -28,40 +28,39 @@
 package com.tencent.devops.project.pojo.user
 
 import com.tencent.devops.project.pojo.DeptInfo
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
 /**
  * 用户机构信息
  *
  * since: 2018-12-09
  */
-@ApiModel("用户部门信息")
+@Schema(title = "用户部门信息")
 data class UserDeptDetail(
-    @ApiModelProperty("bg名称")
+    @get:Schema(title = "bg名称")
     val bgName: String,
-    @ApiModelProperty("bgID")
+    @get:Schema(title = "bgID")
     val bgId: String,
-    @ApiModelProperty("业务线名称")
+    @get:Schema(title = "业务线名称")
     val businessLineName: String? = null,
-    @ApiModelProperty("业务线ID")
+    @get:Schema(title = "业务线ID")
     val businessLineId: String? = null,
-    @ApiModelProperty("部门名称")
+    @get:Schema(title = "部门名称")
     val deptName: String,
-    @ApiModelProperty("部门ID")
+    @get:Schema(title = "部门ID")
     val deptId: String,
-    @ApiModelProperty("中心名称")
+    @get:Schema(title = "中心名称")
     val centerName: String,
-    @ApiModelProperty("中心ID")
+    @get:Schema(title = "中心ID")
     val centerId: String,
-    @ApiModelProperty("组ID")
+    @get:Schema(title = "组ID")
     val groupId: String,
-    @ApiModelProperty("组名称")
+    @get:Schema(title = "组名称")
     val groupName: String,
-    @ApiModelProperty("用户ID")
+    @get:Schema(title = "用户ID")
     val userId: String? = null,
-    @ApiModelProperty("用户名称")
+    @get:Schema(title = "用户名称")
     val name: String? = null,
-    @ApiModelProperty("部门及以上层级")
+    @get:Schema(title = "部门及以上层级")
     val deptInfos: List<DeptInfo>? = emptyList()
 )
