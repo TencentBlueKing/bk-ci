@@ -1,20 +1,20 @@
 package com.tencent.devops.remotedev.pojo.windows
 
-import io.swagger.annotations.ApiParam
+import io.swagger.v3.oas.annotations.Parameter
 
 data class WindowsPoolListFetchData(
-    @ApiParam(value = "zoneId", required = false)
+    @Parameter(description = "zoneId", required = false)
     val zoneId: String?,
-    @ApiParam(value = "machineType", required = false)
+    @Parameter(description = "machineType", required = false)
     val machineType: String?,
-    @ApiParam(value = "ips", required = false)
+    @Parameter(description = "ips", required = false)
     val ips: List<String>?,
-    @ApiParam(value = "status", required = false)
+    @Parameter(description = "status", required = false)
     val status: Int?,
-    @ApiParam("第几页", required = false, defaultValue = "1")
+    @Parameter(description = "第几页", required = false, example = "1")
     val page: Int?,
-    @ApiParam("每页多少条", required = false, defaultValue = "6666")
+    @Parameter(description = "每页多少条", required = false, example = "6666")
     val pageSize: Int?,
-    @ApiParam("是否过滤锁住的机器")
+    @Parameter(description = "是否过滤锁住的机器")
     val lockedFlag: Boolean?
 )

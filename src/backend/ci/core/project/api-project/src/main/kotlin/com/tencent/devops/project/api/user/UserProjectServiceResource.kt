@@ -31,9 +31,9 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_PROJECT_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID
 import com.tencent.devops.project.pojo.Result
 import com.tencent.devops.project.pojo.service.ServiceListVO
-import io.swagger.annotations.Api
-import io.swagger.annotations.ApiOperation
-import io.swagger.annotations.ApiParam
+import io.swagger.v3.oas.annotations.tags.Tag
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.Parameter
 import javax.ws.rs.Consumes
 import javax.ws.rs.GET
 import javax.ws.rs.HeaderParam
@@ -44,7 +44,7 @@ import javax.ws.rs.Produces
 import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
-@Api(tags = ["USER_PROJECT_SERVICE"], description = "项目服务管理接口")
+@Tag(name = "USER_PROJECT_SERVICE", description = "项目服务管理接口")
 @Path("/user")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
@@ -52,26 +52,26 @@ interface UserProjectServiceResource {
 
     @GET
     @Path("/services")
-    @ApiOperation("查询所有服务")
+    @Operation(summary = "查询所有服务")
     fun getServiceList(
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String,
-        @ApiParam("项目ID", required = false)
+        @Parameter(description = "项目ID", required = false)
         @HeaderParam(AUTH_HEADER_DEVOPS_PROJECT_ID)
         projectId: String?
     ): Result<List<ServiceListVO>>
 
     @PUT
     @Path("/services/{service_id}")
-    @ApiOperation("用户修改关注")
+    @Operation(summary = "用户修改关注")
     fun updateCollected(
-        @ApiParam("bk Token", required = true)
+        @Parameter(description = "bk Token", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String,
-        @ApiParam("服务ID")
+        @Parameter(description = "服务ID")
         @PathParam("service_id")
         serviceId: Long,
-        @ApiParam("关注/取消关注")
+        @Parameter(description = "关注/取消关注")
         @QueryParam("collector")
         collector: Boolean
     ): Result<Boolean>

@@ -28,11 +28,10 @@
 
 package com.tencent.devops.auth.pojo.dto
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("用户组重命名")
+@Schema(title = "用户组重命名")
 data class RenameGroupDTO(
-    @ApiModelProperty("用户组名称")
+    @get:Schema(title = "用户组名称")
     val groupName: String
 )

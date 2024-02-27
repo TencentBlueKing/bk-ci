@@ -1,10 +1,9 @@
 package com.tencent.devops.project.pojo
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("OBS运营产品结果")
+@Schema(title = "OBS运营产品结果")
 data class ObsOperationalProductResult(
-    @ApiModelProperty("运营产品")
+    @get:Schema(title = "运营产品")
     val data: List<OperationalProductVO>
 )

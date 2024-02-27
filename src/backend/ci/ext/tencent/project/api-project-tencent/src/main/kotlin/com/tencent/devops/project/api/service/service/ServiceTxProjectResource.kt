@@ -44,9 +44,9 @@ import com.tencent.devops.project.pojo.ProjectExtSystemTagDTO
 import com.tencent.devops.project.pojo.ProjectVO
 import com.tencent.devops.project.pojo.Result
 import com.tencent.devops.project.pojo.enums.ProjectValidateType
-import io.swagger.annotations.Api
-import io.swagger.annotations.ApiOperation
-import io.swagger.annotations.ApiParam
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.Parameter
+import io.swagger.v3.oas.annotations.tags.Tag
 import javax.ws.rs.Consumes
 import javax.ws.rs.GET
 import javax.ws.rs.HeaderParam
@@ -58,7 +58,7 @@ import javax.ws.rs.Produces
 import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
-@Api(tags = ["SERVICE_PROJECT_TX"], description = "蓝盾项目列表接口")
+@Tag(name = "SERVICE_PROJECT_TX", description = "蓝盾项目列表接口")
 @Path("/service/projects/tx")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
@@ -66,186 +66,186 @@ import javax.ws.rs.core.MediaType
 interface ServiceTxProjectResource {
     @GET
     @Path("/")
-    @ApiOperation("查询所有项目")
+    @Operation(summary = "查询所有项目")
     fun list(
-        @ApiParam("PAAS_CC Token", required = true)
+        @Parameter(description = "PAAS_CC Token", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_ACCESS_TOKEN)
         accessToken: String
     ): Result<List<ProjectVO>>
 
     @GET
     @Path("/getProjectByGroup")
-    @ApiOperation("根据组织架构查询所有项目")
+    @Operation(summary = "根据组织架构查询所有项目")
     fun getProjectByGroup(
-        @ApiParam("userId", required = true)
+        @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String,
-        @ApiParam("bgName", required = false)
+        @Parameter(description = "bgName", required = false)
         @QueryParam("bgName")
         bgName: String?,
-        @ApiParam("deptName", required = false)
+        @Parameter(description = "deptName", required = false)
         @QueryParam("deptName")
         deptName: String?,
-        @ApiParam("centerName", required = false)
+        @Parameter(description = "centerName", required = false)
         @QueryParam("centerName")
         centerName: String?
     ): Result<List<ProjectVO>>
 
     @GET
     @Path("/getProjectByOrganizationId")
-    @ApiOperation("根据组织架构查询所有项目")
+    @Operation(summary = "根据组织架构查询所有项目")
     fun getProjectByName(
-        @ApiParam("userId", required = true)
+        @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String,
-        @ApiParam(value = "组织类型", required = true)
+        @Parameter(description = "组织类型", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_ORGANIZATION_TYPE)
         organizationType: String,
-        @ApiParam(value = "组织Id", required = true)
+        @Parameter(description = "组织Id", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_ORGANIZATION_ID)
         organizationId: Long,
-        @ApiParam("deptName", required = false)
+        @Parameter(description = "deptName", required = false)
         @QueryParam("deptName")
         deptName: String?,
-        @ApiParam("centerName", required = false)
+        @Parameter(description = "centerName", required = false)
         @QueryParam("centerName")
         centerName: String?
     ): Result<List<ProjectVO>>
 
     @GET
     @Path("/getProjectByName")
-    @ApiOperation("根据名称查询项目信息,组织限制")
+    @Operation(summary = "根据名称查询项目信息,组织限制")
     fun getProjectByName(
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String,
-        @ApiParam(value = "组织类型", required = true)
+        @Parameter(description = "组织类型", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_ORGANIZATION_TYPE)
         organizationType: String,
-        @ApiParam(value = "组织Id", required = true)
+        @Parameter(description = "组织Id", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_ORGANIZATION_ID)
         organizationId: Long,
-        @ApiParam("项目名称,精准匹配", required = true)
+        @Parameter(description = "项目名称,精准匹配", required = true)
         @QueryParam("name")
         name: String,
-        @ApiParam("名称类型: 中文名称、英文名称", required = true)
+        @Parameter(description = "名称类型: 中文名称、英文名称", required = true)
         @QueryParam("nameType")
         nameType: ProjectValidateType,
-        @ApiParam("是否过滤保密项目", required = false)
+        @Parameter(description = "是否过滤保密项目", required = false)
         @QueryParam("showSecrecy")
         showSecrecy: Boolean?
     ): Result<ProjectVO?>
 
     @GET
     @Path("/getProjectByGroupId")
-    @ApiOperation("根据组织架构查询所有项目")
+    @Operation(summary = "根据组织架构查询所有项目")
     fun getProjectByGroupId(
-        @ApiParam("userId", required = true)
+        @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String,
-        @ApiParam("bgId", required = false)
+        @Parameter(description = "bgId", required = false)
         @QueryParam("bgId")
         bgId: Long?,
-        @ApiParam("deptId", required = false)
+        @Parameter(description = "deptId", required = false)
         @QueryParam("deptId")
         deptId: Long?,
-        @ApiParam("centerId", required = false)
+        @Parameter(description = "centerId", required = false)
         @QueryParam("centerId")
         centerId: Long?
     ): Result<List<ProjectVO>>
 
     @GET
     @Path("/preBuild/userProject/{userId}")
-    @ApiOperation("查询用户项目")
+    @Operation(summary = "查询用户项目")
     fun getPreUserProject(
-        @ApiParam("用户ID", required = true)
+        @Parameter(description = "用户ID", required = true)
         @PathParam("userId")
         userId: String,
-        @ApiParam("accessToken", required = true)
+        @Parameter(description = "accessToken", required = true)
         @QueryParam("accessToken")
         accessToken: String
     ): Result<ProjectVO?>
 
     @GET
     @Path("/remotedev/userProject/{userId}")
-    @ApiOperation("查询用户项目")
+    @Operation(summary = "查询用户项目")
     fun getRemoteDevUserProject(
-        @ApiParam("用户ID", required = true)
+        @Parameter(description = "用户ID", required = true)
         @PathParam("userId")
         userId: String
     ): Result<ProjectVO?>
 
     @GET
     @Path("/enNames/organization")
-    @ApiOperation("查询用户项目")
+    @Operation(summary = "查询用户项目")
     fun getProjectEnNamesByOrganization(
-        @ApiParam("用户ID", required = true)
+        @Parameter(description = "用户ID", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String,
-        @ApiParam("BG_ID", required = true)
+        @Parameter(description = "BG_ID", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_BG_ID)
         bgId: Long,
-        @ApiParam("部门名称", required = true)
+        @Parameter(description = "部门名称", required = true)
         @QueryParam("deptName")
         deptName: String?,
-        @ApiParam("中心名称", required = true)
+        @Parameter(description = "中心名称", required = true)
         @QueryParam("centerName")
         centerName: String?
     ): Result<List<String>>
 
     @GET
     @Path("/enNames/dept")
-    @ApiOperation("查询用户项目")
+    @Operation(summary = "查询用户项目")
     fun getProjectEnNamesByDeptIdAndCenterName(
-        @ApiParam("用户ID", required = true)
+        @Parameter(description = "用户ID", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String,
-        @ApiParam("部门ID", required = true)
+        @Parameter(description = "部门ID", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_DEPT_ID)
         deptId: Long?,
-        @ApiParam("中心名称", required = true)
+        @Parameter(description = "中心名称", required = true)
         @QueryParam("centerName")
         centerName: String?
     ): Result<List<String>>
 
     @GET
     @Path("/enNames/center")
-    @ApiOperation("查询用户项目")
+    @Operation(summary = "查询用户项目")
     fun getProjectEnNamesByCenterId(
-        @ApiParam("用户ID", required = true)
+        @Parameter(description = "用户ID", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String,
-        @ApiParam("中心ID", required = true)
+        @Parameter(description = "中心ID", required = true)
         @QueryParam("centerId")
         centerId: Long?
     ): Result<List<String>>
 
     @GET
     @Path("/rds/getOrCreate")
-    @ApiOperation("查询用户项目")
+    @Operation(summary = "查询用户项目")
     fun getOrCreateRdsProject(
-        @ApiParam("userId", required = true)
+        @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String,
-        @ApiParam("蓝盾项目ID", required = true)
+        @Parameter(description = "蓝盾项目ID", required = true)
         @QueryParam("projectId")
         projectId: String,
-        @ApiParam("蓝盾项目名称", required = true)
+        @Parameter(description = "蓝盾项目名称", required = true)
         @QueryParam("projectName")
         projectName: String
     ): Result<ProjectVO?>
 
     @POST
     @Path("/newProject")
-    @ApiOperation("创建项目")
+    @Operation(summary = "创建项目")
     fun create(
-        @ApiParam("userId", required = true)
+        @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String,
-        @ApiParam("PAAS_CC Token", required = true)
+        @Parameter(description = "PAAS_CC Token", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_ACCESS_TOKEN)
         accessToken: String,
-        @ApiParam(value = "项目信息", required = true)
+        @Parameter(description = "项目信息", required = true)
         projectCreateInfo: ProjectCreateInfo,
         @QueryParam("routerTag")
         routerTag: String?
@@ -253,54 +253,54 @@ interface ServiceTxProjectResource {
 
     @GET
     @Path("/projects/{projectCode}/managers")
-    @ApiOperation(" 查询项目的管理员")
+    @Operation(summary = " 查询项目的管理员")
     fun getProjectManagers(
-        @ApiParam("项目代码", required = true)
+        @Parameter(description = "项目代码", required = true)
         @PathParam("projectCode")
         projectCode: String
     ): Result<List<String>>
 
     @GET
     @Path("/{projectCode}/users/{userId}/verifyWithToken")
-    @ApiOperation(" 校验用户是否项目成员")
+    @Operation(summary = " 校验用户是否项目成员")
     fun verifyUserProjectPermission(
-        @ApiParam("PAAS_CC Token", required = true)
+        @Parameter(description = "PAAS_CC Token", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_ACCESS_TOKEN)
         accessToken: String,
-        @ApiParam("项目代码", required = true)
+        @Parameter(description = "项目代码", required = true)
         @PathParam("projectCode")
         projectCode: String,
-        @ApiParam("用户ID", required = true)
+        @Parameter(description = "用户ID", required = true)
         @PathParam("userId")
         userId: String
     ): Result<Boolean>
 
     @GET
     @Path("/{projectCode}/verifyProjectByOrganization")
-    @ApiOperation(" 校验项目是否数据某组织架构")
+    @Operation(summary = " 校验项目是否数据某组织架构")
     fun verifyProjectByOrganization(
-        @ApiParam("项目代码", required = true)
+        @Parameter(description = "项目代码", required = true)
         @PathParam("projectCode")
         projectCode: String,
-        @ApiParam(value = "组织类型", required = true)
+        @Parameter(description = "组织类型", required = true)
         @QueryParam(AUTH_HEADER_DEVOPS_ORGANIZATION_TYPE)
         organizationType: String,
-        @ApiParam(value = "组织ID", required = true)
+        @Parameter(description = "组织ID", required = true)
         @QueryParam(AUTH_HEADER_DEVOPS_ORGANIZATION_ID)
         organizationId: Int
     ): Result<Boolean>
 
     @POST
     @Path("/gitci/{gitProjectId}/{userId}")
-    @ApiOperation("创建gitCI项目")
+    @Operation(summary = "创建gitCI项目")
     fun createGitCIProject(
-        @ApiParam("工蜂项目id", required = true)
+        @Parameter(description = "工蜂项目id", required = true)
         @PathParam("gitProjectId")
         gitProjectId: Long,
-        @ApiParam("用户名", required = true)
+        @Parameter(description = "用户名", required = true)
         @PathParam("userId")
         userId: String,
-        @ApiParam("工蜂项目名称", required = false)
+        @Parameter(description = "工蜂项目名称", required = false)
         @QueryParam("gitProjectName")
         gitProjectName: String?,
         @ApiParam("项目运营归属", required = false)
@@ -310,45 +310,45 @@ interface ServiceTxProjectResource {
 
     @POST
     @Path("/addManager")
-    @ApiOperation(" 为项目添加管理员")
+    @Operation(summary = " 为项目添加管理员")
     fun addManagerForProject(
-        @ApiParam("用户ID", required = true)
+        @Parameter(description = "用户ID", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String,
-        @ApiParam("管理员", required = true)
+        @Parameter(description = "管理员", required = true)
         addManagerRequest: AddManagerRequest
     ): Result<Boolean>
 
     @POST
     @Path("/createProjectUser")
     fun createProjectUser(
-        @ApiParam("执行人Id", required = true)
+        @Parameter(description = "执行人Id", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         createUser: String?,
-        @ApiParam("是否校验管理员", required = true)
+        @Parameter(description = "是否校验管理员", required = true)
         @QueryParam("checkManager")
         checkManager: Boolean,
-        @ApiParam("添加信息", required = true)
+        @Parameter(description = "添加信息", required = true)
         createInfo: ProjectCreateUserDTO
     ): Result<Boolean>
 
     @POST
     @Path("/create/permission/")
     fun createPipelinePermission(
-        @ApiParam("执行人Id", required = false)
+        @Parameter(description = "执行人Id", required = false)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         createUser: String?,
-        @ApiParam("是否校验管理员", required = true)
+        @Parameter(description = "是否校验管理员", required = true)
         @QueryParam("checkManager")
         checkManager: Boolean,
-        @ApiParam("添加信息", required = true)
+        @Parameter(description = "添加信息", required = true)
         createInfo: PipelinePermissionInfo
     ): Result<Boolean>
 
     @GET
     @Path("{projectId}/roles")
     fun getProjectRoles(
-        @ApiParam("项目Id", required = true)
+        @Parameter(description = "项目Id", required = true)
         @PathParam("projectId")
         projectCode: String
     ): Result<List<BKAuthProjectRolesResources>>
@@ -356,75 +356,75 @@ interface ServiceTxProjectResource {
     @PUT
     @Path("{projectCode}/relation/bind")
     fun bindRelationSystem(
-        @ApiParam("项目Id", required = true)
+        @Parameter(description = "项目Id", required = true)
         @PathParam("projectCode")
         projectCode: String,
-        @ApiParam("关联系统ID", required = true)
+        @Parameter(description = "关联系统ID", required = true)
         @QueryParam("relationId")
         relationId: String
     ): Result<Boolean>
 
     @POST
     @Path("{projectCode}/update/name")
-    @ApiOperation("修改项目名称")
+    @Operation(summary = "修改项目名称")
     fun updateProjectName(
-        @ApiParam("userId", required = true)
+        @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String,
-        @ApiParam("项目Id", required = true)
+        @Parameter(description = "项目Id", required = true)
         @PathParam("projectCode")
         projectCode: String,
-        @ApiParam("关联系统ID", required = true)
+        @Parameter(description = "关联系统ID", required = true)
         @QueryParam("projectName")
         projectName: String
     ): Result<Boolean>
 
     @GET
     @Path("/getProjectInfoByProjectName")
-    @ApiOperation("根据项目名称查询项目信息")
+    @Operation(summary = "根据项目名称查询项目信息")
     fun getProjectInfoByProjectName(
-        @ApiParam("userId", required = true)
+        @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String,
-        @ApiParam("项目名称", required = true)
+        @Parameter(description = "项目名称", required = true)
         @QueryParam("projectName")
         projectName: String
     ): Result<ProjectVO>?
 
     @PUT
     @Path("/{projectCode}/bind/organization")
-    @ApiOperation("绑定项目组织信息")
+    @Operation(summary = "绑定项目组织信息")
     fun bindProjectOrganization(
-        @ApiParam("userId", required = true)
+        @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String,
-        @ApiParam("项目名称", required = true)
+        @Parameter(description = "项目名称", required = true)
         @PathParam("projectCode")
         projectCode: String,
-        @ApiParam("项目组织信息", required = true)
+        @Parameter(description = "项目组织信息", required = true)
         projectDeptInfo: ProjectDeptInfo
     ): Result<Boolean>
 
     @PUT
     @Path("/updateRemotedev")
-    @ApiOperation("修改项目云桌面信息")
+    @Operation(summary = "修改项目云桌面信息")
     fun updateRemotedev(
-        @ApiParam("userId", required = true)
+        @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String,
-        @ApiParam("项目名称", required = true)
+        @Parameter(description = "项目名称", required = true)
         @QueryParam("projectCode")
         projectCode: String,
-        @ApiParam("云桌面配额", required = true)
+        @Parameter(description = "云桌面配额", required = true)
         @QueryParam("desktopNum")
         addcloudDesktopNum: Int
     ): Result<Boolean>
 
-    @ApiOperation("按项目扩展系统设置consul Tag")
+    @Operation(summary = "按项目扩展系统设置consul Tag")
     @PUT
     @Path("/ext/system/setTagByProject")
     fun setExtSystemTagByProject(
-        @ApiParam(value = "consulTag请求入参", required = true)
+        @Parameter(description = "consulTag请求入参", required = true)
         extSystemTagDTO: ProjectExtSystemTagDTO
     ): com.tencent.devops.common.api.pojo.Result<Boolean>
 }

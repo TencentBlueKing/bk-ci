@@ -27,43 +27,42 @@
 
 package com.tencent.devops.process.pojo
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("项目的流水线回调历史")
+@Schema(title = "项目的流水线回调历史")
 data class ProjectPipelineCallBackHistory(
-    @ApiModelProperty("流水线id", required = false)
+    @get:Schema(title = "流水线id", required = false)
     val id: Long? = null,
-    @ApiModelProperty("项目id", required = false)
+    @get:Schema(title = "项目id", required = false)
     val projectId: String,
-    @ApiModelProperty("回调url地址", required = false)
+    @get:Schema(title = "回调url地址", required = false)
     val callBackUrl: String,
-    @ApiModelProperty("事件", required = false)
+    @get:Schema(title = "事件", required = false)
     val events: String,
-    @ApiModelProperty("状态", required = false)
+    @get:Schema(title = "状态", required = false)
     val status: String,
-    @ApiModelProperty("请求header", required = false)
+    @get:Schema(title = "请求header", required = false)
     val requestHeaders: List<CallBackHeader>? = null,
-    @ApiModelProperty("请求body", required = false)
+    @get:Schema(title = "请求body", required = false)
     val requestBody: String,
-    @ApiModelProperty("响应状态码", required = false)
+    @get:Schema(title = "响应状态码", required = false)
     val responseCode: Int? = null,
-    @ApiModelProperty("响应body", required = false)
+    @get:Schema(title = "响应body", required = false)
     val responseBody: String? = null,
-    @ApiModelProperty("错误信息", required = false)
+    @get:Schema(title = "错误信息", required = false)
     val errorMsg: String? = null,
-    @ApiModelProperty("创建时间", required = false)
+    @get:Schema(title = "创建时间", required = false)
     val createdTime: Long? = null,
-    @ApiModelProperty("开始时间", required = false)
+    @get:Schema(title = "开始时间", required = false)
     val startTime: Long,
-    @ApiModelProperty("结束时间", required = false)
+    @get:Schema(title = "结束时间", required = false)
     val endTime: Long
 )
 
-@ApiModel("回调header 模型")
+@Schema(title = "回调header 模型")
 data class CallBackHeader(
-    @ApiModelProperty("名字", required = false)
+    @get:Schema(title = "名字", required = false)
     val name: String,
-    @ApiModelProperty("值", required = false)
+    @get:Schema(title = "值", required = false)
     val value: String
 )

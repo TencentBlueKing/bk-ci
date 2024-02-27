@@ -43,6 +43,7 @@ CREATE TABLE IF NOT EXISTS `T_WORKSPACE` (
 	`WIN_CONFIG_ID` int(11) NULL COMMENT 'windows资源配置id',
     `PROJECT_NAME` varchar(64) NOT NULL DEFAULT '' COMMENT '项目名称',
     `BUSINESS_LINE_NAME` varchar(255) NOT NULL DEFAULT '' COMMENT '业务线名称',
+    `REMARK` varchar(255) NULL DEFAULT '' COMMENT '备注',
     PRIMARY KEY (`ID`),
     UNIQUE INDEX `NAME`(`NAME`)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
@@ -540,5 +541,31 @@ CREATE TABLE IF NOT EXISTS `T_PROJECT_TGIT_LINK`(
 	PRIMARY KEY (`PROJECT_ID`, `URL`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
+-- ----------------------------
+-- Table structure for T_WORKSPACE_NOTIFY
+-- ----------------------------
+CREATE TABLE IF NOT EXISTS `T_WORKSPACE_NOTIFY` (
+    `ID` bigint(20) NOT NULL AUTO_INCREMENT,
+    `OPERATOR` varchar(64) NOT NULL DEFAULT '' COMMENT '操作人',
+    `PROJECT_IDS` varchar(1024) NOT NULL DEFAULT '' COMMENT '项目ID列表',
+    `IPS` mediumtext NOT NULL COMMENT 'IP列表',
+    `TITLE` varchar(256) NOT NULL DEFAULT '' COMMENT '标题',
+    `DESC` varchar(1024) NOT NULL DEFAULT '' COMMENT '描述内容',
+    `CREATED_TIME` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    PRIMARY KEY (`ID`),
+    KEY `uni_1` (`OPERATOR`)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT '云桌面消息通知记录';
+
+-- ----------------------------
+-- Table structure for T_PROJECT_TGIT_ID_LINK 蓝盾项目和工蜂ID关联表
+-- ----------------------------
+CREATE TABLE IF NOT EXISTS `T_PROJECT_TGIT_ID_LINK`(
+	`PROJECT_ID` varchar(64) NOT NULL COMMENT '蓝盾项目ID',
+    `TGIT_ID` bigint(11) NOT NULL COMMENT 'GIT项目ID',
+    `STATUS` varchar(32) NOT NULL COMMENT '仓库状态',
+    `OAUTH_USER` varchar(32) NOT NULL COMMENT '授予oauth权限的用户',
+    `GIT_TYPE` varchar(16) NOT NULL COMMENT 'GIT仓库类型SVN或者GIT',
+	PRIMARY KEY (`PROJECT_ID`, `TGIT_ID`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 SET FOREIGN_KEY_CHECKS = 1;

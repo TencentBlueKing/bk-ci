@@ -2,17 +2,17 @@
 import http from '@/http/api';
 import { Message, Popover } from 'bkui-vue';
 import {
-  EditLine,
+EditLine,
 } from 'bkui-vue/lib/icon';
 import {
-  computed,
-  getCurrentInstance,
-  nextTick,
-  onBeforeUnmount,
-  onMounted,
-  ref,
-  shallowRef,
-  watch,
+computed,
+getCurrentInstance,
+nextTick,
+onBeforeUnmount,
+onMounted,
+ref,
+shallowRef,
+watch,
 } from 'vue';
 import { useI18n } from 'vue-i18n';
 import IAMIframe from './IAM-Iframe';
@@ -55,7 +55,7 @@ const vm = getCurrentInstance();
 const rules = {
   englishName: [
     {
-      validator: value => englishNameReg.test(value),
+      validator: value => props.type !== 'apply' || englishNameReg.test(value),
       message: t('项目ID必须由小写字母+数字+中划线组成，以小写字母开头，长度限制32字符！'),
       trigger: 'blur',
     },

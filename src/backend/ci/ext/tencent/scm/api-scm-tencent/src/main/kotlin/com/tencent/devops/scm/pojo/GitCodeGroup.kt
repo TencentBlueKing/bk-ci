@@ -29,7 +29,7 @@ package com.tencent.devops.scm.pojo
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.annotation.JsonProperty
-import io.swagger.annotations.ApiModel
+import io.swagger.v3.oas.annotations.media.Schema
 
 /**
 {
@@ -44,7 +44,7 @@ import io.swagger.annotations.ApiModel
 "parent_id": 95696
 }
  */
-@ApiModel("工蜂项目组列表信息")
+@Schema(title = "工蜂项目组列表信息")
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class GitCodeGroup(
     val id: Long,

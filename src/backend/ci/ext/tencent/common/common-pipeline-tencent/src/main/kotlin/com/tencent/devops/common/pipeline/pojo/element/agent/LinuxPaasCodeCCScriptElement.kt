@@ -28,35 +28,34 @@
 package com.tencent.devops.common.pipeline.pojo.element.agent
 
 import com.tencent.devops.common.pipeline.enums.BuildScriptType
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
 @Suppress("UNUSED")
-@ApiModel("CodeCC代码检查任务", description = LinuxPaasCodeCCScriptElement.classType)
+@Schema(title = "CodeCC代码检查任务")
 data class LinuxPaasCodeCCScriptElement(
-    @ApiModelProperty("任务名称", required = true)
+    @get:Schema(title = "任务名称", required = true)
     override var name: String = "执行Linux脚本",
-    @ApiModelProperty("id", required = false)
+    @get:Schema(title = "id", required = false)
     override var id: String? = null,
-    @ApiModelProperty("状态", required = false)
+    @get:Schema(title = "状态", required = false)
     override var status: String? = null,
-    @ApiModelProperty("脚本类型", required = true)
+    @get:Schema(title = "脚本类型", required = true)
     override var scriptType: BuildScriptType = BuildScriptType.SHELL,
-    @ApiModelProperty("脚本内容", required = true)
+    @get:Schema(title = "脚本内容", required = true)
     override var script: String = "",
-    @ApiModelProperty("CodeCC Task Name", required = false, hidden = true)
+    @get:Schema(title = "CodeCC Task Name", required = false, hidden = true)
     override var codeCCTaskName: String? = null,
-    @ApiModelProperty("CodeCC Task CN Name", required = false, hidden = true)
+    @get:Schema(title = "CodeCC Task CN Name", required = false, hidden = true)
     override var codeCCTaskCnName: String? = null,
-    @ApiModelProperty("CodeCC Task Id", required = false, hidden = true)
+    @get:Schema(title = "CodeCC Task Id", required = false, hidden = true)
     var codeCCTaskId: String? = null,
-    @ApiModelProperty("是否异步", required = false)
+    @get:Schema(title = "是否异步", required = false)
     override var asynchronous: Boolean? = false,
-    @ApiModelProperty("扫描类型（0：全量, 1：增量）", required = false)
+    @get:Schema(title = "扫描类型（0：全量, 1：增量）", required = false)
     override var scanType: String? = null,
-    @ApiModelProperty("代码存放路径", required = false)
+    @get:Schema(title = "代码存放路径", required = false)
     override var path: String? = null,
-    @ApiModelProperty("工程语言", required = true)
+    @get:Schema(title = "工程语言", required = true)
     override var languages: List<ProjectLanguage> = listOf()
 ) : LinuxCodeCCScriptElement(
     name,

@@ -27,7 +27,7 @@
 
 package com.tencent.devops.auth.api
 
-import io.swagger.annotations.ApiOperation
+import io.swagger.v3.oas.annotations.Operation
 import javax.ws.rs.Consumes
 import javax.ws.rs.POST
 import javax.ws.rs.Path
@@ -40,6 +40,6 @@ import javax.ws.rs.core.MediaType
 interface OPApprovalResource {
     @POST
     @Path("/checkExpiringManager")
-    @ApiOperation("触发续期接口")
+    @Operation(summary = "触发续期接口")
     fun checkExpiringManager()
 }

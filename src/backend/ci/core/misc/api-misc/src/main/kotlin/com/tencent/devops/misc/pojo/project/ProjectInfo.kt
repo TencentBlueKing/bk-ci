@@ -27,15 +27,14 @@
 
 package com.tencent.devops.misc.pojo.project
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("项目信息")
+@Schema(title = "项目信息")
 data class ProjectInfo(
-    @ApiModelProperty("主键Id", required = true)
+    @get:Schema(title = "主键Id", required = true)
     val id: Long,
-    @ApiModelProperty("项目Id", required = true)
+    @get:Schema(title = "项目Id", required = true)
     val projectId: String,
-    @ApiModelProperty("项目渠道", required = true)
+    @get:Schema(title = "项目渠道", required = true)
     val channel: String
 )

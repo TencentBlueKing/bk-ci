@@ -32,32 +32,31 @@ import com.tencent.devops.common.web.constant.BkStyleEnum
 import com.tencent.devops.store.pojo.common.enums.IndexExecuteTimeTypeEnum
 import com.tencent.devops.store.pojo.common.enums.IndexOperationTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("新增指标请求报文体")
+@Schema(title = "新增指标请求报文体")
 data class StoreIndexCreateRequest(
-    @ApiModelProperty("指标代码", required = true)
+    @get:Schema(title = "指标代码", required = true)
     @BkField(maxLength = 10, patternStyle = BkStyleEnum.CODE_STYLE)
     val indexCode: String,
-    @ApiModelProperty("指标名称", required = true)
+    @get:Schema(title = "指标名称", required = true)
     @BkField(maxLength = 64)
     val indexName: String,
-    @ApiModelProperty("指标描述", required = true)
+    @get:Schema(title = "指标描述", required = true)
     @BkField(maxLength = 256)
     val description: String,
-    @ApiModelProperty("等级信息", required = true)
+    @get:Schema(title = "等级信息", required = true)
     val levelInfos: List<StoreIndexLevelInfo>,
-    @ApiModelProperty("运算类型", required = true)
+    @get:Schema(title = "运算类型", required = true)
     val operationType: IndexOperationTypeEnum,
-    @ApiModelProperty("指标对应的插件件代码", required = false)
+    @get:Schema(title = "指标对应的插件件代码", required = false)
     val atomCode: String? = null,
-    @ApiModelProperty("指标对应的插件版本", required = false)
+    @get:Schema(title = "指标对应的插件版本", required = false)
     val atomVersion: String? = null,
-    @ApiModelProperty("指标执行时机类型", required = true)
+    @get:Schema(title = "指标执行时机类型", required = true)
     val executeTimeType: IndexExecuteTimeTypeEnum,
-    @ApiModelProperty("store组件类型", required = true)
+    @get:Schema(title = "store组件类型", required = true)
     val storeType: StoreTypeEnum,
-    @ApiModelProperty("指标展示权重", required = true)
+    @get:Schema(title = "指标展示权重", required = true)
     val weight: Int
 )

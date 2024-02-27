@@ -29,7 +29,7 @@ package com.tencent.devops.environment
 
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.environment.pojo.BizProjectItem
-import io.swagger.annotations.ApiOperation
+import io.swagger.v3.oas.annotations.Operation
 import javax.ws.rs.Consumes
 import javax.ws.rs.DELETE
 import javax.ws.rs.POST
@@ -43,14 +43,14 @@ import javax.ws.rs.core.MediaType
 @Consumes(MediaType.APPLICATION_JSON)
 interface OpBkBizProjectResource {
 
-    @ApiOperation("新增bizProject项")
+    @Operation(summary = "新增bizProject项")
     @POST
     @Path("")
     fun addBizProject(
         bizProjects: List<BizProjectItem>
     ): Result<Boolean>
 
-    @ApiOperation("删除bizProject项")
+    @Operation(summary = "删除bizProject项")
     @DELETE
     @Path("/{id}")
     fun deleteBizProject(

@@ -29,7 +29,9 @@ package com.tencent.devops.common.pipeline.init
 
 import com.tencent.devops.common.pipeline.DispatchSubTypeFetcher
 import com.tencent.devops.common.pipeline.type.DispatchType
+import com.tencent.devops.common.pipeline.type.codecc.CodeCCDispatchType
 import com.tencent.devops.common.pipeline.type.devcloud.PublicDevCloudDispathcType
+import com.tencent.devops.common.pipeline.type.esxi.ESXiDispatchType
 import com.tencent.devops.common.pipeline.type.macos.MacOSDispatchType
 import com.tencent.devops.common.pipeline.type.pcg.PCGDispatchType
 import com.tencent.devops.common.pipeline.type.windows.WindowsDispatchType
@@ -41,7 +43,9 @@ class TencentDispatchSubTypeFetcher : DispatchSubTypeFetcher {
             "THIRD_PARTY_PCG" to PCGDispatchType::class.java,
             "PUBLIC_DEVCLOUD" to PublicDevCloudDispathcType::class.java,
             "MACOS" to MacOSDispatchType::class.java,
-            "WINDOWS" to WindowsDispatchType::class.java
+            "WINDOWS" to WindowsDispatchType::class.java,
+            "CODECC" to CodeCCDispatchType::class.java,
+            "ESXi" to ESXiDispatchType::class.java
         )
     }
 }

@@ -27,13 +27,12 @@
 
 package com.tencent.devops.prebuild.pojo.ide
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("ide打开的目录情况")
+@Schema(title = "ide打开的目录情况")
 data class IdeDirInfo(
-    @ApiModelProperty("目录路径", required = true)
+    @get:Schema(title = "目录路径", required = true)
     val dirPath: String,
-    @ApiModelProperty("server id", required = true)
+    @get:Schema(title = "server id", required = true)
     val serverId: String
 )

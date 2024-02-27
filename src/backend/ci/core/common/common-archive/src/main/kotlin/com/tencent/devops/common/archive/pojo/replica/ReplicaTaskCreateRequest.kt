@@ -29,27 +29,26 @@ package com.tencent.devops.common.archive.pojo.replica
 
 import com.tencent.devops.common.archive.pojo.replica.objects.ReplicaObjectInfo
 import com.tencent.devops.common.archive.pojo.replica.setting.ReplicaSetting
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("同步任务创建请求")
+@Schema(title = "同步任务创建请求")
 data class ReplicaTaskCreateRequest(
-    @ApiModelProperty("任务名称", required = true)
+    @get:Schema(title = "任务名称", required = true)
     val name: String,
-    @ApiModelProperty("本地项目", required = true)
+    @get:Schema(title = "本地项目", required = true)
     val localProjectId: String,
-    @ApiModelProperty("同步对象类型", required = true)
+    @get:Schema(title = "同步对象类型", required = true)
     val replicaObjectType: ReplicaObjectType,
-    @ApiModelProperty("任务对象信息", required = true)
+    @get:Schema(title = "任务对象信息", required = true)
     val replicaTaskObjects: List<ReplicaObjectInfo>,
-    @ApiModelProperty("同步类型", required = true)
+    @get:Schema(title = "同步类型", required = true)
     val replicaType: ReplicaType = ReplicaType.SCHEDULED,
-    @ApiModelProperty("任务设置", required = true)
+    @get:Schema(title = "任务设置", required = true)
     val setting: ReplicaSetting,
-    @ApiModelProperty("远程集群集合", required = true)
+    @get:Schema(title = "远程集群集合", required = true)
     val remoteClusterIds: Set<String>,
-    @ApiModelProperty("是否启用", required = true)
+    @get:Schema(title = "是否启用", required = true)
     val enabled: Boolean = true,
-    @ApiModelProperty("任务描述", required = false)
+    @get:Schema(title = "任务描述", required = false)
     val description: String? = null
 )
