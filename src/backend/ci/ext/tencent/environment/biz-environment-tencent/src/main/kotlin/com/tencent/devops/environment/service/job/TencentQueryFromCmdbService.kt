@@ -6,12 +6,14 @@ import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.environment.constant.DEFAULT_SYTEM_USER
 import com.tencent.devops.environment.constant.EnvironmentMessageCode
+import com.tencent.devops.environment.constant.T_NODE_CREATED_USER
+import com.tencent.devops.environment.constant.T_NODE_NODE_IP
 import com.tencent.devops.environment.pojo.job.cmdbreq.CmdbGetQueryInfoReq
 import com.tencent.devops.environment.pojo.job.cmdbreq.CmdbKeyValues
 import com.tencent.devops.environment.pojo.job.cmdbreq.CmdbPagingInfo
 import com.tencent.devops.environment.pojo.job.cmdbres.CmdbDataIns
 import com.tencent.devops.environment.pojo.job.cmdbres.CmdbResp
-import com.tencent.devops.model.environment.tables.records.TNodeRecord
+import org.jooq.Record5
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.annotation.Primary
@@ -51,11 +53,9 @@ class TencentQueryFromCmdbService : IQueryOperatorService {
      *  判断：用户or节点导入人 是机器的主备负责人（用户：函数中形参userId；节点导入人：T_NODE表中的createdUser）
      *  ext中实现：从cmdb中 用ip查询机器的主备负责人
      */
-    override fun isOperatorOrBakOperator(userId: String, nodeRecords: Set<TNodeRecord>) {
-        val nodeIpList: List<String> = nodeRecords.map { it.nodeIp } // 所有host对应的ip
-        if (logger.isDebugEnabled) logger.debug("[isOperatorOrBakOperator] nodeIpList: $nodeIpList")
-        val nodeIpToNodeMap = nodeRecords.associateBy { it.nodeIp } // 所有host的：ip - 记录 映射
-
+    override fun isOperatorOrBakOperator(userId: String, nodeRecords: Set<Record5<Long, String, Long, Long, String>>) {
+        val nodeIpList: List<String> = nodeRecords.mapNotNull { it[T_NODE_NODE_IP] as? String } // 所有host对应的ip
+        val nodeIpToNodeMap = nodeRecords.associateBy { it[T_NODE_NODE_IP] as? String } // 所有host的：ip - 记录 映射
         val cmdbGetQueryInfoReq = CmdbGetQueryInfoReq(
             bkAppCode = bkAppCode,
             bkAppSecret = bkAppSecret,
@@ -73,17 +73,18 @@ class TencentQueryFromCmdbService : IQueryOperatorService {
         val responseBody = executePostRequest(
             headers, cmdbGetQueryInfoBaseUrl + cmdbGetQueryInfoPath, cmdbGetQueryInfoReq
         )
-        if (logger.isDebugEnabled) logger.debug("[isOperatorOrBakOperator] responseBody: $responseBody")
         val cmdbIpToCmdbDataMap = getNodeIpToCmdbDataMap(responseBody)
 
         val invalidIpList = nodeIpList.filter {
             val isOperator = userId == cmdbIpToCmdbDataMap[it]?.SvrOperator ||
-                nodeIpToNodeMap[it]?.createdUser == cmdbIpToCmdbDataMap[it]?.SvrOperator
+                nodeIpToNodeMap[it]?.get(T_NODE_CREATED_USER) as? String == cmdbIpToCmdbDataMap[it]?.SvrOperator
             val isBakOpertor = cmdbIpToCmdbDataMap[it]?.SvrBakOperator?.split(";")?.contains(userId)!! ||
-                cmdbIpToCmdbDataMap[it]?.SvrBakOperator?.split(";")?.contains(nodeIpToNodeMap[it]?.createdUser)!!
+                cmdbIpToCmdbDataMap[it]?.SvrBakOperator?.split(";")
+                    ?.contains(nodeIpToNodeMap[it]?.get(T_NODE_CREATED_USER) as? String)!!
             !isOperator && !isBakOpertor
         }
         if (invalidIpList.isNotEmpty()) {
+            logger.warn("[isOperatorOrBakOperator] invalidIpList: ${invalidIpList.joinToString()}")
             throw ErrorCodeException(
                 errorCode = EnvironmentMessageCode.ERROR_NODE_IP_ILLEGAL_USER,
                 params = arrayOf(invalidIpList.joinToString(","))
@@ -103,8 +104,6 @@ class TencentQueryFromCmdbService : IQueryOperatorService {
             pagingInfo = CmdbPagingInfo(DEFAULT_START_INDEX, PAGE_SIZE, DEFAULT_RETURN_TOTAL_ROWS)
         )
         val headers = mutableMapOf("accept" to "*/*", "Content-Type" to "application/json")
-        if (logger.isDebugEnabled) logger.debug("[queryCmdb]req:$cmdbGetQueryInfoReq")
-        if (logger.isDebugEnabled) logger.debug("[queryCmdb]url:${cmdbGetQueryInfoBaseUrl + cmdbGetQueryInfoPath}")
         val responseBody = executePostRequest(
             headers, cmdbGetQueryInfoBaseUrl + cmdbGetQueryInfoPath, cmdbGetQueryInfoReq
         )
@@ -113,20 +112,16 @@ class TencentQueryFromCmdbService : IQueryOperatorService {
 
     private fun <T> executePostRequest(headers: Map<String, String>, url: String, req: T): String? {
         val requestContent = jacksonObjectMapper().writeValueAsString(req)
-        if (logger.isDebugEnabled) logger.debug("[executePostRequest] url: $url, body: $requestContent")
-        logger.info("[executePostRequest]POST url: $url, body: ${logWithLengthLimit(requestContent)}")
-        val ccPostResponse = OkhttpUtils.doPost(url, requestContent, headers)
-        val ccPostRes = ccPostResponse.body?.string()
-        logger.info("[executePostRequest]POST res: ${logWithLengthLimit(ccPostRes ?: "")}")
+        logger.info("POST url: $url, req: ${logWithLengthLimit(requestContent)}")
+
+        val ccPostRes = OkhttpUtils.doPost(url, requestContent, headers).body?.string()
+        logger.info("POST res: ${logWithLengthLimit(ccPostRes ?: "")}")
         return ccPostRes
     }
 
     private fun getNodeIpToCmdbDataMap(responseBody: String?): Map<String, CmdbDataIns> {
-        val cmdbResp = jacksonObjectMapper().readValue<CmdbResp>(responseBody!!)
-        if (logger.isDebugEnabled) logger.debug("[getNodeIpToCmdbDataMap] cmdbResp: $cmdbResp")
-        val cmdbData = cmdbResp.data.data
-        val cmdbIpToCmdbDataMap: Map<String, CmdbDataIns> = cmdbData?.associateBy { it.SvrIp!! } ?: mapOf()
-        return cmdbIpToCmdbDataMap
+        val cmdbData = jacksonObjectMapper().readValue<CmdbResp>(responseBody!!).data.data
+        return cmdbData?.associateBy { it.SvrIp!! } ?: mapOf()
     }
 
     private fun logWithLengthLimit(logOrigin: String): String {

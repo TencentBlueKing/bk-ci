@@ -103,8 +103,7 @@ class StockDataUpdateService @Autowired constructor(
 
     private fun updateDevopsAgent() {
         val countBuildNodes = nodeDao.countBuildNodes(dslContext)
-        if (logger.isDebugEnabled)
-            logger.debug("[updateDevopsAgent]countBuildNodes:$countBuildNodes.")
+        logger.info("Update devops agent, node(s) count: $countBuildNodes.")
         countBuildNodes.takeIf { it > 0 }.run {
             val totalPages = PageUtil.calTotalPage(DEFAULT_PAGE_SIZE, countBuildNodes.toLong())
             for (page in 1..totalPages) {
@@ -127,8 +126,7 @@ class StockDataUpdateService @Autowired constructor(
 
     private fun writeDisplayName() {
         val countDisplayNameEmptyNodes = nodeDao.countDisplayNameEmptyNodes(dslContext)
-        if (logger.isDebugEnabled)
-            logger.debug("[writeDisplayName]countDisplayNameEmptyNodes:$countDisplayNameEmptyNodes.")
+        logger.info("Write display name, node(s) count: $countDisplayNameEmptyNodes.")
         if (0 < countDisplayNameEmptyNodes) {
             val totalPages = PageUtil.calTotalPage(DEFAULT_PAGE_SIZE, countDisplayNameEmptyNodes.toLong())
             for (page in 1..totalPages) {
@@ -157,14 +155,13 @@ class StockDataUpdateService @Autowired constructor(
                 nodeDao.batchUpdateDisplayName(dslContext, updateTNodeInfo)
             }
         } else {
-            if (logger.isDebugEnabled) logger.debug("[writeDisplayName] There is no node with empty DisplayName.")
+            logger.info("There is no node with empty DisplayName.")
         }
     }
 
     fun checkDeployNodesIsInCC() {
         val countHostIdNotNullRecord = nodeDao.countDeployNodesInCmdb(dslContext)
-        if (logger.isDebugEnabled)
-            logger.debug("[checkDeployNodesIsInCC]countHostIdNotNullRecord:$countHostIdNotNullRecord.")
+        logger.info("Check deploy node(s) is in CC, node(s) count:$countHostIdNotNullRecord.")
         countHostIdNotNullRecord.takeIf { it > 0 }.run {
             val totalPagesHostIdNotNull = PageUtil.calTotalPage(DEFAULT_PAGE_SIZE, countHostIdNotNullRecord.toLong())
             for (pageHostIdNotNull in 1..totalPagesHostIdNotNull) {
@@ -221,10 +218,10 @@ class StockDataUpdateService @Autowired constructor(
         try {
             val lockSuccess = redisLock.tryLock()
             if (lockSuccess) {
-                if (logger.isDebugEnabled) logger.debug("[taskWithRedisLock]Locked.")
+                logger.info("[taskWithRedisLock]Locked.")
                 operation()
             } else {
-                if (logger.isDebugEnabled) logger.debug("[taskWithRedisLock]Lock failed.")
+                logger.info("[taskWithRedisLock]Lock failed.")
             }
         } catch (e: Throwable) {
             logger.error("[taskWithRedisLock]exception: ", e)

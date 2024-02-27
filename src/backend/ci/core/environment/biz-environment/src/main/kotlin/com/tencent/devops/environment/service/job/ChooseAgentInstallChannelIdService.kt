@@ -72,6 +72,7 @@ class ChooseAgentInstallChannelIdService @Autowired constructor(
                 }
             }
         }
+        logger.info("Auto choose agent install channel: $networkArea")
 
         return when (networkArea) {
             "SUPPORTING" -> PROD_NETWORK_AREA_SUPPORTING
@@ -85,7 +86,7 @@ class ChooseAgentInstallChannelIdService @Autowired constructor(
         val ipAddr: InetAddress = try {
             InetAddress.getByName(ip)
         } catch (e: UnknownHostException) {
-            logger.info("[ipInRange]UnknownHostException: ${e.message}, ip:$ip")
+            logger.warn("[ipInRange]UnknownHostException: ${e.message}, ip:$ip")
             return false
         }
         for (range in ranges) {
@@ -94,7 +95,7 @@ class ChooseAgentInstallChannelIdService @Autowired constructor(
             val subnetAddr: InetAddress = try {
                 InetAddress.getByName(subnet)
             } catch (e: UnknownHostException) {
-                logger.info("[ipInRange]UnknownHostException: ${e.message}")
+                logger.warn("[ipInRange]UnknownHostException: ${e.message}")
                 return false
             }
             val prefixLength = parts[1].toInt()

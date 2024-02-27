@@ -29,13 +29,15 @@ class ParseHashListService @Autowired constructor(
         ) ?: emptyList()
         val hostListByHostId: List<Host>? = executeTarget.hostIdList?.map { Host(bkHostId = it) }
         val hostListByIp: List<Host>? = executeTarget.ipList?.map { Host(bkCloudId = it.bkCloudId, ip = it.ip) }
-        return if (!hostListByHostId.isNullOrEmpty()) {
+        val allHostList = if (!hostListByHostId.isNullOrEmpty()) {
             listOf(hostListByHostId, hostListFromEnvHash, hostListFromNodeHash).flatten()
         } else if (!hostListByIp.isNullOrEmpty()) {
             listOf(hostListByIp, hostListFromEnvHash, hostListFromNodeHash).flatten()
         } else {
             listOf(hostListFromEnvHash, hostListFromNodeHash).flatten()
         }
+        logger.info("All Host List: ${allHostList.joinToString(separator = ", ", transform = { it.toString() })}")
+        return allHostList
     }
 
     fun getHostFromEnvList(projectId: String, envHashIdList: List<String>?/*环境hashId列表*/): List<Host>? {
@@ -60,7 +62,10 @@ class ParseHashListService @Autowired constructor(
                     ip = it[T_NODE_NODE_IP] as String
                 )
             }
-            if (logger.isDebugEnabled) logger.debug("[getHostFromEnvList] nodeHostList: $nodeHostList")
+            if (logger.isDebugEnabled)
+                logger.debug(
+                    "Host from env list: ${nodeHostList.joinToString(separator = ", ", transform = { it.toString() })}"
+                )
             nodeHostList
         }
     }
@@ -83,7 +88,10 @@ class ParseHashListService @Autowired constructor(
                     ip = ip
                 )
             }
-            if (logger.isDebugEnabled) logger.debug("[getHostFromNodeList] hostList: $hostList")
+            if (logger.isDebugEnabled)
+                logger.debug(
+                    "Host from node list: ${hostList.joinToString(separator = ", ", transform = { it.toString() })}"
+                )
             hostList
         }
     }

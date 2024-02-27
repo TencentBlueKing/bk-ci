@@ -110,7 +110,7 @@ class TencentStockDataUpdateService @Autowired constructor(
 
     private fun updateGseAgent() {
         val countCmdbNodes = nodeDao.countCmdbNodes(dslContext)
-        if (logger.isDebugEnabled) logger.debug("[updateAgent]countCmdbNodes:$countCmdbNodes.")
+        logger.info("Update gse agent, node(s) quantity: $countCmdbNodes.")
         countCmdbNodes.takeIf { it > 0 }?.run {
             val totalPages = PageUtil.calTotalPage(DEFAULT_PAGE_SIZE, countCmdbNodes.toLong())
             for (page in 1..totalPages) {
@@ -131,17 +131,28 @@ class TencentStockDataUpdateService @Autowired constructor(
                         )
                 }
                 val existAgentVersionList = existNodeIdToAgentVersionMap.values.toList()
-                if (logger.isDebugEnabled) logger.debug("[updateAgent]existAgentVersionList:$existAgentVersionList.")
+                if (logger.isDebugEnabled)
+                    logger.debug(
+                        "[updateAgent]existAgentVersionList:" +
+                            existAgentVersionList.joinToString(separator = ", ", transform = { it.toString() })
+                    )
                 val ipToExistAgentVersion = existAgentVersionList.associateBy { it.ip }
                 val newAgentVersionList = queryAgentStatusService.getAgentVersions(existAgentVersionList)
-                if (logger.isDebugEnabled) logger.debug("[updateAgent]newAgentVersionList:$newAgentVersionList.")
+                if (logger.isDebugEnabled)
+                    logger.debug(
+                        "[updateAgent]newAgentVersionList:" +
+                            newAgentVersionList?.joinToString(separator = ", ", transform = { it.toString() })
+                    )
                 // 判断 newAgentVersionList 和 existAgentVersionList 是否一致，不一致则更新对应数据库表
                 val agentUpdateList = newAgentVersionList?.filterNot {
                     it.installedTag == ipToExistAgentVersion[it.ip]?.installedTag &&
                         it.version == ipToExistAgentVersion[it.ip]?.version &&
                         it.status == ipToExistAgentVersion[it.ip]?.status
                 }
-                if (logger.isDebugEnabled) logger.debug("[updateAgent]agentUpdateList:$agentUpdateList.")
+                logger.info(
+                    "[updateAgent]agentUpdateList:" +
+                        agentUpdateList?.joinToString(separator = ", ", transform = { it.toString() })
+                )
                 agentUpdateList.takeIf { !it.isNullOrEmpty() }.run {
                     batchUpdateAgent(existNodeIdToAgentVersionMap, agentUpdateList!!)
                 }
@@ -174,13 +185,17 @@ class TencentStockDataUpdateService @Autowired constructor(
                 lastModifyTime = LocalDateTime.now()
             )
         }
-        if (logger.isDebugEnabled) logger.debug("[batchUpdateAgent]agentUpdateRecords:$agentUpdateRecords.")
+        if (logger.isDebugEnabled)
+            logger.debug(
+                "[batchUpdateAgent]agentUpdateRecords:" +
+                    agentUpdateRecords.joinToString(separator = ", ", transform = { it.toString() })
+            )
         nodeDao.batchUpdateAgentInfo(dslContext, agentUpdateRecords)
     }
 
     private fun addNodesToCC() {
         val countCmdbNodes = nodeDao.countCmdbNodes(dslContext)
-        if (logger.isDebugEnabled) logger.debug("[addNodeToCC]countCmdbNodes:$countCmdbNodes")
+        logger.info("Add to cc cmdb node(s) quantity: $countCmdbNodes")
         countCmdbNodes.takeIf { it > 0 }?.run {
             val totalPages = PageUtil.calTotalPage(DEFAULT_PAGE_SIZE, countCmdbNodes.toLong())
             for (page in 1..totalPages) {
@@ -190,32 +205,19 @@ class TencentStockDataUpdateService @Autowired constructor(
     }
 
     private fun addNodeToCCByPage(page: Int) {
-        // 所有"部署"节点 record
         val cmdbNodesRecords =
-            nodeDao.getCmdbNodesHostIdNullLimit(dslContext, page - 1, DEFAULT_PAGE_SIZE)
-        if (logger.isDebugEnabled) logger.debug("[addNodeToCC]cmdbNodesRecords:$cmdbNodesRecords")
-        // 所有"部署"节点 ip
-        val cmdbNodesIp = cmdbNodesRecords.map { it[T_NODE_NODE_IP] as String }.toSet()
-        if (logger.isDebugEnabled) logger.debug("[addNodeToCC]cmdbNodesIp:$cmdbNodesIp.")
-        // 所有"部署"节点 ip - record
-        val nodeIpToNodesRecords = cmdbNodesRecords.associateBy { it[T_NODE_NODE_IP] as String }
-        // 所有"部署"节点 ip - cmdb信息
-        val ipToCmdbInfoMap = tencentQueryFromCmdbService.queryCmdbInfoFromIp(cmdbNodesIp)
-        if (logger.isDebugEnabled) logger.debug("[addNodeToCC]ipToCmdbInfoMap:$ipToCmdbInfoMap.")
+            nodeDao.getCmdbNodesHostIdNullLimit(dslContext, page - 1, DEFAULT_PAGE_SIZE) // 所有"部署"节点 record
+        val cmdbNodesIp = cmdbNodesRecords.map { it[T_NODE_NODE_IP] as String }.toSet() // 所有"部署"节点 ip
+        val nodeIpToNodesRecords = cmdbNodesRecords.associateBy { it[T_NODE_NODE_IP] as String } // 所有"部署"节点 ip - record
+        val ipToCmdbInfoMap = tencentQueryFromCmdbService.queryCmdbInfoFromIp(cmdbNodesIp) // 所有"部署"节点 ip - cmdb信息
         ipToCmdbInfoMap.takeIf { !it.isNullOrEmpty() }.run {
-            // 所有"部署"节点 svrId - cmdb信息
             val svrIdToCmdbInfoMap = ipToCmdbInfoMap!!.values
-                .associateBy { it.serverId?.toLong() }
-            if (logger.isDebugEnabled) logger.debug("[addNodeToCC]svrIdToCmdbInfoMap:$svrIdToCmdbInfoMap.")
-            // 所有"部署"节点 svrId
-            val svrIdList = ipToCmdbInfoMap.values.mapNotNull { it.serverId?.toLong() }
+                .associateBy { it.serverId?.toLong() } // 所有"部署"节点 svrId - cmdb信息
+            val svrIdList = ipToCmdbInfoMap.values.mapNotNull { it.serverId?.toLong() } // 所有"部署"节点 svrId
             // 所有"部署"节点 用svrId查询在不在CC中
             val (_, inCCSvrIdList, notInCCSvrIdList) = cmdbNodeService.checkNodeInCCBySvrId(svrIdList)
-            if (logger.isDebugEnabled) logger.debug("[addNodeToCC]inCCSvrIdList:$inCCSvrIdList.")
-            if (logger.isDebugEnabled) logger.debug("[addNodeToCC]notInCCSvrIdList:$notInCCSvrIdList.")
             // 不在CC中 - 通过节点svrId 添加到CC中，查出host_id和云区域id，写入db对应记录
             val addToCCResp = queryFromCCService.addHostToCiBiz(notInCCSvrIdList)
-            if (logger.isDebugEnabled) logger.debug("[addNodeToCC]addToCCResp:$addToCCResp")
             val ccHostIdList = addToCCResp.data?.bkHostIds
             val (svrIdQueryCCRes, _, _) = cmdbNodeService.checkNodeInCCBySvrId(notInCCSvrIdList)
             val svrIdQueryCCList = svrIdQueryCCRes.data?.info // 所有刚添加到cc中的节点 cc信息
@@ -237,7 +239,7 @@ class TencentStockDataUpdateService @Autowired constructor(
 
     private fun checkDeployNodesIsInCmdb() {
         val countNodeInCmdb = nodeDao.countDeployNodes(dslContext)
-        if (logger.isDebugEnabled) logger.debug("[checkDeployNodesIsInCmdb]countNodeInCmdb:$countNodeInCmdb")
+        logger.info("Node(s) count in cmdb: $countNodeInCmdb")
         countNodeInCmdb.takeIf { it > 0 }.run {
             val totalPages = PageUtil.calTotalPage(DEFAULT_PAGE_SIZE, countNodeInCmdb.toLong())
             for (page in 1..totalPages) {
@@ -246,7 +248,7 @@ class TencentStockDataUpdateService @Autowired constructor(
         }
         // 2.2 节点在cmdb中，查询CC: 在CC-改为NORMAL，不在CC-改为NOT_IN_CC
         stockDataUpdateService.checkDeployNodesIsInCC()
-        if (logger.isDebugEnabled) logger.debug("[checkDeployNodesIsInCmdb]End Check whether the node is in the cmdb.")
+        logger.info("End Check whether the node is in the cmdb.")
     }
 
     private fun checkDeployNodesIsInCmdbByPage(page: Int) {

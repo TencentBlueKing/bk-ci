@@ -100,6 +100,8 @@ class CmdbNodeService @Autowired constructor(
         const val OS_TYPE_CC_CODE_UNIX = "4"
         const val OS_TYPE_CC_CODE_SOLARIS = "5"
         const val OS_TYPE_CC_CODE_FREEBSD = "7"
+
+        const val NS_TO_S = 1000000000
     }
 
     fun getUserCmdbNodesNew(
@@ -169,7 +171,6 @@ class CmdbNodeService @Autowired constructor(
                 AgentVersion(ip = it?.bkHostInnerip, bkHostId = it?.bkHostId)
             }
         )?.associateBy { it.ip }
-        if (logger.isDebugEnabled) logger.debug("[reImportCmdbNodes]ipToAgentVersionInfoMap:$ipToAgentVersionInfoMap")
         val agentStatusMap = ipToAgentVersionInfoMap.takeIf { !it.isNullOrEmpty() }.run {
             esbAgentClient.getAgentStatus(userId, ipToAgentVersionInfoMap!!.keys.filterNotNull().toList())
         }
@@ -225,7 +226,6 @@ class CmdbNodeService @Autowired constructor(
      */
     fun addCmdbNodes(userId: String, projectId: String, nodeIps: List<String>): AddCmdbNodesRes {
         val startTime = LocalDateTime.now()
-        if (logger.isDebugEnabled) logger.debug("[addCmdbNodes]T0(start time): $startTime")
         // 验证 CMDB 节点IP和责任人
         val cmdbIpToNodeMap = checkUserOperator(userId, nodeIps)
         // 只添加不存在的节点
@@ -254,7 +254,6 @@ class CmdbNodeService @Autowired constructor(
         val agentVersionList = queryAgentStatusService.getAgentVersions(ipAndHostIdList)
         val time5 = LocalDateTime.now()
         val ipToAgentVersionMap = agentVersionList?.associateBy { it.ip }
-        if (logger.isDebugEnabled) logger.debug("[addCmdbNodes]ipToAgentVersionMap:$ipToAgentVersionMap")
         val toAddNodeList = toAddIpList.map {
             val cmdbNode = cmdbIpToNodeMap[it]!!
             val opInfo = opService.operateOpProject("", OpOperateReq(2, listOf(projectId))).projGrayStatus?.get(0)
@@ -289,7 +288,11 @@ class CmdbNodeService @Autowired constructor(
             )
         }
         val time6 = LocalDateTime.now()
-        if (logger.isDebugEnabled) logger.debug("[addCmdbNodes]toAddNodeList:$toAddNodeList")
+        if (logger.isDebugEnabled)
+            logger.debug(
+                "[addCmdbNodes]toAddNodeList: " +
+                    toAddNodeList.joinToString(separator = ", ", transform = { it.toString() })
+            )
         dslContext.transaction { configuration ->
             val context = DSL.using(configuration)
             nodeDao.batchAddNode(context, toAddNodeList)
@@ -301,17 +304,16 @@ class CmdbNodeService @Autowired constructor(
             batchRegisterNodePermission(insertedNodeList = insertedNodeList, userId = userId, projectId = projectId)
         }
         val time7 = LocalDateTime.now()
-        if (logger.isDebugEnabled)
-            logger.debug(
-                "[addCmdbNodes]Total: ${Duration.between(startTime, time7).toMillis() / 1000}s, " +
-                    "checkUserOperator(query cmdb): ${Duration.between(startTime, time1).toMillis() / 1000}s, }" +
-                    "checkImportCount: ${Duration.between(time1, time2).toMillis() / 1000}s, }" +
-                    "addNodeToCC: ${Duration.between(time2, time3).toMillis() / 1000}s, }" +
-                    "query agent status from esb: ${Duration.between(time3, time4).toMillis() / 1000}s, }" +
-                    "query agent versions from nodeman/job: ${Duration.between(time4, time5).toMillis() / 1000}s, }" +
-                    "toAddNodeList: ${Duration.between(time5, time6).toMillis() / 1000}s, }" +
-                    "batchAddNode: ${Duration.between(time6, time7).toMillis() / 1000}s, }"
-            )
+        logger.info(
+            "[addCmdbNodes]Total: ${Duration.between(startTime, time7).toNanos().toDouble() / NS_TO_S}s, " +
+                "checkUserOperator(cmdb): ${Duration.between(startTime, time1).toNanos().toDouble() / NS_TO_S}s, " +
+                "checkImportCount: ${Duration.between(time1, time2).toNanos().toDouble() / NS_TO_S}s, " +
+                "addNodeToCC: ${Duration.between(time2, time3).toNanos().toDouble() / NS_TO_S}s, " +
+                "agent status from esb: ${Duration.between(time3, time4).toNanos().toDouble() / NS_TO_S}s, " +
+                "agent versions from nodeman/job: ${Duration.between(time4, time5).toNanos().toDouble() / NS_TO_S}s, " +
+                "toAddNodeList: ${Duration.between(time5, time6).toNanos().toDouble() / NS_TO_S}s, " +
+                "batchAddNode: ${Duration.between(time6, time7).toNanos().toDouble() / NS_TO_S}s, "
+        )
         return AddCmdbNodesRes(
             nodeStatus = true,
             nodesAgentList = toAddNodeList.map {
@@ -357,9 +359,7 @@ class CmdbNodeService @Autowired constructor(
         val serverIdToCmdbNodeMap = toAddIpToCmdbNodeMap.values.associateBy { it.serverId.toLong() }
         // 通过svrId查询节点是否在CC中
         val svrIdList = toAddIpToCmdbNodeMap.map { it.value.serverId.toLong() }
-        if (logger.isDebugEnabled) logger.debug("[addCmdbNodes]svrIdList:$svrIdList")
         val (svrIdQueryCCRes, inCCSvrIdList, notInCCSvrIdList) = checkNodeInCCBySvrId(svrIdList)
-
         var queryCCIpToCCInfoMap = mapOf<String?, CCInfo>() // 在cc中，节点 ip-CCInfo 映射
         if (inCCSvrIdList.isNotEmpty()) { // 在CC中，通过svrId查出host_id（和云区域id，默认0，可默认）
             val ccData = svrIdQueryCCRes.data?.info
@@ -369,12 +369,10 @@ class CmdbNodeService @Autowired constructor(
             }
             queryCCIpToCCInfoMap = ccDataWithStringOsType!!.associateBy { it.bkHostInnerip }
         }
-        if (logger.isDebugEnabled) logger.debug("[addCmdbNodes]queryCCIpToCCInfoMap:$queryCCIpToCCInfoMap")
 
         var addToCCIpToCCInfoMap = mapOf<String?, CCInfo>()
         if (notInCCSvrIdList.isNotEmpty()) { // 不在CC中，add到CC中，查出host_id和云区域id
             val addToCCResp = queryFromCCService.addHostToCiBiz(notInCCSvrIdList)
-            if (logger.isDebugEnabled) logger.debug("[addCmdbNodes]addToCCResp:$addToCCResp")
             val (addToCCSvrIdQueryCCRes, _, _) = checkNodeInCCBySvrId(notInCCSvrIdList)
             val addToCCData = addToCCSvrIdQueryCCRes.data?.info
             val hostIdToCCInfoMap = addToCCData?.associateBy { it.bkHostId }
@@ -388,12 +386,13 @@ class CmdbNodeService @Autowired constructor(
                     osType = getOsTypeByCCCode(hostIdToCCInfoMap?.get(value)?.osType)
                 )
             }
-            if (logger.isDebugEnabled) logger.debug("[addCmdbNodes]addToCCInfo:$addToCCInfoList")
+            if (logger.isDebugEnabled)
+                logger.debug(
+                    "[addCmdbNodes]addToCCInfo: " +
+                        addToCCInfoList?.joinToString(separator = ", ", transform = { it.toString() })
+                )
             addToCCIpToCCInfoMap = addToCCInfoList?.associateBy { it.bkHostInnerip } ?: mapOf()
-            if (logger.isDebugEnabled) logger.debug("[addCmdbNodes]addToCCIpToCCInfoMap:$addToCCIpToCCInfoMap")
         }
-        if (logger.isDebugEnabled) logger.debug("[addCmdbNodes]addToCCIpToCCInfoMap:$addToCCIpToCCInfoMap")
-
         return queryCCIpToCCInfoMap + addToCCIpToCCInfoMap
     }
 
@@ -404,18 +403,19 @@ class CmdbNodeService @Autowired constructor(
             svrIdList,
             FIELD_BK_SVR_ID
         )
-        if (logger.isDebugEnabled) logger.debug("[checkNodeInCCBySvrId]svrIdQueryCCRes:$svrIdQueryCCRes")
         val svrIdQueryCCList = svrIdQueryCCRes.data?.info // 所有在cc中的节点记录
         val svrIdToCCResMap = svrIdQueryCCList!!.associateBy { it.svrId } // cc中 svrId-节点记录 映射
 
         val inCCSvrIdList = mutableListOf<Long>() // 在CC中的节点的SvrId
         val notInCCSvrIdList = mutableListOf<Long>() // 不在CC中的节点的SvrId
         svrIdList.map {
-            if (svrIdToCCResMap.containsKey(it.toLong())) inCCSvrIdList.add(it.toLong())
-            else notInCCSvrIdList.add(it.toLong())
+            if (svrIdToCCResMap.containsKey(it)) inCCSvrIdList.add(it)
+            else notInCCSvrIdList.add(it)
         }
-        if (logger.isDebugEnabled) logger.debug("[checkNodeInCCBySvrId]inCCSvrIdList:$inCCSvrIdList")
-        if (logger.isDebugEnabled) logger.debug("[checkNodeInCCBySvrId]notInCCSvrIdList:$notInCCSvrIdList")
+        logger.info(
+            "[checkNodeInCCBySvrId]inCCSvrIdList: ${inCCSvrIdList.joinToString()}, " +
+                "notInCCSvrIdList: ${notInCCSvrIdList.joinToString()}"
+        )
         return Triple(svrIdQueryCCRes, inCCSvrIdList, notInCCSvrIdList)
     }
 

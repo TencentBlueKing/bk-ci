@@ -32,6 +32,7 @@ import com.tencent.devops.environment.constant.T_ENV_ENV_ID
 import com.tencent.devops.environment.constant.T_NODE_AGENT_STATUS
 import com.tencent.devops.environment.constant.T_NODE_AGENT_VERSION
 import com.tencent.devops.environment.constant.T_NODE_CLOUD_AREA_ID
+import com.tencent.devops.environment.constant.T_NODE_CREATED_USER
 import com.tencent.devops.environment.constant.T_NODE_DISPLAY_NAME
 import com.tencent.devops.environment.model.CreateNodeModel
 import com.tencent.devops.environment.pojo.enums.NodeStatus
@@ -378,35 +379,62 @@ class NodeDao {
         }
     }
 
-    fun getNodesFromHostListByBkHostId(dslContext: DSLContext, projectId: String, hostList: List<Host>): MutableList<TNodeRecord> {
+    fun getNodesFromHostListByBkHostId(
+        dslContext: DSLContext,
+        projectId: String,
+        hostList: List<Host>
+    ): List<Record5<Long, String, Long, Long, String>> {
         val hostIdList = hostList.map { it.bkHostId }
         return with(TNode.T_NODE) {
-            dslContext.selectFrom(this)
+            val nodeRecord = dslContext.select(
+                NODE_ID.`as`(T_NODE_NODE_ID),
+                NODE_IP.`as`(T_NODE_NODE_IP),
+                HOST_ID.`as`(T_NODE_HOST_ID),
+                CLOUD_AREA_ID.`as`(T_NODE_CLOUD_AREA_ID),
+                CREATED_USER.`as`(T_NODE_CREATED_USER)
+            ).from(this)
                 .where(HOST_ID.`in`(hostIdList))
                 .and(PROJECT_ID.eq(projectId))
                 .fetch()
+            nodeRecord.mapNotNull { it }
         }
     }
 
-    fun getNodesFromHostListByBkHostId(dslContext: DSLContext, hostList: List<Host>): MutableList<TNodeRecord> {
+    fun getNodesFromHostListByBkHostId(dslContext: DSLContext, hostList: List<Host>): Result<Record2<Long, Long>> {
         val hostIdList = hostList.map { it.bkHostId }
         return with(TNode.T_NODE) {
-            dslContext.selectFrom(this)
+            dslContext.select(
+                NODE_ID.`as`(T_NODE_NODE_ID),
+                HOST_ID.`as`(T_NODE_HOST_ID)
+            ).from(this)
                 .where(HOST_ID.`in`(hostIdList))
                 .fetch()
         }
     }
 
-    fun getNodesFromHostListByIpAndBkCloudId(dslContext: DSLContext, projectId: String, hostList: List<Host>): List<TNodeRecord> {
+    fun getNodesFromHostListByIpAndBkCloudId(
+        dslContext: DSLContext,
+        projectId: String,
+        hostList: List<Host>
+    ): List<Record5<Long, String, Long, Long, String>> {
         val ipList = hostList.map { it.ip }
         val ipToRecordMap = hostList.associateBy { it.ip }
         return with(TNode.T_NODE) {
-            dslContext.selectFrom(this)
+            val nodeRecord = dslContext.select(
+                NODE_ID.`as`(T_NODE_NODE_ID),
+                NODE_IP.`as`(T_NODE_NODE_IP),
+                HOST_ID.`as`(T_NODE_HOST_ID),
+                CLOUD_AREA_ID.`as`(T_NODE_CLOUD_AREA_ID),
+                CREATED_USER.`as`(T_NODE_CREATED_USER)
+            ).from(this)
                 .where(NODE_IP.`in`(ipList))
                 .and(PROJECT_ID.eq(projectId))
                 .fetch()
-        }.filter {
-            ipToRecordMap[it.nodeIp]?.bkCloudId == it.cloudAreaId
+            nodeRecord.mapNotNull {
+                if (ipToRecordMap[it[T_NODE_NODE_IP] as? String]?.bkCloudId == it[T_NODE_CLOUD_AREA_ID] as? Long) {
+                    it
+                } else null
+            }
         }
     }
 

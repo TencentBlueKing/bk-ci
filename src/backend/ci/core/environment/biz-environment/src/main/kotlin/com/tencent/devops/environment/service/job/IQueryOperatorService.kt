@@ -1,7 +1,7 @@
 package com.tencent.devops.environment.service.job
 
-import com.tencent.devops.model.environment.tables.records.TNodeRecord
+import org.jooq.Record5
 
 interface IQueryOperatorService {
-    fun isOperatorOrBakOperator(userId: String, nodeRecords: Set<TNodeRecord>)
+    fun isOperatorOrBakOperator(userId: String, nodeRecords: Set<Record5<Long, String, Long, Long, String>>)
 }

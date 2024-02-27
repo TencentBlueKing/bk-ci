@@ -7,6 +7,9 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VAL
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.environment.constant.EnvironmentMessageCode
+import com.tencent.devops.environment.constant.T_NODE_CREATED_USER
+import com.tencent.devops.environment.constant.T_NODE_HOST_ID
+import com.tencent.devops.environment.constant.T_NODE_NODE_IP
 import com.tencent.devops.environment.pojo.job.ccreq.CCAddHostReq
 import com.tencent.devops.environment.pojo.job.ccreq.CCDeleteHostReq
 import com.tencent.devops.environment.pojo.job.ccreq.CCFindHostBizRelationsReq
@@ -18,11 +21,11 @@ import com.tencent.devops.environment.pojo.job.ccres.CCBkHost
 import com.tencent.devops.environment.pojo.job.ccres.QueryCCListHostWithoutBizData
 import com.tencent.devops.environment.pojo.job.ccres.CCResp
 import com.tencent.devops.environment.pojo.job.ccres.HostBizRelation
-import com.tencent.devops.model.environment.tables.records.TNodeRecord
 import okhttp3.Headers.Companion.toHeaders
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.Request
 import okhttp3.RequestBody
+import org.jooq.Record5
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
@@ -78,10 +81,10 @@ class QueryFromCCService : IQueryOperatorService {
      *  判断：用户or节点导入人 是机器的主备负责人（用户：函数中形参userId；节点导入人：T_NODE表中的createdUser）
      *  core中实现：从CC中 用对应T_NODE表中记录的host_id查询机器的主备负责人
      */
-    override fun isOperatorOrBakOperator(userId: String, nodeRecords: Set<TNodeRecord>) {
-        val nodeIpList: List<String> = nodeRecords.map { it.nodeIp } // 所有host对应的ip
-        val nodeIpToNodeMap = nodeRecords.associateBy { it.nodeIp } // 所有host的：ip - 记录 映射
-        val nodeHostIdList: List<Long> = nodeRecords.map { it.hostId } // 所有host对应的id
+    override fun isOperatorOrBakOperator(userId: String, nodeRecords: Set<Record5<Long, String, Long, Long, String>>) {
+        val nodeIpList: List<String> = nodeRecords.mapNotNull { it[T_NODE_NODE_IP] as? String } // 所有host对应的ip
+        val nodeIpToNodeMap = nodeRecords.associateBy { it[T_NODE_NODE_IP] as? String } // 所有host的：ip - 记录 映射
+        val nodeHostIdList: List<Long> = nodeRecords.mapNotNull { it[T_NODE_HOST_ID] as? Long } // 所有host对应的id
 
         val ccResp = queryCCListHostWithoutBizByInRules(
             listOf(FIELD_BK_HOST_ID, FIELD_BK_CLOUD_ID, FIELD_BK_HOST_INNERIP, FIELD_OPERATOR, FIELD_BAK_OPERATOR),
@@ -92,14 +95,15 @@ class QueryFromCCService : IQueryOperatorService {
             val ccIpToNodeMap = ccData.associateBy { it.bkHostInnerip }
             val invalidIpList = nodeIpList.filter {
                 val isOperator = userId == ccIpToNodeMap[it]?.operator ||
-                    nodeIpToNodeMap[it]?.createdUser == ccIpToNodeMap[it]?.operator
+                    nodeIpToNodeMap[it]?.get(T_NODE_CREATED_USER) as? String == ccIpToNodeMap[it]?.operator
                 val isBakOpertor = ccIpToNodeMap[it]?.bkBakOperator?.split(",")?.contains(userId)!! ||
-                    ccIpToNodeMap[it]?.bkBakOperator?.split(",")?.contains(nodeIpToNodeMap[it]?.createdUser)!!
+                    ccIpToNodeMap[it]?.bkBakOperator?.split(",")
+                        ?.contains(nodeIpToNodeMap[it]?.get(T_NODE_CREATED_USER) as? String)!!
                 !isOperator && !isBakOpertor
             }
-            if (logger.isDebugEnabled) logger.debug("[isOperatorOrBakOperator] invalidIpList: $invalidIpList")
 
             if (invalidIpList.isNotEmpty()) {
+                logger.warn("[isOperatorOrBakOperator] invalidIpList: ${invalidIpList.joinToString()}")
                 throw ErrorCodeException(
                     errorCode = EnvironmentMessageCode.ERROR_NODE_IP_ILLEGAL_USER,
                     params = arrayOf(invalidIpList.joinToString(","))
@@ -131,14 +135,10 @@ class QueryFromCCService : IQueryOperatorService {
                 )
             )
         )
-        if (logger.isDebugEnabled) logger.debug("[queryCCListHostWithoutBizByInRules] req: $ccListHostWithoutBizReq")
-        if (logger.isDebugEnabled) logger.debug(
-            "[queryCCListHostWithoutBizByInRules] url: ${bkccQueryBaseUrl + bkccListHostWithoutBizPath}"
-        )
+        val url = bkccQueryBaseUrl + bkccListHostWithoutBizPath
         val resBody = executePostRequest(
-            getcommonHeaders(), bkccQueryBaseUrl + bkccListHostWithoutBizPath, ccListHostWithoutBizReq
+            getcommonHeaders(), url, ccListHostWithoutBizReq
         )
-        if (logger.isDebugEnabled) logger.debug("[queryCCListHostWithoutBizByInRules] resBody:$resBody")
         return mapper.readValue(resBody!!)
     }
 
@@ -147,10 +147,7 @@ class QueryFromCCService : IQueryOperatorService {
         val resBody = executePostRequest(
             getAuthHeaders(), bkccExecuteBaseUrl + bkccAddHostToCiBizPath, ccAddHostReq
         )
-        if (logger.isDebugEnabled) logger.debug("[addHostToCiBiz]resBody:$resBody")
-        val deserializedResBody = mapper.readValue<CCResp<CCBkHost>>(resBody!!)
-        if (logger.isDebugEnabled) logger.debug("[addHostToCiBiz]deserializedResBody:$deserializedResBody")
-        return deserializedResBody
+        return mapper.readValue(resBody!!)
     }
 
     fun deleteHostFromCiBiz(hostIdList: Set<Long>): CCResp<Nothing> {
@@ -158,7 +155,6 @@ class QueryFromCCService : IQueryOperatorService {
         val resBody = executeDeleteRequest(
             getAuthHeaders(), bkccExecuteBaseUrl + bkccDeleteHostFromCiBizPath, ccDeleteHostReq
         )
-        if (logger.isDebugEnabled) logger.debug("[deleteHostFromCiBiz]resBody:$resBody")
         return mapper.readValue(resBody!!)
     }
 
@@ -191,26 +187,26 @@ class QueryFromCCService : IQueryOperatorService {
 
     private fun <T> executePostRequest(headers: Map<String, String>, url: String, req: T): String? {
         val requestContent = mapper.writeValueAsString(req)
-        if (logger.isDebugEnabled) logger.debug("[executePostRequest]url: $url, body: $requestContent")
-        logger.info("[executePostRequest]POST url: $url, body: ${logWithLengthLimit(requestContent)}")
-        val ccPostRes = OkhttpUtils.doPost(url, requestContent, headers)
-        if (logger.isDebugEnabled) logger.debug("[executePostRequest] ccPostRes: $ccPostRes")
-        val ccPostResBody = ccPostRes.body?.string()
-        if (logger.isDebugEnabled) logger.debug("[executePostRequest] ccPostRes.body.string(): $ccPostResBody")
-        logger.info("[executePostRequest]POST res: ${logWithLengthLimit(ccPostResBody ?: "")}")
+        logger.info("POST url: $url, req: ${logWithLengthLimit(requestContent)}")
+
+        val ccPostResBody = OkhttpUtils.doPost(url, requestContent, headers).body?.string()
+        logger.info("POST res: ${logWithLengthLimit(ccPostResBody ?: "")}")
         return ccPostResBody
     }
 
     private fun <T> executeDeleteRequest(headers: Map<String, String>, url: String, req: T): String? {
         val requestContent = mapper.writeValueAsString(req)
+        logger.info("DELETE url: $url, req: ${logWithLengthLimit(requestContent)}")
         val requestBody = RequestBody.create("text/plain".toMediaTypeOrNull(), requestContent)
         val deleteReq: Request = Request.Builder()
             .url(url)
             .headers(headers.toHeaders())
             .delete(requestBody)
             .build()
-        val ccDeleteRes = OkhttpUtils.doHttp(deleteReq)
-        return ccDeleteRes.body?.string()
+
+        val deleteResBody = OkhttpUtils.doHttp(deleteReq).body?.string()
+        logger.info("DELETE res: ${logWithLengthLimit(deleteResBody ?: "")}")
+        return deleteResBody
     }
 
     private fun logWithLengthLimit(logOrigin: String): String {
