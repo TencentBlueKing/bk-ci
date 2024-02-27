@@ -41,9 +41,9 @@ import com.tencent.devops.scm.enums.GitAccessLevelEnum
 import com.tencent.devops.scm.pojo.GitCommit
 import com.tencent.devops.scm.pojo.GitProjectInfo
 import com.tencent.devops.scm.pojo.GitRepositoryDirItem
-import io.swagger.v3.oas.annotations.tags.Tag
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
+import io.swagger.v3.oas.annotations.tags.Tag
 import javax.ws.rs.Consumes
 import javax.ws.rs.DELETE
 import javax.ws.rs.GET
@@ -323,14 +323,14 @@ interface ServiceGitRepositoryResource {
         tokenType: TokenTypeEnum
     ): Result<Boolean>
 
-    @ApiOperation("根据代码库哈希ID查询GIT项目ID")
+    @Operation(summary = "根据代码库哈希ID查询GIT项目ID")
     @POST
     @Path("/git/branch/default/rules")
     fun getGitProjectIdByRepositoryHashId(
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam(value = "代码库哈希ID列表", required = true)
+        @Parameter(description = "代码库哈希ID列表", required = true)
         repositoryHashIdList: List<String>
     ): Result<List<String>>
 }
