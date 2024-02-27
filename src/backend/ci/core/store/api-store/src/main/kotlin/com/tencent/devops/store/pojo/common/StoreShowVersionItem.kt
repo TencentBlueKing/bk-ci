@@ -27,15 +27,14 @@
 
 package com.tencent.devops.store.pojo.common
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("回显版本信息")
+@Schema(title = "回显版本信息")
 data class StoreShowVersionItem(
-    @ApiModelProperty("版本号", required = true)
+    @get:Schema(title = "版本号", required = true)
     val version: String,
-    @ApiModelProperty("发布类型", required = true)
+    @get:Schema(title = "发布类型", required = true)
     val releaseType: String,
-    @ApiModelProperty("是否默认选中", required = true)
+    @get:Schema(title = "是否默认选中", required = true)
     val defaultFlag: Boolean = false
 )

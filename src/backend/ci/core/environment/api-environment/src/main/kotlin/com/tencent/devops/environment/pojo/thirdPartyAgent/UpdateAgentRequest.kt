@@ -27,13 +27,13 @@
 
 package com.tencent.devops.environment.pojo.thirdPartyAgent
 
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
 data class UpdateAgentRequest(
-    @ApiModelProperty("Agent Hash ID", required = true)
+    @get:Schema(title = "Agent Hash ID", required = true)
     val agentId: String,
-    @ApiModelProperty("Gateway", required = true)
+    @get:Schema(title = "Gateway", required = true)
     val gateway: String,
-    @ApiModelProperty("File Gateway", required = true)
+    @get:Schema(title = "File Gateway", required = true)
     val fileGateway: String
 )

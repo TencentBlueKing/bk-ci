@@ -30,25 +30,24 @@ import com.tencent.devops.common.notify.enums.EnumEmailFormat
 import com.tencent.devops.common.notify.enums.EnumEmailType
 import com.tencent.devops.common.notify.enums.EnumNotifyPriority
 import com.tencent.devops.common.notify.enums.EnumNotifySource
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("消息通知更新请求报文体")
+@Schema(title = "消息通知更新请求报文体")
 data class UpdateNotifyMessageTemplateRequest(
-    @ApiModelProperty("模板名称", required = false)
+    @get:Schema(title = "模板名称", required = false)
     val templateName: String?,
-    @ApiModelProperty("适用的通知类型（EMAIL:邮件 RTX:企业微信 WECHAT:微信 SMS:短信）", required = false)
+    @get:Schema(title = "适用的通知类型（EMAIL:邮件 RTX:企业微信 WECHAT:微信 SMS:短信）", required = false)
     val notifyTypeScope: ArrayList<String>?,
-    @ApiModelProperty("标题（邮件和RTX方式必填）", required = false)
+    @get:Schema(title = "标题（邮件和RTX方式必填）", required = false)
     val title: String?,
-    @ApiModelProperty("消息内容", required = true)
+    @get:Schema(title = "消息内容", required = true)
     val body: String?,
-    @ApiModelProperty("优先级别（-1:低 0:普通 1:高）", allowableValues = "-1,0,1", dataType = "String", required = true)
+    @get:Schema(title = "优先级别（-1:低 0:普通 1:高）", allowableValues = ["-1", "0", "1"], type = "String", required = true)
     val priority: EnumNotifyPriority?,
-    @ApiModelProperty("通知来源（0:本地业务 1:操作）", allowableValues = "0,1", dataType = "int", required = true)
+    @get:Schema(title = "通知来源（0:本地业务 1:操作）", allowableValues = ["0", "1"], type = "int", required = true)
     val source: EnumNotifySource?,
-    @ApiModelProperty("邮件格式（邮件方式必填 0:文本 1:html网页）", allowableValues = "0,1", dataType = "int", required = false)
+    @get:Schema(title = "邮件格式（邮件方式必填 0:文本 1:html网页）", allowableValues = ["0", "1"], type = "int", required = false)
     val bodyFormat: EnumEmailFormat?,
-    @ApiModelProperty("邮件类型（邮件方式必填 0:外部邮件 1:内部邮件）", allowableValues = "0,1", dataType = "int", required = false)
+    @get:Schema(title = "邮件类型（邮件方式必填 0:外部邮件 1:内部邮件）", allowableValues = ["0", "1"], type = "int", required = false)
     val emailType: EnumEmailType?
 )

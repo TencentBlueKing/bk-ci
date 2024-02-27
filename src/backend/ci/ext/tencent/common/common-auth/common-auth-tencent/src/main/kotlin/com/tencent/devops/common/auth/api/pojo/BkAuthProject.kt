@@ -28,7 +28,7 @@
 package com.tencent.devops.common.auth.api.pojo
 
 import com.fasterxml.jackson.annotation.JsonProperty
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
 /**
  *  {
@@ -58,60 +58,60 @@ import io.swagger.annotations.ApiModelProperty
  */
 data class BkAuthProject(
     @JsonProperty("bg_id", required = true)
-    @ApiModelProperty(name = "bg_id")
+    @get:Schema(title = "bg_id")
     val bgId: Int,
     @JsonProperty("bg_name", required = true)
-    @ApiModelProperty(name = "bg_name")
+    @get:Schema(title = "bg_name")
     val bgName: String,
     @JsonProperty("cc_app_id", required = true)
-    @ApiModelProperty(name = "cc_app_id")
+    @get:Schema(title = "cc_app_id")
     val ccAppId: String,
     @JsonProperty("center_id", required = true)
-    @ApiModelProperty(name = "center_id")
+    @get:Schema(title = "center_id")
     val centerId: String,
     @JsonProperty("center_name", required = true)
-    @ApiModelProperty(name = "center_name")
+    @get:Schema(title = "center_name")
     val centerName: String,
     @JsonProperty("created_at", required = true)
-    @ApiModelProperty(name = "created_at")
+    @get:Schema(title = "created_at")
     val createdAt: String,
     @JsonProperty("creator", required = true)
-    @ApiModelProperty(name = "creator")
+    @get:Schema(title = "creator")
     val creator: String,
     @JsonProperty("dept_id", required = true)
-    @ApiModelProperty(name = "dept_id")
+    @get:Schema(title = "dept_id")
     val deptId: Int,
     @JsonProperty("dept_name", required = true)
-    @ApiModelProperty(name = "dept_name")
+    @get:Schema(title = "dept_name")
     val deptName: String,
     @JsonProperty("description", required = true)
-    @ApiModelProperty(name = "description")
+    @get:Schema(title = "description")
     val description: String,
     @JsonProperty("english_name", required = true)
-    @ApiModelProperty(name = "english_name")
+    @get:Schema(title = "english_name")
     val projectCode: String,
     @get:JsonProperty("is_offlined", required = true)
-    @ApiModelProperty(name = "is_offlined")
+    @get:Schema(title = "is_offlined")
     val isOfflined: Boolean,
     @JsonProperty("logo_addr", required = true)
-    @ApiModelProperty(name = "logo_addr")
+    @get:Schema(title = "logo_addr")
     val logoAddr: String,
     @JsonProperty("project_id", required = true)
-    @ApiModelProperty(name = "project_id")
+    @get:Schema(title = "project_id")
     val projectId: String,
     @JsonProperty("project_name", required = true)
-    @ApiModelProperty(name = "project_name")
+    @get:Schema(title = "project_name")
     val projectName: String,
     @JsonProperty("project_type", required = true)
-    @ApiModelProperty(name = "project_type")
+    @get:Schema(title = "project_type")
     val projectType: Int,
     @JsonProperty("updated_at", required = true)
-    @ApiModelProperty(name = "updated_at")
+    @get:Schema(title = "updated_at")
     val updatedAt: String,
     @JsonProperty("use_bk", required = true)
-    @ApiModelProperty(name = "use_bk")
+    @get:Schema(title = "use_bk")
     val useBk: Boolean,
     @JsonProperty("approval_status", required = true)
-    @ApiModelProperty(name = "approval_status")
+    @get:Schema(title = "approval_status")
     val approvalStatus: String
 )

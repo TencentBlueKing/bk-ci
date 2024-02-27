@@ -27,17 +27,16 @@
 
 package com.tencent.devops.store.pojo.common
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("机构信息报文体")
+@Schema(title = "机构信息报文体")
 data class DeptInfo(
-    @ApiModelProperty("机构ID", required = true)
+    @get:Schema(title = "机构ID", required = true)
     val deptId: Int,
-    @ApiModelProperty("机构名称", required = true)
+    @get:Schema(title = "机构名称", required = true)
     val deptName: String,
-    @ApiModelProperty("机构审核状态(0：待审核 1：审核通过 2：审核驳回)", required = false)
+    @get:Schema(title = "机构审核状态(0：待审核 1：审核通过 2：审核驳回)", required = false)
     val status: String? = null,
-    @ApiModelProperty("批注", required = false)
+    @get:Schema(title = "批注", required = false)
     val comment: String? = null
 )

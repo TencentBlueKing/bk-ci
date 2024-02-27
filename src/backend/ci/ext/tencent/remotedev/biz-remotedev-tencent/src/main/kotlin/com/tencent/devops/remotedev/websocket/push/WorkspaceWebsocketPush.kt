@@ -38,13 +38,13 @@ import com.tencent.devops.common.websocket.pojo.WebSocketType
 import com.tencent.devops.common.websocket.utils.WsRedisUtils
 import com.tencent.devops.remotedev.pojo.WebSocketActionType
 import com.tencent.devops.remotedev.websocket.page.WorkspacePageBuild
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 import org.slf4j.LoggerFactory
 
 @Event(exchange = MQ.EXCHANGE_WEBSOCKET_TMP_FANOUT, routeKey = MQ.ROUTE_WEBSOCKET_TMP_EVENT)
 data class WorkspaceWebsocketPush(
     val type: WebSocketActionType,
-    @ApiModelProperty("行为是否成功")
+    @get:Schema(title = "行为是否成功")
     val status: Boolean,
     val anyMessage: Any,
     val projectId: String,

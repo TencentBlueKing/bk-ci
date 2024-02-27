@@ -29,22 +29,21 @@ package com.tencent.devops.common.pipeline.element
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.tencent.devops.common.pipeline.pojo.element.Element
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("作业平台-作业执行", description = JobDevOpsExecuteTaskExtElement.classType)
+@Schema(title = "作业平台-作业执行")
 data class JobDevOpsExecuteTaskExtElement(
-    @ApiModelProperty("任务名称", required = true)
+    @get:Schema(title = "任务名称", required = true)
     override val name: String = "执行job作业",
-    @ApiModelProperty("id", required = false)
+    @get:Schema(title = "id", required = false)
     override var id: String? = null,
-    @ApiModelProperty("状态", required = false)
+    @get:Schema(title = "状态", required = false)
     override var status: String? = null,
-    @ApiModelProperty("作业ID", required = true)
+    @get:Schema(title = "作业ID", required = true)
     val taskId: Int,
-    @ApiModelProperty("全局参数", required = true)
+    @get:Schema(title = "全局参数", required = true)
     val globalVar: Map<String, String> = mapOf(),
-    @ApiModelProperty("超时时间(s)", required = true)
+    @get:Schema(title = "超时时间(s)", required = true)
     val timeout: Int
 ) : Element(name, id, status) {
     companion object {

@@ -31,9 +31,9 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.store.pojo.common.StoreVisibleDeptResp
 import com.tencent.devops.store.pojo.common.VisibleApproveReq
-import io.swagger.annotations.Api
-import io.swagger.annotations.ApiOperation
-import io.swagger.annotations.ApiParam
+import io.swagger.v3.oas.annotations.tags.Tag
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.Parameter
 import javax.ws.rs.Consumes
 import javax.ws.rs.GET
 import javax.ws.rs.HeaderParam
@@ -43,31 +43,31 @@ import javax.ws.rs.PathParam
 import javax.ws.rs.Produces
 import javax.ws.rs.core.MediaType
 
-@Api(tags = ["OP_PIPELINE_TEMPLATE"], description = "OP-流水线-模版")
+@Tag(name = "OP_PIPELINE_TEMPLATE", description = "OP-流水线-模版")
 @Path("/op/pipeline/template")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface TxOpTemplateResource {
 
-    @ApiOperation("审核可见范围")
+    @Operation(summary = "审核可见范围")
     @PUT
     @Path("/{templateCode}/visible/approve/")
     fun approveVisibleDept(
-        @ApiParam(value = "用户ID", required = true)
+        @Parameter(description = "用户ID", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("标识", required = true)
+        @Parameter(description = "标识", required = true)
         @PathParam("templateCode")
         templateCode: String,
-        @ApiParam("可见范围审核请求报文", required = true)
+        @Parameter(description = "可见范围审核请求报文", required = true)
         visibleApproveReq: VisibleApproveReq
     ): Result<Boolean>
 
-    @ApiOperation("查看可见范围")
+    @Operation(summary = "查看可见范围")
     @GET
     @Path("/{templateCode}/visible")
     fun getVisibleDept(
-        @ApiParam("代码", required = true)
+        @Parameter(description = "代码", required = true)
         @PathParam("templateCode")
         templateCode: String
     ): Result<StoreVisibleDeptResp?>

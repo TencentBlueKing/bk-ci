@@ -32,10 +32,11 @@ dependencies {
     api(project(":ext:tencent:project:api-project-tencent"))
     api(project(":ext:tencent:store:api-store-service"))
     api(project(":ext:tencent:common:common-auth:common-auth-tencent"))
-    api(project(":ext:tencent:monitoring:api-monitoring-tencent"))
+    api(project(":ext:tencent:misc:api-monitoring-tencent"))
     api(project(":ext:tencent:common:common-archive-tencent"))
     api(project(":ext:tencent:auth:sdk-auth-tencent"))
     api(project(":ext:tencent:auth:api-auth-tencent"))
     api(project(":ext:tencent:stream:api-stream-tencent"))
     api(project(":ext:tencent:support:api-support-tencent"))
+    api(project(":core:notify:api-notify"))
 }

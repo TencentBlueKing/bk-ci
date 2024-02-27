@@ -27,17 +27,17 @@
 
 package com.tencent.devops.store.pojo.dto
 
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
 data class UpdateExtServiceEnvInfoDTO(
-    @ApiModelProperty("用户Id", required = true)
+    @get:Schema(title = "用户Id", required = true)
     val userId: String,
-    @ApiModelProperty("扩展服务执行包路径")
+    @get:Schema(title = "扩展服务执行包路径")
     val pkgPath: String? = null,
-    @ApiModelProperty("扩展服务执行包SHA签名串")
+    @get:Schema(title = "扩展服务执行包SHA签名串")
     val pkgShaContent: String? = null,
-    @ApiModelProperty("dockerfile内容")
+    @get:Schema(title = "dockerfile内容")
     val dockerFileContent: String? = null,
-    @ApiModelProperty("扩展服务镜像路径")
+    @get:Schema(title = "扩展服务镜像路径")
     val imagePath: String? = null
 )

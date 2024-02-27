@@ -54,6 +54,7 @@ import com.tencent.devops.remotedev.common.Constansts
 import com.tencent.devops.remotedev.common.Constansts.ADMIN_NAME
 import com.tencent.devops.remotedev.common.WorkspaceNotifyTemplateEnum
 import com.tencent.devops.remotedev.common.exception.ErrorCodeEnum
+import com.tencent.devops.remotedev.cron.HolidayHelper
 import com.tencent.devops.remotedev.dao.ExpertSupportDao
 import com.tencent.devops.remotedev.dao.RemoteDevBillingDao
 import com.tencent.devops.remotedev.dao.RemoteDevSettingDao
@@ -81,7 +82,6 @@ import com.tencent.devops.remotedev.pojo.WorkspaceOwnerType
 import com.tencent.devops.remotedev.pojo.WorkspaceProxyDetail
 import com.tencent.devops.remotedev.pojo.WorkspaceRecord
 import com.tencent.devops.remotedev.pojo.WorkspaceRecordInf
-import com.tencent.devops.remotedev.pojo.WorkspaceRecordWithDetail
 import com.tencent.devops.remotedev.pojo.WorkspaceSearch
 import com.tencent.devops.remotedev.pojo.WorkspaceShared
 import com.tencent.devops.remotedev.pojo.WorkspaceStartCloudDetail
@@ -89,10 +89,12 @@ import com.tencent.devops.remotedev.pojo.WorkspaceStatus
 import com.tencent.devops.remotedev.pojo.WorkspaceSystemType
 import com.tencent.devops.remotedev.pojo.WorkspaceUserDetail
 import com.tencent.devops.remotedev.pojo.common.QueryType
+import com.tencent.devops.remotedev.pojo.common.RemoteDevNotifyType
 import com.tencent.devops.remotedev.pojo.expert.FetchSupportResp
 import com.tencent.devops.remotedev.pojo.op.RemotedevCvmData
 import com.tencent.devops.remotedev.pojo.project.RemotedevProject
 import com.tencent.devops.remotedev.pojo.project.WeSecProjectWorkspace
+import com.tencent.devops.remotedev.pojo.project.WorkspaceProperty
 import com.tencent.devops.remotedev.service.redis.RedisCacheService
 import com.tencent.devops.remotedev.service.redis.RedisCallLimit
 import com.tencent.devops.remotedev.service.redis.RedisKeys
@@ -101,8 +103,14 @@ import com.tencent.devops.remotedev.service.redis.RedisKeys.REDIS_DISCOUNT_TIME_
 import com.tencent.devops.remotedev.service.redis.RedisKeys.REDIS_OFFICIAL_DEVFILE_KEY
 import com.tencent.devops.remotedev.service.transfer.RemoteDevGitTransfer
 import com.tencent.devops.remotedev.service.workspace.NotifyControl
+import com.tencent.devops.remotedev.service.workspace.NotifyControl.Companion.NOT_LOGIN_NOTIFY
+import com.tencent.devops.remotedev.service.workspace.NotifyControl.Companion.SLEEP_3_DAY_NOTIFY
 import com.tencent.devops.remotedev.service.workspace.WorkspaceCommon
 import com.tencent.devops.scm.utils.code.git.GitUtils
+import java.time.Duration
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
+import java.util.concurrent.TimeUnit
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
@@ -110,10 +118,6 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import org.springframework.web.context.request.RequestContextHolder
 import org.springframework.web.context.request.ServletRequestAttributes
-import java.time.Duration
-import java.time.LocalDateTime
-import java.time.format.DateTimeFormatter
-import java.util.concurrent.TimeUnit
 
 @Service
 @Suppress("ALL")
@@ -140,7 +144,10 @@ class WorkspaceService @Autowired constructor(
     private val workspaceJoinDao: WorkspaceJoinDao,
     private val expertSupportDao: ExpertSupportDao,
     private val apiGwService: ApiGwService,
-    private val notifyControl: NotifyControl
+    private val notifyControl: NotifyControl,
+    private val startWorkspaceService: StartWorkspaceService,
+    private val bkBaseService: BKBaseService,
+    private val holidayHelper: HolidayHelper
 ) {
     @ActionAuditRecord(
         actionId = ActionId.CGS_EDIT,
@@ -182,6 +189,33 @@ class WorkspaceService @Autowired constructor(
             bkccService.updateHostName(displayName, workspaceName)
         }
 
+        return true
+    }
+
+    fun modifyWorkspaceProperty(userId: String, workspaceName: String, workspaceProperty: WorkspaceProperty): Boolean {
+        logger.info("$userId modify workspace property $workspaceName|$workspaceProperty")
+
+        val ws = workspaceDao.fetchAnyWorkspace(dslContext, workspaceName = workspaceName)
+            ?: throw ErrorCodeException(
+                errorCode = ErrorCodeEnum.WORKSPACE_NOT_FIND.errorCode,
+                params = arrayOf(workspaceName)
+            )
+        // 审计
+        ActionAuditContext.current()
+            .addAttribute(ActionAuditContent.PROJECT_CODE_TEMPLATE, ws.projectId)
+            .scopeId = ws.projectId
+
+        if (!permissionService.hasUserManager(userId, ws.projectId)) {
+            permissionService.checkViewerPermission(userId, workspaceName, ws.projectId)
+        }
+        dslContext.transaction { configuration ->
+            val transactionContext = DSL.using(configuration)
+            workspaceDao.modifyWorkspaceProperty(
+                dslContext = transactionContext,
+                workspaceName = workspaceName,
+                workspaceProperty = workspaceProperty
+            )
+        }
         return true
     }
 
@@ -293,7 +327,7 @@ class WorkspaceService @Autowired constructor(
         logger.info("$userId get project $projectId workspace list")
         val pageNotNull = page ?: 1
         val pageSizeNotNull = pageSize ?: 6666
-        val search = search?.apply {
+        val theSearch = search?.apply {
             this.projectId = listOf(projectId)
         } ?: WorkspaceSearch(
             projectId = listOf(projectId)
@@ -301,20 +335,21 @@ class WorkspaceService @Autowired constructor(
         val count = workspaceJoinDao.countProjectWorkspace(
             dslContext = dslContext,
             queryType = QueryType.WEB,
-            search = search
+            search = theSearch
         )
         val result = limitFetchProjectWorkspace(
             queryType = QueryType.WEB,
             limit = PageUtil.convertPageSizeToSQLLimit(pageNotNull, pageSizeNotNull),
-            search = search
+            search = theSearch
         )
 
-        val records = parseWorkspaceList(result, false, null)
+        val records = parseWorkspaceList(userId = userId, result = result, enableExportSup = false, expertSupId = null)
 
         return Page(page = pageNotNull, pageSize = pageSizeNotNull, count = count, records = records)
     }
 
     fun getProjectWorkspaceList4Op(
+        userId: String,
         data: ProjectWorkspaceFetchData
     ): Page<ProjectWorkspace> {
         logger.info("op get project ${data.projectId} workspace list {}", data)
@@ -345,7 +380,12 @@ class WorkspaceService @Autowired constructor(
             search = search
         )
 
-        val records = parseWorkspaceList(result, true, data.expertSupId)
+        val records = parseWorkspaceList(
+            userId = userId,
+            result = result,
+            enableExportSup = true,
+            expertSupId = data.expertSupId
+        )
 
         return Page(page = pageNotNull, pageSize = pageSizeNotNull, count = count, records = records)
     }
@@ -365,6 +405,7 @@ class WorkspaceService @Autowired constructor(
     }
 
     fun parseWorkspaceList(
+        userId: String,
         result: List<WorkspaceRecordInf>,
         enableExportSup: Boolean,
         expertSupId: Long?
@@ -372,8 +413,9 @@ class WorkspaceService @Autowired constructor(
         val owners = mutableMapOf<String, String>()
         val viewers = mutableMapOf<String, MutableList<String>>()
         val taiUsers = mutableSetOf<String>()
+        val workspaceNames = result.map { it.workspaceName }.toSet()
 
-        workspaceSharedDao.batchFetchWorkspaceSharedInfo(dslContext, result.map { it.workspaceName }).forEach {
+        workspaceSharedDao.batchFetchWorkspaceSharedInfo(dslContext, workspaceNames).forEach {
             when (it.type) {
                 WorkspaceShared.AssignType.OWNER -> {
                     owners.putIfAbsent(it.workspaceName, it.sharedUser)
@@ -405,7 +447,7 @@ class WorkspaceService @Autowired constructor(
             if (expertSupId != null) {
                 listOf(expertSupportDao.getSup(dslContext, expertSupId))
             } else {
-                expertSupportDao.fetchSupByWorkspaceName(dslContext, result.map { it.workspaceName }.toSet())
+                expertSupportDao.fetchSupByWorkspaceName(dslContext, workspaceNames)
             }.filterNotNull().forEach {
                 val resp = FetchSupportResp(
                     id = it.id,
@@ -421,85 +463,49 @@ class WorkspaceService @Autowired constructor(
             }
         }
 
+        val detailMap = workspaceDao.fetchWorkspaceDetailByNames(dslContext, workspaceNames)
+            .associateBy({ it.workspaceName }) { objectMapper.readValue<WorkSpaceCacheInfo>(it.detail) }
+        val loginUserMap = startWorkspaceService.loginUsers(userId = userId, detailMap.values.map { it.hostIP }.toSet())
+
         val records = mutableListOf<ProjectWorkspace>()
         result.forEach {
-            when (it) {
-                is WorkspaceRecord -> {
-                    val detail = workspaceCommon.getWorkspaceDetail(it.workspaceName)
-                    records.add(
-                        ProjectWorkspace(
-                            workspaceId = it.workspaceId,
-                            workspaceName = it.workspaceName,
-                            projectId = it.projectId,
-                            displayName = it.displayName,
-                            status = it.status,
-                            lastStatusUpdateTime = it.lastStatusUpdateTime?.timestamp(),
-                            sleepingTime = if (it.status.checkSleeping()) {
-                                it.lastStatusUpdateTime?.timestamp()
-                            } else {
-                                null
-                            },
-                            createUserId = it.createUserId,
-                            hostName = detail?.hostIP,
-                            workspaceMountType = it.workspaceMountType,
-                            workspaceSystemType = it.workspaceSystemType,
-                            winConfig = allWindows[it.workspaceName]?.let { i -> allConfig[i.winConfigId.toLong()] },
-                            zoneConfig = detail?.hostIP?.let { ip -> zoneConfig[ip.replace(Regex("[\\d\\.]+"), "")] },
-                            owner = owners[it.workspaceName],
-                            viewers = viewers[it.workspaceName],
-                            ownerCN = taiUserCN[owners[it.workspaceName]] ?: owners[it.workspaceName],
-                            viewersCN = viewers[it.workspaceName]?.map { viewer ->
-                                taiUserCN[viewer] ?: viewer
-                            },
-                            gpu = it.gpu,
-                            cpu = it.cpu,
-                            memory = it.memory,
-                            disk = it.memory,
-                            expertSupportList = expertMap?.get(it.workspaceName),
-                            macAddress = allWindows[it.workspaceName]?.macAddress
-                        )
-                    )
-                }
-
-                is WorkspaceRecordWithDetail -> {
-                    val detail = objectMapper.readValue<WorkSpaceCacheInfo>(it.workSpaceDetail)
-                    records.add(
-                        ProjectWorkspace(
-                            workspaceId = it.workspaceId,
-                            workspaceName = it.workspaceName,
-                            projectId = it.projectId,
-                            displayName = it.displayName,
-                            status = it.status,
-                            lastStatusUpdateTime = it.lastStatusUpdateTime?.timestamp(),
-                            sleepingTime = if (it.status.checkSleeping()) {
-                                it.lastStatusUpdateTime?.timestamp()
-                            } else {
-                                null
-                            },
-                            createUserId = it.createUserId,
-                            hostName = detail.hostIP,
-                            workspaceMountType = it.workspaceMountType,
-                            workspaceSystemType = it.workspaceSystemType,
-                            winConfig = allWindows[it.workspaceName]?.let { i -> allConfig[i.winConfigId.toLong()] },
-                            zoneConfig = detail.hostIP.let { ip -> zoneConfig[ip.replace(Regex("[\\d\\.]+"), "")] },
-                            owner = owners[it.workspaceName],
-                            viewers = viewers[it.workspaceName],
-                            ownerCN = taiUserCN[owners[it.workspaceName]] ?: owners[it.workspaceName],
-                            viewersCN = viewers[it.workspaceName]?.map { viewer ->
-                                taiUserCN[viewer] ?: viewer
-                            },
-                            gpu = it.gpu,
-                            cpu = it.cpu,
-                            memory = it.memory,
-                            disk = it.memory,
-                            expertSupportList = expertMap?.get(it.workspaceName),
-                            macAddress = allWindows[it.workspaceName]?.macAddress
-                        )
-                    )
-                }
-            }
+            val detail = detailMap[it.workspaceName]
+            records.add(
+                ProjectWorkspace(
+                    workspaceId = it.workspaceId,
+                    workspaceName = it.workspaceName,
+                    projectId = it.projectId,
+                    displayName = it.displayName,
+                    status = it.status,
+                    lastStatusUpdateTime = it.lastStatusUpdateTime?.timestamp(),
+                    sleepingTime = if (it.status.checkSleeping()) {
+                        it.lastStatusUpdateTime?.timestamp()
+                    } else {
+                        null
+                    },
+                    createUserId = it.createUserId,
+                    hostName = detail?.hostIP,
+                    workspaceMountType = it.workspaceMountType,
+                    workspaceSystemType = it.workspaceSystemType,
+                    winConfig = allWindows[it.workspaceName]?.let { i -> allConfig[i.winConfigId.toLong()] },
+                    zoneConfig = detail?.hostIP?.let { ip -> zoneConfig[ip.replace(Regex("[\\d\\.]+"), "")] },
+                    owner = owners[it.workspaceName],
+                    viewers = viewers[it.workspaceName],
+                    ownerCN = taiUserCN[owners[it.workspaceName]] ?: owners[it.workspaceName],
+                    viewersCN = viewers[it.workspaceName]?.map { viewer ->
+                        taiUserCN[viewer] ?: viewer
+                    },
+                    gpu = it.gpu,
+                    cpu = it.cpu,
+                    memory = it.memory,
+                    disk = it.memory,
+                    currentLoginUsers = detail?.hostIP?.let { ip -> loginUserMap[ip] } ?: emptyList(),
+                    expertSupportList = expertMap?.get(it.workspaceName),
+                    macAddress = allWindows[it.workspaceName]?.macAddress,
+                    remark = it.remark
+                )
+            )
         }
-
         return records
     }
 
@@ -608,15 +614,9 @@ class WorkspaceService @Autowired constructor(
             limit = PageUtil.convertPageSizeToSQLLimit(pageNotNull, pageSizeNotNull),
             search = workspaceSearch
         )
-//        val count = workspaceDao.countUserWorkspace(dslContext = dslContext, userId = userId)
-//        val result = workspaceDao.limitFetchUserWorkspace(
-//            dslContext = dslContext,
-//            userId = userId,
-//            limit = PageUtil.convertPageSizeToSQLLimit(pageNotNull, pageSizeNotNull)
-//        ) ?: emptyList()
 
         val sharedWorkspace = result.filter { it.ownerType == WorkspaceOwnerType.PROJECT }.ifEmpty { null }?.let {
-            workspaceSharedDao.batchFetchWorkspaceSharedInfo(dslContext, it.map { i -> i.workspaceName })
+            workspaceSharedDao.batchFetchWorkspaceSharedInfo(dslContext, it.map { i -> i.workspaceName }.toSet())
         }?.groupBy { it.workspaceName } ?: emptyMap()
         val taiUsers = sharedWorkspace.values.flatMap {
             it.find { shared ->
@@ -634,6 +634,10 @@ class WorkspaceService @Autowired constructor(
             dslContext,
             result.filter { it.workspaceSystemType == WorkspaceSystemType.WINDOWS_GPU }.map { it.workspaceName }
         ).associateBy { it.workspaceName }
+
+        val detailMap = workspaceDao.fetchWorkspaceDetailByNames(dslContext, result.map { it.workspaceName }.toSet())
+            .associateBy({ it.workspaceName }) { objectMapper.readValue<WorkSpaceCacheInfo>(it.detail) }
+        val loginUserMap = startWorkspaceService.loginUsers(userId = userId, detailMap.values.map { it.hostIP }.toSet())
 
         return Page(
             page = pageNotNull, pageSize = pageSizeNotNull, count = result.count().toLong(),
@@ -656,12 +660,8 @@ class WorkspaceService @Autowired constructor(
                 val owner = sharedWorkspace[it.workspaceName]?.find { shared ->
                     shared.type == WorkspaceShared.AssignType.OWNER
                 }?.sharedUser ?: if (it.ownerType == WorkspaceOwnerType.PERSONAL) it.createUserId else null
-                val hostName = if (it.workspaceSystemType == WorkspaceSystemType.WINDOWS_GPU) {
-                    workspaceCommon.getWorkspaceDetail(it.workspaceName)?.hostIP
-                } else {
-                    it.hostName
-                }
-                val zoneConfig = if (it.workspaceSystemType == WorkspaceSystemType.WINDOWS_GPU) {
+                val hostName = detailMap[it.workspaceName]?.hostIP
+                val zone = if (it.workspaceSystemType == WorkspaceSystemType.WINDOWS_GPU) {
                     hostName?.let { ip -> zoneConfig[ip.replace(Regex("[\\d\\.]+"), "")] }
                 } else {
                     null
@@ -692,11 +692,12 @@ class WorkspaceService @Autowired constructor(
                         ?: WorkspaceShared.AssignType.OWNER,
                     winConfigId = allWindows[it.workspaceName]?.winConfigId,
                     winConfig = allWindows[it.workspaceName]?.let { i -> allConfig[i.winConfigId.toLong()] },
-                    zoneConfig = zoneConfig,
+                    zoneConfig = zone,
                     gpu = it.gpu,
                     cpu = it.cpu,
                     memory = it.memory,
-                    disk = it.memory
+                    disk = it.memory,
+                    currentLoginUsers = hostName?.let { ip -> loginUserMap[ip] } ?: emptyList()
                 )
             }
         )
@@ -754,7 +755,7 @@ class WorkspaceService @Autowired constructor(
             sleepingCount = status.count { it.checkSleeping() },
             deleteCount = status.count { it.checkDeleted() },
             chargeableTime = endBilling.second +
-                (notEndBillingTime + endBilling.first - discountTime * 60).coerceAtLeast(0),
+                    (notEndBillingTime + endBilling.first - discountTime * 60).coerceAtLeast(0),
             usageTime = usageTime,
             sleepingTime = sleepingTime,
             discountTime = discountTime,
@@ -837,7 +838,7 @@ class WorkspaceService @Autowired constructor(
                 status = workspace.status,
                 lastUpdateTime = updateTime.timestamp(),
                 chargeableTime = endBilling.second +
-                    (notEndBillingTime + endBilling.first - discountTime * 60).coerceAtLeast(0),
+                        (notEndBillingTime + endBilling.first - discountTime * 60).coerceAtLeast(0),
                 usageTime = usageTime,
                 sleepingTime = sleepingTime,
                 cpu = cpu,
@@ -1169,6 +1170,76 @@ class WorkspaceService @Autowired constructor(
                 )
             } else {
                 logger.info("no need to notify now|$userId|$duration|${limit * 60}")
+            }
+        }
+    }
+
+    fun notifyWinSleep3Day() {
+        logger.info("notifyWinSleep3Day")
+        val limitDay = holidayHelper.getLastWorkingDays(3).last()
+        workspaceDao.fetchWorkspace(
+            dslContext = dslContext,
+            status = WorkspaceStatus.STOPPED,
+            systemType = WorkspaceSystemType.WINDOWS_GPU
+        )?.parallelStream()?.forEach { workspace ->
+            if ((workspace.lastStatusUpdateTime ?: LocalDateTime.now()) < limitDay) {
+                logger.info(
+                    "ready to notify when sleep in 3 day " +
+                            "|${workspace.workspaceName}|${workspace.lastStatusUpdateTime}|${workspace.hostName}"
+                )
+                workspaceOpHistoryDao.createWorkspaceHistory(
+                    dslContext = dslContext,
+                    workspaceName = workspace.workspaceName,
+                    operator = ADMIN_NAME,
+                    action = WorkspaceAction.NOTIFY,
+                    actionMessage = workspaceCommon.getOpHistory(OpHistoryCopyWriting.TIMEOUT_STOP)
+                )
+                notifyControl.notify4UserAndCCRemoteDevManager(
+                    userIds = permissionService.getWorkspaceOwner(workspace.workspaceName).toMutableSet(),
+                    projectId = workspace.projectId,
+                    notifyTemplateCode = SLEEP_3_DAY_NOTIFY,
+                    notifyType = mutableSetOf(RemoteDevNotifyType.EMAIL),
+                    bodyParams = mapOf(
+                        "cgsIp" to (workspace.hostName ?: "")
+                    )
+                )
+            }
+        }
+    }
+
+    fun notifyWinNotLogin3Day() {
+        val limitDay = holidayHelper.getLastWorkingDays(3).last()
+        val logins = bkBaseService.fetchOnlineIps(limitDay)
+        logger.info("notifyWinNotLogin3Day|$limitDay|${logins.size}")
+        val running = workspaceDao.fetchWorkspace(
+            dslContext = dslContext,
+            status = WorkspaceStatus.RUNNING,
+            systemType = WorkspaceSystemType.WINDOWS_GPU
+        ) ?: return
+        running.parallelStream().forEach { workspace ->
+            if ((workspace.lastStatusUpdateTime ?: LocalDateTime.now()) < limitDay &&
+                workspace.hostName != null && workspace.hostName !in logins
+            ) {
+                logger.info(
+                    "ready to notify when not login in 3 day " +
+                            "|${workspace.workspaceName}|${workspace.lastStatusUpdateTime}|${workspace.hostName}"
+                )
+                workspaceOpHistoryDao.createWorkspaceHistory(
+                    dslContext = dslContext,
+                    workspaceName = workspace.workspaceName,
+                    operator = ADMIN_NAME,
+                    action = WorkspaceAction.NOTIFY,
+                    actionMessage = workspaceCommon.getOpHistory(OpHistoryCopyWriting.TIMEOUT_SLEEP)
+                )
+                notifyControl.notify4UserAndCCRemoteDevManager(
+                    userIds = permissionService.getWorkspaceOwner(workspace.workspaceName).toMutableSet(),
+                    projectId = workspace.projectId,
+                    notifyTemplateCode = NOT_LOGIN_NOTIFY,
+                    notifyType = mutableSetOf(RemoteDevNotifyType.EMAIL),
+                    bodyParams = mapOf(
+                        "cgsIp" to (workspace.hostName ?: "")
+                    )
+                )
             }
         }
     }

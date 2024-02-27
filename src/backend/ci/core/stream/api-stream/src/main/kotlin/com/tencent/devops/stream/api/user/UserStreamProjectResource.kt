@@ -27,68 +27,104 @@
 
 package com.tencent.devops.stream.api.user
 
+import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Pagination
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.project.pojo.ProjectOrganizationInfo
+import com.tencent.devops.project.pojo.ProjectVO
 import com.tencent.devops.stream.pojo.StreamProjectCIInfo
 import com.tencent.devops.stream.pojo.enums.StreamProjectType
 import com.tencent.devops.stream.pojo.enums.StreamProjectsOrder
 import com.tencent.devops.stream.pojo.enums.StreamSortAscOrDesc
-import io.swagger.annotations.Api
-import io.swagger.annotations.ApiOperation
-import io.swagger.annotations.ApiParam
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.Parameter
+import io.swagger.v3.oas.annotations.tags.Tag
 import javax.ws.rs.Consumes
 import javax.ws.rs.GET
 import javax.ws.rs.HeaderParam
+import javax.ws.rs.PUT
 import javax.ws.rs.Path
 import javax.ws.rs.PathParam
 import javax.ws.rs.Produces
 import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
-@Api(tags = ["USER_STREAM_PROJECT"], description = "user-项目资源")
+@Tag(name = "USER_STREAM_PROJECT", description = "user-项目资源")
 @Path("/user/projects")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface UserStreamProjectResource {
 
-    @ApiOperation("获取Git项目与STREAM关联列表")
+    @Operation(summary = "获取Git项目与STREAM关联列表")
     @GET
     @Path("/{type}/list")
     fun getProjects(
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("项目列表类型", required = false)
+        @Parameter(description = "项目列表类型", required = false)
         @PathParam("type")
         type: StreamProjectType?,
-        @ApiParam("搜索条件，模糊匹配path,name", required = false)
+        @Parameter(description = "搜索条件，模糊匹配path,name", required = false)
         @QueryParam("search")
         search: String?,
-        @ApiParam("第几页", required = false, defaultValue = "1")
+        @Parameter(description = "第几页", required = false, example = "1")
         @QueryParam("page")
         page: Int?,
-        @ApiParam("每页多少条", required = false, defaultValue = "10")
+        @Parameter(description = "每页多少条", required = false, example = "10")
         @QueryParam("pageSize")
         pageSize: Int?,
-        @ApiParam("排序条件", required = false)
+        @Parameter(description = "排序条件", required = false)
         @QueryParam("orderBy")
         orderBy: StreamProjectsOrder?,
-        @ApiParam("排序类型", required = false)
+        @Parameter(description = "排序类型", required = false)
         @QueryParam("sort")
         sort: StreamSortAscOrDesc?
     ): Pagination<StreamProjectCIInfo>
 
-    @ApiOperation("获取用户最近访问的项目")
+    @Operation(summary = "获取用户最近访问的项目")
     @GET
     @Path("/history")
     fun getProjectsHistory(
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("多少条记录", required = false, defaultValue = "4")
+        @Parameter(description = "多少条记录", required = false, example = "4")
         @QueryParam("pageSize")
         size: Long?
     ): Result<List<StreamProjectCIInfo>>
+
+    @Operation(summary = "获取项目信息")
+    @GET
+    @Path("/{english_name}")
+    fun getProjectInfo(
+        @Parameter(description = "userId", required = true)
+        @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
+        userId: String,
+        @Parameter(description = "项目ID英文名标识", required = true)
+        @PathParam("english_name")
+        projectId: String
+    ): Result<ProjectVO>
+
+    @Operation(summary = "更新项目组织架构和归属")
+    @PUT
+    @Path("/{english_name}/organization")
+    fun updateProjectOrganization(
+        @Parameter(description = "userId", required = true)
+        @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
+        userId: String,
+        @Parameter(description = "项目ID英文名标识", required = true)
+        @PathParam("english_name")
+        projectId: String,
+        @Parameter(description = "产品ID", required = true)
+        @QueryParam("productId")
+        productId: Int,
+        @Parameter(description = "产品名称", required = true)
+        @QueryParam("productName")
+        productName: String,
+        @Parameter(description = "项目组织", required = true)
+        organization: ProjectOrganizationInfo
+    ): Result<Boolean>
 }

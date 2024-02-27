@@ -33,9 +33,9 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.enums.PlatformEnum
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.experience.pojo.ExperienceExtendBanner
-import io.swagger.annotations.Api
-import io.swagger.annotations.ApiOperation
-import io.swagger.annotations.ApiParam
+import io.swagger.v3.oas.annotations.tags.Tag
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.Parameter
 import javax.ws.rs.Consumes
 import javax.ws.rs.DELETE
 import javax.ws.rs.HeaderParam
@@ -45,140 +45,140 @@ import javax.ws.rs.Produces
 import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
-@Api(tags = ["EXPERIENCE_OP"], description = "版本体验-OP")
+@Tag(name = "EXPERIENCE_OP", description = "版本体验-OP")
 @Path("/op/experience")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface OpExperienceResource {
-    @ApiOperation("修改鹅厂必备")
+    @Operation(summary = "修改鹅厂必备")
     @Path("/public/switchNecessary")
     @POST
     fun switchNecessary(
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam(value = "公开体验记录ID", required = true)
+        @Parameter(description = "公开体验记录ID", required = true)
         @QueryParam("id")
         id: Long
     ): Result<String>
 
-    @ApiOperation("修改鹅厂必备顺序")
+    @Operation(summary = "修改鹅厂必备顺序")
     @Path("/public/setNecessaryIndex")
     @POST
     fun setNecessaryIndex(
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam(value = "公开体验记录ID", required = true)
+        @Parameter(description = "公开体验记录ID", required = true)
         @QueryParam("id")
         id: Long,
-        @ApiParam(value = "鹅厂必备顺序", required = true)
+        @Parameter(description = "鹅厂必备顺序", required = true)
         @QueryParam("necessaryIndex")
         necessaryIndex: Int
     ): Result<String>
 
-    @ApiOperation("修改公开体验banner")
+    @Operation(summary = "修改公开体验banner")
     @Path("/public/setBannerUrl")
     @POST
     fun setBannerUrl(
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam(value = "公开体验记录ID", required = true)
+        @Parameter(description = "公开体验记录ID", required = true)
         @QueryParam("id")
         id: Long,
-        @ApiParam(value = "banner地址", required = true)
+        @Parameter(description = "banner地址", required = true)
         @QueryParam("bannerUrl")
         bannerUrl: String
     ): Result<String>
 
-    @ApiOperation("修改公开体验banner顺序")
+    @Operation(summary = "修改公开体验banner顺序")
     @Path("/public/setBannerIndex")
     @POST
     fun setBannerIndex(
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam(value = "公开体验记录ID", required = true)
+        @Parameter(description = "公开体验记录ID", required = true)
         @QueryParam("id")
         id: Long,
-        @ApiParam(value = "banner顺序", required = true)
+        @Parameter(description = "banner顺序", required = true)
         @QueryParam("bannerIndex")
         bannerIndex: Int
     ): Result<String>
 
-    @ApiOperation("公开体验上下线")
+    @Operation(summary = "公开体验上下线")
     @Path("/public/switchOnline")
     @POST
     fun switchOnline(
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam(value = "公开体验记录ID", required = true)
+        @Parameter(description = "公开体验记录ID", required = true)
         @QueryParam("id")
         id: Long
     ): Result<String>
 
-    @ApiOperation("新增搜索推荐")
+    @Operation(summary = "新增搜索推荐")
     @Path("/search/addRecommend")
     @POST
     fun addRecommend(
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam(value = "推荐内容", required = true)
+        @Parameter(description = "推荐内容", required = true)
         @QueryParam("content")
         content: String,
-        @ApiParam(value = "平台", required = true)
+        @Parameter(description = "平台", required = true)
         @QueryParam("platform")
         platform: PlatformEnum
     ): Result<String>
 
-    @ApiOperation("删除搜索推荐")
+    @Operation(summary = "删除搜索推荐")
     @Path("/search/removeRecommend")
     @DELETE
     fun removeRecommend(
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam(value = "搜索推荐ID", required = true)
+        @Parameter(description = "搜索推荐ID", required = true)
         @QueryParam("id")
         id: Long
     ): Result<String>
 
-    @ApiOperation("新增外部链接公开体验")
+    @Operation(summary = "新增外部链接公开体验")
     @Path("/public/addExternal")
     @POST
     fun addExternal(
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam(value = "外部体验参数")
+        @Parameter(description = "外部体验参数")
         externalAdd: ExperiencePublicExternalAdd
     ): Result<String>
 
-    @ApiOperation("添加扩展banner")
+    @Operation(summary = "添加扩展banner")
     @Path("/index/addExtendBanner")
     @POST
     fun addExtendBanner(
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam(value = "扩展banner")
+        @Parameter(description = "扩展banner")
         experienceExtendBanner: ExperienceExtendBanner
     ): Result<Int>
 
-    @ApiOperation("修改扩展banner")
+    @Operation(summary = "修改扩展banner")
     @Path("/index/updateExtendBanner")
     @POST
     fun updateExtendBanner(
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam(value = "bannerId", required = true)
+        @Parameter(description = "bannerId", required = true)
         @QueryParam("bannerId")
         bannerId: Long,
-        @ApiParam(value = "扩展banner")
+        @Parameter(description = "扩展banner")
         experienceExtendBanner: ExperienceExtendBanner
     ): Result<Int>
 }

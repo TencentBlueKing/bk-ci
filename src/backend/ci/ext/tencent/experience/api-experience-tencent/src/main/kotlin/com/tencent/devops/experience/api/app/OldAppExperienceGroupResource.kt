@@ -32,9 +32,9 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.experience.pojo.group.GroupSummaryWithPermission
-import io.swagger.annotations.Api
-import io.swagger.annotations.ApiOperation
-import io.swagger.annotations.ApiParam
+import io.swagger.v3.oas.annotations.tags.Tag
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.Parameter
 import javax.ws.rs.Consumes
 import javax.ws.rs.GET
 import javax.ws.rs.HeaderParam
@@ -44,30 +44,30 @@ import javax.ws.rs.Produces
 import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
-@Api(tags = ["EXPERIENCE_GROUP"], description = "版本体验-用户分组")
+@Tag(name = "EXPERIENCE_GROUP", description = "版本体验-用户分组")
 @Path("/app/experience/group")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 @Deprecated("已废弃, 以AppExperienceGroupResource为准")
 interface OldAppExperienceGroupResource {
 
-    @ApiOperation("获取体验用户分组")
+    @Operation(summary = "获取体验用户分组")
     @Path("/{projectId}/list")
     @GET
     fun list(
-        @ApiParam("用户Id", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户Id", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("项目Id", required = true)
+        @Parameter(description = "项目Id", required = true)
         @PathParam("projectId")
         projectId: String,
-        @ApiParam("页数", required = false)
+        @Parameter(description = "页数", required = false)
         @QueryParam("page")
         page: Int?,
-        @ApiParam("每页数目(不传默认全部返回)", required = false)
+        @Parameter(description = "每页数目(不传默认全部返回)", required = false)
         @QueryParam("pageSize")
         pageSize: Int?,
-        @ApiParam("是否返回公开体验组", required = false, defaultValue = "false")
+        @Parameter(description = "是否返回公开体验组", required = false, example = "false")
         @QueryParam("returnPublic")
         returnPublic: Boolean?
     ): Result<Page<GroupSummaryWithPermission>>

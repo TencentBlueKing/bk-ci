@@ -27,9 +27,9 @@
 
 package com.tencent.devops.quality.api.v2.pojo
 
-import io.swagger.annotations.ApiModel
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("模板")
+@Schema(title = "模板")
 data class RuleTemplate(
     val hashId: String,
     val name: String,

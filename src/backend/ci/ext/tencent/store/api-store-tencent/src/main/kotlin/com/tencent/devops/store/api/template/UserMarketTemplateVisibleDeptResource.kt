@@ -31,9 +31,9 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.store.pojo.common.StoreVisibleDeptResp
 import com.tencent.devops.store.pojo.template.TemplateVisibleDeptReq
-import io.swagger.annotations.Api
-import io.swagger.annotations.ApiOperation
-import io.swagger.annotations.ApiParam
+import io.swagger.v3.oas.annotations.tags.Tag
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.Parameter
 import javax.ws.rs.Consumes
 import javax.ws.rs.DELETE
 import javax.ws.rs.GET
@@ -45,46 +45,46 @@ import javax.ws.rs.Produces
 import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
-@Api(tags = ["USER_MARKET_TEMPLATE_VISIBLE_DEPT"], description = "模板-可见范围")
+@Tag(name = "USER_MARKET_TEMPLATE_VISIBLE_DEPT", description = "模板-可见范围")
 @Path("/user/market/desk/templates/{templateCode}/visible/dept")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface UserMarketTemplateVisibleDeptResource {
 
-    @ApiOperation("设置模板可见范围")
+    @Operation(summary = "设置模板可见范围")
     @POST
     @Path("/")
     fun addVisibleDept(
-        @ApiParam("userId", required = true)
+        @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("模板代码", required = true)
+        @Parameter(description = "模板代码", required = true)
         @PathParam("templateCode")
         templateCode: String,
-        @ApiParam("模板市场-模板可见范围请求报文体", required = true)
+        @Parameter(description = "模板市场-模板可见范围请求报文体", required = true)
         templateVisibleDeptReq: TemplateVisibleDeptReq
     ): Result<Boolean>
 
-    @ApiOperation("查看模板可见范围")
+    @Operation(summary = "查看模板可见范围")
     @GET
     @Path("/")
     fun getVisibleDept(
-        @ApiParam("模板代码", required = true)
+        @Parameter(description = "模板代码", required = true)
         @PathParam("templateCode")
         templateCode: String
     ): Result<StoreVisibleDeptResp?>
 
-    @ApiOperation("删除模板可见范围")
+    @Operation(summary = "删除模板可见范围")
     @DELETE
     @Path("/")
     fun deleteVisibleDept(
-        @ApiParam("userId", required = true)
+        @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("模板代码", required = true)
+        @Parameter(description = "模板代码", required = true)
         @PathParam("templateCode")
         templateCode: String,
-        @ApiParam("机构Id集合，用\",\"分隔进行拼接（如1,2,3）", required = true)
+        @Parameter(description = "机构Id集合，用\",\"分隔进行拼接（如1,2,3）", required = true)
         @QueryParam("deptIds")
         deptIds: String
     ): Result<Boolean>

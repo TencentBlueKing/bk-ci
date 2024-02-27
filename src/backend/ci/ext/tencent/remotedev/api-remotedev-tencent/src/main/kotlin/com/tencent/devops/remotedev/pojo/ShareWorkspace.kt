@@ -27,16 +27,15 @@
 
 package com.tencent.devops.remotedev.pojo
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("共享工作空间")
+@Schema(title = "共享工作空间")
 data class ShareWorkspace(
-    @ApiModelProperty("workspaceName")
+    @get:Schema(title = "workspaceName")
     val workspaceName: String,
-    @ApiModelProperty("共享用户")
+    @get:Schema(title = "共享用户")
     val sharedUser: List<String>,
-    @ApiModelProperty("操作类型，新增或删除")
+    @get:Schema(title = "操作类型，新增或删除")
     val opType: OpType
 ) {
     enum class OpType {

@@ -26,7 +26,7 @@
  */
 
 dependencies {
-    api(project(":core:image:api-image"))
+    api(project(":core:misc:api-image"))
     api(project(":core:notify:api-notify"))
     api(project(":core:store:biz-store-image"))
     api(project(":ext:tencent:store:api-store-image-tencent"))

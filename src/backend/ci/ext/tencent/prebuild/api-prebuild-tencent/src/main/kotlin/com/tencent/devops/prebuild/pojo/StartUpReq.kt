@@ -27,22 +27,21 @@
 
 package com.tencent.devops.prebuild.pojo
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 import com.tencent.devops.common.api.pojo.OS
 
-@ApiModel("启动构建参数")
+@Schema(title = "启动构建参数")
 data class StartUpReq(
-    @ApiModelProperty("workspace", required = true)
+    @get:Schema(title = "workspace", required = true)
     val workspace: String,
-    @ApiModelProperty("yaml", required = true)
+    @get:Schema(title = "yaml", required = true)
     val yaml: String,
-    @ApiModelProperty("os", required = true)
+    @get:Schema(title = "os", required = true)
     val os: OS,
-    @ApiModelProperty("ip", required = true)
+    @get:Schema(title = "ip", required = true)
     val ip: String,
-    @ApiModelProperty("hostname", required = true)
+    @get:Schema(title = "hostname", required = true)
     val hostname: String,
-    @ApiModelProperty("extraParam", required = false)
+    @get:Schema(title = "extraParam", required = false)
     val extraParam: ExtraParam?
 )

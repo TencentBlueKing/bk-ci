@@ -28,10 +28,10 @@
 package com.tencent.devops.quality.api.v2.pojo.request
 
 import com.tencent.devops.quality.api.v2.pojo.enums.QualityDataType
-import io.swagger.annotations.ApiModel
+import io.swagger.v3.oas.annotations.media.Schema
 import com.tencent.devops.common.quality.pojo.enums.QualityOperation
 
-@ApiModel("创建指标请求")
+@Schema(title = "创建指标请求")
 data class IndicatorCreate(
     val name: String,
     val cnName: String,

@@ -26,7 +26,7 @@
  */
 
 dependencies {
-    api(project(":core:image:api-image"))
+    api(project(":core:misc:api-image"))
     api(project(":core:store:api-store"))
 }
 

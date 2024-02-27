@@ -29,9 +29,9 @@ package com.tencent.devops.environment.api
 
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.environment.pojo.NodePage
-import io.swagger.annotations.Api
-import io.swagger.annotations.ApiOperation
-import io.swagger.annotations.ApiParam
+import io.swagger.v3.oas.annotations.tags.Tag
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.Parameter
 import javax.ws.rs.Consumes
 import javax.ws.rs.GET
 import javax.ws.rs.POST
@@ -42,51 +42,51 @@ import javax.ws.rs.Produces
 import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
-@Api(tags = ["OP_NODE"], description = "管理-节点")
+@Tag(name = "OP_NODE", description = "管理-节点")
 @Path("/op/envnode")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface OpNodeResource {
-    @ApiOperation("刷所有节点的显示名")
+    @Operation(summary = "刷所有节点的显示名")
     @PUT
     @Path("/flushDisplayName")
     fun flushDisplayName(): Result<Int>
 
-    @ApiOperation("节点列表（分页）")
+    @Operation(summary = "节点列表（分页）")
     @GET
     @Path("/list")
     fun list(
-        @ApiParam(value = "第几页，从1开始", required = true)
+        @Parameter(description = "第几页，从1开始", required = true)
         @QueryParam("page")
         page: Int,
-        @ApiParam(value = "每页条数", required = true)
+        @Parameter(description = "每页条数", required = true)
         @QueryParam("pageSize")
         pageSize: Int,
-        @ApiParam(value = "节点名称", required = false)
+        @Parameter(description = "节点名称", required = false)
         @QueryParam("name")
         name: String?
     ): Result<NodePage>
 
-    @ApiOperation("删除节点")
+    @Operation(summary = "删除节点")
     @POST
     @Path("/{projectId}/deleteNodes/{nodeHashId}")
     fun deleteNodes(
-        @ApiParam("项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @ApiParam("NodeHashId", required = true)
+        @Parameter(description = "NodeHashId", required = true)
         @PathParam("nodeHashId")
         nodeHashId: String
     ): Result<Boolean>
 
-    @ApiOperation("开启或关闭监控仪表盘")
+    @Operation(summary = "开启或关闭监控仪表盘")
     @PUT
     @Path("/updateMonitorDashboard")
     fun updateMonitorDashboard(
-        @ApiParam("项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @QueryParam("projectId")
         projectId: String,
-        @ApiParam("updateDashboard", required = true)
+        @Parameter(description = "updateDashboard", required = true)
         @QueryParam("updateDashboard")
         updateDashboard: Boolean
     ): Result<Boolean>

@@ -39,6 +39,7 @@ import com.tencent.devops.dispatch.devcloud.pojo.persistence.PersistenceBuildSta
 import com.tencent.devops.dispatch.devcloud.service.context.DcShutdownHandlerContext
 import com.tencent.devops.dispatch.devcloud.utils.DevCloudJobRedisUtils
 import com.tencent.devops.model.dispatch.devcloud.tables.records.TBuildContainerPoolNoRecord
+import com.tencent.devops.model.dispatch.devcloud.tables.records.TDevcloudBuildRecord
 import org.jooq.DSLContext
 import org.jooq.Result
 import org.slf4j.LoggerFactory
@@ -102,6 +103,55 @@ class DcContainerShutdownHandler @Autowired constructor(
                 vmSeqId = vmSeqId,
                 executeCount = executeCount ?: 1
             )
+        }
+    }
+
+    fun forceStopContainer(devCloudBuildRecord: TDevcloudBuildRecord) {
+        with(devCloudBuildRecord) {
+            logger.info("Container is running, stop it, containerName:$containerName")
+            val taskId =
+                dispatchDevCloudClient.operateContainer(
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    buildId = "",
+                    vmSeqId = vmSeqId,
+                    userId = userId,
+                    name = containerName,
+                    action = Action.STOP
+                )
+            val opResult = dispatchDevCloudClient.waitTaskFinish(
+                userId = userId,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                taskId = taskId
+            )
+            if (opResult.first == TaskStatus.SUCCEEDED) {
+                logger.info("stop dev cloud vm success. then update debug status to false")
+                devCloudBuildDao.updateDebugStatus(
+                    dslContext = dslContext,
+                    pipelineId = pipelineId,
+                    vmSeqId = vmSeqId,
+                    containerName = containerName,
+                    debugStatus = false
+                )
+            } else {
+                // 停不掉？尝试删除
+                logger.info("stop dev cloud vm failed, msg: ${opResult.second}")
+                logger.info(
+                    "stop dev cloud vm failed, try to delete it, " +
+                            "containerName:$containerName"
+                )
+                devCloudBuildDao.delete(dslContext, pipelineId, vmSeqId, poolNo)
+                dispatchDevCloudClient.operateContainer(
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    buildId = "",
+                    vmSeqId = vmSeqId,
+                    userId = userId,
+                    name = containerName,
+                    action = Action.DELETE
+                )
+            }
         }
     }
 

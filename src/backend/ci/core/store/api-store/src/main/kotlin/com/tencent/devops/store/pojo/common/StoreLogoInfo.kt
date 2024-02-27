@@ -27,11 +27,10 @@
 
 package com.tencent.devops.store.pojo.common
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("store组件logo信息")
+@Schema(title = "store组件logo信息")
 data class StoreLogoInfo(
-    @ApiModelProperty("logo地址", required = false)
+    @get:Schema(title = "logo地址", required = false)
     val logoUrl: String?
 )

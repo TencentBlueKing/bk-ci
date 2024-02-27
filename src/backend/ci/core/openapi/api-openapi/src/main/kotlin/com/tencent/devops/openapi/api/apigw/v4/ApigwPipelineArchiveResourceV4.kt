@@ -36,9 +36,9 @@ import com.tencent.devops.common.web.constant.BkStyleEnum
 import com.tencent.devops.process.engine.pojo.PipelineInfo
 import com.tencent.devops.process.pojo.PipelineCollation
 import com.tencent.devops.process.pojo.PipelineSortType
-import io.swagger.annotations.Api
-import io.swagger.annotations.ApiOperation
-import io.swagger.annotations.ApiParam
+import io.swagger.v3.oas.annotations.tags.Tag
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.Parameter
 import javax.ws.rs.Consumes
 import javax.ws.rs.GET
 import javax.ws.rs.HeaderParam
@@ -49,61 +49,61 @@ import javax.ws.rs.Produces
 import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
-@Api(tags = ["OPENAPI_PIPELINE_ARCHIVE_V4"], description = "OPENAPI-流水线归档资源")
+@Tag(name = "OPENAPI_PIPELINE_ARCHIVE_V4", description = "OPENAPI-流水线归档资源")
 @Path("/{apigwType:apigw-user|apigw-app|apigw}/v4/projects/{projectId}/archived/pipelines")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface ApigwPipelineArchiveResourceV4 {
 
-    @ApiOperation("迁移归档流水线数据", tags = ["v4_app_pipeline_archive", "v4_user_pipeline_archive"])
+    @Operation(summary = "迁移归档流水线数据", tags = ["v4_app_pipeline_archive", "v4_user_pipeline_archive"])
     @POST
     @Path("/{pipelineId}/data/migrate")
     fun migrateArchivePipelineData(
-        @ApiParam(value = "用户id", required = true)
+        @Parameter(description = "用户id", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam(value = "项目id", required = true)
+        @Parameter(description = "项目id", required = true)
         @PathParam(value = "projectId")
         projectId: String,
-        @ApiParam(value = "流水线id", required = true)
+        @Parameter(description = "流水线id", required = true)
         @PathParam(value = "pipelineId")
         pipelineId: String,
-        @ApiParam("取消正在运行构建标识", required = true)
+        @Parameter(description = "取消正在运行构建标识", required = true)
         @QueryParam("cancelFlag")
         cancelFlag: Boolean = false
     ): Result<Boolean>
 
-    @ApiOperation("获取已归档流水线列表", tags = ["v4_app_archived_pipeline_list", "v4_user_archived_pipeline_list"])
+    @Operation(summary = "获取已归档流水线列表", tags = ["v4_app_archived_pipeline_list", "v4_user_archived_pipeline_list"])
     @GET
     @Path("/list")
     @Suppress("LongParameterList")
     fun getArchivedPipelineList(
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @ApiParam("第几页", required = false, defaultValue = "1")
+        @Parameter(description = "第几页", required = false, example = "1")
         @QueryParam("page")
         page: Int,
-        @ApiParam("每页多少条", required = false, defaultValue = "20")
+        @Parameter(description = "每页多少条", required = false, example = "20")
         @BkField(patternStyle = BkStyleEnum.PAGE_SIZE_STYLE, required = true)
         @QueryParam("pageSize")
         pageSize: Int,
-        @ApiParam("按流水线过滤", required = false)
+        @Parameter(description = "按流水线过滤", required = false)
         @QueryParam("filterByPipelineName")
         filterByPipelineName: String? = null,
-        @ApiParam("按创建人过滤", required = false)
+        @Parameter(description = "按创建人过滤", required = false)
         @QueryParam("filterByCreator")
         filterByCreator: String? = null,
-        @ApiParam("按标签过滤", required = false)
+        @Parameter(description = "按标签过滤", required = false)
         @QueryParam("filterByLabels")
         filterByLabels: String? = null,
-        @ApiParam("流水线排序", required = false, defaultValue = "CREATE_TIME")
+        @Parameter(description = "流水线排序", required = false, example = "CREATE_TIME")
         @QueryParam("sortType")
         sortType: PipelineSortType? = PipelineSortType.CREATE_TIME,
-        @ApiParam("排序规则", required = false)
+        @Parameter(description = "排序规则", required = false)
         @QueryParam("collation")
         collation: PipelineCollation? = null
     ): Result<Page<PipelineInfo>>

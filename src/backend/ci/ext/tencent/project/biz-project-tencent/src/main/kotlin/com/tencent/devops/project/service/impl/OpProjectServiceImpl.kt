@@ -28,6 +28,7 @@
 package com.tencent.devops.project.service.impl
 
 import com.tencent.devops.common.api.exception.OperationException
+import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.api.util.timestampmilli
@@ -50,8 +51,8 @@ import com.tencent.devops.project.pojo.Result
 import com.tencent.devops.project.pojo.mq.ProjectCreateBroadCastEvent
 import com.tencent.devops.project.pojo.mq.ProjectUpdateBroadCastEvent
 import com.tencent.devops.project.service.ProjectPaasCCService
-import com.tencent.devops.project.service.remotedev.EnableBkRepoData
 import com.tencent.devops.project.service.ProjectService
+import com.tencent.devops.project.service.remotedev.EnableBkRepoData
 import com.tencent.devops.project.service.remotedev.ProjectRemoteDevService
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
@@ -165,8 +166,11 @@ class OpProjectServiceImpl @Autowired constructor(
             )
         }
 
+        val dbProperties = JsonUtil.toOrNull(dbProjectRecord.properties.toString(), ProjectProperties::class.java)
         // 更新云研发项目时相关操作
-        if (projectInfoRequest.properties?.remotedev == true) {
+        val enableRemoteDev = dbProperties == null ||
+            (dbProperties.remotedev != true && projectInfoRequest.properties?.remotedev == true)
+        if (enableRemoteDev) {
             projectRemoteDevService.enableRemoteDev(
                 userId = userId,
                 projectCode = dbProjectRecord.englishName,
@@ -182,6 +186,31 @@ class OpProjectServiceImpl @Autowired constructor(
                     englishName = dbProjectRecord.englishName,
                     productId = projectInfoRequest.productId ?: dbProjectRecord.productId
                 )
+            )
+        }
+        // 新开启的云研发项目给所有管理员发通知或者已经开启的项目管理员新增时发送通知
+        val newManager = projectInfoRequest.properties?.remotedevManager
+            ?.split(";")?.filter { it.isNotBlank() }?.toSet()
+            ?: emptySet()
+        val subManager = newManager.subtract(
+            (
+                dbProperties?.remotedevManager?.split(";")?.filter { it.isNotBlank() }?.toSet()
+                    ?: emptySet()
+                ).toSet()
+        )
+        if (enableRemoteDev) {
+            projectRemoteDevService.sendEnableRemoteDevNotify(
+                sendNotifyUser = newManager,
+                projectCode = dbProjectRecord.englishName,
+                projectName = dbProjectRecord.projectName,
+                cloudDesktopNum = projectInfoRequest.properties?.cloudDesktopNum ?: 0
+            )
+        } else if (dbProperties?.remotedev == true && subManager.isNotEmpty()) {
+            projectRemoteDevService.sendEnableRemoteDevNotify(
+                sendNotifyUser = subManager,
+                projectCode = dbProjectRecord.englishName,
+                projectName = dbProjectRecord.projectName,
+                cloudDesktopNum = projectInfoRequest.properties?.cloudDesktopNum ?: 0
             )
         }
 

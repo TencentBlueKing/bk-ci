@@ -27,13 +27,12 @@
 
 package com.tencent.devops.experience.pojo.group
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("版本体验-体验组权限")
+@Schema(title = "版本体验-体验组权限")
 data class GroupPermission(
-    @ApiModelProperty("是否可编辑", required = true)
+    @get:Schema(title = "是否可编辑", required = true)
     val canEdit: Boolean,
-    @ApiModelProperty("是否可删除", required = true)
+    @get:Schema(title = "是否可删除", required = true)
     val canDelete: Boolean
 )

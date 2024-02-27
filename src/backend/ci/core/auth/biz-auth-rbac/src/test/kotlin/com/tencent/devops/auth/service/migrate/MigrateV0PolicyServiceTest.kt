@@ -28,11 +28,18 @@
 
 package com.tencent.devops.auth.service.migrate
 
+import com.fasterxml.jackson.core.type.TypeReference
+import com.tencent.bk.sdk.iam.dto.manager.AuthorizationScopes
+import com.tencent.devops.auth.pojo.migrate.MigrateTaskDataResult
+import com.tencent.devops.common.api.util.JsonUtil
 import io.mockk.every
 import io.mockk.spyk
+import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
+import org.springframework.core.io.ClassPathResource
+import java.nio.charset.Charset
 
 class MigrateV0PolicyServiceTest : AbMigratePolicyServiceTest() {
 
@@ -73,11 +80,31 @@ class MigrateV0PolicyServiceTest : AbMigratePolicyServiceTest() {
         @Test
         @DisplayName("迁移默认组-开发人员组")
         fun test_2() {
-            buildRbacAuthorizationScopeListTest(
-                self = self,
+            val classPathResource = ClassPathResource("v0/group_web_policy_developer.json")
+            val taskDataResult = JsonUtil.to(
+                json = classPathResource.inputStream.readBytes().toString(Charset.defaultCharset()),
+                type = MigrateTaskDataResult::class.java
+            )
+            val (rbacAuthorizationScopeList, groupIdListOfPipelineActionGroup) = self.buildRbacAuthorizationScopeList(
                 projectCode = projectCode,
-                actualFilePath = "v0/group_web_policy_developer.json",
-                expectedFilePath = "v0/expected/group_web_policy_developer.json"
+                projectName = projectCode,
+                managerGroupId = 1,
+                result = taskDataResult
+            )
+            val expectedClassPathResource = ClassPathResource("v0/expected/group_web_policy_developer.json")
+            val expectedRbacAuthorizationScopes =
+                JsonUtil.to(
+                    json = expectedClassPathResource.inputStream.readBytes().toString(Charset.defaultCharset()),
+                    typeReference = object : TypeReference<List<AuthorizationScopes>>() {}
+                )
+
+            Assertions.assertEquals(
+                JsonUtil.toJson(expectedRbacAuthorizationScopes),
+                JsonUtil.toJson(rbacAuthorizationScopeList)
+            )
+            Assertions.assertEquals(
+                groupIdListOfPipelineActionGroup,
+                listOf("1", "1")
             )
         }
 

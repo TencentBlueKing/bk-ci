@@ -31,16 +31,15 @@ import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.ci.CiBuildConfig
 import com.tencent.devops.common.pipeline.enums.BuildScriptType
 import com.tencent.devops.common.pipeline.pojo.element.agent.LinuxScriptElement
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("CodeCC代码检查任务(客户端)")
+@Schema(title = "CodeCC代码检查任务(客户端)")
 open class CodeCCScanClientTask(
-    @ApiModelProperty("displayName", required = false)
+    @get:Schema(title = "displayName", required = false)
     override var displayName: String?,
-    @ApiModelProperty("入参", required = true)
+    @get:Schema(title = "入参", required = true)
     override val inputs: CodeCCScanClientInput,
-    @ApiModelProperty("执行条件", required = true)
+    @get:Schema(title = "执行条件", required = true)
     override val condition: String?
 ) : AbstractTask(displayName, inputs, condition) {
 
@@ -60,7 +59,20 @@ open class CodeCCScanClientTask(
         )
     }
 
-    private val scanTools = listOf("ccn", "dupc", "sensitive", "checkstyle", "cpplint", "detekt", "eslint", "goml", "occheck", "phpcs", "pylint", "styecop")
+    private val scanTools = listOf(
+        "ccn",
+        "dupc",
+        "sensitive",
+        "checkstyle",
+        "cpplint",
+        "detekt",
+        "eslint",
+        "goml",
+        "occheck",
+        "phpcs",
+        "pylint",
+        "styecop"
+    )
 
     private fun createScanScript(config: CiBuildConfig): String {
         val tools = inputs.tools.split(",").map { it.trim() }.filter { scanTools.contains(it) }
@@ -86,24 +98,27 @@ open class CodeCCScanClientTask(
         }
         return if (inputs.scanType == "all") { // 全量
             "echo \${WORKSPACE} > /tmp/scan_file_list.txt \r\n" +
-            "docker run -t --rm -v /tmp:/tmp -v \${WORKSPACE}:\${WORKSPACE} ${config.codeCCSofwareClientImage} /bin/sh -c 'python /data/codecc_software/scan_local_prod/bin/build.py \${pipeline.name} -DSCAN_TOOLS=$toolsStr -DSCAN_LIST_FILE=/tmp/scan_file_list.txt $ruleSetCmd $skipPath -DWORKSPACE_PATH=\${WORKSPACE}' \r\n"
+                    "docker run -t --rm -v /tmp:/tmp -v \${WORKSPACE}:\${WORKSPACE} ${config.codeCCSofwareClientImage} /bin/sh -c 'python /data/codecc_software/scan_local_prod/bin/build.py \${pipeline.name} -DSCAN_TOOLS=$toolsStr -DSCAN_LIST_FILE=/tmp/scan_file_list.txt $ruleSetCmd $skipPath -DWORKSPACE_PATH=\${WORKSPACE}' \r\n"
         } else {
             "echo $path > /tmp/scan_file_list.txt \r\n" +
-            "docker run -t --rm -v /tmp:/tmp -v \${WORKSPACE}:\${WORKSPACE} ${config.codeCCSofwareClientImage} /bin/sh -c 'python /data/codecc_software/scan_local_prod/bin/build.py \${pipeline.name} -DSCAN_TOOLS=$toolsStr -DSCAN_LIST_FILE=/tmp/scan_file_list.txt $ruleSetCmd $skipPath -DWORKSPACE_PATH=\${WORKSPACE}' \r\n"
+                    "docker run -t --rm -v /tmp:/tmp -v \${WORKSPACE}:\${WORKSPACE} ${config.codeCCSofwareClientImage} /bin/sh -c 'python /data/codecc_software/scan_local_prod/bin/build.py \${pipeline.name} -DSCAN_TOOLS=$toolsStr -DSCAN_LIST_FILE=/tmp/scan_file_list.txt $ruleSetCmd $skipPath -DWORKSPACE_PATH=\${WORKSPACE}' \r\n"
         }
     }
 }
 
-@ApiModel("CodeCC代码检查任务(客户端)")
+@Schema(title = "CodeCC代码检查任务(客户端)")
 open class CodeCCScanClientInput(
-    @ApiModelProperty("扫描类型（all：全量, updated：增量）", required = false)
+    @get:Schema(title = "扫描类型（all：全量, updated：增量）", required = false)
     open var scanType: String? = "all",
-    @ApiModelProperty("工具包,多个之间逗号分隔：ccn,dupc,sensitive,checkstyle,cpplint,detekt,eslint,goml,occheck,phpcs,pylint,styecop", required = true)
+    @get:Schema(
+        title = "工具包,多个之间逗号分隔：ccn,dupc,sensitive,checkstyle,cpplint,detekt,eslint,goml,occheck,phpcs,pylint,styecop",
+        required = true
+    )
     var tools: String,
-    @ApiModelProperty("要扫描的代码路径，默认为整个workspace", required = false)
+    @get:Schema(title = "要扫描的代码路径，默认为整个workspace", required = false)
     var path: String?,
-    @ApiModelProperty("规则集,逗号分隔", required = false)
+    @get:Schema(title = "规则集,逗号分隔", required = false)
     var rules: String?,
-    @ApiModelProperty("排除的目录,逗号分隔", required = false)
+    @get:Schema(title = "排除的目录,逗号分隔", required = false)
     var skipPath: String?
 ) : AbstractInput()

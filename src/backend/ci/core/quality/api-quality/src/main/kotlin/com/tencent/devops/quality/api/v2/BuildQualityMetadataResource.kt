@@ -31,9 +31,9 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_BUILD_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_PIPELINE_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_PROJECT_ID
 import com.tencent.devops.common.api.pojo.Result
-import io.swagger.annotations.Api
-import io.swagger.annotations.ApiOperation
-import io.swagger.annotations.ApiParam
+import io.swagger.v3.oas.annotations.tags.Tag
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.Parameter
 import javax.ws.rs.Consumes
 import javax.ws.rs.HeaderParam
 import javax.ws.rs.POST
@@ -42,32 +42,32 @@ import javax.ws.rs.Produces
 import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
-@Api(tags = ["BUILD_METADATA"], description = "构建-质量红线")
+@Tag(name = "BUILD_METADATA", description = "构建-质量红线")
 @Path("/build/metadata")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface BuildQualityMetadataResource {
 
-    @ApiOperation("设置脚本原子指标的元数据")
+    @Operation(summary = "设置脚本原子指标的元数据")
     @Path("/saveHisMetadata")
     @POST
     fun saveHisMetadata(
-        @ApiParam("项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_PROJECT_ID)
         projectId: String,
-        @ApiParam("构建ID", required = true)
+        @Parameter(description = "构建ID", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_PIPELINE_ID)
         pipelineId: String,
-        @ApiParam("构建ID", required = true)
+        @Parameter(description = "构建ID", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_BUILD_ID)
         buildId: String,
-        @ApiParam("原子类型", required = true)
+        @Parameter(description = "原子类型", required = true)
         @QueryParam("elementType")
         elementType: String,
-        @ApiParam("任务节点ID", required = false)
+        @Parameter(description = "任务节点ID", required = false)
         @QueryParam("taskId")
         taskId: String?,
-        @ApiParam("任务节点名称", required = false)
+        @Parameter(description = "任务节点名称", required = false)
         @QueryParam("taskName")
         taskName: String?,
         data: Map<String, String>

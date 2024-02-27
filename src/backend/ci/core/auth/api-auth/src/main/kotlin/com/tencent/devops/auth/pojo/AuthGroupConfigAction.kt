@@ -28,9 +28,9 @@
 
 package com.tencent.devops.auth.pojo
 
-import io.swagger.annotations.ApiModel
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel
+@Schema
 data class AuthGroupConfigAction(
     val id: Long,
     val resourceType: String,

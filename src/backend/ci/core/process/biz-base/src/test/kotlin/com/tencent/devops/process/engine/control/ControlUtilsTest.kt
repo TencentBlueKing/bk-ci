@@ -197,7 +197,7 @@ class ControlUtilsTest : TestBase() {
 
     @Test
     fun pauseBeforeExec() {
-        var pauseFlag: String? = null
+        var pauseFlag = false
         Assertions.assertFalse(ControlUtils.pauseBeforeExec(null, pauseFlag))
         Assertions.assertTrue(
             ControlUtils.pauseBeforeExec(
@@ -206,7 +206,7 @@ class ControlUtilsTest : TestBase() {
                 alreadyPauseFlag = pauseFlag
             )
         )
-        pauseFlag = ""
+        pauseFlag = false
         Assertions.assertTrue(
             ControlUtils.pauseBeforeExec(
                 additionalOptions = elementAdditionalOptions(runCondition = RunCondition.PRE_TASK_FAILED_ONLY)
@@ -214,7 +214,7 @@ class ControlUtilsTest : TestBase() {
                 alreadyPauseFlag = pauseFlag
             )
         )
-        pauseFlag = "true"
+        pauseFlag = true
         Assertions.assertFalse(
             ControlUtils.pauseBeforeExec(
                 additionalOptions = elementAdditionalOptions(runCondition = RunCondition.PRE_TASK_FAILED_ONLY)

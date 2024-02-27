@@ -748,8 +748,6 @@ class EngineVMBuildService @Autowired(required = false) constructor(
                 )
             }
         }
-        // 重置前置暂停插件暂停状态位
-        pipelineTaskPauseService.pauseTaskFinishExecute(buildId, result.taskId)
         val task = pipelineRuntimeService.completeClaimBuildTask(
             completeTask = CompleteTask(
                 projectId = projectId, buildId = buildId, taskId = result.taskId,

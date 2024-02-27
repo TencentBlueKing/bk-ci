@@ -27,19 +27,18 @@
 
 package com.tencent.devops.auth.entity
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel
+@Schema
 data class ManagerOrganizationInfo(
-    @ApiModelProperty("Id")
+    @get:Schema(title = "Id")
     val id: Int?,
-    @ApiModelProperty("授权名称")
+    @get:Schema(title = "授权名称")
     val name: String,
-    @ApiModelProperty("授权策略Id")
+    @get:Schema(title = "授权策略Id")
     val strategyId: Int,
-    @ApiModelProperty("组织Id")
+    @get:Schema(title = "组织Id")
     val organizationId: Int,
-    @ApiModelProperty("组织级别")
+    @get:Schema(title = "组织级别")
     val organizationLevel: Int
 )

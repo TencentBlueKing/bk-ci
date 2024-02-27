@@ -27,17 +27,16 @@
 
 package com.tencent.devops.dispatch.docker.pojo
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("专机配置返回模型")
+@Schema(title = "专机配置返回模型")
 data class SpecialDockerHostVO(
-    @ApiModelProperty("项目id")
+    @get:Schema(title = "项目id")
     val projectId: String,
-    @ApiModelProperty("主机ip")
+    @get:Schema(title = "主机ip")
     val hostIp: String,
-    @ApiModelProperty("备注")
+    @get:Schema(title = "备注")
     val remark: String?,
-    @ApiModelProperty("是否开启共享挂载")
+    @get:Schema(title = "是否开启共享挂载")
     val nfsShare: Boolean? = false
 )

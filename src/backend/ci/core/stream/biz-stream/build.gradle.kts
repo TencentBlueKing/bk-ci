@@ -41,7 +41,7 @@ dependencies {
     api(project(":core:common:common-webhook:biz-common-webhook"))
     api(project(":core:store:api-store"))
     api(project(":core:project:api-project"))
-    api(project(":core:plugin:api-plugin"))
+    api(project(":core:misc:api-plugin"))
     api(project(":core:quality:api-quality"))
     api(project(":core:auth:api-auth"))
     api(project(":core:common:common-codecc"))
@@ -49,7 +49,7 @@ dependencies {
     api(project(":core:notify:api-notify"))
 
     api("com.zaxxer:HikariCP")
-    api("mysql:mysql-connector-java")
+    api("com.mysql:mysql-connector-j")
     api("org.apache.commons:commons-exec")
     api("org.quartz-scheduler:quartz")
     api("org.springframework.boot:spring-boot-starter-websocket")

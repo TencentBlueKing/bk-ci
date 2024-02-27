@@ -31,9 +31,9 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.quality.api.v2.pojo.request.IndicatorCreate
-import io.swagger.annotations.Api
-import io.swagger.annotations.ApiOperation
-import io.swagger.annotations.ApiParam
+import io.swagger.v3.oas.annotations.tags.Tag
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.Parameter
 import javax.ws.rs.Consumes
 import javax.ws.rs.HeaderParam
 import javax.ws.rs.POST
@@ -42,22 +42,22 @@ import javax.ws.rs.PathParam
 import javax.ws.rs.Produces
 import javax.ws.rs.core.MediaType
 
-@Api(tags = ["BUILD_INDICATOR_V3"], description = "构建-质量红线指标")
+@Tag(name = "BUILD_INDICATOR_V3", description = "构建-质量红线指标")
 @Path("/build/indicator/v3")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface BuildQualityIndicatorResource {
 
-    @ApiOperation("创建红线指标")
+    @Operation(summary = "创建红线指标")
     @Path("/project/{projectId}/upsertIndicator")
     @POST
     fun upsertIndicator(
-        @ApiParam("用户Id", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户Id", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
         @PathParam("projectId")
         projectId: String,
-        @ApiParam("指标请求报文", required = true)
+        @Parameter(description = "指标请求报文", required = true)
         indicatorCreate: List<IndicatorCreate>
     ): Result<Boolean>
 }

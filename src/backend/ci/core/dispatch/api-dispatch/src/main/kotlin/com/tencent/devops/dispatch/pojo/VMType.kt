@@ -27,17 +27,16 @@
 
 package com.tencent.devops.dispatch.pojo
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("虚拟机类型")
+@Schema(title = "虚拟机类型")
 data class VMType(
-    @ApiModelProperty("类型ID", required = true)
+    @get:Schema(title = "类型ID", required = true)
     val id: Int,
-    @ApiModelProperty("类型名称", required = true)
+    @get:Schema(title = "类型名称", required = true)
     val typeName: String,
-    @ApiModelProperty("创建时间", required = true)
+    @get:Schema(title = "创建时间", required = true)
     val createdTime: Long,
-    @ApiModelProperty("修改时间", required = true)
+    @get:Schema(title = "修改时间", required = true)
     val updatedTime: Long
 )

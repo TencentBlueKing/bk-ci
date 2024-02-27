@@ -27,17 +27,16 @@
 
 package com.tencent.devops.remotedev.pojo
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("远程开发配置")
+@Schema(title = "远程开发配置")
 data class RemoteDevFile(
-    @ApiModelProperty("文件id")
+    @get:Schema(title = "文件id")
     val id: Long?,
-    @ApiModelProperty("md5 32位")
+    @get:Schema(title = "md5 32位")
     val md5: String?,
-    @ApiModelProperty("文件路径")
+    @get:Schema(title = "文件路径")
     val path: String,
-    @ApiModelProperty("文件内容")
+    @get:Schema(title = "文件内容")
     val content: String
 )

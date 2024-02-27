@@ -89,4 +89,8 @@ object ActionAuditContent {
     const val CODE_PROXY_CREATE_CONTENT = "create code proxy $CONTENT_TEMPLATE in project $PROJECT_CODE_CONTENT_TEMPLATE"
     const val CODE_PROXY_LIST_CONTENT = "list code proxy $CONTENT_TEMPLATE in project $PROJECT_CODE_CONTENT_TEMPLATE"
     const val CODE_PROXY_DELETE_CONTENT = "delete code proxy $CONTENT_TEMPLATE in project $PROJECT_CODE_CONTENT_TEMPLATE"
+
+    // 自定义
+    const val PROJECT_USER_VERIFY_CONTENT = "verify project user $CONTENT_TEMPLATE in project $PROJECT_CODE_CONTENT_TEMPLATE"
+    const val WATER_MARK_GET_CONTENT = "get user water mark $CONTENT_TEMPLATE in project $PROJECT_CODE_CONTENT_TEMPLATE"
 }
