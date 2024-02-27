@@ -29,21 +29,20 @@ package com.tencent.devops.repository.pojo.git
 
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.tencent.devops.repository.constant.RepositoryConstants.INITIALIZED_BRANCH_RULE_NAME
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("git项目保护分支规则默认信息")
+@Schema(title = "git项目保护分支规则默认信息")
 data class GitProjectProtectionBranchDefaultRule(
-    @ApiModelProperty("名称")
+    @get:Schema(title = "名称")
     @JsonProperty("name")
     val name: String = INITIALIZED_BRANCH_RULE_NAME,
-    @ApiModelProperty("允许合并操作等级")
+    @get:Schema(title = "允许合并操作等级")
     @JsonProperty("push_access_level")
     val pushAccessLevel: Int,
-    @ApiModelProperty("允许推送操作等级")
+    @get:Schema(title = "允许推送操作等级")
     @JsonProperty("merge_access_level")
     val mergeAccessLevel: Int,
-    @ApiModelProperty("是否允许创建者自己通过评审")
+    @get:Schema(title = "是否允许创建者自己通过评审")
     @JsonProperty("creator_can_approve")
     val creatorCanApprove: Boolean = true
 )
