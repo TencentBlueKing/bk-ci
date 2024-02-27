@@ -721,7 +721,7 @@ onMounted(async () => {
 <style lang="postcss">
   .toggle-enable-dialog {
     .bk-modal-content {
-      min-height: 80px !important;
+      min-height: 50px !important;
     }
   }
 </style>
