@@ -17,13 +17,20 @@ const bklogout = {
             + '=; expires=Mon, 26 Jul 1997 05:00:00 GMT; path=' + (c || '/') + '; ' + (b ? ('domain=' + b + ';') : '')
     },
     jsonp (b) {
-        const a = document.createElement('script')
-        a.setAttribute('src', b)
-        document.getElementsByTagName('head')[0].appendChild(a)
-        a.onerror = () => {
-            a.onerror = null
-            bklogout.set_ret(-1, '')
-        }
+        return new Promise((resolve, reject) => {
+            const a = document.createElement('script')
+            a.setAttribute('src', b)
+            document.getElementsByTagName('head')[0].appendChild(a)
+            a.onload = () => {
+                a.onload = null
+                resolve(true)
+            }
+            a.onerror = () => {
+                a.onerror = null
+                bklogout.set_ret(-1, '')
+                resolve(false)
+            }
+        })
     },
     init () {
         const a = location.hostname.match(/\w*\.(com|cn)$/)
@@ -67,12 +74,12 @@ const bklogout = {
             console.error(c)
         }
     },
-    logout (f, b) {
+    async logout (f, b) {
         bklogout.init()
         // 清除第三方登录票据
         const a = bklogout.mainDomain
         if (a !== 'oa.com') {
-            bklogout.jsonp(bklogout.oaLogoutUrl)
+            await bklogout.jsonp(bklogout.oaLogoutUrl)
         } else {
             bklogout.delCookie('TCOA', a)
             bklogout.delCookie('TCOA_TICKET', a)
@@ -92,7 +99,7 @@ const bklogout = {
                 f(2)
             }
         } else {
-            bklogout.jsonp(d)
+            await bklogout.jsonp(d)
         }
     }
 }
