@@ -1117,6 +1117,7 @@
       "addVar": "Add Var",
       "addConst": "Add Const",
       "buildParam": "Input Vairables",
+      "constParam": "Constants",
       "otherVar": "Other variables",
       "varName": "Variable name",
       "constName": "Constant name",
@@ -1482,5 +1483,6 @@
   "dealMR": "Processing MR",
   "copyTempConf": "Clone Template Configuration",
   "tempWithoutConf": "Template does not include this setting",
-  "noPipelineStageTips": "The pipeline has not been configured with stages"
+  "noPipelineStageTips": "The pipeline has not been configured with stages",
+  "triggerLeastOne": "At least one trigger is required"
 }
