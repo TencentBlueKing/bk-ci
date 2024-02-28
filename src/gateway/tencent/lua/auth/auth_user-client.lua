@@ -42,7 +42,7 @@ if is_devx then
         end
     end
 else
-    local double_check = true
+    local double_check = true and ngx.var.http_host == config.bkci.host
     local tof_staffname
     if double_check then
         --- TOF登录
