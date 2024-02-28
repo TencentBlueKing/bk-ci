@@ -45,7 +45,6 @@ import org.tmatesoft.svn.core.SVNDirEntry
 import org.tmatesoft.svn.core.SVNException
 import org.tmatesoft.svn.core.SVNLogEntry
 import org.tmatesoft.svn.core.SVNNodeKind
-import org.tmatesoft.svn.core.SVNURL
 import org.tmatesoft.svn.core.io.SVNRepository
 
 @Suppress("ALL")
@@ -161,8 +160,8 @@ class CodeSvnScmImpl constructor(
             addWebhookByToken(hookUrl, projectName)
         } catch (ignored: ScmException) {
             // 旧项目迁移后的svn项目名可能带有_svn, 去掉_svn后重新尝试添加
-            if (ignored.message == I18nUtil.getCodeLanMessage(CommonMessageCode.ENGINEERING_REPO_NOT_EXIST)
-                && projectName.endsWith(SVN_PROJECT_NAME_SUFFIX)
+            if (ignored.message == I18nUtil.getCodeLanMessage(CommonMessageCode.ENGINEERING_REPO_NOT_EXIST) &&
+                projectName.endsWith(SVN_PROJECT_NAME_SUFFIX)
             ) {
                 try {
                     logger.info("retry addWebHookSVN|newProjectName=$projectName")
