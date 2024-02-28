@@ -43,8 +43,8 @@
     position: absolute;
     right: 660px;
     width: 600px;
-    top: 48px;
-    height: calc(100% - 48px);
+    top: 64px;
+    height: calc(100% - 80px);
     background: white;
     z-index: 10000;
     border: 1px solid $borderColor;

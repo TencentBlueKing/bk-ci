@@ -253,6 +253,9 @@ export default {
             )
         }
         const [{ data }, atomPropRes] = await Promise.all(apis)
+        if (data.yamlInvalidMsg) {
+            throw new Error(data.yamlInvalidMsg)
+        }
         if (actionType === 'FULL_YAML2MODEL' && atomPropRes?.data) {
             const atomProp = atomPropRes.data
             const elements = getters.getAllElements(data.modelAndSetting?.model.stages)
@@ -261,9 +264,6 @@ export default {
                     ...atomProp[element.atomCode]
                 })
             })
-        }
-        if (data.yamlInvalidMsg) {
-            throw new Error(data.yamlInvalidMsg)
         }
         return data
     },
