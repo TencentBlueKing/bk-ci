@@ -163,7 +163,7 @@
     </div>
 </template>
 <script>
-    import { RESOURCE_ACTION, RESOURCE_TYPE, handleCodelibNoPermission } from '@/utils/permission'
+    import { RESOURCE_ACTION, RESOURCE_TYPE } from '@/utils/permission'
     import {
         mapActions
     } from 'vuex'
@@ -521,8 +521,9 @@
                 }
             },
             handleApply () {
-                handleCodelibNoPermission({
+                this.handleNoPermission({
                     projectId: this.projectId,
+                    resourceType: RESOURCE_TYPE,
                     resourceCode: this.urlRepoId,
                     action: RESOURCE_ACTION.VIEW
                 })
