@@ -48,6 +48,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.context.annotation.Primary
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Service
+import java.time.Duration
 import java.time.LocalDateTime
 
 @Service("TencentStockDataUpdateService")
@@ -72,6 +73,8 @@ class TencentStockDataUpdateService @Autowired constructor(
         private const val AGENT_NOT_INSTALLED_TAG = false
         private const val AGENT_ABNORMAL_NODE_STATUS = 0
         private const val AGENT_NORMAL_NODE_STATUS = 1
+
+        const val NS_TO_S = 1000000000
     }
 
     /**
@@ -242,9 +245,14 @@ class TencentStockDataUpdateService @Autowired constructor(
         logger.info("Node(s) count in cmdb: $countNodeInCmdb")
         countNodeInCmdb.takeIf { it > 0 }.run {
             val totalPages = PageUtil.calTotalPage(DEFAULT_PAGE_SIZE, countNodeInCmdb.toLong())
+            val startTime = LocalDateTime.now()
             for (page in 1..totalPages) {
                 checkDeployNodesIsInCmdbByPage(page)
             }
+            logger.info(
+                "[checkDeployNodesIsInCmdb]total time: " +
+                    "${Duration.between(startTime, LocalDateTime.now()).toNanos().toDouble() / NS_TO_S}s"
+            )
         }
         // 2.2 节点在cmdb中，查询CC: 在CC-改为NORMAL，不在CC-改为NOT_IN_CC
         stockDataUpdateService.checkDeployNodesIsInCC()

@@ -51,6 +51,7 @@ import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
+import java.time.Duration
 import java.time.LocalDateTime
 
 @Service("StockDataUpdateService")
@@ -74,6 +75,8 @@ class StockDataUpdateService @Autowired constructor(
         const val AGENT_ABNORMAL_NODE_STATUS = 0
         const val AGENT_NORMAL_NODE_STATUS = 1
         const val AGENT_NOT_INSTALLED_TAG = false
+
+        const val NS_TO_S = 1000000000
     }
 
     /**
@@ -171,9 +174,14 @@ class StockDataUpdateService @Autowired constructor(
         logger.info("Check deploy node(s) is in CC, node(s) count:$countHostIdNotNullRecord.")
         countHostIdNotNullRecord.takeIf { it > 0 }.run {
             val totalPagesHostIdNotNull = PageUtil.calTotalPage(DEFAULT_PAGE_SIZE, countHostIdNotNullRecord.toLong())
+            val startTime = LocalDateTime.now()
             for (pageHostIdNotNull in 1..totalPagesHostIdNotNull) {
                 checkDeployNodesIsInCCByPage(pageHostIdNotNull)
             }
+            logger.info(
+                "[checkDeployNodesIsInCC]total time: " +
+                    "${Duration.between(startTime, LocalDateTime.now()).toNanos().toDouble() / NS_TO_S}s"
+            )
         }
     }
 
