@@ -32,13 +32,13 @@ class BKVisionService @Autowired constructor(
         val url = "${bkConfig.bkvisionUrl}/v1/meta/query?share_uid=${bkConfig.bkvisionShareId}&type=$type"
         val req = Request.Builder()
             .url(url)
-            .headers(headers())
+            .addHeader("x-bkapi-authorization", headerStr())
             .get()
             .build()
         return try {
             OkhttpUtils.doHttp(req).use { response ->
                 val data = response.body!!.string()
-                logger.debug("metaQuery｜$url|${headers()}|${response.code}|$data")
+                logger.debug("metaQuery｜$url|${headerStr()}|${response.code}|$data")
                 if (!response.isSuccessful) {
                     logger.error("metaQuery｜$url|${response.code}|$data")
                     throw ErrorCodeException(
@@ -65,13 +65,13 @@ class BKVisionService @Autowired constructor(
         val url = "${bkConfig.bkvisionUrl}/v1/dataset/query"
         val req = Request.Builder()
             .url(url)
-            .headers(headers())
+            .addHeader("x-bkapi-authorization", headerStr())
             .post(JsonUtil.toJson(body).toRequestBody("application/json; charset=utf-8".toMediaTypeOrNull()))
             .build()
         return try {
             OkhttpUtils.doHttp(req).use { response ->
                 val data = response.body!!.string()
-                logger.debug("queryDataset｜$url|${headers()}|${response.code}|$data")
+                logger.debug("queryDataset｜$url|${headerStr()}|${response.code}|$data")
                 if (!response.isSuccessful) {
                     logger.error("queryDataset｜$url|${response.code}|$data")
                     throw ErrorCodeException(
@@ -99,13 +99,13 @@ class BKVisionService @Autowired constructor(
         val url = "${bkConfig.bkvisionUrl}/v1/field/$uid/preview_data/"
         val req = Request.Builder()
             .url(url)
-            .headers(headers())
+            .addHeader("x-bkapi-authorization", headerStr())
             .post(JsonUtil.toJson(body).toRequestBody("application/json; charset=utf-8".toMediaTypeOrNull()))
             .build()
         return try {
             OkhttpUtils.doHttp(req).use { response ->
                 val data = response.body!!.string()
-                logger.debug("queryFieldData｜$url|${headers()}|${response.code}|$data")
+                logger.debug("queryFieldData｜$url|${headerStr()}|${response.code}|$data")
                 if (!response.isSuccessful) {
                     logger.error("queryFieldData｜$url|${response.code}|$data")
                     throw ErrorCodeException(
@@ -132,13 +132,13 @@ class BKVisionService @Autowired constructor(
         val url = "${bkConfig.bkvisionUrl}/v1/variable/query"
         val req = Request.Builder()
             .url(url)
-            .headers(headers())
+            .addHeader("x-bkapi-authorization", headerStr())
             .post(JsonUtil.toJson(body).toRequestBody("application/json; charset=utf-8".toMediaTypeOrNull()))
             .build()
         return try {
             OkhttpUtils.doHttp(req).use { response ->
                 val data = response.body!!.string()
-                logger.debug("queryVariableData｜$url|${headers()}|${response.code}|$data")
+                logger.debug("queryVariableData｜$url|${headerStr()}|${response.code}|$data")
                 if (!response.isSuccessful) {
                     logger.error("queryVariableData｜$url|${response.code}|$data")
                     throw ErrorCodeException(
@@ -159,15 +159,10 @@ class BKVisionService @Autowired constructor(
         }
     }
 
-    private fun headers(): Headers {
-        return mapOf(
-            "X-Bkapi-Authorization" to JsonUtil.toJson(
-                mapOf(
-                    "bk_app_code" to bkConfig.appCode,
-                    "bk_app_secret" to bkConfig.appSecret
-                )
-            )
-        ).toHeaders()
+    private fun headerStr():String {
+        return objectMapper.writeValueAsString(
+            mapOf("bk_app_code" to bkConfig.appCode, "bk_app_secret" to bkConfig.appSecret)
+        ).replace("\\s".toRegex(), "")
     }
 
     companion object {

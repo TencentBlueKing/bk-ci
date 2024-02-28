@@ -17,12 +17,12 @@ class UserBkVisionResourceImpl @Autowired constructor(
 ) : UserBkVisionResource {
 
     override fun metaQuery(userId: String, projectId: String, shareId: String, type: String): BkVisionResp {
-        permissionService.checkUserPermission(userId, projectId)
+        permissionService.checkUserManager(userId, projectId)
         return bkVisionService.metaQuery(shareId, type)
     }
 
     override fun datasetQuery(userId: String, projectId: String, data: BkVisionDatasetQueryBody): BkVisionResp {
-        permissionService.checkUserPermission(userId, projectId)
+        permissionService.checkUserManager(userId, projectId)
         return bkVisionService.queryDataset(data)
     }
 
@@ -32,12 +32,12 @@ class UserBkVisionResourceImpl @Autowired constructor(
         uid: String,
         data: QueryFieldDataBody
     ): BkVisionResp {
-        permissionService.checkUserPermission(userId, projectId)
+        permissionService.checkUserManager(userId, projectId)
         return bkVisionService.queryFieldData(uid, data)
     }
 
     override fun queryVariableData(userId: String, projectId: String, data: QueryVariableDataBody): BkVisionResp {
-        permissionService.checkUserPermission(userId, projectId)
+        permissionService.checkUserManager(userId, projectId)
         return bkVisionService.queryVariableData(data)
     }
 }

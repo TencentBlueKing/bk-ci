@@ -21,7 +21,7 @@ import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
 @Tag(name = "USER_BK_VISION", description = "用户-BK-VISION")
-@Path("/user/bkvision")
+@Path("/user/bkvision/{projectId}")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface UserBkVisionResource {
@@ -34,7 +34,7 @@ interface UserBkVisionResource {
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
         @Parameter(description = "projectId", required = true)
-        @HeaderParam(AUTH_HEADER_DEVOPS_PROJECT_ID)
+        @PathParam("projectId")
         projectId: String,
         @QueryParam("share_uid")
         shareId: String,
