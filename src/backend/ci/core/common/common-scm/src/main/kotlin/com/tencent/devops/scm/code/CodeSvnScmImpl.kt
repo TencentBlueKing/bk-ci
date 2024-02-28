@@ -159,15 +159,15 @@ class CodeSvnScmImpl constructor(
         try {
             addWebhookByToken(hookUrl, projectName)
         } catch (ignored: ScmException) {
-            // 旧项目迁移后的svn项目名可能带有_svn, 去掉_svn后重新尝试添加
+            // 旧项目迁移后的svn项目名可能带有_svn后缀, 若初次调用失败,则添加_svn后重新尝试添加
             if (ignored.message == I18nUtil.getCodeLanMessage(CommonMessageCode.ENGINEERING_REPO_NOT_EXIST) &&
-                projectName.endsWith(SVN_PROJECT_NAME_SUFFIX)
+                !projectName.endsWith(SVN_PROJECT_NAME_SUFFIX)
             ) {
                 try {
-                    logger.info("retry addWebHookSVN|newProjectName=$projectName")
+                    logger.info("retry addWebHookSVN|newProjectName=$projectName$SVN_PROJECT_NAME_SUFFIX")
                     addWebhookByToken(
                         hookUrl = hookUrl,
-                        projectName = projectName.removeSuffix(SVN_PROJECT_NAME_SUFFIX)
+                        projectName = "$projectName$SVN_PROJECT_NAME_SUFFIX"
                     )
                 } catch (ignored: ScmException) {
                     logger.error("Fail to retry add the webhook", ignored)
