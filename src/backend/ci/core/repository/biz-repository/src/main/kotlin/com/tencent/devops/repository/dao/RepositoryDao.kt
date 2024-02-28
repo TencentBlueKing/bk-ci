@@ -73,7 +73,7 @@ class RepositoryDao {
                     UPDATED_TIME,
                     IS_DELETED,
                     UPDATED_USER,
-                    IS_ATOM
+                    ATOM
                 ).values(
                     projectId,
                     userId,
@@ -439,14 +439,15 @@ class RepositoryDao {
         }
     }
 
-    fun insertAtomRepoFlag(
+    fun updateAtomRepoFlag(
         dslContext: DSLContext,
         projectId: String,
-        repositoryId: Long
+        repositoryId: Long,
+        atom: Boolean
     ) {
         with(TRepository.T_REPOSITORY) {
             dslContext.update(this)
-                .set(IS_ATOM, true)
+                .set(ATOM, atom)
                 .where(REPOSITORY_ID.eq(repositoryId).and(PROJECT_ID.eq(projectId)))
                 .execute()
         }

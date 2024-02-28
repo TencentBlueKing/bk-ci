@@ -24,9 +24,9 @@ BEGIN
                   FROM information_schema.COLUMNS
                   WHERE TABLE_SCHEMA = db
                     AND TABLE_NAME = 'T_REPOSITORY'
-                    AND COLUMN_NAME = 'IS_ATOM') THEN
+                    AND COLUMN_NAME = 'ATOM') THEN
     ALTER TABLE `T_REPOSITORY`
-        ADD COLUMN `IS_ATOM` bit(1) DEFAULT b'0' COMMENT '是否为插件库(插件库不得修改和删除)';
+        ADD COLUMN `ATOM` bit(1) DEFAULT b'0' COMMENT '是否为插件库(插件库不得修改和删除)';
     END IF;
     
     COMMIT;

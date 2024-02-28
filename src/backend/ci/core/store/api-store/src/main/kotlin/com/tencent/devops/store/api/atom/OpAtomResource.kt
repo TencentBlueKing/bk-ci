@@ -244,8 +244,8 @@ interface OpAtomResource {
 
     @Operation(summary = "补充插件仓库标识")
     @POST
-    @Path("/insertAtomRepoFlag")
-    fun insertAtomRepoFlag(
+    @Path("/updateAtomRepoFlag")
+    fun updateAtomRepoFlag(
         @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,

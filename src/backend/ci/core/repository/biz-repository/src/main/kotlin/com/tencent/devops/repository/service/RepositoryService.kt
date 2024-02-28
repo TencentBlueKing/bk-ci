@@ -603,14 +603,6 @@ class RepositoryService @Autowired constructor(
                 )
             )
         }
-        if (record.isAtom == true) {
-            throw OperationException(
-                MessageUtil.getMessageByLocale(
-                    RepositoryMessageCode.ATOM_REPO_CAN_NOT_EDIT,
-                    I18nUtil.getLanguage(userId)
-                )
-            )
-        }
         val codeRepositoryService = CodeRepositoryServiceRegistrar.getService(repository)
         codeRepositoryService.edit(
             userId = userId,
@@ -717,12 +709,11 @@ class RepositoryService @Autowired constructor(
             }
         }
         val repositoryList = repositoryRecordList.map {
-            val authInfo = repoAuthInfoMap[it.repositoryId]
-            val atomRepo = it.isAtom ?: false
-            val hasEditPermission = hasEditPermissionRepoList.contains(it.repositoryId) && !atomRepo
-            val hasDeletePermission = hasDeletePermissionRepoList.contains(it.repositoryId) && !atomRepo
+            val hasEditPermission = hasEditPermissionRepoList.contains(it.repositoryId)
+            val hasDeletePermission = hasDeletePermissionRepoList.contains(it.repositoryId)
             val hasUsePermission = hasUsePermissionRepoList.contains(it.repositoryId)
             val hasViewPermission = hasViewPermissionRepoList.contains(it.repositoryId)
+            val authInfo = repoAuthInfoMap[it.repositoryId]
             RepositoryInfoWithPermission(
                 repositoryHashId = HashUtil.encodeOtherLongId(it.repositoryId),
                 aliasName = it.aliasName,
@@ -739,7 +730,7 @@ class RepositoryService @Autowired constructor(
                 createTime = it.createdTime.timestamp(),
                 createUser = it.userId,
                 updatedUser = it.updatedUser ?: it.userId,
-                atomRepo = atomRepo
+                atomRepo = it.atom ?: false
             )
         }
         return Pair(SQLPage(count, repositoryList), hasCreatePermission)
@@ -878,7 +869,7 @@ class RepositoryService @Autowired constructor(
         if (record.projectId != projectId) {
             throw NotFoundException("Repository is not part of the project")
         }
-        if (record.isAtom == true) {
+        if (record.atom == true) {
             throw OperationException(
                 MessageUtil.getMessageByLocale(
                     RepositoryMessageCode.ATOM_REPO_CAN_NOT_DELETE,
@@ -1161,11 +1152,11 @@ class RepositoryService @Autowired constructor(
         )
     }
 
-    fun insertAtomRepoFlag(
+    fun updateAtomRepoFlag(
         userId: String,
         atomRefRepositoryInfo: List<AtomRefRepositoryInfo>
     ) {
-        logger.info("start insert atom repo flag, userId: $userId, atomRefRepositoryInfo: $atomRefRepositoryInfo")
+        logger.info("start update atom repo flag, userId: $userId, atomRefRepositoryInfo: $atomRefRepositoryInfo")
         if (atomRefRepositoryInfo.isEmpty()) {
             return
         }
@@ -1180,11 +1171,12 @@ class RepositoryService @Autowired constructor(
             repoInfos.add(repositoryRecord)
         }
         repoInfos.forEach {
-            logger.info("insert atom repo flag|${it.projectId}|${it.repositoryHashId}")
-            repositoryDao.insertAtomRepoFlag(
+            logger.info("update atom repo flag|${it.projectId}|${it.repositoryHashId}")
+            repositoryDao.updateAtomRepoFlag(
                 dslContext = dslContext,
                 projectId = it.projectId,
-                repositoryId = it.repositoryId
+                repositoryId = it.repositoryId,
+                atom = true
             )
         }
     }

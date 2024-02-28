@@ -89,7 +89,7 @@ interface OpAtomService {
     /**
      * 补充插件仓库标识
      */
-    fun insertAtomRepoFlag(
+    fun updateAtomRepoFlag(
         userId: String,
         atomCode: String?
     ): Result<Boolean>

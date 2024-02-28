@@ -144,8 +144,8 @@ class OpAtomResourceImpl @Autowired constructor(
         )
     }
 
-    override fun insertAtomRepoFlag(userId: String, atomCode: String?): Result<Boolean> {
-        return opAtomService.insertAtomRepoFlag(
+    override fun updateAtomRepoFlag(userId: String, atomCode: String?): Result<Boolean> {
+        return opAtomService.updateAtomRepoFlag(
             userId = userId,
             atomCode = atomCode
         )

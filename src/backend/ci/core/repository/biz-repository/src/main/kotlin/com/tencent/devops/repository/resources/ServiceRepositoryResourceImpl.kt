@@ -220,11 +220,11 @@ class ServiceRepositoryResourceImpl @Autowired constructor(
         return Result(true)
     }
 
-    override fun insertAtomRepoFlag(
+    override fun updateAtomRepoFlag(
         userId: String,
         atomRefRepositoryInfo: List<AtomRefRepositoryInfo>
     ): Result<Boolean> {
-        repositoryService.insertAtomRepoFlag(
+        repositoryService.updateAtomRepoFlag(
             userId = userId,
             atomRefRepositoryInfo = atomRefRepositoryInfo
         )

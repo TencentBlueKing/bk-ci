@@ -112,7 +112,8 @@ class CodeGitRepositoryService @Autowired constructor(
         repository: CodeGitRepository,
         record: TRepositoryRecord
     ) {
-        if (record.isAtom == true) {
+        // 插件库仅允许修改OAUTH用户，不得修改其他内容
+        if (record.atom == true && repository.authType != RepoAuthType.OAUTH) {
             throw OperationException(
                 MessageUtil.getMessageByLocale(
                     RepositoryMessageCode.ATOM_REPO_CAN_NOT_EDIT,
@@ -194,7 +195,7 @@ class CodeGitRepositoryService @Autowired constructor(
             projectId = repository.projectId,
             repoHashId = HashUtil.encodeOtherLongId(repository.repositoryId),
             gitProjectId = record.gitProjectId,
-            atomRepo = repository.isAtom
+            atomRepo = repository.atom
         )
     }
 

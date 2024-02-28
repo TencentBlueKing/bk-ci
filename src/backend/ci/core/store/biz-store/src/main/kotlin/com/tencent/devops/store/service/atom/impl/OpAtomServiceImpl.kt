@@ -589,21 +589,21 @@ class OpAtomServiceImpl @Autowired constructor(
         }
     }
 
-    override fun insertAtomRepoFlag(userId: String, atomCode: String?): Result<Boolean> {
+    override fun updateAtomRepoFlag(userId: String, atomCode: String?): Result<Boolean> {
         ThreadPoolUtil.submitAction(
             action = {
-                insertAtomRepoFlagAction(
+                updateAtomRepoFlagAction(
                     userId = userId,
                     atomCode = atomCode,
                     threadPoolExecutor = it
                 )
             },
-            actionTitle = "insertAtomRepoFlag"
+            actionTitle = "updateAtomRepoFlag"
         )
         return Result(true)
     }
 
-    private fun insertAtomRepoFlagAction(
+    private fun updateAtomRepoFlagAction(
         userId: String,
         atomCode: String?,
         threadPoolExecutor: ThreadPoolExecutor
@@ -621,7 +621,7 @@ class OpAtomServiceImpl @Autowired constructor(
                 val recordSize = atomRecords.size
                 logger.info("recordSize:$recordSize")
                 try {
-                    client.get(ServiceRepositoryResource::class).insertAtomRepoFlag(
+                    client.get(ServiceRepositoryResource::class).updateAtomRepoFlag(
                         userId = userId,
                         atomRefRepositoryInfo = atomRecords
                     )
@@ -631,7 +631,7 @@ class OpAtomServiceImpl @Autowired constructor(
                 offset += limit
             } while (recordSize == limit)
         } catch (ignored: Exception) {
-            logger.warn("insertAtomRepoFlag failed", ignored)
+            logger.warn("updateAtomRepoFlag failed", ignored)
         } finally {
             threadPoolExecutor.shutdown()
         }
