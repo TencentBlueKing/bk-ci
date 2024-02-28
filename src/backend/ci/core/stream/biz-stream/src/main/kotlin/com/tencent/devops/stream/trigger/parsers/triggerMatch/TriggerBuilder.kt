@@ -1,6 +1,6 @@
 package com.tencent.devops.stream.trigger.parsers.triggerMatch
 
-import com.tencent.devops.common.api.enums.RepositoryType
+import com.tencent.devops.common.api.enums.TriggerRepositoryType
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGitWebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGithubWebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.WebHookTriggerElement
@@ -71,7 +71,7 @@ object TriggerBuilder {
             id = "0",
             repositoryHashId = null,
             repositoryName = gitEvent.projectId.toString(),
-            repositoryType = RepositoryType.NAME,
+            repositoryType = TriggerRepositoryType.NAME,
             branchName = null,
             excludeBranchName = null,
             includePaths = null,
@@ -99,7 +99,7 @@ object TriggerBuilder {
             id = "0",
             repositoryHashId = null,
             repositoryName = gitEvent.projectId.toString(),
-            repositoryType = RepositoryType.NAME,
+            repositoryType = TriggerRepositoryType.NAME,
             branchName = null,
             excludeBranchName = null,
             includePaths = null,
@@ -137,7 +137,7 @@ object TriggerBuilder {
             id = "0",
             repositoryHashId = null,
             repositoryName = gitEvent.objectAttributes.projectId.toString(),
-            repositoryType = RepositoryType.NAME,
+            repositoryType = TriggerRepositoryType.NAME,
             branchName = null,
             excludeBranchName = null,
             includePaths = null,
@@ -202,7 +202,7 @@ object TriggerBuilder {
             id = "0",
             repositoryHashId = null,
             repositoryName = gitPushEvent.project_id.toString(),
-            repositoryType = RepositoryType.NAME,
+            repositoryType = TriggerRepositoryType.NAME,
             branchName = triggerOn.push?.branches?.joinToString(JOIN_SEPARATOR),
             excludeBranchName = triggerOn.push?.branchesIgnore?.joinToString(JOIN_SEPARATOR),
             pathFilterType = PathFilterType.RegexBasedFilter,
@@ -226,7 +226,7 @@ object TriggerBuilder {
             id = "0",
             repositoryHashId = null,
             repositoryName = githubPushEvent.repository.id.toString(),
-            repositoryType = RepositoryType.NAME,
+            repositoryType = TriggerRepositoryType.NAME,
             eventType = CodeEventType.PUSH,
             branchName = triggerOn.push?.branches?.joinToString(JOIN_SEPARATOR),
             excludeBranchName = triggerOn.push?.branchesIgnore?.joinToString(JOIN_SEPARATOR),
@@ -245,7 +245,7 @@ object TriggerBuilder {
             id = "0",
             repositoryHashId = null,
             repositoryName = gitTagPushEvent.project_id.toString(),
-            repositoryType = RepositoryType.NAME,
+            repositoryType = TriggerRepositoryType.NAME,
             branchName = null,
             excludeBranchName = null,
             includePaths = null,
@@ -271,7 +271,7 @@ object TriggerBuilder {
             id = "0",
             repositoryHashId = null,
             repositoryName = gitMergeRequestEvent.object_attributes.target_project_id.toString(),
-            repositoryType = RepositoryType.NAME,
+            repositoryType = TriggerRepositoryType.NAME,
             branchName = triggerOn.mr?.targetBranches?.joinToString(JOIN_SEPARATOR),
             excludeBranchName = null,
             pathFilterType = PathFilterType.RegexBasedFilter,
@@ -310,7 +310,7 @@ object TriggerBuilder {
             id = "0",
             repositoryHashId = null,
             repositoryName = githubPrEvent.pullRequest.base.repo.id.toString(),
-            repositoryType = RepositoryType.NAME,
+            repositoryType = TriggerRepositoryType.NAME,
             branchName = triggerOn.mr?.targetBranches?.joinToString(JOIN_SEPARATOR) ?: "*",
             excludeBranchName = null,
             excludeUsers = triggerOn.mr?.usersIgnore?.joinToString(JOIN_SEPARATOR),

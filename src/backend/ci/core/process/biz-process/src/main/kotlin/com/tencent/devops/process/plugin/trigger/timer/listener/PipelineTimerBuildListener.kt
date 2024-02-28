@@ -74,15 +74,14 @@ class PipelineTimerBuildListener @Autowired constructor(
         }
     }
 
-    private fun timerTrigger(event: PipelineTimerBuildEvent, startValues: Map<String, String> = emptyMap()): String? {
+    private fun timerTrigger(event: PipelineTimerBuildEvent, params: Map<String, String> = emptyMap()): String? {
         with(event) {
             try {
                 val buildResult = serviceTimerBuildResource.timerTrigger(
                     userId = userId,
                     projectId = projectId,
                     pipelineId = pipelineId,
-                    params = emptyMap(),
-                    startValues = startValues,
+                    params = params,
                     channelCode = channelCode
                 )
 
@@ -150,6 +149,7 @@ class PipelineTimerBuildListener @Autowired constructor(
             repositoryType = RepositoryType.ID
         )
         with(event) {
+            logger.info("start to build by time trigger|$projectId|$pipelineId|$repoHashId|$branch")
             try {
                 val revision = scmProxyService.recursiveFetchLatestRevision(
                     projectId = projectId,
@@ -165,13 +165,14 @@ class PipelineTimerBuildListener @Autowired constructor(
                     branch = branch
                 )
                 if (timerBranch == null || timerBranch.revision != revision) {
-                    timerTrigger(
+                    val buildId = timerTrigger(
                         event = event,
-                        startValues = mapOf(
+                        params = mapOf(
                             BK_REPO_WEBHOOK_HASH_ID to repoHashId,
                             PIPELINE_WEBHOOK_BRANCH to branch
                         )
                     ) ?: return
+                    logger.info("success to build by time trigger|$projectId|$pipelineId|$repoHashId|$branch|$buildId")
                     pipelineTimerService.saveTimerBranch(
                         projectId = projectId,
                         pipelineId = pipelineId,
@@ -180,7 +181,7 @@ class PipelineTimerBuildListener @Autowired constructor(
                         revision = revision
                     )
                 } else {
-                    logger.info("branch timer trigger fail,revision not change|$projectId|$repoHashId|$branch")
+                    logger.info("branch timer trigger fail,revision not change|$pipelineId|$repoHashId|$branch")
                 }
             } catch (exception: Exception) {
                 logger.warn("branch timer trigger fail|$projectId|$pipelineId|$repoHashId|$branch", exception)

@@ -475,19 +475,28 @@ BEGIN
     IF NOT EXISTS(SELECT 1
                   FROM information_schema.COLUMNS
                   WHERE TABLE_SCHEMA = db
-                    AND TABLE_NAME = 'T_PIPELINE_BUILD_HISTORY'
-                    AND COLUMN_NAME = 'VERSION_NUM') THEN
-    ALTER TABLE `T_PIPELINE_BUILD_HISTORY`
-        ADD COLUMN `VERSION_NUM` int(11) DEFAULT NULL COMMENT '正式发布版本号';
+                    AND TABLE_NAME = 'T_PIPELINE_TIMER'
+                    AND COLUMN_NAME = 'REPO_HASH_ID') THEN
+    ALTER TABLE T_PIPELINE_TIMER
+        ADD COLUMN `REPO_HASH_ID` varchar(64) COMMENT '代码库HASH ID';
+    END IF;
+
+     IF NOT EXISTS(SELECT 1
+                  FROM information_schema.COLUMNS
+                  WHERE TABLE_SCHEMA = db
+                    AND TABLE_NAME = 'T_PIPELINE_TIMER'
+                    AND COLUMN_NAME = 'BRANCHS') THEN
+    ALTER TABLE T_PIPELINE_TIMER
+        ADD COLUMN `BRANCHS` text  COMMENT '分支列表';
     END IF;
 
     IF NOT EXISTS(SELECT 1
                   FROM information_schema.COLUMNS
                   WHERE TABLE_SCHEMA = db
-                    AND TABLE_NAME = 'T_PIPELINE_BUILD_HISTORY'
-                    AND COLUMN_NAME = 'VERSION_NAME') THEN
-    ALTER TABLE `T_PIPELINE_BUILD_HISTORY`
-        ADD COLUMN  `VERSION_NAME` varchar(64) DEFAULT NULL COMMENT '正式版本名称';
+                    AND TABLE_NAME = 'T_PIPELINE_TIMER'
+                    AND COLUMN_NAME = 'NO_SCM') THEN
+    ALTER TABLE T_PIPELINE_TIMER
+        ADD COLUMN `NO_SCM` bit(1)  DEFAULT FALSE COMMENT '源代码未更新则不触发构建';
     END IF;
 
     COMMIT;

@@ -71,6 +71,7 @@ const val PIPELINE_GIT_MR_TITLE = "GIT_CI_MR_TITLE"
 const val PIPELINE_GIT_MR_DESC = "GIT_CI_MR_DESC"
 const val PIPELINE_GIT_MR_PROPOSER = "GIT_CI_MR_PROPOSER"
 const val PIPELINE_GIT_MR_ACTION = "GIT_CI_MR_ACTION"
+const val PIPELINE_PAC_REPO_HASH_ID = "BK_CI_PAC_REPO_HASH_ID" // 流水线绑定的pac代码库hashId
 
 // =====代码库构建Value常量=====
 const val PIPELINE_GIT_TIME_TRIGGER_KIND = "schedule"

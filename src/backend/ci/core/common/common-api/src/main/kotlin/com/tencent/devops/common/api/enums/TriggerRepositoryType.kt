@@ -25,35 +25,20 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.api
+package com.tencent.devops.common.api.enums
 
-import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.pipeline.enums.ChannelCode
-import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.process.api.service.ServiceTimerBuildResource
-import com.tencent.devops.process.service.builds.PipelineBuildFacadeService
-import org.springframework.beans.factory.annotation.Autowired
+enum class TriggerRepositoryType {
+    ID,
+    NAME,
+    SELF;
 
-@RestResource
-class ServiceTimerBuildResourceImpl @Autowired constructor(
-    val pipelineBuildFacadeService: PipelineBuildFacadeService
-) : ServiceTimerBuildResource {
-    override fun timerTrigger(
-        userId: String,
-        projectId: String,
-        pipelineId: String,
-        params: Map<String, String>,
-        channelCode: ChannelCode
-    ): Result<String?> {
-
-        val buildId = pipelineBuildFacadeService.timerTriggerPipelineBuild(
-            userId = userId,
-            projectId = projectId,
-            pipelineId = pipelineId,
-            parameters = params,
-            checkPermission = ChannelCode.isNeedAuth(channelCode)
-        )
-
-        return Result(buildId)
+    companion object {
+        fun toRepositoryType(type: TriggerRepositoryType?): RepositoryType? {
+            return when (type) {
+                ID, SELF -> RepositoryType.ID
+                NAME -> RepositoryType.NAME
+                else -> null
+            }
+        }
     }
 }

@@ -28,6 +28,7 @@
 package com.tencent.devops.process.yaml.transfer
 
 import com.tencent.devops.common.api.enums.RepositoryType
+import com.tencent.devops.common.api.enums.TriggerRepositoryType
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.common.pipeline.pojo.element.ElementAdditionalOptions
@@ -77,6 +78,11 @@ class TriggerTransfer @Autowired(required = false) constructor(
 
     @Suppress("ComplexMethod")
     fun yaml2TriggerGit(triggerOn: TriggerOn, elementQueue: MutableList<Element>) {
+        val repositoryType = if (triggerOn.repoName.isNullOrBlank()) {
+            TriggerRepositoryType.SELF
+        } else {
+            TriggerRepositoryType.NAME
+        }
         triggerOn.push?.let { push ->
             elementQueue.add(
                 CodeGitWebHookTriggerElement(
@@ -90,7 +96,7 @@ class TriggerTransfer @Autowired(required = false) constructor(
                         ?: PathFilterType.NamePrefixFilter,
                     eventType = CodeEventType.PUSH,
                     // todo action
-                    repositoryType = RepositoryType.NAME,
+                    repositoryType = repositoryType,
                     repositoryName = triggerOn.repoName
                 ).checkTriggerElementEnable(push.enable)
             )
@@ -105,7 +111,7 @@ class TriggerTransfer @Autowired(required = false) constructor(
                     includeUsers = tag.users,
                     excludeUsers = tag.usersIgnore,
                     eventType = CodeEventType.TAG_PUSH,
-                    repositoryType = RepositoryType.NAME,
+                    repositoryType = repositoryType,
                     repositoryName = triggerOn.repoName
                 ).checkTriggerElementEnable(tag.enable)
             )
@@ -129,7 +135,7 @@ class TriggerTransfer @Autowired(required = false) constructor(
                         ?: PathFilterType.NamePrefixFilter,
                     // todo action
                     eventType = CodeEventType.MERGE_REQUEST,
-                    repositoryType = RepositoryType.NAME,
+                    repositoryType = repositoryType,
                     repositoryName = triggerOn.repoName
                 ).checkTriggerElementEnable(mr.enable)
             )
@@ -141,7 +147,7 @@ class TriggerTransfer @Autowired(required = false) constructor(
                     includeCrState = review.states,
                     includeCrTypes = review.types,
                     eventType = CodeEventType.REVIEW,
-                    repositoryType = RepositoryType.NAME,
+                    repositoryType = repositoryType,
                     repositoryName = triggerOn.repoName
                 ).checkTriggerElementEnable(review.enable)
             )
@@ -152,7 +158,7 @@ class TriggerTransfer @Autowired(required = false) constructor(
                 CodeGitWebHookTriggerElement(
                     includeIssueAction = issue.action,
                     eventType = CodeEventType.ISSUES,
-                    repositoryType = RepositoryType.NAME,
+                    repositoryType = repositoryType,
                     repositoryName = triggerOn.repoName
                 ).checkTriggerElementEnable(issue.enable)
             )
@@ -171,7 +177,7 @@ class TriggerTransfer @Autowired(required = false) constructor(
                     },
                     includeNoteComment = note.comment.nonEmptyOrNull()?.join(),
                     eventType = CodeEventType.NOTE,
-                    repositoryType = RepositoryType.NAME,
+                    repositoryType = repositoryType,
                     repositoryName = triggerOn.repoName
                 ).checkTriggerElementEnable(note.enable)
             )
@@ -187,8 +193,8 @@ class TriggerTransfer @Autowired(required = false) constructor(
         val res = mutableMapOf<String, TriggerOn>()
         elements.forEach { git ->
             val name = when (git.repositoryType) {
-                RepositoryType.ID -> git.repositoryHashId ?: ""
-                RepositoryType.NAME -> git.repositoryName ?: ""
+                TriggerRepositoryType.ID -> git.repositoryHashId ?: ""
+                TriggerRepositoryType.NAME -> git.repositoryName ?: ""
                 else -> ""
             }
             val nowExist = res.getOrPut(name) {
@@ -290,6 +296,11 @@ class TriggerTransfer @Autowired(required = false) constructor(
 
     @Suppress("ComplexMethod")
     fun yaml2TriggerTGit(triggerOn: TriggerOn, elementQueue: MutableList<Element>) {
+        val repositoryType = if (triggerOn.repoName.isNullOrBlank()) {
+            TriggerRepositoryType.SELF
+        } else {
+            TriggerRepositoryType.NAME
+        }
         triggerOn.push?.let { push ->
             elementQueue.add(
                 CodeTGitWebHookTriggerElement(
@@ -305,7 +316,7 @@ class TriggerTransfer @Autowired(required = false) constructor(
                                 ?: PathFilterType.NamePrefixFilter,
                             eventType = CodeEventType.PUSH,
                             // todo action
-                            repositoryType = RepositoryType.NAME,
+                            repositoryType = repositoryType,
                             repositoryName = triggerOn.repoName
                         )
                     )
@@ -324,7 +335,7 @@ class TriggerTransfer @Autowired(required = false) constructor(
                             includeUsers = tag.users,
                             excludeUsers = tag.usersIgnore,
                             eventType = CodeEventType.TAG_PUSH,
-                            repositoryType = RepositoryType.NAME,
+                            repositoryType = repositoryType,
                             repositoryName = triggerOn.repoName
                         )
                     )
@@ -352,7 +363,7 @@ class TriggerTransfer @Autowired(required = false) constructor(
                                 ?: PathFilterType.NamePrefixFilter,
                             // todo action
                             eventType = CodeEventType.MERGE_REQUEST,
-                            repositoryType = RepositoryType.NAME,
+                            repositoryType = repositoryType,
                             repositoryName = triggerOn.repoName
                         )
                     )
@@ -368,7 +379,7 @@ class TriggerTransfer @Autowired(required = false) constructor(
                             includeCrState = review.states,
                             includeCrTypes = review.types,
                             eventType = CodeEventType.REVIEW,
-                            repositoryType = RepositoryType.NAME,
+                            repositoryType = repositoryType,
                             repositoryName = triggerOn.repoName
                         )
                     )
@@ -383,7 +394,7 @@ class TriggerTransfer @Autowired(required = false) constructor(
                         input = CodeTGitWebHookTriggerInput(
                             includeIssueAction = issue.action,
                             eventType = CodeEventType.ISSUES,
-                            repositoryType = RepositoryType.NAME,
+                            repositoryType = repositoryType,
                             repositoryName = triggerOn.repoName
                         )
                     )
@@ -406,7 +417,7 @@ class TriggerTransfer @Autowired(required = false) constructor(
                             },
                             includeNoteComment = note.comment.nonEmptyOrNull()?.join(),
                             eventType = CodeEventType.NOTE,
-                            repositoryType = RepositoryType.NAME,
+                            repositoryType = repositoryType,
                             repositoryName = triggerOn.repoName
                         )
                     )
@@ -417,6 +428,11 @@ class TriggerTransfer @Autowired(required = false) constructor(
 
     @Suppress("ComplexMethod")
     fun yaml2TriggerGithub(triggerOn: TriggerOn, elementQueue: MutableList<Element>) {
+        val repositoryType = if (triggerOn.repoName.isNullOrBlank()) {
+            TriggerRepositoryType.SELF
+        } else {
+            TriggerRepositoryType.NAME
+        }
         triggerOn.push?.let { push ->
             elementQueue.add(
                 CodeGithubWebHookTriggerElement(
@@ -430,7 +446,7 @@ class TriggerTransfer @Autowired(required = false) constructor(
                         ?: PathFilterType.NamePrefixFilter,
                     eventType = CodeEventType.PUSH,
                     // todo action
-                    repositoryType = RepositoryType.NAME,
+                    repositoryType = repositoryType,
                     repositoryName = triggerOn.repoName
                 ).checkTriggerElementEnable(push.enable)
             )
@@ -445,7 +461,7 @@ class TriggerTransfer @Autowired(required = false) constructor(
                     includeUsers = tag.users,
                     excludeUsers = tag.usersIgnore.nonEmptyOrNull()?.join(),
                     eventType = CodeEventType.TAG_PUSH,
-                    repositoryType = RepositoryType.NAME,
+                    repositoryType = repositoryType,
                     repositoryName = triggerOn.repoName
                 ).checkTriggerElementEnable(tag.enable)
             )
@@ -468,7 +484,7 @@ class TriggerTransfer @Autowired(required = false) constructor(
                         ?: PathFilterType.NamePrefixFilter,
                     // todo action
                     eventType = CodeEventType.PULL_REQUEST,
-                    repositoryType = RepositoryType.NAME,
+                    repositoryType = repositoryType,
                     repositoryName = triggerOn.repoName
                 ).checkTriggerElementEnable(mr.enable)
             )
@@ -480,7 +496,7 @@ class TriggerTransfer @Autowired(required = false) constructor(
                     includeCrState = review.states,
                     includeCrTypes = review.types,
                     eventType = CodeEventType.REVIEW,
-                    repositoryType = RepositoryType.NAME,
+                    repositoryType = repositoryType,
                     repositoryName = triggerOn.repoName
                 ).checkTriggerElementEnable(review.enable)
             )
@@ -491,7 +507,7 @@ class TriggerTransfer @Autowired(required = false) constructor(
                 CodeGithubWebHookTriggerElement(
                     includeIssueAction = issue.action,
                     eventType = CodeEventType.ISSUES,
-                    repositoryType = RepositoryType.NAME,
+                    repositoryType = repositoryType,
                     repositoryName = triggerOn.repoName
                 ).checkTriggerElementEnable(issue.enable)
             )
@@ -510,7 +526,7 @@ class TriggerTransfer @Autowired(required = false) constructor(
                     },
                     includeNoteComment = note.comment.nonEmptyOrNull()?.join(),
                     eventType = CodeEventType.NOTE,
-                    repositoryType = RepositoryType.NAME,
+                    repositoryType = repositoryType,
                     repositoryName = triggerOn.repoName
                 ).checkTriggerElementEnable(note.enable)
             )
@@ -519,6 +535,11 @@ class TriggerTransfer @Autowired(required = false) constructor(
 
     @Suppress("ComplexMethod")
     fun yaml2TriggerSvn(triggerOn: TriggerOn, elementQueue: MutableList<Element>) {
+        val repositoryType = if (triggerOn.repoName.isNullOrBlank()) {
+            TriggerRepositoryType.SELF
+        } else {
+            TriggerRepositoryType.NAME
+        }
         triggerOn.push?.let { push ->
             elementQueue.add(
                 CodeSVNWebHookTriggerElement(
@@ -529,7 +550,7 @@ class TriggerTransfer @Autowired(required = false) constructor(
                     pathFilterType = push.pathFilterType?.let { PathFilterType.valueOf(it) }
                         ?: PathFilterType.NamePrefixFilter,
                     // todo action
-                    repositoryType = RepositoryType.NAME,
+                    repositoryType = repositoryType,
                     repositoryName = triggerOn.repoName
                 ).checkTriggerElementEnable(push.enable)
             )
@@ -538,6 +559,11 @@ class TriggerTransfer @Autowired(required = false) constructor(
 
     @Suppress("ComplexMethod")
     fun yaml2TriggerP4(triggerOn: TriggerOn, elementQueue: MutableList<Element>) {
+        val repositoryType = if (triggerOn.repoName.isNullOrBlank()) {
+            TriggerRepositoryType.SELF
+        } else {
+            TriggerRepositoryType.NAME
+        }
         triggerOn.push?.let { push ->
             elementQueue.add(
                 CodeP4WebHookTriggerElement(
@@ -546,7 +572,7 @@ class TriggerTransfer @Autowired(required = false) constructor(
                             includePaths = push.paths.nonEmptyOrNull()?.join(),
                             excludePaths = push.pathsIgnore.nonEmptyOrNull()?.join(),
                             eventType = CodeEventType.CHANGE_COMMIT,
-                            repositoryType = RepositoryType.NAME,
+                            repositoryType = repositoryType,
                             repositoryName = triggerOn.repoName
                         )
                     )
@@ -609,6 +635,11 @@ class TriggerTransfer @Autowired(required = false) constructor(
 
     @Suppress("ComplexMethod")
     fun yaml2TriggerGitlab(triggerOn: TriggerOn, elementQueue: MutableList<Element>) {
+        val repositoryType = if (triggerOn.repoName.isNullOrBlank()) {
+            TriggerRepositoryType.SELF
+        } else {
+            TriggerRepositoryType.NAME
+        }
         triggerOn.push?.let { push ->
             elementQueue.add(
                 CodeGitlabWebHookTriggerElement(
@@ -622,7 +653,7 @@ class TriggerTransfer @Autowired(required = false) constructor(
                         ?: PathFilterType.NamePrefixFilter,
                     eventType = CodeEventType.PUSH,
                     // todo action
-                    repositoryType = RepositoryType.NAME,
+                    repositoryType = repositoryType,
                     repositoryName = triggerOn.repoName
                 ).checkTriggerElementEnable(push.enable)
             )
@@ -636,7 +667,7 @@ class TriggerTransfer @Autowired(required = false) constructor(
                     includeUsers = tag.users,
                     excludeUsers = tag.usersIgnore,
                     eventType = CodeEventType.TAG_PUSH,
-                    repositoryType = RepositoryType.NAME,
+                    repositoryType = repositoryType,
                     repositoryName = triggerOn.repoName
                 ).checkTriggerElementEnable(tag.enable)
             )
@@ -658,7 +689,7 @@ class TriggerTransfer @Autowired(required = false) constructor(
                         ?: PathFilterType.NamePrefixFilter,
                     // todo action
                     eventType = CodeEventType.MERGE_REQUEST,
-                    repositoryType = RepositoryType.NAME,
+                    repositoryType = repositoryType,
                     repositoryName = triggerOn.repoName
                 ).checkTriggerElementEnable(mr.enable)
             )

@@ -720,7 +720,6 @@ class PipelineBuildFacadeService(
         projectId: String,
         pipelineId: String,
         parameters: Map<String, String> = emptyMap(),
-        startValues: Map<String, String>? = null,
         checkPermission: Boolean = true
     ): String? {
 
@@ -759,6 +758,11 @@ class PipelineBuildFacadeService(
             val triggerContainer = model.stages[0].containers[0] as TriggerContainer
 
             val paramPamp = buildParamCompatibilityTransformer.parseTriggerParam(triggerContainer.params, parameters)
+            parameters.forEach { (key, value) ->
+                if (!paramPamp.containsKey(key)) {
+                    paramPamp[key] = BuildParameters(key = key, value = value)
+                }
+            }
             return pipelineBuildService.startPipeline(
                 userId = userId,
                 pipeline = pipeline,
@@ -769,7 +773,6 @@ class PipelineBuildFacadeService(
                 model = model,
                 signPipelineVersion = null,
                 frequencyLimit = false,
-                startValues = startValues,
                 versionName = resource.versionName
             ).id
         } finally {
@@ -2346,6 +2349,9 @@ class PipelineBuildFacadeService(
         return pipelineRuntimeService.getLatestBuild(projectId, pipelineIds)
     }
 
+    /**
+     * @return <启动人，#9910 环境构建时遇到启动错误时调度到一个新的Agent 是否重新调度>
+     */
     fun workerBuildFinish(
         projectCode: String,
         pipelineId: String, /* pipelineId在agent请求的数据有值前不可用 */
@@ -2354,7 +2360,7 @@ class PipelineBuildFacadeService(
         nodeHashId: String?,
         executeCount: Int?,
         simpleResult: SimpleResult
-    ): String? {
+    ): Pair<String?, Boolean> {
         var msg = simpleResult.message
 
         if (!nodeHashId.isNullOrBlank()) {
@@ -2387,7 +2393,7 @@ class PipelineBuildFacadeService(
                         executeCount = startUpVMTask.executeCount ?: 1
                     )
                 }
-                return startUpVMTask?.starter
+                return Pair(startUpVMTask?.starter, false)
             }
         } else {
             msg = "$msg| ${I18nUtil.getCodeLanMessage(ProcessMessageCode.BUILD_WORKER_DEAD_ERROR)}"
@@ -2409,7 +2415,7 @@ class PipelineBuildFacadeService(
                         taskId = startUpVMTask.taskId,
                         taskParam = JsonUtil.toJson(taskParam)
                     )
-                    return startUpVMTask.starter
+                    return Pair(startUpVMTask.starter, true)
                 }
             }
         }
@@ -2425,12 +2431,12 @@ class PipelineBuildFacadeService(
         val buildInfo = pipelineRuntimeService.getBuildInfo(projectCode, buildId)
         if (buildInfo == null || buildInfo.status.isFinish()) {
             logger.warn("[$buildId]|workerBuildFinish|The build status is ${buildInfo?.status}")
-            return buildInfo?.startUser
+            return Pair(buildInfo?.startUser, false)
         }
 
         if (executeCount != null && buildInfo.executeCount != null && executeCount != buildInfo.executeCount) {
             logger.warn("[$buildId]|workerBuildFinish|executeCount ne [$executeCount != ${buildInfo.executeCount}]")
-            return buildInfo.startUser
+            return Pair(buildInfo.startUser, false)
         }
 
         val container = pipelineContainerService.getContainer(
@@ -2467,7 +2473,7 @@ class PipelineBuildFacadeService(
             }
         }
 
-        return buildInfo.startUser
+        return Pair(buildInfo.startUser, false)
     }
 
     fun saveBuildVmInfo(projectId: String, pipelineId: String, buildId: String, vmSeqId: String, vmInfo: VmInfo) {

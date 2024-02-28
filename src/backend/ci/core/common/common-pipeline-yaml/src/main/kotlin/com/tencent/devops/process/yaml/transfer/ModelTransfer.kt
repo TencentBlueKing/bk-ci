@@ -36,11 +36,11 @@ import com.tencent.devops.common.pipeline.pojo.setting.PipelineSetting
 import com.tencent.devops.common.pipeline.pojo.setting.Subscription
 import com.tencent.devops.common.pipeline.pojo.transfer.IfType
 import com.tencent.devops.common.pipeline.utils.PIPELINE_SETTING_CONCURRENCY_GROUP_DEFAULT
+import com.tencent.devops.process.yaml.pojo.YamlVersion
 import com.tencent.devops.process.yaml.transfer.VariableDefault.nullIfDefault
 import com.tencent.devops.process.yaml.transfer.aspect.PipelineTransferAspectWrapper
 import com.tencent.devops.process.yaml.transfer.pojo.ModelTransferInput
 import com.tencent.devops.process.yaml.transfer.pojo.YamlTransferInput
-import com.tencent.devops.process.yaml.pojo.YamlVersion
 import com.tencent.devops.process.yaml.v3.models.Concurrency
 import com.tencent.devops.process.yaml.v3.models.Extends
 import com.tencent.devops.process.yaml.v3.models.GitNotices
@@ -325,8 +325,10 @@ class ModelTransfer @Autowired constructor(
         when (modelInput.version) {
             YamlVersion.Version.V2_0 -> {
                 // 融合默认git触发器 + 基础触发器
-                if (scmTrigger[modelInput.defaultScmType] != null) {
-                    val res = scmTrigger[modelInput.defaultScmType]!!.toPre(modelInput.version) as PreTriggerOn
+                if (scmTrigger[modelInput.defaultScmType] != null &&
+                    scmTrigger[modelInput.defaultScmType]!!.size == 1
+                ) {
+                    val res = scmTrigger[modelInput.defaultScmType]!!.first().toPre(modelInput.version) as PreTriggerOn
                     return listOf(
                         res.copy(
                             manual = baseTrigger?.manual,
@@ -345,10 +347,13 @@ class ModelTransfer @Autowired constructor(
 
             YamlVersion.Version.V3_0 -> {
                 val trigger = mutableListOf<IPreTriggerOn>()
-                val triggerV3 = scmTrigger.map { on ->
-                    on.value.toPre(modelInput.version).also {
-                        it as PreTriggerOnV3
-                        it.type = on.key.alis
+                val triggerV3 = mutableListOf<IPreTriggerOn>()
+                scmTrigger.map { on ->
+                    on.value.forEach { pre ->
+                        triggerV3.add(pre.toPre(modelInput.version).also {
+                            it as PreTriggerOnV3
+                            it.type = on.key.alis
+                        })
                     }
                 }
                 if (baseTrigger != null) {
