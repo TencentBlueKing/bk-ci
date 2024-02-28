@@ -30,9 +30,9 @@ package com.tencent.devops.process.yaml.v3.models.on
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.annotation.JsonInclude
 import com.fasterxml.jackson.annotation.JsonProperty
+import com.tencent.devops.process.yaml.pojo.YamlVersion
 import com.tencent.devops.process.yaml.transfer.VariableDefault.DEFAULT_MANUAL_RULE
 import com.tencent.devops.process.yaml.transfer.VariableDefault.nullIfDefault
-import com.tencent.devops.process.yaml.pojo.YamlVersion
 import com.tencent.devops.process.yaml.v3.models.RepositoryHook
 import io.swagger.v3.oas.annotations.media.Schema
 
@@ -100,7 +100,8 @@ data class TriggerOn(
     )
 
     private fun simpleManual() = when {
-        manual?.nullIfDefault(DEFAULT_MANUAL_RULE) == null -> EnableType.TRUE.value
+        manual == null -> null
+        manual == DEFAULT_MANUAL_RULE -> EnableType.TRUE.value
         manual!!.enable == false -> EnableType.FALSE.value
         else -> manual?.copy(enable = null)
     }
