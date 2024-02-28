@@ -189,7 +189,7 @@ class RepoPipelineRefDao {
         return with(TRepositoryPipelineRef.T_REPOSITORY_PIPELINE_REF) {
             val conditions = mutableListOf(
                 PROJECT_ID.eq(projectId),
-                REPOSITORY_ID.eq(repositoryId),
+                REPOSITORY_ID.eq(repositoryId)
             )
             if (!channel.isNullOrBlank()) {
                 conditions.add(CHANNEL.eq(channel))
