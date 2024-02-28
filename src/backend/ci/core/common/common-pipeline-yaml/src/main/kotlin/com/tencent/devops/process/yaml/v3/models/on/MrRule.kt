@@ -30,7 +30,7 @@ package com.tencent.devops.process.yaml.v3.models.on
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.annotation.JsonInclude
 import com.fasterxml.jackson.annotation.JsonProperty
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
 /**
  * model
@@ -39,25 +39,25 @@ import io.swagger.annotations.ApiModelProperty
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class MrRule(
     val enable: Boolean? = true,
-    @ApiModelProperty(name = "source-branches")
+    @get:Schema(title = "source-branches")
     @JsonProperty("source-branches")
     val sourceBranches: List<String>? = null,
 
-    @ApiModelProperty(name = "source-branches-ignore")
+    @get:Schema(title = "source-branches-ignore")
     @JsonProperty("source-branches-ignore")
     val sourceBranchesIgnore: List<String>? = null,
 
-    @ApiModelProperty(name = "target-branches")
+    @get:Schema(title = "target-branches")
     @JsonProperty("target-branches")
     val targetBranches: List<String>? = null,
 
-    @ApiModelProperty(name = "target-branches-ignore")
+    @get:Schema(title = "target-branches-ignore")
     @JsonProperty("target-branches-ignore")
     val targetBranchesIgnore: List<String>? = null,
 
     val paths: List<String>? = null,
 
-    @ApiModelProperty(name = "paths-ignore")
+    @get:Schema(title = "paths-ignore")
     @JsonProperty("paths-ignore")
     val pathsIgnore: List<String>? = null,
 
@@ -65,23 +65,23 @@ data class MrRule(
 
     val users: List<String>? = null,
 
-    @ApiModelProperty(name = "users-ignore")
+    @get:Schema(title = "users-ignore")
     @JsonProperty("users-ignore")
     val usersIgnore: List<String>? = null,
 
-    @ApiModelProperty(name = "block-mr")
+    @get:Schema(title = "block-mr")
     @JsonProperty("block-mr")
     val blockMr: Boolean? = null,
 
-    @ApiModelProperty(name = "webhook-queue")
+    @get:Schema(title = "webhook-queue")
     @JsonProperty("webhook-queue")
     val webhookQueue: Boolean? = null,
 
-    @ApiModelProperty(name = "report-commit-check")
+    @get:Schema(title = "report-commit-check")
     @JsonProperty("report-commit-check")
     val reportCommitCheck: Boolean? = null,
 
-    @ApiModelProperty(name = "path-filter-type")
+    @get:Schema(title = "path-filter-type")
     @JsonProperty("path-filter-type")
     val pathFilterType: String? = null
 )

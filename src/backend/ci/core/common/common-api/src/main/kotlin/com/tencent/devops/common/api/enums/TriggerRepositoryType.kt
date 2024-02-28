@@ -25,16 +25,20 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.pipeline.type.exsi
+package com.tencent.devops.common.api.enums
 
-import com.tencent.devops.common.pipeline.type.BuildType
-import com.tencent.devops.common.pipeline.type.DispatchType
+enum class TriggerRepositoryType {
+    ID,
+    NAME,
+    SELF;
 
-// value is empty
-class ESXiDispatchType : DispatchType("") {
-    override fun cleanDataBeforeSave() = Unit
-
-    override fun replaceField(variables: Map<String, String>) = Unit
-
-    override fun buildType() = BuildType.valueOf(BuildType.ESXi.name)
+    companion object {
+        fun toRepositoryType(type: TriggerRepositoryType?): RepositoryType? {
+            return when (type) {
+                ID, SELF -> RepositoryType.ID
+                NAME -> RepositoryType.NAME
+                else -> null
+            }
+        }
+    }
 }

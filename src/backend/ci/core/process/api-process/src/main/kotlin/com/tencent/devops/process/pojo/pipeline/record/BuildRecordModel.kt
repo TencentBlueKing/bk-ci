@@ -30,42 +30,41 @@ package com.tencent.devops.process.pojo.pipeline.record
 import com.tencent.devops.common.api.pojo.ErrorInfo
 import com.tencent.devops.common.pipeline.enums.BuildRecordTimeStamp
 import com.tencent.devops.common.pipeline.pojo.time.BuildTimestampType
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 import java.time.LocalDateTime
 
-@ApiModel("构建详情记录-插件任务")
+@Schema(title = "构建详情记录-插件任务")
 data class BuildRecordModel(
-    @ApiModelProperty("构建ID", required = true)
+    @get:Schema(title = "构建ID", required = true)
     val buildId: String,
-    @ApiModelProperty("项目ID", required = true)
+    @get:Schema(title = "项目ID", required = true)
     val projectId: String,
-    @ApiModelProperty("流水线ID", required = true)
+    @get:Schema(title = "流水线ID", required = true)
     val pipelineId: String,
-    @ApiModelProperty("编排版本号", required = true)
+    @get:Schema(title = "编排版本号", required = true)
     val resourceVersion: Int,
-    @ApiModelProperty("构建号", required = true)
+    @get:Schema(title = "构建号", required = true)
     val buildNum: Int,
-    @ApiModelProperty("执行次数", required = true)
+    @get:Schema(title = "执行次数", required = true)
     val executeCount: Int,
-    @ApiModelProperty("执行变量", required = true)
+    @get:Schema(title = "执行变量", required = true)
     val modelVar: MutableMap<String, Any>,
-    @ApiModelProperty("触发时间", required = false)
+    @get:Schema(title = "触发时间", required = false)
     val queueTime: LocalDateTime,
-    @ApiModelProperty("触发人", required = true)
+    @get:Schema(title = "触发人", required = true)
     val startUser: String,
-    @ApiModelProperty("触发器", required = true)
+    @get:Schema(title = "触发器", required = true)
     val startType: String,
-    @ApiModelProperty("构建状态", required = false)
+    @get:Schema(title = "构建状态", required = false)
     var status: String? = null,
-    @ApiModelProperty("取消人", required = false)
+    @get:Schema(title = "取消人", required = false)
     val cancelUser: String? = null,
-    @ApiModelProperty("开始时间", required = true)
+    @get:Schema(title = "开始时间", required = true)
     var startTime: LocalDateTime? = null,
-    @ApiModelProperty("结束时间", required = true)
+    @get:Schema(title = "结束时间", required = true)
     var endTime: LocalDateTime? = null,
-    @ApiModelProperty("流水线任务执行错误", required = false)
+    @get:Schema(title = "流水线任务执行错误", required = false)
     var errorInfoList: List<ErrorInfo>? = null,
-    @ApiModelProperty("业务时间戳集合", required = false)
+    @get:Schema(title = "业务时间戳集合", required = false)
     var timestamps: Map<BuildTimestampType, BuildRecordTimeStamp>
 )

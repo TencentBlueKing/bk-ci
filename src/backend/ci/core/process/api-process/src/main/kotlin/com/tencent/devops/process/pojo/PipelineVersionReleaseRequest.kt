@@ -29,17 +29,17 @@ package com.tencent.devops.process.pojo
 
 import com.tencent.devops.common.pipeline.enums.CodeTargetAction
 import com.tencent.devops.process.pojo.pipeline.PipelineYamlVo
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
 data class PipelineVersionReleaseRequest(
-    @ApiModelProperty("是否本次开启PAC", required = true)
+    @get:Schema(title = "是否本次开启PAC", required = true)
     var enablePac: Boolean,
-    @ApiModelProperty("版本描述", required = false)
+    @get:Schema(title = "版本描述", required = false)
     var description: String? = null,
-    @ApiModelProperty("模板版本号（为空时默认最新）", required = false)
+    @get:Schema(title = "模板版本号（为空时默认最新）", required = false)
     var targetAction: CodeTargetAction?,
-    @ApiModelProperty("静态流水线组", required = false)
+    @get:Schema(title = "静态流水线组", required = false)
     var staticViews: List<String> = emptyList(),
-    @ApiModelProperty("流水线YAML信息", required = false)
+    @get:Schema(title = "流水线YAML信息", required = false)
     val yamlInfo: PipelineYamlVo?
 )

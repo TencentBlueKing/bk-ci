@@ -28,25 +28,24 @@
 
 package com.tencent.devops.process.pojo.pipeline
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("流水线yml版本")
+@Schema(title = "流水线yml版本")
 data class PipelineYamlVersion(
-    @ApiModelProperty("项目ID")
+    @get:Schema(title = "项目ID")
     val projectId: String,
-    @ApiModelProperty("代码库ID")
+    @get:Schema(title = "代码库ID")
     val repoHashId: String,
-    @ApiModelProperty("ci文件路径")
+    @get:Schema(title = "ci文件路径")
     val filePath: String,
-    @ApiModelProperty("ci文件blob_id")
+    @get:Schema(title = "ci文件blob_id")
     val blobId: String,
-    @ApiModelProperty("ci文件commitId")
+    @get:Schema(title = "ci文件commitId")
     val commitId: String,
-    @ApiModelProperty("ci文件来源分支/tag")
+    @get:Schema(title = "ci文件来源分支/tag")
     val ref: String?,
-    @ApiModelProperty("流水线ID")
+    @get:Schema(title = "流水线ID")
     val pipelineId: String,
-    @ApiModelProperty("流水线版本")
+    @get:Schema(title = "流水线版本")
     val version: Int
 )

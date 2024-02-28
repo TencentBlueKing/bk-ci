@@ -1,8 +1,8 @@
 package com.tencent.devops.common.auth.callback
 
-import io.swagger.annotations.ApiModel
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("过滤条件搜索实例")
+@Schema(title = "过滤条件搜索实例")
 data class FetchInstanceListData(
     val projectId: String,
     val projectName: String,

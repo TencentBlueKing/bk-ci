@@ -30,11 +30,11 @@ package com.tencent.devops.process.yaml.v3.models.on
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.annotation.JsonInclude
 import com.fasterxml.jackson.annotation.JsonProperty
+import com.tencent.devops.process.yaml.pojo.YamlVersion
 import com.tencent.devops.process.yaml.transfer.VariableDefault.DEFAULT_MANUAL_RULE
 import com.tencent.devops.process.yaml.transfer.VariableDefault.nullIfDefault
-import com.tencent.devops.process.yaml.pojo.YamlVersion
 import com.tencent.devops.process.yaml.v3.models.RepositoryHook
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
 /**
  * model
@@ -50,14 +50,14 @@ data class TriggerOn(
     var issue: IssueRule? = null,
     var review: ReviewRule? = null,
     var note: NoteRule? = null,
-    @ApiModelProperty(name = "repo_hook")
+    @get:Schema(title = "repo_hook")
     @JsonProperty("repo_hook")
     val repoHook: RepositoryHook? = null,
     var manual: ManualRule? = null,
     var remote: String? = null,
     val openapi: String? = null,
     @JsonProperty("repo-name")
-    @ApiModelProperty(name = "repo-name")
+    @get:Schema(title = "repo-name")
     var repoName: String? = null
 ) {
     fun toPre(version: YamlVersion.Version) = when (version) {
@@ -100,7 +100,8 @@ data class TriggerOn(
     )
 
     private fun simpleManual() = when {
-        manual?.nullIfDefault(DEFAULT_MANUAL_RULE) == null -> EnableType.TRUE.value
+        manual == null -> null
+        manual == DEFAULT_MANUAL_RULE -> EnableType.TRUE.value
         manual!!.enable == false -> EnableType.FALSE.value
         else -> manual?.copy(enable = null)
     }
@@ -132,7 +133,7 @@ data class PreTriggerOn(
     override val issue: IssueRule? = null,
     override val review: ReviewRule? = null,
     override val note: NoteRule? = null,
-    @ApiModelProperty(name = "repo_hook")
+    @get:Schema(title = "repo_hook")
     @JsonProperty("repo_hook")
     override val repoHook: List<Any>? = null,
     override val manual: Any? = null,

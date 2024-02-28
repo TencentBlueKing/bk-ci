@@ -29,19 +29,18 @@
 package com.tencent.devops.process.yaml.git.pojo.tgit
 
 import com.tencent.devops.process.yaml.git.pojo.PacGitPushResult
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("tgit 推送结果")
+@Schema(title = "tgit 推送结果")
 data class TGitPushResult(
-    @ApiModelProperty("ci文件路径")
+    @get:Schema(title = "ci文件路径")
     override val filePath: String,
-    @ApiModelProperty("分支名")
+    @get:Schema(title = "分支名")
     override val branch: String,
-    @ApiModelProperty("文件blob_id")
+    @get:Schema(title = "文件blob_id")
     override val blobId: String,
-    @ApiModelProperty("分支最后提交id")
+    @get:Schema(title = "分支最后提交id")
     override val lastCommitId: String,
-    @ApiModelProperty("mr url")
+    @get:Schema(title = "mr url")
     override val mrUrl: String?
 ) : PacGitPushResult

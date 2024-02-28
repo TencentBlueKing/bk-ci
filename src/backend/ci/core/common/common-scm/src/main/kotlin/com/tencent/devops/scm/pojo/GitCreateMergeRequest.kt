@@ -29,17 +29,16 @@
 package com.tencent.devops.scm.pojo
 
 import com.fasterxml.jackson.annotation.JsonProperty
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("创建合并请求")
+@Schema(title = "创建合并请求")
 data class GitCreateMergeRequest(
-    @ApiModelProperty("源分支")
+    @get:Schema(title = "源分支")
     @JsonProperty("source_branch")
     val sourceBranch: String,
-    @ApiModelProperty("目标分支")
+    @get:Schema(title = "目标分支")
     @JsonProperty("target_branch")
     val targetBranch: String,
-    @ApiModelProperty("合并请求的标题")
+    @get:Schema(title = "合并请求的标题")
     val title: String
 )

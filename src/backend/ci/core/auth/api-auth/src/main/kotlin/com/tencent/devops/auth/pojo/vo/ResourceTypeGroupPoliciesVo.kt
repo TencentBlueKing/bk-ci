@@ -28,15 +28,14 @@
 
 package com.tencent.devops.auth.pojo.vo
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("资源类型组策略")
+@Schema(title = "资源类型组策略")
 data class ResourceTypeGroupPoliciesVo(
-    @ApiModelProperty("资源类型")
+    @get:Schema(title = "资源类型")
     val resourceType: String,
-    @ApiModelProperty("策略名")
+    @get:Schema(title = "策略名")
     val name: String,
-    @ApiModelProperty("策略展示名")
+    @get:Schema(title = "策略展示名")
     val displayName: String
 )

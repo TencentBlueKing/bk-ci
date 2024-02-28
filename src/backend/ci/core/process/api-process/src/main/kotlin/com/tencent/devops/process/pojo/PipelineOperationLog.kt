@@ -28,27 +28,26 @@
 package com.tencent.devops.process.pojo
 
 import com.tencent.devops.process.enums.OperationLogType
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("流水线操作日志")
+@Schema(title = "流水线操作日志")
 data class PipelineOperationLog(
-    @ApiModelProperty("唯一标识ID", required = true)
+    @get:Schema(title = "唯一标识ID", required = true)
     val id: Int,
-    @ApiModelProperty("项目ID", required = true)
+    @get:Schema(title = "项目ID", required = true)
     val projectId: String,
-    @ApiModelProperty("流水线ID", required = true)
+    @get:Schema(title = "流水线ID", required = true)
     val pipelineId: String,
-    @ApiModelProperty("版本ID", required = true)
+    @get:Schema(title = "版本ID", required = true)
     val version: Int,
-    @ApiModelProperty("操作用户", required = true)
+    @get:Schema(title = "操作用户", required = true)
     val operator: String,
-    @ApiModelProperty("操作类型", required = true)
+    @get:Schema(title = "操作类型", required = true)
     val operationLogType: OperationLogType,
-    @ApiModelProperty("操作参数", required = true)
+    @get:Schema(title = "操作参数", required = true)
     val params: String,
-    @ApiModelProperty("操作时间", required = false)
+    @get:Schema(title = "操作时间", required = false)
     val operateTime: Long,
-    @ApiModelProperty("操作内容", required = false)
+    @get:Schema(title = "操作内容", required = false)
     val description: String?
 )

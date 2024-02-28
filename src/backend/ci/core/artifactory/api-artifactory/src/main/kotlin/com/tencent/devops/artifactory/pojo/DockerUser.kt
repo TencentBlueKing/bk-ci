@@ -27,17 +27,16 @@
 
 package com.tencent.devops.artifactory.pojo
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("镜像仓库-用户密码")@Suppress("ALL")
+@Schema(title = "镜像仓库-用户密码")@Suppress("ALL")
 data class DockerUser(
-    @ApiModelProperty("用户名", required = true)
+    @get:Schema(title = "用户名", required = true)
     val user: String,
-    @ApiModelProperty("密码", required = true)
+    @get:Schema(title = "密码", required = true)
     val password: String,
-    @ApiModelProperty("仓库域名", required = true)
+    @get:Schema(title = "仓库域名", required = true)
     val domain: String? = null,
-    @ApiModelProperty("仓库端口", required = true)
+    @get:Schema(title = "仓库端口", required = true)
     val docker_port: String? = null
 )

@@ -38,6 +38,7 @@ bkCiKubernetesMemory: 16048
 bkCiKubernetesEnable: true
 bkCiKubernetesHost: http://kubernetes-manager
 bkCiKubernetesToken: landun
+bkCiKubernetesBuilderTaint:
 bkCiDevopsToken: devops
 bkCiAppToken: test
 bkCiNotifyEmailSendChannel: blueking
@@ -52,3 +53,4 @@ bkCiSm4Key: s31^dDjd!3k
 bkCiSm4Enabled: false
 bkCiMonitorRegister: false
 bkCiBuildDataClearSwitch: false
+bkCiOpenapiApiAuth: false

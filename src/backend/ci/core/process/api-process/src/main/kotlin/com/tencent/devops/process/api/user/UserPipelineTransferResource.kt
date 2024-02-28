@@ -38,9 +38,9 @@ import com.tencent.devops.common.pipeline.pojo.transfer.PositionResponse
 import com.tencent.devops.common.pipeline.pojo.transfer.TransferActionType
 import com.tencent.devops.common.pipeline.pojo.transfer.TransferBody
 import com.tencent.devops.common.pipeline.pojo.transfer.TransferResponse
-import io.swagger.annotations.Api
-import io.swagger.annotations.ApiOperation
-import io.swagger.annotations.ApiParam
+import io.swagger.v3.oas.annotations.tags.Tag
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.Parameter
 import javax.ws.rs.Consumes
 import javax.ws.rs.HeaderParam
 import javax.ws.rs.POST
@@ -50,100 +50,100 @@ import javax.ws.rs.Produces
 import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
-@Api(tags = ["USER_PIPELINE_TRANSFER"], description = "用户-流水线互转资源")
+@Tag(name = "USER_PIPELINE_TRANSFER", description = "用户-流水线互转资源")
 @Path("/user/transfer")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 @Suppress("ALL")
 interface UserPipelineTransferResource {
 
-    @ApiOperation("model与yaml互转入口")
+    @Operation(summary = "model与yaml互转入口")
     @POST
     @Path("/projects/{projectId}")
     fun transfer(
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @ApiParam("流水线id", required = false)
+        @Parameter(description = "流水线id", required = false)
         @QueryParam("pipelineId")
         pipelineId: String?,
-        @ApiParam("操作类型", required = true)
+        @Parameter(description = "操作类型", required = true)
         @QueryParam("actionType")
         actionType: TransferActionType,
         data: TransferBody
     ): Result<TransferResponse>
 
-    @ApiOperation("task转yaml格式")
+    @Operation(summary = "task转yaml格式")
     @POST
     @Path("/projects/{projectId}/pipelines/{pipelineId}/task2yaml")
     fun modelTaskTransfer(
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @ApiParam("流水线id", required = true)
+        @Parameter(description = "流水线id", required = true)
         @PathParam("pipelineId")
         pipelineId: String,
         data: Element
     ): Result<String>
 
-    @ApiOperation("task转json格式")
+    @Operation(summary = "task转json格式")
     @POST
     @Path("/projects/{projectId}/pipelines/{pipelineId}/task2model")
     fun yamlTaskTransfer(
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @ApiParam("流水线id", required = true)
+        @Parameter(description = "流水线id", required = true)
         @PathParam("pipelineId")
         pipelineId: String,
         yaml: String
     ): Result<Element>
 
-    @ApiOperation("yaml定位")
+    @Operation(summary = "yaml定位")
     @POST
     @Path("/projects/{projectId}/position")
     fun position(
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @ApiParam("行数 从1开始")
+        @Parameter(description = "行数 从1开始")
         @QueryParam("line")
         line: Int,
-        @ApiParam("列数 从1开始")
+        @Parameter(description = "列数 从1开始")
         @QueryParam("column")
         column: Int,
         yaml: PositionBody
     ): Result<PositionResponse>
 
-    @ApiOperation("yaml中插入插件")
+    @Operation(summary = "yaml中插入插件")
     @POST
     @Path("/projects/{projectId}/pipelines/{pipelineId}/taskInsert")
     fun modelTaskInsert(
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @ApiParam("流水线id", required = true)
+        @Parameter(description = "流水线id", required = true)
         @PathParam("pipelineId")
         pipelineId: String,
-        @ApiParam("行数 从1开始")
+        @Parameter(description = "行数 从1开始")
         @QueryParam("line")
         line: Int,
-        @ApiParam("列数 从1开始")
+        @Parameter(description = "列数 从1开始")
         @QueryParam("column")
         column: Int,
         data: ElementInsertBody

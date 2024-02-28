@@ -97,7 +97,7 @@ class PipelineWebhookService @Autowired constructor(
         val triggerContainer = model.stages[0].containers[0] as TriggerContainer
         val variables = triggerContainer.params.associate { param ->
             param.id to param.defaultValue.toString()
-        }
+        }.toMutableMap()
         val elements = triggerContainer.elements.filterIsInstance<WebHookTriggerElement>()
         val failedElementNames = mutableListOf<String>()
         elements.forEach { element ->

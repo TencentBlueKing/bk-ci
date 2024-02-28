@@ -29,36 +29,35 @@ package com.tencent.devops.store.pojo.common
 
 import com.tencent.devops.common.web.annotation.BkField
 import com.tencent.devops.common.web.constant.BkStyleEnum
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("store组件对接平台请求报文体")
+@Schema(title = "store组件对接平台请求报文体")
 data class StoreDockingPlatformRequest(
-    @ApiModelProperty("平台代码", required = true)
+    @get:Schema(title = "平台代码", required = true)
     @field:BkField(patternStyle = BkStyleEnum.CODE_STYLE)
     val platformCode: String,
-    @ApiModelProperty("平台名称", required = true)
+    @get:Schema(title = "平台名称", required = true)
     @field:BkField(patternStyle = BkStyleEnum.NAME_STYLE)
     val platformName: String,
-    @ApiModelProperty("网址", required = false)
+    @get:Schema(title = "网址", required = false)
     @field:BkField(minLength = 1, maxLength = 256, required = false)
     val website: String?,
-    @ApiModelProperty("简介", required = true)
+    @get:Schema(title = "简介", required = true)
     @field:BkField(minLength = 1, maxLength = 1024)
     val summary: String,
-    @ApiModelProperty("标签", required = false)
+    @get:Schema(title = "标签", required = false)
     val labels: List<String>? = null,
-    @ApiModelProperty("负责人", required = true)
+    @get:Schema(title = "负责人", required = true)
     @field:BkField(minLength = 1, maxLength = 50)
     val principal: String,
-    @ApiModelProperty("平台logo地址", required = false)
+    @get:Schema(title = "平台logo地址", required = false)
     @field:BkField(minLength = 1, maxLength = 256, required = false)
     val logoUrl: String?,
-    @ApiModelProperty("所属机构名称", required = true)
+    @get:Schema(title = "所属机构名称", required = true)
     @field:BkField(patternStyle = BkStyleEnum.NAME_STYLE)
     val ownerDeptName: String,
-    @ApiModelProperty("平台所属错误码前缀", required = true)
+    @get:Schema(title = "平台所属错误码前缀", required = true)
     val errorCodePrefix: Int,
-    @ApiModelProperty("平台所属错误码信息", required = false)
+    @get:Schema(title = "平台所属错误码信息", required = false)
     val errorCodeInfo: List<ErrorCodeInfo>? = null
 )

@@ -27,13 +27,12 @@
 
 package com.tencent.devops.common.pipeline.pojo
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("构建-变量描述")
+@Schema(title = "构建-变量描述")
 data class BuildParameterGroup(
-    @ApiModelProperty("名称(国际化)")
+    @get:Schema(title = "名称(国际化)")
     val name: String,
-    @ApiModelProperty("描述")
+    @get:Schema(title = "描述")
     val params: List<BuildEnvParameters>
 )

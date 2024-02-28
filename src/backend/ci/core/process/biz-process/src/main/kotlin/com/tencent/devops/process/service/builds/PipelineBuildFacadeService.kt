@@ -36,6 +36,7 @@ import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.api.pojo.IdValue
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.pojo.SimpleResult
+import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.auth.api.AuthPermission
@@ -180,6 +181,7 @@ class PipelineBuildFacadeService(
 
     companion object {
         private val logger = LoggerFactory.getLogger(PipelineBuildFacadeService::class.java)
+        private const val RETRY_THIRD_AGENT_ENV = "RETRY_THIRD_AGENT_ENV"
     }
 
     private fun filterParams(
@@ -756,6 +758,11 @@ class PipelineBuildFacadeService(
             val triggerContainer = model.stages[0].containers[0] as TriggerContainer
 
             val paramPamp = buildParamCompatibilityTransformer.parseTriggerParam(triggerContainer.params, parameters)
+            parameters.forEach { (key, value) ->
+                if (!paramPamp.containsKey(key)) {
+                    paramPamp[key] = BuildParameters(key = key, value = value)
+                }
+            }
             return pipelineBuildService.startPipeline(
                 userId = userId,
                 pipeline = pipeline,
@@ -2342,6 +2349,9 @@ class PipelineBuildFacadeService(
         return pipelineRuntimeService.getLatestBuild(projectId, pipelineIds)
     }
 
+    /**
+     * @return <启动人，#9910 环境构建时遇到启动错误时调度到一个新的Agent 是否重新调度>
+     */
     fun workerBuildFinish(
         projectCode: String,
         pipelineId: String, /* pipelineId在agent请求的数据有值前不可用 */
@@ -2350,7 +2360,7 @@ class PipelineBuildFacadeService(
         nodeHashId: String?,
         executeCount: Int?,
         simpleResult: SimpleResult
-    ) {
+    ): Pair<String?, Boolean> {
         var msg = simpleResult.message
 
         if (!nodeHashId.isNullOrBlank()) {
@@ -2383,10 +2393,31 @@ class PipelineBuildFacadeService(
                         executeCount = startUpVMTask.executeCount ?: 1
                     )
                 }
-                return
+                return Pair(startUpVMTask?.starter, false)
             }
         } else {
             msg = "$msg| ${I18nUtil.getCodeLanMessage(ProcessMessageCode.BUILD_WORKER_DEAD_ERROR)}"
+            // #9910 环境构建时遇到启动错误时调度到一个新的Agent
+            // 通过更新 task param 一个固定的参数，使其在尝试完成时重新发送启动请求
+            if (!simpleResult.ignoreAgentIds.isNullOrEmpty()) {
+                val startUpVMTask = pipelineTaskService.getBuildTask(
+                    projectId = projectCode,
+                    buildId = buildId,
+                    taskId = VMUtils.genStartVMTaskId(vmSeqId)
+                )
+                if (startUpVMTask?.status?.isRunning() == true) {
+                    val taskParam = startUpVMTask.taskParams
+                    taskParam[RETRY_THIRD_AGENT_ENV] = simpleResult.ignoreAgentIds!!.joinToString(",")
+                    pipelineTaskService.updateTaskParam(
+                        transactionContext = null,
+                        projectId = startUpVMTask.projectId,
+                        buildId = startUpVMTask.buildId,
+                        taskId = startUpVMTask.taskId,
+                        taskParam = JsonUtil.toJson(taskParam)
+                    )
+                    return Pair(startUpVMTask.starter, true)
+                }
+            }
         }
 
         // 添加错误码日志
@@ -2400,12 +2431,12 @@ class PipelineBuildFacadeService(
         val buildInfo = pipelineRuntimeService.getBuildInfo(projectCode, buildId)
         if (buildInfo == null || buildInfo.status.isFinish()) {
             logger.warn("[$buildId]|workerBuildFinish|The build status is ${buildInfo?.status}")
-            return
+            return Pair(buildInfo?.startUser, false)
         }
 
         if (executeCount != null && buildInfo.executeCount != null && executeCount != buildInfo.executeCount) {
             logger.warn("[$buildId]|workerBuildFinish|executeCount ne [$executeCount != ${buildInfo.executeCount}]")
-            return
+            return Pair(buildInfo.startUser, false)
         }
 
         val container = pipelineContainerService.getContainer(
@@ -2441,6 +2472,8 @@ class PipelineBuildFacadeService(
                 )
             }
         }
+
+        return Pair(buildInfo.startUser, false)
     }
 
     fun saveBuildVmInfo(projectId: String, pipelineId: String, buildId: String, vmSeqId: String, vmInfo: VmInfo) {

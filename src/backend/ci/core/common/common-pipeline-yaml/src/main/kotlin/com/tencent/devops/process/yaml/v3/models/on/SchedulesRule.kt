@@ -31,7 +31,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.annotation.JsonInclude
 import com.fasterxml.jackson.annotation.JsonProperty
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
 /**
  * model
@@ -43,11 +43,11 @@ data class SchedulesRule(
     val cron: Any? = null,
     val interval: Interval? = null,
 
-    @ApiModelProperty(name = "repo-id")
+    @get:Schema(title = "repo-id")
     @JsonProperty("repo-id")
     val repoId: String? = null,
 
-    @ApiModelProperty(name = "repo-name")
+    @get:Schema(title = "repo-name")
     @JsonProperty("repo-name")
     val repoName: String? = null,
 
@@ -61,7 +61,7 @@ data class SchedulesRule(
 ) {
     data class Interval(
         val week: List<String>,
-        @ApiModelProperty(name = "time-points")
+        @get:Schema(title = "time-points")
         @JsonProperty("time-points")
         val timePoints: List<String>? = null
     )

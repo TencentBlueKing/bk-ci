@@ -28,27 +28,27 @@
 package com.tencent.devops.common.pipeline.pojo
 
 import com.tencent.devops.common.pipeline.enums.PipelineInstanceTypeEnum
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
 data class TemplateInstanceCreateRequest(
-    @ApiModelProperty("模板ID", required = true)
+    @get:Schema(title = "模板ID", required = true)
     var templateId: String,
-    @ApiModelProperty("模板版本号（为空时默认最新）", required = true)
+    @get:Schema(title = "模板版本号（为空时默认最新）", required = true)
     var templateVersion: Long?,
-    @ApiModelProperty("流水线名称", required = true)
+    @get:Schema(title = "流水线名称", required = true)
     val pipelineName: String,
-    @ApiModelProperty("是否使用通知配置", required = false)
+    @get:Schema(title = "是否使用通知配置", required = false)
     var useSubscriptionSettings: Boolean?,
-    @ApiModelProperty("是否使用标签配置", required = false)
+    @get:Schema(title = "是否使用标签配置", required = false)
     var useLabelSettings: Boolean?,
-    @ApiModelProperty("是否使用并发组配置", required = false)
+    @get:Schema(title = "是否使用并发组配置", required = false)
     var useConcurrencyGroup: Boolean?,
-    @ApiModelProperty("创建实例的模式", required = false)
+    @get:Schema(title = "创建实例的模式", required = false)
     var instanceType: String? = PipelineInstanceTypeEnum.FREEDOM.type,
-    @ApiModelProperty("是否为空模板", required = false)
+    @get:Schema(title = "是否为空模板", required = false)
     var emptyTemplate: Boolean? = false,
-    @ApiModelProperty("标签", required = false)
+    @get:Schema(title = "标签", required = false)
     var labels: List<String> = emptyList(),
-    @ApiModelProperty("静态流水线组", required = false)
+    @get:Schema(title = "静态流水线组", required = false)
     var staticViews: List<String> = emptyList()
 )

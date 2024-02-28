@@ -123,7 +123,7 @@ class ElementTransfer @Autowired(required = false) constructor(
             if (element is ManualTriggerElement) {
                 triggerOn.value.manual = ManualRule(
                     enable = element.isElementEnable().nullIfDefault(true),
-                    canElementSkip = element.canElementSkip.nullIfDefault(true),
+                    canElementSkip = element.canElementSkip.nullIfDefault(false),
                     useLatestParameters = element.useLatestParameters.nullIfDefault(false)
                 )
                 return@forEach
@@ -192,8 +192,8 @@ class ElementTransfer @Autowired(required = false) constructor(
         elements: List<Element>,
         projectId: String,
         aspectWrapper: PipelineTransferAspectWrapper
-    ): Map<ScmType, TriggerOn> {
-        val res = mutableMapOf<ScmType, TriggerOn>()
+    ): Map<ScmType, List<TriggerOn>> {
+        val res = mutableMapOf<ScmType, List<TriggerOn>>()
         val fix = elements.groupBy { it.getClassType() }
 
         val gitElement = fix[CodeGitWebHookTriggerElement.classType]?.map {
@@ -202,7 +202,7 @@ class ElementTransfer @Autowired(required = false) constructor(
         }
         if (!gitElement.isNullOrEmpty()) {
             val gitTrigger = triggerTransfer.git2YamlTriggerOn(gitElement, projectId, aspectWrapper)
-            res.putAll(gitTrigger.associateBy { ScmType.CODE_GIT })
+            res.putAll(gitTrigger.groupBy { ScmType.CODE_GIT })
         }
 
         val tGitElement = fix[CodeTGitWebHookTriggerElement.classType]?.map {
@@ -211,7 +211,7 @@ class ElementTransfer @Autowired(required = false) constructor(
         }
         if (!tGitElement.isNullOrEmpty()) {
             val gitTrigger = triggerTransfer.git2YamlTriggerOn(tGitElement, projectId, aspectWrapper)
-            res.putAll(gitTrigger.associateBy { ScmType.CODE_TGIT })
+            res.putAll(gitTrigger.groupBy { ScmType.CODE_TGIT })
         }
 
         val githubElement = fix[CodeGithubWebHookTriggerElement.classType]?.map {
@@ -220,7 +220,7 @@ class ElementTransfer @Autowired(required = false) constructor(
         }
         if (!githubElement.isNullOrEmpty()) {
             val gitTrigger = triggerTransfer.git2YamlTriggerOn(githubElement, projectId, aspectWrapper)
-            res.putAll(gitTrigger.associateBy { ScmType.GITHUB })
+            res.putAll(gitTrigger.groupBy { ScmType.GITHUB })
         }
 
         val svnElement = fix[CodeSVNWebHookTriggerElement.classType]?.map {
@@ -229,7 +229,7 @@ class ElementTransfer @Autowired(required = false) constructor(
         }
         if (!svnElement.isNullOrEmpty()) {
             val gitTrigger = triggerTransfer.git2YamlTriggerOn(svnElement, projectId, aspectWrapper)
-            res.putAll(gitTrigger.associateBy { ScmType.CODE_SVN })
+            res.putAll(gitTrigger.groupBy { ScmType.CODE_SVN })
         }
 
         val p4Element = fix[CodeP4WebHookTriggerElement.classType]?.map {
@@ -238,7 +238,7 @@ class ElementTransfer @Autowired(required = false) constructor(
         }
         if (!p4Element.isNullOrEmpty()) {
             val gitTrigger = triggerTransfer.git2YamlTriggerOn(p4Element, projectId, aspectWrapper)
-            res.putAll(gitTrigger.associateBy { ScmType.CODE_P4 })
+            res.putAll(gitTrigger.groupBy { ScmType.CODE_P4 })
         }
 
         val gitlabElement = fix[CodeGitlabWebHookTriggerElement.classType]?.map {
@@ -247,7 +247,7 @@ class ElementTransfer @Autowired(required = false) constructor(
         }
         if (!gitlabElement.isNullOrEmpty()) {
             val gitTrigger = triggerTransfer.git2YamlTriggerOn(gitlabElement, projectId, aspectWrapper)
-            res.putAll(gitTrigger.associateBy { ScmType.CODE_GITLAB })
+            res.putAll(gitTrigger.groupBy { ScmType.CODE_GITLAB })
         }
         return res
     }

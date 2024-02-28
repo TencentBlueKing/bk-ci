@@ -27,19 +27,18 @@
 
 package com.tencent.devops.process.pojo.pipeline
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("配置流水线结果")
+@Schema(title = "配置流水线结果")
 data class PrefetchReleaseResult(
-    @ApiModelProperty("流水线ID", required = true)
+    @get:Schema(title = "流水线ID", required = true)
     val pipelineId: String,
-    @ApiModelProperty("流水线名称", required = true)
+    @get:Schema(title = "流水线名称", required = true)
     val pipelineName: String,
-    @ApiModelProperty("草稿版本号", required = true)
+    @get:Schema(title = "草稿版本号", required = true)
     val version: Int,
-    @ApiModelProperty("发布版本号", required = false)
+    @get:Schema(title = "发布版本号", required = false)
     val newVersionNum: Int,
-    @ApiModelProperty("生成版本名称", required = false)
+    @get:Schema(title = "生成版本名称", required = false)
     val newVersionName: String
 )

@@ -32,7 +32,7 @@ import com.fasterxml.jackson.annotation.JsonProperty
 import com.tencent.devops.common.pipeline.type.agent.DockerOptions
 import com.tencent.devops.common.pipeline.type.docker.ImageType
 import com.tencent.devops.process.yaml.v3.models.step.Step
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
 /**
  * WARN: 请谨慎修改这个类 , 不要随意添加或者删除变量 , 否则可能导致依赖yaml的功能(gitci,prebuild等)异常
@@ -45,26 +45,26 @@ data class Job(
     @JsonProperty("mutex")
     val mutex: Mutex? = null,
     @JsonProperty("runs-on")
-    @ApiModelProperty(name = "runs-on")
+    @get:Schema(title = "runs-on")
     val runsOn: RunsOn = RunsOn(),
     // val container: Container?,
     val services: List<Service>? = null,
-    @ApiModelProperty(name = "if")
+    @get:Schema(title = "if")
     @JsonProperty("if")
     val ifField: String? = null,
     val steps: List<Step>? = null,
-    @ApiModelProperty(name = "if-modify")
+    @get:Schema(title = "if-modify")
     @JsonProperty("if-modify")
     val ifModify: List<String>? = null,
-    @ApiModelProperty(name = "timeout-minutes")
+    @get:Schema(title = "timeout-minutes")
     @JsonProperty("timeout-minutes")
     val timeoutMinutes: String? = null,
     val env: Map<String, String>? = emptyMap(),
-    @ApiModelProperty(name = "continue-on-error")
+    @get:Schema(title = "continue-on-error")
     @JsonProperty("continue-on-error")
     val continueOnError: Boolean? = false,
     val strategy: Strategy? = null,
-    @ApiModelProperty(name = "depend-on")
+    @get:Schema(title = "depend-on")
     @JsonProperty("depend-on")
     val dependOn: List<String>? = emptyList()
 )
@@ -141,22 +141,22 @@ data class ServiceWith(
 
 data class Strategy(
     val matrix: Any,
-    @ApiModelProperty(name = "fast-kill")
+    @get:Schema(title = "fast-kill")
     @JsonProperty("fast-kill")
     val fastKill: Boolean? = null,
-    @ApiModelProperty(name = "max-parallel")
+    @get:Schema(title = "max-parallel")
     @JsonProperty("max-parallel")
     val maxParallel: Int? = null
 )
 
 data class RunsOn(
-    @ApiModelProperty(name = "self-hosted")
+    @get:Schema(title = "self-hosted")
     @JsonProperty("self-hosted")
     val selfHosted: Boolean? = false,
-    @ApiModelProperty(name = "pool-name")
+    @get:Schema(title = "pool-name")
     @JsonProperty("pool-name")
     var poolName: String? = null,
-    @ApiModelProperty(name = "hw-spec")
+    @get:Schema(title = "hw-spec")
     @JsonProperty("hw-spec")
     var hwSpec: String? = null,
     @JsonProperty("node-name")
@@ -164,12 +164,12 @@ data class RunsOn(
     @JsonIgnore
     val poolType: String? = null,
     val container: Any? = null,
-    @ApiModelProperty(name = "agent-selector")
+    @get:Schema(title = "agent-selector")
     @JsonProperty("agent-selector")
     var agentSelector: List<String>? = null,
     val workspace: String? = null,
     val xcode: String? = null,
-    @ApiModelProperty(name = "queue-timeout-minutes")
+    @get:Schema(title = "queue-timeout-minutes")
     @JsonProperty("queue-timeout-minutes")
     var queueTimeoutMinutes: Int? = null,
     var needs: Map<String, String>? = null

@@ -28,26 +28,25 @@
 package com.tencent.devops.common.pipeline.pojo.transfer
 
 import com.tencent.devops.common.pipeline.pojo.element.Element
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("yaml定位")
+@Schema(title = "yaml定位")
 data class PositionResponse(
-    @ApiModelProperty("定位类型，非error时应当必有")
+    @get:Schema(title = "定位类型，非error时应当必有")
     val type: PositionType? = null,
-    @ApiModelProperty("当定位到JOB,STEP时有效，表示当前stage的os类型")
+    @get:Schema(title = "当定位到JOB,STEP时有效，表示当前stage的os类型")
     var jobBaseOs: TransferVMBaseOS? = null,
-    @ApiModelProperty("当定位到STAGE,JOB,STEP时有效，表示stage下标, -1 表示finally stage")
+    @get:Schema(title = "当定位到STAGE,JOB,STEP时有效，表示stage下标, -1 表示finally stage")
     var stageIndex: Int? = null,
-    @ApiModelProperty("当定位到JOB,STEP时有效，表示container下标")
+    @get:Schema(title = "当定位到JOB,STEP时有效，表示container下标")
     var containerIndex: Int? = null,
-    @ApiModelProperty("当定位到JOB,STEP时有效，表示job的id")
+    @get:Schema(title = "当定位到JOB,STEP时有效，表示job的id")
     var jobId: String? = null,
-    @ApiModelProperty("当定位到STEP时有效，表示step下标")
+    @get:Schema(title = "当定位到STEP时有效，表示step下标")
     var stepIndex: Int? = null,
-    @ApiModelProperty("当定位到STEP时有效，拿到对应的element元素")
+    @get:Schema(title = "当定位到STEP时有效，拿到对应的element元素")
     var element: Element? = null,
-    @ApiModelProperty("转换错误")
+    @get:Schema(title = "转换错误")
     val error: String? = null
 ) {
     enum class PositionType {

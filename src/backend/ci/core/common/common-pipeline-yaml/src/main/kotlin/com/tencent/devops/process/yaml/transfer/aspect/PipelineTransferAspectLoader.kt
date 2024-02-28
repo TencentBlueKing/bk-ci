@@ -1,10 +1,7 @@
 package com.tencent.devops.process.yaml.transfer.aspect
 
-import com.tencent.devops.process.yaml.v3.models.PreTemplateScriptBuildYamlV3
-import com.tencent.devops.process.yaml.v3.models.on.PreTriggerOnV3
 import java.util.LinkedList
 import java.util.concurrent.ConcurrentHashMap
-
 import java.util.concurrent.ConcurrentMap
 
 object PipelineTransferAspectLoader {
@@ -29,8 +26,8 @@ object PipelineTransferAspectLoader {
         defaultRepo: () -> String,
         aspects: LinkedList<IPipelineTransferAspect> = LinkedList()
     ): LinkedList<IPipelineTransferAspect> {
-        val repoName = lazy { defaultRepo() }
-        aspects.add(
+        // val repoName = lazy { defaultRepo() }
+        /*aspects.add(
             object : IPipelineTransferAspectTrigger {
                 override fun before(jp: PipelineTransferJoinPoint): Any? {
                     if (jp.yamlTriggerOn() != null && jp.yamlTriggerOn()!!.repoName == null) {
@@ -39,7 +36,7 @@ object PipelineTransferAspectLoader {
                     return null
                 }
             }
-        )
+        )*/
         /*checkout 新增 self类型，此处暂时去掉转换 */
 //        aspects.add(
 //            object : IPipelineTransferAspectElement {
@@ -51,7 +48,7 @@ object PipelineTransferAspectLoader {
 //                }
 //            }
 //        )
-        aspects.add(
+        /*aspects.add(
             // 一个触发器时，如果为默认仓库则忽略repoName和type
             object : IPipelineTransferAspectModel {
                 override fun after(jp: PipelineTransferJoinPoint) {
@@ -66,7 +63,7 @@ object PipelineTransferAspectLoader {
                     }
                 }
             }
-        )
+        )*/
         return aspects
     }
 

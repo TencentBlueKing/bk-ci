@@ -29,7 +29,7 @@ package com.tencent.devops.process.yaml.v3.models.step
 
 import com.fasterxml.jackson.annotation.JsonIgnore
 import com.fasterxml.jackson.annotation.JsonProperty
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
 data class Step(
     val enable: Boolean? = null,
@@ -49,7 +49,7 @@ data class Step(
     val retryTimes: Int?,
     val env: Map<String, Any?>? = emptyMap(),
     val run: String?,
-    @ApiModelProperty("run 插件的附加参数")
+    @get:Schema(title = "run 插件的附加参数")
     val runAdditionalOptions: Map<String, String?>?,
     var checkout: String?,
     @JsonProperty("can-manually-retry")

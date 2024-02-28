@@ -27,9 +27,9 @@
 
 package com.tencent.devops.common.pipeline.pojo.setting
 
-import io.swagger.annotations.ApiModel
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("流水线-订阅-消息类型")
+@Schema(title = "流水线-订阅-消息类型")
 enum class PipelineSubscriptionType {
     EMAIL,
     RTX,
