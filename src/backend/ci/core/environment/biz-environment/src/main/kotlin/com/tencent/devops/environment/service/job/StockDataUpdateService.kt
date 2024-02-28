@@ -235,7 +235,7 @@ class StockDataUpdateService @Autowired constructor(
                         bkHostId = ipToCCInfoMap!![it[T_NODE_NODE_IP] as String]?.bkHostId
                     )
                 }
-                if (!nodeUpdateInfoList.isNullOrEmpty()){
+                if (!nodeUpdateInfoList.isNullOrEmpty()) {
                     nodeDao.updateHostIdAndCloudAreaIdByNodeId(dslContext, nodeUpdateInfoList)
                 }
             }
