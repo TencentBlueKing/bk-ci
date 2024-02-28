@@ -45,6 +45,8 @@ import com.tencent.devops.common.test.BkCiAbstractTest
 import com.tencent.devops.process.engine.pojo.PipelineInfo
 import com.tencent.devops.process.pojo.classify.PipelineGroup
 import com.tencent.devops.process.pojo.classify.PipelineLabel
+import com.tencent.devops.process.yaml.pojo.TemplatePath
+import com.tencent.devops.process.yaml.pojo.YamlVersion
 import com.tencent.devops.process.yaml.transfer.aspect.IPipelineTransferAspect
 import com.tencent.devops.process.yaml.transfer.aspect.IPipelineTransferAspectTrigger
 import com.tencent.devops.process.yaml.transfer.aspect.PipelineTransferAspectLoader
@@ -54,8 +56,6 @@ import com.tencent.devops.process.yaml.transfer.inner.TransferCreator
 import com.tencent.devops.process.yaml.transfer.inner.TransferCreatorImpl
 import com.tencent.devops.process.yaml.transfer.pojo.ModelTransferInput
 import com.tencent.devops.process.yaml.transfer.pojo.YamlTransferInput
-import com.tencent.devops.process.yaml.pojo.TemplatePath
-import com.tencent.devops.process.yaml.pojo.YamlVersion
 import com.tencent.devops.process.yaml.v3.models.IPreTemplateScriptBuildYaml
 import com.tencent.devops.process.yaml.v3.models.job.JobRunsOnPoolType
 import com.tencent.devops.process.yaml.v3.parsers.template.YamlTemplate
@@ -203,6 +203,9 @@ internal class ModelTransferTest : BkCiAbstractTest() {
         every {
             transferCache.getAtomDefaultValue("manualReviewUserTask@1.*")
         }.returns(emptyMap())
+        every {
+            transferCache.getDockerResource(any(), any(), any())
+        }.returns(null)
         every {
             transferCache.getAtomDefaultValue("checkout@1.*")
         }.returns("""{
