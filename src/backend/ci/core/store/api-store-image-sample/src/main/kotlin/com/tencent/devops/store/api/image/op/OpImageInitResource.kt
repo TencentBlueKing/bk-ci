@@ -29,26 +29,26 @@ package com.tencent.devops.store.api.image.op
 
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.store.api.image.op.pojo.ImageInitRequest
-import io.swagger.annotations.Api
-import io.swagger.annotations.ApiOperation
-import io.swagger.annotations.ApiParam
+import io.swagger.v3.oas.annotations.tags.Tag
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.Parameter
 import javax.ws.rs.Consumes
 import javax.ws.rs.POST
 import javax.ws.rs.Path
 import javax.ws.rs.Produces
 import javax.ws.rs.core.MediaType
 
-@Api(tags = ["OP_MARKET_IMAGE"], description = "OP-镜像")
+@Tag(name = "OP_MARKET_IMAGE", description = "OP-镜像")
 @Path("/op/market/image")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface OpImageInitResource {
 
-    @ApiOperation("预置镜像初始化")
+    @Operation(summary = "预置镜像初始化")
     @POST
     @Path("/init")
     fun imageInit(
-        @ApiParam("第三方镜像市场初始化参数", required = false)
+        @Parameter(description = "第三方镜像市场初始化参数", required = false)
         imageInitRequest: ImageInitRequest?
     ): Result<Boolean>
 }

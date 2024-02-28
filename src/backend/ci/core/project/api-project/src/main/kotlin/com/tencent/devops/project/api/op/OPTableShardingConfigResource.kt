@@ -33,9 +33,9 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.annotation.BkField
 import com.tencent.devops.common.web.constant.BkStyleEnum
 import com.tencent.devops.project.pojo.TableShardingConfig
-import io.swagger.annotations.Api
-import io.swagger.annotations.ApiOperation
-import io.swagger.annotations.ApiParam
+import io.swagger.v3.oas.annotations.tags.Tag
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.Parameter
 import javax.validation.Valid
 import javax.ws.rs.Consumes
 import javax.ws.rs.DELETE
@@ -48,61 +48,61 @@ import javax.ws.rs.PathParam
 import javax.ws.rs.Produces
 import javax.ws.rs.core.MediaType
 
-@Api(tags = ["OP_TABLE_SHARDING_CONFIG"], description = "OP-分表配置")
+@Tag(name = "OP_TABLE_SHARDING_CONFIG", description = "OP-分表配置")
 @Path("/op/table/sharding/configs")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface OPTableShardingConfigResource {
 
-    @ApiOperation("添加分表配置")
+    @Operation(summary = "添加分表配置")
     @POST
     @Path("/add")
     fun addTableShardingConfig(
-        @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         @BkField(minLength = 1, maxLength = 50)
         userId: String,
-        @ApiParam(value = "分表配置信息请求报文体", required = true)
+        @Parameter(description = "分表配置信息请求报文体", required = true)
         @Valid
         tableShardingConfig: TableShardingConfig
     ): Result<Boolean>
 
-    @ApiOperation("更新分表配置信息")
+    @Operation(summary = "更新分表配置信息")
     @PUT
     @Path("/ids/{id}/update")
     fun updateTableShardingConfig(
-        @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         @BkField(minLength = 1, maxLength = 50)
         userId: String,
-        @ApiParam("分表配置ID", required = true)
+        @Parameter(description = "分表配置ID", required = true)
         @PathParam("id")
         @BkField(patternStyle = BkStyleEnum.ID_STYLE)
         id: String,
-        @ApiParam(value = "分表配置信息请求报文体", required = true)
+        @Parameter(description = "分表配置信息请求报文体", required = true)
         @Valid
         tableShardingConfig: TableShardingConfig
     ): Result<Boolean>
 
-    @ApiOperation("根据ID获取分表配置信息")
+    @Operation(summary = "根据ID获取分表配置信息")
     @GET
     @Path("/ids/{id}/get")
     fun getTableShardingConfigById(
-        @ApiParam("分表配置ID", required = true)
+        @Parameter(description = "分表配置ID", required = true)
         @PathParam("id")
         @BkField(patternStyle = BkStyleEnum.ID_STYLE)
         id: String
     ): Result<TableShardingConfig?>
 
-    @ApiOperation("根据ID删除分表配置信息")
+    @Operation(summary = "根据ID删除分表配置信息")
     @DELETE
     @Path("/ids/{id}/delete")
     fun deleteTableShardingConfigById(
-        @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         @BkField(minLength = 1, maxLength = 50)
         userId: String,
-        @ApiParam("分表配置ID", required = true)
+        @Parameter(description = "分表配置ID", required = true)
         @PathParam("id")
         @BkField(patternStyle = BkStyleEnum.ID_STYLE)
         id: String

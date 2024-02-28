@@ -32,9 +32,9 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.store.pojo.template.InstallTemplateReq
 import com.tencent.devops.store.pojo.template.MarketTemplateResp
-import io.swagger.annotations.Api
-import io.swagger.annotations.ApiOperation
-import io.swagger.annotations.ApiParam
+import io.swagger.v3.oas.annotations.tags.Tag
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.Parameter
 import javax.validation.Valid
 import javax.ws.rs.Consumes
 import javax.ws.rs.GET
@@ -46,58 +46,58 @@ import javax.ws.rs.Produces
 import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
-@Api(tags = ["SERVICE_MARKET_TEMPLATE"], description = "服务端-模板")
+@Tag(name = "SERVICE_MARKET_TEMPLATE", description = "服务端-模板")
 @Path("/service/market/template")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface ServiceTemplateResource {
 
-    @ApiOperation("模版市场搜索模版")
+    @Operation(summary = "模版市场搜索模版")
     @GET
     @Path("/list/")
     fun list(
-        @ApiParam("userId", required = true)
+        @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String
     ): Result<MarketTemplateResp>
 
-    @ApiOperation("安装模板到项目")
+    @Operation(summary = "安装模板到项目")
     @POST
     @Path("/template/install")
     fun installTemplate(
-        @ApiParam("userId", required = true)
+        @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("安装模板到项目请求报文体", required = true)
+        @Parameter(description = "安装模板到项目请求报文体", required = true)
         installTemplateReq: InstallTemplateReq
     ): Result<Boolean>
 
-    @ApiOperation("校验模板内组件可见范围")
+    @Operation(summary = "校验模板内组件可见范围")
     @GET
     @Path("/{templateCode}/validate")
     fun validateUserTemplateComponentVisibleDept(
-        @ApiParam("用户", required = true)
+        @Parameter(description = "用户", required = true)
         @QueryParam("userId")
         userId: String,
-        @ApiParam("标识", required = true)
+        @Parameter(description = "标识", required = true)
         @PathParam("templateCode")
         templateCode: String,
-        @ApiParam("项目", required = true)
+        @Parameter(description = "项目", required = true)
         @QueryParam("projectCode")
         projectCode: String
     ): Result<Boolean>
 
-    @ApiOperation("校验流水线模型内组件可见范围")
+    @Operation(summary = "校验流水线模型内组件可见范围")
     @POST
     @Path("/{projectCode}/verification")
     fun validateModelComponentVisibleDept(
-        @ApiParam("用户", required = true)
+        @Parameter(description = "用户", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("流水线模型-阶段", required = true)
+        @Parameter(description = "流水线模型-阶段", required = true)
         @Valid
         model: Model,
-        @ApiParam("项目", required = true)
+        @Parameter(description = "项目", required = true)
         @PathParam("projectCode")
         projectCode: String
     ): Result<Boolean>

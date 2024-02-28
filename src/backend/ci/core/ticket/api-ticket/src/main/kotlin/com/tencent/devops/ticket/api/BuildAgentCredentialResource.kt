@@ -33,9 +33,9 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_BUILD_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_PROJECT_ID
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.ticket.pojo.CredentialInfo
-import io.swagger.annotations.Api
-import io.swagger.annotations.ApiOperation
-import io.swagger.annotations.ApiParam
+import io.swagger.v3.oas.annotations.tags.Tag
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.Parameter
 import javax.ws.rs.Consumes
 import javax.ws.rs.GET
 import javax.ws.rs.HeaderParam
@@ -45,32 +45,32 @@ import javax.ws.rs.Produces
 import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
-@Api(tags = ["BUILD_AGENT_CREDENTIAL"], description = "构建-凭据资源")
+@Tag(name = "BUILD_AGENT_CREDENTIAL", description = "构建-凭据资源")
 @Path("/buildAgent/builds/credentials")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 @Suppress("ALL")
 interface BuildAgentCredentialResource {
-    @ApiOperation("构建机获取凭据")
+    @Operation(summary = "构建机获取凭据")
     @Path("/{credentialId}/")
     @GET
     fun get(
-        @ApiParam("项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_PROJECT_ID)
         projectId: String,
-        @ApiParam(value = "构建ID", required = true)
+        @Parameter(description = "构建ID", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_BUILD_ID)
         buildId: String,
-        @ApiParam("Agent ID", required = true)
+        @Parameter(description = "Agent ID", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_AGENT_ID)
         agentId: String,
-        @ApiParam("秘钥", required = true)
+        @Parameter(description = "秘钥", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_AGENT_SECRET_KEY)
         secretKey: String,
-        @ApiParam("凭据ID", required = true)
+        @Parameter(description = "凭据ID", required = true)
         @PathParam("credentialId")
         credentialId: String,
-        @ApiParam("Base64编码的加密公钥", required = true)
+        @Parameter(description = "Base64编码的加密公钥", required = true)
         @QueryParam("publicKey")
         publicKey: String
     ): Result<CredentialInfo?>

@@ -27,17 +27,17 @@
 
 package com.tencent.devops.scm.pojo
 
-import io.swagger.annotations.ApiParam
+import io.swagger.v3.oas.annotations.Parameter
 
 data class DownloadGitRepoFileRequest(
-    @ApiParam("仓库名称", required = true)
+    @Parameter(description = "仓库名称", required = true)
     val repoName: String,
-    @ApiParam("commit hash值、分支名或tag", required = false)
+    @Parameter(description = "commit hash值、分支名或tag", required = false)
     val sha: String?,
-    @ApiParam("限定为下载指定路径的文件", required = false)
+    @Parameter(description = "限定为下载指定路径的文件", required = false)
     val filePath: String?,
-    @ApiParam("支持的 format 格式有:zip、tar、tar.gz、tar.xz、tar.bz2(默认为.zip 格式)", required = false)
+    @Parameter(description = "支持的 format 格式有:zip、tar、tar.gz、tar.xz、tar.bz2(默认为.zip 格式)", required = false)
     val format: String?,
-    @ApiParam("将项目名作为目录打包进去 (默认：false)", required = false)
+    @Parameter(description = "将项目名作为目录打包进去 (默认：false)", required = false)
     val isProjectPathWrapped: Boolean?
 )
