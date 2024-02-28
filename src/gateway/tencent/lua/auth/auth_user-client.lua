@@ -42,7 +42,8 @@ if is_devx then
         end
     end
 else
-    local double_check = true and ngx.var.http_host == config.bkci.host
+    local double_check = true and ngx.var.http_host == config.bkci.host and
+    not string.find(ngx.var.request_uri, '^/prebuild')
     local tof_staffname
     if double_check then
         --- TOF登录
@@ -61,7 +62,7 @@ else
             local ts = tonumber(timestamp)
             local now = ngx.time()
             if now - ts > 180 or ts - now > 180 then
-                ngx.log(ngx.WARN , "tof timestamp error , " , timestamp , " , ts: " , ts)
+                ngx.log(ngx.WARN, "tof timestamp error , ", timestamp, " , ts: ", ts)
                 return false
             end
             -- check timestamp 180
@@ -72,7 +73,7 @@ else
             hash:update(signstr)
             local str = resty_str.str_to_hex(hash:final())
             if string.upper(str) ~= signature then
-                ngx.log(ngx.WARN , "tof signature error , " , signature , " , str: " , str)
+                ngx.log(ngx.WARN, "tof signature error , ", signature, " , str: ", str)
                 return false
             end
             return true
