@@ -28,40 +28,39 @@
 package com.tencent.devops.scm.pojo
 
 import com.fasterxml.jackson.annotation.JsonProperty
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("SVN仓库文件树信息")
+@Schema(title = "SVN仓库文件树信息")
 data class SvnTreeInfo(
     val count: Int,
     val files: List<SvnTreeNodeInfo>
 )
 
-@ApiModel("SVN仓库文件树节点信息")
+@Schema(title = "SVN仓库文件树节点信息")
 data class SvnTreeNodeInfo(
     val file: SvnFile,
     @JsonProperty("file_lock")
     val fileLock: Boolean? = false
 )
 
-@ApiModel("SVN仓库文件信息")
+@Schema(title = "SVN仓库文件信息")
 data class SvnFile(
-    @ApiModelProperty("文件名")
+    @get:Schema(title = "文件名")
     val name: String,
-    @ApiModelProperty("文件全路径")
+    @get:Schema(title = "文件全路径")
     val path: String,
-    @ApiModelProperty("文件大小")
+    @get:Schema(title = "文件大小")
     val size: Long,
-    @ApiModelProperty("文件版本号")
+    @get:Schema(title = "文件版本号")
     val revision: Long,
-    @ApiModelProperty("作者")
+    @get:Schema(title = "作者")
     val author: String,
-    @ApiModelProperty("提交信息")
+    @get:Schema(title = "提交信息")
     val commitMessage: String?,
-    @ApiModelProperty("是否为目录")
+    @get:Schema(title = "是否为目录")
     val directory: Boolean,
-    @ApiModelProperty("是否为外链")
+    @get:Schema(title = "是否为外链")
     val submodule: Boolean,
-    @ApiModelProperty("是否为文件")
+    @get:Schema(title = "是否为文件")
     val file: Boolean
 )
