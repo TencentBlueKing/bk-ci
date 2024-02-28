@@ -2119,7 +2119,7 @@
             "shell" : {
               "type" : "string"
             },
-            "manual-retry" : {
+            "can-manually-retry" : {
               "type" : "boolean"
             }
           },

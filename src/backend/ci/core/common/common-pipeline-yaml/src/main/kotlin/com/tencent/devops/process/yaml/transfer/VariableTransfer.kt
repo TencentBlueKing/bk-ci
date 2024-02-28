@@ -143,13 +143,14 @@ class VariableTransfer @Autowired constructor() {
                 it.type == BuildFormPropertyType.TEMPORARY -> null // not use
                 else -> null
             }
+            val const = it.constant.nullIfDefault(false)
             result[it.id] = Variable(
                 value = it.defaultValue.toString(),
                 name = it.name,
-                readonly = it.readOnly.nullIfDefault(false),
-                allowModifyAtStartup = it.required.nullIfDefault(true),
+                readonly = if (const == true) true else it.readOnly.nullIfDefault(false),
+                allowModifyAtStartup = if (const != true) it.required.nullIfDefault(true) else null,
                 valueNotEmpty = it.valueNotEmpty.nullIfDefault(false),
-                const = it.constant.nullIfDefault(false),
+                const = const,
                 props = props
             )
         }
