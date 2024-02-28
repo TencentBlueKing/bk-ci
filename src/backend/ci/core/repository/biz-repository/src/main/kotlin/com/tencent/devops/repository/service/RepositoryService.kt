@@ -851,7 +851,12 @@ class RepositoryService @Autowired constructor(
         return SQLPage(count, repositoryList)
     }
 
-    fun userDelete(userId: String, projectId: String, repositoryHashId: String) {
+    fun userDelete(
+        userId: String,
+        projectId: String,
+        repositoryHashId: String,
+        checkAtom: Boolean = true
+    ) {
         val repositoryId = HashUtil.decodeOtherIdToLong(repositoryHashId)
         validatePermission(
             user = userId,
@@ -869,7 +874,7 @@ class RepositoryService @Autowired constructor(
         if (record.projectId != projectId) {
             throw NotFoundException("Repository is not part of the project")
         }
-        if (record.atom == true) {
+        if (checkAtom && record.atom == true) {
             throw OperationException(
                 MessageUtil.getMessageByLocale(
                     RepositoryMessageCode.ATOM_REPO_CAN_NOT_DELETE,
