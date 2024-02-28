@@ -27,9 +27,9 @@
 
 package com.tencent.devops.store.service.atom.action
 
-import com.tencent.devops.store.service.common.action.impl.FirstStoreDataDecorateImpl
-import com.tencent.devops.store.service.common.action.impl.FirstStorePropsDecorateImpl
-import com.tencent.devops.store.service.common.action.StoreDecorateFactory
+import com.tencent.devops.store.common.service.action.impl.FirstStoreDataDecorateImpl
+import com.tencent.devops.store.common.service.action.impl.FirstStorePropsDecorateImpl
+import com.tencent.devops.store.common.service.action.StoreDecorateFactory
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.Test
 import javax.annotation.Priority

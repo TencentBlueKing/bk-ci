@@ -27,7 +27,7 @@
 
 package com.tencent.devops.store.util
 
-import com.tencent.devops.store.utils.TextReferenceFileAnalysisUtil
+import com.tencent.devops.store.common.utils.TextReferenceFileAnalysisUtil
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.Test
 

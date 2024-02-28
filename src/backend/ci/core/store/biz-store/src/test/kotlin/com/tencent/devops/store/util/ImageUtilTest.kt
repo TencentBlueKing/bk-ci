@@ -27,7 +27,7 @@
 
 package com.tencent.devops.store.util
 
-import com.tencent.devops.store.utils.image.ImageUtil
+import com.tencent.devops.store.common.utils.image.ImageUtil
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.Test
 
