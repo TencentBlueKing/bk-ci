@@ -133,7 +133,12 @@ class ServiceGitRepositoryResourceImpl @Autowired constructor(
         if (deleteGitProjectResult.isNotOk()) {
             return deleteGitProjectResult
         }
-        repositoryService.userDelete(userId, projectId, repositoryHashId, false)
+        repositoryService.userDelete(
+            userId = userId,
+            projectId = projectId,
+            repositoryHashId = repositoryHashId,
+            checkAtom = false
+        )
         return Result(true)
     }
 
