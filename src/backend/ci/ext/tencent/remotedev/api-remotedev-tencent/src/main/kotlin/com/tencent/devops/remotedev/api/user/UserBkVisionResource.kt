@@ -1,6 +1,5 @@
 package com.tencent.devops.remotedev.api.user
 
-import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_PROJECT_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.remotedev.pojo.bkvision.BkVisionDatasetQueryBody
@@ -50,7 +49,7 @@ interface UserBkVisionResource {
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
         @Parameter(description = "projectId", required = true)
-        @HeaderParam(AUTH_HEADER_DEVOPS_PROJECT_ID)
+        @PathParam("projectId")
         projectId: String,
         data: BkVisionDatasetQueryBody
     ): BkVisionResp
@@ -63,7 +62,7 @@ interface UserBkVisionResource {
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
         @Parameter(description = "projectId", required = true)
-        @HeaderParam(AUTH_HEADER_DEVOPS_PROJECT_ID)
+        @PathParam("projectId")
         projectId: String,
         @PathParam("uid")
         uid: String,
@@ -78,7 +77,7 @@ interface UserBkVisionResource {
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
         @Parameter(description = "projectId", required = true)
-        @HeaderParam(AUTH_HEADER_DEVOPS_PROJECT_ID)
+        @PathParam("projectId")
         projectId: String,
         data: QueryVariableDataBody
     ): BkVisionResp
