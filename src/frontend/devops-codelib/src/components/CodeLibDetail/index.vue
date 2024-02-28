@@ -156,17 +156,17 @@
     </div>
 </template>
 <script>
+    import { RESOURCE_ACTION, RESOURCE_TYPE } from '@/utils/permission'
     import {
         mapActions
     } from 'vuex'
     import {
         REPOSITORY_API_URL_PREFIX
     } from '../../store/constants'
-    import { RESOURCE_ACTION, RESOURCE_TYPE, handleCodelibNoPermission } from '@/utils/permission'
-    import Trigger from './trigger.vue'
+    import UsingPipelinesDialog from '../UsingPipelinesDialog.vue'
     import BasicSetting from './basic-setting.vue'
     import TriggerEvent from './trigger-event.vue'
-    import UsingPipelinesDialog from '../UsingPipelinesDialog.vue'
+    import Trigger from './trigger.vue'
     export default {
         name: 'CodeLibDetail',
         components: {
@@ -521,8 +521,9 @@
                 }
             },
             handleApply () {
-                handleCodelibNoPermission({
+                this.handleNoPermission({
                     projectId: this.projectId,
+                    resourceType: RESOURCE_TYPE,
                     resourceCode: this.urlRepoId,
                     action: RESOURCE_ACTION.VIEW
                 })
