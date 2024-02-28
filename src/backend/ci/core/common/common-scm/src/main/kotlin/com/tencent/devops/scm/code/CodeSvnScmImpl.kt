@@ -158,10 +158,12 @@ class CodeSvnScmImpl constructor(
                     "|AddWebHookSVN|repo=$projectName"
         )
         try {
-            addWebhookByToken(hookUrl)
+            addWebhookByToken(hookUrl, projectName)
         } catch (ignored: ScmException) {
             // 旧项目迁移后的svn项目名可能带有_svn, 去掉_svn后重新尝试添加
-            if (projectName.endsWith(SVN_PROJECT_NAME_SUFFIX)) {
+            if (ignored.message == I18nUtil.getCodeLanMessage(CommonMessageCode.ENGINEERING_REPO_NOT_EXIST)
+                && projectName.endsWith(SVN_PROJECT_NAME_SUFFIX)
+            ) {
                 try {
                     logger.info("retry addWebHookSVN|newProjectName=$projectName")
                     addWebhookByToken(
@@ -312,11 +314,7 @@ class CodeSvnScmImpl constructor(
     /**
      * 基于私人令牌添加svn仓库的webhook
      */
-    private fun addWebhookByToken(hookUrl: String, projectName: String = this.projectName) {
-        // 兜底，若token为空，尝试获取用户会话信息
-        if (token.isNullOrBlank() && !SvnUtils.isSSHProtocol(SVNURL.parseURIEncoded(url).protocol)) {
-            token = getLoginSession()?.privateToken
-        }
+    private fun addWebhookByToken(hookUrl: String, projectName: String) {
         val hooks = svnApi.getWebhooks(
             host = svnConfig.webhookApiUrl,
             projectName = projectName,

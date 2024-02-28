@@ -724,18 +724,21 @@ class ScmProxyService @Autowired constructor(private val client: Client) {
         )
 
         // username+password 关联的git代码库
-        if ((repository is CodeGitRepository || repository is CodeTGitRepository) &&
-            (credential.credentialType == CredentialType.USERNAME_PASSWORD)
-        ) {
+        if (tryGetSession(repository, credential.credentialType)) {
             // USERNAME_PASSWORD v1 = username, v2 = password
-            val session = client.get(ServiceScmResource::class).getLoginSession(
-                RepoSessionRequest(
-                    type = repository.getScmType(),
-                    username = privateKey,
-                    password = passPhrase,
-                    url = repository.url
-                )
-            ).data
+            val session = try {
+                client.get(ServiceScmResource::class).getLoginSession(
+                    RepoSessionRequest(
+                        type = repository.getScmType(),
+                        username = privateKey,
+                        password = passPhrase,
+                        url = repository.url
+                    )
+                ).data
+            } catch (ignored: Exception) {
+                logger.warn("fail to get login session", ignored)
+                null
+            }
             return Credential(
                 username = privateKey,
                 privateKey = session?.privateToken ?: "",
@@ -791,15 +794,17 @@ class ScmProxyService @Autowired constructor(private val client: Client) {
             }
         }
         CodeSvnRepository.SVN_TYPE_HTTP -> {
-            // 凭证中存在token，则直接使用
-            if (credential.credentialType == CredentialType.TOKEN_USERNAME_PASSWORD) {
-                Pair(false, credential.privateKey)
-            } else {
-                Pair(false, "")
-            }
+            // 凭证中存在token，则直接使用，反之用session接口返回值，此处privateKey是svn的token
+            // 参考：1. com.tencent.devops.process.utils.CredentialUtils.getCredential
+            //      2. com.tencent.devops.process.service.scm.ScmProxyService.getCredential
+            Pair(false, credential.privateKey)
         }
         else -> {
             Pair(false, "")
         }
     }
+
+    fun tryGetSession(repository: Repository, credentialType: CredentialType) =
+        (repository is CodeGitRepository || repository is CodeTGitRepository || repository is CodeSvnRepository) &&
+                (credentialType == CredentialType.USERNAME_PASSWORD)
 }

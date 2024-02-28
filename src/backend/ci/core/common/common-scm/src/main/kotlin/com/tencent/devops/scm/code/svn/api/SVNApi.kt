@@ -216,8 +216,7 @@ open class SVNApi {
         hookUrl: String,
         token: String,
         eventType: SvnHookEventType,
-        path: String,
-        isOauth: Boolean = false
+        path: String
     ): SvnHook {
         val fullName = URLEncoder.encode(projectName, "UTF-8")
         val param = mutableMapOf<String, Any>(
