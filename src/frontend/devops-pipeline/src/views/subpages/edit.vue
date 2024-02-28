@@ -209,7 +209,7 @@
             },
             'pipelineInfo.permissions.canEdit': {
                 handler (val) {
-                    if (val) {
+                    if (!val) {
                         this.hasNoPermission = true
                         this.removeLeaveListener()
                     }
