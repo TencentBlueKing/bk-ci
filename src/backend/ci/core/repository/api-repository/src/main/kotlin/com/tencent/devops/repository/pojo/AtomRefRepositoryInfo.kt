@@ -29,6 +29,5 @@ package com.tencent.devops.repository.pojo
 
 data class AtomRefRepositoryInfo(
     val atomCode: String,
-    val repositoryHashId: String,
-    val projectId: String
+    val repositoryHashId: String
 )

@@ -168,7 +168,7 @@ class RepositoryService @Autowired constructor(
                 projectId = projectCode,
                 repoHashId = null,
                 gitProjectId = 0L,
-                atomRepo = true
+                atom = true
             )
 
             // 关联代码库
@@ -1170,7 +1170,6 @@ class RepositoryService @Autowired constructor(
         atomRefRepositoryInfo.forEach {
             val repositoryRecord = repositoryDao.getById(
                 dslContext = dslContext,
-                projectId = it.projectId,
                 repositoryId = HashUtil.decodeOtherIdToLong(it.repositoryHashId)
             ) ?: return@forEach
             repoInfos.add(repositoryRecord)

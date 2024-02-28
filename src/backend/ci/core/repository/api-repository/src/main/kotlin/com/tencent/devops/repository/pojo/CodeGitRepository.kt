@@ -53,7 +53,7 @@ data class CodeGitRepository(
     @get:Schema(title = "Git仓库ID", required = false)
     val gitProjectId: Long?,
     @get:Schema(title = "是否为插件库", required = false)
-    val atomRepo: Boolean? = false
+    val atom: Boolean? = false
 ) : Repository {
     companion object {
         const val classType = "codeGit"

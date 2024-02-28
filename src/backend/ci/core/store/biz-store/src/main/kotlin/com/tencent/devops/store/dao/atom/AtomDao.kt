@@ -1392,7 +1392,6 @@ class AtomDao : AtomBaseDao() {
         }
         return dslContext.selectDistinct(
             ta.ATOM_CODE,
-            ts.PROJECT_CODE,
             ta.REPOSITORY_HASH_ID
         )
             .from(ta).leftJoin(ts)
@@ -1404,8 +1403,7 @@ class AtomDao : AtomBaseDao() {
             .map {
                 AtomRefRepositoryInfo(
                     atomCode = it.value1(),
-                    projectId = it.value2(),
-                    repositoryHashId = it.value3()
+                    repositoryHashId = it.value2()
                 )
             }
     }

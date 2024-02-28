@@ -84,7 +84,7 @@ class CodeGitRepositoryService @Autowired constructor(
                 aliasName = repository.aliasName,
                 url = repository.getFormatURL(),
                 type = ScmType.CODE_GIT,
-                isAtom = repository.atomRepo
+                isAtom = repository.atom
             )
             // Git项目ID
             val gitProjectId =
@@ -195,7 +195,7 @@ class CodeGitRepositoryService @Autowired constructor(
             projectId = repository.projectId,
             repoHashId = HashUtil.encodeOtherLongId(repository.repositoryId),
             gitProjectId = record.gitProjectId,
-            atomRepo = repository.atom
+            atom = repository.atom
         )
     }
 
