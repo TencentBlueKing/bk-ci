@@ -31,7 +31,6 @@ import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.enums.BranchVersionAction
 import com.tencent.devops.common.pipeline.enums.VersionStatus
 import io.swagger.v3.oas.annotations.media.Schema
-
 import java.time.LocalDateTime
 
 @Suppress("LongParameterList", "LongMethod")
