@@ -235,7 +235,7 @@
             >
                 {{ $t("release") }}
             </bk-button>
-            <bk-button :disabled="releasing || previewing" :loading="previewing" @click="hanldePreviewYaml">
+            <bk-button v-if="releaseParams.enablePac" :disabled="releasing || previewing" :loading="previewing" @click="hanldePreviewYaml">
                 {{ $t("previewYaml") }}
             </bk-button>
             <bk-button :disabled="releasing" @click="cancelRelease">
