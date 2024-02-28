@@ -228,14 +228,16 @@ class StockDataUpdateService @Autowired constructor(
                     it[T_NODE_HOST_ID] as? Long == ipToCCInfoMap!![it[T_NODE_NODE_IP] as String]?.bkHostId &&
                         it[T_NODE_CLOUD_AREA_ID] as? Long == ipToCCInfoMap!![it[T_NODE_NODE_IP] as String]
                         ?.bkCloudId?.toLong()
-                }.takeIf { it.isNotEmpty() }!!.map {
+                }.takeIf { it.isNotEmpty() }?.map {
                     CCUpdateInfo(
                         nodeId = it[T_NODE_NODE_ID] as Long,
                         bkCloudId = ipToCCInfoMap!![it[T_NODE_NODE_IP] as String]?.bkCloudId?.toLong(),
                         bkHostId = ipToCCInfoMap!![it[T_NODE_NODE_IP] as String]?.bkHostId
                     )
                 }
-                nodeDao.updateHostIdAndCloudAreaIdByNodeId(dslContext, nodeUpdateInfoList)
+                if (!nodeUpdateInfoList.isNullOrEmpty()){
+                    nodeDao.updateHostIdAndCloudAreaIdByNodeId(dslContext, nodeUpdateInfoList)
+                }
             }
         }
         // 2.2 不在cc中: 置空 host_id 和 云区域id，且 NODE_STATUS 改成 NOT_IN_CC
