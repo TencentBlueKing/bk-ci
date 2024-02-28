@@ -109,7 +109,7 @@
                     },
                     {
                         key: 'constantParam',
-                        title: this.$t('newui.const'),
+                        title: this.$t('newui.pipelineParam.constParam'),
                         list: this.renderParams.filter(item => item.constant === true)
                     },
                     {

@@ -139,7 +139,7 @@
                 if (this.triggerList.length <= 1) {
                     this.$bkMessage({
                         theme: 'error',
-                        message: '至少保留一个触发器'
+                        message: this.$t('triggerLeastOne')
                     })
                     return
                 }
