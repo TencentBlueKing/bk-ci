@@ -109,6 +109,7 @@
             ...mapState(['fetchError']),
             ...mapState('atom', [
                 'pipeline',
+                'pipelineInfo',
                 'pipelineWithoutTrigger',
                 'pipelineYaml',
                 'pipelineSetting',
@@ -200,10 +201,19 @@
                 this.getInterceptAtom()
                 if (val && val.instanceFromTemplate) this.requestMatchTemplateRules(val.templateId)
             },
+            'pipelineInfo.permissions.canEdit': {
+                handler (val) {
+                    if (val) {
+                        this.hasNoPermission = true
+                        this.removeLeaveListener()
+                    }
+                },
+                immediate: true
+            },
             fetchError (error) {
                 if (error.code === 403) {
                     this.hasNoPermission = true
-                    this.removeLeaveListenr()
+                    this.removeLeaveListener()
                 }
             },
             isCodeMode: async function (val) {
@@ -241,7 +251,7 @@
             this.addLeaveListenr()
         },
         beforeDestroy () {
-            this.removeLeaveListenr()
+            this.removeLeaveListener()
             this.setPipelineEditing(false)
             this.setSaveStatus(false)
             this.setEditFrom(false)
@@ -314,7 +324,7 @@
             addLeaveListenr () {
                 window.addEventListener('beforeunload', this.leaveSure)
             },
-            removeLeaveListenr () {
+            removeLeaveListener () {
                 window.removeEventListener('beforeunload', this.leaveSure)
             },
             leaveSure (e) {
