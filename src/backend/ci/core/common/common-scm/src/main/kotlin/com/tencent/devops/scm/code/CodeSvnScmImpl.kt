@@ -28,9 +28,7 @@
 package com.tencent.devops.scm.code
 
 import com.tencent.devops.common.api.constant.CommonMessageCode
-import com.tencent.devops.common.api.constant.DEFAULT_LOCALE_LANGUAGE
 import com.tencent.devops.common.api.enums.ScmType
-import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.scm.IScm
 import com.tencent.devops.scm.code.svn.api.SVNApi
@@ -51,14 +49,15 @@ import org.tmatesoft.svn.core.io.SVNRepository
 
 @Suppress("ALL")
 class CodeSvnScmImpl constructor(
-    override val projectName: String,
+    override var projectName: String,
     override val branchName: String?,
     override val url: String,
     private var username: String,
     private var privateKey: String,
     private val passphrase: String?,
     private val svnConfig: SVNConfig,
-    private val token: String?
+    private var token: String?,
+    private val svnApi: SVNApi
 ) : IScm {
 
     override fun getLatestRevision(): RevisionInfo {
@@ -122,32 +121,6 @@ class CodeSvnScmImpl constructor(
 
     override fun checkTokenAndPrivateKey() {
         try {
-            if (token.isNullOrBlank()) {
-                throw ScmException(
-                    MessageUtil.getMessageByLocale(
-                        messageCode = CommonMessageCode.SVN_TOKEN_EMPTY,
-                        language = DEFAULT_LOCALE_LANGUAGE
-                    ),
-                    ScmType.CODE_SVN.name
-                )
-            }
-            SVNApi.getFileList(
-                host = svnConfig.webhookApiUrl,
-                token = token,
-                projectName = projectName,
-                path = getSubDirPath(),
-                revision = "HEAD"
-            )
-        } catch (ignored: Throwable) {
-            logger.warn("Fail to get file list", ignored)
-            throw ScmException(
-                I18nUtil.getCodeLanMessage(
-                    CommonMessageCode.SVN_TOKEN_FAIL
-                ),
-                ScmType.CODE_SVN.name
-            )
-        }
-        try {
             getLatestRevision()
         } catch (ignored: Throwable) {
             logger.warn("Fail to check the svn latest revision", ignored)
@@ -161,32 +134,6 @@ class CodeSvnScmImpl constructor(
     }
 
     override fun checkTokenAndUsername() {
-        try {
-            if (token.isNullOrBlank()) {
-                throw ScmException(
-                    MessageUtil.getMessageByLocale(
-                        messageCode = CommonMessageCode.SVN_TOKEN_EMPTY,
-                        language = DEFAULT_LOCALE_LANGUAGE
-                    ),
-                    ScmType.CODE_SVN.name
-                )
-            }
-            SVNApi.getFileList(
-                host = svnConfig.webhookApiUrl,
-                token = token,
-                projectName = projectName,
-                path = getSubDirPath(),
-                revision = "HEAD"
-            )
-        } catch (ignored: Throwable) {
-            logger.warn("Fail to get file list", ignored)
-            throw ScmException(
-                I18nUtil.getCodeLanMessage(
-                    CommonMessageCode.SVN_TOKEN_FAIL
-                ),
-                ScmType.CODE_SVN.name
-            )
-        }
         try {
             // 检查用户名密码时privateKey为用户名，passphrase为密码
             // 参考：com.tencent.devops.repository.service.scm.ScmService.checkUsernameAndPassword
@@ -210,15 +157,37 @@ class CodeSvnScmImpl constructor(
                     "|AddWebHookSVN|repo=$projectName"
         )
         try {
-            addWebhookByToken(hookUrl)
-        } catch (ignored: Exception) {
-            logger.warn("Fail to add the webhook", ignored)
-            throw ScmException(
-                message = ignored.message ?: I18nUtil.getCodeLanMessage(
-                    CommonMessageCode.SVN_CREATE_HOOK_FAIL
-                ),
-                scmType = ScmType.CODE_SVN.name
-            )
+            addWebhookByToken(hookUrl, projectName)
+        } catch (ignored: ScmException) {
+            // 工蜂迁移svn项目后，svn项目名与原有git项目名相同，导致项目名冲突，为此在工蜂在svn项目名后添加[_svn]后缀，但在复制svn路径时可能
+            // 缺少[_svn]，如实际路径为[bk_ci/ci_svn],但复制路径为[bk_ci/ci]，所以当报项目不存在时，增加[_svn]后缀后重试
+            if (ignored.message == I18nUtil.getCodeLanMessage(CommonMessageCode.ENGINEERING_REPO_NOT_EXIST) &&
+                !projectName.endsWith(SVN_PROJECT_NAME_SUFFIX)
+            ) {
+                try {
+                    logger.info("retry addWebHookSVN|newProjectName=$projectName$SVN_PROJECT_NAME_SUFFIX")
+                    addWebhookByToken(
+                        hookUrl = hookUrl,
+                        projectName = "$projectName$SVN_PROJECT_NAME_SUFFIX"
+                    )
+                } catch (ignored: ScmException) {
+                    logger.error("Fail to retry add the webhook", ignored)
+                    throw ScmException(
+                        message = ignored.message ?: I18nUtil.getCodeLanMessage(
+                            CommonMessageCode.SVN_CREATE_HOOK_FAIL
+                        ),
+                        scmType = ScmType.CODE_SVN.name
+                    )
+                }
+            } else {
+                logger.error("Fail to add the webhook", ignored)
+                throw ScmException(
+                    message = ignored.message ?: I18nUtil.getCodeLanMessage(
+                        CommonMessageCode.SVN_CREATE_HOOK_FAIL
+                    ),
+                    scmType = ScmType.CODE_SVN.name
+                )
+            }
         }
     }
 
@@ -237,7 +206,7 @@ class CodeSvnScmImpl constructor(
     override fun lock(repoName: String, applicant: String, subpath: String) {
         logger.info("Start to lock the repo $repoName")
         try {
-            SVNApi.lock(repname = repoName, applicant = applicant, subpath = subpath, svnConfig = svnConfig)
+            svnApi.lock(repname = repoName, applicant = applicant, subpath = subpath, svnConfig = svnConfig)
         } catch (e: Exception) {
             logger.warn("Fail to lock the repo:$repoName", e)
             throw ScmException(
@@ -252,7 +221,7 @@ class CodeSvnScmImpl constructor(
     override fun unlock(repoName: String, applicant: String, subpath: String) {
         logger.info("Start to unlock the repo $repoName")
         try {
-            SVNApi.unlock(repname = repoName, applicant = applicant, subpath = subpath, svnConfig = svnConfig)
+            svnApi.unlock(repname = repoName, applicant = applicant, subpath = subpath, svnConfig = svnConfig)
         } catch (e: Exception) {
             logger.warn("Fail to unlock the repo:$repoName", e)
             throw ScmException(
@@ -345,20 +314,11 @@ class CodeSvnScmImpl constructor(
     /**
      * 基于私人令牌添加svn仓库的webhook
      */
-    private fun addWebhookByToken(hookUrl: String) {
-        if (token.isNullOrBlank()) {
-            throw ScmException(
-                MessageUtil.getMessageByLocale(
-                    messageCode = CommonMessageCode.SVN_TOKEN_EMPTY,
-                    language = DEFAULT_LOCALE_LANGUAGE
-                ),
-                ScmType.CODE_SVN.name
-            )
-        }
-        val hooks = SVNApi.getWebhooks(
+    private fun addWebhookByToken(hookUrl: String, projectName: String) {
+        val hooks = svnApi.getWebhooks(
             host = svnConfig.webhookApiUrl,
             projectName = projectName,
-            token = token
+            token = token!!
         )
         val subDirPath = getSubDirPath()
         val existHook = if (hooks.isEmpty()) {
@@ -369,11 +329,11 @@ class CodeSvnScmImpl constructor(
             }
         }
         if (existHook == null) {
-            SVNApi.addWebhooks(
+            svnApi.addWebhooks(
                 host = svnConfig.webhookApiUrl,
                 projectName = projectName,
                 hookUrl = hookUrl,
-                token = token,
+                token = token!!,
                 eventType = SvnHookEventType.SVN_POST_COMMIT_EVENTS,
                 path = subDirPath
             )
@@ -384,7 +344,7 @@ class CodeSvnScmImpl constructor(
 
     override fun getLoginSession(): LoginSession? {
         return try {
-            SVNApi.getSession(
+            svnApi.getSession(
                 host = svnConfig.webhookApiUrl,
                 username = privateKey,
                 password = passphrase ?: ""
@@ -397,5 +357,8 @@ class CodeSvnScmImpl constructor(
 
     companion object {
         private val logger = LoggerFactory.getLogger(CodeSvnScmImpl::class.java)
+
+        // svn项目迁移后补充的后缀
+        const val SVN_PROJECT_NAME_SUFFIX = "_svn"
     }
 }

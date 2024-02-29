@@ -184,11 +184,6 @@ class CodeSvnRepositoryService @Autowired constructor(
                         message = I18nUtil.getCodeLanMessage(CommonMessageCode.PWD_EMPTY)
                     )
                 }
-                if (repoCredentialInfo.token.isEmpty()) {
-                    throw OperationException(
-                        message = I18nUtil.getCodeLanMessage(CommonMessageCode.SVN_TOKEN_EMPTY)
-                    )
-                }
                 scmService.checkUsernameAndPassword(
                     projectName = projectName,
                     url = repository.getFormatURL(),
@@ -201,11 +196,6 @@ class CodeSvnRepositoryService @Autowired constructor(
                 )
             }
             SVN_TYPE_SSH -> {
-                if (repoCredentialInfo.token.isEmpty()) {
-                    throw OperationException(
-                        message = I18nUtil.getCodeLanMessage(CommonMessageCode.SVN_TOKEN_EMPTY)
-                    )
-                }
                 scmService.checkPrivateKeyAndToken(
                     projectName = projectName,
                     url = repository.getFormatURL(),
@@ -266,8 +256,7 @@ class CodeSvnRepositoryService @Autowired constructor(
         // 凭证信息
         return credentialService.getCredentialInfo(
             projectId = projectId,
-            repository = repository,
-            tryGetSession = true
+            repository = repository
         )
     }
 

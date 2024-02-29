@@ -42,6 +42,7 @@ import com.tencent.devops.scm.code.CodeSvnScmImpl
 import com.tencent.devops.scm.code.CodeTGitScmImpl
 import com.tencent.devops.scm.code.git.CodeGitWebhookEvent
 import com.tencent.devops.scm.code.git.api.GitApi
+import com.tencent.devops.scm.code.svn.api.SVNApi
 import com.tencent.devops.scm.config.GitConfig
 import com.tencent.devops.scm.config.SVNConfig
 import com.tencent.devops.scm.enums.CodeSvnRegion
@@ -49,6 +50,7 @@ import com.tencent.devops.scm.exception.ScmException
 
 object ScmFactory {
     private val gitApi = GitApi()
+    private val svnApi = SVNApi()
 
     @Suppress("ALL")
     fun getScm(
@@ -90,7 +92,8 @@ object ScmFactory {
                     privateKey = privateKey,
                     passphrase = passPhrase,
                     svnConfig = svnConfig,
-                    token = token
+                    token = token,
+                    svnApi = svnApi
                 )
             }
             ScmType.CODE_GIT -> {

@@ -48,7 +48,7 @@ import org.slf4j.LoggerFactory
 import java.net.URLEncoder
 
 @Suppress("ALL")
-object SVNApi {
+open class SVNApi {
 
     private val logger = LoggerFactory.getLogger(SVNApi::class.java)
     private val mediaType = "application/json; charset=utf-8".toMediaTypeOrNull()
@@ -181,13 +181,7 @@ object SVNApi {
     private fun request(svnConfig: SVNConfig, url: String) =
         Request.Builder().url(url).header("apiKey", svnConfig.apiKey)
 
-    private fun request(
-        host: String,
-        url: String,
-        token: String
-    ) = Request.Builder().url("$host/$url").header("PRIVATE-TOKEN", token)
-
-    fun request(host: String, token: String, url: String, page: String): Request.Builder {
+    open fun request(host: String, token: String, url: String, page: String): Request.Builder {
         return if (page.isNotEmpty()) Request.Builder()
             .url("$host/$url?$page")
             .header("PRIVATE-TOKEN", token)
@@ -208,7 +202,8 @@ object SVNApi {
         val request = request(
             host = host,
             url = "svn/projects/$fullName/hooks",
-            token = token
+            token = token,
+            page = ""
         ).get().build()
         val body = getBody(request)
         logger.info("Get the webhook($body)")
@@ -234,7 +229,8 @@ object SVNApi {
         val request = request(
             host = host,
             url = "svn/projects/$fullName/hooks",
-            token = token
+            token = token,
+            page = ""
         )
             .post(
                 RequestBody.create(
@@ -260,7 +256,8 @@ object SVNApi {
         val request = request(
             host = host,
             url = "svn/projects/$fullName/tree?$queryParam",
-            token = token
+            token = token,
+            page = ""
         ).get().build()
         val body = getBody(request)
         logger.info("Get the svn file list($body)")
