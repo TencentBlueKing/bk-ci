@@ -595,7 +595,7 @@ export default {
         commit(UPDATE_ATOM_TYPE, payload)
         commit(SET_PIPELINE_EDITING, true)
     },
-    updateAtom: (action, { element: atom, newParam, changeEditStatus }) => {
+    updateAtom: (action, { element: atom, newParam, changeEditStatus = true }) => {
         if (changeEditStatus) {
             PipelineEditActionCreator(UPDATE_ATOM)(action, { atom, newParam })
         } else {
