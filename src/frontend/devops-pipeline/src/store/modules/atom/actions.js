@@ -62,6 +62,7 @@ import {
     SET_PIPELINE,
     SET_PIPELINE_EDITING,
     SET_PIPELINE_EXEC_DETAIL,
+    SET_PIPELINE_INFO,
     SET_PIPELINE_WITHOUT_TRIGGER,
     SET_PIPELINE_YAML,
     SET_REMOTE_TRIGGER_TOKEN,
@@ -79,7 +80,6 @@ import {
     UPDATE_ATOM_OUTPUT_NAMESPACE,
     UPDATE_ATOM_TYPE,
     UPDATE_CONTAINER,
-    UPDATE_PIPELINE_INFO,
     UPDATE_PIPELINE_SETTING_MUNTATION,
     UPDATE_STAGE,
     UPDATE_WHOLE_ATOM_INPUT
@@ -128,7 +128,7 @@ export default {
         const url = `/${PROCESS_API_URL_PREFIX}/user/version/projects/${projectId}/pipelines/${pipelineId}/detail`
 
         return request.get(url).then(response => {
-            commit(UPDATE_PIPELINE_INFO, response.data)
+            commit(SET_PIPELINE_INFO, response.data)
             return response.data
         })
     },

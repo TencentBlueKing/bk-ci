@@ -140,7 +140,7 @@ export default {
             ...(state.pipelineInfo ?? {})
         }
         Object.assign(pipelineInfo, partOfInfo)
-        console.log(pipelineInfo, 123)
+        console.log(pipelineInfo, 123, partOfInfo)
         Vue.set(state, 'pipelineInfo', pipelineInfo)
     },
     [SET_PIPELINE]: (state, pipeline = null) => {
