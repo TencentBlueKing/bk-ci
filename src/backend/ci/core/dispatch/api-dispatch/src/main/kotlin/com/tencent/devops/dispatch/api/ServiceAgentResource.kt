@@ -51,19 +51,19 @@ interface ServiceAgentResource {
     @GET
     @Path("/{agentId}/listBuilds")
     fun listAgentBuild(
-        @Parameter(name = "agent Hash ID", required = true)
+        @Parameter(description = "agent Hash ID", required = true)
         @PathParam("agentId")
         agentId: String,
-        @Parameter(name = "筛选此状态，支持4种输入(QUEUE,RUNNING,DONE,FAILURE)", required = false)
+        @Parameter(description = "筛选此状态，支持4种输入(QUEUE,RUNNING,DONE,FAILURE)", required = false)
         @QueryParam("status")
         status: String?,
-        @Parameter(name = "筛选此pipelineId", required = false)
+        @Parameter(description = "筛选此pipelineId", required = false)
         @QueryParam("pipelineId")
         pipelineId: String?,
-        @Parameter(name = "第几页", required = false)
+        @Parameter(description = "第几页", required = false)
         @QueryParam("page")
         page: Int?,
-        @Parameter(name = "每页条数", required = false)
+        @Parameter(description = "每页条数", required = false)
         @QueryParam("pageSize")
         pageSize: Int?
     ): Page<AgentBuildInfo>

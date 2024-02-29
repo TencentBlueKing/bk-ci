@@ -58,22 +58,22 @@ interface UserTclsResource {
     // @Path("/projects/{projectId}/getEnvList")
     @Path("/{projectId}/getEnvList")
     fun getEnvList(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(name = "TCLS 业务 ID", required = false)
+        @Parameter(description = "TCLS 业务 ID", required = false)
         @QueryParam("tclsAppId")
         tclsAppId: String?,
-        @Parameter(name = "是否是MTCLS业务", required = false)
+        @Parameter(description = "是否是MTCLS业务", required = false)
         @QueryParam("mtclsApp")
         mtclsApp: TclsType?,
-        @Parameter(name = "业务ServiceID", required = false)
+        @Parameter(description = "业务ServiceID", required = false)
         @QueryParam("serviceId")
         serviceId: String?,
-        @Parameter(name = "凭证ID", required = false)
+        @Parameter(description = "凭证ID", required = false)
         @QueryParam("ticketId")
         ticketId: String
     ): Result<List<TclsEnv>>

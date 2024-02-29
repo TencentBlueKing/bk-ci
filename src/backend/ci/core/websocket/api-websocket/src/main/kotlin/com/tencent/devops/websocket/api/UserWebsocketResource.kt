@@ -48,10 +48,10 @@ interface UserWebsocketResource {
     @Path("/{sessionId}/userIds/{userId}/clear")
     @Operation(summary = "页面退出清理session")
     fun clearSession(
-        @Parameter(name = "用户ID", required = true)
+        @Parameter(description = "用户ID", required = true)
         @PathParam("userId")
         userId: String,
-        @Parameter(name = "SessionID", required = true)
+        @Parameter(description = "SessionID", required = true)
         @PathParam("sessionId")
         sessionId: String
     ): Result<Boolean>

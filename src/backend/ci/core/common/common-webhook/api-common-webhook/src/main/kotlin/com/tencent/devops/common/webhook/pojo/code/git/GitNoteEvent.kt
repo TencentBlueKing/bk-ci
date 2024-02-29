@@ -39,14 +39,14 @@ data class GitNoteEvent(
     val objectAttributes: GitNoteAttributes,
     @JsonProperty("project_id")
     val projectId: Long,
-    @Parameter(name = "对提交进行评论时存在")
+    @Parameter(description = "对提交进行评论时存在")
     val commit: GitCommit?,
     @JsonProperty("merge_request")
-    @Parameter(name = "对合并请求评论时存在")
+    @Parameter(description = "对合并请求评论时存在")
     val mergeRequest: GitMRAttributes?,
-    @Parameter(name = "对缺陷进行评论时存在")
+    @Parameter(description = "对缺陷进行评论时存在")
     val issue: GitIssueAttributes?,
-    @Parameter(name = "对评审进行评论时存在")
+    @Parameter(description = "对评审进行评论时存在")
     val review: GitReviewAttributes?
 ) : GitEvent() {
     companion object {

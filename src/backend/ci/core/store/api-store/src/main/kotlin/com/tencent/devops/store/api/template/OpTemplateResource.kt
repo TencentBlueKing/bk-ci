@@ -57,40 +57,40 @@ interface OpTemplateResource {
     @GET
     @Path("/list")
     fun listTemplates(
-        @Parameter(name = "userId", required = true)
+        @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "模版名称", required = false)
+        @Parameter(description = "模版名称", required = false)
         @QueryParam("templateName")
         templateName: String?,
-        @Parameter(name = "模版状态", required = false)
+        @Parameter(description = "模版状态", required = false)
         @QueryParam("templateStatus")
         templateStatus: TemplateStatusEnum?,
-        @Parameter(name = "模版类型", required = false)
+        @Parameter(description = "模版类型", required = false)
         @QueryParam("templateType")
         templateType: TemplateTypeEnum?,
-        @Parameter(name = "模版分类", required = false)
+        @Parameter(description = "模版分类", required = false)
         @QueryParam("classifyCode")
         classifyCode: String?,
-        @Parameter(name = "应用范畴", required = false)
+        @Parameter(description = "应用范畴", required = false)
         @QueryParam("category")
         category: String?,
-        @Parameter(name = "功能标签", required = false)
+        @Parameter(description = "功能标签", required = false)
         @QueryParam("labelCode")
         labelCode: String?,
-        @Parameter(name = "是否最新", required = false)
+        @Parameter(description = "是否最新", required = false)
         @QueryParam("latestFlag")
         latestFlag: Boolean?,
-        @Parameter(name = "排序", required = false)
+        @Parameter(description = "排序", required = false)
         @QueryParam("sortType")
         sortType: OpTemplateSortTypeEnum ? = OpTemplateSortTypeEnum.UPDATE_TIME,
-        @Parameter(name = "排序", required = false)
+        @Parameter(description = "排序", required = false)
         @QueryParam("desc")
         desc: Boolean?,
-        @Parameter(name = "页码", required = false)
+        @Parameter(description = "页码", required = false)
         @QueryParam("page")
         page: Int?,
-        @Parameter(name = "每页数量", required = false)
+        @Parameter(description = "每页数量", required = false)
         @QueryParam("pageSize")
         pageSize: Int?
     ): Result<OpTemplateResp>
@@ -99,13 +99,13 @@ interface OpTemplateResource {
     @Path("/{templateId}/approve")
     @PUT
     fun approveTemplate(
-        @Parameter(name = "用户ID", required = true)
+        @Parameter(description = "用户ID", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "ID", required = true)
+        @Parameter(description = "ID", required = true)
         @PathParam("templateId")
         templateId: String,
-        @Parameter(name = "审核模版请求报文")
+        @Parameter(description = "审核模版请求报文")
         approveReq: ApproveReq
     ): Result<Boolean>
 }

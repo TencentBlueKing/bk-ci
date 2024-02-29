@@ -59,10 +59,10 @@ interface UserStoreEnvVarResource {
     @POST
     @Path("/create")
     fun create(
-        @Parameter(name = "userId", required = true)
+        @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "环境变量请求报文体", required = true)
+        @Parameter(description = "环境变量请求报文体", required = true)
         @Valid
         storeEnvVarRequest: StoreEnvVarRequest
     ): Result<Boolean>
@@ -71,14 +71,14 @@ interface UserStoreEnvVarResource {
     @POST
     @Path("/update")
     fun update(
-        @Parameter(name = "userId", required = true)
+        @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "变量ID", required = true)
+        @Parameter(description = "变量ID", required = true)
         @BkField(patternStyle = BkStyleEnum.ID_STYLE)
         @QueryParam("variableId")
         variableId: String,
-        @Parameter(name = "环境变量请求报文体", required = true)
+        @Parameter(description = "环境变量请求报文体", required = true)
         @Valid
         storeEnvVarRequest: StoreEnvVarRequest
     ): Result<Boolean>
@@ -87,22 +87,22 @@ interface UserStoreEnvVarResource {
     @DELETE
     @Path("/types/{storeType}/codes/{storeCode}")
     fun delete(
-        @Parameter(name = "userId", required = true)
+        @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "组件类型", required = true)
+        @Parameter(description = "组件类型", required = true)
         @PathParam("storeType")
         @BkField(patternStyle = BkStyleEnum.CODE_STYLE)
         storeType: String,
-        @Parameter(name = "组件标识", required = true)
+        @Parameter(description = "组件标识", required = true)
         @PathParam("storeCode")
         @BkField(patternStyle = BkStyleEnum.CODE_STYLE)
         storeCode: String,
-        @Parameter(name = "生效范围 TEST：测试 PRD：正式 ALL：所有", required = true)
+        @Parameter(description = "生效范围 TEST：测试 PRD：正式 ALL：所有", required = true)
         @QueryParam("scope")
         @BkField(patternStyle = BkStyleEnum.SCOPE_STYLE, required = true)
         scope: String,
-        @Parameter(name = "环境变量名称集合，用\",\"分隔进行拼接（如1,2,3）", required = true)
+        @Parameter(description = "环境变量名称集合，用\",\"分隔进行拼接（如1,2,3）", required = true)
         @QueryParam("varNames")
         @BkField(patternStyle = BkStyleEnum.COMMON_STYLE)
         varNames: String
@@ -112,22 +112,22 @@ interface UserStoreEnvVarResource {
     @GET
     @Path("/latest/types/{storeType}/codes/{storeCode}")
     fun getLatestEnvVarList(
-        @Parameter(name = "userId", required = true)
+        @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "组件类型", required = true)
+        @Parameter(description = "组件类型", required = true)
         @PathParam("storeType")
         @BkField(patternStyle = BkStyleEnum.CODE_STYLE)
         storeType: String,
-        @Parameter(name = "组件标识", required = true)
+        @Parameter(description = "组件标识", required = true)
         @PathParam("storeCode")
         @BkField(patternStyle = BkStyleEnum.CODE_STYLE)
         storeCode: String,
-        @Parameter(name = "生效范围 TEST：测试 PRD：正式 ALL：所有", required = false)
+        @Parameter(description = "生效范围 TEST：测试 PRD：正式 ALL：所有", required = false)
         @QueryParam("scope")
         @BkField(patternStyle = BkStyleEnum.SCOPE_STYLE, required = false)
         scope: String?,
-        @Parameter(name = "变量名", required = false)
+        @Parameter(description = "变量名", required = false)
         @QueryParam("varName")
         @BkField(patternStyle = BkStyleEnum.CODE_STYLE, required = false)
         varName: String?
@@ -137,22 +137,22 @@ interface UserStoreEnvVarResource {
     @GET
     @Path("/change/log/types/{storeType}/codes/{storeCode}/vars/{varName}")
     fun getEnvVarChangeLogList(
-        @Parameter(name = "userId", required = true)
+        @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "组件类型", required = true)
+        @Parameter(description = "组件类型", required = true)
         @PathParam("storeType")
         @BkField(patternStyle = BkStyleEnum.CODE_STYLE)
         storeType: String,
-        @Parameter(name = "组件标识", required = true)
+        @Parameter(description = "组件标识", required = true)
         @PathParam("storeCode")
         @BkField(patternStyle = BkStyleEnum.CODE_STYLE)
         storeCode: String,
-        @Parameter(name = "生效范围 TEST：测试 PRD：正式 ALL：所有", required = true)
+        @Parameter(description = "生效范围 TEST：测试 PRD：正式 ALL：所有", required = true)
         @QueryParam("scope")
         @BkField(patternStyle = BkStyleEnum.SCOPE_STYLE, required = true)
         scope: String,
-        @Parameter(name = "变量名", required = true)
+        @Parameter(description = "变量名", required = true)
         @PathParam("varName")
         @BkField(patternStyle = BkStyleEnum.CODE_STYLE)
         varName: String

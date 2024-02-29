@@ -49,7 +49,7 @@ interface OpPCGProjectResource {
     @POST
     @Path("/{projectId}")
     fun add(
-        @Parameter(name = "项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String
     ): Result<Boolean>
@@ -58,7 +58,7 @@ interface OpPCGProjectResource {
     @DELETE
     @Path("/{projectId}")
     fun delete(
-        @Parameter(name = "项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String
     ): Result<Boolean>

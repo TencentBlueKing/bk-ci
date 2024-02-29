@@ -49,7 +49,7 @@ interface ServiceStreamBasicSettingResource {
     @GET
     @Path("/{projectId}")
     fun getStreamConf(
-        @Parameter(name = "蓝盾项目ID", required = true)
+        @Parameter(description = "蓝盾项目ID", required = true)
         @PathParam("projectId")
         projectId: String
     ): Result<StreamBasicSetting?>

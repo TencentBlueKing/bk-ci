@@ -51,13 +51,13 @@ interface SlaMonitorResource {
     @POST
     @Path("/codecc/query")
     fun codeccQuery(
-        @Parameter(name = "事业群ID", required = true)
+        @Parameter(description = "事业群ID", required = true)
         @QueryParam("bgId")
         bgId: String,
-        @Parameter(name = "开始时间", required = true)
+        @Parameter(description = "开始时间", required = true)
         @QueryParam("startTime")
         startTime: Long,
-        @Parameter(name = "结束时间", required = true)
+        @Parameter(description = "结束时间", required = true)
         @QueryParam("endTime")
         endTime: Long
     ): Result<SlaCodeccResponseData>
@@ -66,7 +66,7 @@ interface SlaMonitorResource {
     @GET
     @Path("/email/test")
     fun emailTest(
-        @Parameter(name = "密码", required = true)
+        @Parameter(description = "密码", required = true)
         @QueryParam("pwd")
         pwd: String
     ): Result<String>

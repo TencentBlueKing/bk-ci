@@ -48,7 +48,7 @@ interface OpImageInitResource {
     @POST
     @Path("/init")
     fun imageInit(
-        @Parameter(name = "第三方镜像市场初始化参数", required = false)
+        @Parameter(description = "第三方镜像市场初始化参数", required = false)
         imageInitRequest: ImageInitRequest?
     ): Result<Boolean>
 }

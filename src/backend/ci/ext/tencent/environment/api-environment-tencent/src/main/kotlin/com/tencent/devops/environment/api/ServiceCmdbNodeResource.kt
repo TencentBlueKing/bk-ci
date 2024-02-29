@@ -55,19 +55,19 @@ interface ServiceCmdbNodeResource {
     @POST
     @Path("/list_user_cmdb_nodes_new")
     fun listUserCmdbNodesNew(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "true 时为备份负责人，false 时为主负责人", required = true)
+        @Parameter(description = "true 时为备份负责人，false 时为主负责人", required = true)
         @QueryParam("bakOperator")
         bakOperator: Boolean,
-        @Parameter(name = "第几页", required = false, example = "1")
+        @Parameter(description = "第几页", required = false, example = "1")
         @QueryParam("page")
         page: Int = 1,
-        @Parameter(name = "每页多少条", required = false, example = "100")
+        @Parameter(description = "每页多少条", required = false, example = "100")
         @QueryParam("pageSize")
         pageSize: Int = 100,
-        @Parameter(name = "指定IP", required = false)
+        @Parameter(description = "指定IP", required = false)
         ips: List<String>?
     ): Result<Page<CmdbNode>>
 
@@ -75,13 +75,13 @@ interface ServiceCmdbNodeResource {
     @POST
     @Path("/projects/{projectId}/add_cmdb_nodes")
     fun addCmdbNodes(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(name = "CMDB节点 IP", required = true)
+        @Parameter(description = "CMDB节点 IP", required = true)
         nodeIps: List<String>
     ): Result<AddCmdbNodesRes>
 
@@ -89,7 +89,7 @@ interface ServiceCmdbNodeResource {
     @POST
     @Path("/stock_data_update/check_deploy_nodes_in_cmdb")
     fun checkDeployNodesInCmdb(
-        @Parameter(name = "用户ID", required = true)
+        @Parameter(description = "用户ID", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String = AUTH_HEADER_USER_ID_DEFAULT_VALUE
     )
@@ -98,7 +98,7 @@ interface ServiceCmdbNodeResource {
     @POST
     @Path("/stock_data_update/add_nodes_to_cc")
     fun addNodesToCC(
-        @Parameter(name = "用户ID", required = true)
+        @Parameter(description = "用户ID", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String = AUTH_HEADER_USER_ID_DEFAULT_VALUE
     )
@@ -107,7 +107,7 @@ interface ServiceCmdbNodeResource {
     @POST
     @Path("/stock_data_update/update_gse_agent")
     fun updateGseAgent(
-        @Parameter(name = "用户ID", required = true)
+        @Parameter(description = "用户ID", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String = AUTH_HEADER_USER_ID_DEFAULT_VALUE
     )

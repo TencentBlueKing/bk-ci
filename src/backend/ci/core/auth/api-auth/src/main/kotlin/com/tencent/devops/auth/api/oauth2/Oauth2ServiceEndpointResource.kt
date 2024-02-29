@@ -31,13 +31,13 @@ interface Oauth2ServiceEndpointResource {
     @Operation(summary = "获取授权信息")
     fun getAuthorizationInformation(
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
-        @Parameter(name = "待校验用户ID", required = true)
+        @Parameter(description = "待校验用户ID", required = true)
         userId: String,
         @QueryParam("clientId")
-        @Parameter(name = "客户端ID", required = true)
+        @Parameter(description = "客户端ID", required = true)
         clientId: String,
         @QueryParam("redirectUri")
-        @Parameter(name = "跳转链接", required = true)
+        @Parameter(description = "跳转链接", required = true)
         redirectUri: String
     ): Result<Oauth2AuthorizationInfoVo>
 
@@ -46,15 +46,15 @@ interface Oauth2ServiceEndpointResource {
     @Operation(summary = "获取授权码")
     fun getAuthorizationCode(
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
-        @Parameter(name = "待校验用户ID", required = true)
+        @Parameter(description = "待校验用户ID", required = true)
         userId: String,
         @QueryParam("clientId")
-        @Parameter(name = "客户端ID", required = true)
+        @Parameter(description = "客户端ID", required = true)
         clientId: String,
         @QueryParam("redirectUri")
-        @Parameter(name = "跳转链接", required = true)
+        @Parameter(description = "跳转链接", required = true)
         redirectUri: String,
-        @Parameter(name = "oauth2获取授权码请求报文体", required = true)
+        @Parameter(description = "oauth2获取授权码请求报文体", required = true)
         authorizationCodeDTO: Oauth2AuthorizationCodeDTO
     ): Result<String>
 
@@ -63,12 +63,12 @@ interface Oauth2ServiceEndpointResource {
     @Operation(summary = "获取accessToken")
     fun getAccessToken(
         @HeaderParam(AUTH_HEADER_OAUTH2_CLIENT_ID)
-        @Parameter(name = "客户端id", required = true)
+        @Parameter(description = "客户端id", required = true)
         clientId: String,
         @HeaderParam(AUTH_HEADER_OAUTH2_CLIENT_SECRET)
-        @Parameter(name = "客户端秘钥", required = true)
+        @Parameter(description = "客户端秘钥", required = true)
         clientSecret: String,
-        @Parameter(name = "oauth2获取token请求报文体", required = true)
+        @Parameter(description = "oauth2获取token请求报文体", required = true)
         accessTokenRequest: Oauth2AccessTokenRequest
     ): Result<Oauth2AccessTokenVo?>
 
@@ -77,13 +77,13 @@ interface Oauth2ServiceEndpointResource {
     @Operation(summary = "校验accessToken")
     fun verifyAccessToken(
         @HeaderParam(AUTH_HEADER_OAUTH2_CLIENT_ID)
-        @Parameter(name = "客户端id", required = true)
+        @Parameter(description = "客户端id", required = true)
         clientId: String,
         @HeaderParam(AUTH_HEADER_OAUTH2_CLIENT_SECRET)
-        @Parameter(name = "客户端秘钥", required = true)
+        @Parameter(description = "客户端秘钥", required = true)
         clientSecret: String,
         @HeaderParam(AUTH_HEADER_OAUTH2_AUTHORIZATION)
-        @Parameter(name = "access token", required = true)
+        @Parameter(description = "access token", required = true)
         accessToken: String
     ): Result<String>
 }

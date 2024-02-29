@@ -56,10 +56,10 @@ interface UserImageCommentResource {
     @GET
     @Path("/comments/{commentId}")
     fun getStoreComment(
-        @Parameter(name = "userId", required = true)
+        @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "评论ID", required = true)
+        @Parameter(description = "评论ID", required = true)
         @PathParam("commentId")
         commentId: String
     ): Result<StoreCommentInfo?>
@@ -68,16 +68,16 @@ interface UserImageCommentResource {
     @GET
     @Path("/imageCodes/{imageCode}/comments")
     fun getStoreComments(
-        @Parameter(name = "userId", required = true)
+        @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "镜像代码", required = true)
+        @Parameter(description = "镜像代码", required = true)
         @PathParam("imageCode")
         imageCode: String,
-        @Parameter(name = "页码", required = true)
+        @Parameter(description = "页码", required = true)
         @QueryParam("page")
         page: Int,
-        @Parameter(name = "每页数量", required = true)
+        @Parameter(description = "每页数量", required = true)
         @QueryParam("pageSize")
         pageSize: Int
     ): Result<Page<StoreCommentInfo>?>
@@ -86,7 +86,7 @@ interface UserImageCommentResource {
     @GET
     @Path("/score/imageCodes/{imageCode}")
     fun getImageCommentScoreInfo(
-        @Parameter(name = "镜像代码", required = true)
+        @Parameter(description = "镜像代码", required = true)
         @PathParam("imageCode")
         imageCode: String
     ): Result<StoreCommentScoreInfo>
@@ -95,16 +95,16 @@ interface UserImageCommentResource {
     @POST
     @Path("/imageIds/{imageId}/imageCodes/{imageCode}/comment")
     fun addImageComment(
-        @Parameter(name = "userId", required = true)
+        @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "镜像ID", required = true)
+        @Parameter(description = "镜像ID", required = true)
         @PathParam("imageId")
         imageId: String,
-        @Parameter(name = "镜像代码", required = true)
+        @Parameter(description = "镜像代码", required = true)
         @PathParam("imageCode")
         imageCode: String,
-        @Parameter(name = "评论信息请求报文体", required = true)
+        @Parameter(description = "评论信息请求报文体", required = true)
         storeCommentRequest: StoreCommentRequest
     ): Result<StoreCommentInfo?>
 
@@ -112,13 +112,13 @@ interface UserImageCommentResource {
     @PUT
     @Path("/comments/{commentId}")
     fun updateStoreComment(
-        @Parameter(name = "userId", required = true)
+        @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "评论ID", required = true)
+        @Parameter(description = "评论ID", required = true)
         @PathParam("commentId")
         commentId: String,
-        @Parameter(name = "评论信息请求报文体", required = true)
+        @Parameter(description = "评论信息请求报文体", required = true)
         storeCommentRequest: StoreCommentRequest
     ): Result<Boolean>
 
@@ -126,10 +126,10 @@ interface UserImageCommentResource {
     @PUT
     @Path("/praise/{commentId}")
     fun updateStoreCommentPraiseCount(
-        @Parameter(name = "userId", required = true)
+        @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "评论ID", required = true)
+        @Parameter(description = "评论ID", required = true)
         @PathParam("commentId")
         commentId: String
     ): Result<Int>

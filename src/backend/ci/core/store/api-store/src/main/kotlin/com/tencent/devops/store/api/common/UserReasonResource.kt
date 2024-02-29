@@ -52,7 +52,7 @@ interface UserReasonResource {
     @Path("/types/{type}")
     @BkInterfaceI18n(keyPrefixNames = ["reason", "{data[*].id}"])
     fun list(
-        @Parameter(name = "类别", required = true)
+        @Parameter(description = "类别", required = true)
         @PathParam("type")
         type: ReasonTypeEnum
     ): Result<List<Reason>?>

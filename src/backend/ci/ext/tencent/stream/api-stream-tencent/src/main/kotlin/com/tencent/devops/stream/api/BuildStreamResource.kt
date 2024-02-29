@@ -48,7 +48,7 @@ interface BuildStreamResource {
     @GET
     @Path("/url/{projectId}")
     fun getUrl(
-        @Parameter(name = "projectId", required = true)
+        @Parameter(description = "projectId", required = true)
         @PathParam("projectId")
         projectId: String
     ): Result<String?>

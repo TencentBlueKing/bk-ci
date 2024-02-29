@@ -48,31 +48,31 @@ interface OpPipelineTemplateResource {
     @POST
     @Path("/")
     fun add(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "author", required = true)
+        @Parameter(description = "author", required = true)
         @QueryParam("author")
         author: String,
-        @Parameter(name = "name", required = true)
+        @Parameter(description = "name", required = true)
         @QueryParam("name")
         name: String,
-        @Parameter(name = "type", required = true)
+        @Parameter(description = "type", required = true)
         @QueryParam("type")
         type: TemplateType,
-        @Parameter(name = "category", required = true)
+        @Parameter(description = "category", required = true)
         @QueryParam("category")
         category: String,
-        @Parameter(name = "icon", required = false)
+        @Parameter(description = "icon", required = false)
         @QueryParam("icon")
         icon: String?,
-        @Parameter(name = "logoUrl", required = false)
+        @Parameter(description = "logoUrl", required = false)
         @QueryParam("logoUrl")
         logoUrl: String?,
-        @Parameter(name = "projectCode", required = true, example = "-1")
+        @Parameter(description = "projectCode", required = true, example = "-1")
         @QueryParam("projectCode")
         projectCode: String,
-        @Parameter(name = "流水线", required = true)
+        @Parameter(description = "流水线", required = true)
         model: Model
     ): Result<Boolean>
 

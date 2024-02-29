@@ -51,7 +51,7 @@ interface ServiceLocaleResource {
     @Path("/users/{userId}/get")
     @Operation(summary = "获取用户国际化信息")
     fun getUserLocale(
-        @Parameter(name = "用户ID", required = true)
+        @Parameter(description = "用户ID", required = true)
         @PathParam("userId")
         userId: String
     ): Result<LocaleInfo>

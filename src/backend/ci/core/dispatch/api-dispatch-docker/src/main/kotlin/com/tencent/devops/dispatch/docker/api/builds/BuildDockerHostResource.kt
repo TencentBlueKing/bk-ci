@@ -52,10 +52,10 @@ interface BuildDockerHostResource {
     @Path("/resource-config/pipelines/{pipelineId}/vmSeqs/{vmSeqId}")
     @Operation(summary = "获取蓝盾项目的docker性能配置")
     fun getResourceConfig(
-        @Parameter(name = "蓝盾流水线ID", required = true)
+        @Parameter(description = "蓝盾流水线ID", required = true)
         @PathParam("pipelineId")
         pipelineId: String,
-        @Parameter(name = "JOB ID", required = true)
+        @Parameter(description = "JOB ID", required = true)
         @PathParam("vmSeqId")
         vmSeqId: String
     ): Result<DockerResourceOptionsVO>
@@ -64,16 +64,16 @@ interface BuildDockerHostResource {
     @Path("/qpc/projects/{projectId}/builds/{buildId}/vmSeqs/{vmSeqId}")
     @Operation(summary = "获取蓝盾项目的docker性能配置")
     fun getQpcGitProjectList(
-        @Parameter(name = "蓝盾项目ID", required = true)
+        @Parameter(description = "蓝盾项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(name = "构建ID", required = true)
+        @Parameter(description = "构建ID", required = true)
         @PathParam("buildId")
         buildId: String,
-        @Parameter(name = "JOB ID", required = true)
+        @Parameter(description = "JOB ID", required = true)
         @PathParam("vmSeqId")
         vmSeqId: String,
-        @Parameter(name = "POOLNo", required = true)
+        @Parameter(description = "POOLNo", required = true)
         @QueryParam("poolNo")
         poolNo: Int
     ): Result<List<String>>
@@ -82,19 +82,19 @@ interface BuildDockerHostResource {
     @POST
     @Path("/log")
     fun log(
-        @Parameter(name = "buildId", required = true)
+        @Parameter(description = "buildId", required = true)
         @QueryParam("buildId")
         buildId: String,
-        @Parameter(name = "red", required = true)
+        @Parameter(description = "red", required = true)
         @QueryParam("red")
         red: Boolean,
-        @Parameter(name = "message", required = true)
+        @Parameter(description = "message", required = true)
         @QueryParam("message")
         message: String,
-        @Parameter(name = "tag", required = false)
+        @Parameter(description = "tag", required = false)
         @QueryParam("tag")
         tag: String?,
-        @Parameter(name = "jobId", required = false)
+        @Parameter(description = "jobId", required = false)
         @QueryParam("jobId")
         jobId: String?
     ): Result<Boolean>?
@@ -103,18 +103,18 @@ interface BuildDockerHostResource {
     @POST
     @Path("/postlog")
     fun postLog(
-        @Parameter(name = "buildId", required = true)
+        @Parameter(description = "buildId", required = true)
         @QueryParam("buildId")
         buildId: String,
-        @Parameter(name = "red", required = false)
+        @Parameter(description = "red", required = false)
         @QueryParam("red")
         red: Boolean,
-        @Parameter(name = "message", required = true)
+        @Parameter(description = "message", required = true)
         message: String,
-        @Parameter(name = "tag", required = false)
+        @Parameter(description = "tag", required = false)
         @QueryParam("tag")
         tag: String?,
-        @Parameter(name = "jobId", required = false)
+        @Parameter(description = "jobId", required = false)
         @QueryParam("jobId")
         jobId: String?
     ): Result<Boolean>?
@@ -128,10 +128,10 @@ interface BuildDockerHostResource {
     @Path("/dockerIp/{dockerIp}/refresh")
     @Operation(summary = "刷新Docker构建机状态")
     fun refresh(
-        @Parameter(name = "构建机信息", required = true)
+        @Parameter(description = "构建机信息", required = true)
         @PathParam("dockerIp")
         dockerIp: String,
-        @Parameter(name = "构建机信息", required = true)
+        @Parameter(description = "构建机信息", required = true)
         dockerIpInfoVO: DockerIpInfoVO
     ): Result<Boolean>
 }

@@ -61,19 +61,19 @@ interface BuildJobResource {
     @PUT
     @Path("/started")
     fun jobStarted(
-        @Parameter(name = "项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_PROJECT_ID)
         projectId: String,
-        @Parameter(name = "构建ID", required = true)
+        @Parameter(description = "构建ID", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_BUILD_ID)
         buildId: String,
-        @Parameter(name = "构建环境ID", required = true)
+        @Parameter(description = "构建环境ID", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_VM_SEQ_ID)
         vmSeqId: String,
-        @Parameter(name = "构建机名称", required = true)
+        @Parameter(description = "构建机名称", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_VM_NAME)
         vmName: String,
-        @Parameter(name = "网络问题导致的重试次数", required = false)
+        @Parameter(description = "网络问题导致的重试次数", required = false)
         @QueryParam("retryCount")
         retryCount: String
     ): Result<BuildVariables>
@@ -82,16 +82,16 @@ interface BuildJobResource {
     @GET
     @Path("/claim")
     fun claimTask(
-        @Parameter(name = "项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_PROJECT_ID)
         projectId: String,
-        @Parameter(name = "构建ID", required = true)
+        @Parameter(description = "构建ID", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_BUILD_ID)
         buildId: String,
-        @Parameter(name = "构建环境ID", required = true)
+        @Parameter(description = "构建环境ID", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_VM_SEQ_ID)
         vmSeqId: String,
-        @Parameter(name = "构建机名称", required = true)
+        @Parameter(description = "构建机名称", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_VM_NAME)
         vmName: String
     ): Result<BuildTask>
@@ -100,19 +100,19 @@ interface BuildJobResource {
     @POST
     @Path("/complete")
     fun completeTask(
-        @Parameter(name = "项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_PROJECT_ID)
         projectId: String,
-        @Parameter(name = "构建ID", required = true)
+        @Parameter(description = "构建ID", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_BUILD_ID)
         buildId: String,
-        @Parameter(name = "构建环境ID", required = true)
+        @Parameter(description = "构建环境ID", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_VM_SEQ_ID)
         vmSeqId: String,
-        @Parameter(name = "构建机名称", required = true)
+        @Parameter(description = "构建机名称", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_VM_NAME)
         vmName: String,
-        @Parameter(name = "执行结果", required = true)
+        @Parameter(description = "执行结果", required = true)
         result: BuildTaskResult
     ): Result<Boolean>
 
@@ -120,16 +120,16 @@ interface BuildJobResource {
     @POST
     @Path("/end")
     fun jobEnd(
-        @Parameter(name = "项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_PROJECT_ID)
         projectId: String,
-        @Parameter(name = "构建ID", required = true)
+        @Parameter(description = "构建ID", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_BUILD_ID)
         buildId: String,
-        @Parameter(name = "构建环境ID", required = true)
+        @Parameter(description = "构建环境ID", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_VM_SEQ_ID)
         vmSeqId: String,
-        @Parameter(name = "构建机名称", required = true)
+        @Parameter(description = "构建机名称", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_VM_NAME)
         vmName: String
     ): Result<Boolean>
@@ -138,16 +138,16 @@ interface BuildJobResource {
     @POST
     @Path("/timeout")
     fun jobTimeout(
-        @Parameter(name = "projectId", required = true)
+        @Parameter(description = "projectId", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_PROJECT_ID)
         projectId: String,
-        @Parameter(name = "pipelineId", required = true)
+        @Parameter(description = "pipelineId", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_PIPELINE_ID)
         pipelineId: String,
-        @Parameter(name = "构建ID", required = true)
+        @Parameter(description = "构建ID", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_BUILD_ID)
         buildId: String,
-        @Parameter(name = "构建环境ID", required = true)
+        @Parameter(description = "构建环境ID", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_VM_SEQ_ID)
         vmSeqId: String
     ): Result<Boolean>
@@ -156,13 +156,13 @@ interface BuildJobResource {
     @POST
     @Path("/heartbeat")
     fun jobHeartbeat(
-        @Parameter(name = "构建ID", required = true)
+        @Parameter(description = "构建ID", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_BUILD_ID)
         buildId: String,
-        @Parameter(name = "构建环境ID", required = true)
+        @Parameter(description = "构建环境ID", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_VM_SEQ_ID)
         vmSeqId: String,
-        @Parameter(name = "构建机名称", required = true)
+        @Parameter(description = "构建机名称", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_VM_NAME)
         vmName: String
     ): Result<Boolean>
@@ -171,19 +171,19 @@ interface BuildJobResource {
     @POST
     @Path("/heartbeat/v1")
     fun jobHeartbeatV1(
-        @Parameter(name = "projectId", required = true)
+        @Parameter(description = "projectId", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_PROJECT_ID)
         projectId: String,
-        @Parameter(name = "构建ID", required = true)
+        @Parameter(description = "构建ID", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_BUILD_ID)
         buildId: String,
-        @Parameter(name = "构建环境ID", required = true)
+        @Parameter(description = "构建环境ID", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_VM_SEQ_ID)
         vmSeqId: String,
-        @Parameter(name = "构建机名称", required = true)
+        @Parameter(description = "构建机名称", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_VM_NAME)
         vmName: String,
-        @Parameter(name = "执行次数", required = false)
+        @Parameter(description = "执行次数", required = false)
         @QueryParam("executeCount")
         executeCount: Int? = null
     ): Result<HeartBeatInfo>
@@ -192,21 +192,21 @@ interface BuildJobResource {
     @POST
     @Path("/submit_error")
     fun submitError(
-        @Parameter(name = "projectId", required = true)
+        @Parameter(description = "projectId", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_PROJECT_ID)
         projectId: String,
-        @Parameter(name = "pipelineId", required = true)
+        @Parameter(description = "pipelineId", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_PIPELINE_ID)
         pipelineId: String,
-        @Parameter(name = "构建ID", required = true)
+        @Parameter(description = "构建ID", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_BUILD_ID)
         @BkField(required = true)
         buildId: String,
-        @Parameter(name = "构建环境ID", required = true)
+        @Parameter(description = "构建环境ID", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_VM_SEQ_ID)
         @BkField(required = true)
         vmSeqId: String,
-        @Parameter(name = "执行结果", required = true)
+        @Parameter(description = "执行结果", required = true)
         errorInfo: ErrorInfo
     ): Result<Boolean>
 
@@ -214,13 +214,13 @@ interface BuildJobResource {
     @GET
     @Path("/detail_url")
     fun getBuildDetailUrl(
-        @Parameter(name = "projectId", required = true)
+        @Parameter(description = "projectId", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_PROJECT_ID)
         projectId: String,
-        @Parameter(name = "pipelineId", required = true)
+        @Parameter(description = "pipelineId", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_PIPELINE_ID)
         pipelineId: String,
-        @Parameter(name = "构建ID", required = true)
+        @Parameter(description = "构建ID", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_BUILD_ID)
         buildId: String
     ): Result<String>

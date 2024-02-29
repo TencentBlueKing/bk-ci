@@ -50,7 +50,7 @@ interface ExternalShortUrlResource {
     @Path("/visit/{urlId}")
     @GET
     fun visitShortUrl(
-        @Parameter(name = "urlId", required = true)
+        @Parameter(description = "urlId", required = true)
         @PathParam("urlId")
         urlId: String,
         @Context

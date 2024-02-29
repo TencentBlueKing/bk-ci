@@ -60,13 +60,13 @@ interface ServiceGitBasicSettingResource {
     @POST
     @Path("/enable")
     fun enableGitCI(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "开启或关闭", required = true)
+        @Parameter(description = "开启或关闭", required = true)
         @QueryParam("enabled")
         enabled: Boolean,
-        @Parameter(name = "工蜂项目信息(初始化时用)", required = false)
+        @Parameter(description = "工蜂项目信息(初始化时用)", required = false)
         projectInfo: GitCIProjectInfo
     ): Result<Boolean>
 
@@ -74,10 +74,10 @@ interface ServiceGitBasicSettingResource {
     @GET
     @Path("/{projectId}")
     fun getGitCIConf(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "蓝盾项目ID", required = true)
+        @Parameter(description = "蓝盾项目ID", required = true)
         @PathParam("projectId")
         projectId: String
     ): Result<GitCIBasicSetting?>
@@ -86,10 +86,10 @@ interface ServiceGitBasicSettingResource {
     @POST
     @Path("/validate")
     fun validateGitProject(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "工蜂项目URL", required = true)
+        @Parameter(description = "工蜂项目URL", required = true)
         request: GitUserValidateRequest
     ): Result<GitUserValidateResult?>
 
@@ -97,13 +97,13 @@ interface ServiceGitBasicSettingResource {
     @POST
     @Path("/{projectId}/save")
     fun saveGitCIConf(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "蓝盾项目ID", required = true)
+        @Parameter(description = "蓝盾项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(name = "工蜂项目配置", required = true)
+        @Parameter(description = "工蜂项目配置", required = true)
         gitCIUpdateSetting: GitCIUpdateSetting
     ): Result<Boolean>
 
@@ -111,13 +111,13 @@ interface ServiceGitBasicSettingResource {
     @POST
     @Path("/{projectId}/reset/oauth")
     fun updateEnableUser(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "蓝盾项目ID", required = true)
+        @Parameter(description = "蓝盾项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(name = "目标授权人", required = true)
+        @Parameter(description = "目标授权人", required = true)
         @QueryParam("authUserId")
         authUserId: String
     ): Result<Boolean>
@@ -126,19 +126,19 @@ interface ServiceGitBasicSettingResource {
     @GET
     @Path("/isOauth")
     fun isOAuth(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "重定向url类型", required = false)
+        @Parameter(description = "重定向url类型", required = false)
         @QueryParam("redirectUrlType")
         redirectUrlType: RedirectUrlTypeEnum?,
-        @Parameter(name = "oauth认证成功后重定向到前端的地址", required = false)
+        @Parameter(description = "oauth认证成功后重定向到前端的地址", required = false)
         @QueryParam("redirectUrl")
         redirectUrl: String?,
-        @Parameter(name = "工蜂项目Id", required = false)
+        @Parameter(description = "工蜂项目Id", required = false)
         @QueryParam("gitProjectId")
         gitProjectId: Long? = null,
-        @Parameter(name = "是否刷新token", required = false)
+        @Parameter(description = "是否刷新token", required = false)
         @QueryParam("refreshToken")
         refreshToken: Boolean? = true
     ): Result<AuthorizeResult>

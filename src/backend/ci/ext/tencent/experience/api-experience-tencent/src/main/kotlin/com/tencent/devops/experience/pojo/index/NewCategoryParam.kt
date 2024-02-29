@@ -32,19 +32,19 @@ import javax.ws.rs.PathParam
 import javax.ws.rs.QueryParam
 
 class NewCategoryParam {
-    @Parameter(name = "类别ID,1--游戏,2--工具,3--生活,4--社交", required = true)
+    @Parameter(description = "类别ID,1--游戏,2--工具,3--生活,4--社交", required = true)
     @PathParam("categoryId")
     var categoryId: Int = 0
 
-    @Parameter(name = "页目", required = false)
+    @Parameter(description = "页目", required = false)
     @QueryParam("page")
     var page: Int = 0
 
-    @Parameter(name = "每页数目", required = false)
+    @Parameter(description = "每页数目", required = false)
     @QueryParam("pageSize")
     var pageSize: Int = 0
 
-    @Parameter(name = "是否包含外部跳转", required = false)
+    @Parameter(description = "是否包含外部跳转", required = false)
     @QueryParam("includeExternalUrl")
     var includeExternalUrl: Boolean? = false
 }

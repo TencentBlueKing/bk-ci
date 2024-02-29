@@ -51,13 +51,13 @@ interface UserMarketAtomRepositoryResource {
     @PUT
     @Path("/{atomCode}")
     fun changeAtomRepositoryUserInfo(
-        @Parameter(name = "userId", required = true)
+        @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "项目代码", required = true)
+        @Parameter(description = "项目代码", required = true)
         @QueryParam("projectCode")
         projectCode: String,
-        @Parameter(name = "插件代码", required = true)
+        @Parameter(description = "插件代码", required = true)
         @PathParam("atomCode")
         atomCode: String
     ): Result<Boolean>

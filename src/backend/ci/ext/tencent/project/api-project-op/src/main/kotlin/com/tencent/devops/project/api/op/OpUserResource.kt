@@ -55,7 +55,7 @@ interface OpUserResource {
     @PUT
     @Path("/{userId}")
     fun refreshUserGroup(
-        @Parameter(name = "用户id", required = true)
+        @Parameter(description = "用户id", required = true)
         @PathParam("userId")
         userId: String
     ): Result<UserDeptDetail?>
@@ -74,13 +74,13 @@ interface OpUserResource {
     @GET
     @Path("/ext/gitci/fixProjectInfo")
     fun fixGitCIProjectInfo(
-        @Parameter(name = "起始ID", required = false)
+        @Parameter(description = "起始ID", required = false)
         @QueryParam("start")
         start: Long?,
-        @Parameter(name = "单次数量", required = false)
+        @Parameter(description = "单次数量", required = false)
         @QueryParam("limit")
         limit: Int?,
-        @Parameter(name = "间隔时间", required = false)
+        @Parameter(description = "间隔时间", required = false)
         @QueryParam("sleep")
         sleep: Long?
     ): Result<Int>
@@ -96,7 +96,7 @@ interface OpUserResource {
     @POST
     @Path("/senior/user/add")
     fun createSeniorUsers(
-        @Parameter(name = "高级用户列表", required = true)
+        @Parameter(description = "高级用户列表", required = true)
         seniorUserList: List<SeniorUserDTO>
     ): Result<Boolean>
 
@@ -104,7 +104,7 @@ interface OpUserResource {
     @DELETE
     @Path("/senior/user/delete/{userId}")
     fun deleteSeniorUsers(
-        @Parameter(name = "用户ID", required = true)
+        @Parameter(description = "用户ID", required = true)
         @PathParam("userId")
         userId: String
     ): Result<Boolean>

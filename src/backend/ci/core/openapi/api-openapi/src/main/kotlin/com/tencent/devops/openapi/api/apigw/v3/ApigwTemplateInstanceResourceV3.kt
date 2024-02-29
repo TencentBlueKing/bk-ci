@@ -68,25 +68,25 @@ interface ApigwTemplateInstanceResourceV3 {
     @POST
     @Path("/")
     fun createTemplateInstances(
-        @Parameter(name = "appCode", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
+        @Parameter(description = "appCode", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
         appCode: String?,
-        @Parameter(name = "apigw Type", required = true)
+        @Parameter(description = "apigw Type", required = true)
         @PathParam("apigwType")
         apigwType: String?,
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String,
-        @Parameter(name = "项目ID(项目英文名)", required = true)
+        @Parameter(description = "项目ID(项目英文名)", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(name = "模板ID", required = true)
+        @Parameter(description = "模板ID", required = true)
         @PathParam("templateId")
         templateId: String,
-        @Parameter(name = "模板版本（可通过v3_app_template_list接口获取）", required = true)
+        @Parameter(description = "模板版本（可通过v3_app_template_list接口获取）", required = true)
         @QueryParam("version")
         version: Long,
-        @Parameter(name = "是否应用模板设置")
+        @Parameter(description = "是否应用模板设置")
         @QueryParam("useTemplateSettings")
         useTemplateSettings: Boolean,
         @Parameter(
@@ -136,28 +136,28 @@ interface ApigwTemplateInstanceResourceV3 {
     @PUT
     @Path("/")
     fun updateTemplateInstances(
-        @Parameter(name = "appCode", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
+        @Parameter(description = "appCode", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
         appCode: String?,
-        @Parameter(name = "apigw Type", required = true)
+        @Parameter(description = "apigw Type", required = true)
         @PathParam("apigwType")
         apigwType: String?,
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "项目ID(项目英文名)", required = true)
+        @Parameter(description = "项目ID(项目英文名)", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(name = "模板ID", required = true)
+        @Parameter(description = "模板ID", required = true)
         @PathParam("templateId")
         templateId: String,
-        @Parameter(name = "版本名（可通过v3_app_template_list接口获取）", required = true)
+        @Parameter(description = "版本名（可通过v3_app_template_list接口获取）", required = true)
         @QueryParam("version")
         version: Long,
-        @Parameter(name = "是否应用模板设置")
+        @Parameter(description = "是否应用模板设置")
         @QueryParam("useTemplateSettings")
         useTemplateSettings: Boolean,
-        @Parameter(name = "模板实例", required = true)
+        @Parameter(description = "模板实例", required = true)
         instances: List<TemplateInstanceUpdate>
     ): TemplateOperationRet
 
@@ -168,35 +168,35 @@ interface ApigwTemplateInstanceResourceV3 {
     @GET
     @Path("/")
     fun listTemplateInstances(
-        @Parameter(name = "appCode", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
+        @Parameter(description = "appCode", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
         appCode: String?,
-        @Parameter(name = "apigw Type", required = true)
+        @Parameter(description = "apigw Type", required = true)
         @PathParam("apigwType")
         apigwType: String?,
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "项目ID(项目英文名)", required = true)
+        @Parameter(description = "项目ID(项目英文名)", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(name = "模板ID", required = true)
+        @Parameter(description = "模板ID", required = true)
         @PathParam("templateId")
         templateId: String,
-        @Parameter(name = "第几页", required = false, example = "1")
+        @Parameter(description = "第几页", required = false, example = "1")
         @QueryParam("page")
         page: Int? = 1,
-        @Parameter(name = "每页条数(默认20, 最大100)", required = false, example = "20")
+        @Parameter(description = "每页条数(默认20, 最大100)", required = false, example = "20")
         @QueryParam("pageSize")
         @BkField(patternStyle = BkStyleEnum.PAGE_SIZE_STYLE, required = false)
         pageSize: Int? = 20,
-        @Parameter(name = "名字搜索的关键字", required = false)
+        @Parameter(description = "名字搜索的关键字", required = false)
         @QueryParam("searchKey")
         searchKey: String?,
-        @Parameter(name = "排序字段", required = false)
+        @Parameter(description = "排序字段", required = false)
         @QueryParam("sortType")
         sortType: TemplateSortTypeEnum?,
-        @Parameter(name = "是否降序", required = false)
+        @Parameter(description = "是否降序", required = false)
         @QueryParam("desc")
         desc: Boolean?
     ): Result<TemplateInstancePage>

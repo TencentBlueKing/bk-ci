@@ -60,10 +60,10 @@ interface ServiceDockerHostResource {
     @GET
     @Path("/list")
     fun list(
-        @Parameter(name = "第几页", required = false)
+        @Parameter(description = "第几页", required = false)
         @QueryParam("page")
         page: Int?,
-        @Parameter(name = "每页条数", required = false)
+        @Parameter(description = "每页条数", required = false)
         @QueryParam("pageSize")
         pageSize: Int?
     ): Page<DockerHostZone>
@@ -72,13 +72,13 @@ interface ServiceDockerHostResource {
     @PUT
     @Path("/builds/{buildId}/vmseqs/{vmSeqId}")
     fun updateContainerId(
-        @Parameter(name = "buildId", required = true)
+        @Parameter(description = "buildId", required = true)
         @PathParam("buildId")
         buildId: String,
-        @Parameter(name = "vmSeqId", required = true)
+        @Parameter(description = "vmSeqId", required = true)
         @PathParam("vmSeqId")
         vmSeqId: Int,
-        @Parameter(name = "容器信息", required = true)
+        @Parameter(description = "容器信息", required = true)
         @QueryParam("containerId")
         containerId: String
     ): Result<Boolean>
@@ -87,10 +87,10 @@ interface ServiceDockerHostResource {
     @Path("/dockerIp/{dockerIp}/refresh")
     @Operation(summary = "刷新Docker构建机状态")
     fun refresh(
-        @Parameter(name = "构建机信息", required = true)
+        @Parameter(description = "构建机信息", required = true)
         @PathParam("dockerIp")
         dockerIp: String,
-        @Parameter(name = "构建机信息", required = true)
+        @Parameter(description = "构建机信息", required = true)
         dockerIpInfoVO: DockerIpInfoVO
     ): Result<Boolean>
 
@@ -98,10 +98,10 @@ interface ServiceDockerHostResource {
     @Path("/specialDockerHost/add")
     @Operation(summary = "批量新增专机配置")
     fun createSpecialDockerHost(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String,
-        @Parameter(name = "专机配置列表", required = true)
+        @Parameter(description = "专机配置列表", required = true)
         specialDockerHostVOs: List<SpecialDockerHostVO>
     ): Result<Boolean>
 }

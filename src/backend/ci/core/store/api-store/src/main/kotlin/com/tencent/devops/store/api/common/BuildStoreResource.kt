@@ -55,16 +55,16 @@ interface BuildStoreResource {
     @GET
     @Path("/sensitiveConf/types/{storeType}/codes/{storeCode}")
     fun getSensitiveConf(
-        @Parameter(name = "构建ID", required = true)
+        @Parameter(description = "构建ID", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_BUILD_ID)
         buildId: String,
-        @Parameter(name = "构建环境ID", required = true)
+        @Parameter(description = "构建环境ID", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_VM_SEQ_ID)
         vmSeqId: String,
-        @Parameter(name = "组件类型", required = true)
+        @Parameter(description = "组件类型", required = true)
         @PathParam("storeType")
         storeType: StoreTypeEnum,
-        @Parameter(name = "组件标识", required = true)
+        @Parameter(description = "组件标识", required = true)
         @PathParam("storeCode")
         storeCode: String
     ): Result<List<SensitiveConfResp>?>
@@ -73,19 +73,19 @@ interface BuildStoreResource {
     @GET
     @Path("/pkg/envs/types/{storeType}/languages/{language}/versions/{runtimeVersion}/get")
     fun getStorePkgRunEnvInfo(
-        @Parameter(name = "组件类型", required = true)
+        @Parameter(description = "组件类型", required = true)
         @PathParam("storeType")
         storeType: StoreTypeEnum,
-        @Parameter(name = "开发语言", required = true)
+        @Parameter(description = "开发语言", required = true)
         @PathParam("language")
         language: String,
-        @Parameter(name = "运行时版本", required = true)
+        @Parameter(description = "运行时版本", required = true)
         @PathParam("runtimeVersion")
         runtimeVersion: String,
-        @Parameter(name = "支持的操作系统名称", required = true)
+        @Parameter(description = "支持的操作系统名称", required = true)
         @QueryParam("osName")
         osName: String,
-        @Parameter(name = "支持的操作系统架构", required = true)
+        @Parameter(description = "支持的操作系统架构", required = true)
         @QueryParam("osArch")
         osArch: String
     ): Result<StorePkgRunEnvInfo?>

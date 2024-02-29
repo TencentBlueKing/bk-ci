@@ -47,7 +47,7 @@ interface ServiceDispatchJobResource {
     @POST
     @Path("/monitor")
     fun monitor(
-        @Parameter(name = "agent 事件", required = true)
+        @Parameter(description = "agent 事件", required = true)
         agentStartMonitor: AgentStartMonitor
     )
 }

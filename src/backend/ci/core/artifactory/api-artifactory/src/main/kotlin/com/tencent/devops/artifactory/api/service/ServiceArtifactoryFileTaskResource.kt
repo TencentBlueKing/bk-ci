@@ -57,19 +57,19 @@ interface ServiceArtifactoryFileTaskResource {
     @Path("/create")
     @POST
     fun createFileTask(
-        @Parameter(name = "userId", required = true)
+        @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String,
-        @Parameter(name = "projectId", required = true)
+        @Parameter(description = "projectId", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_PROJECT_ID)
         projectId: String,
-        @Parameter(name = "pipelineId", required = true)
+        @Parameter(description = "pipelineId", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_PIPELINE_ID)
         pipelineId: String,
-        @Parameter(name = "buildId", required = true)
+        @Parameter(description = "buildId", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_BUILD_ID)
         buildId: String,
-        @Parameter(name = "taskId", required = true)
+        @Parameter(description = "taskId", required = true)
         createFileTaskReq: CreateFileTaskReq
     ): Result<String>
 
@@ -77,19 +77,19 @@ interface ServiceArtifactoryFileTaskResource {
     @Path("/tasks/{taskId}/status")
     @GET
     fun getStatus(
-        @Parameter(name = "userId", required = true)
+        @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String,
-        @Parameter(name = "projectId", required = true)
+        @Parameter(description = "projectId", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_PROJECT_ID)
         projectId: String,
-        @Parameter(name = "pipelineId", required = true)
+        @Parameter(description = "pipelineId", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_PIPELINE_ID)
         pipelineId: String,
-        @Parameter(name = "buildId", required = true)
+        @Parameter(description = "buildId", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_BUILD_ID)
         buildId: String,
-        @Parameter(name = "taskId", required = true)
+        @Parameter(description = "taskId", required = true)
         @PathParam("taskId")
         taskId: String
     ): Result<FileTaskInfo?>
@@ -98,19 +98,19 @@ interface ServiceArtifactoryFileTaskResource {
     @Path("/tasks/{taskId}/clear")
     @PUT
     fun clearFileTask(
-        @Parameter(name = "userId", required = true)
+        @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String,
-        @Parameter(name = "projectId", required = true)
+        @Parameter(description = "projectId", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_PROJECT_ID)
         projectId: String,
-        @Parameter(name = "pipelineId", required = true)
+        @Parameter(description = "pipelineId", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_PIPELINE_ID)
         pipelineId: String,
-        @Parameter(name = "buildId", required = true)
+        @Parameter(description = "buildId", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_BUILD_ID)
         buildId: String,
-        @Parameter(name = "taskId", required = true)
+        @Parameter(description = "taskId", required = true)
         @PathParam("taskId")
         taskId: String
     ): Result<Boolean>

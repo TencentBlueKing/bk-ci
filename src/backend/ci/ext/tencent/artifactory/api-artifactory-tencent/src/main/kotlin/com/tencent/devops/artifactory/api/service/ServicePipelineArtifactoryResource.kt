@@ -53,16 +53,16 @@ interface ServicePipelineArtifactoryResource {
     @Path("/{projectId}/{pipelineId}/hasPermission")
     @GET
     fun hasPermission(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(name = "路径", required = false)
+        @Parameter(description = "路径", required = false)
         @PathParam("pipelineId")
         pipelineId: String,
-        @Parameter(name = "权限", required = true)
+        @Parameter(description = "权限", required = true)
         @QueryParam("permission")
         permission: Permission
     ): Result<Boolean>

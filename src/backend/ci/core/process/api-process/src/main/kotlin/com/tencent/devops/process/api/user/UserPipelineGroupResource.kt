@@ -59,10 +59,10 @@ interface UserPipelineGroupResource {
     @GET
     @Path("/groups")
     fun getGroups(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @QueryParam("projectId")
         projectId: String
     ): Result<List<PipelineGroup>>
@@ -71,7 +71,7 @@ interface UserPipelineGroupResource {
     @POST
     @Path("/groups/")
     fun addGroup(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
         pipelineGroup: PipelineGroupCreate
@@ -81,7 +81,7 @@ interface UserPipelineGroupResource {
     @PUT
     @Path("/groups/")
     fun updateGroup(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
         pipelineGroup: PipelineGroupUpdate
@@ -91,13 +91,13 @@ interface UserPipelineGroupResource {
     @DELETE
     @Path("/groups/")
     fun deleteGroup(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @QueryParam("projectId")
         projectId: String,
-        @Parameter(name = "分组ID", required = true)
+        @Parameter(description = "分组ID", required = true)
         @QueryParam("groupId")
         groupId: String
     ): Result<Boolean>
@@ -106,13 +106,13 @@ interface UserPipelineGroupResource {
     @POST
     @Path("/labels/")
     fun addLabel(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @QueryParam("projectId")
         projectId: String,
-        @Parameter(name = "添加标签请求报文", required = true)
+        @Parameter(description = "添加标签请求报文", required = true)
         pipelineLabel: PipelineLabelCreate
     ): Result<Boolean>
 
@@ -120,13 +120,13 @@ interface UserPipelineGroupResource {
     @DELETE
     @Path("/labels/")
     fun deleteLabel(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @QueryParam("projectId")
         projectId: String,
-        @Parameter(name = "标签ID", required = true)
+        @Parameter(description = "标签ID", required = true)
         @QueryParam("labelId")
         labelId: String
     ): Result<Boolean>
@@ -135,13 +135,13 @@ interface UserPipelineGroupResource {
     @PUT
     @Path("/labels/")
     fun updateLabel(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @QueryParam("projectId")
         projectId: String,
-        @Parameter(name = "更改标签请求报文", required = true)
+        @Parameter(description = "更改标签请求报文", required = true)
         pipelineLabel: PipelineLabelUpdate
     ): Result<Boolean>
 
@@ -149,16 +149,16 @@ interface UserPipelineGroupResource {
     @POST
     @Path("/pipeline/labels/")
     fun updatePipelineLabel(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @QueryParam("projectId")
         projectId: String,
-        @Parameter(name = "流水线ID", required = true)
+        @Parameter(description = "流水线ID", required = true)
         @QueryParam("pipelineId")
         pipelineId: String,
-        @Parameter(name = "流水线ids", required = true)
+        @Parameter(description = "流水线ids", required = true)
         labelIds: List<String>
     ): Result<Boolean>
 }

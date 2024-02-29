@@ -54,22 +54,22 @@ interface ServiceMarketAtomArchiveResource {
     @GET
     @Path("/users/{userId}/atoms/{atomCode}/versions/{version}/package/verify")
     fun verifyAtomPackageByUserId(
-        @Parameter(name = "用户ID", required = true)
+        @Parameter(description = "用户ID", required = true)
         @PathParam("userId")
         userId: String,
-        @Parameter(name = "插件代码", required = true)
+        @Parameter(description = "插件代码", required = true)
         @PathParam("atomCode")
         atomCode: String,
-        @Parameter(name = "版本号", required = true)
+        @Parameter(description = "版本号", required = true)
         @PathParam("version")
         version: String,
-        @Parameter(name = "项目代码", required = true)
+        @Parameter(description = "项目代码", required = true)
         @QueryParam("projectCode")
         projectCode: String,
-        @Parameter(name = "发布类型", required = false)
+        @Parameter(description = "发布类型", required = false)
         @QueryParam("releaseType")
         releaseType: ReleaseTypeEnum?,
-        @Parameter(name = "支持的操作系统", required = false)
+        @Parameter(description = "支持的操作系统", required = false)
         @QueryParam("os")
         os: String?
     ): Result<Boolean>
@@ -78,16 +78,16 @@ interface ServiceMarketAtomArchiveResource {
     @GET
     @Path("/users/{userId}/atoms/{atomCode}/versions/{version}/json/verify")
     fun verifyAtomTaskJson(
-        @Parameter(name = "用户ID", required = true)
+        @Parameter(description = "用户ID", required = true)
         @PathParam("userId")
         userId: String,
-        @Parameter(name = "插件代码", required = true)
+        @Parameter(description = "插件代码", required = true)
         @PathParam("atomCode")
         atomCode: String,
-        @Parameter(name = "版本号", required = true)
+        @Parameter(description = "版本号", required = true)
         @PathParam("version")
         version: String,
-        @Parameter(name = "项目代码", required = true)
+        @Parameter(description = "项目代码", required = true)
         @QueryParam("projectCode")
         projectCode: String
     ): Result<GetAtomConfigResult?>
@@ -96,19 +96,19 @@ interface ServiceMarketAtomArchiveResource {
     @GET
     @Path("/users/{userId}/atoms/{atomCode}/versions/{version}/releaseType/verify")
     fun validateReleaseType(
-        @Parameter(name = "用户ID", required = true)
+        @Parameter(description = "用户ID", required = true)
         @PathParam("userId")
         userId: String,
-        @Parameter(name = "插件代码", required = true)
+        @Parameter(description = "插件代码", required = true)
         @PathParam("atomCode")
         atomCode: String,
-        @Parameter(name = "版本号", required = true)
+        @Parameter(description = "版本号", required = true)
         @PathParam("version")
         version: String,
-        @Parameter(name = "项目代码", required = true)
+        @Parameter(description = "项目代码", required = true)
         @QueryParam("projectCode")
         projectCode: String,
-        @Parameter(name = "插件字段校验确认标识", required = false)
+        @Parameter(description = "插件字段校验确认标识", required = false)
         @QueryParam("fieldCheckConfirmFlag")
         fieldCheckConfirmFlag: Boolean?
     ): Result<Boolean>
@@ -117,16 +117,16 @@ interface ServiceMarketAtomArchiveResource {
     @PUT
     @Path("/users/{userId}/atoms/{atomId}/pkg/info/update")
     fun updateAtomPkgInfo(
-        @Parameter(name = "用户ID", required = true)
+        @Parameter(description = "用户ID", required = true)
         @PathParam("userId")
         userId: String,
-        @Parameter(name = "插件ID", required = true)
+        @Parameter(description = "插件ID", required = true)
         @PathParam("atomId")
         atomId: String,
-        @Parameter(name = "项目代码", required = true)
+        @Parameter(description = "项目代码", required = true)
         @QueryParam("projectCode")
         projectCode: String,
-        @Parameter(name = "插件执行包相关信息修改请求报文体", required = true)
+        @Parameter(description = "插件执行包相关信息修改请求报文体", required = true)
         atomPkgInfoUpdateRequest: AtomPkgInfoUpdateRequest
     ): Result<Boolean>
 }

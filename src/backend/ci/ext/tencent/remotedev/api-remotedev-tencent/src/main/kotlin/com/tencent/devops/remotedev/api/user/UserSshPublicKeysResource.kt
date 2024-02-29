@@ -52,7 +52,7 @@ interface UserSshPublicKeysResource {
     @GET
     @Path("/list")
     fun getUserPublicKeysList(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String
     ): Result<List<SshPublicKey>>
@@ -61,10 +61,10 @@ interface UserSshPublicKeysResource {
     @POST
     @Path("/")
     fun createPublicKey(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "ssh key", required = true)
+        @Parameter(description = "ssh key", required = true)
         sshPublicKey: SshPublicKey
     ): Result<Boolean>
 }

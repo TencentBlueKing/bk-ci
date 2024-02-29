@@ -28,21 +28,21 @@ interface ServiceWebhookBuildResource {
     @POST
     @Path("/projects/{projectId}/pipelines/{pipelineId}/webhook/trigger")
     fun webhookTrigger(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(name = "流水线ID", required = true)
+        @Parameter(description = "流水线ID", required = true)
         @PathParam("pipelineId")
         pipelineId: String,
-        @Parameter(name = "启动参数", required = true)
+        @Parameter(description = "启动参数", required = true)
         params: WebhookTriggerParams,
-        @Parameter(name = "渠道号，默认为BS", required = false)
+        @Parameter(description = "渠道号，默认为BS", required = false)
         @QueryParam("channelCode")
         channelCode: ChannelCode = ChannelCode.BS,
-        @Parameter(name = "启动类型", required = false)
+        @Parameter(description = "启动类型", required = false)
         @QueryParam("startType")
         startType: StartType = StartType.WEB_HOOK
     ): Result<String?>

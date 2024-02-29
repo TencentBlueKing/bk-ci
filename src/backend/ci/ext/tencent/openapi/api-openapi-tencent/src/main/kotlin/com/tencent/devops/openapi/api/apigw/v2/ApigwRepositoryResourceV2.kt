@@ -56,28 +56,28 @@ interface ApigwRepositoryResourceV2 {
     @GET
     @Path("/projects/{projectId}/listByProject")
     fun listByProject(
-        @Parameter(name = "appCode", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
+        @Parameter(description = "appCode", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
         appCode: String?,
-        @Parameter(name = "apigw Type", required = true)
+        @Parameter(description = "apigw Type", required = true)
         @PathParam("apigwType")
         apigwType: String?,
-        @Parameter(name = "组织类型", required = true)
+        @Parameter(description = "组织类型", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_ORGANIZATION_TYPE)
         organizationType: String,
-        @Parameter(name = "组织ID", required = true)
+        @Parameter(description = "组织ID", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_ORGANIZATION_ID)
         organizationId: Int,
-        @Parameter(name = "项目ID(项目英文名)", required = true)
+        @Parameter(description = "项目ID(项目英文名)", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(name = "仓库类型", required = false)
+        @Parameter(description = "仓库类型", required = false)
         @QueryParam("repositoryType")
         repositoryType: ScmType?,
-        @Parameter(name = "分页", required = false)
+        @Parameter(description = "分页", required = false)
         @QueryParam("page")
         page: Int?,
-        @Parameter(name = "每页条数(默认20, 最大100)", required = false)
+        @Parameter(description = "每页条数(默认20, 最大100)", required = false)
         @QueryParam("pageSize")
         pageSize: Int?
     ): Result<Page<RepositoryInfo>?>
@@ -86,19 +86,19 @@ interface ApigwRepositoryResourceV2 {
     @GET
     @Path("/getAuthUrl")
     fun getAuthUrl(
-        @Parameter(name = "appCode", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
+        @Parameter(description = "appCode", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
         appCode: String?,
-        @Parameter(name = "apigw Type", required = true)
+        @Parameter(description = "apigw Type", required = true)
         @PathParam("apigwType")
         apigwType: String?,
-        @Parameter(name = "项目id", required = true)
+        @Parameter(description = "项目id", required = true)
         @QueryParam("projectId")
         projectId: String,
-        @Parameter(name = "用户Id", required = true)
+        @Parameter(description = "用户Id", required = true)
         @QueryParam("userId")
         userId: String,
-        @Parameter(name = "项目hashId")
+        @Parameter(description = "项目hashId")
         @QueryParam("repoHashId")
         repoHashId: String?
     ): Result<String>
@@ -107,13 +107,13 @@ interface ApigwRepositoryResourceV2 {
     @GET
     @Path("/git/{userId}")
     fun gitGet(
-        @Parameter(name = "appCode", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
+        @Parameter(description = "appCode", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
         appCode: String?,
-        @Parameter(name = "apigw Type", required = true)
+        @Parameter(description = "apigw Type", required = true)
         @PathParam("apigwType")
         apigwType: String?,
-        @Parameter(name = "用户ID", required = true)
+        @Parameter(description = "用户ID", required = true)
         @PathParam("userId")
         userId: String
     ): Result<String?>

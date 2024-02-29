@@ -22,10 +22,10 @@ interface ServiceExperienceAuthResource {
     @Path("/task")
     @Operation(summary = "iam版本体验回调接口")
     fun experienceTaskInfo(
-        @Parameter(name = "回调信息")
+        @Parameter(description = "回调信息")
         callBackInfo: CallbackRequestDTO,
         @HeaderParam(AUTH_HEADER_IAM_TOKEN)
-        @Parameter(name = "token")
+        @Parameter(description = "token")
         token: String
     ): CallbackBaseResponseDTO?
 
@@ -33,10 +33,10 @@ interface ServiceExperienceAuthResource {
     @Path("/group")
     @Operation(summary = "iam版本体验组回调接口")
     fun experienceGroup(
-        @Parameter(name = "回调信息")
+        @Parameter(description = "回调信息")
         callBackInfo: CallbackRequestDTO,
         @HeaderParam(AUTH_HEADER_IAM_TOKEN)
-        @Parameter(name = "token")
+        @Parameter(description = "token")
         token: String
     ): CallbackBaseResponseDTO?
 }

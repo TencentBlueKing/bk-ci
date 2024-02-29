@@ -26,7 +26,7 @@ interface ServiceGithubPRResource {
     @POST
     @Path("/getPullRequest")
     fun getPullRequest(
-        @Parameter(name = "授权token", required = true)
+        @Parameter(description = "授权token", required = true)
         @HeaderParam(AUTH_HEADER_GITHUB_TOKEN)
         token: String,
         request: GetPullRequestRequest
@@ -36,7 +36,7 @@ interface ServiceGithubPRResource {
     @POST
     @Path("/listPullRequestFiles")
     fun listPullRequestFiles(
-        @Parameter(name = "授权token", required = true)
+        @Parameter(description = "授权token", required = true)
         @HeaderParam(AUTH_HEADER_GITHUB_TOKEN)
         token: String,
         request: ListPullRequestFileRequest

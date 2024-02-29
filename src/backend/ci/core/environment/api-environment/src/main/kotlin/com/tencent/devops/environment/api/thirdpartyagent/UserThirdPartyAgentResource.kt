@@ -81,13 +81,13 @@ interface UserThirdPartyAgentResource {
         @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(name = "操作系统", required = true)
+        @Parameter(description = "操作系统", required = true)
         @PathParam("os")
         os: OS,
-        @Parameter(name = "网关地域", required = false)
+        @Parameter(description = "网关地域", required = false)
         @QueryParam("zoneName")
         zoneName: String?
     ): Result<ThirdPartyAgentLink>
@@ -96,16 +96,16 @@ interface UserThirdPartyAgentResource {
     @GET
     @Path("/projects/{projectId}/os/{os}/gateway")
     fun getGateway(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(name = "操作系统", required = true)
+        @Parameter(description = "操作系统", required = true)
         @PathParam("os")
         os: OS,
-        @Parameter(name = "可见性", required = false)
+        @Parameter(description = "可见性", required = false)
         @QueryParam("visibility")
         visibility: Boolean?
     ): Result<List<SlaveGateway>>
@@ -114,13 +114,13 @@ interface UserThirdPartyAgentResource {
     @GET
     @Path("/projects/{projectId}/node/{nodeId}/link")
     fun getLink(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(name = "Node Hash ID", required = true)
+        @Parameter(description = "Node Hash ID", required = true)
         @PathParam("nodeId")
         nodeId: String
     ): Result<ThirdPartyAgentLink>
@@ -129,13 +129,13 @@ interface UserThirdPartyAgentResource {
     @GET
     @Path("/projects/{projectId}/os/{os}/list")
     fun listAgents(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(name = "操作系统", required = true)
+        @Parameter(description = "操作系统", required = true)
         @PathParam("os")
         os: OS
     ): Result<List<ThirdPartyAgentInfo>>
@@ -144,10 +144,10 @@ interface UserThirdPartyAgentResource {
     @GET
     @Path("/projects/{projectId}/list")
     fun listAgents(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String
     ): Result<List<ThirdPartyAgentInfo>>
@@ -156,13 +156,13 @@ interface UserThirdPartyAgentResource {
     @GET
     @Path("/projects/{projectId}/agents/{agentId}/status")
     fun getAgentStatus(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(name = "Agent Hash ID", required = true)
+        @Parameter(description = "Agent Hash ID", required = true)
         @PathParam("agentId")
         agentId: String
     ): Result<ThirdPartyAgentStatusWithInfo>
@@ -171,15 +171,15 @@ interface UserThirdPartyAgentResource {
     @POST
     @Path("/projects/{projectId}/agents/{agentId}/import")
     fun importAgent(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         @BkField(minLength = 1, maxLength = 128)
         userId: String,
-        @Parameter(name = "项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         @BkField(minLength = 1, maxLength = 64)
         projectId: String,
-        @Parameter(name = "Agent Hash ID", required = true)
+        @Parameter(description = "Agent Hash ID", required = true)
         @PathParam("agentId")
         @BkField(minLength = 1, maxLength = 32)
         agentId: String
@@ -189,15 +189,15 @@ interface UserThirdPartyAgentResource {
     @DELETE
     @Path("/projects/{projectId}/nodes/{nodeHashId}/delete")
     fun deleteAgent(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         @BkField(minLength = 1, maxLength = 128)
         userId: String,
-        @Parameter(name = "项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         @BkField(minLength = 1, maxLength = 64)
         projectId: String,
-        @Parameter(name = "Node Hash ID", required = true)
+        @Parameter(description = "Node Hash ID", required = true)
         @PathParam("nodeHashId")
         @BkField(minLength = 1, maxLength = 32)
         nodeHashId: String
@@ -207,16 +207,16 @@ interface UserThirdPartyAgentResource {
     @POST
     @Path("/projects/{projectId}/nodes/{nodeHashId}/envs")
     fun saveAgentEnvs(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(name = "Node Hash ID", required = true)
+        @Parameter(description = "Node Hash ID", required = true)
         @PathParam("nodeHashId")
         nodeHashId: String,
-        @Parameter(name = "Envs", required = true)
+        @Parameter(description = "Envs", required = true)
         envs: List<EnvVar>
     ): Result<Boolean>
 
@@ -224,13 +224,13 @@ interface UserThirdPartyAgentResource {
     @GET
     @Path("/projects/{projectId}/nodes/{nodeHashId}/envs")
     fun getAgentEnvs(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(name = "Node Hash ID", required = true)
+        @Parameter(description = "Node Hash ID", required = true)
         @PathParam("nodeHashId")
         nodeHashId: String
     ): Result<List<EnvVar>>
@@ -239,16 +239,16 @@ interface UserThirdPartyAgentResource {
     @POST
     @Path("/projects/{projectId}/nodes/{nodeHashId}/parallelTaskCount")
     fun setAgentParallelTaskCount(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(name = "Node Hash ID", required = true)
+        @Parameter(description = "Node Hash ID", required = true)
         @PathParam("nodeHashId")
         nodeHashId: String,
-        @Parameter(name = "parallelTaskCount", required = true)
+        @Parameter(description = "parallelTaskCount", required = true)
         @QueryParam("parallelTaskCount")
         parallelTaskCount: Int
     ): Result<Boolean>
@@ -257,16 +257,16 @@ interface UserThirdPartyAgentResource {
     @POST
     @Path("/projects/{projectId}/nodes/{nodeHashId}/dockerParallelTaskCount")
     fun setAgentDockerParallelTaskCount(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(name = "Node Hash ID", required = true)
+        @Parameter(description = "Node Hash ID", required = true)
         @PathParam("nodeHashId")
         nodeHashId: String,
-        @Parameter(name = "count", required = true)
+        @Parameter(description = "count", required = true)
         @QueryParam("count")
         count: Int
     ): Result<Boolean>
@@ -275,13 +275,13 @@ interface UserThirdPartyAgentResource {
     @GET
     @Path("/projects/{projectId}/nodes/{nodeHashId}/thirdPartyAgentDetail")
     fun getThirdPartyAgentDetail(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(name = "Node Hash ID", required = true)
+        @Parameter(description = "Node Hash ID", required = true)
         @PathParam("nodeHashId")
         nodeHashId: String
     ): Result<ThirdPartyAgentDetail?>
@@ -290,19 +290,19 @@ interface UserThirdPartyAgentResource {
     @GET
     @Path("/projects/{projectId}/nodes/{nodeHashId}/listAgentBuilds")
     fun listAgentBuilds(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(name = "Node Hash ID", required = true)
+        @Parameter(description = "Node Hash ID", required = true)
         @PathParam("nodeHashId")
         nodeHashId: String,
-        @Parameter(name = "第几页", required = false)
+        @Parameter(description = "第几页", required = false)
         @QueryParam("page")
         page: Int?,
-        @Parameter(name = "每页条数", required = false)
+        @Parameter(description = "每页条数", required = false)
         @QueryParam("pageSize")
         pageSize: Int?
     ): Result<Page<AgentBuildDetail>>
@@ -311,19 +311,19 @@ interface UserThirdPartyAgentResource {
     @GET
     @Path("/projects/{projectId}/nodes/{nodeHashId}/listAgentActions")
     fun listAgentActions(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(name = "Node Hash ID", required = true)
+        @Parameter(description = "Node Hash ID", required = true)
         @PathParam("nodeHashId")
         nodeHashId: String,
-        @Parameter(name = "第几页", required = false)
+        @Parameter(description = "第几页", required = false)
         @QueryParam("page")
         page: Int?,
-        @Parameter(name = "每页条数", required = false)
+        @Parameter(description = "每页条数", required = false)
         @QueryParam("pageSize")
         pageSize: Int?
     ): Result<Page<ThirdPartyAgentAction>>
@@ -332,16 +332,16 @@ interface UserThirdPartyAgentResource {
     @GET
     @Path("/projects/{projectId}/nodes/{nodeHashId}/queryCpuUsageMetrix")
     fun queryCpuUsageMetrix(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(name = "Node Hash ID", required = true)
+        @Parameter(description = "Node Hash ID", required = true)
         @PathParam("nodeHashId")
         nodeHashId: String,
-        @Parameter(name = "时间段，HOUR | DAY | WEEK", required = true)
+        @Parameter(description = "时间段，HOUR | DAY | WEEK", required = true)
         @QueryParam("timeRange")
         timeRange: String
     ): Result<Map<String, List<Map<String, Any>>>>
@@ -350,16 +350,16 @@ interface UserThirdPartyAgentResource {
     @GET
     @Path("/projects/{projectId}/nodes/{nodeHashId}/queryMemoryUsageMetrix")
     fun queryMemoryUsageMetrix(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(name = "Node Hash ID", required = true)
+        @Parameter(description = "Node Hash ID", required = true)
         @PathParam("nodeHashId")
         nodeHashId: String,
-        @Parameter(name = "时间段，HOUR | DAY | WEEK", required = true)
+        @Parameter(description = "时间段，HOUR | DAY | WEEK", required = true)
         @QueryParam("timeRange")
         timeRange: String
     ): Result<Map<String, List<Map<String, Any>>>>
@@ -368,16 +368,16 @@ interface UserThirdPartyAgentResource {
     @GET
     @Path("/projects/{projectId}/nodes/{nodeHashId}/queryDiskioMetrix")
     fun queryDiskioMetrix(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(name = "Node Hash ID", required = true)
+        @Parameter(description = "Node Hash ID", required = true)
         @PathParam("nodeHashId")
         nodeHashId: String,
-        @Parameter(name = "时间段，HOUR | DAY | WEEK", required = true)
+        @Parameter(description = "时间段，HOUR | DAY | WEEK", required = true)
         @QueryParam("timeRange")
         timeRange: String
     ): Result<Map<String, List<Map<String, Any>>>>
@@ -386,16 +386,16 @@ interface UserThirdPartyAgentResource {
     @GET
     @Path("/projects/{projectId}/nodes/{nodeHashId}/queryNetMetrix")
     fun queryNetMetrix(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(name = "Node Hash ID", required = true)
+        @Parameter(description = "Node Hash ID", required = true)
         @PathParam("nodeHashId")
         nodeHashId: String,
-        @Parameter(name = "时间段，HOUR | DAY | WEEK", required = true)
+        @Parameter(description = "时间段，HOUR | DAY | WEEK", required = true)
         @QueryParam("timeRange")
         timeRange: String
     ): Result<Map<String, List<Map<String, Any>>>>

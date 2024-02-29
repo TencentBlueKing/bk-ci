@@ -49,10 +49,10 @@ interface ServiceGitCommitResource {
     @POST
     @Path("/pipelines/{pipelineId}/commits/{commit}")
     fun queryCommitInfo(
-        @Parameter(name = "流水线ID", required = false)
+        @Parameter(description = "流水线ID", required = false)
         @PathParam("pipelineId")
         projectCode: String,
-        @Parameter(name = "代码库名称", required = true)
+        @Parameter(description = "代码库名称", required = true)
         @PathParam("commit")
         commit: String
     ): Result<CommitData?>

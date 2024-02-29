@@ -55,13 +55,13 @@ interface UserIpaResource {
     @Path("/sign")
     @Consumes(MediaType.APPLICATION_OCTET_STREAM)
     fun ipaSign(
-        @Parameter(name = "userId", required = true)
+        @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "ipaSignInfoHeader", required = false)
+        @Parameter(description = "ipaSignInfoHeader", required = false)
         @HeaderParam(AUTH_HEADER_DEVOPS_SIGN_INFO)
         ipaSignInfoHeader: String,
-        @Parameter(name = "IPA包文件", required = true)
+        @Parameter(description = "IPA包文件", required = true)
         ipaInputStream: InputStream
     ): Result<String?>
 
@@ -70,10 +70,10 @@ interface UserIpaResource {
     @Path("/sign/{resignId}/status")
     @Consumes(MediaType.APPLICATION_OCTET_STREAM)
     fun getSignStatus(
-        @Parameter(name = "userId", required = true)
+        @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "签名任务ID", required = true)
+        @Parameter(description = "签名任务ID", required = true)
         @PathParam("resignId")
         resignId: String
     ): Result<String>
@@ -83,10 +83,10 @@ interface UserIpaResource {
     @Path("/sign/{resignId}/detail")
     @Consumes(MediaType.APPLICATION_OCTET_STREAM)
     fun getSignDetail(
-        @Parameter(name = "userId", required = true)
+        @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "签名任务ID", required = true)
+        @Parameter(description = "签名任务ID", required = true)
         @PathParam("resignId")
         resignId: String
     ): Result<SignDetail>
@@ -95,10 +95,10 @@ interface UserIpaResource {
     @GET
     @Path("/sign/{resignId}/downloadUrl")
     fun downloadUrl(
-        @Parameter(name = "userId", required = true)
+        @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "签名任务ID", required = true)
+        @Parameter(description = "签名任务ID", required = true)
         @PathParam("resignId")
         resignId: String
     ): Result<String>

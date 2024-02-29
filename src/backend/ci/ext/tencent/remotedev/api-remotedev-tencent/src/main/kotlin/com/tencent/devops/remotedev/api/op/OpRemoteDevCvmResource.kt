@@ -55,10 +55,10 @@ interface OpRemoteDevCvmResource {
     @POST
     @Path("/add")
     fun addRemotedevCvm(
-        @Parameter(name = "用户ID", required = true)
+        @Parameter(description = "用户ID", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "cvm信息", required = true)
+        @Parameter(description = "cvm信息", required = true)
         cvmData: List<RemotedevCvmData>
     ): Result<Boolean>
 
@@ -66,10 +66,10 @@ interface OpRemoteDevCvmResource {
     @POST
     @Path("/list")
     fun getRemotedevCvmList(
-        @Parameter(name = "用户ID", required = true)
+        @Parameter(description = "用户ID", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "查询参数")
+        @Parameter(description = "查询参数")
         data: RemotedevCvmFetchData
     ): Result<Page<RemotedevCvmData>>
 
@@ -77,13 +77,13 @@ interface OpRemoteDevCvmResource {
     @PUT
     @Path("/update/{cvmId}")
     fun updateRemotedevCvm(
-        @Parameter(name = "用户ID", required = true)
+        @Parameter(description = "用户ID", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "模板ID", required = true)
+        @Parameter(description = "模板ID", required = true)
         @PathParam("cvmId")
         cvmId: Long,
-        @Parameter(name = "模板信息", required = true)
+        @Parameter(description = "模板信息", required = true)
         remotedevCvmData: RemotedevCvmData
     ): Result<Boolean>
 
@@ -91,10 +91,10 @@ interface OpRemoteDevCvmResource {
     @DELETE
     @Path("/delete/{cvmId}")
     fun deleteRemotedevCvm(
-        @Parameter(name = "用户ID", required = true)
+        @Parameter(description = "用户ID", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "模板信息", required = true)
+        @Parameter(description = "模板信息", required = true)
         @PathParam("cvmId")
         cvmId: Long
     ): Result<Boolean>

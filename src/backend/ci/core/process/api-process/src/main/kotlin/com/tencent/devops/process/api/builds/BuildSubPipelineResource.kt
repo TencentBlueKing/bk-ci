@@ -60,13 +60,13 @@ interface BuildSubPipelineResource {
     // @Path("/projects/{projectId}/pipelines/{pipelineId}/builds/{buildId}/detail")
     @Path("/subPipeline/{projectId}/{pipelineId}/{buildId}/detail")
     fun getSubPipelineStatus(
-        @Parameter(name = "项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(name = "流水线ID", required = true)
+        @Parameter(description = "流水线ID", required = true)
         @PathParam("pipelineId")
         pipelineId: String,
-        @Parameter(name = "构建ID", required = true)
+        @Parameter(description = "构建ID", required = true)
         @PathParam("buildId")
         buildId: String
     ): Result<SubPipelineStatus>
@@ -76,30 +76,30 @@ interface BuildSubPipelineResource {
     // @Path("/pipelines/{callPipelineId}/atoms/{atomCode}/startByPipeline")
     @Path("/pipelines/{callPipelineId}/{atomCode}/startByPipeline")
     fun callPipelineStartup(
-        @Parameter(name = "项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_PROJECT_ID)
         projectId: String,
-        @Parameter(name = "当前流水线ID", required = true)
+        @Parameter(description = "当前流水线ID", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_PIPELINE_ID)
         parentPipelineId: String,
-        @Parameter(name = "构建ID", required = true)
+        @Parameter(description = "构建ID", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_BUILD_ID)
         buildId: String,
-        @Parameter(name = "要启动的流水线ID", required = true)
+        @Parameter(description = "要启动的流水线ID", required = true)
         @PathParam("callPipelineId")
         callPipelineId: String,
-        @Parameter(name = "插件标识", required = true)
+        @Parameter(description = "插件标识", required = true)
         @PathParam("atomCode")
         atomCode: String,
-        @Parameter(name = "插件ID", required = true)
+        @Parameter(description = "插件ID", required = true)
         @QueryParam("taskId")
         taskId: String,
-        @Parameter(name = "运行方式", required = true)
+        @Parameter(description = "运行方式", required = true)
         @QueryParam("runMode")
         runMode: String,
         @QueryParam("channelCode")
         channelCode: ChannelCode?,
-        @Parameter(name = "启动参数", required = true)
+        @Parameter(description = "启动参数", required = true)
         values: Map<String, String>
     ): Result<ProjectBuildId>
 
@@ -108,31 +108,31 @@ interface BuildSubPipelineResource {
     // @Path("/pipelines/{callPipelineId}/atoms/{atomCode}/startByPipeline")
     @Path("/projects/{callProjectId}/pipelines/{callPipelineId}/atoms/{atomCode}/startByPipeline")
     fun callOtherProjectPipelineStartup(
-        @Parameter(name = "项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_PROJECT_ID)
         projectId: String,
-        @Parameter(name = "当前流水线ID", required = true)
+        @Parameter(description = "当前流水线ID", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_PIPELINE_ID)
         parentPipelineId: String,
-        @Parameter(name = "构建ID", required = true)
+        @Parameter(description = "构建ID", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_BUILD_ID)
         buildId: String,
-        @Parameter(name = "要启动的流水线ID", required = true)
+        @Parameter(description = "要启动的流水线ID", required = true)
         @PathParam("callProjectId")
         callProjectId: String,
-        @Parameter(name = "要启动的流水线ID", required = true)
+        @Parameter(description = "要启动的流水线ID", required = true)
         @PathParam("callPipelineId")
         callPipelineId: String,
-        @Parameter(name = "插件标识", required = true)
+        @Parameter(description = "插件标识", required = true)
         @PathParam("atomCode")
         atomCode: String,
-        @Parameter(name = "插件ID", required = true)
+        @Parameter(description = "插件ID", required = true)
         @QueryParam("taskId")
         taskId: String,
-        @Parameter(name = "运行方式", required = true)
+        @Parameter(description = "运行方式", required = true)
         @QueryParam("runMode")
         runMode: String,
-        @Parameter(name = "启动参数", required = true)
+        @Parameter(description = "启动参数", required = true)
         values: Map<String, String>
     ): Result<ProjectBuildId>
 
@@ -140,13 +140,13 @@ interface BuildSubPipelineResource {
     @GET
     @Path("/projects/{projectId}/pipelines/{pipelineId}/manualStartupInfo")
     fun subpipManualStartupInfo(
-        @Parameter(name = "用户ID", required = true)
+        @Parameter(description = "用户ID", required = true)
         @QueryParam("userId")
         userId: String,
-        @Parameter(name = "项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(name = "流水线ID", required = false, example = "")
+        @Parameter(description = "流水线ID", required = false, example = "")
         @PathParam("pipelineId")
         pipelineId: String
     ): Result<List<SubPipelineStartUpInfo>>
@@ -155,10 +155,10 @@ interface BuildSubPipelineResource {
     @GET
     @Path("/projects/{projectId}/pipelines/getPipelineIdByName")
     fun getPipelineByName(
-        @Parameter(name = "项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(name = "流水线名称", required = false, example = "")
+        @Parameter(description = "流水线名称", required = false, example = "")
         @QueryParam("pipelineName")
         pipelineName: String
     ): Result<List<PipelineId?>>

@@ -54,16 +54,16 @@ interface UserMarketAtomStatisticResource {
     @GET
     @Path("/{atomCode}/pipelines")
     fun getAtomPipelinesByCode(
-        @Parameter(name = "userId", required = true)
+        @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "插件代码", required = true)
+        @Parameter(description = "插件代码", required = true)
         @PathParam("atomCode")
         atomCode: String,
-        @Parameter(name = "第几页", required = false, example = "1")
+        @Parameter(description = "第几页", required = false, example = "1")
         @QueryParam("page")
         page: Int?,
-        @Parameter(name = "每页多少条", required = false, example = "20")
+        @Parameter(description = "每页多少条", required = false, example = "20")
         @QueryParam("pageSize")
         pageSize: Int?
     ): Result<Page<AtomPipeline>>
@@ -72,19 +72,19 @@ interface UserMarketAtomStatisticResource {
     @GET
     @Path("/projectCodes/{projectCode}/atomCodes/{atomCode}/pipelines")
     fun getAtomPipelines(
-        @Parameter(name = "userId", required = true)
+        @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "项目代码", required = true)
+        @Parameter(description = "项目代码", required = true)
         @PathParam("projectCode")
         projectCode: String,
-        @Parameter(name = "原子代码", required = true)
+        @Parameter(description = "原子代码", required = true)
         @PathParam("atomCode")
         atomCode: String,
-        @Parameter(name = "页码", required = false)
+        @Parameter(description = "页码", required = false)
         @QueryParam("page")
         page: Int?,
-        @Parameter(name = "每页数量", required = false)
+        @Parameter(description = "每页数量", required = false)
         @QueryParam("pageSize")
         pageSize: Int?
     ): Result<Page<AtomPipelineExecInfo>>

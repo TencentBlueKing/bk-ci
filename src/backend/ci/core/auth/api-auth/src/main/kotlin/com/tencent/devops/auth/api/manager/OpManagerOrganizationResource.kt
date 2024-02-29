@@ -55,7 +55,7 @@ interface OpManagerOrganizationResource {
     @Path("/")
     @Operation(summary = "新增策略关联组织")
     fun createManagerOrganization(
-        @Parameter(name = "userId", required = true)
+        @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
         managerOrganization: ManageOrganizationDTO
@@ -65,10 +65,10 @@ interface OpManagerOrganizationResource {
     @Path("/{managerId}")
     @Operation(summary = "修改策略关联组织")
     fun updateManagerOrganization(
-        @Parameter(name = "userId", required = true)
+        @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "组织策略Id", required = true)
+        @Parameter(description = "组织策略Id", required = true)
         @PathParam("managerId")
         managerId: Int,
         managerOrganization: ManageOrganizationDTO
@@ -78,10 +78,10 @@ interface OpManagerOrganizationResource {
     @Path("/{managerId}")
     @Operation(summary = "删除策略关联组织")
     fun deleteManagerOrganization(
-        @Parameter(name = "用户名", required = true)
+        @Parameter(description = "用户名", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "组织策略Id", required = true)
+        @Parameter(description = "组织策略Id", required = true)
         @PathParam("managerId")
         managerId: Int
     ): Result<Boolean>
@@ -90,10 +90,10 @@ interface OpManagerOrganizationResource {
     @Path("/{managerId}")
     @Operation(summary = "获取策略关联组织")
     fun getManagerOrganization(
-        @Parameter(name = "用户名", required = true)
+        @Parameter(description = "用户名", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "组织策略Id", required = true)
+        @Parameter(description = "组织策略Id", required = true)
         @PathParam("managerId")
         managerId: Int
     ): Result<ManageOrganizationEntity?>
@@ -102,7 +102,7 @@ interface OpManagerOrganizationResource {
     @Path("/list")
     @Operation(summary = "获取策略关联组织列表")
     fun listManagerOrganization(
-        @Parameter(name = "用户名", required = true)
+        @Parameter(description = "用户名", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String
     ): Result<List<ManageOrganizationEntity>?>

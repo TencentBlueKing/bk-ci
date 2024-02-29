@@ -26,7 +26,7 @@ interface OpTCloudResource {
     @GET
     @Path("/fetchProjectCfs")
     fun fetchProjectCfs(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
         @QueryParam("page")
@@ -39,7 +39,7 @@ interface OpTCloudResource {
     @GET
     @Path("/fetchCfsRegion")
     fun fetchCfsRegion(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String
     ): Result<List<String>>
@@ -48,7 +48,7 @@ interface OpTCloudResource {
     @POST
     @Path("/addProjectCfs")
     fun addProjectCfs(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
         data: ProjectCfsData
@@ -58,7 +58,7 @@ interface OpTCloudResource {
     @DELETE
     @Path("/deleteProjectCfs")
     fun deleteProjectCfs(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
         @QueryParam("projectId")

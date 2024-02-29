@@ -52,7 +52,7 @@ interface ServiceDeptResource {
     @Operation(summary = "获取组织父级")
     fun getParentDept(
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
-        @Parameter(name = "用户ID", required = true)
+        @Parameter(description = "用户ID", required = true)
         userId: String
     ): Result<Int>
 
@@ -61,10 +61,10 @@ interface ServiceDeptResource {
     @Operation(summary = "根据组织名称获取组织id")
     fun getDeptByName(
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
-        @Parameter(name = "用户ID", required = true)
+        @Parameter(description = "用户ID", required = true)
         userId: String,
         @QueryParam("deptName")
-        @Parameter(name = "组织名称", required = true)
+        @Parameter(description = "组织名称", required = true)
         deptName: String
     ): Result<DeptInfoVo?>
 
@@ -73,10 +73,10 @@ interface ServiceDeptResource {
     @Operation(summary = "获取单个用户信息")
     fun getUserInfo(
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
-        @Parameter(name = "用户ID", required = true)
+        @Parameter(description = "用户ID", required = true)
         userId: String,
         @QueryParam("name")
-        @Parameter(name = "用户名称", required = true)
+        @Parameter(description = "用户名称", required = true)
         name: String
     ): Result<UserAndDeptInfoVo?>
 }

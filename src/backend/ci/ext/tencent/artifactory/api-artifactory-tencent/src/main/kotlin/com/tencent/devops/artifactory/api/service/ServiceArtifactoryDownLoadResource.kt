@@ -61,37 +61,37 @@ interface ServiceArtifactoryDownLoadResource {
     @Path("/thirdPartyDownloadUrl")
     @GET
     fun getThirdPartyDownloadUrl(
-        @Parameter(name = "项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @HeaderParam(AUTH_HEADER_PROJECT_ID)
         projectId: String,
-        @Parameter(name = "流水线ID", required = false)
+        @Parameter(description = "流水线ID", required = false)
         @HeaderParam(AUTH_HEADER_PIPELINE_ID)
         pipelineId: String?,
-        @Parameter(name = "构建ID", required = false)
+        @Parameter(description = "构建ID", required = false)
         @HeaderParam(AUTH_HEADER_BUILD_ID)
         buildId: String?,
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String?,
-        @Parameter(name = "版本仓库类型", required = true)
+        @Parameter(description = "版本仓库类型", required = true)
         @QueryParam("artifactoryType")
         artifactoryType: ArtifactoryType,
-        @Parameter(name = "路径", required = true)
+        @Parameter(description = "路径", required = true)
         @QueryParam("path")
         path: String,
-        @Parameter(name = "有效时间(s)", required = true)
+        @Parameter(description = "有效时间(s)", required = true)
         @QueryParam("ttl")
         ttl: Int?,
-        @Parameter(name = "项目ID", required = false)
+        @Parameter(description = "项目ID", required = false)
         @QueryParam("projectId")
         crossProjectId: String?,
-        @Parameter(name = "流水线ID", required = false)
+        @Parameter(description = "流水线ID", required = false)
         @QueryParam("pipelineId")
         crossPipineId: String?,
-        @Parameter(name = "构建No", required = false)
+        @Parameter(description = "构建No", required = false)
         @QueryParam("buildNo")
         crossBuildNo: String?,
-        @Parameter(name = "客户端区域", required = false)
+        @Parameter(description = "客户端区域", required = false)
         @HeaderParam(AUTH_HEADER_REGION)
         region: String?
     ): Result<List<String>>
@@ -100,22 +100,22 @@ interface ServiceArtifactoryDownLoadResource {
     @Path("/{projectId}/{artifactoryType}/downloadUrl")
     @POST
     fun downloadUrl(
-        @Parameter(name = "项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(name = "版本仓库类型", required = true)
+        @Parameter(description = "版本仓库类型", required = true)
         @PathParam("artifactoryType")
         artifactoryType: ArtifactoryType,
-        @Parameter(name = "用户ID", required = true)
+        @Parameter(description = "用户ID", required = true)
         @QueryParam("userId")
         userId: String,
-        @Parameter(name = "路径", required = true)
+        @Parameter(description = "路径", required = true)
         @QueryParam("path")
         path: String,
-        @Parameter(name = "有效时间(s)", required = true)
+        @Parameter(description = "有效时间(s)", required = true)
         @QueryParam("ttl")
         ttl: Int,
-        @Parameter(name = "是否直接对应下载链接(false情况下ipa会换成plist下载链接)", required = false)
+        @Parameter(description = "是否直接对应下载链接(false情况下ipa会换成plist下载链接)", required = false)
         @QueryParam("directed")
         directed: Boolean?
     ): Result<Url>
@@ -124,10 +124,10 @@ interface ServiceArtifactoryDownLoadResource {
     @Path("/apkDefender")
     @POST
     fun apkDefender(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "加固请求", required = true)
+        @Parameter(description = "加固请求", required = true)
         request: ApkDefenderRequest
     ): Result<ApkDefenderTasks>
 
@@ -135,13 +135,13 @@ interface ServiceArtifactoryDownLoadResource {
     @Path("/apkDefenderTask/check")
     @GET
     fun checkApkDefenderTask(
-        @Parameter(name = "项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @HeaderParam(AUTH_HEADER_PROJECT_ID)
         projectId: String,
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "任务ID", required = true)
+        @Parameter(description = "任务ID", required = true)
         @QueryParam("taskId")
         taskId: String
     ): Result<Boolean>
@@ -150,22 +150,22 @@ interface ServiceArtifactoryDownLoadResource {
     @Path("/{projectId}/{artifactoryType}/downloadIndexUrl")
     @POST
     fun downloadIndexUrl(
-        @Parameter(name = "项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(name = "版本仓库类型", required = true)
+        @Parameter(description = "版本仓库类型", required = true)
         @PathParam("artifactoryType")
         artifactoryType: ArtifactoryType,
-        @Parameter(name = "用户ID", required = true)
+        @Parameter(description = "用户ID", required = true)
         @QueryParam("userId")
         userId: String,
-        @Parameter(name = "路径", required = true)
+        @Parameter(description = "路径", required = true)
         @QueryParam("path")
         path: String,
-        @Parameter(name = "有效时间(s)", required = true)
+        @Parameter(description = "有效时间(s)", required = true)
         @QueryParam("ttl")
         ttl: Int,
-        @Parameter(name = "是否直接对应下载链接(false情况下ipa会换成plist下载链接)", required = false)
+        @Parameter(description = "是否直接对应下载链接(false情况下ipa会换成plist下载链接)", required = false)
         @QueryParam("directed")
         directed: Boolean?
     ): Result<Url>

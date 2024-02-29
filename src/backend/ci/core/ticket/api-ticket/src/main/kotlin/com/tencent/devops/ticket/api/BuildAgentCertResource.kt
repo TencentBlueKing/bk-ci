@@ -56,22 +56,22 @@ interface BuildAgentCertResource {
     @Path("/ios/{certId}/")
     @GET
     fun queryIos(
-        @Parameter(name = "项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_PROJECT_ID)
         projectId: String,
-        @Parameter(name = "Agent ID", required = true)
+        @Parameter(description = "Agent ID", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_AGENT_ID)
         agentId: String,
-        @Parameter(name = "秘钥", required = true)
+        @Parameter(description = "秘钥", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_AGENT_SECRET_KEY)
         secretKey: String,
-        @Parameter(name = "构建ID", required = true)
+        @Parameter(description = "构建ID", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_BUILD_ID)
         buildId: String,
-        @Parameter(name = "证书ID", required = true)
+        @Parameter(description = "证书ID", required = true)
         @PathParam("certId")
         certId: String,
-        @Parameter(name = "Base64编码的加密公钥", required = true)
+        @Parameter(description = "Base64编码的加密公钥", required = true)
         @QueryParam("publicKey")
         publicKey: String
     ): Result<CertIOS>
@@ -80,22 +80,22 @@ interface BuildAgentCertResource {
     @Path("/android/{certId}/")
     @GET
     fun queryAndroid(
-        @Parameter(name = "项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_PROJECT_ID)
         projectId: String,
-        @Parameter(name = "Agent ID", required = true)
+        @Parameter(description = "Agent ID", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_AGENT_ID)
         agentId: String,
-        @Parameter(name = "秘钥", required = true)
+        @Parameter(description = "秘钥", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_AGENT_SECRET_KEY)
         secretKey: String,
-        @Parameter(name = "构建ID", required = true)
+        @Parameter(description = "构建ID", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_BUILD_ID)
         buildId: String,
-        @Parameter(name = "证书ID", required = true)
+        @Parameter(description = "证书ID", required = true)
         @PathParam("certId")
         certId: String,
-        @Parameter(name = "Base64编码的加密公钥", required = true)
+        @Parameter(description = "Base64编码的加密公钥", required = true)
         @QueryParam("publicKey")
         publicKey: String
     ): Result<CertAndroid>

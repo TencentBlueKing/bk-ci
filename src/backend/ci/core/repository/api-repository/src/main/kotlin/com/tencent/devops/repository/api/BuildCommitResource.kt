@@ -64,25 +64,25 @@ interface BuildCommitResource {
     @GET
     @Path("/getLatestCommit")
     fun getLatestCommit(
-        @Parameter(name = "项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @HeaderParam(AUTH_HEADER_PROJECT_ID)
         projectId: String,
-        @Parameter(name = "流水线ID", required = true)
+        @Parameter(description = "流水线ID", required = true)
         @QueryParam("pipelineId")
         pipelineId: String,
-        @Parameter(name = "原子ID", required = true)
+        @Parameter(description = "原子ID", required = true)
         @QueryParam("elementId")
         elementId: String,
-        @Parameter(name = "仓库ID或者仓库名", required = true)
+        @Parameter(description = "仓库ID或者仓库名", required = true)
         @QueryParam("repoId")
         repositoryId: String,
-        @Parameter(name = "代码库请求类型", required = false)
+        @Parameter(description = "代码库请求类型", required = false)
         @QueryParam("repositoryType")
         repositoryType: RepositoryType?,
-        @Parameter(name = "第几页", required = false)
+        @Parameter(description = "第几页", required = false)
         @QueryParam("page")
         page: Int?,
-        @Parameter(name = "每页大小", required = false)
+        @Parameter(description = "每页大小", required = false)
         @QueryParam("pageSize")
         pageSize: Int?
     ): Result<List<CommitData>>
@@ -91,10 +91,10 @@ interface BuildCommitResource {
     @GET
     @Path("/getCommitsByBuildId")
     fun getCommitsByBuildId(
-        @Parameter(name = "构建ID", required = true)
+        @Parameter(description = "构建ID", required = true)
         @HeaderParam(AUTH_HEADER_BUILD_ID)
         buildId: String,
-        @Parameter(name = "Agent ID", required = true)
+        @Parameter(description = "Agent ID", required = true)
         @HeaderParam(AUTH_HEADER_AGENT_ID)
         agentId: String
     ): Result<List<CommitResponse>>

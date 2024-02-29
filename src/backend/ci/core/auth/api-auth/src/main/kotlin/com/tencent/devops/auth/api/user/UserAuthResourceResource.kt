@@ -57,16 +57,16 @@ interface UserAuthResourceResource {
     @Path("{resourceCode}/hasManagerPermission")
     @Operation(summary = "是否有资源管理操作的权限")
     fun hasManagerPermission(
-        @Parameter(name = "用户名", required = true)
+        @Parameter(description = "用户名", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(name = "资源类型")
+        @Parameter(description = "资源类型")
         @PathParam("resourceType")
         resourceType: String,
-        @Parameter(name = "资源ID")
+        @Parameter(description = "资源ID")
         @PathParam("resourceCode")
         resourceCode: String
     ): Result<Boolean>
@@ -75,16 +75,16 @@ interface UserAuthResourceResource {
     @Path("{resourceCode}/isEnablePermission")
     @Operation(summary = "是否启用权限管理")
     fun isEnablePermission(
-        @Parameter(name = "用户名", required = true)
+        @Parameter(description = "用户名", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(name = "资源类型")
+        @Parameter(description = "资源类型")
         @PathParam("resourceType")
         resourceType: String,
-        @Parameter(name = "资源ID")
+        @Parameter(description = "资源ID")
         @PathParam("resourceCode")
         resourceCode: String
     ): Result<Boolean>
@@ -94,22 +94,22 @@ interface UserAuthResourceResource {
     @Operation(summary = "获取用户组列表")
     @Suppress("LongParameterList")
     fun listGroup(
-        @Parameter(name = "用户名", required = true)
+        @Parameter(description = "用户名", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(name = "资源类型")
+        @Parameter(description = "资源类型")
         @PathParam("resourceType")
         resourceType: String,
-        @Parameter(name = "资源ID")
+        @Parameter(description = "资源ID")
         @PathParam("resourceCode")
         resourceCode: String,
-        @Parameter(name = "第几页")
+        @Parameter(description = "第几页")
         @QueryParam("page")
         page: Int,
-        @Parameter(name = "每页多少条")
+        @Parameter(description = "每页多少条")
         @QueryParam("pageSize")
         pageSize: Int
     ): Result<Pagination<IamGroupInfoVo>>
@@ -118,16 +118,16 @@ interface UserAuthResourceResource {
     @Path("{resourceCode}/groupMember")
     @Operation(summary = "获取用户所属组")
     fun listUserBelongGroup(
-        @Parameter(name = "用户名", required = true)
+        @Parameter(description = "用户名", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(name = "资源类型")
+        @Parameter(description = "资源类型")
         @PathParam("resourceType")
         resourceType: String,
-        @Parameter(name = "资源ID")
+        @Parameter(description = "资源ID")
         @PathParam("resourceCode")
         resourceCode: String
     ): Result<List<IamGroupMemberInfoVo>>
@@ -136,16 +136,16 @@ interface UserAuthResourceResource {
     @Path("{resourceCode}/enable")
     @Operation(summary = "开启权限管理")
     fun enable(
-        @Parameter(name = "用户名", required = true)
+        @Parameter(description = "用户名", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(name = "资源类型")
+        @Parameter(description = "资源类型")
         @PathParam("resourceType")
         resourceType: String,
-        @Parameter(name = "资源ID")
+        @Parameter(description = "资源ID")
         @PathParam("resourceCode")
         resourceCode: String
     ): Result<Boolean>
@@ -154,16 +154,16 @@ interface UserAuthResourceResource {
     @Path("{resourceCode}/disable")
     @Operation(summary = "关闭权限管理")
     fun disable(
-        @Parameter(name = "用户名", required = true)
+        @Parameter(description = "用户名", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(name = "资源类型")
+        @Parameter(description = "资源类型")
         @PathParam("resourceType")
         resourceType: String,
-        @Parameter(name = "资源ID")
+        @Parameter(description = "资源ID")
         @PathParam("resourceCode")
         resourceCode: String
     ): Result<Boolean>
@@ -173,22 +173,22 @@ interface UserAuthResourceResource {
     @Operation(summary = "获取资源列表")
     @SuppressWarnings("LongParameterList")
     fun listResources(
-        @Parameter(name = "用户名", required = true)
+        @Parameter(description = "用户名", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(name = "资源类型")
+        @Parameter(description = "资源类型")
         @PathParam("resourceType")
         resourceType: String,
-        @Parameter(name = "资源名称")
+        @Parameter(description = "资源名称")
         @QueryParam("resourceName")
         resourceName: String?,
-        @Parameter(name = "第几页")
+        @Parameter(description = "第几页")
         @QueryParam("page")
         page: Int,
-        @Parameter(name = "每页多少条")
+        @Parameter(description = "每页多少条")
         @QueryParam("pageSize")
         pageSize: Int
     ): Result<Pagination<AuthResourceInfo>>
@@ -197,16 +197,16 @@ interface UserAuthResourceResource {
     @Path("{resourceCode}/getResource")
     @Operation(summary = "获取资源实例信息")
     fun getResource(
-        @Parameter(name = "用户名", required = true)
+        @Parameter(description = "用户名", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(name = "资源类型")
+        @Parameter(description = "资源类型")
         @PathParam("resourceType")
         resourceType: String,
-        @Parameter(name = "资源ID")
+        @Parameter(description = "资源ID")
         @PathParam("resourceCode")
         resourceCode: String
     ): Result<AuthResourceInfo>

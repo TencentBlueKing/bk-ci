@@ -50,7 +50,7 @@ interface StatusReportResource {
     @POST
     @Path("/scm/commitcheck")
     fun scmCommitCheck(
-        @Parameter(name = "addCommitCheck接口状态", required = true)
+        @Parameter(description = "addCommitCheck接口状态", required = true)
         addCommitCheckStatus: AddCommitCheckStatus
     ): Result<Boolean>
 
@@ -58,7 +58,7 @@ interface StatusReportResource {
     @POST
     @Path("/project/users")
     fun userUsers(
-        @Parameter(name = "users接口状态", required = true)
+        @Parameter(description = "users接口状态", required = true)
         users: UsersStatus
     ): Result<Boolean>
 }

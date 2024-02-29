@@ -48,22 +48,22 @@ interface ApigwStreamResourceV3 {
     @POST
     @Path("/{gitProjectId}/pipelines/{pipelineId}/startup")
     fun triggerStartup(
-        @Parameter(name = "appCode", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
+        @Parameter(description = "appCode", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
         appCode: String?,
-        @Parameter(name = "apigw Type", required = true)
+        @Parameter(description = "apigw Type", required = true)
         @PathParam("apigwType")
         apigwType: String?,
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String,
-        @Parameter(name = "工蜂项目ID", required = true)
+        @Parameter(description = "工蜂项目ID", required = true)
         @PathParam("gitProjectId")
         gitProjectId: String,
-        @Parameter(name = "流水线ID", required = true)
+        @Parameter(description = "流水线ID", required = true)
         @PathParam("pipelineId")
         pipelineId: String,
-        @Parameter(name = "TriggerBuild请求", required = true)
+        @Parameter(description = "TriggerBuild请求", required = true)
         streamTriggerBuildReq: StreamTriggerBuildReq
     ): Result<TriggerBuildResult>
 
@@ -74,16 +74,16 @@ interface ApigwStreamResourceV3 {
     @GET
     @Path("/{gitProjectId}/projectName/transfer")
     fun getStreamProject(
-        @Parameter(name = "appCode", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
+        @Parameter(description = "appCode", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
         appCode: String?,
-        @Parameter(name = "apigw Type", required = true)
+        @Parameter(description = "apigw Type", required = true)
         @PathParam("apigwType")
         apigwType: String?,
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String,
-        @Parameter(name = "工蜂项目ID", required = true)
+        @Parameter(description = "工蜂项目ID", required = true)
         @PathParam("gitProjectId")
         gitProjectId: String
     ): Result<String>
@@ -95,25 +95,25 @@ interface ApigwStreamResourceV3 {
     @GET
     @Path("/{gitProjectId}/pipelines/list")
     fun getPipelineList(
-        @Parameter(name = "appCode", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
+        @Parameter(description = "appCode", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
         appCode: String?,
-        @Parameter(name = "apigw Type", required = true)
+        @Parameter(description = "apigw Type", required = true)
         @PathParam("apigwType")
         apigwType: String?,
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String,
-        @Parameter(name = "gitProjectId", required = true)
+        @Parameter(description = "gitProjectId", required = true)
         @PathParam("gitProjectId")
         gitProjectId: Long,
-        @Parameter(name = "搜索关键字", required = false)
+        @Parameter(description = "搜索关键字", required = false)
         @QueryParam("keyword")
         keyword: String?,
-        @Parameter(name = "第几页", required = false, example = "1")
+        @Parameter(description = "第几页", required = false, example = "1")
         @QueryParam("page")
         page: Int?,
-        @Parameter(name = "每页多少条（最大50）", required = false, example = "10")
+        @Parameter(description = "每页多少条（最大50）", required = false, example = "10")
         @QueryParam("pageSize")
         pageSize: Int?
     ): Result<Page<V1GitProjectPipeline>>
@@ -125,22 +125,22 @@ interface ApigwStreamResourceV3 {
     @GET
     @Path("/{gitProjectId}/pipelines/{pipelineId}/info")
     fun getPipeline(
-        @Parameter(name = "appCode", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
+        @Parameter(description = "appCode", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
         appCode: String?,
-        @Parameter(name = "apigw Type", required = true)
+        @Parameter(description = "apigw Type", required = true)
         @PathParam("apigwType")
         apigwType: String?,
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String,
-        @Parameter(name = "gitProjectId", required = true)
+        @Parameter(description = "gitProjectId", required = true)
         @PathParam("gitProjectId")
         gitProjectId: Long,
-        @Parameter(name = "流水线ID", required = true)
+        @Parameter(description = "流水线ID", required = true)
         @PathParam("pipelineId")
         pipelineId: String,
-        @Parameter(name = "是否带有最新一次构建历史", required = false)
+        @Parameter(description = "是否带有最新一次构建历史", required = false)
         @QueryParam("withHistory")
         withHistory: Boolean? = false
     ): Result<V1GitProjectPipeline?>
@@ -152,22 +152,22 @@ interface ApigwStreamResourceV3 {
     @POST
     @Path("/{gitProjectId}/pipelines/{pipelineId}/enable")
     fun enablePipeline(
-        @Parameter(name = "appCode", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
+        @Parameter(description = "appCode", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
         appCode: String?,
-        @Parameter(name = "apigw Type", required = true)
+        @Parameter(description = "apigw Type", required = true)
         @PathParam("apigwType")
         apigwType: String?,
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String,
-        @Parameter(name = "gitProjectId", required = true)
+        @Parameter(description = "gitProjectId", required = true)
         @PathParam("gitProjectId")
         gitProjectId: Long,
-        @Parameter(name = "流水线ID", required = true)
+        @Parameter(description = "流水线ID", required = true)
         @PathParam("pipelineId")
         pipelineId: String,
-        @Parameter(name = "是否启用该流水线", required = true)
+        @Parameter(description = "是否启用该流水线", required = true)
         @QueryParam("enabled")
         enabled: Boolean
     ): Result<Boolean>
@@ -179,16 +179,16 @@ interface ApigwStreamResourceV3 {
     @GET
     @Path("/{gitProjectId}/pipelines/listInfo")
     fun listPipelineNames(
-        @Parameter(name = "appCode", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
+        @Parameter(description = "appCode", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
         appCode: String?,
-        @Parameter(name = "apigw Type", required = true)
+        @Parameter(description = "apigw Type", required = true)
         @PathParam("apigwType")
         apigwType: String?,
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String,
-        @Parameter(name = "gitProjectId", required = true)
+        @Parameter(description = "gitProjectId", required = true)
         @PathParam("gitProjectId")
         gitProjectId: Long
     ): Result<List<V1GitProjectPipeline>>
@@ -200,22 +200,22 @@ interface ApigwStreamResourceV3 {
     @GET
     @Path("/{gitProjectId}/builds/detail")
     fun getLatestBuildDetail(
-        @Parameter(name = "appCode", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
+        @Parameter(description = "appCode", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
         appCode: String?,
-        @Parameter(name = "apigw Type", required = true)
+        @Parameter(description = "apigw Type", required = true)
         @PathParam("apigwType")
         apigwType: String?,
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String,
-        @Parameter(name = "gitProjectId", required = true)
+        @Parameter(description = "gitProjectId", required = true)
         @PathParam("gitProjectId")
         gitProjectId: Long,
-        @Parameter(name = "pipelineId", required = false)
+        @Parameter(description = "pipelineId", required = false)
         @QueryParam("pipelineId")
         pipelineId: String?,
-        @Parameter(name = "buildId", required = false)
+        @Parameter(description = "buildId", required = false)
         @QueryParam("buildId")
         buildId: String?
     ): Result<V1GitCIModelDetail?>
@@ -227,40 +227,40 @@ interface ApigwStreamResourceV3 {
     @GET
     @Path("/{gitProjectId}/builds/history")
     fun getHistoryBuildList(
-        @Parameter(name = "appCode", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
+        @Parameter(description = "appCode", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
         appCode: String?,
-        @Parameter(name = "apigw Type", required = true)
+        @Parameter(description = "apigw Type", required = true)
         @PathParam("apigwType")
         apigwType: String?,
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String,
-        @Parameter(name = "gitProjectId", required = true)
+        @Parameter(description = "gitProjectId", required = true)
         @PathParam("gitProjectId")
         gitProjectId: Long,
-        @Parameter(name = "查询开始时间，格式yyyy-MM-dd HH:mm:ss", required = false)
+        @Parameter(description = "查询开始时间，格式yyyy-MM-dd HH:mm:ss", required = false)
         @QueryParam("startBeginTime")
         startBeginTime: String?,
-        @Parameter(name = "查询结束时间，格式yyyy-MM-dd HH:mm:ss", required = false)
+        @Parameter(description = "查询结束时间，格式yyyy-MM-dd HH:mm:ss", required = false)
         @QueryParam("endBeginTime")
         endBeginTime: String?,
-        @Parameter(name = "第几页", required = false, example = "1")
+        @Parameter(description = "第几页", required = false, example = "1")
         @QueryParam("page")
         page: Int?,
-        @Parameter(name = "每页多少条（最大50）", required = false, example = "20")
+        @Parameter(description = "每页多少条（最大50）", required = false, example = "20")
         @QueryParam("pageSize")
         pageSize: Int?,
-        @Parameter(name = "分支", required = false)
+        @Parameter(description = "分支", required = false)
         @QueryParam("branch")
         branch: String?,
-        @Parameter(name = "源仓库ID", required = false)
+        @Parameter(description = "源仓库ID", required = false)
         @QueryParam("sourceGitProjectId")
         sourceGitProjectId: Long?,
-        @Parameter(name = "触发人", required = false)
+        @Parameter(description = "触发人", required = false)
         @QueryParam("triggerUser")
         triggerUser: String?,
-        @Parameter(name = "流水线ID", required = false)
+        @Parameter(description = "流水线ID", required = false)
         @QueryParam("pipelineId")
         pipelineId: String?
     ): Result<Page<V1GitCIBuildHistory>>
@@ -269,19 +269,19 @@ interface ApigwStreamResourceV3 {
     @POST
     @Path("/{gitProjectId}/enable")
     fun enableGitCI(
-        @Parameter(name = "appCode", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
+        @Parameter(description = "appCode", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
         appCode: String?,
-        @Parameter(name = "apigw Type", required = true)
+        @Parameter(description = "apigw Type", required = true)
         @PathParam("apigwType")
         apigwType: String?,
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String,
-        @Parameter(name = "开启或关闭", required = true)
+        @Parameter(description = "开启或关闭", required = true)
         @QueryParam("enabled")
         enabled: Boolean,
-        @Parameter(name = "工蜂项目信息(初始化时用)", required = false)
+        @Parameter(description = "工蜂项目信息(初始化时用)", required = false)
         projectInfo: GitCIProjectInfo
     ): Result<Boolean>
 
@@ -292,16 +292,16 @@ interface ApigwStreamResourceV3 {
     @GET
     @Path("/{gitProjectId}/settings/get")
     fun getGitCIConf(
-        @Parameter(name = "appCode", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
+        @Parameter(description = "appCode", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
         appCode: String?,
-        @Parameter(name = "apigw Type", required = true)
+        @Parameter(description = "apigw Type", required = true)
         @PathParam("apigwType")
         apigwType: String?,
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String,
-        @Parameter(name = "工蜂项目ID", required = true)
+        @Parameter(description = "工蜂项目ID", required = true)
         @PathParam("gitProjectId")
         gitProjectId: String
     ): Result<GitCIBasicSetting?>
@@ -313,19 +313,19 @@ interface ApigwStreamResourceV3 {
     @POST
     @Path("/{gitProjectId}/settings/save")
     fun saveGitCIConf(
-        @Parameter(name = "appCode", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
+        @Parameter(description = "appCode", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
         appCode: String?,
-        @Parameter(name = "apigw Type", required = true)
+        @Parameter(description = "apigw Type", required = true)
         @PathParam("apigwType")
         apigwType: String?,
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String,
-        @Parameter(name = "工蜂项目ID", required = true)
+        @Parameter(description = "工蜂项目ID", required = true)
         @PathParam("gitProjectId")
         gitProjectId: String,
-        @Parameter(name = "工蜂项目配置", required = true)
+        @Parameter(description = "工蜂项目配置", required = true)
         gitCIUpdateSetting: GitCIUpdateSetting
     ): Result<Boolean>
 
@@ -336,10 +336,10 @@ interface ApigwStreamResourceV3 {
     @POST
     @Path("/validate")
     fun validateGitProject(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "工蜂项目URL", required = true)
+        @Parameter(description = "工蜂项目URL", required = true)
         request: GitUserValidateRequest
     ): Result<GitUserValidateResult?>
 
@@ -347,13 +347,13 @@ interface ApigwStreamResourceV3 {
     @POST
     @Path("/{gitProjectId}/reset/oauth")
     fun updateEnableUser(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "工蜂项目ID", required = true)
+        @Parameter(description = "工蜂项目ID", required = true)
         @PathParam("gitProjectId")
         gitProjectId: String,
-        @Parameter(name = "目标授权人", required = true)
+        @Parameter(description = "目标授权人", required = true)
         @QueryParam("authUserId")
         authUserId: String
     ): Result<Boolean>
@@ -365,25 +365,25 @@ interface ApigwStreamResourceV3 {
     @GET
     @Path("/{type}/list")
     fun getProjects(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "项目列表类型", required = false)
+        @Parameter(description = "项目列表类型", required = false)
         @PathParam("type")
         type: GitCIProjectType?,
-        @Parameter(name = "搜索条件，模糊匹配path,name", required = false)
+        @Parameter(description = "搜索条件，模糊匹配path,name", required = false)
         @QueryParam("search")
         search: String?,
-        @Parameter(name = "第几页", required = false, example = "1")
+        @Parameter(description = "第几页", required = false, example = "1")
         @QueryParam("page")
         page: Int?,
-        @Parameter(name = "每页多少条（最大50）", required = false, example = "10")
+        @Parameter(description = "每页多少条（最大50）", required = false, example = "10")
         @QueryParam("pageSize")
         pageSize: Int?,
-        @Parameter(name = "排序条件", required = false)
+        @Parameter(description = "排序条件", required = false)
         @QueryParam("orderBy")
         orderBy: GitCodeProjectsOrder?,
-        @Parameter(name = "排序类型", required = false)
+        @Parameter(description = "排序类型", required = false)
         @QueryParam("sort")
         sort: GitCodeBranchesSort?
     ): Result<List<ProjectCIInfo>>

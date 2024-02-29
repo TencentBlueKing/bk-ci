@@ -49,7 +49,7 @@ interface ServiceManagerUserResource {
     @Path("/{userId}")
     @Operation(summary = "用户管理员信息")
     fun getManagerInfo(
-        @Parameter(name = "用户Id", required = true)
+        @Parameter(description = "用户Id", required = true)
         @PathParam("userId")
         userId: String
     ): Result<Map<String/*organizationId*/, UserPermissionInfo>?>

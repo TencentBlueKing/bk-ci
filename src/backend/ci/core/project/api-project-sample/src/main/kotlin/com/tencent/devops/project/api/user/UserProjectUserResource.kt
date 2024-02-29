@@ -52,7 +52,7 @@ interface UserProjectUserResource {
     @Path("/")
     @Operation(summary = "查询用户基本信息")
     fun get(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String
     ): Result<ProjectUser>
@@ -61,7 +61,7 @@ interface UserProjectUserResource {
     @Path("/detail")
     @Operation(summary = "查询用户详细信息")
     fun getDetail(
-        @Parameter(name = "userId", required = true)
+        @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String
     ): Result<UserDeptDetail>

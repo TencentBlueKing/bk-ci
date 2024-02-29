@@ -58,16 +58,16 @@ interface AppExperienceIndexResource {
     @Path("/banners")
     @GET
     fun banners(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "平台", required = true)
+        @Parameter(description = "平台", required = true)
         @HeaderParam(AUTH_HEADER_PLATFORM)
         platform: Int,
-        @Parameter(name = "页目", required = false)
+        @Parameter(description = "页目", required = false)
         @QueryParam("page")
         page: Int,
-        @Parameter(name = "每页数目", required = false)
+        @Parameter(description = "每页数目", required = false)
         @QueryParam("pageSize")
         pageSize: Int
     ): Result<Pagination<IndexBannerVO>>
@@ -76,19 +76,19 @@ interface AppExperienceIndexResource {
     @Path("/hots")
     @GET
     fun hots(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "平台", required = true)
+        @Parameter(description = "平台", required = true)
         @HeaderParam(AUTH_HEADER_PLATFORM)
         platform: Int,
-        @Parameter(name = "页目", required = false)
+        @Parameter(description = "页目", required = false)
         @QueryParam("page")
         page: Int,
-        @Parameter(name = "每页数目", required = false)
+        @Parameter(description = "每页数目", required = false)
         @QueryParam("pageSize")
         pageSize: Int,
-        @Parameter(name = "是否包含外部跳转", required = false)
+        @Parameter(description = "是否包含外部跳转", required = false)
         @QueryParam("includeExternalUrl")
         includeExternalUrl: Boolean? = false
     ): Result<Pagination<IndexAppInfoVO>>
@@ -97,19 +97,19 @@ interface AppExperienceIndexResource {
     @Path("/necessary")
     @GET
     fun necessary(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "平台", required = true)
+        @Parameter(description = "平台", required = true)
         @HeaderParam(AUTH_HEADER_PLATFORM)
         platform: Int,
-        @Parameter(name = "页目", required = false)
+        @Parameter(description = "页目", required = false)
         @QueryParam("page")
         page: Int,
-        @Parameter(name = "每页数目", required = false)
+        @Parameter(description = "每页数目", required = false)
         @QueryParam("pageSize")
         pageSize: Int,
-        @Parameter(name = "是否包含外部跳转", required = false)
+        @Parameter(description = "是否包含外部跳转", required = false)
         @QueryParam("includeExternalUrl")
         includeExternalUrl: Boolean? = false
     ): Result<Pagination<IndexAppInfoVO>>
@@ -118,19 +118,19 @@ interface AppExperienceIndexResource {
     @Path("/newest")
     @GET
     fun newest(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "平台", required = true)
+        @Parameter(description = "平台", required = true)
         @HeaderParam(AUTH_HEADER_PLATFORM)
         platform: Int,
-        @Parameter(name = "页目", required = false)
+        @Parameter(description = "页目", required = false)
         @QueryParam("page")
         page: Int,
-        @Parameter(name = "每页数目", required = false)
+        @Parameter(description = "每页数目", required = false)
         @QueryParam("pageSize")
         pageSize: Int,
-        @Parameter(name = "是否包含外部跳转", required = false)
+        @Parameter(description = "是否包含外部跳转", required = false)
         @QueryParam("includeExternalUrl")
         includeExternalUrl: Boolean? = false
     ): Result<Pagination<IndexAppInfoVO>>
@@ -139,10 +139,10 @@ interface AppExperienceIndexResource {
     @Path("/category/{categoryId}/hot")
     @GET
     fun hotCategory(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "平台", required = true)
+        @Parameter(description = "平台", required = true)
         @HeaderParam(AUTH_HEADER_PLATFORM)
         platform: Int,
         @BeanParam
@@ -154,10 +154,10 @@ interface AppExperienceIndexResource {
     @Path("/category/{categoryId}/new")
     @GET
     fun newCategory(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "平台", required = true)
+        @Parameter(description = "平台", required = true)
         @HeaderParam(AUTH_HEADER_PLATFORM)
         platform: Int,
         @BeanParam
@@ -168,10 +168,10 @@ interface AppExperienceIndexResource {
     @Path("/minigame")
     @GET
     fun miniGameExperience(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "平台", required = true)
+        @Parameter(description = "平台", required = true)
         @HeaderParam(AUTH_HEADER_PLATFORM)
         platform: Int
     ): Result<List<IndexAppInfoVO>>
@@ -180,7 +180,7 @@ interface AppExperienceIndexResource {
     @Path("/minigame/picture")
     @GET
     fun miniGamePicture(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String
     ): Result<String>

@@ -52,7 +52,7 @@ interface BuildProjectResource {
     @Path("/{projectCode}")
     @Operation(summary = "查询指定项目")
     fun listByProjectCode(
-        @Parameter(name = "项目id", required = true)
+        @Parameter(description = "项目id", required = true)
         @PathParam(value = "projectCode")
         projectCode: String
     ): Result<List<ProjectVO>>
@@ -61,7 +61,7 @@ interface BuildProjectResource {
     @Path("/organizations")
     @Operation(summary = "查询指定项目组织信息")
     fun getProjectOrganizations(
-        @Parameter(name = "项目Id", required = true)
+        @Parameter(description = "项目Id", required = true)
         @HeaderParam(value = AUTH_HEADER_PROJECT_ID)
         projectCode: String
     ): Result<ProjectOrganization?>

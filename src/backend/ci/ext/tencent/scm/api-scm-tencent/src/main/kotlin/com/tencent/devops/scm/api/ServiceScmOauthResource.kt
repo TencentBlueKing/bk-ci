@@ -63,34 +63,34 @@ interface ServiceScmOauthResource {
     @GET
     @Path("/latestRevision")
     fun getLatestRevision(
-        @Parameter(name = "项目名称", required = true)
+        @Parameter(description = "项目名称", required = true)
         @QueryParam("projectName")
         projectName: String,
-        @Parameter(name = "仓库地址", required = true)
+        @Parameter(description = "仓库地址", required = true)
         @QueryParam("url")
         url: String,
-        @Parameter(name = "仓库类型", required = true)
+        @Parameter(description = "仓库类型", required = true)
         @QueryParam("type")
         type: ScmType,
-        @Parameter(name = "branch name", required = false)
+        @Parameter(description = "branch name", required = false)
         @QueryParam("branchName")
         branchName: String? = null,
-        @Parameter(name = "SVN additional path", required = false)
+        @Parameter(description = "SVN additional path", required = false)
         @QueryParam("additionalPath")
         additionalPath: String? = null,
-        @Parameter(name = "privateKey", required = false)
+        @Parameter(description = "privateKey", required = false)
         @QueryParam("privateKey")
         privateKey: String?,
-        @Parameter(name = "passPhrase", required = false)
+        @Parameter(description = "passPhrase", required = false)
         @QueryParam("passPhrase")
         passPhrase: String?,
-        @Parameter(name = "token", required = false)
+        @Parameter(description = "token", required = false)
         @QueryParam("token")
         token: String?,
-        @Parameter(name = "仓库区域前缀（只有svn用到）", required = false)
+        @Parameter(description = "仓库区域前缀（只有svn用到）", required = false)
         @QueryParam("region")
         region: CodeSvnRegion?,
-        @Parameter(name = "仓库对应的用户名", required = false)
+        @Parameter(description = "仓库对应的用户名", required = false)
         @QueryParam("userName")
         userName: String?
     ): Result<RevisionInfo>
@@ -99,31 +99,31 @@ interface ServiceScmOauthResource {
     @GET
     @Path("/branches")
     fun listBranches(
-        @Parameter(name = "项目名称", required = true)
+        @Parameter(description = "项目名称", required = true)
         @QueryParam("projectName")
         projectName: String,
-        @Parameter(name = "仓库地址", required = true)
+        @Parameter(description = "仓库地址", required = true)
         @QueryParam("url")
         url: String,
-        @Parameter(name = "仓库类型", required = true)
+        @Parameter(description = "仓库类型", required = true)
         @QueryParam("type")
         type: ScmType,
-        @Parameter(name = "privateKey", required = true)
+        @Parameter(description = "privateKey", required = true)
         @QueryParam("privateKey")
         privateKey: String?,
-        @Parameter(name = "passPhrase", required = false)
+        @Parameter(description = "passPhrase", required = false)
         @QueryParam("passPhrase")
         passPhrase: String?,
-        @Parameter(name = "token", required = false)
+        @Parameter(description = "token", required = false)
         @QueryParam("token")
         token: String?,
-        @Parameter(name = "仓库区域前缀（只有svn用到）", required = false)
+        @Parameter(description = "仓库区域前缀（只有svn用到）", required = false)
         @QueryParam("region")
         region: CodeSvnRegion?,
-        @Parameter(name = "仓库对应的用户名", required = false)
+        @Parameter(description = "仓库对应的用户名", required = false)
         @QueryParam("userName")
         userName: String?,
-        @Parameter(name = "搜索条件", required = false)
+        @Parameter(description = "搜索条件", required = false)
         @QueryParam("search")
         search: String? = null
     ): Result<List<String>>
@@ -132,22 +132,22 @@ interface ServiceScmOauthResource {
     @GET
     @Path("/tags")
     fun listTags(
-        @Parameter(name = "项目名称", required = true)
+        @Parameter(description = "项目名称", required = true)
         @QueryParam("projectName")
         projectName: String,
-        @Parameter(name = "仓库地址", required = true)
+        @Parameter(description = "仓库地址", required = true)
         @QueryParam("url")
         url: String,
-        @Parameter(name = "仓库类型", required = true)
+        @Parameter(description = "仓库类型", required = true)
         @QueryParam("type")
         type: ScmType,
-        @Parameter(name = "token", required = true)
+        @Parameter(description = "token", required = true)
         @QueryParam("token")
         token: String,
-        @Parameter(name = "仓库对应的用户名", required = true)
+        @Parameter(description = "仓库对应的用户名", required = true)
         @QueryParam("userName")
         userName: String,
-        @Parameter(name = "搜索条件", required = false)
+        @Parameter(description = "搜索条件", required = false)
         @QueryParam("search")
         search: String? = null
     ): Result<List<String>>
@@ -156,28 +156,28 @@ interface ServiceScmOauthResource {
     @GET
     @Path("tokenCheck")
     fun checkPrivateKeyAndToken(
-        @Parameter(name = "项目名称", required = true)
+        @Parameter(description = "项目名称", required = true)
         @QueryParam("projectName")
         projectName: String,
-        @Parameter(name = "仓库地址", required = true)
+        @Parameter(description = "仓库地址", required = true)
         @QueryParam("url")
         url: String,
-        @Parameter(name = "仓库类型", required = true)
+        @Parameter(description = "仓库类型", required = true)
         @QueryParam("type")
         type: ScmType,
-        @Parameter(name = "privateKey", required = true)
+        @Parameter(description = "privateKey", required = true)
         @QueryParam("privateKey")
         privateKey: String?,
-        @Parameter(name = "passPhrase", required = false)
+        @Parameter(description = "passPhrase", required = false)
         @QueryParam("passPhrase")
         passPhrase: String?,
-        @Parameter(name = "token", required = false)
+        @Parameter(description = "token", required = false)
         @QueryParam("token")
         token: String?,
-        @Parameter(name = "仓库区域前缀（只有svn用到）", required = false)
+        @Parameter(description = "仓库区域前缀（只有svn用到）", required = false)
         @QueryParam("region")
         region: CodeSvnRegion?,
-        @Parameter(name = "仓库对应的用户名", required = false)
+        @Parameter(description = "仓库对应的用户名", required = false)
         @QueryParam("userName")
         userName: String
     ): Result<TokenCheckResult>
@@ -186,31 +186,31 @@ interface ServiceScmOauthResource {
     @POST
     @Path("addWebHook")
     fun addWebHook(
-        @Parameter(name = "项目名称", required = true)
+        @Parameter(description = "项目名称", required = true)
         @QueryParam("projectName")
         projectName: String,
-        @Parameter(name = "仓库地址", required = true)
+        @Parameter(description = "仓库地址", required = true)
         @QueryParam("url")
         url: String,
-        @Parameter(name = "仓库类型", required = true)
+        @Parameter(description = "仓库类型", required = true)
         @QueryParam("type")
         type: ScmType,
-        @Parameter(name = "privateKey", required = true)
+        @Parameter(description = "privateKey", required = true)
         @QueryParam("privateKey")
         privateKey: String?,
-        @Parameter(name = "passPhrase", required = false)
+        @Parameter(description = "passPhrase", required = false)
         @QueryParam("passPhrase")
         passPhrase: String?,
-        @Parameter(name = "token", required = false)
+        @Parameter(description = "token", required = false)
         @QueryParam("token")
         token: String?,
-        @Parameter(name = "仓库区域前缀（只有svn用到）", required = false)
+        @Parameter(description = "仓库区域前缀（只有svn用到）", required = false)
         @QueryParam("region")
         region: CodeSvnRegion?,
-        @Parameter(name = "仓库对应的用户名", required = true)
+        @Parameter(description = "仓库对应的用户名", required = true)
         @QueryParam("userName")
         userName: String,
-        @Parameter(name = "事件类型", required = false)
+        @Parameter(description = "事件类型", required = false)
         @QueryParam("event")
         event: String?
     ): Result<Boolean>
@@ -219,16 +219,16 @@ interface ServiceScmOauthResource {
     @GET
     @Path("getWebHooks")
     fun getWebHooks(
-        @Parameter(name = "项目名称", required = true)
+        @Parameter(description = "项目名称", required = true)
         @QueryParam("projectName")
         projectName: String,
-        @Parameter(name = "仓库地址", required = true)
+        @Parameter(description = "仓库地址", required = true)
         @QueryParam("url")
         url: String,
-        @Parameter(name = "仓库类型", required = true)
+        @Parameter(description = "仓库类型", required = true)
         @QueryParam("type")
         type: ScmType,
-        @Parameter(name = "token", required = false)
+        @Parameter(description = "token", required = false)
         @QueryParam("token")
         token: String?
     ): Result<List<GitHook>>
@@ -237,37 +237,37 @@ interface ServiceScmOauthResource {
     @PUT
     @Path("{hookId}/updateWebHook")
     fun updateWebHook(
-        @Parameter(name = "回调地址", required = true)
+        @Parameter(description = "回调地址", required = true)
         @PathParam("hookId")
         hookId: Long,
-        @Parameter(name = "项目名称", required = true)
+        @Parameter(description = "项目名称", required = true)
         @QueryParam("projectName")
         projectName: String,
-        @Parameter(name = "仓库地址", required = true)
+        @Parameter(description = "仓库地址", required = true)
         @QueryParam("url")
         url: String,
-        @Parameter(name = "仓库类型", required = true)
+        @Parameter(description = "仓库类型", required = true)
         @QueryParam("type")
         type: ScmType,
-        @Parameter(name = "privateKey", required = true)
+        @Parameter(description = "privateKey", required = true)
         @QueryParam("privateKey")
         privateKey: String?,
-        @Parameter(name = "passPhrase", required = false)
+        @Parameter(description = "passPhrase", required = false)
         @QueryParam("passPhrase")
         passPhrase: String?,
-        @Parameter(name = "token", required = false)
+        @Parameter(description = "token", required = false)
         @QueryParam("token")
         token: String?,
-        @Parameter(name = "仓库区域前缀（只有svn用到）", required = false)
+        @Parameter(description = "仓库区域前缀（只有svn用到）", required = false)
         @QueryParam("region")
         region: CodeSvnRegion?,
-        @Parameter(name = "仓库对应的用户名", required = true)
+        @Parameter(description = "仓库对应的用户名", required = true)
         @QueryParam("userName")
         userName: String,
-        @Parameter(name = "事件类型", required = false)
+        @Parameter(description = "事件类型", required = false)
         @QueryParam("event")
         event: String?,
-        @Parameter(name = "回调地址", required = true)
+        @Parameter(description = "回调地址", required = true)
         @QueryParam("hookUrl")
         hookUrl: String?
     ): Result<Boolean>
@@ -283,19 +283,19 @@ interface ServiceScmOauthResource {
     @GET
     @Path("getMergeRequestChangeInfo")
     fun getMergeRequestChangeInfo(
-        @Parameter(name = "项目名称", required = true)
+        @Parameter(description = "项目名称", required = true)
         @QueryParam("projectName")
         projectName: String,
-        @Parameter(name = "仓库地址", required = true)
+        @Parameter(description = "仓库地址", required = true)
         @QueryParam("url")
         url: String,
-        @Parameter(name = "仓库类型", required = true)
+        @Parameter(description = "仓库类型", required = true)
         @QueryParam("type")
         type: ScmType,
-        @Parameter(name = "token", required = true)
+        @Parameter(description = "token", required = true)
         @QueryParam("token")
         token: String?,
-        @Parameter(name = "mrId", required = true)
+        @Parameter(description = "mrId", required = true)
         @QueryParam("mrId")
         mrId: Long
     ): Result<GitMrChangeInfo?>
@@ -304,19 +304,19 @@ interface ServiceScmOauthResource {
     @GET
     @Path("getMrInfo")
     fun getMrInfo(
-        @Parameter(name = "项目名称", required = true)
+        @Parameter(description = "项目名称", required = true)
         @QueryParam("projectName")
         projectName: String,
-        @Parameter(name = "仓库地址", required = true)
+        @Parameter(description = "仓库地址", required = true)
         @QueryParam("url")
         url: String,
-        @Parameter(name = "仓库类型", required = true)
+        @Parameter(description = "仓库类型", required = true)
         @QueryParam("type")
         type: ScmType,
-        @Parameter(name = "token", required = true)
+        @Parameter(description = "token", required = true)
         @QueryParam("token")
         token: String?,
-        @Parameter(name = "mrId", required = true)
+        @Parameter(description = "mrId", required = true)
         @QueryParam("mrId")
         mrId: Long
     ): Result<GitMrInfo?>
@@ -325,19 +325,19 @@ interface ServiceScmOauthResource {
     @GET
     @Path("getMrReviewInfo")
     fun getMrReviewInfo(
-        @Parameter(name = "项目名称", required = true)
+        @Parameter(description = "项目名称", required = true)
         @QueryParam("projectName")
         projectName: String,
-        @Parameter(name = "仓库地址", required = true)
+        @Parameter(description = "仓库地址", required = true)
         @QueryParam("url")
         url: String,
-        @Parameter(name = "仓库类型", required = true)
+        @Parameter(description = "仓库类型", required = true)
         @QueryParam("type")
         type: ScmType,
-        @Parameter(name = "token", required = true)
+        @Parameter(description = "token", required = true)
         @QueryParam("token")
         token: String?,
-        @Parameter(name = "mrId", required = true)
+        @Parameter(description = "mrId", required = true)
         @QueryParam("mrId")
         mrId: Long
     ): Result<GitMrReviewInfo?>
@@ -346,25 +346,25 @@ interface ServiceScmOauthResource {
     @GET
     @Path("getMrCommitList")
     fun getMrCommitList(
-        @Parameter(name = "项目名称", required = true)
+        @Parameter(description = "项目名称", required = true)
         @QueryParam("projectName")
         projectName: String,
-        @Parameter(name = "仓库地址", required = true)
+        @Parameter(description = "仓库地址", required = true)
         @QueryParam("url")
         url: String,
-        @Parameter(name = "仓库类型", required = true)
+        @Parameter(description = "仓库类型", required = true)
         @QueryParam("type")
         type: ScmType,
-        @Parameter(name = "token", required = true)
+        @Parameter(description = "token", required = true)
         @QueryParam("token")
         token: String?,
-        @Parameter(name = "mrId", required = true)
+        @Parameter(description = "mrId", required = true)
         @QueryParam("mrId")
         mrId: Long,
-        @Parameter(name = "page", required = true)
+        @Parameter(description = "page", required = true)
         @QueryParam("page")
         page: Int,
-        @Parameter(name = "size", required = true)
+        @Parameter(description = "size", required = true)
         @QueryParam("size")
         size: Int
     ): Result<List<GitCommit>>
@@ -373,16 +373,16 @@ interface ServiceScmOauthResource {
     @GET
     @Path("getProjectInfo")
     fun getProjectInfo(
-        @Parameter(name = "项目名称", required = true)
+        @Parameter(description = "项目名称", required = true)
         @QueryParam("projectName")
         projectName: String,
-        @Parameter(name = "仓库地址", required = true)
+        @Parameter(description = "仓库地址", required = true)
         @QueryParam("url")
         url: String,
-        @Parameter(name = "仓库类型", required = true)
+        @Parameter(description = "仓库类型", required = true)
         @QueryParam("type")
         type: ScmType,
-        @Parameter(name = "token", required = true)
+        @Parameter(description = "token", required = true)
         @QueryParam("token")
         token: String?
     ): Result<GitProjectInfo?>
@@ -391,19 +391,19 @@ interface ServiceScmOauthResource {
     @GET
     @Path("getCrReviewInfo")
     fun getCrReviewInfo(
-        @Parameter(name = "项目名称", required = true)
+        @Parameter(description = "项目名称", required = true)
         @QueryParam("projectName")
         projectName: String,
-        @Parameter(name = "仓库地址", required = true)
+        @Parameter(description = "仓库地址", required = true)
         @QueryParam("url")
         url: String,
-        @Parameter(name = "仓库类型", required = true)
+        @Parameter(description = "仓库类型", required = true)
         @QueryParam("type")
         type: ScmType,
-        @Parameter(name = "token", required = true)
+        @Parameter(description = "token", required = true)
         @QueryParam("token")
         token: String?,
-        @Parameter(name = "crId", required = true)
+        @Parameter(description = "crId", required = true)
         @QueryParam("crId")
         crId: Long
     ): Result<GitCommitReviewInfo?>

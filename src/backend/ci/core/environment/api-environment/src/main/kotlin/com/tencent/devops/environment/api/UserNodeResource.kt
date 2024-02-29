@@ -56,10 +56,10 @@ interface UserNodeResource {
     @Path("/{projectId}/hasCreatePermission")
     @GET
     fun hasCreatePermission(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String
     ): Result<Boolean>
@@ -68,13 +68,13 @@ interface UserNodeResource {
     @POST
     @Path("/{projectId}/deleteNodes")
     fun deleteNodes(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(name = "节点列表", required = true)
+        @Parameter(description = "节点列表", required = true)
         nodeHashIds: List<String>
     ): Result<Boolean>
 
@@ -82,28 +82,28 @@ interface UserNodeResource {
     @GET
     @Path("/{projectId}")
     fun list(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(name = "第几页", required = false)
+        @Parameter(description = "第几页", required = false)
         @QueryParam("page")
         page: Int? = 1,
-        @Parameter(name = "每页多少条", required = false)
+        @Parameter(description = "每页多少条", required = false)
         @QueryParam("pageSize")
         pageSize: Int? = 20,
-        @Parameter(name = "IP", required = false)
+        @Parameter(description = "IP", required = false)
         @QueryParam("nodeIp")
         nodeIp: String?,
-        @Parameter(name = "别名", required = false)
+        @Parameter(description = "别名", required = false)
         @QueryParam("displayName")
         displayName: String?,
-        @Parameter(name = "创建人", required = false)
+        @Parameter(description = "创建人", required = false)
         @QueryParam("createdUser")
         createdUser: String?,
-        @Parameter(name = "最后修改人", required = false)
+        @Parameter(description = "最后修改人", required = false)
         @QueryParam("lastModifiedUser")
         lastModifiedUser: String?
     ): Result<Page<NodeWithPermission>>
@@ -112,10 +112,10 @@ interface UserNodeResource {
     @GET
     @Path("/{projectId}/listUsableServerNodes")
     fun listUsableServerNodes(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String
     ): Result<List<NodeWithPermission>>
@@ -124,13 +124,13 @@ interface UserNodeResource {
     @POST
     @Path("/{projectId}/{nodeHashId}/changeCreatedUser")
     fun changeCreatedUser(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(name = "节点 HashId", required = true)
+        @Parameter(description = "节点 HashId", required = true)
         @PathParam("nodeHashId")
         nodeHashId: String
     ): Result<Boolean>
@@ -139,16 +139,16 @@ interface UserNodeResource {
     @POST
     @Path("/{projectId}/{nodeHashId}/updateDisplayName")
     fun updateDisplayName(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(name = "节点 HashId", required = true)
+        @Parameter(description = "节点 HashId", required = true)
         @PathParam("nodeHashId")
         nodeHashId: String,
-        @Parameter(name = "显示名称", required = true)
+        @Parameter(description = "显示名称", required = true)
         displayName: DisplayName
     ): Result<Boolean>
 }

@@ -52,13 +52,13 @@ interface UserAuthPermissionResource {
     @Path("/batch/validate")
     @Operation(summary = "批量校验用户是否拥有某个资源实例的操作")
     fun batchValidateUserResourcePermission(
-        @Parameter(name = "用户名", required = true)
+        @Parameter(description = "用户名", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_PROJECT_ID)
         projectCode: String,
-        @Parameter(name = "权限批量校验实体", required = true)
+        @Parameter(description = "权限批量校验实体", required = true)
         permissionBatchValidateDTO: PermissionBatchValidateDTO
     ): Result<Map<String, Boolean>>
 }

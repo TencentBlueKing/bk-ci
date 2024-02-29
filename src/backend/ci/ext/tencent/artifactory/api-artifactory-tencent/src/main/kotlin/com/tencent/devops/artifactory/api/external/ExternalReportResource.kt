@@ -47,19 +47,19 @@ interface ExternalReportResource {
     @Path("/{projectId}/{pipelineId}/{buildId}/{elementId}/{path: .*}")
     @GET
     fun get(
-        @Parameter(name = "项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(name = "流水线ID", required = true)
+        @Parameter(description = "流水线ID", required = true)
         @PathParam("pipelineId")
         pipelineId: String,
-        @Parameter(name = "构建ID", required = true)
+        @Parameter(description = "构建ID", required = true)
         @PathParam("buildId")
         buildId: String,
-        @Parameter(name = "原子ID", required = true)
+        @Parameter(description = "原子ID", required = true)
         @PathParam("elementId")
         elementId: String,
-        @Parameter(name = "相对路径", required = true)
+        @Parameter(description = "相对路径", required = true)
         @PathParam("path")
         path: String
     )

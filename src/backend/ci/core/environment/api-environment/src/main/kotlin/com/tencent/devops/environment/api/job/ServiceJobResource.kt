@@ -70,13 +70,13 @@ interface ServiceJobResource {
     @POST
     @Path("/{projectId}/script_execute")
     fun executeScript(
-        @Parameter(name = "用户ID", required = true)
+        @Parameter(description = "用户ID", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String = AUTH_HEADER_USER_ID_DEFAULT_VALUE,
-        @Parameter(name = "项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(name = "执行脚本的信息", required = true)
+        @Parameter(description = "执行脚本的信息", required = true)
         scriptExecuteReq: ScriptExecuteReq
     ): JobResult<ScriptExecuteResult>
 
@@ -84,13 +84,13 @@ interface ServiceJobResource {
     @POST
     @Path("/{projectId}/file_distribute")
     fun distributeFile(
-        @Parameter(name = "用户ID", required = true)
+        @Parameter(description = "用户ID", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String = AUTH_HEADER_USER_ID_DEFAULT_VALUE,
-        @Parameter(name = "项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(name = "文件分发的信息", required = true)
+        @Parameter(description = "文件分发的信息", required = true)
         fileDistributeReq: FileDistributeReq
     ): JobResult<FileDistributeResult>
 
@@ -98,13 +98,13 @@ interface ServiceJobResource {
     @POST
     @Path("/{projectId}/task_terminate")
     fun terminateTask(
-        @Parameter(name = "用户ID", required = true)
+        @Parameter(description = "用户ID", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String = AUTH_HEADER_USER_ID_DEFAULT_VALUE,
-        @Parameter(name = "项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(name = "终止任务的信息", required = true)
+        @Parameter(description = "终止任务的信息", required = true)
         taskTerminateReq: TaskTerminateReq
     ): JobResult<TaskTerminateResult>
 
@@ -112,16 +112,16 @@ interface ServiceJobResource {
     @GET
     @Path("/{projectId}/query_job_instance_status")
     fun queryJobInstanceStatus(
-        @Parameter(name = "用户ID", required = true)
+        @Parameter(description = "用户ID", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String = AUTH_HEADER_USER_ID_DEFAULT_VALUE,
-        @Parameter(name = "项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(name = "作业实例ID", required = true)
+        @Parameter(description = "作业实例ID", required = true)
         @QueryParam("jobInstanceId")
         jobInstanceId: Long,
-        @Parameter(name = "是否返回每个ip上的任务详情，默认false", required = true)
+        @Parameter(description = "是否返回每个ip上的任务详情，默认false", required = true)
         @QueryParam("returnIpResult")
         returnIpResult: Boolean? = false
     ): JobResult<QueryJobInstanceStatusResult>
@@ -130,13 +130,13 @@ interface ServiceJobResource {
     @POST
     @Path("/{projectId}/query_job_instance_logs")
     fun queryJobInstanceLogs(
-        @Parameter(name = "用户ID", required = true)
+        @Parameter(description = "用户ID", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String = AUTH_HEADER_USER_ID_DEFAULT_VALUE,
-        @Parameter(name = "项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(name = "批量查询日志的请求信息", required = true)
+        @Parameter(description = "批量查询日志的请求信息", required = true)
         queryLogsReq: QueryJobInstanceLogsReq
     ): JobResult<QueryJobInstanceLogsResult>
 
@@ -144,13 +144,13 @@ interface ServiceJobResource {
     @POST
     @Path("/{projectId}/create_account")
     fun createAccount(
-        @Parameter(name = "用户ID", required = true)
+        @Parameter(description = "用户ID", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String = AUTH_HEADER_USER_ID_DEFAULT_VALUE,
-        @Parameter(name = "项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(name = "执行脚本的信息", required = true)
+        @Parameter(description = "执行脚本的信息", required = true)
         createAccountReq: CreateAccountReq
     ): JobResult<CreateAccountResult>
 
@@ -158,13 +158,13 @@ interface ServiceJobResource {
     @POST
     @Path("/{projectId}/delete_account")
     fun deleteAccount(
-        @Parameter(name = "用户ID", required = true)
+        @Parameter(description = "用户ID", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String = AUTH_HEADER_USER_ID_DEFAULT_VALUE,
-        @Parameter(name = "项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(name = "执行脚本的信息", required = true)
+        @Parameter(description = "执行脚本的信息", required = true)
         deleteAccountReq: DeleteAccountReq
     ): JobResult<DeleteAccountResult>
 
@@ -172,25 +172,25 @@ interface ServiceJobResource {
     @GET
     @Path("/{projectId}/get_account_list")
     fun getAccountList(
-        @Parameter(name = "用户ID", required = true)
+        @Parameter(description = "用户ID", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String = AUTH_HEADER_USER_ID_DEFAULT_VALUE,
-        @Parameter(name = "项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(name = "账号名称")
+        @Parameter(description = "账号名称")
         @QueryParam("account")
         account: String?,
-        @Parameter(name = "账号别名")
+        @Parameter(description = "账号别名")
         @QueryParam("alias")
         alias: String?,
-        @Parameter(name = "账号用途(1：系统账号, 2：DB账号, 不传则不区分)")
+        @Parameter(description = "账号用途(1：系统账号, 2：DB账号, 不传则不区分)")
         @QueryParam("category")
         category: Int?,
-        @Parameter(name = "分页记录起始位置(不传默认0)")
+        @Parameter(description = "分页记录起始位置(不传默认0)")
         @QueryParam("start")
         start: Int?,
-        @Parameter(name = "单次返回最大记录数(最大1000，不传默认20)")
+        @Parameter(description = "单次返回最大记录数(最大1000，不传默认20)")
         @QueryParam("length")
         length: Int?
     ): JobResult<GetAccountListResult>
@@ -199,16 +199,16 @@ interface ServiceJobResource {
     @GET
     @Path("/{projectId}/get_step_instance_detail")
     fun getStepInstanceDetail(
-        @Parameter(name = "用户ID", required = true)
+        @Parameter(description = "用户ID", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String = AUTH_HEADER_USER_ID_DEFAULT_VALUE,
-        @Parameter(name = "项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(name = "作业实例ID")
+        @Parameter(description = "作业实例ID")
         @QueryParam("jobInstanceId")
         jobInstanceId: Long,
-        @Parameter(name = "步骤实例ID")
+        @Parameter(description = "步骤实例ID")
         @QueryParam("stepInstanceId")
         stepInstanceId: Long
     ): JobResult<GetStepInstanceDetailResult>
@@ -217,37 +217,37 @@ interface ServiceJobResource {
     @GET
     @Path("/{projectId}/get_step_instance_status")
     fun getStepInstanceStatus(
-        @Parameter(name = "用户ID", required = true)
+        @Parameter(description = "用户ID", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String = AUTH_HEADER_USER_ID_DEFAULT_VALUE,
-        @Parameter(name = "项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(name = "作业实例ID", required = true)
+        @Parameter(description = "作业实例ID", required = true)
         @QueryParam("jobInstanceId")
         jobInstanceId: Long,
-        @Parameter(name = "步骤实例ID", required = true)
+        @Parameter(description = "步骤实例ID", required = true)
         @QueryParam("stepInstanceId")
         stepInstanceId: Long,
-        @Parameter(name = "步骤重试次数")
+        @Parameter(description = "步骤重试次数")
         @QueryParam("executeCount")
         executeCount: Int?,
-        @Parameter(name = "滚动批次")
+        @Parameter(description = "滚动批次")
         @QueryParam("batch")
         batch: Int?,
-        @Parameter(name = "每个分组里的最大主机数量，不传则返回全量数据。")
+        @Parameter(description = "每个分组里的最大主机数量，不传则返回全量数据。")
         @QueryParam("maxHostNumPerGroup")
         maxHostNumPerGroup: Int?,
-        @Parameter(name = "日志搜索关键字")
+        @Parameter(description = "日志搜索关键字")
         @QueryParam("keyword")
         keyword: String?,
-        @Parameter(name = "主机IP/IPv6搜索关键字")
+        @Parameter(description = "主机IP/IPv6搜索关键字")
         @QueryParam("searchIp")
         searchIp: String?,
-        @Parameter(name = "执行状态")
+        @Parameter(description = "执行状态")
         @QueryParam("status")
         status: Int?,
-        @Parameter(name = "结果标签")
+        @Parameter(description = "结果标签")
         @QueryParam("tag")
         tag: String?
     ): JobResult<GetStepInstanceStatusResult>
@@ -256,10 +256,10 @@ interface ServiceJobResource {
     @POST
     @Path("/operate_op_project")
     fun operateOpProject(
-        @Parameter(name = "用户ID", required = true)
+        @Parameter(description = "用户ID", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "op操作请求信息", required = true)
+        @Parameter(description = "op操作请求信息", required = true)
         opOperateReq: OpOperateReq
     ): OpOperateResult
 
@@ -267,7 +267,7 @@ interface ServiceJobResource {
     @POST
     @Path("/stock_data_update/write_display_name")
     fun writeDisplayName(
-        @Parameter(name = "用户ID", required = true)
+        @Parameter(description = "用户ID", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String = AUTH_HEADER_USER_ID_DEFAULT_VALUE
     )
@@ -276,7 +276,7 @@ interface ServiceJobResource {
     @POST
     @Path("/stock_data_update/update_devops_agent")
     fun updateDevopsAgent(
-        @Parameter(name = "用户ID", required = true)
+        @Parameter(description = "用户ID", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String = AUTH_HEADER_USER_ID_DEFAULT_VALUE
     )
@@ -285,7 +285,7 @@ interface ServiceJobResource {
     @POST
     @Path("/stock_data_update/check_deploy_nodes_in_cc")
     fun checkDeployNodesInCC(
-        @Parameter(name = "用户ID", required = true)
+        @Parameter(description = "用户ID", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String = AUTH_HEADER_USER_ID_DEFAULT_VALUE
     )

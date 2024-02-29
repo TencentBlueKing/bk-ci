@@ -80,18 +80,18 @@ interface ServicePipelineResource {
     // @Path("/projects/{projectId}/createPipeline")
     @Path("/{projectId}/")
     fun create(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(name = "流水线模型", required = true)
+        @Parameter(description = "流水线模型", required = true)
         pipeline: Model,
-        @Parameter(name = "渠道号，默认为BS", required = true)
+        @Parameter(description = "渠道号，默认为BS", required = true)
         @QueryParam("channelCode")
         channelCode: ChannelCode,
-        @Parameter(name = "是否使用模板配置", required = false)
+        @Parameter(description = "是否使用模板配置", required = false)
         @QueryParam("useTemplateSettings")
         useTemplateSettings: Boolean? = false
     ): Result<PipelineId>
@@ -101,21 +101,21 @@ interface ServicePipelineResource {
     // @Path("/projects/{projectId}/pipelines/{pipelineId}/")
     @Path("/{projectId}/{pipelineId}/")
     fun edit(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(name = "流水线ID", required = true)
+        @Parameter(description = "流水线ID", required = true)
         @PathParam("pipelineId")
         pipelineId: String,
-        @Parameter(name = "流水线模型", required = true)
+        @Parameter(description = "流水线模型", required = true)
         pipeline: Model,
-        @Parameter(name = "渠道号，默认为BS", required = false)
+        @Parameter(description = "渠道号，默认为BS", required = false)
         @QueryParam("channelCode")
         channelCode: ChannelCode,
-        @Parameter(name = "是否修改最后修改人", required = false)
+        @Parameter(description = "是否修改最后修改人", required = false)
         @QueryParam("updateLastModifyUser")
         @DefaultValue("true")
         updateLastModifyUser: Boolean? = true
@@ -125,16 +125,16 @@ interface ServicePipelineResource {
     @POST
     @Path("/{projectId}/{pipelineId}/copy")
     fun copy(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(name = "流水线模型", required = true)
+        @Parameter(description = "流水线模型", required = true)
         @PathParam("pipelineId")
         pipelineId: String,
-        @Parameter(name = "流水线COPY", required = true)
+        @Parameter(description = "流水线COPY", required = true)
         pipeline: PipelineCopy
     ): Result<PipelineId>
 
@@ -142,19 +142,19 @@ interface ServicePipelineResource {
     @POST
     @Path("/projects/{projectId}/pipeline_upload")
     fun uploadPipeline(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(name = "流水线模型与设置", required = true)
+        @Parameter(description = "流水线模型与设置", required = true)
         @Valid
         modelAndSetting: PipelineModelAndSetting,
-        @Parameter(name = "渠道号，默认为BS", required = true)
+        @Parameter(description = "渠道号，默认为BS", required = true)
         @QueryParam("channelCode")
         channelCode: ChannelCode,
-        @Parameter(name = "是否使用模板配置", required = false)
+        @Parameter(description = "是否使用模板配置", required = false)
         @QueryParam("useTemplateSettings")
         useTemplateSettings: Boolean? = false
     ): Result<PipelineId>
@@ -163,19 +163,19 @@ interface ServicePipelineResource {
     @PUT
     @Path("/projects/{projectId}/{pipelineId}/pipeline_edit")
     fun updatePipeline(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(name = "流水线ID", required = true)
+        @Parameter(description = "流水线ID", required = true)
         @PathParam("pipelineId")
         pipelineId: String,
-        @Parameter(name = "流水线模型与设置", required = true)
+        @Parameter(description = "流水线模型与设置", required = true)
         @Valid
         modelAndSetting: PipelineModelAndSetting,
-        @Parameter(name = "渠道号，默认为BS", required = false)
+        @Parameter(description = "渠道号，默认为BS", required = false)
         @QueryParam("channelCode")
         channelCode: ChannelCode
     ): Result<DeployPipelineResult>
@@ -185,16 +185,16 @@ interface ServicePipelineResource {
     // @Path("/projects/{projectId}/pipelines/{pipelineId}/")
     @Path("/{projectId}/{pipelineId}/")
     fun get(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(name = "流水线ID", required = true)
+        @Parameter(description = "流水线ID", required = true)
         @PathParam("pipelineId")
         pipelineId: String,
-        @Parameter(name = "渠道号，默认为BS", required = false)
+        @Parameter(description = "渠道号，默认为BS", required = false)
         @QueryParam("channelCode")
         channelCode: ChannelCode
     ): Result<Model>
@@ -203,19 +203,19 @@ interface ServicePipelineResource {
     @GET
     @Path("/{projectId}/{pipelineId}/withPermission")
     fun getWithPermission(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(name = "流水线ID", required = true)
+        @Parameter(description = "流水线ID", required = true)
         @PathParam("pipelineId")
         pipelineId: String,
-        @Parameter(name = "渠道号，默认为BS", required = false)
+        @Parameter(description = "渠道号，默认为BS", required = false)
         @QueryParam("channelCode")
         channelCode: ChannelCode,
-        @Parameter(name = "是否进行权限校验", required = true)
+        @Parameter(description = "是否进行权限校验", required = true)
         @QueryParam("checkPermission")
         checkPermission: Boolean
     ): Result<Model>
@@ -224,19 +224,19 @@ interface ServicePipelineResource {
     @GET
     @Path("/{projectId}/{pipelineId}/get_setting_with_permission")
     fun getSettingWithPermission(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(name = "流水线ID", required = true)
+        @Parameter(description = "流水线ID", required = true)
         @PathParam("pipelineId")
         pipelineId: String,
-        @Parameter(name = "渠道号，默认为BS", required = false)
+        @Parameter(description = "渠道号，默认为BS", required = false)
         @QueryParam("channelCode")
         channelCode: ChannelCode,
-        @Parameter(name = "是否进行权限校验", required = true)
+        @Parameter(description = "是否进行权限校验", required = true)
         @QueryParam("checkPermission")
         checkPermission: Boolean
     ): Result<PipelineSetting>
@@ -246,15 +246,15 @@ interface ServicePipelineResource {
     @Path("/{projectId}/batchGet")
     @BkApiPermission([BkApiHandleType.API_NO_AUTH_CHECK])
     fun getBatch(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(name = "流水线ID列表", required = true)
+        @Parameter(description = "流水线ID列表", required = true)
         pipelineIds: List<String>,
-        @Parameter(name = "渠道号，默认为BS", required = false)
+        @Parameter(description = "渠道号，默认为BS", required = false)
         @QueryParam("channelCode")
         channelCode: ChannelCode
     ): Result<List<Pipeline>>
@@ -263,24 +263,24 @@ interface ServicePipelineResource {
     @PUT
     @Path("/{projectId}/{pipelineId}/saveSetting")
     fun saveSetting(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(name = "流水线ID", required = true)
+        @Parameter(description = "流水线ID", required = true)
         @PathParam("pipelineId")
         pipelineId: String,
-        @Parameter(name = "是否修改最后修改人", required = false)
+        @Parameter(description = "是否修改最后修改人", required = false)
         @QueryParam("updateLastModifyUser")
         @DefaultValue("true")
         updateLastModifyUser: Boolean? = true,
-        @Parameter(name = "渠道号，默认为BS", required = false)
+        @Parameter(description = "渠道号，默认为BS", required = false)
         @QueryParam("channelCode")
         @DefaultValue("BS")
         channelCode: ChannelCode? = ChannelCode.BS,
-        @Parameter(name = "流水线设置", required = true)
+        @Parameter(description = "流水线设置", required = true)
         setting: PipelineSetting
     ): Result<Boolean>
 
@@ -288,13 +288,13 @@ interface ServicePipelineResource {
     @GET
     @Path("/{projectId}/{pipelineId}/getPipelineInfo")
     fun getPipelineInfo(
-        @Parameter(name = "项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(name = "流水线ID", required = true)
+        @Parameter(description = "流水线ID", required = true)
         @PathParam("pipelineId")
         pipelineId: String,
-        @Parameter(name = "渠道号，默认为BS", required = false)
+        @Parameter(description = "渠道号，默认为BS", required = false)
         @QueryParam("channelCode")
         channelCode: ChannelCode?
     ): Result<PipelineInfo?>
@@ -304,16 +304,16 @@ interface ServicePipelineResource {
     // @Path("/projects/{projectId}/pipelines/{pipelineId}/")
     @Path("/{projectId}/{pipelineId}/")
     fun delete(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(name = "流水线ID", required = true)
+        @Parameter(description = "流水线ID", required = true)
         @PathParam("pipelineId")
         pipelineId: String,
-        @Parameter(name = "渠道号，默认为BS", required = false)
+        @Parameter(description = "渠道号，默认为BS", required = false)
         @QueryParam("channelCode")
         channelCode: ChannelCode
     ): Result<Boolean>
@@ -323,22 +323,22 @@ interface ServicePipelineResource {
     // @Path("/projects/{projectId}/listPipelines")
     @Path("/{projectId}/")
     fun list(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(name = "第几页", required = false, example = "1")
+        @Parameter(description = "第几页", required = false, example = "1")
         @QueryParam("page")
         page: Int? = null,
-        @Parameter(name = "每页多少条", required = false, example = "20")
+        @Parameter(description = "每页多少条", required = false, example = "20")
         @QueryParam("pageSize")
         pageSize: Int? = null,
-        @Parameter(name = "渠道号，默认为BS", required = false)
+        @Parameter(description = "渠道号，默认为BS", required = false)
         @QueryParam("channelCode")
         channelCode: ChannelCode? = ChannelCode.BS,
-        @Parameter(name = "是否校验权限", required = false)
+        @Parameter(description = "是否校验权限", required = false)
         @QueryParam("checkPermission")
         checkPermission: Boolean? = true
     ): Result<Page<Pipeline>>
@@ -348,16 +348,16 @@ interface ServicePipelineResource {
     // @Path("/projects/{projectId}/pipelines/{pipelineId}/status")
     @Path("/{projectId}/{pipelineId}/status")
     fun status(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(name = "流水线ID", required = true)
+        @Parameter(description = "流水线ID", required = true)
         @PathParam("pipelineId")
         pipelineId: String,
-        @Parameter(name = "channel", required = false)
+        @Parameter(description = "channel", required = false)
         @QueryParam("channelCode")
         channelCode: ChannelCode? = ChannelCode.BS
     ): Result<Pipeline?>
@@ -367,13 +367,13 @@ interface ServicePipelineResource {
     // @Path("/projects/{projectId}/pipelines/{pipelineId}/allStatus")
     @Path("/{projectId}/{pipelineId}/allStatus")
     fun getAllstatus(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(name = "流水线ID", required = true)
+        @Parameter(description = "流水线ID", required = true)
         @PathParam("pipelineId")
         pipelineId: String
     ): Result<List<Pipeline>?>
@@ -383,13 +383,13 @@ interface ServicePipelineResource {
     // @Path("/projects/{projectId}/builds/{buildId}/running")
     @Path("/{projectId}/build/{buildId}/running")
     fun isPipelineRunning(
-        @Parameter(name = "项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(name = "构建ID", required = true)
+        @Parameter(description = "构建ID", required = true)
         @PathParam("buildId")
         buildId: String,
-        @Parameter(name = "渠道号，默认为BS", required = false)
+        @Parameter(description = "渠道号，默认为BS", required = false)
         @QueryParam("channelCode")
         channelCode: ChannelCode
     ): Result<Boolean>
@@ -398,13 +398,13 @@ interface ServicePipelineResource {
     @GET
     @Path("/{projectId}/build/{buildId}/isrunning")
     fun isRunning(
-        @Parameter(name = "项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(name = "构建ID", required = true)
+        @Parameter(description = "构建ID", required = true)
         @PathParam("buildId")
         buildId: String,
-        @Parameter(name = "渠道号，默认为BS", required = false)
+        @Parameter(description = "渠道号，默认为BS", required = false)
         @QueryParam("channelCode")
         channelCode: ChannelCode
     ): Result<Boolean>
@@ -413,10 +413,10 @@ interface ServicePipelineResource {
     @GET
     @Path("/count")
     fun count(
-        @Parameter(name = "项目ID", required = false)
+        @Parameter(description = "项目ID", required = false)
         @QueryParam("projectId")
         projectId: Set<String>?,
-        @Parameter(name = "渠道号，默认为BS", required = false)
+        @Parameter(description = "渠道号，默认为BS", required = false)
         @QueryParam("channelCode")
         channelCode: ChannelCode?
     ): Result<Long>
@@ -427,10 +427,10 @@ interface ServicePipelineResource {
     @Path("/{projectId}/getPipelines")
     @BkApiPermission([BkApiHandleType.API_NO_AUTH_CHECK])
     fun getPipelineByIds(
-        @Parameter(name = "项目id", required = true)
+        @Parameter(description = "项目id", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(name = "流水线id列表", required = true)
+        @Parameter(description = "流水线id列表", required = true)
         pipelineIds: Set<String>
     ): Result<List<SimplePipeline>>
 
@@ -440,10 +440,10 @@ interface ServicePipelineResource {
     @Path("/{projectId}/getPipelineNames")
     @BkApiPermission([BkApiHandleType.API_NO_AUTH_CHECK])
     fun getPipelineNameByIds(
-        @Parameter(name = "项目id", required = true)
+        @Parameter(description = "项目id", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(name = "流水线id列表", required = true)
+        @Parameter(description = "流水线id列表", required = true)
         pipelineIds: Set<String>
     ): Result<Map<String, String>>
 
@@ -453,9 +453,9 @@ interface ServicePipelineResource {
     @Path("/buildIds/getBuildNo")
     @BkApiPermission([BkApiHandleType.API_NO_AUTH_CHECK])
     fun getBuildNoByBuildIds(
-        @Parameter(name = "构建id", required = true)
+        @Parameter(description = "构建id", required = true)
         buildIds: Set<String>,
-        @Parameter(name = "项目ID", required = false)
+        @Parameter(description = "项目ID", required = false)
         @QueryParam("projectId")
         projectId: String? = null
     ): Result<Map<String/*buildId*/, String/*buildNo*/>>
@@ -464,16 +464,16 @@ interface ServicePipelineResource {
     @POST
     @Path("/{pipelineId}/projects/{projectId}/rename")
     fun rename(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(name = "流水线ID", required = true)
+        @Parameter(description = "流水线ID", required = true)
         @PathParam("pipelineId")
         pipelineId: String,
-        @Parameter(name = "流水线名称", required = true)
+        @Parameter(description = "流水线名称", required = true)
         name: PipelineName
     ): Result<Boolean>
 
@@ -481,13 +481,13 @@ interface ServicePipelineResource {
     @PUT
     @Path("/{pipelineId}/projects/{projectId}/restore")
     fun restore(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(name = "流水线ID", required = true)
+        @Parameter(description = "流水线ID", required = true)
         @PathParam("pipelineId")
         pipelineId: String
     ): Result<Boolean>
@@ -497,7 +497,7 @@ interface ServicePipelineResource {
     @Path("/projects/{projectCode}/idList")
     @BkApiPermission([BkApiHandleType.API_NO_AUTH_CHECK])
     fun getProjectPipelineIds(
-        @Parameter(name = "项目Id", required = true)
+        @Parameter(description = "项目Id", required = true)
         @PathParam("projectCode")
         projectCode: String
     ): Result<List<PipelineIdInfo>>
@@ -507,10 +507,10 @@ interface ServicePipelineResource {
     @Path("/projects/{projectCode}/pipelines/{pipelineId}/id")
     @BkApiPermission([BkApiHandleType.API_NO_AUTH_CHECK])
     fun getPipelineId(
-        @Parameter(name = "项目Id", required = true)
+        @Parameter(description = "项目Id", required = true)
         @PathParam("projectCode")
         projectCode: String,
-        @Parameter(name = "流水线Id", required = true)
+        @Parameter(description = "流水线Id", required = true)
         @PathParam("pipelineId")
         pipelineId: String
     ): Result<PipelineIdInfo?>
@@ -519,7 +519,7 @@ interface ServicePipelineResource {
     @GET
     @Path("/pipelines/{pipelineId}")
     fun getPipelineInfoByPipelineId(
-        @Parameter(name = "流水线id列表", required = true)
+        @Parameter(description = "流水线id列表", required = true)
         @PathParam("pipelineId")
         pipelineId: String
     ): Result<SimplePipeline?>?
@@ -529,10 +529,10 @@ interface ServicePipelineResource {
     @Path("/labelinfos/list")
     @BkApiPermission([BkApiHandleType.API_NO_AUTH_CHECK])
     fun getPipelineLabelInfos(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         projectIds: List<String>
     ): Result<List<PipelineLabelRelateInfo>>
 
@@ -540,13 +540,13 @@ interface ServicePipelineResource {
     @GET
     @Path("/projects/{projectId}/search_by_name")
     fun searchByName(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(name = "搜索名称")
+        @Parameter(description = "搜索名称")
         @QueryParam("pipelineName")
         pipelineName: String?
     ): Result<List<PipelineIdAndName>>
@@ -555,19 +555,19 @@ interface ServicePipelineResource {
     @GET
     @Path("/projects/{projectId}/paging_search_by_name")
     fun pagingSearchByName(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(name = "搜索名称")
+        @Parameter(description = "搜索名称")
         @QueryParam("pipelineName")
         pipelineName: String?,
-        @Parameter(name = "第几页", required = false, example = "1")
+        @Parameter(description = "第几页", required = false, example = "1")
         @QueryParam("page")
         page: Int? = null,
-        @Parameter(name = "每页多少条", required = false, example = "20")
+        @Parameter(description = "每页多少条", required = false, example = "20")
         @QueryParam("pageSize")
         pageSize: Int? = null
     ): Result<PipelineViewPipelinePage<PipelineInfo>>
@@ -583,11 +583,11 @@ interface ServicePipelineResource {
     @GET
     @Path("/projects{projectId}/pipelines/{id}/info")
     fun getPipelineInfobyAutoId(
-        @Parameter(name = "项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
         @PathParam("id")
-        @Parameter(name = "流水线自增id", required = true)
+        @Parameter(description = "流水线自增id", required = true)
         id: Long
     ): Result<SimplePipeline?>
 
@@ -595,22 +595,22 @@ interface ServicePipelineResource {
     @GET
     @Path("/hasPermissionList")
     fun hasPermissionList(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @HeaderParam(AUTH_HEADER_PROJECT_ID)
         projectId: String,
-        @Parameter(name = "对应权限", required = true, example = "")
+        @Parameter(description = "对应权限", required = true, example = "")
         @QueryParam("permission")
         permission: Permission,
-        @Parameter(name = "排除流水线ID", required = false, example = "")
+        @Parameter(description = "排除流水线ID", required = false, example = "")
         @QueryParam("excludePipelineId")
         excludePipelineId: String?,
-        @Parameter(name = "第几页", required = false, example = "1")
+        @Parameter(description = "第几页", required = false, example = "1")
         @QueryParam("page")
         page: Int?,
-        @Parameter(name = "每页多少条", required = false, example = "20")
+        @Parameter(description = "每页多少条", required = false, example = "20")
         @QueryParam("pageSize")
         pageSize: Int?
     ): Result<Page<Pipeline>>

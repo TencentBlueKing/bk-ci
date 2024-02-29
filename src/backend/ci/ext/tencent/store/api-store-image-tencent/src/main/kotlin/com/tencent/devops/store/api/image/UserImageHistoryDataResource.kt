@@ -52,16 +52,16 @@ interface UserImageHistoryDataResource {
     @GET
     @Path("/transfer")
     fun tranferHistoryImage(
-        @Parameter(name = "userId", required = true)
+        @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "projectId", required = true)
+        @Parameter(description = "projectId", required = true)
         @HeaderParam(AUTH_HEADER_PROJECT_ID)
         projectId: String,
-        @Parameter(name = "机器类型", required = true)
+        @Parameter(description = "机器类型", required = true)
         @QueryParam("agentType")
         agentType: ImageAgentTypeEnum,
-        @Parameter(name = "镜像特殊代号/路径", required = false)
+        @Parameter(description = "镜像特殊代号/路径", required = false)
         @QueryParam("value")
         value: String?
     ): Result<SimpleImageInfo>

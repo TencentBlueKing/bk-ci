@@ -54,10 +54,10 @@ interface ServiceOperationResource {
     @Path("/getLastUpdateUser/{pipelineId}/")
     @BkApiPermission([BkApiHandleType.API_NO_AUTH_CHECK])
     fun getUpdateUser(
-        @Parameter(name = "项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_PROJECT_ID)
         projectId: String,
-        @Parameter(name = "渠道号，默认为DS", required = false)
+        @Parameter(description = "渠道号，默认为DS", required = false)
         @PathParam("pipelineId")
         pipelineId: String
     ): Result<String>

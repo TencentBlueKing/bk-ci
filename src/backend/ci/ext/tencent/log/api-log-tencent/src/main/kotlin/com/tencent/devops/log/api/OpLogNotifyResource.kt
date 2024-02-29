@@ -55,7 +55,7 @@ interface OpLogNotifyResource {
     @POST
     @Path("/users/{userId}")
     fun addUser(
-        @Parameter(name = "用户id", required = true)
+        @Parameter(description = "用户id", required = true)
         @PathParam("userId")
         userId: String
     ): Result<Boolean>
@@ -64,7 +64,7 @@ interface OpLogNotifyResource {
     @DELETE
     @Path("/users/{userId}")
     fun deleteUser(
-        @Parameter(name = "用户id", required = true)
+        @Parameter(description = "用户id", required = true)
         @PathParam("userId")
         userId: String
     ): Result<Boolean>

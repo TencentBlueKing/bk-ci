@@ -62,7 +62,7 @@ interface OpAppVersionResource {
     @GET
     @Path("/{appVersionId}")
     fun getAppVersion(
-        @Parameter(name = "app版本号id", required = true)
+        @Parameter(description = "app版本号id", required = true)
         @PathParam("appVersionId")
         appVersionId: Long
     ): Result<AppVersion?>
@@ -71,7 +71,7 @@ interface OpAppVersionResource {
     @POST
     @Path("/")
     fun addAppVersion(
-        @Parameter(name = "APP版本", required = true)
+        @Parameter(description = "APP版本", required = true)
         appVersionRequest: AppVersionRequest
     ): Result<Int>
 
@@ -79,7 +79,7 @@ interface OpAppVersionResource {
     @POST
     @Path("/multi")
     fun addAppVersions(
-        @Parameter(name = "APP版本", required = true)
+        @Parameter(description = "APP版本", required = true)
         appVersionRequests: List<AppVersionRequest>
     ): Result<Int>
 
@@ -87,10 +87,10 @@ interface OpAppVersionResource {
     @PUT
     @Path("/{appVersionId}")
     fun updateAppVersion(
-        @Parameter(name = "app版本号id", required = true)
+        @Parameter(description = "app版本号id", required = true)
         @PathParam("appVersionId")
         appVersionId: Long,
-        @Parameter(name = "APP版本", required = true)
+        @Parameter(description = "APP版本", required = true)
         appVersionRequest: AppVersionRequest
     ): Result<Int>
 
@@ -98,7 +98,7 @@ interface OpAppVersionResource {
     @DELETE
     @Path("/{appVersionId}")
     fun deleteAppVersion(
-        @Parameter(name = "app版本号id", required = true)
+        @Parameter(description = "app版本号id", required = true)
         @PathParam("appVersionId")
         appVersionId: Long
     ): Result<Int>

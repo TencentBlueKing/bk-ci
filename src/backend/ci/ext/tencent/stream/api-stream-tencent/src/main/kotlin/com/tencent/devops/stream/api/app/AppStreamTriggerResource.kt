@@ -25,16 +25,16 @@ interface AppStreamTriggerResource {
     @POST
     @Path("/projects/{projectId}/pipelines/{pipelineId}/startup")
     fun triggerStartup(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "蓝盾项目ID")
+        @Parameter(description = "蓝盾项目ID")
         @PathParam("projectId")
         projectId: String,
-        @Parameter(name = "流水线ID", required = true)
+        @Parameter(description = "流水线ID", required = true)
         @PathParam("pipelineId")
         pipelineId: String,
-        @Parameter(name = "TriggerBuild请求", required = true)
+        @Parameter(description = "TriggerBuild请求", required = true)
         triggerBuildReq: V2AppTriggerBuildReq
     ): Result<AppTriggerBuildResult>
 }

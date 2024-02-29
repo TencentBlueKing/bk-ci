@@ -53,13 +53,13 @@ interface ServiceIptResource {
     @Path("/{projectId}/searchFileAndProperty")
     @POST
     fun searchFileAndProperty(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(name = "元数据", required = true)
+        @Parameter(description = "元数据", required = true)
         searchProps: SearchProps
     ): Result<FileInfoPage<FileInfo>>
 }

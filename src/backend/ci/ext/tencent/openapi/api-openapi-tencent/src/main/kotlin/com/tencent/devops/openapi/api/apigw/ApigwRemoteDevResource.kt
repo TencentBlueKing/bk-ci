@@ -32,19 +32,19 @@ interface ApigwRemoteDevResource {
     @GET
     @Path("/ticket/validate")
     fun validateUserTicket(
-        @Parameter(name = "appCode", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
+        @Parameter(description = "appCode", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
         appCode: String?,
-        @Parameter(name = "apigw Type", required = true)
+        @Parameter(description = "apigw Type", required = true)
         @PathParam("apigwType")
         apigwType: String?,
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String,
-        @Parameter(name = "区分是否离岸外包场景", required = true)
+        @Parameter(description = "区分是否离岸外包场景", required = true)
         @QueryParam("is_offshore")
         isOffshore: Boolean,
-        @Parameter(name = "登录Ticket，内网传BkTicket，离岸登录传BkToken", required = true)
+        @Parameter(description = "登录Ticket，内网传BkTicket，离岸登录传BkToken", required = true)
         @QueryParam("ticket")
         ticket: String
     ): Result<Boolean>
@@ -53,16 +53,16 @@ interface ApigwRemoteDevResource {
     @GET
     @Path("/project/workspace")
     fun queryProjectWorkspace(
-        @Parameter(name = "appCode", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
+        @Parameter(description = "appCode", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
         appCode: String?,
-        @Parameter(name = "apigw Type", required = true)
+        @Parameter(description = "apigw Type", required = true)
         @PathParam("apigwType")
         apigwType: String?,
-        @Parameter(name = "项目ID", required = false)
+        @Parameter(description = "项目ID", required = false)
         @QueryParam("project_id")
         projectId: String?,
-        @Parameter(name = "ip", required = false)
+        @Parameter(description = "ip", required = false)
         @QueryParam("ip")
         ip: String?
     ): Result<List<WeSecProjectWorkspace>>
@@ -71,13 +71,13 @@ interface ApigwRemoteDevResource {
     @GET
     @Path("/project/list")
     fun queryWorkspaceProjects(
-        @Parameter(name = "appCode", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
+        @Parameter(description = "appCode", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
         appCode: String?,
-        @Parameter(name = "apigw Type", required = true)
+        @Parameter(description = "apigw Type", required = true)
         @PathParam("apigwType")
         apigwType: String?,
-        @Parameter(name = "项目ID", required = false)
+        @Parameter(description = "项目ID", required = false)
         @QueryParam("project_id")
         projectId: String?
     ): Result<List<RemotedevProject>>
@@ -86,13 +86,13 @@ interface ApigwRemoteDevResource {
     @GET
     @Path("/project/cvm")
     fun queryProjectRemoteDevCvm(
-        @Parameter(name = "appCode", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
+        @Parameter(description = "appCode", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
         appCode: String?,
-        @Parameter(name = "apigw Type", required = true)
+        @Parameter(description = "apigw Type", required = true)
         @PathParam("apigwType")
         apigwType: String?,
-        @Parameter(name = "项目ID", required = false)
+        @Parameter(description = "项目ID", required = false)
         @QueryParam("project_id")
         projectId: String?
     ): Result<List<RemotedevCvmData>>
@@ -101,16 +101,16 @@ interface ApigwRemoteDevResource {
     @GET
     @Path("/check/cgs/permission")
     fun checkUserCgsPermission(
-        @Parameter(name = "appCode", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
+        @Parameter(description = "appCode", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
         appCode: String?,
-        @Parameter(name = "apigw Type", required = true)
+        @Parameter(description = "apigw Type", required = true)
         @PathParam("apigwType")
         apigwType: String?,
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String,
-        @Parameter(name = "云桌面IP", required = true)
+        @Parameter(description = "云桌面IP", required = true)
         @QueryParam("ip")
         ip: String
     ): Result<Boolean>
@@ -119,19 +119,19 @@ interface ApigwRemoteDevResource {
     @POST
     @Path("/assign/workspace")
     fun assignWorkspace(
-        @Parameter(name = "appCode", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
+        @Parameter(description = "appCode", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
         appCode: String?,
-        @Parameter(name = "apigw Type", required = true)
+        @Parameter(description = "apigw Type", required = true)
         @PathParam("apigwType")
         apigwType: String?,
-        @Parameter(name = "操作人，必填", required = true)
+        @Parameter(description = "操作人，必填", required = true)
         @QueryParam("operator")
         operator: String,
-        @Parameter(name = "拥有者，为空则表示不分配，只交付项目", required = false)
+        @Parameter(description = "拥有者，为空则表示不分配，只交付项目", required = false)
         @QueryParam("owner")
         owner: String?,
-        @Parameter(name = "分配数据，必填", required = true)
+        @Parameter(description = "分配数据，必填", required = true)
         data: OpProjectWorkspaceAssignData
     ): Result<Boolean>
 
@@ -139,13 +139,13 @@ interface ApigwRemoteDevResource {
     @GET
     @Path("/{projectId}/workspaces")
     fun listWorkspacesWithProjectId(
-        @Parameter(name = "appCode", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
+        @Parameter(description = "appCode", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
         appCode: String?,
-        @Parameter(name = "apigw Type", required = true)
+        @Parameter(description = "apigw Type", required = true)
         @PathParam("apigwType")
         apigwType: String?,
-        @Parameter(name = "项目ID(项目英文名)", required = true)
+        @Parameter(description = "项目ID(项目英文名)", required = true)
         @PathParam("projectId")
         projectId: String
     ): Result<List<WeSecProjectWorkspace>>
@@ -154,16 +154,16 @@ interface ApigwRemoteDevResource {
     @POST
     @Path("/workspace/notify")
     fun notifyWorkspaceInfo(
-        @Parameter(name = "appCode", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
+        @Parameter(description = "appCode", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
         appCode: String?,
-        @Parameter(name = "apigw Type", required = true)
+        @Parameter(description = "apigw Type", required = true)
         @PathParam("apigwType")
         apigwType: String?,
-        @Parameter(name = "操作人，必填", required = true)
+        @Parameter(description = "操作人，必填", required = true)
         @QueryParam("operator")
         operator: String,
-        @Parameter(name = "通知信息", required = true)
+        @Parameter(description = "通知信息", required = true)
         notifyData: WorkspaceNotifyData
     ): Result<Boolean>
 
@@ -171,16 +171,16 @@ interface ApigwRemoteDevResource {
     @GET
     @Path("/checkWorkspaceProject")
     fun checkWorkspaceProject(
-        @Parameter(name = "appCode", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
+        @Parameter(description = "appCode", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
         appCode: String?,
-        @Parameter(name = "apigw Type", required = true)
+        @Parameter(description = "apigw Type", required = true)
         @PathParam("apigwType")
         apigwType: String?,
-        @Parameter(name = "projectId", required = true)
+        @Parameter(description = "projectId", required = true)
         @QueryParam("projectId")
         projectId: String,
-        @Parameter(name = "ip", required = true)
+        @Parameter(description = "ip", required = true)
         @QueryParam("ip")
         ip: String
     ): Result<Boolean>

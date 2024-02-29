@@ -55,10 +55,10 @@ interface BuildAtomResource {
     @GET
     @Path("/projects/{projectCode}/atoms/{atomCode}/default/valid/version")
     fun getAtomDefaultValidVersion(
-        @Parameter(name = "项目代码", required = true)
+        @Parameter(description = "项目代码", required = true)
         @PathParam("projectCode")
         projectCode: String,
-        @Parameter(name = "插件代码", required = true)
+        @Parameter(description = "插件代码", required = true)
         @PathParam("atomCode")
         atomCode: String
     ): Result<VersionInfo?>
@@ -67,10 +67,10 @@ interface BuildAtomResource {
     @POST
     @Path("/test/version/create")
     fun createAtomBranchTestVersion(
-        @Parameter(name = "userId", required = true)
+        @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "新增插件请求报文体", required = true)
+        @Parameter(description = "新增插件请求报文体", required = true)
         marketAtomUpdateRequest: MarketAtomUpdateRequest
     ): Result<String>
 
@@ -78,13 +78,13 @@ interface BuildAtomResource {
     @GET
     @Path("/atoms/{atomCode}/test/version/end")
     fun endBranchVersionTest(
-        @Parameter(name = "userId", required = true)
+        @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "插件分支", required = true)
+        @Parameter(description = "插件分支", required = true)
         @PathParam("atomCode")
         atomCode: String,
-        @Parameter(name = "插件分支", required = true)
+        @Parameter(description = "插件分支", required = true)
         @QueryParam("branch")
         branch: String
     ): Result<Boolean>
@@ -93,10 +93,10 @@ interface BuildAtomResource {
     @GET
     @Path("/desk/atom/release/ids/{atomId}")
     fun getProcessInfo(
-        @Parameter(name = "userId", required = true)
+        @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "atomId", required = true)
+        @Parameter(description = "atomId", required = true)
         @PathParam("atomId")
         atomId: String
     ): Result<StoreProcessInfo>

@@ -53,16 +53,16 @@ interface ServiceMtpResource {
     @Path("/{projectId}/{artifactoryType}/download")
     @GET
     fun mtpDownload(
-        @Parameter(name = "用户ID", required = false, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = false, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String?,
-        @Parameter(name = "项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(name = "版本仓库类型", required = true)
+        @Parameter(description = "版本仓库类型", required = true)
         @PathParam("artifactoryType")
         artifactoryType: ArtifactoryType,
-        @Parameter(name = "路径", required = true)
+        @Parameter(description = "路径", required = true)
         @QueryParam("path")
         path: String
     ): Result<MtpDownloadInfo>

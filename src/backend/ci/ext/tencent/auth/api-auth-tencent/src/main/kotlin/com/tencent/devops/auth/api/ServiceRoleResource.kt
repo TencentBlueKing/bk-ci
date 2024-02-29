@@ -50,10 +50,10 @@ interface ServiceRoleResource {
     @Path("/projectIds/{projectId}")
     @Operation(summary = "获取用户组")
     fun getProjectRoles(
-        @Parameter(name = "用户名", required = true)
+        @Parameter(description = "用户名", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "项目标识", required = true)
+        @Parameter(description = "项目标识", required = true)
         @PathParam("projectId")
         projectId: Int
     ): Result<List<GroupInfoVo>>

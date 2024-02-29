@@ -6,18 +6,18 @@ import io.swagger.v3.oas.annotations.Parameter
 data class RemotedevCvmData(
     @get:Schema(title = "ID")
     val id: Int?,
-    @Parameter(name = "项目ID", required = true)
+    @Parameter(description = "项目ID", required = true)
     val projectId: String,
-    @Parameter(name = "区域", required = true)
+    @Parameter(description = "区域", required = true)
     val zone: String?,
-    @Parameter(name = "可用区域", required = true)
+    @Parameter(description = "可用区域", required = true)
     val availableRegion: String?,
-    @Parameter(name = "cpu", required = true)
+    @Parameter(description = "cpu", required = true)
     val cpu: Int?,
-    @Parameter(name = "内存", required = true)
+    @Parameter(description = "内存", required = true)
     val memory: Int?,
-    @Parameter(name = "子网", required = true)
+    @Parameter(description = "子网", required = true)
     val subnet: String?,
-    @Parameter(name = "云桌面IP", required = true)
+    @Parameter(description = "云桌面IP", required = true)
     val ip: String
 )

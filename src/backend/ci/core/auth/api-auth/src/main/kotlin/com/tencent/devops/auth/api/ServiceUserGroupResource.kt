@@ -49,10 +49,10 @@ interface ServiceUserGroupResource {
     @Path("/users/{userId}/groupIds/{groupId}")
     @Operation(summary = "添加用户到指定组")
     fun addUser2Group(
-        @Parameter(name = "用户名", required = true)
+        @Parameter(description = "用户名", required = true)
         @PathParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "用户组Id", required = true)
+        @Parameter(description = "用户组Id", required = true)
         @PathParam("groupId")
         groupId: Int
     ): Result<Boolean>

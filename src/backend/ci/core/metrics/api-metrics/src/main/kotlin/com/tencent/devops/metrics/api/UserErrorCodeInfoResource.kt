@@ -56,26 +56,26 @@ interface UserErrorCodeInfoResource {
     @Path("/{atomCode}/list")
     @GET
     fun getErrorCodeInfo(
-        @Parameter(name = "项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_PROJECT_ID)
         projectId: String,
-        @Parameter(name = "userId", required = true)
+        @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "关联插件Code", required = true)
+        @Parameter(description = "关联插件Code", required = true)
         @PathParam("atomCode")
         atomCode: String,
-        @Parameter(name = "错误类型,使用逗号进行分隔", required = false)
+        @Parameter(description = "错误类型,使用逗号进行分隔", required = false)
         @QueryParam("errorTypes")
         errorTypes: String?,
-        @Parameter(name = "页码", required = true, example = "1")
+        @Parameter(description = "页码", required = true, example = "1")
         @QueryParam("page")
         page: Int,
-        @Parameter(name = "每页大小", required = true, example = "10")
+        @Parameter(description = "每页大小", required = true, example = "10")
         @BkField(patternStyle = BkStyleEnum.PAGE_SIZE_STYLE, required = true)
         @QueryParam("pageSize")
         pageSize: Int,
-        @Parameter(name = "keyword", required = false)
+        @Parameter(description = "keyword", required = false)
         @QueryParam("keyword")
         keyword: String?
     ): Result<Page<ErrorCodeInfoDO>>

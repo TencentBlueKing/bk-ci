@@ -59,14 +59,14 @@ interface UserImageReleaseResource {
     @POST
     @Path("/image/imageCodes/{imageCode}/store/rel")
     fun addMarketImage(
-        @Parameter(name = "userId", required = true)
+        @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "镜像代码", required = true)
+        @Parameter(description = "镜像代码", required = true)
         @BkField(patternStyle = BkStyleEnum.CODE_STYLE)
         @PathParam("imageCode")
         imageCode: String,
-        @Parameter(name = "关联镜像请求报文体", required = true)
+        @Parameter(description = "关联镜像请求报文体", required = true)
         @Valid
         marketImageRelRequest: MarketImageRelRequest
     ): Result<String>
@@ -75,10 +75,10 @@ interface UserImageReleaseResource {
     @PUT
     @Path("/desk/image/release")
     fun updateMarketImage(
-        @Parameter(name = "userId", required = true)
+        @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "上架镜像请求报文体", required = true)
+        @Parameter(description = "上架镜像请求报文体", required = true)
         marketImageUpdateRequest: MarketImageUpdateRequest
     ): Result<String?>
 
@@ -86,13 +86,13 @@ interface UserImageReleaseResource {
     @PUT
     @Path("/desk/image/offline/imageCodes/{imageCode}/versions")
     fun offlineMarketImage(
-        @Parameter(name = "userId", required = true)
+        @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "镜像Code", required = true)
+        @Parameter(description = "镜像Code", required = true)
         @PathParam("imageCode")
         imageCode: String,
-        @Parameter(name = "下架镜像请求报文体", required = true)
+        @Parameter(description = "下架镜像请求报文体", required = true)
         offlineMarketImageReq: OfflineMarketImageReq
     ): Result<Boolean>
 
@@ -100,10 +100,10 @@ interface UserImageReleaseResource {
     @GET
     @Path("/desk/image/release/process/imageIds/{imageId}")
     fun getProcessInfo(
-        @Parameter(name = "userId", required = true)
+        @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "镜像Id", required = true)
+        @Parameter(description = "镜像Id", required = true)
         @PathParam("imageId")
         imageId: String
     ): Result<StoreProcessInfo>
@@ -112,10 +112,10 @@ interface UserImageReleaseResource {
     @PUT
     @Path("/desk/image/release/cancel/imageIds/{imageId}")
     fun cancelRelease(
-        @Parameter(name = "userId", required = true)
+        @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "镜像Id", required = true)
+        @Parameter(description = "镜像Id", required = true)
         @PathParam("imageId")
         imageId: String
     ): Result<Boolean>
@@ -124,10 +124,10 @@ interface UserImageReleaseResource {
     @PUT
     @Path("/desk/image/release/recheck/imageIds/{imageId}")
     fun recheck(
-        @Parameter(name = "userId", required = true)
+        @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "镜像Id", required = true)
+        @Parameter(description = "镜像Id", required = true)
         @PathParam("imageId")
         imageId: String
     ): Result<Boolean>
@@ -136,10 +136,10 @@ interface UserImageReleaseResource {
     @PUT
     @Path("/desk/image/release/passTest/imageIds/{imageId}")
     fun passTest(
-        @Parameter(name = "userId", required = true)
+        @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "镜像Id", required = true)
+        @Parameter(description = "镜像Id", required = true)
         @PathParam("imageId")
         imageId: String
     ): Result<Boolean>
@@ -148,7 +148,7 @@ interface UserImageReleaseResource {
     @GET
     @Path("/image/agentType/list")
     fun getImageAgentTypes(
-        @Parameter(name = "userId", required = true)
+        @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String
     ): Result<List<ImageAgentTypeInfo>>

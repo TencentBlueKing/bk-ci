@@ -24,7 +24,7 @@ interface ServiceGithubDatabaseResource {
     @POST
     @Path("/getTree")
     fun getTree(
-        @Parameter(name = "授权token", required = true)
+        @Parameter(description = "授权token", required = true)
         @HeaderParam(AUTH_HEADER_GITHUB_TOKEN)
         token: String,
         request: GetTreeRequest

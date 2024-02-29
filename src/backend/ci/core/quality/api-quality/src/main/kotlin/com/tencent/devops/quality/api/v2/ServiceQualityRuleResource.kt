@@ -63,16 +63,16 @@ interface ServiceQualityRuleResource {
     @Path("/{projectId}/{pipelineId}/matchRuleList")
     @GET
     fun matchRuleList(
-        @Parameter(name = "项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(name = "流水线ID", required = true)
+        @Parameter(description = "流水线ID", required = true)
         @PathParam("pipelineId")
         pipelineId: String,
-        @Parameter(name = "模板id", required = true)
+        @Parameter(description = "模板id", required = true)
         @QueryParam("templateId")
         templateId: String?,
-        @Parameter(name = "构建启动时间", required = true)
+        @Parameter(description = "构建启动时间", required = true)
         @QueryParam("startTime")
         startTime: Long
     ): Result<List<QualityRuleMatchTask>>
@@ -81,16 +81,16 @@ interface ServiceQualityRuleResource {
     @Path("/{projectId}/{pipelineId}/{buildId}/auditUserList")
     @GET
     fun getAuditUserList(
-        @Parameter(name = "项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(name = "流水线ID", required = true)
+        @Parameter(description = "流水线ID", required = true)
         @PathParam("pipelineId")
         pipelineId: String,
-        @Parameter(name = "构建ID", required = true)
+        @Parameter(description = "构建ID", required = true)
         @PathParam("buildId")
         buildId: String,
-        @Parameter(name = "原子ID", required = true)
+        @Parameter(description = "原子ID", required = true)
         @QueryParam("taskId")
         taskId: String
     ): Result<Set<String>>
@@ -99,7 +99,7 @@ interface ServiceQualityRuleResource {
     @Path("/check")
     @POST
     fun check(
-        @Parameter(name = "构建检查参数", required = true)
+        @Parameter(description = "构建检查参数", required = true)
         buildCheckParams: BuildCheckParams
     ): Result<RuleCheckResult>
 
@@ -114,7 +114,7 @@ interface ServiceQualityRuleResource {
     @Path("/builds/{buildId}/getHisMetadata")
     @GET
     fun getHisMetadata(
-        @Parameter(name = "构建ID", required = true)
+        @Parameter(description = "构建ID", required = true)
         @PathParam("buildId")
         buildId: String
     ): Result<List<QualityHisMetadata>>
@@ -123,13 +123,13 @@ interface ServiceQualityRuleResource {
     @Path("/{projectId}/")
     @POST
     fun create(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(name = "规则内容", required = true)
+        @Parameter(description = "规则内容", required = true)
         rule: RuleCreateRequest
     ): Result<String>
 
@@ -137,16 +137,16 @@ interface ServiceQualityRuleResource {
     @Path("/{projectId}/{ruleHashId}")
     @PUT
     fun update(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(name = "规则ID", required = true)
+        @Parameter(description = "规则ID", required = true)
         @PathParam("ruleHashId")
         ruleHashId: String,
-        @Parameter(name = "规则内容", required = true)
+        @Parameter(description = "规则内容", required = true)
         rule: RuleUpdateRequest
     ): Result<Boolean>
 
@@ -154,13 +154,13 @@ interface ServiceQualityRuleResource {
     @Path("/{projectId}/{ruleHashId}")
     @DELETE
     fun delete(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(name = "规则ID", required = true)
+        @Parameter(description = "规则ID", required = true)
         @PathParam("ruleHashId")
         ruleHashId: String
     ): Result<Boolean>
@@ -169,16 +169,16 @@ interface ServiceQualityRuleResource {
     @Path("/{projectId}/list")
     @GET
     fun list(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(name = "页目", required = false, example = "1")
+        @Parameter(description = "页目", required = false, example = "1")
         @QueryParam("page")
         page: Int?,
-        @Parameter(name = "每页数目", required = false, example = "20")
+        @Parameter(description = "每页数目", required = false, example = "20")
         @QueryParam("pageSize")
         pageSize: Int?
     ): Result<Page<QualityRuleSummaryWithPermission>>

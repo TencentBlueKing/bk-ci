@@ -59,7 +59,7 @@ interface ServiceQualityRuleResource {
     @Path("/check")
     @POST
     fun check(
-        @Parameter(name = "构建检查参数", required = true)
+        @Parameter(description = "构建检查参数", required = true)
         buildCheckParams: BuildCheckParamsV3
     ): Result<RuleCheckResult>
 
@@ -67,16 +67,16 @@ interface ServiceQualityRuleResource {
     @Path("/project/{projectId}/pipeline/{pipelineId}/create")
     @POST
     fun create(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(name = "流水线ID", required = true)
+        @Parameter(description = "流水线ID", required = true)
         @PathParam("pipelineId")
         pipelineId: String,
-        @Parameter(name = "规则内容", required = true)
+        @Parameter(description = "规则内容", required = true)
         ruleList: List<RuleCreateRequestV3>
     ): Result<List<RuleCreateResponseV3>>
 
@@ -84,28 +84,28 @@ interface ServiceQualityRuleResource {
     @Path("/{projectId}/listRuleBuildHis")
     @GET
     fun listQualityRuleBuildHis(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(name = "流水线ID", required = false)
+        @Parameter(description = "流水线ID", required = false)
         @QueryParam("pipelineId")
         pipelineId: String?,
-        @Parameter(name = "规则ID", required = false)
+        @Parameter(description = "规则ID", required = false)
         @QueryParam("ruleHashId")
         ruleHashId: String?,
-        @Parameter(name = "开始时间", required = false)
+        @Parameter(description = "开始时间", required = false)
         @QueryParam("startTime")
         startTime: Long?,
-        @Parameter(name = "截止时间", required = false)
+        @Parameter(description = "截止时间", required = false)
         @QueryParam("endTime")
         endTime: Long?,
-        @Parameter(name = "页号", required = false, example = "1")
+        @Parameter(description = "页号", required = false, example = "1")
         @QueryParam("page")
         page: Int?,
-        @Parameter(name = "页数", required = false, example = "20")
+        @Parameter(description = "页数", required = false, example = "20")
         @QueryParam("pageSize")
         pageSize: Int?
     ): Result<Page<RuleInterceptHistory>>

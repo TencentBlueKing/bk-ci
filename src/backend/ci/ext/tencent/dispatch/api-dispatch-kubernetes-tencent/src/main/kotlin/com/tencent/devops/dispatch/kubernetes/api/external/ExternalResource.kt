@@ -50,10 +50,10 @@ interface ExternalResource {
     @POST
     @Path("/task/callback")
     fun workspaceTaskCallback(
-        @Parameter(name = "云开发环境对接容器集群类型(DEVCLOUD、START、BCS)", required = false)
+        @Parameter(description = "云开发环境对接容器集群类型(DEVCLOUD、START、BCS)", required = false)
         @QueryParam("type")
         type: WorkspaceMountType? = WorkspaceMountType.DEVCLOUD,
-        @Parameter(name = "回调信息", required = true)
+        @Parameter(description = "回调信息", required = true)
         taskStatus: TaskStatus
     ): Result<Boolean>
 }

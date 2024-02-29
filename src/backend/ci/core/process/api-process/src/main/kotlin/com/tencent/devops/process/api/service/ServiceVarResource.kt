@@ -50,16 +50,16 @@ interface ServiceVarResource {
     @Path("/get_build_variable")
     @GET
     fun getBuildVar(
-        @Parameter(name = "项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @QueryParam("projectId")
         projectId: String,
-        @Parameter(name = "构建ID", required = true)
+        @Parameter(description = "构建ID", required = true)
         @QueryParam("buildId")
         buildId: String,
-        @Parameter(name = "变量名称", required = false)
+        @Parameter(description = "变量名称", required = false)
         @QueryParam("varName")
         varName: String?,
-        @Parameter(name = "流水线ID", required = false)
+        @Parameter(description = "流水线ID", required = false)
         @QueryParam("pipelineId")
         pipelineId: String?
     ): Result<Map<String, String>>
@@ -68,16 +68,16 @@ interface ServiceVarResource {
     @Path("/get_build_context")
     @GET
     fun getContextVar(
-        @Parameter(name = "项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @QueryParam("projectId")
         projectId: String,
-        @Parameter(name = "流水线ID", required = true)
+        @Parameter(description = "流水线ID", required = true)
         @QueryParam("pipelineId")
         pipelineId: String,
-        @Parameter(name = "构建ID", required = true)
+        @Parameter(description = "构建ID", required = true)
         @QueryParam("buildId")
         buildId: String,
-        @Parameter(name = "变量名称", required = false)
+        @Parameter(description = "变量名称", required = false)
         @QueryParam("contextName")
         contextName: String?
     ): Result<Map<String, String>>

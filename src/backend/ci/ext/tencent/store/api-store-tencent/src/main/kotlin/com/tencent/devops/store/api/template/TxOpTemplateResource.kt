@@ -53,13 +53,13 @@ interface TxOpTemplateResource {
     @PUT
     @Path("/{templateCode}/visible/approve/")
     fun approveVisibleDept(
-        @Parameter(name = "用户ID", required = true)
+        @Parameter(description = "用户ID", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "标识", required = true)
+        @Parameter(description = "标识", required = true)
         @PathParam("templateCode")
         templateCode: String,
-        @Parameter(name = "可见范围审核请求报文", required = true)
+        @Parameter(description = "可见范围审核请求报文", required = true)
         visibleApproveReq: VisibleApproveReq
     ): Result<Boolean>
 
@@ -67,7 +67,7 @@ interface TxOpTemplateResource {
     @GET
     @Path("/{templateCode}/visible")
     fun getVisibleDept(
-        @Parameter(name = "代码", required = true)
+        @Parameter(description = "代码", required = true)
         @PathParam("templateCode")
         templateCode: String
     ): Result<StoreVisibleDeptResp?>

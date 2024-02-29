@@ -69,10 +69,10 @@ interface UserPipelineViewResource {
     @GET
     @Path("/projects/{projectId}/settings")
     fun getViewSettings(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String
     ): Result<PipelineViewSettings>
@@ -81,10 +81,10 @@ interface UserPipelineViewResource {
     @POST
     @Path("/projects/{projectId}/settings")
     fun updateViewSettings(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
         viewIdList: List<String>
@@ -94,10 +94,10 @@ interface UserPipelineViewResource {
     @GET
     @Path("/projects/{projectId}/")
     fun getViews(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String
     ): Result<List<PipelineNewViewSummary>>
@@ -106,17 +106,17 @@ interface UserPipelineViewResource {
     @GET
     @Path("/projects/{projectId}/list")
     fun listView(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
         @QueryParam("projected")
-        @Parameter(name = "是否为项目流水线组 , 为空时不区分", required = false)
+        @Parameter(description = "是否为项目流水线组 , 为空时不区分", required = false)
         projected: Boolean? = null,
         @QueryParam("viewType")
-        @Parameter(name = "流水线组类型 , 1--动态, 2--静态 , 为空时不区分", required = false)
+        @Parameter(description = "流水线组类型 , 1--动态, 2--静态 , 为空时不区分", required = false)
         viewType: Int? = null
     ): Result<List<PipelineNewViewSummary>>
 
@@ -124,10 +124,10 @@ interface UserPipelineViewResource {
     @POST
     @Path("/projects/{projectId}/")
     fun addView(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
         pipelineView: PipelineViewForm
@@ -137,12 +137,12 @@ interface UserPipelineViewResource {
     @GET
     @Path("/projects/{projectId}/views/{viewId}")
     fun getView(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
         @PathParam("projectId")
         projectId: String,
-        @Parameter(name = "标签ID", required = true)
+        @Parameter(description = "标签ID", required = true)
         @PathParam("viewId")
         viewId: String
     ): Result<PipelineNewView>
@@ -151,13 +151,13 @@ interface UserPipelineViewResource {
     @DELETE
     @Path("/projects/{projectId}/views/{viewId}")
     fun deleteView(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(name = "标签ID", required = true)
+        @Parameter(description = "标签ID", required = true)
         @PathParam("viewId")
         viewId: String
     ): Result<Boolean>
@@ -166,12 +166,12 @@ interface UserPipelineViewResource {
     @PUT
     @Path("/projects/{projectId}/views/{viewId}")
     fun updateView(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
         @PathParam("projectId")
         projectId: String,
-        @Parameter(name = "标签ID", required = true)
+        @Parameter(description = "标签ID", required = true)
         @PathParam("viewId")
         viewId: String,
         pipelineView: PipelineViewForm
@@ -181,12 +181,12 @@ interface UserPipelineViewResource {
     @POST
     @Path("/projects/{projectId}/views/{viewId}/top")
     fun topView(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
         @PathParam("projectId")
         projectId: String,
-        @Parameter(name = "标签ID", required = true)
+        @Parameter(description = "标签ID", required = true)
         @PathParam("viewId")
         viewId: String,
         pipelineViewTopForm: PipelineViewTopForm
@@ -197,7 +197,7 @@ interface UserPipelineViewResource {
     @Path("/projects/{projectId}/preview")
     @BkApiPermission([BkApiHandleType.API_NO_AUTH_CHECK])
     fun preview(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
         @PathParam("projectId")
@@ -209,7 +209,7 @@ interface UserPipelineViewResource {
     @GET
     @Path("/projects/{projectId}/dict")
     fun dict(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
         @PathParam("projectId")
@@ -220,7 +220,7 @@ interface UserPipelineViewResource {
     @GET
     @Path("/projects/{projectId}/getHitFilters")
     fun getHitFilters(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
         @PathParam("projectId")
@@ -236,7 +236,7 @@ interface UserPipelineViewResource {
     @Path("/projects/{projectId}/matchDynamicView")
     @BkApiPermission([BkApiHandleType.API_NO_AUTH_CHECK])
     fun matchDynamicView(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
         @PathParam("projectId")
@@ -248,7 +248,7 @@ interface UserPipelineViewResource {
     @POST
     @Path("/projects/{projectId}/bulkAdd")
     fun bulkAdd(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
         @PathParam("projectId")
@@ -260,7 +260,7 @@ interface UserPipelineViewResource {
     @POST
     @Path("/projects/{projectId}/bulkRemove")
     fun bulkRemove(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
         @PathParam("projectId")
@@ -272,7 +272,7 @@ interface UserPipelineViewResource {
     @GET
     @Path("/projects/{projectId}/pipelines/{pipelineId}/listViews")
     fun listViewByPipelineId(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
         @PathParam("projectId")
@@ -285,13 +285,13 @@ interface UserPipelineViewResource {
     @GET
     @Path("/projects/{projectId}/views/{viewId}/pipelineCount")
     fun pipelineCount(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(name = "标签ID", required = true)
+        @Parameter(description = "标签ID", required = true)
         @PathParam("viewId")
         viewId: String
     ): Result<PipelineViewPipelineCount>
@@ -300,7 +300,7 @@ interface UserPipelineViewResource {
     @GET
     @Path("/projects/{projectId}/pipelines/{pipelineId}/listViewIds")
     fun listViewIdsByPipelineId(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
         @PathParam("projectId")

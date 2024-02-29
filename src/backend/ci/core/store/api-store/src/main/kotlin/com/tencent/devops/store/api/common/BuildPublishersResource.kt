@@ -54,9 +54,9 @@ interface BuildPublishersResource {
     @Path("/add")
     fun synAddPublisherData(
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
-        @Parameter(name = "用户ID", required = true)
+        @Parameter(description = "用户ID", required = true)
         userId: String,
-        @Parameter(name = "发布者数据同步请求", required = true)
+        @Parameter(description = "发布者数据同步请求", required = true)
         publishers: List<PublishersRequest>
     ): Result<Int>
 
@@ -65,9 +65,9 @@ interface BuildPublishersResource {
     @Path("/delete")
     fun synDeletePublisherData(
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
-        @Parameter(name = "用户ID", required = true)
+        @Parameter(description = "用户ID", required = true)
         userId: String,
-        @Parameter(name = "发布者数据同步请求", required = true)
+        @Parameter(description = "发布者数据同步请求", required = true)
         publishers: List<PublishersRequest>
     ): Result<Int>
 
@@ -76,9 +76,9 @@ interface BuildPublishersResource {
     @Path("/update")
     fun synUpdatePublisherData(
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
-        @Parameter(name = "用户ID", required = true)
+        @Parameter(description = "用户ID", required = true)
         userId: String,
-        @Parameter(name = "发布者数据同步请求", required = true)
+        @Parameter(description = "发布者数据同步请求", required = true)
         publishers: List<PublishersRequest>
     ): Result<Int>
 
@@ -87,9 +87,9 @@ interface BuildPublishersResource {
     @Path("/platforms/add")
     fun synAddPlatformsData(
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
-        @Parameter(name = "用户ID", required = true)
+        @Parameter(description = "用户ID", required = true)
         userId: String,
-        @Parameter(name = "store组件对接平台请求", required = true)
+        @Parameter(description = "store组件对接平台请求", required = true)
         storeDockingPlatformRequests: List<StoreDockingPlatformRequest>
     ): Result<Int>
 
@@ -98,9 +98,9 @@ interface BuildPublishersResource {
     @Path("/platforms/delete")
     fun synDeletePlatformsData(
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
-        @Parameter(name = "用户ID", required = true)
+        @Parameter(description = "用户ID", required = true)
         userId: String,
-        @Parameter(name = "store组件对接平台请求", required = true)
+        @Parameter(description = "store组件对接平台请求", required = true)
         storeDockingPlatformRequests: List<StoreDockingPlatformRequest>
     ): Result<Int>
 
@@ -109,9 +109,9 @@ interface BuildPublishersResource {
     @Path("/platforms/update")
     fun synUpdatePlatformsData(
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
-        @Parameter(name = "用户ID", required = true)
+        @Parameter(description = "用户ID", required = true)
         userId: String,
-        @Parameter(name = "store组件对接平台请求", required = true)
+        @Parameter(description = "store组件对接平台请求", required = true)
         storeDockingPlatformRequests: List<StoreDockingPlatformRequest>
     ): Result<Int>
 
@@ -120,12 +120,12 @@ interface BuildPublishersResource {
     @Path("/platforms/logo/update")
     fun synUpdatePlatformsLogoInfo(
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
-        @Parameter(name = "用户ID", required = true)
+        @Parameter(description = "用户ID", required = true)
         userId: String,
-        @Parameter(name = "平台代码", required = true)
+        @Parameter(description = "平台代码", required = true)
         @QueryParam("platformCode")
         platformCode: String,
-        @Parameter(name = "logoUrl", required = true)
+        @Parameter(description = "logoUrl", required = true)
         @QueryParam("logoUrl")
         logoUrl: String
     ): Result<Boolean>

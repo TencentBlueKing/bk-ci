@@ -60,10 +60,10 @@ interface OpThirdPartyAgentResource {
     @PUT
     @Path("/projects/enable")
     fun enableProject(
-        @Parameter(name = "项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @QueryParam("projectId")
         projectId: String,
-        @Parameter(name = "启动或禁止", required = true)
+        @Parameter(description = "启动或禁止", required = true)
         @QueryParam("enable")
         enable: Boolean
     ): Result<Boolean>
@@ -77,16 +77,16 @@ interface OpThirdPartyAgentResource {
     @POST
     @Path("/agents/{nodeId}/pipelines")
     fun scheduleAgentPipeline(
-        @Parameter(name = "user id", required = true)
+        @Parameter(description = "user id", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @HeaderParam("projectId")
         projectId: String,
-        @Parameter(name = "node id", required = true)
+        @Parameter(description = "node id", required = true)
         @PathParam("nodeId")
         nodeId: String,
-        @Parameter(name = "pipeline", required = true)
+        @Parameter(description = "pipeline", required = true)
         pipeline: PipelineCreate
     ): Result<PipelineSeqId>
 
@@ -94,13 +94,13 @@ interface OpThirdPartyAgentResource {
     @GET
     @Path("/agents/{nodeId}/pipelines")
     fun getAgentPipelineResponse(
-        @Parameter(name = "项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @HeaderParam("projectId")
         projectId: String,
-        @Parameter(name = "node id", required = true)
+        @Parameter(description = "node id", required = true)
         @PathParam("nodeId")
         nodeId: String,
-        @Parameter(name = "seqId", required = true)
+        @Parameter(description = "seqId", required = true)
         @QueryParam("seqId")
         seqId: String
     ): Result<PipelineResponse>
@@ -109,7 +109,7 @@ interface OpThirdPartyAgentResource {
     @POST
     @Path("/agents/updateAgentGateway")
     fun updateAgentGateway(
-        @Parameter(name = "内容", required = false)
+        @Parameter(description = "内容", required = false)
         updateAgentRequest: UpdateAgentRequest
     ): Result<Boolean>
 
@@ -122,7 +122,7 @@ interface OpThirdPartyAgentResource {
     @POST
     @Path("/gateways")
     fun addGateway(
-        @Parameter(name = "gateway", required = true)
+        @Parameter(description = "gateway", required = true)
         gateway: SlaveGateway
     ): Result<Boolean>
 
@@ -130,7 +130,7 @@ interface OpThirdPartyAgentResource {
     @PUT
     @Path("/gateways")
     fun updateGateway(
-        @Parameter(name = "gateway", required = true)
+        @Parameter(description = "gateway", required = true)
         gateway: SlaveGateway
     ): Result<Boolean>
 
@@ -138,7 +138,7 @@ interface OpThirdPartyAgentResource {
     @DELETE
     @Path("/gateways/{zoneName}")
     fun deleteGateway(
-        @Parameter(name = "zoneName", required = true)
+        @Parameter(description = "zoneName", required = true)
         @PathParam("zoneName")
         zoneName: String
     ): Result<Boolean>

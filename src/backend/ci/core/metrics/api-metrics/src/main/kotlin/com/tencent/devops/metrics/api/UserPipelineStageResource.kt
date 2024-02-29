@@ -52,14 +52,14 @@ interface UserPipelineStageResource {
     @Path("/trend/info")
     @POST
     fun queryPipelineStageTrendInfo(
-        @Parameter(name = "项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_PROJECT_ID)
         @BkField(required = true)
         projectId: String,
-        @Parameter(name = "userId", required = true)
+        @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "查询条件", required = false)
+        @Parameter(description = "查询条件", required = false)
         baseQueryReq: BaseQueryReqVO?
     ): Result<List<StageTrendSumInfoVO>>
 }

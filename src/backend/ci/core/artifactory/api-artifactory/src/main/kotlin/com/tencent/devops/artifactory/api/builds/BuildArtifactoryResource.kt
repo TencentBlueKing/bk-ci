@@ -55,22 +55,22 @@ interface BuildArtifactoryResource {
     @Path("/artifactoryType/{artifactoryType}/acrossProjectCopy")
     @GET
     fun acrossProjectCopy(
-        @Parameter(name = "项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @HeaderParam(AUTH_HEADER_PROJECT_ID)
         projectId: String,
-        @Parameter(name = "流水线ID", required = true)
+        @Parameter(description = "流水线ID", required = true)
         @HeaderParam(AUTH_HEADER_PIPELINE_ID)
         pipelineId: String,
-        @Parameter(name = "版本仓库类型", required = true)
+        @Parameter(description = "版本仓库类型", required = true)
         @PathParam("artifactoryType")
         artifactoryType: ArtifactoryType,
-        @Parameter(name = "路径", required = true)
+        @Parameter(description = "路径", required = true)
         @QueryParam("path")
         path: String,
-        @Parameter(name = "目标项目", required = true)
+        @Parameter(description = "目标项目", required = true)
         @QueryParam("targetProjectId")
         targetProjectId: String,
-        @Parameter(name = "目标路径", required = true)
+        @Parameter(description = "目标路径", required = true)
         @QueryParam("targetPath")
         targetPath: String
     ): Result<Count>

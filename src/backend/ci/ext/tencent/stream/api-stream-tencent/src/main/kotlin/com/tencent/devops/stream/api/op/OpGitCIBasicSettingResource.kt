@@ -29,10 +29,10 @@ interface OpGitCIBasicSettingResource {
     @POST
     @Path("/save")
     fun save(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String,
-        @Parameter(name = "工蜂项目", required = true)
+        @Parameter(description = "工蜂项目", required = true)
         gitCIBasicSetting: StreamBasicSetting
     ): Result<Boolean>
 
@@ -45,13 +45,13 @@ interface OpGitCIBasicSettingResource {
     @POST
     @Path("/{gitProjectId}/update")
     fun updateBasicSetting(
-        @Parameter(name = "项目id", required = true)
+        @Parameter(description = "项目id", required = true)
         @PathParam("gitProjectId")
         gitProjectId: Long,
-        @Parameter(name = "是否开启commitCheck", required = true)
+        @Parameter(description = "是否开启commitCheck", required = true)
         @QueryParam("enableCommitCheck")
         enableCommitCheck: Boolean?,
-        @Parameter(name = "是否开启MrComment", required = true)
+        @Parameter(description = "是否开启MrComment", required = true)
         @QueryParam("enableMrComment")
         enableMrComment: Boolean?
     ): Result<Boolean>
@@ -65,13 +65,13 @@ interface OpGitCIBasicSettingResource {
     @POST
     @Path("/updateEnableUserId")
     fun updateEnableUserIdByNewUser(
-        @Parameter(name = "旧userId", required = true)
+        @Parameter(description = "旧userId", required = true)
         @QueryParam("oldUserId")
         oldUserId: String,
-        @Parameter(name = "新userId", required = true)
+        @Parameter(description = "新userId", required = true)
         @QueryParam("newUserId")
         newUserId: String,
-        @Parameter(name = "更新的数量", required = true)
+        @Parameter(description = "更新的数量", required = true)
         @QueryParam("limitNumber")
         @Range(min = 1, max = 50, message = "修改的数量不能小于1、大于50")
         @Valid
@@ -82,13 +82,13 @@ interface OpGitCIBasicSettingResource {
     @POST
     @Path("/updateGitDomain")
     fun updateGitDomain(
-        @Parameter(name = "git老域名", required = true)
+        @Parameter(description = "git老域名", required = true)
         @QueryParam("oldGitDomain")
         oldGitDomain: String,
-        @Parameter(name = "git新域名", required = true)
+        @Parameter(description = "git新域名", required = true)
         @QueryParam("newGitDomain")
         newGitDomain: String,
-        @Parameter(name = "更新的数量", required = true)
+        @Parameter(description = "更新的数量", required = true)
         @QueryParam("limitNumber")
         @Range(min = 1, max = 1000, message = "修改的数量不能小于1、大于1000")
         @Valid

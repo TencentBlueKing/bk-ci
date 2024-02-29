@@ -57,13 +57,13 @@ interface OpReasonResource {
     @POST
     @Path("/types/{type}")
     fun add(
-        @Parameter(name = "userId", required = true)
+        @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "原因类型", required = true)
+        @Parameter(description = "原因类型", required = true)
         @PathParam("type")
         type: ReasonTypeEnum,
-        @Parameter(name = "原因信息请求报文体", required = true)
+        @Parameter(description = "原因信息请求报文体", required = true)
         reasonReq: ReasonReq
     ): Result<Boolean>
 
@@ -71,16 +71,16 @@ interface OpReasonResource {
     @PUT
     @Path("/types/{type}/ids/{id}")
     fun update(
-        @Parameter(name = "userId", required = true)
+        @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "id", required = true)
+        @Parameter(description = "id", required = true)
         @PathParam("id")
         id: String,
-        @Parameter(name = "类别", required = true)
+        @Parameter(description = "类别", required = true)
         @PathParam("type")
         type: ReasonTypeEnum,
-        @Parameter(name = "原因信息请求报文体", required = true)
+        @Parameter(description = "原因信息请求报文体", required = true)
         reasonReq: ReasonReq
     ): Result<Boolean>
 
@@ -88,16 +88,16 @@ interface OpReasonResource {
     @PUT
     @Path("/types/{type}/ids/{id}/enable")
     fun enableReason(
-        @Parameter(name = "userId", required = true)
+        @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "id", required = true)
+        @Parameter(description = "id", required = true)
         @PathParam("id")
         id: String,
-        @Parameter(name = "类别", required = true)
+        @Parameter(description = "类别", required = true)
         @PathParam("type")
         type: ReasonTypeEnum,
-        @Parameter(name = "是否启用", required = true)
+        @Parameter(description = "是否启用", required = true)
         enable: Boolean
     ): Result<Boolean>
 
@@ -105,10 +105,10 @@ interface OpReasonResource {
     @GET
     @Path("/types/{type}/list")
     fun list(
-        @Parameter(name = "类别", required = true)
+        @Parameter(description = "类别", required = true)
         @PathParam("type")
         type: ReasonTypeEnum,
-        @Parameter(name = "是否启用", required = false)
+        @Parameter(description = "是否启用", required = false)
         @QueryParam("enable")
         enable: Boolean?
     ): Result<List<Reason>>
@@ -117,10 +117,10 @@ interface OpReasonResource {
     @DELETE
     @Path("/types/{type}/ids/{id}")
     fun delete(
-        @Parameter(name = "userId", required = true)
+        @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "id", required = true)
+        @Parameter(description = "id", required = true)
         @PathParam("id")
         id: String
     ): Result<Boolean>

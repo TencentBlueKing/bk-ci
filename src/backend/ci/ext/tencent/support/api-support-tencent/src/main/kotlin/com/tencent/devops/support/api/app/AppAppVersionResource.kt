@@ -58,16 +58,16 @@ interface AppAppVersionResource {
     @GET
     @Path("/last")
     fun getLastAppVersion(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "版本号", required = true)
+        @Parameter(description = "版本号", required = true)
         @HeaderParam(AUTH_HEADER_APP_VERSION)
         appVersion: String?,
-        @Parameter(name = "组织", required = false)
+        @Parameter(description = "组织", required = false)
         @HeaderParam(AUTH_HEADER_DEVOPS_ORGANIZATION_NAME)
         organization: String? = null,
-        @Parameter(name = "渠道类型（1:\"安卓\", 2:\"IOS\", 3:\"WEB\"）", required = true)
+        @Parameter(description = "渠道类型（1:\"安卓\", 2:\"IOS\", 3:\"WEB\"）", required = true)
         @QueryParam(value = "channelType")
         channelType: Byte
     ): Result<AppVersion?>
@@ -76,7 +76,7 @@ interface AppAppVersionResource {
     @GET
     @Path("/")
     fun getAllAppVersion(
-        @Parameter(name = "渠道类型（1:\"安卓\", 2:\"IOS\", 3:\"WEB\"）", required = true)
+        @Parameter(description = "渠道类型（1:\"安卓\", 2:\"IOS\", 3:\"WEB\"）", required = true)
         @QueryParam(value = "channelType")
         channelType: Byte
     ): Result<List<AppVersion>>

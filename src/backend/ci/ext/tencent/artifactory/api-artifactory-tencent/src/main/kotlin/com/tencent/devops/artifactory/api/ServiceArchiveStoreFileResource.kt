@@ -57,28 +57,28 @@ interface ServiceArchiveStoreFileResource {
     @Path("/repos/{repoName}/projects/{projectId}/types/{storeType}/codes/{storeCode}/versions/{version}/archive")
     @Consumes(MediaType.MULTIPART_FORM_DATA)
     fun archiveFile(
-        @Parameter(name = "userId", required = true)
+        @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "仓库名称", required = true)
+        @Parameter(description = "仓库名称", required = true)
         @PathParam("repoName")
         repoName: String,
-        @Parameter(name = "项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(name = "组件类型", required = true)
+        @Parameter(description = "组件类型", required = true)
         @PathParam("storeType")
         storeType: StoreTypeEnum,
-        @Parameter(name = "组件代码", required = true)
+        @Parameter(description = "组件代码", required = true)
         @PathParam("storeCode")
         storeCode: String,
-        @Parameter(name = "扩展服务版本号", required = true)
+        @Parameter(description = "扩展服务版本号", required = true)
         @PathParam("version")
         version: String,
-        @Parameter(name = "目标路径", required = true)
+        @Parameter(description = "目标路径", required = true)
         @QueryParam("destPath")
         destPath: String,
-        @Parameter(name = "文件", required = true)
+        @Parameter(description = "文件", required = true)
         @FormDataParam("file")
         inputStream: InputStream,
         @FormDataParam("file")
@@ -89,13 +89,13 @@ interface ServiceArchiveStoreFileResource {
     @DELETE
     @Path("/repos/{repoName}/{fullPath}/delete")
     fun deleteFile(
-        @Parameter(name = "仓库名称", required = true)
+        @Parameter(description = "仓库名称", required = true)
         @PathParam("repoName")
         repoName: String,
-        @Parameter(name = "fullPath", required = true)
+        @Parameter(description = "fullPath", required = true)
         @PathParam("fullPath")
         fullPath: String,
-        @Parameter(name = "type", required = true)
+        @Parameter(description = "type", required = true)
         @QueryParam("type")
         type: String
     ): Result<Boolean>

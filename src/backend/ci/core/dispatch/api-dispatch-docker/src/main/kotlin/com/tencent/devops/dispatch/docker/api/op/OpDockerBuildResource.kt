@@ -54,13 +54,13 @@ interface OpDockerBuildResource {
     @POST
     @Path("/")
     fun enable(
-        @Parameter(name = "流水线ID", required = true)
+        @Parameter(description = "流水线ID", required = true)
         @QueryParam("pipelineId")
         pipelineId: String,
-        @Parameter(name = "vmSeqId", required = false)
+        @Parameter(description = "vmSeqId", required = false)
         @QueryParam("vmSeqId")
         vmSeqId: Int?,
-        @Parameter(name = "enable", required = true)
+        @Parameter(description = "enable", required = true)
         @QueryParam("enable")
         enable: Boolean
     ): Result<Boolean>
@@ -69,7 +69,7 @@ interface OpDockerBuildResource {
     @GET
     @Path("/qpc/whitelist/list")
     fun getQpcWhitelist(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String
     ): Result<List<String>>
@@ -78,10 +78,10 @@ interface OpDockerBuildResource {
     @POST
     @Path("/qpc/whitelist/gitProjects/{gitProjectId}/add")
     fun addQpcWhitelist(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String,
-        @Parameter(name = "工蜂项目ID", required = true)
+        @Parameter(description = "工蜂项目ID", required = true)
         @PathParam("gitProjectId")
         gitProjectId: String
     ): Result<Boolean>
@@ -90,10 +90,10 @@ interface OpDockerBuildResource {
     @DELETE
     @Path("/qpc/whitelist/gitProjects/{gitProjectId}/delete")
     fun deleteQpcWhitelist(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String,
-        @Parameter(name = "工蜂项目ID", required = true)
+        @Parameter(description = "工蜂项目ID", required = true)
         @PathParam("gitProjectId")
         gitProjectId: String
     ): Result<Boolean>

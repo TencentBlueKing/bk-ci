@@ -54,10 +54,10 @@ interface UserExtServiceVisibleDeptResource {
     @POST
     @Path("/")
     fun addVisibleDept(
-        @Parameter(name = "userId", required = true)
+        @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "研发商店-扩展服务可见范围请求报文体", required = true)
+        @Parameter(description = "研发商店-扩展服务可见范围请求报文体", required = true)
         serviceVisibleDeptRequest: ExtsionServiceVisibleDeptReq
     ): Result<Boolean>
 
@@ -65,7 +65,7 @@ interface UserExtServiceVisibleDeptResource {
     @GET
     @Path("/{serviceCode}")
     fun getVisibleDept(
-        @Parameter(name = "扩展服务Code", required = true)
+        @Parameter(description = "扩展服务Code", required = true)
         @PathParam("serviceCode")
         serviceCode: String
     ): Result<StoreVisibleDeptResp?>
@@ -74,13 +74,13 @@ interface UserExtServiceVisibleDeptResource {
     @DELETE
     @Path("/{serviceCode}")
     fun deleteVisibleDept(
-        @Parameter(name = "userId", required = true)
+        @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "扩展服务Code", required = true)
+        @Parameter(description = "扩展服务Code", required = true)
         @PathParam("serviceCode")
         serviceCode: String,
-        @Parameter(name = "机构Id集合，用\",\"分隔进行拼接（如1,2,3）", required = true)
+        @Parameter(description = "机构Id集合，用\",\"分隔进行拼接（如1,2,3）", required = true)
         @QueryParam("deptIds")
         deptIds: String
     ): Result<Boolean>

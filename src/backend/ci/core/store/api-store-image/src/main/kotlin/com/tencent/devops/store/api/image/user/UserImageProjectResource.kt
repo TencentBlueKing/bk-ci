@@ -59,10 +59,10 @@ interface UserImageProjectResource {
     @POST
     @Path("/image/install")
     fun installImage(
-        @Parameter(name = "userId", required = true)
+        @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "安装镜像到项目请求报文体", required = true)
+        @Parameter(description = "安装镜像到项目请求报文体", required = true)
         installImageReq: InstallImageReq
     ): Result<Boolean>
 
@@ -70,10 +70,10 @@ interface UserImageProjectResource {
     @GET
     @Path("/image/installedProjects/{imageCode}")
     fun getInstalledProjects(
-        @Parameter(name = "userId", required = true)
+        @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "模版代码", required = true)
+        @Parameter(description = "模版代码", required = true)
         @PathParam("imageCode")
         imageCode: String
     ): Result<List<InstalledProjRespItem>>
@@ -82,25 +82,25 @@ interface UserImageProjectResource {
     @GET
     @Path("/image/availableImages")
     fun getAvailableImagesByProjectCode(
-        @Parameter(name = "userId", required = true)
+        @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "项目标识", required = true)
+        @Parameter(description = "项目标识", required = true)
         @QueryParam("projectCode")
         projectCode: String,
-        @Parameter(name = "机器类型", required = false)
+        @Parameter(description = "机器类型", required = false)
         @QueryParam("agentType")
         agentType: ImageAgentTypeEnum?,
-        @Parameter(name = "是否推荐", required = false)
+        @Parameter(description = "是否推荐", required = false)
         @QueryParam("recommendFlag")
         recommendFlag: Boolean?,
-        @Parameter(name = "分类ID", required = false)
+        @Parameter(description = "分类ID", required = false)
         @QueryParam("classifyId")
         classifyId: String?,
-        @Parameter(name = "页码", required = false)
+        @Parameter(description = "页码", required = false)
         @QueryParam("page")
         page: Int?,
-        @Parameter(name = "每页数量", required = false)
+        @Parameter(description = "每页数量", required = false)
         @QueryParam("pageSize")
         pageSize: Int?
     ): Result<Page<JobImageItem>?>
@@ -109,22 +109,22 @@ interface UserImageProjectResource {
     @GET
     @Path("/image/jobMarketImages")
     fun getJobMarketImagesByProjectCode(
-        @Parameter(name = "userId", required = true)
+        @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "项目标识", required = true)
+        @Parameter(description = "项目标识", required = true)
         @QueryParam("projectCode")
         projectCode: String,
-        @Parameter(name = "机器类型", required = false)
+        @Parameter(description = "机器类型", required = false)
         @QueryParam("agentType")
         agentType: ImageAgentTypeEnum,
-        @Parameter(name = "是否推荐", required = false)
+        @Parameter(description = "是否推荐", required = false)
         @QueryParam("recommendFlag")
         recommendFlag: Boolean?,
-        @Parameter(name = "页码", required = false)
+        @Parameter(description = "页码", required = false)
         @QueryParam("page")
         page: Int?,
-        @Parameter(name = "每页数量", required = false)
+        @Parameter(description = "每页数量", required = false)
         @QueryParam("pageSize")
         pageSize: Int?
     ): Result<Page<JobMarketImageItem?>?>
@@ -133,34 +133,34 @@ interface UserImageProjectResource {
     @POST
     @Path("/image/jobMarketImages/search")
     fun searchJobMarketImages(
-        @Parameter(name = "userId", required = true)
+        @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "项目标识", required = true)
+        @Parameter(description = "项目标识", required = true)
         @QueryParam("projectCode")
         projectCode: String,
-        @Parameter(name = "机器类型", required = false)
+        @Parameter(description = "机器类型", required = false)
         @QueryParam("agentType")
         agentType: ImageAgentTypeEnum,
-        @Parameter(name = "是否推荐", required = false)
+        @Parameter(description = "是否推荐", required = false)
         @QueryParam("recommendFlag")
         recommendFlag: Boolean?,
-        @Parameter(name = "搜索关键字", required = false)
+        @Parameter(description = "搜索关键字", required = false)
         @QueryParam("keyword")
         keyword: String?,
-        @Parameter(name = "镜像分类Id", required = false)
+        @Parameter(description = "镜像分类Id", required = false)
         @QueryParam("classifyId")
         classifyId: String?,
-        @Parameter(name = "应用范畴", required = false)
+        @Parameter(description = "应用范畴", required = false)
         @QueryParam("categoryCode")
         categoryCode: String?,
-        @Parameter(name = "研发来源", required = false)
+        @Parameter(description = "研发来源", required = false)
         @QueryParam("rdType")
         rdType: ImageRDTypeEnum?,
-        @Parameter(name = "页码", required = false)
+        @Parameter(description = "页码", required = false)
         @QueryParam("page")
         page: Int?,
-        @Parameter(name = "每页数量", required = false)
+        @Parameter(description = "每页数量", required = false)
         @QueryParam("pageSize")
         pageSize: Int?
     ): Result<Page<JobMarketImageItem?>?>

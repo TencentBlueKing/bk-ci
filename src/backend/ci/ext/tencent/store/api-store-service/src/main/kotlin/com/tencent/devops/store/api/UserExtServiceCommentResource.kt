@@ -57,16 +57,16 @@ interface UserExtServiceCommentResource {
     @Path("/serviceIds/{serviceId}/serviceCodes/{serviceCodes}/comment")
     @POST
     fun createServiceComment(
-        @Parameter(name = "userId", required = true)
+        @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "扩展服务ID", required = true)
+        @Parameter(description = "扩展服务ID", required = true)
         @PathParam("serviceId")
         serviceId: String,
-        @Parameter(name = "扩展服务代码", required = true)
+        @Parameter(description = "扩展服务代码", required = true)
         @PathParam("serviceCodes")
         serviceCodes: String,
-        @Parameter(name = "评论信息", required = true)
+        @Parameter(description = "评论信息", required = true)
         storeCommentRequest: StoreCommentRequest
     ): Result<StoreCommentInfo?>
 
@@ -74,13 +74,13 @@ interface UserExtServiceCommentResource {
     @Path("/comments/{commentId}")
     @PUT
     fun updateServiceComment(
-        @Parameter(name = "userId", required = true)
+        @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "评论ID", required = true)
+        @Parameter(description = "评论ID", required = true)
         @PathParam("commentId")
         commentId: String,
-        @Parameter(name = "评论信息", required = true)
+        @Parameter(description = "评论信息", required = true)
         storeCommentRequest: StoreCommentRequest
     ): Result<Boolean>
 
@@ -88,10 +88,10 @@ interface UserExtServiceCommentResource {
     @Path("/comments/{commentId}")
     @GET
     fun getServiceComment(
-        @Parameter(name = "userId", required = true)
+        @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "评论ID", required = true)
+        @Parameter(description = "评论ID", required = true)
         @PathParam("commentId")
         commentId: String
     ): Result<StoreCommentInfo?>
@@ -100,16 +100,16 @@ interface UserExtServiceCommentResource {
     @Path("/serviceCodes/{serviceCode}/comments")
     @GET
     fun getServiceCommentByServiceCode(
-        @Parameter(name = "userId", required = true)
+        @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "扩展服务编码", required = true)
+        @Parameter(description = "扩展服务编码", required = true)
         @PathParam("serviceCode")
         serviceCode: String,
-        @Parameter(name = "页码", required = true)
+        @Parameter(description = "页码", required = true)
         @QueryParam("page")
         page: Int,
-        @Parameter(name = "每页数量", required = true)
+        @Parameter(description = "每页数量", required = true)
         @QueryParam("pageSize")
         pageSize: Int
     ): Result<Page<StoreCommentInfo>?>
@@ -118,7 +118,7 @@ interface UserExtServiceCommentResource {
     @GET
     @Path("/score/serviceCodes/{serviceCode}")
     fun getServiceCommentScoreInfo(
-        @Parameter(name = "扩展服务代码", required = true)
+        @Parameter(description = "扩展服务代码", required = true)
         @PathParam("serviceCode")
         serviceCode: String
     ): Result<StoreCommentScoreInfo>
@@ -127,10 +127,10 @@ interface UserExtServiceCommentResource {
     @PUT
     @Path("/praise/{commentId}")
     fun updateStoreCommentPraiseCount(
-        @Parameter(name = "userId", required = true)
+        @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "评论ID", required = true)
+        @Parameter(description = "评论ID", required = true)
         @PathParam("commentId")
         commentId: String
     ): Result<Int>

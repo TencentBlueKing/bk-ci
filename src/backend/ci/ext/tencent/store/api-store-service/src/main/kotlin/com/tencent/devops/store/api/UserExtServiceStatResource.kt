@@ -50,10 +50,10 @@ interface UserExtServiceStatResource {
     @Operation(summary = "安装量趋势")
     @Path("/serviceCodes/{serviceCode}/install/trend")
     fun getInstallTrend(
-        @Parameter(name = "扩展服务编码")
+        @Parameter(description = "扩展服务编码")
         @PathParam("serviceCode")
         serviceCode: String,
-        @Parameter(name = "天数")
+        @Parameter(description = "天数")
         @QueryParam("days")
         days: Int
     ): Result<List<ExtServiceInstallTrendReq>>

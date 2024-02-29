@@ -55,13 +55,13 @@ interface ServicePipelineInitResource {
     @POST
     @Path("/market/pipeline/init/{projectCode}")
     fun initAtomMarketPipeline(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "项目代码", required = true)
+        @Parameter(description = "项目代码", required = true)
         @PathParam("projectCode")
         projectCode: String,
-        @Parameter(name = "插件市场初始化流水线请求报文体", required = true)
+        @Parameter(description = "插件市场初始化流水线请求报文体", required = true)
         atomMarketInitPipelineReq: AtomMarketInitPipelineReq
     ): Result<AtomMarketInitPipelineResp>
 
@@ -69,13 +69,13 @@ interface ServicePipelineInitResource {
     @POST
     @Path("/market/pipeline/projectCodes/{projectCode}/image/check/init")
     fun initCheckImagePipeline(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "项目代码", required = true)
+        @Parameter(description = "项目代码", required = true)
         @PathParam("projectCode")
         projectCode: String,
-        @Parameter(name = "检查镜像合法性初始化流水线请求报文体", required = true)
+        @Parameter(description = "检查镜像合法性初始化流水线请求报文体", required = true)
         checkImageInitPipelineReq: CheckImageInitPipelineReq
     ): Result<CheckImageInitPipelineResp>
 }

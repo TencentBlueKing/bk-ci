@@ -57,10 +57,10 @@ interface UserTemplateCommentResource {
     @GET
     @Path("/comments/{commentId}")
     fun getStoreComment(
-        @Parameter(name = "userId", required = true)
+        @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "评论ID", required = true)
+        @Parameter(description = "评论ID", required = true)
         @PathParam("commentId")
         commentId: String
     ): Result<StoreCommentInfo?>
@@ -69,16 +69,16 @@ interface UserTemplateCommentResource {
     @GET
     @Path("/templateCodes/{templateCode}/comments")
     fun getStoreComments(
-        @Parameter(name = "userId", required = true)
+        @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "模板代码", required = true)
+        @Parameter(description = "模板代码", required = true)
         @PathParam("templateCode")
         templateCode: String,
-        @Parameter(name = "页码", required = true)
+        @Parameter(description = "页码", required = true)
         @QueryParam("page")
         page: Int,
-        @Parameter(name = "每页数量", required = true)
+        @Parameter(description = "每页数量", required = true)
         @QueryParam("pageSize")
         pageSize: Int
     ): Result<Page<StoreCommentInfo>?>
@@ -87,7 +87,7 @@ interface UserTemplateCommentResource {
     @GET
     @Path("/score/templateCodes/{templateCode}")
     fun getTemplateCommentScoreInfo(
-        @Parameter(name = "模板代码", required = true)
+        @Parameter(description = "模板代码", required = true)
         @PathParam("templateCode")
         templateCode: String
     ): Result<StoreCommentScoreInfo>
@@ -96,16 +96,16 @@ interface UserTemplateCommentResource {
     @POST
     @Path("/templateIds/{templateId}/templateCodes/{templateCode}/comment")
     fun addTemplateComment(
-        @Parameter(name = "userId", required = true)
+        @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "模板ID", required = true)
+        @Parameter(description = "模板ID", required = true)
         @PathParam("templateId")
         templateId: String,
-        @Parameter(name = "模板代码", required = true)
+        @Parameter(description = "模板代码", required = true)
         @PathParam("templateCode")
         templateCode: String,
-        @Parameter(name = "评论信息请求报文体", required = true)
+        @Parameter(description = "评论信息请求报文体", required = true)
         storeCommentRequest: StoreCommentRequest
     ): Result<StoreCommentInfo?>
 
@@ -113,13 +113,13 @@ interface UserTemplateCommentResource {
     @PUT
     @Path("/comments/{commentId}")
     fun updateStoreComment(
-        @Parameter(name = "userId", required = true)
+        @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "评论ID", required = true)
+        @Parameter(description = "评论ID", required = true)
         @PathParam("commentId")
         commentId: String,
-        @Parameter(name = "评论信息请求报文体", required = true)
+        @Parameter(description = "评论信息请求报文体", required = true)
         storeCommentRequest: StoreCommentRequest
     ): Result<Boolean>
 
@@ -127,10 +127,10 @@ interface UserTemplateCommentResource {
     @PUT
     @Path("/praise/{commentId}")
     fun updateStoreCommentPraiseCount(
-        @Parameter(name = "userId", required = true)
+        @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "评论ID", required = true)
+        @Parameter(description = "评论ID", required = true)
         @PathParam("commentId")
         commentId: String
     ): Result<Int>

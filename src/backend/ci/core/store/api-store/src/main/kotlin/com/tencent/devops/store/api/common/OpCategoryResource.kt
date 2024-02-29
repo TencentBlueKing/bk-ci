@@ -55,10 +55,10 @@ interface OpCategoryResource {
     @POST
     @Path("/types/{categoryType}")
     fun add(
-        @Parameter(name = "类别", required = true)
+        @Parameter(description = "类别", required = true)
         @PathParam("categoryType")
         categoryType: StoreTypeEnum,
-        @Parameter(name = "范畴信息请求报文体", required = true)
+        @Parameter(description = "范畴信息请求报文体", required = true)
         categoryRequest: CategoryRequest
     ): Result<Boolean>
 
@@ -66,13 +66,13 @@ interface OpCategoryResource {
     @PUT
     @Path("/types/{categoryType}/ids/{id}")
     fun update(
-        @Parameter(name = "类别", required = true)
+        @Parameter(description = "类别", required = true)
         @PathParam("categoryType")
         categoryType: StoreTypeEnum,
-        @Parameter(name = "范畴ID", required = true)
+        @Parameter(description = "范畴ID", required = true)
         @PathParam("id")
         id: String,
-        @Parameter(name = "范畴信息请求报文体", required = true)
+        @Parameter(description = "范畴信息请求报文体", required = true)
         categoryRequest: CategoryRequest
     ): Result<Boolean>
 
@@ -80,7 +80,7 @@ interface OpCategoryResource {
     @GET
     @Path("/types/{categoryType}")
     fun listAllCategorys(
-        @Parameter(name = "类别", required = true)
+        @Parameter(description = "类别", required = true)
         @PathParam("categoryType")
         categoryType: StoreTypeEnum
     ): Result<List<Category>?>
@@ -89,7 +89,7 @@ interface OpCategoryResource {
     @GET
     @Path("/{id}")
     fun getCategoryById(
-        @Parameter(name = "范畴ID", required = true)
+        @Parameter(description = "范畴ID", required = true)
         @QueryParam("id")
         id: String
     ): Result<Category?>
@@ -98,7 +98,7 @@ interface OpCategoryResource {
     @DELETE
     @Path("/{id}")
     fun deleteCategoryById(
-        @Parameter(name = "范畴ID", required = true)
+        @Parameter(description = "范畴ID", required = true)
         @PathParam("id")
         id: String
     ): Result<Boolean>

@@ -55,16 +55,16 @@ interface ServiceGitForAppResource {
     @GET
     @Path("/projectList")
     fun getGitCIProjectList(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "页码", required = true)
+        @Parameter(description = "页码", required = true)
         @QueryParam("page")
         page: Int,
-        @Parameter(name = "每页条数", required = true)
+        @Parameter(description = "每页条数", required = true)
         @QueryParam("pageSize")
         pageSize: Int,
-        @Parameter(name = "搜索名称", required = false)
+        @Parameter(description = "搜索名称", required = false)
         @QueryParam("searchName")
         searchName: String?
     ): Result<Pagination<AppProjectVO>>
@@ -73,19 +73,19 @@ interface ServiceGitForAppResource {
     @GET
     @Path("/pipelines")
     fun getGitCIPipelines(
-        @Parameter(name = "项目", required = true)
+        @Parameter(description = "项目", required = true)
         @QueryParam("projectId")
         projectId: String,
-        @Parameter(name = "页码", required = false)
+        @Parameter(description = "页码", required = false)
         @QueryParam("page")
         page: Int?,
-        @Parameter(name = "每页条数", required = false)
+        @Parameter(description = "每页条数", required = false)
         @QueryParam("pageSize")
         pageSize: Int?,
-        @Parameter(name = "流水线排序", required = false)
+        @Parameter(description = "流水线排序", required = false)
         @QueryParam("sortType")
         sortType: PipelineSortType?,
-        @Parameter(name = "流水线名称", required = false)
+        @Parameter(description = "流水线名称", required = false)
         @QueryParam("search")
         search: String?
     ): Result<Pagination<StreamGitProjectPipeline>>
@@ -94,10 +94,10 @@ interface ServiceGitForAppResource {
     @GET
     @Path("/pipelineInfo")
     fun getGitCIPipeline(
-        @Parameter(name = "项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @QueryParam("projectId")
         projectId: String,
-        @Parameter(name = "流水线ID", required = true)
+        @Parameter(description = "流水线ID", required = true)
         @QueryParam("pipelineId")
         pipelineId: String
     ): Result<StreamGitProjectPipeline?>

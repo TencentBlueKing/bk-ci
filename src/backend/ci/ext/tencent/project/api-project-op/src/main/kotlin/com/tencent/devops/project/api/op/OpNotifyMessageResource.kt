@@ -47,7 +47,7 @@ interface OpNotifyMessageResource {
     @POST
     @Path("/sendEmailForRelatedObsByProjectIds")
     fun sendEmailToUserForRelatedObsByProjectIds(
-        @Parameter(name = "项目通知请求报文体", required = true)
+        @Parameter(description = "项目通知请求报文体", required = true)
         projectIds: List<String>
     ): Result<Boolean>
 
@@ -55,7 +55,7 @@ interface OpNotifyMessageResource {
     @POST
     @Path("/sendEmailForRelatedObsByCondition/")
     fun sendEmailForRelatedObsByCondition(
-        @Parameter(name = "通过条件对项目进行邮件通知", required = true)
+        @Parameter(description = "通过条件对项目进行邮件通知", required = true)
         sendEmailForProjectByConditionDTO: SendEmailForProjectByConditionDTO
     ): Result<Boolean>
 
@@ -63,7 +63,7 @@ interface OpNotifyMessageResource {
     @POST
     @Path("/getProjectForRelatedObsByCondition/")
     fun getProjectsForRelatedObsByCondition(
-        @Parameter(name = "通过条件对项目进行邮件通知", required = true)
+        @Parameter(description = "通过条件对项目进行邮件通知", required = true)
         sendEmailForProjectByConditionDTO: SendEmailForProjectByConditionDTO
     ): Result<Pair<Int, List<String>>>
 }

@@ -51,16 +51,16 @@ interface BuildStoreIndexInfoResource {
     @POST
     @Path("/storeTypes/{storeType}/depts/{deptCode}/trustworthy/update")
     fun updateTrustworthyIndexInfo(
-        @Parameter(name = "userId", required = true)
+        @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "组织标识", required = true)
+        @Parameter(description = "组织标识", required = true)
         @PathParam("deptCode")
         deptCode: String,
-        @Parameter(name = "组织标识", required = true)
+        @Parameter(description = "组织标识", required = true)
         @PathParam("storeType")
         storeType: StoreTypeEnum,
-        @Parameter(name = "组件代码列表", required = true)
+        @Parameter(description = "组件代码列表", required = true)
         storeCodes: List<String>
     ): Result<Boolean>
 }

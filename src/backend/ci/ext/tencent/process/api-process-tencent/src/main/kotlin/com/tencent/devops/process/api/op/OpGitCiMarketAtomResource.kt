@@ -57,13 +57,13 @@ interface OpGitCiMarketAtomResource {
     @GET
     @Path("/list")
     fun list(
-        @Parameter(name = "插件Code", required = false)
+        @Parameter(description = "插件Code", required = false)
         @QueryParam("atomCode")
         atomCode: String?,
-        @Parameter(name = "第几页", required = false, example = "1")
+        @Parameter(description = "第几页", required = false, example = "1")
         @QueryParam("page")
         page: Int?,
-        @Parameter(name = "每页多少条", required = false, example = "20")
+        @Parameter(description = "每页多少条", required = false, example = "20")
         @QueryParam("pageSize")
         pageSize: Int?
     ): Result<Page<GitCiMarketAtom>>
@@ -72,10 +72,10 @@ interface OpGitCiMarketAtomResource {
     @POST
     @Path("/")
     fun add(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "插件信息列表", required = true)
+        @Parameter(description = "插件信息列表", required = true)
         gitCiMarketAtomReq: GitCiMarketAtomReq
     ): Result<Boolean>
 
@@ -83,7 +83,7 @@ interface OpGitCiMarketAtomResource {
     @DELETE
     @Path("/{atomCode}")
     fun delete(
-        @Parameter(name = "插件Code", required = true)
+        @Parameter(description = "插件Code", required = true)
         @PathParam("atomCode")
         atomCode: String
     ): Result<Boolean>

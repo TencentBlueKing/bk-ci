@@ -31,12 +31,12 @@ import com.tencent.devops.common.api.enums.ScmType
 import io.swagger.v3.oas.annotations.Parameter
 
 data class RepoSessionRequest(
-    @Parameter(name = "仓库类型", required = true)
+    @Parameter(description = "仓库类型", required = true)
     val type: ScmType,
-    @Parameter(name = "username", required = true)
+    @Parameter(description = "username", required = true)
     val username: String,
-    @Parameter(name = "password", required = true)
+    @Parameter(description = "password", required = true)
     val password: String,
-    @Parameter(name = "url", required = true)
+    @Parameter(description = "url", required = true)
     val url: String
 )

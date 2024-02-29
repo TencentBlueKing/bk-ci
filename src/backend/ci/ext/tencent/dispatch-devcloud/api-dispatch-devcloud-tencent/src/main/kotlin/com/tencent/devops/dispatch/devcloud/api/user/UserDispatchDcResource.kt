@@ -30,16 +30,16 @@ interface UserDispatchDcResource {
     @Path("/startDebug/pipeline/{pipelineId}/vmSeq/{vmSeqId}")
     @Operation(summary = "开始启动调试")
     fun startDebug(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "pipelineId", required = true)
+        @Parameter(description = "pipelineId", required = true)
         @PathParam("pipelineId")
         pipelineId: String,
-        @Parameter(name = "vmSeqId", required = true)
+        @Parameter(description = "vmSeqId", required = true)
         @PathParam("vmSeqId")
         vmSeqId: String,
-        @Parameter(name = "构建id", required = false)
+        @Parameter(description = "构建id", required = false)
         @QueryParam("buildId")
         buildId: String?
     ): Result<DevCloudDebugResponse>
@@ -48,16 +48,16 @@ interface UserDispatchDcResource {
     @Path("/stopDebug/pipeline/{pipelineId}/vmSeq/{vmSeqId}")
     @Operation(summary = "关闭调试")
     fun stopDebug(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "pipelineId", required = true)
+        @Parameter(description = "pipelineId", required = true)
         @PathParam("pipelineId")
         pipelineId: String,
-        @Parameter(name = "vmSeqId", required = true)
+        @Parameter(description = "vmSeqId", required = true)
         @PathParam("vmSeqId")
         vmSeqId: String,
-        @Parameter(name = "容器名称", required = false)
+        @Parameter(description = "容器名称", required = false)
         @QueryParam("containerName")
         containerName: String
     ): Result<Boolean>
@@ -66,10 +66,10 @@ interface UserDispatchDcResource {
     @Path("/project/{projectId}/performanceConfig/list")
     @Operation(summary = "获取devcloud性能配置列表")
     fun getDcPerformanceConfigList(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String,
-        @Parameter(name = "projectId", required = true)
+        @Parameter(description = "projectId", required = true)
         @PathParam("projectId")
         projectId: String
     ): Result<UserPerformanceOptionsVO>

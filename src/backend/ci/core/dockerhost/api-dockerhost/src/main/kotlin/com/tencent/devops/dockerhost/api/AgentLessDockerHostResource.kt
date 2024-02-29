@@ -49,7 +49,7 @@ interface AgentLessDockerHostResource {
     @POST
     @Path("/build/start")
     fun startBuild(
-        @Parameter(name = "构建任务", required = true)
+        @Parameter(description = "构建任务", required = true)
         dockerHostBuildInfo: DockerHostBuildInfo
     ): Result<String>
 
@@ -57,7 +57,7 @@ interface AgentLessDockerHostResource {
     @DELETE
     @Path("/build/end")
     fun endBuild(
-        @Parameter(name = "构建任务", required = true)
+        @Parameter(description = "构建任务", required = true)
         dockerHostBuildInfo: DockerHostBuildInfo
     ): Result<Boolean>
 }

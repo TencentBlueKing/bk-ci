@@ -53,13 +53,13 @@ interface ExternalScmResource {
     @POST
     @Path("/codegit/commit")
     fun webHookCodeGitCommit(
-        @Parameter(name = "X-Event")
+        @Parameter(description = "X-Event")
         @HeaderParam("X-Event")
         event: String,
-        @Parameter(name = "X-Token")
+        @Parameter(description = "X-Token")
         @HeaderParam("X-Token")
         secret: String? = null,
-        @Parameter(name = "X-TRACE-ID")
+        @Parameter(description = "X-TRACE-ID")
         @HeaderParam("X-TRACE-ID")
         traceId: String,
         body: String
@@ -74,13 +74,13 @@ interface ExternalScmResource {
     @POST
     @Path("/codetgit/commit")
     fun webHookCodeTGitCommit(
-        @Parameter(name = "X-Event")
+        @Parameter(description = "X-Event")
         @HeaderParam("X-Event")
         event: String,
-        @Parameter(name = "X-Token")
+        @Parameter(description = "X-Token")
         @HeaderParam("X-Token")
         secret: String? = null,
-        @Parameter(name = "X-TRACE-ID")
+        @Parameter(description = "X-TRACE-ID")
         @HeaderParam("X-TRACE-ID")
         traceId: String,
         body: String

@@ -56,13 +56,13 @@ interface UserTemplateReleaseResource {
     @POST
     @Path("/templates/{templateCode}/store/rel")
     fun addMarketTemplate(
-        @Parameter(name = "userId", required = true)
+        @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "模板代码", required = true)
+        @Parameter(description = "模板代码", required = true)
         @PathParam("templateCode")
         templateCode: String,
-        @Parameter(name = "关联模板请求报文体", required = true)
+        @Parameter(description = "关联模板请求报文体", required = true)
         marketTemplateRelRequest: MarketTemplateRelRequest
     ): Result<Boolean>
 
@@ -70,10 +70,10 @@ interface UserTemplateReleaseResource {
     @PUT
     @Path("/desk/template/release")
     fun updateMarketTemplate(
-        @Parameter(name = "userId", required = true)
+        @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "上架模板请求报文体", required = true)
+        @Parameter(description = "上架模板请求报文体", required = true)
         marketTemplateUpdateRequest: MarketTemplateUpdateRequest
     ): Result<String?>
 
@@ -81,10 +81,10 @@ interface UserTemplateReleaseResource {
     @GET
     @Path("/desk/template/release/process/{templateId}")
     fun getProcessInfo(
-        @Parameter(name = "userId", required = true)
+        @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "templateId", required = true)
+        @Parameter(description = "templateId", required = true)
         @PathParam("templateId")
         templateId: String
     ): Result<StoreProcessInfo>
@@ -93,10 +93,10 @@ interface UserTemplateReleaseResource {
     @PUT
     @Path("/desk/template/release/cancel/templateIds/{templateId}")
     fun cancelRelease(
-        @Parameter(name = "userId", required = true)
+        @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "templateId", required = true)
+        @Parameter(description = "templateId", required = true)
         @PathParam("templateId")
         templateId: String
     ): Result<Boolean>
@@ -105,16 +105,16 @@ interface UserTemplateReleaseResource {
     @PUT
     @Path("/desk/template/offline/templateCodes/{templateCode}/versions")
     fun offlineTemplate(
-        @Parameter(name = "userId", required = true)
+        @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "模版代码", required = true)
+        @Parameter(description = "模版代码", required = true)
         @PathParam("templateCode")
         templateCode: String,
-        @Parameter(name = "版本号", required = false)
+        @Parameter(description = "版本号", required = false)
         @QueryParam("version")
         version: String?,
-        @Parameter(name = "原因", required = false)
+        @Parameter(description = "原因", required = false)
         @QueryParam("reason")
         reason: String?
     ): Result<Boolean>

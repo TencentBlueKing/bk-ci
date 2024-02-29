@@ -48,13 +48,13 @@ interface ServiceImageManageResource {
     @POST
     @Path("/compress")
     fun compressImage(
-        @Parameter(name = "网络图片路径", required = true)
+        @Parameter(description = "网络图片路径", required = true)
         @QueryParam("imageUrl")
         imageUrl: String,
-        @Parameter(name = "压缩宽度", required = true)
+        @Parameter(description = "压缩宽度", required = true)
         @QueryParam("compressWidth")
         compressWidth: Int,
-        @Parameter(name = "压缩高度", required = true)
+        @Parameter(description = "压缩高度", required = true)
         @QueryParam("compressHeight")
         compressHeight: Int
     ): Result<String>

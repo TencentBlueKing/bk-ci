@@ -58,13 +58,13 @@ interface BuildCustomDirResource {
     @Path("/{projectId}/list")
     @GET
     fun list(
-        @Parameter(name = "流水线ID", required = true)
+        @Parameter(description = "流水线ID", required = true)
         @HeaderParam(AUTH_HEADER_PIPELINE_ID)
         pipelineId: String,
-        @Parameter(name = "项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(name = "文件夹路径", required = false)
+        @Parameter(description = "文件夹路径", required = false)
         @QueryParam("path")
         path: String
     ): List<FileInfo>
@@ -74,13 +74,13 @@ interface BuildCustomDirResource {
     @Path("/{projectId}/dir")
     @POST
     fun mkdir(
-        @Parameter(name = "流水线ID", required = true)
+        @Parameter(description = "流水线ID", required = true)
         @HeaderParam(AUTH_HEADER_PIPELINE_ID)
         pipelineId: String,
-        @Parameter(name = "项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(name = "文件夹路径", required = false)
+        @Parameter(description = "文件夹路径", required = false)
         @QueryParam("path")
         path: String
     ): Result<Boolean>
@@ -90,13 +90,13 @@ interface BuildCustomDirResource {
     @Path("/{projectId}/rename")
     @POST
     fun rename(
-        @Parameter(name = "流水线ID", required = true)
+        @Parameter(description = "流水线ID", required = true)
         @HeaderParam(AUTH_HEADER_PIPELINE_ID)
         pipelineId: String,
-        @Parameter(name = "项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(name = "文件路径组合", required = false)
+        @Parameter(description = "文件路径组合", required = false)
         pathPair: PathPair
     ): Result<Boolean>
 
@@ -105,13 +105,13 @@ interface BuildCustomDirResource {
     @Path("/{projectId}/copy")
     @POST
     fun copy(
-        @Parameter(name = "流水线ID", required = true)
+        @Parameter(description = "流水线ID", required = true)
         @HeaderParam(AUTH_HEADER_PIPELINE_ID)
         pipelineId: String,
-        @Parameter(name = "项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(name = "组合路径", required = false)
+        @Parameter(description = "组合路径", required = false)
         combinationPath: CombinationPath
     ): Result<Boolean>
 
@@ -120,13 +120,13 @@ interface BuildCustomDirResource {
     @Path("/{projectId}/move")
     @POST
     fun move(
-        @Parameter(name = "流水线ID", required = true)
+        @Parameter(description = "流水线ID", required = true)
         @HeaderParam(AUTH_HEADER_PIPELINE_ID)
         pipelineId: String,
-        @Parameter(name = "项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(name = "组合路径", required = false)
+        @Parameter(description = "组合路径", required = false)
         combinationPath: CombinationPath
     ): Result<Boolean>
 
@@ -135,13 +135,13 @@ interface BuildCustomDirResource {
     @Path("/{projectId}/")
     @DELETE
     fun delete(
-        @Parameter(name = "流水线ID", required = true)
+        @Parameter(description = "流水线ID", required = true)
         @HeaderParam(AUTH_HEADER_PIPELINE_ID)
         pipelineId: String,
-        @Parameter(name = "项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(name = "多个路径", required = false)
+        @Parameter(description = "多个路径", required = false)
         pathList: PathList
     ): Result<Boolean>
 }

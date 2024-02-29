@@ -56,22 +56,22 @@ interface BuildRepositoryResource {
     @Path("/")
     @GET
     fun getByType(
-        @Parameter(name = "项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_PROJECT_ID)
         projectId: String,
-        @Parameter(name = "构建ID", required = true)
+        @Parameter(description = "构建ID", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_BUILD_ID)
         buildId: String,
-        @Parameter(name = "构建环境ID", required = true)
+        @Parameter(description = "构建环境ID", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_VM_SEQ_ID)
         vmSeqId: String,
-        @Parameter(name = "构建机名称", required = true)
+        @Parameter(description = "构建机名称", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_VM_NAME)
         vmName: String,
-        @Parameter(name = "代码库哈希ID或者仓库名", required = true)
+        @Parameter(description = "代码库哈希ID或者仓库名", required = true)
         @QueryParam("repositoryId")
         repositoryId: String,
-        @Parameter(name = "代码库请求类型", required = true)
+        @Parameter(description = "代码库请求类型", required = true)
         @QueryParam("repositoryType")
         repositoryType: RepositoryType?
     ): Result<Repository>

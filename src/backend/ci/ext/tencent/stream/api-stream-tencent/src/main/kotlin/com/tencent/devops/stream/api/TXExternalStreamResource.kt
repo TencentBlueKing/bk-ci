@@ -48,10 +48,10 @@ interface TXExternalStreamResource {
     @GET
     @Path("/git/callback")
     fun gitCallback(
-        @Parameter(name = "code")
+        @Parameter(description = "code")
         @QueryParam("code")
         code: String,
-        @Parameter(name = "state")
+        @Parameter(description = "state")
         @QueryParam("state")
         state: String
     ): Response

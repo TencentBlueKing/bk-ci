@@ -56,10 +56,10 @@ interface ServiceNodeResource {
     @GET
     @Path("/projects/{projectId}/listUsableServerNodes")
     fun listUsableServerNodes(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String
     ): Result<List<NodeWithPermission>>
@@ -68,13 +68,13 @@ interface ServiceNodeResource {
     @POST
     @Path("/projects/{projectId}/listByHashIds")
     fun listByHashIds(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(name = "节点 hashIds", required = true)
+        @Parameter(description = "节点 hashIds", required = true)
         nodeHashIds: List<String>
     ): Result<List<NodeWithPermission>>
 
@@ -82,13 +82,13 @@ interface ServiceNodeResource {
     @POST
     @Path("/projects/{projectId}/listRawByHashIds")
     fun listRawByHashIds(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(name = "节点 hashIds", required = true)
+        @Parameter(description = "节点 hashIds", required = true)
         nodeHashIds: List<String>
     ): Result<List<NodeBaseInfo>>
 
@@ -96,13 +96,13 @@ interface ServiceNodeResource {
     @POST
     @Path("/projects/{projectId}/listRawByEnvHashIds")
     fun listRawByEnvHashIds(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(name = "环境hashIds", required = true)
+        @Parameter(description = "环境hashIds", required = true)
         envHashIds: List<String>
     ): Result<Map<String, List<NodeBaseInfo>>>
 
@@ -110,13 +110,13 @@ interface ServiceNodeResource {
     @GET
     @Path("/projects/{projectId}/listNodeByType/{type}")
     fun listNodeByType(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(name = "操作系统", required = true)
+        @Parameter(description = "操作系统", required = true)
         @PathParam("type")
         type: String
     ): Result<List<NodeBaseInfo>>
@@ -125,10 +125,10 @@ interface ServiceNodeResource {
     @GET
     @Path("/projects/{projectId}/listNodeByNodeType/{nodeType}")
     fun listNodeByNodeType(
-        @Parameter(name = "项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(name = "节点类型", required = true)
+        @Parameter(description = "节点类型", required = true)
         @PathParam("nodeType")
         nodeType: NodeType
     ): Result<List<NodeBaseInfo>>
@@ -137,10 +137,10 @@ interface ServiceNodeResource {
     @GET
     @Path("projects/{projectId}/extListNodes")
     fun extListNodes(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String
     ): Result<List<NodeWithPermission>>
@@ -149,13 +149,13 @@ interface ServiceNodeResource {
     @POST
     @Path("/projects/{projectId}/delete_nodes")
     fun deleteNodes(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(name = "节点列表", required = true)
+        @Parameter(description = "节点列表", required = true)
         nodeHashIds: List<String>
     ): Result<Boolean>
 
@@ -163,13 +163,13 @@ interface ServiceNodeResource {
     @DELETE
     @Path("/projects/{projectId}/delete_third_party_node")
     fun deleteThirdPartyNode(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(name = "agent id", required = true)
+        @Parameter(description = "agent id", required = true)
         @QueryParam("agentId")
         agentId: String
     ): Result<Boolean>
@@ -178,16 +178,16 @@ interface ServiceNodeResource {
     @GET
     @Path("/projects/{projectId}/third_party_env2nodes")
     fun thirdPartyEnv2Nodes(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "项目ID(项目英文名)", required = true)
+        @Parameter(description = "项目ID(项目英文名)", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(name = "环境 hashId (envHashId和envName选填一项)", required = false)
+        @Parameter(description = "环境 hashId (envHashId和envName选填一项)", required = false)
         @QueryParam("envHashId")
         envHashId: String?,
-        @Parameter(name = "环境名称 (envHashId和envName选填一项)", required = false)
+        @Parameter(description = "环境名称 (envHashId和envName选填一项)", required = false)
         @QueryParam("envName")
         envName: String?
     ): Result<List<NodeWithPermission>>

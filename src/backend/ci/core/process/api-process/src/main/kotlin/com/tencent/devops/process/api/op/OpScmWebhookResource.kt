@@ -26,7 +26,7 @@ interface OpScmWebhookResource {
     @PUT
     @Path("/updateWebhookSecret")
     fun updateWebhookSecret(
-        @Parameter(name = "代码库请求类型", required = false)
+        @Parameter(description = "代码库请求类型", required = false)
         @QueryParam("scmType")
         scmType: String
     ): Result<Boolean>
@@ -35,7 +35,7 @@ interface OpScmWebhookResource {
     @PUT
     @Path("/updateWebhookEventInfo")
     fun updateWebhookEventInfo(
-        @Parameter(name = "待更新的项目ID", required = false)
+        @Parameter(description = "待更新的项目ID", required = false)
         @QueryParam("projectId")
         projectId: String?
     ): Result<Boolean>

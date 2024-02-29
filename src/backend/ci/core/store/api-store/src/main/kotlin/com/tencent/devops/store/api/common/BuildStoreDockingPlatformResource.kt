@@ -52,14 +52,14 @@ interface BuildStoreDockingPlatformResource {
     @Path("/types/{storeType}/codes/{storeCode}/add")
     @POST
     fun addStoreDockingPlatforms(
-        @Parameter(name = "组件类型", required = true)
+        @Parameter(description = "组件类型", required = true)
         @PathParam("storeType")
         @BkField(patternStyle = BkStyleEnum.CODE_STYLE)
         storeType: StoreTypeEnum,
-        @Parameter(name = "组件标识", required = true)
+        @Parameter(description = "组件标识", required = true)
         @PathParam("storeCode")
         storeCode: String,
-        @Parameter(name = "平台列表集合")
+        @Parameter(description = "平台列表集合")
         platformCodes: Set<String>
     ): Result<Boolean>
 
@@ -67,7 +67,7 @@ interface BuildStoreDockingPlatformResource {
     @GET
     @Path("/codes/{platformCode}/validate")
     fun isPlatformCodeRegistered(
-        @Parameter(name = "标识", required = true)
+        @Parameter(description = "标识", required = true)
         @PathParam("platformCode")
         platformCode: String
     ): Result<Boolean>

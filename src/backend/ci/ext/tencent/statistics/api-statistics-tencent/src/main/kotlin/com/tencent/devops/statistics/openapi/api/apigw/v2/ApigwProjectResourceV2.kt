@@ -57,25 +57,25 @@ interface ApigwProjectResourceV2 {
     @Path("/getProjectByOrganizationId")
     @Operation(summary = "根据组织架构查询所有项目")
     fun getProjectByOrganizationId(
-        @Parameter(name = "appCode", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
+        @Parameter(description = "appCode", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
         appCode: String?,
-        @Parameter(name = "apigw Type", required = true)
+        @Parameter(description = "apigw Type", required = true)
         @PathParam("apigwType")
         apigwType: String?,
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String,
-        @Parameter(name = "组织类型", required = true)
+        @Parameter(description = "组织类型", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_ORGANIZATION_TYPE)
         organizationType: String,
-        @Parameter(name = "组织Id", required = true)
+        @Parameter(description = "组织Id", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_ORGANIZATION_ID)
         organizationId: Long,
-        @Parameter(name = "deptName", required = false)
+        @Parameter(description = "deptName", required = false)
         @QueryParam("deptName")
         deptName: String?,
-        @Parameter(name = "centerName", required = false)
+        @Parameter(description = "centerName", required = false)
         @QueryParam("centerName")
         centerName: String?
     ): Result<List<ProjectVO>?>
@@ -83,19 +83,19 @@ interface ApigwProjectResourceV2 {
     @GET
     @Path("/{projectId}/roles")
     fun getProjectRoles(
-        @Parameter(name = "appCode", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
+        @Parameter(description = "appCode", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
         appCode: String?,
-        @Parameter(name = "apigw Type", required = true)
+        @Parameter(description = "apigw Type", required = true)
         @PathParam("apigwType")
         apigwType: String?,
-        @Parameter(name = "组织类型", required = true)
+        @Parameter(description = "组织类型", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_ORGANIZATION_TYPE)
         organizationType: String,
-        @Parameter(name = "组织Id", required = true)
+        @Parameter(description = "组织Id", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_ORGANIZATION_ID)
         organizationId: Long,
-        @Parameter(name = "项目code", required = true)
+        @Parameter(description = "项目code", required = true)
         @PathParam("projectId")
         projectId: String
     ): Result<List<BKAuthProjectRolesResources>?>

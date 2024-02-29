@@ -67,22 +67,22 @@ interface UserTemplateInstanceResource {
     @POST
     @Path("/projects/{projectId}/templates/{templateId}")
     fun createTemplateInstances(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(name = "模板ID", required = true)
+        @Parameter(description = "模板ID", required = true)
         @PathParam("templateId")
         templateId: String,
-        @Parameter(name = "模板版本", required = true)
+        @Parameter(description = "模板版本", required = true)
         @QueryParam("version")
         version: Long,
-        @Parameter(name = "是否应用模板设置")
+        @Parameter(description = "是否应用模板设置")
         @QueryParam("useTemplateSettings")
         useTemplateSettings: Boolean,
-        @Parameter(name = "创建实例", required = true)
+        @Parameter(description = "创建实例", required = true)
         instances: List<TemplateInstanceCreate>
     ): TemplateOperationRet
 
@@ -91,19 +91,19 @@ interface UserTemplateInstanceResource {
     @Path("/projects/{projectId}/templates/{templateId}/pipelines")
     @BkApiPermission([BkApiHandleType.API_NO_AUTH_CHECK])
     fun listTemplateInstancesParams(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(name = "模板ID", required = true)
+        @Parameter(description = "模板ID", required = true)
         @PathParam("templateId")
         templateId: String,
-        @Parameter(name = "模板版本", required = true)
+        @Parameter(description = "模板版本", required = true)
         @QueryParam("version")
         version: Long,
-        @Parameter(name = "创建实例", required = true)
+        @Parameter(description = "创建实例", required = true)
         pipelineIds: List<PipelineId>
     ): Result<Map<String/*pipelineId*/, TemplateInstanceParams>>
 
@@ -112,19 +112,19 @@ interface UserTemplateInstanceResource {
     @Path("/projects/{projectId}/templates/{templateId}/pipelines/{pipelineId}/compare")
     @BkApiPermission([BkApiHandleType.API_NO_AUTH_CHECK])
     fun compareTemplateInstances(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(name = "模板ID", required = true)
+        @Parameter(description = "模板ID", required = true)
         @PathParam("templateId")
         templateId: String,
-        @Parameter(name = "流水线ID", required = true)
+        @Parameter(description = "流水线ID", required = true)
         @PathParam("pipelineId")
         pipelineId: String,
-        @Parameter(name = "模板版本", required = true)
+        @Parameter(description = "模板版本", required = true)
         @QueryParam("version")
         version: Long
     ): Result<TemplateCompareModelResult>
@@ -133,22 +133,22 @@ interface UserTemplateInstanceResource {
     @PUT
     @Path("/projects/{projectId}/templates/{templateId}")
     fun updateTemplate(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(name = "模板ID", required = true)
+        @Parameter(description = "模板ID", required = true)
         @PathParam("templateId")
         templateId: String,
-        @Parameter(name = "版本号", required = true)
+        @Parameter(description = "版本号", required = true)
         @QueryParam("version")
         version: Long,
-        @Parameter(name = "是否应用模板设置")
+        @Parameter(description = "是否应用模板设置")
         @QueryParam("useTemplateSettings")
         useTemplateSettings: Boolean,
-        @Parameter(name = "模板实例", required = true)
+        @Parameter(description = "模板实例", required = true)
         instances: List<TemplateInstanceUpdate>
     ): TemplateOperationRet
 
@@ -156,22 +156,22 @@ interface UserTemplateInstanceResource {
     @PUT
     @Path("/projects/{projectId}/templates/{templateId}/async/update")
     fun asyncUpdateTemplateInstances(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(name = "模板ID", required = true)
+        @Parameter(description = "模板ID", required = true)
         @PathParam("templateId")
         templateId: String,
-        @Parameter(name = "模板版本", required = true)
+        @Parameter(description = "模板版本", required = true)
         @QueryParam("version")
         version: Long,
-        @Parameter(name = "是否应用模板设置")
+        @Parameter(description = "是否应用模板设置")
         @QueryParam("useTemplateSettings")
         useTemplateSettings: Boolean,
-        @Parameter(name = "模板实例", required = true)
+        @Parameter(description = "模板实例", required = true)
         instances: List<TemplateInstanceUpdate>
     ): Result<Boolean>
 
@@ -179,29 +179,29 @@ interface UserTemplateInstanceResource {
     @GET
     @Path("/projects/{projectId}/templates/{templateId}")
     fun listTemplate(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(name = "模板ID", required = true)
+        @Parameter(description = "模板ID", required = true)
         @PathParam("templateId")
         templateId: String,
-        @Parameter(name = "第几页", required = false, example = "1")
+        @Parameter(description = "第几页", required = false, example = "1")
         @QueryParam("page")
         page: Int,
-        @Parameter(name = "每页多少条", required = false, example = "20")
+        @Parameter(description = "每页多少条", required = false, example = "20")
         @QueryParam("pageSize")
         @BkField(patternStyle = BkStyleEnum.PAGE_SIZE_STYLE, required = true)
         pageSize: Int,
-        @Parameter(name = "名字搜索的关键字", required = false)
+        @Parameter(description = "名字搜索的关键字", required = false)
         @QueryParam("searchKey")
         searchKey: String?,
-        @Parameter(name = "排序字段", required = false)
+        @Parameter(description = "排序字段", required = false)
         @QueryParam("sortType")
         sortType: TemplateSortTypeEnum?,
-        @Parameter(name = "是否降序", required = false)
+        @Parameter(description = "是否降序", required = false)
         @QueryParam("desc")
         desc: Boolean?
     ): Result<TemplateInstancePage>

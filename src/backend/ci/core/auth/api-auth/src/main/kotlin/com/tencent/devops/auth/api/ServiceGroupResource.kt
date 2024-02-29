@@ -51,13 +51,13 @@ interface ServiceGroupResource {
     @Path("/projectCodes/{projectCode}/")
     @Operation(summary = "项目下添加指定组")
     fun createGroup(
-        @Parameter(name = "用户名", required = true)
+        @Parameter(description = "用户名", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "项目标识", required = true)
+        @Parameter(description = "项目标识", required = true)
         @PathParam("projectCode")
         projectCode: String,
-        @Parameter(name = "用户组信息", required = true)
+        @Parameter(description = "用户组信息", required = true)
         groupInfo: GroupDTO
     ): Result<Boolean>
 
@@ -65,13 +65,13 @@ interface ServiceGroupResource {
     @Path("/projectCodes/{projectCode}/batchCreate")
     @Operation(summary = "项目下添加指定组")
     fun batchCreateGroup(
-        @Parameter(name = "用户名", required = true)
+        @Parameter(description = "用户名", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "项目标识", required = true)
+        @Parameter(description = "项目标识", required = true)
         @PathParam("projectCode")
         projectCode: String,
-        @Parameter(name = "用户组信息", required = true)
+        @Parameter(description = "用户组信息", required = true)
         groupInfos: List<GroupDTO>
     ): Result<Boolean>
 }

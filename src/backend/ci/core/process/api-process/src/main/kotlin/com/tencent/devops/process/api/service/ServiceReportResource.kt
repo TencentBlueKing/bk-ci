@@ -52,7 +52,7 @@ interface ServiceReportResource {
     @POST
     @BkApiPermission([BkApiHandleType.API_NO_AUTH_CHECK])
     fun get(
-        @Parameter(name = "查询参数", required = true)
+        @Parameter(description = "查询参数", required = true)
         reportListDTO: ReportListDTO
     ): Result<List<TaskReport>>
 }

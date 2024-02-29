@@ -62,16 +62,16 @@ interface OpStoreLogoResource {
     @Path("/upload")
     @Consumes(MediaType.MULTIPART_FORM_DATA)
     fun uploadStoreLogo(
-        @Parameter(name = "userId", required = true)
+        @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "contentLength", required = true)
+        @Parameter(description = "contentLength", required = true)
         @HeaderParam("content-length")
         contentLength: Long,
-        @Parameter(name = "是否限制图片尺寸范围", required = false)
+        @Parameter(description = "是否限制图片尺寸范围", required = false)
         @QueryParam("sizeLimitFlag")
         sizeLimitFlag: Boolean? = null,
-        @Parameter(name = "logo", required = true)
+        @Parameter(description = "logo", required = true)
         @FormDataParam("logo")
         inputStream: InputStream,
         @FormDataParam("logo")
@@ -82,13 +82,13 @@ interface OpStoreLogoResource {
     @POST
     @Path("/type/{logoType}")
     fun add(
-        @Parameter(name = "userId", required = true)
+        @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "logoType", required = true)
+        @Parameter(description = "logoType", required = true)
         @PathParam("logoType")
         logoType: LogoTypeEnum,
-        @Parameter(name = "storeLogoReq", required = true)
+        @Parameter(description = "storeLogoReq", required = true)
         storeLogoReq: StoreLogoReq
     ): Result<Boolean>
 
@@ -96,13 +96,13 @@ interface OpStoreLogoResource {
     @PUT
     @Path("/{id}")
     fun update(
-        @Parameter(name = "userId", required = true)
+        @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "id", required = true)
+        @Parameter(description = "id", required = true)
         @PathParam("id")
         id: String,
-        @Parameter(name = "storeLogoReq", required = true)
+        @Parameter(description = "storeLogoReq", required = true)
         storeLogoReq: StoreLogoReq
     ): Result<Boolean>
 
@@ -110,10 +110,10 @@ interface OpStoreLogoResource {
     @GET
     @Path("/{id}")
     fun get(
-        @Parameter(name = "userId", required = true)
+        @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "id", required = true)
+        @Parameter(description = "id", required = true)
         @PathParam("id")
         id: String
     ): Result<Logo?>
@@ -122,10 +122,10 @@ interface OpStoreLogoResource {
     @GET
     @Path("/type/{logoType}")
     fun list(
-        @Parameter(name = "userId", required = true)
+        @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "logoType", required = true)
+        @Parameter(description = "logoType", required = true)
         @PathParam("logoType")
         logoType: LogoTypeEnum
     ): Result<List<Logo>?>
@@ -134,10 +134,10 @@ interface OpStoreLogoResource {
     @DELETE
     @Path("/{id}")
     fun delete(
-        @Parameter(name = "userId", required = true)
+        @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "id", required = true)
+        @Parameter(description = "id", required = true)
         @PathParam("id")
         id: String
     ): Result<Boolean>

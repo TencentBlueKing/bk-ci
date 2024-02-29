@@ -50,10 +50,10 @@ interface UserManagerUserResource {
     @Path("/grant/{managerId}")
     @Operation(summary = "新增管理员到组织(通过链接)")
     fun grantManagerByUrl(
-        @Parameter(name = "用户名", required = true)
+        @Parameter(description = "用户名", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "授权策略Id", required = true)
+        @Parameter(description = "授权策略Id", required = true)
         @PathParam("managerId")
         managerId: Int
     ): Result<String>
@@ -62,10 +62,10 @@ interface UserManagerUserResource {
     @Path("/cancel/grant/{managerId}")
     @Operation(summary = "取消管理员(通过链接)")
     fun cancelGrantManagerByUrl(
-        @Parameter(name = "用户名", required = true)
+        @Parameter(description = "用户名", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "授权策略Id", required = true)
+        @Parameter(description = "授权策略Id", required = true)
         @PathParam("managerId")
         managerId: Int
     ): Result<String>

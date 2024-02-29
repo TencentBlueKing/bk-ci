@@ -22,13 +22,13 @@ interface OpRepositoryConfResource {
     @POST
     @Path("/updateGitDomain")
     fun updateRepoConfGitDomain(
-        @Parameter(name = "git老域名", required = true)
+        @Parameter(description = "git老域名", required = true)
         @QueryParam("oldGitDomain")
         oldGitDomain: String,
-        @Parameter(name = "git新域名", required = true)
+        @Parameter(description = "git新域名", required = true)
         @QueryParam("newGitDomain")
         newGitDomain: String,
-        @Parameter(name = "更新的数量", required = true)
+        @Parameter(description = "更新的数量", required = true)
         @QueryParam("limitNumber")
         @Range(min = 1, max = 1000, message = "修改的数量不能小于1、大于1000")
         @Valid

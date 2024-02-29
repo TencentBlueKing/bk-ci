@@ -54,10 +54,10 @@ interface OpJobQuotaSystemResource {
     @GET
     @Path("/all/statistics")
     fun statistics(
-        @Parameter(name = "分页大小", required = false)
+        @Parameter(description = "分页大小", required = false)
         @QueryParam("limit")
         limit: Int?,
-        @Parameter(name = "偏移", required = false)
+        @Parameter(description = "偏移", required = false)
         @QueryParam("offset")
         offset: Int?
     ): Result<Map<String, Any>>
@@ -71,10 +71,10 @@ interface OpJobQuotaSystemResource {
     @GET
     @Path("/{jobQuotaVmType}")
     fun get(
-        @Parameter(name = "构建机类型", required = false)
+        @Parameter(description = "构建机类型", required = false)
         @PathParam("jobQuotaVmType")
         jobQuotaVmType: JobQuotaVmType,
-        @Parameter(name = "构建来源", required = false)
+        @Parameter(description = "构建来源", required = false)
         @QueryParam("channelCode")
         channelCode: String? = "BS"
     ): Result<List<JobQuotaSystem>>
@@ -83,7 +83,7 @@ interface OpJobQuotaSystemResource {
     @PUT
     @Path("/")
     fun add(
-        @Parameter(name = "Job配额信息", required = true)
+        @Parameter(description = "Job配额信息", required = true)
         jobQuota: JobQuotaSystem
     ): Result<Boolean>
 
@@ -91,10 +91,10 @@ interface OpJobQuotaSystemResource {
     @DELETE
     @Path("/{jobQuotaVmType}")
     fun delete(
-        @Parameter(name = "构建机类型", required = true)
+        @Parameter(description = "构建机类型", required = true)
         @PathParam("jobQuotaVmType")
         jobQuotaVmType: JobQuotaVmType,
-        @Parameter(name = "构建来源", required = false)
+        @Parameter(description = "构建来源", required = false)
         @QueryParam("channelCode")
         channelCode: String? = "BS"
     ): Result<Boolean>
@@ -103,10 +103,10 @@ interface OpJobQuotaSystemResource {
     @POST
     @Path("/{jobQuotaVmType}")
     fun update(
-        @Parameter(name = "构建机类型", required = true)
+        @Parameter(description = "构建机类型", required = true)
         @PathParam("jobQuotaVmType")
         jobQuotaVmType: JobQuotaVmType,
-        @Parameter(name = "Job配额信息", required = true)
+        @Parameter(description = "Job配额信息", required = true)
         jobQuota: JobQuotaSystem
     ): Result<Boolean>
 
@@ -114,7 +114,7 @@ interface OpJobQuotaSystemResource {
     @POST
     @Path("/clear/vm/{vmType}")
     fun restore(
-        @Parameter(name = "构建机类型", required = true)
+        @Parameter(description = "构建机类型", required = true)
         @PathParam("vmType")
         vmType: JobQuotaVmType
     ): Result<Boolean>

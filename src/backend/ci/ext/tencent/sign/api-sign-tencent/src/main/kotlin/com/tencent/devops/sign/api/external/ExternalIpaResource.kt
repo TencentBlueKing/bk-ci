@@ -52,12 +52,12 @@ interface ExternalIpaResource {
     @Path("/upload")
     @Consumes(MediaType.APPLICATION_OCTET_STREAM)
     fun ipaUpload(
-        @Parameter(name = "Base64编码的签名信息", required = false)
+        @Parameter(description = "Base64编码的签名信息", required = false)
         @HeaderParam(AUTH_HEADER_DEVOPS_SIGN_INFO)
         ipaSignInfoHeader: String,
-        @Parameter(name = "IPA包文件", required = true)
+        @Parameter(description = "IPA包文件", required = true)
         ipaInputStream: InputStream,
-        @Parameter(name = "鉴权token", required = true)
+        @Parameter(description = "鉴权token", required = true)
         @QueryParam("token")
         token: String
     ): Result<String>

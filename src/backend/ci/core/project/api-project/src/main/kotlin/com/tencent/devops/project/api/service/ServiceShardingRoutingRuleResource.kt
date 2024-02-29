@@ -56,17 +56,17 @@ interface ServiceShardingRoutingRuleResource {
     @GET
     @Path("/names/{routingName}/get")
     fun getShardingRoutingRuleByName(
-        @Parameter(name = "规则名称", required = true)
+        @Parameter(description = "规则名称", required = true)
         @PathParam("routingName")
         @BkField(minLength = 1, maxLength = 128)
         routingName: String,
-        @Parameter(name = "模块标识", required = true)
+        @Parameter(description = "模块标识", required = true)
         @QueryParam("moduleCode")
         moduleCode: SystemModuleEnum,
-        @Parameter(name = "规则类型", required = true)
+        @Parameter(description = "规则类型", required = true)
         @QueryParam("ruleType")
         ruleType: ShardingRuleTypeEnum,
-        @Parameter(name = "数据库表名称", required = false)
+        @Parameter(description = "数据库表名称", required = false)
         @QueryParam("tableName")
         @BkField(minLength = 1, maxLength = 128, required = false)
         tableName: String? = null
@@ -76,10 +76,10 @@ interface ServiceShardingRoutingRuleResource {
     @Path("/update")
     @Operation(summary = "更新项目DB分片路由规则")
     fun updateShardingRoutingRule(
-        @Parameter(name = "userId", required = true)
+        @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String,
-        @Parameter(name = "路由规则", required = true)
+        @Parameter(description = "路由规则", required = true)
         shardingRoutingRule: ShardingRoutingRule
     ): Result<Boolean>
 }

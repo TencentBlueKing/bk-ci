@@ -48,7 +48,7 @@ interface UserThirdLoginResource {
     @Path("/out")
     fun thirdLoginOut(
         @HeaderParam(AUTH_HEADER_USER_ID)
-        @Parameter(name = "登出用户id")
+        @Parameter(description = "登出用户id")
         userId: String
     ): Response
 }

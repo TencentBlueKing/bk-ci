@@ -49,13 +49,13 @@ interface OpStreamPipelineResource {
     @POST
     @Path("/delete")
     fun checkBranches(
-        @Parameter(name = "删除指定的用户ID", required = true)
+        @Parameter(description = "删除指定的用户ID", required = true)
         @QueryParam("userId")
         userId: String,
-        @Parameter(name = "工蜂项目ID", required = true)
+        @Parameter(description = "工蜂项目ID", required = true)
         @QueryParam("gitProjectId")
         gitProjectId: Long,
-        @Parameter(name = "流水线ID", required = true)
+        @Parameter(description = "流水线ID", required = true)
         @QueryParam("pipelineId")
         pipelineId: String
     ): Result<Boolean>
@@ -66,7 +66,7 @@ interface OpStreamPipelineResource {
     fun listJobIdConflict(
         @QueryParam("startTime")
         startTime: Long?,
-        @Parameter(name = "截止时间")
+        @Parameter(description = "截止时间")
         @QueryParam("endTime")
         endTime: Long?
     ): Result<Int>

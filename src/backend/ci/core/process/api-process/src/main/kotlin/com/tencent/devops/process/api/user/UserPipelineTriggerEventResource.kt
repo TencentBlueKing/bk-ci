@@ -59,10 +59,10 @@ interface UserPipelineTriggerEventResource {
     @GET
     @Path("listTriggerType")
     fun listTriggerType(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "代码库类型,为空则返回所有事件类型", required = false)
+        @Parameter(description = "代码库类型,为空则返回所有事件类型", required = false)
         @QueryParam("scmType")
         scmType: ScmType?
     ): Result<List<IdValue>>
@@ -71,10 +71,10 @@ interface UserPipelineTriggerEventResource {
     @GET
     @Path("listEventType")
     fun listEventType(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "代码库类型,为空则返回所有事件类型", required = false)
+        @Parameter(description = "代码库类型,为空则返回所有事件类型", required = false)
         @QueryParam("scmType")
         scmType: ScmType?
     ): Result<List<IdValue>>
@@ -83,34 +83,34 @@ interface UserPipelineTriggerEventResource {
     @GET
     @Path("/{projectId}/{pipelineId}/listPipelineTriggerEvent")
     fun listPipelineTriggerEvent(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(name = "流水线ID", required = true)
+        @Parameter(description = "流水线ID", required = true)
         @PathParam("pipelineId")
         pipelineId: String,
-        @Parameter(name = "事件类型", required = false)
+        @Parameter(description = "事件类型", required = false)
         @QueryParam("eventType")
         eventType: String?,
-        @Parameter(name = "触发类型", required = false)
+        @Parameter(description = "触发类型", required = false)
         @QueryParam("triggerType")
         triggerType: String?,
-        @Parameter(name = "触发用户", required = false)
+        @Parameter(description = "触发用户", required = false)
         @QueryParam("triggerUser")
         triggerUser: String?,
-        @Parameter(name = "开始时间", required = false)
+        @Parameter(description = "开始时间", required = false)
         @QueryParam("startTime")
         startTime: Long?,
-        @Parameter(name = "结束", required = false)
+        @Parameter(description = "结束", required = false)
         @QueryParam("endTime")
         endTime: Long?,
-        @Parameter(name = "第几页", required = false, example = "1")
+        @Parameter(description = "第几页", required = false, example = "1")
         @QueryParam("page")
         page: Int?,
-        @Parameter(name = "每页多少条", required = false, example = "20")
+        @Parameter(description = "每页多少条", required = false, example = "20")
         @QueryParam("pageSize")
         pageSize: Int?
     ): Result<SQLPage<PipelineTriggerEventVo>>
@@ -119,43 +119,43 @@ interface UserPipelineTriggerEventResource {
     @GET
     @Path("/{projectId}/{repoHashId}/listRepoTriggerEvent")
     fun listRepoTriggerEvent(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(name = "代码库hashId", required = true)
+        @Parameter(description = "代码库hashId", required = true)
         @PathParam("repoHashId")
         repoHashId: String,
-        @Parameter(name = "事件类型", required = false)
+        @Parameter(description = "事件类型", required = false)
         @QueryParam("eventType")
         eventType: String?,
-        @Parameter(name = "触发类型", required = false)
+        @Parameter(description = "触发类型", required = false)
         @QueryParam("triggerType")
         triggerType: String?,
-        @Parameter(name = "触发用户", required = false)
+        @Parameter(description = "触发用户", required = false)
         @QueryParam("triggerUser")
         triggerUser: String?,
-        @Parameter(name = "流水线ID", required = false)
+        @Parameter(description = "流水线ID", required = false)
         @QueryParam("pipelineId")
         pipelineId: String?,
-        @Parameter(name = "事件ID", required = false)
+        @Parameter(description = "事件ID", required = false)
         @QueryParam("eventId")
         eventId: Long?,
-        @Parameter(name = "流水线名称", required = false)
+        @Parameter(description = "流水线名称", required = false)
         @QueryParam("pipelineName")
         pipelineName: String?,
-        @Parameter(name = "开始时间", required = false)
+        @Parameter(description = "开始时间", required = false)
         @QueryParam("startTime")
         startTime: Long?,
-        @Parameter(name = "结束", required = false)
+        @Parameter(description = "结束", required = false)
         @QueryParam("endTime")
         endTime: Long?,
-        @Parameter(name = "第几页", required = false, example = "1")
+        @Parameter(description = "第几页", required = false, example = "1")
         @QueryParam("page")
         page: Int?,
-        @Parameter(name = "每页多少条", required = false, example = "20")
+        @Parameter(description = "每页多少条", required = false, example = "20")
         @QueryParam("pageSize")
         pageSize: Int?
     ): Result<SQLPage<RepoTriggerEventVo>>
@@ -164,25 +164,25 @@ interface UserPipelineTriggerEventResource {
     @GET
     @Path("/{projectId}/{eventId}/listEventDetail")
     fun listEventDetail(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(name = "事件ID", required = true)
+        @Parameter(description = "事件ID", required = true)
         @PathParam("eventId")
         eventId: Long,
-        @Parameter(name = "流水线ID", required = false)
+        @Parameter(description = "流水线ID", required = false)
         @QueryParam("pipelineId")
         pipelineId: String?,
-        @Parameter(name = "流水线名", required = false)
+        @Parameter(description = "流水线名", required = false)
         @QueryParam("pipelineName")
         pipelineName: String?,
-        @Parameter(name = "第几页", required = false, example = "1")
+        @Parameter(description = "第几页", required = false, example = "1")
         @QueryParam("page")
         page: Int?,
-        @Parameter(name = "每页多少条", required = false, example = "20")
+        @Parameter(description = "每页多少条", required = false, example = "20")
         @QueryParam("pageSize")
         pageSize: Int?
     ): Result<SQLPage<PipelineTriggerEventVo>>
@@ -191,13 +191,13 @@ interface UserPipelineTriggerEventResource {
     @POST
     @Path("/{projectId}/{detailId}/replay")
     fun replay(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(name = "触发详情ID", required = true)
+        @Parameter(description = "触发详情ID", required = true)
         @PathParam("detailId")
         detailId: Long
     ): Result<Boolean>
@@ -206,13 +206,13 @@ interface UserPipelineTriggerEventResource {
     @POST
     @Path("/{projectId}/{eventId}/replayAll")
     fun replayAll(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(name = "事件ID", required = true)
+        @Parameter(description = "事件ID", required = true)
         @PathParam("eventId")
         eventId: Long
     ): Result<Boolean>

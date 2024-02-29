@@ -50,7 +50,7 @@ interface BuildGitCiResource {
     @GET
     @Path("/getToken")
     fun getToken(
-        @Parameter(name = "gitProjectId", required = true)
+        @Parameter(description = "gitProjectId", required = true)
         @QueryParam("gitProjectId")
         gitProjectId: String
     ): Result<GitToken?>
@@ -59,7 +59,7 @@ interface BuildGitCiResource {
     @DELETE
     @Path("/clearToken")
     fun clearToken(
-        @Parameter(name = "token", required = true)
+        @Parameter(description = "token", required = true)
         @QueryParam("token")
         token: String
     ): Result<Boolean>

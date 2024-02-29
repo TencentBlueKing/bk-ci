@@ -54,16 +54,16 @@ interface ServicePipelinePermissionResource {
     @Operation(summary = "校验用户是否有具体操作的权限")
     fun checkPipelinePermission(
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
-        @Parameter(name = "待校验用户ID", required = true)
+        @Parameter(description = "待校验用户ID", required = true)
         userId: String,
-        @Parameter(name = "项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(name = "流水线ID", required = true)
+        @Parameter(description = "流水线ID", required = true)
         @PathParam("pipelineId")
         pipelineId: String,
         @QueryParam("permission")
-        @Parameter(name = "操作权限", required = false)
+        @Parameter(description = "操作权限", required = false)
         permission: AuthPermission
     ): Result<Boolean>
 }

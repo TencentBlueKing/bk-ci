@@ -56,13 +56,13 @@ interface AppExperienceDownloadResource {
     @Path("/checkVersion")
     @POST
     fun checkVersion(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "平台", required = true)
+        @Parameter(description = "平台", required = true)
         @HeaderParam(AUTH_HEADER_PLATFORM)
         platform: Int,
-        @Parameter(name = "检查更新参数", required = true)
+        @Parameter(description = "检查更新参数", required = true)
         params: List<CheckVersionParam>
     ): Result<List<CheckVersionVO>>
 
@@ -70,16 +70,16 @@ interface AppExperienceDownloadResource {
     @Path("/records")
     @GET
     fun records(
-        @Parameter(name = "用户ID", required = true)
+        @Parameter(description = "用户ID", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "平台", required = true)
+        @Parameter(description = "平台", required = true)
         @HeaderParam(AUTH_HEADER_PLATFORM)
         platform: Int,
-        @Parameter(name = "页目", required = false)
+        @Parameter(description = "页目", required = false)
         @QueryParam("page")
         page: Int,
-        @Parameter(name = "每页数目", required = false)
+        @Parameter(description = "每页数目", required = false)
         @QueryParam("pageSize")
         pageSize: Int
     ): Result<Pagination<DownloadRecordVO>>

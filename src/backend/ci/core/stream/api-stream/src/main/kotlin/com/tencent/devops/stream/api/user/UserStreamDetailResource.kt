@@ -59,16 +59,16 @@ interface UserStreamDetailResource {
     @GET
     @Path("/detail/{projectId}")
     fun getLatestBuildDetail(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "蓝盾项目ID", required = true)
+        @Parameter(description = "蓝盾项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(name = "流水线ID", required = false)
+        @Parameter(description = "流水线ID", required = false)
         @QueryParam("pipelineId")
         pipelineId: String?,
-        @Parameter(name = "构建ID", required = false)
+        @Parameter(description = "构建ID", required = false)
         @QueryParam("buildId")
         buildId: String?
     ): Result<StreamModelDetail?>
@@ -77,19 +77,19 @@ interface UserStreamDetailResource {
     @POST
     @Path("/detail/{projectId}/review")
     fun buildTriggerReview(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "蓝盾项目ID", required = true)
+        @Parameter(description = "蓝盾项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(name = "流水线ID", required = false)
+        @Parameter(description = "流水线ID", required = false)
         @QueryParam("pipelineId")
         pipelineId: String,
-        @Parameter(name = "构建ID", required = false)
+        @Parameter(description = "构建ID", required = false)
         @QueryParam("buildId")
         buildId: String,
-        @Parameter(name = "是否通过审核", required = true)
+        @Parameter(description = "是否通过审核", required = true)
         @QueryParam("approve")
         approve: Boolean
     ): Result<Boolean>
@@ -98,22 +98,22 @@ interface UserStreamDetailResource {
     @Path("/artifactories/projects/{projectId}/search")
     @GET
     fun search(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "蓝盾项目ID", required = true)
+        @Parameter(description = "蓝盾项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(name = "pipelineId", required = true)
+        @Parameter(description = "pipelineId", required = true)
         @QueryParam("pipelineId")
         pipelineId: String,
-        @Parameter(name = "buildId", required = true)
+        @Parameter(description = "buildId", required = true)
         @QueryParam("buildId")
         buildId: String,
-        @Parameter(name = "第几页", required = false, example = "1")
+        @Parameter(description = "第几页", required = false, example = "1")
         @QueryParam("page")
         page: Int?,
-        @Parameter(name = "每页多少条(不传默认全部返回)", required = false, example = "20")
+        @Parameter(description = "每页多少条(不传默认全部返回)", required = false, example = "20")
         @QueryParam("pageSize")
         pageSize: Int?
     ): Result<FileInfoPage<FileInfo>>
@@ -122,19 +122,19 @@ interface UserStreamDetailResource {
     @Path("/artifactories/projects/{projectId}/artifactoryType/{artifactoryType}/downloadUrl")
     @POST
     fun downloadUrl(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "stream 用户ID", required = true, example = "0")
+        @Parameter(description = "stream 用户ID", required = true, example = "0")
         @HeaderParam("X-GIT-UID")
         gitUserId: String,
-        @Parameter(name = "蓝盾项目ID", required = true)
+        @Parameter(description = "蓝盾项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(name = "版本仓库类型", required = true)
+        @Parameter(description = "版本仓库类型", required = true)
         @PathParam("artifactoryType")
         artifactoryType: ArtifactoryType,
-        @Parameter(name = "路径", required = true)
+        @Parameter(description = "路径", required = true)
         @QueryParam("path")
         path: String
     ): Result<Url>
@@ -143,16 +143,16 @@ interface UserStreamDetailResource {
     @Path("/projects/{projectId}/pipelines/{pipelineId}/builds/{buildId}/report")
     @GET
     fun getReports(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "蓝盾项目ID", required = true)
+        @Parameter(description = "蓝盾项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(name = "流水线ID", required = true)
+        @Parameter(description = "流水线ID", required = true)
         @PathParam("pipelineId")
         pipelineId: String,
-        @Parameter(name = "构建ID", required = true)
+        @Parameter(description = "构建ID", required = true)
         @PathParam("buildId")
         buildId: String
     ): Result<List<Report>>

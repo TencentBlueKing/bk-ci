@@ -51,22 +51,22 @@ interface UserLogFileResource {
     @GET
     @Path("plugin/{projectId}/{pipelineId}/{buildId}/{elementId}/{executeCount}")
     fun getPluginLogUrl(
-        @Parameter(name = "userId", required = true)
+        @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "项目 ID", required = true)
+        @Parameter(description = "项目 ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(name = "流水线 ID", required = true)
+        @Parameter(description = "流水线 ID", required = true)
         @PathParam("pipelineId")
         pipelineId: String,
-        @Parameter(name = "构建 ID", required = true)
+        @Parameter(description = "构建 ID", required = true)
         @PathParam("buildId")
         buildId: String,
-        @Parameter(name = "插件 elementId", required = true)
+        @Parameter(description = "插件 elementId", required = true)
         @PathParam("elementId")
         elementId: String,
-        @Parameter(name = "执行序号", required = true)
+        @Parameter(description = "执行序号", required = true)
         @PathParam("executeCount")
         executeCount: String
     ): Result<Url>

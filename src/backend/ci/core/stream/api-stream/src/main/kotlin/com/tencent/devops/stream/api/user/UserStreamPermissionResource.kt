@@ -51,10 +51,10 @@ interface UserStreamPermissionResource {
     @Operation(summary = "校验用户是否有action的权限，忽略oatuh验证")
     fun validateUserResourcePermission(
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
-        @Parameter(name = "待校验用户ID", required = true)
+        @Parameter(description = "待校验用户ID", required = true)
         userId: String,
         @PathParam("projectId")
-        @Parameter(name = "项目编码", required = true)
+        @Parameter(description = "项目编码", required = true)
         projectId: String
     ): Result<Boolean>
 }

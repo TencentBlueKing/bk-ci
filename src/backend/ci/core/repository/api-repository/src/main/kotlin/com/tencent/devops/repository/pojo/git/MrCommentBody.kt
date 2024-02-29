@@ -30,6 +30,6 @@ package com.tencent.devops.repository.pojo.git
 import io.swagger.v3.oas.annotations.Parameter
 
 data class MrCommentBody(
-    @Parameter(name = "报表数据", required = true)
+    @Parameter(description = "报表数据", required = true)
     val reportData: Pair<List<String>, MutableMap<String, MutableList<List<String>>>>
 )

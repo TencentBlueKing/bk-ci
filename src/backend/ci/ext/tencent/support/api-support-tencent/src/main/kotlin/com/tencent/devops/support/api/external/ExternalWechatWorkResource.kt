@@ -51,16 +51,16 @@ interface ExternalWechatWorkResource {
     @POST
     @Path("/callback")
     fun callback(
-        @Parameter(name = "消息体签名", required = true)
+        @Parameter(description = "消息体签名", required = true)
         @QueryParam(value = "msg_signature")
         signature: String,
-        @Parameter(name = "时间戳", required = true)
+        @Parameter(description = "时间戳", required = true)
         @QueryParam(value = "timestamp")
         timestamp: Long,
-        @Parameter(name = "随机数字串", required = true)
+        @Parameter(description = "随机数字串", required = true)
         @QueryParam(value = "nonce")
         nonce: String,
-        @Parameter(name = "回调密文", required = true)
+        @Parameter(description = "回调密文", required = true)
         reqData: String?
     ): Result<Boolean>
 
@@ -70,19 +70,19 @@ interface ExternalWechatWorkResource {
     @GET
     @Path("/callback")
     fun callback(
-        @Parameter(name = "消息体签名", required = true)
+        @Parameter(description = "消息体签名", required = true)
         @QueryParam(value = "msg_signature")
         signature: String,
-        @Parameter(name = "时间戳", required = true)
+        @Parameter(description = "时间戳", required = true)
         @QueryParam(value = "timestamp")
         timestamp: Long,
-        @Parameter(name = "随机数字串", required = true)
+        @Parameter(description = "随机数字串", required = true)
         @QueryParam(value = "nonce")
         nonce: String,
-        @Parameter(name = "随机加密字符串", required = true)
+        @Parameter(description = "随机加密字符串", required = true)
         @QueryParam(value = "echostr")
         echoStr: String,
-        @Parameter(name = "回调密文", required = false)
+        @Parameter(description = "回调密文", required = false)
         reqData: String?
     ): Result<String>
 
@@ -92,16 +92,16 @@ interface ExternalWechatWorkResource {
     @POST
     @Path("/robot/callback")
     fun robotCallback(
-        @Parameter(name = "消息体签名", required = true)
+        @Parameter(description = "消息体签名", required = true)
         @QueryParam(value = "msg_signature")
         signature: String,
-        @Parameter(name = "时间戳", required = true)
+        @Parameter(description = "时间戳", required = true)
         @QueryParam(value = "timestamp")
         timestamp: Long,
-        @Parameter(name = "随机数字串", required = true)
+        @Parameter(description = "随机数字串", required = true)
         @QueryParam(value = "nonce")
         nonce: String,
-        @Parameter(name = "回调密文", required = true)
+        @Parameter(description = "回调密文", required = true)
         reqData: String?
     ): Result<Boolean>
 
@@ -111,19 +111,19 @@ interface ExternalWechatWorkResource {
     @GET
     @Path("/robot/callback")
     fun robotCallback(
-        @Parameter(name = "消息体签名", required = true)
+        @Parameter(description = "消息体签名", required = true)
         @QueryParam(value = "msg_signature")
         signature: String,
-        @Parameter(name = "时间戳", required = true)
+        @Parameter(description = "时间戳", required = true)
         @QueryParam(value = "timestamp")
         timestamp: Long,
-        @Parameter(name = "随机数字串", required = true)
+        @Parameter(description = "随机数字串", required = true)
         @QueryParam(value = "nonce")
         nonce: String,
-        @Parameter(name = "随机加密字符串", required = true)
+        @Parameter(description = "随机加密字符串", required = true)
         @QueryParam(value = "echostr")
         echoStr: String,
-        @Parameter(name = "回调密文", required = false)
+        @Parameter(description = "回调密文", required = false)
         reqData: String?
     ): String
 }

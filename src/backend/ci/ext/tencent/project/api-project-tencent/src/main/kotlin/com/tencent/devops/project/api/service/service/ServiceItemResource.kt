@@ -55,10 +55,10 @@ interface ServiceItemResource {
     @Path("/{itemId}")
     @Operation(summary = "获取扩展点信息")
     fun getItemInfo(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String,
-        @Parameter(name = "扩展点Id", required = true)
+        @Parameter(description = "扩展点Id", required = true)
         @PathParam("itemId")
         itemId: String
     ): Result<ExtItemDTO?>
@@ -67,7 +67,7 @@ interface ServiceItemResource {
     @Path("/itemIds/{itemId}")
     @Operation(summary = "获取扩展点信息")
     fun getItemById(
-        @Parameter(name = "扩展点Id", required = true)
+        @Parameter(description = "扩展点Id", required = true)
         @PathParam("itemId")
         itemId: String
     ): Result<ServiceItem?>
@@ -76,7 +76,7 @@ interface ServiceItemResource {
     @Path("/itemCodes/{itemCode}")
     @Operation(summary = "获取扩展点信息")
     fun getItemByCode(
-        @Parameter(name = "扩展点Code", required = true)
+        @Parameter(description = "扩展点Code", required = true)
         @PathParam("itemCode")
         itemCode: String
     ): Result<ServiceItem?>
@@ -85,7 +85,7 @@ interface ServiceItemResource {
     @Path("/codes/list")
     @Operation(summary = "获取扩展点列表")
     fun getItemByCodes(
-        @Parameter(name = "扩展点Code", required = true)
+        @Parameter(description = "扩展点Code", required = true)
         @QueryParam("itemCodes")
         itemCodes: Set<String>
     ): Result<List<ServiceItem>?>
@@ -94,7 +94,7 @@ interface ServiceItemResource {
     @Path("/ids/list")
     @Operation(summary = "获取扩展点列表")
     fun getItemInfoByIds(
-        @Parameter(name = "扩展点id串", required = true)
+        @Parameter(description = "扩展点id串", required = true)
         @QueryParam("itemIds")
         itemIds: Set<String>
     ): Result<List<ServiceItem>?>
@@ -103,7 +103,7 @@ interface ServiceItemResource {
     @Path("/list")
     @Operation(summary = "获取扩展点列表")
     fun getItemListsByIds(
-        @Parameter(name = "扩展点Id", required = true)
+        @Parameter(description = "扩展点Id", required = true)
         @QueryParam("itemIds")
         itemIds: Set<String>
     ): Result<List<ExtItemDTO>?>
@@ -112,7 +112,7 @@ interface ServiceItemResource {
     @Path("/add/serviceNum")
     @Operation(summary = "批量添加扩展点使用数量")
     fun addServiceNum(
-        @Parameter(name = "扩展点Id", required = true)
+        @Parameter(description = "扩展点Id", required = true)
         @QueryParam("itemIds")
         itemIds: Set<String>
     ): Result<Boolean>

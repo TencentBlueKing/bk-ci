@@ -48,10 +48,10 @@ interface ExternalRepoResource {
     @GET
     @Path("/git/callback")
     fun gitCallback(
-        @Parameter(name = "code")
+        @Parameter(description = "code")
         @QueryParam("code")
         code: String,
-        @Parameter(name = "state")
+        @Parameter(description = "state")
         @QueryParam("state")
         state: String
     ): Response
@@ -60,10 +60,10 @@ interface ExternalRepoResource {
     @GET
     @Path("/tgit/callback")
     fun tGitCallback(
-        @Parameter(name = "code")
+        @Parameter(description = "code")
         @QueryParam("code")
         code: String,
-        @Parameter(name = "state")
+        @Parameter(description = "state")
         @QueryParam("state")
         state: String
     ): Response
@@ -72,13 +72,13 @@ interface ExternalRepoResource {
     @GET
     @Path("/tapd/callback")
     fun tapdCallback(
-        @Parameter(name = "code")
+        @Parameter(description = "code")
         @QueryParam("code")
         code: String,
-        @Parameter(name = "state")
+        @Parameter(description = "state")
         @QueryParam("state")
         state: String,
-        @Parameter(name = "resource")
+        @Parameter(description = "resource")
         @QueryParam("resource")
         resource: String
     ): Response

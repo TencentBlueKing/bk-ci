@@ -57,7 +57,7 @@ interface OpWindowsConfigResource {
     @GET
     @Path("/list")
     fun getWindowsResourceList(
-        @Parameter(name = "用户ID", required = true)
+        @Parameter(description = "用户ID", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String
     ): Result<List<WindowsResourceTypeConfig>>
@@ -66,10 +66,10 @@ interface OpWindowsConfigResource {
     @POST
     @Path("/add")
     fun addWindowsResource(
-        @Parameter(name = "用户ID", required = true)
+        @Parameter(description = "用户ID", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "模板信息", required = true)
+        @Parameter(description = "模板信息", required = true)
         windowsResourceConfig: WindowsResourceTypeConfig
     ): Result<Boolean>
 
@@ -77,13 +77,13 @@ interface OpWindowsConfigResource {
     @PUT
     @Path("/update")
     fun updateWindowsResource(
-        @Parameter(name = "用户ID", required = true)
+        @Parameter(description = "用户ID", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "模板ID", required = true)
+        @Parameter(description = "模板ID", required = true)
         @QueryParam("id")
         id: Long,
-        @Parameter(name = "模板信息", required = true)
+        @Parameter(description = "模板信息", required = true)
         windowsResourceConfig: WindowsResourceTypeConfig
     ): Result<Boolean>
 
@@ -91,10 +91,10 @@ interface OpWindowsConfigResource {
     @DELETE
     @Path("/delete")
     fun deleteWindowsResource(
-        @Parameter(name = "用户ID", required = true)
+        @Parameter(description = "用户ID", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "模板信息", required = true)
+        @Parameter(description = "模板信息", required = true)
         @QueryParam("id")
         id: Long
     ): Result<Boolean>
@@ -103,7 +103,7 @@ interface OpWindowsConfigResource {
     @GET
     @Path("/zone/list")
     fun getWindowsResourceZoneList(
-        @Parameter(name = "用户ID", required = true)
+        @Parameter(description = "用户ID", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String
     ): Result<List<WindowsResourceZoneConfig>>
@@ -112,10 +112,10 @@ interface OpWindowsConfigResource {
     @POST
     @Path("/zone/add")
     fun addWindowsZone(
-        @Parameter(name = "用户ID", required = true)
+        @Parameter(description = "用户ID", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "模板信息", required = true)
+        @Parameter(description = "模板信息", required = true)
         windowsResourceConfig: WindowsResourceZoneConfig
     ): Result<Boolean>
 
@@ -123,13 +123,13 @@ interface OpWindowsConfigResource {
     @PUT
     @Path("/zone/update")
     fun updateWindowsZone(
-        @Parameter(name = "用户ID", required = true)
+        @Parameter(description = "用户ID", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "模板ID", required = true)
+        @Parameter(description = "模板ID", required = true)
         @QueryParam("id")
         id: Long,
-        @Parameter(name = "模板信息", required = true)
+        @Parameter(description = "模板信息", required = true)
         windowsResourceConfig: WindowsResourceZoneConfig
     ): Result<Boolean>
 
@@ -137,10 +137,10 @@ interface OpWindowsConfigResource {
     @DELETE
     @Path("/zone/delete")
     fun deleteWindowsZone(
-        @Parameter(name = "用户ID", required = true)
+        @Parameter(description = "用户ID", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "模板信息", required = true)
+        @Parameter(description = "模板信息", required = true)
         @QueryParam("id")
         id: Long
     ): Result<Boolean>
@@ -149,7 +149,7 @@ interface OpWindowsConfigResource {
     @POST
     @Path("/spec/createOrUpdate")
     fun createOrUpdateSpec(
-        @Parameter(name = "用户ID", required = true)
+        @Parameter(description = "用户ID", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
         data: WindowsSpecResInfo
@@ -159,13 +159,13 @@ interface OpWindowsConfigResource {
     @DELETE
     @Path("/spec/delete")
     fun deleteSpec(
-        @Parameter(name = "用户ID", required = true)
+        @Parameter(description = "用户ID", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @QueryParam("projectId")
         projectId: String,
-        @Parameter(name = "机型", required = true)
+        @Parameter(description = "机型", required = true)
         @QueryParam("size")
         size: String
     ): Result<Boolean>
@@ -174,19 +174,19 @@ interface OpWindowsConfigResource {
     @GET
     @Path("/spec/list")
     fun fetchSpec(
-        @Parameter(name = "用户ID", required = true)
+        @Parameter(description = "用户ID", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "项目ID", required = false)
+        @Parameter(description = "项目ID", required = false)
         @QueryParam("projectId")
         projectId: String?,
-        @Parameter(name = "机型", required = false)
+        @Parameter(description = "机型", required = false)
         @QueryParam("machineType")
         machineType: String?,
-        @Parameter(name = "第几页", required = true)
+        @Parameter(description = "第几页", required = true)
         @QueryParam("page")
         page: Int?,
-        @Parameter(name = "每页数据条数", required = true)
+        @Parameter(description = "每页数据条数", required = true)
         @QueryParam("pageSize")
         pageSize: Int?
     ): Result<Page<WindowsSpecResInfo>>
@@ -195,13 +195,13 @@ interface OpWindowsConfigResource {
     @PUT
     @Path("/add/{projectId}/{quota}")
     fun addProjectTotalQuota(
-        @Parameter(name = "用户ID", required = true)
+        @Parameter(description = "用户ID", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(name = "配额", required = true)
+        @Parameter(description = "配额", required = true)
         @PathParam("quota")
         quota: Int
     ): Result<Boolean>

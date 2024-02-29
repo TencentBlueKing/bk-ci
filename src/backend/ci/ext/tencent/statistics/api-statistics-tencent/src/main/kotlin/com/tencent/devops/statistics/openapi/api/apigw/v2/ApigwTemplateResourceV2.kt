@@ -58,37 +58,37 @@ interface ApigwTemplateResourceV2 {
     @GET
     @Path("/organization")
     fun listTemplateByOrganization(
-        @Parameter(name = "appCode", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
+        @Parameter(description = "appCode", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
         appCode: String?,
-        @Parameter(name = "apigw Type", required = true)
+        @Parameter(description = "apigw Type", required = true)
         @PathParam("apigwType")
         apigwType: String?,
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String,
-        @Parameter(name = "组织类型", required = true)
+        @Parameter(description = "组织类型", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_ORGANIZATION_TYPE)
         organizationType: String,
-        @Parameter(name = "组织名称", required = true)
+        @Parameter(description = "组织名称", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_ORGANIZATION_NAME)
         organizationName: String,
-        @Parameter(name = "部门名称", required = false, example = "")
+        @Parameter(description = "部门名称", required = false, example = "")
         @QueryParam("deptName")
         deptName: String? = "",
-        @Parameter(name = "中心名称", required = false, example = "")
+        @Parameter(description = "中心名称", required = false, example = "")
         @QueryParam("centerName")
         centerName: String? = "",
-        @Parameter(name = "模版类型", required = false)
+        @Parameter(description = "模版类型", required = false)
         @QueryParam("templateType")
         templateType: TemplateType?,
-        @Parameter(name = "是否已关联到store", required = false)
+        @Parameter(description = "是否已关联到store", required = false)
         @QueryParam("storeFlag")
         storeFlag: Boolean?,
-        @Parameter(name = "第几页", required = false, example = "1")
+        @Parameter(description = "第几页", required = false, example = "1")
         @QueryParam("page")
         page: Int? = null,
-        @Parameter(name = "每页多少条", required = false, example = "20")
+        @Parameter(description = "每页多少条", required = false, example = "20")
         @QueryParam("pageSize")
         pageSize: Int? = null
     ): Result<Page<TemplateModel>>

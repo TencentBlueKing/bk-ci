@@ -54,7 +54,7 @@ interface UserTcmResource {
     @GET
     @Path("/apps")
     fun getApps(
-        @Parameter(name = "用户ID", required = true)
+        @Parameter(description = "用户ID", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String
     ): Result<List<TcmApp>>
@@ -63,13 +63,13 @@ interface UserTcmResource {
     @GET
     @Path("/templates")
     fun getTemplates(
-        @Parameter(name = "用户ID", required = true)
+        @Parameter(description = "用户ID", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "CC业务ID", required = true)
+        @Parameter(description = "CC业务ID", required = true)
         @QueryParam("ccid")
         ccid: String,
-        @Parameter(name = "TCM业务ID", required = true)
+        @Parameter(description = "TCM业务ID", required = true)
         @QueryParam("tcmAppId")
         tcmAppId: String
     ): Result<List<TcmTemplate>>
@@ -78,16 +78,16 @@ interface UserTcmResource {
     @GET
     @Path("/templateInfo")
     fun getTemplateInfo(
-        @Parameter(name = "用户ID", required = true)
+        @Parameter(description = "用户ID", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "CC业务ID", required = true)
+        @Parameter(description = "CC业务ID", required = true)
         @QueryParam("ccid")
         ccid: String,
-        @Parameter(name = "TCM业务ID", required = true)
+        @Parameter(description = "TCM业务ID", required = true)
         @QueryParam("tcmAppId")
         tcmAppId: String,
-        @Parameter(name = "模板ID", required = true)
+        @Parameter(description = "模板ID", required = true)
         @QueryParam("templateId")
         templateId: String
     ): Result<List<TcmTemplateParam>>
@@ -96,16 +96,16 @@ interface UserTcmResource {
     @GET
     @Path("/params")
     fun getParamsList(
-        @Parameter(name = "用户ID", required = true)
+        @Parameter(description = "用户ID", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "CC业务ID", required = true)
+        @Parameter(description = "CC业务ID", required = true)
         @QueryParam("appId")
         appId: String,
-        @Parameter(name = "TCM业务ID", required = true)
+        @Parameter(description = "TCM业务ID", required = true)
         @QueryParam("tcmAppId")
         tcmAppId: String,
-        @Parameter(name = "模板ID", required = true)
+        @Parameter(description = "模板ID", required = true)
         @QueryParam("templateId")
         templateId: String
     ): Result<List<ParametersInfo>>

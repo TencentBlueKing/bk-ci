@@ -58,37 +58,37 @@ interface ApigwLogResourceV4 {
     @GET
     @Path("/init_logs")
     fun getInitLogs(
-        @Parameter(name = "appCode", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
+        @Parameter(description = "appCode", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
         appCode: String?,
-        @Parameter(name = "apigw Type", required = true)
+        @Parameter(description = "apigw Type", required = true)
         @PathParam("apigwType")
         apigwType: String?,
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "项目ID(项目英文名)", required = true)
+        @Parameter(description = "项目ID(项目英文名)", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(name = "流水线ID (p-开头)", required = false)
+        @Parameter(description = "流水线ID (p-开头)", required = false)
         @QueryParam("pipelineId")
         pipelineId: String?,
-        @Parameter(name = "构建ID (b-开头)", required = true)
+        @Parameter(description = "构建ID (b-开头)", required = true)
         @QueryParam("buildId")
         buildId: String,
-        @Parameter(name = "是否包含调试日志", required = false)
+        @Parameter(description = "是否包含调试日志", required = false)
         @QueryParam("debug")
         debug: Boolean? = false,
-        @Parameter(name = "对应elementId (e-开头)", required = false)
+        @Parameter(description = "对应elementId (e-开头)", required = false)
         @QueryParam("tag")
         elementId: String?,
-        @Parameter(name = "对应containerHashId (c-开头)", required = false)
+        @Parameter(description = "对应containerHashId (c-开头)", required = false)
         @QueryParam("jobId")
         jobId: String?,
-        @Parameter(name = "执行次数", required = false)
+        @Parameter(description = "执行次数", required = false)
         @QueryParam("executeCount")
         executeCount: Int?,
-        @Parameter(name = "是否查询归档数据", required = false)
+        @Parameter(description = "是否查询归档数据", required = false)
         @QueryParam("archiveFlag")
         archiveFlag: Boolean? = false
     ): Result<QueryLogs>
@@ -97,49 +97,49 @@ interface ApigwLogResourceV4 {
     @GET
     @Path("/more_logs")
     fun getMoreLogs(
-        @Parameter(name = "appCode", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
+        @Parameter(description = "appCode", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
         appCode: String?,
-        @Parameter(name = "apigw Type", required = true)
+        @Parameter(description = "apigw Type", required = true)
         @PathParam("apigwType")
         apigwType: String?,
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "项目ID(项目英文名)", required = true)
+        @Parameter(description = "项目ID(项目英文名)", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(name = "流水线ID (p-开头)", required = false)
+        @Parameter(description = "流水线ID (p-开头)", required = false)
         @QueryParam("pipelineId")
         pipelineId: String?,
-        @Parameter(name = "构建ID (b-开头)", required = true)
+        @Parameter(description = "构建ID (b-开头)", required = true)
         @QueryParam("buildId")
         buildId: String,
-        @Parameter(name = "是否包含调试日志", required = false)
+        @Parameter(description = "是否包含调试日志", required = false)
         @QueryParam("debug")
         debug: Boolean? = false,
-        @Parameter(name = "日志行数", required = false)
+        @Parameter(description = "日志行数", required = false)
         @QueryParam("num")
         num: Int? = 100,
-        @Parameter(name = "是否正序输出", required = false)
+        @Parameter(description = "是否正序输出", required = false)
         @QueryParam("fromStart")
         fromStart: Boolean? = true,
-        @Parameter(name = "起始行号", required = true)
+        @Parameter(description = "起始行号", required = true)
         @QueryParam("start")
         start: Long,
-        @Parameter(name = "结尾行号", required = true)
+        @Parameter(description = "结尾行号", required = true)
         @QueryParam("end")
         end: Long,
-        @Parameter(name = "对应elementId (e-开头)", required = false)
+        @Parameter(description = "对应elementId (e-开头)", required = false)
         @QueryParam("tag")
         tag: String?,
-        @Parameter(name = "对应containerHashId (c-开头)", required = false)
+        @Parameter(description = "对应containerHashId (c-开头)", required = false)
         @QueryParam("jobId")
         jobId: String?,
-        @Parameter(name = "执行次数", required = false)
+        @Parameter(description = "执行次数", required = false)
         @QueryParam("executeCount")
         executeCount: Int?,
-        @Parameter(name = "是否查询归档数据", required = false)
+        @Parameter(description = "是否查询归档数据", required = false)
         @QueryParam("archiveFlag")
         archiveFlag: Boolean? = false
     ): Result<QueryLogs>
@@ -148,40 +148,40 @@ interface ApigwLogResourceV4 {
     @GET
     @Path("/after_line_logs")
     fun getAfterLogs(
-        @Parameter(name = "appCode", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
+        @Parameter(description = "appCode", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
         appCode: String?,
-        @Parameter(name = "apigw Type", required = true)
+        @Parameter(description = "apigw Type", required = true)
         @PathParam("apigwType")
         apigwType: String?,
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "项目ID(项目英文名)", required = true)
+        @Parameter(description = "项目ID(项目英文名)", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(name = "流水线ID (p-开头)", required = false)
+        @Parameter(description = "流水线ID (p-开头)", required = false)
         @QueryParam("pipelineId")
         pipelineId: String?,
-        @Parameter(name = "构建ID (b-开头)", required = true)
+        @Parameter(description = "构建ID (b-开头)", required = true)
         @QueryParam("buildId")
         buildId: String,
-        @Parameter(name = "起始行号,请分阶段获取构建日志，是否有后续日志需关注返回的hasMore字段。", required = true)
+        @Parameter(description = "起始行号,请分阶段获取构建日志，是否有后续日志需关注返回的hasMore字段。", required = true)
         @QueryParam("start")
         start: Long,
-        @Parameter(name = "是否包含调试日志", required = false)
+        @Parameter(description = "是否包含调试日志", required = false)
         @QueryParam("debug")
         debug: Boolean? = false,
-        @Parameter(name = "对应elementId (e-开头)", required = false)
+        @Parameter(description = "对应elementId (e-开头)", required = false)
         @QueryParam("tag")
         tag: String?,
-        @Parameter(name = "对应containerHashId (c-开头)", required = false)
+        @Parameter(description = "对应containerHashId (c-开头)", required = false)
         @QueryParam("jobId")
         jobId: String?,
-        @Parameter(name = "执行次数", required = false)
+        @Parameter(description = "执行次数", required = false)
         @QueryParam("executeCount")
         executeCount: Int?,
-        @Parameter(name = "是否查询归档数据", required = false)
+        @Parameter(description = "是否查询归档数据", required = false)
         @QueryParam("archiveFlag")
         archiveFlag: Boolean? = false
     ): Result<QueryLogs>
@@ -194,34 +194,34 @@ interface ApigwLogResourceV4 {
     @Path("/download_logs")
     @Produces(MediaType.APPLICATION_OCTET_STREAM)
     fun downloadLogs(
-        @Parameter(name = "appCode", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
+        @Parameter(description = "appCode", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
         appCode: String?,
-        @Parameter(name = "apigw Type", required = true)
+        @Parameter(description = "apigw Type", required = true)
         @PathParam("apigwType")
         apigwType: String?,
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "项目ID(项目英文名)", required = true)
+        @Parameter(description = "项目ID(项目英文名)", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(name = "流水线ID (p-开头)", required = false)
+        @Parameter(description = "流水线ID (p-开头)", required = false)
         @QueryParam("pipelineId")
         pipelineId: String?,
-        @Parameter(name = "构建ID (b-开头)", required = true)
+        @Parameter(description = "构建ID (b-开头)", required = true)
         @QueryParam("buildId")
         buildId: String,
-        @Parameter(name = "对应element ID (e-开头)", required = false)
+        @Parameter(description = "对应element ID (e-开头)", required = false)
         @QueryParam("tag")
         tag: String?,
-        @Parameter(name = "对应containerHashId (c-开头)", required = false)
+        @Parameter(description = "对应containerHashId (c-开头)", required = false)
         @QueryParam("jobId")
         jobId: String?,
-        @Parameter(name = "执行次数", required = false)
+        @Parameter(description = "执行次数", required = false)
         @QueryParam("executeCount")
         executeCount: Int?,
-        @Parameter(name = "是否查询归档数据", required = false)
+        @Parameter(description = "是否查询归档数据", required = false)
         @QueryParam("archiveFlag")
         archiveFlag: Boolean? = false
     ): Response
@@ -230,31 +230,31 @@ interface ApigwLogResourceV4 {
     @GET
     @Path("/log_mode")
     fun getLogMode(
-        @Parameter(name = "appCode", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
+        @Parameter(description = "appCode", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
         appCode: String?,
-        @Parameter(name = "apigw Type", required = true)
+        @Parameter(description = "apigw Type", required = true)
         @PathParam("apigwType")
         apigwType: String?,
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "项目ID(项目英文名)", required = true)
+        @Parameter(description = "项目ID(项目英文名)", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(name = "流水线ID (p-开头)", required = false)
+        @Parameter(description = "流水线ID (p-开头)", required = false)
         @QueryParam("pipelineId")
         pipelineId: String?,
-        @Parameter(name = "构建ID (b-开头)", required = true)
+        @Parameter(description = "构建ID (b-开头)", required = true)
         @QueryParam("buildId")
         buildId: String,
-        @Parameter(name = "对应elementId (e-开头)", required = true)
+        @Parameter(description = "对应elementId (e-开头)", required = true)
         @QueryParam("tag")
         tag: String,
-        @Parameter(name = "执行次数", required = false)
+        @Parameter(description = "执行次数", required = false)
         @QueryParam("executeCount")
         executeCount: Int?,
-        @Parameter(name = "是否查询归档数据", required = false)
+        @Parameter(description = "是否查询归档数据", required = false)
         @QueryParam("archiveFlag")
         archiveFlag: Boolean? = false
     ): Result<QueryLogStatus>
@@ -263,19 +263,19 @@ interface ApigwLogResourceV4 {
     @GET
     @Path("/last_line_num")
     fun getLogLastLineNum(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "项目ID(项目英文名)", required = true)
+        @Parameter(description = "项目ID(项目英文名)", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(name = "流水线ID (p-开头)", required = true)
+        @Parameter(description = "流水线ID (p-开头)", required = true)
         @QueryParam("pipelineId")
         pipelineId: String,
-        @Parameter(name = "构建ID (b-开头)", required = true)
+        @Parameter(description = "构建ID (b-开头)", required = true)
         @QueryParam("buildId")
         buildId: String,
-        @Parameter(name = "是否查询归档数据", required = false)
+        @Parameter(description = "是否查询归档数据", required = false)
         @QueryParam("archiveFlag")
         archiveFlag: Boolean? = false
     ): Result<QueryLogLineNum>

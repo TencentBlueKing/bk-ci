@@ -56,16 +56,16 @@ interface BuildBuildResource {
     // @Path("/projects/{projectId}/pipelines/{pipelineId}/buildNums/{buildNum}/history")
     @Path("/{projectId}/{pipelineId}/{buildNum}/history")
     fun getSingleHistoryBuild(
-        @Parameter(name = "项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(name = "流水线ID", required = true)
+        @Parameter(description = "流水线ID", required = true)
         @PathParam("pipelineId")
         pipelineId: String,
-        @Parameter(name = "流水线buildNum", required = true)
+        @Parameter(description = "流水线buildNum", required = true)
         @PathParam("buildNum")
         buildNum: String,
-        @Parameter(name = "渠道号，默认为BS", required = false)
+        @Parameter(description = "渠道号，默认为BS", required = false)
         @QueryParam("channelCode")
         channelCode: ChannelCode?
     ): Result<BuildHistory?>
@@ -74,13 +74,13 @@ interface BuildBuildResource {
     @GET
     @Path("/{projectId}/{pipelineId}/latestSuccessBuild")
     fun getLatestSuccessBuild(
-        @Parameter(name = "项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(name = "流水线ID", required = true)
+        @Parameter(description = "流水线ID", required = true)
         @PathParam("pipelineId")
         pipelineId: String,
-        @Parameter(name = "渠道号，默认为BS", required = false)
+        @Parameter(description = "渠道号，默认为BS", required = false)
         @QueryParam("channelCode")
         channelCode: ChannelCode?
     ): Result<BuildHistory?>
@@ -90,16 +90,16 @@ interface BuildBuildResource {
     // @Path("/projects/{projectId}/pipelines/{pipelineId}/builds/{buildId}/detail")
     @Path("/{projectId}/{pipelineId}/{buildId}/detail")
     fun getBuildDetail(
-        @Parameter(name = "项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(name = "流水线ID", required = true)
+        @Parameter(description = "流水线ID", required = true)
         @PathParam("pipelineId")
         pipelineId: String,
-        @Parameter(name = "构建ID", required = true)
+        @Parameter(description = "构建ID", required = true)
         @PathParam("buildId")
         buildId: String,
-        @Parameter(name = "渠道号，默认为BS", required = false)
+        @Parameter(description = "渠道号，默认为BS", required = false)
         @QueryParam("channelCode")
         channelCode: ChannelCode
     ): Result<ModelDetail>
@@ -108,13 +108,13 @@ interface BuildBuildResource {
     @GET
     @Path("/taskIds/{taskId}/subVar")
     fun getSubBuildVars(
-        @Parameter(name = "项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_PROJECT_ID)
         projectId: String,
-        @Parameter(name = "构建ID", required = true)
+        @Parameter(description = "构建ID", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_BUILD_ID)
         buildId: String,
-        @Parameter(name = "任务ID", required = false)
+        @Parameter(description = "任务ID", required = false)
         @PathParam("taskId")
         taskId: String
     ): Result<Map<String, String>>
@@ -123,13 +123,13 @@ interface BuildBuildResource {
     @GET
     @Path("/detail_url")
     fun getBuildDetailUrl(
-        @Parameter(name = "projectId", required = true)
+        @Parameter(description = "projectId", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_PROJECT_ID)
         projectId: String,
-        @Parameter(name = "pipelineId", required = true)
+        @Parameter(description = "pipelineId", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_PIPELINE_ID)
         pipelineId: String,
-        @Parameter(name = "构建ID", required = true)
+        @Parameter(description = "构建ID", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_BUILD_ID)
         buildId: String
     ): Result<String>

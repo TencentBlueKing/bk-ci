@@ -53,10 +53,10 @@ interface BuildScriptResource {
         ApiResponse(responseCode = "304", description = "本地插件已是最新，无需下载")
     )
     fun download(
-        @Parameter(name = "插件标识符", required = true)
+        @Parameter(description = "插件标识符", required = true)
         @QueryParam("scriptName")
         scriptName: String,
-        @Parameter(name = "本地eTag标签", required = false)
+        @Parameter(description = "本地eTag标签", required = false)
         @QueryParam("eTag")
         eTag: String?
     ): Response

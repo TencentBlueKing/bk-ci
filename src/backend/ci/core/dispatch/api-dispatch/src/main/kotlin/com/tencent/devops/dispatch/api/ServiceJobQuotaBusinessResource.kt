@@ -51,28 +51,28 @@ interface ServiceJobQuotaBusinessResource {
     @POST
     @Path("/job/projects/{projectId}/vmTypes/{vmType}/builds/{buildId}/vmSeqs/{vmSeqId}")
     fun checkAndAddRunningJob(
-        @Parameter(name = "projectId", required = true)
+        @Parameter(description = "projectId", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(name = "vmType", required = true)
+        @Parameter(description = "vmType", required = true)
         @PathParam("vmType")
         vmType: JobQuotaVmType,
-        @Parameter(name = "buildId", required = true)
+        @Parameter(description = "buildId", required = true)
         @PathParam("buildId")
         buildId: String,
-        @Parameter(name = "vmSeqId", required = true)
+        @Parameter(description = "vmSeqId", required = true)
         @PathParam("vmSeqId")
         vmSeqId: String,
-        @Parameter(name = "executeCount", required = true)
+        @Parameter(description = "executeCount", required = true)
         @QueryParam("executeCount")
         executeCount: Int,
-        @Parameter(name = "containerId", required = true)
+        @Parameter(description = "containerId", required = true)
         @QueryParam("containerId")
         containerId: String,
-        @Parameter(name = "containerHashId", required = false)
+        @Parameter(description = "containerHashId", required = false)
         @QueryParam("containerHashId")
         containerHashId: String?,
-        @Parameter(name = "channelCode", required = false)
+        @Parameter(description = "channelCode", required = false)
         @QueryParam("channelCode")
         channelCode: String? = ""
     ): Result<Boolean>
@@ -81,19 +81,19 @@ interface ServiceJobQuotaBusinessResource {
     @DELETE
     @Path("/job/projects/{projectId}/pipelines/{pipelineId}/builds/{buildId}/vmSeqs/{vmSeqId}")
     fun removeRunningJob(
-        @Parameter(name = "projectId", required = true)
+        @Parameter(description = "projectId", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(name = "pipelineId", required = true)
+        @Parameter(description = "pipelineId", required = true)
         @PathParam("pipelineId")
         pipelineId: String,
-        @Parameter(name = "buildId", required = true)
+        @Parameter(description = "buildId", required = true)
         @PathParam("buildId")
         buildId: String,
-        @Parameter(name = "vmSeqId", required = false)
+        @Parameter(description = "vmSeqId", required = false)
         @PathParam("vmSeqId")
         vmSeqId: String,
-        @Parameter(name = "executeCount", required = true)
+        @Parameter(description = "executeCount", required = true)
         @QueryParam("executeCount")
         executeCount: Int
     ): Result<Boolean>

@@ -65,10 +65,10 @@ interface OpImageResource {
     @POST
     @Path("/")
     fun addImage(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "新增镜像请求报文体", required = true)
+        @Parameter(description = "新增镜像请求报文体", required = true)
         imageCreateRequest: ImageCreateRequest
     ): Result<String>
 
@@ -76,10 +76,10 @@ interface OpImageResource {
     @PUT
     @Path("/release/passTest/imageIds/{imageId}")
     fun passTest(
-        @Parameter(name = "userId", required = true)
+        @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "镜像Id", required = true)
+        @Parameter(description = "镜像Id", required = true)
         @PathParam("imageId")
         imageId: String
     ): Result<Boolean>
@@ -88,10 +88,10 @@ interface OpImageResource {
     @PUT
     @Path("/release/recheck/imageIds/{imageId}")
     fun recheck(
-        @Parameter(name = "userId", required = true)
+        @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "镜像Id", required = true)
+        @Parameter(description = "镜像Id", required = true)
         @PathParam("imageId")
         imageId: String
     ): Result<Boolean>
@@ -100,13 +100,13 @@ interface OpImageResource {
     @PUT
     @Path("/{imageId}")
     fun updateImage(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "镜像ID", required = true)
+        @Parameter(description = "镜像ID", required = true)
         @PathParam("imageId")
         imageId: String,
-        @Parameter(name = "更新镜像请求报文体", required = true)
+        @Parameter(description = "更新镜像请求报文体", required = true)
         imageUpdateRequest: ImageUpdateRequest
     ): Result<Boolean>
 
@@ -114,10 +114,10 @@ interface OpImageResource {
     @DELETE
     @Path("/imageIds/{imageId}")
     fun deleteImageById(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "镜像ID", required = true)
+        @Parameter(description = "镜像ID", required = true)
         @PathParam("imageId")
         imageId: String
     ): Result<Boolean>
@@ -126,10 +126,10 @@ interface OpImageResource {
     @GET
     @Path("/imageIds/{imageId}")
     fun getImageById(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "镜像ID", required = true)
+        @Parameter(description = "镜像ID", required = true)
         @PathParam("imageId")
         imageId: String
     ): Result<ImageDetail>
@@ -138,13 +138,13 @@ interface OpImageResource {
     @GET
     @Path("/imageCodes/{imageCode}")
     fun getImagesByCodeAndVersion(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "镜像代码", required = true)
+        @Parameter(description = "镜像代码", required = true)
         @PathParam("imageCode")
         imageCode: String,
-        @Parameter(name = "版本号", required = false)
+        @Parameter(description = "版本号", required = false)
         @QueryParam("version")
         version: String?
     ): Result<ImageDetail>
@@ -153,16 +153,16 @@ interface OpImageResource {
     @GET
     @Path("/imageCodes/{imageCode}/versions/list")
     fun getImageVersionsByCode(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "镜像代码", required = true)
+        @Parameter(description = "镜像代码", required = true)
         @PathParam("imageCode")
         imageCode: String,
-        @Parameter(name = "页码", required = false)
+        @Parameter(description = "页码", required = false)
         @QueryParam("page")
         page: Int?,
-        @Parameter(name = "每页数量", required = false)
+        @Parameter(description = "每页数量", required = false)
         @QueryParam("pageSize")
         pageSize: Int?
     ): Result<Page<ImageDetail>>
@@ -171,16 +171,16 @@ interface OpImageResource {
     @PUT
     @Path("/offline/imageCodes/{imageCode}/versions")
     fun offlineImage(
-        @Parameter(name = "userId", required = true)
+        @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "镜像代码", required = true)
+        @Parameter(description = "镜像代码", required = true)
         @PathParam("imageCode")
         imageCode: String,
-        @Parameter(name = "版本号", required = false)
+        @Parameter(description = "版本号", required = false)
         @QueryParam("version")
         version: String?,
-        @Parameter(name = "原因", required = false)
+        @Parameter(description = "原因", required = false)
         @QueryParam("reason")
         reason: String?
     ): Result<Boolean>
@@ -189,37 +189,37 @@ interface OpImageResource {
     @GET
     @Path("/")
     fun listImages(
-        @Parameter(name = "userId", required = true)
+        @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "镜像名称", required = false)
+        @Parameter(description = "镜像名称", required = false)
         @QueryParam("imageName")
         imageName: String?,
-        @Parameter(name = "镜像来源类型", required = false)
+        @Parameter(description = "镜像来源类型", required = false)
         @QueryParam("imageSourceType")
         imageSourceType: ImageType?,
-        @Parameter(name = "是否处于流程中", required = false)
+        @Parameter(description = "是否处于流程中", required = false)
         @QueryParam("processFlag")
         processFlag: Boolean?,
-        @Parameter(name = "镜像分类", required = false)
+        @Parameter(description = "镜像分类", required = false)
         @QueryParam("classifyCode")
         classifyCode: String?,
-        @Parameter(name = "应用范畴", required = false)
+        @Parameter(description = "应用范畴", required = false)
         @QueryParam("categoryCodes")
         categoryCodes: String?,
-        @Parameter(name = "功能标签", required = false)
+        @Parameter(description = "功能标签", required = false)
         @QueryParam("labelCodes")
         labelCodes: String?,
-        @Parameter(name = "排序", required = false)
+        @Parameter(description = "排序", required = false)
         @QueryParam("sortType")
         sortType: OpImageSortTypeEnum?,
-        @Parameter(name = "是否降序", required = false)
+        @Parameter(description = "是否降序", required = false)
         @QueryParam("desc")
         desc: Boolean?,
-        @Parameter(name = "页码", required = false)
+        @Parameter(description = "页码", required = false)
         @QueryParam("page")
         page: Int?,
-        @Parameter(name = "每页数量", required = false)
+        @Parameter(description = "每页数量", required = false)
         @QueryParam("pageSize")
         pageSize: Int?
     ): Result<OpImageResp>
@@ -228,13 +228,13 @@ interface OpImageResource {
     @Path("/{imageId}/approve")
     @PUT
     fun approveImage(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "ID", required = true)
+        @Parameter(description = "ID", required = true)
         @PathParam("imageId")
         imageId: String,
-        @Parameter(name = "审核镜像请求报文")
+        @Parameter(description = "审核镜像请求报文")
         approveImageReq: ApproveImageReq
     ): Result<Boolean>
 
@@ -242,10 +242,10 @@ interface OpImageResource {
     @GET
     @Path("/{imageCode}/visible")
     fun getVisibleDept(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "代码", required = true)
+        @Parameter(description = "代码", required = true)
         @PathParam("imageCode")
         imageCode: String
     ): Result<StoreVisibleDeptResp?>
@@ -254,13 +254,13 @@ interface OpImageResource {
     @GET
     @Path("/repo/bk/names/{imageRepoName}")
     fun getBkRelImageInfo(
-        @Parameter(name = "userId", required = true)
+        @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "镜像在仓库中的名称", required = true)
+        @Parameter(description = "镜像在仓库中的名称", required = true)
         @PathParam("imageRepoName")
         imageRepoName: String,
-        @Parameter(name = "需要回显镜像tag的镜像ID", required = false)
+        @Parameter(description = "需要回显镜像tag的镜像ID", required = false)
         @QueryParam("imageId")
         imageId: String?
     ): Result<DockerRepo?>

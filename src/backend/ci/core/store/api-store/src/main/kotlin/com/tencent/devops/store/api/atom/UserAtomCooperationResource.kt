@@ -51,10 +51,10 @@ interface UserAtomCooperationResource {
     @POST
     @Path("/collaborator")
     fun addAtomCollaborator(
-        @Parameter(name = "userId", required = true)
+        @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "申请成为插件协作者请求报文体", required = true)
+        @Parameter(description = "申请成为插件协作者请求报文体", required = true)
         atomCollaboratorCreateReq: AtomCollaboratorCreateReq
     ): Result<AtomCollaboratorCreateResp>
 }

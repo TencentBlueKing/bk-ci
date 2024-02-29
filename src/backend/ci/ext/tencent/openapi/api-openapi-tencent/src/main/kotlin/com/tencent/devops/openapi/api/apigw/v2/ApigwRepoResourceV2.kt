@@ -52,22 +52,22 @@ interface ApigwRepoResourceV2 {
     @Path("/{projectId}/{pipelineId}/{buildId}")
     @Operation(summary = "拿取报告", tags = ["v2_app_reports_get"])
     fun getBuildReports(
-        @Parameter(name = "appCode", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
+        @Parameter(description = "appCode", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
         appCode: String?,
-        @Parameter(name = "apigw Type", required = true)
+        @Parameter(description = "apigw Type", required = true)
         @PathParam("apigwType")
         apigwType: String?,
-        @Parameter(name = "userId")
+        @Parameter(description = "userId")
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "项目code", required = true)
+        @Parameter(description = "项目code", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(name = "流水线Id", required = true)
+        @Parameter(description = "流水线Id", required = true)
         @PathParam("pipelineId")
         pipelineId: String,
-        @Parameter(name = "构建ID", required = true)
+        @Parameter(description = "构建ID", required = true)
         @PathParam("buildId")
         buildId: String
     ): Result<List<TaskReport>?>

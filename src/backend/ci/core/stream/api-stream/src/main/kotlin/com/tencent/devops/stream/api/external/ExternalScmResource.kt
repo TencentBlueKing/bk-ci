@@ -50,7 +50,7 @@ interface ExternalScmResource {
     fun webHookCodeGitCommit(
         @HeaderParam("X-Token")
         token: String,
-        @Parameter(name = "X-Event")
+        @Parameter(description = "X-Event")
         @HeaderParam("X-Event")
         eventType: String,
         event: String

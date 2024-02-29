@@ -5,11 +5,11 @@ import io.swagger.v3.oas.annotations.Parameter
 
 @Schema(title = "windows 机器状态信息")
 data class ComputerStatusResp(
-    @Parameter(name = "机器总数")
+    @Parameter(description = "机器总数")
     val count: Int,
-    @Parameter(name = "机器状态信息")
+    @Parameter(description = "机器状态信息")
     val status: List<ComputerStatusData>,
-    @Parameter(name = "机器登录信息")
+    @Parameter(description = "机器登录信息")
     val users: List<ComputerUserData>
 )
 

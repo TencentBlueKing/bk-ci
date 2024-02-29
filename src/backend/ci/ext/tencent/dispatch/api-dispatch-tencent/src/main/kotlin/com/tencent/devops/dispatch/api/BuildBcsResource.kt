@@ -54,10 +54,10 @@ interface BuildBcsResource {
     @Path("/deploy/app")
     @POST
     fun bcsDeployApp(
-        @Parameter(name = "userId", required = true)
+        @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "部署请求对象")
+        @Parameter(description = "部署请求对象")
         deployApp: DeployApp
     ): Result<Boolean>
 
@@ -65,19 +65,19 @@ interface BuildBcsResource {
     @Path("/namespaces/{namespaceName}/deployments/{deploymentName}")
     @GET
     fun getBcsDeploymentInfo(
-        @Parameter(name = "userId", required = true)
+        @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "命名空间名称")
+        @Parameter(description = "命名空间名称")
         @PathParam("namespaceName")
         namespaceName: String,
-        @Parameter(name = "deployment名称")
+        @Parameter(description = "deployment名称")
         @PathParam("deploymentName")
         deploymentName: String,
-        @Parameter(name = "bcs请求路径")
+        @Parameter(description = "bcs请求路径")
         @QueryParam("bcsUrl")
         bcsUrl: String,
-        @Parameter(name = "请求token")
+        @Parameter(description = "请求token")
         @QueryParam("token")
         token: String
     ): Result<Deployment>

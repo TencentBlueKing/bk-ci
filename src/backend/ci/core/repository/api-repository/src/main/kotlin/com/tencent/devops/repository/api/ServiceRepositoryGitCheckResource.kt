@@ -24,19 +24,19 @@ interface ServiceRepositoryGitCheckResource {
     @POST
     @Path("/get")
     fun getGitCheck(
-        @Parameter(name = "pipelineId", required = true)
+        @Parameter(description = "pipelineId", required = true)
         @QueryParam("pipelineId")
         pipelineId: String,
-        @Parameter(name = "commitId", required = true)
+        @Parameter(description = "commitId", required = true)
         @QueryParam("commitId")
         commitId: String,
-        @Parameter(name = "context", required = true)
+        @Parameter(description = "context", required = true)
         @QueryParam("context")
         context: String,
-        @Parameter(name = "targetBranch", required = false)
+        @Parameter(description = "targetBranch", required = false)
         @QueryParam("targetBranch")
         targetBranch: String?,
-        @Parameter(name = "repositoryConfig", required = true)
+        @Parameter(description = "repositoryConfig", required = true)
         repositoryConfig: RepositoryConfig
     ): Result<RepositoryGitCheck?>
 
@@ -44,7 +44,7 @@ interface ServiceRepositoryGitCheckResource {
     @POST
     @Path("/create")
     fun createGitCheck(
-        @Parameter(name = "gitCheck", required = true)
+        @Parameter(description = "gitCheck", required = true)
         gitCheck: RepositoryGitCheck
     )
 
@@ -52,10 +52,10 @@ interface ServiceRepositoryGitCheckResource {
     @PUT
     @Path("/update")
     fun updateGitCheck(
-        @Parameter(name = "gitCheckId", required = true)
+        @Parameter(description = "gitCheckId", required = true)
         @QueryParam("gitCheckId")
         gitCheckId: Long,
-        @Parameter(name = "buildNumber", required = true)
+        @Parameter(description = "buildNumber", required = true)
         @QueryParam("buildNumber")
         buildNumber: Int
     )

@@ -48,10 +48,10 @@ interface ServiceExtServiceArchiveResource {
     @GET
     @Path("/users/{userId}/services/{serviceCode}/package/verify")
     fun verifyExtServicePackageByUserId(
-        @Parameter(name = "用户ID", required = true)
+        @Parameter(description = "用户ID", required = true)
         @PathParam("userId")
         userId: String,
-        @Parameter(name = "扩展服务代码", required = true)
+        @Parameter(description = "扩展服务代码", required = true)
         @PathParam("serviceCode")
         serviceCode: String
     ): Result<Boolean>

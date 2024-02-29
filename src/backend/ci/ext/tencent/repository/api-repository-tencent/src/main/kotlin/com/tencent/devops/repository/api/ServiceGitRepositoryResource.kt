@@ -66,28 +66,28 @@ interface ServiceGitRepositoryResource {
     @POST
     @Path("/git/create/repository")
     fun createGitCodeRepository(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "项目编码", required = false)
+        @Parameter(description = "项目编码", required = false)
         @QueryParam("projectCode")
         projectCode: String?,
-        @Parameter(name = "代码库名称", required = true)
+        @Parameter(description = "代码库名称", required = true)
         @QueryParam("repositoryName")
         repositoryName: String,
-        @Parameter(name = "样例工程路径", required = false)
+        @Parameter(description = "样例工程路径", required = false)
         @QueryParam("sampleProjectPath")
         sampleProjectPath: String?,
-        @Parameter(name = "命名空间ID", required = false)
+        @Parameter(description = "命名空间ID", required = false)
         @QueryParam("namespaceId")
         namespaceId: Int?,
-        @Parameter(name = "项目可视范围", required = false)
+        @Parameter(description = "项目可视范围", required = false)
         @QueryParam("visibilityLevel")
         visibilityLevel: VisibilityLevelEnum?,
-        @Parameter(name = "token类型 1：oauth 2:privateKey", required = true)
+        @Parameter(description = "token类型 1：oauth 2:privateKey", required = true)
         @QueryParam("tokenType")
         tokenType: TokenTypeEnum,
-        @Parameter(name = "前端UI渲染方式", required = false)
+        @Parameter(description = "前端UI渲染方式", required = false)
         @QueryParam("frontendType")
         frontendType: FrontendTypeEnum? = null
     ): Result<RepositoryInfo?>
@@ -96,15 +96,15 @@ interface ServiceGitRepositoryResource {
     @PUT
     @Path("/git/update/repository/repoId")
     fun updateGitCodeRepository(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "仓库id", required = true)
+        @Parameter(description = "仓库id", required = true)
         @QueryParam("repoId")
         repoId: String,
-        @Parameter(name = "代码库更新信息", required = true)
+        @Parameter(description = "代码库更新信息", required = true)
         updateGitProjectInfo: UpdateGitProjectInfo,
-        @Parameter(name = "token类型 1：oauth 2:privateKey", required = true)
+        @Parameter(description = "token类型 1：oauth 2:privateKey", required = true)
         @QueryParam("tokenType")
         tokenType: TokenTypeEnum
     ): Result<Boolean>
@@ -113,15 +113,15 @@ interface ServiceGitRepositoryResource {
     @PUT
     @Path("/git/update/repository/projectName")
     fun updateGitCodeRepositoryByProjectName(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "项目名称", required = true)
+        @Parameter(description = "项目名称", required = true)
         @QueryParam("projectName")
         projectName: String,
-        @Parameter(name = "更新git项目信息", required = true)
+        @Parameter(description = "更新git项目信息", required = true)
         updateGitProjectInfo: UpdateGitProjectInfo,
-        @Parameter(name = "token类型 0：oauth 1:privateKey", required = true)
+        @Parameter(description = "token类型 0：oauth 1:privateKey", required = true)
         @QueryParam("tokenType")
         tokenType: TokenTypeEnum
     ): Result<Boolean>
@@ -130,19 +130,19 @@ interface ServiceGitRepositoryResource {
     @POST
     @Path("/git/repository/members/add")
     fun addGitProjectMember(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "增加的用户列表", required = true)
+        @Parameter(description = "增加的用户列表", required = true)
         @QueryParam("userIdList")
         userIdList: List<String>,
-        @Parameter(name = "仓库id", required = true)
+        @Parameter(description = "仓库id", required = true)
         @QueryParam("repoId")
         repoId: String,
-        @Parameter(name = "git访问权限", required = true)
+        @Parameter(description = "git访问权限", required = true)
         @QueryParam("gitAccessLevel")
         gitAccessLevel: GitAccessLevelEnum,
-        @Parameter(name = "token类型 1：oauth 2:privateKey", required = true)
+        @Parameter(description = "token类型 1：oauth 2:privateKey", required = true)
         @QueryParam("tokenType")
         tokenType: TokenTypeEnum
     ): Result<Boolean>
@@ -151,16 +151,16 @@ interface ServiceGitRepositoryResource {
     @DELETE
     @Path("/git/repository/members/delete")
     fun deleteGitProjectMember(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "删除的用户列表", required = true)
+        @Parameter(description = "删除的用户列表", required = true)
         @QueryParam("userIdList")
         userIdList: List<String>,
-        @Parameter(name = "仓库id", required = true)
+        @Parameter(description = "仓库id", required = true)
         @QueryParam("repoId")
         repoId: String,
-        @Parameter(name = "token类型 1：oauth 2:privateKey", required = true)
+        @Parameter(description = "token类型 1：oauth 2:privateKey", required = true)
         @QueryParam("tokenType")
         tokenType: TokenTypeEnum
     ): Result<Boolean>
@@ -169,13 +169,13 @@ interface ServiceGitRepositoryResource {
     @PUT
     @Path("/git/repository/user/info/update")
     fun updateRepositoryUserInfo(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "项目编码", required = true)
+        @Parameter(description = "项目编码", required = true)
         @QueryParam("projectCode")
         projectCode: String,
-        @Parameter(name = "代码库HashId", required = true)
+        @Parameter(description = "代码库HashId", required = true)
         @QueryParam("repositoryHashId")
         repositoryHashId: String
     ): Result<Boolean>
@@ -184,16 +184,16 @@ interface ServiceGitRepositoryResource {
     @GET
     @Path("/git/move/repository/group")
     fun moveGitProjectToGroup(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "项目组代码", required = false)
+        @Parameter(description = "项目组代码", required = false)
         @QueryParam("groupCode")
         groupCode: String?,
-        @Parameter(name = "仓库id", required = true)
+        @Parameter(description = "仓库id", required = true)
         @QueryParam("repoId")
         repoId: String,
-        @Parameter(name = "token类型 1：oauth 2:privateKey", required = true)
+        @Parameter(description = "token类型 1：oauth 2:privateKey", required = true)
         @QueryParam("tokenType")
         tokenType: TokenTypeEnum
     ): Result<GitProjectInfo?>
@@ -202,19 +202,19 @@ interface ServiceGitRepositoryResource {
     @GET
     @Path("/{repoId}/getFileContent")
     fun getFileContent(
-        @Parameter(name = "仓库id")
+        @Parameter(description = "仓库id")
         @PathParam("repoId")
         repoId: String,
-        @Parameter(name = "文件路径")
+        @Parameter(description = "文件路径")
         @QueryParam("filePath")
         filePath: String,
-        @Parameter(name = "版本号（svn）")
+        @Parameter(description = "版本号（svn）")
         @QueryParam("reversion")
         reversion: String?,
-        @Parameter(name = "分支（git）")
+        @Parameter(description = "分支（git）")
         @QueryParam("branch")
         branch: String?,
-        @Parameter(name = "代码库请求类型", required = true)
+        @Parameter(description = "代码库请求类型", required = true)
         @QueryParam("repositoryType")
         repositoryType: RepositoryType?
     ): Result<String>
@@ -223,16 +223,16 @@ interface ServiceGitRepositoryResource {
     @PUT
     @Path("/{repoId}/updateFileContent")
     fun updateTGitFileContent(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "仓库id")
+        @Parameter(description = "仓库id")
         @PathParam("repoId")
         repoId: String,
-        @Parameter(name = "代码库请求类型", required = true)
+        @Parameter(description = "代码库请求类型", required = true)
         @QueryParam("repositoryType")
         repositoryType: RepositoryType?,
-        @Parameter(name = "更新文件内容")
+        @Parameter(description = "更新文件内容")
         gitOperationFile: GitOperationFile
     ): Result<Boolean>
 
@@ -240,16 +240,16 @@ interface ServiceGitRepositoryResource {
     @DELETE
     @Path("/{projectId}/{repositoryHashId}")
     fun delete(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(name = "代码库哈希ID", required = true)
+        @Parameter(description = "代码库哈希ID", required = true)
         @PathParam("repositoryHashId")
         repositoryHashId: String,
-        @Parameter(name = "token类型 1：oauth 2:privateKey", required = true)
+        @Parameter(description = "token类型 1：oauth 2:privateKey", required = true)
         @QueryParam("tokenType")
         tokenType: TokenTypeEnum
     ): Result<Boolean>
@@ -258,19 +258,19 @@ interface ServiceGitRepositoryResource {
     @GET
     @Path("/git/repository/tree/Info")
     fun getGitRepositoryTreeInfo(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "仓库id", required = true)
+        @Parameter(description = "仓库id", required = true)
         @QueryParam("repoId")
         repoId: String,
-        @Parameter(name = "commit hash值、分支 或 tag，默认：默认分支", required = false)
+        @Parameter(description = "commit hash值、分支 或 tag，默认：默认分支", required = false)
         @QueryParam("refName")
         refName: String?,
-        @Parameter(name = "文件路径", required = false)
+        @Parameter(description = "文件路径", required = false)
         @QueryParam("path")
         path: String?,
-        @Parameter(name = "token类型 0：oauth 1:privateKey", required = true)
+        @Parameter(description = "token类型 0：oauth 1:privateKey", required = true)
         @QueryParam("tokenType")
         tokenType: TokenTypeEnum
     ): Result<List<GitRepositoryDirItem>?>
@@ -279,7 +279,7 @@ interface ServiceGitRepositoryResource {
     @GET
     @Path("/getAuthUrl")
     fun getAuthUrl(
-        @Parameter(name = "参数json串", required = true)
+        @Parameter(description = "参数json串", required = true)
         @QueryParam("authParamJsonStr")
         authParamJsonStr: String
     ): Result<String>
@@ -288,16 +288,16 @@ interface ServiceGitRepositoryResource {
     @GET
     @Path("/git/repository/recent/commit/info")
     fun getRepoRecentCommitInfo(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "仓库id", required = true)
+        @Parameter(description = "仓库id", required = true)
         @QueryParam("repoId")
         repoId: String,
-        @Parameter(name = "hash值、分支名或tag", required = true)
+        @Parameter(description = "hash值、分支名或tag", required = true)
         @QueryParam("sha")
         sha: String,
-        @Parameter(name = "token类型 1：oauth 2:privateKey", required = true)
+        @Parameter(description = "token类型 1：oauth 2:privateKey", required = true)
         @QueryParam("tokenType")
         tokenType: TokenTypeEnum
     ): Result<GitCommit?>
@@ -306,19 +306,19 @@ interface ServiceGitRepositoryResource {
     @POST
     @Path("/git/tag/create")
     fun createGitTag(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "仓库id", required = true)
+        @Parameter(description = "仓库id", required = true)
         @QueryParam("repoId")
         repoId: String,
-        @Parameter(name = "tag名称", required = true)
+        @Parameter(description = "tag名称", required = true)
         @QueryParam("tagName")
         tagName: String,
-        @Parameter(name = "关联项", required = true)
+        @Parameter(description = "关联项", required = true)
         @QueryParam("ref")
         ref: String,
-        @Parameter(name = "token类型 0：oauth 1:privateKey", required = true)
+        @Parameter(description = "token类型 0：oauth 1:privateKey", required = true)
         @QueryParam("tokenType")
         tokenType: TokenTypeEnum
     ): Result<Boolean>

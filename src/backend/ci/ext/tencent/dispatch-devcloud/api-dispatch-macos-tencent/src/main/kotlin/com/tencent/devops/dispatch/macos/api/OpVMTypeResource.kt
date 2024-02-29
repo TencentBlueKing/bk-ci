@@ -40,7 +40,7 @@ interface OpVMTypeResource {
     @Path("/")
     @Operation(summary = "创建虚拟机类型")
     fun create(
-        @Parameter(name = "vmType", required = true)
+        @Parameter(description = "vmType", required = true)
         vmType: VMTypeCreate
     ): Result<Boolean>
 
@@ -56,7 +56,7 @@ interface OpVMTypeResource {
     @Path("/{vmTypeId}")
     @Operation(summary = "更新虚拟机类型")
     fun update(
-        @Parameter(name = "vmType", required = true)
+        @Parameter(description = "vmType", required = true)
         vmType: VMTypeUpdate
     ): Result<Boolean>
 }

@@ -50,13 +50,13 @@ interface UserProjectOrganizationResource {
     @GET
     @Path("/types/{type}/ids/{id}")
     fun getOrganizations(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "bg, 部门或者中心")
+        @Parameter(description = "bg, 部门或者中心")
         @PathParam("type")
         type: OrganizationType,
-        @Parameter(name = "ID")
+        @Parameter(description = "ID")
         @PathParam("id")
         id: Int
     ): Result<List<OrganizationInfo>>

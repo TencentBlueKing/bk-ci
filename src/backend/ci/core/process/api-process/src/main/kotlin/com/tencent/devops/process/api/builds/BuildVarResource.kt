@@ -53,13 +53,13 @@ interface BuildVarResource {
     @Path("/getBuildVariable")
     @GET
     fun getBuildVar(
-        @Parameter(name = "构建ID", required = true)
+        @Parameter(description = "构建ID", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_BUILD_ID)
         buildId: String,
-        @Parameter(name = "项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_PROJECT_ID)
         projectId: String,
-        @Parameter(name = "流水线ID", required = true)
+        @Parameter(description = "流水线ID", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_PIPELINE_ID)
         pipelineId: String
     ): Result<Map<String, String>>
@@ -68,25 +68,25 @@ interface BuildVarResource {
     @Path("/get_build_context")
     @GET
     fun getContextVariableByName(
-        @Parameter(name = "构建ID", required = true)
+        @Parameter(description = "构建ID", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_BUILD_ID)
         buildId: String,
-        @Parameter(name = "项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_PROJECT_ID)
         projectId: String,
-        @Parameter(name = "流水线ID", required = true)
+        @Parameter(description = "流水线ID", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_PIPELINE_ID)
         pipelineId: String,
-        @Parameter(name = "构建环境ID", required = true)
+        @Parameter(description = "构建环境ID", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_VM_SEQ_ID)
         containerId: String,
-        @Parameter(name = "TASK ID", required = true)
+        @Parameter(description = "TASK ID", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_CI_TASK_ID)
         taskId: String?,
-        @Parameter(name = "变量名称", required = true)
+        @Parameter(description = "变量名称", required = true)
         @QueryParam("contextName")
         contextName: String,
-        @Parameter(name = "是否校验变量", required = false)
+        @Parameter(description = "是否校验变量", required = false)
         @QueryParam("check")
         check: Boolean? = false
     ): Result<String?>

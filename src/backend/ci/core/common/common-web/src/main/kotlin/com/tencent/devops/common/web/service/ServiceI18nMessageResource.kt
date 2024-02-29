@@ -57,10 +57,10 @@ interface ServiceI18nMessageResource {
     @POST
     @Path("/batchAdd")
     fun batchAddI18nMessage(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String = "",
-        @Parameter(name = "国际化信息集合", required = true)
+        @Parameter(description = "国际化信息集合", required = true)
         i18nMessages: List<I18nMessage>
     ): Result<Boolean>
 
@@ -68,16 +68,16 @@ interface ServiceI18nMessageResource {
     @DELETE
     @Path("/keys/{key}/delete")
     fun deleteI18nMessage(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String = "",
-        @Parameter(name = "国际化变量名", required = true)
+        @Parameter(description = "国际化变量名", required = true)
         @PathParam("key")
         key: String,
-        @Parameter(name = "模块标识", required = true)
+        @Parameter(description = "模块标识", required = true)
         @QueryParam("moduleCode")
         moduleCode: String,
-        @Parameter(name = "国际化语言信息", required = false)
+        @Parameter(description = "国际化语言信息", required = false)
         @QueryParam("language")
         language: String?
     ): Result<Boolean>
@@ -86,13 +86,13 @@ interface ServiceI18nMessageResource {
     @GET
     @Path("/keys/{key}/get")
     fun getI18nMessage(
-        @Parameter(name = "国际化变量名", required = true)
+        @Parameter(description = "国际化变量名", required = true)
         @PathParam("key")
         key: String,
-        @Parameter(name = "模块标识", required = true)
+        @Parameter(description = "模块标识", required = true)
         @QueryParam("moduleCode")
         moduleCode: String,
-        @Parameter(name = "国际化语言信息", required = true)
+        @Parameter(description = "国际化语言信息", required = true)
         @QueryParam("language")
         language: String
     ): Result<I18nMessage?>
@@ -101,12 +101,12 @@ interface ServiceI18nMessageResource {
     @POST
     @Path("/list")
     fun getI18nMessages(
-        @Parameter(name = "国际化变量名列表", required = true)
+        @Parameter(description = "国际化变量名列表", required = true)
         keys: List<String>,
-        @Parameter(name = "模块标识", required = true)
+        @Parameter(description = "模块标识", required = true)
         @QueryParam("moduleCode")
         moduleCode: String,
-        @Parameter(name = "国际化语言信息", required = true)
+        @Parameter(description = "国际化语言信息", required = true)
         @QueryParam("language")
         language: String
     ): Result<List<I18nMessage>?>
@@ -115,13 +115,13 @@ interface ServiceI18nMessageResource {
     @GET
     @Path("/listByKeyPrefix")
     fun getI18nMessagesByKeyPrefix(
-        @Parameter(name = "key前缀", required = true)
+        @Parameter(description = "key前缀", required = true)
         @QueryParam("keyPrefix")
         keyPrefix: String,
-        @Parameter(name = "模块标识", required = true)
+        @Parameter(description = "模块标识", required = true)
         @QueryParam("moduleCode")
         moduleCode: String,
-        @Parameter(name = "国际化语言信息", required = true)
+        @Parameter(description = "国际化语言信息", required = true)
         @QueryParam("language")
         language: String
     ): Result<List<I18nMessage>?>

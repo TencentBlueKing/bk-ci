@@ -56,10 +56,10 @@ interface OpPipelineSettingResource {
     @PUT
     @Path("/update")
     fun updateSetting(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "流水线设置", required = true)
+        @Parameter(description = "流水线设置", required = true)
         setting: PipelineSetting
     ): Result<String>
 
@@ -67,13 +67,13 @@ interface OpPipelineSettingResource {
     @GET
     @Path("/get")
     fun getSetting(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @QueryParam("projectId")
         projectId: String,
-        @Parameter(name = "流水线id", required = true)
+        @Parameter(description = "流水线id", required = true)
         @QueryParam("pipelineId")
         pipelineId: String
     ): Result<PipelineSetting>
@@ -82,16 +82,16 @@ interface OpPipelineSettingResource {
     @POST
     @Path("/updateMaxConRunningQueueSize")
     fun updateMaxConRunningQueueSize(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @QueryParam("projectId")
         projectId: String,
-        @Parameter(name = "流水线id", required = true)
+        @Parameter(description = "流水线id", required = true)
         @QueryParam("pipelineId")
         pipelineId: String,
-        @Parameter(name = "最大并发队列大小", required = true)
+        @Parameter(description = "最大并发队列大小", required = true)
         @QueryParam("maxConRunningQueueSize")
         maxConRunningQueueSize: Int = PIPELINE_SETTING_MAX_CON_QUEUE_SIZE_DEFAULT
     ): Result<String>
@@ -100,16 +100,16 @@ interface OpPipelineSettingResource {
     @POST
     @Path("/updatePipelineAsCodeSettings")
     fun updatePipelineAsCodeSettings(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @QueryParam("projectId")
         projectId: String,
-        @Parameter(name = "流水线id", required = true)
+        @Parameter(description = "流水线id", required = true)
         @QueryParam("pipelineId")
         pipelineId: String?,
-        @Parameter(name = "YAML流水线设置", required = true)
+        @Parameter(description = "YAML流水线设置", required = true)
         pipelineAsCodeSettings: PipelineAsCodeSettings
     ): Result<Int>
 }

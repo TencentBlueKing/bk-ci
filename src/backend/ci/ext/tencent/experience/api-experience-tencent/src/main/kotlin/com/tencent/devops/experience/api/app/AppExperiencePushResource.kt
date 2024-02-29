@@ -52,13 +52,13 @@ interface AppExperiencePushResource {
     @Path("/bindDeviceToken")
     @POST
     fun bindDeviceToken(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "平台", required = true)
+        @Parameter(description = "平台", required = true)
         @HeaderParam(AUTH_HEADER_PLATFORM)
         platform: Int,
-        @Parameter(name = "设备TOKEN", required = true)
+        @Parameter(description = "设备TOKEN", required = true)
         @QueryParam("token")
         token: String
     ): Result<Boolean>
@@ -67,13 +67,13 @@ interface AppExperiencePushResource {
     @Path("/subscribe")
     @POST
     fun subscribe(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "平台", required = true)
+        @Parameter(description = "平台", required = true)
         @HeaderParam(AUTH_HEADER_PLATFORM)
         platform: Int,
-        @Parameter(name = "订阅参数", required = true)
+        @Parameter(description = "订阅参数", required = true)
         subscribeParam: SubscribeParam
     ): Result<Boolean>
 
@@ -81,13 +81,13 @@ interface AppExperiencePushResource {
     @Path("/unSubscribe")
     @POST
     fun unSubscribe(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "平台", required = true)
+        @Parameter(description = "平台", required = true)
         @HeaderParam(AUTH_HEADER_PLATFORM)
         platform: Int,
-        @Parameter(name = "取消订阅参数", required = true)
+        @Parameter(description = "取消订阅参数", required = true)
         subscribeParam: SubscribeParam
     ): Result<Boolean>
 }

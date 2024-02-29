@@ -56,15 +56,15 @@ interface UserAtomStatisticsResource {
     @Path("/trend/info")
     @POST
     fun queryAtomTrendInfo(
-        @Parameter(name = "项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @BkField(required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_PROJECT_ID)
         projectId: String,
-        @Parameter(name = "userId", required = true)
+        @Parameter(description = "userId", required = true)
         @BkField(required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "查询条件", required = true)
+        @Parameter(description = "查询条件", required = true)
         atomStatisticsInfoReq: AtomStatisticsInfoReqVO
     ): Result<AtomTrendInfoVO>
 
@@ -72,20 +72,20 @@ interface UserAtomStatisticsResource {
     @Path("/execute/info")
     @POST
     fun queryAtomExecuteStatisticsInfo(
-        @Parameter(name = "项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_PROJECT_ID)
         @BkField(required = true)
         projectId: String,
-        @Parameter(name = "userId", required = true)
+        @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         @BkField(required = true)
         userId: String,
-        @Parameter(name = "查询条件", required = true)
+        @Parameter(description = "查询条件", required = true)
         atomStatisticsInfoReq: AtomStatisticsInfoReqVO,
-        @Parameter(name = "页码", required = true, example = "1")
+        @Parameter(description = "页码", required = true, example = "1")
         @QueryParam("page")
         page: Int,
-        @Parameter(name = "每页大小", required = true, example = "10")
+        @Parameter(description = "每页大小", required = true, example = "10")
         @BkField(patternStyle = BkStyleEnum.PAGE_SIZE_STYLE, required = true)
         @QueryParam("pageSize")
         pageSize: Int

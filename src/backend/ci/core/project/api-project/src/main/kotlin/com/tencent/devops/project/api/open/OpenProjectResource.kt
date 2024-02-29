@@ -53,9 +53,9 @@ interface OpenProjectResource {
     @Operation(summary = "获取项目信息")
     fun get(
         @HeaderParam(AUTH_HEADER_DEVOPS_BK_TOKEN)
-        @Parameter(name = "token")
+        @Parameter(description = "token")
         token: String,
-        @Parameter(name = "项目ID")
+        @Parameter(description = "项目ID")
         @PathParam("projectId")
         projectId: String
     ): Result<ProjectVO>
@@ -65,9 +65,9 @@ interface OpenProjectResource {
     @Operation(summary = "查询指定项目")
     fun listByProjectCodes(
         @HeaderParam(AUTH_HEADER_DEVOPS_BK_TOKEN)
-        @Parameter(name = "token")
+        @Parameter(description = "token")
         token: String,
-        @Parameter(name = "项目id", required = true)
+        @Parameter(description = "项目id", required = true)
         projectCodes: Set<String>
     ): Result<List<ProjectVO>>
 
@@ -76,7 +76,7 @@ interface OpenProjectResource {
     @Operation(summary = "查询运营产品")
     fun getOperationalProducts(
         @HeaderParam(AUTH_HEADER_DEVOPS_BK_TOKEN)
-        @Parameter(name = "token")
+        @Parameter(description = "token")
         token: String
     ): Result<List<OperationalProductVO>>
 }

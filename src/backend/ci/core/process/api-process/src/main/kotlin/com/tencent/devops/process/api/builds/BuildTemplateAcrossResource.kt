@@ -25,13 +25,13 @@ interface BuildTemplateAcrossResource {
     @GET
     @Path("")
     fun getBuildAcrossTemplateInfo(
-        @Parameter(name = "projectId", required = true)
+        @Parameter(description = "projectId", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_PROJECT_ID)
         projectId: String,
-        @Parameter(name = "pipelineId", required = true)
+        @Parameter(description = "pipelineId", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_PIPELINE_ID)
         pipelineId: String,
-        @Parameter(name = "模板ID", required = true)
+        @Parameter(description = "模板ID", required = true)
         @QueryParam("templateId")
         templateId: String
     ): Result<List<BuildTemplateAcrossInfo>>

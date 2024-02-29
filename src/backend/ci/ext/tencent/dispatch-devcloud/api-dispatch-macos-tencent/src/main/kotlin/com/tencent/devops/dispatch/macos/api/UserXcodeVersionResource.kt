@@ -27,7 +27,7 @@ interface UserXcodeVersionResource {
     @Path("/v2")
     @Operation(summary = "获取XCODE版本列表")
     fun listV2(
-        @Parameter(name = "systemVersion", required = true)
+        @Parameter(description = "systemVersion", required = true)
         @QueryParam("systemVersion")
         systemVersion: String?
     ): Result<MacOsVersionVO>

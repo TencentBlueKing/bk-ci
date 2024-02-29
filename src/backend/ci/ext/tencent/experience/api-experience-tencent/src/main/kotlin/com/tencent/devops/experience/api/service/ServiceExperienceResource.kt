@@ -60,13 +60,13 @@ interface ServiceExperienceResource {
     @Path("/{projectId}/")
     @POST
     fun create(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(name = "发布详情", required = true)
+        @Parameter(description = "发布详情", required = true)
         experience: ExperienceServiceCreate
     ): Result<String>
 
@@ -74,9 +74,9 @@ interface ServiceExperienceResource {
     @Path("/list/count")
     @POST
     fun count(
-        @Parameter(name = "项目ID集合", required = false)
+        @Parameter(description = "项目ID集合", required = false)
         projectIds: Set<String>? = setOf(),
-        @Parameter(name = "", required = false)
+        @Parameter(description = "", required = false)
         @QueryParam("expired")
         expired: Boolean? = false
     ): Result<Map<String, Int>>
@@ -85,13 +85,13 @@ interface ServiceExperienceResource {
     @Path("/projects/{projectId}/experienceIds/{experienceHashId}")
     @GET
     fun get(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String,
-        @Parameter(name = "项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(name = "体验HashId", required = false)
+        @Parameter(description = "体验HashId", required = false)
         @PathParam("experienceHashId")
         experienceHashId: String
     ): Result<Experience>
@@ -100,13 +100,13 @@ interface ServiceExperienceResource {
     @Path("/experienceIds/{experienceHashId}/check")
     @GET
     fun check(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String,
-        @Parameter(name = "体验HashId", required = false)
+        @Parameter(description = "体验HashId", required = false)
         @PathParam("experienceHashId")
         experienceHashId: String,
-        @Parameter(name = "组织", required = false)
+        @Parameter(description = "组织", required = false)
         @QueryParam("organization")
         organization: String?
     ): Result<Boolean>
@@ -115,13 +115,13 @@ interface ServiceExperienceResource {
     @Path("/jumpInfo")
     @GET
     fun jumpInfo(
-        @Parameter(name = "项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @QueryParam("projectId")
         projectId: String,
-        @Parameter(name = "bundleId", required = true)
+        @Parameter(description = "bundleId", required = true)
         @QueryParam("bundleIdentifier")
         bundleIdentifier: String,
-        @Parameter(name = "平台", required = true)
+        @Parameter(description = "平台", required = true)
         @QueryParam("platform")
         platform: String
     ): Result<ExperienceJumpInfo>
@@ -130,16 +130,16 @@ interface ServiceExperienceResource {
     @Path("/projects/{projectId}/pipelines/{pipelineId}/builds/{buildId}")
     @GET
     fun listForBuild(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String?,
-        @Parameter(name = "项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(name = "流水线ID", required = true)
+        @Parameter(description = "流水线ID", required = true)
         @PathParam("pipelineId")
         pipelineId: String,
-        @Parameter(name = "构建ID", required = true)
+        @Parameter(description = "构建ID", required = true)
         @PathParam("buildId")
         buildId: String
     ): Result<List<ExperienceInfoForBuild>>
@@ -148,16 +148,16 @@ interface ServiceExperienceResource {
     @Path("/{projectId}/{experienceHashId}")
     @PUT
     fun edit(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(name = "发布HashId", required = false)
+        @Parameter(description = "发布HashId", required = false)
         @PathParam("experienceHashId")
         experienceHashId: String,
-        @Parameter(name = "发布详情", required = true)
+        @Parameter(description = "发布详情", required = true)
         experience: ExperienceUpdate
     ): Result<Boolean>
 
@@ -165,13 +165,13 @@ interface ServiceExperienceResource {
     @Path("/{projectId}/{experienceHashId}/offline")
     @PUT
     fun offline(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String?,
-        @Parameter(name = "项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(name = "发布HashId", required = false)
+        @Parameter(description = "发布HashId", required = false)
         @PathParam("experienceHashId")
         experienceHashId: String
     ): Result<Boolean>
@@ -180,13 +180,13 @@ interface ServiceExperienceResource {
     @Path("/{projectId}/{experienceHashId}/online")
     @PUT
     fun online(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String?,
-        @Parameter(name = "项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(name = "发布HashId", required = false)
+        @Parameter(description = "发布HashId", required = false)
         @PathParam("experienceHashId")
         experienceHashId: String
     ): Result<Boolean>

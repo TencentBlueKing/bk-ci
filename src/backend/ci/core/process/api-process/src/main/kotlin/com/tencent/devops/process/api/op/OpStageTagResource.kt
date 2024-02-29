@@ -53,7 +53,7 @@ interface OpStageTagResource {
     @POST
     @Path("/")
     fun add(
-        @Parameter(name = "流水线阶段标签请求体", required = true)
+        @Parameter(description = "流水线阶段标签请求体", required = true)
         stageTagRequest: StageTagRequest
     ): Result<Boolean>
 
@@ -61,10 +61,10 @@ interface OpStageTagResource {
     @PUT
     @Path("/{id}")
     fun update(
-        @Parameter(name = "流水线阶段标签ID", required = true)
+        @Parameter(description = "流水线阶段标签ID", required = true)
         @PathParam("id")
         id: String,
-        @Parameter(name = "流水线阶段标签请求体", required = true)
+        @Parameter(description = "流水线阶段标签请求体", required = true)
         stageTagRequest: StageTagRequest
     ): Result<Boolean>
 
@@ -77,7 +77,7 @@ interface OpStageTagResource {
     @GET
     @Path("/{id}")
     fun getStageTagById(
-        @Parameter(name = "流水线阶段标签ID", required = true)
+        @Parameter(description = "流水线阶段标签ID", required = true)
         @PathParam("id")
         id: String
     ): Result<PipelineStageTag?>
@@ -86,7 +86,7 @@ interface OpStageTagResource {
     @DELETE
     @Path("/{id}")
     fun deleteStageTagById(
-        @Parameter(name = "流水线阶段标签ID", required = true)
+        @Parameter(description = "流水线阶段标签ID", required = true)
         @PathParam("id")
         id: String
     ): Result<Boolean>

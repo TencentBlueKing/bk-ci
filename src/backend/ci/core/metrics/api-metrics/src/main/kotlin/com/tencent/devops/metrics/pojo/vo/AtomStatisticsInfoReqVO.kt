@@ -32,16 +32,16 @@ import io.swagger.v3.oas.annotations.Parameter
 
 @Schema(title = "插件统计信息查询请求报文")
 data class AtomStatisticsInfoReqVO(
-    @Parameter(name = "流水线ID", required = false)
+    @Parameter(description = "流水线ID", required = false)
     override var pipelineIds: List<String>? = null,
-    @Parameter(name = "流水线标签", required = false)
+    @Parameter(description = "流水线标签", required = false)
     override val pipelineLabelIds: List<Long>? = null,
-    @Parameter(name = "开始时间", required = false)
+    @Parameter(description = "开始时间", required = false)
     override var startTime: String? = null,
-    @Parameter(name = "结束时间", required = false)
+    @Parameter(description = "结束时间", required = false)
     override var endTime: String? = null,
-    @Parameter(name = "错误类型", required = false)
+    @Parameter(description = "错误类型", required = false)
     val errorTypes: List<Int>? = null,
-    @Parameter(name = "插件代码", required = false)
+    @Parameter(description = "插件代码", required = false)
     val atomCodes: List<String>? = null
 ) : BaseQueryReqVO(pipelineIds, pipelineLabelIds, startTime, endTime)

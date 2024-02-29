@@ -51,34 +51,34 @@ interface UserAuditResource {
     @GET
     @Path("/{projectId}/{resourceType}/")
     fun list(
-        @Parameter(name = "用户ID", required = false)
+        @Parameter(description = "用户ID", required = false)
         @QueryParam("userId")
         userId: String?,
-        @Parameter(name = "项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(name = "资源类型", required = true)
+        @Parameter(description = "资源类型", required = true)
         @PathParam("resourceType")
         resourceType: String,
-        @Parameter(name = "状态", required = false)
+        @Parameter(description = "状态", required = false)
         @QueryParam("status")
         status: String?,
-        @Parameter(name = "按流水线ID过滤（精确)", required = false)
+        @Parameter(description = "按流水线ID过滤（精确)", required = false)
         @QueryParam("resourceId")
         resourceId: String?,
-        @Parameter(name = "按流水线名称过滤", required = false)
+        @Parameter(description = "按流水线名称过滤", required = false)
         @QueryParam("resourceName")
         resourceName: String?,
-        @Parameter(name = "开始时间", required = false)
+        @Parameter(description = "开始时间", required = false)
         @QueryParam("startTime")
         startTime: String?,
-        @Parameter(name = "结束时间", required = false)
+        @Parameter(description = "结束时间", required = false)
         @QueryParam("endTime")
         endTime: String?,
-        @Parameter(name = "第几页", required = false, example = "1")
+        @Parameter(description = "第几页", required = false, example = "1")
         @QueryParam("page")
         page: Int?,
-        @Parameter(name = "每页多少条", required = false, example = "20")
+        @Parameter(description = "每页多少条", required = false, example = "20")
         @QueryParam("pageSize")
         pageSize: Int?
     ): Result<AuditPage<AuditInfo>>

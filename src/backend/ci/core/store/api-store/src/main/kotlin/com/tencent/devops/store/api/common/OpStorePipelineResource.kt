@@ -50,10 +50,10 @@ interface OpStorePipelineResource {
     @PUT
     @Path("/model/update")
     fun updateStorePipelineModel(
-        @Parameter(name = "userId", required = true)
+        @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "更新研发商店流水线模型请求报文")
+        @Parameter(description = "更新研发商店流水线模型请求报文")
         updateStorePipelineModelRequest: UpdateStorePipelineModelRequest
     ): Result<Boolean>
 }

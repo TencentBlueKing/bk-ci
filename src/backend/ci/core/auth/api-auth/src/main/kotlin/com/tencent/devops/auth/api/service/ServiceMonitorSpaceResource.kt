@@ -50,11 +50,11 @@ interface ServiceMonitorSpaceResource {
     @GET
     @Path("/")
     fun getMonitorSpaceBizId(
-        @Parameter(name = "用户ID", required = true)
+        @Parameter(description = "用户ID", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
         @QueryParam("projectCode")
-        @Parameter(name = "项目ID", required = false)
+        @Parameter(description = "项目ID", required = false)
         projectCode: String
     ): Result<String>
 
@@ -62,10 +62,10 @@ interface ServiceMonitorSpaceResource {
     @Path("/migrateMonitorResource")
     @Operation(summary = "迁移监控空间权限资源")
     fun migrateMonitorResource(
-        @Parameter(name = "迁移项目", required = true)
+        @Parameter(description = "迁移项目", required = true)
         projectCodes: List<String>,
         @QueryParam("asyncMigrateOtherGroup")
-        @Parameter(name = "异步迁移其他组", required = false)
+        @Parameter(description = "异步迁移其他组", required = false)
         asyncMigrateOtherGroup: Boolean? = true
     ): Result<Boolean>
 }

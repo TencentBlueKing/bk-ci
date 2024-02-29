@@ -62,10 +62,10 @@ interface OpIdeAtomResource {
     @POST
     @Path("/")
     fun addIdeAtom(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "新增IDE插件请求报文体", required = true)
+        @Parameter(description = "新增IDE插件请求报文体", required = true)
         ideAtomCreateRequest: IdeAtomCreateRequest
     ): Result<Boolean>
 
@@ -73,13 +73,13 @@ interface OpIdeAtomResource {
     @PUT
     @Path("/{atomId}")
     fun updateIdeAtom(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "插件ID", required = true)
+        @Parameter(description = "插件ID", required = true)
         @PathParam("atomId")
         atomId: String,
-        @Parameter(name = "更新IDE插件请求报文体", required = true)
+        @Parameter(description = "更新IDE插件请求报文体", required = true)
         ideAtomUpdateRequest: IdeAtomUpdateRequest
     ): Result<Boolean>
 
@@ -87,7 +87,7 @@ interface OpIdeAtomResource {
     @DELETE
     @Path("/atomIds/{atomId}")
     fun deleteIdeAtomById(
-        @Parameter(name = "插件ID", required = true)
+        @Parameter(description = "插件ID", required = true)
         @PathParam("atomId")
         atomId: String
     ): Result<Boolean>
@@ -96,7 +96,7 @@ interface OpIdeAtomResource {
     @GET
     @Path("/atomIds/{atomId}")
     fun getIdeAtomById(
-        @Parameter(name = "插件ID", required = true)
+        @Parameter(description = "插件ID", required = true)
         @PathParam("atomId")
         atomId: String
     ): Result<IdeAtom?>
@@ -105,10 +105,10 @@ interface OpIdeAtomResource {
     @GET
     @Path("/atomCodes/{atomCode}")
     fun getIdeAtomsByCode(
-        @Parameter(name = "插件代码", required = true)
+        @Parameter(description = "插件代码", required = true)
         @PathParam("atomCode")
         atomCode: String,
-        @Parameter(name = "版本号", required = false)
+        @Parameter(description = "版本号", required = false)
         @QueryParam("version")
         version: String?
     ): Result<IdeAtom?>
@@ -117,13 +117,13 @@ interface OpIdeAtomResource {
     @GET
     @Path("/atomCodes/{atomCode}/versions/list")
     fun getIdeAtomVersionsByCode(
-        @Parameter(name = "插件代码", required = true)
+        @Parameter(description = "插件代码", required = true)
         @PathParam("atomCode")
         atomCode: String,
-        @Parameter(name = "页码", required = false)
+        @Parameter(description = "页码", required = false)
         @QueryParam("page")
         page: Int?,
-        @Parameter(name = "每页数量", required = false)
+        @Parameter(description = "每页数量", required = false)
         @QueryParam("pageSize")
         pageSize: Int?
     ): Result<Page<OpIdeAtomItem>?>
@@ -132,28 +132,28 @@ interface OpIdeAtomResource {
     @GET
     @Path("/")
     fun listIdeAtoms(
-        @Parameter(name = "插件名称", required = false)
+        @Parameter(description = "插件名称", required = false)
         @QueryParam("atomName")
         atomName: String?,
-        @Parameter(name = "插件类型，SELF_DEVELOPED：自研 THIRD_PARTY：第三方开发", required = false)
+        @Parameter(description = "插件类型，SELF_DEVELOPED：自研 THIRD_PARTY：第三方开发", required = false)
         @QueryParam("atomType")
         atomType: IdeAtomTypeEnum?,
-        @Parameter(name = "插件分类代码", required = false)
+        @Parameter(description = "插件分类代码", required = false)
         @QueryParam("classifyCode")
         classifyCode: String?,
-        @Parameter(name = "应用范畴(多个用逗号分隔)", required = false)
+        @Parameter(description = "应用范畴(多个用逗号分隔)", required = false)
         @QueryParam("categoryCodes")
         categoryCodes: String?,
-        @Parameter(name = "功能标签(多个用逗号分隔)", required = false)
+        @Parameter(description = "功能标签(多个用逗号分隔)", required = false)
         @QueryParam("labelCodes")
         labelCodes: String?,
-        @Parameter(name = "是否处于流程中", required = false)
+        @Parameter(description = "是否处于流程中", required = false)
         @QueryParam("processFlag")
         processFlag: Boolean?,
-        @Parameter(name = "页码", required = true)
+        @Parameter(description = "页码", required = true)
         @QueryParam("page")
         page: Int,
-        @Parameter(name = "每页数量", required = true)
+        @Parameter(description = "每页数量", required = true)
         @QueryParam("pageSize")
         pageSize: Int
     ): Result<Page<OpIdeAtomItem>?>
@@ -162,13 +162,13 @@ interface OpIdeAtomResource {
     @PUT
     @Path("/release/atomIds/{atomId}")
     fun releaseIdeAtom(
-        @Parameter(name = "userId", required = true)
+        @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "插件ID", required = true)
+        @Parameter(description = "插件ID", required = true)
         @PathParam("atomId")
         atomId: String,
-        @Parameter(name = "IDE插件发布请求报文体", required = true)
+        @Parameter(description = "IDE插件发布请求报文体", required = true)
         ideAtomReleaseRequest: IdeAtomReleaseRequest
     ): Result<Boolean>
 
@@ -176,16 +176,16 @@ interface OpIdeAtomResource {
     @PUT
     @Path("/offline/atomCodes/{atomCode}/versions")
     fun offlineIdeAtom(
-        @Parameter(name = "userId", required = true)
+        @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "插件代码", required = true)
+        @Parameter(description = "插件代码", required = true)
         @PathParam("atomCode")
         atomCode: String,
-        @Parameter(name = "版本号", required = false)
+        @Parameter(description = "版本号", required = false)
         @QueryParam("version")
         version: String?,
-        @Parameter(name = "原因", required = false)
+        @Parameter(description = "原因", required = false)
         @QueryParam("reason")
         reason: String?
     ): Result<Boolean>

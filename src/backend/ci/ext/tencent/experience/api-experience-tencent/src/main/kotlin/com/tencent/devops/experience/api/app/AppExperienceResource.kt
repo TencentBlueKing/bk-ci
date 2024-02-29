@@ -69,13 +69,13 @@ interface AppExperienceResource {
     @Path("/list")
     @GET
     fun list(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "页目", required = false)
+        @Parameter(description = "页目", required = false)
         @QueryParam("page")
         page: Int?,
-        @Parameter(name = "每页数目", required = false)
+        @Parameter(description = "每页数目", required = false)
         @QueryParam("pageSize")
         pageSize: Int?
     ): Result<List<AppExperience>>
@@ -84,19 +84,19 @@ interface AppExperienceResource {
     @Path("/v2/list")
     @GET
     fun listV2(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "平台", required = true)
+        @Parameter(description = "平台", required = true)
         @HeaderParam(AUTH_HEADER_PLATFORM)
         platform: Int,
-        @Parameter(name = "组织", required = false)
+        @Parameter(description = "组织", required = false)
         @HeaderParam(AUTH_HEADER_DEVOPS_ORGANIZATION_NAME)
         organization: String? = null,
-        @Parameter(name = "页目", required = false)
+        @Parameter(description = "页目", required = false)
         @QueryParam("page")
         page: Int,
-        @Parameter(name = "每页数目", required = false)
+        @Parameter(description = "每页数目", required = false)
         @QueryParam("pageSize")
         pageSize: Int
     ): Result<Pagination<AppExperience>>
@@ -105,13 +105,13 @@ interface AppExperienceResource {
     @Path("/v3/list")
     @GET
     fun listV3(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "平台", required = true)
+        @Parameter(description = "平台", required = true)
         @HeaderParam(AUTH_HEADER_PLATFORM)
         platform: Int,
-        @Parameter(name = "组织", required = false)
+        @Parameter(description = "组织", required = false)
         @HeaderParam(AUTH_HEADER_DEVOPS_ORGANIZATION_NAME)
         organization: String? = null
     ): Result<ExperienceList>
@@ -120,22 +120,22 @@ interface AppExperienceResource {
     @Path("/{experienceHashId}/detail")
     @GET
     fun detail(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "平台", required = true)
+        @Parameter(description = "平台", required = true)
         @HeaderParam(AUTH_HEADER_PLATFORM)
         platform: Int,
-        @Parameter(name = "版本号", required = true)
+        @Parameter(description = "版本号", required = true)
         @HeaderParam(AUTH_HEADER_APP_VERSION)
         appVersion: String?,
-        @Parameter(name = "组织", required = false)
+        @Parameter(description = "组织", required = false)
         @HeaderParam(AUTH_HEADER_DEVOPS_ORGANIZATION_NAME)
         organization: String? = null,
-        @Parameter(name = "体验ID", required = true)
+        @Parameter(description = "体验ID", required = true)
         @PathParam("experienceHashId")
         experienceHashId: String,
-        @Parameter(name = "强制最新版本", required = false)
+        @Parameter(description = "强制最新版本", required = false)
         @QueryParam("forceNew")
         forceNew: Boolean = true
     ): Result<AppExperienceDetail>
@@ -144,22 +144,22 @@ interface AppExperienceResource {
     @Path("/{experienceHashId}/changeLog")
     @GET
     fun changeLog(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "组织", required = false)
+        @Parameter(description = "组织", required = false)
         @HeaderParam(AUTH_HEADER_DEVOPS_ORGANIZATION_NAME)
         organization: String? = null,
-        @Parameter(name = "体验ID", required = true)
+        @Parameter(description = "体验ID", required = true)
         @PathParam("experienceHashId")
         experienceHashId: String,
-        @Parameter(name = "页目", required = true)
+        @Parameter(description = "页目", required = true)
         @QueryParam("page")
         page: Int,
-        @Parameter(name = "每页数目", required = true)
+        @Parameter(description = "每页数目", required = true)
         @QueryParam("pageSize")
         pageSize: Int,
-        @Parameter(name = "是否展示所有版本", required = false)
+        @Parameter(description = "是否展示所有版本", required = false)
         @QueryParam("showAll")
         showAll: Boolean?
     ): Result<Pagination<ExperienceChangeLog>>
@@ -168,13 +168,13 @@ interface AppExperienceResource {
     @Path("/{experienceHashId}/downloadUrl")
     @POST
     fun downloadUrl(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "组织", required = false)
+        @Parameter(description = "组织", required = false)
         @HeaderParam(AUTH_HEADER_DEVOPS_ORGANIZATION_NAME)
         organization: String? = null,
-        @Parameter(name = "体验ID", required = true)
+        @Parameter(description = "体验ID", required = true)
         @PathParam("experienceHashId")
         experienceHashId: String
     ): Result<DownloadUrl>
@@ -183,13 +183,13 @@ interface AppExperienceResource {
     @Path("/{projectId}/history")
     @GET
     fun history(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "版本号", required = true)
+        @Parameter(description = "版本号", required = true)
         @HeaderParam(AUTH_HEADER_APP_VERSION)
         appVersion: String?,
-        @Parameter(name = "项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String
     ): Result<List<AppExperienceSummary>>
@@ -198,10 +198,10 @@ interface AppExperienceResource {
     @Path("/{projectId}/projectGroupAndUsers")
     @GET
     fun projectGroupAndUsers(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String
     ): Result<List<ProjectGroupAndUsers>>
@@ -210,13 +210,13 @@ interface AppExperienceResource {
     @Path("{projectId}")
     @POST
     fun create(
-        @Parameter(name = "用户Id", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户Id", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "项目Id", required = true)
+        @Parameter(description = "项目Id", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(name = "体验详情", required = true)
+        @Parameter(description = "体验详情", required = true)
         experience: ExperienceCreate
     ): Result<Boolean>
 
@@ -224,16 +224,16 @@ interface AppExperienceResource {
     @Path("lastParams")
     @GET
     fun lastParams(
-        @Parameter(name = "用户Id", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户Id", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "构件名称", required = true)
+        @Parameter(description = "构件名称", required = true)
         @QueryParam("name")
         name: String,
-        @Parameter(name = "项目Id", required = true)
+        @Parameter(description = "项目Id", required = true)
         @QueryParam("projectId")
         projectId: String,
-        @Parameter(name = "bundleIdentifier", required = true)
+        @Parameter(description = "bundleIdentifier", required = true)
         @QueryParam("bundleIdentifier")
         bundleIdentifier: String
     ): Result<ExperienceLastParams>
@@ -242,10 +242,10 @@ interface AppExperienceResource {
     @Path("/outer/list")
     @GET
     fun outerList(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @QueryParam("projectId")
         projectId: String
     ): Result<List<OuterSelectorVO>>
@@ -254,19 +254,19 @@ interface AppExperienceResource {
     @Path("/{experienceHashId}/installPackages")
     @GET
     fun installPackages(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "平台", required = true)
+        @Parameter(description = "平台", required = true)
         @HeaderParam(AUTH_HEADER_PLATFORM)
         platform: Int,
-        @Parameter(name = "版本号", required = true)
+        @Parameter(description = "版本号", required = true)
         @HeaderParam(AUTH_HEADER_APP_VERSION)
         appVersion: String?,
-        @Parameter(name = "组织", required = false)
+        @Parameter(description = "组织", required = false)
         @HeaderParam(AUTH_HEADER_DEVOPS_ORGANIZATION_NAME)
         organization: String? = null,
-        @Parameter(name = "体验ID", required = true)
+        @Parameter(description = "体验ID", required = true)
         @PathParam("experienceHashId")
         experienceHashId: String
     ): Result<Pagination<AppExperienceInstallPackage>>

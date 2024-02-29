@@ -56,10 +56,10 @@ interface OpWorkspaceResource {
     @POST
     @Path("/share/add")
     fun shareWorkspace(
-        @Parameter(name = "用户ID", required = true)
+        @Parameter(description = "用户ID", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "工作空间共享", required = true)
+        @Parameter(description = "工作空间共享", required = true)
         workspaceShared: WorkspaceSharedOpUse
     ): Result<Boolean>
 
@@ -67,10 +67,10 @@ interface OpWorkspaceResource {
     @POST
     @Path("/share/update")
     fun shareWorkspace4OP(
-        @Parameter(name = "用户ID", required = true)
+        @Parameter(description = "用户ID", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "工作空间共享信息", required = true)
+        @Parameter(description = "工作空间共享信息", required = true)
         shareWorkspace: ShareWorkspace
     ): Result<Boolean>
 
@@ -78,7 +78,7 @@ interface OpWorkspaceResource {
     @GET
     @Path("/share/list")
     fun getShareWorkspace(
-        @Parameter(name = "用户ID", required = true)
+        @Parameter(description = "用户ID", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
         @QueryParam("workspaceName")
@@ -89,10 +89,10 @@ interface OpWorkspaceResource {
     @DELETE
     @Path("/share/delete")
     fun deleteShareWorkspace(
-        @Parameter(name = "用户ID", required = true)
+        @Parameter(description = "用户ID", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "id", required = true)
+        @Parameter(description = "id", required = true)
         @QueryParam("id")
         id: Long
     ): Result<Boolean>
@@ -101,7 +101,7 @@ interface OpWorkspaceResource {
     @GET
     @Path("/detail/move")
     fun moveWorkspaceDetail(
-        @Parameter(name = "用户ID", required = true)
+        @Parameter(description = "用户ID", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
         @QueryParam("workspaceName")
@@ -112,7 +112,7 @@ interface OpWorkspaceResource {
     @GET
     @Path("/status_change")
     fun updateStatus(
-        @Parameter(name = "用户ID", required = true)
+        @Parameter(description = "用户ID", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
         @QueryParam("workspaceName")
@@ -125,16 +125,16 @@ interface OpWorkspaceResource {
     @POST
     @Path("/create_win_workspace_by_vm")
     fun createWinWorkspaceByVm(
-        @Parameter(name = "用户ID", required = true)
+        @Parameter(description = "用户ID", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "老workspace记录，可以为空，如果填写将会做清理", required = true)
+        @Parameter(description = "老workspace记录，可以为空，如果填写将会做清理", required = true)
         @QueryParam("oldWorkspaceName")
         oldWorkspaceName: String?,
-        @Parameter(name = "项目ID，可以为空，如果填写就是团队空间，否则个人空间", required = true)
+        @Parameter(description = "项目ID，可以为空，如果填写就是团队空间，否则个人空间", required = true)
         @QueryParam("projectId")
         projectId: String?,
-        @Parameter(name = "机器uid", required = true)
+        @Parameter(description = "机器uid", required = true)
         @QueryParam("uid")
         uid: String
     ): Result<Boolean>
@@ -143,7 +143,7 @@ interface OpWorkspaceResource {
     @GET
     @Path("/deleteInactivityWorkspace")
     fun deleteInactivityWorkspace(
-        @Parameter(name = "用户ID", required = true)
+        @Parameter(description = "用户ID", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String
     ): Result<Boolean>
@@ -152,10 +152,10 @@ interface OpWorkspaceResource {
     @GET
     @Path("/autoCleanJob4Windows")
     fun autoCleanJob4Windows(
-        @Parameter(name = "用户ID", required = true)
+        @Parameter(description = "用户ID", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "为true时，只执行自动作业中的销毁作业", required = false)
+        @Parameter(description = "为true时，只执行自动作业中的销毁作业", required = false)
         @QueryParam("type")
         type: String?
     ): Result<Boolean>

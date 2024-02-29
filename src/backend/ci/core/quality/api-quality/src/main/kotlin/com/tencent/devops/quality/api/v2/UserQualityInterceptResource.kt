@@ -56,31 +56,31 @@ interface UserQualityInterceptResource {
     @Path("/{projectId}/")
     @GET
     fun list(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(name = "流水线ID", required = false)
+        @Parameter(description = "流水线ID", required = false)
         @QueryParam("pipelineId")
         pipelineId: String?,
-        @Parameter(name = "规则ID", required = false)
+        @Parameter(description = "规则ID", required = false)
         @QueryParam("ruleHashId")
         ruleHashId: String?,
-        @Parameter(name = "状态", required = false)
+        @Parameter(description = "状态", required = false)
         @QueryParam("interceptResult")
         interceptResult: RuleInterceptResult?,
-        @Parameter(name = "开始时间", required = false)
+        @Parameter(description = "开始时间", required = false)
         @QueryParam("startTime")
         startTime: Long?,
-        @Parameter(name = "截止时间", required = false)
+        @Parameter(description = "截止时间", required = false)
         @QueryParam("endTime")
         endTime: Long?,
-        @Parameter(name = "页号", required = false, example = "1")
+        @Parameter(description = "页号", required = false, example = "1")
         @QueryParam("page")
         page: Int?,
-        @Parameter(name = "页数", required = false, example = "20")
+        @Parameter(description = "页数", required = false, example = "20")
         @QueryParam("pageSize")
         pageSize: Int?
     ): Result<Page<RuleInterceptHistory>>
@@ -89,22 +89,22 @@ interface UserQualityInterceptResource {
     @Path("/pipeline/list")
     @POST
     fun pipelineList(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @QueryParam("projectId")
         projectId: String,
-        @Parameter(name = "流水线ID", required = false)
+        @Parameter(description = "流水线ID", required = false)
         @QueryParam("pipelineId")
         pipelineId: String?,
-        @Parameter(name = "构建ID", required = false)
+        @Parameter(description = "构建ID", required = false)
         @QueryParam("buildId")
         buildId: String?,
-        @Parameter(name = "第几次检查", required = false)
+        @Parameter(description = "第几次检查", required = false)
         @QueryParam("checkTimes")
         checkTimes: Int?,
-        @Parameter(name = "规则ID", required = false)
+        @Parameter(description = "规则ID", required = false)
         ruleHashIds: Set<String>
     ): Result<List<RuleInterceptHistory>>
 
@@ -112,19 +112,19 @@ interface UserQualityInterceptResource {
     @Path("/{projectId}/{pipelineId}/{buildId}/auditUserList")
     @GET
     fun getAuditUserList(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(name = "流水线ID", required = true)
+        @Parameter(description = "流水线ID", required = true)
         @PathParam("pipelineId")
         pipelineId: String,
-        @Parameter(name = "构建ID", required = true)
+        @Parameter(description = "构建ID", required = true)
         @PathParam("buildId")
         buildId: String,
-        @Parameter(name = "原子ID", required = true)
+        @Parameter(description = "原子ID", required = true)
         @QueryParam("taskId")
         taskId: String
     ): Result<Set<String>>

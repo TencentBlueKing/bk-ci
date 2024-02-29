@@ -53,13 +53,13 @@ interface ServicePipelineAtomResource {
     @POST
     @Path("/replace")
     fun createReplaceAtomInfo(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "项目ID", required = false)
+        @Parameter(description = "项目ID", required = false)
         @QueryParam("projectId")
         projectId: String?,
-        @Parameter(name = "插件替换请求报文", required = true)
+        @Parameter(description = "插件替换请求报文", required = true)
         atomReplaceRequest: AtomReplaceRequest
     ): Result<String>
 
@@ -67,10 +67,10 @@ interface ServicePipelineAtomResource {
     @POST
     @Path("/rollback")
     fun atomReplaceRollBack(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "插件回滚请求报文", required = true)
+        @Parameter(description = "插件回滚请求报文", required = true)
         atomReplaceRollBack: AtomReplaceRollBack
     ): Result<Boolean>
 }

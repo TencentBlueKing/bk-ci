@@ -51,16 +51,16 @@ interface AppProjectResource {
     @Path("/")
     @Operation(summary = "查询所有项目")
     fun list(
-        @Parameter(name = "userId", required = true)
+        @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String,
-        @Parameter(name = "page", required = true)
+        @Parameter(description = "page", required = true)
         @QueryParam("page")
         page: Int,
-        @Parameter(name = "pageSize", required = true)
+        @Parameter(description = "pageSize", required = true)
         @QueryParam("pageSize")
         pageSize: Int,
-        @Parameter(name = "searchName", required = false)
+        @Parameter(description = "searchName", required = false)
         @QueryParam("searchName")
         searchName: String?
     ): Result<Pagination<AppProjectVO>>

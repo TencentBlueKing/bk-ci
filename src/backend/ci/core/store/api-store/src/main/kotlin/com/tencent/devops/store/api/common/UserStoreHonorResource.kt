@@ -62,16 +62,16 @@ interface UserStoreHonorResource {
     @GET
     @Path("/list")
     fun list(
-        @Parameter(name = "userId", required = true)
+        @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "查询关键字", required = false)
+        @Parameter(description = "查询关键字", required = false)
         @QueryParam("keyWords")
         keyWords: String?,
-        @Parameter(name = "页码", required = true, example = "1")
+        @Parameter(description = "页码", required = true, example = "1")
         @QueryParam("page")
         page: Int,
-        @Parameter(name = "每页数量", required = true, example = "10")
+        @Parameter(description = "每页数量", required = true, example = "10")
         @QueryParam("pageSize")
         @BkField(patternStyle = BkStyleEnum.PAGE_SIZE_STYLE, required = true)
         pageSize: Int
@@ -81,10 +81,10 @@ interface UserStoreHonorResource {
     @DELETE
     @Path("/batch/delete")
     fun batchDelete(
-        @Parameter(name = "userId", required = true)
+        @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "组件荣誉关联信息列表", required = true)
+        @Parameter(description = "组件荣誉关联信息列表", required = true)
         storeHonorRelList: List<StoreHonorRel>
     ): Result<Boolean>
 
@@ -92,10 +92,10 @@ interface UserStoreHonorResource {
     @POST
     @Path("/add")
     fun add(
-        @Parameter(name = "userId", required = true)
+        @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "组件荣誉信息", required = true)
+        @Parameter(description = "组件荣誉信息", required = true)
         addStoreHonorRequest: AddStoreHonorRequest
     ): Result<Boolean>
 
@@ -103,13 +103,13 @@ interface UserStoreHonorResource {
     @GET
     @Path("/get")
     fun getStoreHonor(
-        @Parameter(name = "userId", required = true)
+        @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "组件类型", required = true)
+        @Parameter(description = "组件类型", required = true)
         @QueryParam("storeType")
         storeType: StoreTypeEnum,
-        @Parameter(name = "组件代码", required = true)
+        @Parameter(description = "组件代码", required = true)
         @QueryParam("storeCode")
         storeCode: String
     ): List<HonorInfo>
@@ -118,16 +118,16 @@ interface UserStoreHonorResource {
     @PUT
     @Path("/storeCodes/{storeCode}/install")
     fun installStoreHonor(
-        @Parameter(name = "userId", required = true)
+        @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "组件代码", required = true)
+        @Parameter(description = "组件代码", required = true)
         @PathParam("storeCode")
         storeCode: String,
-        @Parameter(name = "组件类型", required = true)
+        @Parameter(description = "组件类型", required = true)
         @QueryParam("storeType")
         storeType: StoreTypeEnum,
-        @Parameter(name = "荣誉ID")
+        @Parameter(description = "荣誉ID")
         @QueryParam("honorId")
         honorId: String
     ): Result<Boolean>

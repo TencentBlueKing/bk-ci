@@ -54,13 +54,13 @@ interface UserExtMediaResource {
     @Path("/serviceCodes/{serviceCode}/media")
     @POST
     fun createServiceMedia(
-        @Parameter(name = "userId", required = true)
+        @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "扩展服务代码", required = true)
+        @Parameter(description = "扩展服务代码", required = true)
         @PathParam("serviceCode")
         serviceCode: String,
-        @Parameter(name = "评论信息", required = true)
+        @Parameter(description = "评论信息", required = true)
         mediaInfoList: List<MediaInfoReq>
     ): Result<Boolean>
 
@@ -68,16 +68,16 @@ interface UserExtMediaResource {
     @Path("/ids/{mediaId}/")
     @PUT
     fun updateSericeMedia(
-        @Parameter(name = "userId", required = true)
+        @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "媒体ID", required = true)
+        @Parameter(description = "媒体ID", required = true)
         @QueryParam("mediaId")
         mediaId: String,
-        @Parameter(name = "扩展服务代码", required = true)
+        @Parameter(description = "扩展服务代码", required = true)
         @QueryParam("serviceCode")
         serviceCode: String,
-        @Parameter(name = "媒体信息", required = true)
+        @Parameter(description = "媒体信息", required = true)
         mediaInfoReq: MediaInfoReq
     ): Result<Boolean>
 
@@ -85,10 +85,10 @@ interface UserExtMediaResource {
     @Path("/ids/{mediaId}")
     @GET
     fun getServiceMedia(
-        @Parameter(name = "userId", required = true)
+        @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "媒体ID", required = true)
+        @Parameter(description = "媒体ID", required = true)
         @PathParam("mediaId")
         mediaId: String
     ): Result<StoreMediaInfo?>
@@ -97,10 +97,10 @@ interface UserExtMediaResource {
     @Path("/services/{serviceCode}")
     @GET
     fun getServiceMediaByServiceCode(
-        @Parameter(name = "userId", required = true)
+        @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "扩展服务编码", required = true)
+        @Parameter(description = "扩展服务编码", required = true)
         @PathParam("serviceCode")
         serviceCode: String
     ): Result<List<StoreMediaInfo>?>

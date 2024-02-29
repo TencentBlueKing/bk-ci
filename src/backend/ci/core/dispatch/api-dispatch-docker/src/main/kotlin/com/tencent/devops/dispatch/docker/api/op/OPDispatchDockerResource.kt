@@ -60,12 +60,12 @@ interface OPDispatchDockerResource {
     @Path("/getDockerIpList")
     @Operation(summary = "获取Docker构建机列表")
     fun listDispatchDocker(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String,
         @QueryParam("page")
         page: Int?,
-        @Parameter(name = "每页多少条", required = false, example = "10")
+        @Parameter(description = "每页多少条", required = false, example = "10")
         @QueryParam("pageSize")
         pageSize: Int?
     ): Result<DockerIpListPage<DockerIpInfoVO>>
@@ -74,10 +74,10 @@ interface OPDispatchDockerResource {
     @Path("/add")
     @Operation(summary = "批量新增Docker构建机")
     fun createDispatchDocker(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String,
-        @Parameter(name = "IDC构建机信息", required = true)
+        @Parameter(description = "IDC构建机信息", required = true)
         dockerIpInfoVOs: List<DockerIpInfoVO>
     ): Result<Boolean>
 
@@ -85,13 +85,13 @@ interface OPDispatchDockerResource {
     @Path("/update/{dockerIp}")
     @Operation(summary = "更新Docker构建机状态")
     fun updateDispatchDocker(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String,
-        @Parameter(name = "IDC构建机ID", required = true)
+        @Parameter(description = "IDC构建机ID", required = true)
         @PathParam("dockerIp")
         dockerIp: String,
-        @Parameter(name = "IDC构建机信息", required = true)
+        @Parameter(description = "IDC构建机信息", required = true)
         dockerIpUpdateVO: DockerIpUpdateVO
     ): Result<Boolean>
 
@@ -99,7 +99,7 @@ interface OPDispatchDockerResource {
     @Path("/update/all/enable")
     @Operation(summary = "重置所有Docker构建机状态可用")
     fun updateAllDispatchDockerEnable(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String
     ): Result<Boolean>
@@ -108,10 +108,10 @@ interface OPDispatchDockerResource {
     @Path("/delete/{dockerIp}")
     @Operation(summary = "删除Docker构建机")
     fun deleteDispatchDocker(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String,
-        @Parameter(name = "服务ID", required = true)
+        @Parameter(description = "服务ID", required = true)
         @PathParam("dockerIp")
         dockerIp: String
     ): Result<Boolean>
@@ -120,13 +120,13 @@ interface OPDispatchDockerResource {
     @Path("/dockerBuildBinding/delete/{pipelineId}/{vmSeqId}")
     @Operation(summary = "删除Docker构建绑定关系")
     fun removeDockerBuildBinding(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String,
-        @Parameter(name = "流水线ID", required = true)
+        @Parameter(description = "流水线ID", required = true)
         @PathParam("pipelineId")
         pipelineId: String,
-        @Parameter(name = "构建序列号", required = true)
+        @Parameter(description = "构建序列号", required = true)
         @PathParam("vmSeqId")
         vmSeqId: String
     ): Result<Boolean>
@@ -135,7 +135,7 @@ interface OPDispatchDockerResource {
     @Path("/load-config/list")
     @Operation(summary = "获取Docker构建机负载配置")
     fun getDockerHostLoadConfig(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String
     ): Result<Map<String, DockerHostLoadConfig>>
@@ -144,10 +144,10 @@ interface OPDispatchDockerResource {
     @Path("/load-config/add")
     @Operation(summary = "新增Docker构建机负载配置")
     fun createDockerHostLoadConfig(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String,
-        @Parameter(name = "创建IDC构建机所需信息", required = true)
+        @Parameter(description = "创建IDC构建机所需信息", required = true)
         dockerHostLoadConfigMap: Map<String, DockerHostLoadConfig>
     ): Result<Boolean>
 
@@ -155,7 +155,7 @@ interface OPDispatchDockerResource {
     @Path("/docker/threshold/list")
     @Operation(summary = "获取docker漂移负载阈值")
     fun getDockerDriftThreshold(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String
     ): Result<Map<String, String>>
@@ -164,10 +164,10 @@ interface OPDispatchDockerResource {
     @Path("/docker/threshold/update")
     @Operation(summary = "更新docker漂移负载阈值")
     fun updateDockerDriftThreshold(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String,
-        @Parameter(name = "阈值", required = true)
+        @Parameter(description = "阈值", required = true)
         hostDriftLoad: HostDriftLoad
     ): Result<Boolean>
 }

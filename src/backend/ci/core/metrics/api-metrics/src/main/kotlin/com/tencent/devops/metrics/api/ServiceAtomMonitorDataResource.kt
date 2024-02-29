@@ -50,13 +50,13 @@ interface ServiceAtomMonitorDataResource {
     @GET
     @Path("/{atomCode}/statistic")
     fun queryAtomMonitorStatisticData(
-        @Parameter(name = "插件标识", required = true)
+        @Parameter(description = "插件标识", required = true)
         @PathParam("atomCode")
         atomCode: String,
-        @Parameter(name = "开始时间", required = true)
+        @Parameter(description = "开始时间", required = true)
         @QueryParam("startTime")
         startTime: String,
-        @Parameter(name = "结束时间", required = true)
+        @Parameter(description = "结束时间", required = true)
         @QueryParam("endTime")
         endTime: String
     ): Result<AtomMonitorInfoVO>

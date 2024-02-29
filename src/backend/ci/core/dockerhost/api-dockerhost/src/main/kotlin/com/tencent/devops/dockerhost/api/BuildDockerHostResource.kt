@@ -53,25 +53,25 @@ interface BuildDockerHostResource {
     @POST
     @Path("/build/{projectId}/{pipelineId}/{vmSeqId}/{buildId}")
     fun dockerBuild(
-        @Parameter(name = "项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(name = "流水线Id", required = true)
+        @Parameter(description = "流水线Id", required = true)
         @PathParam("pipelineId")
         pipelineId: String,
-        @Parameter(name = "vmSeqId", required = true)
+        @Parameter(description = "vmSeqId", required = true)
         @PathParam("vmSeqId")
         vmSeqId: String,
-        @Parameter(name = "buildId", required = true)
+        @Parameter(description = "buildId", required = true)
         @PathParam("buildId")
         buildId: String,
-        @Parameter(name = "elementId", required = true)
+        @Parameter(description = "elementId", required = true)
         @QueryParam("elementId")
         elementId: String,
-        @Parameter(name = "是否开启镜像扫描", required = false)
+        @Parameter(description = "是否开启镜像扫描", required = false)
         @QueryParam("scanFlag")
         scanFlag: Boolean?,
-        @Parameter(name = "镜像构建参数", required = true)
+        @Parameter(description = "镜像构建参数", required = true)
         dockerBuildParam: DockerBuildParam
     ): Result<Boolean>
 
@@ -79,10 +79,10 @@ interface BuildDockerHostResource {
     @GET
     @Path("/build/{vmSeqId}/{buildId}")
     fun getDockerBuildStatus(
-        @Parameter(name = "vmSeqId", required = true)
+        @Parameter(description = "vmSeqId", required = true)
         @PathParam("vmSeqId")
         vmSeqId: String,
-        @Parameter(name = "buildId", required = true)
+        @Parameter(description = "buildId", required = true)
         @PathParam("buildId")
         buildId: String
     ): Result<Pair<Status, String>>

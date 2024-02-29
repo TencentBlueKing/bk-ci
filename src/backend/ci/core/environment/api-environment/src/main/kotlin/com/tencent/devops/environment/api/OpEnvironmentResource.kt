@@ -47,7 +47,7 @@ interface OpEnvironmentResource {
     @PUT
     @Path("/refresh_gateway")
     fun refreshGateway(
-        @Parameter(name = "新旧网关映射")
+        @Parameter(description = "新旧网关映射")
         oldToNewMap: Map<String, String>
     ): Result<Boolean>
 

@@ -58,11 +58,11 @@ interface WebIDEResource {
     @GET
     @Path("/ideList/{projectId}")
     fun getUserIDEList(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
         @PathParam("projectId")
-        @Parameter(name = "项目id", required = true)
+        @Parameter(description = "项目id", required = true)
         projectId: String
     ): Result<List<IDEInfo>>
 
@@ -70,10 +70,10 @@ interface WebIDEResource {
     @POST
     @Path("/setupAgent")
     fun setupAgent(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "IDE Agent请求包", required = true)
+        @Parameter(description = "IDE Agent请求包", required = true)
         req: IDEAgentReq
     ): Result<BuildId>
 
@@ -81,20 +81,20 @@ interface WebIDEResource {
     @GET
     @Path("/getAgentInstallLink/{projectId}/{zoneName}/{operationSystem}/{initIp}")
     fun getAgentInstallLink(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
         @PathParam("projectId")
-        @Parameter(name = "项目id", required = true, example = "start")
+        @Parameter(description = "项目id", required = true, example = "start")
         projectId: String,
         @PathParam("zoneName")
-        @Parameter(name = "服务器所在地", required = true, example = "0")
+        @Parameter(description = "服务器所在地", required = true, example = "0")
         zoneName: String,
         @PathParam("operationSystem")
-        @Parameter(name = "操作系统类型(可选：LINUX/WINDOWS/MACOS)", required = true, example = "LINUX")
+        @Parameter(description = "操作系统类型(可选：LINUX/WINDOWS/MACOS)", required = true, example = "LINUX")
         operationSystem: String,
         @PathParam("initIp")
-        @Parameter(name = "构建机IP", required = false)
+        @Parameter(description = "构建机IP", required = false)
         initIp: String
     ): Result<ThirdPartyAgentStaticInfo>
 
@@ -102,10 +102,10 @@ interface WebIDEResource {
     @Path("/userProject")
     @Operation(summary = "查询用户项目")
     fun getUserProject(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "accessToken", required = true)
+        @Parameter(description = "accessToken", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_ACCESS_TOKEN)
         accessToken: String
     ): Result<ProjectVO?>
@@ -114,11 +114,11 @@ interface WebIDEResource {
     @Path("/heartBeat/{ip}")
     @Operation(summary = "ide心跳上报接口")
     fun heartBeat(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
         @PathParam("ip")
-        @Parameter(name = "IDE实例的ip地址", required = true)
+        @Parameter(description = "IDE实例的ip地址", required = true)
         ip: String
     ): Result<Boolean>
 
@@ -126,11 +126,11 @@ interface WebIDEResource {
     @Path("/lastOpenDir/{ip}")
     @Operation(summary = "获取上次打开的项目路径")
     fun lastOpenDir(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
         @PathParam("ip")
-        @Parameter(name = "实例id", required = true)
+        @Parameter(description = "实例id", required = true)
         ip: String
     ): Result<IdeDirInfo>
 
@@ -138,13 +138,13 @@ interface WebIDEResource {
     @Path("/lastOpenDir/{ip}")
     @Operation(summary = "更新上次打开的项目路径")
     fun updateLastOpenDir(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
         @PathParam("ip")
-        @Parameter(name = "实例id", required = true)
+        @Parameter(description = "实例id", required = true)
         ip: String,
-        @Parameter(name = "路径", required = true)
+        @Parameter(description = "路径", required = true)
         path: String
     ): Result<Boolean>
 }

@@ -61,10 +61,10 @@ interface OpProjectWorkspaceResource {
     @POST
     @Path("/assign")
     fun assignWorkspace(
-        @Parameter(name = "用户ID", required = true)
+        @Parameter(description = "用户ID", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "分配数据")
+        @Parameter(description = "分配数据")
         data: OpProjectWorkspaceAssignData
     ): Result<Boolean>
 
@@ -72,10 +72,10 @@ interface OpProjectWorkspaceResource {
     @POST
     @Path("/list")
     fun getProjectWorkspaceList(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "查询参数")
+        @Parameter(description = "查询参数")
         data: ProjectWorkspaceFetchData
     ): Result<Page<ProjectWorkspace>>
 
@@ -83,10 +83,10 @@ interface OpProjectWorkspaceResource {
     @POST
     @Path("/fetchOwnerAndAdmin")
     fun fetchOwnerAndAdmin(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "获取数据")
+        @Parameter(description = "获取数据")
         data: FetchOwnerAndAdminData
     ): Result<Set<String>>
 
@@ -94,10 +94,10 @@ interface OpProjectWorkspaceResource {
     @POST
     @Path("/updateCCHost")
     fun updateCCHost(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "修改数据")
+        @Parameter(description = "修改数据")
         data: OpUpdateCCHostData
     ): Result<Boolean>
 
@@ -105,7 +105,7 @@ interface OpProjectWorkspaceResource {
     @POST
     @Path("/refreshCodeProxy")
     fun refreshCodeProxy(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
         @QueryParam("projectId")
@@ -117,10 +117,10 @@ interface OpProjectWorkspaceResource {
     @Path("/list/export")
     @Produces(MediaType.APPLICATION_OCTET_STREAM)
     fun exportProjectWorkspaceList(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "查询参数")
+        @Parameter(description = "查询参数")
         data: ProjectWorkspaceFetchData
     ): Response
 
@@ -128,10 +128,10 @@ interface OpProjectWorkspaceResource {
     @POST
     @Path("/notify")
     fun notify(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "通知信息", required = true)
+        @Parameter(description = "通知信息", required = true)
         notifyData: WorkspaceNotifyData
     ): Result<Boolean>
 
@@ -139,7 +139,7 @@ interface OpProjectWorkspaceResource {
     @GET
     @Path("/notify/list")
     fun fetchNotifyList(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
         @QueryParam("page")

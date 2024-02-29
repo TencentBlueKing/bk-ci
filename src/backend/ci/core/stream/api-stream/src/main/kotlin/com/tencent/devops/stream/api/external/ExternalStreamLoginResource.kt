@@ -49,7 +49,7 @@ interface ExternalStreamLoginResource {
     @GET
     @Path("url")
     fun loginUrl(
-        @Parameter(name = "type")
+        @Parameter(description = "type")
         @QueryParam("type")
         type: String
     ): Result<String>

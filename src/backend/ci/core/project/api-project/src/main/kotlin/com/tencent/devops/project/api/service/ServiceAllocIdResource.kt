@@ -50,7 +50,7 @@ interface ServiceAllocIdResource {
     @Path("/types/segment/tags/{bizTag}/generate")
     @Operation(summary = "按号段模式生成Id")
     fun generateSegmentId(
-        @Parameter(name = "业务标签", required = true)
+        @Parameter(description = "业务标签", required = true)
         @PathParam("bizTag")
         @BkField(minLength = 1, maxLength = 128)
         bizTag: String
@@ -60,11 +60,11 @@ interface ServiceAllocIdResource {
     @Path("/types/segment/tags/{bizTag}/batchGenerate")
     @Operation(summary = "按号段模式批量生成Id(本质是for循环实现,减少远程调用)")
     fun batchGenerateSegmentId(
-        @Parameter(name = "业务标签", required = true)
+        @Parameter(description = "业务标签", required = true)
         @PathParam("bizTag")
         @BkField(minLength = 1, maxLength = 128)
         bizTag: String,
-        @Parameter(name = "个数", required = true)
+        @Parameter(description = "个数", required = true)
         @QueryParam("number")
         number: Int
     ): Result<List<Long?>>

@@ -63,19 +63,19 @@ interface ApigwProjectResourceV2 {
     @Path("/newProject")
     @Operation(summary = "创建项目", tags = ["v2_app_projects_newProject"])
     fun create(
-        @Parameter(name = "appCode", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
+        @Parameter(description = "appCode", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
         appCode: String?,
-        @Parameter(name = "apigw Type", required = true)
+        @Parameter(description = "apigw Type", required = true)
         @PathParam("apigwType")
         apigwType: String?,
-        @Parameter(name = "userId", required = true)
+        @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String,
-        @Parameter(name = "PAAS_CC Token", required = true)
+        @Parameter(description = "PAAS_CC Token", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_ACCESS_TOKEN)
         accessToken: String,
-        @Parameter(name = "项目信息", required = true)
+        @Parameter(description = "项目信息", required = true)
         projectCreateInfo: ProjectCreateInfo
     ): Result<String>
 
@@ -83,22 +83,22 @@ interface ApigwProjectResourceV2 {
     @Path("/newProject/setRouter")
     @Operation(summary = "创建项目", tags = ["v2_app_projects_setRouter"])
     fun createProjectSetRouter(
-        @Parameter(name = "appCode", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
+        @Parameter(description = "appCode", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
         appCode: String?,
-        @Parameter(name = "apigw Type", required = true)
+        @Parameter(description = "apigw Type", required = true)
         @PathParam("apigwType")
         apigwType: String?,
-        @Parameter(name = "userId", required = true)
+        @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String,
-        @Parameter(name = "PAAS_CC Token", required = true)
+        @Parameter(description = "PAAS_CC Token", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_ACCESS_TOKEN)
         accessToken: String,
-        @Parameter(name = "项目对应的流量指向,一般为无权限校验的auto集群", required = true)
+        @Parameter(description = "项目对应的流量指向,一般为无权限校验的auto集群", required = true)
         @HeaderParam("routeTag")
         routerTag: String?,
-        @Parameter(name = "项目信息", required = true)
+        @Parameter(description = "项目信息", required = true)
         projectCreateInfo: ProjectCreateInfo
     ): Result<String>
 
@@ -106,25 +106,25 @@ interface ApigwProjectResourceV2 {
     @Path("/getProjectByOrganizationId")
     @Operation(summary = "根据组织架构查询所有项目", tags = ["v2_app_projects_getProjectByOrganizationId"])
     fun listProjectByOrganizationId(
-        @Parameter(name = "appCode", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
+        @Parameter(description = "appCode", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
         appCode: String?,
-        @Parameter(name = "apigw Type", required = true)
+        @Parameter(description = "apigw Type", required = true)
         @PathParam("apigwType")
         apigwType: String?,
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String,
-        @Parameter(name = "组织类型", required = true)
+        @Parameter(description = "组织类型", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_ORGANIZATION_TYPE)
         organizationType: String,
-        @Parameter(name = "组织Id", required = true)
+        @Parameter(description = "组织Id", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_ORGANIZATION_ID)
         organizationId: Long,
-        @Parameter(name = "deptName", required = false)
+        @Parameter(description = "deptName", required = false)
         @QueryParam("deptName")
         deptName: String?,
-        @Parameter(name = "centerName", required = false)
+        @Parameter(description = "centerName", required = false)
         @QueryParam("centerName")
         centerName: String?
     ): Result<List<ProjectVO>?>
@@ -133,25 +133,25 @@ interface ApigwProjectResourceV2 {
     @Path("/getProjectByName")
     @Operation(summary = "根据名称查询项目信息,组织限制", tags = ["v2_app_projects_getProjectByName"])
     fun getProjectByOrganizationId(
-        @Parameter(name = "appCode", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
+        @Parameter(description = "appCode", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
         appCode: String?,
-        @Parameter(name = "apigw Type", required = true)
+        @Parameter(description = "apigw Type", required = true)
         @PathParam("apigwType")
         apigwType: String?,
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String,
-        @Parameter(name = "组织类型", required = true)
+        @Parameter(description = "组织类型", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_ORGANIZATION_TYPE)
         organizationType: String,
-        @Parameter(name = "组织Id", required = true)
+        @Parameter(description = "组织Id", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_ORGANIZATION_ID)
         organizationId: Long,
-        @Parameter(name = "项目名称,精准匹配", required = true)
+        @Parameter(description = "项目名称,精准匹配", required = true)
         @QueryParam("name")
         name: String,
-        @Parameter(name = "名称类型: 中文名称、英文名称", required = true)
+        @Parameter(description = "名称类型: 中文名称、英文名称", required = true)
         @QueryParam("nameType")
         nameType: ProjectValidateType
     ): Result<ProjectVO?>
@@ -160,16 +160,16 @@ interface ApigwProjectResourceV2 {
     @Path("/{projectId}/createByUser")
     @Operation(summary = "添加指定用户到指定项目用户组", tags = ["v2_app_projects_createByUser"])
     fun createProjectUserByUser(
-        @Parameter(name = "appCode", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
+        @Parameter(description = "appCode", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
         appCode: String?,
-        @Parameter(name = "apigw Type", required = true)
+        @Parameter(description = "apigw Type", required = true)
         @PathParam("apigwType")
         apigwType: String?,
-        @Parameter(name = "执行用户Id", required = true)
+        @Parameter(description = "执行用户Id", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         createUserId: String,
-        @Parameter(name = "添加信息", required = true)
+        @Parameter(description = "添加信息", required = true)
         createInfo: ProjectCreateUserDTO
     ): Result<Boolean?>
 
@@ -177,16 +177,16 @@ interface ApigwProjectResourceV2 {
     @Path("/{projectId}/createUser")
     @Operation(summary = "添加指定用户到指定项目用户组", tags = ["v2_app_projects_createUser"])
     fun createProjectUser(
-        @Parameter(name = "appCode", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
+        @Parameter(description = "appCode", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
         appCode: String?,
-        @Parameter(name = "apigw Type", required = true)
+        @Parameter(description = "apigw Type", required = true)
         @PathParam("apigwType")
         apigwType: String?,
-        @Parameter(name = "执行用户Id", required = true)
+        @Parameter(description = "执行用户Id", required = true)
         @QueryParam("createUserId")
         createUserId: String,
-        @Parameter(name = "添加信息", required = true)
+        @Parameter(description = "添加信息", required = true)
         createInfo: ProjectCreateUserDTO
     ): Result<Boolean?>
 
@@ -194,19 +194,19 @@ interface ApigwProjectResourceV2 {
     @Path("/createUserByApp")
     @Operation(summary = "创建用户", tags = ["v2_app_projects_createUserByApp"])
     fun createProjectaUserByApp(
-        @Parameter(name = "appCode", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
+        @Parameter(description = "appCode", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
         appCode: String?,
-        @Parameter(name = "apigw Type", required = true)
+        @Parameter(description = "apigw Type", required = true)
         @PathParam("apigwType")
         apigwType: String?,
-        @Parameter(name = "组织类型", required = true)
+        @Parameter(description = "组织类型", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_ORGANIZATION_TYPE)
         organizationType: String,
-        @Parameter(name = "组织Id", required = true)
+        @Parameter(description = "组织Id", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_ORGANIZATION_ID)
         organizationId: Long,
-        @Parameter(name = "添加信息", required = true)
+        @Parameter(description = "添加信息", required = true)
         createInfo: ProjectCreateUserDTO
     ): Result<Boolean?>
 
@@ -214,19 +214,19 @@ interface ApigwProjectResourceV2 {
     @Path("/permissions")
     @Operation(summary = "创建权限", tags = ["v2_app_projects_permissions"])
     fun createUserPipelinePermission(
-        @Parameter(name = "appCode", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
+        @Parameter(description = "appCode", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
         appCode: String?,
-        @Parameter(name = "apigw Type", required = true)
+        @Parameter(description = "apigw Type", required = true)
         @PathParam("apigwType")
         apigwType: String?,
-        @Parameter(name = "执行用户Id", required = true)
+        @Parameter(description = "执行用户Id", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         createUserId: String?,
-        @Parameter(name = "是否需要校验管理员", required = false)
+        @Parameter(description = "是否需要校验管理员", required = false)
         @HeaderParam("checkManager")
         checkManager: Boolean?,
-        @Parameter(name = "添加信息", required = true)
+        @Parameter(description = "添加信息", required = true)
         createInfo: PipelinePermissionInfo
     ): Result<Boolean?>
 
@@ -234,19 +234,19 @@ interface ApigwProjectResourceV2 {
     @Path("/{projectId}/roles")
     @Operation(summary = "获取roles", tags = ["v2_app_projects_roles"])
     fun getProjectRoles(
-        @Parameter(name = "appCode", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
+        @Parameter(description = "appCode", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
         appCode: String?,
-        @Parameter(name = "apigw Type", required = true)
+        @Parameter(description = "apigw Type", required = true)
         @PathParam("apigwType")
         apigwType: String?,
-        @Parameter(name = "组织类型", required = true)
+        @Parameter(description = "组织类型", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_ORGANIZATION_TYPE)
         organizationType: String,
-        @Parameter(name = "组织Id", required = true)
+        @Parameter(description = "组织Id", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_ORGANIZATION_ID)
         organizationId: Long,
-        @Parameter(name = "项目code", required = true)
+        @Parameter(description = "项目code", required = true)
         @PathParam("projectId")
         projectId: String
     ): Result<List<BKAuthProjectRolesResources>?>

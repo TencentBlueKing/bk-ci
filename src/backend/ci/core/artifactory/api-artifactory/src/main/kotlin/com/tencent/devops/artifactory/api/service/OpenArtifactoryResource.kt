@@ -49,10 +49,10 @@ interface OpenArtifactoryResource {
     @Path("/artifactList")
     @Operation(summary = "更新流水线构件列表")
     fun updateArtifactList(
-        @Parameter(name = "认证token", required = true)
+        @Parameter(description = "认证token", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_BK_TOKEN)
         token: String,
-        @Parameter(name = "新上传构件回调数据", required = true)
+        @Parameter(description = "新上传构件回调数据", required = true)
         nodeCreatedEventPayload: NodeCreatedEventPayload
     )
 }

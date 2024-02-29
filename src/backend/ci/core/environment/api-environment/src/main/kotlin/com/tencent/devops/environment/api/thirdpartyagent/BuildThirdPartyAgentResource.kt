@@ -48,13 +48,13 @@ interface BuildThirdPartyAgentResource {
     @GET
     @Path("/project/{projectId}/agentId/{agentId}/getOs")
     fun getOs(
-        @Parameter(name = "用户ID", required = true)
+        @Parameter(description = "用户ID", required = true)
         @QueryParam("userId")
         userId: String,
-        @Parameter(name = "项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(name = "agentId", required = true)
+        @Parameter(description = "agentId", required = true)
         @PathParam("agentId")
         agentId: String
     ): Result<String>

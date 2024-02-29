@@ -27,19 +27,19 @@ interface ApigwTXEnvironmentResourceV4 {
     @POST
     @Path("/projects/{projectId}/add_cmdb_nodes")
     fun addCmdbNodes(
-        @Parameter(name = "appCode", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
+        @Parameter(description = "appCode", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
         appCode: String?,
-        @Parameter(name = "apigw Type", required = true)
+        @Parameter(description = "apigw Type", required = true)
         @PathParam("apigwType")
         apigwType: String?,
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "项目ID(项目英文名)", required = true)
+        @Parameter(description = "项目ID(项目英文名)", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(name = "CMDB节点 IP", required = true)
+        @Parameter(description = "CMDB节点 IP", required = true)
         nodeIps: List<String>
     ): Result<AddCmdbNodesRes>
 
@@ -47,7 +47,7 @@ interface ApigwTXEnvironmentResourceV4 {
     @POST
     @Path("/stock_data_update/check_deploy_nodes_in_cmdb")
     fun checkDeployNodesInCmdb(
-        @Parameter(name = "用户ID", required = true)
+        @Parameter(description = "用户ID", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String = AUTH_HEADER_USER_ID_DEFAULT_VALUE
     )
@@ -56,7 +56,7 @@ interface ApigwTXEnvironmentResourceV4 {
     @POST
     @Path("/stock_data_update/add_nodes_to_cc")
     fun addNodesToCC(
-        @Parameter(name = "用户ID", required = true)
+        @Parameter(description = "用户ID", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String = AUTH_HEADER_USER_ID_DEFAULT_VALUE
     )
@@ -65,7 +65,7 @@ interface ApigwTXEnvironmentResourceV4 {
     @POST
     @Path("/stock_data_update/update_gse_agent")
     fun updateGseAgent(
-        @Parameter(name = "用户ID", required = true)
+        @Parameter(description = "用户ID", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String = AUTH_HEADER_USER_ID_DEFAULT_VALUE
     )

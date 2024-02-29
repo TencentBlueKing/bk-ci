@@ -64,10 +64,10 @@ interface BuildLogPrintResource {
     @POST
     @Path("/")
     fun addLogLine(
-        @Parameter(name = "构建ID", required = true)
+        @Parameter(description = "构建ID", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_BUILD_ID)
         buildId: String,
-        @Parameter(name = "一条日志", required = true)
+        @Parameter(description = "一条日志", required = true)
         logMessage: LogMessage
     ): Result<Boolean>
 
@@ -75,10 +75,10 @@ interface BuildLogPrintResource {
     @POST
     @Path("/red")
     fun addRedLogLine(
-        @Parameter(name = "构建ID", required = true)
+        @Parameter(description = "构建ID", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_BUILD_ID)
         buildId: String,
-        @Parameter(name = "一条日志", required = true)
+        @Parameter(description = "一条日志", required = true)
         logMessage: LogMessage
     ): Result<Boolean>
 
@@ -86,10 +86,10 @@ interface BuildLogPrintResource {
     @POST
     @Path("/yellow")
     fun addYellowLogLine(
-        @Parameter(name = "构建ID", required = true)
+        @Parameter(description = "构建ID", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_BUILD_ID)
         buildId: String,
-        @Parameter(name = "一条日志", required = true)
+        @Parameter(description = "一条日志", required = true)
         logMessage: LogMessage
     ): Result<Boolean>
 
@@ -97,10 +97,10 @@ interface BuildLogPrintResource {
     @POST
     @Path("/multi")
     fun addLogMultiLine(
-        @Parameter(name = "构建ID", required = true)
+        @Parameter(description = "构建ID", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_BUILD_ID)
         buildId: String,
-        @Parameter(name = "多条日志列表", required = true)
+        @Parameter(description = "多条日志列表", required = true)
         logMessages: List<LogMessage>
     ): Result<Boolean>
 
@@ -108,22 +108,22 @@ interface BuildLogPrintResource {
     @POST
     @Path("/status")
     fun addLogStatus(
-        @Parameter(name = "构建ID", required = true)
+        @Parameter(description = "构建ID", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_BUILD_ID)
         buildId: String,
-        @Parameter(name = "分辨插件的tag，默认填对应插件id", required = false)
+        @Parameter(description = "分辨插件的tag，默认填对应插件id", required = false)
         @QueryParam("tag")
         tag: String?,
-        @Parameter(name = "插件内的分类的子tag，默认为空", required = false)
+        @Parameter(description = "插件内的分类的子tag，默认为空", required = false)
         @QueryParam("subTag")
         subTag: String?,
-        @Parameter(name = "job id或者container的34位id", required = false)
+        @Parameter(description = "job id或者container的34位id", required = false)
         @QueryParam("jobId")
         jobId: String?,
-        @Parameter(name = "执行次数", required = false)
+        @Parameter(description = "执行次数", required = false)
         @QueryParam("executeCount")
         executeCount: Int?,
-        @Parameter(name = "日志存储模式", required = false)
+        @Parameter(description = "日志存储模式", required = false)
         @QueryParam("logMode")
         logMode: String?
     ): Result<Boolean>
@@ -132,25 +132,25 @@ interface BuildLogPrintResource {
     @PUT
     @Path("/status")
     fun updateLogStatus(
-        @Parameter(name = "构建ID", required = true)
+        @Parameter(description = "构建ID", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_BUILD_ID)
         buildId: String,
-        @Parameter(name = "是否已构建完成", required = true)
+        @Parameter(description = "是否已构建完成", required = true)
         @QueryParam("finished")
         finished: Boolean,
-        @Parameter(name = "分辨插件的tag，默认填对应插件id", required = false)
+        @Parameter(description = "分辨插件的tag，默认填对应插件id", required = false)
         @QueryParam("tag")
         tag: String?,
-        @Parameter(name = "插件内的分类的子tag，默认为空", required = false)
+        @Parameter(description = "插件内的分类的子tag，默认为空", required = false)
         @QueryParam("subTag")
         subTag: String?,
-        @Parameter(name = "job id或者container的34位id", required = false)
+        @Parameter(description = "job id或者container的34位id", required = false)
         @QueryParam("jobId")
         jobId: String?,
-        @Parameter(name = "执行次数", required = false)
+        @Parameter(description = "执行次数", required = false)
         @QueryParam("executeCount")
         executeCount: Int?,
-        @Parameter(name = "日志存储模式", required = false)
+        @Parameter(description = "日志存储模式", required = false)
         @QueryParam("logMode")
         logMode: String?
     ): Result<Boolean>
@@ -159,13 +159,13 @@ interface BuildLogPrintResource {
     @POST
     @Path("/mode")
     fun updateLogStorageMode(
-        @Parameter(name = "构建ID", required = true)
+        @Parameter(description = "构建ID", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_BUILD_ID)
         buildId: String,
-        @Parameter(name = "执行次数", required = false)
+        @Parameter(description = "执行次数", required = false)
         @QueryParam("executeCount")
         executeCount: Int,
-        @Parameter(name = "所有插件的日志存储结果", required = true)
+        @Parameter(description = "所有插件的日志存储结果", required = true)
         propertyList: List<TaskBuildLogProperty>
     ): Result<Boolean>
 
@@ -173,34 +173,34 @@ interface BuildLogPrintResource {
     @GET
     @Path("/{projectId}/{pipelineId}/{buildId}/")
     fun getInitLogs(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(name = "流水线ID", required = true)
+        @Parameter(description = "流水线ID", required = true)
         @PathParam("pipelineId")
         pipelineId: String,
-        @Parameter(name = "构建ID", required = true)
+        @Parameter(description = "构建ID", required = true)
         @PathParam("buildId")
         buildId: String,
-        @Parameter(name = "是否包含调试日志", required = false)
+        @Parameter(description = "是否包含调试日志", required = false)
         @QueryParam("debug")
         debug: Boolean? = false,
-        @Parameter(name = "过滤日志级别", required = false)
+        @Parameter(description = "过滤日志级别", required = false)
         @QueryParam("logType")
         logType: LogType? = null,
-        @Parameter(name = "对应elementId", required = false)
+        @Parameter(description = "对应elementId", required = false)
         @QueryParam("tag")
         tag: String?,
-        @Parameter(name = "指定subTag", required = false)
+        @Parameter(description = "指定subTag", required = false)
         @QueryParam("subTag")
         subTag: String?,
-        @Parameter(name = "对应jobId", required = false)
+        @Parameter(description = "对应jobId", required = false)
         @QueryParam("jobId")
         jobId: String?,
-        @Parameter(name = "执行次数", required = false)
+        @Parameter(description = "执行次数", required = false)
         @QueryParam("executeCount")
         executeCount: Int?
     ): Result<QueryLogs>
@@ -209,37 +209,37 @@ interface BuildLogPrintResource {
     @GET
     @Path("/{projectId}/{pipelineId}/{buildId}/after")
     fun getAfterLogs(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(name = "流水线ID", required = true)
+        @Parameter(description = "流水线ID", required = true)
         @PathParam("pipelineId")
         pipelineId: String,
-        @Parameter(name = "构建ID", required = true)
+        @Parameter(description = "构建ID", required = true)
         @PathParam("buildId")
         buildId: String,
-        @Parameter(name = "起始行号", required = true)
+        @Parameter(description = "起始行号", required = true)
         @QueryParam("start")
         start: Long,
-        @Parameter(name = "是否包含调试日志", required = false)
+        @Parameter(description = "是否包含调试日志", required = false)
         @QueryParam("debug")
         debug: Boolean? = false,
-        @Parameter(name = "过滤日志级别", required = false)
+        @Parameter(description = "过滤日志级别", required = false)
         @QueryParam("logType")
         logType: LogType? = null,
-        @Parameter(name = "对应elementId", required = false)
+        @Parameter(description = "对应elementId", required = false)
         @QueryParam("tag")
         tag: String?,
-        @Parameter(name = "指定subTag", required = false)
+        @Parameter(description = "指定subTag", required = false)
         @QueryParam("subTag")
         subTag: String?,
-        @Parameter(name = "对应jobId", required = false)
+        @Parameter(description = "对应jobId", required = false)
         @QueryParam("jobId")
         jobId: String?,
-        @Parameter(name = "执行次数", required = false)
+        @Parameter(description = "执行次数", required = false)
         @QueryParam("executeCount")
         executeCount: Int?
     ): Result<QueryLogs>

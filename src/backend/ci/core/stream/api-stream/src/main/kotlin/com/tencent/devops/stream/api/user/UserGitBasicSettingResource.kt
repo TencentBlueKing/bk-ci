@@ -62,13 +62,13 @@ interface UserGitBasicSettingResource {
     @POST
     @Path("/enable")
     fun enableStream(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "开启或关闭", required = true)
+        @Parameter(description = "开启或关闭", required = true)
         @QueryParam("enabled")
         enabled: Boolean,
-        @Parameter(name = "stream 项目信息(初始化时用)", required = false)
+        @Parameter(description = "stream 项目信息(初始化时用)", required = false)
         projectInfo: StreamGitProjectInfoWithProject
     ): Result<Boolean>
 
@@ -76,10 +76,10 @@ interface UserGitBasicSettingResource {
     @GET
     @Path("/{projectId}")
     fun getStreamConf(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "蓝盾项目ID", required = true)
+        @Parameter(description = "蓝盾项目ID", required = true)
         @PathParam("projectId")
         projectId: String
     ): Result<StreamBasicSetting?>
@@ -88,13 +88,13 @@ interface UserGitBasicSettingResource {
     @POST
     @Path("/{projectId}/save")
     fun saveStreamConf(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "蓝盾项目ID", required = true)
+        @Parameter(description = "蓝盾项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(name = "stream 项目配置", required = true)
+        @Parameter(description = "stream 项目配置", required = true)
         streamUpdateSetting: StreamUpdateSetting
     ): Result<Boolean>
 
@@ -102,13 +102,13 @@ interface UserGitBasicSettingResource {
     @POST
     @Path("/{projectId}/save_review_setting")
     fun saveStreamReviewSetting(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "蓝盾项目ID", required = true)
+        @Parameter(description = "蓝盾项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(name = "stream 权限校验配置", required = true)
+        @Parameter(description = "stream 权限校验配置", required = true)
         triggerReviewSetting: TriggerReviewSetting
     ): Result<Boolean>
 
@@ -116,13 +116,13 @@ interface UserGitBasicSettingResource {
     @POST
     @Path("/{projectId}/reset/oauth")
     fun updateEnableUser(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "蓝盾项目ID", required = true)
+        @Parameter(description = "蓝盾项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(name = "目标授权人", required = true)
+        @Parameter(description = "目标授权人", required = true)
         @QueryParam("authUserId")
         authUserId: String
     ): Result<Boolean>
@@ -131,19 +131,19 @@ interface UserGitBasicSettingResource {
     @GET
     @Path("/isOauth")
     fun isOAuth(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "重定向url类型", required = false)
+        @Parameter(description = "重定向url类型", required = false)
         @QueryParam("redirectUrlType")
         redirectUrlType: RedirectUrlTypeEnum?,
-        @Parameter(name = "oauth认证成功后重定向到前端的地址", required = false)
+        @Parameter(description = "oauth认证成功后重定向到前端的地址", required = false)
         @QueryParam("redirectUrl")
         redirectUrl: String?,
-        @Parameter(name = "stream 项目Id", required = false)
+        @Parameter(description = "stream 项目Id", required = false)
         @QueryParam("gitProjectId")
         gitProjectId: Long,
-        @Parameter(name = "是否刷新token", required = false)
+        @Parameter(description = "是否刷新token", required = false)
         @QueryParam("refreshToken")
         refreshToken: Boolean? = true
     ): Result<AuthorizeResult>
@@ -152,19 +152,19 @@ interface UserGitBasicSettingResource {
     @GET
     @Path("/projects/{projectId}/nodes/{nodeHashId}/listAgentBuilds")
     fun listAgentBuilds(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(name = "Node Hash ID", required = true)
+        @Parameter(description = "Node Hash ID", required = true)
         @PathParam("nodeHashId")
         nodeHashId: String,
-        @Parameter(name = "第几页", required = false)
+        @Parameter(description = "第几页", required = false)
         @QueryParam("page")
         page: Int?,
-        @Parameter(name = "每页条数", required = false)
+        @Parameter(description = "每页条数", required = false)
         @QueryParam("pageSize")
         pageSize: Int?
     ): Result<Page<AgentBuildDetail>>
@@ -173,10 +173,10 @@ interface UserGitBasicSettingResource {
     @GET
     @Path("/isInstallApp")
     fun isInstallApp(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "stream 项目Id", required = false)
+        @Parameter(description = "stream 项目Id", required = false)
         @QueryParam("gitProjectId")
         gitProjectId: Long
     ): Result<AppInstallationResult>

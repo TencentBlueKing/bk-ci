@@ -54,7 +54,7 @@ interface UserTemplateLabelResource {
     @GET
     @Path("/templateIds/{templateId}/labels")
     fun getTemplateLabelsByTemplateId(
-        @Parameter(name = "模板ID", required = true)
+        @Parameter(description = "模板ID", required = true)
         @PathParam("templateId")
         templateId: String
     ): Result<List<Label>?>

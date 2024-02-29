@@ -53,7 +53,7 @@ interface OpContainerResource {
     @POST
     @Path("/")
     fun add(
-        @Parameter(name = "流水线构建容器请求报文体", required = true)
+        @Parameter(description = "流水线构建容器请求报文体", required = true)
         pipelineContainerRequest: ContainerRequest
     ): Result<Boolean>
 
@@ -61,10 +61,10 @@ interface OpContainerResource {
     @PUT
     @Path("/{id}")
     fun update(
-        @Parameter(name = "容器ID", required = true)
+        @Parameter(description = "容器ID", required = true)
         @PathParam("id")
         id: String,
-        @Parameter(name = "流水线构建容器请求报文体", required = true)
+        @Parameter(description = "流水线构建容器请求报文体", required = true)
         pipelineContainerRequest: ContainerRequest
     ): Result<Boolean>
 
@@ -77,7 +77,7 @@ interface OpContainerResource {
     @GET
     @Path("/{id}")
     fun getContainerById(
-        @Parameter(name = "容器ID", required = true)
+        @Parameter(description = "容器ID", required = true)
         @PathParam("id")
         id: String
     ): Result<Container?>
@@ -86,7 +86,7 @@ interface OpContainerResource {
     @DELETE
     @Path("/{id}")
     fun deleteContainerById(
-        @Parameter(name = "容器ID", required = true)
+        @Parameter(description = "容器ID", required = true)
         @PathParam("id")
         id: String
     ): Result<Boolean>

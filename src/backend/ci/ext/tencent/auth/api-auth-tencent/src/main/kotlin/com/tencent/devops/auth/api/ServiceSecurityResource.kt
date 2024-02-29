@@ -21,10 +21,10 @@ interface ServiceSecurityResource {
     @GET
     @Path("/{projectId}/verifyProjectUser")
     fun verifyProjectUser(
-        @Parameter(name = "项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(name = "凭据", required = true)
+        @Parameter(description = "凭据", required = true)
         @QueryParam("credentialKey")
         credentialKey: String
     ): Result<Boolean?>
@@ -33,10 +33,10 @@ interface ServiceSecurityResource {
     @GET
     @Path("/{projectId}/getUserWaterMark")
     fun getUserWaterMark(
-        @Parameter(name = "项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(name = "凭据", required = true)
+        @Parameter(description = "凭据", required = true)
         @QueryParam("credentialKey")
         credentialKey: String
     ): Result<String?>

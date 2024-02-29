@@ -55,19 +55,19 @@ interface GitCIPipelineResource {
     @GET
     @Path("/{gitProjectId}/list")
     fun getPipelineList(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "gitProjectId", required = true)
+        @Parameter(description = "gitProjectId", required = true)
         @PathParam("gitProjectId")
         gitProjectId: Long,
-        @Parameter(name = "搜索关键字", required = false)
+        @Parameter(description = "搜索关键字", required = false)
         @QueryParam("keyword")
         keyword: String?,
-        @Parameter(name = "第几页", required = false, example = "1")
+        @Parameter(description = "第几页", required = false, example = "1")
         @QueryParam("page")
         page: Int?,
-        @Parameter(name = "每页多少条", required = false, example = "10")
+        @Parameter(description = "每页多少条", required = false, example = "10")
         @QueryParam("pageSize")
         pageSize: Int?
     ): Result<Page<V1GitProjectPipeline>>
@@ -76,16 +76,16 @@ interface GitCIPipelineResource {
     @GET
     @Path("/{gitProjectId}/{pipelineId}/info")
     fun getPipeline(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "gitProjectId", required = true)
+        @Parameter(description = "gitProjectId", required = true)
         @PathParam("gitProjectId")
         gitProjectId: Long,
-        @Parameter(name = "流水线ID", required = true)
+        @Parameter(description = "流水线ID", required = true)
         @PathParam("pipelineId")
         pipelineId: String,
-        @Parameter(name = "是否带有最新一次构建历史", required = false)
+        @Parameter(description = "是否带有最新一次构建历史", required = false)
         @QueryParam("withHistory")
         withHistory: Boolean? = false
     ): Result<V1GitProjectPipeline?>
@@ -94,16 +94,16 @@ interface GitCIPipelineResource {
     @POST
     @Path("/{gitProjectId}/{pipelineId}/enable")
     fun enablePipeline(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "gitProjectId", required = true)
+        @Parameter(description = "gitProjectId", required = true)
         @PathParam("gitProjectId")
         gitProjectId: Long,
-        @Parameter(name = "流水线ID", required = true)
+        @Parameter(description = "流水线ID", required = true)
         @PathParam("pipelineId")
         pipelineId: String,
-        @Parameter(name = "是否启用该流水线", required = true)
+        @Parameter(description = "是否启用该流水线", required = true)
         @QueryParam("enabled")
         enabled: Boolean
     ): Result<Boolean>
@@ -112,10 +112,10 @@ interface GitCIPipelineResource {
     @GET
     @Path("/{gitProjectId}/listInfo")
     fun listPipelineNames(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "gitProjectId", required = true)
+        @Parameter(description = "gitProjectId", required = true)
         @PathParam("gitProjectId")
         gitProjectId: Long
     ): Result<List<V1GitProjectPipeline>>

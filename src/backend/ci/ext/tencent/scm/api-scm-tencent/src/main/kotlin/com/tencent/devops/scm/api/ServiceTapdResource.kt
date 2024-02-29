@@ -54,7 +54,7 @@ interface ServiceTapdResource {
     @GET
     @Path("/appInstallUrl")
     fun appInstallUrl(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String
     ): Result<String>
@@ -63,13 +63,13 @@ interface ServiceTapdResource {
     @GET
     @Path("/callbackUrl")
     fun callbackUrl(
-        @Parameter(name = "code")
+        @Parameter(description = "code")
         @QueryParam("code")
         code: String,
-        @Parameter(name = "state")
+        @Parameter(description = "state")
         @QueryParam("state")
         state: String,
-        @Parameter(name = "resource")
+        @Parameter(description = "resource")
         @QueryParam("resource")
         resource: String
     ): Result<String>

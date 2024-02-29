@@ -56,14 +56,14 @@ interface ServiceStoreStatisticResource {
     @Path("/types/{storeType}/codes/{storeCode}")
     @GET
     fun getStatisticByCode(
-        @Parameter(name = "userId", required = true)
+        @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "组件类型", required = true)
+        @Parameter(description = "组件类型", required = true)
         @PathParam("storeType")
         @BkField(patternStyle = BkStyleEnum.CODE_STYLE)
         storeType: StoreTypeEnum,
-        @Parameter(name = "组件标识", required = true)
+        @Parameter(description = "组件标识", required = true)
         @PathParam("storeCode")
         storeCode: String
     ): Result<StoreStatistic>
@@ -72,11 +72,11 @@ interface ServiceStoreStatisticResource {
     @PUT
     @Path("/types/{storeType}/pipeline/num/update")
     fun updatePipelineNum(
-        @Parameter(name = "组件类型", required = true)
+        @Parameter(description = "组件类型", required = true)
         @PathParam("storeType")
         @BkField(patternStyle = BkStyleEnum.CODE_STYLE)
         storeType: StoreTypeEnum,
-        @Parameter(name = "使用store组件流水线数量更新实体对象列表", required = true)
+        @Parameter(description = "使用store组件流水线数量更新实体对象列表", required = true)
         pipelineNumUpdateList: List<StoreStatisticPipelineNumUpdate>
     ): Result<Boolean>
 }

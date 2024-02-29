@@ -54,23 +54,23 @@ interface ApigwPipelineWebhookResourceV3 {
     @Operation(summary = "获取流水线的webhook列表", tags = ["v3_user_pipeline_webhook_list", "v3_app_pipeline_webhook_list"])
     @GET
     fun listScmWebhook(
-        @Parameter(name = "appCode", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
+        @Parameter(description = "appCode", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
         appCode: String?,
-        @Parameter(name = "apigw Type", required = true)
+        @Parameter(description = "apigw Type", required = true)
         @PathParam("apigwType")
         apigwType: String?,
-        @Parameter(name = "userId", required = true)
+        @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String,
         @PathParam("projectId")
         projectId: String,
         @PathParam("pipelineId")
         pipelineId: String,
-        @Parameter(name = "页码", required = false)
+        @Parameter(description = "页码", required = false)
         @QueryParam("page")
         page: Int?,
-        @Parameter(name = "每页条数(默认20, 最大100)", required = false)
+        @Parameter(description = "每页条数(默认20, 最大100)", required = false)
         @QueryParam("pageSize")
         pageSize: Int?
     ): Result<List<PipelineWebhook>>

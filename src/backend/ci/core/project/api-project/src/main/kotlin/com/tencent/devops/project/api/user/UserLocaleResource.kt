@@ -52,7 +52,7 @@ interface UserLocaleResource {
     @Path("/get")
     @Operation(summary = "获取用户国际化信息")
     fun getUserLocale(
-        @Parameter(name = "userId", required = true)
+        @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String
     ): Result<LocaleInfo>
@@ -61,7 +61,7 @@ interface UserLocaleResource {
     @Path("/language/list")
     @Operation(summary = "获取蓝盾支持的语言")
     fun listSupportLanguages(
-        @Parameter(name = "userId", required = true)
+        @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String
     ): Result<List<LanguageInfo>>
@@ -70,10 +70,10 @@ interface UserLocaleResource {
     @Path("/update")
     @Operation(summary = "更新用户国际化信息")
     fun updateUserLocale(
-        @Parameter(name = "userId", required = true)
+        @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String,
-        @Parameter(name = "国际化信息", required = true)
+        @Parameter(description = "国际化信息", required = true)
         localeInfo: LocaleInfo
     ): Result<Boolean>
 }

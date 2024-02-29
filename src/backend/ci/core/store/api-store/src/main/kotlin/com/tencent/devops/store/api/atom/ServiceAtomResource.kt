@@ -59,7 +59,7 @@ interface ServiceAtomResource {
         keyPrefixNames = ["ATOM", "{data[*].atomCode}", "{data[*].version}", "releaseInfo"]
     )
     fun getInstalledAtoms(
-        @Parameter(name = "项目代码", required = true)
+        @Parameter(description = "项目代码", required = true)
         @PathParam("projectCode")
         projectCode: String
     ): Result<List<InstalledAtom>>
@@ -71,10 +71,10 @@ interface ServiceAtomResource {
         keyPrefixNames = ["ATOM", "{data.atomCode}", "{data.version}", "releaseInfo"]
     )
     fun getAtomVersionInfo(
-        @Parameter(name = "插件代码", required = true)
+        @Parameter(description = "插件代码", required = true)
         @PathParam("atomCode")
         atomCode: String,
-        @Parameter(name = "版本号", required = true)
+        @Parameter(description = "版本号", required = true)
         @PathParam("version")
         version: String
     ): Result<PipelineAtom?>
@@ -83,7 +83,7 @@ interface ServiceAtomResource {
     @POST
     @Path("/list/atomInfos")
     fun getAtomInfos(
-        @Parameter(name = "插件代码版本集合", required = true)
+        @Parameter(description = "插件代码版本集合", required = true)
         codeVersions: Set<AtomCodeVersionReqItem>
     ): Result<List<AtomRunInfo>>
 
@@ -91,13 +91,13 @@ interface ServiceAtomResource {
     @GET
     @Path("/projects/{projectCode}/codes/{atomCode}/versions/{version}/real")
     fun getAtomRealVersion(
-        @Parameter(name = "项目代码", required = true)
+        @Parameter(description = "项目代码", required = true)
         @PathParam("projectCode")
         projectCode: String,
-        @Parameter(name = "插件代码", required = true)
+        @Parameter(description = "插件代码", required = true)
         @PathParam("atomCode")
         atomCode: String,
-        @Parameter(name = "版本号", required = true)
+        @Parameter(description = "版本号", required = true)
         @PathParam("version")
         version: String
     ): Result<String?>
@@ -106,7 +106,7 @@ interface ServiceAtomResource {
     @POST
     @Path("/prop/list")
     fun getAtomProps(
-        @Parameter(name = "插件标识列表", required = true)
+        @Parameter(description = "插件标识列表", required = true)
         atomCodes: Set<String>
     ): Result<Map<String, AtomProp>?>
 
@@ -115,7 +115,7 @@ interface ServiceAtomResource {
     @Path("/codes/{atomCode}/classify/info")
     @BkInterfaceI18n(keyPrefixNames = ["ATOM", "{data.atomCode}", "{data.version}", "releaseInfo"])
     fun getAtomClassifyInfo(
-        @Parameter(name = "插件代码", required = true)
+        @Parameter(description = "插件代码", required = true)
         @PathParam("atomCode")
         atomCode: String
     ): Result<AtomClassifyInfo?>

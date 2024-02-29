@@ -61,10 +61,10 @@ interface UserArchivePipelineResource {
     @Path("/{projectId}/getAllPipelines")
     @Deprecated("use getDownloadAllPipelines instead")
     fun getAllPipelines(
-        @Parameter(name = "用户id", required = true)
+        @Parameter(description = "用户id", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "项目id", required = true)
+        @Parameter(description = "项目id", required = true)
         @PathParam(value = "projectId")
         projectId: String
     ): Result<List<Map<String, String>>>
@@ -74,13 +74,13 @@ interface UserArchivePipelineResource {
     // @Path("/projects/{projectId}/pipelines/{pipelineId}/getAllBuildNo")
     @Path("/{projectId}/pipelines/{pipelineId}/getAllBuildNo")
     fun getAllBuildNo(
-        @Parameter(name = "用户id", required = true)
+        @Parameter(description = "用户id", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "流水线id", required = true)
+        @Parameter(description = "流水线id", required = true)
         @PathParam(value = "pipelineId")
         pipelineId: String,
-        @Parameter(name = "项目id", required = true)
+        @Parameter(description = "项目id", required = true)
         @PathParam(value = "projectId")
         projectId: String
     ): Result<List<Map<String, String>>>
@@ -90,10 +90,10 @@ interface UserArchivePipelineResource {
     // @Path("/projects/{projectId}/getDownloadAllPipelines")
     @Path("/{projectId}/getDownloadAllPipelines")
     fun getDownloadAllPipelines(
-        @Parameter(name = "用户id", required = true)
+        @Parameter(description = "用户id", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "项目id", required = true)
+        @Parameter(description = "项目id", required = true)
         @PathParam(value = "projectId")
         projectId: String
     ): Result<List<Map<String, String>>>
@@ -102,16 +102,16 @@ interface UserArchivePipelineResource {
     @POST
     @Path("/projects/{projectId}/pipelines/{pipelineId}/data/migrate")
     fun migrateArchivePipelineData(
-        @Parameter(name = "用户id", required = true)
+        @Parameter(description = "用户id", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "项目id", required = true)
+        @Parameter(description = "项目id", required = true)
         @PathParam(value = "projectId")
         projectId: String,
-        @Parameter(name = "流水线id", required = true)
+        @Parameter(description = "流水线id", required = true)
         @PathParam(value = "pipelineId")
         pipelineId: String,
-        @Parameter(name = "取消正在运行构建标识", required = true)
+        @Parameter(description = "取消正在运行构建标识", required = true)
         @QueryParam("cancelFlag")
         cancelFlag: Boolean = false
     ): Result<Boolean>
@@ -121,32 +121,32 @@ interface UserArchivePipelineResource {
     @Path("/projects/{projectId}/archived/pipelines/list")
     @Suppress("LongParameterList")
     fun getArchivedPipelineList(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(name = "第几页", required = false, example = "1")
+        @Parameter(description = "第几页", required = false, example = "1")
         @QueryParam("page")
         page: Int,
-        @Parameter(name = "每页多少条", required = false, example = "20")
+        @Parameter(description = "每页多少条", required = false, example = "20")
         @BkField(patternStyle = BkStyleEnum.PAGE_SIZE_STYLE, required = true)
         @QueryParam("pageSize")
         pageSize: Int,
-        @Parameter(name = "按流水线过滤", required = false)
+        @Parameter(description = "按流水线过滤", required = false)
         @QueryParam("filterByPipelineName")
         filterByPipelineName: String? = null,
-        @Parameter(name = "按创建人过滤", required = false)
+        @Parameter(description = "按创建人过滤", required = false)
         @QueryParam("filterByCreator")
         filterByCreator: String? = null,
-        @Parameter(name = "按标签过滤", required = false)
+        @Parameter(description = "按标签过滤", required = false)
         @QueryParam("filterByLabels")
         filterByLabels: String? = null,
-        @Parameter(name = "流水线排序", required = false, example = "CREATE_TIME")
+        @Parameter(description = "流水线排序", required = false, example = "CREATE_TIME")
         @QueryParam("sortType")
         sortType: PipelineSortType? = PipelineSortType.CREATE_TIME,
-        @Parameter(name = "排序规则", required = false)
+        @Parameter(description = "排序规则", required = false)
         @QueryParam("collation")
         collation: PipelineCollation? = null
     ): Result<Page<PipelineInfo>>

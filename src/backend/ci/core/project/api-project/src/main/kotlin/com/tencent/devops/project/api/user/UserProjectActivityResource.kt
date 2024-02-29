@@ -51,10 +51,10 @@ interface UserProjectActivityResource {
     @GET
     @Path("/types/{type}")
     fun getActivities(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "最新动态类型")
+        @Parameter(description = "最新动态类型")
         @PathParam("type")
         type: ActivityType
     ): Result<List<ActivityInfo>>

@@ -28,13 +28,13 @@ interface OpAppManagerUserResource {
     @POST
     @Path("/{appCode}")
     fun setGroup(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userName: String,
-        @Parameter(name = "appCode", required = true)
+        @Parameter(description = "appCode", required = true)
         @PathParam("appCode")
         appCode: String,
-        @Parameter(name = "appManagerInfo", required = true)
+        @Parameter(description = "appManagerInfo", required = true)
         appManagerInfo: AppManagerInfo
     ): Result<Boolean>
 
@@ -42,7 +42,7 @@ interface OpAppManagerUserResource {
     @GET
     @Path("/{appCode}")
     fun getGroup(
-        @Parameter(name = "appCode", required = true)
+        @Parameter(description = "appCode", required = true)
         @PathParam("appCode")
         appCode: String
     ): Result<String?>
@@ -51,10 +51,10 @@ interface OpAppManagerUserResource {
     @DELETE
     @Path("/ids/{id}")
     fun deleteProject(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userName: String,
-        @Parameter(name = "id", required = true)
+        @Parameter(description = "id", required = true)
         @PathParam("id")
         id: Int
     ): Result<Boolean>

@@ -58,10 +58,10 @@ interface ServiceBcsResource {
     @Path("/namespaces/{namespaceName}/create/test")
     @POST
     fun createNamespace(
-        @Parameter(name = "命名空间名称")
+        @Parameter(description = "命名空间名称")
         @PathParam("namespaceName")
         namespaceName: String,
-        @Parameter(name = "创建命名空间请求对象")
+        @Parameter(description = "创建命名空间请求对象")
         createBcsNameSpaceRequest: CreateBcsNameSpaceRequest
     ): Result<Boolean>
 
@@ -69,13 +69,13 @@ interface ServiceBcsResource {
     @Path("/bcs/namespaces/{namespaceName}/secrets/{secretName}/create")
     @POST
     fun createImagePullSecretTest(
-        @Parameter(name = "命名空间名称")
+        @Parameter(description = "命名空间名称")
         @PathParam("namespaceName")
         namespaceName: String,
-        @Parameter(name = "命名空间名称")
+        @Parameter(description = "命名空间名称")
         @PathParam("secretName")
         secretName: String,
-        @Parameter(name = "创建拉取镜像secret请求对象")
+        @Parameter(description = "创建拉取镜像secret请求对象")
         createImagePullSecretRequest: CreateImagePullSecretRequest
     ): Result<Boolean>
 
@@ -83,10 +83,10 @@ interface ServiceBcsResource {
     @Path("/deploy/app")
     @POST
     fun bcsDeployApp(
-        @Parameter(name = "userId", required = true)
+        @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "部署请求对象")
+        @Parameter(description = "部署请求对象")
         deployApp: DeployApp
     ): Result<Boolean>
 
@@ -94,10 +94,10 @@ interface ServiceBcsResource {
     @Path("/stop/app")
     @DELETE
     fun bcsStopApp(
-        @Parameter(name = "userId", required = true)
+        @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "停止部署请求对象")
+        @Parameter(description = "停止部署请求对象")
         stopApp: StopApp
     ): Result<Boolean>
 
@@ -105,16 +105,16 @@ interface ServiceBcsResource {
     @Path("/namespaces/{namespaceName}/deployments/{deploymentName}")
     @GET
     fun getBcsDeploymentInfo(
-        @Parameter(name = "命名空间名称")
+        @Parameter(description = "命名空间名称")
         @PathParam("namespaceName")
         namespaceName: String,
-        @Parameter(name = "deployment名称")
+        @Parameter(description = "deployment名称")
         @PathParam("deploymentName")
         deploymentName: String,
-        @Parameter(name = "bcs请求路径")
+        @Parameter(description = "bcs请求路径")
         @QueryParam("bcsUrl")
         bcsUrl: String,
-        @Parameter(name = "请求token")
+        @Parameter(description = "请求token")
         @QueryParam("token")
         token: String
     ): Result<Deployment>
@@ -123,16 +123,16 @@ interface ServiceBcsResource {
     @Path("/namespaces/{namespaceName}/deployments")
     @GET
     fun getBcsDeploymentInfos(
-        @Parameter(name = "命名空间名称")
+        @Parameter(description = "命名空间名称")
         @PathParam("namespaceName")
         namespaceName: String,
-        @Parameter(name = "deployment名称")
+        @Parameter(description = "deployment名称")
         @QueryParam("deploymentNames")
         deploymentNames: String,
-        @Parameter(name = "bcs请求路径")
+        @Parameter(description = "bcs请求路径")
         @QueryParam("bcsUrl")
         bcsUrl: String,
-        @Parameter(name = "请求token")
+        @Parameter(description = "请求token")
         @QueryParam("token")
         token: String
     ): Result<Map<String, Deployment>>

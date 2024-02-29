@@ -58,11 +58,11 @@ interface OPTableShardingConfigResource {
     @POST
     @Path("/add")
     fun addTableShardingConfig(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         @BkField(minLength = 1, maxLength = 50)
         userId: String,
-        @Parameter(name = "分表配置信息请求报文体", required = true)
+        @Parameter(description = "分表配置信息请求报文体", required = true)
         @Valid
         tableShardingConfig: TableShardingConfig
     ): Result<Boolean>
@@ -71,15 +71,15 @@ interface OPTableShardingConfigResource {
     @PUT
     @Path("/ids/{id}/update")
     fun updateTableShardingConfig(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         @BkField(minLength = 1, maxLength = 50)
         userId: String,
-        @Parameter(name = "分表配置ID", required = true)
+        @Parameter(description = "分表配置ID", required = true)
         @PathParam("id")
         @BkField(patternStyle = BkStyleEnum.ID_STYLE)
         id: String,
-        @Parameter(name = "分表配置信息请求报文体", required = true)
+        @Parameter(description = "分表配置信息请求报文体", required = true)
         @Valid
         tableShardingConfig: TableShardingConfig
     ): Result<Boolean>
@@ -88,7 +88,7 @@ interface OPTableShardingConfigResource {
     @GET
     @Path("/ids/{id}/get")
     fun getTableShardingConfigById(
-        @Parameter(name = "分表配置ID", required = true)
+        @Parameter(description = "分表配置ID", required = true)
         @PathParam("id")
         @BkField(patternStyle = BkStyleEnum.ID_STYLE)
         id: String
@@ -98,11 +98,11 @@ interface OPTableShardingConfigResource {
     @DELETE
     @Path("/ids/{id}/delete")
     fun deleteTableShardingConfigById(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         @BkField(minLength = 1, maxLength = 50)
         userId: String,
-        @Parameter(name = "分表配置ID", required = true)
+        @Parameter(description = "分表配置ID", required = true)
         @PathParam("id")
         @BkField(patternStyle = BkStyleEnum.ID_STYLE)
         id: String

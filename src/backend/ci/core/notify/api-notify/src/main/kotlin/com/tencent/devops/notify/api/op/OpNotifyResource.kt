@@ -55,45 +55,45 @@ interface OpNotifyResource {
     @POST
     @Path("/rtx")
     fun sendRtxNotify(
-        @Parameter(name = "RTX信息内容", required = true)
+        @Parameter(description = "RTX信息内容", required = true)
         message: RtxNotifyMessage
     ): Result<Boolean>
 
     @Operation(summary = "发送电子邮件通知")
     @POST
     @Path("/email")
-    fun sendEmailNotify(@Parameter(name = "电子邮件信息内容", required = true) message: EmailNotifyMessage): Result<Boolean>
+    fun sendEmailNotify(@Parameter(description = "电子邮件信息内容", required = true) message: EmailNotifyMessage): Result<Boolean>
 
     @Operation(summary = "发送微信通知")
     @POST
     @Path("/wechat")
-    fun sendWechatNotify(@Parameter(name = "微信信息内容", required = true) message: WechatNotifyMessage): Result<Boolean>
+    fun sendWechatNotify(@Parameter(description = "微信信息内容", required = true) message: WechatNotifyMessage): Result<Boolean>
 
     @Operation(summary = "发送短信通知")
     @POST
     @Path("/sms")
-    fun sendSmsNotify(@Parameter(name = "短信信息内容", required = true) message: SmsNotifyMessage): Result<Boolean>
+    fun sendSmsNotify(@Parameter(description = "短信信息内容", required = true) message: SmsNotifyMessage): Result<Boolean>
 
     @Operation(summary = "列出所有的通知")
     @GET
     @Path("/listNotifications")
     fun listNotifications(
-        @Parameter(name = "通知方式，包括 rtx, email, wechat, sms 四种", required = true)
+        @Parameter(description = "通知方式，包括 rtx, email, wechat, sms 四种", required = true)
         @QueryParam("type")
         type: String?,
-        @Parameter(name = "开始页数，从1开始", required = false, example = "0")
+        @Parameter(description = "开始页数，从1开始", required = false, example = "0")
         @QueryParam("page")
         page: Int,
-        @Parameter(name = "每页数据条数", required = false, example = "10")
+        @Parameter(description = "每页数据条数", required = false, example = "10")
         @QueryParam("pageSize")
         pageSize: Int,
-        @Parameter(name = "结果是否是成功的", required = false)
+        @Parameter(description = "结果是否是成功的", required = false)
         @QueryParam("success")
         success: Boolean?,
-        @Parameter(name = "源系统id", required = false)
+        @Parameter(description = "源系统id", required = false)
         @QueryParam("fromSysId")
         fromSysId: String?,
-        @Parameter(name = "创建时间排序规则，传 'descend' 则递减排序，不传或传其他值递增排序）", required = false)
+        @Parameter(description = "创建时间排序规则，传 'descend' 则递减排序，不传或传其他值递增排序）", required = false)
         @QueryParam("createdTimeSortOrder")
         createdTimeSortOrder: String?
     ): Result<NotificationResponseWithPage<BaseMessage>?>

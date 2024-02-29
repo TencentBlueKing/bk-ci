@@ -55,22 +55,22 @@ interface ServicePreBuildAgentResource {
     @POST
     @Path("/projects/{projectId}/os/{os}/createPreBuildAgent")
     fun createPrebuildAgent(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(name = "操作系统", required = true)
+        @Parameter(description = "操作系统", required = true)
         @PathParam("os")
         os: OS,
-        @Parameter(name = "网关地域", required = false)
+        @Parameter(description = "网关地域", required = false)
         @QueryParam("zoneName")
         zoneName: String?,
-        @Parameter(name = "初始IP", required = false)
+        @Parameter(description = "初始IP", required = false)
         @QueryParam("zoneName")
         initIp: String?,
-        @Parameter(name = "指定生成node的别名", required = false)
+        @Parameter(description = "指定生成node的别名", required = false)
         @QueryParam("nodeStingId")
         nodeStingId: String?
     ): Result<ThirdPartyAgentStaticInfo>
@@ -79,13 +79,13 @@ interface ServicePreBuildAgentResource {
     @GET
     @Path("/projects/{projectId}/os/{os}/listPreBuildAgents")
     fun listPreBuildAgent(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(name = "操作系统", required = false)
+        @Parameter(description = "操作系统", required = false)
         @PathParam("os")
         os: OS?
     ): Result<List<ThirdPartyAgentStaticInfo>>

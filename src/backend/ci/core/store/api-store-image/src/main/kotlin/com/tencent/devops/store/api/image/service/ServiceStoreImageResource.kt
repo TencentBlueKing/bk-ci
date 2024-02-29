@@ -50,13 +50,13 @@ interface ServiceStoreImageResource {
     @GET
     @Path("/image/projectCodes/{projectCode}/imageCodes/{imageCode}/isInstalled")
     fun isInstalled(
-        @Parameter(name = "userId", required = true)
+        @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "镜像标识", required = true)
+        @Parameter(description = "镜像标识", required = true)
         @PathParam("projectCode")
         projectCode: String,
-        @Parameter(name = "镜像标识", required = true)
+        @Parameter(description = "镜像标识", required = true)
         @PathParam("imageCode")
         imageCode: String
     ): Result<Boolean>
@@ -65,22 +65,22 @@ interface ServiceStoreImageResource {
     @GET
     @Path("/image/projectCodes/{projectCode}/imageCodes/{imageCode}/imageVersions/{imageVersion}")
     fun getImageRepoInfoByCodeAndVersion(
-        @Parameter(name = "userId", required = true)
+        @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "项目标识", required = true)
+        @Parameter(description = "项目标识", required = true)
         @PathParam("projectCode")
         projectCode: String,
-        @Parameter(name = "镜像标识", required = true)
+        @Parameter(description = "镜像标识", required = true)
         @PathParam("imageCode")
         imageCode: String,
-        @Parameter(name = "镜像版本", required = false)
+        @Parameter(description = "镜像版本", required = false)
         @PathParam("imageVersion")
         imageVersion: String?,
-        @Parameter(name = "流水线Id", required = true)
+        @Parameter(description = "流水线Id", required = true)
         @QueryParam("pipelineId")
         pipelineId: String?,
-        @Parameter(name = "构建Id", required = true)
+        @Parameter(description = "构建Id", required = true)
         @QueryParam("buildId")
         buildId: String?
     ): Result<ImageRepoInfo>
@@ -94,10 +94,10 @@ interface ServiceStoreImageResource {
     @GET
     @Path("/image/imageCodes/{imageCode}/imageVersions/{imageVersion}/imageStatus")
     fun getImageStatusByCodeAndVersion(
-        @Parameter(name = "镜像标识", required = true)
+        @Parameter(description = "镜像标识", required = true)
         @PathParam("imageCode")
         imageCode: String,
-        @Parameter(name = "镜像版本", required = false)
+        @Parameter(description = "镜像版本", required = false)
         @PathParam("imageVersion")
         imageVersion: String
     ): Result<String>

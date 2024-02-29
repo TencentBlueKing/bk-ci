@@ -55,22 +55,22 @@ interface TxUserStoreCodeccResource {
     @GET
     @Path("/types/{storeType}/codes/{storeCode}/measurement")
     fun getCodeccMeasureInfo(
-        @Parameter(name = "userId", required = true)
+        @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "组件类型", required = true)
+        @Parameter(description = "组件类型", required = true)
         @PathParam("storeType")
         @BkField(patternStyle = BkStyleEnum.CODE_STYLE)
         storeType: String,
-        @Parameter(name = "组件标识", required = true)
+        @Parameter(description = "组件标识", required = true)
         @PathParam("storeCode")
         @BkField(patternStyle = BkStyleEnum.CODE_STYLE)
         storeCode: String,
-        @Parameter(name = "组件ID", required = false)
+        @Parameter(description = "组件ID", required = false)
         @QueryParam("storeId")
         @BkField(patternStyle = BkStyleEnum.ID_STYLE, required = false)
         storeId: String?,
-        @Parameter(name = "构建ID", required = false)
+        @Parameter(description = "构建ID", required = false)
         @QueryParam("buildId")
         @BkField(patternStyle = BkStyleEnum.ID_STYLE, required = false)
         buildId: String?
@@ -80,18 +80,18 @@ interface TxUserStoreCodeccResource {
     @POST
     @Path("/types/{storeType}/codes/{storeCode}/task/start")
     fun startCodeccTask(
-        @Parameter(name = "userId", required = true)
+        @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "组件类型", required = true)
+        @Parameter(description = "组件类型", required = true)
         @PathParam("storeType")
         @BkField(patternStyle = BkStyleEnum.CODE_STYLE)
         storeType: String,
-        @Parameter(name = "组件标识", required = true)
+        @Parameter(description = "组件标识", required = true)
         @PathParam("storeCode")
         @BkField(patternStyle = BkStyleEnum.CODE_STYLE)
         storeCode: String,
-        @Parameter(name = "组件ID", required = false)
+        @Parameter(description = "组件ID", required = false)
         @QueryParam("storeId")
         @BkField(patternStyle = BkStyleEnum.ID_STYLE, required = false)
         storeId: String?

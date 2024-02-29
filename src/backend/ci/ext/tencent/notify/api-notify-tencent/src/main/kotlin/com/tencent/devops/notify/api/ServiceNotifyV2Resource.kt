@@ -47,7 +47,7 @@ interface ServiceNotifyV2Resource {
     @POST
     @Path("/rtx")
     fun sendRtxNotify(
-        @Parameter(name = "RTX信息内容", required = true)
+        @Parameter(description = "RTX信息内容", required = true)
         message: RtxNotifyMessage
     ): Result<Boolean>
 
@@ -55,7 +55,7 @@ interface ServiceNotifyV2Resource {
     @POST
     @Path("/email")
     fun sendEmailNotify(
-        @Parameter(name = "电子邮件信息内容", required = true)
+        @Parameter(description = "电子邮件信息内容", required = true)
         message: EmailNotifyMessage
     ): Result<Boolean>
 }

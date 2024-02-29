@@ -26,19 +26,19 @@ interface UserPipelineOutputResource {
     @Path("/{projectId}/{pipelineId}/{buildId}/search")
     @POST
     fun searchByBuild(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "项目代码", required = true)
+        @Parameter(description = "项目代码", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(name = "流水线id", required = true)
+        @Parameter(description = "流水线id", required = true)
         @PathParam("pipelineId")
         pipelineId: String,
-        @Parameter(name = "项目代码", required = true)
+        @Parameter(description = "项目代码", required = true)
         @PathParam("buildId")
         buildId: String,
-        @Parameter(name = "搜索过滤条件", required = false)
+        @Parameter(description = "搜索过滤条件", required = false)
         option: PipelineOutputSearchOption?
     ): Result<List<PipelineOutput>>
 }

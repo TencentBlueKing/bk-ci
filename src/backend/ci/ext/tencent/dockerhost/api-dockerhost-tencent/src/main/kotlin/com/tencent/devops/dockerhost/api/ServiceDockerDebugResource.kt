@@ -50,7 +50,7 @@ interface ServiceDockerDebugResource {
     @POST
     @Path("/debug/start")
     fun startDebug(
-        @Parameter(name = "容器信息", required = true)
+        @Parameter(description = "容器信息", required = true)
         dockerStartDebugInfo: ContainerInfo
     ): Result<String>
 
@@ -58,13 +58,13 @@ interface ServiceDockerDebugResource {
     @GET
     @Path("/debug/getWsUrl")
     fun getWebSocketUrl(
-        @Parameter(name = "蓝盾项目ID", required = true)
+        @Parameter(description = "蓝盾项目ID", required = true)
         @QueryParam("projectId")
         projectId: String,
-        @Parameter(name = "蓝盾构建ID", required = true)
+        @Parameter(description = "蓝盾构建ID", required = true)
         @QueryParam("pipelineId")
         pipelineId: String,
-        @Parameter(name = "容器ID", required = true)
+        @Parameter(description = "容器ID", required = true)
         @QueryParam("containerId")
         containerId: String
     ): Result<String>
@@ -73,7 +73,7 @@ interface ServiceDockerDebugResource {
     @POST
     @Path("/debug/end")
     fun endDebug(
-        @Parameter(name = "容器信息", required = true)
+        @Parameter(description = "容器信息", required = true)
         dockerEndDebugInfo: ContainerInfo
     ): Result<Boolean>
 }

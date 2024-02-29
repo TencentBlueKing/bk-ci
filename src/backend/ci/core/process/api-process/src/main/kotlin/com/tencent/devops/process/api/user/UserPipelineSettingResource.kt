@@ -56,10 +56,10 @@ interface UserPipelineSettingResource {
     @Deprecated("已废弃,使用 @see UserPipelineResource.saveSetting")
     @Path("/save")
     fun saveSetting(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "流水线设置", required = true)
+        @Parameter(description = "流水线设置", required = true)
         setting: PipelineSetting
     ): Result<String>
 
@@ -68,16 +68,16 @@ interface UserPipelineSettingResource {
     // @Path("/")
     @Path("/get")
     fun getSetting(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @QueryParam("projectId")
         projectId: String,
-        @Parameter(name = "流水线id")
+        @Parameter(description = "流水线id")
         @QueryParam("pipelineId")
         pipelineId: String,
-        @Parameter(name = "流水线编排版本", required = false)
+        @Parameter(description = "流水线编排版本", required = false)
         @QueryParam("version")
         version: Int = 0
     ): Result<PipelineSetting>
@@ -86,7 +86,7 @@ interface UserPipelineSettingResource {
     @GET
     @Path("/common/get")
     fun getCommonSetting(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String
     ): Result<PipelineCommonSetting>

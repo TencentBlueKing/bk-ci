@@ -70,7 +70,7 @@ interface ServiceProjectResource {
     @Path("/")
     @Operation(summary = "查询当前用户有权限的项目列表")
     fun list(
-        @Parameter(name = "用户ID", required = false)
+        @Parameter(description = "用户ID", required = false)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String
     ): Result<List<ProjectVO>>
@@ -84,12 +84,12 @@ interface ServiceProjectResource {
     @Path("/listMigrateProjects/{offset}/{limit}")
     @Operation(summary = "条件迁移项目实体")
     fun listMigrateProjects(
-        @Parameter(name = "条件迁移项目实体", required = false)
+        @Parameter(description = "条件迁移项目实体", required = false)
         migrateProjectConditionDTO: MigrateProjectConditionDTO,
-        @Parameter(name = "limit", required = true)
+        @Parameter(description = "limit", required = true)
         @PathParam("limit")
         limit: Int,
-        @Parameter(name = "offset", required = true)
+        @Parameter(description = "offset", required = true)
         @PathParam("offset")
         offset: Int
     ): Result<List<ProjectWithPermission>>
@@ -98,7 +98,7 @@ interface ServiceProjectResource {
     @Path("/")
     @Operation(summary = "查询指定项目，不包括被禁用的项目")
     fun listByProjectCode(
-        @Parameter(name = "项目id", required = true)
+        @Parameter(description = "项目id", required = true)
         projectCodes: Set<String>
     ): Result<List<ProjectVO>>
 
@@ -106,7 +106,7 @@ interface ServiceProjectResource {
     @Path("/listOnlyByProjectCode")
     @Operation(summary = "查询指定项目，包括被禁用的项目")
     fun listOnlyByProjectCode(
-        @Parameter(name = "项目id", required = true)
+        @Parameter(description = "项目id", required = true)
         projectCodes: Set<String>
     ): Result<List<ProjectVO>>
 
@@ -114,7 +114,7 @@ interface ServiceProjectResource {
     @Path("/listByProjectCodes")
     @Operation(summary = "查询指定项目")
     fun listByProjectCodeList(
-        @Parameter(name = "项目id", required = true)
+        @Parameter(description = "项目id", required = true)
         projectCodes: List<String>
     ): Result<List<ProjectVO>>
 
@@ -122,7 +122,7 @@ interface ServiceProjectResource {
     @Path("/getProjectByUser")
     @Operation(summary = "查询所有项目")
     fun getProjectByUser(
-        @Parameter(name = "userId", required = true)
+        @Parameter(description = "userId", required = true)
         @QueryParam("userId")
         userName: String
     ): Result<List<ProjectVO>>
@@ -131,13 +131,13 @@ interface ServiceProjectResource {
     @Path("/{projectCode}/users/{userId}/verify")
     @Operation(summary = " 校验用户是否项目成员")
     fun verifyUserProjectPermission(
-        @Parameter(name = "accessToken", required = false)
+        @Parameter(description = "accessToken", required = false)
         @HeaderParam(AUTH_HEADER_DEVOPS_ACCESS_TOKEN)
         accessToken: String? = null,
-        @Parameter(name = "项目代码", required = true)
+        @Parameter(description = "项目代码", required = true)
         @PathParam("projectCode")
         projectCode: String,
-        @Parameter(name = "用户ID", required = true)
+        @Parameter(description = "用户ID", required = true)
         @PathParam("userId")
         userId: String
     ): Result<Boolean>
@@ -146,7 +146,7 @@ interface ServiceProjectResource {
     @Path("/getNameByCode")
     @Operation(summary = "根据项目Code获取对应的名称")
     fun getNameByCode(
-        @Parameter(name = "projectCodes，多个以英文逗号分隔", required = true)
+        @Parameter(description = "projectCodes，多个以英文逗号分隔", required = true)
         @QueryParam("projectCodes")
         projectCodes: String
     ): Result<HashMap<String, String>>
@@ -155,7 +155,7 @@ interface ServiceProjectResource {
     @Path("/{projectId}")
     @Operation(summary = "查询指定EN项目")
     fun get(
-        @Parameter(name = "项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         englishName: String
     ): Result<ProjectVO?>
@@ -164,12 +164,12 @@ interface ServiceProjectResource {
     @Path("/create")
     @Operation(summary = "创建项目")
     fun create(
-        @Parameter(name = "userId", required = true)
+        @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String,
-        @Parameter(name = "项目信息", required = true)
+        @Parameter(description = "项目信息", required = true)
         projectCreateInfo: ProjectCreateInfo,
-        @Parameter(name = "accessToken", required = false)
+        @Parameter(description = "accessToken", required = false)
         @HeaderParam(AUTH_HEADER_DEVOPS_ACCESS_TOKEN)
         accessToken: String? = null
     ): Result<Boolean>
@@ -178,16 +178,16 @@ interface ServiceProjectResource {
     @Path("/create/ext/system")
     @Operation(summary = "创建扩展系统项目")
     fun createExtSystem(
-        @Parameter(name = "userId", required = true)
+        @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String,
-        @Parameter(name = "项目信息")
+        @Parameter(description = "项目信息")
         projectInfo: ProjectCreateInfo,
         @QueryParam("needAuth")
-        @Parameter(name = "是否需要权限")
+        @Parameter(description = "是否需要权限")
         needAuth: Boolean,
         @QueryParam("needAuth")
-        @Parameter(name = "是否需要校验")
+        @Parameter(description = "是否需要校验")
         needValidate: Boolean,
         @QueryParam("projectChanel")
         channel: ProjectChannelCode
@@ -197,15 +197,15 @@ interface ServiceProjectResource {
     @Path("/{projectId}")
     @Operation(summary = "修改项目")
     fun update(
-        @Parameter(name = "userId", required = true)
+        @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String,
-        @Parameter(name = "项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(name = "项目信息", required = true)
+        @Parameter(description = "项目信息", required = true)
         projectUpdateInfo: ProjectUpdateInfo,
-        @Parameter(name = "accessToken", required = false)
+        @Parameter(description = "accessToken", required = false)
         @HeaderParam(AUTH_HEADER_DEVOPS_ACCESS_TOKEN)
         accessToken: String? = null
     ): Result<Boolean>
@@ -213,13 +213,13 @@ interface ServiceProjectResource {
     @PUT
     @Path("/{projectCode}/projectName")
     fun updateProjectName(
-        @Parameter(name = "userId", required = true)
+        @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String,
-        @Parameter(name = "项目Code", required = true)
+        @Parameter(description = "项目Code", required = true)
         @PathParam("projectCode")
         projectCode: String,
-        @Parameter(name = "项目名称", required = true)
+        @Parameter(description = "项目名称", required = true)
         @QueryParam("projectName")
         projectName: String
     ): Result<Boolean>
@@ -227,20 +227,20 @@ interface ServiceProjectResource {
     @PUT
     @Path("/{projectCode}/properties")
     fun updateProjectProperties(
-        @Parameter(name = "项目Code", required = true)
+        @Parameter(description = "项目Code", required = true)
         @PathParam("projectCode")
         projectCode: String,
-        @Parameter(name = "项目名称", required = true)
+        @Parameter(description = "项目名称", required = true)
         properties: ProjectProperties
     ): Result<Boolean>
 
     @GET
     @Path("projectNames/{projectName}")
     fun getProjectByName(
-        @Parameter(name = "userId", required = true)
+        @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String,
-        @Parameter(name = "projectName", required = true)
+        @Parameter(description = "projectName", required = true)
         @PathParam("projectName")
         projectName: String
     ): Result<ProjectVO?>
@@ -249,13 +249,13 @@ interface ServiceProjectResource {
     @Path("/{validateType}/names/validate")
     @Operation(summary = "校验项目名称和项目英文名")
     fun validate(
-        @Parameter(name = "校验的是项目名称或者项目英文名")
+        @Parameter(description = "校验的是项目名称或者项目英文名")
         @PathParam("validateType")
         validateType: ProjectValidateType,
-        @Parameter(name = "项目名称或者项目英文名")
+        @Parameter(description = "项目名称或者项目英文名")
         @QueryParam("name")
         name: String,
-        @Parameter(name = "项目ID")
+        @Parameter(description = "项目ID")
         @QueryParam("english_name")
         projectId: String?
     ): Result<Boolean>
@@ -264,10 +264,10 @@ interface ServiceProjectResource {
     @Path("/{projectId}/orgcheck")
     @Operation(summary = "是否是组织下的项目")
     fun isOrgProject(
-        @Parameter(name = "项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(name = "orgInfo", required = true)
+        @Parameter(description = "orgInfo", required = true)
         orgInfos: OrgInfo
     ): Result<Boolean>
 
@@ -285,10 +285,10 @@ interface ServiceProjectResource {
     @Path("/getProjectListById")
     @Operation(summary = "根据ID查询项目列表")
     fun getProjectListById(
-        @Parameter(name = "最小项目ID", required = true)
+        @Parameter(description = "最小项目ID", required = true)
         @QueryParam("minId")
         minId: Long,
-        @Parameter(name = "最大项目ID", required = true)
+        @Parameter(description = "最大项目ID", required = true)
         @QueryParam("maxId")
         maxId: Long
     ): Result<List<ProjectBaseInfo>>
@@ -302,10 +302,10 @@ interface ServiceProjectResource {
     @POST
     @Path("/{projectId}/createUser")
     fun createProjectUser(
-        @Parameter(name = "项目Id", required = true)
+        @Parameter(description = "项目Id", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(name = "添加信息", required = true)
+        @Parameter(description = "添加信息", required = true)
         createInfo: ProjectCreateUserInfo
     ): Result<Boolean>
 
@@ -313,13 +313,13 @@ interface ServiceProjectResource {
     @Path("/{projectId}/hasPermission/{permission}")
     @GET
     fun hasPermission(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(name = "权限action", required = true)
+        @Parameter(description = "权限action", required = true)
         @PathParam("permission")
         permission: AuthPermission
     ): Result<Boolean>
@@ -328,10 +328,10 @@ interface ServiceProjectResource {
     @Path("/{projectId}/updateProjectSubjectScopes")
     @Operation(summary = "修改项目最大可授权范围")
     fun updateProjectSubjectScopes(
-        @Parameter(name = "项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(name = "ke", required = true)
+        @Parameter(description = "ke", required = true)
         subjectScopes: List<SubjectScopeInfo>
     ): Result<Boolean>
 
@@ -339,10 +339,10 @@ interface ServiceProjectResource {
     @Path("{projectId}/updateProjectProductId")
     @Operation(summary = "修改项目关联产品")
     fun updateProjectProductId(
-        @Parameter(name = "项目code", required = true)
+        @Parameter(description = "项目code", required = true)
         @PathParam("projectId")
         projectCode: String,
-        @Parameter(name = "产品名称", required = true)
+        @Parameter(description = "产品名称", required = true)
         @QueryParam("productName")
         productName: String
     ): Result<Boolean>
@@ -351,10 +351,10 @@ interface ServiceProjectResource {
     @Path("{projectId}/updateOrganizationByEnglishName")
     @Operation(summary = "修改项目组织架构")
     fun updateOrganizationByEnglishName(
-        @Parameter(name = "项目code", required = true)
+        @Parameter(description = "项目code", required = true)
         @PathParam("projectId")
         projectCode: String,
-        @Parameter(name = "产品名称", required = true)
+        @Parameter(description = "产品名称", required = true)
         projectOrganizationInfo: ProjectOrganizationInfo
     ): Result<Boolean>
 }

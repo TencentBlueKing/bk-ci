@@ -53,7 +53,7 @@ interface OpBuildResourceResource {
     @POST
     @Path("/")
     fun add(
-        @Parameter(name = "流水线构建资源请求体", required = true)
+        @Parameter(description = "流水线构建资源请求体", required = true)
         buildResourceRequest: BuildResourceRequest
     ): Result<Boolean>
 
@@ -61,10 +61,10 @@ interface OpBuildResourceResource {
     @PUT
     @Path("/{id}")
     fun update(
-        @Parameter(name = "流水线构建资源ID", required = true)
+        @Parameter(description = "流水线构建资源ID", required = true)
         @PathParam("id")
         id: String,
-        @Parameter(name = "流水线构建资源请求体", required = true)
+        @Parameter(description = "流水线构建资源请求体", required = true)
         buildResourceRequest: BuildResourceRequest
     ): Result<Boolean>
 
@@ -77,7 +77,7 @@ interface OpBuildResourceResource {
     @GET
     @Path("/{id}")
     fun getPipelineBuildResourceById(
-        @Parameter(name = "流水线构建资源ID", required = true)
+        @Parameter(description = "流水线构建资源ID", required = true)
         @PathParam("id")
         id: String
     ): Result<BuildResource?>
@@ -86,7 +86,7 @@ interface OpBuildResourceResource {
     @DELETE
     @Path("/{id}")
     fun deletePipelineBuildResourceById(
-        @Parameter(name = "流水线构建资源ID", required = true)
+        @Parameter(description = "流水线构建资源ID", required = true)
         @PathParam("id")
         id: String
     ): Result<Boolean>

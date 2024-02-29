@@ -55,7 +55,7 @@ interface OPDockerResourceOptionsResource {
     @Path("/resource-options/list")
     @Operation(summary = "获取docker性能基础配置列表")
     fun listResourceOptions(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String
     ): Result<List<DockerResourceOptionsVO>>
@@ -64,10 +64,10 @@ interface OPDockerResourceOptionsResource {
     @Path("/resource-options/add")
     @Operation(summary = "新增性能基础配置")
     fun createResourceOptions(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String,
-        @Parameter(name = "性能配置", required = true)
+        @Parameter(description = "性能配置", required = true)
         dockerResourceOptionsVO: DockerResourceOptionsVO
     ): Result<Boolean>
 
@@ -75,13 +75,13 @@ interface OPDockerResourceOptionsResource {
     @Path("/resource-options/optionId/{id}/update")
     @Operation(summary = "更新性能基础配置")
     fun updateResourceOptions(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String,
-        @Parameter(name = "配置ID", required = true)
+        @Parameter(description = "配置ID", required = true)
         @PathParam("id")
         id: Long,
-        @Parameter(name = "性能配置", required = true)
+        @Parameter(description = "性能配置", required = true)
         dockerResourceOptionsVO: DockerResourceOptionsVO
     ): Result<Boolean>
 
@@ -89,10 +89,10 @@ interface OPDockerResourceOptionsResource {
     @Path("/resource-options/optionId/{id}/delete")
     @Operation(summary = "删除docker性能基础配置")
     fun deleteResourceOptions(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String,
-        @Parameter(name = "ID", required = true)
+        @Parameter(description = "ID", required = true)
         @PathParam("id")
         projectId: Long
     ): Result<Boolean>

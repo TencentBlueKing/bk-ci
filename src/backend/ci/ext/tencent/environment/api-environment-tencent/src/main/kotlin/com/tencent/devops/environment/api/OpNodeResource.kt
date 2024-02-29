@@ -56,13 +56,13 @@ interface OpNodeResource {
     @GET
     @Path("/list")
     fun list(
-        @Parameter(name = "第几页，从1开始", required = true)
+        @Parameter(description = "第几页，从1开始", required = true)
         @QueryParam("page")
         page: Int,
-        @Parameter(name = "每页条数", required = true)
+        @Parameter(description = "每页条数", required = true)
         @QueryParam("pageSize")
         pageSize: Int,
-        @Parameter(name = "节点名称", required = false)
+        @Parameter(description = "节点名称", required = false)
         @QueryParam("name")
         name: String?
     ): Result<NodePage>
@@ -71,10 +71,10 @@ interface OpNodeResource {
     @POST
     @Path("/{projectId}/deleteNodes/{nodeHashId}")
     fun deleteNodes(
-        @Parameter(name = "项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(name = "NodeHashId", required = true)
+        @Parameter(description = "NodeHashId", required = true)
         @PathParam("nodeHashId")
         nodeHashId: String
     ): Result<Boolean>
@@ -83,10 +83,10 @@ interface OpNodeResource {
     @PUT
     @Path("/updateMonitorDashboard")
     fun updateMonitorDashboard(
-        @Parameter(name = "项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @QueryParam("projectId")
         projectId: String,
-        @Parameter(name = "updateDashboard", required = true)
+        @Parameter(description = "updateDashboard", required = true)
         @QueryParam("updateDashboard")
         updateDashboard: Boolean
     ): Result<Boolean>

@@ -54,28 +54,28 @@ interface UserStreamLogResource {
     @GET
     @Path("/{projectId}/{pipelineId}/{buildId}/")
     fun getInitLogs(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "蓝盾项目ID", required = true)
+        @Parameter(description = "蓝盾项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(name = "流水线ID", required = true)
+        @Parameter(description = "流水线ID", required = true)
         @PathParam("pipelineId")
         pipelineId: String,
-        @Parameter(name = "构建ID", required = true)
+        @Parameter(description = "构建ID", required = true)
         @PathParam("buildId")
         buildId: String,
-        @Parameter(name = "是否包含调试日志", required = false)
+        @Parameter(description = "是否包含调试日志", required = false)
         @QueryParam("debug")
         debug: Boolean? = false,
-        @Parameter(name = "对应elementId", required = false)
+        @Parameter(description = "对应elementId", required = false)
         @QueryParam("tag")
         tag: String?,
-        @Parameter(name = "对应jobId", required = false)
+        @Parameter(description = "对应jobId", required = false)
         @QueryParam("jobId")
         jobId: String?,
-        @Parameter(name = "执行次数", required = false)
+        @Parameter(description = "执行次数", required = false)
         @QueryParam("executeCount")
         executeCount: Int?
     ): Result<QueryLogs>
@@ -84,31 +84,31 @@ interface UserStreamLogResource {
     @GET
     @Path("/{projectId}/{pipelineId}/{buildId}/after")
     fun getAfterLogs(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "stream 项目ID", required = true)
+        @Parameter(description = "stream 项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(name = "流水线ID", required = true)
+        @Parameter(description = "流水线ID", required = true)
         @PathParam("pipelineId")
         pipelineId: String,
-        @Parameter(name = "构建ID", required = true)
+        @Parameter(description = "构建ID", required = true)
         @PathParam("buildId")
         buildId: String,
-        @Parameter(name = "起始行号", required = true)
+        @Parameter(description = "起始行号", required = true)
         @QueryParam("start")
         start: Long,
-        @Parameter(name = "是否包含调试日志", required = false)
+        @Parameter(description = "是否包含调试日志", required = false)
         @QueryParam("debug")
         debug: Boolean? = false,
-        @Parameter(name = "对应elementId", required = false)
+        @Parameter(description = "对应elementId", required = false)
         @QueryParam("tag")
         tag: String?,
-        @Parameter(name = "对应jobId", required = false)
+        @Parameter(description = "对应jobId", required = false)
         @QueryParam("jobId")
         jobId: String?,
-        @Parameter(name = "执行次数", required = false)
+        @Parameter(description = "执行次数", required = false)
         @QueryParam("executeCount")
         executeCount: Int?
     ): Result<QueryLogs>
@@ -118,25 +118,25 @@ interface UserStreamLogResource {
     @Path("/{projectId}/{pipelineId}/{buildId}/download")
     @Produces(MediaType.APPLICATION_OCTET_STREAM)
     fun downloadLogs(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "stream 项目ID", required = true)
+        @Parameter(description = "stream 项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(name = "流水线ID", required = true)
+        @Parameter(description = "流水线ID", required = true)
         @PathParam("pipelineId")
         pipelineId: String,
-        @Parameter(name = "构建ID", required = true)
+        @Parameter(description = "构建ID", required = true)
         @PathParam("buildId")
         buildId: String,
-        @Parameter(name = "对应element ID", required = false)
+        @Parameter(description = "对应element ID", required = false)
         @QueryParam("tag")
         tag: String?,
-        @Parameter(name = "对应jobId", required = false)
+        @Parameter(description = "对应jobId", required = false)
         @QueryParam("jobId")
         jobId: String?,
-        @Parameter(name = "执行次数", required = false)
+        @Parameter(description = "执行次数", required = false)
         @QueryParam("executeCount")
         executeCount: Int?
     ): Response

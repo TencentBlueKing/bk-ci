@@ -58,19 +58,19 @@ interface ApigwArtifactoryFileTaskResourceV4 {
     @Path("/file_task")
     @POST
     fun createFileTask(
-        @Parameter(name = "userId", required = true)
+        @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String,
-        @Parameter(name = "projectId", required = true)
+        @Parameter(description = "projectId", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(name = "pipelineId", required = false)
+        @Parameter(description = "pipelineId", required = false)
         @QueryParam("pipelineId")
         pipelineId: String?,
-        @Parameter(name = "buildId", required = true)
+        @Parameter(description = "buildId", required = true)
         @QueryParam("buildId")
         buildId: String,
-        @Parameter(name = "taskId", required = true)
+        @Parameter(description = "taskId", required = true)
         createFileTaskReq: CreateFileTaskReq
     ): Result<String>
 
@@ -78,19 +78,19 @@ interface ApigwArtifactoryFileTaskResourceV4 {
     @Path("/file_task")
     @GET
     fun getStatus(
-        @Parameter(name = "userId", required = true)
+        @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String,
-        @Parameter(name = "projectId", required = true)
+        @Parameter(description = "projectId", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(name = "pipelineId", required = false)
+        @Parameter(description = "pipelineId", required = false)
         @QueryParam("pipelineId")
         pipelineId: String?,
-        @Parameter(name = "buildId", required = true)
+        @Parameter(description = "buildId", required = true)
         @QueryParam("buildId")
         buildId: String,
-        @Parameter(name = "taskId", required = true)
+        @Parameter(description = "taskId", required = true)
         @QueryParam("taskId")
         taskId: String
     ): Result<FileTaskInfo?>
@@ -99,25 +99,25 @@ interface ApigwArtifactoryFileTaskResourceV4 {
     @Path("/file_task")
     @DELETE
     fun clearFileTask(
-        @Parameter(name = "appCode", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
+        @Parameter(description = "appCode", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
         appCode: String?,
-        @Parameter(name = "apigw Type", required = true)
+        @Parameter(description = "apigw Type", required = true)
         @PathParam("apigwType")
         apigwType: String?,
-        @Parameter(name = "userId", required = true)
+        @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String,
-        @Parameter(name = "projectId", required = true)
+        @Parameter(description = "projectId", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(name = "pipelineId", required = false)
+        @Parameter(description = "pipelineId", required = false)
         @QueryParam("pipelineId")
         pipelineId: String?,
-        @Parameter(name = "buildId", required = true)
+        @Parameter(description = "buildId", required = true)
         @QueryParam("buildId")
         buildId: String,
-        @Parameter(name = "taskId", required = true)
+        @Parameter(description = "taskId", required = true)
         @QueryParam("taskId")
         taskId: String
     ): Result<Boolean>

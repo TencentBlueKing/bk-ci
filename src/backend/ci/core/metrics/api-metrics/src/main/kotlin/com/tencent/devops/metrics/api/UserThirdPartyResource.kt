@@ -52,18 +52,18 @@ interface UserThirdPartyResource {
     @Path("/summary/data/get")
     @GET
     fun queryPipelineSummaryInfo(
-        @Parameter(name = "项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_PROJECT_ID)
         @BkField(required = true)
         projectId: String,
-        @Parameter(name = "userId", required = true)
+        @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         @BkField(required = true)
         userId: String,
-        @Parameter(name = "开始时间", required = false)
+        @Parameter(description = "开始时间", required = false)
         @QueryParam("startTime")
         startTime: String?,
-        @Parameter(name = "结束时间", required = false)
+        @Parameter(description = "结束时间", required = false)
         @QueryParam("endTime")
         endTime: String?
     ): Result<ThirdPlatformOverviewInfoVO>

@@ -48,7 +48,7 @@ interface ServiceTXMoaCallBackResource {
     @POST
     @Path("/manual_review_call_back")
     fun manualReviewCallBack(
-        @Parameter(name = "MyOA返回的审批结果结构", required = true)
+        @Parameter(description = "MyOA返回的审批结果结构", required = true)
         extServiceMoaWorkItemReq: ExtServiceMoaWorkItemReq
     ): Result<Boolean>
 }

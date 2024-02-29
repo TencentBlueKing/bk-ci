@@ -52,16 +52,16 @@ interface ExternalThirdLoginResource {
     @Operation(summary = "第三方登录")
     fun thirdLogin(
         @QueryParam("code")
-        @Parameter(name = "验证code")
+        @Parameter(description = "验证code")
         code: String,
         @QueryParam("userId")
-        @Parameter(name = "用户ID")
+        @Parameter(description = "用户ID")
         userId: String,
         @QueryParam("type")
-        @Parameter(name = "登录类型")
+        @Parameter(description = "登录类型")
         type: String,
         @QueryParam("email")
-        @Parameter(name = "邮箱")
+        @Parameter(description = "邮箱")
         email: String? = null
     ): Response
 
@@ -70,7 +70,7 @@ interface ExternalThirdLoginResource {
     @Operation(summary = "校验凭证")
     fun verifyToken(
         @HeaderParam(AUTH_HEADER_BK_CI_LOGIN_TOKEN)
-        @Parameter(name = "凭证")
+        @Parameter(description = "凭证")
         token: String
     ): Result<String>
 }

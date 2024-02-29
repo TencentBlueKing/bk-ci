@@ -33,10 +33,10 @@ interface UserProjectGitProxyResource {
     @POST
     @Path("/create")
     fun createRepo(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "创建数据")
+        @Parameter(description = "创建数据")
         data: CreateGitProxyData
     ): Result<Boolean>
 
@@ -44,19 +44,19 @@ interface UserProjectGitProxyResource {
     @GET
     @Path("/list")
     fun fetchRepo(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @QueryParam("projectId")
         projectId: String,
-        @Parameter(name = "页码", required = true)
+        @Parameter(description = "页码", required = true)
         @QueryParam("page")
         page: Int,
-        @Parameter(name = "每页数量", required = true)
+        @Parameter(description = "每页数量", required = true)
         @QueryParam("pageSize")
         pageSize: Int,
-        @Parameter(name = "仓库类型", required = false)
+        @Parameter(description = "仓库类型", required = false)
         @QueryParam("gitType")
         gitType: ScmType?
     ): Result<Page<FetchRepoResp>>
@@ -65,13 +65,13 @@ interface UserProjectGitProxyResource {
     @DELETE
     @Path("/delete")
     fun deleteRepo(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @QueryParam("projectId")
         projectId: String,
-        @Parameter(name = "项目名称", required = true)
+        @Parameter(description = "项目名称", required = true)
         @QueryParam("repoName")
         repoName: String
     ): Result<Boolean>
@@ -80,10 +80,10 @@ interface UserProjectGitProxyResource {
     @POST
     @Path("/linktgit")
     fun linktgit(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "项目ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "项目ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_PROJECT_ID)
         projectId: String,
         data: LinktgitData
@@ -93,10 +93,10 @@ interface UserProjectGitProxyResource {
     @GET
     @Path("/tgit/list")
     fun tgitList(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "项目ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "项目ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_PROJECT_ID)
         projectId: String
     ): Result<List<TGitRepoData>>
@@ -105,10 +105,10 @@ interface UserProjectGitProxyResource {
     @DELETE
     @Path("/tgit/delete")
     fun deleteTgitRepo(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "项目ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "项目ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_PROJECT_ID)
         projectId: String,
         @Parameter(description = "工蜂仓库ID", required = true)

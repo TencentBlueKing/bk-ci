@@ -50,7 +50,7 @@ interface ServiceBuildlessResource {
     @POST
     @Path("/start")
     fun startBuild(
-        @Parameter(name = "构建任务", required = true)
+        @Parameter(description = "构建任务", required = true)
         buildLessEndInfo: BuildLessStartInfo
     ): Result<String>
 
@@ -58,7 +58,7 @@ interface ServiceBuildlessResource {
     @DELETE
     @Path("/end")
     fun endBuild(
-        @Parameter(name = "构建任务", required = true)
+        @Parameter(description = "构建任务", required = true)
         buildLessEndInfo: BuildLessEndInfo
     ): Result<Boolean>
 }

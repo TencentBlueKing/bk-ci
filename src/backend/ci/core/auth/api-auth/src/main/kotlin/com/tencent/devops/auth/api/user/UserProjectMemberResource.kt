@@ -58,19 +58,19 @@ interface UserProjectMemberResource {
     @Path("/projectIds/{projectId}/roleIds/{roleId}")
     @Operation(summary = "项目下添加指定组组员")
     fun createRoleMember(
-        @Parameter(name = "用户名", required = true)
+        @Parameter(description = "用户名", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "项目标识", required = true)
+        @Parameter(description = "项目标识", required = true)
         @PathParam("projectId")
         projectId: Int,
-        @Parameter(name = "角色Id", required = true)
+        @Parameter(description = "角色Id", required = true)
         @PathParam("roleId")
         roleId: Int,
-        @Parameter(name = "是否为管理员分组", required = true)
+        @Parameter(description = "是否为管理员分组", required = true)
         @QueryParam("managerGroup")
         managerGroup: Boolean,
-        @Parameter(name = "添加用户集合", required = true)
+        @Parameter(description = "添加用户集合", required = true)
         members: List<RoleMemberDTO>
     ): Result<Boolean>
 
@@ -78,16 +78,16 @@ interface UserProjectMemberResource {
     @Path("/projectIds/{projectId}/roleIds/{roleId}")
     @Operation(summary = "查询项目下指定用户组用户")
     fun getRoleMember(
-        @Parameter(name = "项目标识", required = true)
+        @Parameter(description = "项目标识", required = true)
         @PathParam("projectId")
         projectId: Int,
-        @Parameter(name = "角色Id", required = true)
+        @Parameter(description = "角色Id", required = true)
         @PathParam("roleId")
         roleId: Int,
-        @Parameter(name = "页数", required = true)
+        @Parameter(description = "页数", required = true)
         @QueryParam("path")
         page: Int?,
-        @Parameter(name = "页面大小", required = true)
+        @Parameter(description = "页面大小", required = true)
         @QueryParam("pageSize")
         pageSize: Int?
     ): Result<ManagerGroupMemberVo>
@@ -96,13 +96,13 @@ interface UserProjectMemberResource {
     @Path("projectIds/{projectId}/members/all")
     @Operation(summary = "获取项目下所有用户")
     fun getProjectAllMember(
-        @Parameter(name = "项目标识", required = true)
+        @Parameter(description = "项目标识", required = true)
         @PathParam("projectId")
         projectId: Int,
-        @Parameter(name = "页数", required = true)
+        @Parameter(description = "页数", required = true)
         @QueryParam("path")
         page: Int?,
-        @Parameter(name = "页面大小", required = true)
+        @Parameter(description = "页面大小", required = true)
         @QueryParam("pageSize")
         pageSize: Int?
     ): Result<ProjectMembersVO?>
@@ -111,22 +111,22 @@ interface UserProjectMemberResource {
     @Path("/projectIds/{projectId}/roleIds/{roleId}")
     @Operation(summary = "删除项目下指定用户组用户")
     fun deleteRoleMember(
-        @Parameter(name = "用户名", required = true)
+        @Parameter(description = "用户名", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "项目标识", required = true)
+        @Parameter(description = "项目标识", required = true)
         @PathParam("projectId")
         projectId: Int,
-        @Parameter(name = "角色Id", required = true)
+        @Parameter(description = "角色Id", required = true)
         @PathParam("roleId")
         roleId: Int,
-        @Parameter(name = "是否为管理员分组", required = true)
+        @Parameter(description = "是否为管理员分组", required = true)
         @QueryParam("managerGroup")
         managerGroup: Boolean,
-        @Parameter(name = "待删除用户或组织Id", required = true)
+        @Parameter(description = "待删除用户或组织Id", required = true)
         @QueryParam("id")
         members: String,
-        @Parameter(name = "组员类型 user:单用户, dept:组织", required = true)
+        @Parameter(description = "组员类型 user:单用户, dept:组织", required = true)
         @QueryParam("type")
         type: ManagerScopesEnum
     ): Result<Boolean>
@@ -135,13 +135,13 @@ interface UserProjectMemberResource {
     @Path("projectIds/{projectId}/user/groups")
     @Operation(summary = "获取指定用户指定项目下的用户组")
     fun getUserAllGroup(
-        @Parameter(name = "用户名", required = true)
+        @Parameter(description = "用户名", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "项目标识", required = true)
+        @Parameter(description = "项目标识", required = true)
         @PathParam("projectId")
         projectId: Int,
-        @Parameter(name = "待搜用户", required = true)
+        @Parameter(description = "待搜用户", required = true)
         searchUserId: String
     ): Result<List<ManagerRoleGroupInfo>?>
 
@@ -149,11 +149,11 @@ interface UserProjectMemberResource {
     @Path("/projectIds/{projectId}/checkManager")
     @Operation(summary = "判断是否是项目管理员或CI管理员")
     fun checkManager(
-        @Parameter(name = "用户名", required = true)
+        @Parameter(description = "用户名", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
         @PathParam("projectId")
-        @Parameter(name = "项目Id", required = true)
+        @Parameter(description = "项目Id", required = true)
         projectId: String
     ): Result<Boolean>
 }

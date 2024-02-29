@@ -72,16 +72,16 @@ interface UserProjectResource {
     @Path("/")
     @Operation(summary = "查询所有项目")
     fun list(
-        @Parameter(name = "userId", required = true)
+        @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String,
-        @Parameter(name = "access_token")
+        @Parameter(description = "access_token")
         @HeaderParam(AUTH_HEADER_DEVOPS_ACCESS_TOKEN)
         accessToken: String?,
-        @Parameter(name = "是否启用", required = false)
+        @Parameter(description = "是否启用", required = false)
         @QueryParam("enabled")
         enabled: Boolean?,
-        @Parameter(name = "是否拉取未审批通过的项目，若为true，会拉取审批[未通过+通过]的项目", required = false)
+        @Parameter(description = "是否拉取未审批通过的项目，若为true，会拉取审批[未通过+通过]的项目", required = false)
         @QueryParam("unApproved")
         unApproved: Boolean?,
         @Parameter(description = "项目排序", required = false, example = "PROJECT_NAME")
@@ -96,22 +96,22 @@ interface UserProjectResource {
     @Path("/listProjectsForApply")
     @Operation(summary = "查询项目--用于权限申请界面")
     fun listProjectsForApply(
-        @Parameter(name = "userId", required = true)
+        @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String,
-        @Parameter(name = "access_token", required = false)
+        @Parameter(description = "access_token", required = false)
         @HeaderParam(AUTH_HEADER_DEVOPS_ACCESS_TOKEN)
         accessToken: String?,
-        @Parameter(name = "项目名", required = false)
+        @Parameter(description = "项目名", required = false)
         @QueryParam("projectName")
         projectName: String? = null,
-        @Parameter(name = "项目ID英文名标识", required = true)
+        @Parameter(description = "项目ID英文名标识", required = true)
         @QueryParam("english_name")
         projectId: String? = null,
-        @Parameter(name = "页目", required = true)
+        @Parameter(description = "页目", required = true)
         @QueryParam("page")
         page: Int,
-        @Parameter(name = "每页数目", required = true)
+        @Parameter(description = "每页数目", required = true)
         @QueryParam("pageSize")
         pageSize: Int
     ): Result<Pagination<ProjectWithPermission>>
@@ -120,13 +120,13 @@ interface UserProjectResource {
     @Path("/{english_name}")
     @Operation(summary = "获取项目信息，为空抛异常")
     fun get(
-        @Parameter(name = "userId", required = true)
+        @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String,
-        @Parameter(name = "项目ID英文名标识", required = true)
+        @Parameter(description = "项目ID英文名标识", required = true)
         @PathParam("english_name")
         projectId: String,
-        @Parameter(name = "access_token")
+        @Parameter(description = "access_token")
         @HeaderParam(AUTH_HEADER_DEVOPS_ACCESS_TOKEN)
         accessToken: String?
     ): Result<ProjectVO>
@@ -135,13 +135,13 @@ interface UserProjectResource {
     @Path("/{english_name}/show")
     @Operation(summary = "前端获取项目详情,有project_view权限校验")
     fun show(
-        @Parameter(name = "userId", required = true)
+        @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String,
-        @Parameter(name = "项目ID英文名标识", required = true)
+        @Parameter(description = "项目ID英文名标识", required = true)
         @PathParam("english_name")
         projectId: String,
-        @Parameter(name = "access_token")
+        @Parameter(description = "access_token")
         @HeaderParam(AUTH_HEADER_DEVOPS_ACCESS_TOKEN)
         accessToken: String?
     ): Result<ProjectVO>
@@ -150,13 +150,13 @@ interface UserProjectResource {
     @Path("/{english_name}/diff")
     @Operation(summary = "获取项目编辑信息对比")
     fun diff(
-        @Parameter(name = "userId", required = true)
+        @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String,
-        @Parameter(name = "项目ID英文名标识", required = true)
+        @Parameter(description = "项目ID英文名标识", required = true)
         @PathParam("english_name")
         projectId: String,
-        @Parameter(name = "access_token")
+        @Parameter(description = "access_token")
         @HeaderParam(AUTH_HEADER_DEVOPS_ACCESS_TOKEN)
         accessToken: String?
     ): Result<ProjectDiffVO>
@@ -165,13 +165,13 @@ interface UserProjectResource {
     @Path("/{english_name}/containEmpty")
     @Operation(summary = "获取项目信息为空返回空对象")
     fun getContainEmpty(
-        @Parameter(name = "userId", required = true)
+        @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String,
-        @Parameter(name = "项目ID英文名标识", required = true)
+        @Parameter(description = "项目ID英文名标识", required = true)
         @PathParam("english_name")
         projectId: String,
-        @Parameter(name = "access_token")
+        @Parameter(description = "access_token")
         @HeaderParam(AUTH_HEADER_DEVOPS_ACCESS_TOKEN)
         accessToken: String?
     ): Result<ProjectVO?>
@@ -180,12 +180,12 @@ interface UserProjectResource {
     @Path("/")
     @Operation(summary = "创建项目")
     fun create(
-        @Parameter(name = "userId", required = true)
+        @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String,
-        @Parameter(name = "项目信息", required = true)
+        @Parameter(description = "项目信息", required = true)
         projectCreateInfo: ProjectCreateInfo,
-        @Parameter(name = "access_token")
+        @Parameter(description = "access_token")
         @HeaderParam(AUTH_HEADER_DEVOPS_ACCESS_TOKEN)
         accessToken: String?
     ): Result<Boolean>
@@ -194,15 +194,15 @@ interface UserProjectResource {
     @Path("/{project_id}")
     @Operation(summary = "修改项目")
     fun update(
-        @Parameter(name = "userId", required = true)
+        @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String,
-        @Parameter(name = "项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("project_id")
         projectId: String,
-        @Parameter(name = "项目信息", required = true)
+        @Parameter(description = "项目信息", required = true)
         projectUpdateInfo: ProjectUpdateInfo,
-        @Parameter(name = "access_token")
+        @Parameter(description = "access_token")
         @HeaderParam(AUTH_HEADER_DEVOPS_ACCESS_TOKEN)
         accessToken: String?
     ): Result<Boolean>
@@ -211,13 +211,13 @@ interface UserProjectResource {
     @Path("/{project_id}/enable")
     @Operation(summary = "启用或停用项目")
     fun enable(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String,
-        @Parameter(name = "项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("project_id")
         projectId: String,
-        @Parameter(name = "待变更的新状态", required = true)
+        @Parameter(description = "待变更的新状态", required = true)
         @QueryParam("enabled")
         enabled: Boolean
     ): Result<Boolean>
@@ -227,18 +227,18 @@ interface UserProjectResource {
     @Operation(summary = "更改项目logo")
     @Consumes(MediaType.MULTIPART_FORM_DATA)
     fun updateLogo(
-        @Parameter(name = "userId", required = true)
+        @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String,
-        @Parameter(name = "项目英文名", required = true)
+        @Parameter(description = "项目英文名", required = true)
         @PathParam("english_name")
         englishName: String,
-        @Parameter(name = "文件", required = true)
+        @Parameter(description = "文件", required = true)
         @FormDataParam("logo")
         inputStream: InputStream,
         @FormDataParam("logo")
         disposition: FormDataContentDisposition,
-        @Parameter(name = "access_token")
+        @Parameter(description = "access_token")
         @HeaderParam(AUTH_HEADER_DEVOPS_ACCESS_TOKEN)
         accessToken: String?
     ): Result<ProjectLogo>
@@ -248,13 +248,13 @@ interface UserProjectResource {
     @Operation(summary = "上传logo")
     @Consumes(MediaType.MULTIPART_FORM_DATA)
     fun uploadLogo(
-        @Parameter(name = "userId", required = true)
+        @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String,
-        @Parameter(name = "文件", required = true)
+        @Parameter(description = "文件", required = true)
         @FormDataParam("logo")
         inputStream: InputStream,
-        @Parameter(name = "access_token")
+        @Parameter(description = "access_token")
         @HeaderParam(AUTH_HEADER_DEVOPS_ACCESS_TOKEN)
         accessToken: String?
     ): Result<String>
@@ -263,16 +263,16 @@ interface UserProjectResource {
     @Path("/{validateType}/names/validate")
     @Operation(summary = "校验项目名称和项目英文名")
     fun validate(
-        @Parameter(name = "userId", required = true)
+        @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String,
-        @Parameter(name = "校验的是项目名称或者项目英文名")
+        @Parameter(description = "校验的是项目名称或者项目英文名")
         @PathParam("validateType")
         validateType: ProjectValidateType,
-        @Parameter(name = "项目名称或者项目英文名")
+        @Parameter(description = "项目名称或者项目英文名")
         @QueryParam("name")
         name: String,
-        @Parameter(name = "项目ID")
+        @Parameter(description = "项目ID")
         @QueryParam("english_name")
         projectId: String?
     ): Result<Boolean>
@@ -281,7 +281,7 @@ interface UserProjectResource {
     @Path("/hasCreatePermission")
     @GET
     fun hasCreatePermission(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String
     ): Result<Boolean>
@@ -290,13 +290,13 @@ interface UserProjectResource {
     @Path("/{projectId}/hasPermission/{permission}")
     @GET
     fun hasPermission(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(name = "权限action", required = true)
+        @Parameter(description = "权限action", required = true)
         @PathParam("permission")
         permission: AuthPermission
     ): Result<Boolean>
@@ -305,13 +305,13 @@ interface UserProjectResource {
     @Path("/{projectCode}/users/{userId}/verify")
     @Operation(summary = " 校验用户是否项目成员")
     fun verifyUserProjectPermission(
-        @Parameter(name = "accessToken", required = false)
+        @Parameter(description = "accessToken", required = false)
         @HeaderParam(AUTH_HEADER_DEVOPS_ACCESS_TOKEN)
         accessToken: String? = null,
-        @Parameter(name = "项目代码", required = true)
+        @Parameter(description = "项目代码", required = true)
         @PathParam("projectCode")
         projectCode: String,
-        @Parameter(name = "用户ID", required = true)
+        @Parameter(description = "用户ID", required = true)
         @PathParam("userId")
         userId: String
     ): Result<Boolean>
@@ -320,10 +320,10 @@ interface UserProjectResource {
     @Path("/{project_id}/cancelCreateProject")
     @PUT
     fun cancelCreateProject(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("project_id")
         projectId: String
     ): Result<Boolean>
@@ -332,10 +332,10 @@ interface UserProjectResource {
     @Path("/{project_id}/cancelUpdateProject")
     @PUT
     fun cancelUpdateProject(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("project_id")
         projectId: String
     ): Result<Boolean>
@@ -344,7 +344,7 @@ interface UserProjectResource {
     @Path("/product/getOperationalProducts")
     @Operation(summary = "查询运营产品")
     fun getOperationalProducts(
-        @Parameter(name = "userId", required = true)
+        @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String
     ): Result<List<OperationalProductVO>>

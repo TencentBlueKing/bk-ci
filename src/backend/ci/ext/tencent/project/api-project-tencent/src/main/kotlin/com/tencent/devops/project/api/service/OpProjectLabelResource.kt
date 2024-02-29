@@ -58,7 +58,7 @@ interface OpProjectLabelResource {
     @GET
     @Path("/project/{projectId}")
     fun getProjectLabelByProjectId(
-        @Parameter(name = "项目id", required = true)
+        @Parameter(description = "项目id", required = true)
         @PathParam("projectId")
         projectId: String
     ): Result<List<ProjectLabel>>
@@ -67,7 +67,7 @@ interface OpProjectLabelResource {
     @GET
     @Path("/{id}")
     fun getProjectLabel(
-        @Parameter(name = "项目标签id", required = true)
+        @Parameter(description = "项目标签id", required = true)
         @PathParam("id")
         id: String
     ): Result<ProjectLabel?>
@@ -76,7 +76,7 @@ interface OpProjectLabelResource {
     @POST
     @Path("/")
     fun addProjectLabel(
-        @Parameter(name = "项目标签请求报文体", required = true)
+        @Parameter(description = "项目标签请求报文体", required = true)
         projectLabelRequest: ProjectLabelRequest
     ): Result<Boolean>
 
@@ -84,10 +84,10 @@ interface OpProjectLabelResource {
     @PUT
     @Path("/{id}")
     fun updateProjectLabel(
-        @Parameter(name = "项目标签id", required = true)
+        @Parameter(description = "项目标签id", required = true)
         @PathParam("id")
         id: String,
-        @Parameter(name = "项目标签请求报文体", required = true)
+        @Parameter(description = "项目标签请求报文体", required = true)
         projectLabelRequest: ProjectLabelRequest
     ): Result<Boolean>
 
@@ -95,7 +95,7 @@ interface OpProjectLabelResource {
     @DELETE
     @Path("/{id}")
     fun deleteProjectLabel(
-        @Parameter(name = "项目标签id", required = true)
+        @Parameter(description = "项目标签id", required = true)
         @PathParam("id")
         id: String
     ): Result<Boolean>

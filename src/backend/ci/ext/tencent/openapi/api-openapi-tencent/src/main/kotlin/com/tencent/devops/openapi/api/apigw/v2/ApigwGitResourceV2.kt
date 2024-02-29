@@ -54,22 +54,22 @@ interface ApigwGitResourceV2 {
     @GET
     @Path("/getProject")
     fun getProject(
-        @Parameter(name = "appCode", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
+        @Parameter(description = "appCode", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
         appCode: String?,
-        @Parameter(name = "apigw Type", required = true)
+        @Parameter(description = "apigw Type", required = true)
         @PathParam("apigwType")
         apigwType: String?,
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @QueryParam("projectId")
         projectId: String,
-        @Parameter(name = "repo hash iD", required = false)
+        @Parameter(description = "repo hash iD", required = false)
         @QueryParam("repoHashId")
         repoHashId: String?,
-        @Parameter(name = "工蜂代码库名字", required = false)
+        @Parameter(description = "工蜂代码库名字", required = false)
         @QueryParam("search")
         search: String? = null
     ): Result<AuthorizeResult>

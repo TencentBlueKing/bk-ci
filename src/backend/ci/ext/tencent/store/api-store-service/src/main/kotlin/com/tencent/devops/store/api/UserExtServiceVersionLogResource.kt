@@ -52,10 +52,10 @@ interface UserExtServiceVersionLogResource {
     @GET
     @Operation(summary = "获取版本日志列表")
     fun getVersionLogList(
-        @Parameter(name = "userId", required = true)
+        @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "serviceId", required = true)
+        @Parameter(description = "serviceId", required = true)
         @PathParam("serviceId")
         serviceId: String
     ): Result<VersionLogVO?>
@@ -64,10 +64,10 @@ interface UserExtServiceVersionLogResource {
     @GET
     @Operation(summary = "获取单条版本日志")
     fun getVersionLog(
-        @Parameter(name = "userId", required = true)
+        @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "logId", required = true)
+        @Parameter(description = "logId", required = true)
         @PathParam("logId")
         logId: String
     ): Result<VersionLog>

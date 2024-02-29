@@ -61,34 +61,34 @@ interface BuildReportResource {
     @Path("/{taskId}")
     @POST
     fun create(
-        @Parameter(name = "项目英文名，或者叫projectCode", required = true)
+        @Parameter(description = "项目英文名，或者叫projectCode", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_PROJECT_ID)
         projectId: String,
-        @Parameter(name = "流水线ID", required = true)
+        @Parameter(description = "流水线ID", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_PIPELINE_ID)
         pipelineId: String,
-        @Parameter(name = "构建ID", required = true)
+        @Parameter(description = "构建ID", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_BUILD_ID)
         buildId: String,
-        @Parameter(name = "构建环境ID", required = true)
+        @Parameter(description = "构建环境ID", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_VM_SEQ_ID)
         vmSeqId: String,
-        @Parameter(name = "构建机名称", required = true)
+        @Parameter(description = "构建机名称", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_VM_NAME)
         vmName: String,
-        @Parameter(name = "构建机名称", required = true)
+        @Parameter(description = "构建机名称", required = true)
         @PathParam("taskId")
         taskId: String,
-        @Parameter(name = "构建机名称", required = true)
+        @Parameter(description = "构建机名称", required = true)
         @QueryParam("indexFile")
         indexFile: String,
-        @Parameter(name = "报告名称", required = true)
+        @Parameter(description = "报告名称", required = true)
         @QueryParam("name")
         name: String,
-        @Parameter(name = "报告类型", required = true)
+        @Parameter(description = "报告类型", required = true)
         @QueryParam("reportType")
         reportType: ReportTypeEnum,
-        @Parameter(name = "报告邮件", required = false)
+        @Parameter(description = "报告邮件", required = false)
         reportEmail: ReportEmail?
     ): Result<Boolean>
 
@@ -96,13 +96,13 @@ interface BuildReportResource {
     @Path("/{taskId}/rootUrl")
     @GET
     fun getRootUrl(
-        @Parameter(name = "项目英文名", required = true)
+        @Parameter(description = "项目英文名", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_PROJECT_ID)
         projectId: String,
-        @Parameter(name = "构建ID", required = true)
+        @Parameter(description = "构建ID", required = true)
         @HeaderParam(AUTH_HEADER_BUILD_ID)
         buildId: String,
-        @Parameter(name = "构建机名称", required = true)
+        @Parameter(description = "构建机名称", required = true)
         @PathParam("taskId")
         taskId: String
     ): Result<String>

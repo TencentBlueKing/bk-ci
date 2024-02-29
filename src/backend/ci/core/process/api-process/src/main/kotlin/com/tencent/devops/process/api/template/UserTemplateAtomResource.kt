@@ -53,16 +53,16 @@ interface UserTemplateAtomResource {
     @GET
     @Path("/projects/{projectId}/templates/{templateId}/atom/prop/list")
     fun getTemplateAtomPropList(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(name = "模板ID", required = true)
+        @Parameter(description = "模板ID", required = true)
         @PathParam("templateId")
         templateId: String,
-        @Parameter(name = "模板版本", required = false)
+        @Parameter(description = "模板版本", required = false)
         @QueryParam("version")
         version: Long?
     ): Result<Map<String, AtomProp>?>

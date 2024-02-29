@@ -51,13 +51,13 @@ interface ExternalGithubResource {
     @POST
     @Path("/webhook/commit")
     fun webhookCommit(
-        @Parameter(name = "事件类型", required = true)
+        @Parameter(description = "事件类型", required = true)
         @HeaderParam("X-GitHub-Event")
         event: String,
-        @Parameter(name = "事件ID", required = true)
+        @Parameter(description = "事件ID", required = true)
         @HeaderParam("X-Github-Delivery")
         guid: String,
-        @Parameter(name = "secretKey签名(sha1)", required = true)
+        @Parameter(description = "secretKey签名(sha1)", required = true)
         @HeaderParam("X-Hub-Signature")
         signature: String,
         body: String
@@ -67,10 +67,10 @@ interface ExternalGithubResource {
     @GET
     @Path("/oauth/callback")
     fun oauthCallback(
-        @Parameter(name = "code")
+        @Parameter(description = "code")
         @QueryParam("code")
         code: String,
-        @Parameter(name = "state")
+        @Parameter(description = "state")
         @QueryParam("state")
         state: String?
     ): Response

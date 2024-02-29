@@ -63,13 +63,13 @@ interface UserMarketImageResource {
     @GET
     @Path("/image/list/main")
     fun mainPageList(
-        @Parameter(name = "userId", required = true)
+        @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "页码", required = false)
+        @Parameter(description = "页码", required = false)
         @QueryParam("page")
         page: Int?,
-        @Parameter(name = "每页大小", required = false)
+        @Parameter(description = "每页大小", required = false)
         @QueryParam("pageSize")
         pageSize: Int?
     ): Result<List<MarketImageMain>>
@@ -78,37 +78,37 @@ interface UserMarketImageResource {
     @GET
     @Path("/image/list")
     fun searchImage(
-        @Parameter(name = "userId", required = true)
+        @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "搜索关键字", required = false)
+        @Parameter(description = "搜索关键字", required = false)
         @QueryParam("keyword")
         keyword: String?,
-        @Parameter(name = "镜像来源", required = false)
+        @Parameter(description = "镜像来源", required = false)
         @QueryParam("imageSourceType")
         imageSourceType: ImageType?,
-        @Parameter(name = "镜像分类编码", required = false)
+        @Parameter(description = "镜像分类编码", required = false)
         @QueryParam("classifyCode")
         classifyCode: String?,
-        @Parameter(name = "应用范畴", required = false)
+        @Parameter(description = "应用范畴", required = false)
         @QueryParam("categoryCode")
         categoryCode: String?,
-        @Parameter(name = "镜像研发来源", required = false)
+        @Parameter(description = "镜像研发来源", required = false)
         @QueryParam("rdType")
         rdType: ImageRDTypeEnum?,
-        @Parameter(name = "镜像标签代码", required = false)
+        @Parameter(description = "镜像标签代码", required = false)
         @QueryParam("labelCode")
         labelCode: String?,
-        @Parameter(name = "镜像评分", required = false)
+        @Parameter(description = "镜像评分", required = false)
         @QueryParam("score")
         score: Int?,
-        @Parameter(name = "镜像排序字段", required = false)
+        @Parameter(description = "镜像排序字段", required = false)
         @QueryParam("sortType")
         sortType: MarketImageSortTypeEnum?,
-        @Parameter(name = "页码", required = false)
+        @Parameter(description = "页码", required = false)
         @QueryParam("page")
         page: Int?,
-        @Parameter(name = "每页大小", required = false)
+        @Parameter(description = "每页大小", required = false)
         @QueryParam("pageSize")
         pageSize: Int?
     ): Result<MarketImageResp>
@@ -117,10 +117,10 @@ interface UserMarketImageResource {
     @GET
     @Path("/image/imageIds/{imageId}")
     fun getImageDetailById(
-        @Parameter(name = "userId", required = true)
+        @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "镜像Id", required = true)
+        @Parameter(description = "镜像Id", required = true)
         @PathParam("imageId")
         imageId: String
     ): Result<ImageDetail>
@@ -129,10 +129,10 @@ interface UserMarketImageResource {
     @GET
     @Path("/image/imageCodes/{imageCode}")
     fun getImageDetailByCode(
-        @Parameter(name = "userId", required = true)
+        @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "镜像标识", required = true)
+        @Parameter(description = "镜像标识", required = true)
         @PathParam("imageCode")
         imageCode: String
     ): Result<ImageDetail>
@@ -141,16 +141,16 @@ interface UserMarketImageResource {
     @GET
     @Path("/image/imageCodes/{imageCode}/version/list")
     fun getImageVersionListByCode(
-        @Parameter(name = "userId", required = true)
+        @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "镜像标识", required = true)
+        @Parameter(description = "镜像标识", required = true)
         @PathParam("imageCode")
         imageCode: String,
-        @Parameter(name = "页码", required = false)
+        @Parameter(description = "页码", required = false)
         @QueryParam("page")
         page: Int?,
-        @Parameter(name = "每页大小", required = false)
+        @Parameter(description = "每页大小", required = false)
         @QueryParam("pageSize")
         pageSize: Int?
     ): Result<Page<ImageDetail>>
@@ -159,16 +159,16 @@ interface UserMarketImageResource {
     @GET
     @Path("/desk/image/list")
     fun getMyImageList(
-        @Parameter(name = "userId", required = true)
+        @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "镜像名称", required = false)
+        @Parameter(description = "镜像名称", required = false)
         @QueryParam("imageName")
         imageName: String?,
-        @Parameter(name = "页码", required = false)
+        @Parameter(description = "页码", required = false)
         @QueryParam("page")
         page: Int?,
-        @Parameter(name = "每页大小", required = false)
+        @Parameter(description = "每页大小", required = false)
         @QueryParam("pageSize")
         pageSize: Int?
     ): Result<Page<MyImage>>
@@ -177,10 +177,10 @@ interface UserMarketImageResource {
     @DELETE
     @Path("/image/imageCodes/{imageCode}")
     fun delete(
-        @Parameter(name = "userId", required = true)
+        @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "镜像Code", required = true)
+        @Parameter(description = "镜像Code", required = true)
         @PathParam("imageCode")
         imageCode: String
     ): Result<Boolean>
@@ -189,13 +189,13 @@ interface UserMarketImageResource {
     @PUT
     @Path("/baseInfo/images/{imageCode}")
     fun updateImageBaseInfo(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "镜像代码 ", required = true)
+        @Parameter(description = "镜像代码 ", required = true)
         @PathParam("imageCode")
         imageCode: String,
-        @Parameter(name = "镜像基本信息修改请求报文体", required = true)
+        @Parameter(description = "镜像基本信息修改请求报文体", required = true)
         imageBaseInfoUpdateRequest: ImageBaseInfoUpdateRequest
     ): Result<Boolean>
 
@@ -203,10 +203,10 @@ interface UserMarketImageResource {
     @GET
     @Path("/projectCodes/{projectCode}/imageCodes/{imageCode}/version/list")
     fun getPipelineImageVersions(
-        @Parameter(name = "项目代码", required = true)
+        @Parameter(description = "项目代码", required = true)
         @PathParam("projectCode")
         projectCode: String,
-        @Parameter(name = "镜像代码", required = true)
+        @Parameter(description = "镜像代码", required = true)
         @PathParam("imageCode")
         imageCode: String
     ): Result<List<VersionInfo>>

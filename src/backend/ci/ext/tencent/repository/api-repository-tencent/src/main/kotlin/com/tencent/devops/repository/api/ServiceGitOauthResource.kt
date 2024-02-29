@@ -53,19 +53,19 @@ interface ServiceGitOauthResource {
     @GET
     @Path("/isOauth")
     fun isOAuth(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "重定向url类型", required = false)
+        @Parameter(description = "重定向url类型", required = false)
         @QueryParam("redirectUrlType")
         redirectUrlType: RedirectUrlTypeEnum?,
-        @Parameter(name = "oauth认证成功后重定向到前端的地址", required = false)
+        @Parameter(description = "oauth认证成功后重定向到前端的地址", required = false)
         @QueryParam("redirectUrl")
         redirectUrl: String?,
-        @Parameter(name = "工蜂项目Id", required = false)
+        @Parameter(description = "工蜂项目Id", required = false)
         @QueryParam("gitProjectId")
         gitProjectId: Long? = null,
-        @Parameter(name = "是否刷新token", required = false)
+        @Parameter(description = "是否刷新token", required = false)
         @QueryParam("refreshToken")
         refreshToken: Boolean? = false
     ): Result<AuthorizeResult>

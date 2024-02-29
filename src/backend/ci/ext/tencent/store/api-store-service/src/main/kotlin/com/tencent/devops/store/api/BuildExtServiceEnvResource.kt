@@ -49,16 +49,16 @@ interface BuildExtServiceEnvResource {
     @PUT
     @Path("/projects/{projectCode}/services/{serviceCode}/versions/{version}")
     fun updateExtServiceEnv(
-        @Parameter(name = "项目代码", required = true)
+        @Parameter(description = "项目代码", required = true)
         @PathParam("projectCode")
         projectCode: String,
-        @Parameter(name = "扩展服务代码", required = true)
+        @Parameter(description = "扩展服务代码", required = true)
         @PathParam("serviceCode")
         serviceCode: String,
-        @Parameter(name = "版本号", required = true)
+        @Parameter(description = "版本号", required = true)
         @PathParam("version")
         version: String,
-        @Parameter(name = "更新扩展服务环境信息请求报文体", required = true)
+        @Parameter(description = "更新扩展服务环境信息请求报文体", required = true)
         updateExtServiceEnvInfo: UpdateExtServiceEnvInfoDTO
     ): Result<Boolean>
 }

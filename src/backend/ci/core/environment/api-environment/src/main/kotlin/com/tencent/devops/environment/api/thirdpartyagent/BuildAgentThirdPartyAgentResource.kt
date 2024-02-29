@@ -61,16 +61,16 @@ interface BuildAgentThirdPartyAgentResource {
     @POST
     @Path("/startup")
     fun agentStartup(
-        @Parameter(name = "项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_PROJECT_ID)
         projectId: String,
-        @Parameter(name = "Agent ID", required = true)
+        @Parameter(description = "Agent ID", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_AGENT_ID)
         agentId: String,
-        @Parameter(name = "秘钥", required = true)
+        @Parameter(description = "秘钥", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_AGENT_SECRET_KEY)
         secretKey: String,
-        @Parameter(name = "Agent Start Info", required = true)
+        @Parameter(description = "Agent Start Info", required = true)
         startInfo: ThirdPartyAgentStartInfo
     ): Result<AgentStatus>
 
@@ -78,16 +78,16 @@ interface BuildAgentThirdPartyAgentResource {
     @POST
     @Path("/shutdown")
     fun agentShutdown(
-        @Parameter(name = "项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_PROJECT_ID)
         projectId: String,
-        @Parameter(name = "Agent ID", required = true)
+        @Parameter(description = "Agent ID", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_AGENT_ID)
         agentId: String,
-        @Parameter(name = "秘钥", required = true)
+        @Parameter(description = "秘钥", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_AGENT_SECRET_KEY)
         secretKey: String,
-        @Parameter(name = "正常关闭", required = true)
+        @Parameter(description = "正常关闭", required = true)
         @QueryParam("shutdownNormal")
         shutdownNormal: Boolean
     ): Result<AgentStatus>
@@ -96,13 +96,13 @@ interface BuildAgentThirdPartyAgentResource {
     @GET
     @Path("/status")
     fun getAgentStatus(
-        @Parameter(name = "项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_PROJECT_ID)
         projectId: String,
-        @Parameter(name = "Agent ID", required = true)
+        @Parameter(description = "Agent ID", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_AGENT_ID)
         agentId: String,
-        @Parameter(name = "秘钥", required = true)
+        @Parameter(description = "秘钥", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_AGENT_SECRET_KEY)
         secretKey: String
     ): Result<AgentStatus>
@@ -111,16 +111,16 @@ interface BuildAgentThirdPartyAgentResource {
     @POST
     @Path("/agents/heartbeat")
     fun agentHeartbeat(
-        @Parameter(name = "项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_PROJECT_ID)
         projectId: String,
-        @Parameter(name = "Agent ID", required = true)
+        @Parameter(description = "Agent ID", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_AGENT_ID)
         agentId: String,
-        @Parameter(name = "秘钥", required = true)
+        @Parameter(description = "秘钥", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_AGENT_SECRET_KEY)
         secretKey: String,
-        @Parameter(name = "内容", required = false)
+        @Parameter(description = "内容", required = false)
         heartbeatInfo: ThirdPartyAgentHeartbeatInfo?
     ): Result<AgentStatus>
 
@@ -128,16 +128,16 @@ interface BuildAgentThirdPartyAgentResource {
     @POST
     @Path("/agents/newHeartbeat")
     fun newHeartbeat(
-        @Parameter(name = "项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_PROJECT_ID)
         projectId: String,
-        @Parameter(name = "Agent ID", required = true)
+        @Parameter(description = "Agent ID", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_AGENT_ID)
         agentId: String,
-        @Parameter(name = "秘钥", required = true)
+        @Parameter(description = "秘钥", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_AGENT_SECRET_KEY)
         secretKey: String,
-        @Parameter(name = "内容", required = false)
+        @Parameter(description = "内容", required = false)
         heartbeatInfo: NewHeartbeatInfo
     ): Result<HeartbeatResponse>
 
@@ -145,13 +145,13 @@ interface BuildAgentThirdPartyAgentResource {
     @GET
     @Path("agents/pipelines")
     fun getPipelines(
-        @Parameter(name = "项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_PROJECT_ID)
         projectId: String,
-        @Parameter(name = "Agent ID", required = true)
+        @Parameter(description = "Agent ID", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_AGENT_ID)
         agentId: String,
-        @Parameter(name = "秘钥", required = true)
+        @Parameter(description = "秘钥", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_AGENT_SECRET_KEY)
         secretKey: String
     ): Result<ThirdPartyAgentPipeline?>
@@ -160,16 +160,16 @@ interface BuildAgentThirdPartyAgentResource {
     @PUT
     @Path("agents/pipelines")
     fun updatePipelineStatus(
-        @Parameter(name = "项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_PROJECT_ID)
         projectId: String,
-        @Parameter(name = "Agent ID", required = true)
+        @Parameter(description = "Agent ID", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_AGENT_ID)
         agentId: String,
-        @Parameter(name = "秘钥", required = true)
+        @Parameter(description = "秘钥", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_AGENT_SECRET_KEY)
         secretKey: String,
-        @Parameter(name = "管道状态信息", required = true)
+        @Parameter(description = "管道状态信息", required = true)
         response: PipelineResponse
     ): Result<Boolean>
 
@@ -177,16 +177,16 @@ interface BuildAgentThirdPartyAgentResource {
     @POST
     @Path("/agents/metrics")
     fun reportAgentMetrics(
-        @Parameter(name = "项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_PROJECT_ID)
         projectId: String,
-        @Parameter(name = "Agent ID", required = true)
+        @Parameter(description = "Agent ID", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_AGENT_ID)
         agentId: String,
-        @Parameter(name = "秘钥", required = true)
+        @Parameter(description = "秘钥", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_AGENT_SECRET_KEY)
         secretKey: String,
-        @Parameter(name = "数据", required = true)
+        @Parameter(description = "数据", required = true)
         data: String
     ): Result<Boolean>
 }

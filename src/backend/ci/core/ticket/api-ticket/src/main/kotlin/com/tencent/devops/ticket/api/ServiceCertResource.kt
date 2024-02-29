@@ -53,16 +53,16 @@ interface ServiceCertResource {
     @Path("/{projectId}/android/hasUsePermissionList")
     @GET
     fun hasUsePermissionAndroidList(
-        @Parameter(name = "项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(name = "用户ID", required = true)
+        @Parameter(description = "用户ID", required = true)
         @QueryParam("userId")
         userId: String,
-        @Parameter(name = "第几页", required = false, example = "1")
+        @Parameter(description = "第几页", required = false, example = "1")
         @QueryParam("page")
         page: Int?,
-        @Parameter(name = "每页多少条", required = false, example = "20")
+        @Parameter(description = "每页多少条", required = false, example = "20")
         @QueryParam("pageSize")
         pageSize: Int?
     ): Result<Page<Cert>>
@@ -71,13 +71,13 @@ interface ServiceCertResource {
     @Path("/{projectId}/android/{certId}")
     @GET
     fun getAndroid(
-        @Parameter(name = "项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(name = "证书ID", required = true)
+        @Parameter(description = "证书ID", required = true)
         @PathParam("certId")
         certId: String,
-        @Parameter(name = "Base64编码的加密公钥", required = true)
+        @Parameter(description = "Base64编码的加密公钥", required = true)
         @QueryParam("publicKey")
         publicKey: String
     ): Result<CertAndroidWithCredential>
@@ -86,13 +86,13 @@ interface ServiceCertResource {
     @Path("/{projectId}/enterprise/{certId}")
     @GET
     fun getEnterprise(
-        @Parameter(name = "项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(name = "证书ID", required = true)
+        @Parameter(description = "证书ID", required = true)
         @PathParam("certId")
         certId: String,
-        @Parameter(name = "Base64编码的加密公钥", required = true)
+        @Parameter(description = "Base64编码的加密公钥", required = true)
         @QueryParam("publicKey")
         publicKey: String
     ): Result<CertEnterprise>
@@ -101,13 +101,13 @@ interface ServiceCertResource {
     @Path("/{projectId}/tls/{certId}")
     @GET
     fun getTls(
-        @Parameter(name = "项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(name = "证书ID", required = true)
+        @Parameter(description = "证书ID", required = true)
         @PathParam("certId")
         certId: String,
-        @Parameter(name = "Base64编码的加密公钥", required = true)
+        @Parameter(description = "Base64编码的加密公钥", required = true)
         @QueryParam("publicKey")
         publicKey: String
     ): Result<CertTls>

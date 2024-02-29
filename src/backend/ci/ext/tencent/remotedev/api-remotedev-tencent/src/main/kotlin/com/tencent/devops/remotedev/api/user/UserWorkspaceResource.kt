@@ -72,16 +72,16 @@ interface UserWorkspaceResource {
     @POST
     @Path("/")
     fun createWorkspace(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "bkTicket", required = true)
+        @Parameter(description = "bkTicket", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_BK_TICKET)
         bkTicket: String,
-        @Parameter(name = "projectId", required = true)
+        @Parameter(description = "projectId", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_PROJECT_ID)
         projectId: String,
-        @Parameter(name = "工作空间描述", required = true)
+        @Parameter(description = "工作空间描述", required = true)
         workspace: WorkspaceCreate
     ): Result<WorkspaceResponse>
 
@@ -90,13 +90,13 @@ interface UserWorkspaceResource {
     @Path("/")
     @Deprecated("@see getWorkspaceListNew")
     fun getWorkspaceList(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "第几页", required = false, example = "1")
+        @Parameter(description = "第几页", required = false, example = "1")
         @QueryParam("page")
         page: Int?,
-        @Parameter(name = "每页多少条", required = false, example = "6666")
+        @Parameter(description = "每页多少条", required = false, example = "6666")
         @QueryParam("pageSize")
         pageSize: Int?
     ): Result<Page<Workspace>>
@@ -105,13 +105,13 @@ interface UserWorkspaceResource {
     @POST
     @Path("/search")
     fun getWorkspaceListNew(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "第几页", required = false, example = "1")
+        @Parameter(description = "第几页", required = false, example = "1")
         @QueryParam("page")
         page: Int?,
-        @Parameter(name = "每页多少条", required = false, example = "6666")
+        @Parameter(description = "每页多少条", required = false, example = "6666")
         @QueryParam("pageSize")
         pageSize: Int?,
         search: WorkspaceSearch
@@ -121,13 +121,13 @@ interface UserWorkspaceResource {
     @POST
     @Path("/search_export")
     fun getWorkspaceListXlsx(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "第几页", required = false, example = "1")
+        @Parameter(description = "第几页", required = false, example = "1")
         @QueryParam("page")
         page: Int?,
-        @Parameter(name = "每页多少条", required = false, example = "6666")
+        @Parameter(description = "每页多少条", required = false, example = "6666")
         @QueryParam("pageSize")
         pageSize: Int?,
         search: WorkspaceSearch
@@ -137,10 +137,10 @@ interface UserWorkspaceResource {
     @DELETE
     @Path("/")
     fun deleteWorkspace(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "工作空间名称", required = true)
+        @Parameter(description = "工作空间名称", required = true)
         @QueryParam("workspaceName")
         workspaceName: String
     ): Result<Boolean>
@@ -149,13 +149,13 @@ interface UserWorkspaceResource {
     @POST
     @Path("/start")
     fun startWorkspace(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "bkTicket", required = true)
+        @Parameter(description = "bkTicket", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_BK_TICKET)
         bkTicket: String,
-        @Parameter(name = "工作空间名称", required = true)
+        @Parameter(description = "工作空间名称", required = true)
         @QueryParam("workspaceName")
         workspaceName: String
     ): Result<WorkspaceResponse>
@@ -164,10 +164,10 @@ interface UserWorkspaceResource {
     @POST
     @Path("/stop")
     fun stopWorkspace(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "工作空间名称", required = true)
+        @Parameter(description = "工作空间名称", required = true)
         @QueryParam("workspaceName")
         workspaceName: String
     ): Result<Boolean>
@@ -176,13 +176,13 @@ interface UserWorkspaceResource {
     @POST
     @Path("/share")
     fun shareWorkspace(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "工作空间名称", required = true)
+        @Parameter(description = "工作空间名称", required = true)
         @QueryParam("workspaceName")
         workspaceName: String,
-        @Parameter(name = "分享用户", required = true)
+        @Parameter(description = "分享用户", required = true)
         @QueryParam("sharedUser")
         sharedUser: String
     ): Result<Boolean>
@@ -191,13 +191,13 @@ interface UserWorkspaceResource {
     @POST
     @Path("/edit")
     fun editWorkspace(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "工作空间名称", required = true)
+        @Parameter(description = "工作空间名称", required = true)
         @QueryParam("workspaceName")
         workspaceName: String,
-        @Parameter(name = "备注名称", required = true)
+        @Parameter(description = "备注名称", required = true)
         @QueryParam("displayName")
         displayName: String
     ): Result<Boolean>
@@ -206,13 +206,13 @@ interface UserWorkspaceResource {
     @POST
     @Path("/modify/property")
     fun modifyWorkspaceProperty(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "工作空间名称", required = true)
+        @Parameter(description = "工作空间名称", required = true)
         @QueryParam("workspaceName")
         workspaceName: String,
-        @Parameter(name = "备注名称", required = true)
+        @Parameter(description = "备注名称", required = true)
         workspaceProperty: WorkspaceProperty
     ): Result<Boolean>
 
@@ -220,10 +220,10 @@ interface UserWorkspaceResource {
     @GET
     @Path("/workspace_detail")
     fun getWorkspaceDetail(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "工作空间名称", required = true)
+        @Parameter(description = "工作空间名称", required = true)
         @QueryParam("workspaceName")
         workspaceName: String
     ): Result<WorkspaceDetail?>
@@ -232,7 +232,7 @@ interface UserWorkspaceResource {
     @GET
     @Path("/user_detail")
     fun getWorkspaceUserDetail(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String
     ): Result<WorkspaceUserDetail?>
@@ -241,16 +241,16 @@ interface UserWorkspaceResource {
     @GET
     @Path("/detail_timeline")
     fun getWorkspaceTimeline(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "工作空间名称", required = true)
+        @Parameter(description = "工作空间名称", required = true)
         @QueryParam("workspaceName")
         workspaceName: String,
-        @Parameter(name = "第几页", required = false, example = "1")
+        @Parameter(description = "第几页", required = false, example = "1")
         @QueryParam("page")
         page: Int?,
-        @Parameter(name = "每页多少条", required = false, example = "20")
+        @Parameter(description = "每页多少条", required = false, example = "20")
         @QueryParam("pageSize")
         pageSize: Int?
     ): Result<Page<WorkspaceOpHistory>>
@@ -259,19 +259,19 @@ interface UserWorkspaceResource {
     @GET
     @Path("/repository")
     fun getAuthorizedGitRepository(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "模糊搜索代码库", required = false)
+        @Parameter(description = "模糊搜索代码库", required = false)
         @QueryParam("search")
         search: String?,
-        @Parameter(name = "第几页", required = false, example = "1")
+        @Parameter(description = "第几页", required = false, example = "1")
         @QueryParam("page")
         page: Int?,
-        @Parameter(name = "每页多少条", required = false, example = "20")
+        @Parameter(description = "每页多少条", required = false, example = "20")
         @QueryParam("pageSize")
         pageSize: Int?,
-        @Parameter(name = "git 类型", required = true)
+        @Parameter(description = "git 类型", required = true)
         @QueryParam("gitType")
         @DefaultValue("GIT")
         gitType: RemoteDevGitType = RemoteDevGitType.GIT
@@ -281,13 +281,13 @@ interface UserWorkspaceResource {
     @GET
     @Path("/repository_branch")
     fun getRepositoryBranch(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "代码库项目全路径", required = true)
+        @Parameter(description = "代码库项目全路径", required = true)
         @QueryParam("pathWithNamespace")
         pathWithNamespace: String,
-        @Parameter(name = "git 类型", required = true)
+        @Parameter(description = "git 类型", required = true)
         @QueryParam("gitType")
         @DefaultValue("GIT")
         gitType: RemoteDevGitType = RemoteDevGitType.GIT
@@ -297,16 +297,16 @@ interface UserWorkspaceResource {
     @GET
     @Path("/repository_devfile")
     fun checkDevfile(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "代码库项目全路径", required = true)
+        @Parameter(description = "代码库项目全路径", required = true)
         @QueryParam("pathWithNamespace")
         pathWithNamespace: String,
-        @Parameter(name = "分支", required = true)
+        @Parameter(description = "分支", required = true)
         @QueryParam("branch")
         branch: String,
-        @Parameter(name = "git 类型", required = true)
+        @Parameter(description = "git 类型", required = true)
         @QueryParam("gitType")
         @DefaultValue("GIT")
         gitType: RemoteDevGitType = RemoteDevGitType.GIT
@@ -316,19 +316,19 @@ interface UserWorkspaceResource {
     @GET
     @Path("/isOauth")
     fun isOAuth(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "重定向url类型", required = false)
+        @Parameter(description = "重定向url类型", required = false)
         @QueryParam("redirectUrlType")
         redirectUrlType: RedirectUrlTypeEnum?,
-        @Parameter(name = "oauth认证成功后重定向到前端的地址", required = false)
+        @Parameter(description = "oauth认证成功后重定向到前端的地址", required = false)
         @QueryParam("redirectUrl")
         redirectUrl: String?,
-        @Parameter(name = "是否刷新token", required = false)
+        @Parameter(description = "是否刷新token", required = false)
         @QueryParam("refreshToken")
         refreshToken: Boolean? = true,
-        @Parameter(name = "git 类型", required = true)
+        @Parameter(description = "git 类型", required = true)
         @QueryParam("gitType")
         @DefaultValue("GIT")
         gitType: RemoteDevGitType = RemoteDevGitType.GIT
@@ -338,10 +338,10 @@ interface UserWorkspaceResource {
     @POST
     @Path("/heartbeat")
     fun workspaceHeartbeat(
-        @Parameter(name = "userId", required = true)
+        @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "执行次数", required = true)
+        @Parameter(description = "执行次数", required = true)
         @QueryParam("workspaceName")
         workspaceName: String
     ): Result<Boolean>
@@ -350,10 +350,10 @@ interface UserWorkspaceResource {
     @GET
     @Path("/checkPermission")
     fun checkUserPermission(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "工作空间名称", required = true)
+        @Parameter(description = "工作空间名称", required = true)
         @QueryParam("workspaceName")
         workspaceName: String
     ): Result<Boolean>
@@ -362,7 +362,7 @@ interface UserWorkspaceResource {
     @GET
     @Path("/check_user_create")
     fun checkUserCreate(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String
     ): Result<Boolean>
@@ -371,10 +371,10 @@ interface UserWorkspaceResource {
     @POST
     @Path("/updateBkTicket")
     fun updateBkTicket(
-        @Parameter(name = "userId", required = true)
+        @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "bkTicket信息", required = true)
+        @Parameter(description = "bkTicket信息", required = true)
         bkTicketInfo: BkTicketInfo
     ): Result<Boolean>
 
@@ -382,10 +382,10 @@ interface UserWorkspaceResource {
     @POST
     @Path("/updateAllBkTicket")
     fun updateAllBkTicket(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "bkTicket", required = true)
+        @Parameter(description = "bkTicket", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_BK_TICKET)
         bkTicket: String
     ): Result<Boolean>
@@ -394,10 +394,10 @@ interface UserWorkspaceResource {
     @GET
     @Path("/start_cloud_workspace_detail")
     fun startCloudWorkspaceDetail(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "工作空间名称", required = true)
+        @Parameter(description = "工作空间名称", required = true)
         @QueryParam("workspaceName")
         workspaceName: String
     ): Result<WorkspaceStartCloudDetail?>
@@ -406,10 +406,10 @@ interface UserWorkspaceResource {
     @GET
     @Path("/project_access_device_permissions")
     fun projectAccessDevicePermissions(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "MAC地址", required = true)
+        @Parameter(description = "MAC地址", required = true)
         @QueryParam("macAddress")
         macAddress: String
     ): Result<Map<String, ProjectAccessDevicePermissionsResp>>

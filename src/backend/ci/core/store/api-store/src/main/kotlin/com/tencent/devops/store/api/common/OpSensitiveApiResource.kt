@@ -56,25 +56,25 @@ interface OpSensitiveApiResource {
     @Path("list")
     @GET
     fun list(
-        @Parameter(name = "store组件类别 ATOM:插件 TEMPLATE:模板 IMAGE:镜像 IDE_ATOM:IDE插件")
+        @Parameter(description = "store组件类别 ATOM:插件 TEMPLATE:模板 IMAGE:镜像 IDE_ATOM:IDE插件")
         @QueryParam("storeType")
         storeType: StoreTypeEnum?,
-        @Parameter(name = "store组件代码")
+        @Parameter(description = "store组件代码")
         @QueryParam("storeCode")
         storeCode: String?,
-        @Parameter(name = "API名称")
+        @Parameter(description = "API名称")
         @QueryParam("apiName")
         apiName: String?,
-        @Parameter(name = "API等级 NORMAL: 普通 SENSITIVE: 敏感")
+        @Parameter(description = "API等级 NORMAL: 普通 SENSITIVE: 敏感")
         @QueryParam("apiLevel")
         apiLevel: String?,
-        @Parameter(name = "API状态 WAIT:待审批，PASS:通过，REFUSE:拒绝, CANCEL: 取消")
+        @Parameter(description = "API状态 WAIT:待审批，PASS:通过，REFUSE:拒绝, CANCEL: 取消")
         @QueryParam("apiStatus")
         apiStatus: String?,
-        @Parameter(name = "第几页", required = false)
+        @Parameter(description = "第几页", required = false)
         @QueryParam("page")
         page: Int?,
-        @Parameter(name = "每页条数", required = false)
+        @Parameter(description = "每页条数", required = false)
         @QueryParam("pageSize")
         pageSize: Int?
     ): Result<Page<SensitiveApiInfo>>
@@ -83,10 +83,10 @@ interface OpSensitiveApiResource {
     @Path("approve")
     @PUT
     fun approve(
-        @Parameter(name = "userId", required = true)
+        @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "敏感API审批请求体")
+        @Parameter(description = "敏感API审批请求体")
         sensitiveApiApproveReq: SensitiveApiApproveReq
     ): Result<Boolean>
 }

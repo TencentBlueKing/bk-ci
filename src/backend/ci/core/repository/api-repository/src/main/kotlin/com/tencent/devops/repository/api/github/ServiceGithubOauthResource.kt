@@ -24,13 +24,13 @@ interface ServiceGithubOauthResource {
     @GET
     @Path("/callback")
     fun githubCallback(
-        @Parameter(name = "code")
+        @Parameter(description = "code")
         @QueryParam("code")
         code: String,
-        @Parameter(name = "state")
+        @Parameter(description = "state")
         @QueryParam("state")
         state: String?,
-        @Parameter(name = "channelCode")
+        @Parameter(description = "channelCode")
         @QueryParam("channelCode")
         channelCode: String? = null
     ): Result<GithubOauthCallback>
@@ -39,13 +39,13 @@ interface ServiceGithubOauthResource {
     @GET
     @Path("/oauthUrl")
     fun oauthUrl(
-        @Parameter(name = "redirectUrl")
+        @Parameter(description = "redirectUrl")
         @QueryParam("redirectUrl")
         redirectUrl: String,
-        @Parameter(name = "userId, 如果指定将以该userId入库，否则会以github login name 入库")
+        @Parameter(description = "userId, 如果指定将以该userId入库，否则会以github login name 入库")
         @QueryParam("userId")
         userId: String?,
-        @Parameter(name = "token 类型", required = false)
+        @Parameter(description = "token 类型", required = false)
         @QueryParam("tokenType")
         @DefaultValue("GITHUB_APP")
         tokenType: GithubTokenType? = GithubTokenType.GITHUB_APP

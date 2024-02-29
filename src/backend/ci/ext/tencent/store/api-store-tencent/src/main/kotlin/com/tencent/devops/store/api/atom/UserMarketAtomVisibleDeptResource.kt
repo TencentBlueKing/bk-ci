@@ -55,10 +55,10 @@ interface UserMarketAtomVisibleDeptResource {
     @POST
     @Path("/")
     fun addVisibleDept(
-        @Parameter(name = "userId", required = true)
+        @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "插件市场-插件可见范围请求报文体", required = true)
+        @Parameter(description = "插件市场-插件可见范围请求报文体", required = true)
         atomVisibleDeptRequest: AtomVisibleDeptReq
     ): Result<Boolean>
 
@@ -66,7 +66,7 @@ interface UserMarketAtomVisibleDeptResource {
     @GET
     @Path("/{atomCode}")
     fun getVisibleDept(
-        @Parameter(name = "插件代码", required = true)
+        @Parameter(description = "插件代码", required = true)
         @PathParam("atomCode")
         atomCode: String
     ): Result<StoreVisibleDeptResp?>
@@ -75,13 +75,13 @@ interface UserMarketAtomVisibleDeptResource {
     @DELETE
     @Path("/{atomCode}")
     fun deleteVisibleDept(
-        @Parameter(name = "userId", required = true)
+        @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "插件代码", required = true)
+        @Parameter(description = "插件代码", required = true)
         @PathParam("atomCode")
         atomCode: String,
-        @Parameter(name = "机构Id集合，用\",\"分隔进行拼接（如1,2,3）", required = true)
+        @Parameter(description = "机构Id集合，用\",\"分隔进行拼接（如1,2,3）", required = true)
         @QueryParam("deptIds")
         deptIds: String
     ): Result<Boolean>

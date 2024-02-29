@@ -60,10 +60,10 @@ interface OpStoreDockingPlatformResource {
     @POST
     @Path("/add")
     fun add(
-        @Parameter(name = "userId", required = true)
+        @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "对接平台请求报文体", required = true)
+        @Parameter(description = "对接平台请求报文体", required = true)
         @Valid
         storeDockingPlatformRequest: StoreDockingPlatformRequest
     ): Result<Boolean>
@@ -72,14 +72,14 @@ interface OpStoreDockingPlatformResource {
     @PUT
     @Path("/ids/{id}/update")
     fun update(
-        @Parameter(name = "userId", required = true)
+        @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "平台ID", required = true)
+        @Parameter(description = "平台ID", required = true)
         @PathParam("id")
         @BkField(patternStyle = BkStyleEnum.ID_STYLE)
         id: String,
-        @Parameter(name = "对接平台请求报文体", required = true)
+        @Parameter(description = "对接平台请求报文体", required = true)
         @Valid
         storeDockingPlatformRequest: StoreDockingPlatformRequest
     ): Result<Boolean>
@@ -88,22 +88,22 @@ interface OpStoreDockingPlatformResource {
     @GET
     @Path("/list")
     fun listPlatforms(
-        @Parameter(name = "userId", required = true)
+        @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "平台名称", required = false)
+        @Parameter(description = "平台名称", required = false)
         @QueryParam("platformName")
         @BkField(patternStyle = BkStyleEnum.NAME_STYLE, required = false)
         platformName: String? = null,
-        @Parameter(name = "平台ID", required = false)
+        @Parameter(description = "平台ID", required = false)
         @QueryParam("id")
         @BkField(patternStyle = BkStyleEnum.ID_STYLE, required = false)
         id: String? = null,
-        @Parameter(name = "页码", required = true)
+        @Parameter(description = "页码", required = true)
         @QueryParam("page")
         @BkField(patternStyle = BkStyleEnum.NUMBER_STYLE, required = true)
         page: Int = 1,
-        @Parameter(name = "每页数量", required = true)
+        @Parameter(description = "每页数量", required = true)
         @QueryParam("pageSize")
         @BkField(patternStyle = BkStyleEnum.NUMBER_STYLE, required = true)
         pageSize: Int = 10
@@ -113,10 +113,10 @@ interface OpStoreDockingPlatformResource {
     @DELETE
     @Path("/ids/{id}/delete")
     fun deletePlatformById(
-        @Parameter(name = "userId", required = true)
+        @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "平台ID", required = true)
+        @Parameter(description = "平台ID", required = true)
         @PathParam("id")
         @BkField(patternStyle = BkStyleEnum.ID_STYLE)
         id: String

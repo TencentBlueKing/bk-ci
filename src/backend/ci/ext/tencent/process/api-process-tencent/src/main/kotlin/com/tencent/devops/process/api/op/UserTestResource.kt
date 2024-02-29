@@ -48,7 +48,7 @@ interface UserTestResource {
     @DELETE
     @Path("/clearByUerSessionId")
     fun clearUserSessionIdCache(
-        @Parameter(name = "userId", required = true)
+        @Parameter(description = "userId", required = true)
         @QueryParam("userId")
         userId: String
     ): Result<Boolean>
@@ -57,7 +57,7 @@ interface UserTestResource {
     @DELETE
     @Path("/clearBySessionIdPage")
     fun clearSessionIdPageCache(
-        @Parameter(name = "sessionId", required = true)
+        @Parameter(description = "sessionId", required = true)
         @QueryParam("sessionId")
         sessionId: String
     ): Result<Boolean>
@@ -66,7 +66,7 @@ interface UserTestResource {
     @DELETE
     @Path("/clearByPageSessionId")
     fun clearPageSessionIdCache(
-        @Parameter(name = "page", required = true)
+        @Parameter(description = "page", required = true)
         @QueryParam("page")
         page: String
     ): Result<Boolean>

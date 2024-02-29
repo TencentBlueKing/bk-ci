@@ -20,13 +20,13 @@ interface AppExperienceSecurityResource {
     @Path("/getClearSign")
     @GET
     fun getClearSign(
-        @Parameter(name = "用户唯一标识", required = true)
+        @Parameter(description = "用户唯一标识", required = true)
         @QueryParam("openId")
         openId: String,
-        @Parameter(name = "用户昵称", required = true)
+        @Parameter(description = "用户昵称", required = true)
         @QueryParam("nickName")
         nickName: String,
-        @Parameter(name = "用户头像", required = true)
+        @Parameter(description = "用户头像", required = true)
         @QueryParam("avatar")
         avatar: String
     ): Result<String>

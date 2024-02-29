@@ -54,7 +54,7 @@ interface BuildWorkerResource {
         ApiResponse(responseCode = "304", description = "本地的构建执行器已是最新，无需下载")
     )
     fun download(
-        @Parameter(name = "本地eTag标签", required = false)
+        @Parameter(description = "本地eTag标签", required = false)
         @QueryParam("eTag")
         eTag: String?
     ): Response

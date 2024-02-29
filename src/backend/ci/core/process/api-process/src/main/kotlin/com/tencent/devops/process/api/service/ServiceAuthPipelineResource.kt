@@ -53,16 +53,16 @@ interface ServiceAuthPipelineResource {
     @GET
     @Path("/{projectId}/list")
     fun pipelineList(
-        @Parameter(name = "项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(name = "起始位置", required = false)
+        @Parameter(description = "起始位置", required = false)
         @QueryParam("offset")
         offset: Int? = null,
-        @Parameter(name = "步长", required = false)
+        @Parameter(description = "步长", required = false)
         @QueryParam("limit")
         limit: Int? = null,
-        @Parameter(name = "渠道号，默认为BS", required = false)
+        @Parameter(description = "渠道号，默认为BS", required = false)
         @QueryParam("channelCode")
         channelCode: ChannelCode? = ChannelCode.BS
     ): Result<PipelineViewPipelinePage<PipelineInfo>>
@@ -71,7 +71,7 @@ interface ServiceAuthPipelineResource {
     @GET
     @Path("/getInfos")
     fun pipelineInfos(
-        @Parameter(name = "ID集合", required = true)
+        @Parameter(description = "ID集合", required = true)
         @QueryParam("pipelineIds")
         pipelineIds: Set<String>
     ): Result<List<SimplePipeline>?>
@@ -80,16 +80,16 @@ interface ServiceAuthPipelineResource {
     @GET
     @Path("/{projectId}/search")
     fun searchPipelineInstances(
-        @Parameter(name = "项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(name = "起始位置", required = false)
+        @Parameter(description = "起始位置", required = false)
         @QueryParam("offset")
         offset: Int? = null,
-        @Parameter(name = "步长", required = false)
+        @Parameter(description = "步长", required = false)
         @QueryParam("limit")
         limit: Int? = null,
-        @Parameter(name = "流水线名", required = false)
+        @Parameter(description = "流水线名", required = false)
         @QueryParam("pipelineName")
         pipelineName: String
     ): Result<PipelineViewPipelinePage<PipelineInfo>>

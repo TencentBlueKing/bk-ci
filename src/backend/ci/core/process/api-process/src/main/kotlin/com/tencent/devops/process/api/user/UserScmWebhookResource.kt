@@ -52,7 +52,7 @@ interface UserScmWebhookResource {
     @GET
     @Path("/eventType")
     fun getEventType(
-        @Parameter(name = "代码库请求类型", required = false)
+        @Parameter(description = "代码库请求类型", required = false)
         @QueryParam("scmType")
         scmType: String
     ): Result<List<WebhookEventType>>
@@ -67,10 +67,10 @@ interface UserScmWebhookResource {
         projectId: String,
         @PathParam("pipelineId")
         pipelineId: String,
-        @Parameter(name = "页码", required = false)
+        @Parameter(description = "页码", required = false)
         @QueryParam("page")
         page: Int?,
-        @Parameter(name = "每页大小", required = false)
+        @Parameter(description = "每页大小", required = false)
         @QueryParam("pageSize")
         pageSize: Int?
     ): Result<List<PipelineWebhook>>

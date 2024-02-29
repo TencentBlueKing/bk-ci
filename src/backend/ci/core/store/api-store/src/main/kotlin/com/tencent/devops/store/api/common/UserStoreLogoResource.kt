@@ -58,13 +58,13 @@ interface UserStoreLogoResource {
     @Path("/upload")
     @Consumes(MediaType.MULTIPART_FORM_DATA)
     fun uploadStoreLogo(
-        @Parameter(name = "userId", required = true)
+        @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "contentLength", required = true)
+        @Parameter(description = "contentLength", required = true)
         @HeaderParam("content-length")
         contentLength: Long,
-        @Parameter(name = "logo", required = true)
+        @Parameter(description = "logo", required = true)
         @FormDataParam("logo")
         inputStream: InputStream,
         @FormDataParam("logo")
@@ -75,10 +75,10 @@ interface UserStoreLogoResource {
     @GET
     @Path("/type/{logoType}")
     fun list(
-        @Parameter(name = "userId", required = true)
+        @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "logoType", required = true)
+        @Parameter(description = "logoType", required = true)
         @PathParam("logoType")
         logoType: LogoTypeEnum
     ): Result<List<Logo>?>

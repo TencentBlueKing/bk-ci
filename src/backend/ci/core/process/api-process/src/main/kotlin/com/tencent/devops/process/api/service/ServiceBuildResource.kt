@@ -82,10 +82,10 @@ interface ServiceBuildResource {
     @GET
     @Path("/{projectId}/get_pipeline_id_from_build_id")
     fun getPipelineIdFromBuildId(
-        @Parameter(name = "项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(name = "构建ID", required = true)
+        @Parameter(description = "构建ID", required = true)
         @QueryParam("buildId")
         buildId: String
     ): Result<String>
@@ -94,13 +94,13 @@ interface ServiceBuildResource {
     @GET
     @Path("/{projectId}/get_build_id_from_build_number")
     fun getBuildIdFromBuildNumber(
-        @Parameter(name = "项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(name = "流水线ID", required = true)
+        @Parameter(description = "流水线ID", required = true)
         @QueryParam("pipelineId")
         pipelineId: String,
-        @Parameter(name = "构建号", required = true)
+        @Parameter(description = "构建号", required = true)
         @QueryParam("buildNumber")
         buildNumber: Int
     ): Result<String>
@@ -110,28 +110,28 @@ interface ServiceBuildResource {
     // @Path("/projects/{projectId}/pipelines/{pipelineId}/builds/{buildId}/vmStatus")
     @Path("/{projectId}/{pipelineId}/{buildId}/vmStatus")
     fun setVMStatus(
-        @Parameter(name = "项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(name = "流水线ID", required = true)
+        @Parameter(description = "流水线ID", required = true)
         @PathParam("pipelineId")
         pipelineId: String,
-        @Parameter(name = "构建ID", required = true)
+        @Parameter(description = "构建ID", required = true)
         @PathParam("buildId")
         buildId: String,
-        @Parameter(name = "VM SEQ ID", required = true)
+        @Parameter(description = "VM SEQ ID", required = true)
         @QueryParam("vmSeqId")
         vmSeqId: String,
-        @Parameter(name = "status", required = true)
+        @Parameter(description = "status", required = true)
         @QueryParam("status")
         status: BuildStatus,
-        @Parameter(name = "错误类型", required = false)
+        @Parameter(description = "错误类型", required = false)
         @QueryParam("errorType")
         errorType: ErrorType? = null,
-        @Parameter(name = "错误码", required = false)
+        @Parameter(description = "错误码", required = false)
         @QueryParam("errorCode")
         errorCode: Int? = null,
-        @Parameter(name = "错误信息", required = false)
+        @Parameter(description = "错误信息", required = false)
         @QueryParam("errorMsg")
         errorMsg: String? = null
     ): Result<Boolean>
@@ -141,10 +141,10 @@ interface ServiceBuildResource {
     // @Path("/builds/{buildId}/basic")
     @Path("/{buildId}/basic")
     fun serviceBasic(
-        @Parameter(name = "项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @QueryParam("projectId")
         projectId: String,
-        @Parameter(name = "构建ID", required = true)
+        @Parameter(description = "构建ID", required = true)
         @PathParam("buildId")
         buildId: String
     ): Result<BuildBasicInfo>
@@ -155,7 +155,7 @@ interface ServiceBuildResource {
     @Path("/batchBasic")
     @BkApiPermission([BkApiHandleType.API_NO_AUTH_CHECK])
     fun batchServiceBasic(
-        @Parameter(name = "构建ID", required = true)
+        @Parameter(description = "构建ID", required = true)
         buildIds: Set<String>
     ): Result<Map<String, BuildBasicInfo>>
 
@@ -164,16 +164,16 @@ interface ServiceBuildResource {
     // @Path("/projects/{projectId}/pipelines/{pipelineId}/manualStartupInfo")
     @Path("/{projectId}/{pipelineId}/manualStartupInfo")
     fun manualStartupInfo(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(name = "流水线ID", required = true)
+        @Parameter(description = "流水线ID", required = true)
         @PathParam("pipelineId")
         pipelineId: String,
-        @Parameter(name = "渠道号，默认为BS", required = false)
+        @Parameter(description = "渠道号，默认为BS", required = false)
         @QueryParam("channelCode")
         channelCode: ChannelCode
     ): Result<BuildManualStartupInfo>
@@ -183,19 +183,19 @@ interface ServiceBuildResource {
     @Path("/{projectId}/{pipelineId}/manualSearchOptions")
     @BkApiPermission([BkApiHandleType.API_NO_AUTH_CHECK])
     fun manualSearchOptions(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(name = "流水线ID", required = true)
+        @Parameter(description = "流水线ID", required = true)
         @PathParam("pipelineId")
         pipelineId: String,
-        @Parameter(name = "搜索参数", required = false)
+        @Parameter(description = "搜索参数", required = false)
         @QueryParam("search")
         search: String? = null,
-        @Parameter(name = "流水线参数", required = false)
+        @Parameter(description = "流水线参数", required = false)
         buildFormProperty: BuildFormProperty
     ): Result<List<BuildFormValue>>
 
@@ -205,21 +205,21 @@ interface ServiceBuildResource {
     // @Path("/projects/{projectId}/pipelines/{pipelineId}/start")
     @Path("/{projectId}/{pipelineId}/")
     fun manualStartup(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(name = "流水线ID", required = true)
+        @Parameter(description = "流水线ID", required = true)
         @PathParam("pipelineId")
         pipelineId: String,
-        @Parameter(name = "启动参数", required = true)
+        @Parameter(description = "启动参数", required = true)
         values: Map<String, String>,
-        @Parameter(name = "渠道号，默认为BS", required = false)
+        @Parameter(description = "渠道号，默认为BS", required = false)
         @QueryParam("channelCode")
         channelCode: ChannelCode,
-        @Parameter(name = "手动指定构建版本参数", required = false)
+        @Parameter(description = "手动指定构建版本参数", required = false)
         @QueryParam("buildNo")
         buildNo: Int? = null
     ): Result<BuildId>
@@ -228,31 +228,31 @@ interface ServiceBuildResource {
     @POST
     @Path("/{projectId}/{pipelineId}/{buildId}/retry")
     fun retry(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(name = "流水线ID", required = true)
+        @Parameter(description = "流水线ID", required = true)
         @PathParam("pipelineId")
         pipelineId: String,
-        @Parameter(name = "构建ID", required = true)
+        @Parameter(description = "构建ID", required = true)
         @PathParam("buildId")
         buildId: String,
-        @Parameter(name = "要重试或跳过的插件ID，或者StageId", required = false)
+        @Parameter(description = "要重试或跳过的插件ID，或者StageId", required = false)
         @QueryParam("taskId")
         taskId: String? = null,
-        @Parameter(name = "仅重试所有失败Job", required = false)
+        @Parameter(description = "仅重试所有失败Job", required = false)
         @QueryParam("failedContainer")
         failedContainer: Boolean? = false,
-        @Parameter(name = "跳过失败插件，为true时需要传taskId值（值为stageId则表示跳过Stage下所有失败插件）", required = false)
+        @Parameter(description = "跳过失败插件，为true时需要传taskId值（值为stageId则表示跳过Stage下所有失败插件）", required = false)
         @QueryParam("skip")
         skipFailedTask: Boolean? = false,
-        @Parameter(name = "渠道号，默认为BS", required = false)
+        @Parameter(description = "渠道号，默认为BS", required = false)
         @QueryParam("channelCode")
         channelCode: ChannelCode,
-        @Parameter(name = "是否忽略人工触发", required = false)
+        @Parameter(description = "是否忽略人工触发", required = false)
         @QueryParam("checkManualStartup")
         checkManualStartup: Boolean? = false
     ): Result<BuildId>
@@ -262,22 +262,22 @@ interface ServiceBuildResource {
     // @Path("/projects/{projectId}/pipelines/{pipelineId}/builds/{buildId}/stop")
     @Path("/{projectId}/{pipelineId}/{buildId}/")
     fun manualShutdown(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(name = "流水线ID", required = true)
+        @Parameter(description = "流水线ID", required = true)
         @PathParam("pipelineId")
         pipelineId: String,
-        @Parameter(name = "构建ID", required = true)
+        @Parameter(description = "构建ID", required = true)
         @PathParam("buildId")
         buildId: String,
-        @Parameter(name = "渠道号，默认为BS", required = false)
+        @Parameter(description = "渠道号，默认为BS", required = false)
         @QueryParam("channelCode")
         channelCode: ChannelCode,
-        @Parameter(name = "是否强制终止", required = false)
+        @Parameter(description = "是否强制终止", required = false)
         @QueryParam("terminateFlag")
         terminateFlag: Boolean? = false
     ): Result<Boolean>
@@ -287,16 +287,16 @@ interface ServiceBuildResource {
     // @Path("/projects/{projectId}/pipelines/{pipelineId}/builds/{buildId}/shutdown")
     @Path("/shutdown/{projectId}/{pipelineId}/{buildId}/")
     fun serviceShutdown(
-        @Parameter(name = "项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(name = "流水线ID", required = true)
+        @Parameter(description = "流水线ID", required = true)
         @PathParam("pipelineId")
         pipelineId: String,
-        @Parameter(name = "构建ID", required = true)
+        @Parameter(description = "构建ID", required = true)
         @PathParam("buildId")
         buildId: String,
-        @Parameter(name = "渠道号，默认为BS", required = false)
+        @Parameter(description = "渠道号，默认为BS", required = false)
         @QueryParam("channelCode")
         channelCode: ChannelCode
     ): Result<Boolean>
@@ -306,24 +306,24 @@ interface ServiceBuildResource {
     // @Path("/projects/{projectId}/pipelines/{pipelineId}/builds/{buildId}/elements/{elementId}/review")
     @Path("/{projectId}/{pipelineId}/{buildId}/{elementId}/review")
     fun manualReview(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(name = "流水线ID", required = true)
+        @Parameter(description = "流水线ID", required = true)
         @PathParam("pipelineId")
         pipelineId: String,
-        @Parameter(name = "构建ID", required = true)
+        @Parameter(description = "构建ID", required = true)
         @PathParam("buildId")
         buildId: String,
-        @Parameter(name = "步骤Id", required = true)
+        @Parameter(description = "步骤Id", required = true)
         @PathParam("elementId")
         elementId: String,
-        @Parameter(name = "审核信息", required = true)
+        @Parameter(description = "审核信息", required = true)
         params: ReviewParam,
-        @Parameter(name = "渠道号，默认为BS", required = false)
+        @Parameter(description = "渠道号，默认为BS", required = false)
         @QueryParam("channelCode")
         channelCode: ChannelCode
     ): Result<Boolean>
@@ -332,22 +332,22 @@ interface ServiceBuildResource {
     @POST
     @Path("/projects/{projectId}/pipelines/{pipelineId}/builds/{buildId}/review")
     fun buildTriggerReview(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(name = "流水线ID", required = true)
+        @Parameter(description = "流水线ID", required = true)
         @PathParam("pipelineId")
         pipelineId: String,
-        @Parameter(name = "构建ID", required = true)
+        @Parameter(description = "构建ID", required = true)
         @PathParam("buildId")
         buildId: String,
-        @Parameter(name = "是否通过审核", required = true)
+        @Parameter(description = "是否通过审核", required = true)
         @QueryParam("approve")
         approve: Boolean,
-        @Parameter(name = "渠道号，默认为BS", required = false)
+        @Parameter(description = "渠道号，默认为BS", required = false)
         @QueryParam("channelCode")
         channelCode: ChannelCode
     ): Result<Boolean>
@@ -357,19 +357,19 @@ interface ServiceBuildResource {
     // @Path("/projects/{projectId}/pipelines/{pipelineId}/builds/{buildId}/detail")
     @Path("/{projectId}/{pipelineId}/{buildId}/detail")
     fun getBuildDetail(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(name = "流水线ID", required = true)
+        @Parameter(description = "流水线ID", required = true)
         @PathParam("pipelineId")
         pipelineId: String,
-        @Parameter(name = "构建ID", required = true)
+        @Parameter(description = "构建ID", required = true)
         @PathParam("buildId")
         buildId: String,
-        @Parameter(name = "渠道号，默认为BS", required = false)
+        @Parameter(description = "渠道号，默认为BS", required = false)
         @QueryParam("channelCode")
         channelCode: ChannelCode
     ): Result<ModelDetail>
@@ -378,25 +378,25 @@ interface ServiceBuildResource {
     @GET
     @Path("/projects/{projectId}/pipelines/{pipelineId}/builds/{buildId}/record")
     fun getBuildRecordByExecuteCount(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(name = "流水线ID", required = true)
+        @Parameter(description = "流水线ID", required = true)
         @PathParam("pipelineId")
         pipelineId: String,
-        @Parameter(name = "构建ID", required = true)
+        @Parameter(description = "构建ID", required = true)
         @PathParam("buildId")
         buildId: String,
-        @Parameter(name = "执行次数", required = false)
+        @Parameter(description = "执行次数", required = false)
         @QueryParam("executeCount")
         executeCount: Int?,
-        @Parameter(name = "渠道号，默认为BS", required = false)
+        @Parameter(description = "渠道号，默认为BS", required = false)
         @QueryParam("channelCode")
         channelCode: ChannelCode,
-        @Parameter(name = "是否查询归档数据", required = false)
+        @Parameter(description = "是否查询归档数据", required = false)
         @QueryParam("archiveFlag")
         archiveFlag: Boolean? = false
     ): Result<ModelRecord>
@@ -406,22 +406,22 @@ interface ServiceBuildResource {
     // @Path("/projects/{projectId}/pipelines/{pipelineId}/history")
     @Path("/{projectId}/{pipelineId}/history")
     fun getHistoryBuild(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(name = "流水线ID", required = true)
+        @Parameter(description = "流水线ID", required = true)
         @PathParam("pipelineId")
         pipelineId: String,
-        @Parameter(name = "第几页", required = false, example = "1")
+        @Parameter(description = "第几页", required = false, example = "1")
         @QueryParam("page")
         page: Int?,
-        @Parameter(name = "每页多少条", required = false, example = "20")
+        @Parameter(description = "每页多少条", required = false, example = "20")
         @QueryParam("pageSize")
         pageSize: Int?,
-        @Parameter(name = "渠道号，默认为BS", required = false)
+        @Parameter(description = "渠道号，默认为BS", required = false)
         @QueryParam("channelCode")
         channelCode: ChannelCode,
         @Parameter(
@@ -430,67 +430,67 @@ interface ServiceBuildResource {
         )
         @QueryParam("updateTimeDesc")
         updateTimeDesc: Boolean? = null,
-        @Parameter(name = "代码库别名", required = false)
+        @Parameter(description = "代码库别名", required = false)
         @QueryParam("materialAlias")
         materialAlias: List<String>? = null,
-        @Parameter(name = "代码库URL", required = false)
+        @Parameter(description = "代码库URL", required = false)
         @QueryParam("materialUrl")
         materialUrl: String? = null,
-        @Parameter(name = "分支", required = false)
+        @Parameter(description = "分支", required = false)
         @QueryParam("materialBranch")
         materialBranch: List<String>? = null,
-        @Parameter(name = "commitId", required = false)
+        @Parameter(description = "commitId", required = false)
         @QueryParam("materialCommitId")
         materialCommitId: String? = null,
-        @Parameter(name = "commitMessage", required = false)
+        @Parameter(description = "commitMessage", required = false)
         @QueryParam("materialCommitMessage")
         materialCommitMessage: String? = null,
-        @Parameter(name = "状态", required = false)
+        @Parameter(description = "状态", required = false)
         @QueryParam("status")
         status: List<BuildStatus>? = null,
-        @Parameter(name = "触发方式", required = false)
+        @Parameter(description = "触发方式", required = false)
         @QueryParam("trigger")
         trigger: List<StartType>? = null,
-        @Parameter(name = "排队于-开始时间(时间戳形式)", required = false)
+        @Parameter(description = "排队于-开始时间(时间戳形式)", required = false)
         @QueryParam("queueTimeStartTime")
         queueTimeStartTime: Long? = null,
-        @Parameter(name = "排队于-结束时间(时间戳形式)", required = false)
+        @Parameter(description = "排队于-结束时间(时间戳形式)", required = false)
         @QueryParam("queueTimeEndTime")
         queueTimeEndTime: Long? = null,
-        @Parameter(name = "开始于-开始时间(时间戳形式)", required = false)
+        @Parameter(description = "开始于-开始时间(时间戳形式)", required = false)
         @QueryParam("startTimeStartTime")
         startTimeStartTime: Long? = null,
-        @Parameter(name = "开始于-结束时间(时间戳形式)", required = false)
+        @Parameter(description = "开始于-结束时间(时间戳形式)", required = false)
         @QueryParam("startTimeEndTime")
         startTimeEndTime: Long? = null,
-        @Parameter(name = "结束于-开始时间(时间戳形式)", required = false)
+        @Parameter(description = "结束于-开始时间(时间戳形式)", required = false)
         @QueryParam("endTimeStartTime")
         endTimeStartTime: Long? = null,
-        @Parameter(name = "结束于-结束时间(时间戳形式)", required = false)
+        @Parameter(description = "结束于-结束时间(时间戳形式)", required = false)
         @QueryParam("endTimeEndTime")
         endTimeEndTime: Long? = null,
-        @Parameter(name = "耗时最小值", required = false)
+        @Parameter(description = "耗时最小值", required = false)
         @QueryParam("totalTimeMin")
         totalTimeMin: Long? = null,
-        @Parameter(name = "耗时最大值", required = false)
+        @Parameter(description = "耗时最大值", required = false)
         @QueryParam("totalTimeMax")
         totalTimeMax: Long? = null,
-        @Parameter(name = "备注", required = false)
+        @Parameter(description = "备注", required = false)
         @QueryParam("remark")
         remark: String? = null,
-        @Parameter(name = "构件号起始", required = false)
+        @Parameter(description = "构件号起始", required = false)
         @QueryParam("buildNoStart")
         buildNoStart: Int? = null,
-        @Parameter(name = "构件号结束", required = false)
+        @Parameter(description = "构件号结束", required = false)
         @QueryParam("buildNoEnd")
         buildNoEnd: Int? = null,
-        @Parameter(name = "构建信息", required = false)
+        @Parameter(description = "构建信息", required = false)
         @QueryParam("buildMsg")
         buildMsg: String? = null,
-        @Parameter(name = "触发人", required = false)
+        @Parameter(description = "触发人", required = false)
         @QueryParam("startUser")
         startUser: List<String>? = null,
-        @Parameter(name = "是否查询归档数据", required = false)
+        @Parameter(description = "是否查询归档数据", required = false)
         @QueryParam("archiveFlag")
         archiveFlag: Boolean? = false
     ): Result<BuildHistoryPage<BuildHistory>>
@@ -500,19 +500,19 @@ interface ServiceBuildResource {
     // @Path("/projects/{projectId}/pipelines/{pipelineId}/builds/{buildId}/status")
     @Path("/{projectId}/{pipelineId}/{buildId}/status")
     fun getBuildStatus(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(name = "流水线ID", required = true)
+        @Parameter(description = "流水线ID", required = true)
         @PathParam("pipelineId")
         pipelineId: String,
-        @Parameter(name = "构建ID", required = true)
+        @Parameter(description = "构建ID", required = true)
         @PathParam("buildId")
         buildId: String,
-        @Parameter(name = "渠道号，默认为BS", required = true)
+        @Parameter(description = "渠道号，默认为BS", required = true)
         @QueryParam("channelCode")
         channelCode: ChannelCode
     ): Result<BuildHistoryWithVars>
@@ -521,19 +521,19 @@ interface ServiceBuildResource {
     @GET
     @Path("/{projectId}/{pipelineId}/{buildId}/nopermission/status")
     fun getBuildStatusWithoutPermission(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(name = "流水线ID", required = true)
+        @Parameter(description = "流水线ID", required = true)
         @PathParam("pipelineId")
         pipelineId: String,
-        @Parameter(name = "构建ID", required = true)
+        @Parameter(description = "构建ID", required = true)
         @PathParam("buildId")
         buildId: String,
-        @Parameter(name = "渠道号，默认为BS", required = true)
+        @Parameter(description = "渠道号，默认为BS", required = true)
         @QueryParam("channelCode")
         channelCode: ChannelCode
     ): Result<BuildHistoryWithVars>
@@ -542,19 +542,19 @@ interface ServiceBuildResource {
     @GET
     @Path("/{projectId}/{pipelineId}/{buildId}/nopermission/detail_status")
     fun getBuildDetailStatusWithoutPermission(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(name = "流水线ID", required = true)
+        @Parameter(description = "流水线ID", required = true)
         @PathParam("pipelineId")
         pipelineId: String,
-        @Parameter(name = "构建ID", required = true)
+        @Parameter(description = "构建ID", required = true)
         @PathParam("buildId")
         buildId: String,
-        @Parameter(name = "渠道号，默认为BS", required = true)
+        @Parameter(description = "渠道号，默认为BS", required = true)
         @QueryParam("channelCode")
         channelCode: ChannelCode
     ): Result<String>
@@ -564,19 +564,19 @@ interface ServiceBuildResource {
     // @Path("/projects/{projectId}/pipelines/{pipelineId}/builds/{buildId}/vars")
     @Path("/{projectId}/{pipelineId}/{buildId}/vars")
     fun getBuildVars(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(name = "流水线ID", required = true)
+        @Parameter(description = "流水线ID", required = true)
         @PathParam("pipelineId")
         pipelineId: String,
-        @Parameter(name = "构建ID", required = true)
+        @Parameter(description = "构建ID", required = true)
         @PathParam("buildId")
         buildId: String,
-        @Parameter(name = "渠道号，默认为BS", required = false)
+        @Parameter(description = "渠道号，默认为BS", required = false)
         @QueryParam("channelCode")
         channelCode: ChannelCode = ChannelCode.BS
     ): Result<BuildHistoryVariables>
@@ -586,22 +586,22 @@ interface ServiceBuildResource {
     @Path("/{projectId}/{pipelineId}/{buildId}/variables")
     @BkApiPermission([BkApiHandleType.API_NO_AUTH_CHECK])
     fun getBuildVariableValue(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(name = "流水线ID", required = true)
+        @Parameter(description = "流水线ID", required = true)
         @PathParam("pipelineId")
         pipelineId: String,
-        @Parameter(name = "构建ID", required = true)
+        @Parameter(description = "构建ID", required = true)
         @PathParam("buildId")
         buildId: String,
-        @Parameter(name = "渠道号，默认为BS", required = false)
+        @Parameter(description = "渠道号，默认为BS", required = false)
         @QueryParam("channelCode")
         channelCode: ChannelCode = ChannelCode.BS,
-        @Parameter(name = "变量名列表", required = true)
+        @Parameter(description = "变量名列表", required = true)
         variableNames: List<String>
     ): Result<Map<String, String>>
 
@@ -611,12 +611,12 @@ interface ServiceBuildResource {
     @Path("/{projectId}/batchStatus")
     @BkApiPermission([BkApiHandleType.API_NO_AUTH_CHECK])
     fun getBatchBuildStatus(
-        @Parameter(name = "项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(name = "构建ID", required = true)
+        @Parameter(description = "构建ID", required = true)
         buildId: Set<String>,
-        @Parameter(name = "渠道号，默认为BS", required = true)
+        @Parameter(description = "渠道号，默认为BS", required = true)
         @QueryParam("channelCode")
         channelCode: ChannelCode = ChannelCode.BS,
         @QueryParam("startBeginTime")
@@ -629,16 +629,16 @@ interface ServiceBuildResource {
     @GET
     @Path("/{projectId}/batch_get_builds")
     fun getBuilds(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(name = "流水线ID", required = false)
+        @Parameter(description = "流水线ID", required = false)
         @QueryParam("pipelineId")
         pipelineId: String?,
-        @Parameter(name = "状态id", required = false)
+        @Parameter(description = "状态id", required = false)
         @QueryParam("buildStatus")
         buildStatus: Set<BuildStatus>? = null,
         @QueryParam("channelCode")
@@ -651,10 +651,10 @@ interface ServiceBuildResource {
     @Path("/{projectId}/getPipelineLatestBuild")
     @BkApiPermission([BkApiHandleType.API_NO_AUTH_CHECK])
     fun getPipelineLatestBuildByIds(
-        @Parameter(name = "项目id", required = true)
+        @Parameter(description = "项目id", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(name = "流水线id列表", required = true)
+        @Parameter(description = "流水线id列表", required = true)
         pipelineIds: List<String>
     ): Result<Map<String, PipelineLatestBuild>>
 
@@ -663,25 +663,25 @@ interface ServiceBuildResource {
     // @Path("/projects/{projectId}/pipelines/{pipelineId}/builds/{buildId}/seqs/{vmSeqId}/workerBuildFinish")
     @Path("/{projectId}/{pipelineId}/{buildId}/{vmSeqId}/workerBuildFinish")
     fun workerBuildFinish(
-        @Parameter(name = "项目id", required = true)
+        @Parameter(description = "项目id", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(name = "流水线ID", required = true)
+        @Parameter(description = "流水线ID", required = true)
         @PathParam("pipelineId")
         pipelineId: String,
-        @Parameter(name = "构建ID", required = true)
+        @Parameter(description = "构建ID", required = true)
         @PathParam("buildId")
         buildId: String,
-        @Parameter(name = "Container序列号", required = true)
+        @Parameter(description = "Container序列号", required = true)
         @PathParam("vmSeqId")
         vmSeqId: String,
-        @Parameter(name = "构建机节点ID（不是AgentID)", required = true)
+        @Parameter(description = "构建机节点ID（不是AgentID)", required = true)
         @QueryParam("nodeHashId")
         nodeHashId: String? = null,
-        @Parameter(name = "流水线执行次数", required = false)
+        @Parameter(description = "流水线执行次数", required = false)
         @QueryParam("executeCount")
         executeCount: Int?,
-        @Parameter(name = "结果状态", required = true)
+        @Parameter(description = "结果状态", required = true)
         simpleResult: SimpleResult
     ): Result<Pair<String?, Boolean>>
 
@@ -690,19 +690,19 @@ interface ServiceBuildResource {
     // @Path("/projects/{projectId}/pipelines/{pipelineId}/builds/{buildId}/seqs/{vmSeqId}/saveBuildVmInfo")
     @Path("/{projectId}/{pipelineId}/{buildId}/{vmSeqId}/saveBuildVmInfo")
     fun saveBuildVmInfo(
-        @Parameter(name = "项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(name = "流水线ID", required = true)
+        @Parameter(description = "流水线ID", required = true)
         @PathParam("pipelineId")
         pipelineId: String,
-        @Parameter(name = "构建ID", required = true)
+        @Parameter(description = "构建ID", required = true)
         @PathParam("buildId")
         buildId: String,
-        @Parameter(name = "构建 VM ID", required = true)
+        @Parameter(description = "构建 VM ID", required = true)
         @PathParam("vmSeqId")
         vmSeqId: String,
-        @Parameter(name = "参数", required = true)
+        @Parameter(description = "参数", required = true)
         vmInfo: VmInfo
     ): Result<Boolean>
 
@@ -710,16 +710,16 @@ interface ServiceBuildResource {
     @GET
     @Path("/{projectId}/{pipelineId}/{buildNum}/history")
     fun getSingleHistoryBuild(
-        @Parameter(name = "项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(name = "流水线ID", required = true)
+        @Parameter(description = "流水线ID", required = true)
         @PathParam("pipelineId")
         pipelineId: String,
-        @Parameter(name = "流水线buildNum", required = true)
+        @Parameter(description = "流水线buildNum", required = true)
         @PathParam("buildNum")
         buildNum: String,
-        @Parameter(name = "渠道号，默认为BS", required = false)
+        @Parameter(description = "渠道号，默认为BS", required = false)
         @QueryParam("channelCode")
         channelCode: ChannelCode?
     ): Result<BuildHistory?>
@@ -728,25 +728,25 @@ interface ServiceBuildResource {
     @POST
     @Path("/projects/{projectId}/pipelines/{pipelineId}/builds/{buildId}/stages/{stageId}/manualStart")
     fun manualStartStage(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(name = "流水线ID", required = true)
+        @Parameter(description = "流水线ID", required = true)
         @PathParam("pipelineId")
         pipelineId: String,
-        @Parameter(name = "构建ID", required = true)
+        @Parameter(description = "构建ID", required = true)
         @PathParam("buildId")
         buildId: String,
-        @Parameter(name = "阶段ID", required = true)
+        @Parameter(description = "阶段ID", required = true)
         @PathParam("stageId")
         stageId: String,
-        @Parameter(name = "取消执行", required = false)
+        @Parameter(description = "取消执行", required = false)
         @QueryParam("cancel")
         cancel: Boolean?,
-        @Parameter(name = "审核请求体", required = false)
+        @Parameter(description = "审核请求体", required = false)
         reviewRequest: StageReviewRequest? = null
     ): Result<Boolean>
 
@@ -754,22 +754,22 @@ interface ServiceBuildResource {
     @POST
     @Path("/projects/{projectId}/pipelines/{pipelineId}/builds/{buildId}/stages/{stageId}/qualityTrigger")
     fun qualityTriggerStage(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(name = "流水线ID", required = true)
+        @Parameter(description = "流水线ID", required = true)
         @PathParam("pipelineId")
         pipelineId: String,
-        @Parameter(name = "构建ID", required = true)
+        @Parameter(description = "构建ID", required = true)
         @PathParam("buildId")
         buildId: String,
-        @Parameter(name = "阶段ID", required = true)
+        @Parameter(description = "阶段ID", required = true)
         @PathParam("stageId")
         stageId: String,
-        @Parameter(name = "审核请求体", required = true)
+        @Parameter(description = "审核请求体", required = true)
         qualityRequest: StageQualityRequest
     ): Result<Boolean>
 
@@ -777,16 +777,16 @@ interface ServiceBuildResource {
     @POST
     @Path("/projects/{projectId}/pipelines/{pipelineId}/builds/{buildId}/execution/pause")
     fun executionPauseAtom(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(name = "流水线ID", required = true)
+        @Parameter(description = "流水线ID", required = true)
         @PathParam("pipelineId")
         pipelineId: String,
-        @Parameter(name = "构建ID", required = true)
+        @Parameter(description = "构建ID", required = true)
         @PathParam("buildId")
         buildId: String,
         taskPauseExecute: BuildTaskPauseInfo
@@ -796,24 +796,24 @@ interface ServiceBuildResource {
     @POST
     @Path("/{pipelineId}/")
     fun manualStartupNew(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_PROJECT_ID)
         projectId: String,
-        @Parameter(name = "流水线ID", required = true)
+        @Parameter(description = "流水线ID", required = true)
         @PathParam("pipelineId")
         pipelineId: String,
-        @Parameter(name = "启动参数", required = true)
+        @Parameter(description = "启动参数", required = true)
         values: Map<String, String>,
-        @Parameter(name = "渠道号，默认为BS", required = false)
+        @Parameter(description = "渠道号，默认为BS", required = false)
         @QueryParam("channelCode")
         channelCode: ChannelCode,
-        @Parameter(name = "手动指定构建版本参数", required = false)
+        @Parameter(description = "手动指定构建版本参数", required = false)
         @QueryParam("buildNo")
         buildNo: Int? = null,
-        @Parameter(name = "启动类型", required = false)
+        @Parameter(description = "启动类型", required = false)
         @QueryParam("startType")
         startType: StartType
     ): Result<BuildId>
@@ -822,19 +822,19 @@ interface ServiceBuildResource {
     @POST
     @Path("projects/{projectId}/pipelines/{pipelineId}/buildIds/{buildId}/build/restart")
     fun buildRestart(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         @BkField(required = true)
         userId: String,
-        @Parameter(name = "项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @BkField(required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(name = "流水线ID", required = true)
+        @Parameter(description = "流水线ID", required = true)
         @PathParam("pipelineId")
         @BkField(required = true)
         pipelineId: String,
-        @Parameter(name = "构建ID", required = true)
+        @Parameter(description = "构建ID", required = true)
         @PathParam("buildId")
         @BkField(required = true)
         buildId: String
@@ -844,23 +844,23 @@ interface ServiceBuildResource {
     @POST
     @Path("projects/{projectId}/pipelines/{pipelineId}/builds/{buildId}/updateRemark")
     fun updateRemark(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         @BkField(required = true)
         userId: String,
-        @Parameter(name = "项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @BkField(required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(name = "流水线ID", required = true)
+        @Parameter(description = "流水线ID", required = true)
         @PathParam("pipelineId")
         @BkField(required = true)
         pipelineId: String,
-        @Parameter(name = "构建ID", required = true)
+        @Parameter(description = "构建ID", required = true)
         @PathParam("buildId")
         @BkField(required = true)
         buildId: String,
-        @Parameter(name = "备注信息", required = true)
+        @Parameter(description = "备注信息", required = true)
         remark: BuildHistoryRemark?
     ): Result<Boolean>
 
@@ -868,19 +868,19 @@ interface ServiceBuildResource {
     @PUT
     @Path("/{projectId}/{pipelineId}/try_fix_stuck_builds")
     fun tryFinishStuckBuilds(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         @BkField(minLength = 1, maxLength = 128, required = true)
         userId: String,
-        @Parameter(name = "项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         @BkField(minLength = 1, maxLength = 64, required = true)
         projectId: String,
-        @Parameter(name = "流水线ID", required = true)
+        @Parameter(description = "流水线ID", required = true)
         @PathParam("pipelineId")
         @BkField(minLength = 32, maxLength = 34, required = true)
         pipelineId: String,
-        @Parameter(name = "要操作的构建ID列表[最大50个]", required = true)
+        @Parameter(description = "要操作的构建ID列表[最大50个]", required = true)
         @BkField(required = true)
         buildIds: Set<String>
     ): Result<Boolean>

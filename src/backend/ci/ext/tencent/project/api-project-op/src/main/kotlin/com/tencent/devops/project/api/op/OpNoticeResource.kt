@@ -58,7 +58,7 @@ interface OpNoticeResource {
     @GET
     @Path("/{id}")
     fun getNotice(
-        @Parameter(name = "公告id", required = true)
+        @Parameter(description = "公告id", required = true)
         @PathParam("id")
         id: Long
     ): Result<Notice?>
@@ -67,7 +67,7 @@ interface OpNoticeResource {
     @POST
     @Path("/")
     fun addNotice(
-        @Parameter(name = "公告请求报文体", required = true)
+        @Parameter(description = "公告请求报文体", required = true)
         noticeRequest: NoticeRequest
     ): Result<Int>
 
@@ -75,10 +75,10 @@ interface OpNoticeResource {
     @PUT
     @Path("/{id}")
     fun updateNotice(
-        @Parameter(name = "公告id", required = true)
+        @Parameter(description = "公告id", required = true)
         @PathParam("id")
         id: Long,
-        @Parameter(name = "公告请求报文体", required = true)
+        @Parameter(description = "公告请求报文体", required = true)
         noticeRequest: NoticeRequest
     ): Result<Int>
 
@@ -86,7 +86,7 @@ interface OpNoticeResource {
     @DELETE
     @Path("/{id}")
     fun deleteNotice(
-        @Parameter(name = "公告id", required = true)
+        @Parameter(description = "公告id", required = true)
         @PathParam("id")
         id: Long
     ): Result<Int>

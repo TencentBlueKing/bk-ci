@@ -54,10 +54,10 @@ interface ServiceProjectOrganizationResource {
     @GET
     @Path("/ids/{id}")
     fun getDeptInfo(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String?,
-        @Parameter(name = "机构ID")
+        @Parameter(description = "机构ID")
         @PathParam("id")
         id: Int
     ): Result<DeptInfo>
@@ -65,13 +65,13 @@ interface ServiceProjectOrganizationResource {
     @GET
     @Path("/types/{type}/ids/{id}")
     fun getOrganizations(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "机构层级类型")
+        @Parameter(description = "机构层级类型")
         @PathParam("type")
         type: OrganizationType,
-        @Parameter(name = "机构ID")
+        @Parameter(description = "机构ID")
         @PathParam("id")
         id: Int
     ): Result<List<OrganizationInfo>>
@@ -79,10 +79,10 @@ interface ServiceProjectOrganizationResource {
     @GET
     @Path("/parent/deptIds/{deptId}/levels/{level}")
     fun getParentDeptInfos(
-        @Parameter(name = "机构ID")
+        @Parameter(description = "机构ID")
         @PathParam("deptId")
         deptId: String,
-        @Parameter(name = "向上查询的层级数")
+        @Parameter(description = "向上查询的层级数")
         @PathParam("level")
         level: Int
     ): Result<List<DeptInfo>>
@@ -91,10 +91,10 @@ interface ServiceProjectOrganizationResource {
     @GET
     @Path("staffs/deptIds/{deptId}/levels/{level}")
     fun getDeptStaffsWithLevel(
-        @Parameter(name = "机构ID")
+        @Parameter(description = "机构ID")
         @PathParam("deptId")
         deptId: String,
-        @Parameter(name = "向上查询的层级数")
+        @Parameter(description = "向上查询的层级数")
         @PathParam("level")
         level: Int
     ): Result<List<StaffInfo>>

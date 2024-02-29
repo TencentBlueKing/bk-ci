@@ -70,46 +70,46 @@ interface UserAtomResource {
         keyPrefixNames = ["ATOM", "{data.records[*].atomCode}", "{data.records[*].version}", "releaseInfo"]
     )
     fun listAllPipelineAtoms(
-        @Parameter(name = "userId", required = true)
+        @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "支持的服务范围（pipeline/quality/all 分别表示流水线/质量红线/全部）", required = false)
+        @Parameter(description = "支持的服务范围（pipeline/quality/all 分别表示流水线/质量红线/全部）", required = false)
         @QueryParam("serviceScope")
         serviceScope: String?,
-        @Parameter(name = "job类型，AGENT： 编译环境，AGENT_LESS：无编译环境", required = false)
+        @Parameter(description = "job类型，AGENT： 编译环境，AGENT_LESS：无编译环境", required = false)
         @QueryParam("jobType")
         jobType: String?,
-        @Parameter(name = "操作系统（ALL/WINDOWS/LINUX/MACOS）", required = false)
+        @Parameter(description = "操作系统（ALL/WINDOWS/LINUX/MACOS）", required = false)
         @QueryParam("os")
         os: String?,
-        @Parameter(name = "项目编码", required = true)
+        @Parameter(description = "项目编码", required = true)
         @QueryParam("projectCode")
         projectCode: String,
-        @Parameter(name = "插件所属范畴，TRIGGER：触发器类插件 TASK：任务类插件", required = false)
+        @Parameter(description = "插件所属范畴，TRIGGER：触发器类插件 TASK：任务类插件", required = false)
         @QueryParam("category")
         category: String? = AtomCategoryEnum.TASK.name,
-        @Parameter(name = "插件分类id", required = false)
+        @Parameter(description = "插件分类id", required = false)
         @QueryParam("classifyId")
         classifyId: String?,
-        @Parameter(name = "是否推荐", required = false)
+        @Parameter(description = "是否推荐", required = false)
         @QueryParam("recommendFlag")
         recommendFlag: Boolean?,
-        @Parameter(name = "搜索关键字", required = false)
+        @Parameter(description = "搜索关键字", required = false)
         @QueryParam("keyword")
         keyword: String?,
-        @Parameter(name = "查询项目插件标识", required = true)
+        @Parameter(description = "查询项目插件标识", required = true)
         @QueryParam("queryProjectAtomFlag")
         queryProjectAtomFlag: Boolean = true,
-        @Parameter(name = "是否适配操作系统标识", required = false)
+        @Parameter(description = "是否适配操作系统标识", required = false)
         @QueryParam("fitOsFlag")
         fitOsFlag: Boolean? = true,
-        @Parameter(name = "查询支持有编译环境下的无编译环境插件标识", required = false)
+        @Parameter(description = "查询支持有编译环境下的无编译环境插件标识", required = false)
         @QueryParam("queryFitAgentBuildLessAtomFlag")
         queryFitAgentBuildLessAtomFlag: Boolean? = true,
-        @Parameter(name = "页码", required = true)
+        @Parameter(description = "页码", required = true)
         @QueryParam("page")
         page: Int = 1,
-        @Parameter(name = "每页数量", required = true)
+        @Parameter(description = "每页数量", required = true)
         @QueryParam("pageSize")
         @BkField(patternStyle = BkStyleEnum.PAGE_SIZE_STYLE)
         pageSize: Int = 10
@@ -122,16 +122,16 @@ interface UserAtomResource {
         keyPrefixNames = ["ATOM", "{data.atomCode}", "{data.version}", "releaseInfo"]
     )
     fun getPipelineAtom(
-        @Parameter(name = "项目代码", required = true)
+        @Parameter(description = "项目代码", required = true)
         @PathParam("projectCode")
         projectCode: String,
-        @Parameter(name = "插件代码", required = true)
+        @Parameter(description = "插件代码", required = true)
         @PathParam("atomCode")
         atomCode: String,
-        @Parameter(name = "版本号", required = true)
+        @Parameter(description = "版本号", required = true)
         @PathParam("version")
         version: String,
-        @Parameter(name = "是否查询已下架版本", required = false)
+        @Parameter(description = "是否查询已下架版本", required = false)
         @QueryParam("queryOfflineFlag")
         queryOfflineFlag: Boolean? = true
     ): Result<PipelineAtom?>
@@ -140,10 +140,10 @@ interface UserAtomResource {
     @GET
     @Path("/projectCodes/{projectCode}/atomCodes/{atomCode}/version/list")
     fun getPipelineAtomVersions(
-        @Parameter(name = "项目代码", required = true)
+        @Parameter(description = "项目代码", required = true)
         @PathParam("projectCode")
         projectCode: String,
-        @Parameter(name = "插件代码", required = true)
+        @Parameter(description = "插件代码", required = true)
         @PathParam("atomCode")
         atomCode: String
     ): Result<List<VersionInfo>>
@@ -155,22 +155,22 @@ interface UserAtomResource {
         keyPrefixNames = ["ATOM", "{data.records[*].atomCode}", "{data.records[*].version}", "releaseInfo"]
     )
     fun getInstalledAtoms(
-        @Parameter(name = "userId", required = true)
+        @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "项目代码", required = true)
+        @Parameter(description = "项目代码", required = true)
         @PathParam("projectCode")
         projectCode: String,
-        @Parameter(name = "插件分类", required = false)
+        @Parameter(description = "插件分类", required = false)
         @QueryParam("classifyCode")
         classifyCode: String?,
-        @Parameter(name = "名称", required = false)
+        @Parameter(description = "名称", required = false)
         @QueryParam("name")
         name: String?,
-        @Parameter(name = "页码", required = true)
+        @Parameter(description = "页码", required = true)
         @QueryParam("page")
         page: Int = 1,
-        @Parameter(name = "每页数量", required = true)
+        @Parameter(description = "每页数量", required = true)
         @QueryParam("pageSize")
         @BkField(patternStyle = BkStyleEnum.PAGE_SIZE_STYLE)
         pageSize: Int = 10
@@ -180,13 +180,13 @@ interface UserAtomResource {
     @PUT
     @Path("/baseInfo/atoms/{atomCode}")
     fun updateAtomBaseInfo(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "插件代码 ", required = true)
+        @Parameter(description = "插件代码 ", required = true)
         @PathParam("atomCode")
         atomCode: String,
-        @Parameter(name = "插件基本信息修改请求报文体", required = true)
+        @Parameter(description = "插件基本信息修改请求报文体", required = true)
         atomBaseInfoUpdateRequest: AtomBaseInfoUpdateRequest
     ): Result<Boolean>
 
@@ -194,16 +194,16 @@ interface UserAtomResource {
     @Path("/projectCodes/{projectCode}/atoms/{atomCode}")
     @DELETE
     fun uninstallAtom(
-        @Parameter(name = "userId", required = true)
+        @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "项目代码", required = true)
+        @Parameter(description = "项目代码", required = true)
         @PathParam("projectCode")
         projectCode: String,
-        @Parameter(name = "插件代码 ", required = true)
+        @Parameter(description = "插件代码 ", required = true)
         @PathParam("atomCode")
         atomCode: String,
-        @Parameter(name = "卸载插件请求包体", required = true)
+        @Parameter(description = "卸载插件请求包体", required = true)
         unInstallReq: UnInstallReq
     ): Result<Boolean>
 }

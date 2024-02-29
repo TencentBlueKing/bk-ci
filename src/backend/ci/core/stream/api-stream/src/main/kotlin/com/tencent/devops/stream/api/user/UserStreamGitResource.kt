@@ -58,10 +58,10 @@ interface UserStreamGitResource {
     @GET
     @Path("/projects/info")
     fun getGitCodeProjectInfo(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "stream 项目路径/id", required = true)
+        @Parameter(description = "stream 项目路径/id", required = true)
         @QueryParam("gitProjectId")
         gitProjectId: String
     ): Result<StreamGitProjectInfoWithProject?>
@@ -70,19 +70,19 @@ interface UserStreamGitResource {
     @GET
     @Path("/projects/members")
     fun getGitCodeProjectMembers(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "蓝盾项目ID", required = true)
+        @Parameter(description = "蓝盾项目ID", required = true)
         @QueryParam("projectId")
         projectId: String,
-        @Parameter(name = "页码", example = "1")
+        @Parameter(description = "页码", example = "1")
         @QueryParam("page")
         page: Int?,
-        @Parameter(name = "每页数量,最大100", example = "20")
+        @Parameter(description = "每页数量,最大100", example = "20")
         @QueryParam("pageSize")
         pageSize: Int?,
-        @Parameter(name = "搜索用户关键字", required = false)
+        @Parameter(description = "搜索用户关键字", required = false)
         @QueryParam("search")
         search: String?
     ): Result<List<StreamGitMember>?>
@@ -91,28 +91,28 @@ interface UserStreamGitResource {
     @GET
     @Path("/projects/commits")
     fun getGitCodeCommits(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "蓝盾项目ID")
+        @Parameter(description = "蓝盾项目ID")
         @QueryParam("projectId")
         projectId: String,
-        @Parameter(name = "文件路径")
+        @Parameter(description = "文件路径")
         @QueryParam("filePath")
         filePath: String?,
-        @Parameter(name = "分支名称")
+        @Parameter(description = "分支名称")
         @QueryParam("branch")
         branch: String?,
-        @Parameter(name = "在这之后的时间的提交")
+        @Parameter(description = "在这之后的时间的提交")
         @QueryParam("since")
         since: String?,
-        @Parameter(name = "在这之前的时间的提交")
+        @Parameter(description = "在这之前的时间的提交")
         @QueryParam("until")
         until: String?,
-        @Parameter(name = "页码", example = "1")
+        @Parameter(description = "页码", example = "1")
         @QueryParam("page")
         page: Int?,
-        @Parameter(name = "每页数量,最大100", example = "20")
+        @Parameter(description = "每页数量,最大100", example = "20")
         @QueryParam("pageSize")
         pageSize: Int?
     ): Result<List<StreamCommitInfo>?>
@@ -121,13 +121,13 @@ interface UserStreamGitResource {
     @POST
     @Path("/projects/repository/files")
     fun gitCodeCreateFile(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "蓝盾项目ID")
+        @Parameter(description = "蓝盾项目ID")
         @QueryParam("projectId")
         projectId: String,
-        @Parameter(name = "创建文件内容")
+        @Parameter(description = "创建文件内容")
         streamCreateFile: StreamCreateFileInfo
     ): Result<Boolean>
 
@@ -135,25 +135,25 @@ interface UserStreamGitResource {
     @GET
     @Path("/projects/repository/branches")
     fun getGitCodeBranches(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "蓝盾项目ID")
+        @Parameter(description = "蓝盾项目ID")
         @QueryParam("projectId")
         projectId: String,
-        @Parameter(name = "搜索条件，模糊匹配分支名")
+        @Parameter(description = "搜索条件，模糊匹配分支名")
         @QueryParam("search")
         search: String?,
-        @Parameter(name = "页码", example = "1")
+        @Parameter(description = "页码", example = "1")
         @QueryParam("page")
         page: Int?,
-        @Parameter(name = "每页数量,最大100", example = "20")
+        @Parameter(description = "每页数量,最大100", example = "20")
         @QueryParam("pageSize")
         pageSize: Int?,
-        @Parameter(name = "返回列表的排序字段,可选可选字段:name、updated")
+        @Parameter(description = "返回列表的排序字段,可选可选字段:name、updated")
         @QueryParam("orderBy")
         orderBy: StreamBranchesOrder?,
-        @Parameter(name = "返回列表的排序字段,可选可选字段:name、updated")
+        @Parameter(description = "返回列表的排序字段,可选可选字段:name、updated")
         @QueryParam("sort")
         sort: StreamSortAscOrDesc?
     ): Result<List<String>?>
@@ -162,19 +162,19 @@ interface UserStreamGitResource {
     @GET
     @Path("/projects/repository/local_branches")
     fun getLocalBranches(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "蓝盾项目ID")
+        @Parameter(description = "蓝盾项目ID")
         @QueryParam("projectId")
         projectId: String,
-        @Parameter(name = "搜索条件，模糊匹配分支名")
+        @Parameter(description = "搜索条件，模糊匹配分支名")
         @QueryParam("search")
         search: String?,
-        @Parameter(name = "页码", example = "1")
+        @Parameter(description = "页码", example = "1")
         @QueryParam("page")
         page: Int?,
-        @Parameter(name = "每页数量,最大100", example = "20")
+        @Parameter(description = "每页数量,最大100", example = "20")
         @QueryParam("pageSize")
         pageSize: Int?
     ): Result<List<String>?>
@@ -183,13 +183,13 @@ interface UserStreamGitResource {
     @GET
     @Path("/projects/triggers")
     fun getTriggerUser(
-        @Parameter(name = "蓝盾项目ID")
+        @Parameter(description = "蓝盾项目ID")
         @QueryParam("projectId")
         projectId: String,
-        @Parameter(name = "页码", example = "1")
+        @Parameter(description = "页码", example = "1")
         @QueryParam("page")
         page: Int?,
-        @Parameter(name = "每页数量,最大100", example = "20")
+        @Parameter(description = "每页数量,最大100", example = "20")
         @QueryParam("pageSize")
         pageSize: Int?
     ): Result<List<String>>

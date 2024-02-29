@@ -56,7 +56,7 @@ interface ServiceTkePushImageResource {
     @POST
     @Path("/pushImage")
     fun pushImage(
-        @Parameter(name = "推送镜像到TKE镜像仓库请求参数", required = true)
+        @Parameter(description = "推送镜像到TKE镜像仓库请求参数", required = true)
         pushParam: TkePushImageParam
     ): Result<PushImageTask?>
 
@@ -64,10 +64,10 @@ interface ServiceTkePushImageResource {
     @Path("/queryPushImageTask")
     @GET
     fun queryUploadTask(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "任务ID", required = true)
+        @Parameter(description = "任务ID", required = true)
         @QueryParam("taskId")
         taskId: String
     ): Result<PushImageTask?>

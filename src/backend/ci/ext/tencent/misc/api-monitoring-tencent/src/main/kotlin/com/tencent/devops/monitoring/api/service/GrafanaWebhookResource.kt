@@ -49,7 +49,7 @@ interface GrafanaWebhookResource {
     @POST
     @Path("/grafana/webhook")
     fun webhookCallBack(
-        @Parameter(name = "grafana监控webhook回调通知消息", required = true)
+        @Parameter(description = "grafana监控webhook回调通知消息", required = true)
         grafanaNotification: GrafanaNotification
     ): Result<Boolean>
 }

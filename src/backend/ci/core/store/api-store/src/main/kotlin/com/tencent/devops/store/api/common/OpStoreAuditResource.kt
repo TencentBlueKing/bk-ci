@@ -58,22 +58,22 @@ interface OpStoreAuditResource {
     @GET
     @Path("/conf")
     fun getAllAuditConf(
-        @Parameter(name = "userId", required = true)
+        @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "商城组件名称")
+        @Parameter(description = "商城组件名称")
         @QueryParam("storeName")
         storeName: String?,
-        @Parameter(name = "商城组件类型")
+        @Parameter(description = "商城组件类型")
         @QueryParam("storeType")
         storeType: StoreTypeEnum?,
-        @Parameter(name = "审核状态")
+        @Parameter(description = "审核状态")
         @QueryParam("status")
         status: DeptStatusEnum?,
-        @Parameter(name = "分页总页数")
+        @Parameter(description = "分页总页数")
         @QueryParam("page")
         page: Int?,
-        @Parameter(name = "每页记录数量")
+        @Parameter(description = "每页记录数量")
         @QueryParam("pageSize")
         pageSize: Int?
     ): Result<Page<VisibleAuditInfo>>
@@ -82,13 +82,13 @@ interface OpStoreAuditResource {
     @POST
     @Path("/ids/{id}/approve")
     fun approveVisibleDept(
-        @Parameter(name = "userId", required = true)
+        @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "审核记录ID")
+        @Parameter(description = "审核记录ID")
         @PathParam("id")
         id: String,
-        @Parameter(name = "审批信息")
+        @Parameter(description = "审批信息")
         storeApproveRequest: StoreApproveRequest
     ): Result<Boolean>
 
@@ -96,10 +96,10 @@ interface OpStoreAuditResource {
     @DELETE
     @Path("/ids/{id}/delete")
     fun deleteAuditConf(
-        @Parameter(name = "userId", required = true)
+        @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "审核记录ID")
+        @Parameter(description = "审核记录ID")
         @PathParam("id")
         id: String
     ): Result<Boolean>

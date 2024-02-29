@@ -52,10 +52,10 @@ interface UserBkRepoStaticResource {
     @Path("/file/upload")
     @Consumes(MediaType.MULTIPART_FORM_DATA)
     fun uploadStaticFile(
-        @Parameter(name = "userId", required = true)
+        @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "文件", required = true)
+        @Parameter(description = "文件", required = true)
         @FormDataParam("file")
         inputStream: InputStream,
         @FormDataParam("file")

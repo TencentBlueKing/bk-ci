@@ -56,7 +56,7 @@ interface ServiceTemplateResource {
     @GET
     @Path("/list/")
     fun list(
-        @Parameter(name = "userId", required = true)
+        @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String
     ): Result<MarketTemplateResp>
@@ -65,10 +65,10 @@ interface ServiceTemplateResource {
     @POST
     @Path("/template/install")
     fun installTemplate(
-        @Parameter(name = "userId", required = true)
+        @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "安装模板到项目请求报文体", required = true)
+        @Parameter(description = "安装模板到项目请求报文体", required = true)
         installTemplateReq: InstallTemplateReq
     ): Result<Boolean>
 
@@ -76,13 +76,13 @@ interface ServiceTemplateResource {
     @GET
     @Path("/{templateCode}/validate")
     fun validateUserTemplateComponentVisibleDept(
-        @Parameter(name = "用户", required = true)
+        @Parameter(description = "用户", required = true)
         @QueryParam("userId")
         userId: String,
-        @Parameter(name = "标识", required = true)
+        @Parameter(description = "标识", required = true)
         @PathParam("templateCode")
         templateCode: String,
-        @Parameter(name = "项目", required = true)
+        @Parameter(description = "项目", required = true)
         @QueryParam("projectCode")
         projectCode: String
     ): Result<Boolean>
@@ -91,13 +91,13 @@ interface ServiceTemplateResource {
     @POST
     @Path("/{projectCode}/verification")
     fun validateModelComponentVisibleDept(
-        @Parameter(name = "用户", required = true)
+        @Parameter(description = "用户", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "流水线模型-阶段", required = true)
+        @Parameter(description = "流水线模型-阶段", required = true)
         @Valid
         model: Model,
-        @Parameter(name = "项目", required = true)
+        @Parameter(description = "项目", required = true)
         @PathParam("projectCode")
         projectCode: String
     ): Result<Boolean>

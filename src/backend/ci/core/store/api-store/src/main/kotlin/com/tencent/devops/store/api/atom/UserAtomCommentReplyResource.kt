@@ -53,7 +53,7 @@ interface UserAtomCommentReplyResource {
     @GET
     @Path("/comments/{commentId}/replys")
     fun getStoreCommentReplysByCommentId(
-        @Parameter(name = "评论ID", required = true)
+        @Parameter(description = "评论ID", required = true)
         @PathParam("commentId")
         commentId: String
     ): Result<List<StoreCommentReplyInfo>?>
@@ -62,13 +62,13 @@ interface UserAtomCommentReplyResource {
     @POST
     @Path("/comments/{commentId}/reply")
     fun addStoreCommentReply(
-        @Parameter(name = "userId", required = true)
+        @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "评论ID", required = true)
+        @Parameter(description = "评论ID", required = true)
         @PathParam("commentId")
         commentId: String,
-        @Parameter(name = "评论回复信息请求报文体", required = true)
+        @Parameter(description = "评论回复信息请求报文体", required = true)
         storeCommentReplyRequest: StoreCommentReplyRequest
     ): Result<StoreCommentReplyInfo?>
 }

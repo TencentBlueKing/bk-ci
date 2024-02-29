@@ -50,13 +50,13 @@ interface ServiceItemRelResource {
     @PUT
     @Path("items/{itemId}")
     fun updateItemService(
-        @Parameter(name = "userId", required = true)
+        @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "扩展点Id", required = true)
+        @Parameter(description = "扩展点Id", required = true)
         @PathParam("itemId")
         itemId: String,
-        @Parameter(name = "服务ID", required = true)
+        @Parameter(description = "服务ID", required = true)
         @QueryParam("serviceId")
         serviceId: String
     ): Result<Boolean>

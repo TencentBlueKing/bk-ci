@@ -54,16 +54,16 @@ interface OpMediaResource {
     @Path("/storeCodes/{storeCode}/types/{storeType}/media")
     @POST
     fun createStoreMedia(
-        @Parameter(name = "userId", required = true)
+        @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "研发商店代码", required = true)
+        @Parameter(description = "研发商店代码", required = true)
         @PathParam("storeCode")
         storeCode: String,
-        @Parameter(name = "类别", required = true)
+        @Parameter(description = "类别", required = true)
         @PathParam("storeType")
         storeType: StoreTypeEnum,
-        @Parameter(name = "评论信息", required = true)
+        @Parameter(description = "评论信息", required = true)
         mediaInfoList: List<MediaInfoReq>
     ): Result<Boolean>
 
@@ -71,10 +71,10 @@ interface OpMediaResource {
     @Path("/ids/{mediaId}")
     @GET
     fun getStoreMedia(
-        @Parameter(name = "userId", required = true)
+        @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "媒体ID", required = true)
+        @Parameter(description = "媒体ID", required = true)
         @PathParam("mediaId")
         mediaId: String
     ): Result<StoreMediaInfo?>
@@ -83,13 +83,13 @@ interface OpMediaResource {
     @Path("/storesCodes/{storeCode}/types/{labelType}")
     @GET
     fun getStoreMediaByStoreCode(
-        @Parameter(name = "userId", required = true)
+        @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "研发商店编码", required = true)
+        @Parameter(description = "研发商店编码", required = true)
         @PathParam("storeCode")
         storeCode: String,
-        @Parameter(name = "类别", required = true)
+        @Parameter(description = "类别", required = true)
         @PathParam("labelType")
         labelType: StoreTypeEnum
     ): Result<List<StoreMediaInfo>?>

@@ -55,10 +55,10 @@ interface UserDockerDebugResource {
     @POST
     @Path("/start")
     fun startDebug(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         debugStartParam: DebugStartParam
     ): Result<DebugResponse>?
 
@@ -66,22 +66,22 @@ interface UserDockerDebugResource {
     @POST
     @Path("/stop/projects/{projectId}/pipelines/{pipelineId}/vmseqs/{vmSeqId}")
     fun stopDebug(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "项目id", required = true)
+        @Parameter(description = "项目id", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(name = "流水线Id", required = true)
+        @Parameter(description = "流水线Id", required = true)
         @PathParam("pipelineId")
         pipelineId: String,
-        @Parameter(name = "vmSeqId", required = true)
+        @Parameter(description = "vmSeqId", required = true)
         @PathParam("vmSeqId")
         vmSeqId: String,
-        @Parameter(name = "containerName", required = false)
+        @Parameter(description = "containerName", required = false)
         @QueryParam("containerName")
         containerName: String?,
-        @Parameter(name = "dispatchType", required = false)
+        @Parameter(description = "dispatchType", required = false)
         @QueryParam("dispatchType")
         dispatchType: String? = BuildType.DOCKER.name
     ): Result<Boolean>?

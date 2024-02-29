@@ -51,7 +51,7 @@ interface BuildCcrPushImageResource {
     @POST
     @Path("/pushImage")
     fun pushImage(
-        @Parameter(name = "推送镜像到CCR镜像仓库请求参数", required = true)
+        @Parameter(description = "推送镜像到CCR镜像仓库请求参数", required = true)
         pushParam: PushImageParam
     ): Result<PushImageTask?>
 
@@ -59,7 +59,7 @@ interface BuildCcrPushImageResource {
     @Path("/queryPushImageTask")
     @GET
     fun queryUploadTask(
-        @Parameter(name = "任务ID", required = true)
+        @Parameter(description = "任务ID", required = true)
         @QueryParam("taskId")
         taskId: String
     ): Result<PushImageTask?>

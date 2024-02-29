@@ -55,10 +55,10 @@ interface OpLabelResource {
     @POST
     @Path("/types/{labelType}")
     fun add(
-        @Parameter(name = "类别", required = true)
+        @Parameter(description = "类别", required = true)
         @PathParam("labelType")
         labelType: StoreTypeEnum,
-        @Parameter(name = "标签信息请求报文体", required = true)
+        @Parameter(description = "标签信息请求报文体", required = true)
         labelRequest: LabelRequest
     ): Result<Boolean>
 
@@ -66,13 +66,13 @@ interface OpLabelResource {
     @PUT
     @Path("/types/{labelType}/ids/{id}")
     fun update(
-        @Parameter(name = "类别", required = true)
+        @Parameter(description = "类别", required = true)
         @PathParam("labelType")
         labelType: StoreTypeEnum,
-        @Parameter(name = "标签ID", required = true)
+        @Parameter(description = "标签ID", required = true)
         @PathParam("id")
         id: String,
-        @Parameter(name = "标签信息请求报文体", required = true)
+        @Parameter(description = "标签信息请求报文体", required = true)
         labelRequest: LabelRequest
     ): Result<Boolean>
 
@@ -80,7 +80,7 @@ interface OpLabelResource {
     @GET
     @Path("/types/{labelType}")
     fun listAllLabels(
-        @Parameter(name = "类别", required = true)
+        @Parameter(description = "类别", required = true)
         @PathParam("labelType")
         labelType: StoreTypeEnum
     ): Result<List<Label>?>
@@ -89,7 +89,7 @@ interface OpLabelResource {
     @GET
     @Path("/{id}")
     fun getLabelById(
-        @Parameter(name = "标签ID", required = true)
+        @Parameter(description = "标签ID", required = true)
         @QueryParam("id")
         id: String
     ): Result<Label?>
@@ -98,7 +98,7 @@ interface OpLabelResource {
     @DELETE
     @Path("/{id}")
     fun deleteLabelById(
-        @Parameter(name = "标签ID", required = true)
+        @Parameter(description = "标签ID", required = true)
         @PathParam("id")
         id: String
     ): Result<Boolean>

@@ -49,10 +49,10 @@ interface OpStreamCheckResource {
     @POST
     @Path("/branches")
     fun checkBranches(
-        @Parameter(name = "工蜂项目ID", required = true)
+        @Parameter(description = "工蜂项目ID", required = true)
         @QueryParam("gitProjectId")
         gitProjectId: Long?,
-        @Parameter(name = "流水线ID", required = true)
+        @Parameter(description = "流水线ID", required = true)
         @QueryParam("pipelineId")
         pipelineId: String?
     ): Result<Boolean>
@@ -61,7 +61,7 @@ interface OpStreamCheckResource {
     @GET
     @Path("/conflictJobs")
     fun conflictJobs(
-        @Parameter(name = "构建数据失效时间", required = false)
+        @Parameter(description = "构建数据失效时间", required = false)
         @QueryParam("buildDays")
         buildDays: Long?
     ): Result<String>

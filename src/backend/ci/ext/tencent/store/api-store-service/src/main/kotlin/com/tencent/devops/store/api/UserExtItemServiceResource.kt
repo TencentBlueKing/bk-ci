@@ -52,13 +52,13 @@ interface UserExtItemServiceResource {
     @Path("/items/projects/{projectCode}/list")
     @GET
     fun getExtItemServiceList(
-        @Parameter(name = "userId", required = true)
+        @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "项目代码", required = true)
+        @Parameter(description = "项目代码", required = true)
         @PathParam("projectCode")
         projectCode: String,
-        @Parameter(name = "扩展点ID（如果存在多个请用逗号分隔拼接）", required = true)
+        @Parameter(description = "扩展点ID（如果存在多个请用逗号分隔拼接）", required = true)
         @QueryParam("itemIds")
         itemIds: String
     ): Result<List<ExtItemServiceVO>>

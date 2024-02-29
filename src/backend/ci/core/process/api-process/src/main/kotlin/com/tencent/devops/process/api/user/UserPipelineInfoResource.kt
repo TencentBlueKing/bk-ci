@@ -59,13 +59,13 @@ interface UserPipelineInfoResource {
     // @Path("/projects/{projectId}/")
     @Path("/{projectId}/")
     fun list(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(name = "筛选流水线逗号分隔", required = false)
+        @Parameter(description = "筛选流水线逗号分隔", required = false)
         @QueryParam("pipelineIdList")
         pipelineIdListString: String?
     ): Result<List<Pipeline>>
@@ -74,23 +74,23 @@ interface UserPipelineInfoResource {
     @GET
     @Path("/get/names")
     fun paginationGetIdAndName(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_PROJECT_ID)
         projectId: String,
-        @Parameter(name = "渠道号", required = true)
+        @Parameter(description = "渠道号", required = true)
         @QueryParam("channelCodes")
         @BkField(required = true)
         channelCodes: String,
-        @Parameter(name = "keyword", required = false)
+        @Parameter(description = "keyword", required = false)
         @QueryParam("keyword")
         keyword: String?,
-        @Parameter(name = "页码", required = true, example = "1")
+        @Parameter(description = "页码", required = true, example = "1")
         @QueryParam("page")
         page: Int,
-        @Parameter(name = "每页大小", required = true, example = "10")
+        @Parameter(description = "每页大小", required = true, example = "10")
         @BkField(patternStyle = BkStyleEnum.PAGE_SIZE_STYLE, required = true)
         @QueryParam("pageSize")
         pageSize: Int
@@ -100,13 +100,13 @@ interface UserPipelineInfoResource {
     @GET
     @Path("{projectId}/searchByName")
     fun searchByName(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(name = "搜索名称")
+        @Parameter(description = "搜索名称")
         @QueryParam("pipelineName")
         pipelineName: String?
     ): Result<List<PipelineIdAndName>>
@@ -115,13 +115,13 @@ interface UserPipelineInfoResource {
     @GET
     @Path("{projectId}/searchByPipelineId")
     fun searchByPipelineName(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(name = "搜索名称")
+        @Parameter(description = "搜索名称")
         @QueryParam("pipelineId")
         pipelineId: String
     ): Result<PipelineIdAndName?>
@@ -130,13 +130,13 @@ interface UserPipelineInfoResource {
     @GET
     @Path("{projectId}/{pipelineId}/detail")
     fun getPipelineInfo(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(name = "流水线Id")
+        @Parameter(description = "流水线Id")
         @PathParam("pipelineId")
         pipelineId: String
     ): Result<PipelineDetailInfo?>

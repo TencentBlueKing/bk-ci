@@ -31,12 +31,12 @@ interface OPDcPerformanceConfigResource {
     @Path("/performanceConfig/list")
     @Operation(summary = "获取devcloud性能配置列表")
     fun listDcPerformanceConfig(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String,
         @QueryParam("page")
         page: Int?,
-        @Parameter(name = "每页多少条", required = false, example = "10")
+        @Parameter(description = "每页多少条", required = false, example = "10")
         @QueryParam("pageSize")
         pageSize: Int?
     ): Result<ListPage<PerformanceConfigVO>>
@@ -45,10 +45,10 @@ interface OPDcPerformanceConfigResource {
     @Path("/performanceConfig/add")
     @Operation(summary = "新增性能配置")
     fun createDcPerformanceConfig(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String,
-        @Parameter(name = "性能配置", required = true)
+        @Parameter(description = "性能配置", required = true)
         opPerformanceConfigVO: OPPerformanceConfigVO
     ): Result<Boolean>
 
@@ -56,13 +56,13 @@ interface OPDcPerformanceConfigResource {
     @Path("/performanceConfig/{projectId}/update")
     @Operation(summary = "更新Devcloud性能配置")
     fun updateDcPerformanceConfig(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String,
-        @Parameter(name = "蓝盾项目ID", required = true)
+        @Parameter(description = "蓝盾项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(name = "性能配置", required = true)
+        @Parameter(description = "性能配置", required = true)
         opPerformanceConfigVO: OPPerformanceConfigVO
     ): Result<Boolean>
 
@@ -70,10 +70,10 @@ interface OPDcPerformanceConfigResource {
     @Path("/performanceConfig/delete/{projectId}")
     @Operation(summary = "删除Devcloud性能配置")
     fun deleteDcPerformanceConfig(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String,
-        @Parameter(name = "服务ID", required = true)
+        @Parameter(description = "服务ID", required = true)
         @PathParam("projectId")
         projectId: String
     ): Result<Boolean>

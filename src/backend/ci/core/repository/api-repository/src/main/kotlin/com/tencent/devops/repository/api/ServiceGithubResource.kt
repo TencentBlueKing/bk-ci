@@ -58,16 +58,16 @@ interface ServiceGithubResource {
     @POST
     @Path("/accessToken")
     fun createAccessToken(
-        @Parameter(name = "用户ID", required = true)
+        @Parameter(description = "用户ID", required = true)
         @QueryParam("userId")
         userId: String,
-        @Parameter(name = "accessToken", required = true)
+        @Parameter(description = "accessToken", required = true)
         @QueryParam("accessToken")
         accessToken: String,
-        @Parameter(name = "accessToken类型", required = true)
+        @Parameter(description = "accessToken类型", required = true)
         @QueryParam("tokenType")
         tokenType: String,
-        @Parameter(name = "accessToken范围", required = true)
+        @Parameter(description = "accessToken范围", required = true)
         @QueryParam("scope")
         scope: String
     ): Result<Boolean>
@@ -76,10 +76,10 @@ interface ServiceGithubResource {
     @GET
     @Path("/accessToken")
     fun getAccessToken(
-        @Parameter(name = "用户ID", required = true)
+        @Parameter(description = "用户ID", required = true)
         @QueryParam("userId")
         userId: String,
-        @Parameter(name = "token 类型", required = false)
+        @Parameter(description = "token 类型", required = false)
         @QueryParam("tokenType")
         @DefaultValue("GITHUB_APP")
         tokenType: GithubTokenType? = GithubTokenType.GITHUB_APP
@@ -89,13 +89,13 @@ interface ServiceGithubResource {
     @GET
     @Path("/getFileContent")
     fun getFileContent(
-        @Parameter(name = "projectName", required = true)
+        @Parameter(description = "projectName", required = true)
         @QueryParam("projectName")
         projectName: String,
-        @Parameter(name = "ref", required = true)
+        @Parameter(description = "ref", required = true)
         @QueryParam("ref")
         ref: String,
-        @Parameter(name = "filePath", required = true)
+        @Parameter(description = "filePath", required = true)
         @QueryParam("filePath")
         filePath: String
     ): Result<String>
@@ -109,10 +109,10 @@ interface ServiceGithubResource {
     @POST
     @Path("/checkRuns")
     fun addCheckRuns(
-        @Parameter(name = "accessToken", required = true)
+        @Parameter(description = "accessToken", required = true)
         @QueryParam("accessToken")
         accessToken: String,
-        @Parameter(name = "projectName", required = true)
+        @Parameter(description = "projectName", required = true)
         @QueryParam("projectName")
         projectName: String,
         checkRuns: GithubCheckRuns
@@ -122,13 +122,13 @@ interface ServiceGithubResource {
     @PUT
     @Path("/checkRuns")
     fun updateCheckRuns(
-        @Parameter(name = "accessToken", required = true)
+        @Parameter(description = "accessToken", required = true)
         @QueryParam("accessToken")
         accessToken: String,
-        @Parameter(name = "projectName", required = true)
+        @Parameter(description = "projectName", required = true)
         @QueryParam("projectName")
         projectName: String,
-        @Parameter(name = "checkRunId", required = true)
+        @Parameter(description = "checkRunId", required = true)
         @QueryParam("checkRunId")
         checkRunId: Long,
         checkRuns: GithubCheckRuns
@@ -138,13 +138,13 @@ interface ServiceGithubResource {
     @GET
     @Path("/getGithubBranch")
     fun getGithubBranch(
-        @Parameter(name = "accessToken", required = true)
+        @Parameter(description = "accessToken", required = true)
         @QueryParam("accessToken")
         accessToken: String,
-        @Parameter(name = "projectName", required = true)
+        @Parameter(description = "projectName", required = true)
         @QueryParam("projectName")
         projectName: String,
-        @Parameter(name = "branch", required = false)
+        @Parameter(description = "branch", required = false)
         @QueryParam("branch")
         branch: String?
     ): Result<GithubBranch?>
@@ -153,13 +153,13 @@ interface ServiceGithubResource {
     @GET
     @Path("/getGithubTag")
     fun getGithubTag(
-        @Parameter(name = "accessToken", required = true)
+        @Parameter(description = "accessToken", required = true)
         @QueryParam("accessToken")
         accessToken: String,
-        @Parameter(name = "projectName", required = true)
+        @Parameter(description = "projectName", required = true)
         @QueryParam("projectName")
         projectName: String,
-        @Parameter(name = "tag", required = true)
+        @Parameter(description = "tag", required = true)
         @QueryParam("tag")
         tag: String
     ): Result<GithubTag?>
@@ -168,10 +168,10 @@ interface ServiceGithubResource {
     @GET
     @Path("/branches")
     fun listBranches(
-        @Parameter(name = "accessToken", required = true)
+        @Parameter(description = "accessToken", required = true)
         @QueryParam("accessToken")
         accessToken: String,
-        @Parameter(name = "projectName", required = true)
+        @Parameter(description = "projectName", required = true)
         @QueryParam("projectName")
         projectName: String
     ): Result<List<String>>
@@ -180,10 +180,10 @@ interface ServiceGithubResource {
     @GET
     @Path("/tags")
     fun listTags(
-        @Parameter(name = "accessToken", required = true)
+        @Parameter(description = "accessToken", required = true)
         @QueryParam("accessToken")
         accessToken: String,
-        @Parameter(name = "projectName", required = true)
+        @Parameter(description = "projectName", required = true)
         @QueryParam("projectName")
         projectName: String
     ): Result<List<String>>

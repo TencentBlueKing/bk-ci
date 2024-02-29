@@ -54,13 +54,13 @@ interface ServiceStoreLogoResource {
     @Path("/upload")
     @Consumes(MediaType.MULTIPART_FORM_DATA)
     fun uploadStoreLogo(
-        @Parameter(name = "userId", required = true)
+        @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "contentLength", required = true)
+        @Parameter(description = "contentLength", required = true)
         @HeaderParam("content-length")
         contentLength: Long,
-        @Parameter(name = "logo", required = true)
+        @Parameter(description = "logo", required = true)
         @FormDataParam("logo")
         inputStream: InputStream,
         @FormDataParam("logo")

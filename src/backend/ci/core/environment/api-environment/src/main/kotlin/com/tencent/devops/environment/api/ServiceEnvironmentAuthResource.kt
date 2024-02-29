@@ -49,10 +49,10 @@ interface ServiceEnvironmentAuthResource {
     @Path("/env")
     @Operation(summary = "iam环境管理回调接口")
     fun environmentInfo(
-        @Parameter(name = "回调信息")
+        @Parameter(description = "回调信息")
         callBackInfo: CallbackRequestDTO,
         @HeaderParam(AUTH_HEADER_IAM_TOKEN)
-        @Parameter(name = "token")
+        @Parameter(description = "token")
         token: String
     ): CallbackBaseResponseDTO?
 
@@ -60,10 +60,10 @@ interface ServiceEnvironmentAuthResource {
     @Path("/node")
     @Operation(summary = "iam节点回调接口")
     fun nodeInfo(
-        @Parameter(name = "回调信息")
+        @Parameter(description = "回调信息")
         callBackInfo: CallbackRequestDTO,
         @HeaderParam(AUTH_HEADER_IAM_TOKEN)
-        @Parameter(name = "token")
+        @Parameter(description = "token")
         token: String
     ): CallbackBaseResponseDTO?
 }

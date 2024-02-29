@@ -63,7 +63,7 @@ interface ServiceScmWebhookResource {
     @POST
     @Path("/webhook/commit")
     fun webhookCommit(
-        @Parameter(name = "项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_PROJECT_ID)
         projectId: String,
         webhookCommit: WebhookCommit
@@ -79,10 +79,10 @@ interface ServiceScmWebhookResource {
         projectId: String,
         @PathParam("pipelineId")
         pipelineId: String,
-        @Parameter(name = "页码", required = false)
+        @Parameter(description = "页码", required = false)
         @QueryParam("page")
         page: Int?,
-        @Parameter(name = "每页大小", required = false)
+        @Parameter(description = "每页大小", required = false)
         @QueryParam("pageSize")
         pageSize: Int?
     ): Result<List<PipelineWebhook>>

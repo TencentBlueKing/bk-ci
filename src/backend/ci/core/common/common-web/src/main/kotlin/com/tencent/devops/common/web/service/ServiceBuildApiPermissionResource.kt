@@ -73,7 +73,7 @@ interface ServiceBuildApiPermissionResource {
     @Path("verify/{projectId}/{pipelineId}")
     @GET
     fun verifyApi(
-        @Parameter(name = "userId", required = true)
+        @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
         @PathParam("projectId")

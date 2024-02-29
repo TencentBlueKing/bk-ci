@@ -58,10 +58,10 @@ interface UserAtomReleaseResource {
     @POST
     @Path("/desk/atom/")
     fun addMarketAtom(
-        @Parameter(name = "userId", required = true)
+        @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "插件市场工作台-新增插件请求报文体", required = true)
+        @Parameter(description = "插件市场工作台-新增插件请求报文体", required = true)
         @Valid
         marketAtomCreateRequest: MarketAtomCreateRequest
     ): Result<String>
@@ -70,13 +70,13 @@ interface UserAtomReleaseResource {
     @PUT
     @Path("/desk/atom/")
     fun updateMarketAtom(
-        @Parameter(name = "userId", required = true)
+        @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "项目代码", required = true)
+        @Parameter(description = "项目代码", required = true)
         @QueryParam("projectCode")
         projectCode: String,
-        @Parameter(name = "插件市场工作台-新增插件请求报文体", required = true)
+        @Parameter(description = "插件市场工作台-新增插件请求报文体", required = true)
         marketAtomUpdateRequest: MarketAtomUpdateRequest
     ): Result<String?>
 
@@ -84,10 +84,10 @@ interface UserAtomReleaseResource {
     @GET
     @Path("/desk/atom/release/process/{atomId}")
     fun getProcessInfo(
-        @Parameter(name = "userId", required = true)
+        @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "atomId", required = true)
+        @Parameter(description = "atomId", required = true)
         @PathParam("atomId")
         atomId: String
     ): Result<StoreProcessInfo>
@@ -97,10 +97,10 @@ interface UserAtomReleaseResource {
     @PUT
     @Path("/desk/atom/release/cancel/{atomId}")
     fun cancelRelease(
-        @Parameter(name = "userId", required = true)
+        @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "atomId", required = true)
+        @Parameter(description = "atomId", required = true)
         @PathParam("atomId")
         atomId: String
     ): Result<Boolean>
@@ -110,10 +110,10 @@ interface UserAtomReleaseResource {
     @PUT
     @Path("/desk/atom/release/passTest/{atomId}")
     fun passTest(
-        @Parameter(name = "userId", required = true)
+        @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "atomId", required = true)
+        @Parameter(description = "atomId", required = true)
         @PathParam("atomId")
         atomId: String
     ): Result<Boolean>
@@ -122,13 +122,13 @@ interface UserAtomReleaseResource {
     @PUT
     @Path("/desk/atom/offline/{atomCode}")
     fun offlineAtom(
-        @Parameter(name = "userId", required = true)
+        @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "atomCode", required = true)
+        @Parameter(description = "atomCode", required = true)
         @PathParam("atomCode")
         atomCode: String,
-        @Parameter(name = "下架请求报文")
+        @Parameter(description = "下架请求报文")
         atomOfflineReq: AtomOfflineReq
     ): Result<Boolean>
 }

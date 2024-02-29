@@ -28,16 +28,16 @@ interface ServiceTemplateAcrossResource {
     @POST
     @Path("")
     fun batchCreate(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "projectId", required = true)
+        @Parameter(description = "projectId", required = true)
         @QueryParam("projectId")
         projectId: String,
-        @Parameter(name = "pipelineId", required = true)
+        @Parameter(description = "pipelineId", required = true)
         @QueryParam("pipelineId")
         pipelineId: String,
-        @Parameter(name = "跨项目模板信息", required = true)
+        @Parameter(description = "跨项目模板信息", required = true)
         templateAcrossInfos: List<BuildTemplateAcrossInfo>
     )
 
@@ -45,10 +45,10 @@ interface ServiceTemplateAcrossResource {
     @GET
     @Path("")
     fun getBuildAcrossTemplateInfo(
-        @Parameter(name = "projectId", required = true)
+        @Parameter(description = "projectId", required = true)
         @QueryParam("projectId")
         projectId: String,
-        @Parameter(name = "模板ID", required = true)
+        @Parameter(description = "模板ID", required = true)
         @QueryParam("templateId")
         templateId: String
     ): Result<List<BuildTemplateAcrossInfo>>
@@ -57,16 +57,16 @@ interface ServiceTemplateAcrossResource {
     @PUT
     @Path("")
     fun update(
-        @Parameter(name = "projectId", required = true)
+        @Parameter(description = "projectId", required = true)
         @QueryParam("projectId")
         projectId: String,
-        @Parameter(name = "pipelineId", required = true)
+        @Parameter(description = "pipelineId", required = true)
         @QueryParam("pipelineId")
         pipelineId: String,
-        @Parameter(name = "模板ID", required = true)
+        @Parameter(description = "模板ID", required = true)
         @QueryParam("templateId")
         templateId: String,
-        @Parameter(name = "构建ID", required = true)
+        @Parameter(description = "构建ID", required = true)
         @QueryParam("buildId")
         buildId: String
     ): Result<Boolean>
@@ -75,16 +75,16 @@ interface ServiceTemplateAcrossResource {
     @DELETE
     @Path("")
     fun delete(
-        @Parameter(name = "projectId", required = true)
+        @Parameter(description = "projectId", required = true)
         @QueryParam("projectId")
         projectId: String,
-        @Parameter(name = "pipelineId", required = true)
+        @Parameter(description = "pipelineId", required = true)
         @QueryParam("pipelineId")
         pipelineId: String,
-        @Parameter(name = "模板ID", required = true)
+        @Parameter(description = "模板ID", required = true)
         @QueryParam("templateId")
         templateId: String?,
-        @Parameter(name = "构建ID", required = true)
+        @Parameter(description = "构建ID", required = true)
         @QueryParam("buildId")
         buildId: String?
     ): Result<Boolean>

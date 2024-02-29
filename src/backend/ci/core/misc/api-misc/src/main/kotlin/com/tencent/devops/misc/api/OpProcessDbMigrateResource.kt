@@ -51,16 +51,16 @@ interface OpProcessDbMigrateResource {
     @Path("/projects/{projectId}/data/migrate")
     @PUT
     fun migrateProjectData(
-        @Parameter(name = "userId", required = true)
+        @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(name = "取消正在运行构建标识", required = true)
+        @Parameter(description = "取消正在运行构建标识", required = true)
         @QueryParam("cancelFlag")
         cancelFlag: Boolean = false,
-        @Parameter(name = "数据标签", required = true)
+        @Parameter(description = "数据标签", required = true)
         @QueryParam("dataTag")
         dataTag: String
     ): Result<Boolean>

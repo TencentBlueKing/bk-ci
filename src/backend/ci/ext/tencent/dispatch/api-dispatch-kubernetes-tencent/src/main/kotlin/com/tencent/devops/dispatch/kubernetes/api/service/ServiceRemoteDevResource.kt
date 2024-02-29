@@ -57,13 +57,13 @@ interface ServiceRemoteDevResource {
     @GET
     @Path("/workspaces/{workspaceName}/url")
     fun getWorkspaceUrl(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "工作空间唯一name", required = false)
+        @Parameter(description = "工作空间唯一name", required = false)
         @PathParam("workspaceName")
         workspaceName: String,
-        @Parameter(name = "挂载模式", required = false)
+        @Parameter(description = "挂载模式", required = false)
         @QueryParam("mountType")
         @DefaultValue("DEVCLOUD")
         mountType: WorkspaceMountType
@@ -73,13 +73,13 @@ interface ServiceRemoteDevResource {
     @GET
     @Path("/workspaces/{workspaceName}/info")
     fun getWorkspaceInfo(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "工作空间唯一name", required = false)
+        @Parameter(description = "工作空间唯一name", required = false)
         @PathParam("workspaceName")
         workspaceName: String,
-        @Parameter(name = "挂载模式", required = false)
+        @Parameter(description = "挂载模式", required = false)
         @QueryParam("mountType")
         @DefaultValue("DEVCLOUD")
         mountType: WorkspaceMountType

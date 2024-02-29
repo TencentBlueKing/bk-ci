@@ -52,13 +52,13 @@ interface UserImageRepoResource {
     @GET
     @Path("/bk/names/{imageRepoName}")
     fun getBkRelImageInfo(
-        @Parameter(name = "userId", required = true)
+        @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "镜像在仓库中的名称", required = true)
+        @Parameter(description = "镜像在仓库中的名称", required = true)
         @PathParam("imageRepoName")
         imageRepoName: String,
-        @Parameter(name = "需要回显镜像tag的镜像ID", required = false)
+        @Parameter(description = "需要回显镜像tag的镜像ID", required = false)
         @QueryParam("imageId")
         imageId: String?
     ): Result<DockerRepo?>

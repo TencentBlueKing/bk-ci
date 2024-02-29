@@ -67,10 +67,10 @@ interface UserPreBuildResource {
     @GET
     @Path("/project/userProject")
     fun getUserProject(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "accessToken", required = true)
+        @Parameter(description = "accessToken", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_ACCESS_TOKEN)
         accessToken: String
     ): Result<UserProject>
@@ -79,19 +79,19 @@ interface UserPreBuildResource {
     @POST
     @Path("/agent/init/{os}/{ip}/{hostName}")
     fun getOrCreateAgent(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "操作系统类型", required = true)
+        @Parameter(description = "操作系统类型", required = true)
         @PathParam("os")
         os: OS,
-        @Parameter(name = "IP", required = true)
+        @Parameter(description = "IP", required = true)
         @PathParam("ip")
         ip: String,
-        @Parameter(name = "hostName", required = true)
+        @Parameter(description = "hostName", required = true)
         @PathParam("hostName")
         hostName: String,
-        @Parameter(name = "指定生成node的别名", required = false)
+        @Parameter(description = "指定生成node的别名", required = false)
         @QueryParam("nodeStingId")
         nodeStingId: String?
     ): Result<ThirdPartyAgentStaticInfo>
@@ -100,16 +100,16 @@ interface UserPreBuildResource {
     @GET
     @Path("/agent/status/{os}/{ip}/{hostName}")
     fun getAgentStatus(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "操作系统类型", required = true)
+        @Parameter(description = "操作系统类型", required = true)
         @PathParam("os")
         os: OS,
-        @Parameter(name = "IP", required = true)
+        @Parameter(description = "IP", required = true)
         @PathParam("ip")
         ip: String,
-        @Parameter(name = "hostName", required = true)
+        @Parameter(description = "hostName", required = true)
         @PathParam("hostName")
         hostName: String
     ): Result<AgentStatus>
@@ -118,7 +118,7 @@ interface UserPreBuildResource {
     @GET
     @Path("/project/preProject/list")
     fun listPreProject(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String
     ): Result<List<PreProject>>
@@ -127,10 +127,10 @@ interface UserPreBuildResource {
     @GET
     @Path("/project/preProject/nameExist")
     fun preProjectNameExist(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "prebuild项目ID", required = true)
+        @Parameter(description = "prebuild项目ID", required = true)
         @QueryParam("preProjectId")
         preProjectId: String
     ): Result<Boolean>
@@ -139,13 +139,13 @@ interface UserPreBuildResource {
     @POST
     @Path("/project/preProject/{preProjectId}/startup")
     fun manualStartup(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "preProjectId", required = true)
+        @Parameter(description = "preProjectId", required = true)
         @PathParam("preProjectId")
         preProjectId: String,
-        @Parameter(name = "yaml文件", required = true)
+        @Parameter(description = "yaml文件", required = true)
         startUpReq: StartUpReq
     ): Result<BuildId>
 
@@ -153,16 +153,16 @@ interface UserPreBuildResource {
     @DELETE
     @Path("/project/preProject/{preProjectId}/{buildId}/shutdown")
     fun manualShutdown(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "accessToken", required = true)
+        @Parameter(description = "accessToken", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_ACCESS_TOKEN)
         accessToken: String,
-        @Parameter(name = "preProjectId", required = true)
+        @Parameter(description = "preProjectId", required = true)
         @PathParam("preProjectId")
         preProjectId: String,
-        @Parameter(name = "构建ID", required = true)
+        @Parameter(description = "构建ID", required = true)
         @PathParam("buildId")
         buildId: String
     ): Result<Boolean>
@@ -171,13 +171,13 @@ interface UserPreBuildResource {
     @GET
     @Path("/project/preProject/{preProjectId}/build/{buildId}")
     fun getBuildDetail(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "preProjectId", required = true)
+        @Parameter(description = "preProjectId", required = true)
         @PathParam("preProjectId")
         preProjectId: String,
-        @Parameter(name = "构建ID", required = true)
+        @Parameter(description = "构建ID", required = true)
         @PathParam("buildId")
         buildId: String
     ): Result<ModelDetail>
@@ -186,16 +186,16 @@ interface UserPreBuildResource {
     @GET
     @Path("/project/{preProjectId}/build/{buildId}/logs")
     fun getBuildLogs(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "preProjectId", required = true)
+        @Parameter(description = "preProjectId", required = true)
         @PathParam("preProjectId")
         preProjectId: String,
-        @Parameter(name = "构建ID", required = true)
+        @Parameter(description = "构建ID", required = true)
         @PathParam("buildId")
         buildId: String,
-        @Parameter(name = "是否拉取DEBUG日志", required = false)
+        @Parameter(description = "是否拉取DEBUG日志", required = false)
         @QueryParam("debugLog")
         debugLog: Boolean?
     ): Result<QueryLogs>
@@ -204,19 +204,19 @@ interface UserPreBuildResource {
     @GET
     @Path("/project/{preProjectId}/build/{buildId}/logs/after")
     fun getAfterLogs(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "preProjectId", required = true)
+        @Parameter(description = "preProjectId", required = true)
         @PathParam("preProjectId")
         preProjectId: String,
-        @Parameter(name = "构建ID", required = true)
+        @Parameter(description = "构建ID", required = true)
         @PathParam("buildId")
         buildId: String,
-        @Parameter(name = "起始行号", required = true)
+        @Parameter(description = "起始行号", required = true)
         @QueryParam("start")
         start: Long,
-        @Parameter(name = "是否拉取DEBUG日志", required = false)
+        @Parameter(description = "是否拉取DEBUG日志", required = false)
         @QueryParam("debugLog")
         debugLog: Boolean?
     ): Result<QueryLogs>
@@ -225,13 +225,13 @@ interface UserPreBuildResource {
     @GET
     @Path("/build/link/{preProjectId}/{buildId}")
     fun getBuildLink(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "preProjectId", required = true)
+        @Parameter(description = "preProjectId", required = true)
         @PathParam("preProjectId")
         preProjectId: String,
-        @Parameter(name = "构建ID", required = true)
+        @Parameter(description = "构建ID", required = true)
         @PathParam(value = "buildId")
         buildId: String
     ): Result<String>
@@ -240,16 +240,16 @@ interface UserPreBuildResource {
     @GET
     @Path("/history/{preProjectId}")
     fun getHistory(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "preProjectId", required = true)
+        @Parameter(description = "preProjectId", required = true)
         @PathParam("preProjectId")
         preProjectId: String,
-        @Parameter(name = "第几页", required = false, example = "1")
+        @Parameter(description = "第几页", required = false, example = "1")
         @QueryParam("page")
         page: Int?,
-        @Parameter(name = "每页多少条", required = false, example = "20")
+        @Parameter(description = "每页多少条", required = false, example = "20")
         @QueryParam("pageSize")
         pageSize: Int?
     ): Result<List<HistoryResponse>>
@@ -258,10 +258,10 @@ interface UserPreBuildResource {
     @POST
     @Path("/checkYaml")
     fun checkYaml(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "yaml内容", required = true)
+        @Parameter(description = "yaml内容", required = true)
         yaml: GitYamlString
     ): Result<String>
 
@@ -269,10 +269,10 @@ interface UserPreBuildResource {
     @GET
     @Path("/pluginVersion")
     fun getPluginVersion(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "用户的编译器类型", required = true)
+        @Parameter(description = "用户的编译器类型", required = true)
         @QueryParam("pluginType")
         pluginType: PreBuildPluginType
     ): Result<PrePluginVersion?>

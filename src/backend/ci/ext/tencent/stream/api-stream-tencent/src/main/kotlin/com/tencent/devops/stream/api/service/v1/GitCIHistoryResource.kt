@@ -55,34 +55,34 @@ interface GitCIHistoryResource {
     @GET
     @Path("/list/{gitProjectId}")
     fun getHistoryBuildList(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "gitProjectId", required = true)
+        @Parameter(description = "gitProjectId", required = true)
         @PathParam("gitProjectId")
         gitProjectId: Long,
-        @Parameter(name = "查询开始时间，格式yyyy-MM-dd HH:mm:ss", required = false)
+        @Parameter(description = "查询开始时间，格式yyyy-MM-dd HH:mm:ss", required = false)
         @QueryParam("startBeginTime")
         startBeginTime: String?,
-        @Parameter(name = "查询结束时间，格式yyyy-MM-dd HH:mm:ss", required = false)
+        @Parameter(description = "查询结束时间，格式yyyy-MM-dd HH:mm:ss", required = false)
         @QueryParam("endBeginTime")
         endBeginTime: String?,
-        @Parameter(name = "第几页", required = false, example = "1")
+        @Parameter(description = "第几页", required = false, example = "1")
         @QueryParam("page")
         page: Int?,
-        @Parameter(name = "每页多少条", required = false, example = "20")
+        @Parameter(description = "每页多少条", required = false, example = "20")
         @QueryParam("pageSize")
         pageSize: Int?,
-        @Parameter(name = "分支", required = false)
+        @Parameter(description = "分支", required = false)
         @QueryParam("branch")
         branch: String?,
-        @Parameter(name = "源仓库ID", required = false)
+        @Parameter(description = "源仓库ID", required = false)
         @QueryParam("sourceGitProjectId")
         sourceGitProjectId: Long?,
-        @Parameter(name = "触发人", required = false)
+        @Parameter(description = "触发人", required = false)
         @QueryParam("triggerUser")
         triggerUser: String?,
-        @Parameter(name = "流水线ID", required = false)
+        @Parameter(description = "流水线ID", required = false)
         @QueryParam("pipelineId")
         pipelineId: String?
     ): Result<Page<V1GitCIBuildHistory>>
@@ -91,19 +91,19 @@ interface GitCIHistoryResource {
     @GET
     @Path("/branch/list/{gitProjectId}")
     fun getAllBuildBranchList(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "gitProjectId", required = true)
+        @Parameter(description = "gitProjectId", required = true)
         @PathParam("gitProjectId")
         gitProjectId: Long,
-        @Parameter(name = "第几页", required = false, example = "1")
+        @Parameter(description = "第几页", required = false, example = "1")
         @QueryParam("page")
         page: Int?,
-        @Parameter(name = "每页多少条", required = false, example = "20")
+        @Parameter(description = "每页多少条", required = false, example = "20")
         @QueryParam("pageSize")
         pageSize: Int?,
-        @Parameter(name = "分支关键字(模糊搜索)", required = false)
+        @Parameter(description = "分支关键字(模糊搜索)", required = false)
         @QueryParam("keyword")
         keyword: String?
     ): Result<Page<V1GitCIBuildBranch>>

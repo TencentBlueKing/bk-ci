@@ -61,16 +61,16 @@ interface ServicePermissionAuthResource {
     @Operation(summary = "校验用户是否有具体操作的权限")
     fun validateUserActionPermission(
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
-        @Parameter(name = "待校验用户ID", required = true)
+        @Parameter(description = "待校验用户ID", required = true)
         userId: String,
         @HeaderParam(AUTH_HEADER_DEVOPS_BK_TOKEN)
-        @Parameter(name = "认证token", required = true)
+        @Parameter(description = "认证token", required = true)
         token: String,
         @HeaderParam(AUTH_HEADER_GIT_TYPE)
-        @Parameter(name = "系统类型")
+        @Parameter(description = "系统类型")
         type: String? = null,
         @QueryParam("action")
-        @Parameter(name = "资源类型", required = true)
+        @Parameter(description = "资源类型", required = true)
         action: String
     ): Result<Boolean>
 
@@ -79,23 +79,23 @@ interface ServicePermissionAuthResource {
     @Operation(summary = "校验用户是否有具体资源的操作权限")
     fun validateUserResourcePermission(
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
-        @Parameter(name = "待校验用户ID", required = true)
+        @Parameter(description = "待校验用户ID", required = true)
         userId: String,
         @HeaderParam(AUTH_HEADER_DEVOPS_BK_TOKEN)
-        @Parameter(name = "认证token", required = true)
+        @Parameter(description = "认证token", required = true)
         token: String,
         @HeaderParam(AUTH_HEADER_GIT_TYPE)
-        @Parameter(name = "系统类型")
+        @Parameter(description = "系统类型")
         type: String? = null,
         @QueryParam("action")
-        @Parameter(name = "资源类型", required = true)
+        @Parameter(description = "资源类型", required = true)
         action: String,
         @QueryParam("projectCode")
-        @Parameter(name = "项目编码", required = true)
+        @Parameter(description = "项目编码", required = true)
         projectCode: String,
         // 此处resourceCode实际为resourceType
         @QueryParam("resourceCode")
-        @Parameter(name = "资源类型", required = false)
+        @Parameter(description = "资源类型", required = false)
         resourceCode: String?
     ): Result<Boolean>
 
@@ -104,28 +104,28 @@ interface ServicePermissionAuthResource {
     @Operation(summary = "校验用户是否有具体资源实例的操作权限")
     fun validateUserResourcePermissionByRelation(
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
-        @Parameter(name = "待校验用户ID", required = true)
+        @Parameter(description = "待校验用户ID", required = true)
         userId: String,
         @HeaderParam(AUTH_HEADER_DEVOPS_BK_TOKEN)
-        @Parameter(name = "认证token", required = true)
+        @Parameter(description = "认证token", required = true)
         token: String,
         @HeaderParam(AUTH_HEADER_GIT_TYPE)
-        @Parameter(name = "系统类型")
+        @Parameter(description = "系统类型")
         type: String? = null,
         @QueryParam("action")
-        @Parameter(name = "action类型", required = true)
+        @Parameter(description = "action类型", required = true)
         action: String,
         @PathParam("projectCode")
-        @Parameter(name = "项目Code", required = true)
+        @Parameter(description = "项目Code", required = true)
         projectCode: String,
         @QueryParam("resourceCode")
-        @Parameter(name = "资源code", required = true)
+        @Parameter(description = "资源code", required = true)
         resourceCode: String,
         @QueryParam("resourceType")
-        @Parameter(name = "资源类型", required = true)
+        @Parameter(description = "资源类型", required = true)
         resourceType: String,
         @QueryParam("relationResourceType")
-        @Parameter(name = "关联资源,一般为Project", required = false)
+        @Parameter(description = "关联资源,一般为Project", required = false)
         relationResourceType: String? = null
     ): Result<Boolean>
 
@@ -134,19 +134,19 @@ interface ServicePermissionAuthResource {
     @Operation(summary = "校验用户是否有具体资源实例的操作权限")
     fun validateUserResourcePermissionByInstance(
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
-        @Parameter(name = "待校验用户ID", required = true)
+        @Parameter(description = "待校验用户ID", required = true)
         userId: String,
         @HeaderParam(AUTH_HEADER_DEVOPS_BK_TOKEN)
-        @Parameter(name = "认证token", required = true)
+        @Parameter(description = "认证token", required = true)
         token: String,
         @HeaderParam(AUTH_HEADER_GIT_TYPE)
-        @Parameter(name = "系统类型")
+        @Parameter(description = "系统类型")
         type: String? = null,
         @QueryParam("action")
-        @Parameter(name = "action类型", required = true)
+        @Parameter(description = "action类型", required = true)
         action: String,
         @PathParam("projectCode")
-        @Parameter(name = "项目Code", required = true)
+        @Parameter(description = "项目Code", required = true)
         projectCode: String,
         resource: AuthResourceInstance
     ): Result<Boolean>
@@ -156,27 +156,27 @@ interface ServicePermissionAuthResource {
     @Operation(summary = "批量校验用户是否有具体资源实例的操作权限")
     fun batchValidateUserResourcePermissionByRelation(
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
-        @Parameter(name = "待校验用户ID", required = true)
+        @Parameter(description = "待校验用户ID", required = true)
         userId: String,
         @HeaderParam(AUTH_HEADER_DEVOPS_BK_TOKEN)
-        @Parameter(name = "认证token", required = true)
+        @Parameter(description = "认证token", required = true)
         token: String,
         @HeaderParam(AUTH_HEADER_GIT_TYPE)
-        @Parameter(name = "系统类型")
+        @Parameter(description = "系统类型")
         type: String? = null,
         @PathParam("projectCode")
-        @Parameter(name = "项目Code", required = true)
+        @Parameter(description = "项目Code", required = true)
         projectCode: String,
         @QueryParam("resourceCode")
-        @Parameter(name = "资源code", required = true)
+        @Parameter(description = "资源code", required = true)
         resourceCode: String,
         @QueryParam("resourceType")
-        @Parameter(name = "资源类型", required = true)
+        @Parameter(description = "资源类型", required = true)
         resourceType: String,
         @QueryParam("relationResourceType")
-        @Parameter(name = "关联资源,一般为Project", required = false)
+        @Parameter(description = "关联资源,一般为Project", required = false)
         relationResourceType: String? = null,
-        @Parameter(name = "action类型列表", required = true)
+        @Parameter(description = "action类型列表", required = true)
         action: List<String>
     ): Result<Boolean>
 
@@ -185,22 +185,22 @@ interface ServicePermissionAuthResource {
     @Operation(summary = "获取用户所拥有指定权限下的指定类型资源和类型父资源code列表")
     fun getUserResourceAndParentByPermission(
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
-        @Parameter(name = "待校验用户ID", required = true)
+        @Parameter(description = "待校验用户ID", required = true)
         userId: String,
         @HeaderParam(AUTH_HEADER_DEVOPS_BK_TOKEN)
-        @Parameter(name = "认证token", required = true)
+        @Parameter(description = "认证token", required = true)
         token: String,
         @HeaderParam(AUTH_HEADER_GIT_TYPE)
-        @Parameter(name = "系统类型")
+        @Parameter(description = "系统类型")
         type: String? = null,
         @QueryParam("action")
-        @Parameter(name = "action类型")
+        @Parameter(description = "action类型")
         action: String,
         @PathParam("projectCode")
-        @Parameter(name = "项目Code", required = true)
+        @Parameter(description = "项目Code", required = true)
         projectCode: String,
         @QueryParam("resourceType")
-        @Parameter(name = "资源类型")
+        @Parameter(description = "资源类型")
         resourceType: String
     ): Result<Map<String, List<String>>>
 
@@ -209,22 +209,22 @@ interface ServicePermissionAuthResource {
     @Operation(summary = "获取用户某项目下多操作的资源实例列表")
     fun getUserResourcesByPermissions(
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
-        @Parameter(name = "待校验用户ID", required = true)
+        @Parameter(description = "待校验用户ID", required = true)
         userId: String,
         @HeaderParam(AUTH_HEADER_DEVOPS_BK_TOKEN)
-        @Parameter(name = "认证token", required = true)
+        @Parameter(description = "认证token", required = true)
         token: String,
         @HeaderParam(AUTH_HEADER_GIT_TYPE)
-        @Parameter(name = "系统类型")
+        @Parameter(description = "系统类型")
         type: String? = null,
         @QueryParam("action")
-        @Parameter(name = "action类型")
+        @Parameter(description = "action类型")
         action: List<String>,
         @PathParam("projectCode")
-        @Parameter(name = "项目Code", required = true)
+        @Parameter(description = "项目Code", required = true)
         projectCode: String,
         @QueryParam("resourceType")
-        @Parameter(name = "资源类型")
+        @Parameter(description = "资源类型")
         resourceType: String
     ): Result<Map<AuthPermission, List<String>>>
 
@@ -233,22 +233,22 @@ interface ServicePermissionAuthResource {
     @Operation(summary = "获取用户某项目下指定操作的资源实例列表")
     fun getUserResourceByPermission(
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
-        @Parameter(name = "待校验用户ID", required = true)
+        @Parameter(description = "待校验用户ID", required = true)
         userId: String,
         @HeaderParam(AUTH_HEADER_DEVOPS_BK_TOKEN)
-        @Parameter(name = "认证token", required = true)
+        @Parameter(description = "认证token", required = true)
         token: String,
         @HeaderParam(AUTH_HEADER_GIT_TYPE)
-        @Parameter(name = "系统类型")
+        @Parameter(description = "系统类型")
         type: String? = null,
         @QueryParam("action")
-        @Parameter(name = "action类型")
+        @Parameter(description = "action类型")
         action: String,
         @PathParam("projectCode")
-        @Parameter(name = "项目Code", required = true)
+        @Parameter(description = "项目Code", required = true)
         projectCode: String,
         @QueryParam("resourceType")
-        @Parameter(name = "资源类型")
+        @Parameter(description = "资源类型")
         resourceType: String
     ): Result<List<String>>
 
@@ -257,22 +257,22 @@ interface ServicePermissionAuthResource {
     @Operation(summary = "过滤用户某项目下多操作的资源实例列表")
     fun filterUserResourcesByPermissions(
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
-        @Parameter(name = "待校验用户ID", required = true)
+        @Parameter(description = "待校验用户ID", required = true)
         userId: String,
         @HeaderParam(AUTH_HEADER_DEVOPS_BK_TOKEN)
-        @Parameter(name = "认证token", required = true)
+        @Parameter(description = "认证token", required = true)
         token: String,
         @HeaderParam(AUTH_HEADER_GIT_TYPE)
-        @Parameter(name = "系统类型")
+        @Parameter(description = "系统类型")
         type: String? = null,
         @QueryParam("action")
-        @Parameter(name = "action类型")
+        @Parameter(description = "action类型")
         actions: List<String>,
         @PathParam("projectCode")
-        @Parameter(name = "项目Code", required = true)
+        @Parameter(description = "项目Code", required = true)
         projectCode: String,
         @QueryParam("resourceType")
-        @Parameter(name = "资源类型")
+        @Parameter(description = "资源类型")
         resourceType: String,
         resources: List<AuthResourceInstance>
     ): Result<Map<AuthPermission, List<String>>>
@@ -282,25 +282,25 @@ interface ServicePermissionAuthResource {
     @Operation(summary = "创建权限中心资源")
     fun resourceCreateRelation(
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
-        @Parameter(name = "待校验用户ID", required = true)
+        @Parameter(description = "待校验用户ID", required = true)
         userId: String,
         @HeaderParam(AUTH_HEADER_DEVOPS_BK_TOKEN)
-        @Parameter(name = "认证token", required = true)
+        @Parameter(description = "认证token", required = true)
         token: String,
         @HeaderParam(AUTH_HEADER_GIT_TYPE)
-        @Parameter(name = "系统类型")
+        @Parameter(description = "系统类型")
         type: String? = null,
         @PathParam("projectCode")
-        @Parameter(name = "项目Id")
+        @Parameter(description = "项目Id")
         projectCode: String,
         @QueryParam("resourceType")
-        @Parameter(name = "资源类型")
+        @Parameter(description = "资源类型")
         resourceType: String,
         @QueryParam("resourceCode")
-        @Parameter(name = "资源Code")
+        @Parameter(description = "资源Code")
         resourceCode: String,
         @QueryParam("resourceName")
-        @Parameter(name = "资源名称")
+        @Parameter(description = "资源名称")
         resourceName: String
     ): Result<Boolean>
 
@@ -309,22 +309,22 @@ interface ServicePermissionAuthResource {
     @Operation(summary = "修改权限中心资源")
     fun resourceModifyRelation(
         @HeaderParam(AUTH_HEADER_DEVOPS_BK_TOKEN)
-        @Parameter(name = "认证token", required = true)
+        @Parameter(description = "认证token", required = true)
         token: String,
         @HeaderParam(AUTH_HEADER_GIT_TYPE)
-        @Parameter(name = "系统类型")
+        @Parameter(description = "系统类型")
         type: String? = null,
         @PathParam("projectCode")
-        @Parameter(name = "项目Id")
+        @Parameter(description = "项目Id")
         projectCode: String,
         @QueryParam("resourceType")
-        @Parameter(name = "资源类型")
+        @Parameter(description = "资源类型")
         resourceType: String,
         @QueryParam("resourceCode")
-        @Parameter(name = "资源Code")
+        @Parameter(description = "资源Code")
         resourceCode: String,
         @QueryParam("resourceName")
-        @Parameter(name = "资源名称")
+        @Parameter(description = "资源名称")
         resourceName: String
     ): Result<Boolean>
 
@@ -333,19 +333,19 @@ interface ServicePermissionAuthResource {
     @Operation(summary = "删除权限中心资源")
     fun resourceDeleteRelation(
         @HeaderParam(AUTH_HEADER_DEVOPS_BK_TOKEN)
-        @Parameter(name = "认证token", required = true)
+        @Parameter(description = "认证token", required = true)
         token: String,
         @HeaderParam(AUTH_HEADER_GIT_TYPE)
-        @Parameter(name = "系统类型")
+        @Parameter(description = "系统类型")
         type: String? = null,
         @PathParam("projectCode")
-        @Parameter(name = "项目Id")
+        @Parameter(description = "项目Id")
         projectCode: String,
         @QueryParam("resourceType")
-        @Parameter(name = "资源类型")
+        @Parameter(description = "资源类型")
         resourceType: String,
         @QueryParam("resourceCode")
-        @Parameter(name = "资源Code")
+        @Parameter(description = "资源Code")
         resourceCode: String
     ): Result<Boolean>
 
@@ -354,22 +354,22 @@ interface ServicePermissionAuthResource {
     @Operation(summary = "取消权限中心资源")
     fun resourceCancelRelation(
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
-        @Parameter(name = "操作用户ID", required = true)
+        @Parameter(description = "操作用户ID", required = true)
         userId: String,
         @HeaderParam(AUTH_HEADER_DEVOPS_BK_TOKEN)
-        @Parameter(name = "认证token", required = true)
+        @Parameter(description = "认证token", required = true)
         token: String,
         @HeaderParam(AUTH_HEADER_GIT_TYPE)
-        @Parameter(name = "系统类型")
+        @Parameter(description = "系统类型")
         type: String? = null,
         @PathParam("projectCode")
-        @Parameter(name = "项目Id")
+        @Parameter(description = "项目Id")
         projectCode: String,
         @QueryParam("resourceType")
-        @Parameter(name = "资源类型")
+        @Parameter(description = "资源类型")
         resourceType: String,
         @QueryParam("resourceCode")
-        @Parameter(name = "资源Code")
+        @Parameter(description = "资源Code")
         resourceCode: String
     ): Result<Boolean>
 
@@ -378,13 +378,13 @@ interface ServicePermissionAuthResource {
     @Operation(summary = "授权实例级别权限")
     fun grantInstancePermission(
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
-        @Parameter(name = "操作用户ID", required = true)
+        @Parameter(description = "操作用户ID", required = true)
         userId: String,
         @HeaderParam(AUTH_HEADER_DEVOPS_BK_TOKEN)
-        @Parameter(name = "认证token", required = true)
+        @Parameter(description = "认证token", required = true)
         token: String,
         @PathParam("projectCode")
-        @Parameter(name = "项目Id")
+        @Parameter(description = "项目Id")
         projectCode: String,
         grantInstance: GrantInstanceDTO
     ): Result<Boolean>

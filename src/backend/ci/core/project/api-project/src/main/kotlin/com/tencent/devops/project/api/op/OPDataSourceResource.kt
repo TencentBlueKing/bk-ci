@@ -62,11 +62,11 @@ interface OPDataSourceResource {
     @POST
     @Path("/add")
     fun addDataSource(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         @BkField(minLength = 1, maxLength = 50)
         userId: String,
-        @Parameter(name = "数据源信息请求报文体", required = true)
+        @Parameter(description = "数据源信息请求报文体", required = true)
         @Valid
         dataSource: DataSource
     ): Result<Boolean>
@@ -75,15 +75,15 @@ interface OPDataSourceResource {
     @PUT
     @Path("/ids/{id}/update")
     fun updateDataSource(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         @BkField(minLength = 1, maxLength = 50)
         userId: String,
-        @Parameter(name = "数据源ID", required = true)
+        @Parameter(description = "数据源ID", required = true)
         @PathParam("id")
         @BkField(patternStyle = BkStyleEnum.ID_STYLE)
         id: String,
-        @Parameter(name = "数据源信息请求报文体", required = true)
+        @Parameter(description = "数据源信息请求报文体", required = true)
         @Valid
         dataSource: DataSource
     ): Result<Boolean>
@@ -92,7 +92,7 @@ interface OPDataSourceResource {
     @GET
     @Path("/ids/{id}/get")
     fun getDataSourceById(
-        @Parameter(name = "数据源ID", required = true)
+        @Parameter(description = "数据源ID", required = true)
         @PathParam("id")
         @BkField(patternStyle = BkStyleEnum.ID_STYLE)
         id: String
@@ -102,11 +102,11 @@ interface OPDataSourceResource {
     @DELETE
     @Path("/ids/{id}/delete")
     fun deleteDataSourceById(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         @BkField(minLength = 1, maxLength = 50)
         userId: String,
-        @Parameter(name = "数据源ID", required = true)
+        @Parameter(description = "数据源ID", required = true)
         @PathParam("id")
         @BkField(patternStyle = BkStyleEnum.ID_STYLE)
         id: String
@@ -116,19 +116,19 @@ interface OPDataSourceResource {
     @GET
     @Path("/piecewise/get")
     fun getDataBasePiecewiseById(
-        @Parameter(name = "项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @QueryParam("projectId")
         projectId: String,
-        @Parameter(name = "微服务code", required = true)
+        @Parameter(description = "微服务code", required = true)
         @QueryParam("moduleCode")
         moduleCode: SystemModuleEnum,
-        @Parameter(name = "集群名称", required = true)
+        @Parameter(description = "集群名称", required = true)
         @QueryParam("clusterName")
         clusterName: String,
-        @Parameter(name = "规则类型", required = true)
+        @Parameter(description = "规则类型", required = true)
         @QueryParam("ruleType")
         ruleType: ShardingRuleTypeEnum = ShardingRuleTypeEnum.DB,
-        @Parameter(name = "数据库表名称", required = false)
+        @Parameter(description = "数据库表名称", required = false)
         @QueryParam("tableName")
         @BkField(minLength = 1, maxLength = 128, required = false)
         tableName: String? = null

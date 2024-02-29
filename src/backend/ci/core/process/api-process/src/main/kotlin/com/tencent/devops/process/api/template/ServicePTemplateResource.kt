@@ -66,13 +66,13 @@ interface ServicePTemplateResource {
     @POST
     @Path("/store/add")
     fun addMarketTemplate(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @HeaderParam(AUTH_HEADER_PROJECT_ID)
         projectId: String,
-        @Parameter(name = "安装模板请求报文体", required = true)
+        @Parameter(description = "安装模板请求报文体", required = true)
         addMarketTemplateRequest: MarketTemplateRequest
     ): Result<Map<String, String>>
 
@@ -80,13 +80,13 @@ interface ServicePTemplateResource {
     @POST
     @Path("/store/update")
     fun updateMarketTemplateReference(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @HeaderParam(AUTH_HEADER_PROJECT_ID)
         projectId: String,
-        @Parameter(name = "安装模板请求报文体", required = true)
+        @Parameter(description = "安装模板请求报文体", required = true)
         updateMarketTemplateRequest: MarketTemplateRequest
     ): Result<Boolean>
 
@@ -94,7 +94,7 @@ interface ServicePTemplateResource {
     @GET
     @Path("/store/templateCodes/{templateCode}")
     fun getTemplateDetailInfo(
-        @Parameter(name = "模板代码", required = true)
+        @Parameter(description = "模板代码", required = true)
         @PathParam("templateCode")
         templateCode: String
     ): Result<TemplateDetailInfo?>
@@ -103,10 +103,10 @@ interface ServicePTemplateResource {
     @GET
     @Path("/store/templates/{templateCode}/images/releaseStatus/check")
     fun checkImageReleaseStatus(
-        @Parameter(name = "userId", required = true)
+        @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "模板代码", required = true)
+        @Parameter(description = "模板代码", required = true)
         @PathParam("templateCode")
         templateCode: String
     ): Result<String?>
@@ -115,7 +115,7 @@ interface ServicePTemplateResource {
     @GET
     @Path("/store/projects/{projectId}/srcTemplates")
     fun getSrcTemplateCodes(
-        @Parameter(name = "项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String
     ): Result<List<String>>
@@ -124,10 +124,10 @@ interface ServicePTemplateResource {
     @GET
     @Path("/store/srcTemplates/{srcTemplateId}")
     fun getTemplateIdBySrcCode(
-        @Parameter(name = "源模板Id", required = true)
+        @Parameter(description = "源模板Id", required = true)
         @PathParam("srcTemplateId")
         srcTemplateId: String,
-        @Parameter(name = "项目列表", required = true)
+        @Parameter(description = "项目列表", required = true)
         @QueryParam("projectIds")
         projectIds: List<String>
     ): Result<List<PipelineTemplateInfo>>
@@ -136,16 +136,16 @@ interface ServicePTemplateResource {
     @PUT
     @Path("/{templateId}/store/storeFlag")
     fun updateStoreFlag(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @HeaderParam(AUTH_HEADER_PROJECT_ID)
         projectId: String,
-        @Parameter(name = "模版ID", required = true)
+        @Parameter(description = "模版ID", required = true)
         @PathParam("templateId")
         templateId: String,
-        @Parameter(name = "是否已关联市场标识", required = true)
+        @Parameter(description = "是否已关联市场标识", required = true)
         storeFlag: Boolean
     ): Result<Boolean>
 
@@ -153,19 +153,19 @@ interface ServicePTemplateResource {
     @GET
     @Path("/projects/{projectId}/allTemplates")
     fun listAllTemplate(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(name = "模版类型", required = false)
+        @Parameter(description = "模版类型", required = false)
         @QueryParam("templateType")
         templateType: TemplateType?,
-        @Parameter(name = "页码", required = false)
+        @Parameter(description = "页码", required = false)
         @QueryParam("page")
         page: Int?,
-        @Parameter(name = "每页数量", required = false)
+        @Parameter(description = "每页数量", required = false)
         @QueryParam("pageSize")
         @BkField(patternStyle = BkStyleEnum.PAGE_SIZE_STYLE, required = false)
         pageSize: Int?
@@ -175,19 +175,19 @@ interface ServicePTemplateResource {
     @GET
     @Path("/projects/{projectId}/templates/{templateId}")
     fun getTemplate(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(name = "模板ID", required = true)
+        @Parameter(description = "模板ID", required = true)
         @PathParam("templateId")
         templateId: String,
-        @Parameter(name = "模板版本", required = false)
+        @Parameter(description = "模板版本", required = false)
         @QueryParam("version")
         version: Long?,
-        @Parameter(name = "模板版本名称", required = false)
+        @Parameter(description = "模板版本名称", required = false)
         @QueryParam("versionName")
         versionName: String?
     ): Result<TemplateModelDetail>
@@ -196,22 +196,22 @@ interface ServicePTemplateResource {
     @GET
     @Path("/projects/{projectId}/templates")
     fun listTemplate(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(name = "模版类型", required = false)
+        @Parameter(description = "模版类型", required = false)
         @QueryParam("templateType")
         templateType: TemplateType?,
-        @Parameter(name = "是否已关联到store", required = false)
+        @Parameter(description = "是否已关联到store", required = false)
         @QueryParam("storeFlag")
         storeFlag: Boolean?,
-        @Parameter(name = "页码", required = false)
+        @Parameter(description = "页码", required = false)
         @QueryParam("page")
         page: Int?,
-        @Parameter(name = "每页数量", required = false)
+        @Parameter(description = "每页数量", required = false)
         @QueryParam("pageSize")
         @BkField(patternStyle = BkStyleEnum.PAGE_SIZE_STYLE, required = false)
         pageSize: Int?
@@ -222,12 +222,12 @@ interface ServicePTemplateResource {
     @Path("/listTemplateById")
     @BkApiPermission([BkApiHandleType.API_NO_AUTH_CHECK])
     fun listTemplateById(
-        @Parameter(name = "模板ID", required = true)
+        @Parameter(description = "模板ID", required = true)
         templateIds: Collection<String>,
-        @Parameter(name = "项目ID", required = false)
+        @Parameter(description = "项目ID", required = false)
         @QueryParam("projectId")
         projectId: String?,
-        @Parameter(name = "模版类型", required = false)
+        @Parameter(description = "模版类型", required = false)
         @QueryParam("templateType")
         templateType: TemplateType?
     ): Result<OptionalTemplateList>
@@ -236,13 +236,13 @@ interface ServicePTemplateResource {
     @GET
     @Path("/projects/{projectId}/templates/{templateId}/check")
     fun checkTemplate(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(name = "模版ID", required = true)
+        @Parameter(description = "模版ID", required = true)
         @PathParam("templateId")
         templateId: String
     ): Result<Boolean>

@@ -50,19 +50,19 @@ interface BuildImageResource {
     @PUT
     @Path("/projectCodes/{projectCode}/imageCodes/{imageCode}/versions/{version}")
     fun updateImageBaseInfo(
-        @Parameter(name = "用户ID", required = true)
+        @Parameter(description = "用户ID", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "项目代码", required = true)
+        @Parameter(description = "项目代码", required = true)
         @PathParam("projectCode")
         projectCode: String,
-        @Parameter(name = "镜像标识", required = true)
+        @Parameter(description = "镜像标识", required = true)
         @PathParam("imageCode")
         imageCode: String,
-        @Parameter(name = "版本号", required = true)
+        @Parameter(description = "版本号", required = true)
         @PathParam("version")
         version: String,
-        @Parameter(name = "镜像基本信息修改请求报文体", required = true)
+        @Parameter(description = "镜像基本信息修改请求报文体", required = true)
         imageBaseInfoUpdateRequest: ImageBaseInfoUpdateRequest
     ): Result<Boolean>
 }

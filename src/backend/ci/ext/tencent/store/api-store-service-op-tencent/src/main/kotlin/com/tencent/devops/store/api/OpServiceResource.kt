@@ -65,34 +65,34 @@ interface OpServiceResource {
     @GET
     @Path("/")
     fun listAllExtsionServices(
-        @Parameter(name = "扩展服务名称", required = false)
+        @Parameter(description = "扩展服务名称", required = false)
         @QueryParam("serviceName")
         serviceName: String?,
-        @Parameter(name = "扩展点ID", required = false)
+        @Parameter(description = "扩展点ID", required = false)
         @QueryParam("itemId")
         itemId: String?,
-        @Parameter(name = "标签ID", required = false)
+        @Parameter(description = "标签ID", required = false)
         @QueryParam("lableId")
         lableId: String?,
-        @Parameter(name = "是否审核中", required = false)
+        @Parameter(description = "是否审核中", required = false)
         @QueryParam("isApprove")
         isApprove: Boolean?,
-        @Parameter(name = "是否推荐", required = false)
+        @Parameter(description = "是否推荐", required = false)
         @QueryParam("isRecommend")
         isRecommend: Boolean?,
-        @Parameter(name = "是否公共", required = false)
+        @Parameter(description = "是否公共", required = false)
         @QueryParam("isPublic")
         isPublic: Boolean?,
-        @Parameter(name = "排序", required = false)
+        @Parameter(description = "排序", required = false)
         @QueryParam("sortType")
         sortType: OpSortTypeEnum? = OpSortTypeEnum.UPDATE_TIME,
-        @Parameter(name = "排序", required = false)
+        @Parameter(description = "排序", required = false)
         @QueryParam("desc")
         desc: Boolean?,
-        @Parameter(name = "页码", required = false)
+        @Parameter(description = "页码", required = false)
         @QueryParam("page")
         page: Int?,
-        @Parameter(name = "每页数量", required = false)
+        @Parameter(description = "每页数量", required = false)
         @QueryParam("pageSize")
         pageSize: Int?
     ): Result<ExtServiceInfoResp?>
@@ -101,10 +101,10 @@ interface OpServiceResource {
     @GET
     @Path("/serviceIds/{serviceId}")
     fun getExtsionServiceById(
-        @Parameter(name = "userId", required = true)
+        @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "扩展服务ID", required = true)
+        @Parameter(description = "扩展服务ID", required = true)
         @PathParam("serviceId")
         serviceId: String
     ): Result<ServiceVersionVO?>
@@ -113,16 +113,16 @@ interface OpServiceResource {
     @GET
     @Path("/serviceCodes/{serviceCode}/version/list")
     fun listServiceVersionListByCode(
-        @Parameter(name = "userId", required = true)
+        @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "扩展服务Code", required = true)
+        @Parameter(description = "扩展服务Code", required = true)
         @PathParam("serviceCode")
         serviceCode: String,
-        @Parameter(name = "页码", required = false)
+        @Parameter(description = "页码", required = false)
         @QueryParam("page")
         page: Int?,
-        @Parameter(name = "每页数量", required = false)
+        @Parameter(description = "每页数量", required = false)
         @QueryParam("pageSize")
         pageSize: Int?
     ): Result<Page<ExtensionServiceVO>?>
@@ -131,16 +131,16 @@ interface OpServiceResource {
     @POST
     @Path("/serviceIds/{serviceId}/serviceCodes/{serviceCode}")
     fun editExtService(
-        @Parameter(name = "userId", required = true)
+        @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "扩展服务ID", required = true)
+        @Parameter(description = "扩展服务ID", required = true)
         @PathParam("serviceId")
         serviceId: String,
-        @Parameter(name = "扩展服务Code", required = true)
+        @Parameter(description = "扩展服务Code", required = true)
         @PathParam("serviceCode")
         serviceCode: String,
-        @Parameter(name = "修改信息", required = true)
+        @Parameter(description = "修改信息", required = true)
         updateInfo: EditInfoDTO
     ): Result<Boolean>
 
@@ -148,10 +148,10 @@ interface OpServiceResource {
     @GET
     @Path("/serviceCodes/{serviceCode}")
     fun getExtsionServiceByCode(
-        @Parameter(name = "userId", required = true)
+        @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "扩展服务ID", required = true)
+        @Parameter(description = "扩展服务ID", required = true)
         @PathParam("serviceCode")
         serviceCode: String
     ): Result<ServiceVersionVO?>
@@ -160,13 +160,13 @@ interface OpServiceResource {
     @Path("/{serviceId}/approve")
     @PUT
     fun approveService(
-        @Parameter(name = "用户ID", required = true)
+        @Parameter(description = "用户ID", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "扩展ID", required = true)
+        @Parameter(description = "扩展ID", required = true)
         @PathParam("serviceId")
         serviceId: String,
-        @Parameter(name = "审核扩展服务请求报文")
+        @Parameter(description = "审核扩展服务请求报文")
         approveReq: ServiceApproveReq
     ): Result<Boolean>
 
@@ -174,13 +174,13 @@ interface OpServiceResource {
     @PUT
     @Path("/{serviceCode}/offline/")
     fun offlineService(
-        @Parameter(name = "userId", required = true)
+        @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "serviceCode", required = true)
+        @Parameter(description = "serviceCode", required = true)
         @PathParam("serviceCode")
         serviceCode: String,
-        @Parameter(name = "下架请求报文")
+        @Parameter(description = "下架请求报文")
         serviceOffline: ServiceOfflineDTO
     ): Result<Boolean>
 
@@ -188,13 +188,13 @@ interface OpServiceResource {
     @PUT
     @Path("/{serviceCode}/visible/approve/")
     fun approveVisibleDept(
-        @Parameter(name = "用户ID", required = true)
+        @Parameter(description = "用户ID", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "扩展标识", required = true)
+        @Parameter(description = "扩展标识", required = true)
         @PathParam("serviceCode")
         serviceCode: String,
-        @Parameter(name = "可见范围审核请求报文", required = true)
+        @Parameter(description = "可见范围审核请求报文", required = true)
         visibleApproveReq: VisibleApproveReq
     ): Result<Boolean>
 
@@ -202,10 +202,10 @@ interface OpServiceResource {
     @DELETE
     @Path("/serviceIds/{serviceId}")
     fun deleteAtom(
-        @Parameter(name = "userId", required = true)
+        @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "扩展Id", required = true)
+        @Parameter(description = "扩展Id", required = true)
         @PathParam("serviceId")
         serviceId: String
     ): Result<Boolean>
@@ -214,10 +214,10 @@ interface OpServiceResource {
     @GET
     @Path("/{serviceCode}/visible")
     fun getVisibleDept(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "代码", required = true)
+        @Parameter(description = "代码", required = true)
         @PathParam("serviceCode")
         serviceCode: String
     ): Result<StoreVisibleDeptResp?>
@@ -226,13 +226,13 @@ interface OpServiceResource {
     @DELETE
     @Path("/{serviceCode}")
     fun deleteVisibleDept(
-        @Parameter(name = "userId", required = true)
+        @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "扩展服务Code", required = true)
+        @Parameter(description = "扩展服务Code", required = true)
         @PathParam("serviceCode")
         serviceCode: String,
-        @Parameter(name = "机构Id集合，用\",\"分隔进行拼接（如1,2,3）", required = true)
+        @Parameter(description = "机构Id集合，用\",\"分隔进行拼接（如1,2,3）", required = true)
         @QueryParam("deptIds")
         deptIds: String
     ): Result<Boolean>

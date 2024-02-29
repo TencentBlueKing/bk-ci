@@ -52,16 +52,16 @@ interface ServiceP4Resource {
     @GET
     @Path("/getChangelistFiles")
     fun getChangelistFiles(
-        @Parameter(name = "p4Port", required = true)
+        @Parameter(description = "p4Port", required = true)
         @QueryParam("p4Port")
         p4Port: String,
-        @Parameter(name = "p4 username", required = true)
+        @Parameter(description = "p4 username", required = true)
         @QueryParam("username")
         username: String,
-        @Parameter(name = "p4 password", required = true)
+        @Parameter(description = "p4 password", required = true)
         @QueryParam("password")
         password: String,
-        @Parameter(name = "p4 版本号", required = true)
+        @Parameter(description = "p4 版本号", required = true)
         @QueryParam("change")
         change: Int
     ): Result<List<P4FileSpec>>
@@ -70,16 +70,16 @@ interface ServiceP4Resource {
     @GET
     @Path("/getShelvedFiles")
     fun getShelvedFiles(
-        @Parameter(name = "p4Port", required = true)
+        @Parameter(description = "p4Port", required = true)
         @QueryParam("p4Port")
         p4Port: String,
-        @Parameter(name = "p4 username", required = true)
+        @Parameter(description = "p4 username", required = true)
         @QueryParam("username")
         username: String,
-        @Parameter(name = "p4 password", required = true)
+        @Parameter(description = "p4 password", required = true)
         @QueryParam("password")
         password: String,
-        @Parameter(name = "p4 版本号", required = true)
+        @Parameter(description = "p4 版本号", required = true)
         @QueryParam("change")
         change: Int
     ): Result<List<P4FileSpec>>
@@ -88,19 +88,19 @@ interface ServiceP4Resource {
     @GET
     @Path("getFileContent")
     fun getFileContent(
-        @Parameter(name = "p4Port")
+        @Parameter(description = "p4Port")
         @QueryParam("p4Port")
         p4Port: String,
-        @Parameter(name = "文件路径")
+        @Parameter(description = "文件路径")
         @QueryParam("filePath")
         filePath: String,
-        @Parameter(name = "版本号")
+        @Parameter(description = "版本号")
         @QueryParam("reversion")
         reversion: Int,
-        @Parameter(name = "username")
+        @Parameter(description = "username")
         @HeaderParam("username")
         username: String,
-        @Parameter(name = "password")
+        @Parameter(description = "password")
         @HeaderParam("password")
         password: String
     ): Result<String>
@@ -109,13 +109,13 @@ interface ServiceP4Resource {
     @GET
     @Path("/serverInfo")
     fun getServerInfo(
-        @Parameter(name = "p4Port", required = true)
+        @Parameter(description = "p4Port", required = true)
         @QueryParam("p4Port")
         p4Port: String,
-        @Parameter(name = "p4 username", required = true)
+        @Parameter(description = "p4 username", required = true)
         @QueryParam("username")
         username: String,
-        @Parameter(name = "p4 password", required = true)
+        @Parameter(description = "p4 password", required = true)
         @QueryParam("password")
         password: String
     ): Result<P4ServerInfo>
@@ -124,16 +124,16 @@ interface ServiceP4Resource {
     @GET
     @Path("/getChangelist")
     fun getChangelist(
-        @Parameter(name = "p4Port", required = true)
+        @Parameter(description = "p4Port", required = true)
         @QueryParam("p4Port")
         p4Port: String,
-        @Parameter(name = "p4 username", required = true)
+        @Parameter(description = "p4 username", required = true)
         @QueryParam("username")
         username: String,
-        @Parameter(name = "p4 password", required = true)
+        @Parameter(description = "p4 password", required = true)
         @QueryParam("password")
         password: String,
-        @Parameter(name = "p4 版本号", required = true)
+        @Parameter(description = "p4 版本号", required = true)
         @QueryParam("change")
         change: Int
     ): Result<P4ChangeList>
@@ -142,16 +142,16 @@ interface ServiceP4Resource {
     @GET
     @Path("/getShelvedChangeList")
     fun getShelvedChangeList(
-        @Parameter(name = "p4Port", required = true)
+        @Parameter(description = "p4Port", required = true)
         @QueryParam("p4Port")
         p4Port: String,
-        @Parameter(name = "p4 username", required = true)
+        @Parameter(description = "p4 username", required = true)
         @QueryParam("username")
         username: String,
-        @Parameter(name = "p4 password", required = true)
+        @Parameter(description = "p4 password", required = true)
         @QueryParam("password")
         password: String,
-        @Parameter(name = "p4 版本号", required = true)
+        @Parameter(description = "p4 版本号", required = true)
         @QueryParam("change")
         change: Int
     ): Result<P4ChangeList>

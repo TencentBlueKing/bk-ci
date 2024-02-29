@@ -51,21 +51,21 @@ interface ServiceRoleMemberResource {
     @Path("/projectIds/{projectId}/roleIds/{roleId}")
     @Operation(summary = "项目下添加指定组组员")
     fun createRoleMember(
-        @Parameter(name = "用户名", required = true)
+        @Parameter(description = "用户名", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "项目标识", required = true)
+        @Parameter(description = "项目标识", required = true)
         @PathParam("projectId")
         projectId: Int,
-        @Parameter(name = "角色Id", required = true)
+        @Parameter(description = "角色Id", required = true)
         @PathParam("roleId")
         roleId: Int,
-        @Parameter(name = "是否为管理员分组", required = true)
+        @Parameter(description = "是否为管理员分组", required = true)
         @QueryParam("managerGroup")
         managerGroup: Boolean,
-        @Parameter(name = "添加用户集合", required = true)
+        @Parameter(description = "添加用户集合", required = true)
         members: List<RoleMemberDTO>,
-        @Parameter(name = "是否需要分级管理员校验")
+        @Parameter(description = "是否需要分级管理员校验")
         @QueryParam("managerGroup")
         checkGradeManager: Boolean? = false
     ): Result<Boolean>

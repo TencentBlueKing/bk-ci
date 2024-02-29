@@ -60,19 +60,19 @@ interface UserStoreApproveResource {
     @PUT
     @Path("/types/{storeType}/codes/{storeCode}/ids/{approveId}/approve")
     fun approveStoreInfo(
-        @Parameter(name = "userId", required = true)
+        @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "组件类型", required = true)
+        @Parameter(description = "组件类型", required = true)
         @PathParam("storeType")
         storeType: StoreTypeEnum,
-        @Parameter(name = "组件标识", required = true)
+        @Parameter(description = "组件标识", required = true)
         @PathParam("storeCode")
         storeCode: String,
-        @Parameter(name = "审批ID", required = true)
+        @Parameter(description = "审批ID", required = true)
         @PathParam("approveId")
         approveId: String,
-        @Parameter(name = "store审批信息请求报文体", required = true)
+        @Parameter(description = "store审批信息请求报文体", required = true)
         storeApproveRequest: StoreApproveRequest
     ): Result<Boolean>
 
@@ -80,28 +80,28 @@ interface UserStoreApproveResource {
     @GET
     @Path("/types/{storeType}/codes/{storeCode}/list")
     fun getStoreApproveInfos(
-        @Parameter(name = "userId", required = true)
+        @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "组件类型", required = true)
+        @Parameter(description = "组件类型", required = true)
         @PathParam("storeType")
         storeType: StoreTypeEnum,
-        @Parameter(name = "组件标识", required = true)
+        @Parameter(description = "组件标识", required = true)
         @PathParam("storeCode")
         storeCode: String,
-        @Parameter(name = "申请人", required = false)
+        @Parameter(description = "申请人", required = false)
         @QueryParam("applicant")
         applicant: String?,
-        @Parameter(name = "审批类型", required = false)
+        @Parameter(description = "审批类型", required = false)
         @QueryParam("approveType")
         approveType: ApproveTypeEnum?,
-        @Parameter(name = "审批状态", required = false)
+        @Parameter(description = "审批状态", required = false)
         @QueryParam("approveStatus")
         approveStatus: ApproveStatusEnum?,
-        @Parameter(name = "页码", required = true)
+        @Parameter(description = "页码", required = true)
         @QueryParam("page")
         page: Int,
-        @Parameter(name = "每页数量", required = true)
+        @Parameter(description = "每页数量", required = true)
         @QueryParam("pageSize")
         pageSize: Int
     ): Result<Page<StoreApproveInfo>?>
@@ -110,10 +110,10 @@ interface UserStoreApproveResource {
     @GET
     @Path("/ids/{approveId}")
     fun getStoreApproveDetail(
-        @Parameter(name = "userId", required = true)
+        @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "审批ID", required = true)
+        @Parameter(description = "审批ID", required = true)
         @PathParam("approveId")
         approveId: String
     ): Result<StoreApproveDetail?>
@@ -122,16 +122,16 @@ interface UserStoreApproveResource {
     @GET
     @Path("/types/{storeType}/codes/{storeCode}/user")
     fun getUserStoreApproveInfo(
-        @Parameter(name = "userId", required = true)
+        @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "组件类型", required = true)
+        @Parameter(description = "组件类型", required = true)
         @PathParam("storeType")
         storeType: StoreTypeEnum,
-        @Parameter(name = "组件标识", required = true)
+        @Parameter(description = "组件标识", required = true)
         @PathParam("storeCode")
         storeCode: String,
-        @Parameter(name = "审批类型", required = true)
+        @Parameter(description = "审批类型", required = true)
         @QueryParam("approveType")
         approveType: ApproveTypeEnum
     ): Result<StoreApproveInfo?>

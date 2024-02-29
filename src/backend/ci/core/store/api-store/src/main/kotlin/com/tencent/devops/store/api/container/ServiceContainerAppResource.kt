@@ -50,7 +50,7 @@ interface ServiceContainerAppResource {
     @GET
     @Path("/apps")
     fun listApp(
-        @Parameter(name = "系统", required = true)
+        @Parameter(description = "系统", required = true)
         @QueryParam("os")
         os: String
     ): Result<List<ContainerAppWithVersion>>
@@ -59,7 +59,7 @@ interface ServiceContainerAppResource {
     @GET
     @Path("/getApps")
     fun getApp(
-        @Parameter(name = "系统", required = true)
+        @Parameter(description = "系统", required = true)
         @QueryParam("os")
         os: String
     ): Result<List<BuildEnv>>
@@ -68,13 +68,13 @@ interface ServiceContainerAppResource {
     @GET
     @Path("/getBuildEnv")
     fun getBuildEnv(
-        @Parameter(name = "环境变量名称", required = true)
+        @Parameter(description = "环境变量名称", required = true)
         @QueryParam("name")
         name: String,
-        @Parameter(name = "环境变量版本", required = true)
+        @Parameter(description = "环境变量版本", required = true)
         @QueryParam("version")
         version: String,
-        @Parameter(name = "操作系统名称", required = true)
+        @Parameter(description = "操作系统名称", required = true)
         @QueryParam("os")
         os: String
     ): Result<BuildEnv?>

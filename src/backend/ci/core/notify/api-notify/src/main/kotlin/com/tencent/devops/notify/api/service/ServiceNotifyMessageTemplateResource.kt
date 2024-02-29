@@ -49,7 +49,7 @@ interface ServiceNotifyMessageTemplateResource {
     @POST
     @Path("/send")
     fun sendNotifyMessageByTemplate(
-        @Parameter(name = "使用模板发送消息通知请求报文体", required = true)
+        @Parameter(description = "使用模板发送消息通知请求报文体", required = true)
         request: SendNotifyMessageTemplateRequest
     ): Result<Boolean>
 
@@ -57,7 +57,7 @@ interface ServiceNotifyMessageTemplateResource {
     @POST
     @Path("/getContext")
     fun getNotifyMessageByTemplate(
-        @Parameter(name = "使用模板获取消息内容请求", required = true)
+        @Parameter(description = "使用模板获取消息内容请求", required = true)
         request: NotifyMessageContextRequest
     ): Result<NotifyContext?>
 
@@ -69,7 +69,7 @@ interface ServiceNotifyMessageTemplateResource {
     @POST
     @Path("/complete")
     fun completeNotifyMessageByTemplate(
-        @Parameter(name = "使用模板获取消息内容请求", required = true)
+        @Parameter(description = "使用模板获取消息内容请求", required = true)
         request: SendNotifyMessageTemplateRequest
     ): Result<Boolean>
 }

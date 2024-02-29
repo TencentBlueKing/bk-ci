@@ -62,10 +62,10 @@ interface OpRemoteDevResource {
     @POST
     @Path("/wstemplate/add")
     fun addWorkspaceTemplate(
-        @Parameter(name = "用户ID", required = true)
+        @Parameter(description = "用户ID", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "模板信息", required = true)
+        @Parameter(description = "模板信息", required = true)
         workspaceTemplate: WorkspaceTemplate
     ): Result<Boolean>
 
@@ -73,7 +73,7 @@ interface OpRemoteDevResource {
     @GET
     @Path("/wstemplate/list")
     fun getWorkspaceTemplateList(
-        @Parameter(name = "用户ID", required = true)
+        @Parameter(description = "用户ID", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String
     ): Result<List<WorkspaceTemplate>>
@@ -82,13 +82,13 @@ interface OpRemoteDevResource {
     @PUT
     @Path("/wstemplate/update/template/{wsTemplateId}")
     fun updateWorkspaceTemplate(
-        @Parameter(name = "用户ID", required = true)
+        @Parameter(description = "用户ID", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "模板ID", required = true)
+        @Parameter(description = "模板ID", required = true)
         @PathParam("wsTemplateId")
         workspaceTemplateId: Long,
-        @Parameter(name = "模板信息", required = true)
+        @Parameter(description = "模板信息", required = true)
         workspaceTemplate: WorkspaceTemplate
     ): Result<Boolean>
 
@@ -96,10 +96,10 @@ interface OpRemoteDevResource {
     @DELETE
     @Path("/wstemplate/delete/template/{wsTemplateId}")
     fun deleteWorkspaceTemplate(
-        @Parameter(name = "用户ID", required = true)
+        @Parameter(description = "用户ID", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "模板信息", required = true)
+        @Parameter(description = "模板信息", required = true)
         @PathParam("wsTemplateId")
         wsTemplateId: Long
     ): Result<Boolean>
@@ -108,10 +108,10 @@ interface OpRemoteDevResource {
     @POST
     @Path("/init_billing")
     fun initBilling(
-        @Parameter(name = "用户ID", required = true)
+        @Parameter(description = "用户ID", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "freeTime (单位分钟)", required = true)
+        @Parameter(description = "freeTime (单位分钟)", required = true)
         @QueryParam("freeTime")
         freeTime: Int
     ): Result<Boolean>
@@ -120,7 +120,7 @@ interface OpRemoteDevResource {
     @POST
     @Path("/user_setting")
     fun updateUserSetting(
-        @Parameter(name = "用户ID", required = true)
+        @Parameter(description = "用户ID", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
         data: List<OPUserSetting>
@@ -130,10 +130,10 @@ interface OpRemoteDevResource {
     @POST
     @Path("/renewal_time")
     fun renewalExperienceDuration(
-        @Parameter(name = "用户ID", required = true)
+        @Parameter(description = "用户ID", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "续期时长", required = true)
+        @Parameter(description = "续期时长", required = true)
         @QueryParam("renewalTime")
         renewalTime: Int
     ): Result<Boolean>
@@ -142,7 +142,7 @@ interface OpRemoteDevResource {
     @GET
     @Path("/get_user_setting")
     fun getUserSetting(
-        @Parameter(name = "用户ID", required = true)
+        @Parameter(description = "用户ID", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String
     ): Result<RemoteDevUserSettings>
@@ -151,16 +151,16 @@ interface OpRemoteDevResource {
     @GET
     @Path("/get_all_user_settings")
     fun getAllUserSettings(
-        @Parameter(name = "用户ID", required = true)
+        @Parameter(description = "用户ID", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "指定查询的用户", required = false)
+        @Parameter(description = "指定查询的用户", required = false)
         @QueryParam("queryUser")
         queryUser: String?,
-        @Parameter(name = "第几页", required = false, example = "1")
+        @Parameter(description = "第几页", required = false, example = "1")
         @QueryParam("page")
         page: Int?,
-        @Parameter(name = "每页多少条", required = false, example = "6666")
+        @Parameter(description = "每页多少条", required = false, example = "6666")
         @QueryParam("pageSize")
         pageSize: Int?
     ): Result<Page<RemoteDevUserSettings>>
@@ -169,7 +169,7 @@ interface OpRemoteDevResource {
     @POST
     @Path("/refresh/all")
     fun refreshUserInfo(
-        @Parameter(name = "用户ID", required = true)
+        @Parameter(description = "用户ID", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String
     ): Result<Boolean>
@@ -178,10 +178,10 @@ interface OpRemoteDevResource {
     @POST
     @Path("/whiteList/add")
     fun addWhiteListUser(
-        @Parameter(name = "用户ID", required = true)
+        @Parameter(description = "用户ID", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "需要添加的白名单用户，多个用;分隔", required = true)
+        @Parameter(description = "需要添加的白名单用户，多个用;分隔", required = true)
         @QueryParam("whiteListUser")
         whiteListUser: String
     ): Result<Boolean>
@@ -190,10 +190,10 @@ interface OpRemoteDevResource {
     @POST
     @Path("/GPUWhiteList/add")
     fun addGPUWhiteListUser(
-        @Parameter(name = "用户ID", required = true)
+        @Parameter(description = "用户ID", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "需要添加的白名单用户，多个用;分隔", required = true)
+        @Parameter(description = "需要添加的白名单用户，多个用;分隔", required = true)
         @QueryParam("whiteListUser")
         whiteListUser: String
     ): Result<Boolean>
@@ -231,7 +231,7 @@ interface OpRemoteDevResource {
     @GET
     @Path("/workspace_stop")
     fun stopWorkspace(
-        @Parameter(name = "用户ID", required = true)
+        @Parameter(description = "用户ID", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
         @QueryParam("workspaceName")
@@ -242,7 +242,7 @@ interface OpRemoteDevResource {
     @DELETE
     @Path("/workspace_delete")
     fun deleteWorkspace(
-        @Parameter(name = "用户ID", required = true)
+        @Parameter(description = "用户ID", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
         @QueryParam("workspaceName")
@@ -253,10 +253,10 @@ interface OpRemoteDevResource {
     @POST
     @Path("/windows/pool/list")
     fun getStartCloudResourceList(
-        @Parameter(name = "用户ID", required = true)
+        @Parameter(description = "用户ID", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "查询数据")
+        @Parameter(description = "查询数据")
         data: WindowsPoolListFetchData
     ): Result<Page<Map<String, Any>>>
 
@@ -264,7 +264,7 @@ interface OpRemoteDevResource {
     @GET
     @Path("/windows/pool/config")
     fun getCgsConfig(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String
     ): Result<CgsResourceConfig>
@@ -273,7 +273,7 @@ interface OpRemoteDevResource {
     @POST
     @Path("/init_tai_user_info")
     fun initTaiUserInfo(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
         taiUsers: List<String>
