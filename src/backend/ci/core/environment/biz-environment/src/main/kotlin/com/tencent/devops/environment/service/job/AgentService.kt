@@ -116,7 +116,7 @@ data class AgentService @Autowired constructor(
         private val agentTaskEndStatusList = listOf(
             "FAILED", "SUCCESS", "PART_FAILED", "TERMINATED", "REMOVED", "FILTERED", "IGNORED"
         )
-        private val agentRunningStatusList = listOf( // 两种正在执行状态："PENDING"(等待), "RUNNING"（正在执行）
+        private val agentRunningStatusList = listOf(
             "PENDING", "RUNNING"
         )
 
