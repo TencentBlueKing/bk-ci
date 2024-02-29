@@ -308,12 +308,25 @@ class RedisOperation(
         return masterRedisTemplate.opsForZSet().add(getFinalKey(key, isDistinguishCluster), values, score)
     }
 
+    fun zaddTuples(
+        key: String,
+        values: Set<DefaultTypedTuple<String>>,
+        isDistinguishCluster: Boolean? = false
+    ): Long? {
+        writeSlaveIfNeed {
+            slaveRedisTemplate!!.opsForZSet().add(getFinalKey(key, isDistinguishCluster), values)
+        }
+        return masterRedisTemplate.opsForZSet().add(getFinalKey(key, isDistinguishCluster), values)
+    }
+
+    /**
+     * redis version >= 3.0
+     */
     fun zaddIfAbsent(
         key: String,
         values: Set<DefaultTypedTuple<String>>,
         isDistinguishCluster: Boolean? = false
     ): Long? {
-        // 双写
         writeSlaveIfNeed {
             slaveRedisTemplate!!.opsForZSet().addIfAbsent(getFinalKey(key, isDistinguishCluster), values)
         }

@@ -268,7 +268,7 @@ class OpService @Autowired constructor(
                 val projectCodeTypedTuple = projectCodeList.map {
                     DefaultTypedTuple(it, System.currentTimeMillis().toDouble())
                 }
-                val addProjsNumber = redisOperation.zaddIfAbsent(OP_KEY, projectCodeTypedTuple.toSet())
+                val addProjsNumber = redisOperation.zaddTuples(OP_KEY, projectCodeTypedTuple.toSet())
                 if (null != addProjsNumber && addProjsNumber >= 0) {
                     OpOperateResult(
                         code = SUCCESSFUL_CODE,
