@@ -55,7 +55,7 @@ class ProjectRefreshService @Autowired constructor(
                     "refresh all relation atom project product page: $page , pageSize: $pageSize"
                 )
                 val gitProjectIds =
-                    client.get(ServiceMarketAtomResource::class).getAtomRepositoryId(page, pageSize).data?.map {
+                    client.get(ServiceMarketAtomResource::class).getAtomRepositoryId(userId, page, pageSize).data?.map {
                         "git_$it"
                     }
                 if (gitProjectIds.isNullOrEmpty()) {
