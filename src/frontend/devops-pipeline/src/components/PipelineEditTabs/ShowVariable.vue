@@ -52,9 +52,9 @@
 
 <script>
     import { mapActions, mapState } from 'vuex'
+    import AtomOutputVar from './components/atom-output-var'
     import PipelineParam from './components/pipeline-param'
     import PipelineVersion from './components/pipeline-version'
-    import AtomOutputVar from './components/atom-output-var'
     import SystemVar from './components/system-var'
 
     export default {
@@ -183,6 +183,7 @@
   width: 480px;
   background-color: #fafbfd;
   border: 1px solid #dcdee5;
+  border-top: 0;
   .select-tab-container {
     border-bottom: 1px solid #ebf0f5;
     .tab-content {
