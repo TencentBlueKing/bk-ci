@@ -21,7 +21,7 @@
                     name="name"
                     v-validate.initial="'required|max:30'"
                     @@keyup.enter="toggleEditName"
-                    @change="handleEditName"
+                    @input="handleEditName"
                     :placeholder="$t('nameInputTips')"
                     :value="element.name"
                 />

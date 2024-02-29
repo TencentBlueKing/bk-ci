@@ -218,6 +218,8 @@
                         pipelineName: pipelineSetting.pipelineName,
                         canDebug: true,
                         canRelease: true,
+                        baseVersion: this.pipelineInfo?.baseVersion ?? this.pipelineInfo?.releaseVersion,
+                        baseVersionName: this.pipelineInfo?.baseVersionName ?? this.pipelineInfo?.releaseVersionName,
                         version,
                         versionName
                     })

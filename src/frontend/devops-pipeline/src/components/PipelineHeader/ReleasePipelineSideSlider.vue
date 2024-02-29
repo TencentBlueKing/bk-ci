@@ -571,6 +571,8 @@
                         versionName,
                         releaseVersion: version,
                         versionNum,
+                        baseVersion: version,
+                        baseVersionName: versionName,
                         releaseVersionName: versionName,
                         canDebug: false,
                         canRelease: false
