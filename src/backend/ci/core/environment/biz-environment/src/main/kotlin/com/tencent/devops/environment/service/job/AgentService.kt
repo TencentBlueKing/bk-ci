@@ -35,6 +35,7 @@ import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.environment.dao.NodeDao
 import com.tencent.devops.environment.pojo.enums.NodeStatus
+import com.tencent.devops.environment.pojo.job.AgentVersion
 import com.tencent.devops.environment.pojo.job.agentreq.AgentCondition
 import com.tencent.devops.environment.pojo.job.agentreq.AgentHostForInstallAgent
 import com.tencent.devops.environment.pojo.job.agentreq.AgentInstallAgentReq
@@ -93,7 +94,8 @@ data class AgentService @Autowired constructor(
     private val dslContext: DSLContext,
     private val nodeDao: NodeDao,
     private val redisOperation: RedisOperation,
-    private val queryFromCCService: QueryFromCCService
+    private val queryFromCCService: QueryFromCCService,
+    private val queryAgentStatusService: QueryAgentStatusService
 ) {
     @Value("\${environment.cc.bkBizScopeId:#{null}}")
     val bkBizScopeId: Int = 0
@@ -115,14 +117,21 @@ data class AgentService @Autowired constructor(
 
         private const val DEFAULT_PAGE = 1
         private const val DEFAULT_PAGE_SIZE = 20
-        private const val MAXIMUM_RETRY_TIMES = 20
+        private const val MAXIMUM_RETRY_TIMES = 100
         private const val INITIAL_DELAY = 1000L // unit: ms
-        private const val TASK_PERIOD = 15000L // unit: ms
+        private const val TASK_PERIOD = 3000L // unit: ms
 
         private const val AGENT_INSTALL_NORMAL = "SUCCESS"
         private val agentTaskEndStatusList = listOf(
             "FAILED", "SUCCESS", "PART_FAILED", "TERMINATED", "REMOVED", "FILTERED", "IGNORED"
-        ) // 两种正在执行状态："PENDING"(等待), "RUNNING"（正在执行）
+        )
+        private val agentRunningStatusList = listOf( // 两种正在执行状态："PENDING"(等待), "RUNNING"（正在执行）
+            "PENDING", "RUNNING"
+        )
+
+        const val AGENT_ABNORMAL_NODE_STATUS = 0
+        const val AGENT_NORMAL_NODE_STATUS = 1
+        const val AGENT_NOT_INSTALLED_TAG = false
 
         private const val CHECK_NODE_STATUS_TIMEOUT_LOCK_KEY = "check_node_status_timeout_lock"
         private const val EXPIRATION_TIME_OF_THE_LOCK = 200L
@@ -207,7 +216,7 @@ data class AgentService @Autowired constructor(
     /**
      * 安装agent状态轮询
      * 发起安装任务后，轮询安装状态：安装中 - NODE_STATUS: RUNNING
-     * 执行定时轮询任务，每隔 30000ms 检查任务状态，如果结束（成功/失败）则停止轮询。
+     * 执行定时轮询任务，每隔 3000ms 检查任务状态，如果结束（成功/失败）则停止轮询。
      */
     @Async("checkAgentStatus")
     fun checkAgentStatus(userId: String, projectId: String, jobId: Int?, ipList: List<String>?) {
@@ -342,6 +351,40 @@ data class AgentService @Autowired constructor(
                 )
             }
         )
+        // 若agent安装任务结束(成功/失败)，同步更新db中节点安装的状态
+        val ipToNodeStatus = mutableMapOf<String, String>()
+        val hostInfoToStatusMap = agentQueryAgentTaskStatusRes.data?.list?.associate {
+            val status = when (it.status) {
+                AGENT_INSTALL_NORMAL -> NodeStatus.NORMAL.name
+                in agentRunningStatusList -> NodeStatus.RUNNING.name
+                else -> NodeStatus.ABNORMAL.name
+            }
+            Pair(it.ip, it.bkHostId) to status
+        }?.filter { (key, value) -> value != NodeStatus.RUNNING.name } // RUNNING的节点不更新
+        hostInfoToStatusMap?.map { (key, value) -> ipToNodeStatus[key.first] = value }
+        // 对于安装失败的节点，再查agent安装状态
+        val ipToAgentVersionInfoMap = hostInfoToStatusMap?.filter {
+            NodeStatus.ABNORMAL.name == it.value
+        }?.let { hostInfoToStatus ->
+            queryAgentStatusService.getAgentVersions(
+                hostInfoToStatus.map {
+                    AgentVersion(ip = it.key.first, bkHostId = it.key.second?.toLong())
+                }
+            )?.associateBy { it.ip }
+        }
+        val queryAgentIpList = ipToAgentVersionInfoMap?.keys?.filterNotNull()
+        queryAgentIpList?.map {
+            ipToNodeStatus[it] =
+                if (AGENT_NOT_INSTALLED_TAG == ipToAgentVersionInfoMap[it]?.installedTag)
+                    NodeStatus.NOT_INSTALLED.name
+                else if (AGENT_ABNORMAL_NODE_STATUS == ipToAgentVersionInfoMap[it]?.status)
+                    NodeStatus.ABNORMAL.name
+                else if (AGENT_NORMAL_NODE_STATUS == ipToAgentVersionInfoMap[it]?.status)
+                    NodeStatus.NORMAL.name
+                else
+                    NodeStatus.NOT_INSTALLED.name
+        }
+        nodeDao.updateNodeInCCByIp(dslContext, ipToNodeStatus)
         return queryAgentTaskStatusRes
     }
 
