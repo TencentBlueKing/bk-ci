@@ -157,7 +157,7 @@
                         if (!this.finished) {
                             setTimeout(() => {
                                 this.fetchLogContent()
-                            }, 2000)
+                            }, 5000)
                         }
                     })
                     .finally(() => {

@@ -5,10 +5,10 @@
                 <bk-breadcrumb-item :to="{ path: '/console/environment' }">{{ $t('environment.environmentManage') }}</bk-breadcrumb-item>
                 <bk-breadcrumb-item>{{ stepInstanceData.name }}</bk-breadcrumb-item>
             </bk-breadcrumb>
-            <div class="status-box" :class="statusStyleMap[checkStatus(stepInstanceData.stepStatus)]">
+            <div class="status-box" :class="statusStyleMap[checkStatus(stepInstanceData.status)]">
                 <div class="status">
                     <span>{{ $t('environment.状态') }}：</span>
-                    <span class="status-text">{{ stepStatusMap[stepInstanceData.stepStatus] }}</span>
+                    <span class="status-text">{{ stepStatusMap[stepInstanceData.status] }}</span>
                 </div>
                 <div class="time">
                     <span>{{ $t('environment.总耗时') }}：</span>
@@ -285,7 +285,6 @@
                     projectId: this.projectId,
                     jobInstanceId: this.jobInstanceId
                 }).then(res => {
-                    this.stepInstanceData = res.stepInstanceList[0] || {}
                     this.jobInstanceFinished = res.finished
                     if (!this.jobInstanceFinished) {
                         setTimeout(() => {
@@ -310,6 +309,7 @@
                         maxHostNumPerGroup: this.maxHostNumPerGroup
                     }
                 }).then(res => {
+                    this.stepInstanceData = res
                     this.stepResultGroupList = res.stepResultGroupList || []
                     if (this.stepResultGroupList.length) {
                         this.hasLoadEnd = this.ipList.length === this.stepResultGroupList[this.activeGroupIndex].hostSize
