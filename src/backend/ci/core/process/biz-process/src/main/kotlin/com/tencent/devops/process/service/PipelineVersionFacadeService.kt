@@ -43,8 +43,10 @@ import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.CodeTargetAction
 import com.tencent.devops.common.pipeline.enums.PipelineStorageType
 import com.tencent.devops.common.pipeline.enums.VersionStatus
+import com.tencent.devops.common.pipeline.extend.ModelCheckPlugin
 import com.tencent.devops.common.pipeline.pojo.PipelineModelAndSetting
 import com.tencent.devops.common.pipeline.pojo.TemplateInstanceCreateRequest
+import com.tencent.devops.common.pipeline.pojo.element.atom.BeforeDeleteParam
 import com.tencent.devops.common.pipeline.pojo.element.trigger.ManualTriggerElement
 import com.tencent.devops.common.pipeline.pojo.transfer.PreviewResponse
 import com.tencent.devops.common.pipeline.pojo.transfer.TransferActionType
@@ -74,11 +76,13 @@ import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
+import javax.ws.rs.core.Response
 
 @Suppress("ALL")
 @Service
 class PipelineVersionFacadeService @Autowired constructor(
     private val dslContext: DSLContext,
+    private val modelCheckPlugin: ModelCheckPlugin,
     private val pipelineListFacadeService: PipelineListFacadeService,
     private val pipelineSettingFacadeService: PipelineSettingFacadeService,
     private val pipelineInfoFacadeService: PipelineInfoFacadeService,
@@ -340,6 +344,23 @@ class PipelineVersionFacadeService @Autowired constructor(
             versionStatus = versionStatus,
             setting = targetSettings
         )
+        if (versionStatus == VersionStatus.RELEASED) {
+            val existModel = pipelineRepositoryService.getPipelineResourceVersion(
+                projectId = projectId,
+                pipelineId = pipelineId,
+                includeDraft = true
+            )?.model ?: throw ErrorCodeException(
+                statusCode = Response.Status.NOT_FOUND.statusCode,
+                errorCode = ProcessMessageCode.ERROR_PIPELINE_MODEL_NOT_EXISTS
+            )
+            // 对已经存在的模型做处理
+            val param = BeforeDeleteParam(
+                userId = userId,
+                projectId = projectId,
+                pipelineId = pipelineId
+            )
+            modelCheckPlugin.beforeDeleteElementInExistsModel(existModel, draftVersion.model, param)
+        }
         val result = pipelineRepositoryService.deployPipeline(
             model = draftVersion.model,
             projectId = projectId,
