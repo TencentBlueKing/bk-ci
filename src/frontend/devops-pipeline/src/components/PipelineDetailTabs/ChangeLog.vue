@@ -1,7 +1,11 @@
 <template>
     <main class="pipeline-changelog" v-bkloading="{ isLoading }">
         <header class="pipeline-changelog-header">
-            <bk-select v-model="filterCreator" @change="getChangelogs(1)">
+            <bk-select
+                v-model="filterCreator"
+                @change="getChangelogs(1)"
+                :placeholder="$t('audit.operator')"
+            >
                 <bk-option
                     v-for="creator in operatorList"
                     :key="creator"
@@ -23,8 +27,8 @@
 </template>
 
 <script>
-    import { mapActions } from 'vuex'
     import { convertTime } from '@/utils/util'
+    import { mapActions } from 'vuex'
     export default {
         data () {
             return {

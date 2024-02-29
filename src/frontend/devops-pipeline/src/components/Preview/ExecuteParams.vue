@@ -121,7 +121,7 @@
         },
         data () {
             return {
-                activeName: [1, 2, 3],
+                activeName: [1, 2, 3, 4, 5],
                 paramList: [],
                 versionParamList: [],
                 paramsValues: {},
