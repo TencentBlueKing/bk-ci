@@ -38,12 +38,12 @@
 </template>
 
 <script>
+    import InfiniteScroll from '@/components/InfiniteScroll'
+    import EmptyException from '@/components/common/exception'
+    import SearchSelect from '@blueking/search-select'
+    import moment from 'moment'
     import { mapActions } from 'vuex'
     import TriggerEventChildren from './TriggerEventChildren.vue'
-    import InfiniteScroll from '@/components/InfiniteScroll'
-    import SearchSelect from '@blueking/search-select'
-    import EmptyException from '@/components/common/exception'
-    import moment from 'moment'
 
     import '@blueking/search-select/dist/styles/index.css'
     export default {
@@ -56,7 +56,7 @@
         },
         data () {
             return {
-                dateTimeRange: [],
+                dateTimeRange: [new Date().getTime() - 3600 * 1000 * 24 * 7, new Date()],
                 searchKey: [],
                 triggerEventList: [],
                 triggerTypeList: [],
@@ -72,7 +72,6 @@
                     {
                         name: this.$t('triggerType'),
                         id: 'triggerType',
-                        multiable: true,
                         children: this.triggerTypeList
                     },
                     {
@@ -205,7 +204,6 @@
                 }, new Map())
                 const list = []
                 dateMap.forEach((events, date) => {
-                    console.log(events)
                     list.push({
                         tag: date,
                         content: this.$createElement(TriggerEventChildren, {
