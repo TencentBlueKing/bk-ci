@@ -1453,8 +1453,9 @@
   "templateName": "模板",
   "templateVersion": "模版版本",
   "documentTitlePipeline": "流水线 | 持续集成平台-蓝盾 | 腾讯蓝鲸智云",
-  "saveBeforeSwitch": "请先保存流水线，否则所有修改将丢失",
-  "tips": "提示",
+  "saveBeforeSwitch": "为避免切换失败导致数据丢失，请先保存草稿",
+  "tips": "请保存草稿",
+  "saveDraft&Switch": "保存草稿并切换",
   "filterByPacRepo": "所属代码库",
   "filterByPacYamlDir": "所属路径",
   "notAllowPatchDeletePacPipelineTips": "由开启 PAC 模式自动创建，删除流水线请前往代码库操作",
@@ -1473,5 +1474,6 @@
   "copyTempConf": "克隆模板配置",
   "tempWithoutConf": "模板未包含此设置",
   "noPipelineStageTips": "暂未添加流水线Stage",
-  "triggerLeastOne": "至少保留一个触发器"
+  "triggerLeastOne": "至少保留一个触发器",
+  "goExec": "去执行"
 }

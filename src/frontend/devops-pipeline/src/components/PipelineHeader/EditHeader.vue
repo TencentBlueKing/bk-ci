@@ -3,7 +3,7 @@
         <pipeline-bread-crumb>
             <bk-tag>{{ currentVersionName }}</bk-tag>
         </pipeline-bread-crumb>
-        <mode-switch />
+        <mode-switch :save="saveDraft" />
         <aside class="pipeline-edit-right-aside">
             <bk-button
                 :disabled="saveStatus || !isEditing"

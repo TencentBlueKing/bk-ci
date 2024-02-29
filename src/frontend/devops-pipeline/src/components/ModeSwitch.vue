@@ -28,6 +28,10 @@
             readOnly: {
                 type: Boolean,
                 default: false
+            },
+            save: {
+                type: Function,
+                default: () => {}
             }
         },
         data () {
@@ -102,12 +106,16 @@
                 if (this.isSwitching) {
                     return
                 }
-                if (!this.canSwitch) {
+                if (this.isEditing) {
                     this.$bkInfo({
-                        type: 'warning',
                         title: this.$t('tips'),
                         subTitle: this.$t('saveBeforeSwitch'),
-                        showFooter: false
+                        okText: this.$t('saveDraft&Switch'),
+                        confirmFn: async () => {
+                            await this.save()
+                            this.updatePipelineMode(mode)
+                            this.$emit('change', mode)
+                        }
                     })
                     return
                 }

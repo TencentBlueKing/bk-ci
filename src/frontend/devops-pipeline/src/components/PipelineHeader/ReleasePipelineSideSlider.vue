@@ -679,6 +679,24 @@
                                                 click: () => {
                                                     this.$bkInfo.close(instance.id)
                                                     this.$router.push({
+                                                        name: 'executePreview',
+                                                        params: {
+                                                            ...this.$route.params,
+                                                            version: this.pipelineInfo?.releaseVersion
+                                                        }
+                                                    })
+                                                }
+                                            }
+                                        },
+                                        this.$t('goExec')
+                                    ),
+                                    h(
+                                        'bk-button',
+                                        {
+                                            on: {
+                                                click: () => {
+                                                    this.$bkInfo.close(instance.id)
+                                                    this.$router.push({
                                                         name: 'pipelinesHistory',
                                                         params: {
                                                             projectId,
@@ -690,18 +708,8 @@
                                             }
                                         },
                                         this.$t('checkPipeline')
-                                    ),
-                                    h(
-                                        'bk-button',
-                                        {
-                                            on: {
-                                                click: () => {
-                                                    this.$bkInfo.close(instance.id)
-                                                }
-                                            }
-                                        },
-                                        this.$t('return')
                                     )
+
                                 ]
                             )
                         ])

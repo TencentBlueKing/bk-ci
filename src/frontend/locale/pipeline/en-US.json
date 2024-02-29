@@ -1452,8 +1452,9 @@
   "templateName": "Template",
   "templateVersion": "Template Version",
   "documentTitlePipeline": "Pipeline | BK-CI | Tencent BlueKing",
-  "saveBeforeSwitch": "Please save the pipeline before switching, otherwise all changes will be lost.",
-  "tips": "Tips",
+  "saveBeforeSwitch": "In order to avoid data loss caused by switching failure, please save the draft first",
+  "tips": "Save Draft",
+  "saveDraft&Switch": "Save Draft & Switch",
   "filterByPacRepo": "Belonging Code Repository",
   "filterByPacYamlDir": "Belonging Path",
   "notAllowPatchDeletePacPipelineTips": "Automatically created by enabling PAC mode, delete pipeline please go to the code repository operation",
@@ -1472,5 +1473,6 @@
   "copyTempConf": "Clone Template Configuration",
   "tempWithoutConf": "Template does not include this setting",
   "noPipelineStageTips": "The pipeline has not been configured with stages",
-  "triggerLeastOne": "At least one trigger is required"
+  "triggerLeastOne": "At least one trigger is required",
+  "goExec": "Execute"
 }
