@@ -37,7 +37,7 @@ import com.tencent.devops.common.pipeline.pojo.element.trigger.ManualTriggerElem
 import com.tencent.devops.common.pipeline.pojo.element.trigger.RemoteTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.TimerTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeEventType
-import com.tencent.devops.common.pipeline.utils.SkipElementUtils
+import com.tencent.devops.common.pipeline.utils.ElementUtils
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertNotEquals
@@ -63,7 +63,7 @@ class ElementTest {
     fun takeStatus() {
         val element = ManualTriggerElement(id = "1")
         element.status = BuildStatus.QUEUE.name
-        val skipElementVariableName = SkipElementUtils.getSkipElementVariableName(element.id!!)
+        val skipElementVariableName = ElementUtils.getSkipElementVariableName(element.id!!)
         var rerun = true
         element.disableBySkipVar(mapOf(skipElementVariableName to "true"))
         var takeStatus = element.initStatus(rerun = rerun)
