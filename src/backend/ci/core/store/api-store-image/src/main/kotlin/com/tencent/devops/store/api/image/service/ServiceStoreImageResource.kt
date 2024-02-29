@@ -31,9 +31,9 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.store.pojo.image.response.ImageDetail
 import com.tencent.devops.store.pojo.image.response.ImageRepoInfo
-import io.swagger.v3.oas.annotations.tags.Tag
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
+import io.swagger.v3.oas.annotations.tags.Tag
 import javax.ws.rs.Consumes
 import javax.ws.rs.GET
 import javax.ws.rs.HeaderParam
@@ -87,7 +87,7 @@ interface ServiceStoreImageResource {
         buildId: String?
     ): Result<ImageRepoInfo>
 
-    @Parameter(description = "根据镜像代码获取镜像信息")
+    @Operation(summary = "根据镜像代码获取镜像信息")
     @GET
     @Path("/imageCodes/{imageCode}")
     fun getImagesByCodeAndVersion(
@@ -102,7 +102,7 @@ interface ServiceStoreImageResource {
         version: String?
     ): Result<ImageDetail>
 
-    @Parameter(description = "获取所有的自研公共镜像")
+    @Operation(summary = "获取所有的自研公共镜像")
     @GET
     @Path("/image/self_develop/public_images")
     fun getSelfDevelopPublicImages(): Result<List<ImageRepoInfo>>
