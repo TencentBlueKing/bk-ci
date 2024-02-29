@@ -1459,7 +1459,7 @@
   "notAllowPatchDeletePacPipelineTips": "Automatically created by enabling PAC mode, delete pipeline please go to the code repository operation",
   "clearFilterCondition": "Clear Search Conditions",
   "clearFilterConditionTips": "You can try adjusting keywords or {0}",
-  "ymlDeletedTips": "The YAML file on the default branch has been deleted. The timing, CR, issue, note and other triggers based on the default branch configuration have become invalid. If this pipeline is no longer in use, you can manually delete it for cleanup",
+  "ymlDeletedTips": "The YAML file on the default branch has been deleted. The trigger such as cron/CR/issue/note based on the default branch configuration is invalid. If the pipeline is no longer needed, it can be manually deleted for cleanup",
   "unMergedTips": "There are new branch versions that have not been merged into the default branch, you can go to the {0} to view the details",
   "goVersionSideslider": "version history",
   "pacModePipelineDeleteTips": "PAC mode is enabled, please delete the yaml file on the default branch of the code repository before deleting the pipeline",

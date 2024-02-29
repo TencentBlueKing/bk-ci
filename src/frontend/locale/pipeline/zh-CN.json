@@ -1460,7 +1460,7 @@
   "notAllowPatchDeletePacPipelineTips": "由开启 PAC 模式自动创建，删除流水线请前往代码库操作",
   "clearFilterCondition": "清空筛选条件",
   "clearFilterConditionTips": "可以尝试 调整关键词 或 {0}",
-  "ymlDeletedTips": "默认分支上的YAML文件已删除，以默认分支配置为准的定时、CR、issue、note等触发器已失效，若此流水线已无用可手动删除进行清理",
+  "ymlDeletedTips": "默认分支上的YAML文件已删除，以默认分支配置为准的定时/CR/issue/note等触发器已失效，若此流水线已无用可手动删除进行清理",
   "unMergedTips": "有新的分支版本尚未合并到默认分支，可{0}查看详情",
   "goVersionSideslider": "前往版本历史",
   "pacModePipelineDeleteTips": "已开启PAC模式,请先删除代码库默认分支上的yaml文件,再删除流水线",
