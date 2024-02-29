@@ -46,10 +46,9 @@
                 </header>
                 <div slot="content" class="params-collapse-content">
                     <bk-alert
-                        v-if="showChangedParamsAlert"
+                        v-if="showChangedParamsAlert && changedParams.length"
                         type="warning"
                         :title="$t('paramChangeTips', [changedParams.length])"
-                        closable
                     >
                     </bk-alert>
                     <pipeline-params-form
@@ -166,6 +165,7 @@
                 immediate: true,
                 handler (startupInfo) {
                     startupInfo && this.init(startupInfo)
+                    this.showChangedParamsAlert = this.startupInfo?.useLatestParameters
                 }
             }
         },
@@ -229,7 +229,7 @@
                 console.log(this.paramsValues, 'sssss', this.paramList)
             },
             updateParams (valueKey = 'defaultValue') {
-                this.showChangedParamsAlert = true
+                this.showChangedParamsAlert = valueKey === 'value'
                 this.paramsValues = getParamsValuesMap(this.paramList, valueKey)
                 this.setExecuteParams({
                     pipelineId: this.pipelineId,
