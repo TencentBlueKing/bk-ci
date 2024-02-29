@@ -196,8 +196,7 @@
     background: #fafbfd;
     border-right: 1px solid #dcdee5;
     padding: 4px 0;
-    height: 100%;
-    margin: 24px 0 24px 24px;
+    margin: 24px 0 0 24px;
     overflow: auto;
     overflow: overlay;
 
@@ -249,10 +248,9 @@
   }
   .pipeline-detail-entry-main {
     background: #fff;
-    margin: 24px 24px 24px 0;
+    margin: 24px 24px 0 0;
     overflow: hidden;
     flex: 1;
-
   }
 }
 </style>
