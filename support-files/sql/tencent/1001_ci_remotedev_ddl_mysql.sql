@@ -556,5 +556,17 @@ CREATE TABLE IF NOT EXISTS `T_WORKSPACE_NOTIFY` (
     KEY `uni_1` (`OPERATOR`)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT '云桌面消息通知记录';
 
+-- ----------------------------
+-- Table structure for T_PROJECT_TGIT_ID_LINK 蓝盾项目和工蜂ID关联表
+-- ----------------------------
+CREATE TABLE IF NOT EXISTS `T_PROJECT_TGIT_ID_LINK`(
+	`PROJECT_ID` varchar(64) NOT NULL COMMENT '蓝盾项目ID',
+    `TGIT_ID` bigint(11) NOT NULL COMMENT 'GIT项目ID',
+    `STATUS` varchar(32) NOT NULL COMMENT '仓库状态',
+    `OAUTH_USER` varchar(32) NOT NULL COMMENT '授予oauth权限的用户',
+    `GIT_TYPE` varchar(16) NOT NULL COMMENT 'GIT仓库类型SVN或者GIT',
+    `URL` varchar(255) NULL COMMENT '工蜂url地址',
+	PRIMARY KEY (`PROJECT_ID`, `TGIT_ID`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 SET FOREIGN_KEY_CHECKS = 1;
