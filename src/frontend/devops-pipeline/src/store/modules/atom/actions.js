@@ -591,7 +591,10 @@ export default {
         commit(DELETE_ATOM, { elements: container.elements, atomIndex })
         commit(SET_PIPELINE_EDITING, true)
     },
-    updateAtomType: PipelineEditActionCreator(UPDATE_ATOM_TYPE),
+    updateAtomType: ({ commit }, payload) => {
+        commit(UPDATE_ATOM_TYPE, payload)
+        commit(SET_PIPELINE_EDITING, true)
+    },
     updateAtom: (action, { element: atom, newParam, changeEditStatus }) => {
         if (changeEditStatus) {
             PipelineEditActionCreator(UPDATE_ATOM)(action, { atom, newParam })
