@@ -34,6 +34,14 @@ import com.tencent.devops.environment.pojo.job.agentres.AgentResult
 import com.tencent.devops.environment.pojo.job.agentres.QueryAgentStatusFromJobResult
 import com.tencent.devops.environment.pojo.job.agentres.QueryAgentStatusFromNodemanResult
 import com.tencent.devops.environment.pojo.job.AgentVersion
+import com.tencent.devops.environment.pojo.job.agentreq.AgentCondition
+import com.tencent.devops.environment.pojo.job.agentreq.AgentQueryAgentStatusFromNodemanReq
+import com.tencent.devops.environment.pojo.job.agentres.AgentOriginalResult
+import com.tencent.devops.environment.pojo.job.agentres.AgentQueryAgentStatusFromNodemanResult
+import com.tencent.devops.environment.pojo.job.agentres.ExtraData
+import com.tencent.devops.environment.pojo.job.agentres.FilterHostInfo
+import com.tencent.devops.environment.pojo.job.agentres.IdentityInfo
+import com.tencent.devops.environment.pojo.job.agentres.JobResultForFilterHostInfo
 import com.tencent.devops.environment.pojo.job.resp.JobResult
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -42,7 +50,7 @@ import org.springframework.stereotype.Service
 @Service("QueryAgentStatusService")
 class QueryAgentStatusService @Autowired constructor(
     private val jobService: JobService,
-    private val agentService: AgentService
+    private val nodeManApi: NodeManApi
 ) {
     companion object {
         private val logger = LoggerFactory.getLogger(QueryAgentStatusService::class.java)
@@ -132,7 +140,95 @@ class QueryAgentStatusService @Autowired constructor(
             onlyIp = DEFAULT_ONLY_IP,
             runningCount = DEFAULT_RUNNING_COUNT
         )
-        return agentService.queryAgentStatusFromNodeman(getAgentVersionsFromNodemanReq)
+        return queryAgentStatusFromNodeman(getAgentVersionsFromNodemanReq)
+    }
+
+    private fun queryAgentStatusFromNodeman(
+        queryAgentStatusFromNodemanReq: QueryAgentStatusFromNodemanReq
+    ): AgentResult<QueryAgentStatusFromNodemanResult> {
+        NodeManApi.setNodemanOperationName("queryAgentStatusFromNodeman")
+        val queryAgentStatusFromNodemanRequest = AgentQueryAgentStatusFromNodemanReq(
+            bkHostId = queryAgentStatusFromNodemanReq.bkHostId,
+            conditions = queryAgentStatusFromNodemanReq.conditions?.map {
+                AgentCondition(key = it.key, value = it.value)
+            },
+            extraData = queryAgentStatusFromNodemanReq.extraData,
+            pagesize = queryAgentStatusFromNodemanReq.pagesize,
+            page = queryAgentStatusFromNodemanReq.page,
+            onlyIp = queryAgentStatusFromNodemanReq.onlyIp,
+            runningCount = queryAgentStatusFromNodemanReq.runningCount
+        )
+        val agentQueryAgentStatusRes: AgentOriginalResult<AgentQueryAgentStatusFromNodemanResult> =
+            nodeManApi.executePostRequest(
+                queryAgentStatusFromNodemanRequest, AgentQueryAgentStatusFromNodemanResult::class.java
+            )
+        val queryAgentStatusRes: AgentResult<QueryAgentStatusFromNodemanResult> = AgentResult(
+            code = agentQueryAgentStatusRes.code,
+            result = agentQueryAgentStatusRes.result,
+            message = agentQueryAgentStatusRes.message,
+            errors = agentQueryAgentStatusRes.errors,
+            data = agentQueryAgentStatusRes.data?.let {
+                QueryAgentStatusFromNodemanResult(
+                    total = it.total,
+                    list = it.list?.map { filterHostInfo ->
+                        FilterHostInfo(
+                            bkCloudId = filterHostInfo.bkCloudId,
+                            bkBizId = filterHostInfo.bkBizId,
+                            bkHostId = filterHostInfo.bkHostId,
+                            bkHostName = filterHostInfo.bkHostName,
+                            bkAddressing = filterHostInfo.bkAddressing,
+                            bkAgentId = filterHostInfo.bkAgentId,
+                            osType = filterHostInfo.osType,
+                            innerIp = filterHostInfo.innerIp,
+                            innerIpv6 = filterHostInfo.innerIpv6,
+                            outerIp = filterHostInfo.outerIp,
+                            outerIpv6 = filterHostInfo.outerIpv6,
+                            apId = filterHostInfo.apId,
+                            installChannelId = filterHostInfo.installChannelId,
+                            loginIp = filterHostInfo.loginIp,
+                            dataIp = filterHostInfo.dataIp,
+                            status = filterHostInfo.status,
+                            version = filterHostInfo.version,
+                            createdAt = filterHostInfo.createdAt,
+                            updatedAt = filterHostInfo.updatedAt,
+                            isManual = filterHostInfo.isManual,
+                            extraData = filterHostInfo.extraData?.let { extraData ->
+                                ExtraData(
+                                    btSpeedLimit = extraData.btSpeedLimit,
+                                    enableCompression = extraData.enableCompression,
+                                    peerExchangeSwitchForAgent = extraData.peerExchangeSwitchForAgent
+                                )
+                            },
+                            statusDisplay = filterHostInfo.statusDisplay,
+                            bkCloudName = filterHostInfo.bkCloudName,
+                            installChannelName = filterHostInfo.installChannelName,
+                            bkBizName = filterHostInfo.bkBizName,
+                            identityInfo = filterHostInfo.identityInfo?.let { identityInfo ->
+                                IdentityInfo(
+                                    account = identityInfo.account,
+                                    authType = identityInfo.authType,
+                                    port = identityInfo.port,
+                                    reCertification = identityInfo.reCertification
+                                )
+                            },
+                            jobResult = filterHostInfo.jobResult?.let { jobResultForFilterHostInfo ->
+                                JobResultForFilterHostInfo(
+                                    instanceId = jobResultForFilterHostInfo.instanceId,
+                                    jobId = jobResultForFilterHostInfo.jobId,
+                                    status = jobResultForFilterHostInfo.status,
+                                    currentStep = jobResultForFilterHostInfo.currentStep
+                                )
+                            },
+                            topology = filterHostInfo.topology,
+                            operatePermission = filterHostInfo.operatePermission
+                        )
+                    },
+                    runningCount = it.runningCount,
+                    noPermissionCount = it.noPermissionCount
+                )
+            }
+        )
+        return queryAgentStatusRes
     }
 
     private fun getAgentVersionsFromJob(
