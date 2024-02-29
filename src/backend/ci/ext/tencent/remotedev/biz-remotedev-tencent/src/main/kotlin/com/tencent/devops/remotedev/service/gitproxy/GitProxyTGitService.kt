@@ -97,7 +97,7 @@ class GitProxyTGitService @Autowired constructor(
         projectTGitLinkDao.batchAdd(
             dslContext = dslContext,
             projectId = projectId,
-            urls = result.map {
+            data = result.map {
                 TGitRepoDaoData(
                     tgitId = it.key,
                     status = if (it.value.second) {
@@ -110,7 +110,8 @@ class GitProxyTGitService @Autowired constructor(
                         TGitProjectType.SVN.name
                     } else {
                         TGitProjectType.GIT.name
-                    }
+                    },
+                    url = it.value.first.removeHttpPrefix()
                 )
             }
         )
@@ -242,7 +243,8 @@ class GitProxyTGitService @Autowired constructor(
                     TGitProjectType.SVN.name
                 } else {
                     TGitProjectType.GIT.name
-                }
+                },
+                url = url.removeHttpPrefix()
             )
         }
 
@@ -513,7 +515,7 @@ class GitProxyTGitService @Autowired constructor(
                 projectTGitLinkDao.batchAdd(
                     dslContext = dslContext,
                     projectId = projectId,
-                    urls = result.map {
+                    data = result.map {
                         TGitRepoDaoData(
                             tgitId = it.key,
                             status = if (it.value.first.trim() in recordsMap) {
@@ -530,7 +532,8 @@ class GitProxyTGitService @Autowired constructor(
                                 TGitProjectType.SVN.name
                             } else {
                                 TGitProjectType.GIT.name
-                            }
+                            },
+                            url = it.value.first.removeHttpPrefix()
                         )
                     }
                 )
@@ -556,7 +559,7 @@ class GitProxyTGitService @Autowired constructor(
                 projectTGitLinkDao.batchAdd(
                     dslContext = dslContext,
                     projectId = projectId,
-                    urls = result.map {
+                    data = result.map {
                         TGitRepoDaoData(
                             tgitId = it.key,
                             status = if (it.value.first.trim() in recordsMap) {
@@ -573,7 +576,8 @@ class GitProxyTGitService @Autowired constructor(
                                 TGitProjectType.SVN.name
                             } else {
                                 TGitProjectType.GIT.name
-                            }
+                            },
+                            url = it.value.first.removeHttpPrefix()
                         )
                     }
                 )

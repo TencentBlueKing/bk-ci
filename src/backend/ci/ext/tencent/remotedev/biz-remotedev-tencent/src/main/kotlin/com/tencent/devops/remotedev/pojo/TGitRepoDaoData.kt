@@ -6,5 +6,6 @@ data class TGitRepoDaoData(
     val tgitId: Long,
     val status: TGitRepoStatus,
     val oauthUser: String,
-    val gitType: String
+    val gitType: String,
+    val url: String
 )
