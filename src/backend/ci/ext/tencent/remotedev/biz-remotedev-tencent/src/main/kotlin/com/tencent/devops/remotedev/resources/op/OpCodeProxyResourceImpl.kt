@@ -11,13 +11,20 @@ import org.springframework.beans.factory.annotation.Autowired
 class OpCodeProxyResourceImpl @Autowired constructor(
     private val gitProxyTGitService: GitProxyTGitService
 ) : OpCodeProxyResource {
-    override fun tgitlink(data: CallbackLinktgitData): Result<Map<String, Boolean>> {
+    override fun tgitlink(data: CallbackLinktgitData): Result<Map<Long, Boolean>> {
         return Result(
             gitProxyTGitService.linkTGit(
                 userId = data.userId,
                 projectId = data.projectId,
-                urls = data.urls.split("\n").filter { it.isNotBlank() }.toSet()
+                // repoId;url\nrepoId;url
+                repoIds = data.repoIds.split("\n").filter { it.isNotBlank() }
+                    .associate { it.split(";").first().trim().toLong() to it.split(";").last() }
             )
         )
+    }
+
+    override fun migrateTGitData(projectId: String?): Result<Boolean> {
+        gitProxyTGitService.migrateTGitData(projectId)
+        return Result(true)
     }
 }
