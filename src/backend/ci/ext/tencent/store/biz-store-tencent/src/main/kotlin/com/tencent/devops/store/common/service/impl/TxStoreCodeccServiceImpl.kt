@@ -46,12 +46,12 @@ import com.tencent.devops.store.pojo.common.STORE_REPO_CODECC_BUILD_KEY_PREFIX
 import com.tencent.devops.store.pojo.common.STORE_REPO_COMMIT_KEY_PREFIX
 import com.tencent.devops.store.pojo.common.enums.BusinessEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
+import java.util.concurrent.TimeUnit
+import javax.ws.rs.core.Response
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
-import java.util.concurrent.TimeUnit
-import javax.ws.rs.core.Response
 
 @Service
 class TxStoreCodeccServiceImpl @Autowired constructor(
@@ -146,14 +146,18 @@ class TxStoreCodeccServiceImpl @Autowired constructor(
         var qualifiedFlag = false
         if (codeStyleScore != null && codeSecurityScore != null && codeMeasureScore != null) {
             // 判断插件代码库的扫描分数是否合格
-            qualifiedFlag =
-                codeStyleScore >= codeStyleQualifiedScore && codeSecurityScore >= codeSecurityQualifiedScore && codeMeasureScore >= codeMeasureQualifiedScore
+            qualifiedFlag = codeStyleScore >= codeStyleQualifiedScore &&
+                        codeSecurityScore >= codeSecurityQualifiedScore &&
+                        codeMeasureScore >= codeMeasureQualifiedScore
         }
         return qualifiedFlag
     }
 
     private fun getStoreCodeccCommonService(storeType: String): TxStoreCodeccCommonService {
-        return SpringContextUtil.getBean(TxStoreCodeccCommonService::class.java, "${storeType}_CODECC_COMMON_SERVICE")
+        return SpringContextUtil.getBean(
+            TxStoreCodeccCommonService::class.java,
+            "${storeType}_CODECC_COMMON_SERVICE"
+        )
     }
 
     override fun startCodeccTask(

@@ -47,7 +47,11 @@ class UserMarketTemplateVisibleDeptResourceImpl @Autowired constructor(
         return storeVisibleDeptService.deleteVisibleDept(userId, templateCode, deptIds, StoreTypeEnum.TEMPLATE)
     }
 
-    override fun addVisibleDept(userId: String, templateCode: String, templateVisibleDeptReq: TemplateVisibleDeptReq): Result<Boolean> {
+    override fun addVisibleDept(
+        userId: String,
+        templateCode: String,
+        templateVisibleDeptReq: TemplateVisibleDeptReq
+    ): Result<Boolean> {
         return templateVisibleDeptService.addVisibleDept(userId, templateCode, templateVisibleDeptReq.deptInfos)
     }
 

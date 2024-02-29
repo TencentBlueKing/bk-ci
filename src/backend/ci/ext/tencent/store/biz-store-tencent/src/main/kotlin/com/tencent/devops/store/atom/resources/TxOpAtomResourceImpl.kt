@@ -30,11 +30,11 @@ package com.tencent.devops.store.atom.resources
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.store.api.atom.TxOpAtomResource
+import com.tencent.devops.store.atom.service.TxOpAtomService
 import com.tencent.devops.store.common.service.StoreVisibleDeptService
 import com.tencent.devops.store.pojo.common.StoreVisibleDeptResp
 import com.tencent.devops.store.pojo.common.VisibleApproveReq
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
-import com.tencent.devops.store.atom.service.TxOpAtomService
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
@@ -47,7 +47,11 @@ class TxOpAtomResourceImpl @Autowired constructor(
         return opAtomService.moveGitProjectToGroup(userId, groupCode, atomCode)
     }
 
-    override fun approveVisibleDept(userId: String, atomCode: String, visibleApproveReq: VisibleApproveReq): Result<Boolean> {
+    override fun approveVisibleDept(
+        userId: String,
+        atomCode: String,
+        visibleApproveReq: VisibleApproveReq
+    ): Result<Boolean> {
         return storeVisibleDeptService.approveVisibleDept(userId, atomCode, visibleApproveReq, StoreTypeEnum.ATOM)
     }
 

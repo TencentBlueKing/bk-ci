@@ -36,15 +36,15 @@ import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.project.api.service.ServiceProjectResource
-import com.tencent.devops.store.pojo.container.pcg.PCGDockerImage
 import com.tencent.devops.store.common.service.PCGImageService
+import com.tencent.devops.store.pojo.container.pcg.PCGDockerImage
+import java.util.concurrent.TimeUnit
 import okhttp3.Request
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.cloud.context.config.annotation.RefreshScope
 import org.springframework.stereotype.Service
-import java.util.concurrent.TimeUnit
 
 @Service
 @RefreshScope
@@ -60,7 +60,8 @@ class PCGImageServiceImpl @Autowired constructor(
     private val PCG_IMAGE_ENABLE_REDIS_KEY = "atom:pcg:image:enable:key"
 
     @Value("\${pcg.image.url:#{null}}")
-    private val pcgImageUrl: String? = "http://ciserver.wsd.com/interface?skey=8b116e40-5a06-4d17-a1a8-8a131f1b732d&operator=&interface_name=get_tc_container4web&interface_params={\"from\":\"landun\"}"
+    private val pcgImageUrl: String? = "http://ciserver.wsd.com/interface?skey=8b116e40-5a06-4d17-a1a8-8a131f1b732d" +
+            "&operator=&interface_name=get_tc_container4web&interface_params={\"from\":\"landun\"}"
 
     private val projectEnableCache = CacheBuilder.newBuilder()
         .maximumSize(10000)
@@ -157,7 +158,8 @@ class PCGImageServiceImpl @Autowired constructor(
             OkhttpUtils.doHttp(request).use { response ->
                 val responseContent = response.body!!.string()
                 if (!response.isSuccessful) {
-                    logger.warn("Fail to get the pcg images with url($pcgImageUrl) and response(${response.code}|${response.message}|$responseContent)")
+                    logger.warn("Fail to get the pcg images with url($pcgImageUrl) and response(${response.code}" +
+                            "|${response.message}|$responseContent)")
                     return
                 }
                 pcgImageCache.clear()

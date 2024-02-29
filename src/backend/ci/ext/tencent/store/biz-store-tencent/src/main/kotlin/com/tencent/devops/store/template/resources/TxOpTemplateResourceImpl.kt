@@ -43,7 +43,11 @@ class TxOpTemplateResourceImpl @Autowired constructor(
     private val storeVisibleDeptService: StoreVisibleDeptService
 ) : TxOpTemplateResource {
 
-    override fun approveVisibleDept(userId: String, templateCode: String, visibleApproveReq: VisibleApproveReq): Result<Boolean> {
+    override fun approveVisibleDept(
+        userId: String,
+        templateCode: String,
+        visibleApproveReq: VisibleApproveReq
+    ): Result<Boolean> {
         return txOpTemplateService.approveVisibleDept(userId, templateCode, visibleApproveReq)
     }
 

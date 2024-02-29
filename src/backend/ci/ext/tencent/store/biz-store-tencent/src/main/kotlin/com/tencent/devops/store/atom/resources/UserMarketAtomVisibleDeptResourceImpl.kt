@@ -37,15 +37,21 @@ import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
-class UserMarketAtomVisibleDeptResourceImpl @Autowired constructor(private val storeVisibleDeptService: StoreVisibleDeptService) :
-    UserMarketAtomVisibleDeptResource {
+class UserMarketAtomVisibleDeptResourceImpl @Autowired constructor(
+    private val storeVisibleDeptService: StoreVisibleDeptService
+) : UserMarketAtomVisibleDeptResource {
 
     override fun deleteVisibleDept(userId: String, atomCode: String, deptIds: String): Result<Boolean> {
         return storeVisibleDeptService.deleteVisibleDept(userId, atomCode, deptIds, StoreTypeEnum.ATOM)
     }
 
     override fun addVisibleDept(userId: String, atomVisibleDeptRequest: AtomVisibleDeptReq): Result<Boolean> {
-        return storeVisibleDeptService.addVisibleDept(userId, atomVisibleDeptRequest.atomCode, atomVisibleDeptRequest.deptInfos, StoreTypeEnum.ATOM)
+        return storeVisibleDeptService.addVisibleDept(
+            userId = userId,
+            storeCode = atomVisibleDeptRequest.atomCode,
+            deptInfos = atomVisibleDeptRequest.deptInfos,
+            storeType = StoreTypeEnum.ATOM
+        )
     }
 
     override fun getVisibleDept(atomCode: String): Result<StoreVisibleDeptResp?> {
