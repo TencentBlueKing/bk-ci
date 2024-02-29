@@ -8,6 +8,7 @@
         />
         <bk-alert
             v-if="hasUnResolveEvent"
+            type="warning"
         >
             <i class="bk-icon icon-info-circle" />
             <i18n :path="unResolveEventTooltips" tag="p" slot="title">
