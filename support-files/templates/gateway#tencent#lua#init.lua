@@ -111,6 +111,7 @@ config = {
         loginFqdn = "__BK_CI_DEVX_LOGIN_FQDN__"
     },
     auth_token = "__BK_CI_AUTH_TOKEN__",
+    tof_token = "__BK_CI_TOF_TOKEN__"
 }
 
 -- 特殊域名
