@@ -304,8 +304,8 @@ interface ServiceTxProjectResource {
         @QueryParam("gitProjectName")
         gitProjectName: String?,
         @Parameter(description = "项目运营归属", required = false)
-        @QueryParam("productName")
-        productName: String? = null
+        @QueryParam("productId")
+        productId: Int? = null
     ): Result<ProjectVO>
 
     @POST

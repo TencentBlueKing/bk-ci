@@ -29,7 +29,6 @@ package com.tencent.devops.project.service
 
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.client.Client
-import com.tencent.devops.repository.api.ServiceGitRepositoryResource
 import com.tencent.devops.store.api.atom.ServiceMarketAtomResource
 import java.util.concurrent.Executors
 import org.slf4j.LoggerFactory
@@ -55,17 +54,15 @@ class ProjectRefreshService @Autowired constructor(
                 logger.info(
                     "refresh all relation atom project product page: $page , pageSize: $pageSize"
                 )
-                val repositoryHashIdList =
-                    client.get(ServiceMarketAtomResource::class).getAtomRepositoryHashId(page, pageSize).data
-                if (repositoryHashIdList.isNullOrEmpty()) {
+                val gitProjectIds =
+                    client.get(ServiceMarketAtomResource::class).getAtomRepositoryId(page, pageSize).data?.map {
+                        "git_$it"
+                    }
+                if (gitProjectIds.isNullOrEmpty()) {
                     continueFlag = false
                     continue
                 }
-                val gitProjectIds = client.get(ServiceGitRepositoryResource::class).getGitProjectIdByRepositoryHashId(
-                    userId,
-                    repositoryHashIdList
-                ).data?.map { "git_$it" }
-                gitProjectIds?.let { projectService.batchUpdateProjectProductId(gitProjectIds, SYSTEM_DEFAULT_NAME) }
+                gitProjectIds.let { projectService.batchUpdateProjectProductId(gitProjectIds, SYSTEM_DEFAULT_ID) }
                 page++
             }
             logger.info("Syn all relation atom project product ${System.currentTimeMillis() - startTime}ms")
@@ -74,7 +71,7 @@ class ProjectRefreshService @Autowired constructor(
     }
 
     companion object {
-        private const val SYSTEM_DEFAULT_NAME = "蓝盾"
+        private const val SYSTEM_DEFAULT_ID = 3238 // 蓝盾运营归属ID
         private val logger = LoggerFactory.getLogger(ProjectRefreshService::class.java)
     }
 }

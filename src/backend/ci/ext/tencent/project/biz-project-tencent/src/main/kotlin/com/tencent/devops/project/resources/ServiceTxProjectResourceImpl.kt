@@ -301,14 +301,14 @@ class ServiceTxProjectResourceImpl @Autowired constructor(
         gitProjectId: Long,
         userId: String,
         gitProjectName: String?,
-        productName: String?
+        productId: Int?
     ): Result<ProjectVO> {
         return Result(
             projectLocalService.createGitCIProject(
                 userId = userId,
                 gitProjectId = gitProjectId,
                 gitProjectName = gitProjectName,
-                productName = productName
+                productId = productId
             )
         )
     }

@@ -547,15 +547,15 @@ class ProjectLocalService @Autowired constructor(
         userId: String,
         gitProjectId: Long,
         gitProjectName: String?,
-        productName: String? = null
+        productId: Int? = null
     ): ProjectVO {
         val projectCode = "git_$gitProjectId"
         var gitCiProject = projectDao.getByEnglishName(dslContext, projectCode)
         if (gitCiProject != null) {
             return ProjectUtils.packagingBean(gitCiProject)
         }
-        val projectInfo = productName?.let {
-            projectService.getOperationalProducts().find { it.productName == productName }
+        val projectInfo = productId?.let {
+            projectService.getOperationalProducts().find { it.productId == productId }
         }
         val projectCreateInfo = ProjectCreateInfo(
             projectName = gitProjectName ?: projectCode,
