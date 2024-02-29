@@ -62,7 +62,7 @@ class ProjectRefreshService @Autowired constructor(
                     continueFlag = false
                     continue
                 }
-                gitProjectIds.let { projectService.batchUpdateProjectProductId(gitProjectIds, SYSTEM_DEFAULT_ID) }
+                gitProjectIds.let { projectService.batchUpdateProjectProductId(gitProjectIds, BK_PRODUCT_ID) }
                 page++
             }
             logger.info("Syn all relation atom project product ${System.currentTimeMillis() - startTime}ms")
@@ -71,7 +71,7 @@ class ProjectRefreshService @Autowired constructor(
     }
 
     companion object {
-        private const val SYSTEM_DEFAULT_ID = 3238 // 蓝盾运营归属ID
+        private const val BK_PRODUCT_ID = 3238 // 蓝盾运营归属ID
         private val logger = LoggerFactory.getLogger(ProjectRefreshService::class.java)
     }
 }

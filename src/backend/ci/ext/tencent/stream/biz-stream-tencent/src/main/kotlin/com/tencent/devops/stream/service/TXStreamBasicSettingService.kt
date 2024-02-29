@@ -70,7 +70,7 @@ class TXStreamBasicSettingService @Autowired constructor(
 ) {
     companion object {
         private val logger = LoggerFactory.getLogger(TXStreamBasicSettingService::class.java)
-        private const val SYSTEM_DEFAULT_ID = 3238 // 蓝盾运营归属ID
+        private const val BK_PRODUCT_ID = 3238 // 蓝盾运营归属ID
     }
 
     override fun updateProjectSetting(
@@ -188,7 +188,7 @@ class TXStreamBasicSettingService @Autowired constructor(
             checkSameGitProjectName(userId, gitProjectName)
             val productId =
                 if (setting.url.contains("${streamGitConfig.defaultAtomProjectGroupName}/${setting.name}")) {
-                    SYSTEM_DEFAULT_ID
+                    BK_PRODUCT_ID
                 } else {
                     null
                 }
