@@ -68,12 +68,14 @@ import com.tencent.devops.project.jmx.api.ProjectJmxApi
 import com.tencent.devops.project.jmx.api.ProjectJmxApi.Companion.PROJECT_LIST
 import com.tencent.devops.project.pojo.AuthProjectCreateInfo
 import com.tencent.devops.project.pojo.ProjectBaseInfo
+import com.tencent.devops.project.pojo.ProjectCollation
 import com.tencent.devops.project.pojo.ProjectCreateExtInfo
 import com.tencent.devops.project.pojo.ProjectCreateInfo
 import com.tencent.devops.project.pojo.ProjectDiffVO
 import com.tencent.devops.project.pojo.ProjectLogo
 import com.tencent.devops.project.pojo.ProjectOrganizationInfo
 import com.tencent.devops.project.pojo.ProjectProperties
+import com.tencent.devops.project.pojo.ProjectSortType
 import com.tencent.devops.project.pojo.ProjectUpdateCreatorDTO
 import com.tencent.devops.project.pojo.ProjectUpdateInfo
 import com.tencent.devops.project.pojo.ProjectVO
@@ -637,7 +639,9 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
         userId: String,
         accessToken: String?,
         enabled: Boolean?,
-        unApproved: Boolean
+        unApproved: Boolean,
+        sortType: ProjectSortType?,
+        collation: ProjectCollation?
     ): List<ProjectVO> {
         val startEpoch = System.currentTimeMillis()
         var success = false
@@ -674,7 +678,9 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
                 projectDao.listByEnglishName(
                     dslContext = dslContext,
                     englishNameList = projectsWithVisitPermission.toList(),
-                    enabled = enabled
+                    enabled = enabled,
+                    sortType = sortType,
+                    collation = collation
                 ).forEach {
                     val pipelineTemplateInstallPerm = pipelineTemplateInstallPerm(
                         projectsWithPipelineTemplateCreatePerm = projectsWithPipelineTemplateCreatePerm,
@@ -1059,6 +1065,11 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
                     I18nUtil.getCodeLanMessage(ProjectMessageCode.PEM_CHECK_FAIL)
                 )
             }
+            validateProjectRelateProduct(
+                userId = userId,
+                enabled = enabled,
+                productId = projectInfo.productId
+            )
         }
         projectDao.updateUsableStatus(
             dslContext = dslContext,
@@ -1353,6 +1364,12 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
     private fun getAllMembersName() = I18nUtil.getCodeLanMessage(ALL_MEMBERS_NAME)
 
     abstract fun buildRouterTag(routerTag: String?): String?
+
+    abstract fun validateProjectRelateProduct(
+        userId: String,
+        enabled: Boolean,
+        productId: Int?
+    )
 
     companion object {
         const val MAX_PROJECT_NAME_LENGTH = 64
