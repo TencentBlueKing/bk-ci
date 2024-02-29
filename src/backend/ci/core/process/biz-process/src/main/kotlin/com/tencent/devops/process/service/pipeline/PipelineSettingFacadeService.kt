@@ -44,6 +44,7 @@ import com.tencent.devops.common.auth.api.ResourceTypeId
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.VersionStatus
+import com.tencent.devops.common.pipeline.extend.ModelCheckPlugin
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.audit.service.AuditService
 import com.tencent.devops.process.engine.atom.AtomUtils
@@ -84,6 +85,7 @@ class PipelineSettingFacadeService @Autowired constructor(
     private val jobCommonSettingConfig: JobCommonSettingConfig,
     private val taskCommonSettingConfig: TaskCommonSettingConfig,
     private val auditService: AuditService,
+    private val modelCheckPlugin: ModelCheckPlugin,
     private val pipelineEventDispatcher: PipelineEventDispatcher
 ) {
 
@@ -134,6 +136,7 @@ class PipelineSettingFacadeService @Autowired constructor(
                 )
             )
         }
+        modelCheckPlugin.checkSettingIntegrity(setting, projectId)
         ActionAuditContext.current().setInstance(setting)
         val settingVersion = pipelineSettingVersionService.getLatestSettingVersion(
             projectId = projectId,

@@ -44,6 +44,8 @@ import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.common.pipeline.pojo.element.atom.BeforeDeleteParam
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildAtomElement
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildLessAtomElement
+import com.tencent.devops.common.pipeline.pojo.setting.PipelineSetting
+import com.tencent.devops.common.pipeline.pojo.setting.Subscription
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.engine.atom.AtomUtils
 import com.tencent.devops.process.engine.common.Timeout
@@ -159,6 +161,15 @@ open class DefaultModelCheckPlugin constructor(
         }
 
         return metaSize
+    }
+
+    override fun checkSettingIntegrity(setting: PipelineSetting, projectId: String?) {
+        setting.successSubscriptionList?.checkSubscriptionList()
+        setting.failSubscriptionList?.checkSubscriptionList()
+    }
+
+    private fun List<Subscription>.checkSubscriptionList() {
+        // TODO #8161 检查合法性
     }
 
     private fun Stage.checkStageReviewers() {

@@ -110,7 +110,7 @@ class PipelineResourceDao {
                     }
                 } ?: return null,
                 yaml = record.yaml,
-                creator = record.creator,
+                creator = record.creator ?: "unknown",
                 versionName = record.versionName,
                 createTime = record.createTime,
                 updateTime = null,

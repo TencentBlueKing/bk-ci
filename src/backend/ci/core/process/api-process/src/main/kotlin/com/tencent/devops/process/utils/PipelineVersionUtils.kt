@@ -28,6 +28,7 @@
 package com.tencent.devops.process.utils
 
 import com.tencent.devops.common.pipeline.Model
+import com.tencent.devops.common.pipeline.container.TriggerContainer
 import com.tencent.devops.process.pojo.setting.PipelineSettingVersion
 
 object PipelineVersionUtils {
@@ -64,9 +65,15 @@ object PipelineVersionUtils {
         originModel: Model,
         newModel: Model
     ): Int {
-        val originTrigger = originModel.stages.first()
-        val newTrigger = newModel.stages.first()
-        return if (originTrigger == newTrigger) currVersion else currVersion + 1
+        return try {
+            val originTrigger = (originModel.stages.first().containers.first() as TriggerContainer)
+                .copy(params = emptyList())
+            val newTrigger = (newModel.stages.first().containers.first() as TriggerContainer)
+                .copy(params = emptyList())
+            if (originTrigger == newTrigger) currVersion else currVersion + 1
+        } catch (ignore: Throwable) {
+            currVersion
+        }
     }
 
     /**
