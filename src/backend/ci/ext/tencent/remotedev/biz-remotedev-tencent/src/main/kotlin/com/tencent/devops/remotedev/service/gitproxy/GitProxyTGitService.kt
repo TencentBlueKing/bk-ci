@@ -3,7 +3,12 @@ package com.tencent.devops.remotedev.service.gitproxy
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.notify.enums.NotifyType
+import com.tencent.devops.model.remotedev.tables.records.TProjectTgitIdLinkRecord
 import com.tencent.devops.model.remotedev.tables.records.TProjectTgitLinkRecord
+import com.tencent.devops.notify.api.service.ServiceNotifyMessageTemplateResource
+import com.tencent.devops.notify.pojo.SendNotifyMessageTemplateRequest
+import com.tencent.devops.project.api.service.ServiceProjectResource
 import com.tencent.devops.remotedev.common.exception.ErrorCodeEnum
 import com.tencent.devops.remotedev.dao.ProjectTGitLinkDao
 import com.tencent.devops.remotedev.dao.WorkspaceJoinDao
@@ -16,12 +21,14 @@ import com.tencent.devops.remotedev.pojo.gitproxy.TGitRepoStatus
 import com.tencent.devops.remotedev.service.BKItsmService
 import com.tencent.devops.repository.api.ServiceOauthResource
 import com.tencent.devops.repository.pojo.enums.GitAccessLevelEnum
+import com.tencent.devops.repository.pojo.oauth.GitToken
 import okhttp3.Dns
 import okhttp3.OkHttpClient
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
+import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Service
 import java.net.InetAddress
 import java.security.cert.CertificateException
@@ -51,6 +58,9 @@ class GitProxyTGitService @Autowired constructor(
 
     @Value("\${tgit.ip:}")
     private val tGitIp: String = ""
+
+    @Value("\${tgit.expiredPermTmpCode:}")
+    private val expiredPermTmpCode: String = ""
 
     // 校验当前凭据的用户是否拥有连接项目的 master 及以上权限
     fun checkUserPermission(
@@ -577,6 +587,137 @@ class GitProxyTGitService @Autowired constructor(
                         )
                     }
                 )
+            }
+        }
+    }
+
+    /**
+     * 检查关联的TGit仓库的管理员的权限是否过期
+     */
+    @Scheduled(cron = "0 50 9 * * ?")
+    fun dailyUserAuthDoCheck() {
+        val res = projectTGitLinkDao.fetchAll(dslContext)
+        val recordData = mutableMapOf<String, MutableList<TProjectTgitIdLinkRecord>>()
+        res.forEach {
+            if (recordData[it.oauthUser] == null) {
+                recordData[it.oauthUser] = mutableListOf(it)
+            } else {
+                recordData[it.oauthUser]?.add(it)
+            }
+        }
+
+        val result = mutableMapOf<String, MutableMap<String, MutableSet<String>>>()
+        recordData.forEach { (userId, records) ->
+            val svnRecords =
+                records.filter { it.gitType == TGitProjectType.SVN.name }.associateBy { it.tgitId }.toMutableMap()
+            val gitRecords =
+                records.filter { it.gitType != TGitProjectType.SVN.name }.associateBy { it.tgitId }.toMutableMap()
+
+            val token = client.get(ServiceOauthResource::class).tGitGet(userId).data
+            if (token == null) {
+                logger.warn("TGitLinkAuthCheck|get $userId token is null")
+                return@forEach
+            }
+
+            filterNoAuthTGitProject(gitRecords, token, result, userId, TGitProjectType.GIT)
+            filterNoAuthTGitProject(svnRecords, token, result, userId, TGitProjectType.SVN)
+        }
+
+        val projectCodes = result.values.flatMap { it.keys }.toSet()
+        val projects = client.get(ServiceProjectResource::class)
+            .listByProjectCode(projectCodes).data?.associateBy { it.projectCode }
+        if (projects.isNullOrEmpty()) {
+            logger.warn("dailyUserAuthDoCheck|$projectCodes listByProjectCode null")
+            return
+        }
+        logger.debug("dailyUserAuthDoCheck|$projectCodes")
+
+        result.forEach { (userId, projectAndIds) ->
+            projectAndIds.forEach project@{ (projectId, urls) ->
+                val project = projects[projectId]
+                if (project == null) {
+                    logger.warn("dailyUserAuthDoCheck|$projectId is null")
+                    return@project
+                }
+                client.get(ServiceNotifyMessageTemplateResource::class).sendNotifyMessageByTemplate(
+                    SendNotifyMessageTemplateRequest(
+                        templateCode = expiredPermTmpCode,
+                        receivers = mutableSetOf(userId),
+                        notifyType = mutableSetOf(NotifyType.EMAIL.name),
+                        bodyParams = mapOf(
+                            "userId" to userId,
+                            "urls" to urls.joinToString(separator = "\n"),
+                            "projectId" to projectId,
+                            "projectName" to project.projectName
+                        ),
+                        cc = project.properties?.remotedevManager
+                            ?.split(";")?.filter { it.isNotBlank() }
+                            ?.toMutableSet()
+                    )
+                )
+            }
+        }
+    }
+
+    private fun filterNoAuthTGitProject(
+        records: MutableMap<Long, TProjectTgitIdLinkRecord>,
+        token: GitToken,
+        result: MutableMap<String, MutableMap<String, MutableSet<String>>>,
+        userId: String,
+        type: TGitProjectType
+    ) {
+        if (records.isEmpty()) {
+            return
+        }
+
+        var page = 1
+        val pageSize = 100
+        while (true) {
+            val projects = TGitApiClient.getProjectList(
+                client = okHttpClient,
+                gitUrl = tGitUrl,
+                accessToken = token.accessToken,
+                page = page,
+                pageSize = pageSize,
+                search = null,
+                minAccessLevel = GitAccessLevelEnum.MASTER,
+                type = type
+            )
+            projects.forEach projects@{ project ->
+                if (project.id in records.keys) {
+                    // url发生变化时更新url
+                    if ((records[project.id] != null) &&
+                        !(project.httpsUrlToRepo ?: project.httpUrlToRepo).isNullOrBlank() &&
+                        (project.httpsUrlToRepo ?: project.httpUrlToRepo) != records[project.id]?.url
+                    ) {
+                        projectTGitLinkDao.updateUrl(
+                            dslContext = dslContext,
+                            projectId = records[project.id]!!.projectId,
+                            tgitId = project.id,
+                            url = (project.httpsUrlToRepo ?: project.httpUrlToRepo)!!.removeHttpPrefix()
+                        )
+                    }
+                    records.remove(project.id)
+                }
+            }
+
+            if (projects.size < 100) {
+                break
+            }
+            page++
+        }
+
+        val gitResult = if (result[userId] == null) {
+            result[userId] = mutableMapOf()
+            result[userId]!!
+        } else {
+            result[userId]!!
+        }
+        records.values.forEach { record ->
+            if (gitResult[record.projectId] == null) {
+                gitResult[record.projectId] = mutableSetOf(record.url)
+            } else {
+                gitResult[record.projectId]?.add(record.url)
             }
         }
     }
