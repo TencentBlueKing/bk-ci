@@ -27,16 +27,30 @@
 
 package com.tencent.devops.common.api.enums
 
-enum class RepositoryTypeNew {
+/**
+ * 代码库拉取代码库类型
+ */
+enum class CheckoutRepositoryType {
     ID,
     NAME,
-    URL
+    URL,
+    SELF
     ;
 
     companion object {
-        fun parseType(type: String?): RepositoryTypeNew {
+        fun parseType(type: String?): CheckoutRepositoryType {
             if (type.isNullOrBlank()) return ID
             return valueOf(type)
+        }
+
+        /**
+         * 拉取类型跳过定时触发源代码变更检查
+         */
+        fun skipTimerTriggerChange(type: String?): Boolean {
+            return when (type) {
+                URL.name, SELF.name -> true
+                else -> false
+            }
         }
     }
 }
