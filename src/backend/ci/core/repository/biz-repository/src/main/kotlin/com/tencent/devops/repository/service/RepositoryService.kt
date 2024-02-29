@@ -730,7 +730,7 @@ class RepositoryService @Autowired constructor(
                 createTime = it.createdTime.timestamp(),
                 createUser = it.userId,
                 updatedUser = it.updatedUser ?: it.userId,
-                atomRepo = it.atom ?: false
+                atom = it.atom ?: false
             )
         }
         return Pair(SQLPage(count, repositoryList), hasCreatePermission)
