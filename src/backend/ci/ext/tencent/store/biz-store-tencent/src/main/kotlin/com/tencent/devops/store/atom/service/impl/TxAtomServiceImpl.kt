@@ -37,7 +37,6 @@ import com.tencent.devops.repository.api.ServiceGitRepositoryResource
 import com.tencent.devops.repository.pojo.enums.TokenTypeEnum
 import com.tencent.devops.repository.pojo.enums.VisibilityLevelEnum
 import com.tencent.devops.repository.pojo.git.UpdateGitProjectInfo
-import com.tencent.devops.store.atom.service.impl.AtomServiceImpl
 import com.tencent.devops.store.atom.service.TxAtomService
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired

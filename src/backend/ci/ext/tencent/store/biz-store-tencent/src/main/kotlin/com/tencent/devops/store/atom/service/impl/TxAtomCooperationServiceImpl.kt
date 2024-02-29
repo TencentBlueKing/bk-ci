@@ -30,19 +30,18 @@ package com.tencent.devops.store.atom.service.impl
 import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.store.atom.dao.MarketAtomDao
-import com.tencent.devops.store.atom.service.impl.AtomCooperationServiceImpl
 import com.tencent.devops.store.pojo.atom.AtomCollaboratorCreateReq
 import com.tencent.devops.store.pojo.common.ATOM_COLLABORATOR_APPLY_MOA_TEMPLATE
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.support.api.service.ServiceMessageApproveResource
 import com.tencent.devops.support.model.approval.CreateMoaApproveRequest
+import java.text.MessageFormat
+import java.util.concurrent.Executors
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
-import org.springframework.stereotype.Service
-import java.text.MessageFormat
-import java.util.concurrent.Executors
 import org.springframework.context.annotation.Primary
+import org.springframework.stereotype.Service
 
 @Primary
 @Service

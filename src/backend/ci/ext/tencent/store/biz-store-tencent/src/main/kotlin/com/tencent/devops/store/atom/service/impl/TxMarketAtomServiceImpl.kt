@@ -36,7 +36,6 @@ import com.tencent.devops.repository.pojo.Repository
 import com.tencent.devops.repository.pojo.enums.GitCodeFileEncoding
 import com.tencent.devops.repository.pojo.enums.TokenTypeEnum
 import com.tencent.devops.repository.pojo.git.GitOperationFile
-import com.tencent.devops.store.atom.service.impl.MarketAtomServiceImpl
 import com.tencent.devops.store.atom.service.TxMarketAtomService
 import org.slf4j.LoggerFactory
 import org.springframework.context.annotation.Primary
