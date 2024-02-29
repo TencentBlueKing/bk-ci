@@ -28,6 +28,7 @@
 package com.tencent.devops.store.common.dao
 
 import com.tencent.devops.common.api.util.timestampmilli
+import com.tencent.devops.common.db.utils.skipCheck
 import com.tencent.devops.model.store.tables.TStoreSensitiveApi
 import com.tencent.devops.model.store.tables.records.TStoreSensitiveApiRecord
 import com.tencent.devops.store.pojo.common.SensitiveApiCreateDTO
@@ -143,6 +144,7 @@ class SensitiveApiDao {
                 .where(conditions)
                 .orderBy(CREATE_TIME.desc())
                 .limit(offset, limit)
+                .skipCheck()
                 .fetch()
         }
     }
@@ -155,6 +157,7 @@ class SensitiveApiDao {
             val conditions = queryCondition(sensitiveApiSearchDTO)
             dslContext.selectCount().from(this)
                 .where(conditions)
+                .skipCheck()
                 .fetchOne(0, Long::class.java)!!
         }
     }
