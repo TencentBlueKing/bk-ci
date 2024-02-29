@@ -46,7 +46,7 @@ import javax.ws.rs.core.MediaType
 @Consumes(MediaType.APPLICATION_JSON)
 interface OpLogResource {
 
-    @Parameter(name = "执行搬冷任务")
+    @Parameter(description = "执行搬冷任务")
     @PUT
     @Path("/es/index/cold")
     fun makeIndexCold(): Result<Boolean>

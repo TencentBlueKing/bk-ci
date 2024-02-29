@@ -62,40 +62,40 @@ interface AppLogResource {
     @GET
     @Path("/{projectId}/{pipelineId}/{buildId}/")
     fun getInitLogs(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(name = "流水线ID", required = true)
+        @Parameter(description = "流水线ID", required = true)
         @PathParam("pipelineId")
         pipelineId: String,
-        @Parameter(name = "构建ID", required = true)
+        @Parameter(description = "构建ID", required = true)
         @PathParam("buildId")
         buildId: String,
-        @Parameter(name = "是否包含调试日志", required = false)
+        @Parameter(description = "是否包含调试日志", required = false)
         @QueryParam("debug")
         debug: Boolean? = false,
-        @Parameter(name = "过滤日志级别", required = false)
+        @Parameter(description = "过滤日志级别", required = false)
         @QueryParam("logType")
         logType: LogType? = null,
-        @Parameter(name = "对应elementId", required = false)
+        @Parameter(description = "对应elementId", required = false)
         @QueryParam("tag")
         tag: String?,
-        @Parameter(name = "指定subTag", required = false)
+        @Parameter(description = "指定subTag", required = false)
         @QueryParam("subTag")
         subTag: String?,
-        @Parameter(name = "对应jobId", required = false)
+        @Parameter(description = "对应jobId", required = false)
         @QueryParam("jobId")
         jobId: String?,
-        @Parameter(name = "执行次数", required = false)
+        @Parameter(description = "执行次数", required = false)
         @QueryParam("executeCount")
         executeCount: Int?,
-        @Parameter(name = "第几页", required = false)
+        @Parameter(description = "第几页", required = false)
         @QueryParam("page")
         page: Int?,
-        @Parameter(name = "每页条数", required = false)
+        @Parameter(description = "每页条数", required = false)
         @QueryParam("pageSize")
         pageSize: Int?
     ): Result<PageQueryLogs>
@@ -104,46 +104,46 @@ interface AppLogResource {
     @GET
     @Path("/{projectId}/{pipelineId}/{buildId}/more")
     fun getMoreLogs(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(name = "流水线ID", required = true)
+        @Parameter(description = "流水线ID", required = true)
         @PathParam("pipelineId")
         pipelineId: String,
-        @Parameter(name = "构建ID", required = true)
+        @Parameter(description = "构建ID", required = true)
         @PathParam("buildId")
         buildId: String,
-        @Parameter(name = "是否包含调试日志", required = false)
+        @Parameter(description = "是否包含调试日志", required = false)
         @QueryParam("debug")
         debug: Boolean? = false,
-        @Parameter(name = "过滤日志级别", required = false)
+        @Parameter(description = "过滤日志级别", required = false)
         @QueryParam("logType")
         logType: LogType? = null,
-        @Parameter(name = "日志行数", required = false)
+        @Parameter(description = "日志行数", required = false)
         @QueryParam("num")
         num: Int? = 100,
-        @Parameter(name = "是否正序输出", required = false)
+        @Parameter(description = "是否正序输出", required = false)
         @QueryParam("fromStart")
         fromStart: Boolean? = true,
-        @Parameter(name = "起始行号", required = true)
+        @Parameter(description = "起始行号", required = true)
         @QueryParam("start")
         start: Long,
-        @Parameter(name = "结尾行号", required = true)
+        @Parameter(description = "结尾行号", required = true)
         @QueryParam("end")
         end: Long,
-        @Parameter(name = "对应elementId", required = false)
+        @Parameter(description = "对应elementId", required = false)
         @QueryParam("tag")
         tag: String?,
-        @Parameter(name = "指定subTag", required = false)
+        @Parameter(description = "指定subTag", required = false)
         @QueryParam("subTag")
         subTag: String?,
-        @Parameter(name = "对应jobId", required = false)
+        @Parameter(description = "对应jobId", required = false)
         @QueryParam("jobId")
         jobId: String?,
-        @Parameter(name = "执行次数", required = false)
+        @Parameter(description = "执行次数", required = false)
         @QueryParam("executeCount")
         executeCount: Int?
     ): Result<QueryLogs>
@@ -152,10 +152,10 @@ interface AppLogResource {
     @GET
     @Path("/{projectId}/{pipelineId}/{buildId}/after")
     fun getAfterLogs(
-        @Parameter(name = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(name = "项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
         @Parameter(name = "流水线ID", required = true)
