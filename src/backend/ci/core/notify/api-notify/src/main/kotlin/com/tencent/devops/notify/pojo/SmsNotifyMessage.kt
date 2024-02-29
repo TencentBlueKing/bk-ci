@@ -28,21 +28,20 @@ package com.tencent.devops.notify.pojo
 
 import com.tencent.devops.common.notify.enums.EnumNotifyPriority
 import com.tencent.devops.common.notify.enums.EnumNotifySource
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("sms短信消息类型")
+@Schema(title = "sms短信消息类型")
 open class SmsNotifyMessage : BaseMessage() {
 
-    @ApiModelProperty("通知接收者")
+    @get:Schema(title = "通知接收者")
     private val receivers: MutableSet<String> = mutableSetOf()
-    @ApiModelProperty("通知内容")
+    @get:Schema(title = "通知内容")
     var body: String = ""
-    @ApiModelProperty("通知发送者")
+    @get:Schema(title = "通知发送者")
     var sender: String = ""
-    @ApiModelProperty("优先级", allowableValues = "-1,0,1", dataType = "int")
+    @get:Schema(title = "优先级", allowableValues = ["-1", "0", "1"], type = "int")
     var priority: EnumNotifyPriority = EnumNotifyPriority.HIGH
-    @ApiModelProperty("通知来源", allowableValues = "0,1", dataType = "int")
+    @get:Schema(title = "通知来源", allowableValues = ["0", "1"], type = "int")
     var source: EnumNotifySource = EnumNotifySource.BUSINESS_LOGIC
 
     fun addReceiver(receiver: String) {
@@ -61,7 +60,7 @@ open class SmsNotifyMessage : BaseMessage() {
         return receivers.toSet()
     }
 
-    @ApiModelProperty(hidden = true)
+    @Schema(hidden = true)
     fun isReceiversEmpty(): Boolean {
         if (receivers.size == 0) return true
         return false

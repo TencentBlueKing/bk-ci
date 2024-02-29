@@ -212,7 +212,12 @@ class QualityRuleService @Autowired constructor(
                 arrayOf(permission.getI18n(I18nUtil.getLanguage(userId)))
             )
         )
-        qualityRuleDao.updateEnable(dslContext = dslContext, ruleId = ruleId, enable = enable)
+        qualityRuleDao.updateEnable(
+            dslContext = dslContext,
+            projectId = projectId,
+            ruleId = ruleId,
+            enable = enable
+        )
         refreshRedis(projectId, ruleId)
     }
 
@@ -232,7 +237,7 @@ class QualityRuleService @Autowired constructor(
                 arrayOf(permission.getI18n(I18nUtil.getLanguage(userId)))
             )
         )
-        qualityRuleDao.delete(dslContext, ruleId)
+        qualityRuleDao.delete(dslContext = dslContext, projectId = projectId, ruleId = ruleId)
         qualityPermissionService.deleteRuleResource(projectId, ruleId)
         refreshDeletedRuleRedis(projectId, ruleRecord.indicatorRange, ruleRecord.pipelineTemplateRange)
     }

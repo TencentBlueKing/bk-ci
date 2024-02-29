@@ -29,7 +29,7 @@ package com.tencent.devops.scm.pojo
 
 import com.fasterxml.jackson.annotation.JsonAlias
 import com.fasterxml.jackson.annotation.JsonProperty
-import io.swagger.annotations.ApiModel
+import io.swagger.v3.oas.annotations.media.Schema
 
 /*
 * {
@@ -95,7 +95,7 @@ import io.swagger.annotations.ApiModel
 }
 * */
 
-@ApiModel("git mr文件变更信息")
+@Schema(title = "git mr文件变更信息")
 data class GitMrChangeInfo(
     val title: String = "",
     @JsonProperty("target_project_id")

@@ -28,14 +28,13 @@
 package com.tencent.devops.common.pipeline.enums
 
 import com.tencent.devops.common.pipeline.pojo.time.BuildRecordTimeLine
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("构建详情记录-事件时间戳")
+@Schema(title = "构建详情记录-事件时间戳")
 data class BuildRecordTimeStamp(
-    @ApiModelProperty("开始时间", required = true)
+    @get:Schema(title = "开始时间", required = true)
     val startTime: Long?,
-    @ApiModelProperty("结束时间", required = true)
+    @get:Schema(title = "结束时间", required = true)
     val endTime: Long?
 ) {
     fun between() = (endTime ?: startTime ?: 0) - (startTime ?: 0)

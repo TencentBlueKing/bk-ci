@@ -1,12 +1,11 @@
 package com.tencent.devops.experience.pojo.outer
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("外部登录-入参")
+@Schema(title = "外部登录-入参")
 data class OuterLoginParam(
-    @ApiModelProperty("用户名")
+    @get:Schema(title = "用户名")
     val username: String,
-    @ApiModelProperty("密码")
+    @get:Schema(title = "密码")
     val password: String
 )

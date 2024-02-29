@@ -28,18 +28,17 @@
 package com.tencent.devops.remotedev.pojo.project
 
 import com.fasterxml.jackson.annotation.JsonProperty
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("提供给安全侧的获取remotedev项目")
+@Schema(title = "提供给安全侧的获取remotedev项目")
 data class RemotedevProject(
-    @ApiModelProperty("项目ID")
+    @get:Schema(title = "项目ID")
     @JsonProperty("project_id")
     val projectId: String,
-    @ApiModelProperty("项目名称")
+    @get:Schema(title = "项目名称")
     @JsonProperty("project_name")
     val projectName: String,
-    @ApiModelProperty("云研发管理员")
+    @get:Schema(title = "云研发管理员")
     @JsonProperty("remotedev_manager")
     val remotedevManager: String? = ""
 )

@@ -27,21 +27,20 @@
 
 package com.tencent.devops.store.pojo.atom
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("插件插件市场-插件插件特性信息请求报文体")
+@Schema(title = "插件插件市场-插件插件特性信息请求报文体")
 data class AtomFeatureRequest(
-    @ApiModelProperty("插件插件代码", required = true)
+    @get:Schema(title = "插件插件代码", required = true)
     val atomCode: String,
-    @ApiModelProperty("是否推荐标识 true：推荐，false：不推荐", required = false)
+    @get:Schema(title = "是否推荐标识 true：推荐，false：不推荐", required = false)
     val recommendFlag: Boolean? = null,
-    @ApiModelProperty("删除标识", required = false)
+    @get:Schema(title = "删除标识", required = false)
     val deleteFlag: Boolean? = null,
-    @ApiModelProperty("yaml可用标识 true：是，false：否")
+    @get:Schema(title = "yaml可用标识 true：是，false：否")
     val yamlFlag: Boolean? = null,
-    @ApiModelProperty("质量红线可用标识 true：是，false：否")
+    @get:Schema(title = "质量红线可用标识 true：是，false：否")
     val qualityFlag: Boolean? = null,
-    @ApiModelProperty("是否认证标识 true：是，false：否")
+    @get:Schema(title = "是否认证标识 true：是，false：否")
     val certificationFlag: Boolean? = null
 )

@@ -1,20 +1,19 @@
 package com.tencent.devops.auth.pojo
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("资源组详情")
+@Schema(title = "资源组详情")
 data class ResourceGroupInfo(
-    @ApiModelProperty("用户组ID")
+    @get:Schema(title = "用户组ID")
     val groupId: String,
-    @ApiModelProperty("用户组名称")
+    @get:Schema(title = "用户组名称")
     val groupName: String,
-    @ApiModelProperty("项目code")
+    @get:Schema(title = "项目code")
     val projectCode: String,
-    @ApiModelProperty("资源类型")
+    @get:Schema(title = "资源类型")
     val resourceType: String,
-    @ApiModelProperty("资源名称")
+    @get:Schema(title = "资源名称")
     val resourceName: String,
-    @ApiModelProperty("资源code")
+    @get:Schema(title = "资源code")
     val resourceCode: String
 )

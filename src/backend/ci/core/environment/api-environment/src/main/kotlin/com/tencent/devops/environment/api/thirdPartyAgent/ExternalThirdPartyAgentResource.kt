@@ -28,9 +28,9 @@
 package com.tencent.devops.environment.api.thirdPartyAgent
 
 import com.tencent.devops.common.web.annotation.BkField
-import io.swagger.annotations.Api
-import io.swagger.annotations.ApiOperation
-import io.swagger.annotations.ApiParam
+import io.swagger.v3.oas.annotations.tags.Tag
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.Parameter
 import javax.ws.rs.Consumes
 import javax.ws.rs.GET
 import javax.ws.rs.Path
@@ -40,63 +40,63 @@ import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 import javax.ws.rs.core.Response
 
-@Api(tags = ["EXTERNAL_ENVIRONMENT_THIRD_PARTY_AGENT"], description = "第三方构建机资源")
+@Tag(name = "EXTERNAL_ENVIRONMENT_THIRD_PARTY_AGENT", description = "第三方构建机资源")
 @Path("/external/thirdPartyAgent")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface ExternalThirdPartyAgentResource {
 
-    @ApiOperation("下载agent安装脚本")
+    @Operation(summary = "下载agent安装脚本")
     @GET
     @Path("/{agentId}/install")
     @Produces(MediaType.APPLICATION_OCTET_STREAM)
     fun downloadAgentInstallScript(
-        @ApiParam("Agent ID", required = true)
+        @Parameter(description = "Agent ID", required = true)
         @PathParam("agentId")
         @BkField(minLength = 3, maxLength = 32)
         agentId: String
     ): Response
 
-    @ApiOperation("下载agent.zip")
+    @Operation(summary = "下载agent.zip")
     @GET
     @Path("/{agentId}/agent")
     @Produces(MediaType.APPLICATION_OCTET_STREAM)
     fun downloadAgent(
-        @ApiParam("Agent ID", required = true)
+        @Parameter(description = "Agent ID", required = true)
         @PathParam("agentId")
         @BkField(minLength = 3, maxLength = 32)
         agentId: String,
-        @ApiParam("本地eTag标签", required = false)
+        @Parameter(description = "本地eTag标签", required = false)
         @QueryParam("eTag")
         eTag: String?,
-        @ApiParam("本地操作系统架构", required = false)
+        @Parameter(description = "本地操作系统架构", required = false)
         @QueryParam("arch")
         arch: String?
     ): Response
 
-    @ApiOperation("下载JRE")
+    @Operation(summary = "下载JRE")
     @GET
     @Path("/{agentId}/jre")
     @Produces(MediaType.APPLICATION_OCTET_STREAM)
     fun downloadJRE(
-        @ApiParam("Agent ID", required = true)
+        @Parameter(description = "Agent ID", required = true)
         @PathParam("agentId")
         @BkField(minLength = 3, maxLength = 32)
         agentId: String,
-        @ApiParam("本地eTag标签", required = false)
+        @Parameter(description = "本地eTag标签", required = false)
         @QueryParam("eTag")
         eTag: String?,
-        @ApiParam("本地操作系统架构", required = false)
+        @Parameter(description = "本地操作系统架构", required = false)
         @QueryParam("arch")
         arch: String?
     ): Response
 
-    @ApiOperation("生成并下载新的批次安装所需要的文件")
+    @Operation(summary = "生成并下载新的批次安装所需要的文件")
     @GET
     @Path("/{agentHashId}/batch_zip")
     @Produces(MediaType.APPLICATION_OCTET_STREAM)
     fun downloadNewInstallAgentBatchFile(
-        @ApiParam("agentHashId 化身 install Key", required = true)
+        @Parameter(description = "agentHashId 化身 install Key", required = true)
         @PathParam("agentHashId")
         @BkField(minLength = 3, maxLength = 32)
         agentHashId: String

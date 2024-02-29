@@ -29,9 +29,9 @@ package com.tencent.devops.sign.api.external
 
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_SIGN_INFO
 import com.tencent.devops.common.api.pojo.Result
-import io.swagger.annotations.Api
-import io.swagger.annotations.ApiOperation
-import io.swagger.annotations.ApiParam
+import io.swagger.v3.oas.annotations.tags.Tag
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.Parameter
 import java.io.InputStream
 import javax.ws.rs.Path
 import javax.ws.rs.Produces
@@ -41,23 +41,23 @@ import javax.ws.rs.HeaderParam
 import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
-@Api(tags = ["EXTERNAL_IPA"], description = "拓展接口-IPA包")
+@Tag(name = "EXTERNAL_IPA", description = "拓展接口-IPA包")
 @Path("/external/ipa")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface ExternalIpaResource {
 
-    @ApiOperation("IPA包上传并开始签名")
+    @Operation(summary = "IPA包上传并开始签名")
     @POST
     @Path("/upload")
     @Consumes(MediaType.APPLICATION_OCTET_STREAM)
     fun ipaUpload(
-        @ApiParam("Base64编码的签名信息", required = false)
+        @Parameter(description = "Base64编码的签名信息", required = false)
         @HeaderParam(AUTH_HEADER_DEVOPS_SIGN_INFO)
         ipaSignInfoHeader: String,
-        @ApiParam("IPA包文件", required = true)
+        @Parameter(description = "IPA包文件", required = true)
         ipaInputStream: InputStream,
-        @ApiParam("鉴权token", required = true)
+        @Parameter(description = "鉴权token", required = true)
         @QueryParam("token")
         token: String
     ): Result<String>

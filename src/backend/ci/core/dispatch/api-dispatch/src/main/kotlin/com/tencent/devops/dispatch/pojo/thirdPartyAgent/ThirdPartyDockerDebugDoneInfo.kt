@@ -1,21 +1,20 @@
 package com.tencent.devops.dispatch.pojo.thirdPartyAgent
 
 import com.tencent.devops.common.api.pojo.Error
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("第三方构建Docker登录调试完成信息")
+@Schema(title = "第三方构建Docker登录调试完成信息")
 data class ThirdPartyDockerDebugDoneInfo(
-    @ApiModelProperty("项目id")
+    @get:Schema(title = "项目id")
     val projectId: String,
-    @ApiModelProperty("debugId")
+    @get:Schema(title = "debugId")
     val debugId: Long,
-    @ApiModelProperty("流水线id")
+    @get:Schema(title = "流水线id")
     val pipelineId: String,
-    @ApiModelProperty("debug链接")
+    @get:Schema(title = "debug链接")
     val debugUrl: String,
-    @ApiModelProperty("是否成功")
+    @get:Schema(title = "是否成功")
     val success: Boolean,
-    @ApiModelProperty("错误信息")
+    @get:Schema(title = "错误信息")
     val error: Error?
 )

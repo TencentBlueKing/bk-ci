@@ -22,6 +22,8 @@ object RedisKeys {
     const val REDIS_PROJECT_WIN_COUNT_LIMIT = "remotedev:projectWinCountLimit" // 团队空间云桌面创建数量限制
     const val REDIS_CLIENT_INSTALL_URL = "remotedev:clientInstallUrl" // 蓝盾客户端更新地址
     const val REDIS_CLIENT_VERSION_CHECK = "remotedev:clientVersionCheck" // 是否校验蓝盾客户端版本
+    const val REDIS_WORKING_ON_WEEKEND_DAY = "remotedev:holiday:workingDays" // 调休上班时间
+    const val REDIS_HOLIDAY = "remotedev:holiday:holidays" // 休假时间
 
     // redis必填项
     const val REDIS_OFFICIAL_DEVFILE_KEY = "remotedev:devfile"

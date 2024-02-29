@@ -33,9 +33,9 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.store.pojo.common.StoreCommentInfo
 import com.tencent.devops.store.pojo.common.StoreCommentRequest
 import com.tencent.devops.store.pojo.common.StoreCommentScoreInfo
-import io.swagger.annotations.Api
-import io.swagger.annotations.ApiOperation
-import io.swagger.annotations.ApiParam
+import io.swagger.v3.oas.annotations.tags.Tag
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.Parameter
 import javax.ws.rs.Consumes
 import javax.ws.rs.GET
 import javax.ws.rs.HeaderParam
@@ -47,90 +47,90 @@ import javax.ws.rs.Produces
 import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
-@Api(tags = ["USER_EXTENSION_SERVICE_COMMENT"], description = "服务扩展_评论")
+@Tag(name = "USER_EXTENSION_SERVICE_COMMENT", description = "服务扩展_评论")
 @Path("/user/market/service/comment")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface UserExtServiceCommentResource {
 
-    @ApiOperation("添加评论")
+    @Operation(summary = "添加评论")
     @Path("/serviceIds/{serviceId}/serviceCodes/{serviceCodes}/comment")
     @POST
     fun createServiceComment(
-        @ApiParam("userId", required = true)
+        @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("扩展服务ID", required = true)
+        @Parameter(description = "扩展服务ID", required = true)
         @PathParam("serviceId")
         serviceId: String,
-        @ApiParam("扩展服务代码", required = true)
+        @Parameter(description = "扩展服务代码", required = true)
         @PathParam("serviceCodes")
         serviceCodes: String,
-        @ApiParam("评论信息", required = true)
+        @Parameter(description = "评论信息", required = true)
         storeCommentRequest: StoreCommentRequest
     ): Result<StoreCommentInfo?>
 
-    @ApiOperation("修改评论")
+    @Operation(summary = "修改评论")
     @Path("/comments/{commentId}")
     @PUT
     fun updateServiceComment(
-        @ApiParam("userId", required = true)
+        @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("评论ID", required = true)
+        @Parameter(description = "评论ID", required = true)
         @PathParam("commentId")
         commentId: String,
-        @ApiParam("评论信息", required = true)
+        @Parameter(description = "评论信息", required = true)
         storeCommentRequest: StoreCommentRequest
     ): Result<Boolean>
 
-    @ApiOperation("获取单条评论")
+    @Operation(summary = "获取单条评论")
     @Path("/comments/{commentId}")
     @GET
     fun getServiceComment(
-        @ApiParam("userId", required = true)
+        @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("评论ID", required = true)
+        @Parameter(description = "评论ID", required = true)
         @PathParam("commentId")
         commentId: String
     ): Result<StoreCommentInfo?>
 
-    @ApiOperation("获取扩展服务所有评论")
+    @Operation(summary = "获取扩展服务所有评论")
     @Path("/serviceCodes/{serviceCode}/comments")
     @GET
     fun getServiceCommentByServiceCode(
-        @ApiParam("userId", required = true)
+        @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("扩展服务编码", required = true)
+        @Parameter(description = "扩展服务编码", required = true)
         @PathParam("serviceCode")
         serviceCode: String,
-        @ApiParam("页码", required = true)
+        @Parameter(description = "页码", required = true)
         @QueryParam("page")
         page: Int,
-        @ApiParam("每页数量", required = true)
+        @Parameter(description = "每页数量", required = true)
         @QueryParam("pageSize")
         pageSize: Int
     ): Result<Page<StoreCommentInfo>?>
 
-    @ApiOperation("获取扩展服务的评分详情")
+    @Operation(summary = "获取扩展服务的评分详情")
     @GET
     @Path("/score/serviceCodes/{serviceCode}")
     fun getServiceCommentScoreInfo(
-        @ApiParam("扩展服务代码", required = true)
+        @Parameter(description = "扩展服务代码", required = true)
         @PathParam("serviceCode")
         serviceCode: String
     ): Result<StoreCommentScoreInfo>
 
-    @ApiOperation("评论点赞")
+    @Operation(summary = "评论点赞")
     @PUT
     @Path("/praise/{commentId}")
     fun updateStoreCommentPraiseCount(
-        @ApiParam("userId", required = true)
+        @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("评论ID", required = true)
+        @Parameter(description = "评论ID", required = true)
         @PathParam("commentId")
         commentId: String
     ): Result<Int>

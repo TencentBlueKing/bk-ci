@@ -27,37 +27,36 @@
 
 package com.tencent.devops.store.pojo
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("扩展服务首页信息")
+@Schema(title = "扩展服务首页信息")
 data class ExtServiceItem(
-    @ApiModelProperty("ID")
+    @get:Schema(title = "ID")
     val id: String,
-    @ApiModelProperty("名称")
+    @get:Schema(title = "名称")
     val name: String,
-    @ApiModelProperty("标识")
+    @get:Schema(title = "标识")
     val code: String,
-    @ApiModelProperty("分类")
+    @get:Schema(title = "分类")
     val classifyCode: String?,
-    @ApiModelProperty("logo链接")
+    @get:Schema(title = "logo链接")
     val logoUrl: String?,
-    @ApiModelProperty("发布者")
+    @get:Schema(title = "发布者")
     val publisher: String,
-    @ApiModelProperty("下载量")
+    @get:Schema(title = "下载量")
     val downloads: Int?,
-    @ApiModelProperty("评分")
+    @get:Schema(title = "评分")
     val score: Double?,
-    @ApiModelProperty("简介")
+    @get:Schema(title = "简介")
     val summary: String?,
-    @ApiModelProperty("是否有权限安装标识")
+    @get:Schema(title = "是否有权限安装标识")
     val flag: Boolean,
-    @ApiModelProperty("是否公共标识")
+    @get:Schema(title = "是否公共标识")
     val publicFlag: Boolean,
-    @ApiModelProperty("修改人")
+    @get:Schema(title = "修改人")
     val modifier: String,
-    @ApiModelProperty("修改时间")
+    @get:Schema(title = "修改时间")
     val updateTime: String,
-    @ApiModelProperty("是否推荐标识 true：推荐，false：不推荐", required = false)
+    @get:Schema(title = "是否推荐标识 true：推荐，false：不推荐", required = false)
     val recommendFlag: Boolean? = null
 )

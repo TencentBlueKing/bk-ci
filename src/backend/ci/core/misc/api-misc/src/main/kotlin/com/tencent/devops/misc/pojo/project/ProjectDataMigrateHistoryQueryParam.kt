@@ -28,19 +28,18 @@
 package com.tencent.devops.misc.pojo.project
 
 import com.tencent.devops.common.api.enums.SystemModuleEnum
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("查询项目数据迁移历史记录参数")
+@Schema(title = "查询项目数据迁移历史记录参数")
 data class ProjectDataMigrateHistoryQueryParam(
-    @ApiModelProperty("项目Id", required = true)
+    @get:Schema(title = "项目Id", required = true)
     val projectId: String,
-    @ApiModelProperty("流水线Id", required = false)
+    @get:Schema(title = "流水线Id", required = false)
     val pipelineId: String? = null,
-    @ApiModelProperty("模块标识", required = true)
+    @get:Schema(title = "模块标识", required = true)
     val moduleCode: SystemModuleEnum,
-    @ApiModelProperty("迁移集群名称", required = true)
+    @get:Schema(title = "迁移集群名称", required = true)
     val targetClusterName: String,
-    @ApiModelProperty("迁移数据源名称", required = true)
+    @get:Schema(title = "迁移数据源名称", required = true)
     val targetDataSourceName: String
 )

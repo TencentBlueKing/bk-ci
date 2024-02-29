@@ -45,6 +45,7 @@ import com.tencent.devops.remotedev.pojo.WorkspaceResponse
 import com.tencent.devops.remotedev.pojo.WorkspaceSearch
 import com.tencent.devops.remotedev.pojo.WorkspaceStartCloudDetail
 import com.tencent.devops.remotedev.pojo.WorkspaceUserDetail
+import com.tencent.devops.remotedev.pojo.project.WorkspaceProperty
 import com.tencent.devops.remotedev.service.BkTicketService
 import com.tencent.devops.remotedev.service.PermissionService
 import com.tencent.devops.remotedev.service.RepositoryService
@@ -109,6 +110,10 @@ class UserWorkspaceResourceImpl @Autowired constructor(
     @AuditEntry(actionId = ActionId.CGS_EDIT)
     override fun editWorkspace(userId: String, workspaceName: String, displayName: String): Result<Boolean> {
         return Result(workspaceService.editWorkspace(userId, workspaceName, displayName))
+    }
+
+    override fun modifyWorkspaceProperty(userId: String, workspaceName: String, workspaceProperty: WorkspaceProperty): Result<Boolean> {
+        return Result(workspaceService.modifyWorkspaceProperty(userId, workspaceName, workspaceProperty))
     }
 
     @AuditEntry(actionId = ActionId.CGS_DELETE)

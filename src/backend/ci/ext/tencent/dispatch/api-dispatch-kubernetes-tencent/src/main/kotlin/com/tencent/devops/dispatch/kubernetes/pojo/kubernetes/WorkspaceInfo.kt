@@ -1,6 +1,6 @@
 package com.tencent.devops.dispatch.kubernetes.pojo.kubernetes
 
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
 data class WorkspaceInfo(
     val status: EnvStatusEnum,
@@ -9,12 +9,12 @@ data class WorkspaceInfo(
     val clusterId: String,
     val namespace: String,
     val environmentHost: String,
-    @ApiModelProperty("对应pod是否可用，可能为null")
+    @get:Schema(title = "对应pod是否可用，可能为null")
     val ready: Boolean?,
-    @ApiModelProperty("对应pod是否可用，可能为null")
+    @get:Schema(title = "对应pod是否可用，可能为null")
     val started: Boolean?,
-    @ApiModelProperty("start 云桌面使用")
+    @get:Schema(title = "start 云桌面使用")
     val curLaunchId: Int? = null,
-    @ApiModelProperty("云区域ID，start 云桌面使用")
+    @get:Schema(title = "云区域ID，start 云桌面使用")
     val regionId: Int? = null
 )

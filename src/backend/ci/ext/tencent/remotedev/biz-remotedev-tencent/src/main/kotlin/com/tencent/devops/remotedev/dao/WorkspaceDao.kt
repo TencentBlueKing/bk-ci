@@ -45,6 +45,7 @@ import com.tencent.devops.remotedev.pojo.WorkspaceRecord
 import com.tencent.devops.remotedev.pojo.WorkspaceShared
 import com.tencent.devops.remotedev.pojo.WorkspaceStatus
 import com.tencent.devops.remotedev.pojo.WorkspaceSystemType
+import com.tencent.devops.remotedev.pojo.project.WorkspaceProperty
 import java.sql.Timestamp
 import java.time.LocalDateTime
 import org.jooq.Condition
@@ -71,7 +72,8 @@ class WorkspaceDao {
         centerName: String?,
         groupName: String?,
         dslContext: DSLContext,
-        projectName: String
+        projectName: String,
+        businessLineNmae: String? = ""
     ): Long {
         if (workspace.workspaceSystemType == WorkspaceSystemType.WINDOWS_GPU) {
             with(TWorkspaceWindows.T_WORKSPACE_WINDOWS) {
@@ -119,7 +121,8 @@ class WorkspaceDao {
                 WORKSPACE_MOUNT_TYPE,
                 SYSTEM_TYPE,
                 OWNER_TYPE,
-                PROJECT_NAME
+                PROJECT_NAME,
+                BUSINESS_LINE_NAME
             )
                 .values(
                     workspace.projectId,
@@ -148,7 +151,8 @@ class WorkspaceDao {
                     workspace.workspaceMountType.name,
                     workspace.workspaceSystemType.name,
                     workspace.ownerType.name,
-                    projectName
+                    projectName,
+                    businessLineNmae ?: ""
                 )
                 .returning(ID)
                 .fetchOne()!!.id
@@ -641,6 +645,25 @@ class WorkspaceDao {
         }
     }
 
+    fun modifyWorkspaceProperty(
+        dslContext: DSLContext,
+        workspaceName: String,
+        workspaceProperty: WorkspaceProperty
+    ) {
+        with(TWorkspace.T_WORKSPACE) {
+            dslContext.update(this)
+                .set(UPDATE_TIME, LocalDateTime.now())
+                .let {
+                    i -> if (workspaceProperty.displayName != null) i.set(DISPLAY_NAME, workspaceProperty.displayName) else i
+                }
+                .let {
+                    i -> if (workspaceProperty.remark != null) i.set(REMARK, workspaceProperty.remark) else i
+                }
+                .where(NAME.eq(workspaceName))
+                .execute()
+        }
+    }
+
     fun updateWorkspaceCreatorInfo(
         dslContext: DSLContext,
         workspaceName: String,
@@ -846,7 +869,8 @@ class WorkspaceDao {
                     preciAgentId = preciAgentId,
                     workspaceMountType = WorkspaceMountType.valueOf(workspaceMountType),
                     workspaceSystemType = WorkspaceSystemType.valueOf(systemType),
-                    ownerType = WorkspaceOwnerType.valueOf(ownerType)
+                    ownerType = WorkspaceOwnerType.valueOf(ownerType),
+                    remark = remark
                 )
             }
         }

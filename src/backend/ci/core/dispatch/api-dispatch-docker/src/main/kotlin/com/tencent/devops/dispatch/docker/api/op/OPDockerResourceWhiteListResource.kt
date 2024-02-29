@@ -30,9 +30,9 @@ package com.tencent.devops.dispatch.docker.api.op
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Result
-import io.swagger.annotations.Api
-import io.swagger.annotations.ApiOperation
-import io.swagger.annotations.ApiParam
+import io.swagger.v3.oas.annotations.tags.Tag
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.Parameter
 import javax.ws.rs.Consumes
 import javax.ws.rs.DELETE
 import javax.ws.rs.GET
@@ -43,7 +43,7 @@ import javax.ws.rs.PathParam
 import javax.ws.rs.Produces
 import javax.ws.rs.core.MediaType
 
-@Api(tags = ["OP_DISPATCH_RESOURCE"], description = "OP-构建机性能配置接口")
+@Tag(name = "OP_DISPATCH_RESOURCE", description = "OP-构建机性能配置接口")
 @Path("/op/dispatch-docker")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
@@ -51,33 +51,33 @@ interface OPDockerResourceWhiteListResource {
 
     @GET
     @Path("/resource-whitelist/list")
-    @ApiOperation("获取资源配置白名单列表")
+    @Operation(summary = "获取资源配置白名单列表")
     fun getResourceWhitelist(
-        @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String
     ): Result<List<String>>
 
     @POST
     @Path("/resource-whitelist/projects/{projectId}/add")
-    @ApiOperation("新增资源配置白名单")
+    @Operation(summary = "新增资源配置白名单")
     fun addResourceWhitelist(
-        @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String,
-        @ApiParam("服务ID", required = true)
+        @Parameter(description = "服务ID", required = true)
         @PathParam("projectId")
         projectId: String
     ): Result<Boolean>
 
     @DELETE
     @Path("/resource-whitelist/projects/{projectId}/delete")
-    @ApiOperation("删除资源配置白名单")
+    @Operation(summary = "删除资源配置白名单")
     fun deleteResourceWhitelist(
-        @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String,
-        @ApiParam("服务ID", required = true)
+        @Parameter(description = "服务ID", required = true)
         @PathParam("projectId")
         projectId: String
     ): Result<Boolean>

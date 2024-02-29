@@ -28,17 +28,16 @@
 package com.tencent.devops.process.pojo.pipeline
 
 import com.tencent.devops.common.api.pojo.ErrorType
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("构建模型-ID")
+@Schema(title = "构建模型-ID")
 data class SubPipelineStatus(
-    @ApiModelProperty("子流水线状态", required = true)
+    @get:Schema(title = "子流水线状态", required = true)
     val status: String,
-    @ApiModelProperty("错误类型", required = false)
+    @get:Schema(title = "错误类型", required = false)
     var errorType: ErrorType? = null,
-    @ApiModelProperty("错误码", required = false)
+    @get:Schema(title = "错误码", required = false)
     var errorCode: Int? = null,
-    @ApiModelProperty("错误信息", required = false)
+    @get:Schema(title = "错误信息", required = false)
     var errorMsg: String? = null
 )

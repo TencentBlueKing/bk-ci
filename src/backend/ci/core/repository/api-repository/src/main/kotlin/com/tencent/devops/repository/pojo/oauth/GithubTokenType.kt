@@ -27,12 +27,11 @@
 
 package com.tencent.devops.repository.pojo.oauth
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("github token 类型")
+@Schema(title = "github token 类型")
 enum class GithubTokenType(
-    @ApiModelProperty("前缀")
+    @get:Schema(title = "前缀")
     var prefix: String
 ) {
     GITHUB_APP("ghu_"),

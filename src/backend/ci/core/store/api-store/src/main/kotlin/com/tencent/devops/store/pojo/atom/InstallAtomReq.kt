@@ -27,13 +27,12 @@
 
 package com.tencent.devops.store.pojo.atom
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("安装插件到项目请求报文")
+@Schema(title = "安装插件到项目请求报文")
 data class InstallAtomReq(
-    @ApiModelProperty("项目标识", required = true)
+    @get:Schema(title = "项目标识", required = true)
     val projectCode: ArrayList<String>,
-    @ApiModelProperty("插件标识", required = true)
+    @get:Schema(title = "插件标识", required = true)
     val atomCode: String
 )

@@ -28,15 +28,14 @@
 package com.tencent.devops.process.pojo.pipeline
 
 import com.tencent.devops.store.pojo.dto.ExtServiceBaseInfoDTO
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("扩展服务构建初始化流水线请求报文体")
+@Schema(title = "扩展服务构建初始化流水线请求报文体")
 data class ExtServiceBuildInitPipelineReq(
-    @ApiModelProperty("流水线模型", required = true)
+    @get:Schema(title = "流水线模型", required = true)
     val pipelineModel: String,
-    @ApiModelProperty("脚本任务插件Shell执行脚本", required = true)
+    @get:Schema(title = "脚本任务插件Shell执行脚本", required = true)
     val script: String,
-    @ApiModelProperty("扩展服务基本信息", required = true)
+    @get:Schema(title = "扩展服务基本信息", required = true)
     val extServiceBaseInfo: ExtServiceBaseInfoDTO
 )
