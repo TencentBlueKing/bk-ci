@@ -47,7 +47,6 @@ import com.tencent.devops.process.engine.common.BuildTimeCostUtils.generateMatri
 import com.tencent.devops.process.engine.dao.PipelineBuildDao
 import com.tencent.devops.process.engine.dao.PipelineResDao
 import com.tencent.devops.process.engine.dao.PipelineResVersionDao
-import com.tencent.devops.process.engine.service.PipelineElementService
 import com.tencent.devops.process.engine.service.detail.ContainerBuildDetailService
 import com.tencent.devops.process.engine.utils.ContainerUtils
 import com.tencent.devops.process.pojo.VmInfo
@@ -72,7 +71,6 @@ class ContainerBuildRecordService(
     pipelineResDao: PipelineResDao,
     pipelineBuildDao: PipelineBuildDao,
     pipelineResVersionDao: PipelineResVersionDao,
-    pipelineElementService: PipelineElementService,
     stageTagService: StageTagService,
     buildRecordModelDao: BuildRecordModelDao,
     pipelineEventDispatcher: PipelineEventDispatcher,
@@ -86,8 +84,7 @@ class ContainerBuildRecordService(
     recordModelService = recordModelService,
     pipelineResDao = pipelineResDao,
     pipelineBuildDao = pipelineBuildDao,
-    pipelineResVersionDao = pipelineResVersionDao,
-    pipelineElementService = pipelineElementService
+    pipelineResVersionDao = pipelineResVersionDao
 ) {
 
     fun getRecord(
