@@ -223,5 +223,5 @@ interface AtomService {
     /**
      * 分页查询组件代码库哈希ID
      */
-    fun getAtomRepositoryHashId(page: Int, pageSize: Int): Result<List<String>>
+    fun getAtomRepositoryId(userId: String, page: Int, pageSize: Int): Result<List<String>>
 }

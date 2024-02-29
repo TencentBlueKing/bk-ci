@@ -1361,14 +1361,4 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
         }
         return Result(versionInfo)
     }
-
-    override fun getAtomRepositoryHashId(page: Int, pageSize: Int): Result<List<String>> {
-        return Result(
-            atomDao.getAtomRepositoryHashId(
-                dslContext = dslContext,
-                page = page,
-                pageSize = if (pageSize > PageUtil.MAX_PAGE_SIZE) PageUtil.MAX_PAGE_SIZE else pageSize
-            )
-        )
-    }
 }
