@@ -543,7 +543,7 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
                     operator = userId,
                     approvalStatus = newApprovalStatus
                 )
-                projectUpdateHistoryDao.createOrUpdate(
+                projectUpdateHistoryDao.create(
                     dslContext = dslContext,
                     projectUpdateHistoryInfo = projectUpdateHistoryInfo
                 )

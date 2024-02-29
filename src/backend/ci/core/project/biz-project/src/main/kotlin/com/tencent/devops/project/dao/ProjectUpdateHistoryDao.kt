@@ -11,7 +11,7 @@ import java.time.LocalDateTime
 
 @Repository
 class ProjectUpdateHistoryDao {
-    fun createOrUpdate(
+    fun create(
         dslContext: DSLContext,
         projectUpdateHistoryInfo: ProjectUpdateHistoryInfo
     ) {
@@ -29,6 +29,7 @@ class ProjectUpdateHistoryDao {
                 AFTER_SUBJECT_SCOPES,
                 OPERATOR,
                 APPROVAL_STATUS,
+                CREATED_AT,
                 UPDATED_AT
             ).values(
                 projectUpdateHistoryInfo.englishName,
@@ -42,20 +43,9 @@ class ProjectUpdateHistoryDao {
                 projectUpdateHistoryInfo.afterSubjectScopes,
                 projectUpdateHistoryInfo.operator,
                 projectUpdateHistoryInfo.approvalStatus,
+                LocalDateTime.now(),
                 LocalDateTime.now()
-            ).onDuplicateKeyUpdate()
-                .set(BEFORE_PROJECT_NAME, projectUpdateHistoryInfo.beforeProjectName)
-                .set(AFTER_PROJECT_NAME, projectUpdateHistoryInfo.afterProjectName)
-                .set(BEFORE_PRODUCT_ID, projectUpdateHistoryInfo.beforeProductId)
-                .set(AFTER_PRODUCT_ID, projectUpdateHistoryInfo.afterProductId)
-                .set(BEFORE_ORGANIZATION, projectUpdateHistoryInfo.beforeOrganization)
-                .set(AFTER_ORGANIZATION, projectUpdateHistoryInfo.afterOrganization)
-                .set(BEFORE_SUBJECT_SCOPES, projectUpdateHistoryInfo.beforeSubjectScopes)
-                .set(AFTER_SUBJECT_SCOPES, projectUpdateHistoryInfo.afterSubjectScopes)
-                .set(OPERATOR, projectUpdateHistoryInfo.operator)
-                .set(APPROVAL_STATUS, projectUpdateHistoryInfo.approvalStatus)
-                .set(UPDATED_AT, LocalDateTime.now())
-                .execute()
+            ).execute()
         }
     }
 
@@ -65,9 +55,17 @@ class ProjectUpdateHistoryDao {
         englishName: String
     ) {
         with(TProjectUpdateHistory.T_PROJECT_UPDATE_HISTORY) {
-            dslContext.update(this)
-                .set(APPROVAL_STATUS, approvalStatus)
-                .where(ENGLISH_NAME.eq(englishName)).execute()
+            val record = dslContext.selectFrom(this)
+                .where(ENGLISH_NAME.eq(englishName))
+                .orderBy(UPDATED_AT.desc())
+                .fetchAny()
+            record?.let {
+                dslContext.update(this)
+                    .set(APPROVAL_STATUS, approvalStatus)
+                    .set(UPDATED_AT, LocalDateTime.now())
+                    .where(ENGLISH_NAME.eq(englishName))
+                    .execute()
+            }
         }
     }
 
