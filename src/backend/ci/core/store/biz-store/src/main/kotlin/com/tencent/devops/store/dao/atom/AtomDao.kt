@@ -1380,31 +1380,26 @@ class AtomDao : AtomBaseDao() {
         limit: Int,
         offset: Int
     ): List<AtomRefRepositoryInfo> {
-        val ta = TAtom.T_ATOM
-        val ts = TStoreProjectRel.T_STORE_PROJECT_REL
-        val conditions = mutableListOf(
-            ts.STORE_TYPE.eq(StoreTypeEnum.ATOM.type.toByte()),
-            ts.TYPE.eq(StoreProjectTypeEnum.INIT.type.toByte()),
-            ta.REPOSITORY_HASH_ID.isNotNull
-        )
-        if (!atomCode.isNullOrBlank()) {
-            conditions.add(ta.ATOM_CODE.eq(atomCode))
+        return with(TAtom.T_ATOM) {
+            val conditions = mutableListOf(
+                REPOSITORY_HASH_ID.isNotNull,
+                LATEST_FLAG.eq(true)
+            )
+            dslContext.select(
+                ATOM_CODE,
+                REPOSITORY_HASH_ID
+            )
+                .where(conditions)
+                .orderBy(CREATE_TIME.desc())
+                .limit(limit)
+                .offset(offset)
+                .fetch()
+                .map {
+                    AtomRefRepositoryInfo(
+                        atomCode = it.value1(),
+                        repositoryHashId = it.value2()
+                    )
+                }
         }
-        return dslContext.selectDistinct(
-            ta.ATOM_CODE,
-            ta.REPOSITORY_HASH_ID
-        )
-            .from(ta).leftJoin(ts)
-            .on(ta.ATOM_CODE.eq(ts.STORE_CODE)).where(conditions)
-            .orderBy(ta.CREATE_TIME.desc())
-            .limit(limit)
-            .offset(offset)
-            .fetch()
-            .map {
-                AtomRefRepositoryInfo(
-                    atomCode = it.value1(),
-                    repositoryHashId = it.value2()
-                )
-            }
     }
 }
