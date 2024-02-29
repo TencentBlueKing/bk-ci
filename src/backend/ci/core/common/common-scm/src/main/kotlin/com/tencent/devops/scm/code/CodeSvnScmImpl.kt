@@ -159,7 +159,8 @@ class CodeSvnScmImpl constructor(
         try {
             addWebhookByToken(hookUrl, projectName)
         } catch (ignored: ScmException) {
-            // 旧项目迁移后的svn项目名可能带有_svn后缀, 若初次调用失败,则添加_svn后重新尝试添加
+            // 工蜂迁移svn项目后，svn项目名与原有git项目名相同，导致项目名冲突，为此在工蜂在svn项目名后添加[_svn]后缀，但在复制svn路径时可能
+            // 缺少[_svn]，如实际路径为[bk_ci/ci_svn],但复制路径为[bk_ci/ci]，所以当报项目不存在时，增加[_svn]后缀后重试
             if (ignored.message == I18nUtil.getCodeLanMessage(CommonMessageCode.ENGINEERING_REPO_NOT_EXIST) &&
                 !projectName.endsWith(SVN_PROJECT_NAME_SUFFIX)
             ) {
