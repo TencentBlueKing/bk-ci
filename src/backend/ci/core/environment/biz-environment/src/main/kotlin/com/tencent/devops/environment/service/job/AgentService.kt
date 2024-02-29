@@ -258,7 +258,19 @@ data class AgentService @Autowired constructor(
                     if (it.status in agentTaskEndStatusList) { // agent安装结束(成功/失败)
                         val nodeStatus =
                             if (AGENT_INSTALL_NORMAL == it.status) NodeStatus.NORMAL.name
-                            else NodeStatus.ABNORMAL.name
+                            else { // agent安装失败，重新查询agent安装状态
+                                val agentInfo = queryAgentStatusService.getAgentVersions(
+                                    listOf(AgentVersion(ip = it.ip, bkHostId = it.bkHostId?.toLong()))
+                                )
+                                if (AGENT_NOT_INSTALLED_TAG == agentInfo?.get(0)?.installedTag)
+                                    NodeStatus.NOT_INSTALLED.name
+                                else if (AGENT_ABNORMAL_NODE_STATUS == agentInfo?.get(0)?.status)
+                                    NodeStatus.ABNORMAL.name
+                                else if (AGENT_NORMAL_NODE_STATUS == agentInfo?.get(0)?.status)
+                                    NodeStatus.NORMAL.name
+                                else
+                                    NodeStatus.NOT_INSTALLED.name
+                            }
                         nodeDao.updateNodeStatusByNodeIp(dslContext, listOf(it.ip), nodeStatus, null)
                         runningIpList.remove(it.ip)
                     }
