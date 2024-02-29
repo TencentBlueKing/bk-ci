@@ -166,10 +166,13 @@ interface ServiceMarketAtomResource {
         getRelyAtom: GetRelyAtom
     ): Result<Map<String, Map<String, Any>>?>
 
-    @Operation(summary = "分页查询组件代码库哈希ID")
+    @Operation(summary = "分页查询组件代码库ID")
     @GET
-    @Path("/atom/repo/list")
-    fun getAtomRepositoryHashId(
+    @Path("/atom/repoId/list")
+    fun getAtomRepositoryId(
+        @Parameter(description = "userId", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
         @Parameter(description = "第几页", required = true)
         @QueryParam("page")
         page: Int,

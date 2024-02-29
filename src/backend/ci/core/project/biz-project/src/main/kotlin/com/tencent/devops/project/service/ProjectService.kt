@@ -259,10 +259,7 @@ interface ProjectService {
         productName: String
     )
 
-    fun batchUpdateProjectProductId(
-        englishNames: List<String>,
-        productName: String
-    )
+    fun batchUpdateProjectProductId(englishNames: List<String>, productId: Int)
 
     fun updateOrganizationByEnglishName(
         englishName: String,

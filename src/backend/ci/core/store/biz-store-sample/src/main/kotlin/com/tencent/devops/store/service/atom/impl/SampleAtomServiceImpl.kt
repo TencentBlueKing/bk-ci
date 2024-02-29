@@ -39,6 +39,10 @@ class SampleAtomServiceImpl : SampleAtomService, AtomServiceImpl() {
         return true
     }
 
+    override fun getAtomRepositoryId(userId: String, page: Int, pageSize: Int): Result<List<String>> {
+        return Result(emptyList())
+    }
+
     override fun updateRepoInfo(
         visibilityLevel: VisibilityLevelEnum?,
         dbVisibilityLevel: Int?,

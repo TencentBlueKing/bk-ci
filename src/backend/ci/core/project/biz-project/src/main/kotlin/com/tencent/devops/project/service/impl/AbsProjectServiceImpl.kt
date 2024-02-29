@@ -1308,14 +1308,11 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
         )
     }
 
-    override fun batchUpdateProjectProductId(englishNames: List<String>, productName: String) {
-        val product = getOperationalProducts().firstOrNull {
-            it.productName == productName
-        } ?: throw NotFoundException("product - $productName is not exist!")
+    override fun batchUpdateProjectProductId(englishNames: List<String>, productId: Int) {
         projectDao.batchUpdateProductId(
             dslContext = dslContext,
             englishNames = englishNames,
-            productId = product.productId
+            productId = productId
         )
     }
 
