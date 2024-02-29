@@ -11,8 +11,6 @@ import com.tencent.devops.remotedev.pojo.bkvision.BkVisionDatasetQueryBody
 import com.tencent.devops.remotedev.pojo.bkvision.BkVisionResp
 import com.tencent.devops.remotedev.pojo.bkvision.QueryFieldDataBody
 import com.tencent.devops.remotedev.pojo.bkvision.QueryVariableDataBody
-import okhttp3.Headers
-import okhttp3.Headers.Companion.toHeaders
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.Request
 import okhttp3.RequestBody.Companion.toRequestBody
@@ -159,7 +157,7 @@ class BKVisionService @Autowired constructor(
         }
     }
 
-    private fun headerStr():String {
+    private fun headerStr(): String {
         return objectMapper.writeValueAsString(
             mapOf("bk_app_code" to bkConfig.appCode, "bk_app_secret" to bkConfig.appSecret)
         ).replace("\\s".toRegex(), "")
