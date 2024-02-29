@@ -852,7 +852,7 @@ class PipelineAtomReplaceCronService @Autowired constructor(
                 toAtomCode = toAtomCode,
                 toAtomVersion = toAtomVersion,
                 fromField = fromParamName,
-                fromFieldValue = fromAtomInputParamMap?.get(fromParamName),
+                fromFieldValue = fromAtomInputParamMap?.get(fromParamName) ?: paramReplaceInfo.toParamDefaultValue,
                 toField = toParamName,
                 toFieldDefaultValue = paramReplaceInfo.toParamValue
             )
@@ -882,8 +882,10 @@ class PipelineAtomReplaceCronService @Autowired constructor(
             } else {
                 fromAtomInputParamMap?.get(fromParamName)
             }
-            if (inputParamValue != null) {
-                toAtomInputParamMap[toAtomInputParamName] = inputParamValue
+            // 被替换插件参数没有值则用配置的默认值作为替换插件参数值
+            val toAtomInputParamValue = inputParamValue ?: paramReplaceInfo.toParamDefaultValue
+            if (toAtomInputParamValue != null) {
+                toAtomInputParamMap[toAtomInputParamName] = toAtomInputParamValue
             }
             return true
         }

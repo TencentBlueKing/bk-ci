@@ -56,7 +56,6 @@ import com.tencent.devops.process.engine.dao.PipelineBuildDao
 import com.tencent.devops.process.engine.dao.PipelineResDao
 import com.tencent.devops.process.engine.dao.PipelineResVersionDao
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildWebSocketPushEvent
-import com.tencent.devops.process.engine.service.PipelineElementService
 import com.tencent.devops.process.pojo.BuildStageStatus
 import com.tencent.devops.process.pojo.pipeline.record.BuildRecordModel
 import com.tencent.devops.process.pojo.pipeline.record.BuildRecordStage
@@ -78,8 +77,7 @@ open class BaseBuildRecordService(
     private val stageTagService: StageTagService,
     private val recordModelService: PipelineRecordModelService,
     private val pipelineResDao: PipelineResDao,
-    private val pipelineResVersionDao: PipelineResVersionDao,
-    private val pipelineElementService: PipelineElementService
+    private val pipelineResVersionDao: PipelineResVersionDao
 ) {
 
     protected fun update(
@@ -180,14 +178,6 @@ open class BaseBuildRecordService(
         return try {
             watcher.start("fillElementWhenNewBuild")
             val fullModel = JsonUtil.to(resourceStr, Model::class.java)
-            // 为model填充质量红线element
-            pipelineElementService.fillElementWhenNewBuild(
-                model = fullModel,
-                projectId = projectId,
-                pipelineId = pipelineId,
-                handlePostFlag = false,
-                queryDslContext = queryDslContext
-            )
             val baseModelMap = JsonUtil.toMutableMap(bean = fullModel, skipEmpty = false)
             val mergeBuildRecordParam = MergeBuildRecordParam(
                 projectId = projectId,

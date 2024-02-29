@@ -48,7 +48,6 @@ import com.tencent.devops.process.engine.dao.PipelineBuildDao
 import com.tencent.devops.process.engine.dao.PipelineResDao
 import com.tencent.devops.process.engine.dao.PipelineResVersionDao
 import com.tencent.devops.process.engine.pojo.PipelineTaskStatusInfo
-import com.tencent.devops.process.engine.service.PipelineElementService
 import com.tencent.devops.process.engine.service.detail.TaskBuildDetailService
 import com.tencent.devops.process.pojo.pipeline.record.BuildRecordTask
 import com.tencent.devops.process.pojo.task.TaskBuildEndParam
@@ -82,7 +81,6 @@ class TaskBuildRecordService(
     pipelineResDao: PipelineResDao,
     pipelineBuildDao: PipelineBuildDao,
     pipelineResVersionDao: PipelineResVersionDao,
-    pipelineElementService: PipelineElementService,
     stageTagService: StageTagService,
     buildRecordModelDao: BuildRecordModelDao,
     pipelineEventDispatcher: PipelineEventDispatcher,
@@ -96,8 +94,7 @@ class TaskBuildRecordService(
     recordModelService = recordModelService,
     pipelineResDao = pipelineResDao,
     pipelineBuildDao = pipelineBuildDao,
-    pipelineResVersionDao = pipelineResVersionDao,
-    pipelineElementService = pipelineElementService
+    pipelineResVersionDao = pipelineResVersionDao
 ) {
 
     fun updateTaskStatus(
