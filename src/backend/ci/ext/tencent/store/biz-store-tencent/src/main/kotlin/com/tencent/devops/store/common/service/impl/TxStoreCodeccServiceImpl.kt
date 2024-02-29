@@ -183,7 +183,8 @@ class TxStoreCodeccServiceImpl @Autowired constructor(
         logger.info("startCodeccTask commitId:$commitId,startCodeccTaskResult:$startCodeccTaskResult")
         if (startCodeccTaskResult.status == 2300020) {
             // 如果没有创建扫描流水线则再补偿创建
-            val storeCommonDao = SpringContextUtil.getBean(AbstractStoreCommonDao::class.java, "${storeType}_COMMON_DAO")
+            val storeCommonDao =
+                SpringContextUtil.getBean(AbstractStoreCommonDao::class.java, "${storeType}_COMMON_DAO")
             val codeccLanguages = mutableListOf<String>()
             val devLanguages = storeCommonDao.getStoreDevLanguages(dslContext, storeCode)
             devLanguages?.forEach {
