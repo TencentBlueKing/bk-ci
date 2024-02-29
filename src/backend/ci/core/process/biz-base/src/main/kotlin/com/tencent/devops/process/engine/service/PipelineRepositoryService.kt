@@ -235,6 +235,7 @@ class PipelineRepositoryService constructor(
             pipelineId = pipelineId,
             userId = userId,
             create = create,
+            versionStatus = versionStatus,
             channelCode = channelCode
         )
 
@@ -341,6 +342,7 @@ class PipelineRepositoryService constructor(
         pipelineId: String,
         userId: String,
         create: Boolean = true,
+        versionStatus: VersionStatus? = VersionStatus.RELEASED,
         channelCode: ChannelCode
     ): List<PipelineModelTask> {
 
@@ -399,7 +401,8 @@ class PipelineRepositoryService constructor(
         modelTasks: MutableList<PipelineModelTask>,
         channelCode: ChannelCode,
         create: Boolean,
-        distIds: HashSet<String>
+        distIds: HashSet<String>,
+        versionStatus: VersionStatus? = VersionStatus.RELEASED
     ) {
         if (stage.containers.size != 1) {
             logger.warn("The trigger stage contain more than one container (${stage.containers.size})")
@@ -431,16 +434,18 @@ class PipelineRepositoryService constructor(
                 e.id = modelTaskIdGenerator.getNextId()
             }
             distIds.add(e.id!!)
-            ElementBizRegistrar.getPlugin(e)?.afterCreate(
-                element = e,
-                projectId = projectId,
-                pipelineId = pipelineId,
-                pipelineName = model.name,
-                userId = userId,
-                channelCode = channelCode,
-                create = create,
-                container = c
-            )
+            if (versionStatus == VersionStatus.RELEASED) {
+                ElementBizRegistrar.getPlugin(e)?.afterCreate(
+                    element = e,
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    pipelineName = model.name,
+                    userId = userId,
+                    channelCode = channelCode,
+                    create = create,
+                    container = c
+                )
+            }
 
             modelTasks.add(
                 PipelineModelTask(
@@ -472,7 +477,8 @@ class PipelineRepositoryService constructor(
         modelTasks: MutableList<PipelineModelTask>,
         channelCode: ChannelCode,
         create: Boolean,
-        distIds: HashSet<String>
+        distIds: HashSet<String>,
+        versionStatus: VersionStatus? = VersionStatus.RELEASED
     ) {
         if (stage.containers.isEmpty()) {
             throw ErrorCodeException(

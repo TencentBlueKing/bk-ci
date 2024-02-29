@@ -352,7 +352,9 @@ class ModelTransfer @Autowired constructor(
                     on.value.forEach { pre ->
                         triggerV3.add(pre.toPre(modelInput.version).also {
                             it as PreTriggerOnV3
-                            it.type = on.key.alis
+                            if (!it.repoName.isNullOrBlank()) {
+                                it.type = on.key.alis
+                            }
                         })
                     }
                 }
