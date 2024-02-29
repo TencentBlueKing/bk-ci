@@ -61,18 +61,18 @@ interface ApigwProjectResourceV4 {
     @Path("/project_create")
     @Operation(summary = "创建项目", tags = ["v4_app_project_create", "v4_user_project_create"])
     fun create(
-        @Parameter(name = "appCode", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
+        @Parameter(description = "appCode", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
         appCode: String?,
-        @Parameter(name = "apigw Type", required = true)
+        @Parameter(description = "apigw Type", required = true)
         @PathParam("apigwType")
         apigwType: String?,
-        @Parameter(name = "userId", required = true)
+        @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String,
-        @Parameter(name = "项目信息", required = true)
+        @Parameter(description = "项目信息", required = true)
         projectCreateInfo: ProjectCreateInfo,
-        @Parameter(name = "access_token")
+        @Parameter(description = "access_token")
         @HeaderParam(AUTH_HEADER_DEVOPS_ACCESS_TOKEN)
         accessToken: String?
     ): Result<Boolean>
@@ -81,21 +81,21 @@ interface ApigwProjectResourceV4 {
     @Path("/{projectId}")
     @Operation(summary = "修改项目", tags = ["v4_user_project_edit", "v4_app_project_edit"])
     fun update(
-        @Parameter(name = "appCode", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
+        @Parameter(description = "appCode", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
         appCode: String?,
-        @Parameter(name = "apigw Type", required = true)
+        @Parameter(description = "apigw Type", required = true)
         @PathParam("apigwType")
         apigwType: String?,
-        @Parameter(name = "userId", required = true)
+        @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String,
-        @Parameter(name = "项目ID(项目英文名)", required = true)
+        @Parameter(description = "项目ID(项目英文名)", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(name = "项目信息", required = true)
+        @Parameter(description = "项目信息", required = true)
         projectUpdateInfo: ProjectUpdateInfo,
-        @Parameter(name = "access_token")
+        @Parameter(description = "access_token")
         @HeaderParam(AUTH_HEADER_DEVOPS_ACCESS_TOKEN)
         accessToken: String?
     ): Result<Boolean>
@@ -104,19 +104,19 @@ interface ApigwProjectResourceV4 {
     @Path("/{projectId}")
     @Operation(summary = "获取项目信息", tags = ["v4_user_project_get", "v4_app_project_get"])
     fun get(
-        @Parameter(name = "appCode", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
+        @Parameter(description = "appCode", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
         appCode: String?,
-        @Parameter(name = "apigw Type", required = true)
+        @Parameter(description = "apigw Type", required = true)
         @PathParam("apigwType")
         apigwType: String?,
-        @Parameter(name = "userId", required = true)
+        @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String,
-        @Parameter(name = "项目ID英文名标识", required = true)
+        @Parameter(description = "项目ID英文名标识", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(name = "access_token")
+        @Parameter(description = "access_token")
         @HeaderParam(AUTH_HEADER_DEVOPS_ACCESS_TOKEN)
         accessToken: String?
     ): Result<ProjectVO?>
@@ -125,16 +125,16 @@ interface ApigwProjectResourceV4 {
     @Path("/project_list")
     @Operation(summary = "查询所有项目", tags = ["v4_user_project_list", "v4_app_project_list"])
     fun list(
-        @Parameter(name = "appCode", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
+        @Parameter(description = "appCode", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
         appCode: String?,
-        @Parameter(name = "apigw Type", required = true)
+        @Parameter(description = "apigw Type", required = true)
         @PathParam("apigwType")
         apigwType: String?,
-        @Parameter(name = "userId", required = true)
+        @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String,
-        @Parameter(name = "access_token")
+        @Parameter(description = "access_token")
         @HeaderParam(AUTH_HEADER_DEVOPS_ACCESS_TOKEN)
         accessToken: String?
     ): Result<List<ProjectVO>>
@@ -143,22 +143,22 @@ interface ApigwProjectResourceV4 {
     @Path("/project_name_validation")
     @Operation(summary = "校验项目名称和项目英文名", tags = ["v4_app_project_name_validate", "v4_user_project_name_validate"])
     fun validate(
-        @Parameter(name = "appCode", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
+        @Parameter(description = "appCode", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
         appCode: String?,
-        @Parameter(name = "apigw Type", required = true)
+        @Parameter(description = "apigw Type", required = true)
         @PathParam("apigwType")
         apigwType: String?,
-        @Parameter(name = "userId")
+        @Parameter(description = "userId")
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String?,
-        @Parameter(name = "校验的是项目名称或者项目英文名")
+        @Parameter(description = "校验的是项目名称或者项目英文名")
         @QueryParam("validateType")
         validateType: ProjectValidateType,
-        @Parameter(name = "项目名称或者项目英文名")
+        @Parameter(description = "项目名称或者项目英文名")
         @QueryParam("name")
         name: String,
-        @Parameter(name = "项目ID(项目英文名)")
+        @Parameter(description = "项目ID(项目英文名)")
         @QueryParam("english_name")
         projectId: String?
     ): Result<Boolean>
@@ -167,19 +167,19 @@ interface ApigwProjectResourceV4 {
     @Path("/{projectId}/project_user")
     @Operation(summary = "添加指定用户到指定项目用户组", tags = ["v4_app_project_create_users"])
     fun createProjectUser(
-        @Parameter(name = "appCode", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
+        @Parameter(description = "appCode", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
         appCode: String?,
-        @Parameter(name = "apigw Type", required = true)
+        @Parameter(description = "apigw Type", required = true)
         @PathParam("apigwType")
         apigwType: String?,
-        @Parameter(name = "userId")
+        @Parameter(description = "userId")
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String?,
-        @Parameter(name = "projectId", required = true)
+        @Parameter(description = "projectId", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(name = "添加信息", required = true)
+        @Parameter(description = "添加信息", required = true)
         createInfo: ProjectCreateUserInfo
     ): Result<Boolean?>
 }
