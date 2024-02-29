@@ -25,12 +25,15 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.pipeline.utils
+package com.tencent.devops.project.pojo
 
-object SkipElementUtils {
+/**
+ * 项目排序规则
+ */
+enum class ProjectCollation {
+    DEFAULT,
 
-    const val prefix = "devops_container_condition_skip_atoms_"
+    ASC,
 
-    fun getSkipElementVariableName(elementId: String?) =
-        "$prefix$elementId"
+    DESC;
 }
