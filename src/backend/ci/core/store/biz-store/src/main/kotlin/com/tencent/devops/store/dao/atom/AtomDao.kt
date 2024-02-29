@@ -1389,6 +1389,7 @@ class AtomDao : AtomBaseDao() {
                 ATOM_CODE,
                 REPOSITORY_HASH_ID
             )
+                .from(this)
                 .where(conditions)
                 .orderBy(CREATE_TIME.desc())
                 .limit(limit)
