@@ -329,6 +329,11 @@ class PipelineContainerService @Autowired constructor(
                         containerEnableFlag = container.isContainerEnable()
                     )
                 ) {
+                    val taskVar = atomElement.initTaskVar()
+                    taskVar["@type"] = MatrixStatusElement.classType
+                    taskVar[MatrixStatusElement::originClassType.name] = atomElement.getClassType()
+                    taskVar[MatrixStatusElement::originAtomCode.name] = atomElement.getAtomCode()
+                    taskVar[MatrixStatusElement::originTaskAtom.name] = atomElement.getTaskAtom()
                     recordTaskList.add(
                         BuildRecordTask(
                             projectId = projectId,
@@ -346,12 +351,7 @@ class PipelineContainerService @Autowired constructor(
                             timestamps = mapOf(),
                             elementPostInfo = buildTask.additionalOptions?.elementPostInfo,
                             // 对矩阵产生的插件特殊表示类型
-                            taskVar = mutableMapOf(
-                                "@type" to MatrixStatusElement.classType,
-                                MatrixStatusElement::originClassType.name to atomElement.getClassType(),
-                                MatrixStatusElement::originAtomCode.name to atomElement.getAtomCode(),
-                                MatrixStatusElement::originTaskAtom.name to atomElement.getTaskAtom()
-                            )
+                            taskVar = taskVar
                         )
                     )
                 }
@@ -448,7 +448,7 @@ class PipelineContainerService @Autowired constructor(
                             taskId = atomElement.id!!, classType = atomElement.getClassType(),
                             atomCode = atomElement.getTaskAtom(), executeCount = context.executeCount,
                             resourceVersion = context.resourceVersion, taskSeq = taskSeq, status = status.name,
-                            taskVar = mutableMapOf(), timestamps = mapOf(),
+                            taskVar = atomElement.initTaskVar(), timestamps = mapOf(),
                             elementPostInfo = atomElement.additionalOptions?.elementPostInfo?.takeIf { info ->
                                 info.parentElementId != atomElement.id
                             }
@@ -536,7 +536,7 @@ class PipelineContainerService @Autowired constructor(
                             containerId = taskRecord.containerId, taskSeq = taskRecord.taskSeq,
                             taskId = taskRecord.taskId, classType = taskRecord.taskType,
                             atomCode = taskRecord.atomCode ?: taskRecord.taskAtom, timestamps = mapOf(),
-                            executeCount = taskRecord.executeCount ?: 1, taskVar = mutableMapOf(),
+                            executeCount = taskRecord.executeCount ?: 1, taskVar = atomElement.initTaskVar(),
                             status = recordStatus, resourceVersion = context.resourceVersion,
                             elementPostInfo = taskRecord.additionalOptions?.elementPostInfo?.takeIf { info ->
                                 info.parentElementId != taskRecord.taskId

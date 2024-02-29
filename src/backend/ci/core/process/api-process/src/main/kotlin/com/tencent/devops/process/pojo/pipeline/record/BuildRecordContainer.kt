@@ -144,7 +144,7 @@ data class BuildRecordContainer(
                         resourceVersion = context.resourceVersion,
                         taskSeq = index + 2, // model中的插件在数据库表的顺序是从2开始
                         status = buildStatus?.name,
-                        taskVar = mutableMapOf(),
+                        taskVar = element.initTaskVar(),
                         timestamps = mapOf(),
                         elementPostInfo = element.additionalOptions?.elementPostInfo?.takeIf { info ->
                             info.parentElementId != element.id

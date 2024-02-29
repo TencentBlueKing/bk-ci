@@ -27,6 +27,7 @@
 
 package com.tencent.devops.process.service.record
 
+import com.tencent.devops.common.api.constant.KEY_TASK_ATOM
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.JsonUtil.deepCopy
 import com.tencent.devops.common.pipeline.Model
@@ -50,7 +51,6 @@ import com.tencent.devops.process.pojo.pipeline.record.BuildRecordContainer
 import com.tencent.devops.process.pojo.pipeline.record.BuildRecordStage
 import com.tencent.devops.process.pojo.pipeline.record.BuildRecordTask
 import com.tencent.devops.process.pojo.pipeline.record.MergeBuildRecordParam
-import com.tencent.devops.process.utils.KEY_TASK_ATOM
 import com.tencent.devops.store.pojo.common.KEY_ATOM_CODE
 import org.jooq.DSLContext
 import org.springframework.beans.factory.annotation.Autowired
@@ -316,6 +316,12 @@ class PipelineRecordModelService @Autowired constructor(
         if (elementPostInfo != null) {
             // 生成post类型task的变量模型
             taskVarMap = doElementPostInfoBus(elementPostInfo, taskVarMap, containerBaseMap)
+        }
+        val classType = containerRecordTask.classType
+        if (classType in listOf(QualityGateInElement.classType, QualityGateOutElement.classType)) {
+            // 补充质量红线相关信息以便详情页模型数据组装合并
+            taskVarMap["@type"] = classType
+            taskVarMap[KEY_ATOM_CODE] = containerRecordTask.atomCode
         }
         if (matrixTaskFlag && elementPostInfo == null) {
             // 生成矩阵task的变量模型

@@ -194,4 +194,6 @@ abstract class Element(
             additionalOptions!!.enable = false
         }
     }
+
+    open fun initTaskVar(): MutableMap<String, Any> = mutableMapOf()
 }
