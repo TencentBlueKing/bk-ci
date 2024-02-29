@@ -35,6 +35,7 @@ import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
 import com.tencent.devops.common.auth.code.BSPipelineAuthServiceCode
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.repository.api.ServiceGitRepositoryResource
+import com.tencent.devops.repository.api.ServiceRepositoryResource
 import com.tencent.devops.repository.pojo.enums.TokenTypeEnum
 import com.tencent.devops.repository.pojo.enums.VisibilityLevelEnum
 import com.tencent.devops.repository.pojo.git.UpdateGitProjectInfo
@@ -89,17 +90,5 @@ class TxAtomServiceImpl : TxAtomService, AtomServiceImpl() {
             return updateGitRepositoryResult
         }
         return Result(true)
-    }
-
-    override fun getAtomRepositoryId(userId: String, page: Int, pageSize: Int): Result<List<String>> {
-        val repositoryHashIdList = atomDao.getAtomRepositoryHashId(
-            dslContext = dslContext,
-            page = page,
-            pageSize = if (pageSize > PageUtil.MAX_PAGE_SIZE) PageUtil.MAX_PAGE_SIZE else pageSize
-        )
-        return client.get(ServiceGitRepositoryResource::class).getGitProjectIdByRepositoryHashId(
-            userId,
-            repositoryHashIdList
-        )
     }
 }

@@ -322,15 +322,4 @@ interface ServiceGitRepositoryResource {
         @QueryParam("tokenType")
         tokenType: TokenTypeEnum
     ): Result<Boolean>
-
-    @Operation(summary = "根据代码库哈希ID查询GIT项目ID")
-    @POST
-    @Path("/git/branch/default/rules")
-    fun getGitProjectIdByRepositoryHashId(
-        @Parameter(description = "用户ID", required = true)
-        @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String,
-        @Parameter(description = "代码库哈希ID列表", required = true)
-        repositoryHashIdList: List<String>
-    ): Result<List<String>>
 }
