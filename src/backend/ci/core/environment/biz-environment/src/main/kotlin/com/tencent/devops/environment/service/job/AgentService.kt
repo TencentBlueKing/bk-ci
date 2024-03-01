@@ -135,8 +135,7 @@ data class AgentService @Autowired constructor(
         installAgentReqString: String
     ): AgentResult<InstallAgentResult> {
         NodeManApi.setNodemanOperationName("installAgent")
-        val installAgentJson = JSONObject(installAgentReqString)
-        val installAgentReq = mapper.readValue<InstallAgentReq>(installAgentJson.toString())
+        val installAgentReq = mapper.readValue<InstallAgentReq>(installAgentReqString)
         val hostIdToqueryCCResDataMap = queryFromCCService.queryCCFindHostBizRelations(
             installAgentReq.hosts.mapNotNull { it.bkHostId?.toLong() }
         ).data?.associateBy { it.bkHostId }

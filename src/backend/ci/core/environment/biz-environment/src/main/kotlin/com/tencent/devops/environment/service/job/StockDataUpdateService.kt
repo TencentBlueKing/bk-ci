@@ -202,7 +202,7 @@ class StockDataUpdateService @Autowired constructor(
         nodeCCInfoList.takeIf { !it.isNullOrEmpty() }.run {
             // ip - cc记录 映射
             ipToCCInfoMap = nodeCCInfoList!!.associateBy { it.bkHostInnerip }
-            // 2.1 在CC（且状态此时为NOT_IN_CC/NOT_IN_CMDB） - 查询节点agent状态并更新
+            // 2.1 在CC - 查询节点agent状态并更新
             val inCCIpList = nodeCCInfoList.mapNotNull { it.bkHostInnerip }
             inCCIpList.takeIf { it.isNotEmpty() }.run {
                 val ipToAgentVersionInfoMap = queryAgentStatusService.getAgentVersions(
