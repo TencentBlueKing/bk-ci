@@ -27,6 +27,7 @@
 
 package com.tencent.devops.auth.service.gitci
 
+import com.google.common.cache.CacheBuilder
 import com.tencent.devops.auth.ScmRetryUtils
 import com.tencent.devops.auth.service.ManagerService
 import com.tencent.devops.auth.service.stream.StreamPermissionServiceImpl
@@ -37,12 +38,26 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.scm.api.ServiceGitCiResource
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
+import java.util.concurrent.TimeUnit
 
 class StreamGitPermissionServiceImpl @Autowired constructor(
     val client: Client,
     val managerService: ManagerService,
     val projectInfoService: GitProjectInfoService
 ) : StreamPermissionServiceImpl() {
+
+    private val projectDeveloperCache =
+        CacheBuilder.newBuilder()
+            .maximumSize(MAX_SIZE)
+            .expireAfterAccess(5, TimeUnit.HOURS)
+            .build<String, Boolean>()
+
+    private val projectMemberCache =
+        CacheBuilder.newBuilder()
+            .maximumSize(MAX_SIZE)
+            .expireAfterAccess(5, TimeUnit.MINUTES)
+            .build<String, Boolean?>()
+
     override fun isPublicProject(projectCode: String, userId: String?): Boolean {
         val gitProjectId = GitCIUtils.getGitCiProjectId(projectCode)
         return projectInfoService.checkProjectPublic(gitProjectId)
@@ -88,6 +103,10 @@ class StreamGitPermissionServiceImpl @Autowired constructor(
     }
 
     private fun checkDeveloper(gitUserId: String, gitProjectId: String): Boolean {
+        val projectDeveloper = projectDeveloperCache.getIfPresent(projectMemberKey(gitProjectId, gitUserId))
+        if (projectDeveloper != null) {
+            return projectDeveloper
+        }
         return try {
             val checkResult = ScmRetryUtils.callScm(0, logger) {
                 client.getScm(ServiceGitCiResource::class)
@@ -99,6 +118,8 @@ class StreamGitPermissionServiceImpl @Autowired constructor(
             }
             if (!checkResult) {
                 logger.warn("$gitUserId not $gitProjectId developerUp")
+            } else {
+                projectDeveloperCache.put(projectMemberKey(gitProjectId, gitUserId), true)
             }
             checkResult
         } catch (e: Exception) {
@@ -107,8 +128,16 @@ class StreamGitPermissionServiceImpl @Autowired constructor(
         }
     }
 
+    private fun projectMemberKey(projectCode: String, userId: String): String {
+        return projectCode + userId
+    }
+
     private fun checkProjectUser(userId: String, gitProjectId: String): Boolean {
-        try {
+        val projectMember = projectMemberCache.getIfPresent(projectMemberKey(gitProjectId, userId))
+        if (projectMember != null) {
+            return projectMember
+        }
+        return try {
             val projectUser = mutableListOf<String>()
             ScmRetryUtils.callScm(0, logger) {
                 client.getScm(ServiceGitCiResource::class).getProjectMembersAll(
@@ -121,21 +150,24 @@ class StreamGitPermissionServiceImpl @Autowired constructor(
                 }
             }
             if (projectUser.isNotEmpty() && projectUser.contains(userId)) {
-                return true
+                projectMemberCache.put(projectMemberKey(gitProjectId, userId), true)
+                true
+            } else {
+                logger.warn("$gitProjectId $userId is project check fail")
+                false
             }
-            logger.warn("$gitProjectId $userId is project check fail")
-            return false
         } catch (re: RuntimeException) {
             // scm非项目成员会直接报错。 catch异常直接给false
             logger.warn("$userId checkProjectUser $gitProjectId fail")
-            return false
+            false
         } catch (e: Exception) {
             logger.error("maybe network fail. $e")
-            return false
+            false
         }
     }
 
     companion object {
-        val logger = LoggerFactory.getLogger(StreamGitPermissionServiceImpl::class.java)
+        private const val MAX_SIZE = 1000L
+        private val logger = LoggerFactory.getLogger(StreamGitPermissionServiceImpl::class.java)
     }
 }
