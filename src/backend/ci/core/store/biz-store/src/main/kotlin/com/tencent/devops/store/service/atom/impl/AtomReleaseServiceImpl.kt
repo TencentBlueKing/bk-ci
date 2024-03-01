@@ -130,13 +130,13 @@ import com.tencent.devops.store.service.common.StoreI18nMessageService
 import com.tencent.devops.store.service.websocket.StoreWebsocketService
 import com.tencent.devops.store.utils.StoreUtils
 import com.tencent.devops.store.utils.VersionUtils
+import java.time.LocalDateTime
+import java.util.Locale
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
-import java.time.LocalDateTime
-import java.util.Locale
 
 @Suppress("ALL")
 abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseService {
@@ -1453,15 +1453,13 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
         ).use { redisLock ->
             redisLock.lock()
             if (marketAtomDao.isAtomLatestTestVersion(dslContext, atomId) > 0) {
-                val latestTestVersionId = marketAtomDao.queryAtomLatestTestVersionId(dslContext, atomCode)
-                latestTestVersionId?.let {
-                    marketAtomDao.setupAtomLatestTestFlag(
-                        dslContext = dslContext,
-                        userId = userId,
-                        atomCode = atomCode,
-                        atomId = atomId
-                    )
-                }
+                val latestTestVersionId = marketAtomDao.queryAtomLatestTestVersionId(dslContext, atomCode, atomId)
+                marketAtomDao.setupAtomLatestTestFlag(
+                    dslContext = dslContext,
+                    userId = userId,
+                    atomCode = atomCode,
+                    atomId = latestTestVersionId ?: ""
+                )
             }
         }
     }

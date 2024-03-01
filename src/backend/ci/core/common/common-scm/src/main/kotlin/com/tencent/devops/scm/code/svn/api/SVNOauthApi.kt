@@ -25,6 +25,16 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-dependencies {
-    api(project(":core:metrics:biz-metrics"))
+package com.tencent.devops.scm.code.svn.api
+
+import okhttp3.Request
+
+@Suppress("ALL")
+open class SVNOauthApi : SVNApi() {
+
+    override fun request(host: String, token: String, url: String, page: String): Request.Builder {
+        return if (page.isEmpty())
+            Request.Builder().url("$host/$url?access_token=$token")
+        else Request.Builder().url("$host/$url?access_token=$token&$page")
+    }
 }

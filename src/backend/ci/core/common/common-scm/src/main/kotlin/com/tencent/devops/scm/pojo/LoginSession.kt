@@ -30,7 +30,7 @@ import com.fasterxml.jackson.annotation.JsonProperty
 import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "工蜂会话信息")
-data class GitSession(
+data class LoginSession(
     val id: String,
     @get:Schema(title = "邮箱地址")
     val email: String,
