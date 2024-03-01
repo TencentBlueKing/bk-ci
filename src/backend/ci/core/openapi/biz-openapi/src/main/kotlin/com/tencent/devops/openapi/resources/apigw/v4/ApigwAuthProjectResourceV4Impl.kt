@@ -18,7 +18,7 @@ import org.springframework.beans.factory.annotation.Autowired
 @RestResource
 class ApigwAuthProjectResourceV4Impl @Autowired constructor(
     val tokenService: ClientTokenService,
-    val client: Client,
+    val client: Client
 ) : ApigwAuthProjectResourceV4 {
     companion object {
         val logger = LoggerFactory.getLogger(ApigwAuthProjectResourceV4Impl::class.java)
