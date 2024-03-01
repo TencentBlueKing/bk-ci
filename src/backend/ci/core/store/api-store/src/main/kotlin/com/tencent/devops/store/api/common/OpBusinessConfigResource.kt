@@ -30,9 +30,9 @@ package com.tencent.devops.store.api.common
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.store.pojo.common.BusinessConfigRequest
 import com.tencent.devops.store.pojo.common.BusinessConfigResponse
-import io.swagger.annotations.Api
-import io.swagger.annotations.ApiOperation
-import io.swagger.annotations.ApiParam
+import io.swagger.v3.oas.annotations.tags.Tag
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.Parameter
 import javax.ws.rs.Consumes
 import javax.ws.rs.DELETE
 import javax.ws.rs.GET
@@ -43,50 +43,50 @@ import javax.ws.rs.PathParam
 import javax.ws.rs.Produces
 import javax.ws.rs.core.MediaType
 
-@Api(tags = ["OP_STORE_BUSINESS_CONFIG"], description = "OP-STORE-业务配置")
+@Tag(name = "OP_STORE_BUSINESS_CONFIG", description = "OP-STORE-业务配置")
 @Path("/op/store/businessConfig")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface OpBusinessConfigResource {
 
-    @ApiOperation("添加业务配置（返回是否添加成功）")
+    @Operation(summary = "添加业务配置（返回是否添加成功）")
     @POST
     @Path("/")
     fun add(
-        @ApiParam(value = "业务配置信息请求报文体", required = true)
+        @Parameter(description = "业务配置信息请求报文体", required = true)
         businessConfigRequest: BusinessConfigRequest
     ): Result<Boolean>
 
-    @ApiOperation("更新业务配置信息（返回受影响的数据条数）")
+    @Operation(summary = "更新业务配置信息（返回受影响的数据条数）")
     @PUT
     @Path("/ids/{id}")
     fun update(
-        @ApiParam("业务配置ID", required = true)
+        @Parameter(description = "业务配置ID", required = true)
         @PathParam("id")
         id: Int,
-        @ApiParam(value = "业务配置信息请求报文体", required = true)
+        @Parameter(description = "业务配置信息请求报文体", required = true)
         businessConfigRequest: BusinessConfigRequest
     ): Result<Int>
 
-    @ApiOperation("获取所有业务配置信息")
+    @Operation(summary = "获取所有业务配置信息")
     @GET
     @Path("/list")
     fun listAllBusinessConfigs(): Result<List<BusinessConfigResponse>?>
 
-    @ApiOperation("根据ID获取业务配置信息")
+    @Operation(summary = "根据ID获取业务配置信息")
     @GET
     @Path("/{id}")
     fun getBusinessConfigById(
-        @ApiParam("业务配置ID", required = true)
+        @Parameter(description = "业务配置ID", required = true)
         @PathParam("id")
         id: Int
     ): Result<BusinessConfigResponse?>
 
-    @ApiOperation("根据ID删除业务配置信息（返回受影响的数据条数）")
+    @Operation(summary = "根据ID删除业务配置信息（返回受影响的数据条数）")
     @DELETE
     @Path("/{id}")
     fun deleteBusinessConfigById(
-        @ApiParam("业务配置ID", required = true)
+        @Parameter(description = "业务配置ID", required = true)
         @PathParam("id")
         id: Int
     ): Result<Int>

@@ -62,7 +62,7 @@ import com.tencent.devops.common.pipeline.pojo.element.quality.QualityGateInElem
 import com.tencent.devops.common.pipeline.pojo.element.quality.QualityGateOutElement
 import com.tencent.devops.common.pipeline.pojo.time.BuildRecordTimeCost
 import com.tencent.devops.common.pipeline.pojo.time.BuildTimestampType
-import com.tencent.devops.common.pipeline.utils.SkipElementUtils
+import com.tencent.devops.common.pipeline.utils.ElementUtils
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.utils.LogUtils
 import com.tencent.devops.common.web.utils.I18nUtil
@@ -732,6 +732,7 @@ class PipelineRuntimeService @Autowired constructor(
                     context.containerSeq++
                     containerBuildRecords.addRecords(
                         stageId = stage.id!!,
+                        stageEnableFlag = stage.isStageEnable(),
                         container = container,
                         context = context,
                         buildStatus = null,
@@ -745,6 +746,7 @@ class PipelineRuntimeService @Autowired constructor(
                         context.containerSeq++
                         containerBuildRecords.addRecords(
                             stageId = stage.id!!,
+                            stageEnableFlag = stage.isStageEnable(),
                             container = container,
                             context = context,
                             buildStatus = BuildStatus.SKIP,
@@ -757,6 +759,7 @@ class PipelineRuntimeService @Autowired constructor(
                         context.containerSeq++
                         containerBuildRecords.addRecords(
                             stageId = stage.id!!,
+                            stageEnableFlag = stage.isStageEnable(),
                             container = container,
                             context = context,
                             buildStatus = BuildStatus.SKIP,
@@ -1660,7 +1663,7 @@ class PipelineRuntimeService @Autowired constructor(
                 emptyList()
             } else {
                 (JsonUtil.getObjectMapper().readValue(buildParameters) as List<BuildParameters>)
-                    .filter { !it.key.startsWith(SkipElementUtils.prefix) }
+                    .filter { !it.key.startsWith(ElementUtils.skipPrefix) }
             }
         } catch (ignore: Exception) {
             emptyList()

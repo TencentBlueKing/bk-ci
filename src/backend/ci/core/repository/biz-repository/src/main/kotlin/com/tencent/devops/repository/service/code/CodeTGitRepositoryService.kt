@@ -251,20 +251,6 @@ class CodeTGitRepositoryService @Autowired constructor(
             repository = repository
         )
         if (repository.authType != RepoAuthType.OAUTH) {
-            // 授权凭证信息
-            if (repoCredentialInfo.credentialType == CredentialType.USERNAME_PASSWORD.name) {
-                logger.info("using credential of type [USERNAME_PASSWORD],loginUser[${repoCredentialInfo.username}]")
-                repoCredentialInfo.token = scmService.getGitSession(
-                    type = ScmType.CODE_TGIT,
-                    username = repoCredentialInfo.username,
-                    password = repoCredentialInfo.password,
-                    url = repository.url
-                )?.privateToken ?: throw OperationException(
-                    I18nUtil.getCodeLanMessage(
-                        messageCode = CommonMessageCode.TGIT_LOGIN_FAIL
-                    )
-                )
-            }
             val checkResult = checkToken(
                 repoCredentialInfo = repoCredentialInfo,
                 repository = repository
@@ -323,7 +309,8 @@ class CodeTGitRepositoryService @Autowired constructor(
         } else {
             credentialService.getCredentialInfo(
                 projectId = projectId,
-                repository = repository
+                repository = repository,
+                tryGetSession = true
             )
         }
     }

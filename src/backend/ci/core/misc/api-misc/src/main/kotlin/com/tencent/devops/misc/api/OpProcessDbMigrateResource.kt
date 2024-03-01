@@ -29,9 +29,9 @@ package com.tencent.devops.misc.api
 
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.pojo.Result
-import io.swagger.annotations.Api
-import io.swagger.annotations.ApiOperation
-import io.swagger.annotations.ApiParam
+import io.swagger.v3.oas.annotations.tags.Tag
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.Parameter
 import javax.ws.rs.Consumes
 import javax.ws.rs.HeaderParam
 import javax.ws.rs.PUT
@@ -41,26 +41,26 @@ import javax.ws.rs.Produces
 import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
-@Api(tags = ["OP_PROCESS_DB_MIGRATE"], description = "OP-process数据库迁移")
+@Tag(name = "OP_PROCESS_DB_MIGRATE", description = "OP-process数据库迁移")
 @Path("/op/process/db")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface OpProcessDbMigrateResource {
 
-    @ApiOperation("按项目迁移process数据库数据")
+    @Operation(summary = "按项目迁移process数据库数据")
     @Path("/projects/{projectId}/data/migrate")
     @PUT
     fun migrateProjectData(
-        @ApiParam("userId", required = true)
+        @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @ApiParam("取消正在运行构建标识", required = true)
+        @Parameter(description = "取消正在运行构建标识", required = true)
         @QueryParam("cancelFlag")
         cancelFlag: Boolean = false,
-        @ApiParam("数据标签", required = true)
+        @Parameter(description = "数据标签", required = true)
         @QueryParam("dataTag")
         dataTag: String
     ): Result<Boolean>

@@ -1,12 +1,11 @@
 package com.tencent.devops.auth.pojo.vo
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("用户水印信息")
+@Schema(title = "用户水印信息")
 data class SecOpsWaterMarkInfoVo(
-    @ApiModelProperty("类型")
+    @get:Schema(title = "类型")
     val type: String,
-    @ApiModelProperty("水印信息")
+    @get:Schema(title = "水印信息")
     val data: String
 )

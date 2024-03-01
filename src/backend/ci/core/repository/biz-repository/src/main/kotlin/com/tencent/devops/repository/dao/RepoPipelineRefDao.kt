@@ -72,7 +72,8 @@ class RepoPipelineRefDao {
                     TRIGGER_CONDITION,
                     TRIGGER_CONDITION_MD5,
                     CREATE_TIME,
-                    UPDATE_TIME
+                    UPDATE_TIME,
+                    CHANNEL
                 ).values(
                     it.projectId,
                     it.pipelineId,
@@ -91,7 +92,8 @@ class RepoPipelineRefDao {
                     it.triggerCondition?.let { JsonUtil.toJson(it) },
                     it.triggerConditionMd5,
                     now,
-                    now
+                    now,
+                    it.channel
                 ).onDuplicateKeyUpdate()
                     .set(TASK_NAME, it.taskName)
                     .set(PIPELINE_NAME, it.pipelineName)
@@ -106,6 +108,7 @@ class RepoPipelineRefDao {
                     .set(TRIGGER_CONDITION, it.triggerCondition?.let { JsonUtil.toJson(it) })
                     .set(TRIGGER_CONDITION_MD5, it.triggerConditionMd5)
                     .set(UPDATE_TIME, now)
+                    .set(CHANNEL, it.channel)
             }
         }).execute()
     }
@@ -141,6 +144,7 @@ class RepoPipelineRefDao {
         repositoryId: Long,
         eventType: String?,
         triggerConditionMd5: String?,
+        channel: String?,
         limit: Int,
         offset: Int
     ): List<RepoPipelineRefVo> {
@@ -149,6 +153,9 @@ class RepoPipelineRefDao {
                 PROJECT_ID.eq(projectId),
                 REPOSITORY_ID.eq(repositoryId)
             )
+            if (!channel.isNullOrBlank()) {
+                conditions.add(CHANNEL.eq(channel))
+            }
             if (!triggerConditionMd5.isNullOrBlank()) {
                 conditions.add(TRIGGER_CONDITION_MD5.eq(triggerConditionMd5))
             }
@@ -176,13 +183,17 @@ class RepoPipelineRefDao {
         projectId: String,
         repositoryId: Long,
         eventType: String?,
-        triggerConditionMd5: String?
+        triggerConditionMd5: String?,
+        channel: String?
     ): Long {
         return with(TRepositoryPipelineRef.T_REPOSITORY_PIPELINE_REF) {
             val conditions = mutableListOf(
                 PROJECT_ID.eq(projectId),
                 REPOSITORY_ID.eq(repositoryId)
             )
+            if (!channel.isNullOrBlank()) {
+                conditions.add(CHANNEL.eq(channel))
+            }
             if (!triggerConditionMd5.isNullOrBlank()) {
                 conditions.add(TRIGGER_CONDITION_MD5.eq(triggerConditionMd5))
             }

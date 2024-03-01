@@ -33,11 +33,11 @@ import com.tencent.devops.dispatch.pojo.enums.PipelineTaskStatus
 import com.tencent.devops.dispatch.pojo.thirdPartyAgent.BuildJobType
 import com.tencent.devops.model.dispatch.tables.TDispatchThirdpartyAgentBuild
 import com.tencent.devops.model.dispatch.tables.records.TDispatchThirdpartyAgentBuildRecord
-import java.time.LocalDateTime
 import org.jooq.DSLContext
 import org.jooq.JSON
 import org.jooq.Result
 import org.springframework.stereotype.Repository
+import java.time.LocalDateTime
 
 @Repository
 @Suppress("ALL")
@@ -75,10 +75,17 @@ class ThirdPartyAgentBuildDao {
         nodeId: Long,
         dockerInfo: ThirdPartyAgentDockerInfoDispatch?,
         executeCount: Int?,
-        containerHashId: String?
+        containerHashId: String?,
+        envId: Long?,
+        ignoreEnvAgentIds: Set<String>?
     ): Int {
         with(TDispatchThirdpartyAgentBuild.T_DISPATCH_THIRDPARTY_AGENT_BUILD) {
             val now = LocalDateTime.now()
+            val ignoreEnvAgentIdsJson = if (ignoreEnvAgentIds.isNullOrEmpty()) {
+                null
+            } else {
+                JSON.json(JsonUtil.toJson(ignoreEnvAgentIds, false))
+            }
             val preRecord =
                 dslContext.selectFrom(this).where(BUILD_ID.eq(buildId)).and(VM_SEQ_ID.eq(vmSeqId)).fetchAny()
             if (preRecord != null) { // 支持更新，让用户进行步骤重试时继续能使用
@@ -103,6 +110,8 @@ class ThirdPartyAgentBuildDao {
                     )
                     .set(EXECUTE_COUNT, executeCount)
                     .set(CONTAINER_HASH_ID, containerHashId)
+                    .set(ENV_ID, envId)
+                    .set(IGNORE_ENV_AGENT_IDS, ignoreEnvAgentIdsJson)
                     .where(ID.eq(preRecord.id)).execute()
             }
             return dslContext.insertInto(
@@ -123,7 +132,9 @@ class ThirdPartyAgentBuildDao {
                 NODE_ID,
                 DOCKER_INFO,
                 EXECUTE_COUNT,
-                CONTAINER_HASH_ID
+                CONTAINER_HASH_ID,
+                ENV_ID,
+                IGNORE_ENV_AGENT_IDS
             ).values(
                 projectId,
                 agentId,
@@ -145,7 +156,9 @@ class ThirdPartyAgentBuildDao {
                     JSON.json(JsonUtil.toJson(dockerInfo, formatted = false))
                 },
                 executeCount,
-                containerHashId
+                containerHashId,
+                envId,
+                ignoreEnvAgentIdsJson
             ).execute()
         }
     }

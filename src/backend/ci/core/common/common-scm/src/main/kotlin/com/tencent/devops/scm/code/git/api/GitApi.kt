@@ -49,7 +49,7 @@ import com.tencent.devops.scm.pojo.GitMrInfo
 import com.tencent.devops.scm.pojo.GitMrReviewInfo
 import com.tencent.devops.scm.pojo.GitProjectInfo
 import com.tencent.devops.scm.pojo.GitServerError
-import com.tencent.devops.scm.pojo.GitSession
+import com.tencent.devops.scm.pojo.LoginSession
 import com.tencent.devops.scm.pojo.TapdWorkItem
 import io.micrometer.core.instrument.MeterRegistry
 import io.micrometer.core.instrument.Tag
@@ -651,7 +651,7 @@ open class GitApi {
         url: String,
         username: String,
         password: String
-    ): GitSession? {
+    ): LoginSession? {
         val body = JsonUtil.toJson(
             mapOf(
                 "login" to username,

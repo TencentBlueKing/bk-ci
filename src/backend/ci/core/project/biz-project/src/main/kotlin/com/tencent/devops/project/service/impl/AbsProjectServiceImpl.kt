@@ -55,8 +55,9 @@ import com.tencent.devops.common.service.utils.LogUtils
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.model.project.tables.records.TProjectRecord
 import com.tencent.devops.project.SECRECY_PROJECT_REDIS_KEY
-import com.tencent.devops.project.constant.ProjectConstant.NAME_MAX_LENGTH
 import com.tencent.devops.project.constant.ProjectConstant.NAME_MIN_LENGTH
+import com.tencent.devops.project.constant.ProjectConstant.PROJECT_ID_MAX_LENGTH
+import com.tencent.devops.project.constant.ProjectConstant.PROJECT_NAME_MAX_LENGTH
 import com.tencent.devops.project.constant.ProjectMessageCode
 import com.tencent.devops.project.constant.ProjectMessageCode.BOUND_IAM_GRADIENT_ADMIN
 import com.tencent.devops.project.constant.ProjectMessageCode.PROJECT_NOT_EXIST
@@ -67,11 +68,14 @@ import com.tencent.devops.project.jmx.api.ProjectJmxApi
 import com.tencent.devops.project.jmx.api.ProjectJmxApi.Companion.PROJECT_LIST
 import com.tencent.devops.project.pojo.AuthProjectCreateInfo
 import com.tencent.devops.project.pojo.ProjectBaseInfo
+import com.tencent.devops.project.pojo.ProjectCollation
 import com.tencent.devops.project.pojo.ProjectCreateExtInfo
 import com.tencent.devops.project.pojo.ProjectCreateInfo
 import com.tencent.devops.project.pojo.ProjectDiffVO
 import com.tencent.devops.project.pojo.ProjectLogo
+import com.tencent.devops.project.pojo.ProjectOrganizationInfo
 import com.tencent.devops.project.pojo.ProjectProperties
+import com.tencent.devops.project.pojo.ProjectSortType
 import com.tencent.devops.project.pojo.ProjectUpdateCreatorDTO
 import com.tencent.devops.project.pojo.ProjectUpdateInfo
 import com.tencent.devops.project.pojo.ProjectVO
@@ -124,35 +128,52 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
 
     override fun validate(validateType: ProjectValidateType, name: String, projectId: String?) {
         if (name.isBlank()) {
-            throw ErrorCodeException(errorCode = ProjectMessageCode.NAME_EMPTY)
+            throw ErrorCodeException(
+                errorCode = ProjectMessageCode.NAME_EMPTY,
+                defaultMessage = "Project name cannot be blank!"
+            )
         }
         when (validateType) {
             ProjectValidateType.project_name -> {
-                if (name.isEmpty() || name.length > NAME_MAX_LENGTH) {
+                if (name.isEmpty() || name.length > PROJECT_NAME_MAX_LENGTH) {
                     throw ErrorCodeException(
-                        errorCode = ProjectMessageCode.NAME_TOO_LONG
+                        errorCode = ProjectMessageCode.NAME_TOO_LONG,
+                        defaultMessage = "The length of the project name cannot exceed 64 characters!"
                     )
                 }
                 if (projectDao.existByProjectName(dslContext, name, projectId)) {
-                    throw ErrorCodeException(errorCode = ProjectMessageCode.PROJECT_NAME_EXIST)
+                    throw ErrorCodeException(
+                        errorCode = ProjectMessageCode.PROJECT_NAME_EXIST,
+                        defaultMessage = "The name of the project already exists!"
+                    )
                 }
             }
             ProjectValidateType.english_name -> {
-                // 2 ~ 64 个字符+数字，以小写字母开头
-                if (name.length < NAME_MIN_LENGTH || name.length > NAME_MAX_LENGTH) {
+                // 2 ~ 32 个字符+数字，以小写字母开头
+                if (name.length < NAME_MIN_LENGTH) {
                     throw ErrorCodeException(
-                        errorCode = ProjectMessageCode.EN_NAME_INTERVAL_ERROR
+                        errorCode = ProjectMessageCode.EN_NAME_INTERVAL_ERROR,
+                        defaultMessage = "Project id length cannot be less than 2 characters!"
                     )
                 }
+                if (name.length > PROJECT_ID_MAX_LENGTH) {
+                    throw ErrorCodeException(
+                        errorCode = ProjectMessageCode.EN_NAME_INTERVAL_ERROR,
+                        defaultMessage = "The length of the project id cannot exceed 32 characters!"
+                    )
+                }
+
                 if (!Pattern.matches(ENGLISH_NAME_PATTERN, name)) {
                     logger.warn("Project English Name($name) is not match")
                     throw ErrorCodeException(
-                        errorCode = ProjectMessageCode.EN_NAME_COMBINATION_ERROR
+                        errorCode = ProjectMessageCode.EN_NAME_COMBINATION_ERROR,
+                        defaultMessage = "The project id is illegal!"
                     )
                 }
                 if (projectDao.existByEnglishName(dslContext, name, projectId)) {
                     throw ErrorCodeException(
-                        errorCode = ProjectMessageCode.EN_NAME_EXIST
+                        errorCode = ProjectMessageCode.EN_NAME_EXIST,
+                        defaultMessage = "The project id already exists!"
                     )
                 }
             }
@@ -450,7 +471,7 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
                         )
                     }
                 }
-                // 判断是否需要审批,只有修改最大授权范围和权限敏感才需要审批
+                // 判断是否需要审批,当修改最大授权范围/权限敏感/关联运营产品时需要审批
                 val (finalNeedApproval, newApprovalStatus) = getUpdateApprovalStatus(
                     needApproval = needApproval,
                     projectInfo = projectInfo,
@@ -567,7 +588,8 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
             // 当项目创建成功,则只有最大授权范围和项目性质修改才审批
             val finalNeedApproval = authNeedApproval &&
                 (projectInfo.subjectScopes != subjectScopesStr ||
-                    projectInfo.authSecrecy != projectUpdateInfo.authSecrecy
+                    projectInfo.authSecrecy != projectUpdateInfo.authSecrecy ||
+                    projectInfo.productId != projectUpdateInfo.productId
                     )
             val approvalStatus = if (finalNeedApproval) {
                 ProjectApproveStatus.UPDATE_PENDING.status
@@ -617,7 +639,9 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
         userId: String,
         accessToken: String?,
         enabled: Boolean?,
-        unApproved: Boolean
+        unApproved: Boolean,
+        sortType: ProjectSortType?,
+        collation: ProjectCollation?
     ): List<ProjectVO> {
         val startEpoch = System.currentTimeMillis()
         var success = false
@@ -654,7 +678,9 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
                 projectDao.listByEnglishName(
                     dslContext = dslContext,
                     englishNameList = projectsWithVisitPermission.toList(),
-                    enabled = enabled
+                    enabled = enabled,
+                    sortType = sortType,
+                    collation = collation
                 ).forEach {
                     val pipelineTemplateInstallPerm = pipelineTemplateInstallPerm(
                         projectsWithPipelineTemplateCreatePerm = projectsWithPipelineTemplateCreatePerm,
@@ -1039,6 +1065,11 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
                     I18nUtil.getCodeLanMessage(ProjectMessageCode.PEM_CHECK_FAIL)
                 )
             }
+            validateProjectRelateProduct(
+                userId = userId,
+                enabled = enabled,
+                productId = projectInfo.productId
+            )
         }
         projectDao.updateUsableStatus(
             dslContext = dslContext,
@@ -1277,6 +1308,17 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
         )
     }
 
+    override fun updateOrganizationByEnglishName(
+        englishName: String,
+        projectOrganizationInfo: ProjectOrganizationInfo
+    ) {
+        projectDao.updateOrganizationByEnglishName(
+            dslContext = dslContext,
+            englishName = englishName,
+            projectOrganizationInfo = projectOrganizationInfo
+        )
+    }
+
     abstract fun validatePermission(projectCode: String, userId: String, permission: AuthPermission): Boolean
 
     abstract fun getDeptInfo(userId: String): UserDeptDetail
@@ -1322,6 +1364,12 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
     private fun getAllMembersName() = I18nUtil.getCodeLanMessage(ALL_MEMBERS_NAME)
 
     abstract fun buildRouterTag(routerTag: String?): String?
+
+    abstract fun validateProjectRelateProduct(
+        userId: String,
+        enabled: Boolean,
+        productId: Int?
+    )
 
     companion object {
         const val MAX_PROJECT_NAME_LENGTH = 64

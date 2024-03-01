@@ -102,7 +102,7 @@ interface PermissionResourceGroupService {
 
     fun addGroupMember(
         userId: String,
-        /*user 或 department*/
+        /*user or department or template*/
         memberType: String,
         expiredAt: Long,
         groupId: Int

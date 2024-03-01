@@ -29,20 +29,19 @@ package com.tencent.devops.common.api.pojo
 
 import com.fasterxml.jackson.annotation.JsonIgnore
 import com.tencent.devops.common.api.annotation.BkFieldI18n
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
 /**
  *
  * Powered By Tencent
  */
-@ApiModel("数据返回包装模型")
+@Schema(title = "数据返回包装模型")
 data class Result<out T>(
-    @ApiModelProperty("状态码", required = true)
+    @get:Schema(title = "状态码", required = true)
     val status: Int,
-    @ApiModelProperty("错误信息", required = false)
+    @get:Schema(title = "错误信息", required = false)
     val message: String? = null,
-    @ApiModelProperty("数据", required = false)
+    @get:Schema(title = "数据", required = false)
     @BkFieldI18n
     val data: T? = null
 ) {

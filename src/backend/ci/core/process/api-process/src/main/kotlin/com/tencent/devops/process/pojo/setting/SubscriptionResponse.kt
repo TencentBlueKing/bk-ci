@@ -28,25 +28,24 @@
 package com.tencent.devops.process.pojo.setting
 
 import com.tencent.devops.process.pojo.pipeline.PipelineSubscriptionType
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("设置-订阅消息")
+@Schema(title = "设置-订阅消息")
 data class SubscriptionResponse(
-    @ApiModelProperty("通知人员", required = false)
+    @get:Schema(title = "通知人员", required = false)
     val users: String = "",
-    @ApiModelProperty("通知方式(email, rtx)", required = true)
+    @get:Schema(title = "通知方式(email, rtx)", required = true)
     val types: List<PipelineSubscriptionType> = listOf(),
-    @ApiModelProperty("分组id", required = false)
+    @get:Schema(title = "分组id", required = false)
     val groups: List<String> = listOf(),
-    @ApiModelProperty("企业微信群通知开关", required = false)
+    @get:Schema(title = "企业微信群通知开关", required = false)
     val wechatGroupFlag: Boolean = false,
-    @ApiModelProperty("企业微信群通知群ID", required = false)
+    @get:Schema(title = "企业微信群通知群ID", required = false)
     val wechatGroup: String = "",
-    @ApiModelProperty("企业微信群通知转为Markdown格式开关", required = false)
+    @get:Schema(title = "企业微信群通知转为Markdown格式开关", required = false)
     val wechatGroupMarkDownFlag: Boolean = false,
-    @ApiModelProperty("通知内容带上流水线详情连接", required = false)
+    @get:Schema(title = "通知内容带上流水线详情连接", required = false)
     val detailFlag: Boolean = false,
-    @ApiModelProperty("自定义通知内容", required = false)
+    @get:Schema(title = "自定义通知内容", required = false)
     val content: String = ""
 )

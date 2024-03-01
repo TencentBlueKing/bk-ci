@@ -27,11 +27,10 @@
 
 package com.tencent.devops.auth.pojo.dto
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel
+@Schema
 data class ManageStrategyDTO(
-    @ApiModelProperty("策略内容")
+    @get:Schema(title = "策略内容")
     val strategy: Map<String, List<String>>
 )
