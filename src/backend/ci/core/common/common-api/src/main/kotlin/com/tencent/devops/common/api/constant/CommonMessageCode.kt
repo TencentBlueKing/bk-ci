@@ -175,6 +175,8 @@ object CommonMessageCode {
     const val ERROR_PIPELINE_API_ACCESS_NO_PERMISSION = "2100124" // 流水线[{0}]没有接口[{1}]的访问权限
     const val TEMPLATE_PLUGIN_NOT_ALLOWED_USE = "2100125" // 模板中插件【{0}】的【{1}】版本的状态是【{2}】，不允许使用
 
+    const val SVN_TOKEN_FAIL = "2100135" // SVN Token 不正确
+    const val SVN_TOKEN_EMPTY = "2100136" // SVN Token 为空, 请检查代码库的凭证类型
     const val BK_CONTAINER_TIMED_OUT = "bkContainerTimedOut" // 创建容器超时
     const val BK_CREATION_FAILED_EXCEPTION_INFORMATION = "bkCreationFailedExceptionInformation" // 创建失败，异常信息
 
