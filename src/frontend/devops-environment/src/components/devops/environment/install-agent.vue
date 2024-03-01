@@ -108,11 +108,15 @@
         </div>
         <div class="sideslider-content" slot="content" v-else>
             <div class="install-status">
-                <template v-if="installStatus === 'SUCCESS'">
+                <template v-if="['PADDING', 'RUNNING'].includes(installStatus)">
+                    <Icon class="icon" name="loading" />
+                    <span>{{ $t('environment.installingTips') }}</span>
+                </template>
+                <template v-else-if="installStatus === 'SUCCESS'">
                     <i class="bk-icon import-status-icon icon-check-1 success icon"></i>
                     <span>{{ $t('environment.installSuccessTips') }}</span>
                 </template>
-                <template v-else-if="installStatus === 'FAILED'">
+                <template v-else>
                     <i class="bk-icon import-status-icon icon-close error icon"></i>
                     <span>{{ $t('environment.installFailTips') }}</span>
                     <bk-button
@@ -120,13 +124,9 @@
                         class="ml10"
                         @click="handleRetryInstallAgent"
                     >
-                        {{ $t('environment.retry') }}
-                    </bk-button>
-                </template>
-                <template v-else>
-                    <Icon class="icon" name="loading" />
-                    <span>{{ $t('environment.installingTips') }}</span>
-                </template>
+                    {{ $t('environment.retry') }}
+                </bk-button>
+            </template>
             </div>
             <div ref="editor" class="log-wrapper">
                 <div ref="executeScriptLog" v-once id="executeScriptLog" style="height: 100%;" />
