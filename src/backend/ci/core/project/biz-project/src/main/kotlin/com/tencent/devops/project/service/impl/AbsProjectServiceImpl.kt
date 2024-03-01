@@ -1308,12 +1308,13 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
         )
     }
 
-    override fun batchUpdateProjectProductId(englishNames: List<String>, productId: Int) {
+    override fun batchUpdateProjectProductId(englishNames: List<String>, productId: Int): Boolean {
         projectDao.batchUpdateProductId(
             dslContext = dslContext,
             englishNames = englishNames,
             productId = productId
         )
+        return true
     }
 
     abstract fun validatePermission(projectCode: String, userId: String, permission: AuthPermission): Boolean

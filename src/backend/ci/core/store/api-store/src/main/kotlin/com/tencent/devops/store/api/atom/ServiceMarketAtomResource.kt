@@ -32,8 +32,6 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.pipeline.enums.ChannelCode
-import com.tencent.devops.common.web.annotation.BkField
-import com.tencent.devops.common.web.constant.BkStyleEnum
 import com.tencent.devops.store.pojo.atom.AtomPipeline
 import com.tencent.devops.store.pojo.atom.AtomPostReqItem
 import com.tencent.devops.store.pojo.atom.AtomPostResp
@@ -41,9 +39,9 @@ import com.tencent.devops.store.pojo.atom.AtomVersion
 import com.tencent.devops.store.pojo.atom.GetRelyAtom
 import com.tencent.devops.store.pojo.atom.InstallAtomReq
 import com.tencent.devops.store.pojo.atom.enums.AtomStatusEnum
-import io.swagger.v3.oas.annotations.tags.Tag
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
+import io.swagger.v3.oas.annotations.tags.Tag
 import javax.ws.rs.Consumes
 import javax.ws.rs.GET
 import javax.ws.rs.HeaderParam
@@ -165,20 +163,4 @@ interface ServiceMarketAtomResource {
         @Parameter(description = "getRelyAtom", required = false)
         getRelyAtom: GetRelyAtom
     ): Result<Map<String, Map<String, Any>>?>
-
-    @Operation(summary = "分页查询组件代码库ID")
-    @GET
-    @Path("/atom/repoId/list")
-    fun getAtomRepositoryId(
-        @Parameter(description = "userId", required = true)
-        @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String,
-        @Parameter(description = "第几页", required = true)
-        @QueryParam("page")
-        page: Int,
-        @Parameter(description = "每页多少条", required = true)
-        @BkField(patternStyle = BkStyleEnum.PAGE_SIZE_STYLE, required = true)
-        @QueryParam("pageSize")
-        pageSize: Int
-    ): Result<List<String>>
 }
