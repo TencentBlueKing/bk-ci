@@ -280,7 +280,7 @@ class NodeService @Autowired constructor(
                 } else {
                     it.osType
                 },
-                hostId = it.hostId
+                bkHostId = it.hostId
             )
         }
     }

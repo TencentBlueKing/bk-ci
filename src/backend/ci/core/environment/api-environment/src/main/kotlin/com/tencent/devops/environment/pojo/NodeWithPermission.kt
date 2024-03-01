@@ -86,7 +86,7 @@ data class NodeWithPermission(
     @get:Schema(title = "操作系统类型")
     val osType: String?,
     @get:Schema(title = "hostID")
-    val hostId: Long? = null,
+    val bkHostId: Long? = null,
     @get:Schema(title = "job任务ID")
     val taskId: Long?
 )
