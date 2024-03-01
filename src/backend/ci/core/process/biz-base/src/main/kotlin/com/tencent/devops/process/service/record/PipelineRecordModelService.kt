@@ -264,7 +264,7 @@ class PipelineRecordModelService @Autowired constructor(
         var supplementSkipTaskFlag = true
         var preContainerRecordTaskSeq = 1
         // 获取开机任务的序号
-        val startVMTaskSeq = buildRecordContainer.containerVar[Container::startVMTaskSeq.name].toString().toInt()
+        val startVMTaskSeq = buildRecordContainer.containerVar[Container::startVMTaskSeq.name]?.toString()?.toInt() ?: 1
         containerRecordTasks.forEach { containerRecordTask ->
             if (startVMTaskSeq > 1 && startVMTaskSeq > containerRecordTask.taskSeq) {
                 // 当开机任务的序号大于1时，说明第一个任务不是开机任务，job含有内置插件任务，需要重新调整开机任务前面的task任务的taskSeq值
