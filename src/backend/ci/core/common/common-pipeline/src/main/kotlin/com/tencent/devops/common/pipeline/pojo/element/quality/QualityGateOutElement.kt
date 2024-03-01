@@ -27,6 +27,8 @@
 
 package com.tencent.devops.common.pipeline.pojo.element.quality
 
+import com.tencent.devops.common.api.constant.KEY_ELEMENT_ENABLE
+import com.tencent.devops.common.api.constant.KEY_TASK_ATOM
 import com.tencent.devops.common.pipeline.pojo.element.Element
 import io.swagger.v3.oas.annotations.media.Schema
 
@@ -52,4 +54,23 @@ data class QualityGateOutElement(
     override fun getTaskAtom() = "qualityGateOutTaskAtom"
 
     override fun getClassType() = classType
+
+    override fun initTaskVar(): MutableMap<String, Any> {
+        val taskVar = mutableMapOf<String, Any>()
+        taskVar[QualityGateOutElement::name.name] = name
+        taskVar[QualityGateOutElement::version.name] = version
+        taskVar[KEY_TASK_ATOM] = getTaskAtom()
+        taskVar[QualityGateInElement::classType.name] = getClassType()
+        taskVar[KEY_ELEMENT_ENABLE] = isElementEnable()
+        interceptTask?.let {
+            taskVar[QualityGateOutElement::interceptTask.name] = it
+        }
+        interceptTaskName?.let {
+            taskVar[QualityGateOutElement::interceptTaskName.name] = it
+        }
+        reviewUsers?.let {
+            taskVar[QualityGateOutElement::reviewUsers.name] = it
+        }
+        return taskVar
+    }
 }

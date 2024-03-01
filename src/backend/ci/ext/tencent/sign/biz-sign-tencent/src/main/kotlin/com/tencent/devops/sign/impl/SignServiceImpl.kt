@@ -477,40 +477,38 @@ class SignServiceImpl
             }
         }
 
-        private fun pair(
-            rootDict: NSDictionary,
-            zhStrings: File?
-        ): Pair<String, String> {
-            val scheme =
-                try {
-                    val schemeArray = rootDict.objectForKey("CFBundleURLTypes") as NSArray
-                    schemeArray.array
-                        .map { it as NSDictionary }
-                        .map { it.objectForKey("CFBundleURLSchemes") }
-                        .map { it as NSArray }
-                        .map { it.array }
-                        .flatMap { it.toList() }
-                        .map { it as NSString }
-                        .map { it.toString() }
-                        .maxByOrNull { it.length } ?: ""
-                } catch (ignore: Throwable) {
-                    ""
-                }
-            // 应用名称
-            val appName =
-                try {
-                    val nameDictionary =
-                        if (zhStrings != null) {
-                            PropertyListParser.parse(zhStrings) as NSDictionary
-                        } else {
-                            rootDict
-                        }
-                    nameDictionary.objectForKey("CFBundleDisplayName").toString()
-                } catch (ignore: Throwable) {
-                    ""
-                }
-            return Pair(scheme, appName)
+    private fun pair(rootDict: NSDictionary, zhStrings: File?): Pair<String, String> {
+        val scheme = try {
+            if (rootDict.containsKey("CFBundleURLSchemes")) {
+                (rootDict.objectForKey("CFBundleURLSchemes") as NSString).toString()
+            } else {
+                val schemeArray = rootDict.objectForKey("CFBundleURLTypes") as NSArray
+                schemeArray.array
+                    .mapNotNull { it as NSDictionary }
+                    .mapNotNull { it.objectForKey("CFBundleURLSchemes") }
+                    .map { it as NSArray }
+                    .mapNotNull { it.array }
+                    .flatMap { it.toList() }
+                    .mapNotNull { it as NSString }
+                    .map { it.toString() }
+                    .maxByOrNull { it.length } ?: ""
+            }
+        } catch (ignore: Throwable) {
+            ""
         }
+        // 应用名称
+        val appName = try {
+            val nameDictionary = if (zhStrings != null) {
+                PropertyListParser.parse(zhStrings) as NSDictionary
+            } else {
+                rootDict
+            }
+            nameDictionary.objectForKey("CFBundleDisplayName").toString()
+        } catch (ignore: Throwable) {
+            ""
+        }
+        return Pair(scheme, appName)
+    }
 
     /*
      * 解析IPA包Info.plist的信息
