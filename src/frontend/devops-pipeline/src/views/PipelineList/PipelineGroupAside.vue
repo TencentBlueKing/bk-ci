@@ -535,7 +535,6 @@
         width: 0px;
         background: white;
         padding: 0;
-        border-right: 1px solid #DCDEE5;
         transition: width 0.2s linear;
         width: 100%;
         height: 100%;

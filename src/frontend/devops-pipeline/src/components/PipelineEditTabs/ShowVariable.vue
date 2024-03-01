@@ -145,9 +145,25 @@
 <style lang="scss">
 @import "@/scss/mixins/ellipsis.scss";
 @import "@/scss/mixins/scroller.scss";
-.variable-version-wrapper.variable-panel-show {
-    width: 480px;
+.variable-version-wrapper {
+    &.variable-panel-show {
+        width: 480px;
+    }
+
+    &:not(.variable-panel-show) {
+        &:after {
+            z-index: 2020;
+            content: '';
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 2px;
+            height: 100%;
+            background: #699df4;
+        }
+    }
 }
+
 .variable-entry {
   z-index: 2020;
   position: absolute;

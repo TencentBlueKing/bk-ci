@@ -10,6 +10,8 @@
         </div>
         <aside class="pipeline-history-right-aside">
             <bk-button
+                theme="primary"
+                outline
                 v-perm="{
                     hasPermission: canEdit,
                     disablePermissionApi: true,
@@ -22,7 +24,7 @@
                 }"
                 @click="goEdit"
             >
-                {{ $t("edit") }}
+                {{ $t("pipelineEdit") }}
             </bk-button>
             <span v-bk-tooltips="tooltip">
                 <bk-button

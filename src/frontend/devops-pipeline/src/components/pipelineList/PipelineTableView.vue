@@ -739,9 +739,6 @@
                 }
             }
         }
-        ::-webkit-scrollbar {
-            background-color: white;
-        }
         .pipeline-name-wrapper {
             width: 100%;
             display: inline-flex;

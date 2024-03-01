@@ -31,11 +31,11 @@
                 :is-active-draft="isActiveDraft"
             >
                 <template v-if="isCurrentVersion || isActiveDraft">
-                    <i class="devops-icon icon-edit" />
+                    <i style="font-size: 16px" class="devops-icon icon-pipeline-edit" />
                     {{$t('edit')}}
                 </template>
                 <template v-else>
-                    <i class="devops-icon icon-rollback" />
+                    <i style="font-size: 16px" class="devops-icon icon-rollback" />
                     {{ $t("rollback") }}
                 </template>
             </RollbackEntry>
@@ -43,7 +43,7 @@
                 :version="activePipelineVersion"
                 :latest-version="releaseVersion"
             >
-                <i class="devops-icon icon-diff" />
+                <i style="font-size: 16px" class="devops-icon icon-diff" />
                 {{ $t("diff") }}
             </VersionDiffEntry>
         </header>

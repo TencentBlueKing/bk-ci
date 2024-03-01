@@ -37,7 +37,10 @@
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
 }
-.devops-icon.icon-yaml:before {
+.devops-icon.icon-pipeline-edit:before {
+    content: "\e9bb";
+  }
+  .devops-icon.icon-yaml:before {
     content: "\e951";
   }
   .devops-icon.icon-close-circle-fill:before {
@@ -144,7 +147,6 @@
   }
   .devops-icon.icon-list-order:before {
     content: "\e9f9";
-    color: #737987;
   }
   .devops-icon.icon-qrcode:before {
     content: "\e9fc";
