@@ -128,7 +128,7 @@ data class PacNotices(
     constructor(subscription: Subscription, ifField: String?) : this(
         type = subscription.types.map { toNotifyType(it) }.toMutableList().apply { sort() }.also {
             if (subscription.wechatGroupFlag) it.add(NotifyType.RTX_GROUP.yamlText)
-        },
+        }.toSet(),
         receivers = subscription.users.ifBlank { null }?.split(",")?.toSet()?.toList(),
         groups = subscription.groups.ifEmpty { null }?.sorted(),
         content = subscription.content.ifEmpty { null },
@@ -144,6 +144,7 @@ data class PacNotices(
             NotifyType.EMAIL.yamlText -> PipelineSubscriptionType.EMAIL
             NotifyType.RTX_CUSTOM.yamlText -> PipelineSubscriptionType.RTX
             NotifyType.SMS.yamlText -> PipelineSubscriptionType.SMS
+            NotifyType.VOICE.yamlText -> PipelineSubscriptionType.VOICE
             else -> PipelineSubscriptionType.RTX
         }
 
@@ -151,6 +152,7 @@ data class PacNotices(
             PipelineSubscriptionType.EMAIL -> NotifyType.EMAIL.yamlText
             PipelineSubscriptionType.RTX -> NotifyType.RTX_CUSTOM.yamlText
             PipelineSubscriptionType.SMS -> NotifyType.SMS.yamlText
+            PipelineSubscriptionType.VOICE -> NotifyType.VOICE.yamlText
             else -> NotifyType.RTX_GROUP.yamlText
         }
     }
@@ -163,7 +165,7 @@ data class PacNotices(
             users = receivers?.joinToString(",") ?: "",
             wechatGroupFlag = parseType.contains(NotifyType.RTX_GROUP.yamlText),
             wechatGroup = chatId?.joinToString(",") ?: "",
-            wechatGroupMarkdownFlag = notifyMarkdown == ContentFormat.MARKDOWN.name,
+            wechatGroupMarkdownFlag = notifyMarkdown == ContentFormat.MARKDOWN.text,
             detailFlag = notifyDetail ?: false,
             content = content ?: ""
         )
@@ -192,6 +194,9 @@ enum class NotifyType(val yamlText: String) {
 
     // 邮件
     EMAIL("email"),
+
+    // 邮件
+    VOICE("voice"),
 
     // 企业微信群
     RTX_GROUP("wework-chat");

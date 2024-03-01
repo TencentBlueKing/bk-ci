@@ -450,7 +450,7 @@
                   "can-skip-step" : {
                     "type" : "boolean"
                   },
-                  "use-latest-parameters" : {
+                  "use-latest-inputs" : {
                     "type" : "boolean"
                   }
                 }
@@ -911,7 +911,7 @@
                 "can-skip-step" : {
                   "type" : "boolean"
                 },
-                "use-latest-parameters" : {
+                "use-latest-inputs" : {
                   "type" : "boolean"
                 }
               }
@@ -1581,7 +1581,7 @@
           "type" : {
             "type" : "array",
             "items" : {
-              "enum" : [ "email", "wework-message", "wework-chat", "sms" ]
+              "enum" : [ "email", "wework-message", "wework-chat", "sms", "voice" ]
             }
           },
           "receivers" : {
@@ -1605,10 +1605,11 @@
               "type" : "string"
             }
           },
-          "notify-markdown" : {
-            "type" : "boolean"
+          "content-format" : {
+            "type" : "string",
+            "pattern" : "(\\bmarkdown\\b|\\btext\\b)"
           },
-          "notify-detail-url" : {
+          "attach-build-url" : {
             "type" : "boolean"
           },
           "if" : {
