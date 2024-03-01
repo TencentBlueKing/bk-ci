@@ -110,8 +110,4 @@ class ServiceMarketAtomResourceImpl @Autowired constructor(
     override fun getAtomRely(getRelyAtom: GetRelyAtom): Result<Map<String, Map<String, Any>>?> {
         return Result(marketAtomService.getAtomsRely(getRelyAtom = getRelyAtom))
     }
-
-    override fun getAtomRepositoryId(userId: String, page: Int, pageSize: Int): Result<List<String>> {
-        return atomService.getAtomRepositoryId(userId, page, pageSize)
-    }
 }

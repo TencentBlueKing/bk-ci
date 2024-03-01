@@ -254,4 +254,12 @@ class ServiceProjectResourceImpl @Autowired constructor(
         )
         return Result(true)
     }
+
+    override fun batchUpdateProjectProductId(
+        userId: String,
+        productId: Int,
+        projectIds: List<String>
+    ): Result<Boolean> {
+        return Result(projectService.batchUpdateProjectProductId(projectIds, productId))
+    }
 }
