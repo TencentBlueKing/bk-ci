@@ -78,6 +78,7 @@ class NodeDao {
                 dslContext.update(this)
                     .set(NODE_STATUS, nodeStatus)
                     .set(TASK_ID, jobId)
+                    .set(LAST_MODIFY_TIME, LocalDateTime.now())
                     .where(NODE_IP.`in`(nodeIpList))
                     .and(NODE_TYPE.eq(NodeType.CMDB.name))
             )
