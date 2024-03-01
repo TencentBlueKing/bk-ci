@@ -38,7 +38,7 @@ class ProjectNotifyService constructor(
     val projectUserService: ProjectUserService,
     val dslContext: DSLContext,
     val projectUpdateHistoryDao: ProjectUpdateHistoryDao,
-    val redisOperation: RedisOperation,
+    val redisOperation: RedisOperation
 ) {
     companion object {
         private val projectNotifyThreadPool = Executors.newFixedThreadPool(10)
@@ -258,10 +258,10 @@ class ProjectNotifyService constructor(
                 String.format(
                     PROJECT_INFO_CHANGE_TABLE_CONTENT_TEMPLATE,
                     projectInfo.afterProjectName, projectInfo.englishName,
-                    projectService.getOperationalProducts().firstOrNull { it.productId == projectInfo.beforeProductId }?.productName
-                        + "[${projectInfo.beforeProductId}]",
-                    projectService.getOperationalProducts().firstOrNull { it.productId == projectInfo.afterProductId }?.productName
-                        + "[${projectInfo.afterProductId}]",
+                    projectService.getOperationalProducts().firstOrNull { it.productId == projectInfo.beforeProductId }?.productName +
+                        "[${projectInfo.beforeProductId}]",
+                    projectService.getOperationalProducts().firstOrNull { it.productId == projectInfo.afterProductId }?.productName +
+                        "[${projectInfo.afterProductId}]",
                     projectInfo.operator, projectInfo.updatedAt
                 )
             )
@@ -455,7 +455,7 @@ class ProjectNotifyService constructor(
         val bgName = tofService.getDeptInfo(id = verifyBgId.toInt()).name
 
         if (wrongOrganizationalProjectList.isNotEmpty()) {
-            val title1 = "项目监控-全部管理员为${bgName}，但项目所属组织架构不属于${bgName}告警"
+            val title1 = "项目监控-全部管理员为$bgName，但项目所属组织架构不属于${bgName}告警"
             var table1 = String.format(
                 PROJECT_ORGANIZATION_VERIFY_TEMPLATE,
                 "项目名称", "项目ID", "项目所属组织架构", "创建人", "管理员"
@@ -484,7 +484,7 @@ class ProjectNotifyService constructor(
             )
         }
         if (projectID2ManagerBelongVerifyBgId.isNotEmpty()) {
-            val title2 = "项目监控-部分管理员为${bgName}，但项目所属组织架构不属于${bgName}告警"
+            val title2 = "项目监控-部分管理员为$bgName，但项目所属组织架构不属于${bgName}告警"
             var table2 = String.format(
                 PROJECT_ORGANIZATION_VERIFY_TEMPLATE,
                 "项目名称", "项目ID", "项目所属组织架构", "所属组织架构为${bgName}的管理员", "所属组织架构为非${bgName}的管理员"
