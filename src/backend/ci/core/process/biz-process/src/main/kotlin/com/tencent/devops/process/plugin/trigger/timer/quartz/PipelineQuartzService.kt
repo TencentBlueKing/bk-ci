@@ -193,7 +193,7 @@ class PipelineJobBean(
             val redisLock = PipelineTimerTriggerLock(redisOperation, pipelineId, scheduledFireTime)
             if (redisLock.tryLock()) {
                 try {
-                    logger.info("[$pipelineId]|$pipelineId|PIPELINE_TIMER|scheduledFireTime=$scheduledFireTime")
+                    logger.info("[$projectId]|$pipelineId|PIPELINE_TIMER|scheduledFireTime=$scheduledFireTime")
                     watcher.start("dispatch")
                     pipelineEventDispatcher.dispatch(
                         PipelineTimerBuildEvent(

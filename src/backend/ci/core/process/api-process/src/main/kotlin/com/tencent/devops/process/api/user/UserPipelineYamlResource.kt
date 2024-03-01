@@ -30,8 +30,10 @@ package com.tencent.devops.process.api.user
 
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
+import com.tencent.devops.common.api.model.SQLPage
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.process.pojo.pipeline.PipelineYamlSyncInfo
+import com.tencent.devops.repository.pojo.RepoPipelineRefVo
 import io.swagger.v3.oas.annotations.tags.Tag
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
@@ -41,6 +43,7 @@ import javax.ws.rs.HeaderParam
 import javax.ws.rs.Path
 import javax.ws.rs.PathParam
 import javax.ws.rs.Produces
+import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
 @Tag(name = "USER_PIPELINE_YAML", description = "用户-流水线yaml")
@@ -63,6 +66,27 @@ interface UserPipelineYamlResource {
         @PathParam("repoHashId")
         repoHashId: String
     ): Result<Long>
+
+    @Operation(summary = "获取开启pac的流水线列表")
+    @GET
+    @Path("/{projectId}/{repoHashId}/listYamlPipeline")
+    fun listYamlPipeline(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @Parameter(description = "代码库hashId", required = true)
+        @PathParam("repoHashId")
+        repoHashId: String,
+        @Parameter(description = "第几页", required = false, example = "1")
+        @QueryParam("page")
+        page: Int?,
+        @Parameter(description = "每页多少条", required = false, example = "20")
+        @QueryParam("pageSize")
+        pageSize: Int?
+    ): Result<SQLPage<RepoPipelineRefVo>>
 
     @Operation(summary = "获取同步失败yaml详情")
     @GET

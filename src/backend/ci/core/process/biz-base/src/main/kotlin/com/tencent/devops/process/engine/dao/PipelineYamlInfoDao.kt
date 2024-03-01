@@ -243,6 +243,26 @@ class PipelineYamlInfoDao {
         }
     }
 
+    fun listYamlPipeline(
+        dslContext: DSLContext,
+        projectId: String,
+        repoHashId: String,
+        limit: Int,
+        offset: Int
+    ): List<PipelineYamlInfo> {
+        return with(TPipelineYamlInfo.T_PIPELINE_YAML_INFO) {
+            dslContext.selectFrom(this)
+                .where(PROJECT_ID.eq(projectId))
+                .and(REPO_HASH_ID.eq(repoHashId))
+                .and(DELETE.eq(false))
+                .limit(limit)
+                .offset(offset)
+                .fetch {
+                    convert(it)
+                }
+        }
+    }
+
     fun convert(record: TPipelineYamlInfoRecord): PipelineYamlInfo {
         return with(record) {
             PipelineYamlInfo(
