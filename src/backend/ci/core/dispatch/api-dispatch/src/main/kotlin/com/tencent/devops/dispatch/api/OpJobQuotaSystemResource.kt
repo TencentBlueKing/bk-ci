@@ -30,9 +30,9 @@ package com.tencent.devops.dispatch.api
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.dispatch.pojo.JobQuotaSystem
 import com.tencent.devops.dispatch.pojo.enums.JobQuotaVmType
-import io.swagger.annotations.Api
-import io.swagger.annotations.ApiOperation
-import io.swagger.annotations.ApiParam
+import io.swagger.v3.oas.annotations.tags.Tag
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.Parameter
 import javax.ws.rs.Consumes
 import javax.ws.rs.DELETE
 import javax.ws.rs.GET
@@ -44,71 +44,77 @@ import javax.ws.rs.Produces
 import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
-@Api(tags = ["OP_JOBS_SYSTEM_QUOTA"], description = "Job默认配额管理")
+@Tag(name = "OP_JOBS_SYSTEM_QUOTA", description = "Job默认配额管理")
 @Path("/op/jobs/system/quota")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface OpJobQuotaSystemResource {
 
-    @ApiOperation("统计已运行的配额信息")
+    @Operation(summary = "统计已运行的配额信息")
     @GET
     @Path("/all/statistics")
     fun statistics(
-        @ApiParam(value = "分页大小", required = false)
+        @Parameter(description = "分页大小", required = false)
         @QueryParam("limit")
         limit: Int?,
-        @ApiParam(value = "偏移", required = false)
+        @Parameter(description = "偏移", required = false)
         @QueryParam("offset")
         offset: Int?
     ): Result<Map<String, Any>>
 
-    @ApiOperation("获取全部的JOB配额信息")
+    @Operation(summary = "获取全部的JOB配额信息")
     @GET
     @Path("/all/list")
     fun list(): Result<List<JobQuotaSystem>>
 
-    @ApiOperation("获取系统默认JOB配额信息")
+    @Operation(summary = "获取系统默认JOB配额信息")
     @GET
     @Path("/{jobQuotaVmType}")
     fun get(
-        @ApiParam(value = "构建机类型", required = false)
+        @Parameter(description = "构建机类型", required = false)
         @PathParam("jobQuotaVmType")
-        jobQuotaVmType: JobQuotaVmType
+        jobQuotaVmType: JobQuotaVmType,
+        @Parameter(description = "构建来源", required = false)
+        @QueryParam("channelCode")
+        channelCode: String? = "BS"
     ): Result<List<JobQuotaSystem>>
 
-    @ApiOperation("添加系统默认JOB配额信息")
+    @Operation(summary = "添加系统默认JOB配额信息")
     @PUT
     @Path("/")
     fun add(
-        @ApiParam(value = "Job配额信息", required = true)
+        @Parameter(description = "Job配额信息", required = true)
         jobQuota: JobQuotaSystem
     ): Result<Boolean>
 
-    @ApiOperation("删除系统默认JOB配额信息")
+    @Operation(summary = "删除系统默认JOB配额信息")
     @DELETE
     @Path("/{jobQuotaVmType}")
     fun delete(
-        @ApiParam(value = "构建机类型", required = true)
+        @Parameter(description = "构建机类型", required = true)
         @PathParam("jobQuotaVmType")
-        jobQuotaVmType: JobQuotaVmType
+        jobQuotaVmType: JobQuotaVmType,
+        @Parameter(description = "构建来源", required = false)
+        @QueryParam("channelCode")
+        channelCode: String? = "BS"
     ): Result<Boolean>
 
-    @ApiOperation("更新系统的JOB配额信息")
+    @Operation(summary = "更新系统的JOB配额信息")
     @POST
     @Path("/{jobQuotaVmType}")
     fun update(
-        @ApiParam(value = "构建机类型", required = true)
+        @Parameter(description = "构建机类型", required = true)
         @PathParam("jobQuotaVmType")
         jobQuotaVmType: JobQuotaVmType,
-        @ApiParam(value = "Job配额信息", required = true)
+        @Parameter(description = "Job配额信息", required = true)
         jobQuota: JobQuotaSystem
     ): Result<Boolean>
 
-    @ApiOperation("清零当月已运行时间")
+    @Operation(summary = "清零当月已运行时间")
     @POST
     @Path("/clear/vm/{vmType}")
     fun restore(
-        @ApiParam(value = "构建机类型", required = true)
+        @Parameter(description = "构建机类型", required = true)
         @PathParam("vmType")
         vmType: JobQuotaVmType
     ): Result<Boolean>

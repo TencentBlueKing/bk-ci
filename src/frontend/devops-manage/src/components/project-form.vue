@@ -475,6 +475,9 @@ onBeforeUnmount(() => {
       ref="iframeRef"
       class="member-iframe"
       path="add-member-boundary"
+      :query="{
+        search_sence: 'add'
+      }"
     />
   </bk-dialog>
 </template>

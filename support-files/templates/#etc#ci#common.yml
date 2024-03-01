@@ -185,13 +185,13 @@ spring:
         broadcastFlag: true
       - index: 42
         name: T_PIPELINE_ATOM_REPLACE_BASE
-        databaseShardingStrategy: SPECIFY
+        broadcastFlag: true
       - index: 43
         name: T_PIPELINE_ATOM_REPLACE_ITEM
-        databaseShardingStrategy: SPECIFY
+        broadcastFlag: true
       - index: 44
         name: T_PIPELINE_ATOM_REPLACE_HISTORY
-        databaseShardingStrategy: SPECIFY
+        broadcastFlag: true
       - index: 45
         name: T_PIPELINE_WEBHOOK_BUILD_PARAMETER
         databaseShardingStrategy: SHARDING
@@ -222,7 +222,12 @@ spring:
       - index: 54
         name: T_PIPELINE_TRIGGER_DETAIL
         databaseShardingStrategy: SHARDING
-      
+      - index: 55
+        name: T_PIPELINE_TRIGGER_REVIEW
+        databaseShardingStrategy: SHARDING
+      - index: 56
+        name: T_PIPELINE_DATA_CLEAR
+        databaseShardingStrategy: SHARDING
 
 endpoints:
   metrics:
@@ -253,8 +258,8 @@ devopsGateway:
   devnet: __BK_CI_PRIVATE_URL__       # not used yet. keep it same as `host' property.
   oss: __BK_CI_PRIVATE_URL__          # not used yet. keep it same as `host' property.
   ossProxy: __BK_CI_PRIVATE_URL__     # not used yet. keep it same as `host' property.
-  fileDevnetGateway: __BK_CI_PRIVATE_URL__     # not used yet. keep it same as `host' property.
-  fileIdcGateway: __BK_CI_PRIVATE_URL__     # not used yet. keep it same as `host' property.
+  fileDevnetGateway: __BK_REPO_PRIVATE_URL__     # not used yet. keep it same as `host' property.
+  fileIdcGateway: __BK_REPO_PRIVATE_URL__     # not used yet. keep it same as `host' property.
 
 # certificate server 配置
 certificate:
@@ -357,6 +362,8 @@ sharding:
     maxProjectCount: 5 # 同时迁移项目最大数量
     processDbMicroServices: "process,engine,misc,lambda" #使用process数据库的微服务
     sourceDbDataDeleteFlag: false # 迁移成功后是否删除原库数据
+  tableShardingStrategy:
+    defaultShardingNum: 1 # 默认分表数量
 
 cluster:
   tag: __BK_CI_CLUSTER_TAG__
@@ -377,6 +384,10 @@ wechatWork:
   aesKey: __BK_CI_WECHATWORK_AESKEY__
   url: __BK_CI_WECHATWORK_URL__
 
+# 是否开启国密sm4算法
+sm4:
+  enabled: __BK_CI_SM4_ENABLED__
+  key: "__BK_CI_SM4_KEY__"
 # 是否开启审计
 audit:
   enabled: __BK_CI_AUDIT_ENABLED__

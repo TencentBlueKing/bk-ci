@@ -1,5 +1,5 @@
-import SockJS from 'sockjs-client'
 import cookie from 'js-cookie'
+import SockJS from 'sockjs-client'
 const Stomp = require('stompjs/lib/stomp.js').Stomp
 
 function uuid () {
@@ -31,19 +31,57 @@ class BlueShieldWebSocket {
         const socket = new SockJS(`/websocket/ws/user?sessionId=${this.uuid}`)
         this.stompClient = Stomp.over(socket)
         this.stompClient.debug = null
+        this.stompClientConnect()
+        socket.onclose = (err) => {
+            try {
+                console.log(err, socket, this.stompClient)
+                if (err.code === 1006) { // 异常断开
+                    const vm = window.devops
+                    const currentRoute = vm.$router.currentRoute
+                    if (this.detectHasWebsocket(currentRoute) && !this.isConnecting) {
+                        if (currentRoute.path.indexOf('executeDetail') > -1) {
+                            console.log('executeDetail page close reconnect', currentRoute.path)
+                            this.connectCallBack.push(() => {
+                                this.handleMessage({
+                                    body: JSON.stringify({
+                                        webSocketType: 'IFRAME',
+                                        page: currentRoute.path,
+                                        message: JSON.stringify('WEBSOCKET_RECONNECT')
+                                    })
+                                })
+                            })
+                        }
+                        console.log('other page close reconnect')
+                        socket.onclose = null
+                        this.connect()
+                    }
+                } else {
+                    console.log('websocket close event.code: ', err.code)
+                }
+            } catch (error) {
+                console.error(error)
+            }
+        }
+    }
+
+    stompClientConnect () {
         this.isConnecting = true
+        
         this.stompClient.connect({}, () => {
+            console.log('websocket connected', this.connectCallBack)
             this.isConnecting = false
             this.stompClient.subscribe(`/topic/bk/notify/${this.uuid}`, (res) => {
                 this.handleMessage(res)
             })
             this.connectErrTime = 1
+            this.changeRoute(window.devops.$router.currentRoute)
             if (this.connectCallBack.length) {
                 this.connectCallBack.forEach(callBack => callBack())
                 this.connectCallBack = []
             }
         }, (err) => {
             if (this.connectErrTime <= 8) {
+                console.log('websocket connection retrying')
                 this.connectErrTime++
                 const time = Math.random() * 60000
                 setTimeout(() => this.connect(), time)
@@ -95,11 +133,19 @@ class BlueShieldWebSocket {
         vm.$bkNotify(notify)
     }
 
+    detectHasWebsocket (router) {
+        try {
+            const meta = router.meta || {}
+            const path = router.path
+            const pathRegs = meta.webSocket || []
+            return pathRegs.some((reg) => reg && new RegExp(reg).test(path))
+        } catch (error) {
+            return false
+        }
+    }
+
     changeRoute (router) {
-        const meta = router.meta || {}
-        const path = router.path
-        const pathRegs = meta.webSocket || []
-        const hasWebSocket = pathRegs.some((reg) => reg && new RegExp(reg).test(path))
+        const hasWebSocket = this.detectHasWebsocket(router)
         const currentPage = window.currentPage || {}
         const showProjectList = currentPage.show_project_list || false
         const projectId = cookie.get(X_DEVOPS_PROJECT_ID)

@@ -30,9 +30,9 @@ package com.tencent.devops.process.api.auth
 import com.tencent.bk.sdk.iam.dto.callback.request.CallbackRequestDTO
 import com.tencent.bk.sdk.iam.dto.callback.response.CallbackBaseResponseDTO
 import com.tencent.devops.common.api.auth.AUTH_HEADER_IAM_TOKEN
-import io.swagger.annotations.Api
-import io.swagger.annotations.ApiOperation
-import io.swagger.annotations.ApiParam
+import io.swagger.v3.oas.annotations.tags.Tag
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.Parameter
 import javax.ws.rs.Consumes
 import javax.ws.rs.HeaderParam
 import javax.ws.rs.POST
@@ -40,41 +40,52 @@ import javax.ws.rs.Path
 import javax.ws.rs.Produces
 import javax.ws.rs.core.MediaType
 
-@Api(tags = ["AUTH_CALLBACK_PROCESS"], description = "iam回调process接口")
+@Tag(name = "AUTH_CALLBACK_PROCESS", description = "iam回调process接口")
 @Path("/open/pipeline/callback")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface ServiceProcessAuthResource {
     @POST
     @Path("/")
-    @ApiOperation("iam流水线回调接口")
+    @Operation(summary = "iam流水线回调接口")
     fun pipelineInfo(
-        @ApiParam(value = "回调信息")
+        @Parameter(description = "回调信息")
         callBackInfo: CallbackRequestDTO,
         @HeaderParam(AUTH_HEADER_IAM_TOKEN)
-        @ApiParam("token")
+        @Parameter(description = "token")
         token: String
     ): CallbackBaseResponseDTO?
 
     @POST
     @Path("/pipelineGroupInfo")
-    @ApiOperation("iam流水线组回调接口")
+    @Operation(summary = "iam流水线组回调接口")
     fun pipelineGroupInfo(
-        @ApiParam(value = "回调信息")
+        @Parameter(description = "回调信息")
         callBackInfo: CallbackRequestDTO,
         @HeaderParam(AUTH_HEADER_IAM_TOKEN)
-        @ApiParam("token")
+        @Parameter(description = "token")
+        token: String
+    ): CallbackBaseResponseDTO?
+
+    @POST
+    @Path("/pipelineTemplateInfo")
+    @Operation(summary = "iam流水线模板回调接口")
+    fun pipelineTemplateInfo(
+        @Parameter(description = "回调信息")
+        callBackInfo: CallbackRequestDTO,
+        @HeaderParam(AUTH_HEADER_IAM_TOKEN)
+        @Parameter(description = "token")
         token: String
     ): CallbackBaseResponseDTO?
 
     @POST
     @Path("/byAutoId")
-    @ApiOperation("iam流水线回调接口")
+    @Operation(summary = "iam流水线回调接口")
     fun pipelineInfoByAutoId(
-        @ApiParam(value = "回调信息")
+        @Parameter(description = "回调信息")
         callBackInfo: CallbackRequestDTO,
         @HeaderParam(AUTH_HEADER_IAM_TOKEN)
-        @ApiParam("token")
+        @Parameter(description = "token")
         token: String
     ): CallbackBaseResponseDTO?
 }

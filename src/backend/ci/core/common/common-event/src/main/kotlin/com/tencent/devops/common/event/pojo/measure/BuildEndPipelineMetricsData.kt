@@ -28,41 +28,42 @@
 package com.tencent.devops.common.event.pojo.measure
 
 import com.tencent.devops.common.api.pojo.ErrorInfo
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("构建结束后流水线指标数据")
+@Schema(title = "构建结束后流水线指标数据")
 data class BuildEndPipelineMetricsData(
-    @ApiModelProperty("统计时间", required = true)
+    @get:Schema(title = "统计时间", required = true)
     val statisticsTime: String,
-    @ApiModelProperty("项目ID", required = true)
+    @get:Schema(title = "项目ID", required = true)
     val projectId: String,
-    @ApiModelProperty("流水线ID", required = true)
+    @get:Schema(title = "流水线ID", required = true)
     val pipelineId: String,
-    @ApiModelProperty("流水线名称", required = true)
+    @get:Schema(title = "流水线名称", required = true)
     val pipelineName: String,
-    @ApiModelProperty("构建ID", required = true)
+    @get:Schema(title = "构建ID", required = true)
     val buildId: String,
-    @ApiModelProperty("构建序号", required = true)
+    @get:Schema(title = "构建序号", required = true)
     val buildNum: Int,
-    @ApiModelProperty("代码库地址", required = false)
+    @get:Schema(title = "触发类型", required = true)
+    val trigger: String? = null,
+    @get:Schema(title = "代码库地址", required = false)
     val repoUrl: String? = null,
-    @ApiModelProperty("代码库分支", required = false)
+    @get:Schema(title = "代码库分支", required = false)
     val branch: String? = null,
-    @ApiModelProperty("启动用户", required = true)
+    @get:Schema(title = "启动用户", required = true)
     val startUser: String,
-    @ApiModelProperty("执行开始时间", required = true)
+    @get:Schema(title = "执行开始时间", required = true)
     val startTime: String? = null,
-    @ApiModelProperty("执行结束时间", required = true)
+    @get:Schema(title = "执行结束时间", required = true)
     val endTime: String? = null,
-    @ApiModelProperty("流水线构建耗时", required = true)
+    @get:Schema(title = "流水线构建耗时", required = true)
     val costTime: Long,
-    @ApiModelProperty("是否执行成功", required = true)
+    @get:Schema(title = "是否执行成功", required = true)
     val successFlag: Boolean,
-    @ApiModelProperty("错误信息列表", required = false)
+    @get:Schema(title = "错误信息列表", required = false)
     var errorInfos: List<ErrorInfo>? = null,
-    @ApiModelProperty("stage指标数据列表", required = true)
+    @get:Schema(title = "stage指标数据列表", required = true)
     val stages: List<BuildEndStageMetricsData>,
-    @ApiModelProperty("渠道代码", required = true)
+    @get:Schema(title = "渠道代码", required = true)
     val channelCode: String
 )

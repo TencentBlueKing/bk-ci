@@ -1,24 +1,25 @@
 package com.tencent.devops.repository.pojo
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("git check 信息返回模型")
+@Schema(title = "git check 信息返回模型")
 data class RepositoryGitCheck(
-    @ApiModelProperty("git check id")
+    @get:Schema(title = "git check id")
     val gitCheckId: Long,
-    @ApiModelProperty("流水线id")
+    @get:Schema(title = "流水线id")
     val pipelineId: String,
-    @ApiModelProperty("构建次数")
+    @get:Schema(title = "构建次数")
     val buildNumber: Int,
-    @ApiModelProperty("仓库id")
+    @get:Schema(title = "仓库id")
     val repositoryId: String?,
-    @ApiModelProperty("仓库名称")
+    @get:Schema(title = "仓库名称")
     val repositoryName: String?,
-    @ApiModelProperty("提交id")
+    @get:Schema(title = "提交id")
     val commitId: String,
-    @ApiModelProperty("内容")
+    @get:Schema(title = "内容")
     val context: String,
-    @ApiModelProperty("来源类型")
-    val source: ExecuteSource
+    @get:Schema(title = "来源类型")
+    val source: ExecuteSource,
+    @get:Schema(title = "目标分支")
+    val targetBranch: String? = ""
 )

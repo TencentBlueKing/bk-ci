@@ -368,6 +368,9 @@
         watch: {
             execDetail (val) {
                 this.isLoading = val === null
+                if (val) {
+                    this.$updateTabTitle?.(`#${val.buildNum}  ${val.buildMsg} | ${val.pipelineName}`)
+                }
             },
             'routerParams.buildNo': {
                 handler (val, oldVal) {
@@ -399,7 +402,9 @@
         mounted () {
             this.requestPipelineExecDetail(this.routerParams)
             webSocketMessage.installWsMessage(this.setPipelineDetail)
-
+            webSocketMessage.registeOnReconnect(() => {
+                this.requestPipelineExecDetail(this.routerParams)
+            })
             // 第三方系统、通知等，点击链接进入流水线执行详情页面时，定位到具体的 task/ job (自动打开对应的侧滑框)
             const {
                 stageIndex,

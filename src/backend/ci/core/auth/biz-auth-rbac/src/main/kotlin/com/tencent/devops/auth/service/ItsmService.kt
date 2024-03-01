@@ -1,7 +1,5 @@
 package com.tencent.devops.auth.service
 
-import com.fasterxml.jackson.core.type.TypeReference
-import com.fasterxml.jackson.databind.ObjectMapper
 import com.tencent.bk.sdk.iam.dto.itsm.ItsmAttrs
 import com.tencent.bk.sdk.iam.dto.itsm.ItsmColumn
 import com.tencent.bk.sdk.iam.dto.itsm.ItsmContentDTO
@@ -14,33 +12,22 @@ import com.tencent.devops.auth.pojo.ApplyJoinGroupFormDataInfo
 import com.tencent.devops.auth.pojo.ItsmCancelApplicationInfo
 import com.tencent.devops.auth.pojo.ResponseDTO
 import com.tencent.devops.common.api.exception.ErrorCodeException
-import com.tencent.devops.common.api.exception.RemoteServiceException
-import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.auth.api.pojo.SubjectScopeInfo
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.project.pojo.enums.ProjectAuthSecrecyStatus
-import okhttp3.MediaType.Companion.toMediaTypeOrNull
-import okhttp3.Request
-import okhttp3.RequestBody.Companion.toRequestBody
 import org.slf4j.LoggerFactory
-import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 
-class ItsmService @Autowired constructor(
-    val objectMapper: ObjectMapper
+class ItsmService constructor(
+    val bkHttpRequestService: BkHttpRequestService
 ) {
-    @Value("\${auth.appCode:}")
-    private val appCode = ""
-
-    @Value("\${auth.appSecret:}")
-    private val appSecret = ""
 
     @Value("\${itsm.url:#{null}}")
     private val itsmUrlPrefix: String = ""
 
     fun cancelItsmApplication(itsmCancelApplicationInfo: ItsmCancelApplicationInfo): Boolean {
-        val itsmResponseDTO: ResponseDTO<List<Any>> = executeHttpPost(
-            urlSuffix = ITSM_APPLICATION_CANCEL_URL_SUFFIX,
+        val itsmResponseDTO: ResponseDTO<List<Any>> = bkHttpRequestService.executeHttpPost(
+            url = itsmUrlPrefix + ITSM_APPLICATION_CANCEL_URL_SUFFIX,
             body = itsmCancelApplicationInfo
         )
         if (itsmResponseDTO.message != "success") {
@@ -56,7 +43,10 @@ class ItsmService @Autowired constructor(
 
     fun verifyItsmToken(token: String) {
         val param = mapOf("token" to token)
-        val itsmResponseDTO: ResponseDTO<Map<*, *>> = executeHttpPost(ITSM_TOKEN_VERITY_URL_SUFFIX, param)
+        val itsmResponseDTO: ResponseDTO<Map<*, *>> = bkHttpRequestService.executeHttpPost(
+            url = itsmUrlPrefix + ITSM_TOKEN_VERITY_URL_SUFFIX,
+            body = param
+        )
         val itsmApiResData = itsmResponseDTO.data
         logger.info("itsmApiResData:$itsmApiResData")
 
@@ -71,54 +61,10 @@ class ItsmService @Autowired constructor(
 
     fun getItsmTicketStatus(sn: String): String {
         val itsmResponseDTO: ResponseDTO<Map<*, *>> =
-            executeHttpGet(String.format(ITSM_TICKET_STATUS_URL_SUFFIX, sn))
+            bkHttpRequestService.executeHttpGet(
+                url = itsmUrlPrefix + String.format(ITSM_TICKET_STATUS_URL_SUFFIX, sn)
+            )
         return itsmResponseDTO.data?.get("current_status").toString()
-    }
-
-    private fun <T> executeHttpPost(urlSuffix: String, body: Any): ResponseDTO<T> {
-        val headerStr = objectMapper.writeValueAsString(mapOf("bk_app_code" to appCode, "bk_app_secret" to appSecret))
-            .replace("\\s".toRegex(), "")
-        val requestBody = objectMapper.writeValueAsString(body)
-            .toRequestBody("application/json; charset=utf-8".toMediaTypeOrNull())
-        val url = itsmUrlPrefix + urlSuffix
-
-        val request = Request.Builder()
-            .url(url)
-            .post(requestBody)
-            .addHeader("x-bkapi-authorization", headerStr)
-            .build()
-        return executeHttpRequest(url, request)
-    }
-
-    private fun <T> executeHttpGet(urlSuffix: String): ResponseDTO<T> {
-        val headerStr = objectMapper.writeValueAsString(mapOf("bk_app_code" to appCode, "bk_app_secret" to appSecret))
-            .replace("\\s".toRegex(), "")
-        val url = itsmUrlPrefix + urlSuffix
-        val request = Request.Builder()
-            .url(url)
-            .addHeader("x-bkapi-authorization", headerStr)
-            .get()
-            .build()
-        return executeHttpRequest(url, request)
-    }
-
-    private fun <T> executeHttpRequest(url: String, request: Request): ResponseDTO<T> {
-        OkhttpUtils.doHttp(request).use {
-            if (!it.isSuccessful) {
-                logger.warn("request failed, uri:($url)|response: ($it)")
-                throw RemoteServiceException("request failed, response:($it)")
-            }
-            val responseStr = it.body!!.string()
-            val responseDTO: ResponseDTO<T> =
-                objectMapper.readValue(responseStr, object : TypeReference<ResponseDTO<T>>() {})
-            if (responseDTO.code != 0L || !responseDTO.result) {
-                // 请求错误
-                logger.warn("request failed, url:($url)|response:($it)")
-                throw RemoteServiceException("request failed, response:(${responseDTO.message})")
-            }
-            logger.info("request response：${objectMapper.writeValueAsString(responseDTO.data)}")
-            return responseDTO
-        }
     }
 
     @Suppress("LongParameterList")
@@ -137,19 +83,17 @@ class ItsmService @Autowired constructor(
             ItsmColumn.builder().key("projectName")
                 .name(I18nUtil.getCodeLanMessage(AuthI18nConstants.BK_PROJECT_NAME)).type(TEXT_TYPE).build(),
             ItsmColumn.builder().key("projectId").name(
-                I18nUtil.getCodeLanMessage(AuthI18nConstants.BK_PROJECT_ID)
-            ).type(TEXT_TYPE).build(),
-            ItsmColumn.builder().key("desc").name(
-                I18nUtil.getCodeLanMessage(AuthI18nConstants.BK_PROJECT_DESC)
-            ).type(TEXT_TYPE).build(),
+                I18nUtil.getCodeLanMessage(AuthI18nConstants.BK_PROJECT_ID)).type(TEXT_TYPE).build(),
+            ItsmColumn.builder().key("productName")
+                .name(I18nUtil.getCodeLanMessage(AuthI18nConstants.BK_PROJECT_PRODUCT)).type(TEXT_TYPE).build(),
             ItsmColumn.builder().key("organization")
                 .name(I18nUtil.getCodeLanMessage(AuthI18nConstants.BK_ORGANIZATION)).type(TEXT_TYPE).build(),
             ItsmColumn.builder().key("authSecrecy")
                 .name(I18nUtil.getCodeLanMessage(AuthI18nConstants.BK_AUTH_SECRECY)).type(TEXT_TYPE).build(),
             ItsmColumn.builder().key("subjectScopes")
                 .name(I18nUtil.getCodeLanMessage(AuthI18nConstants.BK_SUBJECT_SCOPES)).type(TEXT_TYPE).build(),
-            ItsmColumn.builder().key("productName")
-                .name(I18nUtil.getCodeLanMessage(AuthI18nConstants.BK_PROJECT_PRODUCT)).type(TEXT_TYPE).build()
+            ItsmColumn.builder().key("desc")
+                .name(I18nUtil.getCodeLanMessage(AuthI18nConstants.BK_PROJECT_DESC)).type(TEXT_TYPE).build()
         )
         val itsmAttrs = ItsmAttrs.builder().column(itsmColumns).build()
         val itsmScheme = ItsmScheme.builder().attrs(itsmAttrs).type("table").build()

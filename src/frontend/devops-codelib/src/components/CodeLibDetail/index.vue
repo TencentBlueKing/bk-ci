@@ -99,6 +99,7 @@
                     </a> -->
                     <p
                         class="codelib-address"
+                        v-bk-overflow-tips
                     >
                         {{ repoInfo.url }}
                     </p>
@@ -530,7 +531,7 @@
     }
 </script>
 <style lang='scss' scoped>
-    @media (max-width: 1200px) {
+    @media (max-width: 1400px) {
         .codelib-name {
             span {
                 max-width: 300px;
@@ -540,15 +541,14 @@
             max-width: 300px;
         }
     }
-
-    @media (min-width: 1200px) {
+    @media (min-width: 1400px) {
         .codelib-name {
             span {
-                max-width: 350px;
+                max-width: 320px;
             }
         }
         .codelib-address {
-            max-width: 400px;
+            max-width: 380px;
         }
     }
     ::v-deep {

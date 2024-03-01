@@ -28,13 +28,12 @@
 package com.tencent.devops.store.pojo.common
 
 import com.tencent.devops.store.pojo.common.enums.MediaTypeEnum
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("媒体信息添加类")
+@Schema(title = "媒体信息添加类")
 data class MediaInfoReq(
-    @ApiModelProperty("媒体url", required = true)
+    @get:Schema(title = "媒体url", required = true)
     val mediaUrl: String,
-    @ApiModelProperty("媒体类型", required = true)
+    @get:Schema(title = "媒体类型", required = true)
     val mediaType: MediaTypeEnum
 )

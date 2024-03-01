@@ -29,7 +29,7 @@ package com.tencent.devops.common.pipeline.type
 
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.tencent.devops.common.pipeline.type.docker.ImageType
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
 /**
  * @Description
@@ -37,32 +37,32 @@ import io.swagger.annotations.ApiModelProperty
  * @Version 1.0
  */
 abstract class StoreDispatchType(
-    @ApiModelProperty("docker构建版本", required = false)
+    @get:Schema(title = "docker构建版本", required = false)
     @JsonProperty("value")
     open var dockerBuildVersion: String?,
     routeKeySuffix: DispatchRouteKeySuffix? = null,
-    @ApiModelProperty("镜像类型", required = false)
+    @get:Schema(title = "镜像类型", required = false)
     open var imageType: ImageType? = ImageType.BKDEVOPS,
-    @ApiModelProperty("凭证id", required = false)
+    @get:Schema(title = "凭证id", required = false)
     open var credentialId: String? = "",
-    @ApiModelProperty("凭证项目id", required = false)
+    @get:Schema(title = "凭证项目id", required = false)
     open var credentialProject: String? = "",
-    @ApiModelProperty("商店镜像代码", required = false)
+    @get:Schema(title = "商店镜像代码", required = false)
     // 商店镜像代码
     open var imageCode: String? = "",
-    @ApiModelProperty("商店镜像版本", required = false)
+    @get:Schema(title = "商店镜像版本", required = false)
     // 商店镜像版本
     open var imageVersion: String? = "",
-    @ApiModelProperty("商店镜像名称", required = false)
+    @get:Schema(title = "商店镜像名称", required = false)
     // 商店镜像名称
     open var imageName: String? = "",
-    @ApiModelProperty("商店镜像公共标识", required = false)
+    @get:Schema(title = "商店镜像公共标识", required = false)
     // 商店镜像公共标识
     open var imagePublicFlag: Boolean? = false,
-    @ApiModelProperty("商店镜像研发来源c", required = false)
+    @get:Schema(title = "商店镜像研发来源c", required = false)
     // 商店镜像研发来源c
     open var imageRDType: String? = "",
-    @ApiModelProperty("商店镜像是否推荐", required = false)
+    @get:Schema(title = "商店镜像是否推荐", required = false)
     // 商店镜像是否推荐
     open var recommendFlag: Boolean? = true
 ) : DispatchType((if (dockerBuildVersion.isNullOrBlank()) imageCode else dockerBuildVersion)

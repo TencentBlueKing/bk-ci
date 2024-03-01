@@ -62,7 +62,7 @@ import com.tencent.devops.common.pipeline.pojo.element.quality.QualityGateInElem
 import com.tencent.devops.common.pipeline.pojo.element.quality.QualityGateOutElement
 import com.tencent.devops.common.pipeline.pojo.time.BuildRecordTimeCost
 import com.tencent.devops.common.pipeline.pojo.time.BuildTimestampType
-import com.tencent.devops.common.pipeline.utils.SkipElementUtils
+import com.tencent.devops.common.pipeline.utils.ElementUtils
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.utils.LogUtils
 import com.tencent.devops.common.web.utils.I18nUtil
@@ -106,6 +106,7 @@ import com.tencent.devops.process.engine.service.record.PipelineBuildRecordServi
 import com.tencent.devops.process.engine.service.record.TaskBuildRecordService
 import com.tencent.devops.process.engine.service.rule.PipelineRuleService
 import com.tencent.devops.process.engine.utils.ContainerUtils
+import com.tencent.devops.process.engine.utils.PipelineUtils
 import com.tencent.devops.process.pojo.BuildBasicInfo
 import com.tencent.devops.process.pojo.BuildHistory
 import com.tencent.devops.process.pojo.BuildId
@@ -218,8 +219,8 @@ class PipelineRuntimeService @Autowired constructor(
         }
     }
 
-    fun getBuildInfo(projectId: String, buildId: String): BuildInfo? {
-        val t = pipelineBuildDao.getBuildInfo(dslContext, projectId, buildId)
+    fun getBuildInfo(projectId: String, buildId: String, queryDslContext: DSLContext? = null): BuildInfo? {
+        val t = pipelineBuildDao.getBuildInfo(queryDslContext ?: dslContext, projectId, buildId)
         return pipelineBuildDao.convert(t)
     }
 
@@ -372,12 +373,13 @@ class PipelineRuntimeService @Autowired constructor(
         buildNoEnd: Int?,
         buildMsg: String?,
         startUser: List<String>?,
-        updateTimeDesc: Boolean? = null
+        updateTimeDesc: Boolean? = null,
+        queryDslContext: DSLContext? = null
     ): List<BuildHistory> {
         val currentTimestamp = System.currentTimeMillis()
         // 限制最大一次拉1000，防止攻击
         val list = pipelineBuildDao.listPipelineBuildInfo(
-            dslContext = dslContext,
+            dslContext = queryDslContext ?: dslContext,
             projectId = projectId,
             pipelineId = pipelineId,
             materialAlias = materialAlias,
@@ -730,17 +732,21 @@ class PipelineRuntimeService @Autowired constructor(
                     context.containerSeq++
                     containerBuildRecords.addRecords(
                         stageId = stage.id!!,
+                        stageEnableFlag = stage.isStageEnable(),
                         container = container,
                         context = context,
                         buildStatus = null,
                         taskBuildRecords = taskBuildRecords
                     )
+                    // 清理options变量
+                    container.params = PipelineUtils.cleanOptions(container.params)
                     return@nextContainer
                 } else if (container is NormalContainer) {
                     if (!ContainerUtils.isNormalContainerEnable(container)) {
                         context.containerSeq++
                         containerBuildRecords.addRecords(
                             stageId = stage.id!!,
+                            stageEnableFlag = stage.isStageEnable(),
                             container = container,
                             context = context,
                             buildStatus = BuildStatus.SKIP,
@@ -753,6 +759,7 @@ class PipelineRuntimeService @Autowired constructor(
                         context.containerSeq++
                         containerBuildRecords.addRecords(
                             stageId = stage.id!!,
+                            stageEnableFlag = stage.isStageEnable(),
                             container = container,
                             context = context,
                             buildStatus = BuildStatus.SKIP,
@@ -1605,7 +1612,7 @@ class PipelineRuntimeService @Autowired constructor(
         }
         with(latestRunningBuild) {
             val executeTime = try {
-                timeCost?.executeCost ?: getExecuteTime(latestRunningBuild.projectId, buildId)
+                timeCost?.totalCost ?: getExecuteTime(latestRunningBuild.projectId, buildId)
             } catch (ignored: Throwable) {
                 logger.warn("[$pipelineId]|getExecuteTime-$buildId exception:", ignored)
                 0L
@@ -1645,14 +1652,18 @@ class PipelineRuntimeService @Autowired constructor(
         }
     }
 
-    fun getBuildParametersFromStartup(projectId: String, buildId: String): List<BuildParameters> {
+    fun getBuildParametersFromStartup(
+        projectId: String,
+        buildId: String,
+        queryDslContext: DSLContext? = null
+    ): List<BuildParameters> {
         return try {
-            val buildParameters = pipelineBuildDao.getBuildParameters(dslContext, projectId, buildId)
+            val buildParameters = pipelineBuildDao.getBuildParameters(queryDslContext ?: dslContext, projectId, buildId)
             return if (buildParameters.isNullOrEmpty()) {
                 emptyList()
             } else {
                 (JsonUtil.getObjectMapper().readValue(buildParameters) as List<BuildParameters>)
-                    .filter { !it.key.startsWith(SkipElementUtils.prefix) }
+                    .filter { !it.key.startsWith(ElementUtils.skipPrefix) }
             }
         } catch (ignore: Exception) {
             emptyList()
@@ -1730,10 +1741,11 @@ class PipelineRuntimeService @Autowired constructor(
         buildNoStart: Int? = null,
         buildNoEnd: Int? = null,
         buildMsg: String? = null,
-        startUser: List<String>? = null
+        startUser: List<String>? = null,
+        queryDslContext: DSLContext? = null
     ): Int {
         return pipelineBuildDao.count(
-            dslContext = dslContext,
+            dslContext = queryDslContext ?: dslContext,
             projectId = projectId,
             pipelineId = pipelineId,
             materialAlias = materialAlias,

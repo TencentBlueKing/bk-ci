@@ -128,12 +128,12 @@ class PipelineWebhookService @Autowired constructor(
         element: Element,
         variables: Map<String, String>
     ) {
-        val (repositoryType, eventType, repositoryConfig) =
+        val (scmType, eventType, repositoryConfig) =
             RepositoryConfigUtils.buildWebhookConfig(element, variables)
-        logger.info("$pipelineId| Trying to add the $repositoryType web hook for repo($repositoryConfig)")
+        logger.info("$pipelineId| Trying to add the $scmType web hook for repo($repositoryConfig)")
         val repository = registerWebhook(
             projectId = projectId,
-            repositoryType = repositoryType,
+            scmType = scmType,
             repositoryConfig = repositoryConfig,
             codeEventType = eventType,
             elementVersion = element.version
@@ -141,7 +141,7 @@ class PipelineWebhookService @Autowired constructor(
         val pipelineWebhook = PipelineWebhook(
             projectId = projectId,
             pipelineId = pipelineId,
-            repositoryType = repositoryType,
+            repositoryType = scmType,
             repoType = repositoryConfig.repositoryType,
             repoHashId = repositoryConfig.repositoryHashId,
             repoName = repositoryConfig.repositoryName,
@@ -149,7 +149,8 @@ class PipelineWebhookService @Autowired constructor(
             projectName = getProjectName(repository.projectName),
             repositoryHashId = repository.repoHashId,
             eventType = eventType?.name ?: "",
-            externalId = repository.getExternalId()
+            externalId = repository.getExternalId(),
+            externalName = getExternalName(scmType = scmType, repository.projectName)
         )
         pipelineWebhookDao.save(
             dslContext = dslContext,
@@ -159,7 +160,7 @@ class PipelineWebhookService @Autowired constructor(
 
     private fun registerWebhook(
         projectId: String,
-        repositoryType: ScmType,
+        scmType: ScmType,
         repositoryConfig: RepositoryConfig,
         codeEventType: CodeEventType?,
         elementVersion: String
@@ -172,7 +173,7 @@ class PipelineWebhookService @Autowired constructor(
         )
         try {
             redisLock.lock()
-            return when (repositoryType) {
+            return when (scmType) {
                 ScmType.CODE_GIT ->
                     scmProxyService.addGitWebhook(
                         projectId = projectId,
@@ -319,6 +320,18 @@ class PipelineWebhookService @Autowired constructor(
         return repoSplit[1].trim()
     }
 
+    /**
+     * 获取代码库平台仓库名
+     */
+    fun getExternalName(scmType: ScmType, projectName: String): String {
+        val repoSplit = projectName.split("/")
+        // 如果代码库是svn类型，并且项目名是三层的，比如a/b/c，那对应的rep_name是b,工蜂svn webhook返回的rep_name结构
+        if (scmType == ScmType.CODE_SVN && repoSplit.size == 3) {
+            return repoSplit[1].trim()
+        }
+        return projectName
+    }
+
     fun listWebhook(
         userId: String,
         projectId: String,
@@ -348,5 +361,20 @@ class PipelineWebhookService @Autowired constructor(
             offset = limit.offset,
             limit = limit.limit
         ) ?: emptyList()
+    }
+
+    fun get(
+        projectId: String,
+        pipelineId: String,
+        repositoryHashId: String,
+        eventType: String
+    ): PipelineWebhook? {
+        return pipelineWebhookDao.get(
+            dslContext = dslContext,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            repositoryHashId = repositoryHashId,
+            eventType = eventType
+        )
     }
 }

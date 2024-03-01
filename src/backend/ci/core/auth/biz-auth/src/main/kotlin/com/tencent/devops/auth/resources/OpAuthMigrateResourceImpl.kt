@@ -29,10 +29,11 @@
 package com.tencent.devops.auth.resources
 
 import com.tencent.devops.auth.api.migrate.OpAuthMigrateResource
+import com.tencent.devops.auth.pojo.dto.MigrateResourceDTO
+import com.tencent.devops.auth.pojo.dto.PermissionHandoverDTO
 import com.tencent.devops.auth.service.iam.PermissionMigrateService
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.auth.api.pojo.MigrateProjectConditionDTO
-import com.tencent.devops.common.auth.api.pojo.PermissionHandoverDTO
 import com.tencent.devops.common.web.RestResource
 import org.springframework.beans.factory.annotation.Autowired
 
@@ -65,22 +66,24 @@ class OpAuthMigrateResourceImpl @Autowired constructor(
         return Result(permissionMigrateService.compareResult(projectCode = projectCode))
     }
 
-    override fun migrateResource(
-        projectCode: String,
-        resourceType: String,
-        projectCreator: String
-    ): Result<Boolean> {
+    override fun migrateSpecificResource(migrateResourceDTO: MigrateResourceDTO): Result<Boolean> {
         return Result(
-            permissionMigrateService.migrateResource(
-                projectCode = projectCode,
-                resourceType = resourceType,
-                projectCreator = projectCreator
-            )
+            permissionMigrateService.migrateSpecificResource(migrateResourceDTO = migrateResourceDTO)
+        )
+    }
+
+    override fun migrateSpecificResourceOfAllProject(migrateResourceDTO: MigrateResourceDTO): Result<Boolean> {
+        return Result(
+            permissionMigrateService.migrateSpecificResourceOfAllProject(migrateResourceDTO = migrateResourceDTO)
         )
     }
 
     override fun grantGroupAdditionalAuthorization(projectCodes: List<String>): Result<Boolean> {
         return Result(permissionMigrateService.grantGroupAdditionalAuthorization(projectCodes = projectCodes))
+    }
+
+    override fun handoverAllPermissions(permissionHandoverDTO: PermissionHandoverDTO): Result<Boolean> {
+        return Result(permissionMigrateService.handoverAllPermissions(permissionHandoverDTO = permissionHandoverDTO))
     }
 
     override fun handoverPermissions(permissionHandoverDTO: PermissionHandoverDTO): Result<Boolean> {
@@ -91,11 +94,8 @@ class OpAuthMigrateResourceImpl @Autowired constructor(
         return Result(permissionMigrateService.migrateMonitorResource(projectCodes = projectCodes))
     }
 
-    override fun fitSecToRbacAuth(migrateProjectConditionDTO: MigrateProjectConditionDTO): Result<Boolean> {
-        return Result(
-            permissionMigrateService.fitSecToRbacAuth(
-                migrateProjectConditionDTO = migrateProjectConditionDTO
-            )
-        )
+    override fun autoRenewal(migrateProjectConditionDTO: MigrateProjectConditionDTO): Result<Boolean> {
+        permissionMigrateService.autoRenewal(migrateProjectConditionDTO)
+        return Result(true)
     }
 }

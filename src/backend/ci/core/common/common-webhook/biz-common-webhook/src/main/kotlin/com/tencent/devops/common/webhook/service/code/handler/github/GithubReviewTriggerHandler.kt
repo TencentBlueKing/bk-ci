@@ -29,6 +29,7 @@ package com.tencent.devops.common.webhook.service.code.handler.github
 
 import com.tencent.devops.common.api.pojo.I18Variable
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeEventType
+import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_EVENT_URL
 import com.tencent.devops.common.webhook.annotation.CodeWebhookHandler
 import com.tencent.devops.common.webhook.enums.WebhookI18nConstants
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_REVIEW_APPROVING_REVIEWERS
@@ -125,14 +126,17 @@ class GithubReviewTriggerHandler @Autowired constructor(
         webHookParams: WebHookParams
     ): List<WebhookFilter> {
         with(webHookParams) {
-            eventCacheService.getPrInfo(
-                githubRepoName = event.repository.fullName,
-                pullNumber = event.pullRequest.number.toString(),
-                repo = repository,
-                projectId = projectId
-            )?.run {
-                event.pullRequest.mergeable = this.mergeable
-                event.pullRequest.mergeableState = this.mergeableState
+            // 非[拒绝]和[要求修改]才调用详情接口，更新事件状态
+            if (event.convertState() != "change_required" || event.convertState() != "change_denied") {
+                eventCacheService.getPrInfo(
+                    githubRepoName = event.repository.fullName,
+                    pullNumber = event.pullRequest.number.toString(),
+                    repo = repository,
+                    projectId = projectId
+                )?.run {
+                    event.pullRequest.mergeable = this.mergeable
+                    event.pullRequest.mergeableState = this.mergeableState
+                }
             }
             logger.info("github review event[$event]")
             val urlFilter = GitUrlFilter(
@@ -181,6 +185,7 @@ class GithubReviewTriggerHandler @Autowired constructor(
             startParams[BK_REPO_GIT_WEBHOOK_REVIEW_TARGET_BRANCH] = event.pullRequest.base.ref
             startParams[BK_REPO_GIT_WEBHOOK_REVIEW_SOURCE_PROJECT_ID] = event.pullRequest.head.repo.id
             startParams[BK_REPO_GIT_WEBHOOK_REVIEW_TARGET_PROJECT_ID] = event.pullRequest.base.repo.id
+            startParams[PIPELINE_GIT_EVENT_URL] = buildReviewUrl(event)
             event.pullRequest.requestedReviewers.run {
                 startParams[BK_REPO_GIT_WEBHOOK_REVIEW_APPROVING_REVIEWERS] = this.joinToString(",") {
                     it.login

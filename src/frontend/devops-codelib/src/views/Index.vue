@@ -117,6 +117,7 @@
         isTGit,
         isP4,
         CODE_REPOSITORY_CACHE,
+        CODE_REPOSITORY_SEARCH_VAL,
         isSvn
     } from '../config/'
     
@@ -189,6 +190,9 @@
             this.sortBy = sortBy ?? localStorage.getItem('codelibSortBy') ?? ''
             this.init()
             this.projectList = this.$store.state.projectList
+            if (this.userId) {
+                this.aliasName = JSON.parse(localStorage.getItem(CODE_REPOSITORY_SEARCH_VAL)) || ''
+            }
 
             this.refreshCodelibList()
             if (
@@ -234,11 +238,12 @@
                 const listTotalHeight = windowHeight - top - tableHeadHeight - paginationHeight - windownOffsetBottom - 74
                 const tableRowHeight = 42
 
+                const isCacheProject = this.projectId === (cache && cache.projectId)
                 this.aliasName = query.searchName || ''
-                const id = query.id || (cache && cache.id) || ''
-                const scmType = query.scmType || (cache && cache.scmType) || ''
-                const page = (cache && cache.page) || 1
-                const limit = (cache && cache.limit) || Math.floor(listTotalHeight / tableRowHeight)
+                const id = isCacheProject ? query.id || (cache && cache.id) : ''
+                const scmType = isCacheProject ? query.scmType || (cache && cache.scmType) : ''
+                const page = isCacheProject ? (cache && cache.page) : 1
+                const limit = isCacheProject ? (cache && cache.limit) : Math.floor(listTotalHeight / tableRowHeight)
                 this.startPage = page
                 this.defaultPagesize = Number(limit)
                 if (id) {
@@ -259,6 +264,7 @@
             clearAliasName () {
                 if (this.aliasName === '') {
                     this.refreshCodelibList()
+                    localStorage.removeItem(CODE_REPOSITORY_SEARCH_VAL)
                 }
             },
 
@@ -293,10 +299,11 @@
             },
 
             handleEnterSearch (val) {
+                localStorage.setItem(CODE_REPOSITORY_SEARCH_VAL, JSON.stringify(val.trim()))
                 this.$router.push({
                     query: {
                         ...this.$route.query,
-                        searchName: val
+                        searchName: val.trim()
                     }
                 })
                 this.refreshCodelibList(this.projectId, 1)
@@ -345,8 +352,13 @@
                 this.sortBy = sortBy
                 this.sortType = sortType
                 this.refreshCodelibList()
-                localStorage.setItem('codelibSortType', sortType)
-                localStorage.setItem('codelibSortBy', sortBy)
+                if (sortBy && sortType) {
+                    localStorage.setItem('codelibSortType', sortType)
+                    localStorage.setItem('codelibSortBy', sortBy)
+                } else {
+                    localStorage.removeItem('codelibSortType')
+                    localStorage.removeItem('codelibSortBy')
+                }
                 this.$router.push({
                     query: {
                         ...this.$route.query,

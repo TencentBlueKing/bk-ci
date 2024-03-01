@@ -16,4 +16,33 @@ interface PermissionResourceMemberService {
         resourceType: String,
         resourceCode: String
     ): List<BkAuthGroupAndUserList>
+
+    @Suppress("LongParameterList")
+    fun batchAddResourceGroupMembers(
+        userId: String,
+        projectCode: String,
+        iamGroupId: Int,
+        expiredTime: Long,
+        members: List<String>? = emptyList(),
+        departments: List<String>? = emptyList()
+    ): Boolean
+
+    fun batchDeleteResourceGroupMembers(
+        userId: String,
+        projectCode: String,
+        iamGroupId: Int,
+        members: List<String>? = emptyList(),
+        departments: List<String>? = emptyList()
+    ): Boolean
+
+    fun roleCodeToIamGroupId(
+        projectCode: String,
+        roleCode: String
+    ): Int
+
+    fun autoRenewal(
+        projectCode: String,
+        resourceType: String,
+        resourceCode: String
+    )
 }

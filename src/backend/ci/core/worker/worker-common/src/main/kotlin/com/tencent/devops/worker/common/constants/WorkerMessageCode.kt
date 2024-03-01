@@ -138,6 +138,7 @@ object WorkerMessageCode {
     const val AGENT_NETWORK_CONNECT_FAILED = "2130074" // 构建机网络连接问题(Agent Network Connect Failed)
     const val AGENT_NETWORK_TIMEOUT = "2130075" // 构建机网络超时问题(Agent Network Timeout)
     const val AGENT_NETWORK_UNKNOWN = "2130076" // 构建机网络未知异常(Agent Network Unknown)
+    const val CHECK_DOCKER_IMAGE_INFO_FAILED = "2130077" // 校验镜像信息失败
 
     const val BK_CERTIFICATE_ID_EMPTY = "bkCertificateIdEmpty" // 证书ID为空
     const val BK_BUILD_IMAGE_SUCCEED = "bkBuildImageSucceed" // 构建镜像成功！

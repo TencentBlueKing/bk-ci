@@ -37,9 +37,9 @@ import com.tencent.devops.quality.pojo.GroupSummaryWithPermission
 import com.tencent.devops.quality.pojo.GroupUpdate
 import com.tencent.devops.quality.pojo.GroupUsers
 import com.tencent.devops.quality.pojo.ProjectGroupAndUsers
-import io.swagger.annotations.Api
-import io.swagger.annotations.ApiOperation
-import io.swagger.annotations.ApiParam
+import io.swagger.v3.oas.annotations.tags.Tag
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.Parameter
 import javax.ws.rs.Consumes
 import javax.ws.rs.DELETE
 import javax.ws.rs.GET
@@ -52,113 +52,113 @@ import javax.ws.rs.Produces
 import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
-@Api(tags = ["USER_GROUP"], description = "质量红线-用户组")
+@Tag(name = "USER_GROUP", description = "质量红线-用户组")
 @Path("/user/groups")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface UserGroupResource {
-    @ApiOperation("获取用户组列表")
+    @Operation(summary = "获取用户组列表")
     @Path("/{projectId}/list")
     @GET
     fun list(
-        @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @ApiParam("页目", required = false, defaultValue = "1")
+        @Parameter(description = "页目", required = false, example = "1")
         @QueryParam("page")
         page: Int?,
-        @ApiParam("每页数目", required = false, defaultValue = "20")
+        @Parameter(description = "每页数目", required = false, example = "20")
         @QueryParam("pageSize")
         pageSize: Int?
     ): Result<Page<GroupSummaryWithPermission>>
 
-    @ApiOperation("获取项目用户组信息和组所有人员")
+    @Operation(summary = "获取项目用户组信息和组所有人员")
     @Path("/{projectId}/projectGroupAndUsers")
     @GET
     fun projectGroupAndUsers(
-        @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String
     ): Result<List<ProjectGroupAndUsers>>
 
-    @ApiOperation("创建用户组")
+    @Operation(summary = "创建用户组")
     @Path("/{projectId}/")
     @POST
     fun create(
-        @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @ApiParam("用户组", required = true)
+        @Parameter(description = "用户组", required = true)
         group: GroupCreate
     ): Result<Boolean>
 
-    @ApiOperation("获取用户组")
+    @Operation(summary = "获取用户组")
     @Path("/{projectId}/{groupHashId}")
     @GET
     fun get(
-        @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @ApiParam("用户组HashID", required = true)
+        @Parameter(description = "用户组HashID", required = true)
         @PathParam("groupHashId")
         groupHashId: String
     ): Result<Group>
 
-    @ApiOperation("获取用户组用户")
+    @Operation(summary = "获取用户组用户")
     @Path("/{projectId}/{groupHashId}/users")
     @GET
     fun getUsers(
-        @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @ApiParam("用户组HashID", required = true)
+        @Parameter(description = "用户组HashID", required = true)
         @PathParam("groupHashId")
         groupHashId: String
     ): Result<GroupUsers>
 
-    @ApiOperation("修改用户组")
+    @Operation(summary = "修改用户组")
     @Path("/{projectId}/{groupHashId}")
     @PUT
     fun edit(
-        @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @ApiParam("用户组HashID", required = true)
+        @Parameter(description = "用户组HashID", required = true)
         @PathParam("groupHashId")
         groupHashId: String,
-        @ApiParam("用户组", required = true)
+        @Parameter(description = "用户组", required = true)
         group: GroupUpdate
     ): Result<Boolean>
 
-    @ApiOperation("删除用户组")
+    @Operation(summary = "删除用户组")
     @Path("/{projectId}/{groupHashId}")
     @DELETE
     fun delete(
-        @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @ApiParam("用户组HashID", required = true)
+        @Parameter(description = "用户组HashID", required = true)
         @PathParam("groupHashId")
         groupHashId: String
     ): Result<Boolean>

@@ -28,9 +28,10 @@
 
 package com.tencent.devops.auth.service.sample
 
+import com.tencent.devops.auth.pojo.dto.MigrateResourceDTO
 import com.tencent.devops.auth.service.iam.PermissionMigrateService
 import com.tencent.devops.common.auth.api.pojo.MigrateProjectConditionDTO
-import com.tencent.devops.common.auth.api.pojo.PermissionHandoverDTO
+import com.tencent.devops.auth.pojo.dto.PermissionHandoverDTO
 
 class SamplePermissionMigrateService : PermissionMigrateService {
     override fun v3ToRbacAuth(projectCodes: List<String>): Boolean {
@@ -53,11 +54,11 @@ class SamplePermissionMigrateService : PermissionMigrateService {
         return true
     }
 
-    override fun migrateResource(
-        projectCode: String,
-        resourceType: String,
-        projectCreator: String
-    ): Boolean {
+    override fun migrateSpecificResource(migrateResourceDTO: MigrateResourceDTO): Boolean {
+        return true
+    }
+
+    override fun migrateSpecificResourceOfAllProject(migrateResourceDTO: MigrateResourceDTO): Boolean {
         return true
     }
 
@@ -65,15 +66,23 @@ class SamplePermissionMigrateService : PermissionMigrateService {
         return true
     }
 
+    override fun handoverAllPermissions(permissionHandoverDTO: PermissionHandoverDTO): Boolean {
+        return true
+    }
+
     override fun handoverPermissions(permissionHandoverDTO: PermissionHandoverDTO): Boolean {
         return true
     }
 
-    override fun migrateMonitorResource(projectCodes: List<String>, async: Boolean): Boolean {
+    override fun migrateMonitorResource(
+        projectCodes: List<String>,
+        asyncMigrateManagerGroup: Boolean,
+        asyncMigrateOtherGroup: Boolean
+    ): Boolean {
         return true
     }
 
-    override fun fitSecToRbacAuth(migrateProjectConditionDTO: MigrateProjectConditionDTO): Boolean {
+    override fun autoRenewal(migrateProjectConditionDTO: MigrateProjectConditionDTO): Boolean {
         return true
     }
 }

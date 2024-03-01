@@ -617,7 +617,7 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
                     atomCode = atomCode,
                     atomName = atomName,
                     indicators = indicators,
-                    version = if (branch == MASTER) null else atomVersion
+                    version = if (atomVersion.startsWith("$TEST-$branch-")) atomVersion else null
                 )
 
                 // 再注册指标
@@ -1219,7 +1219,8 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
                 atomCode = atomCode,
                 atomId = atomRecord.id,
                 userId = userId,
-                reason = reason
+                reason = reason,
+                version = version
             )
         }
     }
@@ -1229,7 +1230,8 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
         atomCode: String,
         atomId: String,
         userId: String,
-        reason: String?
+        reason: String?,
+        version: String
     ) {
         // 查找插件最近二个已经发布的版本
         val releaseAtomRecords = marketAtomDao.getReleaseAtomsByCode(context, atomCode, 2)
@@ -1244,6 +1246,7 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
                     latestFlag = false
                 )
             )
+            redisOperation.delete(StoreUtils.getStoreRunInfoKey(StoreTypeEnum.ATOM.name, atomCode))
             val newestReleaseAtomRecord = releaseAtomRecords[0]
             if (newestReleaseAtomRecord.id == atomId) {
                 var tmpAtomId: String? = null
@@ -1450,15 +1453,13 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
         ).use { redisLock ->
             redisLock.lock()
             if (marketAtomDao.isAtomLatestTestVersion(dslContext, atomId) > 0) {
-                val latestTestVersionId = marketAtomDao.queryAtomLatestTestVersionId(dslContext, atomCode)
-                latestTestVersionId?.let {
-                    marketAtomDao.setupAtomLatestTestFlag(
-                        dslContext = dslContext,
-                        userId = userId,
-                        atomCode = atomCode,
-                        atomId = atomId
-                    )
-                }
+                val latestTestVersionId = marketAtomDao.queryAtomLatestTestVersionId(dslContext, atomCode, atomId)
+                marketAtomDao.setupAtomLatestTestFlag(
+                    dslContext = dslContext,
+                    userId = userId,
+                    atomCode = atomCode,
+                    atomId = latestTestVersionId ?: ""
+                )
             }
         }
     }

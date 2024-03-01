@@ -31,9 +31,9 @@ import com.tencent.devops.common.api.enums.RepositoryType
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.pipeline.pojo.BuildFormValue
 import com.tencent.devops.scm.pojo.RevisionInfo
-import io.swagger.annotations.Api
-import io.swagger.annotations.ApiOperation
-import io.swagger.annotations.ApiParam
+import io.swagger.v3.oas.annotations.tags.Tag
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.Parameter
 import javax.ws.rs.Consumes
 import javax.ws.rs.GET
 import javax.ws.rs.Path
@@ -42,80 +42,84 @@ import javax.ws.rs.Produces
 import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
-@Api(tags = ["USER_SCM"], description = "用户-scm相关接口")
+@Tag(name = "USER_SCM", description = "用户-scm相关接口")
 @Path("/user/scm")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface UserScmResource {
 
-    @ApiOperation("获取仓库最新版本")
+    @Operation(summary = "获取仓库最新版本")
     @GET
     // @Path("/projects/{projectId}/repositories/{repositoryId}/latestRevision")
     @Path("/{projectId}/{repositoryId}/latestRevision")
     fun getLatestRevision(
-        @ApiParam("项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @ApiParam("repo hash id or repo name", required = true)
+        @Parameter(description = "repo hash id or repo name", required = true)
         @PathParam("repositoryId")
         repositoryId: String,
-        @ApiParam("branch name", required = false)
+        @Parameter(description = "branch name", required = false)
         @QueryParam("branchName")
         branchName: String? = null,
-        @ApiParam("SVN additional path", required = false)
+        @Parameter(description = "SVN additional path", required = false)
         @QueryParam("additionalPath")
         additionalPath: String? = null,
-        @ApiParam("代码库请求类型", required = false)
+        @Parameter(description = "代码库请求类型", required = false)
         @QueryParam("repositoryType")
         repositoryType: RepositoryType?
     ): Result<RevisionInfo>
 
-    @ApiOperation("列出仓库所有分支")
+    @Operation(summary = "列出仓库所有分支")
     @GET
     // @Path("/projects/{projectId}/repositories/{repositoryId}/branches")
     @Path("/{projectId}/{repositoryId}/branches")
     fun listBranches(
-        @ApiParam("项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @ApiParam("repo hash id", required = true)
+        @Parameter(description = "repo hash id", required = true)
         @PathParam("repositoryId")
         repositoryId: String,
-        @ApiParam("代码库请求类型", required = true)
+        @Parameter(description = "代码库请求类型", required = true)
         @QueryParam("repositoryType")
         repositoryType: RepositoryType?
     ): Result<List<String>>
 
-    @ApiOperation("列出仓库所有分支")
+    @Operation(summary = "列出仓库所有分支")
     @GET
     // @Path("/projects/{projectId}/repositories/{repositoryId}/tags")
     @Path("/{projectId}/{repositoryId}/tags")
     fun listTags(
-        @ApiParam("项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @ApiParam("repo hash id", required = true)
+        @Parameter(description = "repo hash id", required = true)
         @PathParam("repositoryId")
         repositoryId: String,
-        @ApiParam("代码库请求类型", required = true)
+        @Parameter(description = "代码库请求类型", required = true)
         @QueryParam("repositoryType")
         repositoryType: RepositoryType?
     ): Result<List<String>>
 
-    @ApiOperation("列出仓库分支和tag集合")
+    @Operation(summary = "列出仓库分支和tag集合")
     @GET
     @Path("/{projectId}/{repositoryId}/refs")
+    @Deprecated(
+        replaceWith = ReplaceWith("UserBuildParametersResource.listGitRefs"),
+        message = "流水线下拉参数,统一到UserBuildParametersResource维护"
+    )
     fun listRefs(
-        @ApiParam("项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @ApiParam("repo hash id", required = true)
+        @Parameter(description = "repo hash id", required = true)
         @PathParam("repositoryId")
         repositoryId: String,
-        @ApiParam("代码库请求类型", required = false)
+        @Parameter(description = "代码库请求类型", required = false)
         @QueryParam("repositoryType")
         repositoryType: RepositoryType?,
-        @ApiParam("搜索条件", required = false)
+        @Parameter(description = "搜索条件", required = false)
         @QueryParam("search")
         search: String?
     ): Result<List<BuildFormValue>>
