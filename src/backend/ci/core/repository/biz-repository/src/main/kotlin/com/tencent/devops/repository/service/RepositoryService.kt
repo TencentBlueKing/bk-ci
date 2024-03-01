@@ -1155,6 +1155,8 @@ class RepositoryService @Autowired constructor(
             hashId = repositoryHashId,
             newName = repoRename.name
         )
+        // 同步权限中心
+        editResource(projectId, repositoryId, repoRename.name)
     }
 
     fun updateAtomRepoFlag(
