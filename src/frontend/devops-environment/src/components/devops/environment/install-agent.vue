@@ -108,7 +108,7 @@
         </div>
         <div class="sideslider-content" slot="content" v-else>
             <div class="install-status">
-                <template v-if="['PADDING', 'RUNNING'].includes(installStatus)">
+                <template v-if="['PENDING', 'RUNNING'].includes(installStatus)">
                     <Icon class="icon" name="loading" />
                     <span>{{ $t('environment.installingTips') }}</span>
                 </template>
@@ -124,9 +124,9 @@
                         class="ml10"
                         @click="handleRetryInstallAgent"
                     >
-                    {{ $t('environment.retry') }}
-                </bk-button>
-            </template>
+                        {{ $t('environment.retry') }}
+                    </bk-button>
+                </template>
             </div>
             <div ref="editor" class="log-wrapper">
                 <div ref="executeScriptLog" v-once id="executeScriptLog" style="height: 100%;" />
@@ -206,7 +206,7 @@
                 channelList: [],
                 isEditing: true,
                 jobId: 0,
-                installStatus: '',
+                installStatus: 'PENDING',
                 taskLog: '',
                 keyFileFormData: new FormData()
             }
@@ -380,9 +380,7 @@
                         await this.fetchInstallAgentTaskLog()
                     }, 5000)
                 } else {
-                    setTimeout(() => {
-                        this.$emit('install')
-                    }, 5000)
+                    this.$emit('install')
                 }
             },
 
