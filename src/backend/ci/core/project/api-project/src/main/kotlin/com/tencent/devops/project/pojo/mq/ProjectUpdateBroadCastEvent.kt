@@ -29,7 +29,6 @@ package com.tencent.devops.project.pojo.mq
 
 import com.tencent.devops.common.event.annotation.Event
 import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
-import com.tencent.devops.project.pojo.ProjectUpdateHistoryInfo
 import com.tencent.devops.project.pojo.ProjectUpdateInfo
 
 @Event(exchange = MQ.EXCHANGE_PROJECT_UPDATE_FANOUT)

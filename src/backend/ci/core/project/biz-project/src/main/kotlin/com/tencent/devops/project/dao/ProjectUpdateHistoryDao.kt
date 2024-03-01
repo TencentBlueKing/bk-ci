@@ -63,7 +63,7 @@ class ProjectUpdateHistoryDao {
                 dslContext.update(this)
                     .set(APPROVAL_STATUS, approvalStatus)
                     .set(UPDATED_AT, LocalDateTime.now())
-                    .where(ENGLISH_NAME.eq(englishName))
+                    .where(ID.eq(record.id))
                     .execute()
             }
         }

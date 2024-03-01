@@ -2,7 +2,6 @@ package com.tencent.devops.project.pojo
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-
 @Schema(title = "项目更新历史记录实体")
 data class ProjectUpdateHistoryInfo(
     @get:Schema(title = "英文名称")
