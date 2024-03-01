@@ -55,7 +55,7 @@ class RepositoryDao {
         aliasName: String,
         url: String,
         type: ScmType,
-        isAtom: Boolean? = false
+        atom: Boolean? = false
     ): Long {
         val now = LocalDateTime.now()
         var repoId = 0L
@@ -84,7 +84,7 @@ class RepositoryDao {
                     now,
                     false,
                     userId,
-                    isAtom
+                    atom
                 )
                     .returning(REPOSITORY_ID)
                     .fetchOne()!!.repositoryId
@@ -426,14 +426,12 @@ class RepositoryDao {
 
     fun getById(
         dslContext: DSLContext,
-        projectId: String,
         repositoryId: Long
     ): TRepositoryRecord? {
         with(TRepository.T_REPOSITORY) {
             return dslContext.selectFrom(this)
                 .where(
-                    PROJECT_ID.eq(projectId).and(REPOSITORY_ID.eq(repositoryId))
-                        .and(IS_DELETED.eq(false))
+                    REPOSITORY_ID.eq(repositoryId).and(IS_DELETED.eq(false))
                 )
                 .fetchAny()
         }

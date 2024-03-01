@@ -63,5 +63,5 @@ data class RepositoryInfoWithPermission(
     @get:Schema(title = "授权身份", required = true)
     val authIdentity: String? = null,
     @get:Schema(title = "插件仓库", required = true)
-    val atomRepo: Boolean? = false
+    val atom: Boolean? = false
 )
