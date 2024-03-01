@@ -66,7 +66,6 @@ import com.tencent.devops.environment.pojo.job.agentres.RetryAgentInstallTaskRes
 import com.tencent.devops.environment.pojo.job.agentres.Statistics
 import com.tencent.devops.environment.pojo.job.agentres.TerminalAgentInstallTaskResult
 import org.jooq.DSLContext
-import org.json.JSONObject
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
