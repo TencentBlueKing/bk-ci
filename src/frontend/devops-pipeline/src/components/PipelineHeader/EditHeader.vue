@@ -226,7 +226,8 @@
 
                     this.$bkMessage({
                         theme: 'success',
-                        message: this.$t('editPage.saveDraftSuccess', [pipelineSetting.pipelineName])
+                        message: this.$t('editPage.saveDraftSuccess', [pipelineSetting.pipelineName]),
+                        limit: 1
                     })
                 } catch (e) {
                     const { projectId, pipelineId } = this.$route.params

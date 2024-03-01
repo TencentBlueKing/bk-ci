@@ -49,7 +49,8 @@
                 window.navigator.clipboard.writeText(con)
                 this.$bkMessage({
                     theme: 'success',
-                    message: this.$t('copySuc')
+                    message: this.$t('copySuc'),
+                    limit: 1
                 })
             }
         }

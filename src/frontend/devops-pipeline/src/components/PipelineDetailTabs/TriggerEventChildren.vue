@@ -60,7 +60,8 @@
                     if (res) {
                         this.$bkMessage({
                             theme: 'success',
-                            message: this.$t('reTriggerSuc')
+                            message: this.$t('reTriggerSuc'),
+                            limit: 1
                         })
                     }
                 } catch (error) {

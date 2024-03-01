@@ -166,7 +166,8 @@
                     this.$bkMessage({
                         message,
                         theme,
-                        delay: 5000
+                        delay: 5000,
+                        limit: 1
                     })
                 }
             }

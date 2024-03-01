@@ -57,7 +57,8 @@
                     window.navigator.clipboard.writeText(copyUrl)
                     this.$bkMessage({
                         theme: 'success',
-                        message: this.$t('copySuc')
+                        message: this.$t('copySuc'),
+                        limit: 1
                     })
                 } catch (error) {
                     console.log(error)
