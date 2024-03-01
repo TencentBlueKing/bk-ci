@@ -285,12 +285,21 @@ object SignUtils {
             needResignDirs.forEach { resignDir ->
                 resignDir.listFiles()?.forEach { subFile ->
                     // 如果是个其他待签文件则使用主描述文件进行重签
-                    overwriteInfo(subFile, info, false, replaceKeyList, bundleId, bundleName, bundleVersion)
-                    codesignFile(certId, subFile.absolutePath, codeSignPath, codesignExternalStr)
+                    overwriteInfo(
+                        subFile, info, false, replaceKeyList,
+                        bundleId, bundleName, bundleVersion
+                    )
+                    codesignFile(
+                        certId, subFile.absolutePath,
+                        codeSignPath, codesignExternalStr
+                    )
                 }
             }
             // 重签当前目录
-            overwriteInfo(frameworkDir, info, false, replaceKeyList, bundleId, bundleName, bundleVersion)
+            overwriteInfo(
+                frameworkDir, info, false, replaceKeyList,
+                bundleId, bundleName, bundleVersion
+            )
             codesignFile(certId, frameworkDir.absolutePath, codeSignPath, codesignExternalStr)
             true
         } catch (ignore: Throwable) {
@@ -391,7 +400,8 @@ object SignUtils {
             if (it.isDirectory && resignFilenamesSet.contains(it.name)) {
                 if (it.name.equals("Frameworks")) {
                     it.listFiles()
-                        .filter { node -> node.isDirectory && node.extension.contains("framework") }.toMutableList()
+                        .filter { node ->
+                            node.isDirectory && node.extension.contains("framework") }.toMutableList()
                         .forEach { node ->
                             scanNeedResignFiles(node, needResignFiles)
                         }
@@ -419,17 +429,20 @@ object SignUtils {
             logger.info("[replaceCFBundleName] $bundleNameCmd")
             runtimeExec(bundleNameCmd)
 
-            val bundleDisplayNameCmd = "plutil -replace CFBundleDisplayName -string $bundleName ${fixPath(infoPlistPath)}"
+            val bundleDisplayNameCmd =
+                "plutil -replace CFBundleDisplayName -string $bundleName ${fixPath(infoPlistPath)}"
             logger.info("[replaceCFBundleDisplayName] $bundleDisplayNameCmd")
             runtimeExec(bundleDisplayNameCmd)
         }
 
         if (!bundleVersion.isNullOrBlank()) {
-            val bundleVersionCmd = "plutil -replace CFBundleVersion -string $bundleVersion ${fixPath(infoPlistPath)}"
+            val bundleVersionCmd =
+                "plutil -replace CFBundleVersion -string $bundleVersion ${fixPath(infoPlistPath)}"
             logger.info("[replaceCFBundleVersion] $bundleVersionCmd")
             runtimeExec(bundleVersionCmd)
 
-            val shortVersionCmd = "plutil -replace CFBundleShortVersionString -string $bundleVersion ${fixPath(infoPlistPath)}"
+            val shortVersionCmd =
+                "plutil -replace CFBundleShortVersionString -string $bundleVersion ${fixPath(infoPlistPath)}"
             logger.info("[replaceCFBundleShortVersionString] $shortVersionCmd")
             runtimeExec(shortVersionCmd)
         }

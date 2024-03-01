@@ -114,18 +114,21 @@ class SignServiceImpl
                 signInfoService.finishUnzip(resignId, ipaUnzipDir, ipaSignInfo, taskExecuteCount)
 
                 // 签名操作
-                val signFinished =
-                    if (ipaSignInfo.wildcard) {
-                        // 下载描述文件
-                        val wildcardMobileProvisionInfo = downloadWildcardMobileProvision(mobileProvisionDir, ipaSignInfo)
-                        resignIpaPackageWildcard(ipaUnzipDir, ipaSignInfo, wildcardMobileProvisionInfo)
-                    } else {
-                        val mobileProvisionInfoMap = downloadMobileProvision(mobileProvisionDir, ipaSignInfo)
-                        resignIpaPackage(ipaUnzipDir, ipaSignInfo, mobileProvisionInfoMap)
-                    }
+                val signFinished = if (ipaSignInfo.wildcard) {
+                    // 下载描述文件
+                    val wildcardMobileProvisionInfo =
+                        downloadWildcardMobileProvision(mobileProvisionDir, ipaSignInfo)
+                    resignIpaPackageWildcard(ipaUnzipDir, ipaSignInfo, wildcardMobileProvisionInfo)
+                } else {
+                    val mobileProvisionInfoMap =
+                        downloadMobileProvision(mobileProvisionDir, ipaSignInfo)
+                    resignIpaPackage(ipaUnzipDir, ipaSignInfo, mobileProvisionInfoMap)
+                }
                 if (!signFinished) {
                     logger.warn("SIGN|[$resignId]|[${ipaSignInfo.buildId}] sign ipa failed.")
-                    throw ErrorCodeException(errorCode = SignMessageCode.ERROR_SIGN_IPA, defaultMessage = "IPA包签名失败")
+                    throw ErrorCodeException(
+                        errorCode = SignMessageCode.ERROR_SIGN_IPA, defaultMessage = "IPA包签名失败"
+                    )
                 }
                 signInfoService.finishResign(resignId, ipaSignInfo, taskExecuteCount)
 
@@ -138,10 +141,14 @@ class SignServiceImpl
                     }
                 val uploadFileName = fileName.substring(0, fileName.lastIndexOf(".")) + resultName + ".ipa"
                 // 压缩目录
-                val signedIpaFile = SignUtils.zipIpaFile(ipaUnzipDir, ipaUnzipDir.parent + File.separator + uploadFileName)
+                val signedIpaFile = SignUtils.zipIpaFile(
+                    ipaUnzipDir, ipaUnzipDir.parent + File.separator + uploadFileName
+                )
                 if (signedIpaFile == null) {
                     logger.warn("SIGN|[$resignId]|[${ipaSignInfo.buildId}] zip ipa failed.")
-                    throw ErrorCodeException(errorCode = SignMessageCode.ERROR_SIGN_IPA, defaultMessage = "IPA文件生成失败")
+                    throw ErrorCodeException(
+                        errorCode = SignMessageCode.ERROR_SIGN_IPA, defaultMessage = "IPA文件生成失败"
+                    )
                 }
                 signInfoService.finishZip(resignId, signedIpaFile, ipaSignInfo, taskExecuteCount)
 
@@ -180,15 +187,20 @@ class SignServiceImpl
                 finished = true
             } catch (ignore: Throwable) {
                 logger.warn("SIGN|[$resignId] sign failed with error.", ignore)
-                signInfoService.failResign(resignId, ipaSignInfo, taskExecuteCount, ignore.message ?: "Unknown error")
+                signInfoService.failResign(
+                    resignId = resignId,
+                    info = ipaSignInfo,
+                    executeCount = taskExecuteCount,
+                    message = ignore.message ?: "Unknown error"
+                )
                 finished = true
             } finally {
                 if (!finished) {
                     signInfoService.failResign(
-                        resignId,
-                        ipaSignInfo,
-                        taskExecuteCount,
-                        "Task exit with unknown error"
+                        resignId = resignId,
+                        info = ipaSignInfo,
+                        executeCount = taskExecuteCount,
+                        message = "Task exit with unknown error"
                     )
                 }
             }
@@ -276,11 +288,14 @@ class SignServiceImpl
             val entitlementFile = File("${mobileProvisionFile.canonicalPath}.entitlement.plist")
             // 描述文件转为plist文件
             val mpToPlistCommand = "/usr/bin/security cms -D -i ${mobileProvisionFile.canonicalPath}"
-            val plistResult = CommandLineUtils.execute(mpToPlistCommand, mobileProvisionFile.parentFile, true)
+            val plistResult = CommandLineUtils.execute(
+                mpToPlistCommand, mobileProvisionFile.parentFile, true
+            )
             // 将plist写入到文件
             plistFile.writeText(plistResult)
             // 从plist文件抽离出entitlement文件
-            val plistToEntitlementCommand = "/usr/libexec/PlistBuddy -x -c 'Print:Entitlements' ${plistFile.canonicalPath}"
+            val plistToEntitlementCommand =
+                "/usr/libexec/PlistBuddy -x -c 'Print:Entitlements' ${plistFile.canonicalPath}"
             // 将entitlement写入到文件
             val entitlementResult =
                 CommandLineUtils.execute(
