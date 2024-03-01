@@ -668,28 +668,27 @@
                                             },
                                             this.$t('dealMR')
                                         )
-                                        : null,
-                                    h(
-                                        'bk-button',
-                                        {
-                                            props: {
-                                                theme: 'primary'
-                                            },
-                                            on: {
-                                                click: () => {
-                                                    this.$bkInfo.close(instance.id)
-                                                    this.$router.push({
-                                                        name: 'executePreview',
-                                                        params: {
-                                                            ...this.$route.params,
-                                                            version: this.pipelineInfo?.releaseVersion
-                                                        }
-                                                    })
+                                        : h(
+                                            'bk-button',
+                                            {
+                                                props: {
+                                                    theme: 'primary'
+                                                },
+                                                on: {
+                                                    click: () => {
+                                                        this.$bkInfo.close(instance.id)
+                                                        this.$router.push({
+                                                            name: 'executePreview',
+                                                            params: {
+                                                                ...this.$route.params,
+                                                                version: this.pipelineInfo?.releaseVersion
+                                                            }
+                                                        })
+                                                    }
                                                 }
-                                            }
-                                        },
-                                        this.$t('goExec')
-                                    ),
+                                            },
+                                            this.$t('goExec')
+                                        ),
                                     h(
                                         'bk-button',
                                         {

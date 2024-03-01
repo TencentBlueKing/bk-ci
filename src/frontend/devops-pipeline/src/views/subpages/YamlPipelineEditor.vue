@@ -368,6 +368,7 @@
 
         &-editor {
             flex: 1;
+            overflow: hidden;
         }
     }
 </style>
