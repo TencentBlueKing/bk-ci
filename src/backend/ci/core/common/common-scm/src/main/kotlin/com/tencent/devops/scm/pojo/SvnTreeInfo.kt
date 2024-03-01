@@ -25,6 +25,42 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-dependencies {
-    api(project(":core:metrics:biz-metrics"))
-}
+package com.tencent.devops.scm.pojo
+
+import com.fasterxml.jackson.annotation.JsonProperty
+import io.swagger.v3.oas.annotations.media.Schema
+
+@Schema(title = "SVN仓库文件树信息")
+data class SvnTreeInfo(
+    val count: Int,
+    val files: List<SvnTreeNodeInfo>
+)
+
+@Schema(title = "SVN仓库文件树节点信息")
+data class SvnTreeNodeInfo(
+    val file: SvnFile,
+    @JsonProperty("file_lock")
+    val fileLock: Boolean? = false
+)
+
+@Schema(title = "SVN仓库文件信息")
+data class SvnFile(
+    @get:Schema(title = "文件名")
+    val name: String,
+    @get:Schema(title = "文件全路径")
+    val path: String,
+    @get:Schema(title = "文件大小")
+    val size: Long,
+    @get:Schema(title = "文件版本号")
+    val revision: Long,
+    @get:Schema(title = "作者")
+    val author: String,
+    @get:Schema(title = "提交信息")
+    val commitMessage: String?,
+    @get:Schema(title = "是否为目录")
+    val directory: Boolean,
+    @get:Schema(title = "是否为外链")
+    val submodule: Boolean,
+    @get:Schema(title = "是否为文件")
+    val file: Boolean
+)
