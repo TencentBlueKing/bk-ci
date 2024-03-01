@@ -343,7 +343,7 @@ class OpService @Autowired constructor(
      */
     private fun clearAllGrayProjs(): OpOperateResult {
         val deleteKeyResult = redisOperation.delete(OP_KEY)
-        return if (deleteKeyResult) {
+        return if (deleteKeyResult) { // 1 - ZET中有元素
             OpOperateResult(
                 code = SUCCESSFUL_CODE,
                 result = SUCCESSFUL_RESULT,
@@ -351,10 +351,10 @@ class OpService @Autowired constructor(
                 grayProjNumber = grayProjsTotalNum()
             )
         } else {
-            OpOperateResult(
-                code = OPERATE_FAILED_CODE,
-                result = OPERATE_FAILED_RESULT,
-                msg = OPERATE_FAILED_MSG,
+            OpOperateResult( // 0 - ZET中没有元素
+                code = KEY_NOT_EXIST_CODE,
+                result = KEY_NOT_EXIST_RESULT,
+                msg = KEY_NOT_EXIST_MSG,
                 grayProjNumber = grayProjsTotalNum()
             )
         }
