@@ -67,10 +67,6 @@ class OpUserResourceImpl @Autowired constructor(
         )
     }
 
-    override fun refreshAtomCodeRepoGitCIProjectProduct(userId: String): Result<Boolean> {
-        return Result(projectRefreshService.refreshAllRelationAtomProjectProduct(userId))
-    }
-
     override fun createPublicAccount(userInfo: UserInfo): Result<Boolean> {
         return Result(projectUserRefreshService.createPublicAccount(userInfo))
     }

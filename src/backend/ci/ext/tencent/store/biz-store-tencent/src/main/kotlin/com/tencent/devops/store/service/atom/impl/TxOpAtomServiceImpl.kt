@@ -29,14 +29,18 @@ package com.tencent.devops.store.service.atom.impl
 
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.web.utils.I18nUtil
+import com.tencent.devops.project.api.service.ServiceProjectResource
 import com.tencent.devops.repository.api.ServiceGitRepositoryResource
 import com.tencent.devops.repository.pojo.enums.TokenTypeEnum
 import com.tencent.devops.scm.pojo.GitProjectInfo
 import com.tencent.devops.store.dao.atom.AtomDao
 import com.tencent.devops.store.pojo.atom.AtomFeatureUpdateRequest
+import com.tencent.devops.store.service.atom.AtomService
 import com.tencent.devops.store.service.atom.TxOpAtomService
+import java.util.concurrent.Executors
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -51,9 +55,11 @@ import org.springframework.stereotype.Service
 class TxOpAtomServiceImpl @Autowired constructor(
     private val dslContext: DSLContext,
     private val atomDao: AtomDao,
-    private val client: Client
+    private val client: Client,
+    private val atomService: AtomService
 ) : TxOpAtomService {
 
+    private val executorService = Executors.newSingleThreadExecutor()
     private val logger = LoggerFactory.getLogger(TxOpAtomServiceImpl::class.java)
 
     /**
@@ -96,5 +102,40 @@ class TxOpAtomServiceImpl @Autowired constructor(
                 messageCode = CommonMessageCode.SYSTEM_ERROR,
                 language = I18nUtil.getLanguage(userId))
         }
+    }
+
+    override fun refreshAllRelationAtomProjectProduct(userId: String): Boolean {
+        executorService.execute {
+            Thread.sleep(500)
+            val startTime = System.currentTimeMillis()
+            // 开始同步数据
+            var page = PageUtil.DEFAULT_PAGE
+            val pageSize = PageUtil.MAX_PAGE_SIZE
+            var continueFlag = true
+            while (continueFlag) {
+                logger.info(
+                    "refresh all relation atom project product page: $page , pageSize: $pageSize"
+                )
+                val gitProjectIds = atomService.getAtomRepositoryId(userId, page, pageSize).data?.map {
+                        "git_$it"
+                    }
+                if (gitProjectIds.isNullOrEmpty()) {
+                    continueFlag = false
+                    continue
+                }
+                client.get(ServiceProjectResource::class).batchUpdateProjectProductId(
+                    userId = userId,
+                    productId = Companion.BK_PRODUCT_ID,
+                    projectIds = gitProjectIds
+                )
+                page++
+            }
+            logger.info("Syn all relation atom project product ${System.currentTimeMillis() - startTime}ms")
+        }
+        return true
+    }
+
+    companion object {
+        private const val BK_PRODUCT_ID = 3238 // 蓝盾运营归属ID
     }
 }

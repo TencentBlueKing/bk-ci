@@ -110,13 +110,4 @@ interface OpUserResource {
         @PathParam("userId")
         userId: String
     ): Result<Boolean>
-
-    @Operation(summary = "刷新插件代码库关联工蜂CI项目的运营归属")
-    @GET
-    @Path("/refresh/ci/project/product")
-    fun refreshAtomCodeRepoGitCIProjectProduct(
-        @Parameter(description = "用户ID", required = true)
-        @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String
-    ): Result<Boolean>
 }
