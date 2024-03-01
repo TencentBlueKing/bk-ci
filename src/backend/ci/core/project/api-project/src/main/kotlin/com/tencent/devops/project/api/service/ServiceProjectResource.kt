@@ -360,7 +360,7 @@ interface ServiceProjectResource {
 
     @Operation(summary = "更新项目运营归属信息")
     @Path("/productIds/{productId}/update")
-    @GET
+    @PUT
     fun batchUpdateProjectProductId(
         @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
