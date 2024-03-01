@@ -199,10 +199,7 @@
                         ...p,
                         readOnly: true
                     }))
-                    this.otherParams = startupInfo.properties.filter(p => !p.constant && !p.required && !allVersionKeyList.includes(p.id) && p.propertyType !== 'BUILD').map(p => ({
-                        ...p,
-                        readOnly: false
-                    }))
+                    this.otherParams = startupInfo.properties.filter(p => !p.constant && !p.required && !allVersionKeyList.includes(p.id) && p.propertyType !== 'BUILD')
                     this.initParams(values)
                     this.setExecuteParams({
                         pipelineId: this.pipelineId,

@@ -137,7 +137,8 @@
 
                     this.$bkMessage({
                         theme: 'success',
-                        message: this.$t('editPage.saveDraftSuccess', [pipelineSetting.pipelineName])
+                        message: this.$t('editPage.saveDraftSuccess', [pipelineSetting.pipelineName]),
+                        limit: 1
                     })
                     this.$router.replace({
                         name: 'pipelinesEdit',

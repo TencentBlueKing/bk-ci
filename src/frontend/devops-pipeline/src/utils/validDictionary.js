@@ -27,7 +27,7 @@ const dictionary = {
             excludeComma: field => '字段不能包含英文逗号',
             string: field => '字段只能包含数字，字母和下划线',
             varRule: field => '字段只能以字母和下划线开头，同时只包含字母，数字以及下划线',
-            constVarRule: field => '字段只能以大写字母开头，同时只包含大写字母，数字以及下划线',
+            constVarRule: field => '由大写字母和数字、下划线组成，需以字母开头',
             numeric: field => '字段只能包含数字',
             regex: (field, regex) => {
                 return `字段不符合(${regex})正则表达式规则`

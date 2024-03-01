@@ -139,7 +139,8 @@
                 if (this.triggerList.length <= 1) {
                     this.$bkMessage({
                         theme: 'error',
-                        message: this.$t('triggerLeastOne')
+                        message: this.$t('triggerLeastOne'),
+                        limit: 1
                     })
                     return
                 }

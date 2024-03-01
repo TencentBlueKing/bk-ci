@@ -57,7 +57,6 @@
                 {{ $t("edit") }}
             </bk-button>
             <bk-button
-                theme="primary"
                 :loading="executeStatus"
                 v-perm="{
                     hasPermission: canExecute,

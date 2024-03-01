@@ -2,7 +2,6 @@
     <span>
         <bk-button
             text
-            size="small"
             theme="primary"
             @click="diffVersion(version)"
         >

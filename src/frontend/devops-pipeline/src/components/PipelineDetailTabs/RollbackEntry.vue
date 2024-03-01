@@ -1,7 +1,6 @@
 <template>
     <bk-button
         text
-        size="small"
         theme="primary"
         :disabled="loading"
         :loading="loading"

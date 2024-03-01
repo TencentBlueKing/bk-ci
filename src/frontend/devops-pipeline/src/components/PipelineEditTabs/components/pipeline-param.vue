@@ -1,6 +1,6 @@
 <template>
     <div class="variable-container">
-        <bk-alert type="info" :title="$t('newui.pipelineParam.useTips')" closable></bk-alert>
+        <bk-alert v-if="editable" type="info" :title="$t('newui.pipelineParam.useTips')" closable></bk-alert>
         <div class="operate-row">
             <template v-if="editable">
                 <bk-button class="var-btn" v-enStyle="'min-width:100px'" @click="handleAdd">{{$t('newui.pipelineParam.addVar')}}</bk-button>

@@ -256,7 +256,7 @@
                             ? await this.getDownloadLogFromArtifactory(pluginData)
                             : this.downloadLink
                     if (logMode === 'LOCAL') {
-                        this.$bkMessage({ theme: 'primary', message: this.$t('history.uploadLog') })
+                        this.$bkMessage({ theme: 'primary', message: this.$t('history.uploadLog'), limit: 1 })
                         return
                     }
                 }

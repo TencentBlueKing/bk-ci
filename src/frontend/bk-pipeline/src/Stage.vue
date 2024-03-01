@@ -8,6 +8,7 @@
                 :stage-index="stageIndex"
                 :stage-check="stage.checkIn"
                 :is-exec-detail="reactiveData.isExecDetail"
+                :editable="reactiveData.editable"
                 :user-name="reactiveData.userName"
                 :stage-status="stageStatusCls"
             />

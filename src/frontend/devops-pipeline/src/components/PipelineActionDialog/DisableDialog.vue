@@ -65,7 +65,8 @@
                     })
                     this.$bkMessage({
                         theme: 'success',
-                        message: this.$t(this.lock ? 'enableSuc' : 'disableSuc', [this.pipelineName])
+                        message: this.$t(this.lock ? 'enableSuc' : 'disableSuc', [this.pipelineName]),
+                        limit: 1
                     })
                     this.$nextTick(() => {
                         this.handleCancel()

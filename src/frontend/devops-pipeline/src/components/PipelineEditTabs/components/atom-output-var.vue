@@ -1,6 +1,6 @@
 <template>
     <div class="variable-container">
-        <bk-alert type="info" :title="$t('newui.atomVarTips')" closable></bk-alert>
+        <bk-alert v-if="editable" type="info" :title="$t('newui.atomVarTips')" closable></bk-alert>
         <div class="operate-row">
             <bk-input
                 v-model="searchStr"
