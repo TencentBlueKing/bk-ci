@@ -242,14 +242,14 @@ class PipelineRecordModelService @Autowired constructor(
         stageRecordTasks: List<BuildRecordTask>,
         buildRecordContainer: BuildRecordContainer,
         containerVarMap: MutableMap<String, Any>,
-        containerBaseMap: Map<String, Any>,
+        containerBaseMap: MutableMap<String, Any>,
         matrixTaskFlag: Boolean = false
     ) {
         val containerId = buildRecordContainer.containerId
         // 过滤出job下的task变量数据
         val containerRecordTasks = stageRecordTasks.filter { it.containerId == containerId }.sortedBy { it.taskSeq }
         val tasks = mutableListOf<Map<String, Any>>()
-        val taskBaseMaps = containerBaseMap[Container::elements.name] as List<Map<String, Any>>
+        val taskBaseMaps = (containerBaseMap[Container::elements.name] as List<Map<String, Any>>).toMutableList()
         // 如果job下的task都被跳过，则使用流水线model的element节点生成task模型
         val containerExecuteCount = buildRecordContainer.executeCount
         if (buildRecordContainer.matrixGroupFlag != true && containerRecordTasks.isEmpty()) {
@@ -313,9 +313,9 @@ class PipelineRecordModelService @Autowired constructor(
     private fun generateTaskVarMap(
         containerRecordTask: BuildRecordTask,
         taskId: String,
-        containerBaseMap: Map<String, Any>,
+        containerBaseMap: MutableMap<String, Any>,
         matrixTaskFlag: Boolean,
-        taskBaseMaps: List<Map<String, Any>>
+        taskBaseMaps: MutableList<Map<String, Any>>
     ): MutableMap<String, Any> {
         var taskVarMap = containerRecordTask.taskVar
         taskVarMap[Element::id.name] = taskId
@@ -327,14 +327,18 @@ class PipelineRecordModelService @Autowired constructor(
             taskVarMap = doElementPostInfoBus(elementPostInfo, taskVarMap, containerBaseMap)
         }
         val classType = containerRecordTask.classType
-        if (classType in listOf(QualityGateInElement.classType, QualityGateOutElement.classType)) {
+        val atomCode = containerRecordTask.atomCode
+        val qualityTaskFlag = atomCode in listOf(QualityGateInElement.classType, QualityGateOutElement.classType)
+        val taskBaseMapIndex = containerRecordTask.taskSeq - 2
+        if (qualityTaskFlag) {
             // 补充质量红线相关信息以便详情页模型数据组装合并
             taskVarMap["@type"] = classType
-            taskVarMap[KEY_ATOM_CODE] = containerRecordTask.atomCode
+            taskVarMap[KEY_ATOM_CODE] = atomCode
+            taskBaseMaps.add(taskBaseMapIndex, taskVarMap)
         }
-        if (matrixTaskFlag && elementPostInfo == null) {
+        if (matrixTaskFlag && elementPostInfo == null && !qualityTaskFlag) {
             // 生成矩阵task的变量模型
-            val taskBaseMap = taskBaseMaps[containerRecordTask.taskSeq - 2]
+            val taskBaseMap = taskBaseMaps[taskBaseMapIndex]
             taskVarMap = ModelUtils.generateBuildModelDetail(taskBaseMap.deepCopy(), taskVarMap)
         }
         return taskVarMap
