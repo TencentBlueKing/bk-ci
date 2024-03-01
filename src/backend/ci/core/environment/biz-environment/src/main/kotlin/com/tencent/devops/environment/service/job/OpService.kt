@@ -350,8 +350,8 @@ class OpService @Autowired constructor(
                 msg = SUCCESSFUL_DELETE_KEY_MSG,
                 grayProjNumber = grayProjsTotalNum()
             )
-        } else {
-            OpOperateResult( // 0 - ZET中没有元素
+        } else { // 0 - ZET中没有元素
+            OpOperateResult(
                 code = KEY_NOT_EXIST_CODE,
                 result = KEY_NOT_EXIST_RESULT,
                 msg = KEY_NOT_EXIST_MSG,
