@@ -37,6 +37,8 @@ data class AtomParamReplaceInfo(
     val toParamName: String,
     @get:Schema(title = "替换插件参数值，不传默认用被替换插件参数值替换", required = false)
     val toParamValue: Any? = null,
+    @get:Schema(title = "替换插件默认参数值，如果没有指定替换插件参数值且被替换插件参数没有值则用该默认值作为替换插件参数值", required = false)
+    val toParamDefaultValue: Any? = null,
     @get:Schema(title = "参数自定义转换接口url地址，接口参数结构需统一", required = false)
     val paramConvertUrl: String? = null
 )
