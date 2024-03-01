@@ -105,4 +105,6 @@ interface Container : IModelTemplate {
     fun fetchGroupContainers(): List<Container>?
 
     fun fetchMatrixContext(): Map<String, String>?
+
+    fun isContainerEnable(): Boolean
 }

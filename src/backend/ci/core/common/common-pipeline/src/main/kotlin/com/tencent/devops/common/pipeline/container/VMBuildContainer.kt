@@ -158,6 +158,10 @@ data class VMBuildContainer(
         return matrixContext
     }
 
+    override fun isContainerEnable(): Boolean {
+        return jobControlOption?.enable ?: true
+    }
+
     override fun transformCompatibility() {
         if (jobControlOption?.timeoutVar.isNullOrBlank()) {
             jobControlOption?.timeoutVar = jobControlOption?.timeout.toString()

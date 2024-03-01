@@ -231,3 +231,5 @@ const val KEY_STAGE = "stage"
 const val KEY_JOB = "job"
 
 const val KEY_TASK = "task"
+
+const val KEY_TASK_ATOM = "taskAtom"

@@ -189,14 +189,6 @@ open class BaseBuildRecordService(
         return try {
             watcher.start("fillElementWhenNewBuild")
             val fullModel = JsonUtil.to(resourceStr, Model::class.java)
-            // 为model填充质量红线element
-            pipelineElementService.fillElementWhenNewBuild(
-                model = fullModel,
-                projectId = projectId,
-                pipelineId = pipelineId,
-                handlePostFlag = false,
-                queryDslContext = queryDslContext
-            )
             val baseModelMap = JsonUtil.toMutableMap(bean = fullModel, skipEmpty = false)
             val mergeBuildRecordParam = MergeBuildRecordParam(
                 projectId = projectId,
