@@ -82,7 +82,8 @@ class CodeGitRepositoryService @Autowired constructor(
                 userId = userId,
                 aliasName = repository.aliasName,
                 url = repository.getFormatURL(),
-                type = ScmType.CODE_GIT
+                type = ScmType.CODE_GIT,
+                atom = repository.atom
             )
             // Git项目ID
             val gitProjectId =
@@ -110,6 +111,15 @@ class CodeGitRepositoryService @Autowired constructor(
         repository: CodeGitRepository,
         record: TRepositoryRecord
     ) {
+        // 插件库仅允许修改OAUTH用户，不得修改其他内容
+        if (record.atom == true && repository.authType != RepoAuthType.OAUTH) {
+            throw OperationException(
+                MessageUtil.getMessageByLocale(
+                    RepositoryMessageCode.ATOM_REPO_CAN_NOT_EDIT,
+                    I18nUtil.getLanguage(userId)
+                )
+            )
+        }
         // 提交的参数与数据库中类型不匹配
         if (record.type != ScmType.CODE_GIT.name) {
             throw OperationException(
@@ -183,7 +193,8 @@ class CodeGitRepositoryService @Autowired constructor(
             authType = RepoAuthType.parse(record.authType),
             projectId = repository.projectId,
             repoHashId = HashUtil.encodeOtherLongId(repository.repositoryId),
-            gitProjectId = record.gitProjectId
+            gitProjectId = record.gitProjectId,
+            atom = repository.atom
         )
     }
 
