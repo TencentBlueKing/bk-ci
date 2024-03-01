@@ -181,24 +181,20 @@ class PipelineRecordModelService @Autowired constructor(
         val stageRecordTasks = buildRecordTasks.filter { it.stageId == stageId }
         val containers = mutableListOf<Map<String, Any>>()
         val stageNormalRecordContainers = stageRecordContainers.filter { it.matrixGroupId.isNullOrBlank() }
-        stageNormalRecordContainers.forEach { stageRecordContainer ->
-            val containerVarMap = stageRecordContainer.containerVar
-            val containerId = stageRecordContainer.containerId
-            containerVarMap[Container::id.name] = containerId
-            containerVarMap[Container::status.name] = stageRecordContainer.status ?: ""
-            containerVarMap[Container::executeCount.name] = stageRecordContainer.executeCount
-            containerVarMap[Container::containPostTaskFlag.name] = stageRecordContainer.containPostTaskFlag ?: false
+        stageNormalRecordContainers.forEach { stageNormalRecordContainer ->
+            val containerId = stageNormalRecordContainer.containerId
+            val containerVarMap = generateContainerVarMap(stageNormalRecordContainer, containerId)
             val containerBaseMap = (stageBaseMap[Stage::containers.name] as List<Map<String, Any>>).first {
                 it[Container::id.name] == containerId
             }
             val containerBaseModelMap = containerBaseMap.deepCopy<MutableMap<String, Any>>()
             handleContainerRecordTask(
                 stageRecordTasks = stageRecordTasks,
-                buildRecordContainer = stageRecordContainer,
+                buildRecordContainer = stageNormalRecordContainer,
                 containerVarMap = containerVarMap,
                 containerBaseMap = containerBaseModelMap
             )
-            val matrixGroupFlag = stageRecordContainer.matrixGroupFlag
+            val matrixGroupFlag = stageNormalRecordContainer.matrixGroupFlag
             if (matrixGroupFlag == true) {
                 // 过滤出矩阵分裂出的job数据
                 val matrixRecordContainers =
@@ -206,13 +202,8 @@ class PipelineRecordModelService @Autowired constructor(
                 val groupContainers = mutableListOf<Map<String, Any>>()
                 matrixRecordContainers.forEach { matrixRecordContainer ->
                     // 生成矩阵job的变量模型
-                    var matrixContainerVarMap = matrixRecordContainer.containerVar
                     val matrixContainerId = matrixRecordContainer.containerId
-                    matrixContainerVarMap[Container::id.name] = matrixContainerId
-                    matrixContainerVarMap[Container::status.name] = matrixRecordContainer.status ?: ""
-                    matrixContainerVarMap[Container::executeCount.name] = matrixRecordContainer.executeCount
-                    matrixContainerVarMap[Container::containPostTaskFlag.name] =
-                        matrixRecordContainer.containPostTaskFlag ?: false
+                    var matrixContainerVarMap = generateContainerVarMap(matrixRecordContainer, matrixContainerId)
                     handleContainerRecordTask(
                         stageRecordTasks = stageRecordTasks,
                         buildRecordContainer = matrixRecordContainer,
@@ -233,6 +224,18 @@ class PipelineRecordModelService @Autowired constructor(
             containers.add(containerVarMap)
         }
         stageVarMap[Stage::containers.name] = containers
+    }
+
+    private fun generateContainerVarMap(
+        recordContainer: BuildRecordContainer,
+        containerId: String
+    ): MutableMap<String, Any> {
+        val containerVarMap = recordContainer.containerVar
+        containerVarMap[Container::id.name] = containerId
+        containerVarMap[Container::status.name] = recordContainer.status ?: ""
+        containerVarMap[Container::executeCount.name] = recordContainer.executeCount
+        containerVarMap[Container::containPostTaskFlag.name] = recordContainer.containPostTaskFlag ?: false
+        return containerVarMap
     }
 
     private fun handleContainerRecordTask(
@@ -259,23 +262,29 @@ class PipelineRecordModelService @Autowired constructor(
         }
         val lastElementTaskId = taskBaseMaps[taskBaseMaps.size - 1][Element::id.name].toString()
         var supplementSkipTaskFlag = true
-        var lastContainerRecordSeq = 1
+        var preContainerRecordTaskSeq = 1
+        // 获取开机任务的序号
+        val startVMTaskSeq = buildRecordContainer.containerVar[Container::startVMTaskSeq.name].toString().toInt()
         containerRecordTasks.forEach { containerRecordTask ->
-            while (containerRecordTask.taskSeq - lastContainerRecordSeq > 1) {
+            if (startVMTaskSeq > 1 && startVMTaskSeq > containerRecordTask.taskSeq) {
+                // 当开机任务的序号大于1时，说明第一个任务不是开机任务，job含有内置插件任务，需要重新调整开机任务前面的task任务的taskSeq值
+                containerRecordTask.taskSeq += 1
+            }
+            while (containerRecordTask.taskSeq - preContainerRecordTaskSeq > 1) {
                 // 补充跳过的task对象
-                val taskBaseMap = taskBaseMaps[lastContainerRecordSeq - 1]
+                val taskBaseMap = taskBaseMaps[preContainerRecordTaskSeq - 1]
                 val taskVarMap = generateSkipTaskVarModel(matrixTaskFlag, taskBaseMap, containerRecordTask.executeCount)
                 if (taskVarMap[Element::id.name].toString() == lastElementTaskId) {
                     supplementSkipTaskFlag = false
                 }
                 tasks.add(taskVarMap)
-                lastContainerRecordSeq++
+                preContainerRecordTaskSeq++
             }
             val taskId = containerRecordTask.taskId
             if (matrixTaskFlag || taskId == lastElementTaskId) {
                 supplementSkipTaskFlag = false
             }
-            lastContainerRecordSeq = containerRecordTask.taskSeq
+            preContainerRecordTaskSeq = containerRecordTask.taskSeq
             val taskVarMap = generateTaskVarMap(
                 containerRecordTask = containerRecordTask,
                 taskId = taskId,
