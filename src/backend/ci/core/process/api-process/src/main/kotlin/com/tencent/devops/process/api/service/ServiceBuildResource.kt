@@ -57,9 +57,9 @@ import com.tencent.devops.process.pojo.VmInfo
 import com.tencent.devops.process.pojo.pipeline.ModelDetail
 import com.tencent.devops.process.pojo.pipeline.ModelRecord
 import com.tencent.devops.process.pojo.pipeline.PipelineLatestBuild
-import io.swagger.v3.oas.annotations.tags.Tag
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
+import io.swagger.v3.oas.annotations.tags.Tag
 import javax.ws.rs.Consumes
 import javax.ws.rs.DELETE
 import javax.ws.rs.GET
@@ -683,7 +683,7 @@ interface ServiceBuildResource {
         executeCount: Int?,
         @Parameter(description = "结果状态", required = true)
         simpleResult: SimpleResult
-    ): Result<String?>
+    ): Result<Pair<String?, Boolean>>
 
     @Operation(summary = "保存构建详情")
     @POST

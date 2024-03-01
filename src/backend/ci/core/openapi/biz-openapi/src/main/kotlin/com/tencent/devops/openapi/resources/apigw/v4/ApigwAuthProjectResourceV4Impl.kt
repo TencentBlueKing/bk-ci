@@ -10,7 +10,6 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.client.ClientTokenService
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.openapi.api.apigw.v4.ApigwAuthProjectResourceV4
-import com.tencent.devops.openapi.service.OpenapiPermissionService
 import com.tencent.devops.project.pojo.ProjectCreateUserInfo
 import com.tencent.devops.project.pojo.ProjectDeleteUserInfo
 import org.slf4j.LoggerFactory
@@ -20,7 +19,6 @@ import org.springframework.beans.factory.annotation.Autowired
 class ApigwAuthProjectResourceV4Impl @Autowired constructor(
     val tokenService: ClientTokenService,
     val client: Client,
-    val openapiPermissionService: OpenapiPermissionService
 ) : ApigwAuthProjectResourceV4 {
     companion object {
         val logger = LoggerFactory.getLogger(ApigwAuthProjectResourceV4Impl::class.java)
