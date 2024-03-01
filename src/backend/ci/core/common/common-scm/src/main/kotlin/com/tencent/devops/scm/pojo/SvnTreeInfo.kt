@@ -25,27 +25,42 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.pipeline.init
+package com.tencent.devops.scm.pojo
 
-import com.tencent.devops.common.pipeline.DispatchSubTypeFetcher
-import com.tencent.devops.common.pipeline.type.DispatchType
-import com.tencent.devops.common.pipeline.type.codecc.CodeCCDispatchType
-import com.tencent.devops.common.pipeline.type.devcloud.PublicDevCloudDispathcType
-import com.tencent.devops.common.pipeline.type.esxi.ESXiDispatchType
-import com.tencent.devops.common.pipeline.type.macos.MacOSDispatchType
-import com.tencent.devops.common.pipeline.type.pcg.PCGDispatchType
-import com.tencent.devops.common.pipeline.type.windows.WindowsDispatchType
+import com.fasterxml.jackson.annotation.JsonProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-class TencentDispatchSubTypeFetcher : DispatchSubTypeFetcher {
+@Schema(title = "SVN仓库文件树信息")
+data class SvnTreeInfo(
+    val count: Int,
+    val files: List<SvnTreeNodeInfo>
+)
 
-    override fun jsonSubTypes(): Map<String, Class<out DispatchType>> {
-        return mapOf(
-            "THIRD_PARTY_PCG" to PCGDispatchType::class.java,
-            "PUBLIC_DEVCLOUD" to PublicDevCloudDispathcType::class.java,
-            "MACOS" to MacOSDispatchType::class.java,
-            "WINDOWS" to WindowsDispatchType::class.java,
-            "CODECC" to CodeCCDispatchType::class.java,
-            "ESXi" to ESXiDispatchType::class.java
-        )
-    }
-}
+@Schema(title = "SVN仓库文件树节点信息")
+data class SvnTreeNodeInfo(
+    val file: SvnFile,
+    @JsonProperty("file_lock")
+    val fileLock: Boolean? = false
+)
+
+@Schema(title = "SVN仓库文件信息")
+data class SvnFile(
+    @get:Schema(title = "文件名")
+    val name: String,
+    @get:Schema(title = "文件全路径")
+    val path: String,
+    @get:Schema(title = "文件大小")
+    val size: Long,
+    @get:Schema(title = "文件版本号")
+    val revision: Long,
+    @get:Schema(title = "作者")
+    val author: String,
+    @get:Schema(title = "提交信息")
+    val commitMessage: String?,
+    @get:Schema(title = "是否为目录")
+    val directory: Boolean,
+    @get:Schema(title = "是否为外链")
+    val submodule: Boolean,
+    @get:Schema(title = "是否为文件")
+    val file: Boolean
+)

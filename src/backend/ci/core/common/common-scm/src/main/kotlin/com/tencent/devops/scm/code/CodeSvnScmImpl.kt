@@ -32,9 +32,11 @@ import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.scm.IScm
 import com.tencent.devops.scm.code.svn.api.SVNApi
+import com.tencent.devops.scm.code.svn.api.SvnHookEventType
 import com.tencent.devops.scm.config.SVNConfig
 import com.tencent.devops.scm.exception.ScmException
 import com.tencent.devops.scm.jmx.JMX
+import com.tencent.devops.scm.pojo.LoginSession
 import com.tencent.devops.scm.pojo.RevisionInfo
 import com.tencent.devops.scm.utils.code.svn.SvnUtils
 import org.slf4j.LoggerFactory
@@ -47,13 +49,15 @@ import org.tmatesoft.svn.core.io.SVNRepository
 
 @Suppress("ALL")
 class CodeSvnScmImpl constructor(
-    override val projectName: String,
+    override var projectName: String,
     override val branchName: String?,
     override val url: String,
     private var username: String,
     private var privateKey: String,
     private val passphrase: String?,
-    private val svnConfig: SVNConfig
+    private val svnConfig: SVNConfig,
+    private var token: String?,
+    private val svnApi: SVNApi
 ) : IScm {
 
     override fun getLatestRevision(): RevisionInfo {
@@ -153,33 +157,37 @@ class CodeSvnScmImpl constructor(
                     "|AddWebHookSVN|repo=$projectName"
         )
         try {
-            val hooks = SVNApi.getWebhooks(svnConfig, url)
-            val addHooks = if (hooks.isEmpty()) {
-                hookUrl
+            addWebhookByToken(hookUrl, projectName)
+        } catch (ignored: ScmException) {
+            // 工蜂迁移svn项目后，svn项目名与原有git项目名相同，导致项目名冲突，为此在工蜂在svn项目名后添加[_svn]后缀，但在复制svn路径时可能
+            // 缺少[_svn]，如实际路径为[bk_ci/ci_svn],但复制路径为[bk_ci/ci]，所以当报项目不存在时，增加[_svn]后缀后重试
+            if (ignored.message == I18nUtil.getCodeLanMessage(CommonMessageCode.ENGINEERING_REPO_NOT_EXIST) &&
+                !projectName.endsWith(SVN_PROJECT_NAME_SUFFIX)
+            ) {
+                try {
+                    logger.info("retry addWebHookSVN|newProjectName=$projectName$SVN_PROJECT_NAME_SUFFIX")
+                    addWebhookByToken(
+                        hookUrl = hookUrl,
+                        projectName = "$projectName$SVN_PROJECT_NAME_SUFFIX"
+                    )
+                } catch (ignored: ScmException) {
+                    logger.error("Fail to retry add the webhook", ignored)
+                    throw ScmException(
+                        message = ignored.message ?: I18nUtil.getCodeLanMessage(
+                            CommonMessageCode.SVN_CREATE_HOOK_FAIL
+                        ),
+                        scmType = ScmType.CODE_SVN.name
+                    )
+                }
             } else {
-                if (hooks.contains(hookUrl)) {
-                    logger.info("The hook url is already exist, ignore")
-                    return
-                }
-                logger.info("Get the exist hooks - ($hooks)")
-
-                val result = StringBuilder()
-                hooks.forEach {
-                    result.append(it).append(",")
-                }
-                result.append(hookUrl)
-                result.toString()
+                logger.error("Fail to add the webhook", ignored)
+                throw ScmException(
+                    message = ignored.message ?: I18nUtil.getCodeLanMessage(
+                        CommonMessageCode.SVN_CREATE_HOOK_FAIL
+                    ),
+                    scmType = ScmType.CODE_SVN.name
+                )
             }
-            logger.info("Adding the svn webhooks($addHooks)")
-            SVNApi.addWebhooks(svnConfig, username, url, addHooks)
-        } catch (ignored: Exception) {
-            logger.warn("Fail to add the webhook", ignored)
-            throw ScmException(
-                message = I18nUtil.getCodeLanMessage(
-                    CommonMessageCode.SVN_CREATE_HOOK_FAIL
-                ),
-                scmType = ScmType.CODE_SVN.name
-            )
         }
     }
 
@@ -198,7 +206,7 @@ class CodeSvnScmImpl constructor(
     override fun lock(repoName: String, applicant: String, subpath: String) {
         logger.info("Start to lock the repo $repoName")
         try {
-            SVNApi.lock(repname = repoName, applicant = applicant, subpath = subpath, svnConfig = svnConfig)
+            svnApi.lock(repname = repoName, applicant = applicant, subpath = subpath, svnConfig = svnConfig)
         } catch (e: Exception) {
             logger.warn("Fail to lock the repo:$repoName", e)
             throw ScmException(
@@ -213,7 +221,7 @@ class CodeSvnScmImpl constructor(
     override fun unlock(repoName: String, applicant: String, subpath: String) {
         logger.info("Start to unlock the repo $repoName")
         try {
-            SVNApi.unlock(repname = repoName, applicant = applicant, subpath = subpath, svnConfig = svnConfig)
+            svnApi.unlock(repname = repoName, applicant = applicant, subpath = subpath, svnConfig = svnConfig)
         } catch (e: Exception) {
             logger.warn("Fail to unlock the repo:$repoName", e)
             throw ScmException(
@@ -300,7 +308,57 @@ class CodeSvnScmImpl constructor(
         }
     }
 
+    private fun getSubDirPath() = url.substringAfter(projectName, "/")
+        .removeSuffix("/").ifBlank { "/" }
+
+    /**
+     * 基于私人令牌添加svn仓库的webhook
+     */
+    private fun addWebhookByToken(hookUrl: String, projectName: String) {
+        val hooks = svnApi.getWebhooks(
+            host = svnConfig.webhookApiUrl,
+            projectName = projectName,
+            token = token!!
+        )
+        val subDirPath = getSubDirPath()
+        val existHook = if (hooks.isEmpty()) {
+            null
+        } else {
+            hooks.find {
+                it.url == hookUrl && it.path == subDirPath
+            }
+        }
+        if (existHook == null) {
+            svnApi.addWebhooks(
+                host = svnConfig.webhookApiUrl,
+                projectName = projectName,
+                hookUrl = hookUrl,
+                token = token!!,
+                eventType = SvnHookEventType.SVN_POST_COMMIT_EVENTS,
+                path = subDirPath
+            )
+        } else {
+            logger.info("The web hook url($hookUrl) is already exist($existHook)")
+        }
+    }
+
+    override fun getLoginSession(): LoginSession? {
+        return try {
+            svnApi.getSession(
+                host = svnConfig.webhookApiUrl,
+                username = privateKey,
+                password = passphrase ?: ""
+            )
+        } catch (e: ScmException) {
+            logger.warn("fail get the svn session", e)
+            null
+        }
+    }
+
     companion object {
         private val logger = LoggerFactory.getLogger(CodeSvnScmImpl::class.java)
+
+        // svn项目迁移后补充的后缀
+        const val SVN_PROJECT_NAME_SUFFIX = "_svn"
     }
 }

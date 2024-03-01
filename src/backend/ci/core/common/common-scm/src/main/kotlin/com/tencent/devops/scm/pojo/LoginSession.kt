@@ -24,28 +24,18 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
+package com.tencent.devops.scm.pojo
 
-package com.tencent.devops.common.pipeline.init
+import com.fasterxml.jackson.annotation.JsonProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-import com.tencent.devops.common.pipeline.DispatchSubTypeFetcher
-import com.tencent.devops.common.pipeline.type.DispatchType
-import com.tencent.devops.common.pipeline.type.codecc.CodeCCDispatchType
-import com.tencent.devops.common.pipeline.type.devcloud.PublicDevCloudDispathcType
-import com.tencent.devops.common.pipeline.type.esxi.ESXiDispatchType
-import com.tencent.devops.common.pipeline.type.macos.MacOSDispatchType
-import com.tencent.devops.common.pipeline.type.pcg.PCGDispatchType
-import com.tencent.devops.common.pipeline.type.windows.WindowsDispatchType
-
-class TencentDispatchSubTypeFetcher : DispatchSubTypeFetcher {
-
-    override fun jsonSubTypes(): Map<String, Class<out DispatchType>> {
-        return mapOf(
-            "THIRD_PARTY_PCG" to PCGDispatchType::class.java,
-            "PUBLIC_DEVCLOUD" to PublicDevCloudDispathcType::class.java,
-            "MACOS" to MacOSDispatchType::class.java,
-            "WINDOWS" to WindowsDispatchType::class.java,
-            "CODECC" to CodeCCDispatchType::class.java,
-            "ESXi" to ESXiDispatchType::class.java
-        )
-    }
-}
+@Schema(title = "工蜂会话信息")
+data class LoginSession(
+    val id: String,
+    @get:Schema(title = "邮箱地址")
+    val email: String,
+    @get:Schema(title = "用户名")
+    val username: String,
+    @JsonProperty("private_token")
+    val privateToken: String
+)

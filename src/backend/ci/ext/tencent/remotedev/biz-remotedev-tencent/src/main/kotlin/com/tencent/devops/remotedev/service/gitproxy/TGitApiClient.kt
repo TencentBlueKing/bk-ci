@@ -200,6 +200,8 @@ object TGitApiClient {
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class TGitProjectInfo(
+    @JsonProperty("id")
+    val id: Long,
     @JsonProperty("http_url_to_repo")
     val httpUrlToRepo: String?,
     @JsonProperty("https_url_to_repo")

@@ -50,7 +50,7 @@ import com.tencent.devops.scm.pojo.GitCommitReviewInfo
 import com.tencent.devops.scm.pojo.GitMrChangeInfo
 import com.tencent.devops.scm.pojo.GitMrInfo
 import com.tencent.devops.scm.pojo.GitMrReviewInfo
-import com.tencent.devops.scm.pojo.GitSession
+import com.tencent.devops.scm.pojo.LoginSession
 import com.tencent.devops.scm.pojo.RepoSessionRequest
 import com.tencent.devops.ticket.api.ServiceCredentialResource
 import com.tencent.devops.ticket.pojo.enums.CredentialType
@@ -491,8 +491,8 @@ class GitScmService @Autowired constructor(
         username: String,
         password: String,
         url: String
-    ): GitSession? {
-        return client.get(ServiceScmResource::class).getSession(
+    ): LoginSession? {
+        return client.get(ServiceScmResource::class).getLoginSession(
             RepoSessionRequest(
                 type = scmType,
                 username = username,

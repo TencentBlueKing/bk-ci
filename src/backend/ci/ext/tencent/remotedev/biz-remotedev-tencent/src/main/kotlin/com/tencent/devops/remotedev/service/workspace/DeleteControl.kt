@@ -327,11 +327,12 @@ class DeleteControl @Autowired constructor(
         }
     }
 
+    // 缓冲期先改成14天限制
     fun autoDeleteWhenSleep7Day(
         onDelete: Boolean = false,
         readyDeleteWorkspace: MutableList<String> = mutableListOf()
     ) {
-        val limitDay = holidayHelper.getLastWorkingDays(7).last()
+        val limitDay = holidayHelper.getLastWorkingDays(14).last()
         logger.info("autoDeleteWhenSleep7Day|$limitDay")
         workspaceDao.fetchWorkspace(
             dslContext = dslContext,
@@ -340,7 +341,7 @@ class DeleteControl @Autowired constructor(
         )?.parallelStream()?.forEach { workspace ->
             if ((workspace.lastStatusUpdateTime ?: LocalDateTime.now()) < limitDay) {
                 logger.info(
-                    "ready to delete when sleep 7 day " +
+                    "ready to delete when sleep 14 day " +
                             "|${workspace.workspaceName}|${workspace.lastStatusUpdateTime}|${workspace.hostName}"
                 )
                 workspaceOpHistoryDao.createWorkspaceHistory(
@@ -352,7 +353,7 @@ class DeleteControl @Autowired constructor(
                 )
                 readyDeleteWorkspace.add(
                     "project=${workspace.projectId}, ip=${workspace.hostName}" +
-                            ", 原因=关机超过7天(关机时间: ${workspace.lastStatusUpdateTime?.format(formatter)}" +
+                            ", 原因=关机超过14天(关机时间: ${workspace.lastStatusUpdateTime?.format(formatter)}" +
                             " 早于检测时间 ${limitDay.format(formatter)})"
                 )
                 if (onDelete) {

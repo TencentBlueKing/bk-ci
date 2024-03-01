@@ -24,18 +24,17 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-package com.tencent.devops.scm.pojo
 
-import com.fasterxml.jackson.annotation.JsonProperty
-import io.swagger.v3.oas.annotations.media.Schema
+package com.tencent.devops.scm.code.svn.api
 
-@Schema(title = "工蜂会话信息")
-data class GitSession(
-    val id: String,
-    @get:Schema(title = "邮箱地址")
-    val email: String,
-    @get:Schema(title = "用户名")
-    val username: String,
-    @JsonProperty("private_token")
-    val privateToken: String
-)
+import okhttp3.Request
+
+@Suppress("ALL")
+open class SVNOauthApi : SVNApi() {
+
+    override fun request(host: String, token: String, url: String, page: String): Request.Builder {
+        return if (page.isEmpty())
+            Request.Builder().url("$host/$url?access_token=$token")
+        else Request.Builder().url("$host/$url?access_token=$token&$page")
+    }
+}

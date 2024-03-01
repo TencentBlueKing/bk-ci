@@ -47,6 +47,7 @@ import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeP4WebHookTrig
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeTGitWebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.WebHookTriggerElement
 import com.tencent.devops.common.pipeline.utils.RepositoryConfigUtils
+import com.tencent.devops.process.engine.dao.PipelineInfoDao
 import com.tencent.devops.process.engine.dao.PipelineModelTaskDao
 import com.tencent.devops.process.engine.dao.PipelineResDao
 import com.tencent.devops.repository.api.ServiceRepositoryResource
@@ -75,7 +76,8 @@ class RepoPipelineRefService @Autowired constructor(
     private val pipelineResDao: PipelineResDao,
     private val objectMapper: ObjectMapper,
     private val client: Client,
-    private val modelTaskDao: PipelineModelTaskDao
+    private val modelTaskDao: PipelineModelTaskDao,
+    private val pipelineInfoDao: PipelineInfoDao
 ) {
     companion object {
         private val logger = LoggerFactory.getLogger(RepoPipelineRefService::class.java)
@@ -99,6 +101,11 @@ class RepoPipelineRefService @Autowired constructor(
     ) {
         logger.info("updateRepositoryPipelineRef, [$userId|$action|$projectId|$pipelineId]")
         var model: Model? = null
+        val channel = pipelineInfoDao.getPipelineInfo(
+            dslContext = dslContext,
+            projectId = projectId,
+            pipelineId = pipelineId
+        )?.channel ?: return
         if (action != "delete_pipeline") {
             val modelString = pipelineResDao.getLatestVersionModelString(dslContext, projectId, pipelineId)
             if (modelString.isNullOrBlank()) {
@@ -113,7 +120,14 @@ class RepoPipelineRefService @Autowired constructor(
             }
         }
         try {
-            analysisPipelineRefAndSave(userId, action, projectId, pipelineId, model)
+            analysisPipelineRefAndSave(
+                userId = userId,
+                action = action,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                model = model,
+                channel = channel
+            )
         } catch (e: Exception) {
             logger.warn("analysisPipelineRefAndSave failed", e)
         }
@@ -180,7 +194,8 @@ class RepoPipelineRefService @Autowired constructor(
         action: String,
         projectId: String,
         pipelineId: String,
-        model: Model?
+        model: Model?,
+        channel: String
     ) {
         val repoPipelineRefInfos = mutableListOf<RepoPipelineRefInfo>()
         val variables = mutableMapOf<String, String>()
@@ -216,7 +231,8 @@ class RepoPipelineRefService @Autowired constructor(
             request = RepoPipelineRefRequest(
                 action = action,
                 pipelineId = pipelineId,
-                pipelineRefInfos = repoPipelineRefInfos
+                pipelineRefInfos = repoPipelineRefInfos,
+                channel = channel
             )
         )
     }
@@ -346,8 +362,8 @@ class RepoPipelineRefService @Autowired constructor(
 
     private fun getMarketBuildRepoConfig(input: Map<*, *>, variables: Map<String, String>): RepositoryConfig? {
         val taskRepoType = input["repositoryType"] as String?
-        // URL指定代码库，无需关联代码库
-        if (taskRepoType == "URL") {
+        // URL/SELF指定代码库，无需关联代码库;
+        if (taskRepoType == "URL" || taskRepoType == "SELF") {
             return null
         }
         val repositoryType = RepositoryType.parseType(taskRepoType)
