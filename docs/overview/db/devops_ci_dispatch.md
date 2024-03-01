@@ -436,6 +436,8 @@
 |  16   | DOCKER_INFO |   json   | 1073741824 |   0    |    Y     |  N   |       | 第三方构建机 docker 构建信息  |
 |  17   | EXECUTE_COUNT |   int   | 10 |   0    |    Y     |  N   |       | 流水线执行次数  |
 |  18   | CONTAINER_HASH_ID |   varchar   | 128 |   0    |    Y     |  N   |       | 容器 ID 日志使用  |
+|  19   | ENV_ID |   bigint   | 20 |   0    |    Y     |  N   |       | 第三方构建所属环境  |
+|  20   | IGNORE_ENV_AGENT_IDS |   json   | 1073741824 |   0    |    Y     |  N   |       | 这次调度被排除的 agent 节点  |
 
 **表名：** <a>T_DISPATCH_THIRDPARTY_AGENT_DOCKER_DEBUG</a>
 
