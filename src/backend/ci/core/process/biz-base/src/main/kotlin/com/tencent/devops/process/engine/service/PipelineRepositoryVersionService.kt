@@ -35,6 +35,7 @@ import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.dao.PipelineSettingVersionDao
 import com.tencent.devops.process.engine.control.lock.PipelineVersionLock
 import com.tencent.devops.process.engine.dao.PipelineBuildDao
+import com.tencent.devops.process.engine.dao.PipelineResourceDao
 import com.tencent.devops.process.engine.dao.PipelineResourceVersionDao
 import com.tencent.devops.process.engine.pojo.PipelineInfo
 import com.tencent.devops.process.engine.pojo.PipelineVersionWithInfo
@@ -47,6 +48,7 @@ import org.springframework.stereotype.Service
 @Suppress("LongParameterList", "ReturnCount")
 class PipelineRepositoryVersionService(
     private val dslContext: DSLContext,
+    private val pipelineResourceDao: PipelineResourceDao,
     private val pipelineResourceVersionDao: PipelineResourceVersionDao,
     private val pipelineSettingVersionDao: PipelineSettingVersionDao,
     private val pipelineBuildDao: PipelineBuildDao,
@@ -183,24 +185,55 @@ class PipelineRepositoryVersionService(
             return Pair(0, mutableListOf())
         }
 
-        val count = pipelineResourceVersionDao.count(
+        var count = pipelineResourceVersionDao.count(
             dslContext = dslContext,
             projectId = projectId,
             pipelineId = pipelineId,
             creator = creator,
             description = description
         )
-        val result = pipelineResourceVersionDao.listPipelineVersion(
-            dslContext = dslContext,
-            projectId = projectId,
-            pipelineId = pipelineId,
-            creator = creator,
-            description = description,
-            versionName = versionName,
-            excludeVersion = excludeVersion,
-            offset = offset,
-            limit = limit
+        val result = mutableListOf<PipelineVersionSimple>()
+        result.addAll(
+            pipelineResourceVersionDao.listPipelineVersion(
+                dslContext = dslContext,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                creator = creator,
+                description = description,
+                versionName = versionName,
+                excludeVersion = excludeVersion,
+                offset = offset,
+                limit = limit
+            )
         )
+        // #8161 兼容老数据的版本表无记录
+        if (result.isEmpty()) {
+            pipelineResourceDao.getReleaseVersionResource(
+                dslContext, projectId, pipelineId
+            )?.let { record ->
+                count = 1
+                result.add(
+                    PipelineVersionSimple(
+                        pipelineId = record.pipelineId,
+                        creator = record.creator,
+                        createTime = record.createTime.timestampmilli(),
+                        updateTime = record.updateTime?.timestampmilli(),
+                        version = record.version,
+                        versionName = record.versionName ?: "",
+                        referFlag = record.referFlag,
+                        referCount = record.referCount,
+                        versionNum = record.versionNum ?: record.version,
+                        pipelineVersion = record.pipelineVersion,
+                        triggerVersion = record.triggerVersion,
+                        settingVersion = record.settingVersion,
+                        status = record.status,
+                        debugBuildId = record.debugBuildId,
+                        baseVersion = record.baseVersion,
+                        description = record.description
+                    )
+                )
+            }
+        }
         val list = mutableListOf<PipelineVersionWithInfo>()
 
         result.forEach {

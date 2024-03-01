@@ -1048,24 +1048,24 @@ class PipelineInfoFacadeService @Autowired constructor(
                     params = arrayOf("branchName")
                 )
             }
-
             val existModel = pipelineRepositoryService.getPipelineResourceVersion(
                 projectId = projectId,
                 pipelineId = pipelineId,
-                version = null,
                 includeDraft = true
             )?.model ?: throw ErrorCodeException(
                 statusCode = Response.Status.NOT_FOUND.statusCode,
                 errorCode = ProcessMessageCode.ERROR_PIPELINE_MODEL_NOT_EXISTS
             )
-            // 对已经存在的模型做处理
-            val param = BeforeDeleteParam(
-                userId = userId,
-                projectId = projectId,
-                pipelineId = pipelineId,
-                channelCode = channelCode
-            )
-            modelCheckPlugin.beforeDeleteElementInExistsModel(existModel, model, param)
+            if (versionStatus == VersionStatus.RELEASED) {
+                // 对已经存在的模型做处理
+                val param = BeforeDeleteParam(
+                    userId = userId,
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    channelCode = channelCode
+                )
+                modelCheckPlugin.beforeDeleteElementInExistsModel(existModel, model, param)
+            }
             val deployResult = pipelineRepositoryService.deployPipeline(
                 model = model,
                 projectId = projectId,

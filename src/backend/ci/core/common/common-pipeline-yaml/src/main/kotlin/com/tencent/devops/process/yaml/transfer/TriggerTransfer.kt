@@ -195,6 +195,7 @@ class TriggerTransfer @Autowired(required = false) constructor(
             val name = when (git.repositoryType) {
                 TriggerRepositoryType.ID -> git.repositoryHashId ?: ""
                 TriggerRepositoryType.NAME -> git.repositoryName ?: ""
+                TriggerRepositoryType.SELF -> "self"
                 else -> ""
             }
             val nowExist = res.getOrPut(name) {

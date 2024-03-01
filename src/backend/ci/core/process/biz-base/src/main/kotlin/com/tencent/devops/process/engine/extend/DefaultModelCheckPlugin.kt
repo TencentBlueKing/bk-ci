@@ -44,7 +44,12 @@ import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.common.pipeline.pojo.element.atom.BeforeDeleteParam
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildAtomElement
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildLessAtomElement
+import com.tencent.devops.common.pipeline.pojo.setting.PipelineSetting
+import com.tencent.devops.common.pipeline.pojo.setting.Subscription
 import com.tencent.devops.process.constant.ProcessMessageCode
+import com.tencent.devops.process.constant.ProcessMessageCode.BK_INCORRECT_NOTIFICATION_METHOD
+import com.tencent.devops.process.constant.ProcessMessageCode.BK_INVALID_NOTIFICATION_RECIPIENT
+import com.tencent.devops.process.constant.ProcessMessageCode.BK_MESSAGE_CONTENT_EMPTY
 import com.tencent.devops.process.engine.atom.AtomUtils
 import com.tencent.devops.process.engine.common.Timeout
 import com.tencent.devops.process.engine.utils.PipelineUtils
@@ -159,6 +164,31 @@ open class DefaultModelCheckPlugin constructor(
         }
 
         return metaSize
+    }
+
+    override fun checkSettingIntegrity(setting: PipelineSetting, projectId: String?) {
+        setting.successSubscriptionList?.checkSubscriptionList()
+        setting.failSubscriptionList?.checkSubscriptionList()
+    }
+
+    private fun List<Subscription>.checkSubscriptionList() {
+        this.forEach { subscription ->
+            if (subscription.types.isEmpty()) {
+                throw ErrorCodeException(
+                    errorCode = BK_INCORRECT_NOTIFICATION_METHOD
+                )
+            }
+            if (subscription.users.isBlank()) {
+                throw ErrorCodeException(
+                    errorCode = BK_INVALID_NOTIFICATION_RECIPIENT
+                )
+            }
+            if (subscription.content.isBlank()) {
+                throw ErrorCodeException(
+                    errorCode = BK_MESSAGE_CONTENT_EMPTY
+                )
+            }
+        }
     }
 
     private fun Stage.checkStageReviewers() {

@@ -95,6 +95,7 @@ class PipelineResourceDao {
         with(T_PIPELINE_RESOURCE) {
             val record = dslContext.selectFrom(this)
                 .where(PIPELINE_ID.eq(pipelineId).and(PROJECT_ID.eq(projectId)))
+                .orderBy(VERSION.desc()).limit(1)
                 .fetchAny() ?: return null
             return PipelineResourceVersion(
                 projectId = record.projectId,
@@ -109,7 +110,7 @@ class PipelineResourceDao {
                     }
                 } ?: return null,
                 yaml = record.yaml,
-                creator = record.creator,
+                creator = record.creator ?: "unknown",
                 versionName = record.versionName,
                 createTime = record.createTime,
                 updateTime = null,

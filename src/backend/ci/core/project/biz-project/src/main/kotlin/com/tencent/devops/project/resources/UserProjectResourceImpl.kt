@@ -35,10 +35,12 @@ import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.project.api.user.UserProjectResource
 import com.tencent.devops.project.constant.ProjectMessageCode.PROJECT_NOT_EXIST
 import com.tencent.devops.project.pojo.OperationalProductVO
+import com.tencent.devops.project.pojo.ProjectCollation
 import com.tencent.devops.project.pojo.ProjectCreateExtInfo
 import com.tencent.devops.project.pojo.ProjectCreateInfo
 import com.tencent.devops.project.pojo.ProjectDiffVO
 import com.tencent.devops.project.pojo.ProjectLogo
+import com.tencent.devops.project.pojo.ProjectSortType
 import com.tencent.devops.project.pojo.ProjectUpdateInfo
 import com.tencent.devops.project.pojo.ProjectVO
 import com.tencent.devops.project.pojo.ProjectWithPermission
@@ -47,9 +49,9 @@ import com.tencent.devops.project.pojo.enums.ProjectChannelCode
 import com.tencent.devops.project.pojo.enums.ProjectValidateType
 import com.tencent.devops.project.service.ProjectPermissionService
 import com.tencent.devops.project.service.ProjectService
-import java.io.InputStream
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition
 import org.springframework.beans.factory.annotation.Autowired
+import java.io.InputStream
 
 @RestResource
 class UserProjectResourceImpl @Autowired constructor(
@@ -61,9 +63,20 @@ class UserProjectResourceImpl @Autowired constructor(
         userId: String,
         accessToken: String?,
         enabled: Boolean?,
-        unApproved: Boolean?
+        unApproved: Boolean?,
+        sortType: ProjectSortType?,
+        collation: ProjectCollation?
     ): Result<List<ProjectVO>> {
-        return Result(projectService.list(userId, accessToken, enabled, unApproved ?: false))
+        return Result(
+            projectService.list(
+                userId = userId,
+                accessToken = accessToken,
+                enabled = enabled,
+                unApproved = unApproved ?: false,
+                sortType = sortType ?: ProjectSortType.PROJECT_NAME,
+                collation = collation ?: ProjectCollation.DEFAULT
+            )
+        )
     }
 
     override fun listProjectsForApply(
