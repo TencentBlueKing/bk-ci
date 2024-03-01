@@ -49,7 +49,7 @@ class BuildIpaResourceImpl
         private val syncSignService: AsyncSignService,
         private val downloadService: DownloadService,
         private val signInfoService: SignInfoService,
-        private val objectMapper: ObjectMapper,
+        private val objectMapper: ObjectMapper
     ) : BuildIpaResource {
         companion object {
             private val logger = LoggerFactory.getLogger(BuildIpaResourceImpl::class.java)
@@ -60,7 +60,7 @@ class BuildIpaResourceImpl
             pipelineId: String,
             buildId: String,
             ipaSignInfoHeader: String,
-            ipaInputStream: InputStream,
+            ipaInputStream: InputStream
         ): Result<String> {
             val resignId = "s-${UUIDUtil.generate()}"
             val ipaSignInfo = signInfoService.check(signInfoService.decodeIpaSignInfo(ipaSignInfoHeader, objectMapper))
@@ -71,7 +71,7 @@ class BuildIpaResourceImpl
                         resignId = resignId,
                         ipaSignInfo = ipaSignInfo,
                         ipaSignInfoHeader = ipaSignInfoHeader,
-                        ipaInputStream = ipaInputStream,
+                        ipaInputStream = ipaInputStream
                     )
                 taskExecuteCount = taskExecuteCount2
                 syncSignService.asyncSign(resignId, ipaSignInfo, ipaFile, taskExecuteCount)
@@ -81,7 +81,7 @@ class BuildIpaResourceImpl
                     resignId = resignId,
                     info = ipaSignInfo,
                     executeCount = taskExecuteCount,
-                    message = ignored.message ?: "Start sign task with exception",
+                    message = ignored.message ?: "Start sign task with exception"
                 )
                 throw ignored
             }
@@ -91,7 +91,7 @@ class BuildIpaResourceImpl
             projectId: String,
             pipelineId: String,
             buildId: String,
-            resignId: String,
+            resignId: String
         ): Result<String> {
             return Result(signService.getSignStatus(resignId).getValue())
         }
@@ -100,7 +100,7 @@ class BuildIpaResourceImpl
             projectId: String,
             pipelineId: String,
             buildId: String,
-            resignId: String,
+            resignId: String
         ): Result<SignDetail> {
             return Result(signService.getSignDetail(resignId))
         }
@@ -109,14 +109,14 @@ class BuildIpaResourceImpl
             projectId: String,
             pipelineId: String,
             buildId: String,
-            resignId: String,
+            resignId: String
         ): Result<String> {
             return Result(
                 downloadService.getDownloadUrl(
                     userId = "",
                     resignId = resignId,
-                    downloadType = "build",
-                ),
+                    downloadType = "build"
+                )
             )
         }
     }

@@ -34,7 +34,7 @@ import java.security.MessageDigest
 
 sealed class HashAlgorithm(
     private val algorithm: String,
-    private val hashLength: Int,
+    private val hashLength: Int
 ) {
     fun hash(file: File) = hash(file.inputStream().buffered())
 

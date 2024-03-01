@@ -41,7 +41,7 @@ object IpaFileUtil {
      * */
     fun copyInputStreamToFile(
         inputStream: InputStream,
-        target: File,
+        target: File
     ): String? {
         // 如果文件存在，则删除
         if (target.exists()) {

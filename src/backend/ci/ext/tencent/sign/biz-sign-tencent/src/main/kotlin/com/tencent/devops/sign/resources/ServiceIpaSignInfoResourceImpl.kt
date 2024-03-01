@@ -40,7 +40,7 @@ class ServiceIpaSignInfoResourceImpl
     @Autowired
     constructor(
         private val signInfoService: SignInfoService,
-        private val objectMapper: ObjectMapper,
+        private val objectMapper: ObjectMapper
     ) : ServiceIpaSignInfoResource {
         override fun base64Encode(ipaSignInfo: IpaSignInfo): Result<String> {
             val ipaSignInfoEncode = signInfoService.encodeIpaSignInfo(ipaSignInfo)

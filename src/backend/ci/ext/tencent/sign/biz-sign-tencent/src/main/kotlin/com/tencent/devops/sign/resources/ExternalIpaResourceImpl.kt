@@ -54,7 +54,7 @@ class ExternalIpaResourceImpl
         private val signService: SignService,
         private val syncSignService: AsyncSignService,
         private val signInfoService: SignInfoService,
-        private val objectMapper: ObjectMapper,
+        private val objectMapper: ObjectMapper
     ) : ExternalIpaResource {
         @Value("\${bkci.sign.tokenExpiresInMinutes:120}")
         private val tokenExpiresInMinutes: Int = 120
@@ -62,7 +62,7 @@ class ExternalIpaResourceImpl
         override fun ipaUpload(
             ipaSignInfoHeader: String,
             ipaInputStream: InputStream,
-            token: String,
+            token: String
         ): Result<String> {
             val resignId = "s-${UUIDUtil.generate()}"
             val ipaSignInfo = signInfoService.check(signInfoService.decodeIpaSignInfo(ipaSignInfoHeader, objectMapper))
@@ -70,7 +70,7 @@ class ExternalIpaResourceImpl
                 ipaUploadDao.get(dslContext, token)
                     ?: throw ErrorCodeException(
                         errorCode = SignMessageCode.ERROR_UPLOAD_TOKEN_INVALID,
-                        defaultMessage = "使用的上传token无效",
+                        defaultMessage = "使用的上传token无效"
                     )
 
             // 判断token是否过期
@@ -79,7 +79,7 @@ class ExternalIpaResourceImpl
             ) {
                 throw ErrorCodeException(
                     errorCode = SignMessageCode.ERROR_UPLOAD_TOKEN_EXPIRED,
-                    defaultMessage = "使用的上传token已过期",
+                    defaultMessage = "使用的上传token已过期"
                 )
             }
             // 对签名信息做替换
@@ -95,7 +95,7 @@ class ExternalIpaResourceImpl
                         ipaSignInfo = ipaSignInfo,
                         ipaSignInfoHeader = ipaSignInfoHeader,
                         ipaInputStream = ipaInputStream,
-                        md5Check = false,
+                        md5Check = false
                     )
                 taskExecuteCount = taskExecuteCount2
                 ipaUploadDao.update(dslContext, token, resignId)
@@ -106,7 +106,7 @@ class ExternalIpaResourceImpl
                     resignId = resignId,
                     info = ipaSignInfo,
                     executeCount = taskExecuteCount,
-                    message = ignored.message ?: "Start sign task with exception",
+                    message = ignored.message ?: "Start sign task with exception"
                 )
                 throw ignored
             }

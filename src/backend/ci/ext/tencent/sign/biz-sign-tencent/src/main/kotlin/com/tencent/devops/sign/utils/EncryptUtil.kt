@@ -51,7 +51,7 @@ object EncryptUtil {
     @Throws(GeneralSecurityException::class)
     fun encrypt(
         original: ByteArray?,
-        key: String,
+        key: String
     ): ByteArray {
         val keyBytes = key.toByteArray(StandardCharsets.UTF_8)
         val iv = Arrays.copyOf(keyBytes, 16)
@@ -66,7 +66,7 @@ object EncryptUtil {
     @Throws(GeneralSecurityException::class)
     fun encrypt(
         originalContent: String,
-        key: String,
+        key: String
     ): String {
         val original = originalContent.toByteArray(StandardCharsets.UTF_8)
         val encrypted = encrypt(original, key)
@@ -79,7 +79,7 @@ object EncryptUtil {
     @Throws(GeneralSecurityException::class)
     fun decrypt(
         encrypted: ByteArray?,
-        key: String,
+        key: String
     ): ByteArray {
         val keyBytes = key.toByteArray(StandardCharsets.UTF_8)
         val iv = Arrays.copyOf(keyBytes, 16)
@@ -94,7 +94,7 @@ object EncryptUtil {
     @Throws(GeneralSecurityException::class)
     fun decrypt(
         encryptedContent: String?,
-        key: String,
+        key: String
     ): String {
         val encrypted = Base64.getDecoder().decode(encryptedContent)
         val decrypted = decrypt(encrypted, key)
@@ -107,7 +107,7 @@ object EncryptUtil {
     @Throws(GeneralSecurityException::class)
     fun decryptToBytes(
         encryptedContent: String?,
-        key: String,
+        key: String
     ): ByteArray {
         val encrypted = Base64.getDecoder().decode(encryptedContent)
         return decrypt(encrypted, key)

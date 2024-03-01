@@ -57,14 +57,14 @@ class ServiceIpaResourceImpl
         private val syncSignService: AsyncSignService,
         private val downloadService: DownloadService,
         private val signInfoService: SignInfoService,
-        private val objectMapper: ObjectMapper,
+        private val objectMapper: ObjectMapper
     ) : ServiceIpaResource {
         override fun getHistorySign(
             userId: String,
             startTime: Long?,
             endTime: Long?,
             page: Int?,
-            pageSize: Int?,
+            pageSize: Int?
         ): Result<Page<SignHistory>> {
             val pageNotNull = page ?: 0
             val pageSizeNotNull = pageSize?.coerceAtMost(20) ?: 20
@@ -75,7 +75,7 @@ class ServiceIpaResourceImpl
                     startTime = startTime,
                     endTime = endTime,
                     offset = limit.offset,
-                    limit = limit.limit,
+                    limit = limit.limit
                 )
             return Result(Page(pageNotNull, pageSizeNotNull, result.count, result.records))
         }
@@ -83,7 +83,7 @@ class ServiceIpaResourceImpl
         override fun ipaSign(
             ipaSignInfoHeader: String,
             ipaInputStream: InputStream,
-            md5Check: Boolean,
+            md5Check: Boolean
         ): Result<String> {
             val resignId = "s-${UUIDUtil.generate()}"
             val ipaSignInfo = signInfoService.check(signInfoService.decodeIpaSignInfo(ipaSignInfoHeader, objectMapper))
@@ -95,7 +95,7 @@ class ServiceIpaResourceImpl
                         ipaSignInfo = ipaSignInfo,
                         ipaSignInfoHeader = ipaSignInfoHeader,
                         ipaInputStream = ipaInputStream,
-                        md5Check = md5Check,
+                        md5Check = md5Check
                     )
                 taskExecuteCount = taskExecuteCount2
                 syncSignService.asyncSign(resignId, ipaSignInfo, ipaFile, taskExecuteCount)
@@ -105,7 +105,7 @@ class ServiceIpaResourceImpl
                     resignId = resignId,
                     info = ipaSignInfo,
                     executeCount = taskExecuteCount,
-                    message = e.message ?: "Start sign task with exception",
+                    message = e.message ?: "Start sign task with exception"
                 )
                 throw e
             }
@@ -115,7 +115,7 @@ class ServiceIpaResourceImpl
             userId: String,
             projectId: String,
             pipelineId: String,
-            buildId: String,
+            buildId: String
         ): Result<IpaUploadInfo> {
             val token = UUIDUtil.generate()
             ipaUploadDao.save(
@@ -124,7 +124,7 @@ class ServiceIpaResourceImpl
                 projectId = projectId,
                 pipelineId = pipelineId,
                 buildId = buildId,
-                uploadToken = token,
+                uploadToken = token
             )
             return Result(IpaUploadInfo(projectId, pipelineId, buildId, token))
         }
@@ -142,8 +142,8 @@ class ServiceIpaResourceImpl
                 downloadService.getDownloadUrl(
                     userId = "",
                     resignId = resignId,
-                    downloadType = "service",
-                ),
+                    downloadType = "service"
+                )
             )
         }
     }

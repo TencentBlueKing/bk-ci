@@ -42,5 +42,5 @@ data class IpaInfoPlist(
     @get:Schema(title = "应用scheme", required = true)
     var scheme: String = "",
     @get:Schema(title = "应用名称", required = true)
-    var appName: String = "",
+    var appName: String = ""
 )

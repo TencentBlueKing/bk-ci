@@ -61,27 +61,27 @@ class UserIpaResourceImpl
         private val signInfoService: SignInfoService,
         private val objectMapper: ObjectMapper,
         private val authPermissionApi: AuthPermissionApi,
-        private val pipelineAuthServiceCode: PipelineAuthServiceCode,
+        private val pipelineAuthServiceCode: PipelineAuthServiceCode
     ) : UserIpaResource {
         override fun ipaSign(
             userId: String,
             ipaSignInfoHeader: String,
-            ipaInputStream: InputStream,
+            ipaInputStream: InputStream
         ): Result<String?> {
             val resignId = "s-${UUIDUtil.generate()}"
             val ipaSignInfo = signInfoService.check(signInfoService.decodeIpaSignInfo(ipaSignInfoHeader, objectMapper))
             if (!checkParams(ipaSignInfo, userId)) {
                 logger.warn(
                     "User ($userId) does not have permission to initiate iOS enterprise resignature in " +
-                        "pipeline (${ipaSignInfo.pipelineId}) of project (${ipaSignInfo.projectId}).",
+                        "pipeline (${ipaSignInfo.pipelineId}) of project (${ipaSignInfo.projectId})."
                 )
                 throw PermissionForbiddenException(
                     message =
                         MessageUtil.getMessageByLocale(
                             messageCode = IOS_ENTERPRISE_RESIGNATURE,
                             language = I18nUtil.getLanguage(userId),
-                            params = arrayOf(userId, ipaSignInfo.projectId, ipaSignInfo.pipelineId.toString()),
-                        ),
+                            params = arrayOf(userId, ipaSignInfo.projectId, ipaSignInfo.pipelineId.toString())
+                        )
                 )
             }
             var taskExecuteCount = 1
@@ -96,7 +96,7 @@ class UserIpaResourceImpl
                     resignId = resignId,
                     info = ipaSignInfo,
                     executeCount = taskExecuteCount,
-                    message = ignored.message ?: "Start sign task with exception",
+                    message = ignored.message ?: "Start sign task with exception"
                 )
                 throw ignored
             }
@@ -104,34 +104,34 @@ class UserIpaResourceImpl
 
         override fun getSignStatus(
             userId: String,
-            resignId: String,
+            resignId: String
         ): Result<String> {
             return Result(signService.getSignStatus(resignId).getValue())
         }
 
         override fun getSignDetail(
             userId: String,
-            resignId: String,
+            resignId: String
         ): Result<SignDetail> {
             return Result(signService.getSignDetail(resignId))
         }
 
         override fun downloadUrl(
             userId: String,
-            resignId: String,
+            resignId: String
         ): Result<String> {
             return Result(
                 downloadService.getDownloadUrl(
                     userId = userId,
                     resignId = resignId,
-                    downloadType = "user",
-                ),
+                    downloadType = "user"
+                )
             )
         }
 
         private fun checkParams(
             ipaSignInfo: IpaSignInfo,
-            userId: String,
+            userId: String
         ): Boolean {
             val projectId = ipaSignInfo.projectId
             val pipelineId = ipaSignInfo.pipelineId ?: ""
@@ -141,7 +141,7 @@ class UserIpaResourceImpl
                 resourceType = AuthResourceType.PIPELINE_DEFAULT,
                 projectCode = projectId,
                 resourceCode = pipelineId,
-                permission = AuthPermission.EXECUTE,
+                permission = AuthPermission.EXECUTE
             )
         }
 
