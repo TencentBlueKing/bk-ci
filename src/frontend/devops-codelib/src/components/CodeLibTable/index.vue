@@ -572,6 +572,11 @@
                                     message: this.$t('codelib.successfullyDeleted'),
                                     theme: 'success'
                                 })
+                            }).catch((e) => {
+                                this.$bkMessage({
+                                    message: e.message || e,
+                                    theme: 'error'
+                                })
                             })
                         }
                     })
