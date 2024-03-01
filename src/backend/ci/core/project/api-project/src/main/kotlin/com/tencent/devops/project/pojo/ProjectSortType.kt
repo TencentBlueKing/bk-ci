@@ -25,6 +25,9 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-dependencies {
-    api(project(":core:metrics:biz-metrics"))
+package com.tencent.devops.project.pojo
+
+enum class ProjectSortType {
+    PROJECT_NAME,
+    ENGLISH_NAME
 }
