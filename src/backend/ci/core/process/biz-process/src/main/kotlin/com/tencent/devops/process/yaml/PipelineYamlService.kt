@@ -30,9 +30,11 @@ package com.tencent.devops.process.yaml
 
 import com.tencent.devops.common.api.constant.coerceAtMaxLength
 import com.tencent.devops.common.api.enums.RepositoryType
+import com.tencent.devops.common.api.model.SQLPage
 import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.model.process.tables.records.TPipelineYamlBranchFileRecord
+import com.tencent.devops.process.engine.dao.PipelineInfoDao
 import com.tencent.devops.process.engine.dao.PipelineWebhookVersionDao
 import com.tencent.devops.process.engine.dao.PipelineYamlBranchFileDao
 import com.tencent.devops.process.engine.dao.PipelineYamlInfoDao
@@ -43,6 +45,7 @@ import com.tencent.devops.process.pojo.pipeline.PipelineYamlVo
 import com.tencent.devops.process.pojo.pipeline.enums.PipelineYamlStatus
 import com.tencent.devops.process.pojo.webhook.PipelineWebhookVersion
 import com.tencent.devops.repository.api.ServiceRepositoryResource
+import com.tencent.devops.repository.pojo.RepoPipelineRefVo
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
@@ -56,7 +59,8 @@ class PipelineYamlService(
     private val pipelineYamlVersionDao: PipelineYamlVersionDao,
     private val pipelineWebhookVersionDao: PipelineWebhookVersionDao,
     private val pipelineYamlBranchFileDao: PipelineYamlBranchFileDao,
-    private val client: Client
+    private val client: Client,
+    private val pipelineInfoDao: PipelineInfoDao
 ) {
 
     companion object {
@@ -367,6 +371,40 @@ class PipelineYamlService(
             projectId = projectId,
             repoHashId = repoHashId
         )
+    }
+
+    fun listPipelineYaml(
+        projectId: String,
+        repoHashId: String,
+        limit: Int,
+        offset: Int
+    ): SQLPage<RepoPipelineRefVo> {
+        val count = pipelineYamlInfoDao.countYamlPipeline(
+            dslContext = dslContext,
+            projectId = projectId,
+            repoHashId = repoHashId
+        )
+        val pipelineYamlList = pipelineYamlInfoDao.listYamlPipeline(
+            dslContext = dslContext,
+            projectId = projectId,
+            repoHashId = repoHashId,
+            limit = limit,
+            offset = offset
+        )
+        val pipelineInfoMap = pipelineInfoDao.listInfoByPipelineIds(
+            dslContext = dslContext,
+            projectId = projectId,
+            pipelineIds = pipelineYamlList.map { it.pipelineId }.toSet()
+        ).associateBy { it.pipelineId }
+
+        val records = pipelineYamlList.map {
+            RepoPipelineRefVo(
+                projectId = projectId,
+                pipelineId = it.pipelineId,
+                pipelineName = pipelineInfoMap[it.pipelineId]?.pipelineName ?: ""
+            )
+        }
+        return SQLPage(count = count, records = records)
     }
 
     fun getAllYamlPipeline(

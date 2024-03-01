@@ -28,12 +28,15 @@
 
 package com.tencent.devops.process.api
 
+import com.tencent.devops.common.api.model.SQLPage
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.process.api.user.UserPipelineYamlResource
 import com.tencent.devops.process.pojo.pipeline.PipelineYamlSyncInfo
 import com.tencent.devops.process.yaml.PipelineYamlService
 import com.tencent.devops.process.yaml.PipelineYamlSyncService
+import com.tencent.devops.repository.pojo.RepoPipelineRefVo
 
 @RestResource
 class UserPipelineYamlResourceImpl(
@@ -46,6 +49,26 @@ class UserPipelineYamlResourceImpl(
             pipelineYamlService.countPipelineYaml(
                 projectId = projectId,
                 repoHashId = repoHashId
+            )
+        )
+    }
+
+    override fun listYamlPipeline(
+        userId: String,
+        projectId: String,
+        repoHashId: String,
+        page: Int?,
+        pageSize: Int?
+    ): Result<SQLPage<RepoPipelineRefVo>> {
+        val pageNotNull = page ?: 0
+        val pageSizeNotNull = pageSize ?: PageUtil.DEFAULT_PAGE_SIZE
+        val limit = PageUtil.convertPageSizeToSQLLimit(pageNotNull, pageSizeNotNull)
+        return Result(
+            pipelineYamlService.listPipelineYaml(
+                projectId = projectId,
+                repoHashId = repoHashId,
+                limit = limit.limit,
+                offset = limit.offset
             )
         )
     }

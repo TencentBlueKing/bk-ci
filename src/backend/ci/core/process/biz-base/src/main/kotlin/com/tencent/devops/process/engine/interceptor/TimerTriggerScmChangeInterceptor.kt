@@ -428,8 +428,8 @@ class TimerTriggerScmChangeInterceptor @Autowired constructor(
 
         // checkout插件[按仓库URL输入]不校验代码变更
         if (
-            ele.getAtomCode() == "checkout"
-            && CheckoutRepositoryType.skipTimerTriggerChange(input["repositoryType"]?.toString())
+            ele.getAtomCode() == "checkout" &&
+            CheckoutRepositoryType.skipTimerTriggerChange(input["repositoryType"]?.toString())
         ) return true
         val repositoryConfig = getMarketBuildRepoConfig(input, variables) ?: return false
 
