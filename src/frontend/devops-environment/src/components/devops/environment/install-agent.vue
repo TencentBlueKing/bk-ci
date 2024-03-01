@@ -336,7 +336,7 @@
                 this.isShow = false
                 this.isLoading = false
                 this.isEditing = true
-                this.installStatus = ''
+                this.installStatus = 'PENDING'
                 this.jobId = 0
                 this.keyFile = null
                 this.keyFileFormData = new FormData()
@@ -401,7 +401,7 @@
             },
 
             async handleRetryInstallAgent () {
-                this.installStatus = ''
+                this.installStatus = 'PENDING'
                 this.taskLog = ''
                 this.editor.getSession().setValue('')
                 this.handleConFirm()
