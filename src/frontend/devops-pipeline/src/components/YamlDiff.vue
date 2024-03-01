@@ -52,13 +52,10 @@
                 {
                     language: 'yaml',
                     readOnly: this.readOnly,
-                    automaticLayout: true,
-                    hideCursorInOverviewRuler: false
+                    automaticLayout: true
                 }
             )
-            if (this.oldYaml && this.newYaml) {
-                this.diff(this.oldYaml, this.newYaml)
-            }
+            this.diff(this.oldYaml, this.newYaml)
         },
         beforeDestroy () {
             if (this.editor) {

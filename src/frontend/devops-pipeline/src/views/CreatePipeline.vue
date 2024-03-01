@@ -62,7 +62,7 @@
                             <i class="bk-icon icon-check-1"></i>
                         </span>
                         <p class="pipeline-template-logo">
-                            <img :src="temp.logoUrl" v-if="temp.logoUrl">
+                            <img :src="temp.logoUrl" v-if="temp.logoUrl.replace('http:', '')">
                             <logo size="50" :name="temp.icon || 'placeholder'" v-else></logo>
                         </p>
                         <div class="pipeline-template-detail">
