@@ -178,11 +178,6 @@ open class DefaultModelCheckPlugin constructor(
                     errorCode = BK_INCORRECT_NOTIFICATION_METHOD
                 )
             }
-            if (subscription.users.isBlank()) {
-                throw ErrorCodeException(
-                    errorCode = BK_INVALID_NOTIFICATION_RECIPIENT
-                )
-            }
             if (subscription.content.isBlank()) {
                 throw ErrorCodeException(
                     errorCode = BK_MESSAGE_CONTENT_EMPTY
