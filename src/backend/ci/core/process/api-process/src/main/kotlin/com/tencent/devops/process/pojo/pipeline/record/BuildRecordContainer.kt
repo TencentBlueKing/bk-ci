@@ -90,6 +90,10 @@ data class BuildRecordContainer(
             container.containerHashId?.let {
                 containerVar[Container::containerHashId.name] = it
             }
+            val startVMTaskSeq = container.startVMTaskSeq
+            startVMTaskSeq?.let {
+                containerVar[Container::startVMTaskSeq.name] = it
+            }
             if (container is TriggerContainer) {
                 containerVar[container::params.name] = container.params
                 container.buildNo?.let {
@@ -130,6 +134,13 @@ data class BuildRecordContainer(
                     // 不保存跳过的非post任务记录或非质量红线记录
                     return@forEachIndexed
                 }
+                val taskSeq = if (startVMTaskSeq != null && startVMTaskSeq > 1 && index < startVMTaskSeq - 1) {
+                    // 开机任务前的任务的序号需要在index基础上加1
+                    index + 1
+                } else {
+                    // 开机任务后的任务的序号需要在index基础上加2
+                    index + 2
+                }
                 taskBuildRecords.add(
                     BuildRecordTask(
                         projectId = context.projectId,
@@ -142,7 +153,7 @@ data class BuildRecordContainer(
                         atomCode = element.getTaskAtom(),
                         executeCount = context.executeCount,
                         resourceVersion = context.resourceVersion,
-                        taskSeq = index + 2, // model中的插件在数据库表的顺序是从2开始
+                        taskSeq = taskSeq,
                         status = buildStatus?.name,
                         taskVar = element.initTaskVar(),
                         timestamps = mapOf(),
