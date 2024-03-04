@@ -29,7 +29,7 @@
         <main class="pipeline-detail-entry-main">
             <component :is="activeChild.component" />
         </main>
-        <show-variable v-if="activeChild.showVar" :editable="false" :pipeline="pipeline" />
+        <show-variable v-if="activeChild.showVar && pipeline" :editable="false" :pipeline="pipeline" />
     </div>
 </template>
 
