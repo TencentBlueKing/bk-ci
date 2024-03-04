@@ -1079,7 +1079,7 @@
                     this.switchConstruct(node)
                 } else if (this.deploymentNodes.includes(node.nodeType)) {
                     this.installAgentIp = node.ip
-                    this.installHostId = node.hostId
+                    this.installHostId = node.bkHostId
                     this.installOsType = node.osType
                     this.$refs.installAgent.isShow = true
                 }
@@ -1087,7 +1087,7 @@
 
             handleShowLogDetail (node) {
                 this.installAgentIp = node.ip
-                this.installHostId = node.hostId
+                this.installHostId = node.bkHostId
                 this.installOsType = node.osType
                 this.taskId = node.taskId
                 this.$refs.installAgent.isShow = true

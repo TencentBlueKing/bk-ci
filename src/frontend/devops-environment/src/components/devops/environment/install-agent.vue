@@ -192,7 +192,7 @@
                     password: '',
                     installChannelId: 'auto',
                     innerIp: '',
-                    hostId: null
+                    bkHostId: null
                 }
             }
             return {
@@ -221,7 +221,7 @@
                 if (val) {
                     this.fetchChannelList()
                     this.formData.innerIp = this.innerIp
-                    this.formData.hostId = this.hostId
+                    this.formData.bkHostId = this.hostId
                     if (['LINUX', 'AIX', 'SOLARIS', 'WINDOWS'].includes(this.osType)) {
                         this.formData.osType = this.osType
                     }
