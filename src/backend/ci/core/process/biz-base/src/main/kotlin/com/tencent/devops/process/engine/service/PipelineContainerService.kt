@@ -577,8 +577,9 @@ class PipelineContainerService @Autowired constructor(
             )
         }
         logger.info(
-            "prepareBuildContainerTasks|${context.buildId}|matrixGroupFlag=${container.matrixGroupFlag}|" +
-                "needUpdateContainer=$needUpdateContainer|needStartVM=$needStartVM|executeCount=${context.executeCount}"
+            "prepareBuildContainerTasks|buildId=${context.buildId}|matrixGroupFlag=${container.matrixGroupFlag}|" +
+                "needUpdateContainer=$needUpdateContainer|needStartVM=$needStartVM|" +
+                "startVMTaskSeq=${container.startVMTaskSeq}"
         )
         if (needUpdateContainer) {
             container.resetBuildOption(context.executeCount)
