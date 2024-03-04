@@ -233,10 +233,10 @@ data class AgentService @Autowired constructor(
                 }?.map {
                     if (logger.isDebugEnabled)
                         logger.debug("Agent install task: ip: ${it.ip}, status: ${it.status}")
-                    if (it.status in agentTaskEndStatusList) { // agent安装结束(成功/失败)
+                    if (it.status in agentTaskEndStatusList) { // agent安装任务结束(成功/失败)
                         val nodeStatus =
                             if (AGENT_INSTALL_NORMAL == it.status) NodeStatus.NORMAL.name
-                            else { // agent安装失败，重新查询agent安装状态
+                            else { // agent安装任务失败，重新查询节点agent安装状态
                                 val agentInfo = queryAgentStatusService.getAgentVersions(
                                     listOf(AgentVersion(ip = it.ip, bkHostId = it.bkHostId?.toLong()))
                                 )
