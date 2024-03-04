@@ -216,7 +216,7 @@ class SleepControl @Autowired constructor(
         )
     }
 
-    fun heartBeatStopWS(workspaceName: String, opHistory: OpHistoryCopyWriting): Boolean {
+    fun systemStopWS(workspaceName: String, opHistory: OpHistoryCopyWriting): Boolean {
 
         val workspace = workspaceDao.fetchAnyWorkspace(dslContext = dslContext, workspaceName = workspaceName)
             ?: throw ErrorCodeException(
@@ -231,13 +231,6 @@ class SleepControl @Autowired constructor(
                 params = arrayOf(workspace.workspaceName, "status is already ${workspace.status}, can't stop again")
             )
         }
-
-        if (!workspaceCommon.checkProjectRouter(
-                creator = workspace.createUserId,
-                workspaceName = workspaceName,
-                workspaceOwnerType = workspace.ownerType
-            )
-        ) return false
 
         RedisCallLimit(
             redisOperation,
@@ -282,6 +275,32 @@ class SleepControl @Autowired constructor(
         }
     }
 
+    fun heartBeatStopWS(workspaceName: String, opHistory: OpHistoryCopyWriting): Boolean {
+
+        val workspace = workspaceDao.fetchAnyWorkspace(dslContext = dslContext, workspaceName = workspaceName)
+            ?: throw ErrorCodeException(
+                errorCode = ErrorCodeEnum.WORKSPACE_NOT_FIND.errorCode,
+                params = arrayOf(workspaceName)
+            )
+        // 校验状态
+        if (workspace.status.checkSleeping()) {
+            logger.info("$workspace has been stopped, return error.")
+            throw ErrorCodeException(
+                errorCode = ErrorCodeEnum.WORKSPACE_STATUS_CHANGE_FAIL.errorCode,
+                params = arrayOf(workspace.workspaceName, "status is already ${workspace.status}, can't stop again")
+            )
+        }
+
+        if (!workspaceCommon.checkProjectRouter(
+                creator = workspace.createUserId,
+                workspaceName = workspaceName,
+                workspaceOwnerType = workspace.ownerType
+            )
+        ) return false
+
+        return systemStopWS(workspaceName, opHistory)
+    }
+
     fun autoSleepWhenNotLogin(onSleep: Boolean = false, readySleepWorkspace: MutableList<String> = mutableListOf()) {
         val limitDay = holidayHelper.getLastWorkingDays(7).last()
         val logins = bkBaseService.fetchOnlineIps(limitDay)
@@ -311,7 +330,7 @@ class SleepControl @Autowired constructor(
                         action = WorkspaceAction.DELETE,
                         actionMessage = workspaceCommon.getOpHistory(OpHistoryCopyWriting.TIMEOUT_STOP)
                     )
-                    kotlin.runCatching { heartBeatStopWS(workspace.workspaceName, OpHistoryCopyWriting.TIMEOUT_SLEEP) }
+                    kotlin.runCatching { systemStopWS(workspace.workspaceName, OpHistoryCopyWriting.TIMEOUT_SLEEP) }
                         .onFailure { i ->
                             logger.warn("auto sleep fail|${i.message}", i)
                         }.onSuccess {
