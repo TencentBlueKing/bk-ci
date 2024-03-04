@@ -172,7 +172,7 @@ class RemoteDevService @Autowired constructor(
                         errorCode = ErrorCodeEnum.BASE_CREATE_VM_ERROR.errorCode,
                         formatErrorMessage = ErrorCodeEnum.BASE_CREATE_VM_ERROR.getErrorMessage(),
                         envId = result.enviromentUid,
-                        errorMessage = I18nUtil.getCodeLanMessage(BK_WORKSPACE_STATE_NOT_RUNNING),
+                        errorMessage = I18nUtil.getCodeLanMessage(BK_WORKSPACE_STATE_NOT_RUNNING)
                     )
                 }
 
