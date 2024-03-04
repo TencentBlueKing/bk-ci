@@ -345,26 +345,30 @@ class ProjectNotifyService constructor(
         projectID2ManagerNotBelongVerifyBgId: MutableMap<String, List<String>>
     ) {
         projectInfos.forEach { projectInfo ->
-            val managerDeptInfos = getManagerDeptInfos(projectInfo) ?: return@forEach
-            val managerBgIds = managerDeptInfos.map { it.bgId }
-            val isManagerBgSame = managerBgIds.distinct().size == 1
-            logger.debug("process project infos:$projectInfos|$managerDeptInfos")
-            if (isManagerBgSame) {
-                processManagerBgSame(
-                    projectInfo = projectInfo,
-                    managerBgIds = managerBgIds,
-                    verifyBgId = verifyBgId,
-                    wrongOrganizationalProjectList = wrongOrganizationalProjectList
-                )
-            } else {
-                processManagerBgNotSame(
-                    projectInfo = projectInfo,
-                    managerDeptInfos = managerDeptInfos,
-                    managerBgIds = managerBgIds,
-                    verifyBgId = verifyBgId,
-                    projectID2ManagerBelongVerifyBgId = projectID2ManagerBelongVerifyBgId,
-                    projectID2ManagerNotBelongVerifyBgId = projectID2ManagerNotBelongVerifyBgId
-                )
+            try {
+                val managerDeptInfos = getManagerDeptInfos(projectInfo) ?: return@forEach
+                val managerBgIds = managerDeptInfos.map { it.bgId }
+                val isManagerBgSame = managerBgIds.distinct().size == 1
+                logger.debug("process project infos:$projectInfo|$managerDeptInfos")
+                if (isManagerBgSame) {
+                    processManagerBgSame(
+                        projectInfo = projectInfo,
+                        managerBgIds = managerBgIds,
+                        verifyBgId = verifyBgId,
+                        wrongOrganizationalProjectList = wrongOrganizationalProjectList
+                    )
+                } else {
+                    processManagerBgNotSame(
+                        projectInfo = projectInfo,
+                        managerDeptInfos = managerDeptInfos,
+                        managerBgIds = managerBgIds,
+                        verifyBgId = verifyBgId,
+                        projectID2ManagerBelongVerifyBgId = projectID2ManagerBelongVerifyBgId,
+                        projectID2ManagerNotBelongVerifyBgId = projectID2ManagerNotBelongVerifyBgId
+                    )
+                }
+            } catch (ex: Exception) {
+                logger.warn("process projectInfos fail:$ex")
             }
         }
     }
