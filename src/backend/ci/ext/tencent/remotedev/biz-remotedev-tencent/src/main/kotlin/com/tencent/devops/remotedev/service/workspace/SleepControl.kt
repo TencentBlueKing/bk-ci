@@ -317,11 +317,13 @@ class SleepControl @Autowired constructor(
                         }.onSuccess {
                             logger.info(
                                 "sleep $it when not login 7 day " +
-                                        "|${workspace.workspaceName}|${workspace.lastStatusUpdateTime}|${workspace.hostName}"
+                                        "|${workspace.workspaceName}|${workspace.lastStatusUpdateTime}|" +
+                                        "${workspace.hostName}"
                             )
                             if (it) {
                                 notifyControl.notify4UserAndCCRemoteDevManager(
-                                    userIds = permissionService.getWorkspaceOwner(workspace.workspaceName).toMutableSet(),
+                                    userIds = permissionService.getWorkspaceOwner(workspace.workspaceName)
+                                        .toMutableSet(),
                                     projectId = workspace.projectId,
                                     notifyTemplateCode = NotifyControl.NOT_LOGIN_AUTO_SLEEP_NOTIFY,
                                     notifyType = mutableSetOf(RemoteDevNotifyType.EMAIL),
