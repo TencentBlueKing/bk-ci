@@ -69,29 +69,14 @@ class ProjectUpdateHistoryDao {
         }
     }
 
-    fun listByProductIdChange(
+    fun listTwentyFourHours (
         dslContext: DSLContext
     ): Result<TProjectUpdateHistoryRecord> {
         val currentTime = LocalDateTime.now()
         val twentyFourHoursAgo = currentTime.minusHours(24)
         return with(TProjectUpdateHistory.T_PROJECT_UPDATE_HISTORY) {
             dslContext.selectFrom(this)
-                .where(BEFORE_PRODUCT_ID.ne(AFTER_PRODUCT_ID))
-                .and(UPDATED_AT.between(twentyFourHoursAgo, currentTime))
-                .and(APPROVAL_STATUS.eq(ProjectApproveStatus.APPROVED.status))
-                .fetch()
-        }
-    }
-
-    fun listByOrganizationChange(
-        dslContext: DSLContext
-    ): Result<TProjectUpdateHistoryRecord> {
-        val currentTime = LocalDateTime.now()
-        val twentyFourHoursAgo = currentTime.minusHours(24)
-        return with(TProjectUpdateHistory.T_PROJECT_UPDATE_HISTORY) {
-            dslContext.selectFrom(this)
-                .where(BEFORE_ORGANIZATION.ne(AFTER_ORGANIZATION))
-                .and(UPDATED_AT.between(twentyFourHoursAgo, currentTime))
+                .where(UPDATED_AT.between(twentyFourHoursAgo, currentTime))
                 .and(APPROVAL_STATUS.eq(ProjectApproveStatus.APPROVED.status))
                 .fetch()
         }

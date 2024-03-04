@@ -211,9 +211,9 @@ class ProjectNotifyService constructor(
             "项目名称", "项目ID", "所属组织架构-变更前", "所属组织架构-变更后", "操作人", "操作时间"
         )
 
-        val projectInfos = projectUpdateHistoryDao.listByOrganizationChange(
+        val projectInfos = projectUpdateHistoryDao.listTwentyFourHours(
             dslContext = dslContext
-        )
+        ).filter { it.beforeOrganization != it.afterOrganization }
         if (projectInfos.isEmpty()) return true
         projectInfos.forEach {
             table = table.plus(
@@ -250,7 +250,8 @@ class ProjectNotifyService constructor(
             "项目名称", "项目ID", "所属运营产品-变更前", "所属运营产品-变更后", "操作人", "操作时间"
         )
 
-        val projectInfos = projectUpdateHistoryDao.listByProductIdChange(dslContext = this.dslContext)
+        val projectInfos = projectUpdateHistoryDao.listTwentyFourHours(dslContext = this.dslContext)
+            .filter { it.beforeProductId != it.afterProductId }
         if (projectInfos.isEmpty()) return true
 
         projectInfos.forEach { projectInfo ->
