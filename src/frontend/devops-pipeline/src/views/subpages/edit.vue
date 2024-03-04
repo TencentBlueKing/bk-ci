@@ -10,7 +10,7 @@
         </empty-tips>
         <YamlPipelineEditor v-else-if="isCodeMode" />
         <template v-else>
-            <show-variable v-if="currentTab === 'pipeline'" :pipeline="pipeline" />
+            <show-variable v-if="currentTab === 'pipeline' && pipeline" :pipeline="pipeline" />
             <header class="choose-type-switcher" :class="{ 'when-show-variable': currentTab === 'pipeline' && showVariable }">
                 <span
                     v-for="panel in panels"
