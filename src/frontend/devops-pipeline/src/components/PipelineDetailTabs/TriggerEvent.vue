@@ -7,6 +7,7 @@
         scroll-box-class-name="trigger-event-timeline"
         v-slot="{
             queryList,
+            isLoadingMore,
             list
         }"
     >
@@ -27,10 +28,7 @@
             </search-select>
         </header>
         <div class="trigger-event-timeline">
-            <bk-timeline
-                v-if="list.length > 0"
-                :list="getTimelineList(list)"
-            />
+            <trigger-event-timeline v-if="list.length > 0 || isLoadingMore" :list="list" />
             <empty-exception v-else :type="emptyType" @clear="clearFilter" />
         </div>
 
@@ -41,18 +39,16 @@
     import InfiniteScroll from '@/components/InfiniteScroll'
     import EmptyException from '@/components/common/exception'
     import SearchSelect from '@blueking/search-select'
-    import moment from 'moment'
     import { mapActions } from 'vuex'
-    import TriggerEventChildren from './TriggerEventChildren.vue'
+    import TriggerEventTimeline from './TriggerEventTimeline.vue'
 
     import '@blueking/search-select/dist/styles/index.css'
     export default {
         components: {
-            // eslint-disable-next-line vue/no-unused-components
-            TriggerEventChildren,
             SearchSelect,
             InfiniteScroll,
-            EmptyException
+            EmptyException,
+            TriggerEventTimeline
         },
         data () {
             return {
@@ -90,7 +86,6 @@
                 return this.filterData.map(item => item.name).join(' / ')
             },
             isSearching () {
-                console.log(this.searchKey, this.dateTimeRange)
                 return this.searchKey?.length > 0 || this.dateTimeRange.some(item => !!item)
             },
             emptyType () {
@@ -191,30 +186,6 @@
                 } finally {
                     this.isLoading = false
                 }
-            },
-            getTimelineList (originList) {
-                const dateMap = originList.reduce((acc, item) => {
-                    const date = moment(item.eventTime).format('YYYY-MM-DD')
-                    console.log(date)
-                    if (!acc.has(date)) {
-                        acc.set(date, [])
-                    }
-                    acc.get(date).push(item)
-                    return acc
-                }, new Map())
-                const list = []
-                dateMap.forEach((events, date) => {
-                    list.push({
-                        tag: date,
-                        content: this.$createElement(TriggerEventChildren, {
-                            props: {
-                                events
-                            }
-                        })
-                    })
-                })
-                console.log(originList, list)
-                return list
             },
             handleFilterChange (queryList) {
                 console.log('change')
