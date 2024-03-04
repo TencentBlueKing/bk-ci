@@ -28,7 +28,7 @@
         <template v-if="editingElementPos">
             <template v-if="(typeof editingElementPos.elementIndex !== 'undefined')">
                 <atom-property-panel
-                    close-confirm
+                    :close-confirm="isPipelineEditing"
                     v-bind="editingElementPos"
                     :editable="pipelineEditable"
                     :stages="stages"
@@ -111,7 +111,8 @@
                 'pipelineWithoutTrigger',
                 'pipelineYaml',
                 'pipelineSetting',
-                'editingElementPos'
+                'editingElementPos',
+                'isPipelineEditing'
             ]),
             ...mapGetters('atom', [
                 'osList',
