@@ -71,6 +71,8 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.scheduling.annotation.Async
 import org.springframework.stereotype.Service
 import java.io.InputStream
+import java.time.Duration
+import java.time.LocalDateTime
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 import javax.ws.rs.core.Response
@@ -121,6 +123,8 @@ data class AgentService @Autowired constructor(
         const val AGENT_ABNORMAL_NODE_STATUS = 0
         const val AGENT_NORMAL_NODE_STATUS = 1
         const val AGENT_NOT_INSTALLED_TAG = false
+
+        private const val NS_TO_S = 1000000000
     }
 
     fun installAgent(
@@ -267,7 +271,18 @@ data class AgentService @Autowired constructor(
                 }
             }
         }
-        executor.scheduleAtFixedRate(task, INITIAL_DELAY, TASK_PERIOD, TimeUnit.MILLISECONDS)
+        val startTime = LocalDateTime.now()
+        try {
+            executor.scheduleAtFixedRate(task, INITIAL_DELAY, TASK_PERIOD, TimeUnit.MILLISECONDS)
+        } catch (e: Exception) {
+            logger.warn("Check agent status failed. Exception: $e")
+        } finally {
+            executor.shutdown()
+            logger.info(
+                "Agent install finish takes " +
+                    "${Duration.between(startTime, LocalDateTime.now()).toNanos().toDouble() / NS_TO_S}s."
+            )
+        }
     }
 
     fun queryAgentTaskStatus(
