@@ -99,7 +99,10 @@ class PipelineTransferYamlService @Autowired constructor(
     }
 
     fun getTemplate(param: GetTemplateParam<Any>): String {
-        return ""
+        throw PipelineTransferException(
+            CommonMessageCode.YAML_NOT_VALID,
+            arrayOf("Templates are not currently supported")
+        )
     }
 
     fun transfer(
