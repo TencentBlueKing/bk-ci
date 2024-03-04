@@ -31,7 +31,6 @@ import com.fasterxml.jackson.databind.DeserializationFeature
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.exception.CustomException
-import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.environment.dao.NodeDao
 import com.tencent.devops.environment.pojo.enums.NodeStatus
@@ -122,9 +121,6 @@ data class AgentService @Autowired constructor(
         const val AGENT_ABNORMAL_NODE_STATUS = 0
         const val AGENT_NORMAL_NODE_STATUS = 1
         const val AGENT_NOT_INSTALLED_TAG = false
-
-        private const val CHECK_NODE_STATUS_TIMEOUT_LOCK_KEY = "check_node_status_timeout_lock"
-        private const val EXPIRATION_TIME_OF_THE_LOCK = 200L
     }
 
     fun installAgent(
@@ -209,14 +205,7 @@ data class AgentService @Autowired constructor(
      */
     @Async("checkAgentStatus")
     fun checkAgentStatus(userId: String, projectId: String, jobId: Int?, ipList: List<String>?) {
-        val redisLock = RedisLock(redisOperation, CHECK_NODE_STATUS_TIMEOUT_LOCK_KEY, EXPIRATION_TIME_OF_THE_LOCK)
-        redisLock.takeIf { it.tryLock() }.run {
-            try {
-                checkAgentStatusTimed(userId, projectId, jobId, ipList)
-            } finally {
-                redisLock.unlock()
-            }
-        }
+        checkAgentStatusTimed(userId, projectId, jobId, ipList)
     }
 
     private fun checkAgentStatusTimed(userId: String, projectId: String, jobId: Int?, ipList: List<String>?) {
