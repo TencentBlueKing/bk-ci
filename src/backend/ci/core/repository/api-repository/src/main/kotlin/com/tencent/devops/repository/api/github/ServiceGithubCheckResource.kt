@@ -2,9 +2,9 @@ package com.tencent.devops.repository.api.github
 
 import com.tencent.devops.common.api.auth.AUTH_HEADER_GITHUB_TOKEN
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.sdk.github.request.CreateCheckRunRequest
-import com.tencent.devops.common.sdk.github.request.UpdateCheckRunRequest
-import com.tencent.devops.common.sdk.github.response.CheckRunResponse
+import com.tencent.devops.repository.sdk.github.request.CreateCheckRunRequest
+import com.tencent.devops.repository.sdk.github.request.UpdateCheckRunRequest
+import com.tencent.devops.repository.sdk.github.response.CheckRunResponse
 import io.swagger.v3.oas.annotations.tags.Tag
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter

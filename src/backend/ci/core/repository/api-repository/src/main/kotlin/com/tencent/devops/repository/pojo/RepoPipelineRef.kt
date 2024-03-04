@@ -64,5 +64,7 @@ data class RepoPipelineRef(
     @get:Schema(title = "触发条件")
     val triggerCondition: String?,
     @get:Schema(title = "触发条件md5")
-    val triggerConditionMd5: String?
+    val triggerConditionMd5: String?,
+    @get:Schema(title = "流水线创建渠道")
+    val channel: String
 )

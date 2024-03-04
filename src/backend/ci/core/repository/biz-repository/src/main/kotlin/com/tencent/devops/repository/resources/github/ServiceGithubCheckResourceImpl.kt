@@ -1,12 +1,12 @@
 package com.tencent.devops.repository.resources.github
 
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.sdk.github.request.CreateCheckRunRequest
-import com.tencent.devops.common.sdk.github.request.UpdateCheckRunRequest
-import com.tencent.devops.common.sdk.github.response.CheckRunResponse
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.repository.api.github.ServiceGithubCheckResource
-import com.tencent.devops.repository.github.service.GithubCheckService
+import com.tencent.devops.repository.sdk.github.request.CreateCheckRunRequest
+import com.tencent.devops.repository.sdk.github.request.UpdateCheckRunRequest
+import com.tencent.devops.repository.sdk.github.response.CheckRunResponse
+import com.tencent.devops.repository.sdk.github.service.GithubCheckService
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
