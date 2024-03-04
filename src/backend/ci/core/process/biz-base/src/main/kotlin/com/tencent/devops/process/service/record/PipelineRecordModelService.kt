@@ -341,8 +341,8 @@ class PipelineRecordModelService @Autowired constructor(
             taskBaseMaps.add(taskBaseMapIndex, taskVarMap)
             containerBaseMap[QUALITY_FLAG] = true
         }
-        val mergeTaskVarFlag = (matrixTaskFlag && elementPostInfo == null && !qualityTaskFlag) ||
-            containerBaseMap[QUALITY_FLAG] == true
+        val mergeTaskVarFlag = (matrixTaskFlag || containerBaseMap[QUALITY_FLAG] == true) &&
+            elementPostInfo == null && !qualityTaskFlag
         if (mergeTaskVarFlag) {
             // 生成完整的task的变量模型
             val taskBaseMap = taskBaseMaps[taskBaseMapIndex]
