@@ -48,7 +48,6 @@ import com.tencent.devops.common.pipeline.pojo.setting.PipelineSetting
 import com.tencent.devops.common.pipeline.pojo.setting.Subscription
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.constant.ProcessMessageCode.BK_INCORRECT_NOTIFICATION_METHOD
-import com.tencent.devops.process.constant.ProcessMessageCode.BK_INVALID_NOTIFICATION_RECIPIENT
 import com.tencent.devops.process.constant.ProcessMessageCode.BK_MESSAGE_CONTENT_EMPTY
 import com.tencent.devops.process.engine.atom.AtomUtils
 import com.tencent.devops.process.engine.common.Timeout

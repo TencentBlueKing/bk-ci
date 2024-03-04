@@ -103,6 +103,7 @@ import com.tencent.devops.common.pipeline.pojo.transfer.TransferActionType
 import com.tencent.devops.common.pipeline.pojo.transfer.TransferBody
 import com.tencent.devops.process.engine.dao.PipelineYamlInfoDao
 import com.tencent.devops.process.service.PipelineOperationLogService
+import com.tencent.devops.process.service.pipeline.PipelineSettingVersionService
 import com.tencent.devops.process.service.pipeline.PipelineTransferYamlService
 import com.tencent.devops.process.util.NotifyTemplateUtils
 import com.tencent.devops.process.utils.PIPELINE_MATRIX_CON_RUNNING_SIZE_MAX
@@ -148,6 +149,7 @@ class PipelineRepositoryService constructor(
     private val templatePipelineDao: TemplatePipelineDao,
     private val templateDao: TemplateDao,
     private val pipelineResourceVersionDao: PipelineResourceVersionDao,
+    private val pipelineSettingVersionService: PipelineSettingVersionService,
     private val pipelineSettingVersionDao: PipelineSettingVersionDao,
     private val pipelineViewGroupDao: PipelineViewGroupDao,
     private val versionConfigure: VersionConfigure,
@@ -1584,6 +1586,25 @@ class PipelineRepositoryService constructor(
 
     fun getSetting(projectId: String, pipelineId: String): PipelineSetting? {
         return pipelineSettingDao.getSetting(dslContext, projectId, pipelineId)
+    }
+
+    fun getSettingByPipelineVersion(
+        projectId: String,
+        pipelineId: String,
+        pipelineVersion: Int
+    ): PipelineSetting? {
+        val resource = pipelineResourceVersionDao.getPipelineVersionSimple(
+            dslContext, projectId, pipelineId, pipelineVersion
+        )
+        return resource?.settingVersion?.let {
+            pipelineSettingVersionService.getPipelineSetting(
+                projectId = projectId,
+                pipelineId = pipelineId,
+                userId = null,
+                detailInfo = null,
+                version = it
+            )
+        } ?: pipelineSettingDao.getSetting(dslContext, projectId, pipelineId)
     }
 
     fun saveSetting(
