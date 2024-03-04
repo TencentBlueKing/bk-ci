@@ -309,7 +309,8 @@ class DeleteControl @Autowired constructor(
                         }.onSuccess {
                             logger.info(
                                 "delete $it when not assign " +
-                                        "|${workspace.workspaceName}|${workspace.lastStatusUpdateTime}|${workspace.hostName}"
+                                        "|${workspace.workspaceName}|${workspace.lastStatusUpdateTime}|" +
+                                        "${workspace.hostName}"
                             )
                             if (it) {
                                 notifyGroups.putIfAbsent(workspace.projectId, mutableListOf(workspace.hostName ?: ""))
@@ -369,7 +370,8 @@ class DeleteControl @Autowired constructor(
                     }.onSuccess {
                         logger.info(
                             "delete $it when sleep 14 day " +
-                                    "|${workspace.workspaceName}|${workspace.lastStatusUpdateTime}|${workspace.hostName}"
+                                    "|${workspace.workspaceName}|${workspace.lastStatusUpdateTime}|" +
+                                    "${workspace.hostName}"
                         )
                         if (it) {
                             notifyControl.notify4UserAndCCRemoteDevManager(
