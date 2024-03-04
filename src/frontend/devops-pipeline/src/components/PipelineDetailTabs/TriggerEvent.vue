@@ -29,7 +29,7 @@
         </header>
         <div class="trigger-event-timeline">
             <trigger-event-timeline v-if="list.length > 0 || isLoadingMore" :list="list" />
-            <empty-exception v-else :type="emptyType" @clear="clearFilter" />
+            <empty-exception v-else :type="emptyType" @clear="clearFilter(queryList)" />
         </div>
 
     </InfiniteScroll>
@@ -43,6 +43,7 @@
     import TriggerEventTimeline from './TriggerEventTimeline.vue'
 
     import '@blueking/search-select/dist/styles/index.css'
+    const DEFAULT_DATE_RANGE = [new Date(new Date().getTime() - 3600 * 1000 * 24 * 7), new Date()]
     export default {
         components: {
             SearchSelect,
@@ -52,7 +53,7 @@
         },
         data () {
             return {
-                dateTimeRange: [new Date().getTime() - 3600 * 1000 * 24 * 7, new Date()],
+                dateTimeRange: [...DEFAULT_DATE_RANGE],
                 searchKey: [],
                 triggerEventList: [],
                 triggerTypeList: [],
@@ -188,7 +189,6 @@
                 }
             },
             handleFilterChange (queryList) {
-                console.log('change')
                 this.$nextTick(() => {
                     queryList(1)
                 })
@@ -202,9 +202,13 @@
                     endTime: this.dateTimeRange[1] ? +(new Date(this.dateTimeRange[1])) : undefined
                 })
             },
-            clearFilter () {
+            clearFilter (queryList) {
                 this.dateTimeRange = []
                 this.searchKey = []
+
+                this.$nextTick(() => {
+                    queryList(1)
+                })
             }
 
         }
@@ -238,6 +242,7 @@
             align-items: center;
             .bk-timeline {
                 align-self: flex-start;
+                width: 100%;
                 .bk-timeline-dot .bk-timeline-content {
                     max-width: none; // TODO: hack
                 }

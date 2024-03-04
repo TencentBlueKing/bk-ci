@@ -220,6 +220,9 @@
             },
             isCodeMode: async function (val) {
                 try {
+                    this.togglePropertyPanel({
+                        isShow: false
+                    })
                     const pipeline = Object.assign({}, this.pipeline, {
                         stages: [
                             this.pipeline.stages[0],
