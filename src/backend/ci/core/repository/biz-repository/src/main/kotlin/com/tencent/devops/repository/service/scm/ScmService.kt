@@ -45,7 +45,7 @@ import com.tencent.devops.scm.pojo.GitMrChangeInfo
 import com.tencent.devops.scm.pojo.GitMrInfo
 import com.tencent.devops.scm.pojo.GitMrReviewInfo
 import com.tencent.devops.scm.pojo.GitProjectInfo
-import com.tencent.devops.scm.pojo.GitSession
+import com.tencent.devops.scm.pojo.LoginSession
 import com.tencent.devops.scm.pojo.RevisionInfo
 import com.tencent.devops.scm.pojo.TokenCheckResult
 import com.tencent.devops.scm.utils.code.svn.SvnUtils
@@ -676,12 +676,12 @@ class ScmService @Autowired constructor(
         ).getCommitReviewInfo(crId = crId)
     }
 
-    override fun getGitSession(
+    override fun getLoginSession(
         type: ScmType,
         username: String,
         password: String,
         url: String
-    ): GitSession? {
+    ): LoginSession? {
         return ScmFactory.getScm(
             projectName = "",
             url = url,
@@ -692,7 +692,7 @@ class ScmService @Autowired constructor(
             token = "",
             region = null,
             userName = null
-        ).getGitSession()
+        ).getLoginSession()
     }
 
     companion object {

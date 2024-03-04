@@ -55,6 +55,7 @@ import com.tencent.devops.repository.constant.RepositoryMessageCode.ERROR_DELETE
 import com.tencent.devops.repository.constant.RepositoryMessageCode.USER_CREATE_PEM_ERROR
 import com.tencent.devops.repository.dao.RepositoryCodeGitDao
 import com.tencent.devops.repository.dao.RepositoryDao
+import com.tencent.devops.repository.pojo.AtomRefRepositoryInfo
 import com.tencent.devops.repository.pojo.AuthorizeResult
 import com.tencent.devops.repository.pojo.CodeGitRepository
 import com.tencent.devops.repository.pojo.RepoRename
@@ -174,7 +175,8 @@ class RepositoryService @Autowired constructor(
                 authType = RepoAuthType.OAUTH,
                 projectId = projectCode,
                 repoHashId = null,
-                gitProjectId = 0L
+                gitProjectId = 0L,
+                atom = true
             )
 
             // 关联代码库
@@ -755,6 +757,7 @@ class RepositoryService @Autowired constructor(
                 createTime = it.createdTime.timestamp(),
                 createUser = it.userId,
                 updatedUser = it.updatedUser ?: it.userId,
+                atom = it.atom ?: false,
                 enablePac = it.enablePac
             )
         }
@@ -879,7 +882,13 @@ class RepositoryService @Autowired constructor(
         return SQLPage(count, repositoryList)
     }
 
-    fun userDelete(userId: String, projectId: String, repositoryHashId: String, checkPac: Boolean = true) {
+    fun userDelete(
+        userId: String,
+        projectId: String,
+        repositoryHashId: String,
+        checkAtom: Boolean = true,
+        checkPac: Boolean = true
+    ) {
         val repositoryId = HashUtil.decodeOtherIdToLong(repositoryHashId)
         validatePermission(
             user = userId,
@@ -896,6 +905,14 @@ class RepositoryService @Autowired constructor(
         val record = repositoryDao.get(dslContext, repositoryId, projectId)
         if (record.projectId != projectId) {
             throw NotFoundException("Repository is not part of the project")
+        }
+        if (checkAtom && record.atom == true) {
+            throw OperationException(
+                MessageUtil.getMessageByLocale(
+                    RepositoryMessageCode.ATOM_REPO_CAN_NOT_DELETE,
+                    I18nUtil.getLanguage(userId)
+                )
+            )
         }
         if (checkPac && record.enablePac == true) {
             throw ErrorCodeException(errorCode = ERROR_DELETE_BECAUSE_ENABLED_PAC)
@@ -1174,6 +1191,36 @@ class RepositoryService @Autowired constructor(
             hashId = repositoryHashId,
             newName = repoRename.name
         )
+        // 同步权限中心
+        editResource(projectId, repositoryId, repoRename.name)
+    }
+
+    fun updateAtomRepoFlag(
+        userId: String,
+        atomRefRepositoryInfo: List<AtomRefRepositoryInfo>
+    ) {
+        logger.info("start update atom repo flag, userId: $userId, atomRefRepositoryInfo: $atomRefRepositoryInfo")
+        if (atomRefRepositoryInfo.isEmpty()) {
+            return
+        }
+        val repoInfos = mutableListOf <TRepositoryRecord>()
+        // 过滤无效数据
+        atomRefRepositoryInfo.forEach {
+            val repositoryRecord = repositoryDao.getById(
+                dslContext = dslContext,
+                repositoryId = HashUtil.decodeOtherIdToLong(it.repositoryHashId)
+            ) ?: return@forEach
+            repoInfos.add(repositoryRecord)
+        }
+        repoInfos.forEach {
+            logger.info("update atom repo flag|${it.projectId}|${it.repositoryHashId}")
+            repositoryDao.updateAtomRepoFlag(
+                dslContext = dslContext,
+                projectId = it.projectId,
+                repositoryId = it.repositoryId,
+                atom = true
+            )
+        }
     }
 
     fun isOAuth(

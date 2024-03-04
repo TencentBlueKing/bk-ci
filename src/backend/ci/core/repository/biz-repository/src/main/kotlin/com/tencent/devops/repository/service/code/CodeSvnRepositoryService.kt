@@ -169,6 +169,7 @@ class CodeSvnRepositoryService @Autowired constructor(
         repoCredentialInfo: RepoCredentialInfo,
         repository: CodeSvnRepository
     ): TokenCheckResult {
+        val projectName = SvnUtils.getSvnProjectName(repository.getFormatURL())
         return when (repository.svnType) {
             SVN_TYPE_HTTP -> {
                 var username = repoCredentialInfo.username
@@ -188,7 +189,7 @@ class CodeSvnRepositoryService @Autowired constructor(
                     )
                 }
                 scmService.checkUsernameAndPassword(
-                    projectName = repository.projectName,
+                    projectName = projectName,
                     url = repository.getFormatURL(),
                     type = ScmType.CODE_SVN,
                     username = username,
@@ -200,12 +201,12 @@ class CodeSvnRepositoryService @Autowired constructor(
             }
             SVN_TYPE_SSH -> {
                 scmService.checkPrivateKeyAndToken(
-                    projectName = repository.projectName,
+                    projectName = projectName,
                     url = repository.getFormatURL(),
                     type = ScmType.CODE_SVN,
                     privateKey = repoCredentialInfo.privateKey,
                     passPhrase = repoCredentialInfo.passPhrase,
-                    token = "",
+                    token = repoCredentialInfo.token,
                     region = repository.region,
                     userName = repository.userName
                 )
