@@ -202,5 +202,6 @@
     "代码库不存在": "Code repository does not exist”",
     "该代码库不存在，请切换代码库": "This code repository does not exist, please switch to another code repository",
     "申请权限": "Apply permission",
-    "请先关闭 PAC 模式，再删除代码库": "Please close PAC mode before deleting the repository"
+    "请先关闭 PAC 模式，再删除代码库": "Please close PAC mode before deleting the repository",
+    "代码库下管理的流水线": "Pipelines"
 }

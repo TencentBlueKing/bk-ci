@@ -580,6 +580,13 @@ const actions = {
         repositoryHashId
     }) {
         return vue.$ajax.get(`${PROCESS_API_URL_PREFIX}/user/pipeline/yaml/${projectId}/${repositoryHashId}/listSyncFailedYaml`)
+    },
+
+    getYamlPipelines ({ commit }, {
+        projectId,
+        repositoryHashId
+    }) {
+        return vue.$ajax.get(`${PROCESS_API_URL_PREFIX}/user/pipeline/yaml/${projectId}/${repositoryHashId}/listYamlPipeline`)
     }
 }
 

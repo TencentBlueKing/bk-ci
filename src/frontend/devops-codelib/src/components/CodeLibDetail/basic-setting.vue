@@ -131,7 +131,11 @@
                     </div>
 
                     <div v-if="syncStatus === 'SUCCEED'" class="pipeline-count">
-                        {{ $t('codelib.共N条流水线', [pipelineCount]) }}
+                        <i18n
+                            tag="div"
+                            path="codelib.共N条流水线">
+                            <button class="bk-text-button" @click="isShowPipeline = true">{{ pipelineCount }}</button>
+                        </i18n>
                     </div>
                     
                     <!-- 同步中 -->
@@ -356,6 +360,25 @@
                 <bk-button @click="showSyncFailedDetail = !showSyncFailedDetail">{{ $t('codelib.关闭') }}</bk-button>
             </template>
         </bk-dialog>
+
+        <bk-sideslider
+            :is-show.sync="isShowPipeline"
+            :width="700"
+            quick-close
+            :title="$t('codelib.代码库下管理的流水线')"
+        >
+            <div slot="content" style="padding: 20px;">
+                <bk-table
+                    :data="pipelineList"
+                >
+                    <bk-table-column :label="$t('codelib.流水线名称')" prop="pipelineName">
+                        <template slot-scope="{ row }">
+                            <a :href="`/console/pipeline/${projectId}/${row.pipelineId}/history/history`" target="_blank">{{ row.pipelineName }}</a>
+                        </template>
+                    </bk-table-column>
+                </bk-table>
+            </div>
+        </bk-sideslider>
     </section>
 </template>
 <script>
@@ -432,7 +455,9 @@
                 showSyncFailedDetail: false,
                 syncFailedPipelineList: [],
                 pipelineCount: 0,
-                refreshLoading: false
+                refreshLoading: false,
+                isShowPipeline: false,
+                pipelineList: []
             }
         },
         computed: {
@@ -486,7 +511,6 @@
                             await this.handleTogglePacStatus()
                         } else if (['resetGitOauth', 'resetTGitOauth', 'resetGithubOauth'].includes(resetType)) {
                             this.userId = userId
-                            // await this.handleResetAuth()
                         }
                     }, 200)
                 },
@@ -496,32 +520,7 @@
                 this.time = 1000
                 this.syncStatus = ''
             },
-            codelibTypeConstants (val) {
-                // 校验是否已经授权了OAUTh
-                // switch (val) {
-                //     case 'git':
-                //         this.refreshGitOauth({
-                //             type: 'git',
-                //             resetType: 'checkGitOauth',
-                //             redirectUrl: window.location.href
-                //         })
-                //         break
-                //     case 'github':
-                //         this.refreshGithubOauth({
-                //             projectId: this.projectId,
-                //             resetType: 'checkGithubOauth',
-                //             redirectUrl: window.location.href
-                //         })
-                //         break
-                //     case 'tgit':
-                //         this.refreshGitOauth({
-                //             type: 'tgit',
-                //             resetType: 'checkTGitOauth',
-                //             redirectUrl: window.location.href
-                //         })
-                //         break
-                // }
-            },
+            
             showSyncFailedDetail (val) {
                 if (val) {
                     this.getListYamlSync({
@@ -551,6 +550,21 @@
                 if (val === 'SYNC') {
                     this.fetchYamlSyncStatus()
                 }
+            },
+
+            isShowPipeline (val) {
+                if (val) {
+                    this.getYamlPipelines({
+                        projectId: this.projectId,
+                        repositoryHashId: this.repoInfo.repoHashId
+                    }).then(res => {
+                        this.pipelineList = res.records
+                    }).catch(e => {
+                        console.error(e)
+                    })
+                } else {
+                    this.pipelineList = []
+                }
             }
         },
         created () {
@@ -572,7 +586,8 @@
                 'retrySyncRepository',
                 'getListYamlSync',
                 'getYamlSyncStatus',
-                'getPacPipelineCount'
+                'getPacPipelineCount',
+                'getYamlPipelines'
             ]),
             prettyDateTimeFormat,
 
@@ -615,6 +630,8 @@
                     repositoryHashId: this.repoInfo.repoHashId
                 }).then(res => {
                     this.hasCiFolder = res
+                }).catch(e => {
+                    console.error(e)
                 }).finally(() => {
                     this.refreshLoading = false
                 })
