@@ -65,7 +65,7 @@
   },
   "peerDependencies": {
     "vue": "~2.7.16",
-    "@tencent/bk-magic-vue": "2.5.9-beta.5"
+    "@tencent/bk-magic-vue": "2.5.9-beta.6"
   },
   "keywords": [
     "pipeline",
