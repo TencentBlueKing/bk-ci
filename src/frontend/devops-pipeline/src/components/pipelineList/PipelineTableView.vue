@@ -4,7 +4,7 @@
         v-bkloading="{ isLoading }"
         ref="pipelineTable"
         row-key="pipelineId"
-        height="100%"
+        :max-height="maxHeight"
         row-auto-height
         :data="pipelineList"
         :size="tableSize"
@@ -334,6 +334,10 @@
         mixins: [pipelineActionMixin],
         props: {
             isPatchView: Boolean,
+            maxHeight: {
+                type: Number,
+                default: 0
+            },
             filterParams: {
                 type: Object,
                 default: () => ({})
@@ -368,9 +372,6 @@
             ]),
             isAllPipelineView () {
                 return this.$route.params.viewId === ALL_PIPELINE_VIEW_ID
-            },
-            maxheight () {
-                return this.$refs?.pipelineTable?.$el?.parent?.clientHeight
             },
             isDeleteView () {
                 return this.$route.params.viewId === DELETED_VIEW_ID

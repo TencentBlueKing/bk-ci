@@ -104,10 +104,11 @@
                 </div>
             </header>
         </template>
-        <div class="pipeline-list-box">
+        <div class="pipeline-list-box" ref="tableBox">
             <pipeline-table-view
                 v-if="isTableLayout"
                 :filter-params="filters"
+                :max-height="$refs.tableBox?.offsetHeight"
                 ref="pipelineBox"
             />
             <pipelines-card-view
