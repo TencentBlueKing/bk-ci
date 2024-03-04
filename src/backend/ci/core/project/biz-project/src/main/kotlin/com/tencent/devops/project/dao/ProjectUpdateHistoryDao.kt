@@ -69,7 +69,7 @@ class ProjectUpdateHistoryDao {
         }
     }
 
-    fun listTwentyFourHours (
+    fun listTwentyFourHours(
         dslContext: DSLContext
     ): Result<TProjectUpdateHistoryRecord> {
         val currentTime = LocalDateTime.now()
