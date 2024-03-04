@@ -14,9 +14,9 @@
                 />
             </bk-select>
         </header>
-        <section class="pipeline-changelog-content">
+        <section class="pipeline-changelog-content" ref="tableBox">
             <bk-table
-                height="100%"
+                :max-height="$refs?.tableBox?.offsetHeight"
                 :data="operateLogs"
                 :pagination="pagination"
             >
