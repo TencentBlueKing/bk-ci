@@ -56,7 +56,7 @@ class QueryAgentStatusService @Autowired constructor(
         private val logger = LoggerFactory.getLogger(QueryAgentStatusService::class.java)
         private const val DEFAULT_AGENT_CONDITION_KEY = "inner_ip"
         private const val DEFAULT_EXTRA_DATA = "job_result"
-        private const val DEFAULT_PAGE_SIZE = 20
+        private const val DEFAULT_PAGE_SIZE = 100
         private const val DEFAULT_PAGE = 1
         private const val DEFAULT_ONLY_IP = false
         private const val DEFAULT_RUNNING_COUNT = false
