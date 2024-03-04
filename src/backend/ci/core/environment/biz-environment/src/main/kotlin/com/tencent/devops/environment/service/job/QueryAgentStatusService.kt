@@ -62,6 +62,7 @@ class QueryAgentStatusService @Autowired constructor(
         private const val DEFAULT_RUNNING_COUNT = false
         private const val INSTALLED_AGENT_TAG = true
         private const val NOT_INSTALLED_AGENT_TAG = false
+        private const val AGENT_ABNORMAL_STATUS = 0
     }
 
     fun getAgentVersions(ipAndHostIdList: List<AgentVersion>): List<AgentVersion>? {
@@ -84,8 +85,11 @@ class QueryAgentStatusService @Autowired constructor(
                 logger.info("[getAgentVersions]installedHostIdList is null or empty.")
                 emptyList()
             } else {
+                // 2.1.1 调用job的接口查询agent状态，有对应返回
                 val jobRes = getAgentVersionsFromJob(installedHostIdList)
-                jobRes.data?.agentInfoList?.map {
+                val hostIdMutableList = hostIdList.toMutableList()
+                val jobResAgentVersion = jobRes.data?.agentInfoList?.map {
+                    hostIdMutableList.remove(it.bkHostId)
                     AgentVersion(
                         ip = hostIdToAgentVersionMap[it.bkHostId]?.ip,
                         bkHostId = it.bkHostId,
@@ -94,15 +98,28 @@ class QueryAgentStatusService @Autowired constructor(
                         status = it.status
                     )
                 }
+                // 2.1.2 调用job的接口查询agent状态，没有对应返回 (查询节点管理 - 已安装agent，查询job - 无对应返回，认为此时agent异常)
+                val agentAbnormalList = if (hostIdMutableList.isNotEmpty()) {
+                    hostIdMutableList.map {
+                        AgentVersion(
+                            ip = hostIdToAgentVersionMap[it]?.ip,
+                            bkHostId = it,
+                            installedTag = INSTALLED_AGENT_TAG,
+                            version = null,
+                            status = AGENT_ABNORMAL_STATUS
+                        )
+                    }
+                } else emptyList()
+                jobResAgentVersion?.plus(agentAbnormalList)
             }
         logger.info(
             "[getAgentVersions]installedAgentVersionList: " +
                 installedAgentVersionList?.joinToString(separator = ", ", transform = { it.toString() })
         )
+        // 2.2 未安装agent
         val notInstalledAgentHostIdList = nodemanRes.data?.list?.filter { // 未安装agent，不再查job了
             it?.status == "NOT_INSTALLED"
         }?.mapNotNull { it?.bkHostId }
-        // 2.2 未安装agent
         val notInstalledAgentVersionList =
             if (notInstalledAgentHostIdList.isNullOrEmpty())
                 emptyList()
