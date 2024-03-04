@@ -820,6 +820,9 @@ object ScriptYmlUtils {
             val timePoints = interval.timePoints ?: listOf("00:00")
             timePoints.forEach { time ->
                 val (h, m) = time.split(":").map { it.toIntOrNull() ?: return@let }
+                if (h !in 0 until 25 || m !in 0 until 61) {
+                    throw YamlFormatException("$time is not valid")
+                }
                 newExpression.add("0 $m $h ? * ${week.joinToString(separator = ",")}")
             }
         }
