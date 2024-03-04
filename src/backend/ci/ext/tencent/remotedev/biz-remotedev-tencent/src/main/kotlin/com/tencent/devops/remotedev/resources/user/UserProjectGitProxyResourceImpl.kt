@@ -48,7 +48,11 @@ class UserProjectGitProxyResourceImpl @Autowired constructor(
         return Result(gitProxyService.deleteRepo(userId, projectId, repoName))
     }
 
-    override fun linktgit(userId: String, projectId: String, data: LinktgitData): Result<Map<String, Boolean>> {
+    override fun linktgit(
+        userId: String,
+        projectId: String,
+        data: LinktgitData
+    ): Result<Map<Long, Pair<String, Boolean>>> {
         return Result(gitProxyTGitService.checkUserPermission(userId, projectId, data.codeUrls))
     }
 
@@ -56,7 +60,7 @@ class UserProjectGitProxyResourceImpl @Autowired constructor(
         return Result(gitProxyTGitService.tgitLinkList(projectId))
     }
 
-    override fun deleteTgitRepo(userId: String, projectId: String, url: String): Result<Boolean> {
-        return Result(gitProxyTGitService.deleteTgitLink(userId, projectId, url))
+    override fun deleteTgitRepo(userId: String, projectId: String, repoId: Long, url: String): Result<Boolean> {
+        return Result(gitProxyTGitService.deleteTgitLink(userId, projectId, repoId, url))
     }
 }

@@ -61,5 +61,7 @@ data class ExperienceServiceCreate(
     @get:Schema(title = "产品负责人", required = true)
     val productOwner: List<String>?,
     @get:Schema(title = "是否发送通知", required = false)
-    val sendNotification: Boolean = true
+    val sendNotification: Boolean = true,
+    @get:Schema(title = "scheme", required = false)
+    val scheme: String? = null
 )
