@@ -19,10 +19,11 @@
                     @change="queryVersionList"
                 />
             </header>
-            <section class="pipeline-version-history-content">
+            <section class="pipeline-version-history-content" ref="tableBox">
                 <bk-table
                     :data="pipelineVersionList"
                     :pagination="pagination"
+                    :max-height="$refs?.tableBox?.offsetHeight"
                     size="small"
                 >
                     <empty-exception :type="emptyType" slot="empty" @clear="clearFilter"></empty-exception>

@@ -57,10 +57,10 @@
                 </div>
             </div>
         </bk-exception>
-        <div class="bkdevops-build-history-table-wrapper" v-else>
+        <div class="bkdevops-build-history-table-wrapper" ref="tableBox" v-else>
             <bk-table
                 class="bkdevops-build-history-table"
-                height="100%"
+                :max-height="$refs?.tableBox?.offsetHeight"
                 :data="buildHistoryList"
                 :row-class-name="handleRowStyle"
                 :empty-text="$t('history.filterNullTips')"
