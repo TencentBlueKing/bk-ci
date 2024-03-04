@@ -28,8 +28,8 @@
 package com.tencent.devops.common.web.handler
 
 import com.tencent.devops.common.api.constant.CommonMessageCode
+import com.tencent.devops.common.api.exception.SdkException
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.sdk.exception.SdkException
 import com.tencent.devops.common.service.Profile
 import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.common.web.annotation.BkExceptionMapper

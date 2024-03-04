@@ -29,12 +29,12 @@
 package com.tencent.devops.repository.resources.github
 
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.sdk.github.request.GetRepositoryPermissionsRequest
-import com.tencent.devops.common.sdk.github.request.GetRepositoryRequest
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.repository.api.github.ServiceGithubPermissionResource
-import com.tencent.devops.repository.github.service.GithubRepositoryService
 import com.tencent.devops.repository.pojo.enums.GithubAccessLevelEnum
+import com.tencent.devops.repository.sdk.github.request.GetRepositoryPermissionsRequest
+import com.tencent.devops.repository.sdk.github.request.GetRepositoryRequest
+import com.tencent.devops.repository.sdk.github.service.GithubRepositoryService
 import com.tencent.devops.repository.service.github.GithubTokenService
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired

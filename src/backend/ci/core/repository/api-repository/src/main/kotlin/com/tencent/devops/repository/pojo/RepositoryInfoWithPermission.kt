@@ -62,6 +62,8 @@ data class RepositoryInfoWithPermission(
     val svnType: String? = null,
     @get:Schema(title = "授权身份", required = true)
     val authIdentity: String? = null,
+    @get:Schema(title = "插件仓库", required = true)
+    val atom: Boolean? = false,
     @get:Schema(title = "是否启用pac", required = true)
     val enablePac: Boolean? = false
 )

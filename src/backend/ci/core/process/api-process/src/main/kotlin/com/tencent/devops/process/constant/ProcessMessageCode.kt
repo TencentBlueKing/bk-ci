@@ -329,6 +329,7 @@ object ProcessMessageCode {
     const val ERROR_YAML_BOUND_PIPELINE = "2101215" // 文件{0}已绑定流水线{1}
     const val ERROR_YAML_PUSH_NO_REPO_PERMISSION = "2101216" // 发布必须仓库developer以上权限
     const val ERROR_REPO_NO_INIT = "2101217" // 默认分支不存在,请先初始化代码库
+    const val ERROR_REPOSITORY_NOT_OAUTH = "2101218" // 当前代码库关联人({0})未进行OAUTH授权，请尝试切换代码库凭证类型
 
     const val BK_SUCCESSFULLY_DISTRIBUTED = "bkSuccessfullyDistributed" // 跨项目构件分发成功，共分发了{0}个文件
     const val BK_SUCCESSFULLY_FAILED = "bkSuccessfullyFailed" // 跨项目构件分发失败，
