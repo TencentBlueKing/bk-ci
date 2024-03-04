@@ -61,7 +61,7 @@ class PipelineSettingVersionService @Autowired constructor(
     fun getPipelineSetting(
         projectId: String,
         pipelineId: String,
-        userId: String,
+        userId: String?,
         detailInfo: PipelineDetailInfo?,
         channelCode: ChannelCode = ChannelCode.BS,
         version: Int
@@ -70,9 +70,11 @@ class PipelineSettingVersionService @Autowired constructor(
         var settingInfo = pipelineSettingDao.getSetting(dslContext, projectId, pipelineId)
 
         // 获取已生效的流水线的标签和分组
-        val groups = pipelineGroupService.getGroups(userId, projectId, pipelineId)
+        val groups = userId?.let {
+            pipelineGroupService.getGroups(userId, projectId, pipelineId)
+        }
         val labels = ArrayList<String>()
-        groups.forEach {
+        groups?.forEach {
             labels.addAll(it.labels)
         }
         if (settingInfo == null) {
