@@ -599,7 +599,7 @@
                         id: 'displayName'
                     },
                     {
-                        name: this.$t('environment.envInfo.creator'),
+                        name: this.$t('environment.importer'),
                         id: 'createdUser'
                     },
                     {

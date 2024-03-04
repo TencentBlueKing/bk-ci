@@ -68,7 +68,7 @@
                         :placeholder="$t('environment.passwordPlaceholder')"
                         @change="handleChangeData"
                     />
-                    <div class="password-tips">{{ $t('environment.passwordTips') }}</div>
+                    <div v-if="formData.authType === 'PASSWORD'" class="password-tips">{{ $t('environment.passwordTips', [formData.osType === 'WINDOWS' ? 'Administrator' : 'root']) }}</div>
                 </bk-form-item>
                 <bk-form-item
                     v-else
@@ -86,7 +86,7 @@
                         :multiple="false"
                     >
                     </bk-upload>
-                    <div class="keyFile-tips">{{ $t('environment.keyFileTips') }}</div>
+                    <div v-if="formData.authType === 'PASSWORD'" class="keyFile-tips">{{ $t('environment.keyFileTips', [formData.osType === 'WINDOWS' ? 'Administrator' : 'root']) }}</div>
                 </bk-form-item>
                 <bk-form-item
                     :label="$t('environment.installationChannel')"
