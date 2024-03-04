@@ -576,6 +576,11 @@ class PipelineContainerService @Autowired constructor(
                 executeCount = context.executeCount
             )
         }
+        logger.info(
+            "prepareBuildContainerTasks|buildId=${context.buildId}|matrixGroupFlag=${container.matrixGroupFlag}|" +
+                "needUpdateContainer=$needUpdateContainer|needStartVM=$needStartVM|" +
+                "startVMTaskSeq=${container.startVMTaskSeq}"
+        )
         if (needUpdateContainer) {
             container.resetBuildOption(context.executeCount)
             if (lastTimeBuildContainers.isNotEmpty()) {

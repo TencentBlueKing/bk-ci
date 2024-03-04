@@ -67,6 +67,10 @@ class PipelineRecordModelService @Autowired constructor(
     private val modelTaskIdGenerator: ModelTaskIdGenerator
 ) {
 
+    companion object {
+        private const val QUALITY_FLAG = "qualityFlag"
+    }
+
     /**
      * 生成构建变量模型map集合
      * @param mergeBuildRecordParam 合并流水线变量模型参数
@@ -335,9 +339,12 @@ class PipelineRecordModelService @Autowired constructor(
             taskVarMap["@type"] = classType
             taskVarMap[KEY_ATOM_CODE] = atomCode
             taskBaseMaps.add(taskBaseMapIndex, taskVarMap)
+            containerBaseMap[QUALITY_FLAG] = true
         }
-        if (matrixTaskFlag && elementPostInfo == null && !qualityTaskFlag) {
-            // 生成矩阵task的变量模型
+        val mergeTaskVarFlag = (matrixTaskFlag && elementPostInfo == null && !qualityTaskFlag) ||
+            containerBaseMap[QUALITY_FLAG] == true
+        if (mergeTaskVarFlag) {
+            // 生成完整的task的变量模型
             val taskBaseMap = taskBaseMaps[taskBaseMapIndex]
             taskVarMap = ModelUtils.generateBuildModelDetail(taskBaseMap.deepCopy(), taskVarMap)
         }
