@@ -262,7 +262,7 @@ data class AgentService @Autowired constructor(
                     nodeDao.updateNodeStatusByNodeIp(dslContext, runningIpList, NodeStatus.ABNORMAL.name, null)
                     executor.shutdown()
                 } else {
-                    if (logger.isDebugEnabled) logger.debug("Agent install task running...")
+                    logger.debug("Agent install task running...")
                     count++
                 }
             }
