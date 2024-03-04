@@ -85,7 +85,7 @@
         wechatGroup: '',
         wechatGroupMarkdownFlag: false,
         detailFlag: false,
-        content: '【${BK_CI_PROJECT_NAME_CN}】- 【${BK_CI_PIPELINE_NAME}】#${BK_CI_BUILD_NUM} 执行成功，耗时${BK_CI_BUILD_TOTAL_TIME}, 触发人: ${BK_CI_START_USER_NAME}。'
+        content: window.pipelineVue?.$i18n?.t('settings.defaultSuc')
     }
 
     const defaultFail = {
@@ -96,7 +96,7 @@
         wechatGroup: '',
         wechatGroupMarkdownFlag: false,
         detailFlag: false,
-        content: '【${BK_CI_PROJECT_NAME_CN}】- 【${BK_CI_PIPELINE_NAME}】#${BK_CI_BUILD_NUM} 执行成功，耗时${BK_CI_BUILD_TOTAL_TIME}, 触发人: ${BK_CI_START_USER_NAME}。'
+        content: window.pipelineVue?.$i18n?.t('settings.defaultFail')
     }
 
     export default {
@@ -272,6 +272,7 @@
         }
     }
     .edit-notify-container {
+        z-index: 2010;
         .edit-notify-content {
             padding: 20px 24px;
         }
@@ -282,7 +283,6 @@
                 margin-left: 24px;
             }
         }
-        /* .bk-s */
     }
 
     @media screen and (max-width: 1496px) { /*当屏幕尺寸小于1496px时，应用下面的CSS样式*/
