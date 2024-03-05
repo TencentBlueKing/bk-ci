@@ -51,6 +51,7 @@ stages:
 
               cd ${WORKSPACE}/scripts/
               cp -rf ci_env_test.properties ci_env.properties
+              echo "BK_CI_VERSION=\"$(date +%s)\"" >> ci_env.properties
               sh ./render_ci -m ci ../support-files/templates/*
 
               cd ${WORKSPACE}/ci/frontend/

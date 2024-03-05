@@ -574,6 +574,25 @@
         false
       )
     }
+
+    function detectNewVersion() {
+      var xhr = new XMLHttpRequest()
+      xhr.open('GET', '/console/', true)
+      xhr.onreadystatechange = function () {
+        if (xhr.readyState === 4 && xhr.status === 200) {
+          var versions = xhr.responseText.match(/BK_CI_VERSION="(.+?)"/)
+          var version = versions && versions[1]
+          console.log(version)
+          if (version !== '__BK_CI_VERSION__') {
+            console.log('has new Version')
+            // window.location.reload(true)
+          }
+        }
+      }
+      xhr.send()
+    }
+
+    window.requestIdleCallback(detectNewVersion)
   </script>
 </body>
 
