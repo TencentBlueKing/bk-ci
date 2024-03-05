@@ -41,7 +41,6 @@ import validDictionary from './utils/validDictionary'
 
 import { handlePipelineNoPermission, RESOURCE_ACTION } from '@/utils/permission'
 import bkMagic from '@tencent/bk-magic-vue'
-import BkPipeline from 'bkui-pipeline'
 // 权限指令
 import '@tencent/bk-magic-vue/dist/bk-magic-vue.min.css'
 import { BkPermission, PermissionDirective } from 'bk-permission'
@@ -74,9 +73,6 @@ Vue.use(VeeValidate, {
 })
 VeeValidate.Validator.localize(validDictionary)
 ExtendsCustomRules(VeeValidate.Validator.extend)
-Vue.use(BkPipeline, {
-    i18n
-})
 
 Vue.prototype.$setLocale = setLocale
 Vue.prototype.isExtendTx = VERSION_TYPE === 'tencent'

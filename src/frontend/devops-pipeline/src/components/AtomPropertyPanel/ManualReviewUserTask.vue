@@ -5,7 +5,7 @@
                 <component
                     :is="obj.component"
                     v-bind="obj"
-                    v-model="element[key]"
+                    :value="element[key]"
                     :disabled="disabled"
                     :handle-change="handleChange"
                     :show-content="disabled"
@@ -22,7 +22,7 @@
                     <div>
                         {{ $t('editPage.every') }}
                         <vuex-input
-                            v-model="element.reminderTime"
+                            :value="element.reminderTime"
                             class="remind-number-input"
                             v-validate.initial="{ reminderTimeRule: true }"
                             name="reminderTime"

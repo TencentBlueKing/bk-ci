@@ -104,14 +104,15 @@
     import StageReviewPanel from './StageReviewPanel'
     import AtomSelector from './AtomSelector'
     import { isObject, areDeeplyEqual } from '../utils/util'
-
+    import BkPipeline, { loadI18nMessages } from 'bkui-pipeline'
     export default {
         components: {
             StagePropertyPanel,
             AtomPropertyPanel,
             ContainerPropertyPanel,
             StageReviewPanel,
-            AtomSelector
+            AtomSelector,
+            BkPipeline
         },
         props: {
             isSaving: {
@@ -256,6 +257,9 @@
                 },
                 deep: true
             }
+        },
+        created () {
+            loadI18nMessages(this.$i18n)
         },
         beforeDestroy () {
             this.toggleAtomSelectorPopup(false)

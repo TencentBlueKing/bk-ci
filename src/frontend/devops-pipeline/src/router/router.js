@@ -23,7 +23,7 @@ import zyPipelineRoute from './zhiyan'
 
 const pipelines = () => import(/* webpackChunkName: "pipelines" */'../views')
 
-const CreatePipeline = () => import(/* webpackChunkName: "pipelines" */'../views/CreatePipeline.vue')
+const CreatePipeline = () => import(/* webpackChunkName: "pipelineCreate" */'../views/CreatePipeline.vue')
 const pipelinesNewList = () => import(/* webpackChunkName: "pipelinesNewList" */'../views/PipelineList/list')
 const PipelineManageList = () => import(/* webpackChunkName: "pipelinesNewList" */'../views/PipelineList/PipelineManageList')
 const PatchManageList = () => import(/* webpackChunkName: "pipelinesNewList" */'../views/PipelineList/PatchManageList')
