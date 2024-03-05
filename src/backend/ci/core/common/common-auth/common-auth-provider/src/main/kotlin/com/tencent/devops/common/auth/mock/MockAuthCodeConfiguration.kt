@@ -54,7 +54,7 @@ import org.springframework.context.annotation.Configuration
  * mock serviceCode
  */
 @Configuration
-class MockAuthCodeAutoConfiguration {
+class MockAuthCodeConfiguration {
     @Bean
     @ConditionalOnMissingBean(BcsAuthServiceCode::class)
     fun bcsAuthServiceCode() = MockBcsAuthServiceCode()
