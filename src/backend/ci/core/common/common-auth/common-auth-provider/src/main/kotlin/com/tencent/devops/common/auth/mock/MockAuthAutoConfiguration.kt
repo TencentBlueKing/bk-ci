@@ -50,7 +50,7 @@ import org.springframework.context.annotation.Import
 @Configuration
 @ConditionalOnWebApplication
 @ConditionalOnProperty(prefix = "auth", name = ["idProvider"], havingValue = "sample")
-@Import(MockAuthCodeAutoConfiguration::class)
+@Import(MockAuthCodeConfiguration::class)
 class MockAuthAutoConfiguration {
 
     @Bean
