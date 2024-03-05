@@ -69,6 +69,7 @@ import org.slf4j.LoggerFactory
 import org.slf4j.MDC
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
+import java.util.concurrent.Executors
 
 @Service
 class RestartWorkspaceHandler @Autowired constructor(
@@ -83,6 +84,7 @@ class RestartWorkspaceHandler @Autowired constructor(
     private val workspaceOpHistoryDao: WorkspaceOpHistoryDao,
     private val notifyControl: NotifyControl
 ) {
+    private val executor = Executors.newCachedThreadPool()
 
     companion object {
         private val logger = LoggerFactory.getLogger(RestartWorkspaceHandler::class.java)
@@ -241,6 +243,14 @@ class RestartWorkspaceHandler @Autowired constructor(
                         "time" to DateTimeUtil.formatDate(Date())
                     )
                 )
+            }
+            // 重装成功后做异步设置(L盘挂载)
+            val hostIdSub = event.environmentIp?.split(".")
+            val ip = hostIdSub?.subList(1, hostIdSub.size)?.joinToString(separator = ".")
+            ip?.let { it ->
+                executor.execute {
+                    workspaceCommon.makeDiskMount(it, event.userId)
+                }
             }
         } else {
             // 启动失败,记录为EXCEPTION
