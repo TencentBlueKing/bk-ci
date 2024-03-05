@@ -457,11 +457,9 @@
             },
             column () {
                 Object.keys(this.BUILD_HISTORY_TABLE_COLUMNS_MAP).map((item) => {
-                    if (this.customColumn.includes(item)) {
-                        const localStorageVal = localStorage.getItem(`${item}Width`)
-                        if (localStorageVal) {
-                            this.BUILD_HISTORY_TABLE_COLUMNS_MAP[item].width = localStorageVal
-                        }
+                    const localStorageVal = localStorage.getItem(`${item}Width`)
+                    if (localStorageVal) {
+                        this.BUILD_HISTORY_TABLE_COLUMNS_MAP[item].width = localStorageVal
                     }
                     return item
                 })
@@ -578,10 +576,7 @@
                 }
             },
             handleDragend (newWidth, oldWidth, column) {
-                if (this.customColumn.includes(column.property)) {
-                    localStorage.setItem(`${column.property}Width`, newWidth)
-                }
-
+                localStorage.setItem(`${column.property}Width`, newWidth)
                 this.BUILD_HISTORY_TABLE_COLUMNS_MAP[column.property].width = newWidth
             },
             getArchiveUrl ({ id: buildNo }, type = '', codelib = '') {
