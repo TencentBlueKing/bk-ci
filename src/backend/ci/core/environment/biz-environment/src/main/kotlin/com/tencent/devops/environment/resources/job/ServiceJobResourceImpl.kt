@@ -207,6 +207,10 @@ class ServiceJobResourceImpl @Autowired constructor(
         stockDataUpdateService.checkDeployNodes()
     }
 
+    override fun updateGseAgent(userId: String) {
+        stockDataUpdateService.scheduledUpdateGseAgent()
+    }
+
     private fun checkParamBlank(userId: String, projectId: String) {
         if (userId.isBlank()) {
             throw ParamBlankException("userId is blank.")

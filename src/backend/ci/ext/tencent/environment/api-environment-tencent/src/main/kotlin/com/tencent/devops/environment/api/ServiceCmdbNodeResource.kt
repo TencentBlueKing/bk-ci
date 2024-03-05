@@ -102,13 +102,4 @@ interface ServiceCmdbNodeResource {
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String = AUTH_HEADER_USER_ID_DEFAULT_VALUE
     )
-
-    @Operation(summary = "gse agent状态版本更新接口")
-    @POST
-    @Path("/stock_data_update/update_gse_agent")
-    fun updateGseAgent(
-        @Parameter(description = "用户ID", required = true)
-        @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String = AUTH_HEADER_USER_ID_DEFAULT_VALUE
-    )
 }

@@ -73,8 +73,4 @@ class ServiceCmdbNodeResourceImpl @Autowired constructor(
     override fun addNodesToCC(userId: String) {
         tencentStockDataUpdateService.addNodesToCCOnce()
     }
-
-    override fun updateGseAgent(userId: String) {
-        tencentStockDataUpdateService.scheduledUpdateGseAgent()
-    }
 }

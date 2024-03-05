@@ -32,12 +32,16 @@ import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.environment.constant.T_ENVIRONMENT_THIRDPARTY_AGENT_MASTER_VERSION
 import com.tencent.devops.environment.constant.T_ENVIRONMENT_THIRDPARTY_AGENT_NODE_ID
+import com.tencent.devops.environment.constant.T_NODE_AGENT_STATUS
+import com.tencent.devops.environment.constant.T_NODE_AGENT_VERSION
 import com.tencent.devops.environment.constant.T_NODE_CLOUD_AREA_ID
 import com.tencent.devops.environment.constant.T_NODE_HOST_ID
 import com.tencent.devops.environment.constant.T_NODE_NODE_HASH_ID
 import com.tencent.devops.environment.constant.T_NODE_NODE_ID
 import com.tencent.devops.environment.constant.T_NODE_NODE_IP
+import com.tencent.devops.environment.constant.T_NODE_NODE_STATUS
 import com.tencent.devops.environment.constant.T_NODE_NODE_TYPE
+import com.tencent.devops.environment.constant.T_NODE_PROJECT_ID
 import com.tencent.devops.environment.dao.NodeDao
 import com.tencent.devops.environment.dao.thirdpartyagent.ThirdPartyAgentDao
 import com.tencent.devops.environment.pojo.enums.NodeStatus
@@ -47,9 +51,11 @@ import com.tencent.devops.environment.pojo.job.DisplayNameInfo
 import com.tencent.devops.environment.pojo.job.CCUpdateInfo
 import com.tencent.devops.environment.pojo.job.UpdateTNodeInfo
 import com.tencent.devops.environment.pojo.job.ccres.CCInfo
+import com.tencent.devops.environment.pojo.job.req.OpOperateReq
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Service
 import java.time.Duration
 import java.time.LocalDateTime
@@ -61,11 +67,13 @@ class StockDataUpdateService @Autowired constructor(
     private val queryFromCCService: QueryFromCCService,
     private val thirdPartyAgentDao: ThirdPartyAgentDao,
     private val redisOperation: RedisOperation,
-    private val queryAgentStatusService: QueryAgentStatusService
+    private val queryAgentStatusService: QueryAgentStatusService,
+    private val opService: OpService
 ) : IStockDataUpdateService {
 
     companion object {
         private val logger = LoggerFactory.getLogger(StockDataUpdateService::class.java)
+        private const val SCHEDULED_UPDATE_GSE_AGENT_TIMEOUT_LOCK_KEY = "scheduled_update_gse_agent_timeout_lock"
         private const val WRITE_DISPLAY_NAME_TIMEOUT_LOCK_KEY = "write_display_name_timeout_lock"
         private const val UPDATE_DEVOPS_AGENT_TIMEOUT_LOCK_KEY = "update_devops_agent_timeout_lock"
 
@@ -91,6 +99,19 @@ class StockDataUpdateService @Autowired constructor(
     }
 
     /**
+     * updateAgent:
+     * 定时任务：gse agent状态/版本 轮询 + 差量更新
+     * 条件：NODE_TYPE为"部署"的，查询该节点的agent安装状态以及版本，并对比差异更新。
+     * 同步更新蓝盾agent。
+     * 分组执行，每次遍历1000条记录。
+     * cron：每小时执行一次。
+     */
+    @Scheduled(cron = "0 17 * * * ?")
+    fun scheduledUpdateGseAgent() {
+        taskWithRedisLock(SCHEDULED_UPDATE_GSE_AGENT_TIMEOUT_LOCK_KEY, ::updateGseAgent)
+    }
+
+    /**
      * writeDisplayName:
      * display_name为空的：拼接节点类型、node hash值、nodeId这三个字段，写入display_name。
      * 分组执行，每次遍历100条记录。
@@ -109,6 +130,91 @@ class StockDataUpdateService @Autowired constructor(
      */
     fun updateDevopsAgentOnce() {
         taskWithRedisLock(UPDATE_DEVOPS_AGENT_TIMEOUT_LOCK_KEY, ::updateDevopsAgent)
+    }
+
+    private fun updateGseAgent() {
+        val countCmdbNodes = nodeDao.countCmdbNodes(dslContext)
+        logger.info("Update gse agent, node(s) quantity: $countCmdbNodes.")
+        countCmdbNodes.takeIf { it > 0 }?.run {
+            val totalPages = PageUtil.calTotalPage(DEFAULT_PAGE_SIZE, countCmdbNodes.toLong())
+            for (page in 1..totalPages) {
+                val cmdbNodesRecords = nodeDao.getCmdbNodes(dslContext, page, DEFAULT_PAGE_SIZE)
+                val existNodeIdToAgentVersionMap = cmdbNodesRecords.filter {
+                    val opInfo = opService.operateOpProject(
+                        "", OpOperateReq(2, listOf(it[T_NODE_PROJECT_ID] as String))
+                    ).projGrayStatus?.get(0)
+                    it[T_NODE_PROJECT_ID] as String == opInfo?.englishName && true == opInfo.projGrayStatus
+                }.associate {
+                    it[T_NODE_NODE_ID] as Long to
+                        AgentVersion(
+                            ip = it[T_NODE_NODE_IP] as? String,
+                            bkHostId = it[T_NODE_HOST_ID] as? Long,
+                            installedTag = NodeStatus.NOT_INSTALLED.name != it[T_NODE_NODE_STATUS] as String,
+                            version = it[T_NODE_AGENT_VERSION] as? String,
+                            status = if (it[T_NODE_AGENT_STATUS] as Boolean) 1 else 0
+                        )
+                }
+                val existAgentVersionList = existNodeIdToAgentVersionMap.values.toList()
+                if (logger.isDebugEnabled)
+                    logger.debug(
+                        "[updateGseAgent]existAgentVersionList:" +
+                            existAgentVersionList.joinToString(separator = ", ", transform = { it.toString() })
+                    )
+                val ipToExistAgentVersion = existAgentVersionList.associateBy { it.ip }
+                val newAgentVersionList = queryAgentStatusService.getAgentVersions(existAgentVersionList)
+                if (logger.isDebugEnabled)
+                    logger.debug(
+                        "[updateGseAgent]newAgentVersionList:" +
+                            newAgentVersionList?.joinToString(separator = ", ", transform = { it.toString() })
+                    )
+                // 判断 newAgentVersionList 和 existAgentVersionList 是否一致，不一致则更新对应数据库表
+                val agentUpdateList = newAgentVersionList?.filterNot {
+                    it.installedTag == ipToExistAgentVersion[it.ip]?.installedTag &&
+                        it.version == ipToExistAgentVersion[it.ip]?.version &&
+                        it.status == ipToExistAgentVersion[it.ip]?.status
+                }
+                logger.info(
+                    "[updateGseAgent]agentUpdateList:" +
+                        agentUpdateList?.joinToString(separator = ", ", transform = { it.toString() })
+                )
+                agentUpdateList.takeIf { !it.isNullOrEmpty() }.run {
+                    batchUpdateAgent(existNodeIdToAgentVersionMap, agentUpdateList!!)
+                }
+            }
+        }
+    }
+
+    private fun batchUpdateAgent(
+        existNodeIdToAgentVersionMap: Map<Long, AgentVersion>,
+        agentUpdateList: List<AgentVersion>
+    ) {
+        val ipToAgentUpdateList = agentUpdateList.associateBy { it.ip }
+        val agentUpdateIpList = agentUpdateList.mapNotNull { it.ip }
+        val agentUpdateHostIdList = agentUpdateList.mapNotNull { it.bkHostId }
+
+        val agentUpdateRecords = existNodeIdToAgentVersionMap.filter { (key, value) ->
+            agentUpdateIpList.contains(value.ip) || agentUpdateHostIdList.contains(value.bkHostId)
+        }.map { (key, value) ->
+            UpdateTNodeInfo(
+                nodeId = key,
+                nodeStatus = if (AGENT_NOT_INSTALLED_TAG == ipToAgentUpdateList[value.ip]?.installedTag)
+                    NodeStatus.NOT_INSTALLED.name
+                else if (AGENT_ABNORMAL_NODE_STATUS == ipToAgentUpdateList[value.ip]?.status)
+                    NodeStatus.ABNORMAL.name
+                else if (AGENT_NORMAL_NODE_STATUS == ipToAgentUpdateList[value.ip]?.status)
+                    NodeStatus.NORMAL.name
+                else null,
+                agentStatus = AGENT_NORMAL_NODE_STATUS == ipToAgentUpdateList[value.ip]?.status,
+                agentVersion = ipToAgentUpdateList[value.ip]?.version,
+                lastModifyTime = LocalDateTime.now()
+            )
+        }
+        if (logger.isDebugEnabled)
+            logger.debug(
+                "[batchUpdateAgent]agentUpdateRecords:" +
+                    agentUpdateRecords.joinToString(separator = ", ", transform = { it.toString() })
+            )
+        nodeDao.batchUpdateAgentInfo(dslContext, agentUpdateRecords)
     }
 
     private fun updateDevopsAgent() {
