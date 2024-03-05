@@ -34,7 +34,7 @@ import com.tencent.devops.common.auth.api.BkAuthProperties
 import com.tencent.devops.common.auth.api.v3.TxV3AuthPermissionApi
 import com.tencent.devops.common.auth.api.v3.TxV3AuthProjectApi
 import com.tencent.devops.common.auth.api.v3.TxV3AuthResourceApiStr
-import com.tencent.devops.common.auth.mock.MockAuthCodeAutoConfiguration
+import com.tencent.devops.common.auth.mock.MockAuthCodeConfiguration
 import com.tencent.devops.common.auth.mock.api.MockAuthResourceApi
 import com.tencent.devops.common.auth.mock.api.MockAuthTokenApi
 import com.tencent.devops.common.auth.service.IamEsbService
@@ -56,7 +56,7 @@ import org.springframework.core.Ordered
 @AutoConfigureOrder(Ordered.LOWEST_PRECEDENCE)
 @ConditionalOnProperty(prefix = "auth", name = ["idProvider"], havingValue = "new_v3")
 @AutoConfigureBefore(name = ["com.tencent.devops.common.auth.MockAuthAutoConfiguration"])
-@Import(MockAuthCodeAutoConfiguration::class)
+@Import(MockAuthCodeConfiguration::class)
 class TxV3AuthAutoConfiguration {
 
     @Bean

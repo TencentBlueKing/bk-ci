@@ -29,7 +29,7 @@ package com.tencent.devops.common.auth
 
 import com.tencent.devops.common.auth.api.stream.GitAuthPermissionApi
 import com.tencent.devops.common.auth.api.stream.GitAuthProjectApi
-import com.tencent.devops.common.auth.mock.MockAuthCodeAutoConfiguration
+import com.tencent.devops.common.auth.mock.MockAuthCodeConfiguration
 import com.tencent.devops.common.auth.mock.api.MockAuthResourceApi
 import com.tencent.devops.common.auth.mock.api.MockAuthTokenApi
 import com.tencent.devops.common.client.Client
@@ -47,7 +47,7 @@ import org.springframework.core.Ordered
 @ConditionalOnWebApplication
 @AutoConfigureOrder(Ordered.LOWEST_PRECEDENCE)
 @ConditionalOnProperty(prefix = "auth", name = ["idProvider"], havingValue = "git")
-@Import(MockAuthCodeAutoConfiguration::class)
+@Import(MockAuthCodeConfiguration::class)
 class GitAuthAutoConfiguration {
 
     @Bean
