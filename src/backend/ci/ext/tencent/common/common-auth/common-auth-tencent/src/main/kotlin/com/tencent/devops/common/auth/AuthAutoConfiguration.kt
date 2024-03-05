@@ -28,81 +28,42 @@
 package com.tencent.devops.common.auth
 
 import com.fasterxml.jackson.databind.ObjectMapper
-import com.tencent.bk.sdk.iam.config.IamConfiguration
-import com.tencent.bk.sdk.iam.service.impl.ApigwHttpClientServiceImpl
-import com.tencent.bk.sdk.iam.service.impl.ManagerServiceImpl
-import com.tencent.devops.common.auth.api.BSAuthPermissionApi
-import com.tencent.devops.common.auth.api.BSAuthProjectApi
-import com.tencent.devops.common.auth.api.BSAuthResourceApi
-import com.tencent.devops.common.auth.api.BSAuthTokenApi
+import com.tencent.devops.auth.service.ManagerService
+import com.tencent.devops.common.auth.api.AuthTokenApi
 import com.tencent.devops.common.auth.api.BSCCProjectApi
-import com.tencent.devops.common.auth.api.BkAuthProperties
+import com.tencent.devops.common.auth.api.BkCCProperties
+import com.tencent.devops.common.auth.code.PipelineAuthServiceCode
 import com.tencent.devops.common.auth.jmx.JmxAuthApi
-import com.tencent.devops.common.redis.RedisOperation
-import org.springframework.boot.autoconfigure.AutoConfigureBefore
-import org.springframework.boot.autoconfigure.AutoConfigureOrder
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
+import com.tencent.devops.common.client.Client
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.context.annotation.Primary
-import org.springframework.core.Ordered
-import com.tencent.devops.common.client.Client
+import org.springframework.jmx.export.MBeanExporter
 
 @Configuration
 @ConditionalOnWebApplication
-@AutoConfigureOrder(Ordered.LOWEST_PRECEDENCE)
-@ConditionalOnProperty(prefix = "auth", name = ["idProvider"], havingValue = "client")
-@AutoConfigureBefore(name = ["com.tencent.devops.common.auth.MockAuthAutoConfiguration"])
 class AuthAutoConfiguration {
 
     @Bean
-    @Primary
-    fun bkAuthProperties() = BkAuthProperties()
+    @ConditionalOnMissingBean
+    fun managerService(client: Client) = ManagerService(client)
+
+    @Bean
+    fun jmxAuthApi(mBeanExporter: MBeanExporter) = JmxAuthApi(mBeanExporter)
 
     @Bean
     @Primary
-    fun bsAuthTokenApi(bkAuthProperties: BkAuthProperties, objectMapper: ObjectMapper, redisOperation: RedisOperation) =
-        BSAuthTokenApi(bkAuthProperties, objectMapper, redisOperation)
+    fun bkCCProperties() = BkCCProperties()
 
     @Bean
     @Primary
-    fun bsAuthPermissionApi(
-        bkAuthProperties: BkAuthProperties,
+    fun bkCCProjectApi(
+        pipelineAuthServiceCode: PipelineAuthServiceCode,
+        bkCCProperties: BkCCProperties,
         objectMapper: ObjectMapper,
-        bsAuthTokenApi: BSAuthTokenApi,
-        jmxAuthApi: JmxAuthApi,
-        client: Client
+        authTokenApi: AuthTokenApi
     ) =
-        BSAuthPermissionApi(bkAuthProperties, objectMapper, bsAuthTokenApi, jmxAuthApi, client)
-
-    @Bean
-    @Primary
-    fun bsAuthResourceApi(
-        bkAuthProperties: BkAuthProperties,
-        objectMapper: ObjectMapper,
-        bsAuthTokenApi: BSAuthTokenApi,
-        client: Client
-    ) =
-        BSAuthResourceApi(bkAuthProperties, objectMapper, bsAuthTokenApi, client)
-
-    @Bean
-    @Primary
-    fun bsAuthProjectApi(
-        bkAuthProperties: BkAuthProperties,
-        objectMapper: ObjectMapper,
-        bsAuthTokenApi: BSAuthTokenApi,
-        bsCCProjectApi: BSCCProjectApi
-    ) =
-        BSAuthProjectApi(bkAuthProperties, objectMapper, bsAuthTokenApi, bsCCProjectApi)
-
-    @Bean
-    fun apigwHttpClientServiceImpl(
-        iamConfiguration: IamConfiguration
-    ) = ApigwHttpClientServiceImpl(iamConfiguration)
-
-    @Bean
-    fun iamManagerService(
-        iamConfiguration: IamConfiguration
-    ) = ManagerServiceImpl(apigwHttpClientServiceImpl(iamConfiguration), iamConfiguration)
+        BSCCProjectApi(bkCCProperties, objectMapper, authTokenApi, pipelineAuthServiceCode)
 }

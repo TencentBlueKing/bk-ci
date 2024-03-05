@@ -27,23 +27,19 @@
 
 package com.tencent.devops.common.auth
 
-import com.fasterxml.jackson.databind.ObjectMapper
-import com.tencent.bk.sdk.iam.config.IamConfiguration
-import com.tencent.bk.sdk.iam.service.impl.ApigwHttpClientServiceImpl
-import com.tencent.bk.sdk.iam.service.impl.ManagerServiceImpl
-import com.tencent.devops.common.auth.api.BSAuthResourceApi
-import com.tencent.devops.common.auth.api.BSAuthTokenApi
-import com.tencent.devops.common.auth.api.BkAuthProperties
 import com.tencent.devops.common.auth.api.stream.GitAuthPermissionApi
 import com.tencent.devops.common.auth.api.stream.GitAuthProjectApi
+import com.tencent.devops.common.auth.mock.MockAuthCodeAutoConfiguration
+import com.tencent.devops.common.auth.mock.api.MockAuthResourceApi
+import com.tencent.devops.common.auth.mock.api.MockAuthTokenApi
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.client.ClientTokenService
-import com.tencent.devops.common.redis.RedisOperation
 import org.springframework.boot.autoconfigure.AutoConfigureOrder
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
+import org.springframework.context.annotation.Import
 import org.springframework.context.annotation.Primary
 import org.springframework.core.Ordered
 
@@ -51,26 +47,12 @@ import org.springframework.core.Ordered
 @ConditionalOnWebApplication
 @AutoConfigureOrder(Ordered.LOWEST_PRECEDENCE)
 @ConditionalOnProperty(prefix = "auth", name = ["idProvider"], havingValue = "git")
+@Import(MockAuthCodeAutoConfiguration::class)
 class GitAuthAutoConfiguration {
 
     @Bean
-    fun apigwHttpClientServiceImpl(
-        iamConfiguration: IamConfiguration
-    ) = ApigwHttpClientServiceImpl(iamConfiguration)
-
-    @Bean
-    fun iamManagerService(
-        iamConfiguration: IamConfiguration
-    ) = ManagerServiceImpl(apigwHttpClientServiceImpl(iamConfiguration), iamConfiguration)
-
-    @Bean
     @Primary
-    fun bkAuthProperties() = BkAuthProperties()
-
-    @Bean
-    @Primary
-    fun authTokenApi(bkAuthProperties: BkAuthProperties, objectMapper: ObjectMapper, redisOperation: RedisOperation) =
-        BSAuthTokenApi(bkAuthProperties, objectMapper, redisOperation)
+    fun authTokenApi() = MockAuthTokenApi()
 
     @Bean
     @Primary
@@ -82,13 +64,7 @@ class GitAuthAutoConfiguration {
 
     @Bean
     @Primary
-    fun authResourceApi(
-        bkAuthProperties: BkAuthProperties,
-        objectMapper: ObjectMapper,
-        bsAuthTokenApi: BSAuthTokenApi,
-        client: Client
-    ) =
-        BSAuthResourceApi(bkAuthProperties, objectMapper, bsAuthTokenApi, client)
+    fun authResourceApi(authTokenApi: MockAuthTokenApi) = MockAuthResourceApi()
 
     @Bean
     @Primary

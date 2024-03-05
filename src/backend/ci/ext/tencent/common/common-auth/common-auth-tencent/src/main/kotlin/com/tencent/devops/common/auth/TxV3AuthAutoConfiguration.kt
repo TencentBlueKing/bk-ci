@@ -27,26 +27,26 @@
 
 package com.tencent.devops.common.auth
 
-import com.fasterxml.jackson.databind.ObjectMapper
 import com.tencent.bk.sdk.iam.config.IamConfiguration
 import com.tencent.bk.sdk.iam.service.impl.ApigwHttpClientServiceImpl
 import com.tencent.bk.sdk.iam.service.impl.ManagerServiceImpl
-import com.tencent.devops.common.auth.api.BSAuthResourceApi
-import com.tencent.devops.common.auth.api.BSAuthTokenApi
 import com.tencent.devops.common.auth.api.BkAuthProperties
 import com.tencent.devops.common.auth.api.v3.TxV3AuthPermissionApi
 import com.tencent.devops.common.auth.api.v3.TxV3AuthProjectApi
 import com.tencent.devops.common.auth.api.v3.TxV3AuthResourceApiStr
+import com.tencent.devops.common.auth.mock.MockAuthCodeAutoConfiguration
+import com.tencent.devops.common.auth.mock.api.MockAuthResourceApi
+import com.tencent.devops.common.auth.mock.api.MockAuthTokenApi
 import com.tencent.devops.common.auth.service.IamEsbService
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.client.ClientTokenService
-import com.tencent.devops.common.redis.RedisOperation
 import org.springframework.boot.autoconfigure.AutoConfigureBefore
 import org.springframework.boot.autoconfigure.AutoConfigureOrder
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
+import org.springframework.context.annotation.Import
 import org.springframework.context.annotation.Primary
 import org.springframework.core.Ordered
 
@@ -56,6 +56,7 @@ import org.springframework.core.Ordered
 @AutoConfigureOrder(Ordered.LOWEST_PRECEDENCE)
 @ConditionalOnProperty(prefix = "auth", name = ["idProvider"], havingValue = "new_v3")
 @AutoConfigureBefore(name = ["com.tencent.devops.common.auth.MockAuthAutoConfiguration"])
+@Import(MockAuthCodeAutoConfiguration::class)
 class TxV3AuthAutoConfiguration {
 
     @Bean
@@ -98,18 +99,11 @@ class TxV3AuthAutoConfiguration {
 
     @Bean
     @Primary
-    fun bsAuthResourceApi(
-        bkAuthProperties: BkAuthProperties,
-        objectMapper: ObjectMapper,
-        bsAuthTokenApi: BSAuthTokenApi,
-        client: Client
-    ) =
-        BSAuthResourceApi(bkAuthProperties, objectMapper, bsAuthTokenApi, client)
+    fun authResourceApi(authTokenApi: MockAuthTokenApi) = MockAuthResourceApi()
 
     @Bean
     @Primary
-    fun authTokenApi(bkAuthProperties: BkAuthProperties, objectMapper: ObjectMapper, redisOperation: RedisOperation) =
-        BSAuthTokenApi(bkAuthProperties, objectMapper, redisOperation)
+    fun authTokenApi() = MockAuthTokenApi()
 
     @Bean
     fun iamEsbService() = IamEsbService()
