@@ -49,7 +49,7 @@ import javax.ws.rs.core.MediaType
 @Path("/service/dispatch-docker")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
-@ServiceInterface("dispatch-docker")
+@ServiceInterface("dispatch")
 interface ServiceDockerResourceConfigResource {
 
     @GET
