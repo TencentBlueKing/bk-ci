@@ -66,8 +66,7 @@ The frontend development is based on Vue and the directory is divided according 
     |- common                   # Common module
       |- common-auth            # Authorization module
         |- common-auth-api      # API of the authorization module
-        |- common-auth-sample   # Sample implementation of the authorization module
-        |- common-auth-blueking # Implementation of integration with BlueKing Authorization Center
+        |- common-auth-provider # authorization module provider
     |- dispatch    # Root directory of the Dispatch microservice
     |- environment # Root directory of the Environment microservice
     |- log         # Root directory of the Log microservice
