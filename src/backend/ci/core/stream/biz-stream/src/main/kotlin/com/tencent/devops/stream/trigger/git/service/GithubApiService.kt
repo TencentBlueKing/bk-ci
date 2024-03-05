@@ -29,17 +29,6 @@ package com.tencent.devops.stream.trigger.git.service
 
 import com.tencent.devops.common.api.exception.CustomException
 import com.tencent.devops.common.client.Client
-import com.tencent.devops.common.sdk.github.request.CompareTwoCommitsRequest
-import com.tencent.devops.common.sdk.github.request.CreateCheckRunRequest
-import com.tencent.devops.common.sdk.github.request.CreateIssueCommentRequest
-import com.tencent.devops.common.sdk.github.request.GetCommitRequest
-import com.tencent.devops.common.sdk.github.request.GetPullRequestRequest
-import com.tencent.devops.common.sdk.github.request.GetRepositoryContentRequest
-import com.tencent.devops.common.sdk.github.request.GetRepositoryPermissionsRequest
-import com.tencent.devops.common.sdk.github.request.GetRepositoryRequest
-import com.tencent.devops.common.sdk.github.request.GetTreeRequest
-import com.tencent.devops.common.sdk.github.request.ListPullRequestFileRequest
-import com.tencent.devops.common.sdk.github.request.ListRepositoryCollaboratorsRequest
 import com.tencent.devops.repository.api.ServiceGithubResource
 import com.tencent.devops.repository.api.github.ServiceGithubCheckResource
 import com.tencent.devops.repository.api.github.ServiceGithubCommitsResource
@@ -49,6 +38,17 @@ import com.tencent.devops.repository.api.github.ServiceGithubPRResource
 import com.tencent.devops.repository.api.github.ServiceGithubRepositoryResource
 import com.tencent.devops.repository.api.github.ServiceGithubUserResource
 import com.tencent.devops.repository.pojo.enums.GithubAccessLevelEnum
+import com.tencent.devops.repository.sdk.github.request.CompareTwoCommitsRequest
+import com.tencent.devops.repository.sdk.github.request.CreateCheckRunRequest
+import com.tencent.devops.repository.sdk.github.request.CreateIssueCommentRequest
+import com.tencent.devops.repository.sdk.github.request.GetCommitRequest
+import com.tencent.devops.repository.sdk.github.request.GetPullRequestRequest
+import com.tencent.devops.repository.sdk.github.request.GetRepositoryContentRequest
+import com.tencent.devops.repository.sdk.github.request.GetRepositoryPermissionsRequest
+import com.tencent.devops.repository.sdk.github.request.GetRepositoryRequest
+import com.tencent.devops.repository.sdk.github.request.GetTreeRequest
+import com.tencent.devops.repository.sdk.github.request.ListPullRequestFileRequest
+import com.tencent.devops.repository.sdk.github.request.ListRepositoryCollaboratorsRequest
 import com.tencent.devops.scm.code.git.api.GITHUB_CHECK_RUNS_STATUS_COMPLETED
 import com.tencent.devops.scm.code.git.api.GITHUB_CHECK_RUNS_STATUS_IN_PROGRESS
 import com.tencent.devops.scm.enums.GitAccessLevelEnum

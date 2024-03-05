@@ -27,7 +27,7 @@
 
 package com.tencent.devops.stream.trigger.git.pojo.github
 
-import com.tencent.devops.common.sdk.github.pojo.GithubTree
+import com.tencent.devops.repository.sdk.github.pojo.GithubTree
 import com.tencent.devops.scm.pojo.GitFileInfo
 import com.tencent.devops.stream.trigger.git.pojo.StreamGitTreeFileInfo
 

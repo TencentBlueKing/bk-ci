@@ -461,7 +461,7 @@ onBeforeUnmount(() => {
         v-for="(subjectScope, index) in projectData.subjectScopes"
         :key="index"
       >
-        {{ subjectScope.name }}
+        {{ subjectScope.id === '*' ? t('全员') : subjectScope.name }}
       </bk-tag>
       <EditLine
         class="edit-line ml5"
