@@ -346,7 +346,7 @@ class CodeSvnScmImpl constructor(
                 throw ignored
             } else {
                 val projectNameArr = projectName.split("/").toMutableList()
-                if (projectNameArr.size <= 1 || !projectNameArr[0].endsWith(SVN_PROJECT_NAME_SUFFIX)) {
+                if (projectNameArr.size <= 1 || projectNameArr[0].endsWith(SVN_PROJECT_NAME_SUFFIX)) {
                     throw ignored
                 }
                 projectNameArr[0] = projectNameArr[0].plus(SVN_PROJECT_NAME_SUFFIX)
