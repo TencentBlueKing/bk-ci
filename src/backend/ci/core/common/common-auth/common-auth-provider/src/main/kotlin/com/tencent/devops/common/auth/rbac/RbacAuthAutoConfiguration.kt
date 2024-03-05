@@ -63,7 +63,7 @@ import org.springframework.core.Ordered
 @Suppress("ALL")
 @Configuration
 @ConditionalOnProperty(prefix = "auth", name = ["idProvider"], havingValue = "rbac")
-@AutoConfigureBefore(name = ["com.tencent.devops.common.auth.MockAuthAutoConfiguration"])
+@AutoConfigureBefore(name = ["com.tencent.devops.common.auth.mock.MockAuthAutoConfiguration"])
 @ConditionalOnWebApplication
 @AutoConfigureOrder(Ordered.LOWEST_PRECEDENCE)
 @EnableConfigurationProperties(RbacAuthProperties::class)

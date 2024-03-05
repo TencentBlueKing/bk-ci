@@ -58,7 +58,7 @@ import org.springframework.core.Ordered
 @ConditionalOnProperty(prefix = "auth", name = ["idProvider"], havingValue = "bk_login")
 @ConditionalOnWebApplication
 @AutoConfigureOrder(Ordered.LOWEST_PRECEDENCE)
-@AutoConfigureBefore(name = ["com.tencent.devops.common.auth.MockAuthAutoConfiguration"])
+@AutoConfigureBefore(name = ["com.tencent.devops.common.auth.mock.MockAuthAutoConfiguration"])
 class BkAuthAutoConfiguration {
 
     @Bean
