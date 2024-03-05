@@ -35,31 +35,12 @@ import com.tencent.devops.common.auth.mock.api.MockAuthPermissionApi
 import com.tencent.devops.common.auth.mock.api.MockAuthProjectApi
 import com.tencent.devops.common.auth.mock.api.MockAuthResourceApi
 import com.tencent.devops.common.auth.mock.api.MockAuthTokenApi
-import com.tencent.devops.common.auth.code.ArtifactoryAuthServiceCode
-import com.tencent.devops.common.auth.code.BcsAuthServiceCode
-import com.tencent.devops.common.auth.code.CodeAuthServiceCode
-import com.tencent.devops.common.auth.code.EnvironmentAuthServiceCode
-import com.tencent.devops.common.auth.mock.code.MockArtifactoryAuthServiceCode
-import com.tencent.devops.common.auth.mock.code.MockBcsAuthServiceCode
-import com.tencent.devops.common.auth.mock.code.MockCodeAuthServiceCode
-import com.tencent.devops.common.auth.mock.code.MockEnvironmentAuthServiceCode
-import com.tencent.devops.common.auth.mock.code.MockPipelineAuthServiceCode
-import com.tencent.devops.common.auth.mock.code.MockPipelineGroupAuthServiceCode
-import com.tencent.devops.common.auth.mock.code.MockProjectAuthServiceCode
-import com.tencent.devops.common.auth.mock.code.MockQualityAuthServiceCode
-import com.tencent.devops.common.auth.mock.code.MockRepoAuthServiceCode
-import com.tencent.devops.common.auth.mock.code.MockTicketAuthServiceCode
-import com.tencent.devops.common.auth.code.PipelineAuthServiceCode
-import com.tencent.devops.common.auth.code.ProjectAuthServiceCode
-import com.tencent.devops.common.auth.code.QualityAuthServiceCode
-import com.tencent.devops.common.auth.code.RepoAuthServiceCode
-import com.tencent.devops.common.auth.code.TicketAuthServiceCode
-import org.springframework.boot.autoconfigure.AutoConfigureOrder
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
-import org.springframework.core.Ordered
+import org.springframework.context.annotation.Import
 
 /**
  * 兜底bean,可能存在有些auth.idProvider声明了这些bean,有些没有声明,没有的就需要创建一个mock bean
@@ -68,8 +49,8 @@ import org.springframework.core.Ordered
  */
 @Configuration
 @ConditionalOnWebApplication
-@AutoConfigureOrder(Ordered.LOWEST_PRECEDENCE)
-@SuppressWarnings("TooManyFunctions")
+@ConditionalOnProperty(prefix = "auth", name = ["idProvider"], havingValue = "sample")
+@Import(MockAuthCodeAutoConfiguration::class)
 class MockAuthAutoConfiguration {
 
     @Bean
@@ -91,44 +72,4 @@ class MockAuthAutoConfiguration {
 //    @Primary
     @ConditionalOnMissingBean(AuthProjectApi::class)
     fun authProjectApi(bkAuthPermissionApi: MockAuthPermissionApi) = MockAuthProjectApi(bkAuthPermissionApi)
-
-    @Bean
-    @ConditionalOnMissingBean(BcsAuthServiceCode::class)
-    fun bcsAuthServiceCode() = MockBcsAuthServiceCode()
-
-    @Bean
-    @ConditionalOnMissingBean(PipelineAuthServiceCode::class)
-    fun pipelineAuthServiceCode() = MockPipelineAuthServiceCode()
-
-    @Bean
-    @ConditionalOnMissingBean(PipelineAuthServiceCode::class)
-    fun pipelineGroupAuthServiceCode() = MockPipelineGroupAuthServiceCode()
-
-    @Bean
-    @ConditionalOnMissingBean(CodeAuthServiceCode::class)
-    fun codeAuthServiceCode() = MockCodeAuthServiceCode()
-
-    @Bean
-    @ConditionalOnMissingBean(ProjectAuthServiceCode::class)
-    fun projectAuthServiceCode() = MockProjectAuthServiceCode()
-
-    @Bean
-    @ConditionalOnMissingBean(EnvironmentAuthServiceCode::class)
-    fun environmentAuthServiceCode() = MockEnvironmentAuthServiceCode()
-
-    @Bean
-    @ConditionalOnMissingBean(RepoAuthServiceCode::class)
-    fun repoAuthServiceCode() = MockRepoAuthServiceCode()
-
-    @Bean
-    @ConditionalOnMissingBean(TicketAuthServiceCode::class)
-    fun ticketAuthServiceCode() = MockTicketAuthServiceCode()
-
-    @Bean
-    @ConditionalOnMissingBean(QualityAuthServiceCode::class)
-    fun qualityAuthServiceCode() = MockQualityAuthServiceCode()
-
-    @Bean
-    @ConditionalOnMissingBean(ArtifactoryAuthServiceCode::class)
-    fun artifactoryAuthServiceCode() = MockArtifactoryAuthServiceCode()
 }
