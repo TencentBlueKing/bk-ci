@@ -161,32 +161,11 @@ class CodeSvnScmImpl constructor(
         } catch (ignored: ScmException) {
             // 工蜂迁移svn项目后，svn项目名与原有git项目名相同，导致项目名冲突，为此在工蜂在svn组名后添加[_svn]后缀，但在复制svn路径时可能
             // 缺少[_svn]，如实际路径为[bk_ci_svn/ci],但复制路径为[bk_ci/ci]，所以当报项目不存在时，组名处增加[_svn]后缀后重试
-            val (needTry, newProjectName) = tryAddSuffixToGroupName(projectName, ignored.message)
-            if (needTry) {
-                try {
-                    logger.info("retry addWebHookSVN|newProjectName=$newProjectName")
-                    addWebhookByToken(
-                        hookUrl = hookUrl,
-                        projectName = newProjectName
-                    )
-                } catch (ignored: ScmException) {
-                    logger.error("Fail to retry add the webhook", ignored)
-                    throw ScmException(
-                        message = ignored.message ?: I18nUtil.getCodeLanMessage(
-                            CommonMessageCode.SVN_CREATE_HOOK_FAIL
-                        ),
-                        scmType = ScmType.CODE_SVN.name
-                    )
-                }
-            } else {
-                logger.error("Fail to add the webhook", ignored)
-                throw ScmException(
-                    message = ignored.message ?: I18nUtil.getCodeLanMessage(
-                        CommonMessageCode.SVN_CREATE_HOOK_FAIL
-                    ),
-                    scmType = ScmType.CODE_SVN.name
-                )
-            }
+            tryAddSuffixToGroupName(
+                projectName = projectName,
+                hookUrl = hookUrl,
+                ignored = ignored
+            )
         }
     }
 
@@ -357,23 +336,35 @@ class CodeSvnScmImpl constructor(
     /**
      * 尝试添加后缀到组名
      */
-    private fun tryAddSuffixToGroupName(projectName: String, errorMsg: String?): Pair<Boolean, String> {
-        val projectNameArr = projectName.split("/").toMutableList()
-        return when {
-            projectNameArr.size <= 1 ||
-                    errorMsg != I18nUtil.getCodeLanMessage(CommonMessageCode.ENGINEERING_REPO_NOT_EXIST) -> {
-                Pair(false, projectName)
-            }
-
-            !projectNameArr[0].endsWith(SVN_PROJECT_NAME_SUFFIX) -> {
-                // 替换组名，[bk_ci/ci] -> [bk_ci_svn/ci]
+    private fun tryAddSuffixToGroupName(
+        projectName: String,
+        hookUrl: String,
+        ignored: Exception
+    ) {
+        try {
+            if (ignored.message != I18nUtil.getCodeLanMessage(CommonMessageCode.ENGINEERING_REPO_NOT_EXIST)) {
+                throw ignored
+            } else {
+                val projectNameArr = projectName.split("/").toMutableList()
+                if (projectNameArr.size <= 1 || !projectNameArr[0].endsWith(SVN_PROJECT_NAME_SUFFIX)) {
+                    throw ignored
+                }
                 projectNameArr[0] = projectNameArr[0].plus(SVN_PROJECT_NAME_SUFFIX)
-                Pair(true, projectNameArr.joinToString("/"))
+                val newProjectName = projectNameArr.joinToString("/")
+                logger.info("retry addWebHookSVN|new projectName=$newProjectName")
+                addWebhookByToken(
+                    hookUrl = hookUrl,
+                    projectName = newProjectName
+                )
             }
-
-            else -> {
-                Pair(false, projectName)
-            }
+        } catch (ignored: Exception) {
+            logger.error("Fail to add the webhook", ignored)
+            throw ScmException(
+                message = ignored.message ?: I18nUtil.getCodeLanMessage(
+                    CommonMessageCode.SVN_CREATE_HOOK_FAIL
+                ),
+                scmType = ScmType.CODE_SVN.name
+            )
         }
     }
 
