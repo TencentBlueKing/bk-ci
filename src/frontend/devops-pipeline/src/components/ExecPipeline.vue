@@ -251,13 +251,15 @@
     import simplebar from 'simplebar-vue'
     import 'simplebar-vue/dist/simplebar.min.css'
     import { mapActions, mapState } from 'vuex'
+    import BkPipeline, { loadI18nMessages } from 'bkui-pipeline'
     export default {
         components: {
             simplebar,
             CheckAtomDialog,
             CompleteLog,
             Logo,
-            MiniMap
+            MiniMap,
+            BkPipeline
         },
         props: {
             execDetail: {
@@ -460,6 +462,9 @@
         },
         updated () {
             this.setScrollBarPostion()
+        },
+        created () {
+            loadI18nMessages(this.$i18n)
         },
         mounted () {
             this.requestInterceptAtom(this.routerParams)

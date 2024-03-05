@@ -44,7 +44,7 @@ import {
     RESOURCE_ACTION
 } from '@/utils/permission'
 import bkMagic from 'bk-magic-vue'
-import BkPipeline from 'bkui-pipeline'
+
 import { pipelineDocs } from '../../common-lib/docs'
 // 权限指令
 import 'bk-magic-vue/dist/bk-magic-vue.min.css'
@@ -77,9 +77,6 @@ Vue.use(VeeValidate, {
 })
 VeeValidate.Validator.localize(validDictionary)
 ExtendsCustomRules(VeeValidate.Validator.extend)
-Vue.use(BkPipeline, {
-    i18n
-})
 
 Vue.prototype.$setLocale = setLocale
 Vue.prototype.$permissionResourceAction = RESOURCE_ACTION
