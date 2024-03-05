@@ -10,9 +10,9 @@ import com.tencent.devops.remotedev.pojo.gitproxy.CreateGitProxyData
 import com.tencent.devops.remotedev.pojo.gitproxy.FetchRepoResp
 import com.tencent.devops.remotedev.pojo.gitproxy.LinktgitData
 import com.tencent.devops.remotedev.pojo.gitproxy.TGitRepoData
-import io.swagger.v3.oas.annotations.tags.Tag
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
+import io.swagger.v3.oas.annotations.tags.Tag
 import javax.ws.rs.Consumes
 import javax.ws.rs.DELETE
 import javax.ws.rs.GET
@@ -87,7 +87,7 @@ interface UserProjectGitProxyResource {
         @HeaderParam(AUTH_HEADER_PROJECT_ID)
         projectId: String,
         data: LinktgitData
-    ): Result<Map<Long, Pair<String, Boolean>>>
+    ): Result<Map<String, Boolean>>
 
     @Operation(summary = "获取已经关联的仓库")
     @GET

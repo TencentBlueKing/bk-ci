@@ -67,20 +67,20 @@ class GitProxyTGitService @Autowired constructor(
         userId: String,
         projectId: String,
         codeProjectUrls: Set<String>
-    ): Map<Long, Pair<String, Boolean>> {
+    ): Map<String, Boolean> {
         val token = client.get(ServiceOauthResource::class).tGitGet(userId).data ?: throw ErrorCodeException(
             errorCode = ErrorCodeEnum.NO_TGIT_OAUTH_ERROR.errorCode,
             errorType = ErrorCodeEnum.NO_TGIT_OAUTH_ERROR.errorType,
             params = arrayOf(userId, tGitUrl)
         )
 
-        val urls = codeProjectUrls.filter { it.isNotBlank() }.map { it.trim() }.toSet()
+        val urls = codeProjectUrls.filter { it.isNotBlank() }.map { it.trim().removeHttpPrefix() }.toSet()
 
         val result = mutableMapOf<Long, Pair<String, Boolean>>()
 
         // 过滤 svn 项目，目前 SVN项目只能从根组创建项目，所以项目组的分割后俩项目的分割后三
         val svnProjectUrls = urls.filter {
-            it.removeHttpPrefix().startsWith(tSvnUrl.removeHttpPrefix())
+            it.startsWith(tSvnUrl.removeHttpPrefix())
         }.toSet()
         if (svnProjectUrls.isNotEmpty()) {
             val noGroup = svnProjectUrls.all { it.split("/").filter { s -> s.isNotBlank() }.size == 3 }
@@ -89,7 +89,7 @@ class GitProxyTGitService @Autowired constructor(
 
         // 过滤 git 项目，git的项目结尾有.git不然都按项目组算
         val gitProjectUrls = urls.filter {
-            it.removeHttpPrefix().startsWith(tGitUrl.removeHttpPrefix())
+            it.startsWith(tGitUrl.removeHttpPrefix())
         }.toSet()
         if (gitProjectUrls.isNotEmpty()) {
             val noGroup = gitProjectUrls.all { it.endsWith(".git") }
@@ -125,7 +125,13 @@ class GitProxyTGitService @Autowired constructor(
             }
         )
 
-        return result
+        // 过滤下成功的和不成功的
+        val sucUrls = result.values.map { it.first }.toSet()
+        val allResult = mutableMapOf<String, Boolean>()
+        allResult.putAll(urls.subtract(sucUrls).associateWith { false })
+        allResult.putAll(result.values.associate { it.first to it.second })
+
+        return allResult
     }
 
     private fun filterUrlPermission(
@@ -161,14 +167,12 @@ class GitProxyTGitService @Autowired constructor(
                         logger.warn("filterUrlPermission|httpsUrl is null $project")
                         return@projects
                     }
-                    val url = project.httpsUrlToRepo ?: project.httpUrlToRepo
-                    if (url?.removeHttpPrefix() != projectUrl &&
-                        url?.removeHttpPrefix()?.startsWith(projectUrl) != true
-                    ) {
+                    val url = (project.httpsUrlToRepo ?: project.httpUrlToRepo)?.removeHttpPrefix()
+                    if ((url != projectUrl) && (url?.startsWith(projectUrl) != true)) {
                         return@urls
                     }
 
-                    result[project.id] = Pair(url.removeHttpPrefix(), true)
+                    result[project.id] = Pair(url, true)
 
                     // 如果全都是项目判断那么只要项目判断完就可以退出
                     if (noGroup && rProjectUrls.subtract(result.keys).isEmpty()) {
@@ -267,11 +271,11 @@ class GitProxyTGitService @Autowired constructor(
             return emptyList()
         }
 
-        // 防止因为未找到url导致页面未展示，所以以数据库数据为准，默认填入id
+        // 防止因为未找到url导致页面未展示，所以以数据库数据为准，默认填入数据库有的url
         val result = repos.map {
             TGitRepoData(
                 repoId = it.tgitId,
-                url = it.tgitId.toString(),
+                url = it.url ?: it.tgitId.toString(),
                 status = TGitRepoStatus.fromStr(it.status)
             )
         }.associateBy { it.repoId }
@@ -338,8 +342,9 @@ class GitProxyTGitService @Autowired constructor(
                 // 过滤项目信息
                 projects.forEach projects@{ project ->
                     if (repoIds.contains(project.id)) {
-                        result[project.id]?.url =
-                            project.httpsUrlToRepo ?: project.httpUrlToRepo ?: project.id.toString()
+                        if (!project.httpsUrlToRepo.isNullOrBlank() || !project.httpUrlToRepo.isNullOrBlank()) {
+                            result[project.id]?.url = project.httpsUrlToRepo ?: project.httpUrlToRepo!!
+                        }
                         repoIds.remove(project.id)
                     }
                 }
