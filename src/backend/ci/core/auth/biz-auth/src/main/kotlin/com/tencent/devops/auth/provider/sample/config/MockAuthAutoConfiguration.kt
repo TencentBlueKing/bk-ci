@@ -78,11 +78,7 @@ class MockAuthAutoConfiguration {
 
     @Bean
     @ConditionalOnMissingBean(PermissionGrantService::class)
-    fun sampleGrantPermissionServiceImpl(
-        grantServiceImpl: GrantServiceImpl,
-        iamConfiguration: IamConfiguration,
-        client: Client
-    ) = SampleGrantPermissionServiceImpl(grantServiceImpl, iamConfiguration, client)
+    fun sampleGrantPermissionServiceImpl() = SampleGrantPermissionServiceImpl()
 
     @Bean
     @ConditionalOnMissingBean(LocalManagerService::class)
