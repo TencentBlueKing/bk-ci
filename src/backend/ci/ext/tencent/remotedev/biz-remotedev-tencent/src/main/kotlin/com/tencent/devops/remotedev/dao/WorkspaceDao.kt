@@ -654,7 +654,7 @@ class WorkspaceDao {
             dslContext.update(this)
                 .set(UPDATE_TIME, LocalDateTime.now())
                 .let {
-                    i -> if (!workspaceProperty.displayName.isNullOrEmpty()) i.set(DISPLAY_NAME, workspaceProperty.displayName) else i
+                    i -> if (workspaceProperty.displayName != null) i.set(DISPLAY_NAME, workspaceProperty.displayName) else i
                 }
                 .let {
                     i -> if (workspaceProperty.remark != null) i.set(REMARK, workspaceProperty.remark) else i
