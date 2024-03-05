@@ -32,9 +32,13 @@ import com.tencent.bk.sdk.iam.helper.AuthHelper
 import com.tencent.bk.sdk.iam.service.PolicyService
 import com.tencent.devops.auth.service.AuthPipelineIdService
 import com.tencent.devops.auth.service.AuthVerifyRecordService
+import com.tencent.devops.auth.service.DeptService
 import com.tencent.devops.auth.service.ManagerService
+import com.tencent.devops.auth.service.TxMigrateCreatorFixServiceImpl
 import com.tencent.devops.auth.service.iam.IamCacheService
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.client.ClientTokenService
+import com.tencent.devops.common.service.BkTag
 import org.springframework.boot.autoconfigure.AutoConfigureOrder
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication
@@ -48,7 +52,7 @@ import org.springframework.core.Ordered
 @ConditionalOnProperty(prefix = "auth", name = ["idProvider"], havingValue = "rbac")
 @AutoConfigureOrder(Ordered.LOWEST_PRECEDENCE)
 @Suppress("LongParameterList")
-class IamAuthRbacConfiguration {
+class TxRbacAuthConfiguration {
     @Bean
     fun txPermissionService(
         authHelper: AuthHelper,
@@ -77,5 +81,19 @@ class IamAuthRbacConfiguration {
     @Primary
     fun txRbacPermissionSuperManagerService(managerService: ManagerService) = TxRbacPermissionSuperManagerService(
         managerService = managerService
+    )
+
+    @Bean
+    @Primary
+    fun txMigrateCreatorFixService(
+        deptService: DeptService,
+        client: Client,
+        tokenService: ClientTokenService,
+        bkTag: BkTag
+    ) = TxMigrateCreatorFixServiceImpl(
+        deptService = deptService,
+        client = client,
+        tokenService = tokenService,
+        bkTag = bkTag
     )
 }

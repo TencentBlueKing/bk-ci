@@ -9,9 +9,7 @@ import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.utils.TActionUtils
 import com.tencent.devops.common.client.Client
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.stereotype.Service
 
-@Service
 class TxPermissionGrantServiceImpl @Autowired constructor(
     override val grantServiceImpl: GrantServiceImpl,
     override val iamConfiguration: IamConfiguration,

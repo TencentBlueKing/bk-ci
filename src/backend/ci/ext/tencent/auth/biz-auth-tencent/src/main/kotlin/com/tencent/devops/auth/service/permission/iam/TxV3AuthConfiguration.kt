@@ -3,28 +3,38 @@ package com.tencent.devops.auth.service.permission.iam
 import com.tencent.bk.sdk.iam.config.IamConfiguration
 import com.tencent.bk.sdk.iam.helper.AuthHelper
 import com.tencent.bk.sdk.iam.service.PolicyService
+import com.tencent.bk.sdk.iam.service.impl.GrantServiceImpl
+import com.tencent.devops.auth.dao.AuthGroupDao
 import com.tencent.devops.auth.refresh.dispatch.AuthRefreshDispatch
 import com.tencent.devops.auth.service.AuthGroupService
 import com.tencent.devops.auth.service.AuthPipelineIdService
 import com.tencent.devops.auth.service.AuthVerifyRecordService
 import com.tencent.devops.auth.service.DeptService
 import com.tencent.devops.auth.service.ManagerService
+import com.tencent.devops.auth.service.StrategyService
+import com.tencent.devops.auth.service.TxPermissionGradeServiceImpl
+import com.tencent.devops.auth.service.TxPermissionGrantServiceImpl
+import com.tencent.devops.auth.service.TxPermissionRoleMemberImpl
+import com.tencent.devops.auth.service.TxPermissionRoleServiceImpl
 import com.tencent.devops.auth.service.iam.IamCacheService
+import com.tencent.devops.auth.service.iam.PermissionGradeService
 import com.tencent.devops.auth.service.iam.PermissionRoleMemberService
 import com.tencent.devops.auth.service.iam.PermissionRoleService
 import com.tencent.devops.common.client.Client
+import org.jooq.DSLContext
 import org.springframework.boot.autoconfigure.AutoConfigureOrder
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
+import org.springframework.context.annotation.Primary
 import org.springframework.core.Ordered
 
 @Configuration
 @ConditionalOnWebApplication
 @ConditionalOnProperty(prefix = "auth", name = ["idProvider"], havingValue = "new_v3")
 @AutoConfigureOrder(Ordered.LOWEST_PRECEDENCE)
-class IamAuthConfiguration {
+class TxV3AuthConfiguration {
 
     @Bean
     fun txPermissionProjectService(
@@ -100,4 +110,59 @@ class IamAuthConfiguration {
 
     @Bean
     fun managerService(client: Client) = ManagerService(client)
+
+    @Bean
+    @Primary
+    fun txPermissionGradeService(iamManagerService: com.tencent.bk.sdk.iam.service.ManagerService) =
+        TxPermissionGradeServiceImpl(
+            iamManagerService = iamManagerService
+        )
+
+    @Bean
+    @Primary
+    fun txPermissionGrantService(
+        grantServiceImpl: GrantServiceImpl,
+        iamConfiguration: IamConfiguration,
+        client: Client,
+        authPipelineIdService: AuthPipelineIdService
+    ) = TxPermissionGrantServiceImpl(
+        grantServiceImpl = grantServiceImpl,
+        iamConfiguration = iamConfiguration,
+        client = client,
+        authPipelineIdService = authPipelineIdService
+    )
+
+    @Bean
+    @Primary
+    fun txPermissionRoleMember(
+        iamManagerService: com.tencent.bk.sdk.iam.service.ManagerService,
+        permissionGradeService: PermissionGradeService,
+        groupService: AuthGroupService
+    ) = TxPermissionRoleMemberImpl(
+        iamManagerService = iamManagerService,
+        permissionGradeService = permissionGradeService,
+        groupService = groupService
+    )
+
+    @Bean
+    @Primary
+    fun txPermissionRoleServiceImpl(
+        iamManagerService: com.tencent.bk.sdk.iam.service.ManagerService,
+        permissionGradeService: PermissionGradeService,
+        iamConfiguration: IamConfiguration,
+        groupService: AuthGroupService,
+        authGroupDao: AuthGroupDao,
+        dslContext: DSLContext,
+        client: Client,
+        stagService: StrategyService
+    ) = TxPermissionRoleServiceImpl(
+        iamManagerService = iamManagerService,
+        permissionGradeService = permissionGradeService,
+        iamConfiguration = iamConfiguration,
+        groupService = groupService,
+        authGroupDao = authGroupDao,
+        dslContext = dslContext,
+        client = client,
+        stagService = stagService
+    )
 }

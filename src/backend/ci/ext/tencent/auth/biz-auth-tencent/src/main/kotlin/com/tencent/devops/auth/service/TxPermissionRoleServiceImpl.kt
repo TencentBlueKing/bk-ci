@@ -42,9 +42,7 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.web.utils.I18nUtil
 import org.jooq.DSLContext
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.stereotype.Service
 
-@Service
 class TxPermissionRoleServiceImpl @Autowired constructor(
     iamManagerService: ManagerService,
     private val permissionGradeService: PermissionGradeService,

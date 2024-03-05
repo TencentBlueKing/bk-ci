@@ -34,10 +34,8 @@ import com.tencent.devops.auth.pojo.dto.RoleMemberDTO
 import com.tencent.devops.auth.service.iam.PermissionGradeService
 import com.tencent.devops.auth.service.iam.impl.AbsPermissionRoleMemberImpl
 import org.slf4j.LoggerFactory
-import org.springframework.stereotype.Service
 import org.springframework.beans.factory.annotation.Autowired
 
-@Service
 class TxPermissionRoleMemberImpl @Autowired constructor(
     override val iamManagerService: ManagerService,
     private val permissionGradeService: PermissionGradeService,
