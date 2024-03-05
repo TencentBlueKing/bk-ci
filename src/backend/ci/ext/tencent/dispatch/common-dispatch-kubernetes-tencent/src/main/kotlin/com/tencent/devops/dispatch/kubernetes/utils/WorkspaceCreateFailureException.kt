@@ -25,16 +25,14 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.remotedev.pojo.project
+package com.tencent.devops.dispatch.kubernetes.utils
 
-import com.fasterxml.jackson.annotation.JsonProperty
-import io.swagger.v3.oas.annotations.media.Schema
+import com.tencent.devops.common.api.pojo.ErrorType
 
-@Schema(title = "工作空间属性")
-data class WorkspaceProperty(
-    @get:Schema(title = "别名")
-    @JsonProperty("display_name")
-    val displayName: String?,
-    @get:Schema(title = "备注")
-    val remark: String?
-)
+class WorkspaceCreateFailureException(
+    val errorType: ErrorType,
+    val errorCode: Int,
+    val formatErrorMessage: String,
+    val envId: String,
+    errorMessage: String
+) : Exception(errorMessage)

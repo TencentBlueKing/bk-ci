@@ -339,10 +339,12 @@ class PipelineRecordModelService @Autowired constructor(
             taskVarMap["@type"] = classType
             taskVarMap[KEY_ATOM_CODE] = atomCode
             taskBaseMaps.add(taskBaseMapIndex, taskVarMap)
+            // 把当前job中含有质量红线的标识写入job模型
             containerBaseMap[QUALITY_FLAG] = true
         }
-        val mergeTaskVarFlag = (matrixTaskFlag && elementPostInfo == null && !qualityTaskFlag) ||
-            containerBaseMap[QUALITY_FLAG] == true
+        // 当前job是矩阵类型或者质量红线任务标识为true，且当前任务不是post任务或者质量红线任务，则需要生成完整的task变量模型以便后面和model合并
+        val mergeTaskVarFlag = (matrixTaskFlag || containerBaseMap[QUALITY_FLAG] == true) &&
+            elementPostInfo == null && !qualityTaskFlag
         if (mergeTaskVarFlag) {
             // 生成完整的task的变量模型
             val taskBaseMap = taskBaseMaps[taskBaseMapIndex]
