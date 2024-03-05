@@ -369,7 +369,11 @@
         >
             <div slot="content" style="padding: 20px;">
                 <bk-table
+                    v-bkloading="{ isLoading: isFetchLoading }"
                     :data="pipelineList"
+                    :pagination="pipelinePagination"
+                    @page-change="handlePageChange"
+                    @limit-change="handleLimitChange"
                 >
                     <bk-table-column :label="$t('codelib.流水线名称')" prop="pipelineName">
                         <template slot-scope="{ row }">
@@ -457,7 +461,13 @@
                 pipelineCount: 0,
                 refreshLoading: false,
                 isShowPipeline: false,
-                pipelineList: []
+                pipelineList: [],
+                pipelinePagination: {
+                    current: 1,
+                    count: 0,
+                    limit: 10
+                },
+                isFetchLoading: false
             }
         },
         computed: {
@@ -554,14 +564,7 @@
 
             isShowPipeline (val) {
                 if (val) {
-                    this.getYamlPipelines({
-                        projectId: this.projectId,
-                        repositoryHashId: this.repoInfo.repoHashId
-                    }).then(res => {
-                        this.pipelineList = res.records
-                    }).catch(e => {
-                        console.error(e)
-                    })
+                    this.fetchYamlPipelines()
                 } else {
                     this.pipelineList = []
                 }
@@ -875,6 +878,32 @@
                 }).then(res => {
                     this.pipelineCount = res
                 })
+            },
+            fetchYamlPipelines () {
+                this.isFetchLoading = true
+                this.getYamlPipelines({
+                    projectId: this.projectId,
+                    repositoryHashId: this.repoInfo.repoHashId,
+                    page: this.pipelinePagination.current,
+                    pageSize: this.pipelinePagination.limit
+                }).then(res => {
+                    this.pipelineList = res.records
+                    this.isFetchLoading = false
+                    this.pipelinePagination.count = res.count
+                }).catch(e => {
+                    console.error(e)
+                })
+            },
+
+            handlePageChange (page) {
+                this.pipelinePagination.current = page
+                this.fetchYamlPipelines()
+            },
+
+            handleLimitChange (limit) {
+                this.pipelinePagination.current = 1
+                this.pipelinePagination.limit = limit
+                this.fetchYamlPipelines()
             }
         }
     }
