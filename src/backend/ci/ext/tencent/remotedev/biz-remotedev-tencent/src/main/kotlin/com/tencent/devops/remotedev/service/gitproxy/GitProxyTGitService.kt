@@ -96,8 +96,9 @@ class GitProxyTGitService @Autowired constructor(
             filterUrlPermission(gitProjectUrls, token.accessToken, result, TGitProjectType.GIT, noGroup)
         }
 
+        // 说明没有一个成功的
         if (result.isEmpty()) {
-            return emptyMap()
+            return urls.associateWith { false }
         }
 
         // 关联项目，不符合要求的自动踢出去
