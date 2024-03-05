@@ -4,7 +4,7 @@ import com.tencent.devops.auth.service.ManagerService
 import com.tencent.devops.auth.service.PermissionSuperManagerService
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthResourceType
-import com.tencent.devops.common.auth.utils.RbacAuthUtils
+import com.tencent.devops.common.auth.rbac.utils.RbacAuthUtils
 
 class TxRbacPermissionSuperManagerService(
     private val managerService: ManagerService

@@ -29,8 +29,8 @@ package com.tencent.devops.auth.service.gitci
 
 import com.google.common.cache.CacheBuilder
 import com.tencent.devops.auth.ScmRetryUtils
+import com.tencent.devops.auth.provider.stream.service.StreamPermissionServiceImpl
 import com.tencent.devops.auth.service.ManagerService
-import com.tencent.devops.auth.service.stream.StreamPermissionServiceImpl
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.utils.GitCIUtils
