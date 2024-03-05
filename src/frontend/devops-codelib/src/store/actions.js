@@ -584,9 +584,11 @@ const actions = {
 
     getYamlPipelines ({ commit }, {
         projectId,
-        repositoryHashId
+        repositoryHashId,
+        page,
+        pageSize
     }) {
-        return vue.$ajax.get(`${PROCESS_API_URL_PREFIX}/user/pipeline/yaml/${projectId}/${repositoryHashId}/listYamlPipeline`)
+        return vue.$ajax.get(`${PROCESS_API_URL_PREFIX}/user/pipeline/yaml/${projectId}/${repositoryHashId}/listYamlPipeline?page=${page}&pageSize=${pageSize}`)
     }
 }
 
