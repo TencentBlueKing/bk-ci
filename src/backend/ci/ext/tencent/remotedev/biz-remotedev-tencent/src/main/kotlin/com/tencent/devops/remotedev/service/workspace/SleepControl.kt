@@ -343,6 +343,7 @@ class SleepControl @Autowired constructor(
                                 notifyControl.notify4UserAndCCRemoteDevManager(
                                     userIds = permissionService.getWorkspaceOwner(workspace.workspaceName)
                                         .toMutableSet(),
+                                    cc = mutableSetOf(workspace.createUserId),
                                     projectId = workspace.projectId,
                                     notifyTemplateCode = NotifyControl.NOT_LOGIN_AUTO_SLEEP_NOTIFY,
                                     notifyType = mutableSetOf(RemoteDevNotifyType.EMAIL),
