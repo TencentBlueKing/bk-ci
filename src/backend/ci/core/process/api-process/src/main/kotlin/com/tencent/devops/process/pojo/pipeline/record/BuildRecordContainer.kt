@@ -128,7 +128,8 @@ data class BuildRecordContainer(
                 if (buildStatus == BuildStatus.SKIP && !ElementUtils.getTaskAddFlag(
                         element = element,
                         stageEnableFlag = stageEnableFlag,
-                        containerEnableFlag = container.isContainerEnable()
+                        containerEnableFlag = container.isContainerEnable(),
+                        originMatrixContainerFlag = container.fetchGroupContainers() != null
                     )
                 ) {
                     // 不保存跳过的非post任务记录或非质量红线记录
@@ -150,7 +151,7 @@ data class BuildRecordContainer(
                         containerId = container.containerId!!,
                         taskId = element.id!!,
                         classType = element.getClassType(),
-                        atomCode = element.getTaskAtom(),
+                        atomCode = element.getAtomCode(),
                         executeCount = context.executeCount,
                         resourceVersion = context.resourceVersion,
                         taskSeq = taskSeq,
