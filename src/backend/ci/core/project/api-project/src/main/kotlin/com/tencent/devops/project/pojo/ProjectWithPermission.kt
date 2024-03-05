@@ -11,5 +11,7 @@ data class ProjectWithPermission(
     @get:Schema(title = "权限")
     val permission: Boolean,
     @get:Schema(title = "环境路由")
-    val routerTag: String?
+    val routerTag: String?,
+    @get:Schema(title = "bgId")
+    val bgId: Long? = null
 )
