@@ -38,7 +38,7 @@ const logoFiles = computed(() => {
 const isRbac = computed(() => {
   return authProvider.value === 'rbac'
 })
-const authProvider = ref(window.BK_CI_AUTH_PROVIDER || '')
+const authProvider = ref(window.top.BK_CI_AUTH_PROVIDER || '')
 const projectForm = ref(null);
 const iframeRef = ref(null);
 const vm = getCurrentInstance();
