@@ -492,4 +492,14 @@ class StoreProjectRelDao {
                 .fetch()
         }
     }
+
+    fun getAtomProjectRel(dslContext: DSLContext, storeCode: String): TStoreProjectRelRecord? {
+        with(TStoreProjectRel.T_STORE_PROJECT_REL) {
+            return dslContext.selectFrom(this)
+                .where(STORE_CODE.eq(storeCode))
+                .and(TYPE.eq(StoreProjectTypeEnum.INIT.type.toByte()))
+                .and(STORE_TYPE.eq(StoreTypeEnum.ATOM.type.toByte()))
+                .fetchOne()
+        }
+    }
 }

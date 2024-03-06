@@ -45,7 +45,6 @@ dependencies {
     implementation(project(":core:process:biz-process"))
     implementation(project(":core:project:biz-project-sample"))
     implementation(project(":core:quality:biz-quality"))
-    implementation(project(":core:repository:biz-repository-sample"))
     implementation(project(":core:ticket:biz-ticket"))
     implementation(project(":core:websocket:biz-websocket"))
 }

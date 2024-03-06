@@ -412,7 +412,7 @@ class SignServiceImpl @Autowired constructor(
                 throw ErrorCodeException(
                     errorCode = SignMessageCode.ERROR_PARS_INFO_PLIST,
                     defaultMessage = "Missing parameters in Info.plist file, please check:" +
-                        "CFBundleIdentifier, CFBundleName, CFBundleShortVersionString, CFBundleVersion"
+                            "CFBundleIdentifier, CFBundleName, CFBundleShortVersionString, CFBundleVersion"
                 )
             }
             var parameters = rootDict.objectForKey("CFBundleIdentifier") as NSString
@@ -449,16 +449,20 @@ class SignServiceImpl @Autowired constructor(
 
     private fun pair(rootDict: NSDictionary, zhStrings: File?): Pair<String, String> {
         val scheme = try {
-            val schemeArray = rootDict.objectForKey("CFBundleURLTypes") as NSArray
-            schemeArray.array
-                .map { it as NSDictionary }
-                .map { it.objectForKey("CFBundleURLSchemes") }
-                .map { it as NSArray }
-                .map { it.array }
-                .flatMap { it.toList() }
-                .map { it as NSString }
-                .map { it.toString() }
-                .maxByOrNull { it.length } ?: ""
+            if (rootDict.containsKey("CFBundleURLSchemes")) {
+                (rootDict.objectForKey("CFBundleURLSchemes") as NSString).toString()
+            } else {
+                val schemeArray = rootDict.objectForKey("CFBundleURLTypes") as NSArray
+                schemeArray.array
+                    .mapNotNull { it as NSDictionary }
+                    .mapNotNull { it.objectForKey("CFBundleURLSchemes") }
+                    .map { it as NSArray }
+                    .mapNotNull { it.array }
+                    .flatMap { it.toList() }
+                    .mapNotNull { it as NSString }
+                    .map { it.toString() }
+                    .maxByOrNull { it.length } ?: ""
+            }
         } catch (ignore: Throwable) {
             ""
         }
@@ -518,7 +522,7 @@ class SignServiceImpl @Autowired constructor(
     private fun getCodeSignFile(version: String?): String {
         logger.info(
             "SIGN|codesignPathVersion1=$codesignPathVersion1" +
-                "|codesignPathVersion2=$codesignPathVersion2"
+                    "|codesignPathVersion2=$codesignPathVersion2"
         )
         return when (version) {
             "version1" -> codesignPathVersion1 ?: DEFAULT_CODESIGN_PATH

@@ -87,6 +87,14 @@ interface OpAtomService {
     ): Result<Boolean>
 
     /**
+     * 补充插件仓库标识
+     */
+    fun updateAtomRepoFlag(
+        userId: String,
+        atomCode: String?
+    ): Result<Boolean>
+
+    /**
      * 将插件设置为默认
      */
     fun setDefault(userId: String, atomCode: String): Boolean

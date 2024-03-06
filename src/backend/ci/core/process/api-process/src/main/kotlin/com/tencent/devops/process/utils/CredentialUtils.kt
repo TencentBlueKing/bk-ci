@@ -76,5 +76,6 @@ object CredentialUtils {
 data class Credential(
     val username: String,
     val privateKey: String, // password or private key
-    val passPhrase: String? // passphrase for ssh private key
+    val passPhrase: String?, // passphrase for ssh private key
+    var credentialType: CredentialType? = null
 )

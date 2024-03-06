@@ -249,7 +249,9 @@
         mapActions
     } from 'vuex'
     import {
-        getCodelibConfig
+        getCodelibConfig,
+        CODE_REPOSITORY_CACHE,
+        CODE_REPOSITORY_SEARCH_VAL
     } from '../../config'
     export default {
         props: {
@@ -463,6 +465,16 @@
                 'refreshGithubOauth'
             ]),
             openValidate () {
+                const { scmType, id, page, limit, searchName } = this.$route.query
+                const { projectId } = this.$route.params
+                localStorage.setItem(CODE_REPOSITORY_CACHE, JSON.stringify({
+                    scmType,
+                    id,
+                    page,
+                    limit,
+                    projectId
+                }))
+                localStorage.setItem(CODE_REPOSITORY_SEARCH_VAL, JSON.stringify(searchName || ''))
                 if (this.isGit || this.isTGit) {
                     this.refreshGitOauth({
                         type: this.isGit ? 'git' : 'tgit',
