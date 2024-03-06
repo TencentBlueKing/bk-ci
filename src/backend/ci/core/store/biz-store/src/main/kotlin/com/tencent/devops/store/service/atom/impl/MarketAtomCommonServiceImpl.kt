@@ -46,6 +46,10 @@ import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.model.store.tables.records.TAtomRecord
 import com.tencent.devops.store.constant.StoreMessageCode
+import com.tencent.devops.store.constant.StoreMessageCode.BK_DEFAULT_FAIL_POLICY
+import com.tencent.devops.store.constant.StoreMessageCode.BK_DEFAULT_RETRY_POLICY
+import com.tencent.devops.store.constant.StoreMessageCode.BK_DEFAULT_TIMEOUT
+import com.tencent.devops.store.constant.StoreMessageCode.BK_RETRY_TIMES
 import com.tencent.devops.store.dao.atom.AtomDao
 import com.tencent.devops.store.dao.atom.MarketAtomDao
 import com.tencent.devops.store.dao.atom.MarketAtomEnvInfoDao
@@ -514,18 +518,18 @@ class MarketAtomCommonServiceImpl : MarketAtomCommonService {
     }
 
     private fun validateConfigMap(configMap: Map<String, Any>) {
-        val defaultTimeout = configMap["defaultTimeout"] as? Int ?: 900
+        val defaultTimeout = configMap[BK_DEFAULT_TIMEOUT] as? Int ?: 900
         if (defaultTimeout !in 1..10080) {
             throw ErrorCodeException(errorCode = StoreMessageCode.TASK_JSON_CONFIG_DEFAULT_TIMEOUT_FIELD_IS_INVALID)
         }
-        val defaultFailPolicy = configMap["defaultFailPolicy"] as? String
-        val defaultRetryPolicy = configMap["defaultRetryPolicy"] as? List<String>
+        val defaultFailPolicy = configMap[BK_DEFAULT_FAIL_POLICY] as? String
+        val defaultRetryPolicy = configMap[BK_DEFAULT_RETRY_POLICY] as? List<String>
         if (!defaultRetryPolicy.isNullOrEmpty()) {
             if (defaultFailPolicy == AtomFailPolicyEnum.AUTO_CONTINUE.value &&
                 AtomRetryPolicyEnum.MANUALLY_RETRY.value in defaultRetryPolicy) {
                 throw ErrorCodeException(errorCode = StoreMessageCode.TASK_JSON_CONFIG_POLICY_FIELD_IS_INVALID)
             }
-            val retryTimes = configMap["retryTimes"] as? Int ?: 1
+            val retryTimes = configMap[BK_RETRY_TIMES] as? Int ?: 1
             if (AtomRetryPolicyEnum.AUTO_RETRY.value in defaultRetryPolicy && retryTimes !in 1..5) {
                 throw ErrorCodeException(errorCode = StoreMessageCode.TASK_JSON_CONFIG_RETRY_TIME_FIELD_IS_INVALID)
             }
