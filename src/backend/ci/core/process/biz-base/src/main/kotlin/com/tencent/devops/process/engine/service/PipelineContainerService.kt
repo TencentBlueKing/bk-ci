@@ -326,7 +326,8 @@ class PipelineContainerService @Autowired constructor(
                 if (ElementUtils.getTaskAddFlag(
                         element = atomElement,
                         stageEnableFlag = stage.isStageEnable(),
-                        containerEnableFlag = container.isContainerEnable()
+                        containerEnableFlag = container.isContainerEnable(),
+                        originMatrixContainerFlag = ContainerUtils.isOriginMatrixContainer(container)
                     )
                 ) {
                     val taskVar = atomElement.initTaskVar()
@@ -439,7 +440,8 @@ class PipelineContainerService @Autowired constructor(
                 if (retryFlag && ElementUtils.getTaskAddFlag(
                         element = atomElement,
                         stageEnableFlag = stage.isStageEnable(),
-                        containerEnableFlag = container.isContainerEnable()
+                        containerEnableFlag = container.isContainerEnable(),
+                        originMatrixContainerFlag = ContainerUtils.isOriginMatrixContainer(container)
                     )
                 ) {
                     taskBuildRecords.add(
@@ -447,7 +449,7 @@ class PipelineContainerService @Autowired constructor(
                             projectId = context.projectId, pipelineId = context.pipelineId,
                             buildId = context.buildId, stageId = stage.id!!, containerId = container.containerId!!,
                             taskId = atomElement.id!!, classType = atomElement.getClassType(),
-                            atomCode = atomElement.getTaskAtom(), executeCount = context.executeCount,
+                            atomCode = atomElement.getAtomCode(), executeCount = context.executeCount,
                             resourceVersion = context.resourceVersion, taskSeq = taskSeq, status = status.name,
                             taskVar = atomElement.initTaskVar(), timestamps = mapOf(),
                             elementPostInfo = atomElement.additionalOptions?.elementPostInfo?.takeIf { info ->
