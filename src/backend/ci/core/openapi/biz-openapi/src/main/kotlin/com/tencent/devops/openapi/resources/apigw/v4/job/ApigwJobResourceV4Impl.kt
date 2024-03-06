@@ -168,4 +168,8 @@ class ApigwJobResourceV4Impl @Autowired constructor(
     override fun checkDeployNodesInCC(userId: String) {
         client.get(ServiceJobResource::class).checkDeployNodesInCC(userId)
     }
+
+    override fun updateGseAgent(userId: String) {
+        client.get(ServiceJobResource::class).updateGseAgent(userId)
+    }
 }
