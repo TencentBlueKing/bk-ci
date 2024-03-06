@@ -28,6 +28,7 @@
 package com.tencent.devops.remotedev.service.workspace
 
 import com.tencent.devops.common.api.exception.ErrorCodeException
+import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.notify.enums.NotifyType
@@ -65,6 +66,7 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
+import java.time.LocalDateTime
 
 @Service
 @Suppress("LongMethod")
@@ -381,7 +383,7 @@ class NotifyControl @Autowired constructor(
                 ip = it.ips.removeSurrounding("[", "]"),
                 title = it.title,
                 desc = it.desc,
-                createTime = it.createdTime.toString(),
+                createTime = DateTimeUtil.toDateTime(it.createdTime as LocalDateTime),
                 operator = it.operator
             )
         }
