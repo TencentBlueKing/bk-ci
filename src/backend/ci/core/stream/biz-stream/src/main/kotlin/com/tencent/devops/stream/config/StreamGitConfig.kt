@@ -49,8 +49,5 @@ class StreamGitConfig {
     @Value("\${github.signSecret:}")
     val signSecret: String = ""
 
-    @Value("\${bkci.defaultProductId:#{0}}")
-    val defaultBkProductId: Int = 0
-
     fun getScmType() = ScmType.valueOf(scmType!!)
 }
