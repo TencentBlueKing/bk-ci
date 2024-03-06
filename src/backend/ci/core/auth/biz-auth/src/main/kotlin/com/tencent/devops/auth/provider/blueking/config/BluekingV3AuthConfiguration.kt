@@ -212,4 +212,13 @@ class BluekingV3AuthConfiguration {
         iamConfiguration: IamConfiguration?,
         bkPermissionProjectService: BkPermissionProjectService
     ) = BkPermissionUrlService(iamEsbService, iamConfiguration, bkPermissionProjectService)
+
+    @Bean
+    fun iamCacheService(
+        policyService: PolicyService,
+        groupService: AuthGroupService
+    ) = IamCacheService(
+        policyService = policyService,
+        groupService = groupService
+    )
 }

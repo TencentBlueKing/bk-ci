@@ -1,7 +1,5 @@
 package com.tencent.devops.auth.provider.sample.config
 
-import com.tencent.bk.sdk.iam.config.IamConfiguration
-import com.tencent.bk.sdk.iam.service.impl.GrantServiceImpl
 import com.tencent.devops.auth.provider.sample.service.SampleAuthAuthorizationScopesService
 import com.tencent.devops.auth.provider.sample.service.SampleAuthMonitorSpaceService
 import com.tencent.devops.auth.provider.sample.service.SampleAuthPermissionProjectService
@@ -44,7 +42,6 @@ import com.tencent.devops.auth.service.iam.PermissionRoleMemberService
 import com.tencent.devops.auth.service.iam.PermissionRoleService
 import com.tencent.devops.auth.service.iam.PermissionService
 import com.tencent.devops.auth.service.iam.PermissionUrlService
-import com.tencent.devops.common.client.Client
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
 import org.springframework.context.annotation.Bean
 
