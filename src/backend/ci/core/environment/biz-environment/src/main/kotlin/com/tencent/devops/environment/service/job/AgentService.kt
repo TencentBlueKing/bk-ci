@@ -91,9 +91,6 @@ data class AgentService @Autowired constructor(
     @Value("\${environment.cc.bkBizScopeId:#{null}}")
     val bkBizScopeId: Int = 0
 
-    @Value("\${environment.nodeman.agentStatusQueryThreadCount:#{null}}")
-    val agentStatusQueryThreadCount: Int = 30
-
     companion object {
         private val logger = LoggerFactory.getLogger(AgentService::class.java)
 
@@ -128,9 +125,6 @@ data class AgentService @Autowired constructor(
         const val AGENT_NOT_INSTALLED_TAG = false
 
         private const val NS_TO_S = 1000000000
-
-//        val executor = Executors.newSingleThreadScheduledExecutor()
-//        val executor = Executors.newSingleThreadScheduledExecutor()
     }
 
     fun installAgent(
@@ -228,7 +222,7 @@ data class AgentService @Autowired constructor(
         if (null == ipList) return
         val executor = Executors.newSingleThreadScheduledExecutor()
         val runningIpList = ipList.toMutableList()
-        nodeDao.updateNodeStatusByNodeIp(dslContext, ipList, NodeStatus.RUNNING.name, jobId.toLong())
+        nodeDao.updateNodeStatusByNodeIp(dslContext, ipList, NodeStatus.RUNNING.name, null, jobId.toLong())
         val task = object : Runnable {
             var count = 0
             override fun run() {
@@ -260,7 +254,7 @@ data class AgentService @Autowired constructor(
                                     NodeStatus.NOT_INSTALLED.name
                             }
                         val nodeAgentVersion = agentInfo?.get(0)?.version
-                        nodeDao.updateNodeStatusByNodeIp(dslContext, listOf(it.ip), nodeStatus, nodeAgentVersion,null)
+                        nodeDao.updateNodeStatusByNodeIp(dslContext, listOf(it.ip), nodeStatus, nodeAgentVersion, null)
                         runningIpList.remove(it.ip)
                     }
                 }
