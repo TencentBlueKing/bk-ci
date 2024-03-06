@@ -331,6 +331,9 @@ object ProcessMessageCode {
     const val ERROR_REPO_NO_INIT = "2101217" // 默认分支不存在,请先初始化代码库
     const val ERROR_REPOSITORY_NOT_OAUTH = "2101218" // 当前代码库关联人({0})未进行OAUTH授权，请尝试切换代码库凭证类型
 
+    const val ERROR_INCORRECT_NOTIFICATION_TYPE = "2101230" // 通知类型配置不正确，请检查
+    const val ERROR_INCORRECT_NOTIFICATION_MESSAGE_CONTENT = "2101231" // 通知内容配配置不正确置，请检查
+
     const val BK_SUCCESSFULLY_DISTRIBUTED = "bkSuccessfullyDistributed" // 跨项目构件分发成功，共分发了{0}个文件
     const val BK_SUCCESSFULLY_FAILED = "bkSuccessfullyFailed" // 跨项目构件分发失败，
     const val BK_NO_MATCH_FILE_DISTRIBUTE = "bkNoMatchFileDistribute" // 匹配不到待分发的文件: {0}
