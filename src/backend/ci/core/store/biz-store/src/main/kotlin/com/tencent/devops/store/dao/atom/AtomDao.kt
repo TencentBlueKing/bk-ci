@@ -47,6 +47,7 @@ import com.tencent.devops.model.store.tables.TClassify
 import com.tencent.devops.model.store.tables.TStoreProjectRel
 import com.tencent.devops.model.store.tables.TStoreStatisticsTotal
 import com.tencent.devops.model.store.tables.records.TAtomRecord
+import com.tencent.devops.repository.pojo.AtomRefRepositoryInfo
 import com.tencent.devops.repository.pojo.enums.VisibilityLevelEnum
 import com.tencent.devops.store.pojo.atom.AtomBaseInfoUpdateRequest
 import com.tencent.devops.store.pojo.atom.AtomCreateRequest
@@ -1370,6 +1371,36 @@ class AtomDao : AtomBaseDao() {
                     )
                 )
                 .orderBy(tAtom.CREATE_TIME.desc()).limit(1).fetchOne(0, String::class.java)
+        }
+    }
+
+    fun getAtomRepoInfoByCode(
+        dslContext: DSLContext,
+        atomCode: String?,
+        limit: Int,
+        offset: Int
+    ): List<AtomRefRepositoryInfo> {
+        return with(TAtom.T_ATOM) {
+            val conditions = mutableListOf(
+                REPOSITORY_HASH_ID.isNotNull,
+                LATEST_FLAG.eq(true)
+            )
+            dslContext.select(
+                ATOM_CODE,
+                REPOSITORY_HASH_ID
+            )
+                .from(this)
+                .where(conditions)
+                .orderBy(CREATE_TIME.desc())
+                .limit(limit)
+                .offset(offset)
+                .fetch()
+                .map {
+                    AtomRefRepositoryInfo(
+                        atomCode = it.value1(),
+                        repositoryHashId = it.value2()
+                    )
+                }
         }
     }
 

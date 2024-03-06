@@ -45,6 +45,7 @@ import com.tencent.devops.dispatch.kubernetes.pojo.mq.WorkspaceCreateEvent
 import com.tencent.devops.dispatch.kubernetes.pojo.mq.WorkspaceOperateEvent
 import com.tencent.devops.dispatch.kubernetes.pojo.remotedev.WorkspaceResponse
 import com.tencent.devops.dispatch.kubernetes.service.factory.RemoteDevServiceFactory
+import com.tencent.devops.dispatch.kubernetes.utils.WorkspaceCreateFailureException
 import com.tencent.devops.remotedev.pojo.WorkspaceMountType
 import com.tencent.devops.remotedev.pojo.event.RemoteDevUpdateEvent
 import com.tencent.devops.remotedev.pojo.event.UpdateEventType
@@ -82,11 +83,12 @@ class RemoteDevService @Autowired constructor(
                 fStatus = EnvironmentActionStatus.PENDING,
                 workspaceName = event.workspaceName
             )
-            throw BuildFailureException(
-                ErrorCodeEnum.BASE_CREATE_VM_ERROR.errorType,
-                ErrorCodeEnum.BASE_CREATE_VM_ERROR.errorCode,
-                ErrorCodeEnum.BASE_CREATE_VM_ERROR.getErrorMessage(),
-                I18nUtil.getCodeLanMessage(BK_CREATE_WORKSPACE_ERROR)
+            throw WorkspaceCreateFailureException(
+                errorType = ErrorCodeEnum.BASE_CREATE_VM_ERROR.errorType,
+                errorCode = ErrorCodeEnum.BASE_CREATE_VM_ERROR.errorCode,
+                formatErrorMessage = ErrorCodeEnum.BASE_CREATE_VM_ERROR.getErrorMessage(),
+                envId = workspace.environmentUid,
+                errorMessage = I18nUtil.getCodeLanMessage(BK_CREATE_WORKSPACE_ERROR)
             )
         }
         val mountType = event.mountType ?: event.devFile.checkWorkspaceMountType()
@@ -165,11 +167,12 @@ class RemoteDevService @Autowired constructor(
                     .getWorkspaceInfo(userId, event.workspaceName)
 
                 if (workspaceInfo.status != EnvStatusEnum.running) {
-                    throw BuildFailureException(
-                        ErrorCodeEnum.BASE_CREATE_VM_ERROR.errorType,
-                        ErrorCodeEnum.BASE_CREATE_VM_ERROR.errorCode,
-                        ErrorCodeEnum.BASE_CREATE_VM_ERROR.getErrorMessage(),
-                        I18nUtil.getCodeLanMessage(BK_WORKSPACE_STATE_NOT_RUNNING)
+                    throw WorkspaceCreateFailureException(
+                        errorType = ErrorCodeEnum.BASE_CREATE_VM_ERROR.errorType,
+                        errorCode = ErrorCodeEnum.BASE_CREATE_VM_ERROR.errorCode,
+                        formatErrorMessage = ErrorCodeEnum.BASE_CREATE_VM_ERROR.getErrorMessage(),
+                        envId = result.enviromentUid,
+                        errorMessage = I18nUtil.getCodeLanMessage(BK_WORKSPACE_STATE_NOT_RUNNING)
                     )
                 }
 
@@ -198,11 +201,12 @@ class RemoteDevService @Autowired constructor(
                 )
             }
 
-            throw BuildFailureException(
-                ErrorCodeEnum.BASE_CREATE_VM_ERROR.errorType,
-                ErrorCodeEnum.BASE_CREATE_VM_ERROR.errorCode,
-                ErrorCodeEnum.BASE_CREATE_VM_ERROR.getErrorMessage(),
-                "errorMessage:$taskMessage"
+            throw WorkspaceCreateFailureException(
+                errorType = ErrorCodeEnum.BASE_CREATE_VM_ERROR.errorType,
+                errorCode = ErrorCodeEnum.BASE_CREATE_VM_ERROR.errorCode,
+                formatErrorMessage = ErrorCodeEnum.BASE_CREATE_VM_ERROR.getErrorMessage(),
+                envId = result.enviromentUid,
+                errorMessage = "errorMessage:$taskMessage"
             )
         }
     }

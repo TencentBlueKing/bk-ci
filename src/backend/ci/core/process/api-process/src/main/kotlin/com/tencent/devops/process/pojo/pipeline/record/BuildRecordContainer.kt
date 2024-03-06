@@ -33,6 +33,7 @@ import com.tencent.devops.common.pipeline.container.VMBuildContainer
 import com.tencent.devops.common.pipeline.enums.BuildRecordTimeStamp
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.pojo.time.BuildTimestampType
+import com.tencent.devops.common.pipeline.utils.ElementUtils
 import com.tencent.devops.process.pojo.app.StartBuildContext
 import io.swagger.v3.oas.annotations.media.Schema
 import java.time.LocalDateTime
@@ -78,6 +79,7 @@ data class BuildRecordContainer(
         @Suppress("ComplexMethod")
         fun MutableList<BuildRecordContainer>.addRecords(
             stageId: String,
+            stageEnableFlag: Boolean,
             container: Container,
             context: StartBuildContext,
             buildStatus: BuildStatus?,
@@ -87,6 +89,10 @@ data class BuildRecordContainer(
             containerVar[Container::name.name] = container.name
             container.containerHashId?.let {
                 containerVar[Container::containerHashId.name] = it
+            }
+            val startVMTaskSeq = container.startVMTaskSeq
+            startVMTaskSeq?.let {
+                containerVar[Container::startVMTaskSeq.name] = it
             }
             if (container is TriggerContainer) {
                 containerVar[container::params.name] = container.params
@@ -119,6 +125,22 @@ data class BuildRecordContainer(
             )
             if (taskBuildRecords == null) return
             container.elements.forEachIndexed { index, element ->
+                if (buildStatus == BuildStatus.SKIP && !ElementUtils.getTaskAddFlag(
+                        element = element,
+                        stageEnableFlag = stageEnableFlag,
+                        containerEnableFlag = container.isContainerEnable()
+                    )
+                ) {
+                    // 不保存跳过的非post任务记录或非质量红线记录
+                    return@forEachIndexed
+                }
+                val taskSeq = if (startVMTaskSeq != null && startVMTaskSeq > 1 && index < startVMTaskSeq - 1) {
+                    // 开机任务前的任务的序号需要在index基础上加1
+                    index + 1
+                } else {
+                    // 开机任务后的任务的序号需要在index基础上加2
+                    index + 2
+                }
                 taskBuildRecords.add(
                     BuildRecordTask(
                         projectId = context.projectId,
@@ -131,9 +153,9 @@ data class BuildRecordContainer(
                         atomCode = element.getTaskAtom(),
                         executeCount = context.executeCount,
                         resourceVersion = context.resourceVersion,
-                        taskSeq = index,
+                        taskSeq = taskSeq,
                         status = buildStatus?.name,
-                        taskVar = mutableMapOf(),
+                        taskVar = element.initTaskVar(),
                         timestamps = mapOf(),
                         elementPostInfo = element.additionalOptions?.elementPostInfo?.takeIf { info ->
                             info.parentElementId != element.id

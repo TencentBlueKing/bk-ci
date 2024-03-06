@@ -34,7 +34,7 @@ import io.swagger.v3.oas.annotations.media.Schema
 data class WorkspaceProperty(
     @get:Schema(title = "别名")
     @JsonProperty("display_name")
-    val displayName: String? = "",
+    val displayName: String?,
     @get:Schema(title = "备注")
-    val remark: String? = ""
+    val remark: String?
 )

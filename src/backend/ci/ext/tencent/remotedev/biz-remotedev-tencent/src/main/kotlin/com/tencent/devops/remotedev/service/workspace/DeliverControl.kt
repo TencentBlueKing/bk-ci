@@ -273,6 +273,7 @@ class DeliverControl @Autowired constructor(
                         }
                         notifyControl.notify4RemoteDevManager(
                             projectId = projectId,
+                            cc = mutableSetOf(workspace.createUserId),
                             notifyTemplateCode = WINDOWS_GPU_ASSIGN_NOTIFY,
                             notifyType = mutableSetOf(RemoteDevNotifyType.EMAIL),
                             bodyParams = mapOf(

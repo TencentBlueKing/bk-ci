@@ -43,8 +43,8 @@ import com.tencent.devops.project.api.service.ServiceProjectResource
 import com.tencent.devops.project.constant.ProjectMessageCode
 import com.tencent.devops.remotedev.common.Constansts.ADMIN_NAME
 import com.tencent.devops.remotedev.common.exception.ErrorCodeEnum
-import com.tencent.devops.remotedev.dao.RemoteDevSettingDao
 import com.tencent.devops.remotedev.dao.ProjectNotifyDao
+import com.tencent.devops.remotedev.dao.RemoteDevSettingDao
 import com.tencent.devops.remotedev.dao.WorkspaceDao
 import com.tencent.devops.remotedev.pojo.WebSocketActionType
 import com.tencent.devops.remotedev.pojo.WorkspaceAction
@@ -148,6 +148,7 @@ class NotifyControl @Autowired constructor(
 
     fun notify4RemoteDevManager(
         projectId: String,
+        cc: MutableSet<String>,
         notifyTemplateCode: String,
         notifyType: MutableSet<RemoteDevNotifyType>,
         bodyParams: Map<String, String>
@@ -163,12 +164,14 @@ class NotifyControl @Autowired constructor(
                 ?: mutableSetOf(),
             notifyTemplateCode = notifyTemplateCode,
             notifyType = notifyType,
-            bodyParams = bodyParams
+            bodyParams = bodyParams,
+            cc = cc
         )
     }
 
     fun notify4UserAndCCRemoteDevManager(
         userIds: MutableSet<String>,
+        cc: MutableSet<String>,
         projectId: String,
         notifyTemplateCode: String,
         notifyType: MutableSet<RemoteDevNotifyType>,
@@ -180,13 +183,15 @@ class NotifyControl @Autowired constructor(
             .getOrElse { null }?.data ?: throw ErrorCodeException(
             errorCode = ProjectMessageCode.PROJECT_NOT_EXIST
         )
+        projectInfo.properties?.remotedevManager?.split(";")?.toMutableSet()?.let {
+            cc.addAll(it)
+        }
         notify4User(
             userIds = userIds,
-            cc = projectInfo.properties?.remotedevManager?.split(";")?.toMutableSet()
-                ?: mutableSetOf(),
             notifyTemplateCode = notifyTemplateCode,
             notifyType = notifyType,
-            bodyParams = bodyParams
+            bodyParams = bodyParams,
+            cc = cc
         )
     }
 
@@ -210,7 +215,11 @@ class NotifyControl @Autowired constructor(
             })
             val receivers = userIds.map { taiInfos[it] ?: it }
             val receiversNameWithCN = remoteDevSettingDao.fetchTaiUserInfo(dslContext, userIds = taiUserNames)
-                .mapValues { "${it.value.first}@${it.value.second}" }.values.plus(
+                .mapValues {
+                    if (it.value.first.isNotBlank()) {
+                        "${it.value.first}@${it.value.second}"
+                    } else it.key
+                }.values.plus(
                     userIds.filter { !it.contains("@tai") }
                 )
             logger.info("notify4User EMAIL|$notifyTemplateCode|$receivers|$bodyParams|$receiversNameWithCN")

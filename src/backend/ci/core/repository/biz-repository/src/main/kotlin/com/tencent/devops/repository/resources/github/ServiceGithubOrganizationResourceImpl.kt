@@ -28,11 +28,11 @@
 package com.tencent.devops.repository.resources.github
 
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.sdk.github.pojo.Organization
-import com.tencent.devops.common.sdk.github.request.ListOrganizationsRequest
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.repository.api.github.ServiceGithubOrganizationResource
-import com.tencent.devops.repository.github.service.GithubOrganizationService
+import com.tencent.devops.repository.sdk.github.pojo.Organization
+import com.tencent.devops.repository.sdk.github.request.ListOrganizationsRequest
+import com.tencent.devops.repository.sdk.github.service.GithubOrganizationService
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource

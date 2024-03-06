@@ -278,7 +278,7 @@ class DeleteControl @Autowired constructor(
     ) {
         val limitDay = holidayHelper.getLastWorkingDays(3).last()
         logger.info("autoDeleteWhenNotAssign|$limitDay")
-        val notifyGroups = mutableMapOf<String, MutableList<String>>()
+        val notifyGroups = mutableMapOf<String, MutableList<Pair<String, String>>>()
         workspaceDao.fetchWorkspace(
             dslContext = dslContext,
             status = WorkspaceStatus.DISTRIBUTING,
@@ -303,24 +303,36 @@ class DeleteControl @Autowired constructor(
                         action = WorkspaceAction.DELETE,
                         actionMessage = workspaceCommon.getOpHistory(OpHistoryCopyWriting.TIMEOUT_STOP)
                     )
-                    kotlin.runCatching { deleteWorkspace4OP(ADMIN_NAME, workspace.workspaceName) }.onFailure { i ->
-                        logger.warn("auto delete fail|${i.message}", i)
-                    }.onSuccess {
-                        notifyGroups.putIfAbsent(workspace.projectId, mutableListOf(workspace.hostName ?: ""))
-                            ?.add(workspace.hostName ?: "")
-                    }
+                    kotlin.runCatching { deleteWorkspace4OP(ADMIN_NAME, workspace.workspaceName) }
+                        .onFailure { i ->
+                            logger.warn("auto delete fail|${i.message}", i)
+                        }.onSuccess {
+                            logger.info(
+                                "delete $it when not assign " +
+                                        "|${workspace.workspaceName}|${workspace.lastStatusUpdateTime}|" +
+                                        "${workspace.hostName}"
+                            )
+                            if (it) {
+                                val value = Pair(workspace.hostName ?: "", workspace.createUserId)
+                                notifyGroups.putIfAbsent(
+                                    workspace.projectId,
+                                    mutableListOf(value)
+                                )?.add(value)
+                            }
+                        }
                 }
             }
         }
         if (onDelete) {
-            notifyGroups.forEach { (projectId, hostNames) ->
+            notifyGroups.forEach { (projectId, values) ->
                 // 邮件通知
                 notifyControl.notify4RemoteDevManager(
                     projectId = projectId,
+                    cc = values.mapTo(mutableSetOf()) { it.second },
                     notifyTemplateCode = NOT_ASSIGN_AUTO_DELETE_NOTIFY,
                     notifyType = mutableSetOf(RemoteDevNotifyType.EMAIL),
                     bodyParams = mapOf(
-                        "cgsIps" to hostNames.joinToString("\n")
+                        "cgsIps" to values.joinToString("\n") { it.first }
                     )
                 )
             }
@@ -360,15 +372,23 @@ class DeleteControl @Autowired constructor(
                     kotlin.runCatching { deleteWorkspace4OP(ADMIN_NAME, workspace.workspaceName) }.onFailure { i ->
                         logger.warn("auto delete fail|${i.message}", i)
                     }.onSuccess {
-                        notifyControl.notify4UserAndCCRemoteDevManager(
-                            userIds = permissionService.getWorkspaceOwner(workspace.workspaceName).toMutableSet(),
-                            projectId = workspace.projectId,
-                            notifyTemplateCode = SLEEP_7_DAY_AUTO_DELETE_NOTIFY,
-                            notifyType = mutableSetOf(RemoteDevNotifyType.EMAIL),
-                            bodyParams = mapOf(
-                                "cgsIp" to (workspace.hostName ?: "")
-                            )
+                        logger.info(
+                            "delete $it when sleep 14 day " +
+                                    "|${workspace.workspaceName}|${workspace.lastStatusUpdateTime}|" +
+                                    "${workspace.hostName}"
                         )
+                        if (it) {
+                            notifyControl.notify4UserAndCCRemoteDevManager(
+                                userIds = permissionService.getWorkspaceOwner(workspace.workspaceName).toMutableSet(),
+                                cc = mutableSetOf(workspace.createUserId),
+                                projectId = workspace.projectId,
+                                notifyTemplateCode = SLEEP_7_DAY_AUTO_DELETE_NOTIFY,
+                                notifyType = mutableSetOf(RemoteDevNotifyType.EMAIL),
+                                bodyParams = mapOf(
+                                    "cgsIp" to (workspace.hostName ?: "")
+                                )
+                            )
+                        }
                     }
                 }
             }

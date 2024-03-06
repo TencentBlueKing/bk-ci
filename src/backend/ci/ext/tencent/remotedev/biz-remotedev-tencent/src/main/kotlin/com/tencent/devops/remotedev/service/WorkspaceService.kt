@@ -433,7 +433,11 @@ class WorkspaceService @Autowired constructor(
         val allConfig = windowsResourceConfigService.getAllType(true, null).associateBy { it.id!! }
         val zoneConfig = windowsResourceConfigService.getAllZone().associateBy { it.zoneShortName }
         val taiUserCN = remoteDevSettingDao.fetchTaiUserInfo(dslContext, userIds = taiUsers)
-            .mapValues { "${it.value.first}@${it.value.second}" }
+            .mapValues {
+                if (it.value.first.isNotBlank()) {
+                    "${it.value.first}@${it.value.second}"
+                } else it.key
+            }
 
         val allWindows = workspaceWindowsDao.batchFetchWorkspaceWindowsInfo(
             dslContext,
@@ -626,7 +630,11 @@ class WorkspaceService @Autowired constructor(
         val taiUserCN = remoteDevSettingDao.fetchTaiUserInfo(
             dslContext,
             userIds = taiUsers.filter { UserUtil.isTaiUser(it) }.toSet()
-        ).mapValues { "${it.value.first}@${it.value.second}" }
+        ).mapValues {
+            if (it.value.first.isNotBlank()) {
+                "${it.value.first}@${it.value.second}"
+            } else it.key
+        }
         val allConfig = windowsResourceConfigService.getAllType(true, null).associateBy { it.id!! }
         val zoneConfig = windowsResourceConfigService.getAllZone().associateBy { it.zoneShortName }
 
@@ -1196,6 +1204,7 @@ class WorkspaceService @Autowired constructor(
                 )
                 notifyControl.notify4UserAndCCRemoteDevManager(
                     userIds = permissionService.getWorkspaceOwner(workspace.workspaceName).toMutableSet(),
+                    cc = mutableSetOf(workspace.createUserId),
                     projectId = workspace.projectId,
                     notifyTemplateCode = SLEEP_3_DAY_NOTIFY,
                     notifyType = mutableSetOf(RemoteDevNotifyType.EMAIL),
@@ -1233,6 +1242,7 @@ class WorkspaceService @Autowired constructor(
                 )
                 notifyControl.notify4UserAndCCRemoteDevManager(
                     userIds = permissionService.getWorkspaceOwner(workspace.workspaceName).toMutableSet(),
+                    cc = mutableSetOf(workspace.createUserId),
                     projectId = workspace.projectId,
                     notifyTemplateCode = NOT_LOGIN_NOTIFY,
                     notifyType = mutableSetOf(RemoteDevNotifyType.EMAIL),
