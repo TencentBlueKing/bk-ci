@@ -279,12 +279,23 @@ class DeleteControl @Autowired constructor(
         val limitDay = holidayHelper.getLastWorkingDays(3).last()
         logger.info("autoDeleteWhenNotAssign|$limitDay")
         val notifyGroups = mutableMapOf<String, MutableList<Pair<String, String>>>()
+        val whiteListProject = redisCache.getSetMembers(
+            RedisKeys.REDIS_WORKSPACE_AUTO_DELETE_WHITE_LIST_PROJECT
+        ) ?: emptySet()
         workspaceDao.fetchWorkspace(
             dslContext = dslContext,
             status = WorkspaceStatus.DISTRIBUTING,
             systemType = WorkspaceSystemType.WINDOWS_GPU
         )?.parallelStream()?.forEach { workspace ->
             if ((workspace.lastStatusUpdateTime ?: LocalDateTime.now()) < limitDay) {
+                if (workspace.projectId in whiteListProject) {
+                    readyDeleteWorkspace.add(
+                        "project=${workspace.projectId}, ip=${workspace.hostName}," +
+                                " 原因=超过3天未分配(创建时间: ${workspace.lastStatusUpdateTime?.format(formatter)}" +
+                                " 早于检测时间 ${limitDay.format(formatter)}) 白名单已命中，只展示，将不会销毁。"
+                    )
+                    return@forEach
+                }
                 logger.info(
                     "ready to delete when not assign " +
                             "|${workspace.workspaceName}|${workspace.lastStatusUpdateTime}|${workspace.hostName}"
@@ -346,12 +357,23 @@ class DeleteControl @Autowired constructor(
     ) {
         val limitDay = holidayHelper.getLastWorkingDays(14).last()
         logger.info("autoDeleteWhenSleep7Day|$limitDay")
+        val whiteListProject = redisCache.getSetMembers(
+            RedisKeys.REDIS_WORKSPACE_AUTO_DELETE_WHITE_LIST_PROJECT
+        ) ?: emptySet()
         workspaceDao.fetchWorkspace(
             dslContext = dslContext,
             status = WorkspaceStatus.STOPPED,
             systemType = WorkspaceSystemType.WINDOWS_GPU
         )?.parallelStream()?.forEach { workspace ->
             if ((workspace.lastStatusUpdateTime ?: LocalDateTime.now()) < limitDay) {
+                if (workspace.projectId in whiteListProject) {
+                    readyDeleteWorkspace.add(
+                        "project=${workspace.projectId}, ip=${workspace.hostName}" +
+                                ", 原因=关机超过14天(关机时间: ${workspace.lastStatusUpdateTime?.format(formatter)}" +
+                                " 早于检测时间 ${limitDay.format(formatter)}) 白名单已命中，只展示，将不会销毁。"
+                    )
+                    return@forEach
+                }
                 logger.info(
                     "ready to delete when sleep 14 day " +
                             "|${workspace.workspaceName}|${workspace.lastStatusUpdateTime}|${workspace.hostName}"
