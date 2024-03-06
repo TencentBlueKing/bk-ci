@@ -24,16 +24,14 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-package com.tencent.devops.store.utils
+package com.tencent.devops.store.common.utils
 
 import com.tencent.devops.store.atom.service.impl.OpAtomServiceImpl
-import com.tencent.devops.store.service.atom.impl.OpAtomServiceImpl
-import org.slf4j.LoggerFactory
 import java.util.concurrent.Executors
 import java.util.concurrent.LinkedBlockingQueue
 import java.util.concurrent.ThreadPoolExecutor
 import java.util.concurrent.TimeUnit
-import org.glassfish.jersey.internal.inject.Bindings.service
+import org.slf4j.LoggerFactory
 
 object ThreadPoolUtil {
     private fun getThreadPoolExecutor(
@@ -60,7 +58,7 @@ object ThreadPoolUtil {
         action: (threadPoolExecutor: ThreadPoolExecutor) -> Unit
     ) {
         val startTime = System.currentTimeMillis()
-        val threadPoolExecutor = ThreadPoolUtil.getThreadPoolExecutor(
+        val threadPoolExecutor = getThreadPoolExecutor(
             corePoolSize = corePoolSize,
             maximumPoolSize = maximumPoolSize,
             keepAliveTime = keepAliveTime,
