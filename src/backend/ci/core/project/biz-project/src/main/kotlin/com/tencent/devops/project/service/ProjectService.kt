@@ -257,8 +257,6 @@ interface ProjectService {
         productId: Int? = null
     )
 
-    fun batchUpdateProjectProductId(englishNames: List<String>, productId: Int): Boolean
-
     fun updateOrganizationByEnglishName(
         englishName: String,
         projectOrganizationInfo: ProjectOrganizationInfo

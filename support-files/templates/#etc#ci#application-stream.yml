@@ -20,6 +20,7 @@ stream:
 
 git:
   gitUrl: __BK_CI_STREAM_GIT_URL__
+  defaultAtomProjectGroupName: __BK_CI_ATOM_PROJECT_GROUP_NAME__
 
 # 定时清理任务相关配置
 cron:

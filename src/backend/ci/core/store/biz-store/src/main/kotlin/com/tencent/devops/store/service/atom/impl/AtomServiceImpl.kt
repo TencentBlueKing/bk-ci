@@ -1362,16 +1362,4 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
         }
         return Result(versionInfo)
     }
-
-    override fun getAtomRepositoryId(userId: String, page: Int, pageSize: Int): Result<List<String>> {
-        val repositoryHashIdList = atomDao.getAtomRepositoryHashId(
-            dslContext = dslContext,
-            page = page,
-            pageSize = if (pageSize > PageUtil.MAX_PAGE_SIZE) PageUtil.MAX_PAGE_SIZE else pageSize
-        )
-        return client.get(ServiceRepositoryResource::class).getGitProjectIdByRepositoryHashId(
-            userId,
-            repositoryHashIdList
-        )
-    }
 }
