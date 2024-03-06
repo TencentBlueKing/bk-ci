@@ -31,6 +31,7 @@ import com.fasterxml.jackson.databind.DeserializationFeature
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.exception.CustomException
+import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.environment.dao.NodeDao
 import com.tencent.devops.environment.pojo.enums.NodeStatus
@@ -156,7 +157,9 @@ data class AgentService @Autowired constructor(
                     osType = it.osType,
                     authType = it.authType,
                     account = it.account,
-                    password = it.password,
+                    password = if (null == it.password && "PASSWORD" == it.authType) {
+                        throw ParamBlankException("The password cannot be empty.")
+                    } else it.password,
                     port = DEFAULT_INSTALL_AGENT_PORT,
                     key = if ("KEY" == it.authType) fileService.convertFileContentToString(keyFile) else it.key,
                     isManual = DEFAULT_IS_MANUAL,
