@@ -41,6 +41,8 @@ data class BuildTaskResult(
     val containerId: String?,
     @get:Schema(title = "是否执行成功", required = true)
     val success: Boolean,
+    @get:Schema(title = "插件执行次数", required = true)
+    val executeCount: Int? = null,
     @get:Schema(title = "构建结果", required = true)
     val buildResult: Map<String, String>,
     @get:Schema(title = "错误原因", required = false)

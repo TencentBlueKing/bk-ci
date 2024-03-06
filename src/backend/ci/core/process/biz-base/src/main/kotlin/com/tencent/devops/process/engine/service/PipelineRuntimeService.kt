@@ -1508,6 +1508,7 @@ class PipelineRuntimeService @Autowired constructor(
                     actionType = if (endBuild) ActionType.END else ActionType.REFRESH,
                     errorCode = completeTask.errorCode ?: 0,
                     errorTypeName = completeTask.errorType?.getI18n(I18nUtil.getDefaultLocaleLanguage()),
+                    executeCount = buildTask.executeCount,
                     reason = completeTask.errorMsg
                 )
             )
