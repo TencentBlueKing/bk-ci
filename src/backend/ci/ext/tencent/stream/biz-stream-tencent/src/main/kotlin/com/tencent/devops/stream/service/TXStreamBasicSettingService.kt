@@ -46,6 +46,7 @@ import com.tencent.devops.stream.pojo.StreamGitProjectInfoWithProject
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.annotation.Primary
 import org.springframework.stereotype.Service
 
@@ -68,9 +69,12 @@ class TXStreamBasicSettingService @Autowired constructor(
     streamGitTransferService = streamGitTransferService,
     streamGitConfig = streamGitConfig
 ) {
+
+    @Value("\${bkci.defaultProductId:#{0}}")
+    val defaultBkProductId: Int = 0
+
     companion object {
         private val logger = LoggerFactory.getLogger(TXStreamBasicSettingService::class.java)
-        private const val BK_PRODUCT_ID = 3238 // 蓝盾运营归属ID
     }
 
     override fun updateProjectSetting(
@@ -188,7 +192,7 @@ class TXStreamBasicSettingService @Autowired constructor(
             checkSameGitProjectName(userId, gitProjectName)
             val productId =
                 if (setting.url.contains("${streamGitConfig.defaultAtomProjectGroupName}/${setting.name}")) {
-                    BK_PRODUCT_ID
+                    defaultBkProductId
                 } else {
                     null
                 }

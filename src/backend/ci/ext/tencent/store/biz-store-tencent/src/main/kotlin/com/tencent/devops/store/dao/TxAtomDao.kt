@@ -24,22 +24,24 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-package com.tencent.devops.store.service.atom
 
-import com.tencent.devops.common.api.pojo.Result
+package com.tencent.devops.store.dao
 
-interface AtomRepositoryService {
+import com.tencent.devops.model.store.tables.TAtom
+import org.jooq.DSLContext
+import org.springframework.stereotype.Repository
 
-    /**
-     * 更改插件代码库的用户信息
-     * @param userId 移交的用户ID
-     * @param projectCode 项目代码
-     * @param atomCode 插件代码
-     */
-    fun updateAtomRepositoryUserInfo(userId: String, projectCode: String, atomCode: String): Result<Boolean>
+@Repository
+class TxAtomDao {
 
-    /**
-     * 分页查询组件代码库哈希ID
-     */
-    fun getAtomRepositoryId(userId: String, page: Int, pageSize: Int): Result<List<String>>
+    fun getAtomRepositoryHashId(dslContext: DSLContext, page: Int, pageSize: Int): List<String> {
+        with(TAtom.T_ATOM) {
+            return dslContext.select(REPOSITORY_HASH_ID)
+                .from(this)
+                .groupBy(ATOM_CODE)
+                .orderBy(CREATE_TIME.asc(), ID.asc())
+                .limit(pageSize).offset((page - 1) * pageSize)
+                .fetchInto(String::class.java)
+        }
+    }
 }

@@ -408,6 +408,14 @@ class ServiceTxProjectResourceImpl @Autowired constructor(
         return projectTagService.updateExtSystemRouterTag(extSystemTagDTO)
     }
 
+    override fun batchUpdateProjectProductId(
+        userId: String,
+        productId: Int,
+        projectIds: List<String>
+    ): Result<Boolean> {
+        return Result(projectTxService.batchUpdateProjectProductId(projectIds, productId))
+    }
+
     companion object {
         private val logger = LoggerFactory.getLogger(ServiceTxProjectResourceImpl::class.java)
     }

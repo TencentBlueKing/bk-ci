@@ -28,9 +28,12 @@ package com.tencent.devops.store.service.atom.impl
 
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.repository.api.ServiceGitRepositoryResource
+import com.tencent.devops.repository.api.ServiceRepositoryResource
+import com.tencent.devops.store.dao.TxAtomDao
 import com.tencent.devops.store.dao.atom.MarketAtomDao
 import com.tencent.devops.store.dao.common.StoreMemberDao
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
@@ -48,6 +51,9 @@ class AtomRepositoryServiceImpl : AtomRepositoryService {
 
     @Autowired
     lateinit var marketAtomDao: MarketAtomDao
+
+    @Autowired
+    lateinit var txAtomDao: TxAtomDao
 
     @Autowired
     lateinit var storeMemberDao: StoreMemberDao
@@ -87,5 +93,17 @@ class AtomRepositoryServiceImpl : AtomRepositoryService {
             .updateRepositoryUserInfo(userId, projectCode, atomRecord.repositoryHashId)
         logger.info("updateAtomRepositoryUserInfoResult is:$updateAtomRepositoryUserInfoResult")
         return updateAtomRepositoryUserInfoResult
+    }
+
+    override fun getAtomRepositoryId(userId: String, page: Int, pageSize: Int): Result<List<String>> {
+        val repositoryHashIdList = txAtomDao.getAtomRepositoryHashId(
+            dslContext = dslContext,
+            page = page,
+            pageSize = if (pageSize > PageUtil.MAX_PAGE_SIZE) PageUtil.MAX_PAGE_SIZE else pageSize
+        )
+        return client.get(ServiceRepositoryResource::class).getGitProjectIdByRepositoryHashId(
+            userId,
+            repositoryHashIdList
+        )
     }
 }

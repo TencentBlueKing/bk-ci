@@ -38,12 +38,13 @@ import com.tencent.devops.repository.pojo.enums.TokenTypeEnum
 import com.tencent.devops.scm.pojo.GitProjectInfo
 import com.tencent.devops.store.dao.atom.AtomDao
 import com.tencent.devops.store.pojo.atom.AtomFeatureUpdateRequest
-import com.tencent.devops.store.service.atom.AtomService
+import com.tencent.devops.store.service.atom.AtomRepositoryService
 import com.tencent.devops.store.service.atom.TxOpAtomService
 import java.util.concurrent.Executors
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 
 /**
@@ -56,8 +57,11 @@ class TxOpAtomServiceImpl @Autowired constructor(
     private val dslContext: DSLContext,
     private val atomDao: AtomDao,
     private val client: Client,
-    private val atomService: AtomService
+    private val atomRepositoryService: AtomRepositoryService
 ) : TxOpAtomService {
+
+    @Value("\${bkci.defaultProductId:#{0}}")
+    val defaultBkProductId: Int = 0
 
     private val executorService = Executors.newSingleThreadExecutor()
     private val logger = LoggerFactory.getLogger(TxOpAtomServiceImpl::class.java)
@@ -116,7 +120,7 @@ class TxOpAtomServiceImpl @Autowired constructor(
                 logger.info(
                     "refresh all relation atom project product page: $page , pageSize: $pageSize"
                 )
-                val gitProjectIds = atomService.getAtomRepositoryId(userId, page, pageSize).data?.map {
+                val gitProjectIds = atomRepositoryService.getAtomRepositoryId(userId, page, pageSize).data?.map {
                         "git_$it"
                     }
                 if (gitProjectIds.isNullOrEmpty()) {
@@ -125,7 +129,7 @@ class TxOpAtomServiceImpl @Autowired constructor(
                 }
                 client.get(ServiceProjectResource::class).batchUpdateProjectProductId(
                     userId = userId,
-                    productId = Companion.BK_PRODUCT_ID,
+                    productId = defaultBkProductId,
                     projectIds = gitProjectIds
                 )
                 page++
@@ -133,9 +137,5 @@ class TxOpAtomServiceImpl @Autowired constructor(
             logger.info("Syn all relation atom project product ${System.currentTimeMillis() - startTime}ms")
         }
         return true
-    }
-
-    companion object {
-        private const val BK_PRODUCT_ID = 3238 // 蓝盾运营归属ID
     }
 }
