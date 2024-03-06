@@ -1403,15 +1403,4 @@ class AtomDao : AtomBaseDao() {
                 }
         }
     }
-
-    fun getAtomRepositoryHashId(dslContext: DSLContext, page: Int, pageSize: Int): List<String> {
-        with(TAtom.T_ATOM) {
-            return dslContext.select(REPOSITORY_HASH_ID)
-                .from(this)
-                .groupBy(ATOM_CODE)
-                .orderBy(CREATE_TIME.asc(), ID.asc())
-                .limit(pageSize).offset((page - 1) * pageSize)
-                .fetchInto(String::class.java)
-        }
-    }
 }
