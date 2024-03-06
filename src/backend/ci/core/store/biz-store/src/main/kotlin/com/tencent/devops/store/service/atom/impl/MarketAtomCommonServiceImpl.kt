@@ -526,7 +526,7 @@ class MarketAtomCommonServiceImpl : MarketAtomCommonService {
                 throw ErrorCodeException(errorCode = StoreMessageCode.TASK_JSON_CONFIG_POLICY_FIELD_IS_INVALID)
             }
             val retryTimes = configMap["retryTimes"] as? Int ?: 1
-            if (AtomRetryPolicyEnum.AUTO_RETYR.name in defaultRetryPolicy && retryTimes !in 1..5){
+            if (AtomRetryPolicyEnum.AUTO_RETYR.name in defaultRetryPolicy && retryTimes !in 1..5) {
                 throw ErrorCodeException(errorCode = StoreMessageCode.TASK_JSON_CONFIG_RETRY_TIME_FIELD_IS_INVALID)
             }
         }
