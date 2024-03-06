@@ -375,7 +375,7 @@ class NotifyControl @Autowired constructor(
         pageSize: Int
     ): List<WorkspaceNotifyListData> {
         val sqlLimit = PageUtil.convertPageSizeToSQLLimit(page, pageSize)
-        return notifyDao.fetch(dslContext, sqlLimit).map {
+        return notifyDao.fetch(dslContext, sqlLimit).sortedByDescending { it.createdTime }.map {
             WorkspaceNotifyListData(
                 projectId = it.projectIds,
                 ip = it.ips,
