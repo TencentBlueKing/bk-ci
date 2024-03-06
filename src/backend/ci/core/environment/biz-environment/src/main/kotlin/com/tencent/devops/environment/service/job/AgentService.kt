@@ -264,7 +264,7 @@ data class AgentService @Autowired constructor(
                     executor.shutdown()
                 } else if (count > MAXIMUM_RETRY_TIMES) {
                     logger.info("Agent install task abnormal ip: $runningIpList")
-                    nodeDao.updateNodeStatusByNodeIp(dslContext, runningIpList, NodeStatus.ABNORMAL.name, null)
+                    nodeDao.updateNodeStatusByNodeIp(dslContext, runningIpList, NodeStatus.ABNORMAL.name, null, null)
                     executor.shutdown()
                 } else {
                     logger.debug("Agent install task running...")
