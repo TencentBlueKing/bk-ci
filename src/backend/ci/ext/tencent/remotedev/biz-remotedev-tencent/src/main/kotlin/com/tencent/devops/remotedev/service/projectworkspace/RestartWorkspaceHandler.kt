@@ -235,7 +235,7 @@ class RestartWorkspaceHandler @Autowired constructor(
                     userIds = permissionService.getWorkspaceOwner(workspace.workspaceName).toMutableSet(),
                     notifyTemplateCode = WINDOWS_GPU_RESTART_NOTIFY,
                     notifyType = mutableSetOf(RemoteDevNotifyType.EMAIL, RemoteDevNotifyType.CLIENT_PUSH),
-                    bodyParams = mapOf(
+                    bodyParams = mutableMapOf(
                         "workspaceName" to workspace.workspaceName,
                         "projectId" to workspace.projectId,
                         "cgsId" to (workspace.hostName ?: workspace.workspaceName),
