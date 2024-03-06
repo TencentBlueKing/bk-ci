@@ -91,6 +91,9 @@ data class AgentService @Autowired constructor(
     @Value("\${environment.cc.bkBizScopeId:#{null}}")
     val bkBizScopeId: Int = 0
 
+    @Value("\${environment.nodeman.agentStatusQueryThreadCount:#{null}}")
+    val agentStatusQueryThreadCount: Int = 30
+
     companion object {
         private val logger = LoggerFactory.getLogger(AgentService::class.java)
 
@@ -125,6 +128,9 @@ data class AgentService @Autowired constructor(
         const val AGENT_NOT_INSTALLED_TAG = false
 
         private const val NS_TO_S = 1000000000
+
+//        val executor = Executors.newSingleThreadScheduledExecutor()
+//        val executor = Executors.newSingleThreadScheduledExecutor()
     }
 
     fun installAgent(
@@ -238,12 +244,12 @@ data class AgentService @Autowired constructor(
                     if (logger.isDebugEnabled)
                         logger.debug("Agent install task: ip: ${it.ip}, status: ${it.status}")
                     if (it.status in agentTaskEndStatusList) { // agent安装任务结束(成功/失败)
+                        val agentInfo = queryAgentStatusService.getAgentVersions(
+                            listOf(AgentVersion(ip = it.ip, bkHostId = it.bkHostId?.toLong()))
+                        )
                         val nodeStatus =
                             if (AGENT_INSTALL_NORMAL == it.status) NodeStatus.NORMAL.name
                             else { // agent安装任务失败，重新查询节点agent安装状态
-                                val agentInfo = queryAgentStatusService.getAgentVersions(
-                                    listOf(AgentVersion(ip = it.ip, bkHostId = it.bkHostId?.toLong()))
-                                )
                                 if (AGENT_NOT_INSTALLED_TAG == agentInfo?.get(0)?.installedTag)
                                     NodeStatus.NOT_INSTALLED.name
                                 else if (AGENT_ABNORMAL_NODE_STATUS == agentInfo?.get(0)?.status)
@@ -253,7 +259,8 @@ data class AgentService @Autowired constructor(
                                 else
                                     NodeStatus.NOT_INSTALLED.name
                             }
-                        nodeDao.updateNodeStatusByNodeIp(dslContext, listOf(it.ip), nodeStatus, null)
+                        val nodeAgentVersion = agentInfo?.get(0)?.version
+                        nodeDao.updateNodeStatusByNodeIp(dslContext, listOf(it.ip), nodeStatus, nodeAgentVersion,null)
                         runningIpList.remove(it.ip)
                     }
                 }

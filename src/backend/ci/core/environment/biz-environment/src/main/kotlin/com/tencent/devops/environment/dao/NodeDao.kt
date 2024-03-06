@@ -71,12 +71,14 @@ class NodeDao {
         dslContext: DSLContext,
         nodeIpList: List<String>,
         nodeStatus: String,
+        nodeAgentVersion: String?,
         jobId: Long?
     ) {
         with(TNode.T_NODE) {
             val batchUpdate = dslContext.batch(
                 dslContext.update(this)
                     .set(NODE_STATUS, nodeStatus)
+                    .set(AGENT_VERSION, nodeAgentVersion)
                     .set(TASK_ID, jobId)
                     .set(LAST_MODIFY_TIME, LocalDateTime.now())
                     .where(NODE_IP.`in`(nodeIpList))
