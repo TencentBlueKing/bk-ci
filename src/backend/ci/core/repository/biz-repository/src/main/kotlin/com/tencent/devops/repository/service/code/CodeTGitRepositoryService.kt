@@ -50,7 +50,6 @@ import com.tencent.devops.repository.service.scm.IScmService
 import com.tencent.devops.repository.service.tgit.TGitOAuthService
 import com.tencent.devops.scm.pojo.TokenCheckResult
 import com.tencent.devops.scm.utils.code.git.GitUtils
-import com.tencent.devops.ticket.pojo.enums.CredentialType
 import org.apache.commons.lang3.StringUtils
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
@@ -201,10 +200,6 @@ class CodeTGitRepositoryService @Autowired constructor(
                 )
             }
             RepoAuthType.HTTP -> {
-                if (repoCredentialInfo.credentialType == CredentialType.USERNAME_PASSWORD.name) {
-                    logger.info("TGit check type is username+password,don't check, return")
-                    return TokenCheckResult(result = true, message = "")
-                }
                 scmService.checkUsernameAndPassword(
                     projectName = GitUtils.getProjectName(repository.getFormatURL()),
                     url = repository.getFormatURL(),
@@ -217,10 +212,6 @@ class CodeTGitRepositoryService @Autowired constructor(
                 )
             }
             RepoAuthType.HTTPS -> {
-                if (repoCredentialInfo.credentialType == CredentialType.USERNAME_PASSWORD.name) {
-                    logger.info("TGit check type is username+password,don't check, return")
-                    return TokenCheckResult(result = true, message = "")
-                }
                 scmService.checkUsernameAndPassword(
                     projectName = GitUtils.getProjectName(repository.getFormatURL()),
                     url = repository.getFormatURL(),
