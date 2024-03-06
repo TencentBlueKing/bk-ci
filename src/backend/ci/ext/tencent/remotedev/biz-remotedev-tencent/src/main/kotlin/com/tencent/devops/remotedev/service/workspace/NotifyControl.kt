@@ -377,11 +377,12 @@ class NotifyControl @Autowired constructor(
         val sqlLimit = PageUtil.convertPageSizeToSQLLimit(page, pageSize)
         return notifyDao.fetch(dslContext, sqlLimit).sortedByDescending { it.createdTime }.map {
             WorkspaceNotifyListData(
-                projectId = it.projectIds,
-                ip = it.ips,
+                projectId = it.projectIds.removeSurrounding("[", "]"),
+                ip = it.ips.removeSurrounding("[", "]"),
                 title = it.title,
                 desc = it.desc,
-                createTime = it.createdTime.toString()
+                createTime = it.createdTime.toString(),
+                operator = it.operator
             )
         }
     }
