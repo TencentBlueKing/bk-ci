@@ -45,7 +45,7 @@ import org.springframework.stereotype.Component
 @Component
 class AuthRefreshEventListener @Autowired constructor(
     val userPermissionService: UserPermissionService,
-    val iamCacheService: IamCacheService
+    val iamCacheService: IamCacheService?
 ) : Listener<RefreshBroadCastEvent> {
 
     /**
@@ -102,7 +102,7 @@ class AuthRefreshEventListener @Autowired constructor(
 
     fun onIamCacheRefresh(event: IamCacheRefreshEvent) {
         logger.info("onIamCacheRefresh: ${event.refreshType} | ${event.userId}| ${event.resourceType}")
-        iamCacheService.refreshUserExpression(event.userId, event.resourceType)
+        iamCacheService?.refreshUserExpression(event.userId, event.resourceType)
     }
 
     companion object {

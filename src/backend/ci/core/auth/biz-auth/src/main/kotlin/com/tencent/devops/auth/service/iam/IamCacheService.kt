@@ -9,10 +9,8 @@ import com.tencent.devops.auth.service.AuthGroupService
 import com.tencent.devops.common.auth.utils.AuthUtils
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.stereotype.Service
 import java.util.concurrent.TimeUnit
 
-@Service
 class IamCacheService @Autowired constructor(
     @Autowired(required = false)
     val policyService: PolicyService?,
