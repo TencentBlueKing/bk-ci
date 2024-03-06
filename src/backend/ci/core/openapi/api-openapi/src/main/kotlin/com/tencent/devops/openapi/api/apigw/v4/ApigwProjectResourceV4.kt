@@ -182,4 +182,31 @@ interface ApigwProjectResourceV4 {
         @Parameter(description = "添加信息", required = true)
         createInfo: ProjectCreateUserInfo
     ): Result<Boolean?>
+
+    @PUT
+    @Path("/{projectId}/update_project_product")
+    @Operation(
+        summary = "更新项目关联产品",
+        tags = ["v4_app_update_project_product", "v4_user_update_project_product"]
+    )
+    fun updateProjectProductId(
+        @Parameter(description = "appCode", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
+        appCode: String?,
+        @Parameter(description = "apigw Type", required = true)
+        @PathParam("apigwType")
+        apigwType: String?,
+        @Parameter(description = "userId")
+        @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
+        userId: String?,
+        @Parameter(description = "projectId", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @Parameter(description = "产品名称", required = true)
+        @QueryParam("productName")
+        productName: String? = null,
+        @Parameter(description = "产品Id", required = true)
+        @QueryParam("productId")
+        productId: Int? = null
+    ): Result<Boolean>
 }

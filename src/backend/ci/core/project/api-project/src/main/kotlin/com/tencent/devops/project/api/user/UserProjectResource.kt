@@ -34,9 +34,11 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Pagination
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.project.pojo.OperationalProductVO
+import com.tencent.devops.project.pojo.ProjectCollation
 import com.tencent.devops.project.pojo.ProjectCreateInfo
 import com.tencent.devops.project.pojo.ProjectDiffVO
 import com.tencent.devops.project.pojo.ProjectLogo
+import com.tencent.devops.project.pojo.ProjectSortType
 import com.tencent.devops.project.pojo.ProjectUpdateInfo
 import com.tencent.devops.project.pojo.ProjectVO
 import com.tencent.devops.project.pojo.ProjectWithPermission
@@ -81,7 +83,13 @@ interface UserProjectResource {
         enabled: Boolean?,
         @Parameter(description = "是否拉取未审批通过的项目，若为true，会拉取审批[未通过+通过]的项目", required = false)
         @QueryParam("unApproved")
-        unApproved: Boolean?
+        unApproved: Boolean?,
+        @Parameter(description = "项目排序", required = false, example = "PROJECT_NAME")
+        @QueryParam("sortType")
+        sortType: ProjectSortType?,
+        @Parameter(description = "排序规则", required = false)
+        @QueryParam("collation")
+        collation: ProjectCollation?
     ): Result<List<ProjectVO>>
 
     @GET
