@@ -32,7 +32,7 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.web.utils.I18nUtil
-import com.tencent.devops.project.api.service.ServiceProjectResource
+import com.tencent.devops.project.api.service.service.ServiceTxProjectResource
 import com.tencent.devops.repository.api.ServiceGitRepositoryResource
 import com.tencent.devops.repository.pojo.enums.TokenTypeEnum
 import com.tencent.devops.scm.pojo.GitProjectInfo
@@ -127,7 +127,7 @@ class TxOpAtomServiceImpl @Autowired constructor(
                     continueFlag = false
                     continue
                 }
-                client.get(ServiceProjectResource::class).batchUpdateProjectProductId(
+                client.get(ServiceTxProjectResource::class).batchUpdateProjectProductId(
                     userId = userId,
                     productId = defaultBkProductId,
                     projectIds = gitProjectIds
