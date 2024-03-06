@@ -136,6 +136,18 @@ class MarketAtomCommonServiceImpl : MarketAtomCommonService {
     @Value("\${atom.maxAtomTimeout:10080}")
     private val maxAtomTimeout: Int = 10080
 
+    @Value("\${atom.defaultTimeout:900}")
+    private val defaultTimeout: Int = 900
+
+    @Value("\${atom.minAtomTimeout:1}")
+    private val minAtomTimeout: Int = 1
+
+    @Value("\${atom.maxAtomRetryTimes:5}")
+    private val maxAtomRetryTimes: Int = 5
+
+    @Value("\${atom.minAtomRetryTimes:1}")
+    private val minAtomRetryTimes: Int = 1
+
     private val logger = LoggerFactory.getLogger(MarketAtomCommonServiceImpl::class.java)
 
     @Suppress("UNCHECKED_CAST")
@@ -521,8 +533,8 @@ class MarketAtomCommonServiceImpl : MarketAtomCommonService {
     }
 
     private fun validateConfigMap(configMap: Map<String, Any>) {
-        val defaultTimeout = configMap[BK_DEFAULT_TIMEOUT] as? Int ?: 900
-        if (defaultTimeout !in 1..maxAtomTimeout) {
+        val defaultTimeout = configMap[BK_DEFAULT_TIMEOUT] as? Int ?: defaultTimeout
+        if (defaultTimeout !in minAtomTimeout..maxAtomTimeout) {
             throw ErrorCodeException(errorCode = StoreMessageCode.TASK_JSON_CONFIG_DEFAULT_TIMEOUT_FIELD_IS_INVALID)
         }
         val defaultFailPolicy = configMap[BK_DEFAULT_FAIL_POLICY] as? String
@@ -532,8 +544,9 @@ class MarketAtomCommonServiceImpl : MarketAtomCommonService {
                 AtomRetryPolicyEnum.MANUALLY_RETRY.name in defaultRetryPolicy) {
                 throw ErrorCodeException(errorCode = StoreMessageCode.TASK_JSON_CONFIG_POLICY_FIELD_IS_INVALID)
             }
-            val retryTimes = configMap[BK_RETRY_TIMES] as? Int ?: 1
-            if (AtomRetryPolicyEnum.AUTO_RETRY.name in defaultRetryPolicy && retryTimes !in 1..5) {
+            val retryTimes = configMap[BK_RETRY_TIMES] as? Int ?: minAtomRetryTimes
+            if (AtomRetryPolicyEnum.AUTO_RETRY.name in defaultRetryPolicy &&
+                retryTimes !in minAtomRetryTimes..maxAtomRetryTimes) {
                 throw ErrorCodeException(errorCode = StoreMessageCode.TASK_JSON_CONFIG_RETRY_TIME_FIELD_IS_INVALID)
             }
         }
