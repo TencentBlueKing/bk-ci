@@ -403,4 +403,25 @@ CREATE TABLE IF NOT EXISTS `T_SENIOR_USER` (
     PRIMARY KEY (`USER_ID`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='高级用户表';
 
+CREATE TABLE IF NOT EXISTS `T_PROJECT_UPDATE_HISTORY`
+(
+    `ID`                    bigint(20)  NOT NULL AUTO_INCREMENT COMMENT '主键ID',
+    `ENGLISH_NAME`          varchar(64) NOT NULL COMMENT '英文名称',
+    `BEFORE_PROJECT_NAME`   varchar(64) NOT NULL COLLATE utf8mb4_bin COMMENT '变更前项目名称',
+    `AFTER_PROJECT_NAME`    varchar(64) NOT NULL COLLATE utf8mb4_bin COMMENT '变更后项目名称',
+    `BEFORE_PRODUCT_ID`     int(10)          DEFAULT NULL COMMENT '变更前运营产品ID',
+    `AFTER_PRODUCT_ID`      int(10)          DEFAULT NULL COMMENT '变更后运营产品ID',
+    `BEFORE_ORGANIZATION`   varchar(255)     DEFAULT NULL COMMENT '变更前组织架构',
+    `AFTER_ORGANIZATION`    varchar(255)     DEFAULT NULL COMMENT '变更后组织架构',
+    `BEFORE_SUBJECT_SCOPES` text             DEFAULT NULL COMMENT '变更前最大可授权人员范围',
+    `AFTER_SUBJECT_SCOPES`  text             DEFAULT NULL COMMENT '变更后最大可授权人员范围',
+    `OPERATOR`              varchar(32)      DEFAULT NULL COMMENT '操作人',
+    `APPROVAL_STATUS`       int(10)          DEFAULT '1',
+    `CREATED_AT`            timestamp   NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    `UPDATED_AT`            timestamp   NULL DEFAULT CURRENT_TIMESTAMP COMMENT '更新时间',
+    PRIMARY KEY (`ID`) USING BTREE,
+    KEY `IDX_ENGLISH_NAME_UPDATED_AT` (`ENGLISH_NAME`,`UPDATED_AT`)
+) ENGINE = InnoDB
+  DEFAULT CHARSET = utf8mb4 COMMENT ='项目更新历史表';
+
 SET FOREIGN_KEY_CHECKS = 1;

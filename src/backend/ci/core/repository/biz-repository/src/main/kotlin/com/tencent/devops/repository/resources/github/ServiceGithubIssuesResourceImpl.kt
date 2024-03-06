@@ -29,11 +29,11 @@
 package com.tencent.devops.repository.resources.github
 
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.sdk.github.request.CreateIssueCommentRequest
-import com.tencent.devops.common.sdk.github.response.CreateIssueCommentResponse
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.repository.api.github.ServiceGithubIssuesResource
-import com.tencent.devops.repository.github.service.GithubIssueService
+import com.tencent.devops.repository.sdk.github.request.CreateIssueCommentRequest
+import com.tencent.devops.repository.sdk.github.response.CreateIssueCommentResponse
+import com.tencent.devops.repository.sdk.github.service.GithubIssueService
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource

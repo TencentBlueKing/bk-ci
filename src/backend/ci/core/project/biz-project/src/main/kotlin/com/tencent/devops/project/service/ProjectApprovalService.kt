@@ -36,6 +36,7 @@ import com.tencent.devops.model.project.tables.records.TProjectRecord
 import com.tencent.devops.project.constant.ProjectMessageCode
 import com.tencent.devops.project.dao.ProjectApprovalDao
 import com.tencent.devops.project.dao.ProjectDao
+import com.tencent.devops.project.dao.ProjectUpdateHistoryDao
 import com.tencent.devops.project.dispatch.ProjectDispatcher
 import com.tencent.devops.project.pojo.ProjectApprovalInfo
 import com.tencent.devops.project.pojo.ProjectCreateExtInfo
@@ -58,7 +59,8 @@ class ProjectApprovalService @Autowired constructor(
     private val projectApprovalDao: ProjectApprovalDao,
     private val projectDao: ProjectDao,
     private val projectExtService: ProjectExtService,
-    private val projectDispatcher: ProjectDispatcher
+    private val projectDispatcher: ProjectDispatcher,
+    private val projectUpdateHistoryDao: ProjectUpdateHistoryDao
 ) {
 
     companion object {
@@ -309,6 +311,11 @@ class ProjectApprovalService @Autowired constructor(
                 subjectScopesStr = JsonUtil.toJson(projectUpdateInfo.subjectScopes!!),
                 logoAddress = logoAddress
             )
+            projectUpdateHistoryDao.updateProjectHistoryStatus(
+                dslContext = context,
+                englishName = projectId,
+                approvalStatus = ProjectApproveStatus.APPROVED.status
+            )
             projectDispatcher.dispatch(
                 ProjectUpdateBroadCastEvent(
                     userId = applicant,
@@ -357,6 +364,11 @@ class ProjectApprovalService @Autowired constructor(
                 englishName = projectId,
                 approver = approver,
                 approvalStatus = ProjectApproveStatus.APPROVED.status
+            )
+            projectUpdateHistoryDao.updateProjectHistoryStatus(
+                dslContext = context,
+                englishName = projectId,
+                approvalStatus = ProjectApproveStatus.UPDATE_REJECT_OR_REVOKE.status
             )
         }
     }
