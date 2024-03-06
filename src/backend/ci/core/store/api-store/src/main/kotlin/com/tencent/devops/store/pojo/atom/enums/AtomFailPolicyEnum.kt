@@ -27,7 +27,7 @@
 
 package com.tencent.devops.store.pojo.atom.enums
 
-enum class AtomFailPolicyEnum(val value: String) {
-    AUTO_CONTINUE("AUTO-CONTINUE"), // 自动继续
-    MANUALLY_CONTINUE("MANUALLY-CONTINUE") // 手动继续
+enum class AtomFailPolicyEnum {
+    AUTO_CONTINUE, // 自动继续
+    MANUALLY_CONTINUE // 手动继续
 }

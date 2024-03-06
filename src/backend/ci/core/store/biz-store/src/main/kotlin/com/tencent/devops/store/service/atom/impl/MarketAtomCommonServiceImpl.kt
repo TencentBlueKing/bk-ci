@@ -133,6 +133,9 @@ class MarketAtomCommonServiceImpl : MarketAtomCommonService {
     @Value("\${pipeline.setting.common.stage.job.task.maxOutputNum:100}")
     private val maxOutputNum: Int = 100
 
+    @Value("\${atom.maxAtomTimeout:10080}")
+    private val maxAtomTimeout: Int = 10080
+
     private val logger = LoggerFactory.getLogger(MarketAtomCommonServiceImpl::class.java)
 
     @Suppress("UNCHECKED_CAST")
@@ -519,18 +522,18 @@ class MarketAtomCommonServiceImpl : MarketAtomCommonService {
 
     private fun validateConfigMap(configMap: Map<String, Any>) {
         val defaultTimeout = configMap[BK_DEFAULT_TIMEOUT] as? Int ?: 900
-        if (defaultTimeout !in 1..10080) {
+        if (defaultTimeout !in 1..maxAtomTimeout) {
             throw ErrorCodeException(errorCode = StoreMessageCode.TASK_JSON_CONFIG_DEFAULT_TIMEOUT_FIELD_IS_INVALID)
         }
         val defaultFailPolicy = configMap[BK_DEFAULT_FAIL_POLICY] as? String
         val defaultRetryPolicy = configMap[BK_DEFAULT_RETRY_POLICY] as? List<String>
         if (!defaultRetryPolicy.isNullOrEmpty()) {
-            if (defaultFailPolicy == AtomFailPolicyEnum.AUTO_CONTINUE.value &&
-                AtomRetryPolicyEnum.MANUALLY_RETRY.value in defaultRetryPolicy) {
+            if (defaultFailPolicy == AtomFailPolicyEnum.AUTO_CONTINUE.name &&
+                AtomRetryPolicyEnum.MANUALLY_RETRY.name in defaultRetryPolicy) {
                 throw ErrorCodeException(errorCode = StoreMessageCode.TASK_JSON_CONFIG_POLICY_FIELD_IS_INVALID)
             }
             val retryTimes = configMap[BK_RETRY_TIMES] as? Int ?: 1
-            if (AtomRetryPolicyEnum.AUTO_RETRY.value in defaultRetryPolicy && retryTimes !in 1..5) {
+            if (AtomRetryPolicyEnum.AUTO_RETRY.name in defaultRetryPolicy && retryTimes !in 1..5) {
                 throw ErrorCodeException(errorCode = StoreMessageCode.TASK_JSON_CONFIG_RETRY_TIME_FIELD_IS_INVALID)
             }
         }

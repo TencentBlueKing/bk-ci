@@ -27,7 +27,7 @@
 
 package com.tencent.devops.store.pojo.atom.enums
 
-enum class AtomRetryPolicyEnum(val value: String) {
-    AUTO_RETRY("AUTO-RETRY"), // 自动重试
-    MANUALLY_RETRY("MANUALLY-RETRY") // 手动重试
+enum class AtomRetryPolicyEnum {
+    AUTO_RETRY, // 自动重试
+    MANUALLY_RETRY // 手动重试
 }

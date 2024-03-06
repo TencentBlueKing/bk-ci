@@ -78,6 +78,7 @@ pipeline:
   atom:
     maxRelQueryNum: 2000  # 最大查询数量
     maxRelQueryRangeTime: 30  # 最大查询时间跨度
+    maxAtomTimeout: 10080
   version:
     max_keep_num: 50
     spec_channels: "AM,CODECC,GCLOUD,GIT,GONGFENGSCAN,CODECC_EE"
