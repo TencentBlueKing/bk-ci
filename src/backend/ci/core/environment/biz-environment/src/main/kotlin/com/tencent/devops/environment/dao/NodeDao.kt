@@ -67,6 +67,23 @@ import org.jooq.Record7
 @Suppress("ALL")
 @Repository
 class NodeDao {
+    fun getCmdbNodesByIpAndProjectId(
+        dslContext: DSLContext,
+        projectId: String,
+        nodeIpList: List<String>
+    ): Result<Record3<Long, String, String>> {
+        with(TNode.T_NODE) {
+            return dslContext.select(
+                NODE_ID.`as`(T_NODE_NODE_ID),
+                NODE_IP.`as`(T_NODE_NODE_IP),
+                NODE_STATUS.`as`(T_NODE_NODE_STATUS)
+            ).from(this)
+                .where(NODE_TYPE.`in`(NodeType.CMDB.name, NodeType.UNKNOWN.name, NodeType.OTHER.name))
+                .and(NODE_IP.`in`(nodeIpList))
+                .fetch()
+        }
+    }
+
     fun updateNodeStatusByNodeIp(
         dslContext: DSLContext,
         nodeIpList: List<String>,

@@ -38,6 +38,7 @@ import com.tencent.devops.environment.constant.T_NODE_AGENT_STATUS
 import com.tencent.devops.environment.constant.T_NODE_AGENT_VERSION
 import com.tencent.devops.environment.constant.T_NODE_NODE_ID
 import com.tencent.devops.environment.constant.T_NODE_NODE_IP
+import com.tencent.devops.environment.constant.T_NODE_NODE_STATUS
 import com.tencent.devops.environment.dao.NodeDao
 import com.tencent.devops.environment.dao.ProjectConfigDao
 import com.tencent.devops.environment.model.CreateNodeModel
@@ -109,6 +110,7 @@ class CmdbNodeService @Autowired constructor(
         bakOperator: Boolean,
         page: Int,
         pageSize: Int,
+        projectId: String,
         ips: List<String>
     ): Page<CmdbNode> {
         val sqlLimit = PageUtil.convertPageSizeToSQLLimit(page, pageSize)
@@ -125,7 +127,7 @@ class CmdbNodeService @Autowired constructor(
                 offset = offset,
                 limit = limit
             )
-        return Page(
+        val pageFromCmdb = Page(
             page = page,
             pageSize = pageSize,
             count = cmdbNodePage.totalRows.toLong(),
@@ -136,11 +138,62 @@ class CmdbNodeService @Autowired constructor(
                     bakOperator = it.bakOperator,
                     ip = it.ip,
                     displayIp = it.displayIp,
-                    agentStatus = it.agentStatus,
                     osName = it.osName
                 )
             }
         )
+        // 判断cmdbNodePage中的nodes，是否在蓝盾db中
+        val cmdbIpList = cmdbNodePage.nodes.map { it.ip }
+        val cmdbNodeRecord = nodeDao.getCmdbNodesByIpAndProjectId(
+            dslContext, projectId, cmdbIpList
+        )
+        val ipToCmdbNodeRecordMap = cmdbNodeRecord.associateBy { it[T_NODE_NODE_IP] as String }
+        // 1. 在 - 读取节点状态，且importStatus置为true
+        val mutableCmdbIpList = cmdbIpList.toMutableList()
+        pageFromCmdb.records.filter { it.ip in ipToCmdbNodeRecordMap.keys }.map {
+            it.nodeStatus = ipToCmdbNodeRecordMap[it.ip]?.get(T_NODE_NODE_STATUS) as String
+            it.importStatus = true
+            mutableCmdbIpList.remove(it.ip)
+        }
+        // 2. 不在 - 重新查询节点状态：在不在CC（得到host_id）-> nodeman中查是否已经安装 -> job中查agent状态+版本号
+        val nodeCCInfoList = mutableCmdbIpList.takeIf { it.isNotEmpty() }.run {
+            queryFromCCService.queryCCListHostWithoutBizByInRules(
+                listOf(FIELD_BK_HOST_ID, FIELD_BK_HOST_INNERIP),
+                mutableCmdbIpList,
+                FIELD_BK_HOST_INNERIP
+            ).data?.info
+        }
+        // 2.1 在cc
+        val ipToAgentVersionInfoMap = if (!nodeCCInfoList.isNullOrEmpty()) {
+            nodeCCInfoList.map {
+                mutableCmdbIpList.remove(it.bkHostInnerip)
+            }
+            queryAgentStatusService.getAgentVersions(
+                nodeCCInfoList.map {
+                    AgentVersion(ip = it.bkHostInnerip, bkHostId = it.bkHostId)
+                }
+            )?.associateBy { it.ip }
+        } else null
+        ipToAgentVersionInfoMap.takeIf { !it.isNullOrEmpty() }.run {
+            pageFromCmdb.records.filterNot { it.ip in ipToCmdbNodeRecordMap.keys }.map {
+                it.nodeStatus = if (AGENT_NOT_INSTALLED_TAG == ipToAgentVersionInfoMap!![it.ip]?.installedTag)
+                    NodeStatus.NOT_INSTALLED.name
+                else if (AGENT_ABNORMAL_NODE_STATUS == ipToAgentVersionInfoMap[it.ip]?.status)
+                    NodeStatus.ABNORMAL.name
+                else if (AGENT_NORMAL_NODE_STATUS == ipToAgentVersionInfoMap[it.ip]?.status)
+                    NodeStatus.NORMAL.name
+                else
+                    NodeStatus.NOT_INSTALLED.name
+            }
+        }
+        // 2.2 不在cc
+        mutableCmdbIpList.takeIf { it.isNotEmpty() }.run {
+            pageFromCmdb.records.filter { it.ip in mutableCmdbIpList }.map {
+                it.nodeStatus = NodeStatus.NOT_IN_CC.name
+            }
+        }
+
+        return pageFromCmdb
     }
 
     /**

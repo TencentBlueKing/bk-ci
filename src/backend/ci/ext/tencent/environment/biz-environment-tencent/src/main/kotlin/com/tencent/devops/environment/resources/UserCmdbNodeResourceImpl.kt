@@ -44,6 +44,7 @@ class UserCmdbNodeResourceImpl @Autowired constructor(
 
     override fun listUserCmdbNodesNew(
         userId: String,
+        projectId: String,
         bakOperator: Boolean,
         page: Int,
         pageSize: Int,
@@ -55,6 +56,7 @@ class UserCmdbNodeResourceImpl @Autowired constructor(
                 bakOperator = bakOperator,
                 page = page,
                 pageSize = pageSize,
+                projectId = projectId,
                 ips = ips ?: listOf()
             )
         )

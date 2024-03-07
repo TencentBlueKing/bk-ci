@@ -58,6 +58,9 @@ interface ServiceCmdbNodeResource {
         @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
+        @Parameter(description = "项目ID", required = true)
+        @QueryParam("projectId")
+        projectId: String,
         @Parameter(description = "true 时为备份负责人，false 时为主负责人", required = true)
         @QueryParam("bakOperator")
         bakOperator: Boolean,
