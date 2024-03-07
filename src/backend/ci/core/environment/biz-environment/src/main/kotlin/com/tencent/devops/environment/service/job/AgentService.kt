@@ -145,15 +145,20 @@ data class AgentService @Autowired constructor(
                 AgentHostForInstallAgent(
                     bkBizId = hostIdToqueryCCResDataMap?.get(it.bkHostId)?.bkBizId ?: bkBizScopeId,
                     bkCloudId = it.bkCloudId ?: DEFAULT_CLOUD_ID,
-                    bkHostId = it.bkHostId, bkAddressing = null,
+                    bkHostId = it.bkHostId,
+                    bkAddressing = null,
                     apId = DEFAULT_INSTALL_AGENT_AP_ID,
                     installChannelId = if (it.isAutoChooseInstallChannelId) {
                         chooseAgentInstallChannelIdService.autoChooseAgentInstallChannelId(
                             it.innerIp ?: ""
                         )
                     } else it.installChannelId,
-                    innerIp = it.innerIp, outerIp = null, loginIp = null, dataIp = null,
-                    innerIpv6 = null, outerIpv6 = null,
+                    innerIp = it.innerIp,
+                    outerIp = null,
+                    loginIp = null,
+                    dataIp = null,
+                    innerIpv6 = null,
+                    outerIpv6 = null,
                     osType = it.osType,
                     authType = it.authType,
                     account = it.account,
@@ -163,8 +168,11 @@ data class AgentService @Autowired constructor(
                     port = DEFAULT_INSTALL_AGENT_PORT,
                     key = if ("KEY" == it.authType) FileUtils.convertFileContentToString(keyFile) else it.key,
                     isManual = DEFAULT_IS_MANUAL,
-                    retention = null, peerExchangeSwitchForAgent = null, btSpeedLimit = null,
-                    enableCompression = null, dataPath = null
+                    retention = null,
+                    peerExchangeSwitchForAgent = null,
+                    btSpeedLimit = null,
+                    enableCompression = null,
+                    dataPath = null
                 )
             },
             replaceHostId = installAgentReq.replaceHostId,
