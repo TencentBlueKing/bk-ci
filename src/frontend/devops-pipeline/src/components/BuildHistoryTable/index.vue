@@ -652,6 +652,10 @@
                         pageSize: Number(this.$route.query.pageSize ?? 20)
                     }
                 })
+            } else {
+                this.setHistoryPageStatus({
+                    queryStr: getQueryParamString(this.historyPageStatus?.query ?? {})
+                })
             }
             this.requestHistory()
         },
