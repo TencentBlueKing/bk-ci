@@ -34,7 +34,9 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import java.net.InetAddress
-import java.net.UnknownHostException
+import java.nio.ByteBuffer
+import java.time.Duration
+import java.time.LocalDateTime
 
 @Service("AutoChooseAgentInstallChannelIdService")
 class ChooseAgentInstallChannelIdService @Autowired constructor(
@@ -48,6 +50,8 @@ class ChooseAgentInstallChannelIdService @Autowired constructor(
         private const val PROD_NETWORK_AREA_OSS = 6
         private const val PROD_NETWORK_AREA_DEVNET = 5 // 正式环境安装通道数值
         private const val PROD_NETWORK_AREA_DEFAULT = -1
+
+        const val NS_TO_S = 1000000000
     }
 
     fun autoChooseAgentInstallChannelId(ip: String): Int {
@@ -62,6 +66,7 @@ class ChooseAgentInstallChannelIdService @Autowired constructor(
         }.toMap()
 
         var networkArea = "SUPPORTING"
+        val startTime = LocalDateTime.now()
         if (ip.startsWith("9.134.") || ip.startsWith("9.135.")) {
             networkArea = "DEVNET"
         } else {
@@ -72,7 +77,8 @@ class ChooseAgentInstallChannelIdService @Autowired constructor(
                 }
             }
         }
-        logger.info("Auto choose agent install channel: $networkArea")
+        val costTime = Duration.between(startTime, LocalDateTime.now()).toNanos().toDouble() / NS_TO_S
+        logger.info("Auto choose agent install channel: $networkArea, cost time:${costTime}s.")
 
         return when (networkArea) {
             "SUPPORTING" -> PROD_NETWORK_AREA_SUPPORTING
@@ -82,34 +88,34 @@ class ChooseAgentInstallChannelIdService @Autowired constructor(
         }
     }
 
-    private fun ipInRange(ip: String, ranges: List<String>): Boolean {
-        val ipAddr: InetAddress = try {
-            InetAddress.getByName(ip)
-        } catch (e: UnknownHostException) {
-            logger.warn("[ipInRange]UnknownHostException: ${e.message}, ip:$ip")
-            return false
-        }
-        for (range in ranges) {
-            val parts = range.split("/")
-            val subnet = parts[0]
-            val subnetAddr: InetAddress = try {
-                InetAddress.getByName(subnet)
-            } catch (e: UnknownHostException) {
-                logger.warn("[ipInRange]UnknownHostException: ${e.message}")
-                return false
-            }
-            val prefixLength = parts[1].toInt()
-            val subnetMask = 0xffffffff shl (32 - prefixLength)
-            val subnetBytes = (subnetAddr.address.map { it.toInt() and 0xff }).toIntArray()
-            val ipBytes = (ipAddr.address.map { it.toInt() and 0xff }).toIntArray()
-            var maskIndex = 0
-            while (maskIndex < 4 && ipBytes[maskIndex] and subnetMask.toInt() == subnetBytes[maskIndex]) {
-                maskIndex++
-            }
-            if (maskIndex == 4) {
+    fun ipInRange(ip: String, subnets: List<String>): Boolean {
+        // 将IP地址转换为长整型
+        val targetIp = ipToLong(InetAddress.getByName(ip))
+
+        // 遍历每个子网
+        for (subnet in subnets) {
+            val parts = subnet.split("/")
+            val subnetIp = ipToLong(InetAddress.getByName(parts[0]))
+            val prefix = parts[1].toInt()
+
+            // 计算子网的最小IP和最大IP
+            val minIp = subnetIp and ((0xFFFFFFFF.toInt() shl (32 - prefix)).toLong())
+            val maxIp = minIp or ((0xFFFFFFFF.toInt() shr prefix).toLong())
+
+            // 判断目标IP是否在子网范围内
+            if (targetIp in minIp..maxIp) {
                 return true
             }
         }
         return false
+    }
+
+    private fun ipToLong(inetAddress: InetAddress): Long {
+        val buffer = ByteBuffer.wrap(inetAddress.address)
+        var ip: Long = 0
+        while (buffer.hasRemaining()) {
+            ip = ip shl 8 or (buffer.get().toInt() and 0xFF).toLong()
+        }
+        return ip
     }
 }
