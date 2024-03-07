@@ -78,7 +78,7 @@ class ChooseAgentInstallChannelIdService @Autowired constructor(
             }
         }
         val costTime = Duration.between(startTime, LocalDateTime.now()).toNanos().toDouble() / NS_TO_S
-        logger.info("Auto choose agent install channel: $networkArea, cost time:${costTime}s.")
+        logger.info("Ip: $ip, Auto choose agent install channel: $networkArea, cost time:${costTime}s.")
 
         return when (networkArea) {
             "SUPPORTING" -> PROD_NETWORK_AREA_SUPPORTING
