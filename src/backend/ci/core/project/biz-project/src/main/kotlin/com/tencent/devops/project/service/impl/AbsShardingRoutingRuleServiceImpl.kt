@@ -52,7 +52,7 @@ abstract class AbsShardingRoutingRuleServiceImpl @Autowired constructor(
     private val shardingRoutingRuleDispatcher: ShardingRoutingRuleDispatcher
 ) : ShardingRoutingRuleService {
     companion object {
-        private val DEFAULT_RULE_REDIS_CACHE_TIME = TimeUnit.DAYS.toSeconds(30) // 分片规则在redis默认缓存时间
+        private val DEFAULT_RULE_REDIS_CACHE_TIME = TimeUnit.DAYS.toSeconds(14) // 分片规则在redis默认缓存时间
     }
 
     /**
