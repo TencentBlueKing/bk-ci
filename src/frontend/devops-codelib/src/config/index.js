@@ -63,7 +63,7 @@ export const listColumnsCache = {
 
 export const codelibConfig = {
     svn: {
-        credentialTypes: 'SSH_PRIVATEKEY,TOKEN_USERNAME_PASSWORD',
+        credentialTypes: 'SSH_PRIVATEKEY,TOKEN_SSH_PRIVATEKEY',
         addType: 'SSH_PRIVATEKEY',
         label: 'SVN',
         typeName: 'codeSvn'
