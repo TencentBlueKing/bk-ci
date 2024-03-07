@@ -133,19 +133,19 @@ class MarketAtomCommonServiceImpl : MarketAtomCommonService {
     @Value("\${pipeline.setting.common.stage.job.task.maxOutputNum:100}")
     private val maxOutputNum: Int = 100
 
-    @Value("\${atom.maxAtomTimeout:10080}")
+    @Value("\${store.atom.maxTimeout:10080}")
     private val maxAtomTimeout: Int = 10080
 
-    @Value("\${atom.defaultTimeout:900}")
-    private val defaultTimeout: Int = 900
+    @Value("\${store.atom.defaultTimeout:900}")
+    private val defaultAtomTimeout: Int = 900
 
-    @Value("\${atom.minAtomTimeout:1}")
+    @Value("\${store.atom.minTimeout:1}")
     private val minAtomTimeout: Int = 1
 
-    @Value("\${atom.maxAtomRetryTimes:5}")
+    @Value("\${store.atom.maxRetryNum:5}")
     private val maxAtomRetryTimes: Int = 5
 
-    @Value("\${atom.minAtomRetryTimes:1}")
+    @Value("\${store.atom.minRetryNum:1}")
     private val minAtomRetryTimes: Int = 1
 
     private val logger = LoggerFactory.getLogger(MarketAtomCommonServiceImpl::class.java)
@@ -533,7 +533,7 @@ class MarketAtomCommonServiceImpl : MarketAtomCommonService {
     }
 
     private fun validateConfigMap(configMap: Map<String, Any>) {
-        val defaultTimeout = configMap[BK_DEFAULT_TIMEOUT] as? Int ?: defaultTimeout
+        val defaultTimeout = configMap[BK_DEFAULT_TIMEOUT] as? Int ?: defaultAtomTimeout
         if (defaultTimeout !in minAtomTimeout..maxAtomTimeout) {
             throw ErrorCodeException(errorCode = StoreMessageCode.TASK_JSON_CONFIG_DEFAULT_TIMEOUT_FIELD_IS_INVALID)
         }
