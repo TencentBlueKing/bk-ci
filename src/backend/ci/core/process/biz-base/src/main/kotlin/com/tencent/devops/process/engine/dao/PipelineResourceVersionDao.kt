@@ -467,18 +467,9 @@ class PipelineResourceVersionDao {
         version: Int
     ): PipelineVersionSimple? {
         with(T_PIPELINE_RESOURCE_VERSION) {
-            return dslContext.select(
-                PIPELINE_ID,
-                CREATOR,
-                CREATE_TIME,
-                VERSION,
-                VERSION_NAME,
-                REFER_FLAG,
-                REFER_COUNT
-            )
-                .from(this)
+            return dslContext.selectFrom(this)
                 .where(PIPELINE_ID.eq(pipelineId).and(PROJECT_ID.eq(projectId)).and(VERSION.eq(version)))
-                .fetchOneInto(PipelineVersionSimple::class.java)
+                .fetchAny(sampleMapper)
         }
     }
 
