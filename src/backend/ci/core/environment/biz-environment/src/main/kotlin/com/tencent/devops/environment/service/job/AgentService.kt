@@ -65,6 +65,7 @@ import com.tencent.devops.environment.pojo.job.agentres.QueryAgentTaskStatusResu
 import com.tencent.devops.environment.pojo.job.agentres.RetryAgentInstallTaskResult
 import com.tencent.devops.environment.pojo.job.agentres.Statistics
 import com.tencent.devops.environment.pojo.job.agentres.TerminalAgentInstallTaskResult
+import com.tencent.devops.environment.utils.FileUtils
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -82,7 +83,6 @@ import javax.ws.rs.core.Response
 data class AgentService @Autowired constructor(
     private val nodeManApi: NodeManApi,
     private val chooseAgentInstallChannelIdService: ChooseAgentInstallChannelIdService,
-    private val fileService: FileService,
     private val dslContext: DSLContext,
     private val nodeDao: NodeDao,
     private val redisOperation: RedisOperation,
@@ -161,7 +161,7 @@ data class AgentService @Autowired constructor(
                         throw ParamBlankException("The password cannot be empty.")
                     } else it.password,
                     port = DEFAULT_INSTALL_AGENT_PORT,
-                    key = if ("KEY" == it.authType) fileService.convertFileContentToString(keyFile) else it.key,
+                    key = if ("KEY" == it.authType) FileUtils.convertFileContentToString(keyFile) else it.key,
                     isManual = DEFAULT_IS_MANUAL,
                     retention = null, peerExchangeSwitchForAgent = null, btSpeedLimit = null,
                     enableCompression = null, dataPath = null

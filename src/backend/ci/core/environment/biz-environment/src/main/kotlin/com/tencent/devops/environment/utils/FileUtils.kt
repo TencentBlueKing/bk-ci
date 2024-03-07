@@ -25,14 +25,12 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.environment.service.job
+package com.tencent.devops.environment.utils
 
 import com.tencent.devops.common.api.exception.ParamBlankException
-import org.springframework.stereotype.Service
 import java.io.InputStream
 
-@Service("FileService")
-class FileService {
+object FileUtils {
     fun convertFileContentToString(inputStream: InputStream?): String {
         if (inputStream != null) {
             val content: String
