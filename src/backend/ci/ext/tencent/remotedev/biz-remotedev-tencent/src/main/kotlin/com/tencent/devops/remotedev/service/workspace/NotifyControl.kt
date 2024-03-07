@@ -111,6 +111,9 @@ class NotifyControl @Autowired constructor(
 
         /*云桌面通知-未登录3天时提醒*/
         const val NOT_LOGIN_NOTIFY = "NOT_LOGIN_NOTIFY"
+
+        /*云桌面通知-您的云桌面已被强制销毁*/
+        const val WORKSPACE_FORCE_DELETE = "WORKSPACE_FORCE_DELETE"
     }
 
     fun notifyWorkspaceInfo(
