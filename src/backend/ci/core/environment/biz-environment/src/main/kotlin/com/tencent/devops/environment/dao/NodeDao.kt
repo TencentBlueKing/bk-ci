@@ -361,12 +361,16 @@ class NodeDao {
     }
 
     fun updateNodeInCCByIp(dslContext: DSLContext, ipToNodeStatus: Map<String, String>) {
+        val agentVersionDefault: String? = null
         with(TNode.T_NODE) {
             val batchUpdate = dslContext.batch(
                 ipToNodeStatus.map { (ip, nodeStatus) ->
-                    dslContext.update(this)
+                    val updateInfo = dslContext.update(this)
                         .set(NODE_STATUS, nodeStatus)
-                        .where(NODE_IP.eq(ip))
+                    if (NodeStatus.NOT_INSTALLED.name == nodeStatus) {
+                        updateInfo.set(AGENT_VERSION, agentVersionDefault)
+                    }
+                    updateInfo.where(NODE_IP.eq(ip))
                         .and(NODE_TYPE.`in`(NodeType.CMDB.name, NodeType.UNKNOWN.name, NodeType.OTHER.name))
                 }
             )
