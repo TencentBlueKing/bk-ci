@@ -151,7 +151,7 @@ class NotifyControl @Autowired constructor(
         cc: MutableSet<String>,
         notifyTemplateCode: String,
         notifyType: MutableSet<RemoteDevNotifyType>,
-        bodyParams: Map<String, String>
+        bodyParams: MutableMap<String, String>
     ) {
         val projectInfo = kotlin.runCatching {
             client.get(ServiceProjectResource::class).get(projectId)
@@ -175,7 +175,7 @@ class NotifyControl @Autowired constructor(
         projectId: String,
         notifyTemplateCode: String,
         notifyType: MutableSet<RemoteDevNotifyType>,
-        bodyParams: Map<String, String>
+        bodyParams: MutableMap<String, String>
     ) {
         val projectInfo = kotlin.runCatching {
             client.get(ServiceProjectResource::class).get(projectId)
@@ -199,12 +199,21 @@ class NotifyControl @Autowired constructor(
         userIds: MutableSet<String>,
         notifyTemplateCode: String,
         notifyType: MutableSet<RemoteDevNotifyType>,
-        bodyParams: Map<String, String>,
+        bodyParams: MutableMap<String, String>,
         cc: MutableSet<String> = mutableSetOf()
     ) {
+        val taiUserNames = userIds.filter { it.contains("@tai") }.toSet()
+        val receiversNameWithCN = remoteDevSettingDao.fetchTaiUserInfo(dslContext, userIds = taiUserNames)
+            .mapValues {
+                if (it.value.first.isNotBlank()) {
+                    "${it.value.first}@${it.value.second}"
+                } else it.key
+            }.values.plus(
+                userIds.filter { !it.contains("@tai") }
+            )
+        bodyParams.putIfAbsent("receiversNameWithCN", receiversNameWithCN.joinToString())
         /* 发外部邮件，需要模板配置email_type=0*/
         if (notifyType.contains(RemoteDevNotifyType.EMAIL)) {
-            val taiUserNames = userIds.filter { it.contains("@tai") }.toSet()
             // 掉接口拿真正邮件地址
             val taiInfos = taiClient.taiUserInfo(
                 TaiUserInfoRequest(usernames = taiUserNames)
@@ -214,20 +223,10 @@ class NotifyControl @Autowired constructor(
                 user.accountEmail
             })
             val receivers = userIds.map { taiInfos[it] ?: it }
-            val receiversNameWithCN = remoteDevSettingDao.fetchTaiUserInfo(dslContext, userIds = taiUserNames)
-                .mapValues {
-                    if (it.value.first.isNotBlank()) {
-                        "${it.value.first}@${it.value.second}"
-                    } else it.key
-                }.values.plus(
-                    userIds.filter { !it.contains("@tai") }
-                )
-            logger.info("notify4User EMAIL|$notifyTemplateCode|$receivers|$bodyParams|$receiversNameWithCN")
+            logger.info("notify4User EMAIL|$notifyTemplateCode|$receivers|$bodyParams")
             sendNotifyMessageTemplateRequest(
                 notifyTemplateCode = notifyTemplateCode,
-                bodyParams = bodyParams.plus(
-                    "receiversNameWithCN" to receiversNameWithCN.joinToString()
-                ),
+                bodyParams = bodyParams,
                 notifyType = mutableSetOf(NotifyType.EMAIL.name),
                 receivers = receivers.toMutableSet(),
                 cc = cc,
@@ -272,6 +271,7 @@ class NotifyControl @Autowired constructor(
                 notifyTemplateCode = notifyTemplateCode,
                 bodyParams = bodyParams,
                 notifyType = mutableSetOf(NotifyType.RTX.name),
+                receivers = userIds.plus(cc).toMutableSet(),
                 markdownContent = false
             )
         }
@@ -363,6 +363,9 @@ class NotifyControl @Autowired constructor(
         cc: MutableSet<String> = mutableSetOf(),
         markdownContent: Boolean = false
     ) {
+        /*去掉 ADMIN_NAME 避免失误发送*/
+        receivers.remove(ADMIN_NAME)
+        cc.remove(ADMIN_NAME)
         val request = SendNotifyMessageTemplateRequest(
             templateCode = notifyTemplateCode,
             bodyParams = bodyParams,
