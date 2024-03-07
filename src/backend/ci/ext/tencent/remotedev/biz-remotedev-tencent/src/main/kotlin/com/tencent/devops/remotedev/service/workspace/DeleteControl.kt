@@ -189,6 +189,33 @@ class DeleteControl @Autowired constructor(
         }
     }
 
+    fun deleteWorkspace4OP(
+        userId: String,
+        workspaceName: String
+    ): Boolean {
+        val workspace = workspaceDao.fetchAnyWorkspace(dslContext, workspaceName = workspaceName)
+            ?: throw ErrorCodeException(
+                errorCode = ErrorCodeEnum.WORKSPACE_NOT_FIND.errorCode,
+                params = arrayOf(workspaceName)
+            )
+        val res = deleteWorkspace4System(userId, workspaceName)
+        if (res) {
+            val userIds = permissionService.getWorkspaceOwner(workspace.workspaceName)
+            notifyControl.notify4UserAndCCRemoteDevManager(
+                userIds = userIds.toMutableSet(),
+                cc = mutableSetOf(workspace.createUserId),
+                projectId = workspace.projectId,
+                notifyTemplateCode = NotifyControl.WORKSPACE_FORCE_DELETE,
+                notifyType = mutableSetOf(RemoteDevNotifyType.EMAIL, RemoteDevNotifyType.RTX),
+                bodyParams = mutableMapOf(
+                    "cgsIp" to (workspace.hostName ?: ""),
+                    "userId" to userIds.joinToString()
+                )
+            )
+        }
+        return res
+    }
+
     @ActionAuditRecord(
         actionId = ActionId.CGS_DELETE,
         instance = AuditInstanceRecord(
@@ -198,7 +225,7 @@ class DeleteControl @Autowired constructor(
         ),
         content = ActionAuditContent.CGS_DELETE_CONTENT
     )
-    fun deleteWorkspace4OP(
+    private fun deleteWorkspace4System(
         userId: String,
         workspaceName: String
     ): Boolean {
@@ -314,7 +341,7 @@ class DeleteControl @Autowired constructor(
                         action = WorkspaceAction.DELETE,
                         actionMessage = workspaceCommon.getOpHistory(OpHistoryCopyWriting.TIMEOUT_STOP)
                     )
-                    kotlin.runCatching { deleteWorkspace4OP(ADMIN_NAME, workspace.workspaceName) }
+                    kotlin.runCatching { deleteWorkspace4System(ADMIN_NAME, workspace.workspaceName) }
                         .onFailure { i ->
                             logger.warn("auto delete fail|${i.message}", i)
                         }.onSuccess {
@@ -391,7 +418,7 @@ class DeleteControl @Autowired constructor(
                             " 早于检测时间 ${limitDay.format(formatter)})"
                 )
                 if (onDelete) {
-                    kotlin.runCatching { deleteWorkspace4OP(ADMIN_NAME, workspace.workspaceName) }.onFailure { i ->
+                    kotlin.runCatching { deleteWorkspace4System(ADMIN_NAME, workspace.workspaceName) }.onFailure { i ->
                         logger.warn("auto delete fail|${i.message}", i)
                     }.onSuccess {
                         logger.info(
