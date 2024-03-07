@@ -269,7 +269,8 @@
         "TSTACK": "DevCloud",
         "OTHER": "Other",
         "UNKNOWN": "Unknown",
-        "NOT_INSTALLED": "Not installed"
+        "NOT_INSTALLED": "Not installed",
+        "NOT_IN_CC": "Not in BlueKing CC"
     },
     "newPool": "New Pool",
     "查看构建机监控": "View build machine monitoring",

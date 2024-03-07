@@ -159,7 +159,7 @@ const actions = {
      * CMDB节点列表
      */
     requestCmdbNode ({ commit }, { params }) {
-        return vue.$ajax.post(`${prefix}/user/envnode/listUserCmdbNodesNew?page=${params.page}&pageSize=${params.pageSize}&bakOperator=${params.bakOperator}`, params.ipList).then(response => {
+        return vue.$ajax.post(`${prefix}/user/envnode/listUserCmdbNodesNew?projectId=${params.projectId}&page=${params.page}&pageSize=${params.pageSize}&bakOperator=${params.bakOperator}`, params.ipList).then(response => {
             return response
         })
     },

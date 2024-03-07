@@ -76,18 +76,17 @@
                     @select-all="toggleAllSelect"
                 >
                     <bk-table-column type="selection" width="60" align="center" :selectable="isImported" show-overflow-tooltip></bk-table-column>
-                    <bk-table-column label="IP" prop="ip" show-overflow-tooltip></bk-table-column>
+                    <bk-table-column label="IP" prop="ip" width="150" show-overflow-tooltip></bk-table-column>
                     <bk-table-column :label="$t('environment.nodeInfo.hostName')" prop="name" show-overflow-tooltip></bk-table-column>
-                    <bk-table-column :label="$t('environment.operator')" prop="operator" show-overflow-tooltip></bk-table-column>
-                    <bk-table-column :label="$t('environment.bkOperator')" prop="bakOperator" show-overflow-tooltip></bk-table-column>
-                    <bk-table-column :label="$t('environment.nodeInfo.gseAgentStatus')" prop="agentStatus">
+                    <bk-table-column :label="$t('environment.operator')" width="150" prop="operator" show-overflow-tooltip></bk-table-column>
+                    <bk-table-column :label="$t('environment.bkOperator')" width="150" prop="bakOperator" show-overflow-tooltip></bk-table-column>
+                    <bk-table-column :label="$t('environment.status')" prop="nodeStatus" show-overflow-tooltip>
                         <template slot-scope="{ row }">
-                            <span
-                                :class="{
-                                    'node-agstatus normal-status-node': true,
-                                    'abnormal-status-node': !row.agentStatus
-                                }">
-                                {{ row.agentStatus ? $t('environment.nodeInfo.normal') : $t('environment.nodeInfo.abnormal') }}
+                            <span>
+                                <StatusIcon v-if="successStatus.includes(row.nodeStatus)" status="success" />
+                                <StatusIcon v-else-if="failStatus.includes(row.nodeStatus)" status="error" />
+                                <StatusIcon v-else-if="['NOT_INSTALLED'].includes(row.nodeStatus)" status="normal" />
+                                {{ $t('environment.nodeStatusMap')[row.nodeStatus] }}
                             </span>
                         </template>
                     </bk-table-column>
@@ -105,8 +104,12 @@
 
 <script>
     import { mapGetters } from 'vuex'
+    import StatusIcon from '@/components/status-icon.vue'
 
     export default {
+        components: {
+            StatusIcon
+        },
         props: {
             nodeSelectConf: Object,
             curUserInfo: Object,
@@ -142,8 +145,9 @@
                     limit: 8,
                     limitList: [8, 20, 50, 100]
                 },
-                nodeList: [],
-                selectedNodeList: []
+                selectedNodeList: [],
+                successStatus: ['NORMAL', 'BUILD_IMAGE_SUCCESS'],
+                failStatus: ['NOT_IN_CC', 'ABNORMAL', 'DELETED', 'LOST', 'BUILD_IMAGE_FAILED', 'UNKNOWN']
             }
         },
         computed: {
@@ -172,7 +176,6 @@
                     this.searchKeyList.splice(0, this.searchKeyList.length)
                 } else {
                     this.pagination.current = 1
-                    await this.requestAllList()
                     await this.getDate()
                 }
             },
@@ -189,24 +192,18 @@
                         bakOperator: this.operator === 'bakOperator',
                         ipList: this.searchKeyList,
                         page: this.pagination.current,
-                        pageSize: this.pagination.limit
+                        pageSize: this.pagination.limit,
+                        projectId: this.projectId
                     }
-                    this.rowList = []
                     const res = await this.$store.dispatch('environment/requestCmdbNode', { params })
-                    res.records && res.records.forEach(item => {
-                        this.rowList.push({
-                            ...item
-                        })
-                    })
+                    this.rowList = res.records || []
                     
                     // 回填已经导入的节点
                     this.$nextTick(() => {
-                        this.nodeList.forEach(selection => {
-                            const matchItem = this.rowList.find(val => val.ip === selection.ip && selection.nodeType === 'CMDB')
-                            if (matchItem) {
-                                this.$refs.nodeListTable.toggleRowSelection(matchItem, true)
-                            }
-                        })
+                        const matchItem = this.rowList.find(val => val.importStatus)
+                        if (matchItem) {
+                            this.$refs.nodeListTable.toggleRowSelection(matchItem, true)
+                        }
                     })
                     this.pagination.count = res.count
                 } catch (err) {
@@ -324,22 +321,10 @@
                 this.getDate()
             },
             toggleNodeSelect (selection) {
-                if (!this.nodeList.length) {
-                    this.selectedNodeList = selection
-                    return
-                }
-                this.selectedNodeList = selection.filter(i => {
-                    return !this.nodeList.find(val => val.nodeType === 'CMDB' && val.ip === i.ip)
-                })
+                this.selectedNodeList = selection.filter(i => !i.importStatus)
             },
             toggleAllSelect (selection) {
-                if (!this.nodeList.length) {
-                    this.selectedNodeList = selection
-                    return
-                }
-                this.selectedNodeList = selection.filter(i => {
-                    return !this.nodeList.find(val => val.nodeType === 'CMDB' && val.ip === i.ip)
-                })
+                this.selectedNodeList = selection.filter(i => !i.importStatus)
             },
             async confirmFn () {
                 const selectNodeId = []
@@ -373,20 +358,11 @@
             cancelFn () {
                 this.$emit('cancel-fn')
             },
-            async requestAllList () {
-                const res = await this.$store.dispatch('environment/requestNodeList', {
-                    projectId: this.projectId,
-                    page: 1,
-                    pageSize: -1
-                })
-                this.nodeList = res.records
-            },
             /**
              * 当前行是否可以勾选
-             * 已经导入过的节点不可勾选，状态为NOT_IN_CC的节点可勾选重新导入
              */
             isImported (row) {
-                return !this.nodeList.some(node => (node.nodeType === 'CMDB' && node.ip === row.ip))
+                return !row.importStatus
             }
         }
     }
