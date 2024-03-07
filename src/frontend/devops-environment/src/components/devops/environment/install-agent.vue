@@ -13,9 +13,11 @@
         <div slot="content" v-if="isEditing">
             <bk-alert type="info" :title="$t('environment.installAgentTips')" closable></bk-alert>
             <bk-form
+                ref="form"
                 class="mt20"
                 :label-width="labelWidth"
                 :model="formData"
+                :rules="rules"
             >
                 <bk-form-item
                     :label="$t('environment.nodeInfo.os')"
@@ -36,6 +38,7 @@
                     :label="$t('environment.loginAccount')"
                     :required="true"
                     property="account"
+                    error-display-type="normal"
                 >
                     <bk-input
                         v-model="formData.account"
@@ -61,6 +64,7 @@
                     :label="$t('environment.loginPassword')"
                     :required="true"
                     property="password"
+                    error-display-type="normal"
                 >
                     <bk-input
                         v-model="formData.password"
@@ -214,6 +218,24 @@
         computed: {
             projectId () {
                 return this.$route.params.projectId
+            },
+            rules () {
+                return {
+                    account: [
+                        {
+                            required: true,
+                            message: this.$t('environment.请填写登录账号'),
+                            trigger: 'blur'
+                        }
+                    ],
+                    password: [
+                        {
+                            required: true,
+                            message: this.$t('environment.请填写密码'),
+                            trigger: 'blur'
+                        }
+                    ]
+                }
             }
         },
         watch: {
@@ -289,47 +311,49 @@
                 })
             },
 
-            async handleConFirm () {
-                try {
-                    this.isLoading = true
-                    const params = { ...this.formData }
-                    if (params.installChannelId === 'auto') {
-                        params.isAutoChooseInstallChannelId = true
-                        delete params.installChannelId
-                    } else if (params.installChannelId === 'others') {
-                        params.isAutoChooseInstallChannelId = false
-                        delete params.installChannelId
-                    } else {
-                        params.isAutoChooseInstallChannelId = false
-                    }
-                    const hosts = []
-                    hosts.push(params)
-                    this.keyFileFormData.append('installAgentReq', JSON.stringify({ hosts }))
-                    const res = await this.$store.dispatch('environment/installAgent', {
-                        projectId: this.projectId,
-                        data: this.keyFileFormData,
-                        headers: {
-                            'Content-Type': 'multipart/form-data'
+            handleConFirm () {
+                this.$refs.form.validate().then(async () => {
+                    try {
+                        this.isLoading = true
+                        const params = { ...this.formData }
+                        if (params.installChannelId === 'auto') {
+                            params.isAutoChooseInstallChannelId = true
+                            delete params.installChannelId
+                        } else if (params.installChannelId === 'others') {
+                            params.isAutoChooseInstallChannelId = false
+                            delete params.installChannelId
+                        } else {
+                            params.isAutoChooseInstallChannelId = false
                         }
-                    })
-                    this.jobId = res.jobId
-                    this.isEditing = false
-                    this.$nextTick(() => {
-                        this.initEditor()
-                    })
-                    this.isLoading = false
-                    setTimeout(async () => {
-                        await this.fetchInstallAgentStatus()
-                        await this.fetchInstallAgentTaskLog()
-                    }, 1000)
-                    this.$emit('install')
-                } catch (e) {
-                    this.$bkMessage({
-                        theme: 'error',
-                        message: e.message || e
-                    })
-                    this.isLoading = false
-                }
+                        const hosts = []
+                        hosts.push(params)
+                        this.keyFileFormData.append('installAgentReq', JSON.stringify({ hosts }))
+                        const res = await this.$store.dispatch('environment/installAgent', {
+                            projectId: this.projectId,
+                            data: this.keyFileFormData,
+                            headers: {
+                                'Content-Type': 'multipart/form-data'
+                            }
+                        })
+                        this.jobId = res.jobId
+                        this.isEditing = false
+                        this.$nextTick(() => {
+                            this.initEditor()
+                        })
+                        this.isLoading = false
+                        setTimeout(async () => {
+                            await this.fetchInstallAgentStatus()
+                            await this.fetchInstallAgentTaskLog()
+                        }, 1000)
+                        this.$emit('install')
+                    } catch (e) {
+                        this.$bkMessage({
+                            theme: 'error',
+                            message: e.message || e
+                        })
+                        this.isLoading = false
+                    }
+                })
             },
 
             handleCancel () {

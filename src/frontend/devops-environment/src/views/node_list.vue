@@ -441,6 +441,7 @@
     import StatusIcon from '@/components/status-icon.vue'
     import SearchSelect from '@blueking/search-select'
     import { getQueryString } from '@/utils/util'
+    import webSocketMessage from '../utils/webSocketMessage.js'
     import { NODE_RESOURCE_ACTION, NODE_RESOURCE_TYPE } from '@/utils/permission'
     // import emptyNode from './empty_node'
     import '@blueking/search-select/dist/styles/index.css'
@@ -599,7 +600,7 @@
                         id: 'displayName'
                     },
                     {
-                        name: this.$t('environment.importer'),
+                        name: this.$t('environment.nodeInfo.importer'),
                         id: 'createdUser'
                     },
                     {
@@ -718,6 +719,9 @@
                 this.constructImportForm.model = urlParams
                 this.toImportNode('construct')
             }
+
+            webSocketMessage.installWsMessage(this.requestList)
+            this.$once('hook:beforeDestroy', webSocketMessage.unInstallWsMessage)
         },
         async mounted () {
             await this.init()

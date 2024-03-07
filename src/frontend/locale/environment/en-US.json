@@ -412,5 +412,7 @@
     "查看日志": "View logs",
     "确认离开当前页？": "Are you sure to leave now?",
     "离开将会导致未保存信息丢失": "Your changes will be lost if you close without saving.",
-    "离开": "Leave"
+    "离开": "Leave",
+    "请填写登录账号": "Please enter account",
+    "请填写密码": "Please enter password"
 }
