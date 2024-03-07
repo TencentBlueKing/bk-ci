@@ -311,6 +311,8 @@
     "item": "个",
     "minutes": "分钟",
     "itemPlaceholder": "请输入",
+    "defaultSuc": "【${BK_CI_PROJECT_NAME_CN}】- 【${BK_CI_PIPELINE_NAME}】#${BK_CI_BUILD_NUM} 执行成功，耗时${BK_CI_BUILD_TOTAL_TIME}, 触发人: ${BK_CI_START_USER_NAME}。",
+    "defaultFail": "【${BK_CI_PROJECT_NAME_CN}】- 【${BK_CI_PIPELINE_NAME}】#${BK_CI_BUILD_NUM} 执行失败，耗时${BK_CI_BUILD_TOTAL_TIME}, 触发人: ${BK_CI_START_USER_NAME}。",
     "runningOption": {
       "multiple": "可并发运行",
       "lock": "禁用流水线，任何触发方式都无法运行",
