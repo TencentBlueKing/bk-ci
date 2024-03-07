@@ -285,7 +285,8 @@ class PipelineRecordModelService @Autowired constructor(
                 preContainerRecordTaskSeq++
             }
             val taskId = containerRecordTask.taskId
-            if (matrixTaskFlag || taskId == lastElementTaskId) {
+            if (containerRecordTask.elementPostInfo != null || taskId == lastElementTaskId) {
+                // 当job含有post任务或者db中存在model最后一个插件的任务记录，则不需要再补充跳过的task任务
                 supplementSkipTaskFlag = false
             }
             preContainerRecordTaskSeq = containerRecordTask.taskSeq
@@ -361,19 +362,24 @@ class PipelineRecordModelService @Autowired constructor(
         tasks: MutableList<Map<String, Any>>
     ) {
         val containerResourceRecordTasks = containerRecordTasks.filter {
-            it.elementPostInfo == null && it.classType !in listOf(
-                QualityGateInElement.classType, QualityGateOutElement.classType
-            )
+            it.elementPostInfo == null
         }.sortedBy { it.taskSeq }
         if (containerResourceRecordTasks.isNotEmpty()) {
-            val lastResourceRecordTaskId = containerResourceRecordTasks[containerResourceRecordTasks.size - 1].taskId
-            val lastResourceRecordTaskBaseMap =
-                taskBaseMaps.firstOrNull { it[Element::id.name] == lastResourceRecordTaskId }
-            val lastResourceRecordTaskIndex = taskBaseMaps.indexOf(lastResourceRecordTaskBaseMap)
+            val lastResourceRecordTaskSeq = containerResourceRecordTasks[containerResourceRecordTasks.size - 1].taskSeq
+            val lastResourceRecordTaskIndex = lastResourceRecordTaskSeq - 2
             val taskBaseMapNum = taskBaseMaps.size
             if (taskBaseMapNum - lastResourceRecordTaskIndex > 1) {
+                // 如果job里含有质量红线任务，则后续跳过的任务都需要生成完整的变量模型以便和model合并
+                val mergeFlag = containerResourceRecordTasks.firstOrNull {
+                    it.atomCode in listOf(QualityGateInElement.classType, QualityGateOutElement.classType)
+                } != null
                 for (i in lastResourceRecordTaskIndex + 1 until taskBaseMapNum) {
-                    val taskVarMap = generateSkipTaskVarModel(matrixTaskFlag, taskBaseMaps[i], containerExecuteCount)
+                    val taskVarMap = generateSkipTaskVarModel(
+                        matrixTaskFlag = matrixTaskFlag,
+                        taskBaseMap = taskBaseMaps[i],
+                        executeCount = containerExecuteCount,
+                        mergeFlag = mergeFlag
+                    )
                     tasks.add(taskVarMap)
                 }
             }
@@ -416,7 +422,8 @@ class PipelineRecordModelService @Autowired constructor(
     private fun generateSkipTaskVarModel(
         matrixTaskFlag: Boolean,
         taskBaseMap: Map<String, Any>,
-        executeCount: Int
+        executeCount: Int,
+        mergeFlag: Boolean = false
     ): MutableMap<String, Any> {
         var taskVarMap = mutableMapOf<String, Any>()
         val taskId = if (matrixTaskFlag) {
@@ -434,6 +441,8 @@ class PipelineRecordModelService @Autowired constructor(
                 taskBaseMap[MatrixStatusElement::classType.name].toString()
             taskVarMap[MatrixStatusElement::originAtomCode.name] = taskBaseMap[KEY_ATOM_CODE].toString()
             taskVarMap[MatrixStatusElement::originTaskAtom.name] = taskBaseMap[KEY_TASK_ATOM].toString()
+            taskVarMap = ModelUtils.generateBuildModelDetail(taskBaseMap.deepCopy(), taskVarMap)
+        } else if (mergeFlag) {
             taskVarMap = ModelUtils.generateBuildModelDetail(taskBaseMap.deepCopy(), taskVarMap)
         }
         return taskVarMap

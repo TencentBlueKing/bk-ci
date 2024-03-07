@@ -299,6 +299,7 @@ class WorkspaceService @Autowired constructor(
 
             workspaceCommon.shareWorkspace(
                 workspaceName = workspaceName,
+                projectId = workspace.projectId,
                 operator = userId,
                 assigns = listOf(ProjectWorkspaceAssign(sharedUser, WorkspaceShared.AssignType.VIEWER, null)),
                 mountType = workspace.workspaceMountType
@@ -1202,14 +1203,16 @@ class WorkspaceService @Autowired constructor(
                     action = WorkspaceAction.NOTIFY,
                     actionMessage = workspaceCommon.getOpHistory(OpHistoryCopyWriting.TIMEOUT_STOP)
                 )
+                val userIds = permissionService.getWorkspaceOwner(workspace.workspaceName)
                 notifyControl.notify4UserAndCCRemoteDevManager(
-                    userIds = permissionService.getWorkspaceOwner(workspace.workspaceName).toMutableSet(),
+                    userIds = userIds.toMutableSet(),
                     cc = mutableSetOf(workspace.createUserId),
                     projectId = workspace.projectId,
                     notifyTemplateCode = SLEEP_3_DAY_NOTIFY,
-                    notifyType = mutableSetOf(RemoteDevNotifyType.EMAIL),
-                    bodyParams = mapOf(
-                        "cgsIp" to (workspace.hostName ?: "")
+                    notifyType = mutableSetOf(RemoteDevNotifyType.EMAIL, RemoteDevNotifyType.RTX),
+                    bodyParams = mutableMapOf(
+                        "cgsIp" to (workspace.hostName ?: ""),
+                        "userId" to userIds.joinToString()
                     )
                 )
             }
@@ -1240,14 +1243,16 @@ class WorkspaceService @Autowired constructor(
                     action = WorkspaceAction.NOTIFY,
                     actionMessage = workspaceCommon.getOpHistory(OpHistoryCopyWriting.TIMEOUT_SLEEP)
                 )
+                val userIds = permissionService.getWorkspaceOwner(workspace.workspaceName)
                 notifyControl.notify4UserAndCCRemoteDevManager(
-                    userIds = permissionService.getWorkspaceOwner(workspace.workspaceName).toMutableSet(),
+                    userIds = userIds.toMutableSet(),
                     cc = mutableSetOf(workspace.createUserId),
                     projectId = workspace.projectId,
                     notifyTemplateCode = NOT_LOGIN_NOTIFY,
-                    notifyType = mutableSetOf(RemoteDevNotifyType.EMAIL),
-                    bodyParams = mapOf(
-                        "cgsIp" to (workspace.hostName ?: "")
+                    notifyType = mutableSetOf(RemoteDevNotifyType.EMAIL, RemoteDevNotifyType.RTX),
+                    bodyParams = mutableMapOf(
+                        "cgsIp" to (workspace.hostName ?: ""),
+                        "userId" to userIds.joinToString()
                     )
                 )
             }

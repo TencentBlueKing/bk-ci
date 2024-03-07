@@ -168,6 +168,7 @@ class DeliverControl @Autowired constructor(
                 logger.info("assignUser2Workspace|$userId|${assign2Owner.userId}")
                 workspaceCommon.shareWorkspace(
                     workspaceName = workspaceName,
+                    projectId = workspace.projectId,
                     operator = userId,
                     assigns = listOf(assign2Owner),
                     mountType = WorkspaceMountType.START
@@ -192,6 +193,7 @@ class DeliverControl @Autowired constructor(
                 if (assign2Owner != null) {
                     workspaceCommon.shareWorkspace(
                         workspaceName = workspaceName,
+                        projectId = workspace.projectId,
                         operator = userId,
                         assigns = listOf(
                             ProjectWorkspaceAssign(
@@ -211,6 +213,7 @@ class DeliverControl @Autowired constructor(
         if (add.isNotEmpty()) {
             workspaceCommon.shareWorkspace(
                 workspaceName = workspaceName,
+                projectId = workspace.projectId,
                 operator = userId,
                 assigns = add,
                 mountType = WorkspaceMountType.START
@@ -275,11 +278,12 @@ class DeliverControl @Autowired constructor(
                             projectId = projectId,
                             cc = mutableSetOf(workspace.createUserId),
                             notifyTemplateCode = WINDOWS_GPU_ASSIGN_NOTIFY,
-                            notifyType = mutableSetOf(RemoteDevNotifyType.EMAIL),
-                            bodyParams = mapOf(
+                            notifyType = mutableSetOf(RemoteDevNotifyType.EMAIL, RemoteDevNotifyType.RTX),
+                            bodyParams = mutableMapOf(
                                 "workspaceName" to workspace.workspaceName,
                                 "cgsId" to (workspace.hostName ?: workspace.workspaceName),
-                                "projectId" to projectId
+                                "projectId" to projectId,
+                                "creator" to workspace.createUserId
                             )
                         )
                     }

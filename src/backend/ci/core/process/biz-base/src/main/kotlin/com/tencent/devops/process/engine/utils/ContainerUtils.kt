@@ -27,6 +27,7 @@
 
 package com.tencent.devops.process.engine.utils
 
+import com.tencent.devops.common.pipeline.container.Container
 import com.tencent.devops.common.pipeline.container.NormalContainer
 import com.tencent.devops.common.pipeline.container.VMBuildContainer
 import com.tencent.devops.common.pipeline.enums.BuildStatus
@@ -95,5 +96,9 @@ object ContainerUtils {
         } else {
             "${getQueuePrefix()}$containerName"
         }
+    }
+
+    fun isOriginMatrixContainer(container: Container): Boolean {
+        return container.fetchGroupContainers() != null
     }
 }

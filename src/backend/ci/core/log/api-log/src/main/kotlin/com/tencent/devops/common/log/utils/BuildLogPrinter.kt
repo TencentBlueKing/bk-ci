@@ -262,18 +262,16 @@ class BuildLogPrinter(
         subTag: String? = null
     ) {
         try {
-            doWithCircuitBreaker {
-                genLogPrintPrintResource().updateLogStatus(
-                    buildId = buildId,
-                    finished = true,
-                    tag = tag,
-                    subTag = subTag,
-                    jobId = jobId,
-                    executeCount = executeCount
-                )
-            }
+            genLogPrintPrintResource().updateLogStatus(
+                buildId = buildId,
+                finished = true,
+                tag = tag,
+                subTag = subTag,
+                jobId = jobId,
+                executeCount = executeCount
+            )
         } catch (ignore: Exception) {
-            logger.error("[$buildId]|stopLog fail", ignore)
+            logger.warn("[$buildId]|stopLog fail", ignore)
         }
     }
 
@@ -285,17 +283,15 @@ class BuildLogPrinter(
         subTag: String? = null
     ) {
         try {
-            doWithCircuitBreaker {
-                genLogPrintPrintResource().addLogStatus(
-                    buildId = buildId,
-                    tag = tag,
-                    subTag = subTag,
-                    jobId = jobId,
-                    executeCount = executeCount
-                )
-            }
+            genLogPrintPrintResource().addLogStatus(
+                buildId = buildId,
+                tag = tag,
+                subTag = subTag,
+                jobId = jobId,
+                executeCount = executeCount
+            )
         } catch (ignore: Exception) {
-            logger.error("[$buildId]|stopLog fail", ignore)
+            logger.warn("[$buildId]|stopLog fail", ignore)
         }
     }
 

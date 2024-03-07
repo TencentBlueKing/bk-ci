@@ -38,6 +38,8 @@ data class BuildTask(
     val vmSeqId: String,
     @get:Schema(title = "任务状态", required = true)
     val status: BuildTaskStatus,
+    @get:Schema(title = "插件执行次数", required = false)
+    val executeCount: Int? = null,
     @get:Schema(title = "任务ID", required = true)
     val taskId: String? = null,
     @Deprecated("原本用于标识上下文但统一传了taskId，现废弃")
