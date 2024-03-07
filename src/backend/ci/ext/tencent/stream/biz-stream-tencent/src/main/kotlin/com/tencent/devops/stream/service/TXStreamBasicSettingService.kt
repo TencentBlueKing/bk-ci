@@ -196,7 +196,6 @@ class TXStreamBasicSettingService @Autowired constructor(
                 } else {
                     null
                 }
-            logger.info("path:${streamGitConfig.defaultAtomProjectGroupName}/${setting.name}")
             val projectResult =
                 client.get(ServiceTxProjectResource::class).createGitCIProject(
                     gitProjectId = setting.gitProjectId,
