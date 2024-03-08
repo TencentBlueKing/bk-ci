@@ -65,7 +65,8 @@
         },
         data () {
             return {
-                nameEditing: false
+                nameEditing: false,
+                isElementModified: false
             }
         },
         computed: {
@@ -120,6 +121,16 @@
                 return ''
             }
         },
+        watch: {
+            element: {
+                handler (val, oldVal) {
+                    console.log('element', JSON.stringify(val), JSON.stringify(oldVal))
+                    this.isElementModified = true
+                },
+                deep: true
+
+            }
+        },
         methods: {
             ...mapActions('atom', [
                 'toggleAtomSelectorPopup',
@@ -127,7 +138,8 @@
                 'togglePropertyPanel'
             ]),
             async handleBeforeClose () {
-                if (!this.closeConfirm) {
+                console.log('handleBeforeClose', this.closeConfirm, this.isElementModified)
+                if (!this.closeConfirm || !this.isElementModified) {
                     return true
                 }
                 const res = await navConfirm({
@@ -137,6 +149,7 @@
                 if (res && typeof this.beforeClose === 'function') {
                     await this.beforeClose()
                 }
+                this.isElementModified = false
                 return res
             },
 

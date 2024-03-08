@@ -7,7 +7,7 @@
                     name="stepId"
                     :handle-change="handleUpdateAtom"
                     :disabled="!editable || showPanelType === 'PAUSE'"
-                    style="width: 282px;margin-top: 6px;"
+                    style="width: 282px; margin-top: 6px;"
                     v-validate.initial="`varRule|unique:${allStepId}`"
                 >
                 </vuex-input>
@@ -411,7 +411,6 @@
                 deep: true,
                 handler: function (errorsItems) {
                     const isError = errorsItems.length > 0
-                    console.log('atom errors', errorsItems, this.errors)
                     this.handleUpdateAtom('isError', isError)
                 }
             }
@@ -486,10 +485,6 @@
 
             toggleEditName (show) {
                 this.nameEditing = show
-            },
-            handleEditName (e) {
-                const { value } = e.target
-                this.handleUpdateAtom('name', value)
             },
             setAtomValidate (addErrors, removeErrors) {
                 if (addErrors && addErrors.length) {

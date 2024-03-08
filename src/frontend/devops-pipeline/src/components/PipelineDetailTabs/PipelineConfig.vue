@@ -1,14 +1,13 @@
 <template>
     <div class="pipeline-config-wrapper" v-bkloading="{ isLoading }">
         <bk-alert
-            v-if="isActiveDraft"
+            v-if="hasDraftPipeline"
             :title="
                 $t('draftInfoTips', [draftCreator, draftLastUpdateTime])
             "
         />
         <bk-alert
             v-if="hasUnResolveEvent"
-            type="warning"
         >
             <i class="bk-icon icon-info-circle" />
             <i18n :path="unResolveEventTooltips" tag="p" slot="title">
@@ -17,35 +16,6 @@
         </bk-alert>
         <header class="pipeline-config-header">
             <mode-switch read-only />
-            <VersionSideslider
-                v-model="activePipelineVersion"
-                ref="versionSideslider"
-                @change="handleVersionChange"
-            />
-            <RollbackEntry
-                :version="activePipelineVersion"
-                :pipeline-id="pipelineId"
-                :project-id="projectId"
-                :version-name="activePipelineVersionName"
-                :draft-base-version-name="draftBaseVersionName"
-                :is-active-draft="isActiveDraft"
-            >
-                <template v-if="isCurrentVersion || isActiveDraft">
-                    <i style="font-size: 16px" class="devops-icon icon-pipeline-edit" />
-                    {{$t('edit')}}
-                </template>
-                <template v-else>
-                    <i style="font-size: 16px" class="devops-icon icon-rollback" />
-                    {{ $t("rollback") }}
-                </template>
-            </RollbackEntry>
-            <VersionDiffEntry
-                :version="activePipelineVersion"
-                :latest-version="releaseVersion"
-            >
-                <i style="font-size: 16px" class="devops-icon icon-diff" />
-                {{ $t("diff") }}
-            </VersionDiffEntry>
         </header>
         <section class="pipeline-model-content">
             <YamlEditor
@@ -73,11 +43,9 @@
     import { TriggerTab, NotifyTab } from '@/components/PipelineEditTabs/'
     import PipelineModel from './PipelineModel'
     import BaseConfig from './BaseConfig'
-    import VersionSideslider from './VersionSideslider'
     import Logo from '@/components/Logo'
-    import VersionDiffEntry from './VersionDiffEntry'
-    import RollbackEntry from './RollbackEntry'
     import { convertTime } from '@/utils/util'
+    import { bus, SHOW_VERSION_HISTORY_SIDESLIDER } from '@/utils/bus'
     import {
         RESOURCE_ACTION
     } from '@/utils/permission'
@@ -88,19 +56,13 @@
             TriggerTab,
             BaseConfig,
             YamlEditor,
-            Logo,
-            VersionSideslider,
-            VersionDiffEntry,
-            RollbackEntry
+            Logo
         },
         data () {
             return {
                 RESOURCE_ACTION,
                 isLoading: false,
                 yaml: '',
-                activePipelineVersion: null,
-                activePipelineVersionModel: null,
-                activePipelineVersionName: '',
                 yamlHighlightBlockMap: {},
                 yamlHighlightBlock: []
             }
@@ -111,7 +73,8 @@
                 'pipelineSetting',
                 'pipelineWithoutTrigger',
                 'pipeline',
-                'pipelineInfo'
+                'pipelineInfo',
+                'activePipelineVersion'
             ]),
 
             ...mapState([
@@ -119,8 +82,8 @@
             ]),
             ...mapGetters({
                 isCodeMode: 'isCodeMode',
-                getPipelineSubscriptions: 'atom/getPipelineSubscriptions',
-                draftBaseVersionName: 'atom/getDraftBaseVersionName'
+                hasDraftPipeline: 'atom/hasDraftPipeline',
+                getPipelineSubscriptions: 'atom/getPipelineSubscriptions'
             }),
             projectId () {
                 return this.$route.params.projectId
@@ -133,12 +96,6 @@
             },
             pipelineType () {
                 return this.$route.params.type
-            },
-            releaseVersion () {
-                return this.pipelineInfo?.releaseVersion
-            },
-            releaseVersionName () {
-                return this.pipelineInfo?.releaseVersionName
             },
             hasUnResolveEvent () {
                 return ['DELETED', 'UN_MERGED'].includes(this.pipelineInfo?.yamlInfo?.status)
@@ -153,17 +110,11 @@
                         return ''
                 }
             },
-            isCurrentVersion () {
-                return this.activePipelineVersion === this.pipelineInfo?.releaseVersion
-            },
-            isActiveDraft () {
-                return this.activePipelineVersionModel?.isDraft ?? false
-            },
             draftLastUpdateTime () {
-                return convertTime(this.activePipelineVersionModel?.updateTime)
+                return convertTime(this.activePipelineVersion?.updateTime)
             },
             draftCreator () {
-                return this.activePipelineVersionModel?.creator ?? '--'
+                return this.activePipelineVersion?.creator ?? '--'
             },
             dynamicComponentConf () {
                 switch (this.pipelineType) {
@@ -214,8 +165,7 @@
                     this.yamlHighlightBlock = this.yamlHighlightBlockMap?.[this.pipelineType] ?? []
                 }
             },
-            releaseVersion (version) {
-                this.activePipelineVersion = version
+            'activePipelineVersion.version' (version) {
                 this.$nextTick(() => {
                     this.init()
                 })
@@ -224,18 +174,10 @@
                 this.$nextTick(() => {
                     this.init()
                 })
-            },
-            releaseVersionName (versionName) {
-                this.activePipelineVersionName = versionName
             }
         },
         created () {
-            if (this.releaseVersion) {
-                this.activePipelineVersion = this.releaseVersion
-                this.$nextTick(() => {
-                    this.init()
-                })
-            }
+            this.init()
         },
 
         beforeDestroy () {
@@ -255,11 +197,11 @@
             ]),
             async init () {
                 try {
-                    if (this.activePipelineVersion) {
+                    if (this.activePipelineVersion?.version) {
                         this.isLoading = true
                         const yamlHighlightBlockMap = await this.requestPipeline({
                             ...this.$route.params,
-                            version: this.activePipelineVersion
+                            version: this.activePipelineVersion.version
                         })
                         this.yamlHighlightBlockMap = yamlHighlightBlockMap
                         if (this.isCodeMode) {
@@ -275,17 +217,8 @@
                     this.isLoading = false
                 }
             },
-            handleVersionChange (versionId, version) {
-                this.activePipelineVersionName = version.versionName
-                this.activePipelineVersionModel = version
-                if (versionId !== this.activePipelineVersion) {
-                    this.$nextTick(() => {
-                        this.init()
-                    })
-                }
-            },
             showVersionSideSlider () {
-                this.$refs.versionSideslider?.showVersionSideSlider?.()
+                bus.$emit(SHOW_VERSION_HISTORY_SIDESLIDER)
             }
         }
     }

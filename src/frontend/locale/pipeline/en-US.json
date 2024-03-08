@@ -1476,5 +1476,8 @@
   "tempWithoutConf": "Template does not include this setting",
   "noPipelineStageTips": "The pipeline has not been configured with stages",
   "triggerLeastOne": "At least one trigger is required",
-  "goExec": "Execute"
+  "goExec": "Execute",
+  "switchToReleaseVersion": "切换至最新版本",
+  "switchToReleaseVersionCheck": "切换至最新版本查看",
+  "switch": "切换"
 }

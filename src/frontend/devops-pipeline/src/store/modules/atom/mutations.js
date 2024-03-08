@@ -40,6 +40,7 @@ import {
     PIPELINE_SETTING_MUTATION,
     PROPERTY_PANEL_VISIBLE,
     RESET_PIPELINE_SETTING_MUNTATION,
+    SELECT_PIPELINE_VERSION,
     SET_ATOMS,
     SET_ATOMS_CLASSIFY,
     SET_ATOM_MODAL,
@@ -467,6 +468,12 @@ export default {
     },
     [SET_COMMEND_ATOM_PAGE_OVER]: (state, payload) => {
         state.isCommendAtomPageOver = payload
+        return state
+    },
+    [SELECT_PIPELINE_VERSION]: (state, version) => {
+        Object.assign(state, {
+            activePipelineVersion: version
+        })
         return state
     }
 }

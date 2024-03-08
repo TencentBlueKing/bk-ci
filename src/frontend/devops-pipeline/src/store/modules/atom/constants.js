@@ -131,3 +131,4 @@ export const defaultBuildNo = {
 }
 
 export const TOGGLE_STAGE_REVIEW_PANEL = 'TOGGLE_STAGE_REVIEW_PANEL'
+export const SELECT_PIPELINE_VERSION = 'SELECT_PIPELINE_VERSION'

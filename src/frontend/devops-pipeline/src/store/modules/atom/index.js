@@ -82,7 +82,8 @@ export default {
         },
         pipelineCommonSetting: {},
         editfromImport: false,
-        isPipelineEditing: false
+        isPipelineEditing: false,
+        activePipelineVersion: null
     },
     mutations,
     actions,

@@ -45,7 +45,7 @@
     import DynamicParameterSimple from '@/components/AtomFormComponent/DynamicParameterSimple'
     import { getAtomDefaultValue } from '@/store/modules/atom/atomUtil'
     import AtomOutput from './AtomOutput'
-    
+
     export default {
         name: 'normal-atom-v2',
         components: {
@@ -136,14 +136,15 @@
             atomValue () {
                 try {
                     const atomDefaultValue = getAtomDefaultValue(this.atomPropsModel.input)
+
                     // 新增字段，已添加插件读取默认值
-                    const atomValue = Object.keys(this.element.data.input).reduce((res, key) => {
-                        if (Object.prototype.hasOwnProperty.call(atomDefaultValue, key)) {
-                            res[key] = this.element.data.input[key]
+                    const atomValue = Object.keys(atomDefaultValue).reduce((res, key) => {
+                        if (!Object.prototype.hasOwnProperty.call(this.element.data.input, key)) {
+                            res[key] = atomDefaultValue[key]
                         }
                         return res
-                    }, atomDefaultValue)
-                    this.handleUpdateWholeAtomInput(atomValue)
+                    }, this.element.data.input)
+                    console.log(1111, atomDefaultValue, this.atomPropsModel, atomValue)
                     return atomValue
                 } catch (e) {
                     console.warn('getAtomInput error', e)

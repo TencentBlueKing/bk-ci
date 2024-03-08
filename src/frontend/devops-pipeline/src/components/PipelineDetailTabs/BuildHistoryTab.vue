@@ -44,7 +44,7 @@
             }),
             ...mapState('atom', [
                 'isPropertyPanelVisible',
-                'pipelineInfo'
+                'activePipelineVersion'
             ]),
             ...mapState('pipelines', [
                 'executeStatus'
@@ -83,7 +83,7 @@
                         handler: () => {
                             const params = {
                                 ...this.$route.params,
-                                version: this.pipelineInfo?.version
+                                version: this.activePipelineVersion?.version
                             }
                             if (this.isReleasePipeline) {
                                 return this.$router.push({

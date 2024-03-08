@@ -1477,5 +1477,8 @@
   "tempWithoutConf": "模板未包含此设置",
   "noPipelineStageTips": "暂未添加流水线Stage",
   "triggerLeastOne": "至少保留一个触发器",
-  "goExec": "去执行"
+  "goExec": "去执行",
+  "switchToReleaseVersion": "切换至最新版本",
+  "switchToReleaseVersionCheck": "切换至最新版本查看",
+  "switch": "切换"
 }

@@ -42,6 +42,15 @@ export default {
     isReleasePipeline: state => {
         return !state.pipelineInfo?.onlyDraft
     },
+    isReleaseVersion: state => {
+        return state.activePipelineVersion?.version === state.pipelineInfo?.releaseVersion
+    },
+    isOutdatedVersion: state => {
+        return state.activePipelineVersion?.version < state.pipelineInfo?.releaseVersion
+    },
+    isActiveDraftVersion: state => {
+        return state.activePipelineVersion?.isDraft ?? false
+    },
     pacEnabled: state => {
         return state.pipelineInfo?.pipelineAsCodeSettings?.enable ?? false
     },

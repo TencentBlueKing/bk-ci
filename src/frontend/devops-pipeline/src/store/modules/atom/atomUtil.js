@@ -90,7 +90,6 @@ export function PipelineEditActionCreator (mutation) {
             commit(mutation, payload)
             return
         }
-
         if (payload.container && payload.newParam) {
             if (compareParam(payload.newParam, payload.container)) {
                 commit(SET_PIPELINE_EDITING, true)

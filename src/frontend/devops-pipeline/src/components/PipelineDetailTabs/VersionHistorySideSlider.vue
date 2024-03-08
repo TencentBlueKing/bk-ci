@@ -46,6 +46,7 @@
                         <template slot-scope="props">
                             <rollback-entry
                                 v-if="props.row.canRollback"
+                                :has-permission="canEdit"
                                 :version="props.row.version"
                                 :pipeline-id="$route.params.pipelineId"
                                 :project-id="$route.params.projectId"
@@ -118,6 +119,9 @@
             }),
             releaseVersion () {
                 return this.pipelineInfo?.releaseVersion
+            },
+            canEdit () {
+                return this.pipelineInfo?.permissions?.canEdit
             },
             columns () {
                 return [{

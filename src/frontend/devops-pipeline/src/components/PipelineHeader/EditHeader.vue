@@ -229,6 +229,7 @@
                         message: this.$t('editPage.saveDraftSuccess', [pipelineSetting.pipelineName]),
                         limit: 1
                     })
+                    return true
                 } catch (e) {
                     const { projectId, pipelineId } = this.$route.params
 
@@ -237,10 +238,7 @@
                         resourceCode: pipelineId,
                         action: RESOURCE_ACTION.EDIT
                     }, 10000)
-                    return {
-                        code: e.code,
-                        message: e.message
-                    }
+                    return false
                 } finally {
                     this.setSaveStatus(false)
                 }
