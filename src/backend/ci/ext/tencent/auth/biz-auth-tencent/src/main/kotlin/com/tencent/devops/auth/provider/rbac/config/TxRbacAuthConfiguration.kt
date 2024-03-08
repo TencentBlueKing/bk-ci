@@ -27,17 +27,10 @@
 
 package com.tencent.devops.auth.provider.rbac.config
 
-import com.tencent.bk.sdk.iam.config.IamConfiguration
-import com.tencent.bk.sdk.iam.helper.AuthHelper
-import com.tencent.bk.sdk.iam.service.PolicyService
-import com.tencent.devops.auth.provider.txv3.service.AuthPipelineIdService
-import com.tencent.devops.auth.service.AuthVerifyRecordService
+import com.tencent.devops.auth.provider.rbac.service.TxMigrateCreatorFixServiceImpl
+import com.tencent.devops.auth.provider.rbac.service.TxRbacSuperManagerService
 import com.tencent.devops.auth.service.DeptService
 import com.tencent.devops.auth.service.ManagerService
-import com.tencent.devops.auth.provider.rbac.service.TxMigrateCreatorFixServiceImpl
-import com.tencent.devops.auth.service.iam.IamCacheService
-import com.tencent.devops.auth.provider.txv3.service.TxPermissionServiceImpl
-import com.tencent.devops.auth.provider.rbac.service.TxRbacSuperManagerService
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.client.ClientTokenService
 import com.tencent.devops.common.service.BkTag
@@ -55,27 +48,6 @@ import org.springframework.core.Ordered
 @AutoConfigureOrder(Ordered.LOWEST_PRECEDENCE)
 @Suppress("LongParameterList")
 class TxRbacAuthConfiguration {
-    @Bean
-    fun txPermissionService(
-        authHelper: AuthHelper,
-        policyService: PolicyService,
-        iamConfiguration: IamConfiguration,
-        managerService: ManagerService,
-        iamCacheService: IamCacheService,
-        client: Client,
-        authPipelineIdService: AuthPipelineIdService,
-        authVerifyRecordService: AuthVerifyRecordService
-    ) = TxPermissionServiceImpl(
-        authHelper = authHelper,
-        policyService = policyService,
-        iamConfiguration = iamConfiguration,
-        managerService = managerService,
-        iamCacheService = iamCacheService,
-        client = client,
-        authPipelineIdService = authPipelineIdService,
-        authVerifyRecordService = authVerifyRecordService
-    )
-
     @Bean
     fun managerService(client: Client) = ManagerService(client)
 
