@@ -42,6 +42,34 @@ if is_devx then
         end
     end
 else
+    --- 移动网关登录(下面ms表示mobile site的意思)
+    local ms_timestamp = ngx.var.http_timestamp
+    local ms_signature = ngx.var.http_signature
+    local ms_staffid = ngx.var.http_staffid
+    local ms_staffname = ngx.var.http_staffname
+    local ms_x_ext_data = ngx.var.http_x_ext_data
+    local ms_x_rio_seq = ngx.var.http_x_rio_seq
+    if ms_timestamp ~= nil and ms_signature ~= nil and ms_staffid ~= nil and ms_staffname ~= nil and ms_x_ext_data ~= nil and
+        ms_x_rio_seq ~= nil then
+        local timestamp = ngx.time()
+        local absTime = math.abs(tonumber(ms_timestamp) - timestamp)
+        if absTime < 180 then
+            local token = config.mobileSiteToken
+            local input = ms_timestamp .. token .. ms_x_rio_seq .. "," .. ms_staffid .. "," .. ms_staffname .. "," ..
+                ms_x_ext_data .. ms_timestamp
+            local resty_sha256 = require "resty.sha256"
+            local resty_str = require "resty.string"
+            local sha256 = resty_sha256:new()
+            sha256:update(input)
+            local digest = sha256:final()
+            local my_signature = string.upper(resty_str.str_to_hex(digest))
+            if ms_signature == my_signature then
+                --- 设置用户信息
+                ngx.header["x-devops-uid"] = ms_staffname
+                ngx.exit(200)
+            end
+        end
+    end
     local double_check = true and ngx.var.http_host == config.bkci.host and
         not string.find(ngx.var.request_uri, '^/prebuild') and not string.find(ngx.var.request_uri, '^/ms/prebuild') and
         not string.find(ngx.var.request_uri, '^/remotedev') and not string.find(ngx.var.request_uri, '^/ms/remotedev') and
@@ -129,35 +157,6 @@ else
             ngx.header["x-devops-bk-token"] = bk_token
             ngx.header["x-devops-access-token"] = ticket.access_token
             ngx.exit(200)
-        end
-    end
-
-    --- 移动网关登录(下面ms表示mobile site的意思)
-    local ms_timestamp = ngx.var.http_timestamp
-    local ms_signature = ngx.var.http_signature
-    local ms_staffid = ngx.var.http_staffid
-    local ms_staffname = ngx.var.http_staffname
-    local ms_x_ext_data = ngx.var.http_x_ext_data
-    local ms_x_rio_seq = ngx.var.http_x_rio_seq
-    if ms_timestamp ~= nil and ms_signature ~= nil and ms_staffid ~= nil and ms_staffname ~= nil and ms_x_ext_data ~= nil and
-        ms_x_rio_seq ~= nil then
-        local timestamp = ngx.time()
-        local absTime = math.abs(tonumber(ms_timestamp) - timestamp)
-        if absTime < 180 then
-            local token = config.mobileSiteToken
-            local input = ms_timestamp .. token .. ms_x_rio_seq .. "," .. ms_staffid .. "," .. ms_staffname .. "," ..
-                ms_x_ext_data .. ms_timestamp
-            local resty_sha256 = require "resty.sha256"
-            local resty_str = require "resty.string"
-            local sha256 = resty_sha256:new()
-            sha256:update(input)
-            local digest = sha256:final()
-            local my_signature = string.upper(resty_str.str_to_hex(digest))
-            if ms_signature == my_signature then
-                --- 设置用户信息
-                ngx.header["x-devops-uid"] = ms_staffname
-                ngx.exit(200)
-            end
         end
     end
 end
