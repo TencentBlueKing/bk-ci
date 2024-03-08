@@ -26,17 +26,16 @@
  */
 package com.tencent.devops.monitoring.pojo
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("插件监控统计数据")
+@Schema(title = "插件监控统计数据")
 data class AtomMonitorStatisticData(
-    @ApiModelProperty("插件标识", required = true)
+    @get:Schema(title = "插件标识", required = true)
     val atomCode: String,
-    @ApiModelProperty("执行成功总数量", required = true)
+    @get:Schema(title = "执行成功总数量", required = true)
     val totalSuccessNum: Int,
-    @ApiModelProperty("执行失败总数量", required = true)
+    @get:Schema(title = "执行失败总数量", required = true)
     val totalFailNum: Int,
-    @ApiModelProperty("执行失败详情", required = true)
+    @get:Schema(title = "执行失败详情", required = true)
     val totalFailDetail: AtomMonitorFailDetailData
 )

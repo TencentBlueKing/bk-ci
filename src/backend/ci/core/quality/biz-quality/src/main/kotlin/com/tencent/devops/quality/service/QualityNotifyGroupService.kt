@@ -245,6 +245,7 @@ class QualityNotifyGroupService @Autowired constructor(
 
         qualityNotifyGroupDao.update(
             dslContext = dslContext,
+            projectId = projectId,
             id = groupId,
             name = group.name,
             innerUsers = objectMapper.writeValueAsString(group.innerUsers),
@@ -274,7 +275,7 @@ class QualityNotifyGroupService @Autowired constructor(
         )
 
         qualityPermissionService.deleteGroupResource(projectId = projectId, groupId = groupId)
-        qualityNotifyGroupDao.delete(dslContext, groupId)
+        qualityNotifyGroupDao.delete(dslContext = dslContext, projectId = projectId, id = groupId)
     }
 
     companion object {

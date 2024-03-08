@@ -429,6 +429,7 @@ class EngineVMBuildService @Autowired(required = false) constructor(
                 containerId = startUpVMTask.containerId,
                 containerHashId = startUpVMTask.containerHashId,
                 containerType = startUpVMTask.containerType,
+                executeCount = startUpVMTask.executeCount,
                 actionType = actionType,
                 reason = message
             )
@@ -469,7 +470,7 @@ class EngineVMBuildService @Autowired(required = false) constructor(
             val buildInfo = pipelineRuntimeService.getBuildInfo(projectId, buildId)
             if (buildInfo == null || buildInfo.status.isFinish()) {
                 LOG.info("ENGINE|$buildId|BC_END|$projectId|j($vmSeqId|$vmName|buildInfo ${buildInfo?.status}")
-                return BuildTask(buildId, vmSeqId, BuildTaskStatus.END)
+                return BuildTask(buildId, vmSeqId, BuildTaskStatus.END, buildInfo?.executeCount)
             }
             val container = pipelineContainerService.getContainer(
                 projectId = projectId,
@@ -479,7 +480,7 @@ class EngineVMBuildService @Autowired(required = false) constructor(
             )
             if (container == null || container.status.isFinish()) {
                 LOG.info("ENGINE|$buildId|BC_END|$projectId|j($vmSeqId)|container ${container?.status}")
-                return BuildTask(buildId, vmSeqId, BuildTaskStatus.END)
+                return BuildTask(buildId, vmSeqId, BuildTaskStatus.END, buildInfo.executeCount)
             }
 
             val allTasks = pipelineTaskService.listContainerBuildTasks(
@@ -490,7 +491,7 @@ class EngineVMBuildService @Autowired(required = false) constructor(
             )
 
             val task = allTasks.firstOrNull()
-                ?: return BuildTask(buildId, vmSeqId, BuildTaskStatus.WAIT)
+                ?: return BuildTask(buildId, vmSeqId, BuildTaskStatus.WAIT, buildInfo.executeCount)
 
             return claim(
                 task = task, buildId = buildId, userId = task.starter, vmSeqId = vmSeqId,
@@ -512,15 +513,15 @@ class EngineVMBuildService @Autowired(required = false) constructor(
         return when {
             task.status == BuildStatus.QUEUE -> { // 初始化状态，表明任务还未准备好
                 LOG.info("ENGINE|$buildId|BC_QUEUE|${task.projectId}|j($vmSeqId)|${task.taskId}|${task.taskName}")
-                BuildTask(buildId, vmSeqId, BuildTaskStatus.WAIT)
+                BuildTask(buildId, vmSeqId, BuildTaskStatus.WAIT, task.executeCount)
             }
             task.taskAtom.isNotBlank() -> { // 排除非构建机的插件任务 继续等待直到它完成
                 LOG.info("ENGINE|$buildId|BC_NOT_VM|${task.projectId}|j($vmSeqId)|${task.taskId}|${task.taskName}")
-                BuildTask(buildId, vmSeqId, BuildTaskStatus.WAIT)
+                BuildTask(buildId, vmSeqId, BuildTaskStatus.WAIT, task.executeCount)
             }
             task.taskId == VMUtils.genEndPointTaskId(task.taskSeq) -> { // 全部完成了
                 pipelineRuntimeService.claimBuildTask(task, userId) // 刷新一下这个结束的任务节点时间
-                BuildTask(buildId, vmSeqId, BuildTaskStatus.END)
+                BuildTask(buildId, vmSeqId, BuildTaskStatus.END, task.executeCount)
             }
             pipelineTaskService.isNeedPause(taskId = task.taskId, buildId = task.buildId, taskRecord = task) -> {
                 // 如果插件配置了前置暂停, 暂停期间关闭当前构建机，节约资源。
@@ -538,7 +539,7 @@ class EngineVMBuildService @Autowired(required = false) constructor(
                         actionType = ActionType.REFRESH
                     )
                 )
-                BuildTask(buildId, vmSeqId, BuildTaskStatus.END)
+                BuildTask(buildId, vmSeqId, BuildTaskStatus.END, task.executeCount)
             } // #5109 如果因平台异常原因导致上一个任务还处于运行中，结束处理不及时 ，需要等待
             task.status.isRunning() && task.taskId == redisOperation.get(completeTaskKey(buildId, vmSeqId)) -> {
                 LOG.info("ENGINE|$buildId|BC_RUNNING|${task.projectId}|j($vmSeqId)|${task.taskId}|${task.status}")
@@ -552,7 +553,7 @@ class EngineVMBuildService @Autowired(required = false) constructor(
                     jobId = task.containerHashId,
                     executeCount = task.executeCount ?: 1
                 )
-                BuildTask(buildId, vmSeqId, BuildTaskStatus.WAIT)
+                BuildTask(buildId, vmSeqId, BuildTaskStatus.WAIT, task.executeCount)
             }
             else -> {
                 val allVariable = buildVariableService.getAllVariable(task.projectId, task.pipelineId, buildId)
@@ -605,6 +606,7 @@ class EngineVMBuildService @Autowired(required = false) constructor(
                     elementId = task.taskId,
                     elementName = task.taskName,
                     stepId = task.stepId,
+                    executeCount = task.executeCount,
                     type = task.taskType,
                     params = task.taskParams.map {
                         // 在pipeline as code模式下，此处直接保持原文传给worker
@@ -719,7 +721,7 @@ class EngineVMBuildService @Autowired(required = false) constructor(
             buildId = buildId,
             containerId = vmSeqId,
             taskId = result.elementId,
-            executeCount = buildInfo.executeCount ?: 1,
+            executeCount = result.executeCount ?: buildInfo.executeCount ?: 1,
             buildStatus = buildStatus,
             errorType = errorType,
             errorCode = result.errorCode,
@@ -748,8 +750,6 @@ class EngineVMBuildService @Autowired(required = false) constructor(
                 )
             }
         }
-        // 重置前置暂停插件暂停状态位
-        pipelineTaskPauseService.pauseTaskFinishExecute(buildId, result.taskId)
         val task = pipelineRuntimeService.completeClaimBuildTask(
             completeTask = CompleteTask(
                 projectId = projectId, buildId = buildId, taskId = result.taskId,
@@ -857,7 +857,7 @@ class EngineVMBuildService @Autowired(required = false) constructor(
                             buildId = buildId,
                             pipelineId = buildInfo.pipelineId,
                             containerId = vmSeqId,
-                            executeCount = buildInfo.executeCount ?: 1
+                            executeCount = result.executeCount ?: buildInfo.executeCount ?: 1
                         )
                         BuildStatus.RETRY
                     }

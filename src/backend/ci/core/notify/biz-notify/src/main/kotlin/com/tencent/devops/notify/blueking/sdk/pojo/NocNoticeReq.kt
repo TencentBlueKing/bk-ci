@@ -27,10 +27,10 @@
 package com.tencent.devops.notify.blueking.sdk.pojo
 
 import com.fasterxml.jackson.annotation.JsonProperty
-import io.swagger.annotations.ApiModel
+import io.swagger.v3.oas.annotations.media.Schema
 
 @Suppress("ALL")
-@ApiModel("公共语音通知模型")
+@Schema(title = "公共语音通知模型")
 data class NocNoticeReq(
     val auto_read_message: String,
     val receiver__username: String,

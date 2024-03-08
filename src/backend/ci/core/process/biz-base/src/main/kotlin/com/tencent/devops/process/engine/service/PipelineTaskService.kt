@@ -45,7 +45,6 @@ import com.tencent.devops.common.pipeline.utils.BuildStatusSwitcher
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.model.process.tables.records.TPipelineInfoRecord
 import com.tencent.devops.model.process.tables.records.TPipelineModelTaskRecord
-import com.tencent.devops.process.engine.common.Timeout
 import com.tencent.devops.process.engine.control.ControlUtils
 import com.tencent.devops.process.engine.dao.PipelineBuildTaskDao
 import com.tencent.devops.process.engine.dao.PipelineInfoDao
@@ -57,7 +56,6 @@ import com.tencent.devops.process.engine.service.detail.TaskBuildDetailService
 import com.tencent.devops.process.engine.service.record.ContainerBuildRecordService
 import com.tencent.devops.process.engine.service.record.PipelineBuildRecordService
 import com.tencent.devops.process.engine.service.record.TaskBuildRecordService
-import com.tencent.devops.process.engine.utils.PauseRedisUtils
 import com.tencent.devops.process.pojo.PipelineProjectRel
 import com.tencent.devops.process.pojo.task.PipelineBuildTaskInfo
 import com.tencent.devops.process.service.BuildVariableService
@@ -513,7 +511,13 @@ class PipelineTaskService @Autowired constructor(
     }
 
     fun isNeedPause(taskId: String, buildId: String, taskRecord: PipelineBuildTask): Boolean {
-        val alreadyPause = redisOperation.get(PauseRedisUtils.getPauseRedisKey(buildId = buildId, taskId = taskId))
+        val alreadyPause = taskBuildRecordService.taskAlreadyPause(
+            projectId = taskRecord.projectId,
+            pipelineId = taskRecord.pipelineId,
+            buildId = buildId,
+            taskId = taskId,
+            executeCount = taskRecord.executeCount ?: 1
+        )
         return ControlUtils.pauseBeforeExec(taskRecord.additionalOptions, alreadyPause)
     }
 
@@ -647,12 +651,6 @@ class PipelineTaskService @Autowired constructor(
             containerId = task.containerId,
             taskId = task.taskId,
             executeCount = task.executeCount ?: 1
-        )
-
-        redisOperation.set(
-            key = PauseRedisUtils.getPauseRedisKey(buildId = task.buildId, taskId = task.taskId),
-            value = "true",
-            expiredInSecond = Timeout.CONTAINER_MAX_MILLS / 1000
         )
     }
 

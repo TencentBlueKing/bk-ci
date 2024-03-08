@@ -54,7 +54,8 @@ class RepositoryDao {
         userId: String,
         aliasName: String,
         url: String,
-        type: ScmType
+        type: ScmType,
+        atom: Boolean? = false
     ): Long {
         val now = LocalDateTime.now()
         var repoId = 0L
@@ -71,7 +72,8 @@ class RepositoryDao {
                     CREATED_TIME,
                     UPDATED_TIME,
                     IS_DELETED,
-                    UPDATED_USER
+                    UPDATED_USER,
+                    ATOM
                 ).values(
                     projectId,
                     userId,
@@ -81,7 +83,8 @@ class RepositoryDao {
                     now,
                     now,
                     false,
-                    userId
+                    userId,
+                    atom
                 )
                     .returning(REPOSITORY_ID)
                     .fetchOne()!!.repositoryId
@@ -417,6 +420,33 @@ class RepositoryDao {
                 .set(UPDATED_USER, updateUser)
                 .set(UPDATED_TIME, LocalDateTime.now())
                 .where(REPOSITORY_HASH_ID.eq(hashId).and(PROJECT_ID.eq(projectId)))
+                .execute()
+        }
+    }
+
+    fun getById(
+        dslContext: DSLContext,
+        repositoryId: Long
+    ): TRepositoryRecord? {
+        with(TRepository.T_REPOSITORY) {
+            return dslContext.selectFrom(this)
+                .where(
+                    REPOSITORY_ID.eq(repositoryId).and(IS_DELETED.eq(false))
+                )
+                .fetchAny()
+        }
+    }
+
+    fun updateAtomRepoFlag(
+        dslContext: DSLContext,
+        projectId: String,
+        repositoryId: Long,
+        atom: Boolean
+    ) {
+        with(TRepository.T_REPOSITORY) {
+            dslContext.update(this)
+                .set(ATOM, atom)
+                .where(REPOSITORY_ID.eq(repositoryId).and(PROJECT_ID.eq(projectId)))
                 .execute()
         }
     }

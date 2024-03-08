@@ -30,9 +30,9 @@ package com.tencent.devops.environment.api
 import com.tencent.bk.sdk.iam.dto.callback.request.CallbackRequestDTO
 import com.tencent.bk.sdk.iam.dto.callback.response.CallbackBaseResponseDTO
 import com.tencent.devops.common.api.auth.AUTH_HEADER_IAM_TOKEN
-import io.swagger.annotations.Api
-import io.swagger.annotations.ApiOperation
-import io.swagger.annotations.ApiParam
+import io.swagger.v3.oas.annotations.tags.Tag
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.Parameter
 import javax.ws.rs.Consumes
 import javax.ws.rs.HeaderParam
 import javax.ws.rs.POST
@@ -40,30 +40,30 @@ import javax.ws.rs.Path
 import javax.ws.rs.Produces
 import javax.ws.rs.core.MediaType
 
-@Api(tags = ["AUTH_CALLBACK_ENVIRONMENT"], description = "iam回调environment接口")
+@Tag(name = "AUTH_CALLBACK_ENVIRONMENT", description = "iam回调environment接口")
 @Path("/open/environment/callback")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface ServiceEnvironmentAuthResource {
     @POST
     @Path("/env")
-    @ApiOperation("iam环境管理回调接口")
+    @Operation(summary = "iam环境管理回调接口")
     fun environmentInfo(
-        @ApiParam(value = "回调信息")
+        @Parameter(description = "回调信息")
         callBackInfo: CallbackRequestDTO,
         @HeaderParam(AUTH_HEADER_IAM_TOKEN)
-        @ApiParam("token")
+        @Parameter(description = "token")
         token: String
     ): CallbackBaseResponseDTO?
 
     @POST
     @Path("/node")
-    @ApiOperation("iam节点回调接口")
+    @Operation(summary = "iam节点回调接口")
     fun nodeInfo(
-        @ApiParam(value = "回调信息")
+        @Parameter(description = "回调信息")
         callBackInfo: CallbackRequestDTO,
         @HeaderParam(AUTH_HEADER_IAM_TOKEN)
-        @ApiParam("token")
+        @Parameter(description = "token")
         token: String
     ): CallbackBaseResponseDTO?
 }

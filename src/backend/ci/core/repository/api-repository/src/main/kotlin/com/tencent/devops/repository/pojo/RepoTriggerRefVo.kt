@@ -28,27 +28,27 @@
 
 package com.tencent.devops.repository.pojo
 
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
 data class RepoTriggerRefVo(
     val projectId: String,
-    @ApiModelProperty("代码库Id")
+    @get:Schema(title = "代码库Id")
     val repositoryHashId: String,
-    @ApiModelProperty("插件code")
+    @get:Schema(title = "插件code")
     val atomCode: String,
-    @ApiModelProperty("触发类型")
+    @get:Schema(title = "触发类型")
     val triggerType: String,
-    @ApiModelProperty("事件类型描述，根据[eventType]进行国际化")
+    @get:Schema(title = "事件类型描述，根据[eventType]进行国际化")
     val eventTypeDesc: String,
-    @ApiModelProperty("插件参数")
+    @get:Schema(title = "插件参数")
     val taskParams: Map<String, Any>,
-    @ApiModelProperty("触发条件")
+    @get:Schema(title = "触发条件")
     val triggerCondition: Map<String, Any>?,
-    @ApiModelProperty("触发条件md5")
+    @get:Schema(title = "触发条件md5")
     val triggerConditionMd5: String?,
-    @ApiModelProperty("流水线引用数量")
+    @get:Schema(title = "流水线引用数量")
     val pipelineRefCount: Int,
     val atomLogo: String? = null,
-    @ApiModelProperty("事件类型key")
+    @get:Schema(title = "事件类型key")
     val eventType: String
 )

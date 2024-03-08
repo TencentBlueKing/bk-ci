@@ -42,6 +42,14 @@ class UserDao {
         }
     }
 
+    fun getPublicType(dslContext: DSLContext, userId: String): TUserRecord? {
+        with(TUser.T_USER) {
+            return dslContext.selectFrom(this).where(USER_ID.eq(userId))
+                .and(USER_TYPE.eq(true))
+                .fetchOne()
+        }
+    }
+
     fun create(
         dslContext: DSLContext,
         userId: String,
