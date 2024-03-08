@@ -341,8 +341,9 @@ class SleepControl @Autowired constructor(
                             )
                             if (it) {
                                 val userIds = permissionService.getWorkspaceOwner(workspace.workspaceName)
-                                notifyControl.notify4UserAndCCRemoteDevManager(
+                                notifyControl.notify4UserAndCCRemoteDevManagerAndCCOwnerShareUser(
                                     userIds = userIds.toMutableSet(),
+                                    workspaceName = workspace.workspaceName,
                                     cc = mutableSetOf(workspace.createUserId),
                                     projectId = workspace.projectId,
                                     notifyTemplateCode = NotifyControl.NOT_LOGIN_AUTO_SLEEP_NOTIFY,
