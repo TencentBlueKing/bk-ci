@@ -163,7 +163,7 @@ class BkAuthPermissionApi constructor(
         return try {
             responseBean.data!![0]!!.pass
         } catch (ignored: Exception) {
-            com.tencent.devops.common.auth.blueking.api.BkAuthPermissionApi.Companion.logger.warn("bkiam, An exception occurs in the parse response bean, msg: $ignored", ignored)
+            logger.warn("bkiam, An exception occurs in the parse response bean, msg: $ignored", ignored)
             false
         }
     }
@@ -251,7 +251,7 @@ class BkAuthPermissionApi constructor(
             }
             return resultMap
         } catch (ignored: Exception) {
-            com.tencent.devops.common.auth.blueking.api.BkAuthPermissionApi.Companion.logger.warn("bkiam, An exception occurs in the parse response bean, msg: $ignored")
+            logger.warn("bkiam, An exception occurs in the parse response bean, msg: $ignored")
             throw RemoteServiceException("bkiam, An exception occurs in the parse response bean, msg: $ignored")
         }
     }

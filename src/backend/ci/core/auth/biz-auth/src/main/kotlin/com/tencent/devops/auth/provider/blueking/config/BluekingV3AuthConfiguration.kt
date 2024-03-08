@@ -103,10 +103,6 @@ class BluekingV3AuthConfiguration {
     fun iamManagerService() = ManagerServiceImpl(apigwHttpClientServiceImpl(), iamConfiguration())
 
     @Bean
-    @ConditionalOnMissingBean(GrantServiceImpl::class)
-    fun grantService() = GrantServiceImpl(apigwHttpClientServiceImpl(), iamConfiguration())
-
-    @Bean
     @Primary
     fun v3permissionService(
         authHelper: AuthHelper,

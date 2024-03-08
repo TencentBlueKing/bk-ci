@@ -90,10 +90,6 @@ class BluekingV3AuthAutoConfiguration {
     ) = BluekingV3AuthTokenApi(redisOperation, tokenServiceImpl)
 
     @Bean
-    @ConditionalOnMissingBean
-    fun iamEsbService() = IamEsbService()
-
-    @Bean
     @Primary
     fun authResourceApi(authTokenApi: BluekingV3AuthTokenApi) =
         BluekingV3ResourceApi(
@@ -109,6 +105,16 @@ class BluekingV3AuthAutoConfiguration {
             authHelper = authHelper(),
             iamConfiguration = iamConfiguration(),
             iamEsbService = iamEsbService()
+        )
+
+    @Bean
+    @Primary
+    fun authPermissionApi(redisOperation: RedisOperation) =
+        BluekingV3AuthPermissionApi(
+            authHelper = authHelper(),
+            policyService = policyService(),
+            redisOperation = redisOperation,
+            iamConfiguration = iamConfiguration()
         )
 
     @Bean
@@ -139,6 +145,10 @@ class BluekingV3AuthAutoConfiguration {
     fun artifactoryAuthServiceCode() = BluekingV3ArtifactoryAuthServiceCode()
 
     @Bean
+    @ConditionalOnMissingBean
+    fun iamEsbService() = IamEsbService()
+
+    @Bean
     fun iamConfiguration() = IamConfiguration(systemId, appCode, appSecret, iamBaseUrl, iamApigw)
 
     // 鉴权类
@@ -160,14 +170,4 @@ class BluekingV3AuthAutoConfiguration {
 
     @Bean
     fun grantService() = GrantServiceImpl(httpService(), iamConfiguration())
-
-    @Bean
-    @Primary
-    fun authPermissionApi(redisOperation: RedisOperation) =
-        BluekingV3AuthPermissionApi(
-            authHelper = authHelper(),
-            policyService = policyService(),
-            redisOperation = redisOperation,
-            iamConfiguration = iamConfiguration()
-        )
 }
