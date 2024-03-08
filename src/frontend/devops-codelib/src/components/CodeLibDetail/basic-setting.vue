@@ -373,7 +373,7 @@
                     :data="pipelineList"
                     :pagination="pipelinePagination"
                     @page-change="handlePageChange"
-                    @limit-change="handleLimitChange"
+                    @page-limit-change="handleLimitChange"
                 >
                     <bk-table-column :label="$t('codelib.流水线名称')" prop="pipelineName">
                         <template slot-scope="{ row }">
