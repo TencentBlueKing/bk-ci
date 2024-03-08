@@ -653,10 +653,6 @@
                         ...(this.historyPageStatus?.query ?? {})
                     }
                 })
-            } else {
-                this.setHistoryPageStatus({
-                    queryStr: getQueryParamString(this.historyPageStatus?.query ?? {})
-                })
             }
             this.requestHistory()
         },
