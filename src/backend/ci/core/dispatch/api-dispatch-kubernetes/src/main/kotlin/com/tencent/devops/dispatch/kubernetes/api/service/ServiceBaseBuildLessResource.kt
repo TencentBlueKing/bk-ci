@@ -30,21 +30,17 @@ package com.tencent.devops.dispatch.kubernetes.api.service
 import com.tencent.devops.buildless.pojo.BuildLessEndInfo
 import com.tencent.devops.buildless.pojo.BuildLessStartInfo
 import com.tencent.devops.common.api.annotation.ServiceInterface
-import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
-import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.dispatch.kubernetes.pojo.base.DebugResponse
-import io.swagger.annotations.Api
-import io.swagger.annotations.ApiOperation
-import io.swagger.annotations.ApiParam
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.Parameter
+import io.swagger.v3.oas.annotations.tags.Tag
 import javax.ws.rs.Consumes
-import javax.ws.rs.HeaderParam
 import javax.ws.rs.POST
 import javax.ws.rs.Path
 import javax.ws.rs.Produces
 import javax.ws.rs.core.MediaType
 
-@Api(tags = ["SERVICE_DISPATCH_BASE_BUILDLESS"], description = "SERVICE_DISPATCH_BASE_BUILDLESS")
+@Tag(name = "SERVICE_DISPATCH_BASE_BUILDLESS", description = "SERVICE_DISPATCH_BASE_BUILDLESS")
 @Path("/service/buildless")
 @ServiceInterface("dispatch-kubernetes") // 指明接入到哪个微服务
 @Produces(MediaType.APPLICATION_JSON)
@@ -53,17 +49,17 @@ interface ServiceBaseBuildLessResource {
 
     @POST
     @Path("/start")
-    @ApiOperation("启动无编译构建")
+    @Operation(summary = "启动无编译构建")
     fun startBuildLess(
-        @ApiParam("请求体", required = true)
+        @Parameter(description = "请求体", required = true)
         buildLessStartInfo: BuildLessStartInfo
     ): Result<Boolean>
 
     @POST
     @Path("/end")
-    @ApiOperation("停止无编译构建")
+    @Operation(summary = "停止无编译构建")
     fun endBuildLess(
-        @ApiParam("请求体", required = true)
+        @Parameter(description = "请求体", required = true)
         buildLessEndInfo: BuildLessEndInfo
     ): Result<Boolean>
 }
