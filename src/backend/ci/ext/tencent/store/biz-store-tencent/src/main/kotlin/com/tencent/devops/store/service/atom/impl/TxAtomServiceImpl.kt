@@ -31,7 +31,7 @@ import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.auth.api.AuthProjectApi
 import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
-import com.tencent.devops.common.auth.code.BSPipelineAuthServiceCode
+import com.tencent.devops.common.auth.code.PipelineAuthServiceCode
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.repository.api.ServiceGitRepositoryResource
 import com.tencent.devops.repository.pojo.enums.TokenTypeEnum
@@ -46,14 +46,14 @@ import org.springframework.stereotype.Service
 class TxAtomServiceImpl : TxAtomService, AtomServiceImpl() {
 
     @Autowired
-    lateinit var bsPipelineAuthServiceCode: BSPipelineAuthServiceCode
+    lateinit var pipelineAuthServiceCode: PipelineAuthServiceCode
     @Autowired
-    lateinit var bsAuthProjectApi: AuthProjectApi
+    lateinit var authProjectApi: AuthProjectApi
 
     private val logger = LoggerFactory.getLogger(TxAtomServiceImpl::class.java)
 
     override fun hasManagerPermission(projectCode: String, userId: String): Boolean {
-        return bsAuthProjectApi.getProjectUsers(bsPipelineAuthServiceCode, projectCode, BkAuthGroup.MANAGER)
+        return authProjectApi.getProjectUsers(pipelineAuthServiceCode, projectCode, BkAuthGroup.MANAGER)
             .contains(userId)
     }
 

@@ -33,7 +33,7 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_ORGANIZATION_TYPE_D
 import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.auth.api.AuthProjectApi
 import com.tencent.devops.common.auth.api.pojo.BKAuthProjectRolesResources
-import com.tencent.devops.common.auth.code.BSPipelineAuthServiceCode
+import com.tencent.devops.common.auth.code.PipelineAuthServiceCode
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.project.pojo.ProjectVO
 import com.tencent.devops.statistics.constant.StatisticsMessageCode.ORG_NOT_PROJECT
@@ -51,7 +51,7 @@ class ProjectLocalService @Autowired constructor(
     private val dslContext: DSLContext,
     private val projectDao: ProjectDao,
     private val bkAuthProjectApi: AuthProjectApi,
-    private val bsPipelineAuthServiceCode: BSPipelineAuthServiceCode,
+    private val pipelineAuthServiceCode: PipelineAuthServiceCode,
     private val jmxApi: ProjectJmxApi
 ) {
     fun getProjectEnNamesByOrganization(
@@ -225,7 +225,7 @@ class ProjectLocalService @Autowired constructor(
         var roles = mutableListOf<BKAuthProjectRolesResources>()
         if (queryProject != null) {
             roles = bkAuthProjectApi.getProjectRoles(
-                bsPipelineAuthServiceCode,
+                pipelineAuthServiceCode,
                 queryProject!!.englishName,
                 queryProject!!.projectId
             ).toMutableList()

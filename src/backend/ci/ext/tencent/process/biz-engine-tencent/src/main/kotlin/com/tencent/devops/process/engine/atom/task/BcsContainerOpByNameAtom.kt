@@ -39,8 +39,7 @@ import com.tencent.devops.common.api.pojo.ErrorCode.USER_TASK_OPERATE_FAIL
 import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
-import com.tencent.devops.common.auth.api.BSAuthTokenApi
-import com.tencent.devops.common.auth.code.PipelineAuthServiceCode
+import com.tencent.devops.common.auth.service.BkAccessTokenApi
 import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.pipeline.element.BcsContainerOpByNameElement
 import com.tencent.devops.common.pipeline.element.bcs.BcsCommandStatus
@@ -64,8 +63,7 @@ import org.springframework.stereotype.Component
 @Scope(SCOPE_PROTOTYPE)
 class BcsContainerOpByNameAtom @Autowired constructor(
     private val buildLogPrinter: BuildLogPrinter,
-    private val bkAuthTokenApi: BSAuthTokenApi,
-    private val serviceCode: PipelineAuthServiceCode
+    private val bkAccessTokenApi: BkAccessTokenApi
 ) : IAtomTask<BcsContainerOpByNameElement> {
 
     override fun getParamElement(task: PipelineBuildTask): BcsContainerOpByNameElement {
@@ -85,7 +83,13 @@ class BcsContainerOpByNameAtom @Autowired constructor(
     ): AtomResponse {
 
         if (param.opType.isBlank()) {
-            buildLogPrinter.addRedLine(task.buildId, "opType is not init", task.taskId, task.containerHashId, task.executeCount ?: 1)
+            buildLogPrinter.addRedLine(
+                buildId = task.buildId,
+                message = "opType is not init",
+                tag = task.taskId,
+                jobId = task.containerHashId,
+                executeCount = task.executeCount ?: 1
+            )
             return AtomResponse(
                 buildStatus = BuildStatus.FAILED,
                 errorType = ErrorType.USER,
@@ -95,7 +99,13 @@ class BcsContainerOpByNameAtom @Autowired constructor(
         }
         if (param.category.isNullOrBlank()) {
             logger.warn("[${task.buildId}]|TASK_BcsContainerOpAtom| category is not init")
-            buildLogPrinter.addRedLine(task.buildId, "category is not init", task.taskId, task.containerHashId, task.executeCount ?: 1)
+            buildLogPrinter.addRedLine(
+                buildId = task.buildId,
+                message = "category is not init",
+                tag = task.taskId,
+                jobId = task.containerHashId,
+                executeCount = task.executeCount ?: 1
+            )
             return AtomResponse(
                 buildStatus = BuildStatus.FAILED,
                 errorType = ErrorType.USER,
@@ -378,7 +388,7 @@ class BcsContainerOpByNameAtom @Autowired constructor(
         instId: String,
         instVersionName: String
     ): Int {
-        val token = bkAuthTokenApi.getAccessToken(serviceCode)
+        val token = bkAccessTokenApi.getPipelineAccessToken()
         val url = bcsAppUrl + "cc_app_ids/$appIdStr/projects/$projectId/instances/$instId/versions/?access_token=$token"
         logger.info("Get instVersionId, request url: $url")
         val request = Request.Builder()
@@ -452,7 +462,7 @@ class BcsContainerOpByNameAtom @Autowired constructor(
     }
 
     private fun getInstanceStatus(appidStr: String, projectId: String, instanceId: String): TaskResult {
-        val token = bkAuthTokenApi.getAccessToken(serviceCode)
+        val token = bkAccessTokenApi.getPipelineAccessToken()
         val url =
                 bcsAppUrl + "cc_app_ids/$appidStr/projects/$projectId/instances/$instanceId/status/?access_token=$token"
         logger.info("Get instance status, request url: $url")
@@ -542,7 +552,7 @@ class BcsContainerOpByNameAtom @Autowired constructor(
                 )
         )
 
-        val token = bkAuthTokenApi.getAccessToken(serviceCode)
+        val token = bkAccessTokenApi.getPipelineAccessToken()
         val url = bcsAppUrl + "cc_app_ids/$appIdStr/projects/$projectId/instances/?access_token=$token"
         logger.info("Create instance, request url: $url")
 
@@ -621,7 +631,7 @@ class BcsContainerOpByNameAtom @Autowired constructor(
         projectId: String,
         instIdList: String
     ): Pair<Int, String> {
-        val token = bkAuthTokenApi.getAccessToken(serviceCode)
+        val token = bkAccessTokenApi.getPipelineAccessToken()
         val url =
                 bcsAppUrl + "cc_app_ids/$appidStr/projects/$projectId/instances/batch_recreate/?access_token=$token&category=${category.getValue()}"
         logger.info("Recreate instance, request url: $url")
@@ -656,7 +666,7 @@ class BcsContainerOpByNameAtom @Autowired constructor(
         projectId: String,
         instIdList: String
     ): Pair<Int, String> {
-        val token = bkAuthTokenApi.getAccessToken(serviceCode)
+        val token = bkAccessTokenApi.getPipelineAccessToken()
         val url =
                 bcsAppUrl + "cc_app_ids/$appidStr/projects/$projectId/instances/batch_delete/?access_token=$token&category=${category.getValue()}"
         logger.info("delete instance, request url: $url")
@@ -693,7 +703,7 @@ class BcsContainerOpByNameAtom @Autowired constructor(
         bcsAppInstName: String,
         namespace: String
     ): String {
-        val token = bkAuthTokenApi.getAccessToken(serviceCode)
+        val token = bkAccessTokenApi.getPipelineAccessToken()
         val url =
                 bcsAppUrl + "cc_app_ids/$appidStr/projects/$projectId/instance/detail/?access_token=$token&category=${category.getValue()}&name=$bcsAppInstName&namespace=$namespace"
         logger.info("Get bcsAppInstId, request url: $url")
@@ -748,7 +758,7 @@ class BcsContainerOpByNameAtom @Autowired constructor(
         instIdList: String,
         signalInfoObj: Map<String, Any>
     ): Pair<Int, String> {
-        val token = bkAuthTokenApi.getAccessToken(serviceCode)
+        val token = bkAccessTokenApi.getPipelineAccessToken()
         val url =
                 bcsAppUrl + "cc_app_ids/$appidStr/projects/$projectId/$signalCategory/batch_signal/?access_token=$token"
         logger.info("Send $signalCategory signal, request url: $url")
@@ -819,7 +829,7 @@ class BcsContainerOpByNameAtom @Autowired constructor(
             reserveTimeVar = parseVariable(param.reserveTime, runVariables).toInt()
         }
 
-        val token = bkAuthTokenApi.getAccessToken(serviceCode)
+        val token = bkAccessTokenApi.getPipelineAccessToken()
         val url = bcsAppUrl + "cc_app_ids/$appidStr/projects/$projectId/instances/$instId/command/"
         logger.info("SendCommand, request url: $url")
 
@@ -881,7 +891,7 @@ class BcsContainerOpByNameAtom @Autowired constructor(
         instId: String,
         taskId: String
     ): TaskResult {
-        val token = bkAuthTokenApi.getAccessToken(serviceCode)
+        val token = bkAccessTokenApi.getPipelineAccessToken()
         val url =
                 bcsAppUrl + "cc_app_ids/$appidStr/projects/$projectId/instances/$instId/command/status/?access_token=$token&task_id=$taskId"
         logger.info("Get Command Status, request url: $url")
@@ -1003,7 +1013,7 @@ class BcsContainerOpByNameAtom @Autowired constructor(
         instIdList: String,
         instNum: Int
     ): Pair<Int, String> {
-        val token = bkAuthTokenApi.getAccessToken(serviceCode)
+        val token = bkAccessTokenApi.getPipelineAccessToken()
         val url =
                 bcsAppUrl + "cc_app_ids/$appidStr/projects/$projectId/instances/batch_scale/?access_token=$token&category=${category.getValue()}&instance_num=$instNum"
         logger.info("Scale instance, request url: $url")
@@ -1040,7 +1050,7 @@ class BcsContainerOpByNameAtom @Autowired constructor(
         instIdList: String,
         namespaceVar: Map<String, Map<String, String>>
     ): Pair<Int, String> {
-        val token = bkAuthTokenApi.getAccessToken(serviceCode)
+        val token = bkAccessTokenApi.getPipelineAccessToken()
         val url =
                 bcsAppUrl + "cc_app_ids/$appidStr/projects/$projectId/instances/batch_application_update/?access_token=$token&category=${BcsCategory.APPLICATION.getValue()}&version_id=$versionId"
         logger.info("Update application instance, request url: $url")
@@ -1080,7 +1090,7 @@ class BcsContainerOpByNameAtom @Autowired constructor(
         instIdList: String,
         instVar: Map<String, Map<String, String>>
     ): Pair<Int, String> {
-        val token = bkAuthTokenApi.getAccessToken(serviceCode)
+        val token = bkAccessTokenApi.getPipelineAccessToken()
         val url =
                 bcsAppUrl + "cc_app_ids/$appidStr/projects/$projectId/instances/batch_update/?access_token=$token&category=${category.getValue()}&version_id=$versionId&instance_num=$instNum"
         logger.info("Update instance, request url: $url")
@@ -1113,7 +1123,7 @@ class BcsContainerOpByNameAtom @Autowired constructor(
     }
 
     private fun getProjectOriginId(projectCode: String): String {
-        val token = bkAuthTokenApi.getAccessToken(serviceCode)
+        val token = bkAccessTokenApi.getPipelineAccessToken()
         val url = "$projectUrl$projectCode/?access_token=$token"
         logger.info("Get project info, request url: $url")
         val request = Request.Builder()

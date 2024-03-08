@@ -5,10 +5,8 @@ import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.archive.client.BkRepoClient
-import com.tencent.devops.common.auth.api.BSAuthTokenApi
 import com.tencent.devops.common.auth.api.BkAuthProperties
-import com.tencent.devops.common.auth.code.BSPipelineAuthServiceCode
-import com.tencent.devops.common.auth.code.BSProjectServiceCodec
+import com.tencent.devops.common.auth.service.BkAccessTokenApi
 import com.tencent.devops.project.dispatch.ProjectDispatcher
 import com.tencent.devops.project.pojo.AuthProjectForCreateResult
 import com.tencent.devops.project.pojo.ProjectCreateExtInfo
@@ -27,10 +25,8 @@ import org.springframework.stereotype.Service
 @Suppress("LongParameterList")
 class TxProjectExtServiceImpl(
     private val bkRepoClient: BkRepoClient,
-    private val bsPipelineAuthServiceCode: BSPipelineAuthServiceCode,
-    private val bsProjectAuthServiceCode: BSProjectServiceCodec,
     private val projectPaasCCService: ProjectPaasCCService,
-    private val bsAuthTokenApi: BSAuthTokenApi,
+    private val bkAccessTokenApi: BkAccessTokenApi,
     private val projectDispatcher: ProjectDispatcher,
     private val authProperties: BkAuthProperties,
     private val objectMapper: ObjectMapper
@@ -80,7 +76,7 @@ class TxProjectExtServiceImpl(
         // 创建AUTH项目
         val newAccessToken = if (accessToken.isNullOrBlank()) {
             param["creator"] = userId
-            bsAuthTokenApi.getAccessToken(bsProjectAuthServiceCode)
+            bkAccessTokenApi.getProjectAccessToken()
         } else accessToken
         val authUrl = "${authProperties.url}/projects?access_token=$newAccessToken"
         logger.info("create project $authUrl $userId,use userAccessToken${newAccessToken == accessToken}")

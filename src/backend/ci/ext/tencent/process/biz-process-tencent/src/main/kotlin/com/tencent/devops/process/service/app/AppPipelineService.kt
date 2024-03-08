@@ -30,7 +30,7 @@ package com.tencent.devops.process.service.app
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.auth.api.AuthProjectApi
 import com.tencent.devops.common.auth.api.BSCCProjectApi
-import com.tencent.devops.common.auth.code.BSPipelineAuthServiceCode
+import com.tencent.devops.common.auth.code.PipelineAuthServiceCode
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.StartType
@@ -48,12 +48,12 @@ import org.springframework.stereotype.Service
 
 @Service
 class AppPipelineService @Autowired constructor(
-    private val bkAuthProjectApi: AuthProjectApi,
+    private val authProjectApi: AuthProjectApi,
     private val bkCCProjectApi: BSCCProjectApi,
     private val pipelineBuildFacadeService: PipelineBuildFacadeService,
     private val pipelineListFacadeService: PipelineListFacadeService,
     private val client: Client,
-    private val bsPipelineAuthServiceCode: BSPipelineAuthServiceCode
+    private val pipelineAuthServiceCode: PipelineAuthServiceCode
 ) {
     companion object {
         private val logger = LoggerFactory.getLogger(AppPipelineService::class.java)
@@ -66,7 +66,7 @@ class AppPipelineService @Autowired constructor(
         channelCode: ChannelCode = ChannelCode.BS
     ): Page<AppProject> {
         var beginTime = System.currentTimeMillis()
-        val projectIds = bkAuthProjectApi.getUserProjects(bsPipelineAuthServiceCode, userId, null)
+        val projectIds = authProjectApi.getUserProjects(pipelineAuthServiceCode, userId, null)
         logger.info("get project ids time: ${System.currentTimeMillis() - beginTime}")
         beginTime = System.currentTimeMillis()
 

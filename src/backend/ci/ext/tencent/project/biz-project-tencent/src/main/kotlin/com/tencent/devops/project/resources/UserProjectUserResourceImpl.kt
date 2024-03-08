@@ -30,7 +30,7 @@ package com.tencent.devops.project.resources
 import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.auth.api.AuthPermission
-import com.tencent.devops.common.auth.code.BSPipelineAuthServiceCode
+import com.tencent.devops.common.auth.code.PipelineAuthServiceCode
 import com.tencent.devops.common.ci.UserUtil
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.project.api.service.user.UserProjectUserResource
@@ -50,7 +50,7 @@ import org.springframework.beans.factory.annotation.Value
 class UserProjectUserResourceImpl @Autowired constructor(
     private val tofService: TOFService,
     private val projectLocalService: ProjectLocalService,
-    private val serviceCode: BSPipelineAuthServiceCode,
+    private val serviceCode: PipelineAuthServiceCode,
     private val projectService: ProjectService
 ) : UserProjectUserResource {
 

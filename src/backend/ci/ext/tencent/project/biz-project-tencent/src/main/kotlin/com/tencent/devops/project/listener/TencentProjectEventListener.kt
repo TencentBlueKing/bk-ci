@@ -27,8 +27,7 @@
 
 package com.tencent.devops.project.listener
 
-import com.tencent.devops.common.auth.api.BSAuthTokenApi
-import com.tencent.devops.common.auth.code.BSPipelineAuthServiceCode
+import com.tencent.devops.common.auth.service.BkAccessTokenApi
 import com.tencent.devops.project.pojo.ProjectUpdateLogoInfo
 import com.tencent.devops.project.pojo.mq.ProjectBroadCastEvent
 import com.tencent.devops.project.pojo.mq.ProjectCreateBroadCastEvent
@@ -46,8 +45,7 @@ import org.springframework.beans.factory.annotation.Autowired
 @Suppress("UNUSED", "TooGenericExceptionCaught")
 class TencentProjectEventListener @Autowired constructor(
     val projectPaasCCService: ProjectPaasCCService,
-    val bsAuthTokenApi: BSAuthTokenApi,
-    val bsPipelineAuthServiceCode: BSPipelineAuthServiceCode,
+    val bkAccessTokenApi: BkAccessTokenApi,
     @Autowired(required = false)
     val iamV3Service: IamV3Service?
 ) : ProjectEventListener {
@@ -87,7 +85,7 @@ class TencentProjectEventListener @Autowired constructor(
     }
 
     override fun onReceiveProjectUpdate(event: ProjectUpdateBroadCastEvent) {
-        val accessToken = bsAuthTokenApi.getAccessToken(bsPipelineAuthServiceCode)
+        val accessToken = bkAccessTokenApi.getPipelineAccessToken()
         projectPaasCCService.updatePaasCCProject(
             userId = event.userId,
             projectId = event.projectId,
@@ -97,7 +95,7 @@ class TencentProjectEventListener @Autowired constructor(
     }
 
     override fun onReceiveProjectUpdateLogo(event: ProjectUpdateLogoBroadCastEvent) {
-        val accessToken = bsAuthTokenApi.getAccessToken(bsPipelineAuthServiceCode)
+        val accessToken = bkAccessTokenApi.getPipelineAccessToken()
 
         val projectUpdateLogoInfo = ProjectUpdateLogoInfo(
             logo_addr = event.logoAddr,

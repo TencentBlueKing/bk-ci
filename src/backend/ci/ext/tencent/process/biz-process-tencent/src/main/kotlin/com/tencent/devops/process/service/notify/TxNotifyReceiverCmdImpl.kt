@@ -29,7 +29,7 @@ package com.tencent.devops.process.service.notify
 
 import com.tencent.devops.common.api.util.EnvUtils
 import com.tencent.devops.common.auth.api.AuthProjectApi
-import com.tencent.devops.common.auth.code.BSPipelineAuthServiceCode
+import com.tencent.devops.common.auth.code.PipelineAuthServiceCode
 import com.tencent.devops.process.notify.command.BuildNotifyContext
 import com.tencent.devops.process.notify.command.impl.NotifyReceiversCmd
 import org.slf4j.LoggerFactory
@@ -39,8 +39,8 @@ import org.springframework.stereotype.Service
 @Service
 @Suppress("ComplexMethod", "NestedBlockDepth")
 class TxNotifyReceiverCmdImpl @Autowired constructor(
-    val bsAuthProjectApi: AuthProjectApi,
-    val bsPipelineAuthServiceCode: BSPipelineAuthServiceCode
+    val authProjectApi: AuthProjectApi,
+    val pipelineAuthServiceCode: PipelineAuthServiceCode
 ) : NotifyReceiversCmd() {
     override fun canExecute(commandContext: BuildNotifyContext): Boolean {
         return true
@@ -56,8 +56,8 @@ class TxNotifyReceiverCmdImpl @Autowired constructor(
             users.addAll(successReceiver.split(",").toMutableSet())
             if (!emptyGroup(commandContext.pipelineSetting.successSubscription.groups)) {
                 logger.info("success notify config group: ${commandContext.pipelineSetting.successSubscription.groups}")
-                val projectRoleUsers = bsAuthProjectApi.getProjectGroupAndUserList(
-                    serviceCode = bsPipelineAuthServiceCode,
+                val projectRoleUsers = authProjectApi.getProjectGroupAndUserList(
+                    serviceCode = pipelineAuthServiceCode,
                     projectCode = commandContext.projectId)
                 projectRoleUsers.forEach {
                     if (it.roleName in commandContext.pipelineSetting.successSubscription.groups) {
@@ -74,8 +74,8 @@ class TxNotifyReceiverCmdImpl @Autowired constructor(
             users.addAll(failReceiver.split(",").toMutableSet())
             if (!emptyGroup(commandContext.pipelineSetting.failSubscription.groups)) {
                 logger.info("fail notify config group: ${commandContext.pipelineSetting.failSubscription.groups}")
-                val projectRoleUsers = bsAuthProjectApi.getProjectGroupAndUserList(
-                    serviceCode = bsPipelineAuthServiceCode,
+                val projectRoleUsers = authProjectApi.getProjectGroupAndUserList(
+                    serviceCode = pipelineAuthServiceCode,
                     projectCode = commandContext.projectId)
                 projectRoleUsers.forEach {
                     if (it.roleName in commandContext.pipelineSetting.failSubscription.groups) {

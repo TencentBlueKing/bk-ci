@@ -48,6 +48,7 @@ import com.tencent.devops.common.auth.code.BSTicketAuthServiceCode
 import com.tencent.devops.common.auth.code.BSVSAuthServiceCode
 import com.tencent.devops.common.auth.code.BSWetestAuthServiceCode
 import com.tencent.devops.common.auth.jmx.JmxAuthApi
+import com.tencent.devops.common.auth.service.BkAccessTokenApi
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.redis.RedisOperation
 import org.springframework.boot.autoconfigure.AutoConfigureBefore
@@ -72,8 +73,8 @@ class BSAuthAutoConfiguration {
 
     @Bean
     @Primary
-    fun bsAuthTokenApi(bkAuthProperties: BkAuthProperties, objectMapper: ObjectMapper, redisOperation: RedisOperation) =
-        BSAuthTokenApi(bkAuthProperties, objectMapper, redisOperation)
+    fun bsAuthTokenApi(bkAccessTokenApi: BkAccessTokenApi, redisOperation: RedisOperation) =
+        BSAuthTokenApi(bkAccessTokenApi = bkAccessTokenApi, redisOperation = redisOperation)
 
     @Bean
     @Primary

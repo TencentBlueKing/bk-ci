@@ -30,19 +30,25 @@ package com.tencent.devops.project.config
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.tencent.devops.auth.service.ManagerService
 import com.tencent.devops.common.auth.api.AuthPermissionApi
+import com.tencent.devops.common.auth.api.AuthProjectApi
 import com.tencent.devops.common.auth.api.AuthResourceApi
 import com.tencent.devops.common.auth.api.AuthTokenApi
 import com.tencent.devops.common.auth.api.BSAuthProjectApi
 import com.tencent.devops.common.auth.api.BkAuthProperties
 import com.tencent.devops.common.auth.code.BSPipelineAuthServiceCode
 import com.tencent.devops.common.auth.code.BSProjectServiceCodec
+import com.tencent.devops.common.auth.code.PipelineAuthServiceCode
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.client.ClientTokenService
+import com.tencent.devops.project.dao.ProjectDao
 import com.tencent.devops.project.service.ProjectPermissionService
 import com.tencent.devops.project.service.iam.ProjectIamV0Service
+import com.tencent.devops.project.service.impl.SampleProjectExtPermissionServiceImpl
 import com.tencent.devops.project.service.impl.StreamProjectPermissionServiceImpl
 import com.tencent.devops.project.service.impl.V0ProjectExtPermissionServiceImpl
 import com.tencent.devops.project.service.impl.TxV0ProjectPermissionServiceImpl
+import com.tencent.devops.project.service.tof.TOFService
+import org.jooq.DSLContext
 import org.springframework.boot.autoconfigure.AutoConfigureOrder
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication
@@ -82,6 +88,24 @@ class TxProjectInitConfiguration {
 
     @Bean
     @ConditionalOnProperty(prefix = "auth", name = ["idProvider"], havingValue = "client")
+    fun projectIamV0Service(
+        authProjectApi: AuthProjectApi,
+        authPermissionApi: AuthPermissionApi,
+        pipelineAuthServiceCode: PipelineAuthServiceCode,
+        tofService: TOFService,
+        dslContext: DSLContext,
+        projectDao: ProjectDao
+    ): ProjectIamV0Service = ProjectIamV0Service(
+        authProjectApi = authProjectApi,
+        authPermissionApi = authPermissionApi,
+        pipelineAuthServiceCode = pipelineAuthServiceCode,
+        tofService = tofService,
+        dslContext = dslContext,
+        projectDao = projectDao
+    )
+
+    @Bean
+    @ConditionalOnProperty(prefix = "auth", name = ["idProvider"], havingValue = "client")
     fun txProjectPermissionServiceImpl(
         objectMapper: ObjectMapper,
         projectIamV0Service: ProjectIamV0Service,
@@ -90,11 +114,7 @@ class TxProjectInitConfiguration {
 
     @Bean
     @ConditionalOnProperty(prefix = "auth", name = ["idProvider"], havingValue = "git")
-    fun gitCIProjectPermissionServiceImpl(
-        objectMapper: ObjectMapper,
-        projectIamV0Service: ProjectIamV0Service,
-        bsPipelineAuthServiceCode: BSPipelineAuthServiceCode
-    ) = V0ProjectExtPermissionServiceImpl(objectMapper, projectIamV0Service, bsPipelineAuthServiceCode)
+    fun gitCIProjectPermissionServiceImpl() = SampleProjectExtPermissionServiceImpl()
 
     @Bean
     @ConditionalOnProperty(prefix = "auth", name = ["idProvider"], havingValue = "git")

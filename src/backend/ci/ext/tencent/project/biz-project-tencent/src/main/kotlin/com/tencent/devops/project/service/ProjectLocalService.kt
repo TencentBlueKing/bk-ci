@@ -27,8 +27,6 @@
 
 package com.tencent.devops.project.service
 
-import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
-import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_ORGANIZATION_TYPE_BG
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_ORGANIZATION_TYPE_CENTER
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_ORGANIZATION_TYPE_DEPARTMENT
@@ -37,15 +35,13 @@ import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.pojo.Pagination
 import com.tencent.devops.common.api.pojo.PipelineAsCodeSettings
-import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.auth.api.AuthProjectApi
-import com.tencent.devops.common.auth.api.BkAuthProperties
 import com.tencent.devops.common.auth.api.pojo.BKAuthProjectRolesResources
 import com.tencent.devops.common.auth.api.pojo.DefaultGroupType
 import com.tencent.devops.common.auth.api.pojo.DefaultGroupType.Companion.getDisplayName
 import com.tencent.devops.common.auth.code.AuthServiceCode
-import com.tencent.devops.common.auth.code.BSPipelineAuthServiceCode
+import com.tencent.devops.common.auth.code.PipelineAuthServiceCode
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.service.BkTag
 import com.tencent.devops.common.web.utils.I18nUtil
@@ -78,8 +74,7 @@ class ProjectLocalService @Autowired constructor(
     private val dslContext: DSLContext,
     private val projectDao: ProjectDao,
     private val authProjectApi: AuthProjectApi,
-    bkAuthProperties: BkAuthProperties,
-    private val bsPipelineAuthServiceCode: BSPipelineAuthServiceCode,
+    private val pipelineAuthServiceCode: PipelineAuthServiceCode,
     private val jmxApi: ProjectJmxApi,
     private val projectService: ProjectService,
     private val projectTagService: ProjectTagService,
@@ -89,7 +84,6 @@ class ProjectLocalService @Autowired constructor(
     private val projectExtPermissionService: ProjectExtPermissionService,
     private val bkTag: BkTag
 ) {
-    private var authUrl: String = "${bkAuthProperties.url}/projects"
 
     @Value("\${tag.stream:#{null}}")
     private val streamTag: String? = null
@@ -499,7 +493,7 @@ class ProjectLocalService @Autowired constructor(
                 language = I18nUtil.getLanguage(userId))
             return Result(messageResult.status, messageResult.message, null)
         }
-        val projectUserList = authProjectApi.getProjectUsers(bsPipelineAuthServiceCode, projectCode)
+        val projectUserList = authProjectApi.getProjectUsers(pipelineAuthServiceCode, projectCode)
         logger.info("getProjectUsers projectUserList is :$projectUserList")
         return Result(projectUserList)
     }
@@ -520,27 +514,6 @@ class ProjectLocalService @Autowired constructor(
                     UserRole(it.displayName, it.roleId, it.roleName, it.type)
                 }
             }
-    }
-
-    fun getProjectIdInAuth(projectCode: String, accessToken: String): String? {
-        try {
-            val url = "$authUrl/$projectCode?access_token=$accessToken"
-            logger.info("Get request url: $url")
-            OkhttpUtils.doGet(url).use { resp ->
-                val responseStr = resp.body!!.string()
-                logger.info("responseBody: $responseStr")
-                val response: Map<String, Any> = jacksonObjectMapper().readValue(responseStr)
-                return if (response["code"] as Int == 0) {
-                    val responseData = response["data"] as Map<String, Any>
-                    return responseData["project_id"] as String
-                } else {
-                    null
-                }
-            }
-        } catch (e: Exception) {
-            logger.error("Get project info error", e)
-            throw RuntimeException("Get project info error: ${e.message}")
-        }
     }
 
     fun createGitCIProject(userId: String, gitProjectId: Long, gitProjectName: String?): ProjectVO {
@@ -596,7 +569,7 @@ class ProjectLocalService @Autowired constructor(
             errorCode = ProjectMessageCode.PROJECT_NOT_EXIST
         )
         return authProjectApi.getProjectRoles(
-            bsPipelineAuthServiceCode,
+            pipelineAuthServiceCode,
             queryProject.englishName,
             queryProject.projectId
         ).toMutableList()
@@ -618,7 +591,7 @@ class ProjectLocalService @Autowired constructor(
         logger.info("createpipeline|$userId|$projectId|$permission|$resourceType|$resourceCode")
         if (checkManager!!) {
             // 操作人必须为项目的管理员
-            if (!authProjectApi.checkProjectManager(userId, bsPipelineAuthServiceCode, projectId)) {
+            if (!authProjectApi.checkProjectManager(userId, pipelineAuthServiceCode, projectId)) {
                 logger.warn("$userId is not manager for project[$projectId]")
                 throw OperationException(
                     (I18nUtil.getCodeLanMessage(

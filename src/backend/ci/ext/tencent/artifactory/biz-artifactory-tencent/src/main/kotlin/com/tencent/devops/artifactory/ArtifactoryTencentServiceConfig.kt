@@ -37,10 +37,10 @@ import com.tencent.devops.artifactory.service.permission.RbacArtPipelineServiceI
 import com.tencent.devops.artifactory.service.permission.StreamArtPipelineServiceImpl
 import com.tencent.devops.artifactory.service.permission.TxV3ArtPipelineServiceImpl
 import com.tencent.devops.common.archive.client.BkRepoClient
-import com.tencent.devops.common.auth.api.BSAuthPermissionApi
-import com.tencent.devops.common.auth.api.BSAuthProjectApi
-import com.tencent.devops.common.auth.code.BSPipelineAuthServiceCode
-import com.tencent.devops.common.auth.code.BSRepoAuthServiceCode
+import com.tencent.devops.common.auth.api.AuthPermissionApi
+import com.tencent.devops.common.auth.api.AuthProjectApi
+import com.tencent.devops.common.auth.code.PipelineAuthServiceCode
+import com.tencent.devops.common.auth.code.RepoAuthServiceCode
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.client.ClientTokenService
 import com.tencent.devops.common.service.config.CommonConfig
@@ -98,12 +98,12 @@ class ArtifactoryTencentServiceConfig {
     @ConditionalOnProperty(prefix = "auth", name = ["idProvider"], havingValue = "client")
     fun defaultPipelineService(
         client: Client,
-        pipelineAuthServiceCode: BSPipelineAuthServiceCode,
-        bkAuthPermissionApi: BSAuthPermissionApi,
-        authProjectApi: BSAuthProjectApi,
-        artifactoryAuthServiceCode: BSRepoAuthServiceCode
+        pipelineAuthServiceCode: PipelineAuthServiceCode,
+        authPermissionApi: AuthPermissionApi,
+        authProjectApi: AuthProjectApi,
+        artifactoryAuthServiceCode: RepoAuthServiceCode
     ) = DefaultPipelineServiceImpl(
-        client, pipelineAuthServiceCode, bkAuthPermissionApi, authProjectApi, artifactoryAuthServiceCode
+        client, pipelineAuthServiceCode, authPermissionApi, authProjectApi, artifactoryAuthServiceCode
     )
 
     @Bean

@@ -31,10 +31,13 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.tencent.devops.auth.service.ManagerService
 import com.tencent.devops.common.auth.api.AuthTokenApi
 import com.tencent.devops.common.auth.api.BSCCProjectApi
+import com.tencent.devops.common.auth.api.BkAuthProperties
 import com.tencent.devops.common.auth.api.BkCCProperties
 import com.tencent.devops.common.auth.code.PipelineAuthServiceCode
 import com.tencent.devops.common.auth.jmx.JmxAuthApi
+import com.tencent.devops.common.auth.service.BkAccessTokenApi
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.redis.RedisOperation
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication
 import org.springframework.context.annotation.Bean
@@ -66,4 +69,21 @@ class AuthAutoConfiguration {
         authTokenApi: AuthTokenApi
     ) =
         BSCCProjectApi(bkCCProperties, objectMapper, authTokenApi, pipelineAuthServiceCode)
+
+    /**
+     * 获取蓝鲸accessToken依赖这个配置,所以不管使用哪个权限中心,都需要配置这个bean
+     */
+    @Bean
+    fun bkAuthProperties() = BkAuthProperties()
+
+    @Bean
+    fun bkAccessTokenApi(
+        bkAuthProperties: BkAuthProperties,
+        objectMapper: ObjectMapper,
+        redisOperation: RedisOperation
+    ) = BkAccessTokenApi(
+        bkAuthProperties = bkAuthProperties,
+        objectMapper = objectMapper,
+        redisOperation = redisOperation
+    )
 }

@@ -37,7 +37,7 @@ import com.tencent.devops.common.auth.api.AuthProjectApi
 import com.tencent.devops.common.auth.api.AuthResourceApiStr
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
-import com.tencent.devops.common.auth.code.BSPipelineAuthServiceCode
+import com.tencent.devops.common.auth.code.PipelineAuthServiceCode
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_PIPELINE_NOT_EXISTS
@@ -49,7 +49,7 @@ import javax.ws.rs.core.Response
 class V3PipelinePermissionServiceImpl @Autowired constructor(
     val authPermissionApi: AuthPermissionApi,
     val authProjectApi: AuthProjectApi,
-    val bsPipelineAuthServiceCode: BSPipelineAuthServiceCode,
+    val pipelineAuthServiceCode: PipelineAuthServiceCode,
     val dslContext: DSLContext,
     val pipelineInfoDao: PipelineInfoDao,
     val authResourceApi: AuthResourceApiStr
@@ -65,7 +65,7 @@ class V3PipelinePermissionServiceImpl @Autowired constructor(
     ): Boolean {
         return authPermissionApi.validateUserResourcePermission(
             user = userId,
-            serviceCode = bsPipelineAuthServiceCode,
+            serviceCode = pipelineAuthServiceCode,
             resourceType = authResourceType ?: AuthResourceType.PIPELINE_DEFAULT,
             permission = permission,
             projectCode = projectId
@@ -96,7 +96,7 @@ class V3PipelinePermissionServiceImpl @Autowired constructor(
             resourceCode = iamId,
             permission = permission,
             resourceType = authResourceType ?: AuthResourceType.PIPELINE_DEFAULT,
-            serviceCode = bsPipelineAuthServiceCode
+            serviceCode = pipelineAuthServiceCode
         )
     }
 
@@ -133,7 +133,7 @@ class V3PipelinePermissionServiceImpl @Autowired constructor(
             resourceCode = iamId,
             permission = permission,
             resourceType = AuthResourceType.PIPELINE_DEFAULT,
-            serviceCode = bsPipelineAuthServiceCode
+            serviceCode = pipelineAuthServiceCode
         )
         if (!permissionCheck) {
             throw PermissionForbiddenException(message)
@@ -144,7 +144,7 @@ class V3PipelinePermissionServiceImpl @Autowired constructor(
 
         val iamInstanceList = authPermissionApi.getUserResourceByPermission(
             user = userId,
-            serviceCode = bsPipelineAuthServiceCode,
+            serviceCode = pipelineAuthServiceCode,
             projectCode = projectId,
             permission = permission,
             supplier = null,
@@ -182,7 +182,7 @@ class V3PipelinePermissionServiceImpl @Autowired constructor(
         return authResourceApi.createResource(
             user = userId,
             projectCode = projectId,
-            serviceCode = bsPipelineAuthServiceCode.id(),
+            serviceCode = pipelineAuthServiceCode.id(),
             resourceType = AuthResourceType.PIPELINE_DEFAULT.value,
             resourceCode = pipelineAutoId,
             resourceName = pipelineName
@@ -202,12 +202,12 @@ class V3PipelinePermissionServiceImpl @Autowired constructor(
             user = userId,
             projectCode = projectId,
             group = group,
-            serviceCode = bsPipelineAuthServiceCode
+            serviceCode = pipelineAuthServiceCode
         )
     }
 
     override fun checkProjectManager(userId: String, projectId: String): Boolean {
-        return authProjectApi.checkProjectManager(userId, bsPipelineAuthServiceCode, projectId)
+        return authProjectApi.checkProjectManager(userId, pipelineAuthServiceCode, projectId)
     }
 
     private fun findInstanceId(projectId: String, pipelineId: String): String {

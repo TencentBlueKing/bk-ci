@@ -62,7 +62,7 @@ import com.tencent.devops.common.archive.config.BkRepoConfig
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthPermissionApi
 import com.tencent.devops.common.auth.api.AuthResourceType
-import com.tencent.devops.common.auth.code.BSProjectServiceCodec
+import com.tencent.devops.common.auth.code.ProjectAuthServiceCode
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.web.utils.I18nUtil
@@ -130,8 +130,6 @@ import com.tencent.devops.store.service.common.StoreUserService
 import com.tencent.devops.store.service.common.StoreVisibleDeptService
 import com.tencent.devops.store.service.common.action.StoreDecorateFactory
 import com.tencent.devops.store.utils.VersionUtils
-import java.time.LocalDateTime
-import java.util.regex.Pattern
 import okhttp3.Request
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
@@ -139,6 +137,8 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import org.springframework.util.StringUtils
+import java.time.LocalDateTime
+import java.util.regex.Pattern
 
 @Service
 abstract class ExtServiceBaseService @Autowired constructor() {
@@ -194,7 +194,7 @@ abstract class ExtServiceBaseService @Autowired constructor() {
     @Autowired
     lateinit var storeStatisticTotalDao: StoreStatisticTotalDao
     @Autowired
-    lateinit var bsProjectServiceCodec: BSProjectServiceCodec
+    lateinit var projectServiceCodec: ProjectAuthServiceCode
     @Autowired
     lateinit var redisOperation: RedisOperation
     @Autowired
@@ -1727,7 +1727,7 @@ abstract class ExtServiceBaseService @Autowired constructor() {
         val permissionCheck = permissionApi.validateUserResourcePermission(
             user = userId,
             projectCode = projectCode,
-            serviceCode = bsProjectServiceCodec,
+            serviceCode = projectServiceCodec,
             resourceType = AuthResourceType.PIPELINE_DEFAULT,
             resourceCode = "*",
             permission = AuthPermission.CREATE
