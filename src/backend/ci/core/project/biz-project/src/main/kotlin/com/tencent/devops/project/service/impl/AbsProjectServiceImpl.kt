@@ -88,6 +88,7 @@ import com.tencent.devops.project.pojo.enums.ProjectApproveStatus
 import com.tencent.devops.project.pojo.enums.ProjectChannelCode
 import com.tencent.devops.project.pojo.enums.ProjectTipsStatus
 import com.tencent.devops.project.pojo.enums.ProjectValidateType
+import com.tencent.devops.project.pojo.mq.ProjectEnableStatusBroadCastEvent
 import com.tencent.devops.project.pojo.mq.ProjectUpdateBroadCastEvent
 import com.tencent.devops.project.pojo.mq.ProjectUpdateLogoBroadCastEvent
 import com.tencent.devops.project.pojo.user.UserDeptDetail
@@ -1096,6 +1097,13 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
                 productId = projectInfo.productId
             )
         }
+        projectDispatcher.dispatch(
+            ProjectEnableStatusBroadCastEvent(
+                userId = userId ?: "",
+                projectId = englishName,
+                enabled = enabled
+            )
+        )
         projectDao.updateUsableStatus(
             dslContext = dslContext,
             userId = userId,
