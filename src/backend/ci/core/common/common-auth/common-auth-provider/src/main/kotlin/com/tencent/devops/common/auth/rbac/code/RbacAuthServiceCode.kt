@@ -42,7 +42,6 @@ enum class RbacAuthServiceCode(val value: String) {
     QUALITY(BK_DEVOPS_SCOPE),
     EXPERIENCE(BK_DEVOPS_SCOPE);
 
-
     companion object {
         fun get(value: String): RbacAuthServiceCode {
             values().forEach {

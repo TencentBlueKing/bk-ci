@@ -102,7 +102,6 @@ class BluekingV3AuthConfiguration {
     @Bean
     fun iamManagerService() = ManagerServiceImpl(apigwHttpClientServiceImpl(), iamConfiguration())
 
-
     @Bean
     @Primary
     fun v3permissionService(
