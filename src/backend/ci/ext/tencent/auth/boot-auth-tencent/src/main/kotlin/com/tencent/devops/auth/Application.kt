@@ -31,7 +31,6 @@ import com.tencent.devops.common.service.MicroService
 import com.tencent.devops.common.service.MicroServiceApplication
 import org.springframework.context.annotation.ComponentScan
 
-@ComponentScan("com.tencent.devops.auth", "com.tencent.devops.common")
 @MicroService
 class Application
 
