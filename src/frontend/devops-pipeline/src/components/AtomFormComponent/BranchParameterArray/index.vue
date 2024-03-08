@@ -16,6 +16,7 @@
                 <bk-option
                     v-for="option in branchesList"
                     :key="option.key"
+                    :disabled="curValue.includes(option.key)"
                     :id="option.key"
                     :name="option.value">
                 </bk-option>
@@ -91,7 +92,8 @@
         methods: {
             handleChangeBranch (val, index) {
                 this.curValue[index] = val
-                this.handleChange(this.name, this.curValue)
+                const params = this.curValue.filter(i => !!i)
+                this.handleChange(this.name, params)
             },
             getBranchesList () {
                 this.isLoading = true

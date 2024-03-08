@@ -1,5 +1,17 @@
 <template>
     <div class="cron-trigger">
+        <accordion show-checkbox :show-content="isShowBasicRule" :after-toggle="toggleBasicRule">
+            <header class="var-header" slot="header">
+                <span>{{ $t('editPage.baseRule') }}</span>
+                <input class="accordion-checkbox" type="checkbox" :checked="isShowBasicRule" style="margin-left: auto;" />
+            </header>
+            <div slot="content">
+                <form-field :required="true" :label="$t('editPage.baseRule')" :is-error="errors.has('newExpression')">
+                    <cron-timer :name="'newExpression'" ref="newExpression" :value="element['newExpression']" :handle-change="handleUpdateElement" v-validate.initial="{ 'required': isShowBasicRule }" />
+                </form-field>
+            </div>
+        </accordion>
+
         <form-field class="cron-build-tab" :required="false" :label="$t('editPage.codelib')">
             <request-selector
                 v-bind="codelibOption"
@@ -23,18 +35,6 @@
             >
             </BranchParameterArray>
         </form-field>
-
-        <accordion show-checkbox :show-content="isShowBasicRule" :after-toggle="toggleBasicRule">
-            <header class="var-header" slot="header">
-                <span>{{ $t('editPage.baseRule') }}</span>
-                <input class="accordion-checkbox" type="checkbox" :checked="isShowBasicRule" style="margin-left: auto;" />
-            </header>
-            <div slot="content">
-                <form-field :required="true" :label="$t('editPage.baseRule')" :is-error="errors.has('newExpression')">
-                    <cron-timer :name="'newExpression'" ref="newExpression" :value="element['newExpression']" :handle-change="handleUpdateElement" v-validate.initial="{ 'required': isShowBasicRule }" />
-                </form-field>
-            </div>
-        </accordion>
 
         <accordion show-checkbox :show-content="advance" :after-toggle="toggleAdvance">
             <header class="var-header" slot="header">
