@@ -27,12 +27,15 @@
 
 package com.tencent.devops.auth.provider.rbac.config
 
+import com.fasterxml.jackson.databind.ObjectMapper
 import com.tencent.devops.auth.provider.rbac.service.TxMigrateCreatorFixServiceImpl
 import com.tencent.devops.auth.provider.rbac.service.TxRbacSuperManagerService
+import com.tencent.devops.auth.service.AuthDeptServiceImpl
 import com.tencent.devops.auth.service.DeptService
 import com.tencent.devops.auth.service.ManagerService
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.client.ClientTokenService
+import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.BkTag
 import org.springframework.boot.autoconfigure.AutoConfigureOrder
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
@@ -70,4 +73,11 @@ class TxRbacAuthConfiguration {
         tokenService = tokenService,
         bkTag = bkTag
     )
+
+    @Bean
+    @Primary
+    fun deptService(
+        redisOperation: RedisOperation,
+        objectMapper: ObjectMapper
+    ) = AuthDeptServiceImpl(redisOperation, objectMapper)
 }
