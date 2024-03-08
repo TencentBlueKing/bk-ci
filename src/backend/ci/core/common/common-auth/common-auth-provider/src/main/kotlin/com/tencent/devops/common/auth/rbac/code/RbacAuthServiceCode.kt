@@ -39,7 +39,9 @@ enum class RbacAuthServiceCode(val value: String) {
     TICKET(BK_DEVOPS_SCOPE),
     ENVIRONMENT(BK_DEVOPS_SCOPE),
     PROJECT(BK_DEVOPS_SCOPE),
-    QUALITY(BK_DEVOPS_SCOPE);
+    QUALITY(BK_DEVOPS_SCOPE),
+    EXPERIENCE(BK_DEVOPS_SCOPE);
+
 
     companion object {
         fun get(value: String): RbacAuthServiceCode {
