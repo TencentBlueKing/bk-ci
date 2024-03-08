@@ -45,7 +45,8 @@ import org.springframework.stereotype.Component
 @Component
 class AuthRefreshEventListener @Autowired constructor(
     val userPermissionService: UserPermissionService,
-    val iamCacheService: IamCacheService?
+    // v3才需要刷新策略
+    @Autowired(required = false) val iamCacheService: IamCacheService?
 ) : Listener<RefreshBroadCastEvent> {
 
     /**
