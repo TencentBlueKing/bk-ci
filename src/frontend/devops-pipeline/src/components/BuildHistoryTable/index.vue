@@ -639,6 +639,12 @@
                 this.$nextTick(() => {
                     this.handlePageChange(1)
                 })
+            },
+            'activePipelineVersion.version': {
+                handler (val) {
+                    this.requestHistory()
+                },
+                immediate: true
             }
         },
         created () {
@@ -654,7 +660,6 @@
                     }
                 })
             }
-            this.requestHistory()
         },
 
         methods: {

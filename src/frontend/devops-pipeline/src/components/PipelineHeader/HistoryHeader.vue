@@ -205,7 +205,7 @@
             },
             handleVersionChange (versionId, version) {
                 this.selectPipelineVersion(version)
-                if (this.$route.params.type === 'history' && versionId < this.releaseVersion) {
+                if (['history', 'triggerEvent'].includes(this.$route.params.type) && versionId < this.releaseVersion) {
                     this.$nextTick(() => {
                         this.$router.push({
                             name: 'pipelinesHistory',

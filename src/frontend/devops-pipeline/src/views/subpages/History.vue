@@ -1,7 +1,7 @@
 <template>
     <div :class="['pipeline-detail-entry', {
         'show-pipeline-var': activeChild.showVar
-    }]">
+    }]" v-bkloading="{ isLoading }">
         <aside class="pipeline-detail-entry-aside">
             <ul v-for="item in asideNav" :key="item.title">
                 <li class="nav-item-title">
@@ -66,7 +66,7 @@
             ShowVariable
         },
         computed: {
-            ...mapState('atom', ['pipelineInfo', 'pipeline']),
+            ...mapState('atom', ['pipelineInfo', 'pipeline', 'activePipelineVersion']),
             ...mapGetters('atom', ['isActiveDraftVersion', 'isOutdatedVersion']),
             activeMenuItem () {
                 return this.$route.params.type || 'history'
@@ -153,6 +153,9 @@
                         }))
                     }
                 ]
+            },
+            isLoading () {
+                return !this.activePipelineVersion?.version
             }
         },
         beforeDestroy () {
