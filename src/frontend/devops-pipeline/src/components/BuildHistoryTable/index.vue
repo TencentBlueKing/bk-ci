@@ -475,10 +475,12 @@
             ...mapGetters({
                 historyPageStatus: 'pipelines/getHistoryPageStatus',
                 isReleasePipeline: 'atom/isReleasePipeline',
-                isCurPipelineLocked: 'atom/isCurPipelineLocked'
+                isCurPipelineLocked: 'atom/isCurPipelineLocked',
+                isActiveDraftVersion: 'atom/isActiveDraftVersion'
             }),
             ...mapState('atom', [
-                'pipelineInfo'
+                'pipelineInfo',
+                'activePipelineVersion'
             ]),
             projectId () {
                 return this.$route.params.projectId
@@ -636,6 +638,11 @@
                 this.$nextTick(() => {
                     this.handlePageChange(1)
                 })
+            },
+            isActiveDraftVersion (version) {
+                this.$nextTick(() => {
+                    this.handlePageChange(1)
+                })
             }
         },
         created () {
@@ -647,14 +654,8 @@
                 this.setHistoryPageStatus({
                     queryStr: getQueryParamString(this.$route.query),
                     query: {
-                        ...(this.historyPageStatus?.query ?? {}),
-                        page: Number(this.$route.query.page ?? 1),
-                        pageSize: Number(this.$route.query.pageSize ?? 20)
+                        ...(this.historyPageStatus?.query ?? {})
                     }
-                })
-            } else {
-                this.setHistoryPageStatus({
-                    queryStr: getQueryParamString(this.historyPageStatus?.query ?? {})
                 })
             }
             this.requestHistory()
@@ -676,6 +677,7 @@
             },
             async requestHistory () {
                 try {
+                    if (!this.activePipelineVersion?.version) return
                     this.isLoading = true
                     this.resetRemark()
                     const {
@@ -685,11 +687,7 @@
                     const res = await this.requestPipelinesHistory({
                         projectId,
                         pipelineId,
-                        ...(this.isDebug
-                            ? {
-                                version: this.$route.params.version
-                            }
-                            : {})
+                        version: this.activePipelineVersion?.version
                     })
                     this.setHistoryPageStatus({
                         count: res.count
@@ -716,10 +714,7 @@
             },
             handlePageChange (page) {
                 this.setHistoryPageStatus({
-                    query: {
-                        ...(this.historyPageStatus?.query ?? {}),
-                        page
-                    }
+                    page
                 })
                 this.$nextTick(() => {
                     this.requestHistory()
@@ -727,11 +722,8 @@
             },
             handleLimitChange (limit) {
                 this.setHistoryPageStatus({
-                    query: {
-                        ...(this.historyPageStatus?.query ?? {}),
-                        page: 1,
-                        pageSize: limit
-                    }
+                    page: 1,
+                    pageSize: limit
                 })
                 this.$nextTick(() => {
                     this.requestHistory()
@@ -979,7 +971,7 @@
                     },
                     params: {
                         ...this.$route.params,
-                        version: this.pipelineInfo?.version
+                        version: this.activePipelineVersion?.version
                     }
                 })
             },
@@ -988,7 +980,7 @@
                     name: 'pipelinesEdit',
                     params: {
                         ...this.$route.params,
-                        version: this.pipelineInfo?.version
+                        version: this.activePipelineVersion?.version
                     }
                 })
             },

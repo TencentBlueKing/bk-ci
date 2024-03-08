@@ -111,10 +111,13 @@
                         title: this.$t('tips'),
                         subTitle: this.$t('saveBeforeSwitch'),
                         okText: this.$t('saveDraft&Switch'),
+                        confirmLoading: true,
                         confirmFn: async () => {
-                            await this.save()
-                            this.updatePipelineMode(mode)
-                            this.$emit('change', mode)
+                            const result = await this.save()
+                            if (result) {
+                                this.updatePipelineMode(mode)
+                                this.$emit('change', mode)
+                            }
                         }
                     })
                     return

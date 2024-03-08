@@ -43,6 +43,7 @@ import {
     PIPELINE_SETTING_MUTATION,
     PROPERTY_PANEL_VISIBLE,
     RESET_PIPELINE_SETTING_MUNTATION,
+    SELECT_PIPELINE_VERSION,
     SET_ATOMS,
     SET_ATOMS_CLASSIFY,
     SET_ATOM_MODAL,
@@ -814,5 +815,8 @@ export default {
         return request.get(`/${PROCESS_API_URL_PREFIX}/user/pipelineViews/projects/${projectId}/pipelines/${pipelineId}/listPermissionStaticViews`).then(response => {
             return response.data
         })
+    },
+    selectPipelineVersion ({ commit }, version) {
+        commit(SELECT_PIPELINE_VERSION, version)
     }
 }

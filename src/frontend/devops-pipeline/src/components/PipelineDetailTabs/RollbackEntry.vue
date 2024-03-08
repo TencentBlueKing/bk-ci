@@ -1,10 +1,13 @@
 <template>
     <bk-button
-        text
-        theme="primary"
+        :text="text"
+        :outline="outline"
+        :theme="theme"
         :disabled="loading"
         :loading="loading"
         v-perm="{
+            hasPermission,
+            disablePermissionApi: typeof hasPermission === 'boolean',
             permissionData: {
                 projectId: projectId,
                 resourceType: 'pipeline',
@@ -30,6 +33,18 @@
 
     export default {
         props: {
+            outline: Boolean,
+            hasPermission: {
+                type: Boolean
+            },
+            text: {
+                type: Boolean,
+                default: true
+            },
+            theme: {
+                type: String,
+                default: 'primary'
+            },
             version: {
                 type: Number,
                 required: true

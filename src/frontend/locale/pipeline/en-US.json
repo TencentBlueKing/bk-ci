@@ -313,6 +313,8 @@
     "item": "Items",
     "minutes": "Minutes",
     "itemPlaceholder": "Please enter",
+    "defaultSuc": "【${BK_CI_PROJECT_NAME_CN}】- 【${BK_CI_PIPELINE_NAME}】#${BK_CI_BUILD_NUM} build success, Takes ${BK_CI_BUILD_TOTAL_TIME}, Trigger user: ${BK_CI_START_USER_NAME.",
+    "defaultFail": "【${BK_CI_PROJECT_NAME_CN}】- 【${BK_CI_PIPELINE_NAME}】#${BK_CI_BUILD_NUM} build fail, Takes ${BK_CI_BUILD_TOTAL_TIME}, Trigger user: ${BK_CI_START_USER_NAME}.",
     "runningOption": {
       "multiple": "Can run concurrently",
       "lock": "Disable the pipeline, it cannot be run by any triggering method",
@@ -1488,5 +1490,8 @@
   "tempWithoutConf": "Template does not include this setting",
   "noPipelineStageTips": "The pipeline has not been configured with stages",
   "triggerLeastOne": "At least one trigger is required",
-  "goExec": "Execute"
+  "goExec": "Execute",
+  "switchToReleaseVersion": "切换至最新版本",
+  "switchToReleaseVersionCheck": "切换至最新版本查看",
+  "switch": "切换"
 }

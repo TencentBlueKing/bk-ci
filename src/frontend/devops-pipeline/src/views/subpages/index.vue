@@ -21,6 +21,7 @@
             this.$store.dispatch('atom/setPipeline', null)
             this.$store.dispatch('atom/setPipelineWithoutTrigger', null)
             this.$store.dispatch('atom/setPipelineYaml', '')
+            this.$store.dispatch('atom/selectPipelineVersion', null)
             this.$store.commit('atom/resetPipelineSetting', null)
             this.$store.commit(`atom/${SET_PIPELINE_INFO}`, null)
             this.$store.commit('pipelines/updatePipelineList', [])

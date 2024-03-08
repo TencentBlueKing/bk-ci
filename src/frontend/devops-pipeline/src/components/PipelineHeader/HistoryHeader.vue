@@ -3,49 +3,86 @@
         <div class="pipeline-history-left-aside">
             <pipeline-bread-crumb />
             <pac-tag class="pipeline-pac-indicator" v-if="pacEnabled" :info="yamlInfo" />
+            <VersionSideslider
+                :value="activePipelineVersion?.version"
+                @change="handleVersionChange"
+            />
+            <bk-button
+                v-if="isOutdatedVersion"
+                text
+                size="small"
+                theme="primary"
+                @click="switchToReleaseVersion"
+            >
+                <i class="devops-icon icon-shift"></i>
+                {{ $t("switchToReleaseVersion") }}
+            </bk-button>
             <badge
+                class="pipeline-exec-badge"
                 :project-id="projectId"
                 :pipeline-id="pipelineId"
             />
         </div>
         <aside class="pipeline-history-right-aside">
-            <bk-button
-                theme="primary"
+            <VersionDiffEntry
+                v-if="!isReleaseVersion"
+                :text="false"
                 outline
-                v-perm="{
-                    hasPermission: canEdit,
-                    disablePermissionApi: true,
-                    permissionData: {
-                        projectId,
-                        resourceType: 'pipeline',
-                        resourceCode: pipelineId,
-                        action: RESOURCE_ACTION.EDIT
-                    }
-                }"
-                @click="$router.push(editRouteName)"
+                :version="activePipelineVersion?.version"
+                :latest-version="releaseVersion"
             >
-                {{ $t("pipelineEdit") }}
-            </bk-button>
-            <span v-bk-tooltips="tooltip">
+                {{ $t("diff") }}
+            </VersionDiffEntry>
+            <RollbackEntry
+                v-if="showRollback"
+                :text="false"
+                :has-permission="canEdit"
+                :version="activePipelineVersion?.version"
+                :pipeline-id="pipelineId"
+                :project-id="projectId"
+                :version-name="activePipelineVersion?.versionName"
+                :draft-base-version-name="draftBaseVersionName"
+                :is-active-draft="activePipelineVersion?.isDraft"
+            />
+            <template v-else>
                 <bk-button
-                    :disabled="!executable"
                     theme="primary"
+                    outline
                     v-perm="{
-                        hasPermission: canExecute,
+                        hasPermission: canEdit,
                         disablePermissionApi: true,
                         permissionData: {
                             projectId,
                             resourceType: 'pipeline',
                             resourceCode: pipelineId,
-                            action: RESOURCE_ACTION.EXECUTE
+                            action: RESOURCE_ACTION.EDIT
                         }
                     }"
-                    @click="goExecPreview"
+                    @click="goEdit"
                 >
-                    {{ $t("exec") }}
-
+                    {{ $t("edit") }}
                 </bk-button>
-            </span>
+                <span v-bk-tooltips="tooltip">
+                    <bk-button
+                        :disabled="!executable"
+                        theme="primary"
+                        v-perm="{
+                            hasPermission: canExecute,
+                            disablePermissionApi: true,
+                            permissionData: {
+                                projectId,
+                                resourceType: 'pipeline',
+                                resourceCode: pipelineId,
+                                action: RESOURCE_ACTION.EXECUTE
+                            }
+                        }"
+                        @click="goExecPreview"
+                    >
+                        {{ $t(isActiveDraftVersion ? 'debug' : 'exec') }}
+
+                    </bk-button>
+                </span>
+            </template>
             <more-actions />
         </aside>
     </div>
@@ -57,16 +94,22 @@
     import {
         RESOURCE_ACTION
     } from '@/utils/permission'
-    import { mapGetters, mapState } from 'vuex'
+    import { mapGetters, mapState, mapActions } from 'vuex'
     import MoreActions from './MoreActions.vue'
     import PipelineBreadCrumb from './PipelineBreadCrumb.vue'
+    import VersionSideslider from '@/components/PipelineDetailTabs/VersionSideslider'
+    import VersionDiffEntry from '@/components/PipelineDetailTabs/VersionDiffEntry'
+    import RollbackEntry from '@/components/PipelineDetailTabs/RollbackEntry'
 
     export default {
         components: {
             PipelineBreadCrumb,
             PacTag,
             Badge,
-            MoreActions
+            MoreActions,
+            VersionSideslider,
+            VersionDiffEntry,
+            RollbackEntry
         },
         data () {
             return {
@@ -74,18 +117,25 @@
             }
         },
         computed: {
-            editRouteName () {
-                return {
-                    name: 'pipelinesEdit',
-                    params: this.$route.params
-                }
-            },
-            ...mapState('atom', ['pipelineInfo']),
+            ...mapState('atom', ['pipelineInfo', 'activePipelineVersion']),
             ...mapGetters({
                 isCurPipelineLocked: 'atom/isCurPipelineLocked',
                 isReleasePipeline: 'atom/isReleasePipeline',
+                isReleaseVersion: 'atom/isReleaseVersion',
+                isActiveDraftVersion: 'atom/isActiveDraftVersion',
+                isOutdatedVersion: 'atom/isOutdatedVersion',
+                draftBaseVersionName: 'atom/getDraftBaseVersionName',
                 pacEnabled: 'atom/pacEnabled'
             }),
+            showRollback () {
+                return !this.isActiveDraftVersion && !this.isReleaseVersion
+            },
+            releaseVersion () {
+                return this.pipelineInfo?.releaseVersion
+            },
+            releaseVersionName () {
+                return this.pipelineInfo?.releaseVersionName
+            },
             projectId () {
                 return this.$route.params.projectId
             },
@@ -118,15 +168,55 @@
                     }
             }
         },
+        watch: {
+            releaseVersion: {
+                handler (val) {
+                    if (val) {
+                        this.selectPipelineVersion({
+                            version: val
+                        })
+                    }
+                },
+                immediate: true
+            }
+        },
         methods: {
+            ...mapActions('atom', ['selectPipelineVersion']),
+            goEdit () {
+                this.$router.push({
+                    name: 'pipelinesEdit'
+                })
+            },
             goExecPreview () {
                 this.$router.push({
                     name: 'executePreview',
+                    query: {
+                        ...(this.isActiveDraftVersion ? { debug: '' } : {})
+                    },
                     params: {
                         ...this.$route.params,
-                        version: this.pipelineInfo?.releaseVersion
+                        version: this.activePipelineVersion?.version
                     }
                 })
+            },
+            switchToReleaseVersion () {
+                this.selectPipelineVersion({
+                    version: this.releaseVersion
+                })
+            },
+            handleVersionChange (versionId, version) {
+                this.selectPipelineVersion(version)
+                if (this.$route.params.type === 'history' && versionId < this.releaseVersion) {
+                    this.$nextTick(() => {
+                        this.$router.push({
+                            name: 'pipelinesHistory',
+                            params: {
+                                ...this.$route.params,
+                                type: 'pipeline'
+                            }
+                        })
+                    })
+                }
             }
         }
     }
@@ -143,8 +233,11 @@
         display: grid;
         grid-auto-flow: column;
         align-items: center;
-        .pipeline-pac-indicator {
-            margin-right: 22px;
+        .pipeline-pac-indicator{
+            margin-right: 16px;
+        }
+        .pipeline-exec-badge  {
+            margin-left: 4px;
         }
     }
 
