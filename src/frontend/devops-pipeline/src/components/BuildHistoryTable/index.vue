@@ -488,6 +488,9 @@
             pipelineId () {
                 return this.$route.params.pipelineId
             },
+            pipelineVersion () {
+                return this.isDebug ? this.pipelineInfo?.version : this.activePipelineVersion?.version
+            },
             canEdit () {
                 return this.pipelineInfo?.permissions.canEdit ?? true
             },
@@ -640,7 +643,7 @@
                     this.handlePageChange(1)
                 })
             },
-            'activePipelineVersion.version': {
+            pipelineVersion: {
                 handler (val) {
                     this.requestHistory()
                 },
@@ -679,7 +682,7 @@
             },
             async requestHistory () {
                 try {
-                    if (!this.activePipelineVersion?.version) return
+                    if (!this.pipelineVersion) return
                     this.isLoading = true
                     this.resetRemark()
                     const {
@@ -689,7 +692,7 @@
                     const res = await this.requestPipelinesHistory({
                         projectId,
                         pipelineId,
-                        version: this.activePipelineVersion?.version
+                        version: this.pipelineVersion
                     })
                     this.setHistoryPageStatus({
                         count: res.count
@@ -972,7 +975,7 @@
                     },
                     params: {
                         ...this.$route.params,
-                        version: this.activePipelineVersion?.version
+                        version: this.pipelineInfo?.[this.isDebug ? 'version' : 'releaseVersion']
                     }
                 })
             },
@@ -981,7 +984,7 @@
                     name: 'pipelinesEdit',
                     params: {
                         ...this.$route.params,
-                        version: this.activePipelineVersion?.version
+                        version: this.pipelineInfo?.[this.isDebug ? 'version' : 'releaseVersion']
                     }
                 })
             },
