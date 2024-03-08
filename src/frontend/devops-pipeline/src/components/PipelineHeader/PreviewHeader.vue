@@ -132,7 +132,8 @@
                     name: 'pipelinesHistory',
                     params: {
                         projectId: this.projectId,
-                        pipelineId
+                        pipelineId,
+                        type: 'history'
                     }
                 })
             }
