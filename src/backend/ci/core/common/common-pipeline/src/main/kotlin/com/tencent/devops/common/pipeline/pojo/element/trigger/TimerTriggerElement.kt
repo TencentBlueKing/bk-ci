@@ -58,7 +58,7 @@ data class TimerTriggerElement(
     @get:Schema(title = "指定代码库分支", required = false)
     val branches: List<String>? = null,
     @get:Schema(title = "代码库类型", required = false)
-    val repoType: RepositoryType? = null,
+    val repositoryType: RepositoryType? = null,
     @get:Schema(title = "代码库HashId", required = false)
     val repoHashId: String? = null,
     @get:Schema(title = "指定代码库别名", required = false)

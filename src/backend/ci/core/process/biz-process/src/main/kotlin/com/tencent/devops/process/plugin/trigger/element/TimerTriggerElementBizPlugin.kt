@@ -139,7 +139,7 @@ class TimerTriggerElementBizPlugin constructor(
                     RepositoryConfigUtils.getRepositoryConfig(
                         repoHashId = repoHashId,
                         repoName = repoName,
-                        repoType = repoType,
+                        repoType = repositoryType,
                         variables = variables
                     )
                 }
