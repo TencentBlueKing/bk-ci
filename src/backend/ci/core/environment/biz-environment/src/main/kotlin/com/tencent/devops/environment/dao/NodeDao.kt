@@ -80,6 +80,7 @@ class NodeDao {
             ).from(this)
                 .where(NODE_TYPE.`in`(NodeType.CMDB.name, NodeType.UNKNOWN.name, NodeType.OTHER.name))
                 .and(NODE_IP.`in`(nodeIpList))
+                .and(PROJECT_ID.eq(projectId))
                 .fetch()
         }
     }
