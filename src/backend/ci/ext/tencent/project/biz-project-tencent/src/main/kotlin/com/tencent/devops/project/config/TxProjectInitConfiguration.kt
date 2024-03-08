@@ -38,11 +38,13 @@ import com.tencent.devops.common.auth.api.BkAuthProperties
 import com.tencent.devops.common.auth.code.BSPipelineAuthServiceCode
 import com.tencent.devops.common.auth.code.BSProjectServiceCodec
 import com.tencent.devops.common.auth.code.PipelineAuthServiceCode
+import com.tencent.devops.common.auth.code.ProjectAuthServiceCode
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.client.ClientTokenService
 import com.tencent.devops.project.dao.ProjectDao
 import com.tencent.devops.project.service.ProjectPermissionService
 import com.tencent.devops.project.service.iam.ProjectIamV0Service
+import com.tencent.devops.project.service.impl.RbacProjectExtPermissionServiceImpl
 import com.tencent.devops.project.service.impl.SampleProjectExtPermissionServiceImpl
 import com.tencent.devops.project.service.impl.StreamProjectPermissionServiceImpl
 import com.tencent.devops.project.service.impl.V0ProjectExtPermissionServiceImpl
@@ -124,5 +126,23 @@ class TxProjectInitConfiguration {
     ): ProjectPermissionService = StreamProjectPermissionServiceImpl(
         client = client,
         tokenService = tokenService
+    )
+
+    @Bean
+    @ConditionalOnProperty(prefix = "auth", name = ["idProvider"], havingValue = "rbac")
+    fun rbacProjectExtPermissionServiceImpl(
+        client: Client,
+        tokenService: ClientTokenService,
+        projectDao: ProjectDao,
+        dslContext: DSLContext,
+        authProjectApi: AuthProjectApi,
+        projectAuthServiceCode: ProjectAuthServiceCode
+    ) = RbacProjectExtPermissionServiceImpl(
+        client = client,
+        tokenService = tokenService,
+        projectDao = projectDao,
+        dslContext = dslContext,
+        authProjectApi = authProjectApi,
+        projectAuthServiceCode = projectAuthServiceCode
     )
 }
