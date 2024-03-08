@@ -25,19 +25,11 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-dependencies {
-    api(project(":ext:tencent:common:common-digest-tencent"))
-    api(project(":core:project:biz-project"))
-    api(project(":core:project:api-project"))
-    api(project(":ext:tencent:project:api-project-tencent"))
-    api(project(":ext:tencent:store:api-store-service"))
-    api(project(":ext:tencent:common:common-auth:common-auth-tencent"))
-    api(project(":ext:tencent:misc:api-monitoring-tencent"))
-    api(project(":ext:tencent:common:common-archive-tencent"))
-    api(project(":ext:tencent:auth:sdk-auth-tencent"))
-    api(project(":ext:tencent:auth:api-auth-tencent"))
-    api(project(":ext:tencent:stream:api-stream-tencent"))
-    api(project(":ext:tencent:support:api-support-tencent"))
-    api(project(":core:notify:api-notify"))
-    api(project(":core:metrics:api-metrics"))
+package com.tencent.devops.project.api.pojo.enums
+
+@Suppress("MaxLineLength")
+enum class ProjectRelateOBSProductStatusEnum(val value: String, val action: String) {
+    ACTIVE_BUT_NOT_RELATE_PRODUCT("启用中，活跃但未关联OBS运营产品", "<p><a href=\"%s/console/manage/%s/edit\">去关联运营产品</a> <a href=\"%s/console/manage/%s/show\">停用项目</a></p>"),
+    RELATE_PRODUCT_BUT_INACTIVE("启用中，关联OBS运营产品但不活跃", "<p><a href=\"%s/console/manage/%s/show\">停用项目</a> </p>"),
+    INACTIVE_AND_NOT_RELATE_PRODUCT("启用中，不活跃且未关联OBS运营产品", "<p><a href=\"%s/console/manage/%s/edit\">去关联运营产品</a> <a href=\"%s/console/manage/%s/show\">停用项目</a></p>"),
 }
