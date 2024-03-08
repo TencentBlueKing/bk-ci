@@ -1,5 +1,29 @@
 <template>
     <div class="cron-trigger">
+        <form-field class="cron-build-tab" :required="false" :label="$t('editPage.codelib')">
+            <request-selector
+                v-bind="codelibOption"
+                :popover-min-width="250"
+                :disabled="disabled"
+                :url="getCodeUrl"
+                name="repoHashId"
+                :value="element['repoHashId']"
+                :handle-change="handleUpdateElement"
+            >
+            </request-selector>
+        </form-field>
+
+        <form-field class="cron-build-tab" :label="$t('editPage.branches')">
+            <BranchParameterArray
+                name="branches"
+                :disabled="disabled"
+                :repo-hash-id="element['repoHashId']"
+                :value="element['branches']"
+                :handle-change="handleUpdateElement"
+            >
+            </BranchParameterArray>
+        </form-field>
+
         <accordion show-checkbox :show-content="isShowBasicRule" :after-toggle="toggleBasicRule">
             <header class="var-header" slot="header">
                 <span>{{ $t('editPage.baseRule') }}</span>
@@ -35,15 +59,32 @@
 <script>
     import atomMixin from './atomMixin'
     import validMixins from '../validMixins'
+    import BranchParameterArray from '../AtomFormComponent/BranchParameterArray/index'
+    import { REPOSITORY_API_URL_PREFIX } from '@/store/constants'
 
     export default {
         name: 'timer-trigger',
+        components: {
+            BranchParameterArray
+        },
         mixins: [atomMixin, validMixins],
         data () {
             return {
                 isShowBasicRule: this.notEmptyArray('newExpression'),
                 advance: this.notEmptyArray('advanceExpression'),
                 advanceValue: (this.element.advanceExpression && this.element.advanceExpression.join('\n')) || ''
+            }
+        },
+        computed: {
+            getCodeUrl () {
+                return `/${REPOSITORY_API_URL_PREFIX}/user/repositories/{projectId}/hasPermissionList?permission=USE&page=1&pageSize=1000`
+            },
+            codelibOption () {
+                return {
+                    paramId: 'repositoryHashId',
+                    paramName: 'aliasName',
+                    searchable: true
+                }
             }
         },
         watch: {
