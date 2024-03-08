@@ -200,10 +200,11 @@
                     
                     // 回填已经导入的节点
                     this.$nextTick(() => {
-                        const matchItem = this.rowList.find(val => val.importStatus)
-                        if (matchItem) {
-                            this.$refs.nodeListTable.toggleRowSelection(matchItem, true)
-                        }
+                        this.rowList.forEach(i => {
+                            if (i.importStatus) {
+                                this.$refs.nodeListTable.toggleRowSelection(i, true)
+                            }
+                        })
                     })
                     this.pagination.count = res.count
                 } catch (err) {
