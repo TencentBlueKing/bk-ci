@@ -83,7 +83,7 @@
                         handler: () => {
                             const params = {
                                 ...this.$route.params,
-                                version: this.activePipelineVersion?.version
+                                version: this.isDebug ? this.pipelineInfo?.version : this.activePipelineVersion?.version
                             }
                             if (this.isReleasePipeline) {
                                 return this.$router.push({
