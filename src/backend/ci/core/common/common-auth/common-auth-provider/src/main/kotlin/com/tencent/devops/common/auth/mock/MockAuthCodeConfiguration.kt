@@ -31,6 +31,7 @@ import com.tencent.devops.common.auth.code.ArtifactoryAuthServiceCode
 import com.tencent.devops.common.auth.code.BcsAuthServiceCode
 import com.tencent.devops.common.auth.code.CodeAuthServiceCode
 import com.tencent.devops.common.auth.code.EnvironmentAuthServiceCode
+import com.tencent.devops.common.auth.code.ExperienceAuthServiceCode
 import com.tencent.devops.common.auth.code.PipelineAuthServiceCode
 import com.tencent.devops.common.auth.code.ProjectAuthServiceCode
 import com.tencent.devops.common.auth.code.QualityAuthServiceCode
@@ -40,6 +41,7 @@ import com.tencent.devops.common.auth.mock.code.MockArtifactoryAuthServiceCode
 import com.tencent.devops.common.auth.mock.code.MockBcsAuthServiceCode
 import com.tencent.devops.common.auth.mock.code.MockCodeAuthServiceCode
 import com.tencent.devops.common.auth.mock.code.MockEnvironmentAuthServiceCode
+import com.tencent.devops.common.auth.mock.code.MockExperienceAuthServiceCode
 import com.tencent.devops.common.auth.mock.code.MockPipelineAuthServiceCode
 import com.tencent.devops.common.auth.mock.code.MockPipelineGroupAuthServiceCode
 import com.tencent.devops.common.auth.mock.code.MockProjectAuthServiceCode
@@ -94,4 +96,8 @@ class MockAuthCodeConfiguration {
     @Bean
     @ConditionalOnMissingBean(ArtifactoryAuthServiceCode::class)
     fun artifactoryAuthServiceCode() = MockArtifactoryAuthServiceCode()
+
+    @Bean
+    @ConditionalOnMissingBean(ExperienceAuthServiceCode::class)
+    fun experienceAuthServiceCode() = MockExperienceAuthServiceCode()
 }
