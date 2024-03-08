@@ -1,6 +1,6 @@
 <template>
     <bread-crumb :value="breadCrumbPath">
-        <template v-if="pipelineList && pipelineList.length">
+        <template v-if="pipelineList?.length">
             <bread-crumb-item v-for="(crumb, index) in breadCrumbs" :key="index" v-bind="crumb">
                 <slot v-if="index === breadCrumbs.length - 1"></slot>
             </bread-crumb-item>
@@ -64,7 +64,7 @@
                             },
                         handleSelected: this.doSelectPipeline,
                         searching: this.pipelineListSearching,
-                        handleSearch: debounce(this.handleSearchPipeline, 500)
+                        handleSearch: debounce(this.handleSearchPipeline, 1000)
                     }, ...(this.showRecordEntry
                     ? [{
                         selectedValue: this.$t('draftExecRecords'),
@@ -180,7 +180,3 @@
         }
     }
 </script>
-
-<style lang="scss">
-
-</style>

@@ -313,6 +313,8 @@
     "item": "个",
     "minutes": "分钟",
     "itemPlaceholder": "请输入",
+    "defaultSuc": "【${BK_CI_PROJECT_NAME_CN}】- 【${BK_CI_PIPELINE_NAME}】#${BK_CI_BUILD_NUM} 执行成功，耗时${BK_CI_BUILD_TOTAL_TIME}, 触发人: ${BK_CI_START_USER_NAME}。",
+    "defaultFail": "【${BK_CI_PROJECT_NAME_CN}】- 【${BK_CI_PIPELINE_NAME}】#${BK_CI_BUILD_NUM} 执行失败，耗时${BK_CI_BUILD_TOTAL_TIME}, 触发人: ${BK_CI_START_USER_NAME}。",
     "runningOption": {
       "multiple": "可并发运行",
       "lock": "禁用流水线，任何触发方式都无法运行",
@@ -1487,5 +1489,8 @@
   "tempWithoutConf": "模板未包含此设置",
   "noPipelineStageTips": "暂未添加流水线Stage",
   "triggerLeastOne": "至少保留一个触发器",
-  "goExec": "去执行"
+  "goExec": "去执行",
+  "switchToReleaseVersion": "切换至最新版本",
+  "switchToReleaseVersionCheck": "切换至最新版本查看",
+  "switch": "切换"
 }

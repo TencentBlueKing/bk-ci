@@ -3,7 +3,7 @@
         'show-pipeline-var': activeChild.showVar
     }]">
         <aside class="pipeline-detail-entry-aside">
-            <ul v-for="item in asideNav" :key="item.name">
+            <ul v-for="item in asideNav" :key="item.title">
                 <li class="nav-item-title">
                     {{ item.title }}
                     <span class="nav-item-link" v-if="item.link" @click="item.link.handler">
@@ -11,30 +11,41 @@
                         {{ item.link.title }}
                     </span>
                 </li>
-                <ul class="nav-child-list" v-for="(child, cIndex) in item.children" :key="cIndex">
+                <ul class="nav-child-list">
                     <li
                         @click="switchType(child)"
+                        v-for="child in item.children"
+                        :key="child.name"
                         :class="[
                             'nav-child-title',
                             {
-                                active: child.active
+                                active: child.active,
+                                'nav-child-disabled': child.disabled
                             }
                         ]"
+                        v-bk-tooltips="child.disableTooltip"
                     >
                         {{ child.title }}
                     </li>
+
                 </ul>
             </ul>
+            <div ref="tool" id="disable-nav-child-item-tooltips">
+                {{$t('switchToReleaseVersionCheck')}}
+                <span @click="switchToReleaseVersion" class="text-link">{{ $t('newlist.view') }}</span>
+            </div>
         </aside>
+
         <main class="pipeline-detail-entry-main">
-            <component :is="activeChild.component" />
+            <component :is="activeChild.component" v-bind="activeChild.props" />
         </main>
         <show-variable v-if="activeChild.showVar && pipeline" :editable="false" :pipeline="pipeline" />
+
     </div>
 </template>
 
 <script>
-    import { mapActions, mapState } from 'vuex'
+    import { mapActions, mapState, mapGetters } from 'vuex'
     import Logo from '@/components/Logo'
     import {
         BuildHistoryTab,
@@ -56,6 +67,7 @@
         },
         computed: {
             ...mapState('atom', ['pipelineInfo', 'pipeline']),
+            ...mapGetters('atom', ['isActiveDraftVersion', 'isOutdatedVersion']),
             activeMenuItem () {
                 return this.$route.params.type || 'history'
             },
@@ -68,11 +80,21 @@
                         title: this.$t('executeInfo'),
                         children: [
                             {
-                                title: this.$t('pipelinesHistory'),
+                                title: this.$t(this.isActiveDraftVersion ? 'draftExecRecords' : 'pipelinesHistory'),
+                                disabled: this.isOutdatedVersion,
+                                disableTooltip: {
+                                    content: this.$refs?.tool,
+                                    interactive: true,
+                                    disabled: !this.isOutdatedVersion
+                                },
                                 name: 'history'
                             },
                             {
                                 title: this.$t('triggerEvent'),
+                                disabled: this.isOutdatedVersion,
+                                disableTooltip: {
+                                    disabled: true
+                                },
                                 name: 'triggerEvent'
                             }
                             // , {
@@ -105,6 +127,9 @@
                             }
                         ].map((child) => ({
                             ...child,
+                            disableTooltip: {
+                                disabled: true
+                            },
                             active: this.activeMenuItem === child.name
                         }))
                     },
@@ -121,6 +146,9 @@
                             }
                         ].map((child) => ({
                             ...child,
+                            disableTooltip: {
+                                disabled: true
+                            },
                             active: this.activeMenuItem === child.name
                         }))
                     }
@@ -132,6 +160,7 @@
         },
         methods: {
             ...mapActions('pipelines', ['resetHistoryFilterCondition']),
+            ...mapActions('atom', ['selectPipelineVersion']),
             getNavComponent (type) {
                 switch (type) {
                     case 'triggerEvent':
@@ -164,17 +193,29 @@
                         }
                     default:
                         return {
-                            component: 'BuildHistoryTab'
+                            component: 'BuildHistoryTab',
+                            props: {
+                                isDebug: this.isActiveDraftVersion
+                            }
                         }
                 }
             },
             switchType (child) {
+                if (child.disabled) return
                 this.$router.push({
                     name: 'pipelinesHistory',
                     params: {
                         ...this.$route.params,
                         type: child.name
                     }
+                })
+            },
+            switchToReleaseVersion () {
+                this.selectPipelineVersion({
+                    version: this.pipelineInfo.releaseVersion,
+                    versionName: this.pipelineInfo.releaseVersionName,
+                    isDraft: false,
+                    displayName: this.pipelineInfo.releaseVersionName
                 })
             }
         }
@@ -196,9 +237,11 @@
     background: #fafbfd;
     border-right: 1px solid #dcdee5;
     padding: 4px 0;
-    margin: 24px 0 0 24px;
     overflow: auto;
     overflow: overlay;
+    #disable-nav-child-item-tooltips {
+        display: none;
+    }
 
     .nav-item-title {
       padding: 0 16px 0 22px;
@@ -226,13 +269,18 @@
     .nav-child-list {
       margin-bottom: 4px;
     }
+
     .nav-child-title {
       position: relative;
       padding-left: 32px;
       cursor: pointer;
       font-size: 14px;
-      &:hover,
-      &.active {
+      &.nav-child-disabled {
+            color: #c4c6cc;
+            cursor: not-allowed;
+      }
+      &:hover:not(.nav-child-disabled),
+      &.active:not(.nav-child-disabled) {
         background: #e1ecff;
         color: #3A84FF;
         &:after {
@@ -248,7 +296,6 @@
   }
   .pipeline-detail-entry-main {
     background: #fff;
-    margin: 24px 24px 0 0;
     overflow: hidden;
     flex: 1;
   }

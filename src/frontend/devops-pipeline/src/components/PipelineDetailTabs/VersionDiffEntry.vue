@@ -1,8 +1,9 @@
 <template>
     <span>
         <bk-button
-            text
-            theme="primary"
+            :text="text"
+            :outline="outline"
+            :theme="theme"
             @click="diffVersion(version)"
         >
             <slot>
@@ -72,6 +73,15 @@
             YamlDiff
         },
         props: {
+            text: {
+                type: Boolean,
+                default: true
+            },
+            outline: Boolean,
+            theme: {
+                type: String,
+                default: 'primary'
+            },
             version: {
                 type: Number,
                 required: true

@@ -31,10 +31,10 @@ const state = {
         queryStr: '',
         isQuerying: false,
         count: 0,
+        page: 1,
+        pageSize: 20,
         dateTimeRange: [],
         query: {
-            page: 1,
-            pageSize: 20
         },
         searchKey: []
     }
@@ -196,14 +196,15 @@ const actions = {
      * @return {Promise} promise 对象
      */
     requestPipelinesHistory ({ commit, state, dispatch }, { projectId, pipelineId, version }) {
-        let { historyPageStatus: { queryStr } } = state
+        let { historyPageStatus: { queryStr, page, pageSize } } = state
         dispatch('setHistoryPageStatus', {
             isQuerying: !!queryStr
         })
         if (version) {
             queryStr += `&version=${version}`
         }
-        console.log(queryStr)
+        queryStr += `&page=${page}&pageSize=${pageSize}`
+        console.log(queryStr, 'queryStr')
         return ajax.get(`${prefix}${projectId}/${pipelineId}/history/new?${queryStr}`).then(response => {
             return response.data
         })

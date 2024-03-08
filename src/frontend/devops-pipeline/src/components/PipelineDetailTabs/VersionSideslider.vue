@@ -18,7 +18,7 @@
                 }]" />
                 <span v-if="isActiveDraft">{{ $t('editPage.draftVersion', [draftBaseVersionName]) }}</span>
                 <span v-else>
-                    {{ activeVersionName }}
+                    {{ activeDisplayName }}
                 </span>
                 <i class="bk-icon icon-angle-down" />
             </div>
@@ -64,6 +64,7 @@
 <script>
     import Logo from '@/components/Logo'
     import { convertTime } from '@/utils/util'
+    import { bus, SHOW_VERSION_HISTORY_SIDESLIDER } from '@/utils/bus'
     import { mapActions, mapState } from 'vuex'
     import VersionHistorySideSlider from './VersionHistorySideSlider'
     export default {
@@ -110,7 +111,7 @@
                 return this.$route.params.pipelineId
             },
             // 最新的流水线版本信息
-            activeVersionName () {
+            activeDisplayName () {
                 return this.activeVersion?.displayName ?? '--'
             },
             selectedVersionId () {
@@ -131,12 +132,18 @@
                 this.activeVersionId = val
                 this.activeVersion = this.versionList.find(item => item.version === val)
             },
-            pipelineId () {
-                this.handlePipelineVersionList()
+            pipelineId: {
+                handler () {
+                    this.handlePipelineVersionList()
+                },
+                immediate: true
             }
         },
-        created () {
-            this.handlePipelineVersionList()
+        mounted () {
+            bus.$on(SHOW_VERSION_HISTORY_SIDESLIDER, this.showVersionSideSlider)
+        },
+        beforeDestroy () {
+            bus.$off(SHOW_VERSION_HISTORY_SIDESLIDER, this.showVersionSideSlider)
         },
         methods: {
             convertTime,
