@@ -101,4 +101,14 @@ interface ExternalThirdPartyAgentResource {
         @BkField(minLength = 3, maxLength = 32)
         agentHashId: String
     ): Response
+
+    @Operation(summary = "下载agent安装脚本")
+    @GET
+    @Path("/install")
+    @Produces(MediaType.APPLICATION_OCTET_STREAM)
+    fun downloadAgentInstallScriptNew(
+        @Parameter(description = "网关地域", required = false)
+        @QueryParam("zoneName")
+        zoneName: String?
+    ): Response
 }
