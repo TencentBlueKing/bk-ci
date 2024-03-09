@@ -239,8 +239,6 @@ else
   
   unzip_jdk
   
-  os=`uname`
-  arch1=`uname -m`
   echo "OS: $OS"
   echo "ARCH: $ARCH"
   
