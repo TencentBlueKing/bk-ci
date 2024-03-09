@@ -154,7 +154,7 @@ function installMacosAgentService()
   ${workspace}/start.sh
 }
 
-# -----
+# ------
 
 if [[ "$os" == "Darwin" ]]; then
   cd ${workspace}
@@ -187,9 +187,6 @@ else
   
   echo "check java version"
   jdk/bin/java -version
-  
-  echo "check and write ssh config"
-  writeSSHConfig
   
   service_name=`getServiceName`
   
