@@ -63,7 +63,7 @@ function download_agent()
   fi
 }
 
-# ----- linux
+# ------ linux
 
 function installLinuxAgentService()
 {
@@ -101,7 +101,7 @@ function uninstallLinuxAgentService()
   ${workspace}/stop.sh
 }
 
-# ----- macos
+# ------ macos
 
 function addMacosRunAtLoad()
 {
@@ -154,7 +154,7 @@ function installMacosAgentService()
   ${workspace}/start.sh
 }
 
-# -----
+# ------
 
 function writeSSHConfig()
 {
