@@ -156,16 +156,28 @@ function installMacosAgentService()
 
 # ------
 
+function getAgentId()
+{
+  agentIdstr=$(cat $workspace/.agent.properties | grep devops.agent.id=)
+  agent_id="${agentIdstr#*=}"
+}
+
 if [[ "$os" == "Darwin" ]]; then
   cd ${workspace}
   
-  initArch
-  download_agent
-  unzip -o agent.zip
-  unzip_jdk
-  
+  initOs
   echo "OS: $OS"
+  initArch
   echo "ARCH: $ARCH"
+  
+  download_agent
+  
+  unzip -o agent.zip
+  
+  getAgentId
+  echo "agentid $agent_id"
+  
+  unzip_jdk
   echo "check java version"
   jdk/Contents/Home/bin/java -version
   
@@ -175,16 +187,18 @@ else
   cd ${workspace}
   
   if [[ ! -f "agent.zip" ]]; then
+    initOs
+    echo "OS: $OS"
     initArch
+    echo "ARCH: $ARCH"
     download_agent
     unzip -o agent.zip
   fi
   
+  getAgentId
+  echo "agentid $agent_id"
+  
   unzip_jdk
-  
-  echo "OS: $OS"
-  echo "ARCH: $ARCH"
-  
   echo "check java version"
   jdk/bin/java -version
   
