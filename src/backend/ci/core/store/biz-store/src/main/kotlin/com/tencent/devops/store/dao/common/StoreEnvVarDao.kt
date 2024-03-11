@@ -30,6 +30,7 @@ package com.tencent.devops.store.dao.common
 import com.tencent.devops.common.api.constant.KEY_VERSION
 import com.tencent.devops.common.api.util.AESUtil
 import com.tencent.devops.common.api.util.UUIDUtil
+import com.tencent.devops.common.db.utils.skipCheck
 import com.tencent.devops.model.store.tables.TStoreEnvVar
 import com.tencent.devops.model.store.tables.records.TStoreEnvVarRecord
 import com.tencent.devops.store.pojo.common.KEY_CREATE_TIME
@@ -304,7 +305,7 @@ class StoreEnvVarDao {
                         .and(VERSION.eq(t.field(KEY_VERSION, Int::class.java)))
                 )
                 .where(conditions)
-            return baseStep.fetch()
+            return baseStep.skipCheck().fetch()
         }
     }
 
