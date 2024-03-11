@@ -21,12 +21,19 @@
                                 action: RESOURCE_ACTION.EDIT
                             }
                         }"
+                        v-bk-tooltips="{
+                            content: $t('codelib.PAC 模式下不允许修改别名'),
+                            disabled: !curRepo.enablePac
+                        }"
                         @click="handleEditName"
                     >
                         <Icon
                             name="edit-line"
                             size="16"
                             class="edit-icon"
+                            :class="{
+                                'disable-delete-icon': curRepo.enablePac
+                            }"
                         />
                     </span>
                     <span
