@@ -123,7 +123,7 @@ interface ApigwTurboResourceV4 {
 
     @POST
     @Operation(summary = "新增加速方案", tags = ["v4_app_turbo_plan_addNew", "v4_user_turbo_plan_addNew"])
-    @Path("/projectId/{projectId}/{userId}/addTurboPlan")
+    @Path("/projectId/{projectId}/addTurboPlan")
     fun addNewTurboPlan(
         @Parameter(description = "蓝盾项目id", required = true)
         @PathParam("projectId")
