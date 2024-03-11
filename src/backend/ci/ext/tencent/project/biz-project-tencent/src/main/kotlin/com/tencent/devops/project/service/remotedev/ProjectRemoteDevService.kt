@@ -175,16 +175,24 @@ class ProjectRemoteDevService @Autowired constructor(
             return true
         }
         val record = projectDao.getByEnglishName(dslContext, projectCode) ?: return false
-        if (record.properties == null) {
+        if (record.properties == null && enableRemotedev == null) {
             return false
         }
-        var prop = JsonUtil.to(record.properties, ProjectProperties::class.java)
+        var prop = if (record.properties == null) {
+            JsonUtil.to(record.properties, ProjectProperties::class.java)
+        } else {
+            ProjectProperties()
+        }
         if (addcloudDesktopNum != null) {
             prop = prop.copy(cloudDesktopNum = prop.cloudDesktopNum + addcloudDesktopNum)
         }
         if (enableRemotedev != null) {
             prop = prop.copy(remotedev = enableRemotedev)
-            val dbProperties = JsonUtil.to(record.properties, ProjectProperties::class.java)
+            val dbProperties = if (record.properties == null) {
+                JsonUtil.to(record.properties, ProjectProperties::class.java)
+            } else {
+                ProjectProperties()
+            }
             // 更新云研发项目时相关操作
             val enableRemoteDev = dbProperties.remotedev != true && enableRemotedev == true
             if (enableRemoteDev) {
