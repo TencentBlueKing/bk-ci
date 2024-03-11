@@ -40,9 +40,9 @@ import com.tencent.devops.store.pojo.vo.ExtServiceMainItemVo
 import com.tencent.devops.store.pojo.vo.SearchExtServiceVO
 import com.tencent.devops.store.pojo.vo.ServiceVersionListItem
 import com.tencent.devops.store.pojo.vo.ServiceVersionVO
-import io.swagger.annotations.Api
-import io.swagger.annotations.ApiOperation
-import io.swagger.annotations.ApiParam
+import io.swagger.v3.oas.annotations.tags.Tag
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.Parameter
 import javax.ws.rs.Consumes
 import javax.ws.rs.GET
 import javax.ws.rs.HeaderParam
@@ -54,135 +54,135 @@ import javax.ws.rs.Produces
 import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
-@Api(tags = ["USER_EXTENSION_SERVICE"], description = "服务扩展--基础信息")
+@Tag(name = "USER_EXTENSION_SERVICE", description = "服务扩展--基础信息")
 @Path("/user/market")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface UserExtServiceResource {
-    @ApiOperation("获取服务扩展市场首页的数据")
+    @Operation(summary = "获取服务扩展市场首页的数据")
     @Path("/service/list/main")
     @GET
     fun mainPageList(
-        @ApiParam("userId", required = true)
+        @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("页码", required = false)
+        @Parameter(description = "页码", required = false)
         @QueryParam("page")
         page: Int?,
-        @ApiParam("每页数量", required = false)
+        @Parameter(description = "每页数量", required = false)
         @QueryParam("pageSize")
         pageSize: Int?
     ): Result<List<ExtServiceMainItemVo>>
 
-    @ApiOperation("服务扩展市场搜索服务扩展")
+    @Operation(summary = "服务扩展市场搜索服务扩展")
     @GET
     @Path("/service/list/")
     fun list(
-        @ApiParam("userId", required = true)
+        @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("搜索关键字", required = false)
+        @Parameter(description = "搜索关键字", required = false)
         @QueryParam("keyword")
         keyword: String?,
-        @ApiParam("服务扩展分类", required = false)
+        @Parameter(description = "服务扩展分类", required = false)
         @QueryParam("classifyCode")
         classifyCode: String?,
-        @ApiParam("功能标签", required = false)
+        @Parameter(description = "功能标签", required = false)
         @QueryParam("labelCode")
         labelCode: String?,
-        @ApiParam("BK服务ID", required = false)
+        @Parameter(description = "BK服务ID", required = false)
         @QueryParam("bkServiceId")
         bkServiceId: Long?,
-        @ApiParam("评分", required = false)
+        @Parameter(description = "评分", required = false)
         @QueryParam("score")
         score: Int?,
-        @ApiParam("研发来源", required = false)
+        @Parameter(description = "研发来源", required = false)
         @QueryParam("rdType")
         rdType: ServiceTypeEnum?,
-        @ApiParam("排序", required = false)
+        @Parameter(description = "排序", required = false)
         @QueryParam("sortType")
         sortType: ExtServiceSortTypeEnum? = ExtServiceSortTypeEnum.CREATE_TIME,
-        @ApiParam("页码", required = false)
+        @Parameter(description = "页码", required = false)
         @QueryParam("page")
         page: Int?,
-        @ApiParam("每页数量", required = false)
+        @Parameter(description = "每页数量", required = false)
         @QueryParam("pageSize")
         pageSize: Int?
     ): Result<SearchExtServiceVO>
 
-    @ApiOperation("根据插件标识获取扩展正式版本详情")
+    @Operation(summary = "根据插件标识获取扩展正式版本详情")
     @GET
     @Path("/service/{serviceCode}")
     fun getServiceByCode(
-        @ApiParam("userId", required = true)
+        @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("bk ticket", required = true)
+        @Parameter(description = "bk ticket", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_BK_TICKET)
         bk_ticket: String,
-        @ApiParam("serviceCode", required = true)
+        @Parameter(description = "serviceCode", required = true)
         @PathParam("serviceCode")
         serviceCode: String
     ): Result<ServiceVersionVO?>
 
-    @ApiOperation("根据扩展标识获取扩展版本列表")
+    @Operation(summary = "根据扩展标识获取扩展版本列表")
     @GET
     @Path("/service/version/list/")
     fun getServiceVersionsByCode(
-        @ApiParam("userId", required = true)
+        @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("serviceCode", required = true)
+        @Parameter(description = "serviceCode", required = true)
         @QueryParam("serviceCode")
         serviceCode: String,
-        @ApiParam("页码", required = true)
+        @Parameter(description = "页码", required = true)
         @QueryParam("page")
         page: Int = 1,
-        @ApiParam("每页数量", required = true)
+        @Parameter(description = "每页数量", required = true)
         @QueryParam("pageSize")
         pageSize: Int = 10
     ): Result<Page<ServiceVersionListItem>>
 
-    @ApiOperation("添加媒体信息、可见范围")
+    @Operation(summary = "添加媒体信息、可见范围")
     @POST
     @Path("/serviceIds/{serviceId}/ext/submitInfo")
     fun createMediaAndVisible(
-        @ApiParam("userId", required = true)
+        @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("serviceId", required = true)
+        @Parameter(description = "serviceId", required = true)
         @PathParam("serviceId")
         serviceId: String,
-        @ApiParam("媒体、可见范围信息")
+        @Parameter(description = "媒体、可见范围信息")
         submitInfo: ExtSubmitDTO
     ): Result<Boolean>
 
-    @ApiOperation("编辑返回测试中")
+    @Operation(summary = "编辑返回测试中")
     @POST
     @Path("/serviceIds/{serviceId}/ext/back")
     fun createMediaAndVisible(
-        @ApiParam("userId", required = true)
+        @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("serviceId", required = true)
+        @Parameter(description = "serviceId", required = true)
         @PathParam("serviceId")
         serviceId: String
     ): Result<Boolean>
 
-    @ApiOperation("更新扩展服务信息")
+    @Operation(summary = "更新扩展服务信息")
     @PUT
     @Path("/baseInfo/serviceCodes/{serviceCode}/serviceIds/{serviceId}")
     fun updateServiceBaseInfo(
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("扩展服务编码 ", required = true)
+        @Parameter(description = "扩展服务编码 ", required = true)
         @PathParam("serviceCode")
         serviceCode: String,
-        @ApiParam("扩展服务Id ", required = true)
+        @Parameter(description = "扩展服务Id ", required = true)
         @PathParam("serviceId")
         serviceId: String,
-        @ApiParam(value = "扩展服务基本信息修改请求报文体", required = true)
+        @Parameter(description = "扩展服务基本信息修改请求报文体", required = true)
         serviceBaseInfoUpdateRequest: ServiceBaseInfoUpdateRequest
     ): Result<Boolean>
 }

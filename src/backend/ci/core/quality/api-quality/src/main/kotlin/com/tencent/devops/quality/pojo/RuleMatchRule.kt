@@ -27,13 +27,12 @@
 
 package com.tencent.devops.quality.pojo
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("质量红线-匹配拦截规则")
+@Schema(title = "质量红线-匹配拦截规则")
 data class RuleMatchRule(
-    @ApiModelProperty("规则ID", required = true)
+    @get:Schema(title = "规则ID", required = true)
     val ruleHashId: String,
-    @ApiModelProperty("规则名称", required = true)
+    @get:Schema(title = "规则名称", required = true)
     val ruleName: String
 )

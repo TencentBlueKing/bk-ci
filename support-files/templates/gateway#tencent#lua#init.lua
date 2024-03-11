@@ -76,7 +76,8 @@ config = {
         domain = "__BKREPO_HOST__",
         user = "__BKREPO_USER__",
         password = "__BKREPO_PASSWORD__",
-        static_domain = "__BKREPO_STATIC_HOST__"
+        static_domain = "__BKREPO_STATIC_HOST__",
+        dl_domain = "__BKREPO_DL_HOST__"
     },
     prebuild = { domain = "__BKCI_PREBUILD_FQDN__", port = "__BKCI_PREBUILD_PORT__" },
     dayuHost = "__BKCI_DAYU_URL__",
@@ -111,6 +112,7 @@ config = {
         loginFqdn = "__BK_CI_DEVX_LOGIN_FQDN__"
     },
     auth_token = "__BK_CI_AUTH_TOKEN__",
+    tof_token = "__BK_CI_TOF_TOKEN__"
 }
 
 -- 特殊域名

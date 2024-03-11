@@ -31,9 +31,9 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.stream.v1.pojo.V1GitRepositoryConf
-import io.swagger.annotations.Api
-import io.swagger.annotations.ApiOperation
-import io.swagger.annotations.ApiParam
+import io.swagger.v3.oas.annotations.tags.Tag
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.Parameter
 import javax.ws.rs.Consumes
 import javax.ws.rs.DELETE
 import javax.ws.rs.GET
@@ -44,44 +44,44 @@ import javax.ws.rs.PathParam
 import javax.ws.rs.Produces
 import javax.ws.rs.core.MediaType
 
-@Api(tags = ["SERVICE_STREAM_SETTING"], description = "setting页面")
+@Tag(name = "SERVICE_STREAM_SETTING", description = "setting页面")
 @Path("/service/repository")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface GitRepositoryConfResource {
 
-    @ApiOperation("关闭Stream功能")
+    @Operation(summary = "关闭Stream功能")
     @DELETE
     @Path("/disable/{gitProjectId}")
     fun disableGitCI(
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("工蜂项目ID", required = true)
+        @Parameter(description = "工蜂项目ID", required = true)
         @PathParam("gitProjectId")
         gitProjectId: Long
     ): Result<Boolean>
 
-    @ApiOperation("查询Stream项目配置")
+    @Operation(summary = "查询Stream项目配置")
     @GET
     @Path("/enable/{gitProjectId}")
     fun getGitCIConf(
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam(value = "gitProjectId", required = true)
+        @Parameter(description = "gitProjectId", required = true)
         @PathParam("gitProjectId")
         gitProjectId: Long
     ): Result<V1GitRepositoryConf?>
 
-    @ApiOperation("保存Stream配置")
+    @Operation(summary = "保存Stream配置")
     @POST
     @Path("/settings/save")
     fun saveGitCIConf(
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("工蜂项目配置", required = true)
+        @Parameter(description = "工蜂项目配置", required = true)
         repositoryConf: V1GitRepositoryConf
     ): Result<Boolean>
 }

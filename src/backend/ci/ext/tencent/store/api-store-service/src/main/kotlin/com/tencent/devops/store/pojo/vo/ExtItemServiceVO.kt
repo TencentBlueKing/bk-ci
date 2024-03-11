@@ -27,13 +27,12 @@
 
 package com.tencent.devops.store.pojo.vo
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("扩展点对应的扩展服务信息")
+@Schema(title = "扩展点对应的扩展服务信息")
 data class ExtItemServiceVO(
-    @ApiModelProperty("扩展点Id", required = true)
+    @get:Schema(title = "扩展点Id", required = true)
     val itemId: String,
-    @ApiModelProperty("扩展服务列表", required = false)
+    @get:Schema(title = "扩展服务列表", required = false)
     val extServiceList: List<ExtServiceVO>?
 )

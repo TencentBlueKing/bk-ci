@@ -32,6 +32,7 @@ import com.tencent.devops.common.dispatch.sdk.BuildFailureException
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.dispatch.kubernetes.dao.DispatchWorkspaceDao
 import com.tencent.devops.dispatch.kubernetes.dao.DispatchWorkspaceOpHisDao
+import com.tencent.devops.dispatch.kubernetes.pojo.BK_CREATE_WORKSPACE_ERROR
 import com.tencent.devops.dispatch.kubernetes.pojo.BK_WORKSPACE_STATE_NOT_RUNNING
 import com.tencent.devops.dispatch.kubernetes.pojo.EnvironmentAction
 import com.tencent.devops.dispatch.kubernetes.pojo.EnvironmentActionStatus
@@ -44,6 +45,7 @@ import com.tencent.devops.dispatch.kubernetes.pojo.mq.WorkspaceCreateEvent
 import com.tencent.devops.dispatch.kubernetes.pojo.mq.WorkspaceOperateEvent
 import com.tencent.devops.dispatch.kubernetes.pojo.remotedev.WorkspaceResponse
 import com.tencent.devops.dispatch.kubernetes.service.factory.RemoteDevServiceFactory
+import com.tencent.devops.dispatch.kubernetes.utils.WorkspaceCreateFailureException
 import com.tencent.devops.remotedev.pojo.WorkspaceMountType
 import com.tencent.devops.remotedev.pojo.event.RemoteDevUpdateEvent
 import com.tencent.devops.remotedev.pojo.event.UpdateEventType
@@ -66,7 +68,29 @@ class RemoteDevService @Autowired constructor(
         private val logger = LoggerFactory.getLogger(RemoteDevService::class.java)
     }
 
+    @Suppress("ComplexMethod")
     fun createWorkspace(userId: String, event: WorkspaceCreateEvent): WorkspaceResponse {
+        // 查询是否已经存在记录
+        val workspace = dispatchWorkspaceDao.getWorkspaceInfo(
+            dslContext = dslContext,
+            workspaceName = event.workspaceName
+        )
+        if (workspace != null) {
+            logger.warn("Repeated creation, return failure")
+            dispatchWorkspaceOpHisDao.updateStatusByWorkspaceName(
+                dslContext = dslContext,
+                status = EnvironmentActionStatus.FAILED,
+                fStatus = EnvironmentActionStatus.PENDING,
+                workspaceName = event.workspaceName
+            )
+            throw WorkspaceCreateFailureException(
+                errorType = ErrorCodeEnum.BASE_CREATE_VM_ERROR.errorType,
+                errorCode = ErrorCodeEnum.BASE_CREATE_VM_ERROR.errorCode,
+                formatErrorMessage = ErrorCodeEnum.BASE_CREATE_VM_ERROR.getErrorMessage(),
+                envId = workspace.environmentUid,
+                errorMessage = I18nUtil.getCodeLanMessage(BK_CREATE_WORKSPACE_ERROR)
+            )
+        }
         val mountType = event.mountType ?: event.devFile.checkWorkspaceMountType()
         val result = remoteDevServiceFactory.loadRemoteDevService(mountType)
             .createWorkspace(userId, event)
@@ -143,11 +167,12 @@ class RemoteDevService @Autowired constructor(
                     .getWorkspaceInfo(userId, event.workspaceName)
 
                 if (workspaceInfo.status != EnvStatusEnum.running) {
-                    throw BuildFailureException(
-                        ErrorCodeEnum.BASE_CREATE_VM_ERROR.errorType,
-                        ErrorCodeEnum.BASE_CREATE_VM_ERROR.errorCode,
-                        ErrorCodeEnum.BASE_CREATE_VM_ERROR.getErrorMessage(),
-                        I18nUtil.getCodeLanMessage(BK_WORKSPACE_STATE_NOT_RUNNING)
+                    throw WorkspaceCreateFailureException(
+                        errorType = ErrorCodeEnum.BASE_CREATE_VM_ERROR.errorType,
+                        errorCode = ErrorCodeEnum.BASE_CREATE_VM_ERROR.errorCode,
+                        formatErrorMessage = ErrorCodeEnum.BASE_CREATE_VM_ERROR.getErrorMessage(),
+                        envId = result.enviromentUid,
+                        errorMessage = I18nUtil.getCodeLanMessage(BK_WORKSPACE_STATE_NOT_RUNNING)
                     )
                 }
 
@@ -176,11 +201,12 @@ class RemoteDevService @Autowired constructor(
                 )
             }
 
-            throw BuildFailureException(
-                ErrorCodeEnum.BASE_CREATE_VM_ERROR.errorType,
-                ErrorCodeEnum.BASE_CREATE_VM_ERROR.errorCode,
-                ErrorCodeEnum.BASE_CREATE_VM_ERROR.getErrorMessage(),
-                "errorMessage:$taskMessage"
+            throw WorkspaceCreateFailureException(
+                errorType = ErrorCodeEnum.BASE_CREATE_VM_ERROR.errorType,
+                errorCode = ErrorCodeEnum.BASE_CREATE_VM_ERROR.errorCode,
+                formatErrorMessage = ErrorCodeEnum.BASE_CREATE_VM_ERROR.getErrorMessage(),
+                envId = result.enviromentUid,
+                errorMessage = "errorMessage:$taskMessage"
             )
         }
     }

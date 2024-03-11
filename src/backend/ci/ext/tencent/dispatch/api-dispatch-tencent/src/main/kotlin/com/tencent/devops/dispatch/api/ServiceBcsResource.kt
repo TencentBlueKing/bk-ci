@@ -34,9 +34,9 @@ import com.tencent.devops.dispatch.pojo.CreateImagePullSecretRequest
 import com.tencent.devops.dispatch.pojo.DeployApp
 import com.tencent.devops.dispatch.pojo.StopApp
 import io.fabric8.kubernetes.api.model.apps.Deployment
-import io.swagger.annotations.Api
-import io.swagger.annotations.ApiOperation
-import io.swagger.annotations.ApiParam
+import io.swagger.v3.oas.annotations.tags.Tag
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.Parameter
 import javax.ws.rs.Consumes
 import javax.ws.rs.DELETE
 import javax.ws.rs.GET
@@ -48,91 +48,91 @@ import javax.ws.rs.Produces
 import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
-@Api(tags = ["SERVICE_BCS"], description = "BCS服务")
+@Tag(name = "SERVICE_BCS", description = "BCS服务")
 @Path("/service/bcs")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface ServiceBcsResource {
 
-    @ApiOperation("bcs创建命名空间")
+    @Operation(summary = "bcs创建命名空间")
     @Path("/namespaces/{namespaceName}/create/test")
     @POST
     fun createNamespace(
-        @ApiParam("命名空间名称")
+        @Parameter(description = "命名空间名称")
         @PathParam("namespaceName")
         namespaceName: String,
-        @ApiParam("创建命名空间请求对象")
+        @Parameter(description = "创建命名空间请求对象")
         createBcsNameSpaceRequest: CreateBcsNameSpaceRequest
     ): Result<Boolean>
 
-    @ApiOperation("bcs创建拉取镜像secret")
+    @Operation(summary = "bcs创建拉取镜像secret")
     @Path("/bcs/namespaces/{namespaceName}/secrets/{secretName}/create")
     @POST
     fun createImagePullSecretTest(
-        @ApiParam("命名空间名称")
+        @Parameter(description = "命名空间名称")
         @PathParam("namespaceName")
         namespaceName: String,
-        @ApiParam("命名空间名称")
+        @Parameter(description = "命名空间名称")
         @PathParam("secretName")
         secretName: String,
-        @ApiParam("创建拉取镜像secret请求对象")
+        @Parameter(description = "创建拉取镜像secret请求对象")
         createImagePullSecretRequest: CreateImagePullSecretRequest
     ): Result<Boolean>
 
-    @ApiOperation("bcs部署应用")
+    @Operation(summary = "bcs部署应用")
     @Path("/deploy/app")
     @POST
     fun bcsDeployApp(
-        @ApiParam("userId", required = true)
+        @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("部署请求对象")
+        @Parameter(description = "部署请求对象")
         deployApp: DeployApp
     ): Result<Boolean>
 
-    @ApiOperation("bcs停止部署应用")
+    @Operation(summary = "bcs停止部署应用")
     @Path("/stop/app")
     @DELETE
     fun bcsStopApp(
-        @ApiParam("userId", required = true)
+        @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("停止部署请求对象")
+        @Parameter(description = "停止部署请求对象")
         stopApp: StopApp
     ): Result<Boolean>
 
-    @ApiOperation("获取deployment信息")
+    @Operation(summary = "获取deployment信息")
     @Path("/namespaces/{namespaceName}/deployments/{deploymentName}")
     @GET
     fun getBcsDeploymentInfo(
-        @ApiParam("命名空间名称")
+        @Parameter(description = "命名空间名称")
         @PathParam("namespaceName")
         namespaceName: String,
-        @ApiParam("deployment名称")
+        @Parameter(description = "deployment名称")
         @PathParam("deploymentName")
         deploymentName: String,
-        @ApiParam("bcs请求路径")
+        @Parameter(description = "bcs请求路径")
         @QueryParam("bcsUrl")
         bcsUrl: String,
-        @ApiParam("请求token")
+        @Parameter(description = "请求token")
         @QueryParam("token")
         token: String
     ): Result<Deployment>
 
-    @ApiOperation("获取deployment信息集合")
+    @Operation(summary = "获取deployment信息集合")
     @Path("/namespaces/{namespaceName}/deployments")
     @GET
     fun getBcsDeploymentInfos(
-        @ApiParam("命名空间名称")
+        @Parameter(description = "命名空间名称")
         @PathParam("namespaceName")
         namespaceName: String,
-        @ApiParam("deployment名称")
+        @Parameter(description = "deployment名称")
         @QueryParam("deploymentNames")
         deploymentNames: String,
-        @ApiParam("bcs请求路径")
+        @Parameter(description = "bcs请求路径")
         @QueryParam("bcsUrl")
         bcsUrl: String,
-        @ApiParam("请求token")
+        @Parameter(description = "请求token")
         @QueryParam("token")
         token: String
     ): Result<Map<String, Deployment>>

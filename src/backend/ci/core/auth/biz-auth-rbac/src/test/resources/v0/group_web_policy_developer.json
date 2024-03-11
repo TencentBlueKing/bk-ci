@@ -17,7 +17,28 @@
         {
           "type": "pipeline",
           "paths": [
-
+          ]
+        }
+      ]
+    },
+    {
+      "actions": [
+        {
+          "id": "pipeline_view"
+        }
+      ],
+      "resources": [
+        {
+          "type": "pipeline",
+          "paths": [
+            [
+              {
+                "id": "p-73b497705e2c431cb0bdbef523ba2033",
+                "name": "pipeline_1",
+                "system_id": "bk_ci",
+                "type": "pipeline"
+              }
+            ]
           ]
         }
       ]
@@ -32,7 +53,6 @@
         {
           "type": "credential",
           "paths": [
-
           ]
         }
       ]
@@ -47,7 +67,6 @@
         {
           "type": "cert",
           "paths": [
-
           ]
         }
       ]
@@ -62,7 +81,6 @@
         {
           "type": "repertory",
           "paths": [
-
           ]
         }
       ]
@@ -77,7 +95,6 @@
         {
           "type": "environment",
           "paths": [
-
           ]
         }
       ]
@@ -92,7 +109,71 @@
         {
           "type": "env_node",
           "paths": [
-
+          ]
+        }
+      ]
+    },
+    {
+      "actions": [
+        {
+          "id": "pipeline_download"
+        },
+        {
+          "id": "pipeline_view"
+        },
+        {
+          "id": "pipeline_share"
+        },
+        {
+          "id": "pipeline_list"
+        }
+      ],
+      "resources": [
+        {
+          "type": "pipeline",
+          "paths": [
+            [
+              {
+                "id": "p-73b497705e2c431cb0bdbef523ba20f5",
+                "name": "pipeline_2",
+                "system_id": "bk_ci",
+                "type": "pipeline"
+              }
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "actions": [
+        {
+          "id": "pipeline_download"
+        },
+        {
+          "id": "pipeline_view"
+        },
+        {
+          "id": "pipeline_list"
+        },
+        {
+          "id": "pipeline_execute"
+        },
+        {
+          "id": "pipeline_share"
+        }
+      ],
+      "resources": [
+        {
+          "type": "pipeline",
+          "paths": [
+            [
+              {
+                "id": "p-463a7de1ecb14ce7bfe298a2dee95099",
+                "name": "pipeline_3",
+                "system_id": "bk_ci",
+                "type": "pipeline"
+              }
+            ]
           ]
         }
       ]

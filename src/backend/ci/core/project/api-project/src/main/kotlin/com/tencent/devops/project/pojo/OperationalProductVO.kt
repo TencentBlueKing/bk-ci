@@ -1,15 +1,14 @@
 package com.tencent.devops.project.pojo
 
 import com.fasterxml.jackson.annotation.JsonProperty
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("运营产品")
+@Schema(title = "运营产品")
 data class OperationalProductVO(
-    @ApiModelProperty("产品ID")
+    @get:Schema(title = "产品ID")
     @JsonProperty(value = "ProductId", required = true)
     val productId: Int,
-    @ApiModelProperty("产品ID")
+    @get:Schema(title = "产品ID")
     @JsonProperty(value = "ProductName", required = true)
     val productName: String
 )

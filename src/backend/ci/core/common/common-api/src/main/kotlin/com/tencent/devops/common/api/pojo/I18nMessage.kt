@@ -25,17 +25,16 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 package com.tencent.devops.common.api.pojo
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("国际化信息")
+@Schema(title = "国际化信息")
 data class I18nMessage(
-    @ApiModelProperty("模块标识")
+    @get:Schema(title = "模块标识")
     val moduleCode: String,
-    @ApiModelProperty("国际化语言信息")
+    @get:Schema(title = "国际化语言信息")
     val language: String,
-    @ApiModelProperty("国际化变量名")
+    @get:Schema(title = "国际化变量名")
     val key: String,
-    @ApiModelProperty("国际化变量值")
+    @get:Schema(title = "国际化变量值")
     val value: String
 )

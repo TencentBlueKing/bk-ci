@@ -36,9 +36,9 @@ import com.tencent.devops.common.web.annotation.BkField
 import com.tencent.devops.common.web.constant.BkStyleEnum
 import com.tencent.devops.project.pojo.DataBasePiecewiseInfo
 import com.tencent.devops.project.pojo.DataSource
-import io.swagger.annotations.Api
-import io.swagger.annotations.ApiOperation
-import io.swagger.annotations.ApiParam
+import io.swagger.v3.oas.annotations.tags.Tag
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.Parameter
 import javax.validation.Valid
 import javax.ws.rs.Consumes
 import javax.ws.rs.DELETE
@@ -52,83 +52,83 @@ import javax.ws.rs.Produces
 import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
-@Api(tags = ["OP_DATA_SOURCE"], description = "OP-数据源")
+@Tag(name = "OP_DATA_SOURCE", description = "OP-数据源")
 @Path("/op/dataSources")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface OPDataSourceResource {
 
-    @ApiOperation("添加数据源")
+    @Operation(summary = "添加数据源")
     @POST
     @Path("/add")
     fun addDataSource(
-        @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         @BkField(minLength = 1, maxLength = 50)
         userId: String,
-        @ApiParam(value = "数据源信息请求报文体", required = true)
+        @Parameter(description = "数据源信息请求报文体", required = true)
         @Valid
         dataSource: DataSource
     ): Result<Boolean>
 
-    @ApiOperation("更新数据源信息")
+    @Operation(summary = "更新数据源信息")
     @PUT
     @Path("/ids/{id}/update")
     fun updateDataSource(
-        @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         @BkField(minLength = 1, maxLength = 50)
         userId: String,
-        @ApiParam("数据源ID", required = true)
+        @Parameter(description = "数据源ID", required = true)
         @PathParam("id")
         @BkField(patternStyle = BkStyleEnum.ID_STYLE)
         id: String,
-        @ApiParam(value = "数据源信息请求报文体", required = true)
+        @Parameter(description = "数据源信息请求报文体", required = true)
         @Valid
         dataSource: DataSource
     ): Result<Boolean>
 
-    @ApiOperation("根据ID获取数据源信息")
+    @Operation(summary = "根据ID获取数据源信息")
     @GET
     @Path("/ids/{id}/get")
     fun getDataSourceById(
-        @ApiParam("数据源ID", required = true)
+        @Parameter(description = "数据源ID", required = true)
         @PathParam("id")
         @BkField(patternStyle = BkStyleEnum.ID_STYLE)
         id: String
     ): Result<DataSource?>
 
-    @ApiOperation("根据ID删除数据源信息")
+    @Operation(summary = "根据ID删除数据源信息")
     @DELETE
     @Path("/ids/{id}/delete")
     fun deleteDataSourceById(
-        @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         @BkField(minLength = 1, maxLength = 50)
         userId: String,
-        @ApiParam("数据源ID", required = true)
+        @Parameter(description = "数据源ID", required = true)
         @PathParam("id")
         @BkField(patternStyle = BkStyleEnum.ID_STYLE)
         id: String
     ): Result<Boolean>
 
-    @ApiOperation("根据PROJECT_ID获取数据库分片信息")
+    @Operation(summary = "根据PROJECT_ID获取数据库分片信息")
     @GET
     @Path("/piecewise/get")
     fun getDataBasePiecewiseById(
-        @ApiParam("项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @QueryParam("projectId")
         projectId: String,
-        @ApiParam("微服务code", required = true)
+        @Parameter(description = "微服务code", required = true)
         @QueryParam("moduleCode")
         moduleCode: SystemModuleEnum,
-        @ApiParam("集群名称", required = true)
+        @Parameter(description = "集群名称", required = true)
         @QueryParam("clusterName")
         clusterName: String,
-        @ApiParam("规则类型", required = true)
+        @Parameter(description = "规则类型", required = true)
         @QueryParam("ruleType")
         ruleType: ShardingRuleTypeEnum = ShardingRuleTypeEnum.DB,
-        @ApiParam("数据库表名称", required = false)
+        @Parameter(description = "数据库表名称", required = false)
         @QueryParam("tableName")
         @BkField(minLength = 1, maxLength = 128, required = false)
         tableName: String? = null

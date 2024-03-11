@@ -30,7 +30,7 @@ package com.tencent.devops.common.web.service
 import com.tencent.devops.common.api.annotation.ServiceInterface
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.pojo.Result
-import io.swagger.annotations.ApiParam
+import io.swagger.v3.oas.annotations.Parameter
 import javax.ws.rs.Consumes
 import javax.ws.rs.GET
 import javax.ws.rs.HeaderParam
@@ -73,7 +73,7 @@ interface ServiceBuildApiPermissionResource {
     @Path("verify/{projectId}/{pipelineId}")
     @GET
     fun verifyApi(
-        @ApiParam(name = "userId", required = true)
+        @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
         @PathParam("projectId")

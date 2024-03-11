@@ -32,19 +32,18 @@ import com.tencent.devops.common.pipeline.enums.CodePullStrategy
 import com.tencent.devops.common.pipeline.enums.GitPullModeType
 import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildAtomElement
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
 /**
  * gitCiCodeRepo
  */
-@ApiModel("拉代码（GIT_CI工蜂专用）")
+@Schema(title = "拉代码（GIT_CI工蜂专用）")
 data class GitCiCodeRepoTask(
-    @ApiModelProperty("displayName", required = false)
+    @get:Schema(title = "displayName", required = false)
     override var displayName: String?,
-    @ApiModelProperty("入参", required = true)
+    @get:Schema(title = "入参", required = true)
     override val inputs: GitCiCodeRepoInput,
-    @ApiModelProperty("执行条件", required = true)
+    @get:Schema(title = "执行条件", required = true)
     override val condition: String?
 ) : AbstractTask(displayName, inputs, condition) {
     companion object {
@@ -65,40 +64,40 @@ data class GitCiCodeRepoTask(
     }
 }
 
-@ApiModel("git工蜂ci拉取代码")
+@Schema(title = "git工蜂ci拉取代码")
 data class GitCiCodeRepoInput(
-    @ApiModelProperty("工蜂仓库名称", required = true)
+    @get:Schema(title = "工蜂仓库名称", required = true)
     val repositoryName: String,
-    @ApiModelProperty("工蜂仓库URL", required = true)
+    @get:Schema(title = "工蜂仓库URL", required = true)
     val repositoryUrl: String,
-    @ApiModelProperty("oauthToken", required = true)
+    @get:Schema(title = "oauthToken", required = true)
     val oauthToken: String,
-    @ApiModelProperty("localPath", required = false)
+    @get:Schema(title = "localPath", required = false)
     val localPath: String? = null,
-    @ApiModelProperty("strategy", required = false)
+    @get:Schema(title = "strategy", required = false)
     val strategy: CodePullStrategy = CodePullStrategy.REVERT_UPDATE,
-    @ApiModelProperty("pullType", required = false)
+    @get:Schema(title = "pullType", required = false)
     val pullType: GitPullModeType = GitPullModeType.BRANCH,
-    @ApiModelProperty("refName", required = false)
+    @get:Schema(title = "refName", required = false)
     val refName: String? = "master",
-    @ApiModelProperty("pipelineStartType", required = false)
+    @get:Schema(title = "pipelineStartType", required = false)
     val pipelineStartType: StartType = StartType.MANUAL,
-    @ApiModelProperty("hookEventType", required = false)
+    @get:Schema(title = "hookEventType", required = false)
     val hookEventType: String? = null,
-    @ApiModelProperty("hookSourceBranch", required = false)
+    @get:Schema(title = "hookSourceBranch", required = false)
     val hookSourceBranch: String? = null,
-    @ApiModelProperty("hookTargetBranch", required = false)
+    @get:Schema(title = "hookTargetBranch", required = false)
     val hookTargetBranch: String? = null,
-    @ApiModelProperty("hookSourceUrl", required = false)
+    @get:Schema(title = "hookSourceUrl", required = false)
     val hookSourceUrl: String? = null,
-    @ApiModelProperty("hookTargetUrl", required = false)
+    @get:Schema(title = "hookTargetUrl", required = false)
     val hookTargetUrl: String? = null,
-    @ApiModelProperty("enableSubmodule", required = false)
+    @get:Schema(title = "enableSubmodule", required = false)
     val enableSubmodule: Boolean = true,
-    @ApiModelProperty("enableVirtualMergeBranch", required = false)
+    @get:Schema(title = "enableVirtualMergeBranch", required = false)
     val enableVirtualMergeBranch: Boolean = true,
-    @ApiModelProperty("enableSubmoduleRemote", required = false)
+    @get:Schema(title = "enableSubmoduleRemote", required = false)
     val enableSubmoduleRemote: Boolean = true,
-    @ApiModelProperty("autoCrlf", required = false)
+    @get:Schema(title = "autoCrlf", required = false)
     val autoCrlf: Boolean = true
 ) : AbstractInput()

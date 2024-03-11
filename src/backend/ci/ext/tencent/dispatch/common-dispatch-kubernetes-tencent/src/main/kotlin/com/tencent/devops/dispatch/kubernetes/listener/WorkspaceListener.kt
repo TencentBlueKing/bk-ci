@@ -33,6 +33,7 @@ import com.tencent.devops.common.service.prometheus.BkTimed
 import com.tencent.devops.dispatch.kubernetes.pojo.mq.WorkspaceCreateEvent
 import com.tencent.devops.dispatch.kubernetes.pojo.mq.WorkspaceOperateEvent
 import com.tencent.devops.dispatch.kubernetes.service.RemoteDevService
+import com.tencent.devops.dispatch.kubernetes.utils.WorkspaceCreateFailureException
 import com.tencent.devops.remotedev.pojo.event.RemoteDevUpdateEvent
 import com.tencent.devops.remotedev.pojo.event.UpdateEventType
 import com.tencent.devops.remotedev.pojo.image.WorkspaceImageInfo
@@ -72,6 +73,10 @@ class WorkspaceListener @Autowired constructor(
             backEvent.resourceId = workspaceResponse.resourceId
             backEvent.macAddress = workspaceResponse.macAddress
             backEvent.status = true
+        } catch (e: WorkspaceCreateFailureException) {
+            backEvent.errorMsg = e.formatErrorMessage + e.message
+            backEvent.environmentUid = e.envId
+            logger.error("Handle workspace create error.", e)
         } catch (e: BuildFailureException) {
             backEvent.errorMsg = e.formatErrorMessage + e.message
             logger.error("Handle workspace create error.", e)

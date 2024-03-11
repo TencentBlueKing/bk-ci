@@ -28,28 +28,28 @@
 package com.tencent.devops.common.auth.api.pojo
 
 import com.fasterxml.jackson.annotation.JsonProperty
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
 data class BkAuthResourceCreateRequest(
     @JsonProperty("project_code")
-    @ApiModelProperty(name = "project_code")
+    @get:Schema(title = "project_code")
     val projectCode: String,
     @JsonProperty("service_code")
-    @ApiModelProperty(name = "service_code")
+    @get:Schema(title = "service_code")
     val serviceCode: String,
     @JsonProperty("resource_code")
-    @ApiModelProperty(name = "resource_code")
+    @get:Schema(title = "resource_code")
     val resourceCode: String,
     @JsonProperty("resource_name")
-    @ApiModelProperty(name = "resource_name")
+    @get:Schema(title = "resource_name")
     val resourceName: String,
     @JsonProperty("resource_type")
-    @ApiModelProperty(name = "resource_type")
+    @get:Schema(title = "resource_type")
     val resourceType: String,
     @JsonProperty("creator")
-    @ApiModelProperty(name = "creator")
+    @get:Schema(title = "creator")
     val creator: String,
     @JsonProperty("authorized_groups")
-    @ApiModelProperty(name = "authorized_groups")
+    @get:Schema(title = "authorized_groups")
     val authorizedGroups: String?
 )

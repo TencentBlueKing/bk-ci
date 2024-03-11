@@ -70,14 +70,17 @@ class RepoPipelineService @Autowired constructor(
         projectId: String,
         request: RepoPipelineRefRequest
     ) {
-        logger.info("updatePipelineRef: [$userId|$projectId|${request.action}|${request.pipelineId}}]")
+        logger.info(
+            "updatePipelineRef: [$userId|$projectId|${request.action}" +
+                    "|${request.pipelineId}|${request.channel}]"
+        )
         when (request.action) {
             "create_pipeline", "update_pipeline", "restore_pipeline", "op" -> {
                 if (request.pipelineRefInfos.isEmpty()) {
                     cleanPipelineRef(projectId, request.pipelineId)
                     return
                 }
-                savePipelineRefInfo(projectId, request.pipelineId, request.pipelineRefInfos)
+                savePipelineRefInfo(projectId, request.pipelineId, request.pipelineRefInfos, request.channel)
             }
             "delete_pipeline" -> {
                 cleanPipelineRef(projectId, request.pipelineId)
@@ -91,7 +94,8 @@ class RepoPipelineService @Autowired constructor(
     private fun savePipelineRefInfo(
         projectId: String,
         pipelineId: String,
-        pipelineRefInfos: List<RepoPipelineRefInfo>
+        pipelineRefInfos: List<RepoPipelineRefInfo>,
+        channel: String?
     ) {
         val repoPipelineRefs = mutableListOf<RepoPipelineRef>()
         val repoBuffer = mutableMapOf<String, Repository>()
@@ -133,7 +137,8 @@ class RepoPipelineService @Autowired constructor(
                     triggerCondition = refInfo.triggerCondition,
                     triggerConditionMd5 = refInfo.triggerCondition?.let {
                         DigestUtils.md5Hex(JsonUtil.toJson(it))
-                    }
+                    },
+                    channel = channel ?: "BS"
                 )
             )
         }
@@ -182,12 +187,14 @@ class RepoPipelineService @Autowired constructor(
         offset: Int
     ): SQLPage<RepoPipelineRefVo> {
         val repositoryId = HashUtil.decodeOtherIdToLong((repositoryHashId))
+        // 仅展示蓝盾平台流水线关联的数据
         val count = repoPipelineRefDao.countByRepo(
             dslContext = dslContext,
             projectId = projectId,
             repositoryId = repositoryId,
             eventType = eventType,
-            triggerConditionMd5 = triggerConditionMd5
+            triggerConditionMd5 = triggerConditionMd5,
+            channel = "BS"
         )
         val records = repoPipelineRefDao.listByRepo(
             dslContext = dslContext,
@@ -195,6 +202,7 @@ class RepoPipelineService @Autowired constructor(
             repositoryId = repositoryId,
             eventType = eventType,
             triggerConditionMd5 = triggerConditionMd5,
+            channel = "BS",
             limit = limit,
             offset = offset
         )

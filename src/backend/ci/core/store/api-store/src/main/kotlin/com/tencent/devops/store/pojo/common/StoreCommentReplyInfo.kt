@@ -27,25 +27,24 @@
 
 package com.tencent.devops.store.pojo.common
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("评论回复信息")
+@Schema(title = "评论回复信息")
 data class StoreCommentReplyInfo(
-    @ApiModelProperty("回复ID", required = true)
+    @get:Schema(title = "回复ID", required = true)
     val replyId: String,
-    @ApiModelProperty("回复者", required = true)
+    @get:Schema(title = "回复者", required = true)
     val replyer: String,
-    @ApiModelProperty("回复内容", required = true)
+    @get:Schema(title = "回复内容", required = true)
     val replyContent: String,
-    @ApiModelProperty("回复者组织架构信息", required = true)
+    @get:Schema(title = "回复者组织架构信息", required = true)
     val replyerDept: String,
-    @ApiModelProperty("回复者头像url地址", required = false)
+    @get:Schema(title = "回复者头像url地址", required = false)
     val profileUrl: String,
-    @ApiModelProperty("被回复者", required = true)
+    @get:Schema(title = "被回复者", required = true)
     val replyToUser: String,
-    @ApiModelProperty("回复创建时间", required = true)
+    @get:Schema(title = "回复创建时间", required = true)
     val replyTime: Long,
-    @ApiModelProperty("回复更新时间", required = true)
+    @get:Schema(title = "回复更新时间", required = true)
     val updateTime: Long
 )

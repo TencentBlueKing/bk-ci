@@ -29,19 +29,18 @@ package com.tencent.devops.common.ci.task
 
 import com.tencent.devops.common.ci.CiBuildConfig
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildAtomElement
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
 /**
  * marketBuild
  */
-@ApiModel("插件市场")
+@Schema(title = "插件市场")
 data class MarketBuildTask(
-    @ApiModelProperty("displayName", required = false)
+    @get:Schema(title = "displayName", required = false)
     override var displayName: String?,
-    @ApiModelProperty("入参", required = true)
+    @get:Schema(title = "入参", required = true)
     override val inputs: MarketBuildInput,
-    @ApiModelProperty("执行条件", required = true)
+    @get:Schema(title = "执行条件", required = true)
     override val condition: String?
 ) : AbstractTask(displayName, inputs, condition) {
     companion object {
@@ -61,14 +60,14 @@ data class MarketBuildTask(
     }
 }
 
-@ApiModel("插件市场入参")
+@Schema(title = "插件市场入参")
 data class MarketBuildInput(
-    @ApiModelProperty("atomCode", required = true)
+    @get:Schema(title = "atomCode", required = true)
     val atomCode: String,
-    @ApiModelProperty("name", required = false)
+    @get:Schema(title = "name", required = false)
     val name: String?,
-    @ApiModelProperty("原子版本", required = false)
+    @get:Schema(title = "原子版本", required = false)
     var version: String = "1.*",
-    @ApiModelProperty("原子参数数据", required = true)
+    @get:Schema(title = "原子参数数据", required = true)
     val data: Map<String, Any> = mapOf()
 ) : AbstractInput()

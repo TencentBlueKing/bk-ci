@@ -27,17 +27,16 @@
 
 package com.tencent.devops.process.pojo
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("")
+@Schema(title = "")
 data class DockerEnableProject(
-    @ApiModelProperty("是否启用", required = false)
+    @get:Schema(title = "是否启用", required = false)
     var enable: Boolean,
-    @ApiModelProperty("项目id", required = false)
+    @get:Schema(title = "项目id", required = false)
     val projectId: String,
-    @ApiModelProperty("创建时间", required = false)
+    @get:Schema(title = "创建时间", required = false)
     val createTime: Long,
-    @ApiModelProperty("更新时间", required = false)
+    @get:Schema(title = "更新时间", required = false)
     var updateTime: Long
 )

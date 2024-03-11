@@ -31,9 +31,9 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.store.pojo.common.MediaInfoReq
 import com.tencent.devops.store.pojo.common.StoreMediaInfo
-import io.swagger.annotations.Api
-import io.swagger.annotations.ApiOperation
-import io.swagger.annotations.ApiParam
+import io.swagger.v3.oas.annotations.tags.Tag
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.Parameter
 import javax.ws.rs.Consumes
 import javax.ws.rs.GET
 import javax.ws.rs.HeaderParam
@@ -45,62 +45,62 @@ import javax.ws.rs.Produces
 import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
-@Api(tags = ["USER_EXTENSION_MEDIA"], description = "服务扩展_媒体信息")
+@Tag(name = "USER_EXTENSION_MEDIA", description = "服务扩展_媒体信息")
 @Path("/user/market/common/media")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface UserExtMediaResource {
-    @ApiOperation("添加媒体信息")
+    @Operation(summary = "添加媒体信息")
     @Path("/serviceCodes/{serviceCode}/media")
     @POST
     fun createServiceMedia(
-        @ApiParam("userId", required = true)
+        @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("扩展服务代码", required = true)
+        @Parameter(description = "扩展服务代码", required = true)
         @PathParam("serviceCode")
         serviceCode: String,
-        @ApiParam("评论信息", required = true)
+        @Parameter(description = "评论信息", required = true)
         mediaInfoList: List<MediaInfoReq>
     ): Result<Boolean>
 
-    @ApiOperation("修改媒体信息")
+    @Operation(summary = "修改媒体信息")
     @Path("/ids/{mediaId}/")
     @PUT
     fun updateSericeMedia(
-        @ApiParam("userId", required = true)
+        @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("媒体ID", required = true)
+        @Parameter(description = "媒体ID", required = true)
         @QueryParam("mediaId")
         mediaId: String,
-        @ApiParam("扩展服务代码", required = true)
+        @Parameter(description = "扩展服务代码", required = true)
         @QueryParam("serviceCode")
         serviceCode: String,
-        @ApiParam("媒体信息", required = true)
+        @Parameter(description = "媒体信息", required = true)
         mediaInfoReq: MediaInfoReq
     ): Result<Boolean>
 
-    @ApiOperation("获取单条媒体信息")
+    @Operation(summary = "获取单条媒体信息")
     @Path("/ids/{mediaId}")
     @GET
     fun getServiceMedia(
-        @ApiParam("userId", required = true)
+        @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("媒体ID", required = true)
+        @Parameter(description = "媒体ID", required = true)
         @PathParam("mediaId")
         mediaId: String
     ): Result<StoreMediaInfo?>
 
-    @ApiOperation("获取扩展服务所有媒体信息")
+    @Operation(summary = "获取扩展服务所有媒体信息")
     @Path("/services/{serviceCode}")
     @GET
     fun getServiceMediaByServiceCode(
-        @ApiParam("userId", required = true)
+        @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("扩展服务编码", required = true)
+        @Parameter(description = "扩展服务编码", required = true)
         @PathParam("serviceCode")
         serviceCode: String
     ): Result<List<StoreMediaInfo>?>

@@ -28,7 +28,7 @@
 package com.tencent.devops.buildless.api.builds
 
 import com.tencent.devops.buildless.pojo.BuildLessTask
-import io.swagger.annotations.ApiParam
+import io.swagger.v3.oas.annotations.Parameter
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
@@ -41,7 +41,7 @@ interface BuildBuildLessMvcResource {
 
     @GetMapping("/task/claim", produces = [org.springframework.http.MediaType.APPLICATION_JSON_VALUE])
     fun claimBuildLessTask(
-        @ApiParam(value = "containerId", required = true)
+        @Parameter(description = "containerId", required = true)
         @QueryParam("containerId")
         containerId: String
     ): DeferredResult<BuildLessTask?>
