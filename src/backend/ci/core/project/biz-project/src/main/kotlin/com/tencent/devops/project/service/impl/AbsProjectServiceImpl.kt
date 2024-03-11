@@ -60,6 +60,7 @@ import com.tencent.devops.project.constant.ProjectConstant.PROJECT_ID_MAX_LENGTH
 import com.tencent.devops.project.constant.ProjectConstant.PROJECT_NAME_MAX_LENGTH
 import com.tencent.devops.project.constant.ProjectMessageCode
 import com.tencent.devops.project.constant.ProjectMessageCode.BOUND_IAM_GRADIENT_ADMIN
+import com.tencent.devops.project.constant.ProjectMessageCode.ERROR_PROJECT_NOT_RELATED_PRODUCT
 import com.tencent.devops.project.constant.ProjectMessageCode.PROJECT_NOT_EXIST
 import com.tencent.devops.project.constant.ProjectMessageCode.UNDER_APPROVAL_PROJECT
 import com.tencent.devops.project.dao.ProjectDao
@@ -198,6 +199,12 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
         if (createExtInfo.needValidate!!) {
             validate(ProjectValidateType.project_name, projectCreateInfo.projectName)
             validate(ProjectValidateType.english_name, projectCreateInfo.englishName)
+        }
+        if (projectChannel == ProjectChannelCode.BS && projectCreateInfo.productId == null) {
+            throw ErrorCodeException(
+                errorCode = ERROR_PROJECT_NOT_RELATED_PRODUCT,
+                defaultMessage = "Product ID cannot be empty!"
+            )
         }
         val userDeptDetail = getDeptInfo(userId)
         var projectId = defaultProjectId
@@ -440,6 +447,12 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
             name = projectUpdateInfo.projectName,
             projectId = projectUpdateInfo.englishName
         )
+        if (projectUpdateInfo.productId == null) {
+            throw ErrorCodeException(
+                errorCode = ERROR_PROJECT_NOT_RELATED_PRODUCT,
+                defaultMessage = "Product ID cannot be empty!"
+            )
+        }
         val startEpoch = System.currentTimeMillis()
         var success = false
         val subjectScopes = projectUpdateInfo.subjectScopes!!.ifEmpty {
