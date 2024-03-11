@@ -25,30 +25,13 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.auth.provider.blueking.service
+package com.tencent.devops.common.auth.rbac.code
 
-import com.tencent.devops.auth.service.LocalManagerService
-import org.springframework.beans.factory.annotation.Autowired
+import com.tencent.devops.common.auth.code.ExperienceAuthServiceCode
 
-class BkLocalManagerServiceImp @Autowired constructor() : LocalManagerService {
-
-    override fun projectManagerCheck(
-        userId: String,
-        projectCode: String,
-        action: String,
-        resourceType: String
-    ): Boolean {
-        if (isAdmin(userId)) {
-            return true
-        }
-        return false
-    }
-
-    // 有用户相关功能后， 需要校验真是的管理员账号
-    private fun isAdmin(userId: String): Boolean {
-        if (userId == "admin") {
-            return true
-        }
-        return false
-    }
+/**
+ * ServiceCode
+ */
+class RbacExperienceAuthServiceCode : ExperienceAuthServiceCode {
+    override fun id() = RbacAuthServiceCode.EXPERIENCE.value
 }

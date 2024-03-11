@@ -33,6 +33,7 @@ import com.tencent.devops.common.auth.code.CodeAuthServiceCode
 import com.tencent.devops.common.auth.code.EnvironmentAuthServiceCode
 import com.tencent.devops.common.auth.code.ExperienceAuthServiceCode
 import com.tencent.devops.common.auth.code.PipelineAuthServiceCode
+import com.tencent.devops.common.auth.code.PipelineGroupAuthServiceCode
 import com.tencent.devops.common.auth.code.ProjectAuthServiceCode
 import com.tencent.devops.common.auth.code.QualityAuthServiceCode
 import com.tencent.devops.common.auth.code.RepoAuthServiceCode
@@ -66,7 +67,7 @@ class MockAuthCodeConfiguration {
     fun pipelineAuthServiceCode() = MockPipelineAuthServiceCode()
 
     @Bean
-    @ConditionalOnMissingBean(PipelineAuthServiceCode::class)
+    @ConditionalOnMissingBean(PipelineGroupAuthServiceCode::class)
     fun pipelineGroupAuthServiceCode() = MockPipelineGroupAuthServiceCode()
 
     @Bean

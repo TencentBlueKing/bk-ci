@@ -78,8 +78,8 @@ import com.tencent.devops.auth.service.AuthMonitorSpaceService
 import com.tencent.devops.auth.service.AuthProjectUserMetricsService
 import com.tencent.devops.auth.service.AuthVerifyRecordService
 import com.tencent.devops.auth.service.DeptService
-import com.tencent.devops.auth.service.PermissionSuperManagerService
 import com.tencent.devops.auth.service.ResourceService
+import com.tencent.devops.auth.service.SuperManagerService
 import com.tencent.devops.auth.service.iam.MigrateCreatorFixService
 import com.tencent.devops.auth.service.iam.PermissionProjectService
 import com.tencent.devops.auth.service.iam.PermissionResourceGroupService
@@ -225,7 +225,7 @@ class RbacAuthConfiguration {
         iamConfiguration: IamConfiguration,
         iamV2PolicyService: PolicyService,
         authResourceCodeConverter: AuthResourceCodeConverter,
-        permissionSuperManagerService: PermissionSuperManagerService,
+        superManagerService: SuperManagerService,
         rbacCacheService: RbacCacheService,
         client: Client,
         authProjectUserMetricsService: AuthProjectUserMetricsService
@@ -235,7 +235,7 @@ class RbacAuthConfiguration {
         iamConfiguration = iamConfiguration,
         policyService = iamV2PolicyService,
         authResourceCodeConverter = authResourceCodeConverter,
-        permissionSuperManagerService = permissionSuperManagerService,
+        superManagerService = superManagerService,
         rbacCacheService = rbacCacheService,
         client = client,
         authProjectUserMetricsService = authProjectUserMetricsService
