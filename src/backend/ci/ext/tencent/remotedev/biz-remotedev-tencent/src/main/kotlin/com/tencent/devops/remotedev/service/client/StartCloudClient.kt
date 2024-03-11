@@ -1,6 +1,7 @@
 package com.tencent.devops.remotedev.service.client
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
+import com.fasterxml.jackson.annotation.JsonProperty
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.jacksonTypeRef
 import com.tencent.devops.common.api.exception.RemoteServiceException
@@ -172,5 +173,6 @@ data class StartCloudAppCreateReq(
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class StartCloudAppCreateRespData(
+    @JsonProperty("AppId")
     val appId: Long
 )
