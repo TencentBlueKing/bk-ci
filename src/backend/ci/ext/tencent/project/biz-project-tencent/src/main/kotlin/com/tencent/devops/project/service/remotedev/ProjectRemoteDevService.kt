@@ -178,7 +178,7 @@ class ProjectRemoteDevService @Autowired constructor(
         if (record.properties == null && enableRemotedev == null) {
             return false
         }
-        var prop = if (record.properties == null) {
+        var prop = if (record.properties != null) {
             JsonUtil.to(record.properties, ProjectProperties::class.java)
         } else {
             ProjectProperties()
@@ -188,7 +188,7 @@ class ProjectRemoteDevService @Autowired constructor(
         }
         if (enableRemotedev != null) {
             prop = prop.copy(remotedev = enableRemotedev)
-            val dbProperties = if (record.properties == null) {
+            val dbProperties = if (record.properties != null) {
                 JsonUtil.to(record.properties, ProjectProperties::class.java)
             } else {
                 ProjectProperties()
