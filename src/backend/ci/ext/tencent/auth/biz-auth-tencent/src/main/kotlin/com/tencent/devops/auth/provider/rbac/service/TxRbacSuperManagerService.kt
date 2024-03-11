@@ -1,19 +1,20 @@
 package com.tencent.devops.auth.provider.rbac.service
 
 import com.tencent.devops.auth.service.ManagerService
-import com.tencent.devops.auth.service.PermissionSuperManagerService
+import com.tencent.devops.auth.service.SuperManagerService
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.rbac.utils.RbacAuthUtils
 
 class TxRbacSuperManagerService(
     private val managerService: ManagerService
-) : PermissionSuperManagerService {
-    override fun reviewManagerCheck(
+) : SuperManagerService {
+
+    override fun projectManagerCheck(
         userId: String,
         projectCode: String,
-        resourceType: String,
-        action: String
+        action: String,
+        resourceType: String
     ): Boolean {
         val projectManageAction = RbacAuthUtils.buildAction(AuthPermission.MANAGE, AuthResourceType.PROJECT)
         if (action == projectManageAction) {

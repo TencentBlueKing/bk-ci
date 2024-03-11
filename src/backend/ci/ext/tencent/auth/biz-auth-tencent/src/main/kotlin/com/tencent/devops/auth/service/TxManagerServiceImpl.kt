@@ -35,7 +35,7 @@ import org.springframework.stereotype.Service
 @Service
 class TxManagerServiceImpl @Autowired constructor(
     val managerService: ManagerService
-) : LocalManagerService {
+) : SuperManagerService {
     override fun projectManagerCheck(
         userId: String,
         projectCode: String,
