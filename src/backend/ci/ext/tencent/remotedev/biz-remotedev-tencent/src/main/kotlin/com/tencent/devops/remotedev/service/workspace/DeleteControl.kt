@@ -219,9 +219,7 @@ class DeleteControl @Autowired constructor(
     @ActionAuditRecord(
         actionId = ActionId.CGS_DELETE,
         instance = AuditInstanceRecord(
-            resourceType = ResourceTypeId.CGS,
-            instanceNames = "#workspaceName",
-            instanceIds = "#workspaceName"
+            resourceType = ResourceTypeId.CGS
         ),
         content = ActionAuditContent.CGS_DELETE_CONTENT
     )
@@ -243,6 +241,9 @@ class DeleteControl @Autowired constructor(
                 )
             // 审计
             ActionAuditContext.current()
+                .addInstanceInfo(
+                    workspaceName, workspaceName, null, null
+                )
                 .addAttribute(ActionAuditContent.PROJECT_CODE_TEMPLATE, workspace.projectId)
                 .scopeId = workspace.projectId
 
