@@ -87,8 +87,10 @@ class ServiceThirdPartyAgentResourceImpl @Autowired constructor(
     override fun getAgentsByEnvId(projectId: String, envId: String) =
         Result(thirdPartyAgentService.getAgentByEnvId(projectId, envId))
 
-    override fun getAgentsByEnvName(projectId: String, envName: String): Result<List<ThirdPartyAgent>> =
-        Result(thirdPartyAgentService.getAgnetByEnvName(projectId, envName))
+    override fun getAgentsByEnvName(projectId: String, envName: String): Result<List<ThirdPartyAgent>> {
+        val (_, res) = thirdPartyAgentService.getAgentByEnvName(projectId, envName)
+        return Result(res)
+    }
 
     override fun upgrade(projectId: String, agentId: String, secretKey: String, tag: String) =
         thirdPartyAgentService.checkIfCanUpgrade(projectId, agentId, secretKey, tag)
@@ -266,5 +268,12 @@ class ServiceThirdPartyAgentResourceImpl @Autowired constructor(
 
     override fun getPipelines(projectId: String, agentId: String, secretKey: String): Result<ThirdPartyAgentPipeline?> {
         return Result(thirdPartyAgentPipelineService.getPipelines(projectId, agentId, secretKey))
+    }
+
+    override fun getAgentsByEnvNameWithId(
+        projectId: String,
+        envName: String
+    ): Result<Pair<Long?, List<ThirdPartyAgent>>> {
+        return Result(thirdPartyAgentService.getAgentByEnvName(projectId, envName))
     }
 }

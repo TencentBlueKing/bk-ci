@@ -29,41 +29,56 @@ package com.tencent.devops.project.api.op
 
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.project.pojo.SendEmailForProjectByConditionDTO
-import io.swagger.annotations.Api
-import io.swagger.annotations.ApiOperation
-import io.swagger.annotations.ApiParam
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.Parameter
+import io.swagger.v3.oas.annotations.tags.Tag
 import javax.ws.rs.Consumes
 import javax.ws.rs.POST
 import javax.ws.rs.Path
 import javax.ws.rs.Produces
 import javax.ws.rs.core.MediaType
 
-@Api(tags = ["OP_NOTIFY_MESSAGE"], description = "OP-消息通知")
+@Tag(name = "OP_NOTIFY_MESSAGE", description = "OP-消息通知")
 @Path("/op/notify/message")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface OpNotifyMessageResource {
-    @ApiOperation("推动项目关联运营产品-根据项目")
+    @Operation(summary = "推动项目关联运营产品-根据项目")
     @POST
     @Path("/sendEmailForRelatedObsByProjectIds")
     fun sendEmailToUserForRelatedObsByProjectIds(
-        @ApiParam(value = "项目通知请求报文体", required = true)
+        @Parameter(description = "项目通知请求报文体", required = true)
         projectIds: List<String>
     ): Result<Boolean>
 
-    @ApiOperation("推动项目关联运营产品-根据条件")
+    @Operation(summary = "推动项目关联运营产品-根据条件")
     @POST
     @Path("/sendEmailForRelatedObsByCondition/")
     fun sendEmailForRelatedObsByCondition(
-        @ApiParam(value = "通过条件对项目进行邮件通知", required = true)
+        @Parameter(description = "通过条件对项目进行邮件通知", required = true)
         sendEmailForProjectByConditionDTO: SendEmailForProjectByConditionDTO
     ): Result<Boolean>
 
-    @ApiOperation("查询项目关联运营产品-根据条件")
+    @Operation(summary = "查询项目关联运营产品-根据条件")
     @POST
     @Path("/getProjectForRelatedObsByCondition/")
     fun getProjectsForRelatedObsByCondition(
-        @ApiParam(value = "通过条件对项目进行邮件通知", required = true)
+        @Parameter(description = "通过条件对项目进行邮件通知", required = true)
         sendEmailForProjectByConditionDTO: SendEmailForProjectByConditionDTO
     ): Result<Pair<Int, List<String>>>
+
+    @Operation(summary = "项目所属组织架构变更通知")
+    @POST
+    @Path("/sendEmailForProjectOrganizationChange/")
+    fun sendEmailForProjectOrganizationChange(): Result<Boolean>
+
+    @Operation(summary = "项目所属OBS运营产品变更通知")
+    @POST
+    @Path("/sendEmailForProjectProductChange/")
+    fun sendEmailForProjectProductChange(): Result<Boolean>
+
+    @Operation(summary = "检查项目组织架构是否正确")
+    @POST
+    @Path("/sendEmailForVerifyProjectOrganization/")
+    fun sendEmailForVerifyProjectOrganization(): Result<Boolean>
 }

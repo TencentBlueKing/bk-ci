@@ -29,9 +29,9 @@ package com.tencent.devops.project.api.user
 
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID
 import com.tencent.devops.project.pojo.Result
-import io.swagger.annotations.Api
-import io.swagger.annotations.ApiOperation
-import io.swagger.annotations.ApiParam
+import io.swagger.v3.oas.annotations.tags.Tag
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.Parameter
 import javax.ws.rs.Consumes
 import javax.ws.rs.HeaderParam
 import javax.ws.rs.POST
@@ -39,7 +39,7 @@ import javax.ws.rs.Path
 import javax.ws.rs.Produces
 import javax.ws.rs.core.MediaType
 
-@Api(tags = ["USER_COUNT"], description = "用户-统计")
+@Tag(name = "USER_COUNT", description = "用户-统计")
 @Path("/user/count")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
@@ -47,18 +47,18 @@ interface UserCountResource {
 
     @Path("/login")
     @POST
-    @ApiOperation("登录统计")
+    @Operation(summary = "登录统计")
     fun login(
-        @ApiParam("userId", required = true)
+        @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String,
-        @ApiParam("X-Real-IP", required = false)
+        @Parameter(description = "X-Real-IP", required = false)
         @HeaderParam("X-Real-IP")
         xRealIp: String?,
-        @ApiParam("X-Forwarded-For", required = false)
+        @Parameter(description = "X-Forwarded-For", required = false)
         @HeaderParam("X-Forwarded-For")
         xForwardedFor: String?,
-        @ApiParam("User-Agent", required = true)
+        @Parameter(description = "User-Agent", required = true)
         @HeaderParam("User-Agent")
         userAgent: String?
     ): Result<Boolean>

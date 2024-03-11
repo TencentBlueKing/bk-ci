@@ -32,34 +32,33 @@ import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.pipeline.enums.CodePullStrategy
 import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.common.pipeline.pojo.git.GitPullMode
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("拉取Github仓库代码", description = GithubElement.classType)
+@Schema(title = "拉取Github仓库代码", description = GithubElement.classType)
 data class GithubElement(
-    @ApiModelProperty("任务名称", required = true)
+    @get:Schema(title = "任务名称", required = true)
     override val name: String = "",
-    @ApiModelProperty("id", required = false)
+    @get:Schema(title = "id", required = false)
     override var id: String? = null,
-    @ApiModelProperty("状态", required = false)
+    @get:Schema(title = "状态", required = false)
     override var status: String? = null,
-    @ApiModelProperty("代码库哈希ID", required = true)
+    @get:Schema(title = "代码库哈希ID", required = true)
     val repositoryHashId: String?,
-    @ApiModelProperty("checkout 策略", required = false)
+    @get:Schema(title = "checkout 策略", required = false)
     val strategy: CodePullStrategy? = CodePullStrategy.INCREMENT_UPDATE,
-    @ApiModelProperty("代码存放路径", required = false)
+    @get:Schema(title = "代码存放路径", required = false)
     val path: String? = null,
-    @ApiModelProperty("启动Submodule", required = false)
+    @get:Schema(title = "启动Submodule", required = false)
     val enableSubmodule: Boolean? = true,
-    @ApiModelProperty("revision 用于强制指定commitId", required = false)
+    @get:Schema(title = "revision 用于强制指定commitId", required = false)
     var revision: String? = null,
-    @ApiModelProperty("指定拉取方式", required = false)
+    @get:Schema(title = "指定拉取方式", required = false)
     val gitPullMode: GitPullMode?,
-    @ApiModelProperty("支持虚拟合并分支", required = false)
+    @get:Schema(title = "支持虚拟合并分支", required = false)
     val enableVirtualMergeBranch: Boolean? = false,
-    @ApiModelProperty("新版的github原子的类型")
+    @get:Schema(title = "新版的github原子的类型")
     val repositoryType: RepositoryType? = null,
-    @ApiModelProperty("新版的github代码库名")
+    @get:Schema(title = "新版的github代码库名")
     val repositoryName: String? = null
 ) : Element(name, id, status) {
 

@@ -27,60 +27,59 @@
 
 package com.tencent.devops.quality.pojo.po
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 import java.time.LocalDateTime
 
-@ApiModel("质量红线指标PO")
+@Schema(title = "质量红线指标PO")
 data class QualityIndicatorPO(
-    @ApiModelProperty("ID")
+    @get:Schema(title = "ID")
     val id: Long,
-    @ApiModelProperty("原子的ClassType")
+    @get:Schema(title = "原子的ClassType")
     val elementType: String?,
-    @ApiModelProperty("产出原子")
+    @get:Schema(title = "产出原子")
     var elementName: String?,
-    @ApiModelProperty("工具/原子子类")
+    @get:Schema(title = "工具/原子子类")
     val elementDetail: String?,
-    @ApiModelProperty("指标英文名")
+    @get:Schema(title = "指标英文名")
     val enName: String?,
-    @ApiModelProperty("指标中文名")
+    @get:Schema(title = "指标中文名")
     val cnName: String?,
-    @ApiModelProperty("指标所包含基础数据")
+    @get:Schema(title = "指标所包含基础数据")
     val metadataIds: String?,
-    @ApiModelProperty("默认操作")
+    @get:Schema(title = "默认操作")
     val defaultOperation: String?,
-    @ApiModelProperty("可用操作")
+    @get:Schema(title = "可用操作")
     val operationAvailable: String?,
-    @ApiModelProperty("默认阈值")
+    @get:Schema(title = "默认阈值")
     val threshold: String?,
-    @ApiModelProperty("阈值类型")
+    @get:Schema(title = "阈值类型")
     val thresholdType: String?,
-    @ApiModelProperty("描述")
+    @get:Schema(title = "描述")
     var desc: String?,
-    @ApiModelProperty("是否可修改")
+    @get:Schema(title = "是否可修改")
     val indicatorReadOnly: Boolean?,
-    @ApiModelProperty("阶段")
+    @get:Schema(title = "阶段")
     val stage: String?,
-    @ApiModelProperty("可见项目范围")
+    @get:Schema(title = "可见项目范围")
     val indicatorRange: String?,
-    @ApiModelProperty("是否启用")
+    @get:Schema(title = "是否启用")
     val enable: Boolean?,
-    @ApiModelProperty("指标类型")
+    @get:Schema(title = "指标类型")
     val type: String?,
-    @ApiModelProperty("指标标签，用于前端区分控制")
+    @get:Schema(title = "指标标签，用于前端区分控制")
     val tag: String?,
-    @ApiModelProperty("创建用户")
+    @get:Schema(title = "创建用户")
     val createUser: String?,
-    @ApiModelProperty("更新用户")
+    @get:Schema(title = "更新用户")
     val updateUser: String?,
-    @ApiModelProperty("创建时间")
+    @get:Schema(title = "创建时间")
     val createTime: LocalDateTime?,
-    @ApiModelProperty("更新时间")
+    @get:Schema(title = "更新时间")
     val updateTime: LocalDateTime?,
-    @ApiModelProperty("插件版本号")
+    @get:Schema(title = "插件版本号")
     val atomVersion: String,
-    @ApiModelProperty("用户自定义提示日志")
+    @get:Schema(title = "用户自定义提示日志")
     val logPrompt: String,
-    @ApiModelProperty("指标权重")
+    @get:Schema(title = "指标权重")
     val weight: Int? = null
 )

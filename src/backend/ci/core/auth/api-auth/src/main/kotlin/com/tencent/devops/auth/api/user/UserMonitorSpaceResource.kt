@@ -29,9 +29,9 @@ package com.tencent.devops.auth.api.user
 
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.pojo.Result
-import io.swagger.annotations.Api
-import io.swagger.annotations.ApiOperation
-import io.swagger.annotations.ApiParam
+import io.swagger.v3.oas.annotations.tags.Tag
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.Parameter
 import javax.ws.rs.Consumes
 import javax.ws.rs.GET
 import javax.ws.rs.HeaderParam
@@ -40,20 +40,20 @@ import javax.ws.rs.Produces
 import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
-@Api(tags = ["AUTH_MONITOR_SPACE"], description = "监控空间接口")
+@Tag(name = "AUTH_MONITOR_SPACE", description = "监控空间接口")
 @Path("/user/auth/monitor/space")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface UserMonitorSpaceResource {
-    @ApiOperation("获取监控空间业务id")
+    @Operation(summary = "获取监控空间业务id")
     @GET
     @Path("/")
     fun getMonitorSpaceBizId(
-        @ApiParam(value = "用户ID", required = true)
+        @Parameter(description = "用户ID", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
         @QueryParam("projectCode")
-        @ApiParam("项目ID", required = false)
+        @Parameter(description = "项目ID", required = false)
         projectCode: String
     ): Result<String>
 }

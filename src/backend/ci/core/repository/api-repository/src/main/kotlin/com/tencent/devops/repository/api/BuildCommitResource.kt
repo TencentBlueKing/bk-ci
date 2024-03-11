@@ -34,9 +34,9 @@ import com.tencent.devops.common.api.enums.RepositoryType
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.repository.pojo.commit.CommitData
 import com.tencent.devops.repository.pojo.commit.CommitResponse
-import io.swagger.annotations.Api
-import io.swagger.annotations.ApiOperation
-import io.swagger.annotations.ApiParam
+import io.swagger.v3.oas.annotations.tags.Tag
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.Parameter
 import javax.ws.rs.Consumes
 import javax.ws.rs.GET
 import javax.ws.rs.HeaderParam
@@ -46,55 +46,55 @@ import javax.ws.rs.Produces
 import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
-@Api(tags = ["BUILD_COMMIT"], description = "构建-git相关")
+@Tag(name = "BUILD_COMMIT", description = "构建-git相关")
 @Path("/build/commit/")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 @Suppress("ALL")
 interface BuildCommitResource {
 
-    @ApiOperation("保存对应流水线的commit")
+    @Operation(summary = "保存对应流水线的commit")
     @POST
     @Path("/addCommit")
     fun addCommit(
         commits: List<CommitData>
     ): Result<Int>
 
-    @ApiOperation("获取流水线的最新一次commit")
+    @Operation(summary = "获取流水线的最新一次commit")
     @GET
     @Path("/getLatestCommit")
     fun getLatestCommit(
-        @ApiParam("项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @HeaderParam(AUTH_HEADER_PROJECT_ID)
         projectId: String,
-        @ApiParam("流水线ID", required = true)
+        @Parameter(description = "流水线ID", required = true)
         @QueryParam("pipelineId")
         pipelineId: String,
-        @ApiParam("原子ID", required = true)
+        @Parameter(description = "原子ID", required = true)
         @QueryParam("elementId")
         elementId: String,
-        @ApiParam("仓库ID或者仓库名", required = true)
+        @Parameter(description = "仓库ID或者仓库名", required = true)
         @QueryParam("repoId")
         repositoryId: String,
-        @ApiParam("代码库请求类型", required = false)
+        @Parameter(description = "代码库请求类型", required = false)
         @QueryParam("repositoryType")
         repositoryType: RepositoryType?,
-        @ApiParam("第几页", required = false)
+        @Parameter(description = "第几页", required = false)
         @QueryParam("page")
         page: Int?,
-        @ApiParam("每页大小", required = false)
+        @Parameter(description = "每页大小", required = false)
         @QueryParam("pageSize")
         pageSize: Int?
     ): Result<List<CommitData>>
 
-    @ApiOperation("根据构建ID获取提交记录")
+    @Operation(summary = "根据构建ID获取提交记录")
     @GET
     @Path("/getCommitsByBuildId")
     fun getCommitsByBuildId(
-        @ApiParam(value = "构建ID", required = true)
+        @Parameter(description = "构建ID", required = true)
         @HeaderParam(AUTH_HEADER_BUILD_ID)
         buildId: String,
-        @ApiParam("Agent ID", required = true)
+        @Parameter(description = "Agent ID", required = true)
         @HeaderParam(AUTH_HEADER_AGENT_ID)
         agentId: String
     ): Result<List<CommitResponse>>

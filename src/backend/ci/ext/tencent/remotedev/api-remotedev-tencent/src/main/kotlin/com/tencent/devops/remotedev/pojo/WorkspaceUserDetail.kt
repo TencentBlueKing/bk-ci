@@ -27,31 +27,30 @@
 
 package com.tencent.devops.remotedev.pojo
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("获取用户工作空间详情model")
+@Schema(title = "获取用户工作空间详情model")
 data class WorkspaceUserDetail(
-    @ApiModelProperty("运行中容器数量")
+    @get:Schema(title = "运行中容器数量")
     val runningCount: Int,
-    @ApiModelProperty("已休眠容器数量")
+    @get:Schema(title = "已休眠容器数量")
     val sleepingCount: Int,
-    @ApiModelProperty("已销毁容器数量")
+    @get:Schema(title = "已销毁容器数量")
     val deleteCount: Int,
-    @ApiModelProperty("计费时间（秒）")
+    @get:Schema(title = "计费时间（秒）")
     val chargeableTime: Long,
-    @ApiModelProperty("使用时间（秒）")
+    @get:Schema(title = "使用时间（秒）")
     val usageTime: Long,
-    @ApiModelProperty("休眠时间（秒）")
+    @get:Schema(title = "休眠时间（秒）")
     val sleepingTime: Long,
-    @ApiModelProperty("免费时间（秒）")
+    @get:Schema(title = "免费时间（秒）")
     val discountTime: Long,
-    @ApiModelProperty("CPU 核心数")
+    @get:Schema(title = "CPU 核心数")
     val cpu: Int,
-    @ApiModelProperty("内存大小（MB）")
+    @get:Schema(title = "内存大小（MB）")
     val memory: Int,
-    @ApiModelProperty("存储空间大小（GB）")
+    @get:Schema(title = "存储空间大小（GB）")
     val disk: Int,
-    @ApiModelProperty("windows-gpu体验剩余时长(秒)")
+    @get:Schema(title = "windows-gpu体验剩余时长(秒)")
     val winUsageTimeLeft: Int
 )

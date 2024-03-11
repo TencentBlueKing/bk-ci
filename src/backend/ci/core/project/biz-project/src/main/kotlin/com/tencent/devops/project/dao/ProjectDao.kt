@@ -35,9 +35,11 @@ import com.tencent.devops.model.project.tables.TProject
 import com.tencent.devops.model.project.tables.records.TProjectRecord
 import com.tencent.devops.project.pojo.OpProjectUpdateInfoRequest
 import com.tencent.devops.project.pojo.PaasProject
+import com.tencent.devops.project.pojo.ProjectCollation
 import com.tencent.devops.project.pojo.ProjectCreateInfo
 import com.tencent.devops.project.pojo.ProjectOrganizationInfo
 import com.tencent.devops.project.pojo.ProjectProperties
+import com.tencent.devops.project.pojo.ProjectSortType
 import com.tencent.devops.project.pojo.ProjectUpdateInfo
 import com.tencent.devops.project.pojo.ProjectVO
 import com.tencent.devops.project.pojo.enums.ProjectApproveStatus
@@ -135,6 +137,7 @@ class ProjectDao {
         val centerId = migrateProjectConditionDTO.centerId
         val deptId = migrateProjectConditionDTO.deptId
         val bdId = migrateProjectConditionDTO.bgId
+        val projectCodes = migrateProjectConditionDTO.projectCodes
         val excludedProjectCodes = migrateProjectConditionDTO.excludedProjectCodes
         val creator = migrateProjectConditionDTO.projectCreator
         val routerTag = migrateProjectConditionDTO.routerTag
@@ -160,6 +163,7 @@ class ProjectDao {
                 .let { if (bdId == null) it else it.and(BG_ID.eq(bdId)) }
                 .let { if (creator == null) it else it.and(CREATOR.eq(creator)) }
                 .let { if (excludedProjectCodes == null) it else it.and(ENGLISH_NAME.notIn(excludedProjectCodes)) }
+                .let { if (projectCodes == null) it else it.and(ENGLISH_NAME.`in`(projectCodes)) }
                 .let {
                     when (isRelatedProduct) {
                         null -> it
@@ -570,7 +574,9 @@ class ProjectDao {
         limit: Int? = null,
         searchName: String? = null,
         enabled: Boolean? = null,
-        authSecrecyStatus: ProjectAuthSecrecyStatus? = null
+        authSecrecyStatus: ProjectAuthSecrecyStatus? = null,
+        sortType: ProjectSortType? = null,
+        collation: ProjectCollation? = ProjectCollation.DEFAULT
     ): Result<TProjectRecord> {
         with(TProject.T_PROJECT) {
             return dslContext.selectFrom(this)
@@ -580,6 +586,31 @@ class ProjectDao {
                 .let { if (null == searchName) it else it.and(PROJECT_NAME.like("%$searchName%")) }
                 .let { if (null == enabled) it else it.and(ENABLED.eq(enabled)) }
                 .let { if (null == authSecrecyStatus) it else it.and(AUTH_SECRECY.eq(authSecrecyStatus.value)) }
+                .let {
+                    if (sortType != null) {
+                        when (sortType) {
+                            ProjectSortType.PROJECT_NAME -> {
+                                if (collation == ProjectCollation.DEFAULT || collation == ProjectCollation.ASC) {
+                                    it.orderBy(DSL.field("CONVERT({0} USING GBK)", PROJECT_NAME).asc())
+                                } else {
+                                    it.orderBy(DSL.field("CONVERT({0} USING GBK)", PROJECT_NAME).desc())
+                                }
+                            }
+                            ProjectSortType.ENGLISH_NAME -> {
+                                if (collation == ProjectCollation.DEFAULT || collation == ProjectCollation.ASC) {
+                                    it.orderBy(ENGLISH_NAME.asc())
+                                } else {
+                                    it.orderBy(ENGLISH_NAME.desc())
+                                }
+                            }
+                            else -> {
+                                it
+                            }
+                        }
+                    } else {
+                        it
+                    }
+                }
                 .let { if (null == offset || null == limit) it else it.limit(offset, limit) }
                 .fetch()
         }

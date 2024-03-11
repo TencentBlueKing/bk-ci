@@ -33,9 +33,9 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.remotedev.pojo.WindowsResourceTypeConfig
 import com.tencent.devops.remotedev.pojo.WindowsResourceZoneConfig
 import com.tencent.devops.remotedev.pojo.op.WindowsSpecResInfo
-import io.swagger.annotations.Api
-import io.swagger.annotations.ApiOperation
-import io.swagger.annotations.ApiParam
+import io.swagger.v3.oas.annotations.tags.Tag
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.Parameter
 import javax.ws.rs.Consumes
 import javax.ws.rs.DELETE
 import javax.ws.rs.GET
@@ -48,160 +48,160 @@ import javax.ws.rs.Produces
 import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
-@Api(tags = ["OP_WINDOWS"], description = "OP_WINDOWS")
+@Tag(name = "OP_WINDOWS", description = "OP_WINDOWS")
 @Path("/op/windowsResource")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface OpWindowsConfigResource {
-    @ApiOperation("获取windows硬件配置")
+    @Operation(summary = "获取windows硬件配置")
     @GET
     @Path("/list")
     fun getWindowsResourceList(
-        @ApiParam(value = "用户ID", required = true)
+        @Parameter(description = "用户ID", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String
     ): Result<List<WindowsResourceTypeConfig>>
 
-    @ApiOperation("新增windows硬件配置")
+    @Operation(summary = "新增windows硬件配置")
     @POST
     @Path("/add")
     fun addWindowsResource(
-        @ApiParam(value = "用户ID", required = true)
+        @Parameter(description = "用户ID", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam(value = "模板信息", required = true)
+        @Parameter(description = "模板信息", required = true)
         windowsResourceConfig: WindowsResourceTypeConfig
     ): Result<Boolean>
 
-    @ApiOperation("更新windows硬件配置")
+    @Operation(summary = "更新windows硬件配置")
     @PUT
     @Path("/update")
     fun updateWindowsResource(
-        @ApiParam(value = "用户ID", required = true)
+        @Parameter(description = "用户ID", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam(value = "模板ID", required = true)
+        @Parameter(description = "模板ID", required = true)
         @QueryParam("id")
         id: Long,
-        @ApiParam(value = "模板信息", required = true)
+        @Parameter(description = "模板信息", required = true)
         windowsResourceConfig: WindowsResourceTypeConfig
     ): Result<Boolean>
 
-    @ApiOperation("删除windows硬件配置")
+    @Operation(summary = "删除windows硬件配置")
     @DELETE
     @Path("/delete")
     fun deleteWindowsResource(
-        @ApiParam(value = "用户ID", required = true)
+        @Parameter(description = "用户ID", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam(value = "模板信息", required = true)
+        @Parameter(description = "模板信息", required = true)
         @QueryParam("id")
         id: Long
     ): Result<Boolean>
 
-    @ApiOperation("获取windows区域配置")
+    @Operation(summary = "获取windows区域配置")
     @GET
     @Path("/zone/list")
     fun getWindowsResourceZoneList(
-        @ApiParam(value = "用户ID", required = true)
+        @Parameter(description = "用户ID", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String
     ): Result<List<WindowsResourceZoneConfig>>
 
-    @ApiOperation("新增windows区域配置")
+    @Operation(summary = "新增windows区域配置")
     @POST
     @Path("/zone/add")
     fun addWindowsZone(
-        @ApiParam(value = "用户ID", required = true)
+        @Parameter(description = "用户ID", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam(value = "模板信息", required = true)
+        @Parameter(description = "模板信息", required = true)
         windowsResourceConfig: WindowsResourceZoneConfig
     ): Result<Boolean>
 
-    @ApiOperation("更新windows区域配置")
+    @Operation(summary = "更新windows区域配置")
     @PUT
     @Path("/zone/update")
     fun updateWindowsZone(
-        @ApiParam(value = "用户ID", required = true)
+        @Parameter(description = "用户ID", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam(value = "模板ID", required = true)
+        @Parameter(description = "模板ID", required = true)
         @QueryParam("id")
         id: Long,
-        @ApiParam(value = "模板信息", required = true)
+        @Parameter(description = "模板信息", required = true)
         windowsResourceConfig: WindowsResourceZoneConfig
     ): Result<Boolean>
 
-    @ApiOperation("删除windows区域配置")
+    @Operation(summary = "删除windows区域配置")
     @DELETE
     @Path("/zone/delete")
     fun deleteWindowsZone(
-        @ApiParam(value = "用户ID", required = true)
+        @Parameter(description = "用户ID", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam(value = "模板信息", required = true)
+        @Parameter(description = "模板信息", required = true)
         @QueryParam("id")
         id: Long
     ): Result<Boolean>
 
-    @ApiOperation("创建或者更新特殊机型配置")
+    @Operation(summary = "创建或者更新特殊机型配置")
     @POST
     @Path("/spec/createOrUpdate")
     fun createOrUpdateSpec(
-        @ApiParam(value = "用户ID", required = true)
+        @Parameter(description = "用户ID", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
         data: WindowsSpecResInfo
     ): Result<Boolean>
 
-    @ApiOperation("删除特殊机型配额")
+    @Operation(summary = "删除特殊机型配额")
     @DELETE
     @Path("/spec/delete")
     fun deleteSpec(
-        @ApiParam(value = "用户ID", required = true)
+        @Parameter(description = "用户ID", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam(value = "项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @QueryParam("projectId")
         projectId: String,
-        @ApiParam(value = "机型", required = true)
+        @Parameter(description = "机型", required = true)
         @QueryParam("size")
         size: String
     ): Result<Boolean>
 
-    @ApiOperation("特殊机型配额列表")
+    @Operation(summary = "特殊机型配额列表")
     @GET
     @Path("/spec/list")
     fun fetchSpec(
-        @ApiParam(value = "用户ID", required = true)
+        @Parameter(description = "用户ID", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("项目ID", required = false)
+        @Parameter(description = "项目ID", required = false)
         @QueryParam("projectId")
         projectId: String?,
-        @ApiParam("机型", required = false)
+        @Parameter(description = "机型", required = false)
         @QueryParam("machineType")
         machineType: String?,
-        @ApiParam("第几页", required = true)
+        @Parameter(description = "第几页", required = true)
         @QueryParam("page")
         page: Int?,
-        @ApiParam("每页数据条数", required = true)
+        @Parameter(description = "每页数据条数", required = true)
         @QueryParam("pageSize")
         pageSize: Int?
     ): Result<Page<WindowsSpecResInfo>>
 
-    @ApiOperation("追加项目云桌面总配额")
+    @Operation(summary = "追加项目云桌面总配额")
     @PUT
     @Path("/add/{projectId}/{quota}")
     fun addProjectTotalQuota(
-        @ApiParam(value = "用户ID", required = true)
+        @Parameter(description = "用户ID", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam(value = "项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @ApiParam(value = "配额", required = true)
+        @Parameter(description = "配额", required = true)
         @PathParam("quota")
         quota: Int
     ): Result<Boolean>

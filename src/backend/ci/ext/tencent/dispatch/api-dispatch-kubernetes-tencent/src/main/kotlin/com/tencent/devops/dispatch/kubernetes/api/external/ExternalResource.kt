@@ -30,9 +30,9 @@ package com.tencent.devops.dispatch.kubernetes.api.external
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.dispatch.kubernetes.pojo.kubernetes.TaskStatus
 import com.tencent.devops.remotedev.pojo.WorkspaceMountType
-import io.swagger.annotations.Api
-import io.swagger.annotations.ApiOperation
-import io.swagger.annotations.ApiParam
+import io.swagger.v3.oas.annotations.tags.Tag
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.Parameter
 import javax.ws.rs.Consumes
 import javax.ws.rs.POST
 import javax.ws.rs.Path
@@ -40,20 +40,20 @@ import javax.ws.rs.Produces
 import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
-@Api(tags = ["EXTERNAL_DISPATCH_KUBERNETES"], description = "External-dispatch-kubernetes")
+@Tag(name = "EXTERNAL_DISPATCH_KUBERNETES", description = "External-dispatch-kubernetes")
 @Path("/external/remotedev/")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface ExternalResource {
 
-    @ApiOperation("工作空间task回调")
+    @Operation(summary = "工作空间task回调")
     @POST
     @Path("/task/callback")
     fun workspaceTaskCallback(
-        @ApiParam(value = "云开发环境对接容器集群类型(DEVCLOUD、START、BCS)", required = false)
+        @Parameter(description = "云开发环境对接容器集群类型(DEVCLOUD、START、BCS)", required = false)
         @QueryParam("type")
         type: WorkspaceMountType? = WorkspaceMountType.DEVCLOUD,
-        @ApiParam(value = "回调信息", required = true)
+        @Parameter(description = "回调信息", required = true)
         taskStatus: TaskStatus
     ): Result<Boolean>
 }

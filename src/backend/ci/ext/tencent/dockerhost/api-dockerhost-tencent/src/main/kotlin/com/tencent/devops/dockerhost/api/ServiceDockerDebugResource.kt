@@ -29,9 +29,9 @@ package com.tencent.devops.dockerhost.api
 
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.dispatch.docker.pojo.ContainerInfo
-import io.swagger.annotations.Api
-import io.swagger.annotations.ApiOperation
-import io.swagger.annotations.ApiParam
+import io.swagger.v3.oas.annotations.tags.Tag
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.Parameter
 import javax.ws.rs.Consumes
 import javax.ws.rs.GET
 import javax.ws.rs.POST
@@ -40,40 +40,40 @@ import javax.ws.rs.Produces
 import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
-@Api(tags = ["DOCKER_DEBUG"], description = "docker debug")
+@Tag(name = "DOCKER_DEBUG", description = "docker debug")
 @Path("/docker")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface ServiceDockerDebugResource {
 
-    @ApiOperation("启动流水线调试")
+    @Operation(summary = "启动流水线调试")
     @POST
     @Path("/debug/start")
     fun startDebug(
-        @ApiParam("容器信息", required = true)
+        @Parameter(description = "容器信息", required = true)
         dockerStartDebugInfo: ContainerInfo
     ): Result<String>
 
-    @ApiOperation("获取调试url")
+    @Operation(summary = "获取调试url")
     @GET
     @Path("/debug/getWsUrl")
     fun getWebSocketUrl(
-        @ApiParam("蓝盾项目ID", required = true)
+        @Parameter(description = "蓝盾项目ID", required = true)
         @QueryParam("projectId")
         projectId: String,
-        @ApiParam("蓝盾构建ID", required = true)
+        @Parameter(description = "蓝盾构建ID", required = true)
         @QueryParam("pipelineId")
         pipelineId: String,
-        @ApiParam("容器ID", required = true)
+        @Parameter(description = "容器ID", required = true)
         @QueryParam("containerId")
         containerId: String
     ): Result<String>
 
-    @ApiOperation("终止流水线调试")
+    @Operation(summary = "终止流水线调试")
     @POST
     @Path("/debug/end")
     fun endDebug(
-        @ApiParam("容器信息", required = true)
+        @Parameter(description = "容器信息", required = true)
         dockerEndDebugInfo: ContainerInfo
     ): Result<Boolean>
 }

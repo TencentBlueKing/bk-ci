@@ -27,25 +27,25 @@
 
 package com.tencent.devops.process.pojo.third.spm
 
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
 data class SpmFileInfo(
-    @ApiModelProperty("file_id")
+    @get:Schema(title = "file_id")
     val fileId: Int,
-    @ApiModelProperty("batch_id")
+    @get:Schema(title = "batch_id")
     val batchId: Int,
-    @ApiModelProperty("operate_type")
+    @get:Schema(title = "operate_type")
     val operateType: String,
-    @ApiModelProperty("filename")
+    @get:Schema(title = "filename")
     val fileName: String,
-    @ApiModelProperty("size")
+    @get:Schema(title = "size")
     val size: Int,
-    @ApiModelProperty("md5")
+    @get:Schema(title = "md5")
     val md5: String,
-    @ApiModelProperty("status")
+    @get:Schema(title = "status")
     val status: Int,
-    @ApiModelProperty("submit_time")
+    @get:Schema(title = "submit_time")
     val submitTime: String,
-    @ApiModelProperty("finish_rate")
+    @get:Schema(title = "finish_rate")
     val finishRate: String
 )

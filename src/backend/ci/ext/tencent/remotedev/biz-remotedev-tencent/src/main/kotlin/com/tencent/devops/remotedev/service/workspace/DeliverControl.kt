@@ -39,8 +39,6 @@ import com.tencent.devops.common.auth.api.ActionId
 import com.tencent.devops.common.auth.api.ResourceTypeId
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.redis.RedisOperation
-import com.tencent.devops.project.api.service.ServiceProjectResource
-import com.tencent.devops.project.constant.ProjectMessageCode
 import com.tencent.devops.remotedev.common.exception.ErrorCodeEnum
 import com.tencent.devops.remotedev.dao.WorkspaceDao
 import com.tencent.devops.remotedev.dao.WorkspaceOpHistoryDao
@@ -170,6 +168,7 @@ class DeliverControl @Autowired constructor(
                 logger.info("assignUser2Workspace|$userId|${assign2Owner.userId}")
                 workspaceCommon.shareWorkspace(
                     workspaceName = workspaceName,
+                    projectId = workspace.projectId,
                     operator = userId,
                     assigns = listOf(assign2Owner),
                     mountType = WorkspaceMountType.START
@@ -194,6 +193,7 @@ class DeliverControl @Autowired constructor(
                 if (assign2Owner != null) {
                     workspaceCommon.shareWorkspace(
                         workspaceName = workspaceName,
+                        projectId = workspace.projectId,
                         operator = userId,
                         assigns = listOf(
                             ProjectWorkspaceAssign(
@@ -213,6 +213,7 @@ class DeliverControl @Autowired constructor(
         if (add.isNotEmpty()) {
             workspaceCommon.shareWorkspace(
                 workspaceName = workspaceName,
+                projectId = workspace.projectId,
                 operator = userId,
                 assigns = add,
                 mountType = WorkspaceMountType.START
@@ -273,22 +274,16 @@ class DeliverControl @Autowired constructor(
                                 )
                             )
                         }
-                        val projectInfo = kotlin.runCatching {
-                            client.get(ServiceProjectResource::class).get(projectId)
-                        }.onFailure { logger.warn("get project $projectId info error|${it.message}") }
-                            .getOrElse { null }?.data ?: throw ErrorCodeException(
-                            errorCode = ProjectMessageCode.PROJECT_NOT_EXIST
-                        )
-                        notifyControl.notify4User(
-                            userIds = projectInfo.properties?.remotedevManager?.split(";")?.toMutableSet()
-                                ?: mutableSetOf(),
-                            workspaceName = workspace.workspaceName,
+                        notifyControl.notify4RemoteDevManager(
+                            projectId = projectId,
+                            cc = mutableSetOf(workspace.createUserId),
                             notifyTemplateCode = WINDOWS_GPU_ASSIGN_NOTIFY,
-                            notifyType = mutableSetOf(RemoteDevNotifyType.EMAIL),
-                            bodyParams = mapOf(
+                            notifyType = mutableSetOf(RemoteDevNotifyType.EMAIL, RemoteDevNotifyType.RTX),
+                            bodyParams = mutableMapOf(
                                 "workspaceName" to workspace.workspaceName,
                                 "cgsId" to (workspace.hostName ?: workspace.workspaceName),
-                                "projectId" to projectId
+                                "projectId" to projectId,
+                                "creator" to workspace.createUserId
                             )
                         )
                     }

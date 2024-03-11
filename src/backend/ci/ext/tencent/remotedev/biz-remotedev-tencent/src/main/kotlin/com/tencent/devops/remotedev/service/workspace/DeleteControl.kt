@@ -45,6 +45,7 @@ import com.tencent.devops.environment.api.ServiceNodeResource
 import com.tencent.devops.remotedev.common.Constansts
 import com.tencent.devops.remotedev.common.Constansts.ADMIN_NAME
 import com.tencent.devops.remotedev.common.exception.ErrorCodeEnum
+import com.tencent.devops.remotedev.cron.HolidayHelper
 import com.tencent.devops.remotedev.dao.RemoteDevBillingDao
 import com.tencent.devops.remotedev.dao.RemoteDevSettingDao
 import com.tencent.devops.remotedev.dao.WorkspaceDao
@@ -57,6 +58,7 @@ import com.tencent.devops.remotedev.pojo.WorkspaceOwnerType
 import com.tencent.devops.remotedev.pojo.WorkspaceRecord
 import com.tencent.devops.remotedev.pojo.WorkspaceStatus
 import com.tencent.devops.remotedev.pojo.WorkspaceSystemType
+import com.tencent.devops.remotedev.pojo.common.RemoteDevNotifyType
 import com.tencent.devops.remotedev.pojo.event.RemoteDevUpdateEvent
 import com.tencent.devops.remotedev.pojo.event.UpdateEventType
 import com.tencent.devops.remotedev.service.BKCCService
@@ -69,15 +71,18 @@ import com.tencent.devops.remotedev.service.redis.RedisHeartBeat
 import com.tencent.devops.remotedev.service.redis.RedisKeys
 import com.tencent.devops.remotedev.service.redis.RedisKeys.REDIS_CALL_LIMIT_KEY_PREFIX
 import com.tencent.devops.remotedev.service.tcloud.TCloudCfsService
+import com.tencent.devops.remotedev.service.workspace.NotifyControl.Companion.NOT_ASSIGN_AUTO_DELETE_NOTIFY
+import com.tencent.devops.remotedev.service.workspace.NotifyControl.Companion.SLEEP_7_DAY_AUTO_DELETE_NOTIFY
+import java.time.Duration
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
+import java.util.concurrent.TimeUnit
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.slf4j.MDC
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
-import java.time.Duration
-import java.time.LocalDateTime
-import java.util.concurrent.TimeUnit
 
 @Service
 @Suppress("LongMethod")
@@ -98,12 +103,14 @@ class DeleteControl @Autowired constructor(
     private val bkccService: BKCCService,
     private val notifyControl: NotifyControl,
     private val tCloudCfsService: TCloudCfsService,
-    private val gitProxyTGitService: GitProxyTGitService
+    private val gitProxyTGitService: GitProxyTGitService,
+    private val holidayHelper: HolidayHelper
 ) {
 
     companion object {
         private val logger = LoggerFactory.getLogger(DeleteControl::class.java)
         private val expiredTimeInSeconds = TimeUnit.MINUTES.toSeconds(2)
+        val formatter: DateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
     }
 
     @ActionAuditRecord(
@@ -182,6 +189,34 @@ class DeleteControl @Autowired constructor(
         }
     }
 
+    fun deleteWorkspace4OP(
+        userId: String,
+        workspaceName: String
+    ): Boolean {
+        val workspace = workspaceDao.fetchAnyWorkspace(dslContext, workspaceName = workspaceName)
+            ?: throw ErrorCodeException(
+                errorCode = ErrorCodeEnum.WORKSPACE_NOT_FIND.errorCode,
+                params = arrayOf(workspaceName)
+            )
+        val res = deleteWorkspace4System(userId, workspaceName)
+        if (res) {
+            val userIds = permissionService.getWorkspaceOwner(workspace.workspaceName)
+            notifyControl.notify4UserAndCCRemoteDevManagerAndCCOwnerShareUser(
+                userIds = userIds.toMutableSet(),
+                workspaceName = workspace.workspaceName,
+                cc = mutableSetOf(workspace.createUserId),
+                projectId = workspace.projectId,
+                notifyTemplateCode = NotifyControl.WORKSPACE_FORCE_DELETE,
+                notifyType = mutableSetOf(RemoteDevNotifyType.EMAIL, RemoteDevNotifyType.RTX),
+                bodyParams = mutableMapOf(
+                    "cgsIp" to (workspace.hostName ?: ""),
+                    "userId" to userIds.joinToString()
+                )
+            )
+        }
+        return res
+    }
+
     @ActionAuditRecord(
         actionId = ActionId.CGS_DELETE,
         instance = AuditInstanceRecord(
@@ -191,7 +226,7 @@ class DeleteControl @Autowired constructor(
         ),
         content = ActionAuditContent.CGS_DELETE_CONTENT
     )
-    fun deleteWorkspace4OP(
+    private fun deleteWorkspace4System(
         userId: String,
         workspaceName: String
     ): Boolean {
@@ -235,8 +270,8 @@ class DeleteControl @Autowired constructor(
     }
 
     // 获取已休眠(status:3)且过期14天的工作空间
-    fun deleteInactivityWorkspace() {
-        logger.info("getTimeOutInactivityWorkspace")
+    fun deleteLinuxInactivityWorkspace() {
+        logger.info("deleteLinuxInactivityWorkspace")
         workspaceDao.getTimeOutInactivityWorkspace(
             timeOutDays = Constansts.timeoutDays,
             dslContext = dslContext,
@@ -245,13 +280,18 @@ class DeleteControl @Autowired constructor(
             MDC.put(TraceTag.BIZID, TraceTag.buildBiz())
             logger.info(
                 "workspace ${it.workspaceName} last active is ${
-                it.updateTime
+                    it.updateTime
                 } ready to delete"
             )
             kotlin.runCatching { heartBeatDeleteWS(it) }.onFailure { i ->
                 logger.warn("deleteInactivityWorkspace fail|${i.message}", i)
             }
         }
+    }
+
+    // 获取已休眠(status:3)且过期14天的工作空间
+    fun deleteWinInactivityWorkspace() {
+        logger.info("deleteWinInactivityWorkspace")
         val now = LocalDateTime.now()
         workspaceDao.fetchNotUsageTimeWinWorkspace(dslContext, status = WorkspaceStatus.STOPPED)
             ?.parallelStream()?.forEach {
@@ -263,6 +303,154 @@ class DeleteControl @Autowired constructor(
                     }
                 }
             }
+    }
+
+    fun autoDeleteWhenNotAssign(
+        onDelete: Boolean = false,
+        readyDeleteWorkspace: MutableList<String> = mutableListOf()
+    ) {
+        val limitDay = holidayHelper.getLastWorkingDays(3).last()
+        logger.info("autoDeleteWhenNotAssign|$limitDay")
+        val notifyGroups = mutableMapOf<String, MutableList<Pair<String, String>>>()
+        val whiteListProject = redisCache.getSetMembers(
+            RedisKeys.REDIS_WORKSPACE_AUTO_DELETE_WHITE_LIST_PROJECT
+        ) ?: emptySet()
+        workspaceDao.fetchWorkspace(
+            dslContext = dslContext,
+            status = WorkspaceStatus.DISTRIBUTING,
+            systemType = WorkspaceSystemType.WINDOWS_GPU
+        )?.parallelStream()?.forEach { workspace ->
+            if ((workspace.lastStatusUpdateTime ?: LocalDateTime.now()) < limitDay) {
+                if (workspace.projectId in whiteListProject) {
+                    readyDeleteWorkspace.add(
+                        "project=${workspace.projectId}, ip=${workspace.hostName}," +
+                                " 原因=超过3天未分配(创建时间: ${workspace.lastStatusUpdateTime?.format(formatter)}" +
+                                " 早于检测时间 ${limitDay.format(formatter)}) 白名单已命中，只展示，将不会销毁。"
+                    )
+                    return@forEach
+                }
+                logger.info(
+                    "ready to delete when not assign " +
+                            "|${workspace.workspaceName}|${workspace.lastStatusUpdateTime}|${workspace.hostName}"
+                )
+
+                readyDeleteWorkspace.add(
+                    "project=${workspace.projectId}, ip=${workspace.hostName}," +
+                            " 原因=超过3天未分配(创建时间: ${workspace.lastStatusUpdateTime?.format(formatter)}" +
+                            " 早于检测时间 ${limitDay.format(formatter)})"
+                )
+                if (onDelete) {
+                    workspaceOpHistoryDao.createWorkspaceHistory(
+                        dslContext = dslContext,
+                        workspaceName = workspace.workspaceName,
+                        operator = ADMIN_NAME,
+                        action = WorkspaceAction.DELETE,
+                        actionMessage = workspaceCommon.getOpHistory(OpHistoryCopyWriting.TIMEOUT_STOP)
+                    )
+                    kotlin.runCatching { deleteWorkspace4System(ADMIN_NAME, workspace.workspaceName) }
+                        .onFailure { i ->
+                            logger.warn("auto delete fail|${i.message}", i)
+                        }.onSuccess {
+                            logger.info(
+                                "delete $it when not assign " +
+                                        "|${workspace.workspaceName}|${workspace.lastStatusUpdateTime}|" +
+                                        "${workspace.hostName}"
+                            )
+                            if (it) {
+                                val value = Pair(workspace.hostName ?: "", workspace.createUserId)
+                                notifyGroups.putIfAbsent(
+                                    workspace.projectId,
+                                    mutableListOf(value)
+                                )?.add(value)
+                            }
+                        }
+                }
+            }
+        }
+        if (onDelete) {
+            notifyGroups.forEach { (projectId, values) ->
+                // 邮件通知
+                notifyControl.notify4RemoteDevManager(
+                    projectId = projectId,
+                    cc = values.mapTo(mutableSetOf()) { it.second },
+                    notifyTemplateCode = NOT_ASSIGN_AUTO_DELETE_NOTIFY,
+                    notifyType = mutableSetOf(RemoteDevNotifyType.EMAIL, RemoteDevNotifyType.RTX),
+                    bodyParams = mutableMapOf(
+                        "cgsIps" to values.joinToString("\n") { it.first }
+                    )
+                )
+            }
+        }
+    }
+
+    // 缓冲期先改成14天限制
+    fun autoDeleteWhenSleep7Day(
+        onDelete: Boolean = false,
+        readyDeleteWorkspace: MutableList<String> = mutableListOf()
+    ) {
+        val limitDay = holidayHelper.getLastWorkingDays(14).last()
+        logger.info("autoDeleteWhenSleep7Day|$limitDay")
+        val whiteListProject = redisCache.getSetMembers(
+            RedisKeys.REDIS_WORKSPACE_AUTO_DELETE_WHITE_LIST_PROJECT
+        ) ?: emptySet()
+        workspaceDao.fetchWorkspace(
+            dslContext = dslContext,
+            status = WorkspaceStatus.STOPPED,
+            systemType = WorkspaceSystemType.WINDOWS_GPU
+        )?.parallelStream()?.forEach { workspace ->
+            if ((workspace.lastStatusUpdateTime ?: LocalDateTime.now()) < limitDay) {
+                if (workspace.projectId in whiteListProject) {
+                    readyDeleteWorkspace.add(
+                        "project=${workspace.projectId}, ip=${workspace.hostName}" +
+                                ", 原因=关机超过14天(关机时间: ${workspace.lastStatusUpdateTime?.format(formatter)}" +
+                                " 早于检测时间 ${limitDay.format(formatter)}) 白名单已命中，只展示，将不会销毁。"
+                    )
+                    return@forEach
+                }
+                logger.info(
+                    "ready to delete when sleep 14 day " +
+                            "|${workspace.workspaceName}|${workspace.lastStatusUpdateTime}|${workspace.hostName}"
+                )
+                workspaceOpHistoryDao.createWorkspaceHistory(
+                    dslContext = dslContext,
+                    workspaceName = workspace.workspaceName,
+                    operator = ADMIN_NAME,
+                    action = WorkspaceAction.DELETE,
+                    actionMessage = workspaceCommon.getOpHistory(OpHistoryCopyWriting.TIMEOUT_STOP)
+                )
+                readyDeleteWorkspace.add(
+                    "project=${workspace.projectId}, ip=${workspace.hostName}" +
+                            ", 原因=关机超过14天(关机时间: ${workspace.lastStatusUpdateTime?.format(formatter)}" +
+                            " 早于检测时间 ${limitDay.format(formatter)})"
+                )
+                if (onDelete) {
+                    kotlin.runCatching { deleteWorkspace4System(ADMIN_NAME, workspace.workspaceName) }.onFailure { i ->
+                        logger.warn("auto delete fail|${i.message}", i)
+                    }.onSuccess {
+                        logger.info(
+                            "delete $it when sleep 14 day " +
+                                    "|${workspace.workspaceName}|${workspace.lastStatusUpdateTime}|" +
+                                    "${workspace.hostName}"
+                        )
+                        if (it) {
+                            val userIds = permissionService.getWorkspaceOwner(workspace.workspaceName)
+                            notifyControl.notify4UserAndCCRemoteDevManagerAndCCOwnerShareUser(
+                                userIds = userIds.toMutableSet(),
+                                workspaceName = workspace.workspaceName,
+                                cc = mutableSetOf(workspace.createUserId),
+                                projectId = workspace.projectId,
+                                notifyTemplateCode = SLEEP_7_DAY_AUTO_DELETE_NOTIFY,
+                                notifyType = mutableSetOf(RemoteDevNotifyType.EMAIL, RemoteDevNotifyType.RTX),
+                                bodyParams = mutableMapOf(
+                                    "cgsIp" to (workspace.hostName ?: ""),
+                                    "userId" to userIds.joinToString()
+                                )
+                            )
+                        }
+                    }
+                }
+            }
+        }
     }
 
     fun heartBeatDeleteWS(workspace: WorkspaceRecord): Boolean {
@@ -332,7 +520,7 @@ class DeleteControl @Autowired constructor(
                 EnvStatusEnum.deleted -> event.status = true
                 else -> logger.warn(
                     "delete workspace callback with error|" +
-                        "${event.workspaceName}|${workspaceInfo.status}"
+                            "${event.workspaceName}|${workspaceInfo.status}"
                 )
             }
         }
@@ -358,11 +546,11 @@ class DeleteControl @Autowired constructor(
         if (status) {
             // 删除环境管理第三方构建机记录
             if (!workspace.preciAgentId.isNullOrBlank() && client.get(ServiceNodeResource::class)
-                .deleteThirdPartyNode(workspace.createUserId, projectId, workspace.preciAgentId!!).data == false
+                    .deleteThirdPartyNode(workspace.createUserId, projectId, workspace.preciAgentId!!).data == false
             ) {
                 logger.warn(
                     "delete workspace $workspaceName, but third party agent delete failed." +
-                        "|${workspace.createUserId}|$projectId|${detail?.environmentIP}|${workspace.preciAgentId}"
+                            "|${workspace.createUserId}|$projectId|${detail?.environmentIP}|${workspace.preciAgentId}"
                 )
             }
             // 清心跳

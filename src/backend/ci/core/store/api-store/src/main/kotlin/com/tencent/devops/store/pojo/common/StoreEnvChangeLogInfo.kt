@@ -27,19 +27,18 @@
 
 package com.tencent.devops.store.pojo.common
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("store组件环境变量变更历史信息")
+@Schema(title = "store组件环境变量变更历史信息")
 data class StoreEnvChangeLogInfo(
-    @ApiModelProperty("变量名", required = true)
+    @get:Schema(title = "变量名", required = true)
     val varName: String,
-    @ApiModelProperty("变更前变量值", required = true)
+    @get:Schema(title = "变更前变量值", required = true)
     val beforeVarValue: String,
-    @ApiModelProperty("变更后变量值", required = true)
+    @get:Schema(title = "变更后变量值", required = true)
     val afterVarValue: String,
-    @ApiModelProperty("修改用户", required = true)
+    @get:Schema(title = "修改用户", required = true)
     val modifier: String,
-    @ApiModelProperty("修改时间", required = true)
+    @get:Schema(title = "修改时间", required = true)
     val updateTime: String
 )

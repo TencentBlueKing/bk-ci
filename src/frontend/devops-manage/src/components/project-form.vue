@@ -2,17 +2,17 @@
 import http from '@/http/api';
 import { Message, Popover } from 'bkui-vue';
 import {
-EditLine,
+  EditLine,
 } from 'bkui-vue/lib/icon';
 import {
-computed,
-getCurrentInstance,
-nextTick,
-onBeforeUnmount,
-onMounted,
-ref,
-shallowRef,
-watch,
+  computed,
+  getCurrentInstance,
+  nextTick,
+  onBeforeUnmount,
+  onMounted,
+  ref,
+  shallowRef,
+  watch,
 } from 'vue';
 import { useI18n } from 'vue-i18n';
 import IAMIframe from './IAM-Iframe';
@@ -48,6 +48,8 @@ const logoFiles = computed(() => {
 });
 const englishNameReg = /^[a-z][a-z0-9-]{1,32}$/;
 const inited = ref(false);
+const authProvider = ref(window.top.BK_CI_AUTH_PROVIDER || '');
+const isRbac = computed(() => authProvider.value === 'rbac');
 const projectForm = ref<any>(null);
 const iframeRef = ref(null);
 const operationalList = ref([]);
@@ -537,7 +539,12 @@ onBeforeUnmount(() => {
       >
       </bk-select>
     </bk-form-item>
-    <bk-form-item :label="t('项目性质')" property="authSecrecy" :required="true">
+    <bk-form-item
+      v-if="isRbac"
+      :label="t('项目性质')"
+      property="authSecrecy"
+      :required="true"
+    >
       <bk-radio-group
         v-model="projectData.authSecrecy"
         @change="handleChangeForm"
@@ -555,6 +562,7 @@ onBeforeUnmount(() => {
       </bk-radio-group>
     </bk-form-item>
     <bk-form-item
+      v-if="isRbac"
       :label="t('项目最大可授权人员范围')"
       :description="t('该设置表示可以加入项目的成员的最大范围，范围内的用户才可以成功加入项目下的任意用户组')"
       property="subjectScopes"
@@ -563,7 +571,7 @@ onBeforeUnmount(() => {
         v-for="(subjectScope, index) in projectData.subjectScopes"
         :key="index"
       >
-        {{ subjectScope.name }}
+        {{ subjectScope.id === '*' ? t('全员') : subjectScope.name }}
       </bk-tag>
       <EditLine
         class="edit-line ml5"

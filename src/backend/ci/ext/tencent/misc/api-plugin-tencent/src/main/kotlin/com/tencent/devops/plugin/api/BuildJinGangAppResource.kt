@@ -31,9 +31,9 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_BUILD_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_PIPELINE_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_PROJECT_ID
 import com.tencent.devops.common.api.pojo.Result
-import io.swagger.annotations.Api
-import io.swagger.annotations.ApiOperation
-import io.swagger.annotations.ApiParam
+import io.swagger.v3.oas.annotations.tags.Tag
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.Parameter
 import javax.ws.rs.Consumes
 import javax.ws.rs.HeaderParam
 import javax.ws.rs.POST
@@ -43,101 +43,101 @@ import javax.ws.rs.Produces
 import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
-@Api(tags = ["BUILD_JIN_GANG"], description = "构建-金刚app扫描任务")
+@Tag(name = "BUILD_JIN_GANG", description = "构建-金刚app扫描任务")
 @Path("/build/jingang")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface BuildJinGangAppResource {
 
-    @ApiOperation("启动金刚扫描")
+    @Operation(summary = "启动金刚扫描")
     @POST
     @Path("/users/{userId}/app/scan")
     fun scanApp(
-        @ApiParam("用户ID", required = true)
+        @Parameter(description = "用户ID", required = true)
         @PathParam("userId")
         userId: String,
-        @ApiParam("项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @HeaderParam(AUTH_HEADER_PROJECT_ID)
         projectId: String,
-        @ApiParam("流水线ID", required = true)
+        @Parameter(description = "流水线ID", required = true)
         @HeaderParam(AUTH_HEADER_PIPELINE_ID)
         pipelineId: String,
-        @ApiParam("流水线构建id", required = true)
+        @Parameter(description = "流水线构建id", required = true)
         @HeaderParam(AUTH_HEADER_BUILD_ID)
         buildId: String,
-        @ApiParam("流水线构建No", required = true)
+        @Parameter(description = "流水线构建No", required = true)
         @QueryParam("buildNo")
         buildNo: Int,
-        @ApiParam("element ID", required = true)
+        @Parameter(description = "element ID", required = true)
         @QueryParam("elementId")
         elementId: String,
-        @ApiParam("文件路径", required = true)
+        @Parameter(description = "文件路径", required = true)
         @QueryParam("file")
         file: String,
-        @ApiParam("是否是自定义仓库", required = true)
+        @Parameter(description = "是否是自定义仓库", required = true)
         @QueryParam("isCustom")
         isCustom: Boolean,
-        @ApiParam("运行类型（3表示中跑静态，1表示跑静态和跑动态）", required = true)
+        @Parameter(description = "运行类型（3表示中跑静态，1表示跑静态和跑动态）", required = true)
         @QueryParam("runType")
         runType: String
     ): Result<String>
 
-    @ApiOperation("创建金刚Task")
+    @Operation(summary = "创建金刚Task")
     @POST
     @Path("/users/{userId}/app/create")
     fun createTask(
-        @ApiParam("项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @HeaderParam(AUTH_HEADER_PROJECT_ID)
         projectId: String,
-        @ApiParam("流水线ID", required = true)
+        @Parameter(description = "流水线ID", required = true)
         @HeaderParam(AUTH_HEADER_PIPELINE_ID)
         pipelineId: String,
-        @ApiParam("流水线构建id", required = true)
+        @Parameter(description = "流水线构建id", required = true)
         @HeaderParam(AUTH_HEADER_BUILD_ID)
         buildId: String,
-        @ApiParam("流水线构建No", required = true)
+        @Parameter(description = "流水线构建No", required = true)
         @QueryParam("buildNo")
         buildNo: Int,
-        @ApiParam("用户ID", required = true)
+        @Parameter(description = "用户ID", required = true)
         @PathParam("userId")
         userId: String,
-        @ApiParam("文件路径", required = true)
+        @Parameter(description = "文件路径", required = true)
         @QueryParam("path")
         path: String,
-        @ApiParam("文件MD5", required = true)
+        @Parameter(description = "文件MD5", required = true)
         @QueryParam("md5")
         md5: String,
-        @ApiParam("文件大小", required = true)
+        @Parameter(description = "文件大小", required = true)
         @QueryParam("size")
         size: Long,
-        @ApiParam("文件版本", required = true)
+        @Parameter(description = "文件版本", required = true)
         @QueryParam("version")
         version: String,
-        @ApiParam("文件类型", required = true)
+        @Parameter(description = "文件类型", required = true)
         @QueryParam("type")
         type: Int
     ): Result<Long>
 
-    @ApiOperation("更新金刚Task")
+    @Operation(summary = "更新金刚Task")
     @POST
     @Path("/users/{userId}/app/update")
     fun updateTask(
-        @ApiParam("流水线构建id", required = true)
+        @Parameter(description = "流水线构建id", required = true)
         @HeaderParam(AUTH_HEADER_BUILD_ID)
         buildId: String,
-        @ApiParam("文件MD5", required = true)
+        @Parameter(description = "文件MD5", required = true)
         @QueryParam("md5")
         md5: String,
-        @ApiParam("task状态", required = true)
+        @Parameter(description = "task状态", required = true)
         @QueryParam("status")
         status: Int,
-        @ApiParam("task Id", required = true)
+        @Parameter(description = "task Id", required = true)
         @QueryParam("taskId")
         taskId: Long,
-        @ApiParam("扫描Url", required = true)
+        @Parameter(description = "扫描Url", required = true)
         @QueryParam("scanUrl")
         scanUrl: String,
-        @ApiParam("task结果", required = true)
+        @Parameter(description = "task结果", required = true)
         @QueryParam("result")
         result: String
     )

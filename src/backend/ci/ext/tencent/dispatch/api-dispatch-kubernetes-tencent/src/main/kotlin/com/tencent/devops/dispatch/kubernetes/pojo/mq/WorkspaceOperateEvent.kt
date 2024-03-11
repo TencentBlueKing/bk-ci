@@ -33,16 +33,16 @@ import com.tencent.devops.common.remotedev.WorkspaceEvent
 import com.tencent.devops.common.service.trace.TraceTag
 import com.tencent.devops.remotedev.pojo.WorkspaceMountType
 import com.tencent.devops.remotedev.pojo.event.UpdateEventType
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
 @Event(MQ.EXCHANGE_REMOTE_DEV_LISTENER_DIRECT, MQ.ROUTE_WORKSPACE_OPERATE_STARTUP)
 data class WorkspaceOperateEvent(
     override val userId: String,
     override val traceId: String = TraceTag.buildBiz(),
     val type: UpdateEventType,
-    @ApiModelProperty("用户设置里云开发的环境变量")
+    @get:Schema(title = "用户设置里云开发的环境变量")
     val settingEnvs: Map<String, String> = emptyMap(),
-    @ApiModelProperty("包含了创建者 ssh key 的字符串")
+    @get:Schema(title = "包含了创建者 ssh key 的字符串")
     val sshKeys: String = "",
     val bkTicket: String? = null,
     val cgsId: String? = null,

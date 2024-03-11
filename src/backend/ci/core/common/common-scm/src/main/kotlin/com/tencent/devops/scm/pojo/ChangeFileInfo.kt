@@ -29,9 +29,9 @@ package com.tencent.devops.scm.pojo
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.annotation.JsonProperty
-import io.swagger.annotations.ApiModel
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("工蜂差异文件信息")
+@Schema(title = "工蜂差异文件信息")
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class ChangeFileInfo(
     @JsonProperty("old_path")

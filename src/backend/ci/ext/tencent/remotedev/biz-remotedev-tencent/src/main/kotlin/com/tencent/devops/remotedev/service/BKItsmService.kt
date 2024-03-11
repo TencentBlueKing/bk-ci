@@ -3,7 +3,6 @@ package com.tencent.devops.remotedev.service
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
-import com.sun.org.slf4j.internal.LoggerFactory
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
@@ -12,6 +11,7 @@ import com.tencent.devops.remotedev.config.BkConfig
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.Request
 import okhttp3.RequestBody.Companion.toRequestBody
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
@@ -24,7 +24,7 @@ class BKItsmService @Autowired constructor(
     fun createTicket(
         projectId: String,
         userId: String,
-        urls: Set<String>
+        tData: Map<Long, Pair<String, Boolean>>
     ): String {
         val url = "${bkConfig.itsmHost}/v2/itsm/create_ticket"
         val body = BKItsmCreateTicketReq(
@@ -43,11 +43,15 @@ class BKItsmService @Autowired constructor(
                 ),
                 mapOf(
                     "key" to "url",
-                    "value" to urls.joinToString("\n")
+                    "value" to tData.values.joinToString("\n") { it.first }
                 ),
                 mapOf(
                     "key" to "userId",
                     "value" to userId
+                ),
+                mapOf(
+                    "key" to "tgit_ids",
+                    "value" to tData.map { "${it.key};${it.value.first}" }.toSet().joinToString("\n")
                 )
             )
         )

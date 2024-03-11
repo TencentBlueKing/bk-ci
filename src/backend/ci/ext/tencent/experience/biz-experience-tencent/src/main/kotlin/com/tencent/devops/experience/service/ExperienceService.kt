@@ -820,6 +820,10 @@ class ExperienceService @Autowired constructor(
 
         val propertyMap = getArtifactoryPropertiesMap(userId, projectId, artifactoryType, path)
 
+        if (!experience.scheme.isNullOrBlank()) {
+            propertyMap[ARCHIVE_PROPS_APP_SCHEME] = experience.scheme!!
+        }
+
         if (!propertyMap.containsKey(ARCHIVE_PROPS_BUILD_NO)) {
             throw RuntimeException(
                 MessageUtil.getMessageByLocale(

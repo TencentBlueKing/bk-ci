@@ -27,11 +27,10 @@
 
 package com.tencent.devops.remotedev.pojo
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("重装工作空间系统接口请求")
+@Schema(title = "重装工作空间系统接口请求")
 data class WorkspaceRebuildReq(
-    @ApiModelProperty("工作空间镜像地址")
+    @get:Schema(title = "工作空间镜像地址")
     val imageCosFile: String
 )

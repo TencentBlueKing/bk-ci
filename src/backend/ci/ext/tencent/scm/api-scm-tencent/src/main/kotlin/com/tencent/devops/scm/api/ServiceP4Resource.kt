@@ -31,9 +31,9 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.scm.code.p4.api.P4ChangeList
 import com.tencent.devops.scm.code.p4.api.P4FileSpec
 import com.tencent.devops.scm.code.p4.api.P4ServerInfo
-import io.swagger.annotations.Api
-import io.swagger.annotations.ApiOperation
-import io.swagger.annotations.ApiParam
+import io.swagger.v3.oas.annotations.tags.Tag
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.Parameter
 import javax.ws.rs.Consumes
 import javax.ws.rs.GET
 import javax.ws.rs.HeaderParam
@@ -42,116 +42,116 @@ import javax.ws.rs.Produces
 import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
-@Api(tags = ["SERVICE_P4"], description = "服务-p4相关")
+@Tag(name = "SERVICE_P4", description = "服务-p4相关")
 @Path("/service/p4")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface ServiceP4Resource {
 
-    @ApiOperation("获取p4文件变更列表")
+    @Operation(summary = "获取p4文件变更列表")
     @GET
     @Path("/getChangelistFiles")
     fun getChangelistFiles(
-        @ApiParam("p4Port", required = true)
+        @Parameter(description = "p4Port", required = true)
         @QueryParam("p4Port")
         p4Port: String,
-        @ApiParam("p4 username", required = true)
+        @Parameter(description = "p4 username", required = true)
         @QueryParam("username")
         username: String,
-        @ApiParam("p4 password", required = true)
+        @Parameter(description = "p4 password", required = true)
         @QueryParam("password")
         password: String,
-        @ApiParam("p4 版本号", required = true)
+        @Parameter(description = "p4 版本号", required = true)
         @QueryParam("change")
         change: Int
     ): Result<List<P4FileSpec>>
 
-    @ApiOperation("获取p4 shelve文件变更列表")
+    @Operation(summary = "获取p4 shelve文件变更列表")
     @GET
     @Path("/getShelvedFiles")
     fun getShelvedFiles(
-        @ApiParam("p4Port", required = true)
+        @Parameter(description = "p4Port", required = true)
         @QueryParam("p4Port")
         p4Port: String,
-        @ApiParam("p4 username", required = true)
+        @Parameter(description = "p4 username", required = true)
         @QueryParam("username")
         username: String,
-        @ApiParam("p4 password", required = true)
+        @Parameter(description = "p4 password", required = true)
         @QueryParam("password")
         password: String,
-        @ApiParam("p4 版本号", required = true)
+        @Parameter(description = "p4 版本号", required = true)
         @QueryParam("change")
         change: Int
     ): Result<List<P4FileSpec>>
 
-    @ApiOperation("获取p4文件内容")
+    @Operation(summary = "获取p4文件内容")
     @GET
     @Path("getFileContent")
     fun getFileContent(
-        @ApiParam(value = "p4Port")
+        @Parameter(description = "p4Port")
         @QueryParam("p4Port")
         p4Port: String,
-        @ApiParam(value = "文件路径")
+        @Parameter(description = "文件路径")
         @QueryParam("filePath")
         filePath: String,
-        @ApiParam(value = "版本号")
+        @Parameter(description = "版本号")
         @QueryParam("reversion")
         reversion: Int,
-        @ApiParam(value = "username")
+        @Parameter(description = "username")
         @HeaderParam("username")
         username: String,
-        @ApiParam(value = "password")
+        @Parameter(description = "password")
         @HeaderParam("password")
         password: String
     ): Result<String>
 
-    @ApiOperation("获取p4服务端信息")
+    @Operation(summary = "获取p4服务端信息")
     @GET
     @Path("/serverInfo")
     fun getServerInfo(
-        @ApiParam("p4Port", required = true)
+        @Parameter(description = "p4Port", required = true)
         @QueryParam("p4Port")
         p4Port: String,
-        @ApiParam("p4 username", required = true)
+        @Parameter(description = "p4 username", required = true)
         @QueryParam("username")
         username: String,
-        @ApiParam("p4 password", required = true)
+        @Parameter(description = "p4 password", required = true)
         @QueryParam("password")
         password: String
     ): Result<P4ServerInfo>
 
-    @ApiOperation("获取p4文件变更列表(含提交信息)")
+    @Operation(summary = "获取p4文件变更列表(含提交信息)")
     @GET
     @Path("/getChangelist")
     fun getChangelist(
-        @ApiParam("p4Port", required = true)
+        @Parameter(description = "p4Port", required = true)
         @QueryParam("p4Port")
         p4Port: String,
-        @ApiParam("p4 username", required = true)
+        @Parameter(description = "p4 username", required = true)
         @QueryParam("username")
         username: String,
-        @ApiParam("p4 password", required = true)
+        @Parameter(description = "p4 password", required = true)
         @QueryParam("password")
         password: String,
-        @ApiParam("p4 版本号", required = true)
+        @Parameter(description = "p4 版本号", required = true)
         @QueryParam("change")
         change: Int
     ): Result<P4ChangeList>
 
-    @ApiOperation("获取p4 shelve文件变更列表(含提交信息)")
+    @Operation(summary = "获取p4 shelve文件变更列表(含提交信息)")
     @GET
     @Path("/getShelvedChangeList")
     fun getShelvedChangeList(
-        @ApiParam("p4Port", required = true)
+        @Parameter(description = "p4Port", required = true)
         @QueryParam("p4Port")
         p4Port: String,
-        @ApiParam("p4 username", required = true)
+        @Parameter(description = "p4 username", required = true)
         @QueryParam("username")
         username: String,
-        @ApiParam("p4 password", required = true)
+        @Parameter(description = "p4 password", required = true)
         @QueryParam("password")
         password: String,
-        @ApiParam("p4 版本号", required = true)
+        @Parameter(description = "p4 版本号", required = true)
         @QueryParam("change")
         change: Int
     ): Result<P4ChangeList>

@@ -43,6 +43,7 @@ import com.tencent.devops.dispatch.kubernetes.pojo.kubernetes.EnvStatusEnum
 import com.tencent.devops.dispatch.kubernetes.pojo.mq.WorkspaceOperateEvent
 import com.tencent.devops.remotedev.common.Constansts
 import com.tencent.devops.remotedev.common.exception.ErrorCodeEnum
+import com.tencent.devops.remotedev.cron.HolidayHelper
 import com.tencent.devops.remotedev.dao.WorkspaceDao
 import com.tencent.devops.remotedev.dao.WorkspaceOpHistoryDao
 import com.tencent.devops.remotedev.pojo.OpHistoryCopyWriting
@@ -50,19 +51,24 @@ import com.tencent.devops.remotedev.pojo.WebSocketActionType
 import com.tencent.devops.remotedev.pojo.WorkspaceAction
 import com.tencent.devops.remotedev.pojo.WorkspaceRecord
 import com.tencent.devops.remotedev.pojo.WorkspaceStatus
+import com.tencent.devops.remotedev.pojo.WorkspaceSystemType
+import com.tencent.devops.remotedev.pojo.common.RemoteDevNotifyType
 import com.tencent.devops.remotedev.pojo.event.RemoteDevUpdateEvent
 import com.tencent.devops.remotedev.pojo.event.UpdateEventType
+import com.tencent.devops.remotedev.service.BKBaseService
 import com.tencent.devops.remotedev.service.PermissionService
 import com.tencent.devops.remotedev.service.redis.RedisCallLimit
 import com.tencent.devops.remotedev.service.redis.RedisHeartBeat
 import com.tencent.devops.remotedev.service.redis.RedisKeys.REDIS_CALL_LIMIT_KEY_PREFIX
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
+import java.util.concurrent.TimeUnit
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.slf4j.MDC
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
-import java.util.concurrent.TimeUnit
 
 @Service
 @Suppress("LongMethod")
@@ -76,12 +82,15 @@ class SleepControl @Autowired constructor(
     private val dispatcher: RemoteDevDispatcher,
     private val redisHeartBeat: RedisHeartBeat,
     private val workspaceCommon: WorkspaceCommon,
-    private val notifyControl: NotifyControl
+    private val notifyControl: NotifyControl,
+    private val bkBaseService: BKBaseService,
+    private val holidayHelper: HolidayHelper
 ) {
 
     companion object {
         private val logger = LoggerFactory.getLogger(SleepControl::class.java)
         private val expiredTimeInSeconds = TimeUnit.MINUTES.toSeconds(2)
+        val formatter: DateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
     }
 
     @ActionAuditRecord(
@@ -207,7 +216,7 @@ class SleepControl @Autowired constructor(
         )
     }
 
-    fun heartBeatStopWS(workspaceName: String, opHistory: OpHistoryCopyWriting): Boolean {
+    fun systemStopWS(workspaceName: String, opHistory: OpHistoryCopyWriting): Boolean {
 
         val workspace = workspaceDao.fetchAnyWorkspace(dslContext = dslContext, workspaceName = workspaceName)
             ?: throw ErrorCodeException(
@@ -222,13 +231,6 @@ class SleepControl @Autowired constructor(
                 params = arrayOf(workspace.workspaceName, "status is already ${workspace.status}, can't stop again")
             )
         }
-
-        if (!workspaceCommon.checkProjectRouter(
-                creator = workspace.createUserId,
-                workspaceName = workspaceName,
-                workspaceOwnerType = workspace.ownerType
-            )
-        ) return false
 
         RedisCallLimit(
             redisOperation,
@@ -273,6 +275,91 @@ class SleepControl @Autowired constructor(
         }
     }
 
+    fun heartBeatStopWS(workspaceName: String, opHistory: OpHistoryCopyWriting): Boolean {
+
+        val workspace = workspaceDao.fetchAnyWorkspace(dslContext = dslContext, workspaceName = workspaceName)
+            ?: throw ErrorCodeException(
+                errorCode = ErrorCodeEnum.WORKSPACE_NOT_FIND.errorCode,
+                params = arrayOf(workspaceName)
+            )
+        // 校验状态
+        if (workspace.status.checkSleeping()) {
+            logger.info("$workspace has been stopped, return error.")
+            throw ErrorCodeException(
+                errorCode = ErrorCodeEnum.WORKSPACE_STATUS_CHANGE_FAIL.errorCode,
+                params = arrayOf(workspace.workspaceName, "status is already ${workspace.status}, can't stop again")
+            )
+        }
+
+        if (!workspaceCommon.checkProjectRouter(
+                creator = workspace.createUserId,
+                workspaceName = workspaceName,
+                workspaceOwnerType = workspace.ownerType
+            )
+        ) return false
+
+        return systemStopWS(workspaceName, opHistory)
+    }
+
+    fun autoSleepWhenNotLogin(onSleep: Boolean = false, readySleepWorkspace: MutableList<String> = mutableListOf()) {
+        val limitDay = holidayHelper.getLastWorkingDays(7).last()
+        val logins = bkBaseService.fetchOnlineIps(limitDay)
+        logger.info("autoDeleteWhenSleep7Day|$limitDay|${logins.size}")
+        workspaceDao.fetchWorkspace(
+            dslContext = dslContext,
+            status = WorkspaceStatus.RUNNING,
+            systemType = WorkspaceSystemType.WINDOWS_GPU
+        )?.parallelStream()?.forEach { workspace ->
+            if ((workspace.lastStatusUpdateTime ?: LocalDateTime.now()) < limitDay &&
+                workspace.hostName != null && workspace.hostName !in logins
+            ) {
+                logger.info(
+                    "ready to sleep when not login 7 day " +
+                            "|${workspace.workspaceName}|${workspace.lastStatusUpdateTime}|${workspace.hostName}"
+                )
+                readySleepWorkspace.add(
+                    "project=${workspace.projectId}, ip=${workspace.hostName}," +
+                            " 原因=超过7天未登陆(最近登陆时间: ${logins[workspace.hostName]}" +
+                            " 早于检测时间 ${limitDay.format(formatter)})"
+                )
+                if (onSleep) {
+                    workspaceOpHistoryDao.createWorkspaceHistory(
+                        dslContext = dslContext,
+                        workspaceName = workspace.workspaceName,
+                        operator = Constansts.ADMIN_NAME,
+                        action = WorkspaceAction.DELETE,
+                        actionMessage = workspaceCommon.getOpHistory(OpHistoryCopyWriting.TIMEOUT_STOP)
+                    )
+                    kotlin.runCatching { systemStopWS(workspace.workspaceName, OpHistoryCopyWriting.TIMEOUT_SLEEP) }
+                        .onFailure { i ->
+                            logger.warn("auto sleep fail|${i.message}", i)
+                        }.onSuccess {
+                            logger.info(
+                                "sleep $it when not login 7 day " +
+                                        "|${workspace.workspaceName}|${workspace.lastStatusUpdateTime}|" +
+                                        "${workspace.hostName}"
+                            )
+                            if (it) {
+                                val userIds = permissionService.getWorkspaceOwner(workspace.workspaceName)
+                                notifyControl.notify4UserAndCCRemoteDevManagerAndCCOwnerShareUser(
+                                    userIds = userIds.toMutableSet(),
+                                    workspaceName = workspace.workspaceName,
+                                    cc = mutableSetOf(workspace.createUserId),
+                                    projectId = workspace.projectId,
+                                    notifyTemplateCode = NotifyControl.NOT_LOGIN_AUTO_SLEEP_NOTIFY,
+                                    notifyType = mutableSetOf(RemoteDevNotifyType.EMAIL, RemoteDevNotifyType.RTX),
+                                    bodyParams = mutableMapOf(
+                                        "cgsIp" to (workspace.hostName ?: ""),
+                                        "userId" to userIds.joinToString()
+                                    )
+                                )
+                            }
+                        }
+                }
+            }
+        }
+    }
+
     fun afterStopWorkspace(event: RemoteDevUpdateEvent) {
         if (!event.status) {
             // 调devcloud接口查询是否已经启动成功，如果成功还是走成功的逻辑.
@@ -282,7 +369,7 @@ class SleepControl @Autowired constructor(
                 EnvStatusEnum.stopped -> event.status = true
                 else -> logger.warn(
                     "stop workspace callback with error|" +
-                        "${event.workspaceName}|${workspaceInfo.status}"
+                            "${event.workspaceName}|${workspaceInfo.status}"
                 )
             }
         }
