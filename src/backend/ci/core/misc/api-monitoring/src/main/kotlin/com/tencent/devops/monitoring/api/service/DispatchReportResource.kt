@@ -29,27 +29,27 @@ package com.tencent.devops.monitoring.api.service
 import com.tencent.devops.common.api.annotation.ServiceInterface
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.monitoring.pojo.DispatchStatus
-import io.swagger.annotations.Api
-import io.swagger.annotations.ApiOperation
-import io.swagger.annotations.ApiParam
+import io.swagger.v3.oas.annotations.tags.Tag
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.Parameter
 import javax.ws.rs.Consumes
 import javax.ws.rs.POST
 import javax.ws.rs.Path
 import javax.ws.rs.Produces
 import javax.ws.rs.core.MediaType
 
-@Api(tags = ["SERVICE_MONITORING_REPORT"], description = "监控上报")
+@Tag(name = "SERVICE_MONITORING_REPORT", description = "监控上报")
 @Path("/service/report")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 @ServiceInterface("misc")
 interface DispatchReportResource {
 
-    @ApiOperation("各个dispatch模块上报开机状态")
+    @Operation(summary = "各个dispatch模块上报开机状态")
     @POST
     @Path("/dispatch/status")
     fun dispatch(
-        @ApiParam("构建机开机关机状态", required = true)
+        @Parameter(description = "构建机开机关机状态", required = true)
         dispatchStatus: DispatchStatus
     ): Result<Boolean>
 }

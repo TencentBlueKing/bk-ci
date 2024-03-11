@@ -28,22 +28,21 @@
 package com.tencent.devops.quality.api.v2.pojo.op
 
 import com.fasterxml.jackson.annotation.JsonInclude
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
 @JsonInclude(JsonInclude.Include.ALWAYS)
-@ApiModel("质量红线-控制点修改模型")
+@Schema(title = "质量红线-控制点修改模型")
 data class ControlPointUpdate(
-    @ApiModelProperty("原子的ClassType")
+    @get:Schema(title = "原子的ClassType")
     val elementType: String?,
-    @ApiModelProperty("控制点名称(原子名称)")
+    @get:Schema(title = "控制点名称(原子名称)")
     val name: String?,
-    @ApiModelProperty("研发阶段")
+    @get:Schema(title = "研发阶段")
     val stage: String?,
-    @ApiModelProperty("支持红线位置(准入-BEFORE, 准出-AFTER)")
+    @get:Schema(title = "支持红线位置(准入-BEFORE, 准出-AFTER)")
     val availablePosition: String?,
-    @ApiModelProperty("默认红线位置")
+    @get:Schema(title = "默认红线位置")
     val defaultPosition: String?,
-    @ApiModelProperty("是否启用")
+    @get:Schema(title = "是否启用")
     val enable: Boolean?
 )

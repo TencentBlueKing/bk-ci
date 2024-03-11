@@ -97,6 +97,6 @@ interface PermissionMigrateService {
     ): Boolean
 
     fun autoRenewal(
-        projectCodes: List<String>
+        migrateProjectConditionDTO: MigrateProjectConditionDTO
     ): Boolean
 }

@@ -27,13 +27,12 @@
 
 package com.tencent.devops.store.pojo.common
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("标签信息请求报文体")
+@Schema(title = "标签信息请求报文体")
 data class LabelRequest(
-    @ApiModelProperty("标签代码", required = true)
+    @get:Schema(title = "标签代码", required = true)
     val labelCode: String,
-    @ApiModelProperty("标签名称", required = true)
+    @get:Schema(title = "标签名称", required = true)
     val labelName: String
 )

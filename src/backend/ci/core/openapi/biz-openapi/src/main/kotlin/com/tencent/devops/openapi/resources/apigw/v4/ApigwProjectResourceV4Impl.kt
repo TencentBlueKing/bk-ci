@@ -155,4 +155,21 @@ class ApigwProjectResourceV4Impl @Autowired constructor(
             createInfo = createInfo
         )
     }
+
+    override fun updateProjectProductId(
+        appCode: String?,
+        apigwType: String?,
+        userId: String?,
+        projectId: String,
+        productName: String?,
+        productId: Int?
+    ): Result<Boolean> {
+        logger.info("updateProjectProductId v4 |$appCode|$userId|$projectId|$productName")
+        openapiPermissionService.validProjectManagerPermission(appCode, apigwType, userId, projectId)
+        return client.get(ServiceProjectResource::class).updateProjectProductId(
+            projectCode = projectId,
+            productName = productName,
+            productId = productId
+        )
+    }
 }

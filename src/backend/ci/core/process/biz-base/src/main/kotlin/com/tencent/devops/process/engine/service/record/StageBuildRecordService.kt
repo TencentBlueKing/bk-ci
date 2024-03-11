@@ -44,7 +44,6 @@ import com.tencent.devops.process.engine.dao.PipelineBuildDao
 import com.tencent.devops.process.engine.dao.PipelineResDao
 import com.tencent.devops.process.engine.dao.PipelineResVersionDao
 import com.tencent.devops.process.engine.pojo.PipelineBuildStageControlOption
-import com.tencent.devops.process.engine.service.PipelineElementService
 import com.tencent.devops.process.engine.service.detail.StageBuildDetailService
 import com.tencent.devops.process.pojo.BuildStageStatus
 import com.tencent.devops.process.service.StageTagService
@@ -67,7 +66,6 @@ class StageBuildRecordService(
     recordModelService: PipelineRecordModelService,
     pipelineResDao: PipelineResDao,
     pipelineResVersionDao: PipelineResVersionDao,
-    pipelineElementService: PipelineElementService,
     stageTagService: StageTagService,
     buildRecordModelDao: BuildRecordModelDao,
     pipelineEventDispatcher: PipelineEventDispatcher,
@@ -81,8 +79,7 @@ class StageBuildRecordService(
     recordModelService = recordModelService,
     pipelineResDao = pipelineResDao,
     pipelineBuildDao = pipelineBuildDao,
-    pipelineResVersionDao = pipelineResVersionDao,
-    pipelineElementService = pipelineElementService
+    pipelineResVersionDao = pipelineResVersionDao
 ) {
 
     fun updateStageStatus(
