@@ -199,12 +199,10 @@
             switchVersion (versionId) {
                 const version = this.versionList.find(item => item.version === versionId && item.pipelineId === this.pipelineId)
                 console.log(versionId, this.pipelineId, this.isLoading, version)
-                if (version) {
-                    this.activeVersion = version
-                    this.$emit('change', versionId, version)
-                    this.$emit('input', versionId, version)
-                    this.$emit('update:value', versionId, version)
-                }
+                this.activeVersion = version
+                this.$emit('change', versionId, version)
+                this.$emit('input', versionId, version)
+                this.$emit('update:value', versionId, version)
             },
             isCurrentVersion (version) {
                 return version?.version === this.pipelineInfo?.releaseVersion
