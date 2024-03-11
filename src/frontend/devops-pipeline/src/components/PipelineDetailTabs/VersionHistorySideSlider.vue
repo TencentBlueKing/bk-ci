@@ -34,7 +34,7 @@
                             }]">
                                 <span>
                                     <i class="devops-icon icon-edit-line" v-if="row.status === 'COMMITTING'" />
-                                    <logo v-else-if="row.isBranchVersion" name="branch" size="14" />
+                                    <logo v-else-if="row.isBranchVersion" name="branch" size="16" />
                                     <i v-else class="devops-icon icon-check-circle" />
                                 </span>
                                 {{ row.versionName }}
