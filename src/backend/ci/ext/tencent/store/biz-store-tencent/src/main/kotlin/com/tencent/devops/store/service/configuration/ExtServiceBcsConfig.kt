@@ -25,26 +25,23 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.store.service.config
+package com.tencent.devops.store.service.configuration
 
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Component
 
 @Component
-class ExtServiceDeploymentConfig {
+class ExtServiceBcsConfig {
 
-    @Value("\${store.extService.bcs.deployment.pullImageSecretName}")
-    val pullImageSecretName: String = ""
+    @Value("\${store.extService.bcs.masterUrl}")
+    val masterUrl: String = ""
 
-    @Value("\${store.extService.bcs.deployment.grayPullImageSecretName}")
-    val grayPullImageSecretName: String = ""
+    @Value("\${store.extService.bcs.token}")
+    val token: String = ""
 
-    @Value("\${store.extService.bcs.deployment.replicas}")
-    val replicas: String = ""
+    @Value("\${store.extService.bcs.deployTimeOut}")
+    val deployTimeOut: String = ""
 
-    @Value("\${store.extService.bcs.deployment.grayReplicas}")
-    val grayReplicas: String = ""
-
-    @Value("\${store.extService.bcs.deployment.containerPort}")
-    val containerPort: String = ""
+    @Value("\${store.extService.bcs.killGrayAppIntervalTime}")
+    val killGrayAppIntervalTime: String = ""
 }

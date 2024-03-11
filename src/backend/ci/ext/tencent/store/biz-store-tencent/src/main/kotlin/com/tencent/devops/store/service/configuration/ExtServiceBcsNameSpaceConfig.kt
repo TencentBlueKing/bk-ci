@@ -25,7 +25,7 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.store.service.config
+package com.tencent.devops.store.service.configuration
 
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Component

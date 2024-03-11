@@ -25,23 +25,26 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.store.service.config
+package com.tencent.devops.store.service.configuration
 
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Component
 
 @Component
-class ExtServiceBcsConfig {
+class ExtServiceBcsLimitRangeConfig {
 
-    @Value("\${store.extService.bcs.masterUrl}")
-    val masterUrl: String = ""
+    @Value("\${store.extService.bcs.limitRange.default.cpu}")
+    val defaultCpu: String = ""
 
-    @Value("\${store.extService.bcs.token}")
-    val token: String = ""
+    @Value("\${store.extService.bcs.limitRange.default.memory}")
+    val defaultMemory: String = ""
 
-    @Value("\${store.extService.bcs.deployTimeOut}")
-    val deployTimeOut: String = ""
+    @Value("\${store.extService.bcs.limitRange.defaultRequest.cpu}")
+    val defaultRequestCpu: String = ""
 
-    @Value("\${store.extService.bcs.killGrayAppIntervalTime}")
-    val killGrayAppIntervalTime: String = ""
+    @Value("\${store.extService.bcs.limitRange.defaultRequest.memory}")
+    val defaultRequestMemory: String = ""
+
+    @Value("\${store.extService.bcs.limitRange.type}")
+    val limitType: String = ""
 }

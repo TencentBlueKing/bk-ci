@@ -61,7 +61,7 @@ import com.tencent.devops.store.pojo.extservice.dto.ExtServiceImageInfoDTO
 import com.tencent.devops.store.pojo.extservice.dto.InitExtServiceDTO
 import com.tencent.devops.store.pojo.extservice.enums.ExtServicePackageSourceTypeEnum
 import com.tencent.devops.store.pojo.extservice.enums.ExtServiceStatusEnum
-import com.tencent.devops.store.service.config.ExtServiceImageSecretConfig
+import com.tencent.devops.store.service.configuration.ExtServiceImageSecretConfig
 import com.tencent.devops.store.service.dao.ExtServiceBuildInfoDao
 import java.util.Base64
 import java.util.concurrent.TimeUnit
@@ -205,7 +205,7 @@ class TxExtServiceBaseService : ExtServiceBaseService() {
         val username = Base64.getEncoder().encodeToString(extServiceImageSecretConfig.repoUsername.toByteArray())
         val password = Base64.getEncoder().encodeToString(extServiceImageSecretConfig.repoPassword.toByteArray())
         val extServiceImageInfo = ExtServiceImageInfoDTO(
-            imageName = serviceCode,
+            imageName = imageName,
             imageTag = version,
             repoAddr = repoAddr,
             username = username,
@@ -282,7 +282,7 @@ class TxExtServiceBaseService : ExtServiceBaseService() {
             val startParams = mutableMapOf<String, String>() // 启动参数
             startParams["serviceCode"] = serviceCode
             startParams["version"] = serviceRecord.version
-            startParams["imageName"] = serviceCode
+            startParams["imageName"] = imageName
             startParams["imageTag"] = version
             startParams["extServiceDeployInfo"] = JsonUtil.toJson(deployApp)
             startParams["script"] = script
