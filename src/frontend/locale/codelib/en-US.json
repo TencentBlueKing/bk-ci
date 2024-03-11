@@ -203,7 +203,7 @@
     "该代码库不存在，请切换代码库": "This code repository does not exist, please switch to another code repository",
     "申请权限": "Apply permission",
     "请先关闭 PAC 模式，再删除代码库": "Please close PAC mode before deleting the repository",
-    "代码库下管理的流水线": "Pipelines",
+    "代码库下管理的流水线": "Pipelines managed under the code repository",
     "以下流水线通过别名方式使用此代码库": "The following pipelines use this repository through aliases",
     "别名变更后，使用旧别名引用的流水线将引用不到当前代码库，请评估变更是否合理": "After the alias is changed, pipelines that reference the old alias will not be able to reference the current repository. Please assess whether the change is reasonable.",
     "确认更改": "Confirm Changes"
