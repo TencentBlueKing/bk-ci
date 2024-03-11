@@ -33,6 +33,11 @@ class RemotedevProjectService @Autowired constructor(
             return false
         }
 
+        // 如果是来关闭的就不用往下走了
+        if (!enable) {
+            return true
+        }
+
         // 注册start gameid
         val project = client.get(ServiceProjectResource::class).listByProjectCode(setOf(projectId)).data?.firstOrNull()
         if (project == null) {
