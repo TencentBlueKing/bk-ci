@@ -202,6 +202,9 @@ export default {
             if (!pipelineRes.data.yamlSupported) {
                 rootCommit(commit, UPDATE_PIPELINE_MODE, UI_MODE)
             }
+            if (!pipelineRes?.data?.yamlSupported) {
+                throw new Error(pipelineRes?.data?.yamlInvalidMsg)
+            }
             const { yaml, ...highlightMap } = pipelineRes.data.yamlPreview
             if (pipelineRes?.data?.yamlPreview?.yaml) {
                 commit(SET_PIPELINE_YAML, yaml)
