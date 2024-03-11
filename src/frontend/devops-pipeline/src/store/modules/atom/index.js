@@ -84,7 +84,8 @@ export default {
         pipelineCommonSetting: {},
         editfromImport: false,
         isPipelineEditing: false,
-        activePipelineVersion: null
+        activePipelineVersion: null,
+        yamlHighlightBlockMap: {}
     },
     mutations,
     actions,

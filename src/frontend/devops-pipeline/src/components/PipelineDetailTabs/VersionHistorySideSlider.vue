@@ -32,9 +32,11 @@
                             <div :class="['pipeline-version-name-cell', {
                                 'active-version-name': row.version === releaseVersion
                             }]">
-                                <i class="devops-icon icon-edit-line" v-if="row.status === 'COMMITTING'" />
-                                <logo v-else-if="row.isBranchVersion" name="branch" size="14" />
-                                <i v-else class="devops-icon icon-check-circle" />
+                                <span>
+                                    <i class="devops-icon icon-edit-line" v-if="row.status === 'COMMITTING'" />
+                                    <logo v-else-if="row.isBranchVersion" name="branch" size="14" />
+                                    <i v-else class="devops-icon icon-check-circle" />
+                                </span>
                                 {{ row.versionName }}
                                 <!-- <span>
                                     [{{ $t('mainBranch') }}]
@@ -56,7 +58,6 @@
                             />
                             <bk-button
                                 text
-                                size="small"
                                 theme="primary"
                                 :disabled="releaseVersion === props.row.version"
                                 @click="deleteVersion(props.row)"
@@ -295,8 +296,8 @@
                 display: flex;
                 align-items: center;
                 grid-gap: 6px;
-
-                .icon-check-circle {
+                > span {
+                    flex-shrink: 0;
                     font-size: 16px;
                 }
                 &.active-version-name .icon-check-circle {

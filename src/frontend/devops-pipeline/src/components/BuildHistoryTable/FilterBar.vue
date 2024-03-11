@@ -128,7 +128,7 @@
                     const [statusList, repoList, branchList, triggerList] = await Promise.all([
                         'status',
                         'repo',
-                        `branchName?materialAlias=${this.$route.query.materialAlias}`,
+                        `branchName?materialAlias=${this.$route.query.materialAlias ?? ''}`,
                         'trigger'
                     ].map(this.getConditionList))
                     this.statusList = statusList.map(item => ({

@@ -335,8 +335,8 @@
         props: {
             isPatchView: Boolean,
             maxHeight: {
-                type: Number,
-                default: 0
+                type: [Number, String],
+                default: 'auto'
             },
             filterParams: {
                 type: Object,
@@ -606,6 +606,7 @@
                         current: page
                     })
                     this.pipelineList = records
+                    console.log(this.pipelineList, 111)
                     if (this.isAllPipelineView || this.isPatchView || this.isDeleteView) {
                         this.visibleTagCountList = {}
                         setTimeout(this.calcOverPos, 100)

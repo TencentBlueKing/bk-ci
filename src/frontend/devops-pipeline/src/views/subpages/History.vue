@@ -1,7 +1,7 @@
 <template>
     <div :class="['pipeline-detail-entry', {
         'show-pipeline-var': activeChild.showVar
-    }]" v-bkloading="{ isLoading }">
+    }]">
         <aside class="pipeline-detail-entry-aside">
             <ul v-for="item in asideNav" :key="item.title">
                 <li class="nav-item-title">
@@ -30,8 +30,8 @@
 
                 </ul>
             </ul>
-            <div ref="tool" id="disable-nav-child-item-tooltips">
-                {{$t('switchToReleaseVersionCheck')}}
+            <div v-for="i in [1,2,3,4]" :key="i" ref="disableToolTips" class="disable-nav-child-item-tooltips">
+                {{$t('switchToReleaseVersion')}}
                 <span @click="switchToReleaseVersion" class="text-link">{{ $t('newlist.view') }}</span>
             </div>
         </aside>
@@ -81,19 +81,19 @@
                         children: [
                             {
                                 title: this.$t(this.isActiveDraftVersion ? 'draftExecRecords' : 'pipelinesHistory'),
-                                disabled: this.isOutdatedVersion,
                                 disableTooltip: {
-                                    content: this.$refs?.tool,
-                                    interactive: true,
-                                    disabled: !this.isOutdatedVersion
+                                    content: this.$refs.disableToolTips?.[0],
+                                    disabled: !this.isOutdatedVersion,
+                                    delay: [300, 0]
                                 },
                                 name: 'history'
                             },
                             {
                                 title: this.$t('triggerEvent'),
-                                disabled: this.isOutdatedVersion,
                                 disableTooltip: {
-                                    disabled: true
+                                    content: this.$refs.disableToolTips?.[1],
+                                    disabled: !this.isOutdatedVersion,
+                                    delay: [300, 0]
                                 },
                                 name: 'triggerEvent'
                             }
@@ -103,6 +103,7 @@
                             // }
                         ].map((child) => ({
                             ...child,
+                            disabled: this.isOutdatedVersion,
                             active: this.activeMenuItem === child.name
                         }))
                     },
@@ -138,26 +139,32 @@
                         children: [
                             {
                                 title: this.$t('authSetting'),
+                                disableTooltip: {
+                                    content: this.$refs.disableToolTips?.[2],
+                                    disabled: !this.isOutdatedVersion,
+                                    delay: [300, 0]
+                                },
                                 name: 'permission'
                             },
                             {
                                 title: this.$t('operationLog'),
+                                disableTooltip: {
+                                    content: this.$refs.disableToolTips?.[3],
+                                    disabled: !this.isOutdatedVersion,
+                                    delay: [300, 0]
+                                },
                                 name: 'changeLog'
                             }
                         ].map((child) => ({
                             ...child,
-                            disableTooltip: {
-                                disabled: true
-                            },
+                            disabled: this.isOutdatedVersion,
                             active: this.activeMenuItem === child.name
                         }))
                     }
                 ]
-            },
-            isLoading () {
-                return !this.activePipelineVersion?.version
             }
         },
+
         beforeDestroy () {
             this.resetHistoryFilterCondition()
         },
@@ -242,7 +249,7 @@
     padding: 4px 0;
     overflow: auto;
     overflow: overlay;
-    #disable-nav-child-item-tooltips {
+    .disable-nav-child-item-tooltips {
         display: none;
     }
 
