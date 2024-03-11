@@ -185,8 +185,9 @@
                             isRelease: item.status === 'RELEASED'
                         }
                     })
+                    const version = this.versionList.find(item => item.version === this.value)
 
-                    // this.switchVersion(this.value)
+                    this.activeVersion = version
                 } catch (err) {
                     this.$showTips({
                         message: err.message || err,
@@ -197,8 +198,7 @@
                 }
             },
             switchVersion (versionId) {
-                const version = this.versionList.find(item => item.version === versionId && item.pipelineId === this.pipelineId)
-                console.log(versionId, this.pipelineId, this.isLoading, version)
+                const version = this.versionList.find(item => item.version === versionId)
                 this.activeVersion = version
                 this.$emit('change', versionId, version)
                 this.$emit('input', versionId, version)
