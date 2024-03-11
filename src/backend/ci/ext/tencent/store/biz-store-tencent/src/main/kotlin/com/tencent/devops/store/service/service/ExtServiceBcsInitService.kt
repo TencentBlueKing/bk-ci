@@ -34,10 +34,10 @@ import com.tencent.devops.dispatch.pojo.CreateImagePullSecretRequest
 import com.tencent.devops.dispatch.pojo.KubernetesLabel
 import com.tencent.devops.dispatch.pojo.KubernetesLimitRange
 import com.tencent.devops.dispatch.pojo.KubernetesRepo
-import com.tencent.devops.store.service.configuration.ExtServiceBcsConfig
-import com.tencent.devops.store.service.configuration.ExtServiceBcsLimitRangeConfig
-import com.tencent.devops.store.service.configuration.ExtServiceBcsNameSpaceConfig
-import com.tencent.devops.store.service.configuration.ExtServiceImageSecretConfig
+import com.tencent.devops.store.service.config.ExtServiceBcsConfig
+import com.tencent.devops.store.service.config.ExtServiceBcsLimitRangeConfig
+import com.tencent.devops.store.service.config.ExtServiceBcsNameSpaceConfig
+import com.tencent.devops.store.service.config.ExtServiceImageSecretConfig
 import javax.annotation.PostConstruct
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired

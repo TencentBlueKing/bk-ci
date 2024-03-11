@@ -25,29 +25,26 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.store.service.configuration
+package com.tencent.devops.store.service.config
 
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Component
 
 @Component
-class ExtServiceIngressConfig {
+class ExtServiceBcsLimitRangeConfig {
 
-    @Value("\${store.extService.bcs.ingress.host}")
-    val host: String = ""
+    @Value("\${store.extService.bcs.limitRange.default.cpu}")
+    val defaultCpu: String = ""
 
-    @Value("\${store.extService.bcs.ingress.grayHost}")
-    val grayHost: String = ""
+    @Value("\${store.extService.bcs.limitRange.default.memory}")
+    val defaultMemory: String = ""
 
-    @Value("\${store.extService.bcs.ingress.contextPath}")
-    val contextPath: String = ""
+    @Value("\${store.extService.bcs.limitRange.defaultRequest.cpu}")
+    val defaultRequestCpu: String = ""
 
-    @Value("\${store.extService.bcs.ingress.annotation.class}")
-    val annotationClass: String = ""
+    @Value("\${store.extService.bcs.limitRange.defaultRequest.memory}")
+    val defaultRequestMemory: String = ""
 
-    @Value("\${store.extService.bcs.ingress.annotation.existLbId}")
-    val annotationExistLbId: String = ""
-
-    @Value("\${store.extService.bcs.ingress.annotation.grayExistLbId}")
-    val annotationGrayExistLbId: String = ""
+    @Value("\${store.extService.bcs.limitRange.type}")
+    val limitType: String = ""
 }

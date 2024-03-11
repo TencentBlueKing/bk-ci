@@ -52,9 +52,7 @@ import com.tencent.devops.repository.pojo.enums.VisibilityLevelEnum
 import com.tencent.devops.store.common.dao.BusinessConfigDao
 import com.tencent.devops.store.common.dao.StorePipelineBuildRelDao
 import com.tencent.devops.store.common.dao.StorePipelineRelDao
-import com.tencent.devops.store.service.configuration.ExtServiceImageSecretConfig
 import com.tencent.devops.store.constant.StoreMessageCode
-import com.tencent.devops.store.service.dao.ExtServiceBuildInfoDao
 import com.tencent.devops.store.pojo.common.KEY_STORE_CODE
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.pojo.extservice.constants.KEY_EXT_SERVICE_ITEMS_PREFIX
@@ -63,6 +61,8 @@ import com.tencent.devops.store.pojo.extservice.dto.ExtServiceImageInfoDTO
 import com.tencent.devops.store.pojo.extservice.dto.InitExtServiceDTO
 import com.tencent.devops.store.pojo.extservice.enums.ExtServicePackageSourceTypeEnum
 import com.tencent.devops.store.pojo.extservice.enums.ExtServiceStatusEnum
+import com.tencent.devops.store.service.config.ExtServiceImageSecretConfig
+import com.tencent.devops.store.service.dao.ExtServiceBuildInfoDao
 import java.util.Base64
 import java.util.concurrent.TimeUnit
 import org.apache.commons.text.StringEscapeUtils
@@ -205,7 +205,7 @@ class TxExtServiceBaseService : ExtServiceBaseService() {
         val username = Base64.getEncoder().encodeToString(extServiceImageSecretConfig.repoUsername.toByteArray())
         val password = Base64.getEncoder().encodeToString(extServiceImageSecretConfig.repoPassword.toByteArray())
         val extServiceImageInfo = ExtServiceImageInfoDTO(
-            imageName = imageName,
+            imageName = serviceCode,
             imageTag = version,
             repoAddr = repoAddr,
             username = username,

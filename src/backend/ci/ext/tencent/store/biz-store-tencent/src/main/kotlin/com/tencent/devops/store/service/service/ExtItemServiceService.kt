@@ -30,7 +30,7 @@ package com.tencent.devops.store.service.service
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.store.common.dao.StoreProjectRelDao
-import com.tencent.devops.store.service.configuration.ExtServiceIngressConfig
+import com.tencent.devops.store.service.config.ExtServiceIngressConfig
 import com.tencent.devops.store.service.dao.ExtItemServiceDao
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.pojo.extservice.vo.ExtItemServiceVO

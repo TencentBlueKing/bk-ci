@@ -86,7 +86,7 @@ import com.tencent.devops.store.common.service.StoreUserService
 import com.tencent.devops.store.common.service.StoreVisibleDeptService
 import com.tencent.devops.store.common.service.action.StoreDecorateFactory
 import com.tencent.devops.store.common.utils.VersionUtils
-import com.tencent.devops.store.service.configuration.ExtServiceBcsNameSpaceConfig
+import com.tencent.devops.store.service.config.ExtServiceBcsNameSpaceConfig
 import com.tencent.devops.store.constant.StoreMessageCode
 import com.tencent.devops.store.service.dao.ExtItemServiceDao
 import com.tencent.devops.store.service.dao.ExtServiceDao

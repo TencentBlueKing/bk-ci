@@ -25,32 +25,29 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.store.service.configuration
+package com.tencent.devops.store.service.config
 
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Component
 
 @Component
-class ExtServiceImageSecretConfig {
+class ExtServiceIngressConfig {
 
-    @Value("\${store.extService.bcs.secret.image.secretName}")
-    val secretName: String = ""
+    @Value("\${store.extService.bcs.ingress.host}")
+    val host: String = ""
 
-    @Value("\${store.extService.bcs.secret.image.graySecretName}")
-    val graySecretName: String = ""
+    @Value("\${store.extService.bcs.ingress.grayHost}")
+    val grayHost: String = ""
 
-    @Value("\${store.extService.bcs.secret.image.imageNamePrefix}")
-    val imageNamePrefix: String = ""
+    @Value("\${store.extService.bcs.ingress.contextPath}")
+    val contextPath: String = ""
 
-    @Value("\${store.extService.bcs.secret.image.repo.registryUrl}")
-    val repoRegistryUrl: String = ""
+    @Value("\${store.extService.bcs.ingress.annotation.class}")
+    val annotationClass: String = ""
 
-    @Value("\${store.extService.bcs.secret.image.repo.name}")
-    val repoUsername: String = ""
+    @Value("\${store.extService.bcs.ingress.annotation.existLbId}")
+    val annotationExistLbId: String = ""
 
-    @Value("\${store.extService.bcs.secret.image.repo.password}")
-    val repoPassword: String = ""
-
-    @Value("\${store.extService.bcs.secret.image.repo.email}")
-    val repoEmail: String = ""
+    @Value("\${store.extService.bcs.ingress.annotation.grayExistLbId}")
+    val annotationGrayExistLbId: String = ""
 }

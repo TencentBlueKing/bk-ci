@@ -32,8 +32,8 @@ import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.dispatch.api.ServiceBcsResource
 import com.tencent.devops.store.common.dao.StoreReleaseDao
-import com.tencent.devops.store.service.configuration.ExtServiceBcsConfig
-import com.tencent.devops.store.service.configuration.ExtServiceBcsNameSpaceConfig
+import com.tencent.devops.store.service.config.ExtServiceBcsConfig
+import com.tencent.devops.store.service.config.ExtServiceBcsNameSpaceConfig
 import com.tencent.devops.store.service.dao.ExtServiceDao
 import com.tencent.devops.store.service.dao.ExtServiceFeatureDao
 import com.tencent.devops.store.pojo.common.StoreReleaseCreateRequest
