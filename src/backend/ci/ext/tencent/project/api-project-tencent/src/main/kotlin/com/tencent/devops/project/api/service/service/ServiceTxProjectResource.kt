@@ -412,9 +412,12 @@ interface ServiceTxProjectResource {
         @Parameter(description = "项目名称", required = true)
         @QueryParam("projectCode")
         projectCode: String,
-        @Parameter(description = "云桌面配额", required = true)
+        @Parameter(description = "云桌面配额", required = false)
         @QueryParam("desktopNum")
-        addcloudDesktopNum: Int
+        addcloudDesktopNum: Int?,
+        @Parameter(description = "开启或关闭云研发", required = false)
+        @QueryParam("enable")
+        enable: Boolean?
     ): Result<Boolean>
 
     @Operation(summary = "按项目扩展系统设置consul Tag")

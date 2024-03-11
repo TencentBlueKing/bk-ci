@@ -165,14 +165,60 @@ class ProjectRemoteDevService @Autowired constructor(
         }
     }
 
-    fun updateRemoteDevInfo(projectCode: String, addcloudDesktopNum: Int): Boolean {
+    fun updateRemoteDevInfo(
+        userId: String,
+        projectCode: String,
+        addcloudDesktopNum: Int?,
+        enableRemotedev: Boolean?
+    ): Boolean {
+        if (addcloudDesktopNum == null && enableRemotedev == null) {
+            return true
+        }
         val record = projectDao.getByEnglishName(dslContext, projectCode) ?: return false
         if (record.properties == null) {
             return false
         }
-        val prop = JsonUtil.to(record.properties, ProjectProperties::class.java)
-        val newProp = prop.copy(cloudDesktopNum = prop.cloudDesktopNum + addcloudDesktopNum)
-        return projectDao.updatePropertiesByCode(dslContext, projectCode, newProp) > 0
+        var prop = JsonUtil.to(record.properties, ProjectProperties::class.java)
+        if (addcloudDesktopNum != null) {
+            prop = prop.copy(cloudDesktopNum = prop.cloudDesktopNum + addcloudDesktopNum)
+        }
+        if (enableRemotedev != null) {
+            prop = prop.copy(remotedev = enableRemotedev)
+            val dbProperties = JsonUtil.to(record.properties, ProjectProperties::class.java)
+            // 更新云研发项目时相关操作
+            val enableRemoteDev = dbProperties.remotedev != true && enableRemotedev == true
+            if (enableRemoteDev) {
+                enableRemoteDev(
+                    userId = userId,
+                    projectCode = record.englishName,
+                    enableRepoData = EnableBkRepoData(
+                        projectName = record.projectName,
+                        projectCode = record.englishName,
+                        bgId = record.bgId.toString(),
+                        bgName = record.bgName,
+                        centerId = record.centerId.toString(),
+                        centerName = record.centerName,
+                        deptId = record.deptId.toString(),
+                        deptName = record.deptName,
+                        englishName = record.englishName,
+                        productId = record.productId
+                    )
+                )
+            }
+            // 新开启的云研发项目给所有管理员发通知
+            val manager = dbProperties.remotedevManager
+                ?.split(";")?.filter { it.isNotBlank() }?.toSet()
+                ?: emptySet()
+
+            sendEnableRemoteDevNotify(
+                sendNotifyUser = manager,
+                projectCode = record.englishName,
+                projectName = record.projectName,
+                cloudDesktopNum = prop.cloudDesktopNum
+            )
+        }
+
+        return projectDao.updatePropertiesByCode(dslContext, projectCode, prop) > 0
     }
 
     fun sendEnableRemoteDevNotify(

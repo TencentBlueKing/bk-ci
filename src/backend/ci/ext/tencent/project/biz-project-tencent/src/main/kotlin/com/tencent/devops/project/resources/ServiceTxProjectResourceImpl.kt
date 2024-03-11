@@ -386,8 +386,13 @@ class ServiceTxProjectResourceImpl @Autowired constructor(
         )
     }
 
-    override fun updateRemotedev(userId: String, projectCode: String, addcloudDesktopNum: Int): Result<Boolean> {
-        return Result(remoteDevService.updateRemoteDevInfo(projectCode, addcloudDesktopNum))
+    override fun updateRemotedev(
+        userId: String,
+        projectCode: String,
+        addcloudDesktopNum: Int?,
+        enable: Boolean?
+    ): Result<Boolean> {
+        return Result(remoteDevService.updateRemoteDevInfo(userId, projectCode, addcloudDesktopNum, enable))
     }
 
     override fun setExtSystemTagByProject(
