@@ -5,7 +5,6 @@ import com.tencent.devops.auth.provider.sample.service.SampleAuthMonitorSpaceSer
 import com.tencent.devops.auth.provider.sample.service.SampleAuthPermissionProjectService
 import com.tencent.devops.auth.provider.sample.service.SampleAuthPermissionService
 import com.tencent.devops.auth.provider.sample.service.SampleGrantPermissionServiceImpl
-import com.tencent.devops.auth.provider.sample.service.SampleLocalManagerServiceImpl
 import com.tencent.devops.auth.provider.sample.service.SampleOrganizationService
 import com.tencent.devops.auth.provider.sample.service.SamplePermissionApplyService
 import com.tencent.devops.auth.provider.sample.service.SamplePermissionExtService
@@ -18,15 +17,14 @@ import com.tencent.devops.auth.provider.sample.service.SamplePermissionResourceS
 import com.tencent.devops.auth.provider.sample.service.SamplePermissionResourceValidateService
 import com.tencent.devops.auth.provider.sample.service.SamplePermissionRoleMemberService
 import com.tencent.devops.auth.provider.sample.service.SamplePermissionRoleService
-import com.tencent.devops.auth.provider.sample.service.SamplePermissionSuperManagerService
 import com.tencent.devops.auth.provider.sample.service.SamplePermissionUrlServiceImpl
+import com.tencent.devops.auth.provider.sample.service.SampleSuperManagerServiceImpl
 import com.tencent.devops.auth.service.AuthAuthorizationScopesService
 import com.tencent.devops.auth.service.AuthMonitorSpaceService
 import com.tencent.devops.auth.service.DefaultDeptServiceImpl
 import com.tencent.devops.auth.service.DeptService
-import com.tencent.devops.auth.service.LocalManagerService
 import com.tencent.devops.auth.service.OrganizationService
-import com.tencent.devops.auth.service.PermissionSuperManagerService
+import com.tencent.devops.auth.service.SuperManagerService
 import com.tencent.devops.auth.service.iam.PermissionApplyService
 import com.tencent.devops.auth.service.iam.PermissionExtService
 import com.tencent.devops.auth.service.iam.PermissionGradeService
@@ -78,8 +76,8 @@ class MockAuthAutoConfiguration {
     fun sampleGrantPermissionServiceImpl() = SampleGrantPermissionServiceImpl()
 
     @Bean
-    @ConditionalOnMissingBean(LocalManagerService::class)
-    fun sampleLocalManagerServiceImpl() = SampleLocalManagerServiceImpl()
+    @ConditionalOnMissingBean(SuperManagerService::class)
+    fun sampleSuperManagerServiceImpl() = SampleSuperManagerServiceImpl()
 
     @Bean
     @ConditionalOnMissingBean(PermissionGradeService::class)
@@ -120,10 +118,6 @@ class MockAuthAutoConfiguration {
     @Bean
     @ConditionalOnMissingBean(PermissionResourceValidateService::class)
     fun samplePermissionResourceValidateService() = SamplePermissionResourceValidateService()
-
-    @Bean
-    @ConditionalOnMissingBean(PermissionSuperManagerService::class)
-    fun samplePermissionSuperManagerService() = SamplePermissionSuperManagerService()
 
     @Bean
     @ConditionalOnMissingBean(PermissionMigrateService::class)

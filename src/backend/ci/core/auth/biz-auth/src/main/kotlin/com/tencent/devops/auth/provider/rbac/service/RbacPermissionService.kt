@@ -40,7 +40,7 @@ import com.tencent.bk.sdk.iam.dto.resource.V2ResourceNode
 import com.tencent.bk.sdk.iam.helper.AuthHelper
 import com.tencent.bk.sdk.iam.service.PolicyService
 import com.tencent.devops.auth.service.AuthProjectUserMetricsService
-import com.tencent.devops.auth.service.PermissionSuperManagerService
+import com.tencent.devops.auth.service.SuperManagerService
 import com.tencent.devops.auth.service.iam.PermissionService
 import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.api.util.Watcher
@@ -62,7 +62,7 @@ class RbacPermissionService constructor(
     private val iamConfiguration: IamConfiguration,
     private val policyService: PolicyService,
     private val authResourceCodeConverter: AuthResourceCodeConverter,
-    private val permissionSuperManagerService: PermissionSuperManagerService,
+    private val superManagerService: SuperManagerService,
     private val rbacCacheService: RbacCacheService,
     private val client: Client,
     private val authProjectUserMetricsService: AuthProjectUserMetricsService
@@ -482,7 +482,7 @@ class RbacPermissionService constructor(
                 MDC.put(TraceTag.BIZID, traceId)
                 val authPermission = action.substringAfterLast("_")
                 // 具有action管理员权限,那么有所有资源权限
-                if (permissionSuperManagerService.reviewManagerCheck(
+                if (superManagerService.projectManagerCheck(
                         userId = userId,
                         projectCode = projectCode,
                         resourceType = resourceType,
@@ -608,7 +608,7 @@ class RbacPermissionService constructor(
         return rbacCacheService.checkProjectManager(
             userId = userId,
             projectCode = projectCode
-        ) || permissionSuperManagerService.reviewManagerCheck(
+        ) || superManagerService.projectManagerCheck(
             userId = userId,
             projectCode = projectCode,
             resourceType = resourceType,

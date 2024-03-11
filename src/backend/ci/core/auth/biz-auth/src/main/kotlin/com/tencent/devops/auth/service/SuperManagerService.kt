@@ -23,23 +23,18 @@
  * NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
- *
  */
 
 package com.tencent.devops.auth.service
 
 /**
- * 超级管理员权限
+ * 超级管理员权限校验
  */
-interface PermissionSuperManagerService {
-
-    /**
-     * 校验是否有查看权限
-     */
-    fun reviewManagerCheck(
+interface SuperManagerService {
+    fun projectManagerCheck(
         userId: String,
         projectCode: String,
-        resourceType: String,
-        action: String
+        action: String,
+        resourceType: String
     ): Boolean
 }

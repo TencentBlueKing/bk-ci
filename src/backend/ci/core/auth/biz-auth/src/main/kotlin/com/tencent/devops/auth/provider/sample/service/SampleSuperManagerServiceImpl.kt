@@ -25,13 +25,17 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.auth.service
+package com.tencent.devops.auth.provider.sample.service
 
-interface LocalManagerService {
-    fun projectManagerCheck(
+import com.tencent.devops.auth.service.SuperManagerService
+
+class SampleSuperManagerServiceImpl : SuperManagerService {
+    override fun projectManagerCheck(
         userId: String,
         projectCode: String,
         action: String,
         resourceType: String
-    ): Boolean
+    ): Boolean {
+        return false
+    }
 }

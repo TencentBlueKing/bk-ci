@@ -25,17 +25,30 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.auth.provider.sample.service
+package com.tencent.devops.auth.provider.blueking.service
 
-import com.tencent.devops.auth.service.LocalManagerService
+import com.tencent.devops.auth.service.SuperManagerService
+import org.springframework.beans.factory.annotation.Autowired
 
-class SampleLocalManagerServiceImpl : LocalManagerService {
+class BkSuperManagerServiceImp @Autowired constructor() : SuperManagerService {
+
     override fun projectManagerCheck(
         userId: String,
         projectCode: String,
         action: String,
         resourceType: String
     ): Boolean {
+        if (isAdmin(userId)) {
+            return true
+        }
+        return false
+    }
+
+    // 有用户相关功能后， 需要校验真是的管理员账号
+    private fun isAdmin(userId: String): Boolean {
+        if (userId == "admin") {
+            return true
+        }
         return false
     }
 }

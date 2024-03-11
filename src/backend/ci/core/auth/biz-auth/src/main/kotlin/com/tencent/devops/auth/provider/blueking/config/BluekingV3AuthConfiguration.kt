@@ -37,7 +37,7 @@ import com.tencent.bk.sdk.iam.service.impl.ManagerServiceImpl
 import com.tencent.devops.auth.dao.AuthGroupDao
 import com.tencent.devops.auth.provider.blueking.service.BkAuthGrantPermissionServiceImpl
 import com.tencent.devops.auth.provider.blueking.service.BkIamPermissionRoleExtService
-import com.tencent.devops.auth.provider.blueking.service.BkLocalManagerServiceImp
+import com.tencent.devops.auth.provider.blueking.service.BkSuperManagerServiceImp
 import com.tencent.devops.auth.provider.blueking.service.BkOrganizationService
 import com.tencent.devops.auth.provider.blueking.service.BkPermissionExtServiceImpl
 import com.tencent.devops.auth.provider.blueking.service.BkPermissionGraderServiceImpl
@@ -141,7 +141,7 @@ class BluekingV3AuthConfiguration {
 
     @Bean
     @Primary
-    fun bkManagerService() = BkLocalManagerServiceImp()
+    fun bkManagerService() = BkSuperManagerServiceImp()
 
     @Bean
     @Primary
