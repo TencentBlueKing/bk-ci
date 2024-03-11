@@ -206,5 +206,6 @@
     "代码库下管理的流水线": "Pipelines managed under the code repository",
     "以下流水线通过别名方式使用此代码库": "The following pipelines use this repository through aliases",
     "别名变更后，使用旧别名引用的流水线将引用不到当前代码库，请评估变更是否合理": "After the alias is changed, pipelines that reference the old alias will not be able to reference the current repository. Please assess whether the change is reasonable.",
-    "确认更改": "Confirm Changes"
+    "确认更改": "Confirm Changes",
+    "PAC 模式下不允许修改别名": "Alias modifications are not allowed in PAC mode"
 }
