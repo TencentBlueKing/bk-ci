@@ -36,6 +36,7 @@
                 pipelineList: 'pipelines/getPipelineList'
             }),
             ...mapState('atom', [
+                'pipeline',
                 'pipelineInfo'
             ]),
             breadCrumbs () {
@@ -47,12 +48,12 @@
                     }
                 }, this.$route.name === 'pipelineImportEdit'
                     ? {
-                        selectedValue: this.pipelineInfo?.pipelineName ?? '--'
+                        selectedValue: this.pipeline?.name ?? '--'
                     }
                     : {
                         paramId: 'pipelineId',
                         paramName: 'pipelineName',
-                        selectedValue: this.pipelineInfo?.pipelineName ?? '--',
+                        selectedValue: this.pipeline?.name ?? '--',
                         records: this.pipelineList,
                         showTips: true,
                         tipsName: 'switch_pipeline_hint',
@@ -143,6 +144,16 @@
             async doSelectPipeline (pipelineId, cur) {
                 try {
                     const { $route } = this
+                    const name = $route.params.buildNo ? 'pipelinesHistory' : $route.name
+
+                    this.$router.push({
+                        name,
+                        params: {
+                            ...$route.params,
+                            projectId: $route.params.projectId,
+                            pipelineId
+                        }
+                    })
                     await this.requestPipelineSummary({
                         pipelineId,
                         projectId: $route.params.projectId
@@ -156,16 +167,6 @@
                             pipelineId,
                             pipelineName: cur.pipelineName
                         })
-                    })
-                    const name = $route.params.buildNo ? 'pipelinesHistory' : $route.name
-
-                    this.$router.push({
-                        name,
-                        params: {
-                            ...$route.params,
-                            projectId: $route.params.projectId,
-                            pipelineId
-                        }
                     })
                 } catch (error) {
                     this.handleError(error, {

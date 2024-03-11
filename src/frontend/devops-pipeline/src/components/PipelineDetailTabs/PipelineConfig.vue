@@ -37,7 +37,7 @@
 </template>
 
 <script>
-    import { mapActions, mapState, mapGetters } from 'vuex'
+    import { mapState, mapGetters } from 'vuex'
     import ModeSwitch from '@/components/ModeSwitch'
     import YamlEditor from '@/components/YamlEditor'
     import { TriggerTab, NotifyTab } from '@/components/PipelineEditTabs/'
@@ -62,23 +62,17 @@
             return {
                 RESOURCE_ACTION,
                 isLoading: false,
-                yaml: '',
-                yamlHighlightBlockMap: {},
-                yamlHighlightBlock: []
+                yaml: ''
             }
         },
         computed: {
             ...mapState('atom', [
                 'pipelineYaml',
                 'pipelineSetting',
-                'pipelineWithoutTrigger',
                 'pipeline',
                 'pipelineInfo',
-                'activePipelineVersion'
-            ]),
-
-            ...mapState([
-                'pipelineMode'
+                'activePipelineVersion',
+                'yamlHighlightBlockMap'
             ]),
             ...mapGetters({
                 isCodeMode: 'isCodeMode',
@@ -154,69 +148,16 @@
                     default:
                         return null
                 }
+            },
+            yamlHighlightBlock () {
+                return this.isCodeMode ? (this.yamlHighlightBlockMap?.[this.pipelineType] ?? []) : []
             }
-        },
-        watch: {
-            pipelineType (type) {
-                this.yamlHighlightBlock = this.yamlHighlightBlockMap?.[type] ?? []
-            },
-            isCodeMode (val) {
-                if (val) {
-                    this.yamlHighlightBlock = this.yamlHighlightBlockMap?.[this.pipelineType] ?? []
-                }
-            },
-            'activePipelineVersion.version' (version) {
-                this.$nextTick(() => {
-                    this.init()
-                })
-            },
-            pipelineId (id) {
-                this.$nextTick(() => {
-                    this.init()
-                })
-            }
-        },
-        created () {
-            this.init()
         },
 
         beforeDestroy () {
             this.$refs.editor?.destroy()
-            this.setPipelineYaml('')
-            this.setPipeline(null)
-            this.setPipelineWithoutTrigger(null)
-            this.setPipelineSetting(null)
         },
         methods: {
-            ...mapActions('atom', [
-                'requestPipeline',
-                'setPipeline',
-                'setPipelineYaml',
-                'setPipelineSetting',
-                'setPipelineWithoutTrigger'
-            ]),
-            async init () {
-                try {
-                    if (this.activePipelineVersion?.version) {
-                        this.isLoading = true
-                        const yamlHighlightBlockMap = await this.requestPipeline({
-                            ...this.$route.params,
-                            version: this.activePipelineVersion.version
-                        })
-                        this.yamlHighlightBlockMap = yamlHighlightBlockMap
-                        if (this.isCodeMode) {
-                            this.yamlHighlightBlock = this.yamlHighlightBlockMap[this.pipelineType]
-                        }
-                    }
-                } catch (error) {
-                    this.$bkMessage({
-                        theme: 'error',
-                        message: error.message
-                    })
-                } finally {
-                    this.isLoading = false
-                }
-            },
             showVersionSideSlider () {
                 bus.$emit(SHOW_VERSION_HISTORY_SIDESLIDER)
             }

@@ -66,6 +66,10 @@
             padding: 24px;
             overflow: hidden;
             height: 100%;
+            .pipeline-list-box {
+                flex: 1;
+                overflow: hidden;
+            }
 
             .current-pipeline-group-name {
                 display: flex;

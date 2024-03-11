@@ -462,7 +462,6 @@
                 buildHistories: [],
                 stoping: {},
                 isLoading: false,
-                currentPipelineVersion: '',
                 tableSetting: {
                     selectedFields: [],
                     size: 'small',
@@ -489,7 +488,7 @@
                 return this.$route.params.pipelineId
             },
             pipelineVersion () {
-                return this.isDebug ? this.pipelineInfo?.version : this.activePipelineVersion?.version
+                return this.activePipelineVersion?.version
             },
             canEdit () {
                 return this.pipelineInfo?.permissions.canEdit ?? true
@@ -633,21 +632,19 @@
             }
         },
         watch: {
-            pipelineId () {
-                this.$nextTick(() => {
-                    this.handlePageChange(1)
-                })
-            },
-            isActiveDraftVersion (version) {
-                this.$nextTick(() => {
-                    this.handlePageChange(1)
-                })
-            },
-            pipelineVersion: {
-                handler (val) {
-                    this.requestHistory()
+            pipelineId: {
+                handler () {
+                    this.$nextTick(() => {
+                        this.handlePageChange(1)
+                    })
                 },
                 immediate: true
+            },
+            isActiveDraftVersion: {
+                handler (val) {
+                    this.handlePageChange(1)
+                }
+
             }
         },
         created () {
@@ -697,7 +694,6 @@
                     this.setHistoryPageStatus({
                         count: res.count
                     })
-                    this.currentPipelineVersion = res.pipelineVersion || ''
                     this.buildHistories = res.records
                 } catch (err) {
                     if (err.code === 403) {

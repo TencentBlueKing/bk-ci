@@ -540,8 +540,4 @@
             cursor: pointer;
         }
     }
-    .pipeline-list-box {
-        flex: 1;
-        overflow: hidden;
-    }
 </style>

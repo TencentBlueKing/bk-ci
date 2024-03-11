@@ -64,6 +64,7 @@ import {
     SET_PIPELINE_INFO,
     SET_PIPELINE_WITHOUT_TRIGGER,
     SET_PIPELINE_YAML,
+    SET_PIPELINE_YAML_HIGHLIGHT_MAP,
     SET_REMOTE_TRIGGER_TOKEN,
     SET_REQUEST_ATOM_DATA,
     SET_SAVE_STATUS,
@@ -157,6 +158,10 @@ export default {
     },
     [SET_PIPELINE_YAML]: (state, yaml = '') => {
         Vue.set(state, 'pipelineYaml', yaml)
+        return state
+    },
+    [SET_PIPELINE_YAML_HIGHLIGHT_MAP]: (state, highlightMap = {}) => {
+        Vue.set(state, 'yamlHighlightBlockMap', highlightMap)
         return state
     },
     [RESET_PIPELINE_SETTING_MUNTATION]: (state, payload) => {

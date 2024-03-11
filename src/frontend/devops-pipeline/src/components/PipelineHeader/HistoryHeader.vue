@@ -112,6 +112,9 @@
             VersionDiffEntry,
             RollbackEntry
         },
+        props: {
+            updatePipeline: Function
+        },
         computed: {
             ...mapState('atom', ['pipelineInfo', 'activePipelineVersion']),
             ...mapGetters({
@@ -148,7 +151,7 @@
                 return this.pipelineInfo?.permissions?.canExecute ?? true
             },
             executable () {
-                return !this.isCurPipelineLocked && this.canManualStartup && this.isReleasePipeline
+                return (!this.isCurPipelineLocked && this.canManualStartup && this.isReleasePipeline) || this.isActiveDraftVersion
             },
             canManualStartup () {
                 return this.pipelineInfo?.canManualStartup ?? true
@@ -165,18 +168,6 @@
             },
             RESOURCE_ACTION () {
                 return RESOURCE_ACTION
-            }
-        },
-        watch: {
-            releaseVersion: {
-                handler (val) {
-                    if (val) {
-                        this.selectPipelineVersion({
-                            version: val
-                        })
-                    }
-                },
-                immediate: true
             }
         },
         methods: {
@@ -205,6 +196,8 @@
             },
             handleVersionChange (versionId, version) {
                 this.selectPipelineVersion(version)
+                console.log('this.handleVersionChange', versionId, version)
+                this.updatePipeline?.()
                 if (['history', 'triggerEvent'].includes(this.$route.params.type) && versionId < this.releaseVersion) {
                     this.$nextTick(() => {
                         this.$router.push({

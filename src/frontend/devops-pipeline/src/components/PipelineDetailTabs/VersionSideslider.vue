@@ -3,7 +3,8 @@
         <bk-select
             ref="versionSelector"
             searchable
-            v-model="activeVersionId"
+            :value="value"
+            :disabled="isLoading"
             :clearable="false"
             :popover-width="320"
             ext-cls="pipeline-version-selector"
@@ -91,7 +92,6 @@
                 versionList: [],
                 searchKeyword: '',
                 activeVersion: null,
-                activeVersionId: this.value,
                 pagination: {
                     current: 1,
                     count: 0,
@@ -129,7 +129,6 @@
         },
         watch: {
             value (val) {
-                this.activeVersionId = val
                 this.activeVersion = this.versionList.find(item => item.version === val)
             },
             pipelineId: {
@@ -163,15 +162,16 @@
                 this.pagination.limit = limit
                 this.handlePipelineVersionList()
             },
-            handlePipelineVersionList () {
-                this.isLoading = true
-                this.requestPipelineVersionList({
-                    projectId: this.projectId,
-                    pipelineId: this.pipelineId,
-                    page: this.pagination.current,
-                    pageSize: this.pagination.limit,
-                    versionName: this.searchKeyword
-                }).then(({ records, count }) => {
+            async handlePipelineVersionList () {
+                try {
+                    this.isLoading = true
+                    const { records } = await this.requestPipelineVersionList({
+                        projectId: this.projectId,
+                        pipelineId: this.pipelineId,
+                        page: this.pagination.current,
+                        pageSize: this.pagination.limit,
+                        versionName: this.searchKeyword
+                    })
                     this.versionList = records.map(item => {
                         const isDraft = item.status === 'COMMITTING'
                         const isBranchVersion = item.status === 'BRANCH'
@@ -185,18 +185,20 @@
                             isRelease: item.status === 'RELEASED'
                         }
                     })
-                    this.switchVersion(this.value)
-                }).catch(err => {
+
+                    // this.switchVersion(this.value)
+                } catch (err) {
                     this.$showTips({
                         message: err.message || err,
                         theme: 'error'
                     })
-                }).finally(() => {
+                } finally {
                     this.isLoading = false
-                })
+                }
             },
             switchVersion (versionId) {
-                const version = this.versionList.find(item => item.version === versionId)
+                const version = this.versionList.find(item => item.version === versionId && item.pipelineId === this.pipelineId)
+                console.log(versionId, this.pipelineId, this.isLoading, version)
                 if (version) {
                     this.activeVersion = version
                     this.$emit('change', versionId, version)

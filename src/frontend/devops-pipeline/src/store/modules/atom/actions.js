@@ -66,6 +66,7 @@ import {
     SET_PIPELINE_INFO,
     SET_PIPELINE_WITHOUT_TRIGGER,
     SET_PIPELINE_YAML,
+    SET_PIPELINE_YAML_HIGHLIGHT_MAP,
     SET_REMOTE_TRIGGER_TOKEN,
     SET_REQUEST_ATOM_DATA,
     SET_SAVE_STATUS,
@@ -201,9 +202,11 @@ export default {
             if (!pipelineRes.data.yamlSupported) {
                 rootCommit(commit, UPDATE_PIPELINE_MODE, UI_MODE)
             }
+            const { yaml, ...highlightMap } = pipelineRes.data.yamlPreview
             if (pipelineRes?.data?.yamlPreview?.yaml) {
-                commit(SET_PIPELINE_YAML, pipelineRes?.data?.yamlPreview?.yaml)
+                commit(SET_PIPELINE_YAML, yaml)
             }
+            commit(SET_PIPELINE_YAML_HIGHLIGHT_MAP, highlightMap)
             return pipelineRes?.data?.yamlPreview
         } catch (e) {
             if (e.code === 403) {
