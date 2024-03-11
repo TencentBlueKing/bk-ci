@@ -58,7 +58,6 @@
                 </div>
                 <div
                     v-else
-                    v-bk-clickoutside="handleSave"
                     class="edit-input"
                 >
                     <bk-input
@@ -66,13 +65,13 @@
                         ref="aliasNameInput"
                         :maxlength="60"
                         v-model="repoInfo.aliasName"
-                        @enter="handleSave"
+                        @enter="checkPipelines"
                     >
                     </bk-input>
                     <bk-button
                         class="ml5 mr5"
                         text
-                        @click="handleSave"
+                        @click="checkPipelines"
                     >
                         {{ $t('codelib.save') }}
                     </bk-button>
@@ -138,8 +137,10 @@
                 :is-show.sync="pipelinesDialogPayload.isShow"
                 :pipelines-list="pipelinesList"
                 :fetch-pipelines-list="fetchPipelinesList"
-                :is-loadig-more="pipelinesDialogPayload.isLoadingMore"
+                :is-loading-more="pipelinesDialogPayload.isLoadingMore"
                 :has-load-end="pipelinesDialogPayload.hasLoadEnd"
+                :task-repo-type="pipelinesDialogPayload.taskRepoType"
+                @confirm="handleSave"
             />
         </section>
         <empty-tips
@@ -224,7 +225,8 @@
                     hasLoadEnd: false,
                     page: 1,
                     pageSize: 20,
-                    repositoryHashId: ''
+                    repositoryHashId: '',
+                    taskRepoType: ''
                 },
                 codelibIconMap: {
                     CODE_SVN: 'code-SVN',
@@ -287,6 +289,7 @@
             'pipelinesDialogPayload.isShow' (val) {
                 if (!val) {
                     this.pipelinesList = []
+                    this.pipelinesDialogPayload.taskRepoType = ''
                 }
             },
             scmType: {
@@ -375,14 +378,27 @@
                 })
             },
 
-            /**
-             * 保存代码库别名
-             */
-            handleSave () {
+            async checkPipelines () {
                 if (this.repoInfo.aliasName === this.oldAliasName) {
                     this.isEditing = false
                     return
                 }
+                if (this.curRepo.repositoryHashId !== this.pipelinesDialogPayload.repositoryHashId) {
+                    this.pipelinesDialogPayload.repositoryHashId = this.curRepo.repositoryHashId
+                    this.pipelinesList = []
+                }
+                this.pipelinesDialogPayload.taskRepoType = 'NAME'
+                this.pipelinesDialogPayload.page = 1
+                await this.fetchPipelinesList()
+
+                if (this.pipelinesList.length) return
+                this.handleSave()
+            },
+
+            /**
+             * 保存代码库别名
+             */
+            handleSave () {
                 this.renameAliasName({
                     projectId: this.projectId,
                     repositoryHashId: this.repoInfo.repoHashId,
@@ -404,6 +420,7 @@
                     this.repoInfo.aliasName = this.oldAliasName
                     console.error(e)
                 }).finally(() => {
+                    this.pipelinesDialogPayload.isShow = false
                     this.isEditing = false
                 })
             },
@@ -493,6 +510,7 @@
                 await this.fetchUsingPipelinesList({
                     projectId: this.projectId,
                     repositoryHashId: this.pipelinesDialogPayload.repositoryHashId,
+                    taskRepoType: this.pipelinesDialogPayload.taskRepoType,
                     page: this.pipelinesDialogPayload.page,
                     pageSize: this.pipelinesDialogPayload.pageSize
                 }).then(res => {

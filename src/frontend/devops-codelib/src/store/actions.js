@@ -440,14 +440,16 @@ const actions = {
         page,
         pageSize,
         eventType,
-        triggerConditionMd5
+        triggerConditionMd5,
+        taskRepoType
     }) {
         return vue.$ajax.get(`${REPOSITORY_API_URL_PREFIX}/user/repositories/${projectId}/${repositoryHashId}/listRepoPipelineRef`, {
             params: {
                 page,
                 pageSize,
                 eventType,
-                triggerConditionMd5
+                triggerConditionMd5,
+                taskRepoType
             }
         })
     },
