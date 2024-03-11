@@ -25,13 +25,28 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.auth.rbac.code
+package com.tencent.devops.auth.service
 
-import com.tencent.devops.common.auth.code.ExperienceAuthServiceCode
+import com.tencent.devops.common.auth.api.AuthPermission
+import com.tencent.devops.common.auth.api.AuthResourceType
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.stereotype.Service
 
-/**
- * ServiceCode
- */
-class RbacExperienceAuthServiceCode : ExperienceAuthServiceCode {
-    override fun id() = RbacAuthServiceCode.EXPERIENCE.value
+@Service
+class TxManagerServiceImpl @Autowired constructor(
+    val managerService: ManagerService
+) : LocalManagerService {
+    override fun projectManagerCheck(
+        userId: String,
+        projectCode: String,
+        action: String,
+        resourceType: String
+    ): Boolean {
+        return managerService.isManagerPermission(
+            userId = userId,
+            projectId = projectCode,
+            resourceType = AuthResourceType.get(resourceType),
+            authPermission = AuthPermission.get(action)
+        )
+    }
 }
