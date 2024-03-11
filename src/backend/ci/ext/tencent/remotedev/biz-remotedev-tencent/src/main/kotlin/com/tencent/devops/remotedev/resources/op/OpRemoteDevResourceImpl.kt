@@ -130,6 +130,22 @@ class OpRemoteDevResourceImpl @Autowired constructor(
         )
     }
 
+    @AuditEntry(actionId = ActionId.CGS_DELETE)
+    override fun batchDeleteWorkspace(userId: String, workspaceNames: Set<String>): Result<Map<String, Boolean>> {
+        val result = mutableMapOf<String, Boolean>()
+        workspaceNames.forEach {
+            val ok = deleteControl.deleteWorkspace4OP(
+                userId = userId,
+                workspaceName = it
+            )
+            result[it] = ok
+        }
+
+        // TODO: 发送删除通知
+
+        return Result(result)
+    }
+
     @AuditEntry(actionId = ActionId.CGS_STOP)
     override fun stopWorkspace(userId: String, workspaceName: String): Result<Boolean> {
         return Result(

@@ -249,6 +249,17 @@ interface OpRemoteDevResource {
         workspaceName: String
     ): Result<Boolean>
 
+    @Operation(summary = "销毁工作空间")
+    @DELETE
+    @Path("/workspace_delete_batch")
+    fun batchDeleteWorkspace(
+        @Parameter(description = "用户ID", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @QueryParam("workspaceNames")
+        workspaceNames: Set<String>
+    ): Result<Map<String, Boolean>>
+
     @Operation(summary = "实时获取START云桌面资源池的机器")
     @POST
     @Path("/windows/pool/list")
