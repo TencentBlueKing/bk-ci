@@ -194,11 +194,6 @@
                         // this.emitPipelineChange(newVal)
                     }
                 }
-            },
-            'pipeline.name': {
-                handler: function () {
-                    this.emitPipelineChange(this.pipeline)
-                }
             }
         },
         mounted () {

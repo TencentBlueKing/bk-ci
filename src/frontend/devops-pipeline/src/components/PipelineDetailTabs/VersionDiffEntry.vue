@@ -47,7 +47,7 @@
                 </header>
                 <div class="pipeline-yaml-diff-wrapper">
                     <yaml-diff
-                        :old-yaml="pipelineYaml"
+                        :old-yaml="currentYaml"
                         height="100%"
                         :new-yaml="activeYaml"
                     />
@@ -66,7 +66,7 @@
 </template>
 
 <script>
-    import { mapState, mapActions } from 'vuex'
+    import { mapActions } from 'vuex'
     import YamlDiff from '@/components/YamlDiff'
     export default {
         components: {
@@ -97,6 +97,7 @@
                 showVersionDiffDialog: false,
                 activeVersion: '',
                 activeYaml: '',
+                currentYaml: '',
                 pipelineVersionList: [],
                 page: 1,
                 hasNext: true,
@@ -107,9 +108,6 @@
             }
         },
         computed: {
-            ...mapState('atom', [
-                'pipelineYaml'
-            ]),
             latestVersionName () {
                 return this.pipelineVersionList.find(item => item.version === this.latestVersion)?.versionName ?? '--'
             }
@@ -156,23 +154,25 @@
                     this.showVersionDiffDialog = true
                     this.loadMore(this.page)
                     this.activeVersion = version
-                    if (this.activeVersion === this.latestVersion) {
-                        this.activeYaml = this.pipelineYaml
-                        return
-                    }
-                    const [activePipeline] = await Promise.all([
+                    const [activePipeline, currentPipeline] = await Promise.all([
                         this.fetchPipelineByVersion({
                             projectId: this.$route.params.projectId,
                             pipelineId: this.$route.params.pipelineId,
                             version: this.activeVersion
+                        }),
+                        this.fetchPipelineByVersion({
+                            projectId: this.$route.params.projectId,
+                            pipelineId: this.$route.params.pipelineId,
+                            version: this.latestVersion
                         })
                     ])
 
-                    if (activePipeline?.yamlSupported) {
+                    if (activePipeline?.yamlSupported && currentPipeline?.yamlSupported) {
                         this.activeYaml = activePipeline.yamlPreview.yaml
+                        this.currentYaml = currentPipeline.yamlPreview.yaml
                         return
                     }
-                    console.log(activePipeline, 'hahaha')
+                    console.log(activePipeline, 'hahaha', currentPipeline)
                     throw new Error(activePipeline?.yamlInvalidMsg)
                 } catch (error) {
                     console.log(error)

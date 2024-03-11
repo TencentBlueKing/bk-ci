@@ -72,6 +72,7 @@
                 <div slot="content" class="params-collapse-content">
                     <pipeline-params-form
                         ref="paramsForm"
+                        disabled
                         :param-values="constantValues"
                         :params="constantParams"
                     />
@@ -85,6 +86,7 @@
                 <div slot="content" class="params-collapse-content">
                     <pipeline-params-form
                         ref="paramsForm"
+                        disabled
                         :param-values="otherValues"
                         :params="otherParams"
                     />
@@ -195,14 +197,8 @@
                     }))
                     this.versionParamList = startupInfo.properties.filter(p => allVersionKeyList.includes(p.id))
                     this.buildList = startupInfo.properties.filter(p => p.propertyType === 'BUILD')
-                    this.constantParams = startupInfo.properties.filter(p => p.constant).map(p => ({
-                        ...p,
-                        readOnly: true
-                    }))
-                    this.otherParams = startupInfo.properties.filter(p => !p.constant && !p.required && !allVersionKeyList.includes(p.id) && p.propertyType !== 'BUILD').map(p => ({
-                        ...p,
-                        readOnly: true
-                    }))
+                    this.constantParams = startupInfo.properties.filter(p => p.constant)
+                    this.otherParams = startupInfo.properties.filter(p => !p.constant && !p.required && !allVersionKeyList.includes(p.id) && p.propertyType !== 'BUILD')
                     this.initParams(values)
                     this.setExecuteParams({
                         pipelineId: this.pipelineId,

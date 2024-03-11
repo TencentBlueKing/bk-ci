@@ -60,7 +60,11 @@
                         to: ['pipelinesHistory'].includes(this.$route.name)
                             ? null
                             : {
-                                name: 'pipelinesHistory'
+                                name: 'pipelinesHistory',
+                                params: {
+                                    ...this.$route.params,
+                                    type: 'history'
+                                }
                             },
                         handleSelected: this.doSelectPipeline,
                         searching: this.pipelineListSearching,
