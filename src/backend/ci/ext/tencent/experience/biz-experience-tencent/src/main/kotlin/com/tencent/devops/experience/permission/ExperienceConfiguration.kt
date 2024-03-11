@@ -92,4 +92,16 @@ class ExperienceConfiguration {
     ) = RbacExperiencePermissionServiceImpl(
         client, dslContext, experienceDao, tokenService
     )
+
+    @Bean
+    @ConditionalOnProperty(prefix = "auth", name = ["idProvider"], havingValue = "sample")
+    fun mockExperiencePermissionServiceImpl(
+        dslContext: DSLContext,
+        experienceDao: ExperienceDao,
+        groupDao: GroupDao
+    ) = MockExperiencePermissionService(
+        dslContext = dslContext,
+        groupDao = groupDao,
+        experienceDao = experienceDao
+    )
 }

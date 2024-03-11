@@ -47,8 +47,8 @@ import com.tencent.devops.project.service.iam.ProjectIamV0Service
 import com.tencent.devops.project.service.impl.RbacProjectExtPermissionServiceImpl
 import com.tencent.devops.project.service.impl.SampleProjectExtPermissionServiceImpl
 import com.tencent.devops.project.service.impl.StreamProjectPermissionServiceImpl
-import com.tencent.devops.project.service.impl.V0ProjectExtPermissionServiceImpl
 import com.tencent.devops.project.service.impl.TxV0ProjectPermissionServiceImpl
+import com.tencent.devops.project.service.impl.V0ProjectExtPermissionServiceImpl
 import com.tencent.devops.project.service.tof.TOFService
 import org.jooq.DSLContext
 import org.springframework.boot.autoconfigure.AutoConfigureOrder
@@ -123,7 +123,7 @@ class TxProjectInitConfiguration {
     fun gitStreamProjectPermissionService(
         client: Client,
         tokenService: ClientTokenService
-    ): ProjectPermissionService = StreamProjectPermissionServiceImpl(
+    ) = StreamProjectPermissionServiceImpl(
         client = client,
         tokenService = tokenService
     )
@@ -145,4 +145,8 @@ class TxProjectInitConfiguration {
         authProjectApi = authProjectApi,
         projectAuthServiceCode = projectAuthServiceCode
     )
+
+    @Bean
+    @ConditionalOnProperty(prefix = "auth", name = ["idProvider"], havingValue = "sample")
+    fun sampleProjectExtPermissionService() = SampleProjectExtPermissionServiceImpl()
 }
