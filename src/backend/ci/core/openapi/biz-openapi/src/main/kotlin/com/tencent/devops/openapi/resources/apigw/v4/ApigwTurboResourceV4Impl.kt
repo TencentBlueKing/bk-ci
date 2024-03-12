@@ -34,7 +34,6 @@ import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.openapi.api.apigw.v4.ApigwTurboResourceV4
 import com.tencent.devops.turbo.api.IServiceResourceStatController
 import com.tencent.devops.turbo.api.IServiceTurboController
-import com.tencent.devops.turbo.api.IUserTurboPlanController
 import com.tencent.devops.turbo.pojo.TurboPlanModel
 import com.tencent.devops.turbo.pojo.TurboRecordModel
 import com.tencent.devops.turbo.vo.ProjectResourceUsageVO
