@@ -1,5 +1,5 @@
 <template>
-    <div :class="['pipeline-detail-entry', {
+    <div v-bkloading="{ isLoading: switchingVersion }" :class="['pipeline-detail-entry', {
         'show-pipeline-var': activeChild.showVar
     }]">
         <aside class="pipeline-detail-entry-aside">
@@ -65,8 +65,8 @@
             ShowVariable
         },
         computed: {
-            ...mapState('atom', ['pipelineInfo', 'pipeline', 'activePipelineVersion']),
-            ...mapGetters('atom', ['isActiveDraftVersion', 'isOutdatedVersion']),
+            ...mapState('atom', ['pipelineInfo', 'pipeline', 'activePipelineVersion', 'switchingVersion']),
+            ...mapGetters('atom', ['isActiveDraftVersion', 'isReleaseVersion']),
             activeMenuItem () {
                 return this.$route.params.type || 'history'
             },
@@ -82,7 +82,7 @@
                                 title: this.$t(this.isActiveDraftVersion ? 'draftExecRecords' : 'pipelinesHistory'),
                                 disableTooltip: {
                                     content: this.$refs.disableToolTips?.[0],
-                                    disabled: !this.isOutdatedVersion,
+                                    disabled: !this.isReleaseVersion,
                                     delay: [300, 0]
                                 },
                                 name: 'history'
@@ -91,7 +91,7 @@
                                 title: this.$t('triggerEvent'),
                                 disableTooltip: {
                                     content: this.$refs.disableToolTips?.[1],
-                                    disabled: !this.isOutdatedVersion,
+                                    disabled: !this.isReleaseVersion,
                                     delay: [300, 0]
                                 },
                                 name: 'triggerEvent'
@@ -102,7 +102,7 @@
                             // }
                         ].map((child) => ({
                             ...child,
-                            disabled: this.isOutdatedVersion,
+                            disabled: !this.isReleaseVersion,
                             active: this.activeMenuItem === child.name
                         }))
                     },
@@ -140,7 +140,7 @@
                                 title: this.$t('authSetting'),
                                 disableTooltip: {
                                     content: this.$refs.disableToolTips?.[2],
-                                    disabled: !this.isOutdatedVersion,
+                                    disabled: this.isReleaseVersion,
                                     delay: [300, 0]
                                 },
                                 name: 'permission'
@@ -149,14 +149,14 @@
                                 title: this.$t('operationLog'),
                                 disableTooltip: {
                                     content: this.$refs.disableToolTips?.[3],
-                                    disabled: !this.isOutdatedVersion,
+                                    disabled: this.isReleaseVersion,
                                     delay: [300, 0]
                                 },
                                 name: 'changeLog'
                             }
                         ].map((child) => ({
                             ...child,
-                            disabled: this.isOutdatedVersion,
+                            disabled: !this.isReleaseVersion,
                             active: this.activeMenuItem === child.name
                         }))
                     }

@@ -73,6 +73,7 @@ import {
     SET_STORE_LOADING,
     SET_STORE_SEARCH,
     SET_TEMPLATE,
+    SWITCHING_PIPELINE_VERSION,
     TOGGLE_ATOM_SELECTOR_POPUP,
     TOGGLE_STAGE_REVIEW_PANEL,
     UPDATE_ATOM,
@@ -478,6 +479,12 @@ export default {
     [SELECT_PIPELINE_VERSION]: (state, version) => {
         Object.assign(state, {
             activePipelineVersion: version
+        })
+        return state
+    },
+    [SWITCHING_PIPELINE_VERSION]: (state, payload) => {
+        Object.assign(state, {
+            switchingVersion: payload
         })
         return state
     }

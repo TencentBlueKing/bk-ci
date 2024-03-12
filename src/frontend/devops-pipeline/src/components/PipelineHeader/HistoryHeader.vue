@@ -1,7 +1,7 @@
 <template>
     <div class="pipeline-history-header">
         <div class="pipeline-history-left-aside">
-            <pipeline-bread-crumb :is-loading="isLoading" />
+            <pipeline-bread-crumb :is-loading="switchingVersion" />
             <pac-tag class="pipeline-pac-indicator" v-if="pacEnabled" :info="yamlInfo" />
             <VersionSideslider
                 :value="activePipelineVersion?.version"
@@ -117,13 +117,8 @@
         props: {
             updatePipeline: Function
         },
-        data () {
-            return {
-                isLoading: false
-            }
-        },
         computed: {
-            ...mapState('atom', ['pipeline', 'pipelineInfo', 'activePipelineVersion']),
+            ...mapState('atom', ['pipeline', 'pipelineInfo', 'activePipelineVersion', 'switchingVersion']),
             ...mapGetters({
                 isCurPipelineLocked: 'atom/isCurPipelineLocked',
                 isReleasePipeline: 'atom/isReleasePipeline',
@@ -202,7 +197,7 @@
             }
         },
         methods: {
-            ...mapActions('atom', ['selectPipelineVersion', 'requestPipeline']),
+            ...mapActions('atom', ['selectPipelineVersion', 'requestPipeline', 'setSwitchingPipelineVersion']),
             goEdit () {
                 this.$router.push({
                     name: 'pipelinesEdit'
@@ -212,7 +207,7 @@
                 try {
                     const version = this.activePipelineVersion?.version ?? this.pipelineInfo?.releaseVersion
                     if (version) {
-                        this.isLoading = true
+                        this.setSwitchingPipelineVersion(true)
                         await this.requestPipeline({
                             ...this.$route.params,
                             version
@@ -224,7 +219,7 @@
                         message: error.message
                     })
                 } finally {
-                    this.isLoading = false
+                    this.setSwitchingPipelineVersion(false)
                 }
             },
             goExecPreview () {
@@ -245,9 +240,8 @@
                 })
             },
             handleVersionChange (versionId, version) {
-                console.log('handleChange')
                 this.init()
-                if (['history', 'triggerEvent'].includes(this.$route.params.type) && versionId < this.releaseVersion) {
+                if (['history', 'triggerEvent'].includes(this.$route.params.type) && !this.isReleaseVersion) {
                     this.$nextTick(() => {
                         this.$router.push({
                             name: 'pipelinesHistory',

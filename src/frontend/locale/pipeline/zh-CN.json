@@ -1465,7 +1465,6 @@
   "clearFilterCondition": "清空筛选条件",
   "clearFilterConditionTips": "可以尝试 调整关键词 或 {0}",
   "ymlDeletedTips": "默认分支上的YAML文件已删除，以默认分支配置为准的定时/CR/issue/note等触发器已失效，若此流水线已无用可手动删除进行清理",
-  "unMergedTips": "有新的分支版本尚未合并到默认分支，可{0}查看详情",
   "goVersionSideslider": "前往版本历史",
   "pacModePipelineDeleteTips": "已开启PAC模式,请先删除代码库默认分支上的yaml文件,再删除流水线",
   "noPermissionToDelete": "无权限删除",
@@ -1480,5 +1479,11 @@
   "triggerLeastOne": "至少保留一个触发器",
   "goExec": "去执行",
   "switchToReleaseVersion": "切换至最新版本",
-  "switch": "切换"
+  "switch": "切换",
+  "branchVersionNotMergeYet": "分支版本尚未合并到默认分支 {0} {1}",
+  "helpGuide": "帮助说明",
+  "goTgitCommitMR": "去工蜂提交MR",
+  "branchVersionTips1": "1、PUSH、MR、TAG事件触发时，流水线配置以触发分支上对应的YAML文件为准",
+  "branchVersionTips2": "2、其他触发方式（定时、手动、ISSUE、REVIEW、NOTE等）时，流水线配置以默认分支上对应的YAML文件为准",
+  "branchVersionTips3": "3、流水线查看页面，展示默认分支上对应的YAML文件内容"
 }
