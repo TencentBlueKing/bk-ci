@@ -256,7 +256,7 @@ interface OpRemoteDevResource {
         @Parameter(description = "用户ID", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @QueryParam("workspaceNames")
+        @Parameter(description = "工作空间名称列表")
         workspaceNames: Set<String>
     ): Result<Map<String, Boolean>>
 
