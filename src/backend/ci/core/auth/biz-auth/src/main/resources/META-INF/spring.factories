@@ -1,2 +1,2 @@
 org.springframework.boot.autoconfigure.EnableAutoConfiguration=\
-com.tencent.devops.auth.provider.sample.config.MockAuthAutoConfiguration
+com.tencent.devops.auth.provider.sample.config.MockAuthConfiguration
