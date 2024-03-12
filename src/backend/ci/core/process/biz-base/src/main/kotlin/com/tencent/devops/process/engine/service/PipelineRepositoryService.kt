@@ -904,7 +904,30 @@ class PipelineRepositoryService constructor(
                     dslContext = transactionContext,
                     projectId = projectId,
                     pipelineId = pipelineId
-                ) ?: releaseResource
+                ) ?: run {
+                    // #8161 没有版本表数据的流水线，兜底增加一个当前版本
+                    pipelineResourceVersionDao.create(
+                        dslContext = transactionContext,
+                        projectId = projectId,
+                        pipelineId = pipelineId,
+                        creator = userId,
+                        version = releaseResource.version,
+                        model = releaseResource.model,
+                        yaml = null,
+                        baseVersion = baseVersion,
+                        versionName = releaseResource.versionName ?: PipelineVersionUtils.getVersionName(
+                            releaseResource.version, releaseResource.version, 0, 0
+                        ) ?: "",
+                        versionNum = releaseResource.versionNum,
+                        pipelineVersion = null,
+                        triggerVersion = null,
+                        settingVersion = null,
+                        versionStatus = null,
+                        branchAction = null,
+                        description = "backup"
+                    )
+                    releaseResource
+                }
                 watcher.start("updatePipelineInfo")
                 // 旧逻辑 bak —— 写入INFO表后进行了version的自动+1
                 // 新逻辑 #8161
