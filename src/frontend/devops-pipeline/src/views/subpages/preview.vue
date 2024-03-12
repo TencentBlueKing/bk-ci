@@ -8,7 +8,7 @@
     import { mapActions, mapGetters, mapState } from 'vuex'
     import ExecuteParams from '@/components/Preview/ExecuteParams'
     import OptionalExecute from '@/components/Preview/OptionalExecute'
-    import { bus } from '@/utils/bus'
+    import { bus, UPDATE_PREVIEW_PIPELINE_NAME } from '@/utils/bus'
     export default {
         components: {
             ExecuteParams,
@@ -101,6 +101,7 @@
                         this.fetchPipelineByVersion(params)
                     ])
                     this.pipelineModel = pipelineRes?.modelAndSetting?.model
+                    bus.$emit(UPDATE_PREVIEW_PIPELINE_NAME, this.pipelineModel?.name)
                     this.startupInfo = res
                     if (res.properties.length === 0) {
                         this.setExecuteStep(2)

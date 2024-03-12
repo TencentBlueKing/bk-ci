@@ -1,5 +1,5 @@
 <template>
-    <BuildHistoryTab is-debug />
+    <BuildHistoryTab is-debug :pipeline-version="pipelineVersion" />
 </template>
 
 <script>
@@ -8,6 +8,11 @@
     export default {
         components: {
             BuildHistoryTab
+        },
+        computed: {
+            pipelineVersion () {
+                return this.$route.params.version
+            }
         }
     }
 </script>

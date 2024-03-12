@@ -445,6 +445,7 @@
             showLog: {
                 type: Function
             },
+            pipelineVersion: Number,
             isDebug: Boolean
         },
         data () {
@@ -478,17 +479,13 @@
                 isActiveDraftVersion: 'atom/isActiveDraftVersion'
             }),
             ...mapState('atom', [
-                'pipelineInfo',
-                'activePipelineVersion'
+                'pipelineInfo'
             ]),
             projectId () {
                 return this.$route.params.projectId
             },
             pipelineId () {
-                return this.$route.params.pipelineId
-            },
-            pipelineVersion () {
-                return this.activePipelineVersion?.version
+                return this.pipelineInfo?.pipelineId
             },
             canEdit () {
                 return this.pipelineInfo?.permissions.canEdit ?? true
@@ -634,9 +631,7 @@
         watch: {
             pipelineId: {
                 handler () {
-                    this.$nextTick(() => {
-                        this.handlePageChange(1)
-                    })
+                    this.handlePageChange(1)
                 },
                 immediate: true
             },
@@ -670,7 +665,6 @@
                 'resetHistoryFilterCondition'
             ]),
             handleTableSettingChange ({ fields: selectedFields, size }) {
-                debugger
                 Object.assign(this.tableSetting, {
                     selectedFields,
                     size
@@ -679,7 +673,9 @@
             },
             async requestHistory () {
                 try {
-                    if (!this.pipelineVersion) return
+                    const version = this.pipelineVersion ?? this.pipelineInfo?.releaseVersion
+                    console.log(this.pipelineVersion, version, 1111)
+                    if (!version) return
                     this.isLoading = true
                     this.resetRemark()
                     const {

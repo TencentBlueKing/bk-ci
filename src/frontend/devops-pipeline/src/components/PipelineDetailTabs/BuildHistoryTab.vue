@@ -1,7 +1,7 @@
 <template>
     <div class="build-history-tab-content">
         <empty-tips v-if="hasNoPermission" :show-lock="true" v-bind="emptyTipsConfig"></empty-tips>
-        <build-history-table v-else :show-log="showLog" :is-debug="isDebug" />
+        <build-history-table v-else :show-log="showLog" :is-debug="isDebug" :pipeline-version="pipelineVersion" />
     </div>
 </template>
 
@@ -25,7 +25,8 @@
 
         mixins: [pipelineConstMixin],
         props: {
-            isDebug: Boolean
+            isDebug: Boolean,
+            pipelineVersion: Number
         },
         data () {
             return {
@@ -43,8 +44,7 @@
                 isCurPipelineLocked: 'atom/isCurPipelineLocked'
             }),
             ...mapState('atom', [
-                'isPropertyPanelVisible',
-                'activePipelineVersion'
+                'isPropertyPanelVisible'
             ]),
             ...mapState('pipelines', [
                 'executeStatus'
@@ -83,7 +83,7 @@
                         handler: () => {
                             const params = {
                                 ...this.$route.params,
-                                version: this.isDebug ? this.pipelineInfo?.version : this.activePipelineVersion?.version
+                                version: this.pipelineVersion
                             }
                             if (this.isReleasePipeline) {
                                 return this.$router.push({

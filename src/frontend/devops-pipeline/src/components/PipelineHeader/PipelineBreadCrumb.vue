@@ -1,6 +1,6 @@
 <template>
     <bread-crumb :value="breadCrumbPath">
-        <template v-if="pipelineList?.length">
+        <template v-if="pipelineList?.length && !isLoading">
             <bread-crumb-item v-for="(crumb, index) in breadCrumbs" :key="index" v-bind="crumb">
                 <slot v-if="index === breadCrumbs.length - 1"></slot>
             </bread-crumb-item>
@@ -22,7 +22,9 @@
             BreadCrumbItem
         },
         props: {
-            showRecordEntry: Boolean
+            showRecordEntry: Boolean,
+            pipelineName: String,
+            isLoading: Boolean
         },
         data () {
             return {
@@ -40,6 +42,7 @@
                 'pipelineInfo'
             ]),
             breadCrumbs () {
+                console.log('this.pipelineName', this.pipeline)
                 return [{
                     icon: 'pipeline',
                     selectedValue: this.$t('pipeline'),
@@ -53,7 +56,7 @@
                     : {
                         paramId: 'pipelineId',
                         paramName: 'pipelineName',
-                        selectedValue: this.pipeline?.name ?? '--',
+                        selectedValue: this.pipelineName ?? this.pipeline?.name ?? '--',
                         records: this.pipelineList,
                         showTips: true,
                         tipsName: 'switch_pipeline_hint',

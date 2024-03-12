@@ -567,6 +567,7 @@
     "remark": "备注",
     "noBuildRecords": "构建记录为空",
     "noPermissionTips": "你没有查看该流水线的权限，请切换项目或申请相应权限",
+    "noEditPermissionTips": "你没有编辑该流水线的权限，请切换项目或申请相应权限",
     "noReleaseBuildEmptyTips": "流水线尚未发布，请先发布，再启动执行。发布流水线后即可触发执行构建任务。系统将为每次构建分配一个唯一 ID，所有构建记录都会展示在这里。",
     "buildEmptyDesc": "定义了流水线之后，你可以手动触发执行一次构建任务，我们会给每个构建分配一个唯一ID，所有的构建记录都会在这里",
     "startBuildTips": "开始构建流水线",

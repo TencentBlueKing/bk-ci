@@ -1,7 +1,7 @@
 <template>
-    <div v-bkloading="{ isLoading }" class="biz-container bkdevops-history-subpage pipeline-subpages">
+    <div class="biz-container bkdevops-history-subpage pipeline-subpages">
         <div class="pipeline-subpages-header">
-            <router-view name="header" :update-pipeline="init"></router-view>
+            <router-view name="header"></router-view>
         </div>
         <router-view class="biz-content"></router-view>
         <portal-target name="artifactory-popup"></portal-target>
@@ -9,41 +9,10 @@
 </template>
 
 <script>
-    import { mapActions, mapState } from 'vuex'
+    import { mapActions } from 'vuex'
     import { SET_PIPELINE_INFO } from '@/store/modules/atom/constants'
 
     export default {
-        data () {
-            return {
-                isLoading: false
-            }
-        },
-        computed: {
-            ...mapState('atom', [
-                'activePipelineVersion',
-                'editfromImport',
-                'pipelineInfo'
-            ]),
-            pipelineId () {
-                return this.pipelineInfo?.pipelineId
-            }
-        },
-        watch: {
-            pipelineId: {
-                handler (id) {
-                    if (id) {
-                        if (this.activePipelineVersion?.version === this.pipelineInfo?.releaseVersion) {
-                            this.init()
-                        } else {
-                            this.selectPipelineVersion({
-                                version: this.pipelineInfo?.releaseVersion
-                            })
-                        }
-                    }
-                },
-                immediate: true
-            }
-        },
         created () {
             this.$store.dispatch('requestProjectDetail', {
                 projectId: this.$route.params.projectId
@@ -60,31 +29,11 @@
         },
         methods: {
             ...mapActions('atom', [
-                'requestPipeline',
                 'setPipeline',
                 'setPipelineYaml',
                 'selectPipelineVersion',
                 'setPipelineWithoutTrigger'
-            ]),
-            async init () {
-                try {
-                    const version = this.activePipelineVersion?.version ?? this.pipelineInfo?.releaseVersion
-                    if (version) {
-                        this.isLoading = true
-                        await this.requestPipeline({
-                            ...this.$route.params,
-                            version
-                        })
-                    }
-                } catch (error) {
-                    this.$bkMessage({
-                        theme: 'error',
-                        message: error.message
-                    })
-                } finally {
-                    this.isLoading = false
-                }
-            }
+            ])
         }
     }
 </script>

@@ -1,6 +1,6 @@
 <template>
     <div class="pipeline-edit-header">
-        <pipeline-bread-crumb>
+        <pipeline-bread-crumb :pipeline-name="pipelineSetting?.pipelineName">
             <bk-tag>{{ currentVersionName }}</bk-tag>
         </pipeline-bread-crumb>
         <mode-switch :save="saveDraft" />
@@ -137,9 +137,6 @@
                 }
                 return this.versionName
             },
-            pipelineName () {
-                return this.pipelineInfo?.name ?? '--'
-            },
             currentVersion () {
                 return this.pipelineInfo?.version ?? ''
             }
@@ -215,7 +212,6 @@
                     this.setPipelineEditing(false)
 
                     this.$store.commit(`atom/${UPDATE_PIPELINE_INFO}`, {
-                        pipelineName: pipelineSetting.pipelineName,
                         canDebug: true,
                         canRelease: true,
                         baseVersion: this.pipelineInfo?.baseVersion ?? this.pipelineInfo?.releaseVersion,

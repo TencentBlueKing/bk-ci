@@ -1,6 +1,6 @@
 <template>
-    <div class="pipeline-preview-header">
-        <pipeline-bread-crumb>
+    <div v-if="pipelineName" class="pipeline-preview-header">
+        <pipeline-bread-crumb :pipeline-name="pipelineName">
             <span class="build-num-switcher-wrapper">
                 {{ title }}
             </span>
@@ -63,11 +63,12 @@
             </template>
         </aside>
     </div>
+    <i v-else class="devops-icon icon-circle-2-1 spin-icon" style="margin-left: 20px;" />
 </template>
 
 <script>
     import { mapState, mapActions, mapGetters } from 'vuex'
-    import { bus } from '@/utils/bus'
+    import { bus, UPDATE_PREVIEW_PIPELINE_NAME } from '@/utils/bus'
     import {
         RESOURCE_ACTION
     } from '@/utils/permission'
@@ -78,7 +79,8 @@
         },
         data () {
             return {
-                paramsValid: true
+                paramsValid: true,
+                pipelineName: '--'
             }
         },
         computed: {
@@ -138,8 +140,17 @@
                 })
             }
         },
+        mounted () {
+            bus.$on(UPDATE_PREVIEW_PIPELINE_NAME, this.updatePipelineName)
+        },
+        beforeDestroy () {
+            bus.$off(UPDATE_PREVIEW_PIPELINE_NAME, this.updatePipelineName)
+        },
         methods: {
             ...mapActions('pipelines', ['setExecuteStep']),
+            updatePipelineName (name) {
+                this.pipelineName = name
+            },
             handleClick () {
                 bus.$emit('start-execute')
             },
