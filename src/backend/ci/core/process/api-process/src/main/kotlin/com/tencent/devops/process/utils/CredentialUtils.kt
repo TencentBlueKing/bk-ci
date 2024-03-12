@@ -107,7 +107,6 @@ object CredentialUtils {
         )
     }
 
-
     private val logger = LoggerFactory.getLogger(CredentialUtils::class.java)
 }
 
