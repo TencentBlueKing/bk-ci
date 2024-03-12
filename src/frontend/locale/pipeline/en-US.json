@@ -1484,5 +1484,6 @@
   "goTgitCommitMR": "MR",
   "branchVersionTips1": "1. When PUSH, MR, TAG events are triggered, the pipeline configuration is based on the corresponding YAML file on the <b>triggered branch</b>",
   "branchVersionTips2": "2. For other triggering methods (CRON, MANUAL, ISSUE, REVIEW, NOTE, etc.), the pipeline configuration is based on the corresponding YAML file on the <b>default branch</b>",
-  "branchVersionTips3": "3. The pipeline view page displays the content of the corresponding YAML file on the <b>default branch</b>"
+  "branchVersionTips3": "3. The pipeline view page displays the content of the corresponding YAML file on the <b>default branch</b>",
+  "latest": "最新"
 }

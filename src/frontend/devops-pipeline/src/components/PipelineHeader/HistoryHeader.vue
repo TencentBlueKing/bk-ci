@@ -3,10 +3,11 @@
         <div class="pipeline-history-left-aside">
             <pipeline-bread-crumb :is-loading="switchingVersion" />
             <pac-tag class="pipeline-pac-indicator" v-if="pacEnabled" :info="yamlInfo" />
-            <VersionSideslider
+            <VersionSelector
                 :value="activePipelineVersion?.version"
-                ref="versionSliderInstance"
+                ref="versionSelectorInstance"
                 @change="handleVersionChange"
+                @showAllVersion="showVersionSideSlider"
             />
             <bk-button
                 v-if="!isReleaseVersion"
@@ -87,6 +88,10 @@
             </template>
             <more-actions v-if="isReleaseVersion" />
         </aside>
+        <VersionHistorySideSlider
+            :show-version-sideslider="showVersionSideslider"
+            @close="closeVersionSideSlider"
+        />
     </div>
 </template>
 
@@ -100,7 +105,8 @@
     import PipelineBreadCrumb from './PipelineBreadCrumb.vue'
     import PacTag from '@/components/PacTag.vue'
     import Badge from '@/components/Badge.vue'
-    import VersionSideslider from '@/components/PipelineDetailTabs/VersionSideslider'
+    import VersionSelector from '@/components/PipelineDetailTabs/VersionSelector'
+    import VersionHistorySideSlider from '@/components/PipelineDetailTabs/VersionHistorySideSlider'
     import VersionDiffEntry from '@/components/PipelineDetailTabs/VersionDiffEntry'
     import RollbackEntry from '@/components/PipelineDetailTabs/RollbackEntry'
 
@@ -110,15 +116,26 @@
             PacTag,
             Badge,
             MoreActions,
-            VersionSideslider,
+            VersionSelector,
+            VersionHistorySideSlider,
             VersionDiffEntry,
             RollbackEntry
         },
         props: {
             updatePipeline: Function
         },
+        data () {
+            return {
+                showVersionSideslider: false
+            }
+        },
         computed: {
-            ...mapState('atom', ['pipeline', 'pipelineInfo', 'activePipelineVersion', 'switchingVersion']),
+            ...mapState('atom', [
+                'pipeline',
+                'pipelineInfo',
+                'activePipelineVersion',
+                'switchingVersion'
+            ]),
             ...mapGetters({
                 isCurPipelineLocked: 'atom/isCurPipelineLocked',
                 isReleasePipeline: 'atom/isReleasePipeline',
@@ -197,11 +214,24 @@
             }
         },
         methods: {
-            ...mapActions('atom', ['selectPipelineVersion', 'requestPipeline', 'setSwitchingPipelineVersion']),
+            ...mapActions('atom', [
+                'selectPipelineVersion',
+                'requestPipeline',
+                'setSwitchingPipelineVersion',
+                'setShowVariable'
+            ]),
             goEdit () {
                 this.$router.push({
                     name: 'pipelinesEdit'
                 })
+            },
+            showVersionSideSlider () {
+                this.setShowVariable(false)
+                this.$refs?.versionSelectorInstance?.close?.()
+                this.showVersionSideslider = true
+            },
+            closeVersionSideSlider () {
+                this.showVersionSideslider = false
             },
             async init () {
                 try {
@@ -240,6 +270,7 @@
                 })
             },
             handleVersionChange (versionId, version) {
+                this.selectPipelineVersion(version)
                 this.init()
                 if (['history', 'triggerEvent'].includes(this.$route.params.type) && !this.isReleaseVersion) {
                     this.$nextTick(() => {
