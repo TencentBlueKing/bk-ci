@@ -122,7 +122,7 @@ class ApigwTurboResourceV4Impl @Autowired constructor(
     ): Response<String?> {
         logger.info("OPENAPI_TURBO_V4|addNewTurboPlan: userId[$userId] projectId[$projectId]")
         return client.getSpringMvc(IServiceTurboController::class)
-            .addNewTurboPlan(turboPlanModel = turboPlanModel, projectId = projectId, user = userId)
+            .addNewTurboPlan(turboPlanModel = turboPlanModel, projectId = projectId, userId = userId)
     }
 
     override fun getServerResourcesSummary(
