@@ -322,7 +322,7 @@ class StockDataUpdateService @Autowired constructor(
                     }
                 )?.associateBy { it.ip }
                 val ipToNodeStatus = mutableMapOf<String, String>()
-                inCCIpList.map { ipToNodeStatus[it] =getNodeStatus(ipToAgentVersionInfoMap?.get(it)) }
+                inCCIpList.map { ipToNodeStatus[it] = getNodeStatus(ipToAgentVersionInfoMap?.get(it)) }
                 nodeDao.updateNodeInCCByIp(dslContext, ipToNodeStatus)
                 // 4. CC中信息（host_id和云区域id）改变 - 更新信息，不变 - 不操作
                 val nodeUpdateInfoList = nodeRecords.filterNot {
