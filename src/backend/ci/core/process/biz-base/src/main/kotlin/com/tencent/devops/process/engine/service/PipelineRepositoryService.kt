@@ -634,7 +634,9 @@ class PipelineRepositoryService constructor(
         description: String?,
         pipelineAsCodeSettings: PipelineAsCodeSettings?
     ): DeployPipelineResult {
+        // #8161 如果只有一个分支版本的创建操作，流水线状态也为仅有草稿
         val onlyDraft = versionStatus == VersionStatus.COMMITTING
+            || versionStatus == VersionStatus.BRANCH
         val modelVersion = 1
         var versionNum = 1
         var pipelineVersion = 1
@@ -902,11 +904,7 @@ class PipelineRepositoryService constructor(
                     dslContext = transactionContext,
                     projectId = projectId,
                     pipelineId = pipelineId
-                ) ?: throw ErrorCodeException(
-                    statusCode = Response.Status.NOT_FOUND.statusCode,
-                    errorCode = ProcessMessageCode.ERROR_PIPELINE_NOT_EXISTS,
-                    params = arrayOf(pipelineId)
-                )
+                ) ?: releaseResource
                 watcher.start("updatePipelineInfo")
                 // 旧逻辑 bak —— 写入INFO表后进行了version的自动+1
                 // 新逻辑 #8161
@@ -1330,10 +1328,7 @@ class PipelineRepositoryService constructor(
                 dslContext = context,
                 projectId = projectId,
                 pipelineId = pipelineId
-            ) ?: throw ErrorCodeException(
-                statusCode = Response.Status.NOT_FOUND.statusCode,
-                errorCode = ProcessMessageCode.ERROR_NO_PIPELINE_VERSION_EXISTS_BY_ID
-            )
+            ) ?: releaseResource
             // 获取目标的版本用于更新草稿
             val targetVersion = pipelineResourceVersionDao.getVersionResource(
                 dslContext = context,
