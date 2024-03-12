@@ -138,19 +138,23 @@ class JobService @Autowired constructor(
             projectId, fileDistributeReq.executeTarget
         )
         permissionManageService.isUserHasAllPermission(userId, projectId, allExecuteTargetHostList)
+        val allFileSourceHostList: MutableList<Host> = mutableListOf()
+        fileDistributeReq.fileSourceList.map { fileSource ->
+            allFileSourceHostList.plus(parseHashListService.getAllHostList(projectId, fileSource.sourceFileServer))
+        }
+        permissionManageService.isUserHasAllPermission(userId, projectId, allFileSourceHostList)
         val jobCloudFileDistributeReq = JobCloudFileDistributeReq(
             fileSourceList = fileDistributeReq.fileSourceList.map { fileSource ->
-                val allFileSourceHostList: List<Host> = parseHashListService.getAllHostList(
+                val fileSourceHostList: List<Host> = parseHashListService.getAllHostList(
                     projectId, fileSource.sourceFileServer
                 )
-                permissionManageService.isUserHasAllPermission(userId, projectId, allFileSourceHostList)
                 JobCloudFileSource(
                     fileList = fileSource.fileList.toList(),
                     server = JobCloudExecuteTarget(
-                        ipList = allFileSourceHostList.filter { it.bkHostId == null }.map {
+                        ipList = fileSourceHostList.filter { it.bkHostId == null }.map {
                             JobCloudIpInfo(bkCloudId = it.bkCloudId, ip = it.ip)
                         },
-                        hostIdList = allFileSourceHostList.filter { it.bkHostId != null }.map { it.bkHostId ?: 0L }
+                        hostIdList = fileSourceHostList.filter { it.bkHostId != null }.map { it.bkHostId ?: 0L }
                     ),
                     account = JobCloudAccountAlias(
                         id = fileSource.account.id,
