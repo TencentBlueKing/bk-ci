@@ -275,7 +275,7 @@ class DeleteControl @Autowired constructor(
 
             // 生成表格数据
             val tableData = workspaces.associate {
-                (CommonUtil.zoneIp2Ip(it.hostName) ?: "NO DATA") to (lastTimeMap[it.hostName] ?: "NO DATA")
+                (CommonUtil.zoneIp2Ip(it.hostName) ?: "") to (lastTimeMap[it.hostName] ?: "")
             }
             val (emailTable, rtxTable) = generateTable(user, tableData)
 
