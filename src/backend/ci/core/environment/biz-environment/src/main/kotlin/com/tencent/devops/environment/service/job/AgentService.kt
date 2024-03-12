@@ -70,12 +70,12 @@ import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
-import org.springframework.scheduling.annotation.Async
 import org.springframework.stereotype.Service
 import java.io.InputStream
 import java.time.Duration
 import java.time.LocalDateTime
-import java.util.concurrent.Executors
+import java.util.concurrent.SynchronousQueue
+import java.util.concurrent.ThreadPoolExecutor
 import java.util.concurrent.TimeUnit
 import javax.ws.rs.core.Response
 
@@ -91,6 +91,23 @@ data class AgentService @Autowired constructor(
 ) {
     @Value("\${environment.cc.bkBizScopeId:#{null}}")
     val bkBizScopeId: Int = 0
+
+    @Value("\${environment.checkAgentStatus.corePoolSize:#{null}}")
+    final val corePoolSize: Int = 1
+
+    @Value("\${environment.checkAgentStatus.maximumPoolSize:#{null}}")
+    final val maximumPoolSize: Int = 5
+
+    @Value("\${environment.checkAgentStatus.keepAliveTime:#{null}}")
+    final val keepAliveTime: Long = 0L
+
+    private val checkAgentStatusExecutor = ThreadPoolExecutor(
+        corePoolSize,
+        maximumPoolSize,
+        keepAliveTime,
+        TimeUnit.MILLISECONDS,
+        SynchronousQueue()
+    )
 
     companion object {
         private val logger = LoggerFactory.getLogger(AgentService::class.java)
@@ -110,8 +127,6 @@ data class AgentService @Autowired constructor(
         private const val DEFAULT_PAGE = 1
         private const val DEFAULT_PAGE_SIZE = 20
         private const val MAXIMUM_RETRY_TIMES = 100
-        private const val INITIAL_DELAY = 1000L // unit: ms
-        private const val TASK_PERIOD = 3000L // unit: ms
 
         private const val AGENT_INSTALL_NORMAL = "SUCCESS"
         private val agentTaskEndStatusList = listOf(
@@ -218,7 +233,6 @@ data class AgentService @Autowired constructor(
      * 发起安装任务后，轮询安装状态：安装中 - NODE_STATUS: RUNNING
      * 执行定时轮询任务，每隔 3000ms 检查任务状态，如果结束（成功/失败）则停止轮询。
      */
-    @Async("checkAgentStatus")
     fun checkAgentStatus(userId: String, projectId: String, jobId: Int?, ipList: List<String>?) {
         checkAgentStatusTimed(userId, projectId, jobId, ipList)
     }
@@ -231,65 +245,68 @@ data class AgentService @Autowired constructor(
             )
         }
         if (null == ipList) return
-        val executor = Executors.newSingleThreadScheduledExecutor()
         val runningIpList = ipList.toMutableList()
         nodeDao.updateNodeStatusByNodeIp(dslContext, ipList, NodeStatus.RUNNING.name, null, jobId.toLong())
         val task = object : Runnable {
             var count = 0
             override fun run() {
-                val queryAgentTaskStatusReq = QueryAgentTaskStatusReq(
-                    page = DEFAULT_PAGE, pageSize = DEFAULT_PAGE_SIZE
-                )
-                val queryAgentTaskStatusRes = queryAgentTaskStatus(
-                    userId, projectId, jobId, queryAgentTaskStatusReq
-                )
-                queryAgentTaskStatusRes.data?.list?.filter {
-                    it.ip in runningIpList
-                }?.map {
-                    if (logger.isDebugEnabled)
-                        logger.debug("Agent install task: ip: ${it.ip}, status: ${it.status}")
-                    if (it.status in agentTaskEndStatusList) { // agent安装任务结束(成功/失败)
-                        val agentInfo = queryAgentStatusService.getAgentVersions(
-                            listOf(AgentVersion(ip = it.ip, bkHostId = it.bkHostId?.toLong()))
-                        )
-                        val nodeStatus =
-                            if (AGENT_INSTALL_NORMAL == it.status) NodeStatus.NORMAL.name
-                            else { // agent安装任务失败，重新查询节点agent安装状态
-                                if (AGENT_NOT_INSTALLED_TAG == agentInfo?.get(0)?.installedTag)
-                                    NodeStatus.NOT_INSTALLED.name
-                                else if (AGENT_ABNORMAL_NODE_STATUS == agentInfo?.get(0)?.status)
-                                    NodeStatus.ABNORMAL.name
-                                else if (AGENT_NORMAL_NODE_STATUS == agentInfo?.get(0)?.status)
-                                    NodeStatus.NORMAL.name
-                                else
-                                    NodeStatus.NOT_INSTALLED.name
-                            }
-                        val nodeAgentVersion = agentInfo?.get(0)?.version
-                        nodeDao.updateNodeStatusByNodeIp(dslContext, listOf(it.ip), nodeStatus, nodeAgentVersion, null)
-                        runningIpList.remove(it.ip)
+                while (count < MAXIMUM_RETRY_TIMES) {
+                    val queryAgentTaskStatusReq = QueryAgentTaskStatusReq(
+                        page = DEFAULT_PAGE, pageSize = DEFAULT_PAGE_SIZE
+                    )
+                    val queryAgentTaskStatusRes = queryAgentTaskStatus(
+                        userId, projectId, jobId, queryAgentTaskStatusReq
+                    )
+                    queryAgentTaskStatusRes.data?.list?.filter {
+                        it.ip in runningIpList
+                    }?.map {
+                        if (logger.isDebugEnabled)
+                            logger.debug("Agent install task: ip: ${it.ip}, status: ${it.status}")
+                        if (it.status in agentTaskEndStatusList) { // agent安装任务结束(成功/失败)
+                            val agentInfo = queryAgentStatusService.getAgentVersions(
+                                listOf(AgentVersion(ip = it.ip, bkHostId = it.bkHostId?.toLong()))
+                            )
+                            val nodeStatus =
+                                if (AGENT_INSTALL_NORMAL == it.status) NodeStatus.NORMAL.name
+                                else { // agent安装任务失败，重新查询节点agent安装状态
+                                    if (AGENT_NOT_INSTALLED_TAG == agentInfo?.get(0)?.installedTag)
+                                        NodeStatus.NOT_INSTALLED.name
+                                    else if (AGENT_ABNORMAL_NODE_STATUS == agentInfo?.get(0)?.status)
+                                        NodeStatus.ABNORMAL.name
+                                    else if (AGENT_NORMAL_NODE_STATUS == agentInfo?.get(0)?.status)
+                                        NodeStatus.NORMAL.name
+                                    else
+                                        NodeStatus.NOT_INSTALLED.name
+                                }
+                            val nodeAgentVersion = agentInfo?.get(0)?.version
+                            nodeDao.updateNodeStatusByNodeIp(
+                                dslContext, listOf(it.ip), nodeStatus, nodeAgentVersion, null
+                            )
+                            runningIpList.remove(it.ip)
+                        }
                     }
+                    logger.info("Agent install task runningIpList:${runningIpList.joinToString()}")
+                    if (runningIpList.isEmpty()) {
+                        logger.info("Agent install task is complete.")
+                        break
+                    } else {
+                        logger.debug("Agent install task running...")
+                        count++
+                    }
+                    Thread.sleep(3000L)
                 }
-                logger.info("Agent install task runningIpList:${runningIpList.joinToString()}")
-                if (runningIpList.isEmpty()) {
-                    logger.info("Agent install task is complete.")
-                    executor.shutdown()
-                } else if (count > MAXIMUM_RETRY_TIMES) {
+                if (count >= MAXIMUM_RETRY_TIMES) {
                     logger.info("Agent install task abnormal ip: $runningIpList")
                     nodeDao.updateNodeStatusByNodeIp(dslContext, runningIpList, NodeStatus.ABNORMAL.name, null, null)
-                    executor.shutdown()
-                } else {
-                    logger.debug("Agent install task running...")
-                    count++
                 }
             }
         }
         val startTime = LocalDateTime.now()
         try {
-            executor.scheduleAtFixedRate(task, INITIAL_DELAY, TASK_PERIOD, TimeUnit.MILLISECONDS)
+            checkAgentStatusExecutor.submit(task)
         } catch (e: Exception) {
             logger.warn("Check agent status failed. Exception: $e")
         } finally {
-            executor.shutdown()
             logger.info(
                 "Agent install finish takes " +
                     "${Duration.between(startTime, LocalDateTime.now()).toNanos().toDouble() / NS_TO_S}s."
