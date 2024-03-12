@@ -121,7 +121,7 @@ class ApigwTurboResourceV4Impl @Autowired constructor(
         turboPlanModel: TurboPlanModel
     ): Response<String?> {
         logger.info("OPENAPI_TURBO_V4|addNewTurboPlan: userId[$userId] projectId[$projectId]")
-        return client.getSpringMvc(IUserTurboPlanController::class)
+        return client.getSpringMvc(IServiceTurboController::class)
             .addNewTurboPlan(turboPlanModel = turboPlanModel, projectId = projectId, user = userId)
     }
 
