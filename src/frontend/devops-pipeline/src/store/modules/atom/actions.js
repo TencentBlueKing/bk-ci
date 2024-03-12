@@ -74,6 +74,7 @@ import {
     SET_STAGE_TAG_LIST,
     SET_STORE_SEARCH,
     SET_TEMPLATE,
+    SWITCHING_PIPELINE_VERSION,
     TOGGLE_ATOM_SELECTOR_POPUP,
     TOGGLE_STAGE_REVIEW_PANEL,
     UPDATE_ATOM,
@@ -824,5 +825,9 @@ export default {
     },
     selectPipelineVersion ({ commit }, version) {
         commit(SELECT_PIPELINE_VERSION, version)
+    },
+    setSwitchingPipelineVersion ({ commit }, isSwitching) {
+        commit(SWITCHING_PIPELINE_VERSION, isSwitching)
     }
+
 }

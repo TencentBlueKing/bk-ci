@@ -37,7 +37,7 @@ export default {
         return getters.hasDraftPipeline ? state.pipelineInfo?.baseVersionName : '--'
     },
     isBranchVersion: state => {
-        return state.pipelineInfo?.baseVersionStatus === 'BRANCH'
+        return state.activePipelineVersion?.status === 'BRANCH'
     },
     isReleasePipeline: state => {
         return !state.pipelineInfo?.onlyDraft
