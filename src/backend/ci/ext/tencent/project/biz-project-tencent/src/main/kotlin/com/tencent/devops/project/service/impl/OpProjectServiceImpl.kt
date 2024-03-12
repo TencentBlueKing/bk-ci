@@ -60,7 +60,7 @@ import org.springframework.dao.DuplicateKeyException
 import org.springframework.stereotype.Service
 import org.springframework.util.CollectionUtils
 
-@Suppress("LongParameterList")
+@Suppress("LongParameterList", "ComplexCondition")
 @Service
 class OpProjectServiceImpl @Autowired constructor(
     private val dslContext: DSLContext,
