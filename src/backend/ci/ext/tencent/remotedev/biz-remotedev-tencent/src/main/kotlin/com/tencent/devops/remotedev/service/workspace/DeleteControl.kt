@@ -288,7 +288,7 @@ class DeleteControl @Autowired constructor(
                 bodyParams = mutableMapOf(
                     "userId" to user,
                     "rtxTable" to rtxTable,
-                    "emailTable" to emailTable,
+                    "emailTable" to emailTable
                 )
             )
         }
