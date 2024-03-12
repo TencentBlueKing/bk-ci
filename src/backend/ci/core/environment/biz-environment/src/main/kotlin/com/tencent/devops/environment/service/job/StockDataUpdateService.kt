@@ -197,13 +197,7 @@ class StockDataUpdateService @Autowired constructor(
         }.map { (key, value) ->
             UpdateTNodeInfo(
                 nodeId = key,
-                nodeStatus = if (AGENT_NOT_INSTALLED_TAG == ipToAgentUpdateList[value.ip]?.installedTag)
-                    NodeStatus.NOT_INSTALLED.name
-                else if (AGENT_ABNORMAL_NODE_STATUS == ipToAgentUpdateList[value.ip]?.status)
-                    NodeStatus.ABNORMAL.name
-                else if (AGENT_NORMAL_NODE_STATUS == ipToAgentUpdateList[value.ip]?.status)
-                    NodeStatus.NORMAL.name
-                else null,
+                nodeStatus = getNodeStatus(ipToAgentUpdateList[value.ip]),
                 agentStatus = AGENT_NORMAL_NODE_STATUS == ipToAgentUpdateList[value.ip]?.status,
                 agentVersion = ipToAgentUpdateList[value.ip]?.version,
                 lastModifyTime = LocalDateTime.now()
@@ -215,6 +209,17 @@ class StockDataUpdateService @Autowired constructor(
                     agentUpdateRecords.joinToString(separator = ", ", transform = { it.toString() })
             )
         nodeDao.batchUpdateAgentInfo(dslContext, agentUpdateRecords)
+    }
+
+    private fun getNodeStatus(agentInfo: AgentVersion?): String {
+        return if (AgentService.AGENT_NOT_INSTALLED_TAG == agentInfo?.installedTag)
+            NodeStatus.NOT_INSTALLED.name
+        else if (AgentService.AGENT_ABNORMAL_NODE_STATUS == agentInfo?.status)
+            NodeStatus.ABNORMAL.name
+        else if (AgentService.AGENT_NORMAL_NODE_STATUS == agentInfo?.status)
+            NodeStatus.NORMAL.name
+        else
+            NodeStatus.NOT_INSTALLED.name
     }
 
     private fun updateDevopsAgent() {
@@ -317,17 +322,7 @@ class StockDataUpdateService @Autowired constructor(
                     }
                 )?.associateBy { it.ip }
                 val ipToNodeStatus = mutableMapOf<String, String>()
-                inCCIpList.map {
-                    ipToNodeStatus[it] =
-                        if (AGENT_NOT_INSTALLED_TAG == ipToAgentVersionInfoMap?.get(it)?.installedTag)
-                            NodeStatus.NOT_INSTALLED.name
-                        else if (AGENT_ABNORMAL_NODE_STATUS == ipToAgentVersionInfoMap?.get(it)?.status)
-                            NodeStatus.ABNORMAL.name
-                        else if (AGENT_NORMAL_NODE_STATUS == ipToAgentVersionInfoMap?.get(it)?.status)
-                            NodeStatus.NORMAL.name
-                        else
-                            NodeStatus.NOT_INSTALLED.name
-                }
+                inCCIpList.map { ipToNodeStatus[it] =getNodeStatus(ipToAgentVersionInfoMap?.get(it)) }
                 nodeDao.updateNodeInCCByIp(dslContext, ipToNodeStatus)
                 // 4. CC中信息（host_id和云区域id）改变 - 更新信息，不变 - 不操作
                 val nodeUpdateInfoList = nodeRecords.filterNot {

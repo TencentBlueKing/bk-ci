@@ -268,16 +268,7 @@ data class AgentService @Autowired constructor(
                             )
                             val nodeStatus =
                                 if (AGENT_INSTALL_NORMAL == it.status) NodeStatus.NORMAL.name
-                                else { // agent安装任务失败，重新查询节点agent安装状态
-                                    if (AGENT_NOT_INSTALLED_TAG == agentInfo?.get(0)?.installedTag)
-                                        NodeStatus.NOT_INSTALLED.name
-                                    else if (AGENT_ABNORMAL_NODE_STATUS == agentInfo?.get(0)?.status)
-                                        NodeStatus.ABNORMAL.name
-                                    else if (AGENT_NORMAL_NODE_STATUS == agentInfo?.get(0)?.status)
-                                        NodeStatus.NORMAL.name
-                                    else
-                                        NodeStatus.NOT_INSTALLED.name
-                                }
+                                else getNodeStatus(agentInfo?.get(0)) // agent安装任务失败，重新查询节点agent安装状态
                             val nodeAgentVersion = agentInfo?.get(0)?.version
                             nodeDao.updateNodeStatusByNodeIp(
                                 dslContext, listOf(it.ip), nodeStatus, nodeAgentVersion, null
@@ -312,6 +303,17 @@ data class AgentService @Autowired constructor(
                     "${Duration.between(startTime, LocalDateTime.now()).toNanos().toDouble() / NS_TO_S}s."
             )
         }
+    }
+
+    private fun getNodeStatus(agentInfo: AgentVersion?): String {
+        return if (AGENT_NOT_INSTALLED_TAG == agentInfo?.installedTag)
+            NodeStatus.NOT_INSTALLED.name
+        else if (AGENT_ABNORMAL_NODE_STATUS == agentInfo?.status)
+            NodeStatus.ABNORMAL.name
+        else if (AGENT_NORMAL_NODE_STATUS == agentInfo?.status)
+            NodeStatus.NORMAL.name
+        else
+            NodeStatus.NOT_INSTALLED.name
     }
 
     fun queryAgentTaskStatus(
@@ -407,17 +409,7 @@ data class AgentService @Autowired constructor(
             )?.associateBy { it.ip }
         }
         val queryAgentIpList = ipToAgentVersionInfoMap?.keys?.filterNotNull()
-        queryAgentIpList?.map {
-            ipToNodeStatus[it] =
-                if (AGENT_NOT_INSTALLED_TAG == ipToAgentVersionInfoMap[it]?.installedTag)
-                    NodeStatus.NOT_INSTALLED.name
-                else if (AGENT_ABNORMAL_NODE_STATUS == ipToAgentVersionInfoMap[it]?.status)
-                    NodeStatus.ABNORMAL.name
-                else if (AGENT_NORMAL_NODE_STATUS == ipToAgentVersionInfoMap[it]?.status)
-                    NodeStatus.NORMAL.name
-                else
-                    NodeStatus.NOT_INSTALLED.name
-        }
+        queryAgentIpList?.map { ipToNodeStatus[it] = getNodeStatus(ipToAgentVersionInfoMap[it]) }
         nodeDao.updateNodeInCCByIp(dslContext, ipToNodeStatus)
         return queryAgentTaskStatusRes
     }

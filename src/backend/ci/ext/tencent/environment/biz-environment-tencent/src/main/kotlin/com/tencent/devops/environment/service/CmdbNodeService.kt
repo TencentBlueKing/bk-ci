@@ -56,6 +56,7 @@ import com.tencent.devops.environment.pojo.job.ccres.CCInfo
 import com.tencent.devops.environment.pojo.job.ccres.CCResp
 import com.tencent.devops.environment.pojo.job.ccres.QueryCCListHostWithoutBizData
 import com.tencent.devops.environment.pojo.job.req.OpOperateReq
+import com.tencent.devops.environment.service.job.AgentService
 import com.tencent.devops.environment.service.job.OpService
 import com.tencent.devops.environment.service.job.QueryAgentStatusService
 import com.tencent.devops.environment.service.job.QueryFromCCService
@@ -176,14 +177,7 @@ class CmdbNodeService @Autowired constructor(
         } else null
         ipToAgentVersionInfoMap.takeIf { !it.isNullOrEmpty() }.run {
             pageFromCmdb.records.filterNot { it.ip in ipToCmdbNodeRecordMap.keys }.map {
-                it.nodeStatus = if (AGENT_NOT_INSTALLED_TAG == ipToAgentVersionInfoMap!![it.ip]?.installedTag)
-                    NodeStatus.NOT_INSTALLED.name
-                else if (AGENT_ABNORMAL_NODE_STATUS == ipToAgentVersionInfoMap[it.ip]?.status)
-                    NodeStatus.ABNORMAL.name
-                else if (AGENT_NORMAL_NODE_STATUS == ipToAgentVersionInfoMap[it.ip]?.status)
-                    NodeStatus.NORMAL.name
-                else
-                    NodeStatus.NOT_INSTALLED.name
+                it.nodeStatus = getNodeStatus(ipToAgentVersionInfoMap!![it.ip])
             }
         }
         // 2.2 不在cc
@@ -194,6 +188,17 @@ class CmdbNodeService @Autowired constructor(
         }
 
         return pageFromCmdb
+    }
+
+    private fun getNodeStatus(agentInfo: AgentVersion?): String {
+        return if (AgentService.AGENT_NOT_INSTALLED_TAG == agentInfo?.installedTag)
+            NodeStatus.NOT_INSTALLED.name
+        else if (AgentService.AGENT_ABNORMAL_NODE_STATUS == agentInfo?.status)
+            NodeStatus.ABNORMAL.name
+        else if (AgentService.AGENT_NORMAL_NODE_STATUS == agentInfo?.status)
+            NodeStatus.NORMAL.name
+        else
+            NodeStatus.NOT_INSTALLED.name
     }
 
     /**
@@ -316,14 +321,7 @@ class CmdbNodeService @Autowired constructor(
                 projectId = projectId,
                 nodeIp = cmdbNode.ip,
                 nodeName = cmdbNode.name,
-                nodeStatus = if (AGENT_NOT_INSTALLED_TAG == ipToAgentVersionMap?.get(cmdbNode.ip)?.installedTag)
-                    NodeStatus.NOT_INSTALLED.name
-                else if (AGENT_ABNORMAL_NODE_STATUS == ipToAgentVersionMap?.get(cmdbNode.ip)?.status)
-                    NodeStatus.ABNORMAL.name
-                else if (AGENT_NORMAL_NODE_STATUS == ipToAgentVersionMap?.get(cmdbNode.ip)?.status)
-                    NodeStatus.NORMAL.name
-                else
-                    NodeStatus.NOT_INSTALLED.name,
+                nodeStatus = getNodeStatus(ipToAgentVersionMap?.get(cmdbNode.ip)),
                 nodeType = NodeType.CMDB.name,
                 createdUser = userId,
                 osName = cmdbNode.osName,
