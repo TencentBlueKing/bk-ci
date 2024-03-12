@@ -13,6 +13,7 @@ import com.tencent.devops.remotedev.pojo.OPUserSetting
 import com.tencent.devops.remotedev.pojo.RemoteDevUserSettings
 import com.tencent.devops.remotedev.pojo.WorkspaceTemplate
 import com.tencent.devops.remotedev.pojo.windows.WindowsPoolListFetchData
+import com.tencent.devops.remotedev.service.BKBaseService
 import com.tencent.devops.remotedev.service.RemoteDevSettingService
 import com.tencent.devops.remotedev.service.UserRefreshService
 import com.tencent.devops.remotedev.service.WhiteListService
@@ -34,7 +35,8 @@ class OpRemoteDevResourceImpl @Autowired constructor(
     private val whiteListService: WhiteListService,
     private val workspaceImageService: WorkspaceImageService,
     private val sleepControl: SleepControl,
-    private val deleteControl: DeleteControl
+    private val deleteControl: DeleteControl,
+    private val bkBaseService: BKBaseService
 ) : OpRemoteDevResource {
 
     override fun addWorkspaceTemplate(userId: String, workspaceTemplate: WorkspaceTemplate): Result<Boolean> {
@@ -131,19 +133,11 @@ class OpRemoteDevResourceImpl @Autowired constructor(
     }
 
     @AuditEntry(actionId = ActionId.CGS_DELETE)
-    override fun batchDeleteWorkspace(userId: String, workspaceNames: Set<String>): Result<Map<String, Boolean>> {
-        val result = mutableMapOf<String, Boolean>()
-        workspaceNames.forEach {
-            val ok = deleteControl.deleteWorkspace4OP(
-                userId = userId,
-                workspaceName = it
-            )
-            result[it] = ok
-        }
-
-        // TODO: 发送删除通知
-
-        return Result(result)
+    override fun batchDeleteWorkspace(
+        userId: String,
+        workspaceNames: Set<String>
+    ): Result<Map<String, Boolean>> {
+        return Result(deleteControl.batchDeleteWorkspace4OP(userId, workspaceNames))
     }
 
     @AuditEntry(actionId = ActionId.CGS_STOP)

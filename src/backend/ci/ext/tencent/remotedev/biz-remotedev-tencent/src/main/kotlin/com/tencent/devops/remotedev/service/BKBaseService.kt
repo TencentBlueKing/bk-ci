@@ -214,6 +214,62 @@ class BKBaseService @Autowired constructor(
         return result
     }
 
+    fun fetchLastOnline(
+        nodeIds: Set<String>
+    ): Map<String, String> {
+        val sql = "SELECT node_id, MAX(dtEventTime) " +
+            "FROM 100656_cgs_report_game_all " +
+            "WHERE where node_id in (${
+            nodeIds.joinToString(separator = "','", prefix = "'", postfix = "'")
+            }) " +
+            "GROUP BY node_id"
+
+        val url = "${bkConfig.baseUrl}/prod/v3/queryengine/query_sync/"
+        val body = BakeBaseQuerySyncReq(
+            bkdataDataToken = bkConfig.baseToken,
+            bkAppCode = bkConfig.appCode,
+            bkAppSecret = bkConfig.appSecret,
+            sql = sql
+        )
+        val request = Request.Builder()
+            .url(url)
+            .post(JsonUtil.toJson(body).toRequestBody("application/json; charset=utf-8".toMediaTypeOrNull()))
+            .build()
+
+        val resp = try {
+            okHttpClient.newCall(request).execute().use { response ->
+                val data = response.body!!.string()
+                logger.debug("fetchLastOnline｜req|{}|response code|{}|content|{}", body, response.code, data)
+                if (!response.isSuccessful) {
+                    logger.error("fetchLastOnline｜req|{}|response code|{}|content|{}", body, response.code, data)
+                    return emptyMap()
+                }
+
+                val resp = objectMapper.readValue<BakeBaseQuerySyncResp>(data)
+                if (!resp.result) {
+                    logger.error("fetchLastOnline｜req|{}|response code|{}|content|{}", body, response.code, data)
+                    return emptyMap()
+                }
+                resp
+            }
+        } catch (e: Exception) {
+            logger.error("fetchLastOnline request error", e)
+            return emptyMap()
+        }
+
+        val result = mutableMapOf<String, String>()
+        try {
+            resp.data?.list?.forEach { l ->
+                result[l["node_id"] as String] = l["_col1"] as String
+            } ?: return result
+        } catch (e: Exception) {
+            logger.error("fetchLastOnline parse data error", e)
+            return result
+        }
+
+        return result
+    }
+
     companion object {
         private val dateFormat = SimpleDateFormat("yyyy-MM-dd HH:mm:ss")
         private val theDateFormat = DateTimeFormatter.ofPattern("yyyyMMdd")
