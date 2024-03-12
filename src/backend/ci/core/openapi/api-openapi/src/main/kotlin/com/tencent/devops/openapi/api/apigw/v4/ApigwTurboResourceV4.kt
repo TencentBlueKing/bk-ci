@@ -141,10 +141,10 @@ interface ApigwTurboResourceV4 {
     @Path("/server_resources")
     fun getServerResourcesSummary(
         @Parameter(description = "起始统计日期")
-        @QueryParam(value = "pageNum")
+        @QueryParam(value = "startDate")
         startDate: String?,
         @Parameter(description = "截止统计日期")
-        @QueryParam("pageSize")
+        @QueryParam("endDate")
         endDate: String?,
         @Parameter(description = "页数")
         @QueryParam(value = "pageNum")
