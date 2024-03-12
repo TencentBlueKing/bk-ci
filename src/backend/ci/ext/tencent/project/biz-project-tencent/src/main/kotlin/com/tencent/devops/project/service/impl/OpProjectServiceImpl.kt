@@ -174,22 +174,21 @@ class OpProjectServiceImpl @Autowired constructor(
         }
 
         // 已经开启的项目管理员新增时发送通知
-        val newManager = projectInfoRequest.properties?.remotedevManager
-            ?.split(";")?.filter { it.isNotBlank() }?.toSet()
-            ?: emptySet()
-        val subManager = newManager.subtract(
-            (
-                dbProperties?.remotedevManager?.split(";")?.filter { it.isNotBlank() }?.toSet()
-                    ?: emptySet()
-                ).toSet()
-        )
-        if (dbProperties?.remotedev == true && subManager.isNotEmpty()) {
-            projectRemoteDevService.sendEnableRemoteDevNotify(
-                sendNotifyUser = subManager,
-                projectCode = dbProjectRecord.englishName,
-                projectName = dbProjectRecord.projectName,
-                cloudDesktopNum = projectInfoRequest.properties?.cloudDesktopNum ?: 0
-            )
+        if (dbProperties?.remotedev == true && projectInfoRequest.properties?.remotedev == true) {
+            val newManager = projectInfoRequest.properties?.remotedevManager
+                ?.split(";")?.filter { it.isNotBlank() }?.toSet()
+                ?: emptySet()
+            val oldManager = dbProperties.remotedevManager?.split(";")?.filter { it.isNotBlank() }?.toSet()
+                ?: emptySet()
+            val subManager = newManager.subtract(oldManager)
+            if (subManager.isNotEmpty()) {
+                projectRemoteDevService.sendEnableRemoteDevNotify(
+                    sendNotifyUser = subManager,
+                    projectCode = dbProjectRecord.englishName,
+                    projectName = dbProjectRecord.projectName,
+                    cloudDesktopNum = projectInfoRequest.properties?.cloudDesktopNum ?: 0
+                )
+            }
         }
 
         return if (!flag) {

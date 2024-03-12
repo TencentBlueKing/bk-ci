@@ -212,18 +212,18 @@ class ProjectRemoteDevService @Autowired constructor(
                         productId = record.productId
                     )
                 )
-            }
-            // 新开启的云研发项目给所有管理员发通知
-            val manager = dbProperties.remotedevManager
-                ?.split(";")?.filter { it.isNotBlank() }?.toSet()
-                ?: emptySet()
+                // 新开启的云研发项目给所有管理员发通知
+                val manager = dbProperties.remotedevManager
+                    ?.split(";")?.filter { it.isNotBlank() }?.toSet()
+                    ?: emptySet()
 
-            sendEnableRemoteDevNotify(
-                sendNotifyUser = manager,
-                projectCode = record.englishName,
-                projectName = record.projectName,
-                cloudDesktopNum = prop.cloudDesktopNum
-            )
+                sendEnableRemoteDevNotify(
+                    sendNotifyUser = manager,
+                    projectCode = record.englishName,
+                    projectName = record.projectName,
+                    cloudDesktopNum = prop.cloudDesktopNum
+                )
+            }
         }
 
         return projectDao.updatePropertiesByCode(dslContext, projectCode, prop) > 0
