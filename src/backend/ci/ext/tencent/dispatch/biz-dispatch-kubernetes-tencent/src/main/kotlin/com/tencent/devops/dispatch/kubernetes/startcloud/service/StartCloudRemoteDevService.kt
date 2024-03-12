@@ -131,8 +131,8 @@ class StartCloudRemoteDevService @Autowired constructor(
                     machineType = event.devFile.machineType
                 )
             )?.filter {
-                it.zoneId.replace(Regex("\\d+"), "") == event.devFile.zoneId &&
-                    it.machineResources?.any { ma -> ma.machineType == event.devFile.machineType } == true
+                (it.zoneId.replace(Regex("\\d+"), "") == event.devFile.zoneId) &&
+                        (it.machineResources?.any { ma -> ma.machineType == event.devFile.machineType } == true)
             }?.randomOrNull() ?: throw BuildFailureException(
                 ErrorCodeEnum.CREATE_ENVIRONMENT_INTERFACE_FAIL.errorType,
                 ErrorCodeEnum.CREATE_ENVIRONMENT_INTERFACE_FAIL.errorCode,
