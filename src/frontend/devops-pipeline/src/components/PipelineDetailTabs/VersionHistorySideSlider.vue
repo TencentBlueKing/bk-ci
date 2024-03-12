@@ -95,11 +95,7 @@
             Logo
         },
         props: {
-            showVersionSideslider: Boolean,
-            currentYaml: {
-                type: String,
-                required: true
-            }
+            showVersionSideslider: Boolean
         },
         data () {
             return {
