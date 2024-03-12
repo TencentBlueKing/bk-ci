@@ -776,7 +776,8 @@ class ScmProxyService @Autowired constructor(private val client: Client) {
             return Credential(
                 username = v1,
                 privateKey = session?.privateToken ?: "",
-                passPhrase = v2
+                passPhrase = v2,
+                svnToken = session?.privateToken ?: ""
             )
         }
         // 按顺序封装凭证信息
@@ -828,14 +829,10 @@ class ScmProxyService @Autowired constructor(private val client: Client) {
             }
         }
         CodeSvnRepository.SVN_TYPE_HTTP -> {
-            // 凭证中存在token，则直接使用，反之用session接口返回值，此处token是svn的token
+            // 凭证中存在token，则直接使用，反之用session接口返回值，此处svnToken是svn的token
             // 参考：1. com.tencent.devops.process.utils.CredentialUtils.getCredential
             //      2. com.tencent.devops.process.service.scm.ScmProxyService.getCredential
-            if (credential.credentialType == CredentialType.TOKEN_USERNAME_PASSWORD) {
-                Pair(false, credential.svnToken ?: "")
-            } else {
-                Pair(false, credential.privateKey)
-            }
+            Pair(false, credential.svnToken ?: "")
         }
         else -> {
             Pair(false, "")
