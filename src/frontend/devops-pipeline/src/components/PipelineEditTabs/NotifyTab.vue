@@ -75,6 +75,7 @@
 </template>
 
 <script>
+    import { deepCopy } from '@/utils/util'
     import NotifySetting from '@/components/pipelineSetting/NotifySetting'
 
     const defaultSuc = {
@@ -159,7 +160,6 @@
         },
         methods: {
             getRenderInfo (type) {
-                console.log(type)
                 return this[type]
             },
             getShowContent (col, val) {
@@ -183,9 +183,9 @@
                 this.editType = type
                 this.editIndex = index
                 if (index > -1 && this[type][index]) {
-                    this.sliderEditItem = this[type][index]
+                    this.sliderEditItem = deepCopy(this[type][index])
                 } else {
-                    this.sliderEditItem = type === 'failSubscriptionList' ? Object.assign({}, defaultFail) : Object.assign({}, defaultSuc)
+                    this.sliderEditItem = deepCopy(type === 'failSubscriptionList' ? defaultFail : defaultSuc)
                 }
             },
             handleSaveNotify () {

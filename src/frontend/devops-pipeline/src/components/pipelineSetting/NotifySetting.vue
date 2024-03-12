@@ -51,26 +51,28 @@
                     :value="subscription.wechatGroupFlag">
                 </atom-checkbox>
             </bk-form-item>
-            <bk-form-item v-if="subscription.wechatGroupFlag" :label="$t('settings.groupIdLabel')">
-                <group-id-selector
-                    class="item-groupid"
-                    :handle-change="updateSubscription"
-                    name="wechatGroup"
-                    :value="subscription.wechatGroup"
-                    :placeholder="$t('settings.groupIdTips')"
-                    icon-class="icon-question-circle"
-                    desc-direction="top">
-                </group-id-selector>
-            </bk-form-item>
-            <bk-form-item v-if="subscription.wechatGroupFlag">
-                <atom-checkbox
-                    style="width: auto;"
-                    name="wechatGroupMarkdownFlag"
-                    :text="$t('settings.wechatGroupMarkdownFlag')"
-                    :handle-change="updateSubscription"
-                    :value="subscription.wechatGroupMarkdownFlag">
-                </atom-checkbox>
-            </bk-form-item>
+            <template v-if="subscription.types.includes('WEWORK') && subscription.wechatGroupFlag">
+                <bk-form-item :label="$t('settings.groupIdLabel')">
+                    <group-id-selector
+                        class="item-groupid"
+                        :handle-change="updateSubscription"
+                        name="wechatGroup"
+                        :value="subscription.wechatGroup"
+                        :placeholder="$t('settings.groupIdTips')"
+                        icon-class="icon-question-circle"
+                        desc-direction="top">
+                    </group-id-selector>
+                </bk-form-item>
+                <bk-form-item>
+                    <atom-checkbox
+                        style="width: auto;"
+                        name="wechatGroupMarkdownFlag"
+                        :text="$t('settings.wechatGroupMarkdownFlag')"
+                        :handle-change="updateSubscription"
+                        :value="subscription.wechatGroupMarkdownFlag">
+                    </atom-checkbox>
+                </bk-form-item>
+            </template>
         </bk-form>
     </div>
 </template>
