@@ -1,6 +1,6 @@
 <template>
-    <div class="pipeline-detail-header">
-        <pipeline-bread-crumb :show-record-entry="isDebugExec">
+    <div v-if="execDetail" class="pipeline-detail-header">
+        <pipeline-bread-crumb :show-record-entry="isDebugExec" :pipeline-name="execDetail?.pipelineName">
             <span class="build-num-switcher-wrapper">
                 {{ $t(isDebugExec ? 'draftExecDetail' : 'pipelinesDetail') }}
                 <build-num-switcher v-bind="buildNumConf" />
@@ -80,6 +80,7 @@
             />
         </aside>
     </div>
+    <i v-else class="devops-icon icon-circle-2-1 spin-icon" style="margin-left: 20px;"></i>
 </template>
 
 <script>

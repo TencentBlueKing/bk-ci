@@ -40,7 +40,6 @@
             <component :is="activeChild.component" v-bind="activeChild.props" />
         </main>
         <show-variable v-if="activeChild.showVar && pipeline" :editable="false" :pipeline="pipeline" />
-
     </div>
 </template>
 
@@ -167,10 +166,21 @@
 
         beforeDestroy () {
             this.resetHistoryFilterCondition()
+            this.setPipeline(null)
+            this.setPipelineWithoutTrigger(null)
+            this.setPipelineYaml('')
+            this.selectPipelineVersion(null)
+            this.$store.commit('atom/resetPipelineSetting', null)
         },
         methods: {
             ...mapActions('pipelines', ['resetHistoryFilterCondition']),
-            ...mapActions('atom', ['selectPipelineVersion']),
+            ...mapActions('atom', [
+                'selectPipelineVersion',
+                'setPipeline',
+                'setPipelineYaml',
+                'selectPipelineVersion',
+                'setPipelineWithoutTrigger'
+            ]),
             getNavComponent (type) {
                 switch (type) {
                     case 'triggerEvent':
@@ -205,7 +215,8 @@
                         return {
                             component: 'BuildHistoryTab',
                             props: {
-                                isDebug: this.isActiveDraftVersion
+                                isDebug: this.isActiveDraftVersion,
+                                pipelineVersion: this.activePipelineVersion?.version
                             }
                         }
                 }

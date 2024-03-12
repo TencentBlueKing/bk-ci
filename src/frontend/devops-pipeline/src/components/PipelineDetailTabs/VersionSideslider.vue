@@ -15,7 +15,7 @@
                 <i v-if="isActiveDraft" class="devops-icon icon-edit-line" />
                 <logo v-else-if="isActiveBranchVersion" class="pipeline-branch-version-icon" name="branch" size="14" />
                 <i v-else :class="['devops-icon icon-check-circle', {
-                    'is-release-version-icon': isCurrentVersion(activeVersion)
+                    'is-release-version-icon': isCurrentVersion(activePipelineVersion)
                 }]" />
                 <span v-if="isActiveDraft">{{ $t('editPage.draftVersion', [draftBaseVersionName]) }}</span>
                 <span v-else>
@@ -70,7 +70,7 @@
     import VersionHistorySideSlider from './VersionHistorySideSlider'
     export default {
         name: 'versionSideslider',
-        emit: ['input', 'update:value', 'change'],
+        emit: ['input', 'change'],
         components: {
             Logo,
             VersionHistorySideSlider
@@ -91,7 +91,6 @@
                 showVersionSideslider: false,
                 versionList: [],
                 searchKeyword: '',
-                activeVersion: null,
                 pagination: {
                     current: 1,
                     count: 0,
@@ -102,7 +101,8 @@
         computed: {
             ...mapState('atom', [
                 'pipelineYaml',
-                'pipelineInfo'
+                'pipelineInfo',
+                'activePipelineVersion'
             ]),
             projectId () {
                 return this.$route.params.projectId
@@ -112,24 +112,27 @@
             },
             // 最新的流水线版本信息
             activeDisplayName () {
-                return this.activeVersion?.displayName ?? '--'
+                return this.activePipelineVersion?.displayName ?? '--'
             },
             selectedVersionId () {
-                return this.activeVersion?.version ?? null
+                return this.activePipelineVersion?.version ?? null
             },
             isActiveDraft () {
-                return this.activeVersion?.isDraft ?? false
+                return this.activePipelineVersion?.isDraft ?? false
             },
             isActiveBranchVersion () {
-                return this.activeVersion?.isBranchVersion ?? false
+                return this.activePipelineVersion?.isBranchVersion ?? false
             },
             draftBaseVersionName () {
-                return this.activeVersion?.baseVersionName ?? '--'
+                return this.activePipelineVersion?.baseVersionName ?? '--'
             }
         },
         watch: {
             value (val) {
-                this.activeVersion = this.versionList.find(item => item.version === val)
+                const activeVersion = this.versionList.find(item => item.version === val)
+                if (activeVersion) {
+                    this.selectPipelineVersion(activeVersion)
+                }
             },
             pipelineId: {
                 handler () {
@@ -150,7 +153,8 @@
                 'requestPipelineVersionList'
             ]),
             ...mapActions('atom', [
-                'setShowVariable'
+                'setShowVariable',
+                'selectPipelineVersion'
             ]),
             showVersionSideSlider () {
                 this.setShowVariable(false)
@@ -187,7 +191,9 @@
                     })
                     const version = this.versionList.find(item => item.version === this.value)
 
-                    this.activeVersion = version
+                    if (version) {
+                        this.selectPipelineVersion(version)
+                    }
                 } catch (err) {
                     this.$showTips({
                         message: err.message || err,
@@ -199,10 +205,11 @@
             },
             switchVersion (versionId) {
                 const version = this.versionList.find(item => item.version === versionId)
-                this.activeVersion = version
-                this.$emit('change', versionId, version)
-                this.$emit('input', versionId, version)
-                this.$emit('update:value', versionId, version)
+                if (version) {
+                    this.selectPipelineVersion(version)
+                    this.$emit('change', versionId)
+                    this.$emit('input', versionId)
+                }
             },
             isCurrentVersion (version) {
                 return version?.version === this.pipelineInfo?.releaseVersion
