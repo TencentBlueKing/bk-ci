@@ -84,7 +84,8 @@ object RepositoryMessageCode {
     const val ERROR_MEMBER_LEVEL_LOWER_MASTER = "2115035" // 开启pac需要master以上权限
     const val ERROR_DEFAULT_BRANCH_IS_EMPTY = "2115036" // 默认分支不能为空
     const val ERROR_REPO_REPEATEDLY_ENABLED_PAC = "2115037" // 代码库已开启PAC。
-    const val ERROR_DELETE_BECAUSE_ENABLED_PAC = "2115038" // 请先关闭 PAC 模式，再删除代码库
+    const val PAC_REPO_CAN_NOT_DELETE = "2115038" // 代码库已开启PAC,不能删除
+    const val PAC_REPO_CAN_NOT_RENAME = "2115039" // 代码库已开启PAC,不能重命名
 
     const val ATOM_REPO_CAN_NOT_EDIT = "2115040" // 插件仓库不得修改
     const val ATOM_REPO_CAN_NOT_DELETE = "2115041" // 插件仓库不得删除
