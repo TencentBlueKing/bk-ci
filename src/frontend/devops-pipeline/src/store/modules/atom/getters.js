@@ -43,7 +43,7 @@ export default {
         return !state.pipelineInfo?.onlyDraft
     },
     isReleaseVersion: state => {
-        return state.activePipelineVersion?.version === state.pipelineInfo?.releaseVersion
+        return state.activePipelineVersion?.version === state.pipelineInfo?.releaseVersion && state.activePipelineVersion?.status === 'RELEASED'
     },
     isOutdatedVersion: state => {
         return state.activePipelineVersion?.version < state.pipelineInfo?.releaseVersion

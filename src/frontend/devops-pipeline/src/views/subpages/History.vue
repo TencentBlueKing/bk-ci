@@ -74,21 +74,24 @@
                 return this.getNavComponent(this.activeMenuItem)
             },
             asideNav () {
+                console.log('watch, ', !this.isReleaseVersion, !this.isActiveDraftVersion)
                 return [
                     {
                         title: this.$t('executeInfo'),
                         children: [
                             {
                                 title: this.$t(this.isActiveDraftVersion ? 'draftExecRecords' : 'pipelinesHistory'),
+                                disabled: !this.isReleaseVersion && !this.isActiveDraftVersion,
                                 disableTooltip: {
                                     content: this.$refs.disableToolTips?.[0],
-                                    disabled: this.isReleaseVersion,
+                                    disabled: this.isReleaseVersion || this.isActiveDraftVersion,
                                     delay: [300, 0]
                                 },
                                 name: 'history'
                             },
                             {
                                 title: this.$t('triggerEvent'),
+                                disabled: !this.isReleaseVersion,
                                 disableTooltip: {
                                     content: this.$refs.disableToolTips?.[1],
                                     disabled: this.isReleaseVersion,
@@ -102,7 +105,6 @@
                             // }
                         ].map((child) => ({
                             ...child,
-                            disabled: !this.isReleaseVersion,
                             active: this.activeMenuItem === child.name
                         }))
                     },
@@ -233,10 +235,10 @@
             },
             switchToReleaseVersion () {
                 this.selectPipelineVersion({
-                    version: this.pipelineInfo.releaseVersion,
-                    versionName: this.pipelineInfo.releaseVersionName,
+                    version: this.pipelineInfo?.releaseVersion,
+                    versionName: this.pipelineInfo?.releaseVersionName,
                     isDraft: false,
-                    displayName: this.pipelineInfo.releaseVersionName
+                    displayName: this.pipelineInfo?.releaseVersionName
                 })
             }
         }

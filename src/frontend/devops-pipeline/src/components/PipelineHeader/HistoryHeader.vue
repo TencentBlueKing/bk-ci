@@ -194,6 +194,7 @@
         },
         watch: {
             releaseVersion (version) {
+                console.log('watch, releaseVersion', version)
                 this.selectPipelineVersion({
                     version
                 })
@@ -202,6 +203,13 @@
                 console.log('watch', filters)
                 this.$nextTick(() => {
                     this.init()
+                })
+            }
+        },
+        mounted () {
+            if (this.releaseVersion) {
+                this.selectPipelineVersion({
+                    version: this.releaseVersion
                 })
             }
         },
@@ -228,6 +236,7 @@
             async init () {
                 try {
                     const version = this.activePipelineVersion?.version
+                    console.log('watch,init', this.activePipelineVersion?.version)
                     if (version) {
                         this.setSwitchingPipelineVersion(true)
                         await this.requestPipeline({
