@@ -55,43 +55,17 @@ class DevCloudBuildListener @Autowired constructor(
     }
 
     override fun onShutdown(event: PipelineAgentShutdownEvent) {
-        if (event.source == "shutdownAllVMTaskAtom") {
-            // 同一个buildId的多个shutdownAllVMTaskAtom事件一定在短时间内到达，300s足够
-            val shutdownLock = RedisLock(redisOperation, shutdownLockBaseKey + event.buildId, 300L)
-            try {
-                if (shutdownLock.tryLock()) {
-                    dcContainerShutdownHandler.handlerRequest(
-                        DcShutdownHandlerContext(
-                            userId = event.userId,
-                            projectId = event.projectId,
-                            pipelineId = event.pipelineId,
-                            buildId = event.buildId,
-                            vmSeqId = event.vmSeqId,
-                            executeCount = event.executeCount,
-                            shutdownEvent = event
-                        )
-                    )
-                } else {
-                    logger.info("shutdownAllVMTaskAtom of {} already invoked, ignore", event.buildId)
-                }
-            } catch (e: Exception) {
-                logger.info("Fail to shutdown VM", e)
-            } finally {
-                shutdownLock.unlock()
-            }
-        } else {
-            dcContainerShutdownHandler.handlerRequest(
-                DcShutdownHandlerContext(
-                    userId = event.userId,
-                    projectId = event.projectId,
-                    pipelineId = event.pipelineId,
-                    buildId = event.buildId,
-                    vmSeqId = event.vmSeqId,
-                    executeCount = event.executeCount,
-                    shutdownEvent = event
-                )
+        dcContainerShutdownHandler.handlerRequest(
+            DcShutdownHandlerContext(
+                userId = event.userId,
+                projectId = event.projectId,
+                pipelineId = event.pipelineId,
+                buildId = event.buildId,
+                vmSeqId = event.vmSeqId,
+                executeCount = event.executeCount,
+                shutdownEvent = event
             )
-        }
+        )
     }
 
     private fun startUp(dispatchMessage: DispatchMessage) {
