@@ -280,6 +280,7 @@ class UserPipelineResourceImpl @Autowired constructor(
     ): Result<Boolean> {
         checkParam(userId, projectId)
         modelAndSetting.setting.checkParam()
+        modelAndSetting.setting.fixSubscriptions()
         val buildNumRule = modelAndSetting.setting.buildNumRule
         if (!buildNumRule.isNullOrBlank()) {
             pipelineRuleService.validateRuleStr(buildNumRule, PipelineRuleBusCodeEnum.BUILD_NUM.name)
