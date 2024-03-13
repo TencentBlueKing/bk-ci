@@ -93,9 +93,9 @@ data:
       privateMachine:
         label: bkci.dispatch.kubenetes/private-builder
     buildless:
-      # 是否开启无编译构建集群
-      enabled: true
-      # 无编译构建集群启动deployments数量（建议>=2, 避免单独故障）
+      # 是否开启无编译构建集群(默认不开启)
+      enabled: false
+      # 无编译构建集群启动deployments数量（建议>=2）
       deploymentReplicas: 2
       # deployment配置
       buildlessDeployment:
