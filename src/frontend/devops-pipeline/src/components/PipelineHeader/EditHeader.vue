@@ -197,7 +197,7 @@
                     const { data: { version, versionName } } = await this.saveDraftPipeline({
                         projectId,
                         pipelineId,
-                        baseVersion: this.pipelineInfo.baseVersion,
+                        baseVersion: this.pipelineInfo?.baseVersion,
                         storageType: this.pipelineMode,
                         modelAndSetting: {
                             model: {

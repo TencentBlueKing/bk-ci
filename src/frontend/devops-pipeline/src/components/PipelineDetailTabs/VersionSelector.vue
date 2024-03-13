@@ -209,10 +209,7 @@
                         } else {
                             this.versionList.push(...versions)
                         }
-                        const version = this.versionList.find(item => item.version === this.value)
-                        if (version) {
-                            this.activeVersion = version
-                        }
+                        this.switchVersion(this.value)
                     }
                 } catch (error) {
                     console.log(error)
@@ -223,12 +220,13 @@
             switchVersion (versionId) {
                 const version = this.versionList.find(item => item.version === versionId)
                 if (version) {
+                    this.activeVersion = version
                     this.$emit('change', versionId, version)
                     this.$emit('input', versionId, version)
                 }
             },
             isCurrentVersion (version) {
-                return version?.version === this.pipelineInfo?.releaseVersion
+                return version?.version === this.pipelineInfo?.releaseVersion && version?.status === 'RELEASED'
             },
             searchVersion (keyword) {
                 this.searchKeyword = keyword

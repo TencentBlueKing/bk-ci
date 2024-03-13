@@ -84,7 +84,7 @@
                 hasDraftPipeline: 'atom/hasDraftPipeline'
             }),
             isRollback () {
-                const { baseVersion, releaseVersion } = this.pipelineInfo
+                const { baseVersion, releaseVersion } = (this.pipelineInfo ?? {})
                 const isReleaseVersion = this.version === releaseVersion
                 return !(this.isActiveDraft || baseVersion === this.version || (isReleaseVersion && !this.hasDraftPipeline))
             },
