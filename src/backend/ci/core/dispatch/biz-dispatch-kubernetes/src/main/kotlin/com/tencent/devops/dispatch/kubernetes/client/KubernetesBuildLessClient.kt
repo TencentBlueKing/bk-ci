@@ -59,8 +59,10 @@ class KubernetesBuildLessClient @Autowired constructor(
         with(buildLessStartInfo) {
             logger.info("[$buildId]|[$vmSeqId] Start buildLess request url: $url, body: $buildLessStartInfo")
             val request = clientCommon.baseRequest("", url)
-                .post(JsonUtil.toJson(buildLessStartInfo)
-                          .toRequestBody("application/json; charset=utf-8".toMediaTypeOrNull()))
+                .post(
+                    JsonUtil.toJson(buildLessStartInfo)
+                        .toRequestBody("application/json; charset=utf-8".toMediaTypeOrNull())
+                )
                 .build()
             try {
                 OkhttpUtils.doHttp(request).use { response ->

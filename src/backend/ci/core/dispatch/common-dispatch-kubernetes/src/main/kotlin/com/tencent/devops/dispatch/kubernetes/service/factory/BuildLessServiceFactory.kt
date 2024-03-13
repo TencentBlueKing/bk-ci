@@ -30,7 +30,6 @@ package com.tencent.devops.dispatch.kubernetes.service.factory
 import com.tencent.devops.common.dispatch.sdk.service.DockerRoutingSdkService
 import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.dispatch.kubernetes.interfaces.BuildLessService
-import com.tencent.devops.dispatch.kubernetes.interfaces.ContainerService
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 

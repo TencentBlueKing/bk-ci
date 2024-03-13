@@ -29,8 +29,6 @@ package com.tencent.devops.dispatch.kubernetes.interfaces
 
 import com.tencent.devops.buildless.pojo.BuildLessEndInfo
 import com.tencent.devops.buildless.pojo.BuildLessStartInfo
-import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.dispatch.kubernetes.pojo.builds.DispatchBuildBuilderStatus
 
 /**
  * 用来获取不同类型的dispatchType的buildless service来调用相关实现

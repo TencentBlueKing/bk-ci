@@ -46,7 +46,6 @@ import com.tencent.devops.dispatch.docker.service.DockerHostProxyService
 import com.tencent.devops.dispatch.docker.utils.DockerHostUtils
 import com.tencent.devops.dispatch.kubernetes.api.service.ServiceBaseBuildLessResource
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
-import okhttp3.Request
 import okhttp3.RequestBody.Companion.toRequestBody
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
@@ -127,8 +126,8 @@ class BuildLessStartHandler @Autowired constructor(
 
     private fun startK8sBuildLess(
         buildLessStartInfo: BuildLessStartInfo,
-        handlerContext: BuildLessStartHandlerContext)
-    {
+        handlerContext: BuildLessStartHandlerContext
+    ) {
         client.get(ServiceBaseBuildLessResource::class).startBuildLess(buildLessStartInfo)
     }
 

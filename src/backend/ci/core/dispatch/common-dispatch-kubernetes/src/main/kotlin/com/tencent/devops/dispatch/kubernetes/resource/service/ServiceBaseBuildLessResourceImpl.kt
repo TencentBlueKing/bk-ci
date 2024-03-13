@@ -32,7 +32,6 @@ import com.tencent.devops.buildless.pojo.BuildLessStartInfo
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.dispatch.kubernetes.api.service.ServiceBaseBuildLessResource
-import com.tencent.devops.dispatch.kubernetes.pojo.base.DebugResponse
 import com.tencent.devops.dispatch.kubernetes.service.DispatchBaseBuildLessService
 import org.springframework.beans.factory.annotation.Autowired
 
