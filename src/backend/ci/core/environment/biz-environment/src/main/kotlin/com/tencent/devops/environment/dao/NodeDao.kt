@@ -379,6 +379,24 @@ class NodeDao {
         }
     }
 
+    fun updateNodeInCCByHostId(dslContext: DSLContext, hostIdToNodeStatus: Map<Long, String>) {
+        val agentVersionDefault: String? = null
+        with(TNode.T_NODE) {
+            val batchUpdate = dslContext.batch(
+                hostIdToNodeStatus.map { (hostId, nodeStatus) ->
+                    val updateInfo = dslContext.update(this)
+                        .set(NODE_STATUS, nodeStatus)
+                    if (NodeStatus.NOT_INSTALLED.name == nodeStatus) {
+                        updateInfo.set(AGENT_VERSION, agentVersionDefault)
+                    }
+                    updateInfo.where(HOST_ID.eq(hostId))
+                        .and(NODE_TYPE.`in`(NodeType.CMDB.name, NodeType.UNKNOWN.name, NodeType.OTHER.name))
+                }
+            )
+            batchUpdate.execute()
+        }
+    }
+
     fun updateNodeNotInCmdb(dslContext: DSLContext, ipList: List<String>) {
         val hostIdDefault: Long? = null
         val cloudAreaIdDefault: Long? = null

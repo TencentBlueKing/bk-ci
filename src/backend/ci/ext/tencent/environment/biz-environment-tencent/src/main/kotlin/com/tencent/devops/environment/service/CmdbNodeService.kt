@@ -279,7 +279,7 @@ class CmdbNodeService @Autowired constructor(
     }
 
     /**
-     * IDC测试机导入
+     * 测试机导入
      * 如果机器不存在，add一条新纪录
      */
     fun addCmdbNodes(userId: String, projectId: String, nodeIps: List<String>): AddCmdbNodesRes {

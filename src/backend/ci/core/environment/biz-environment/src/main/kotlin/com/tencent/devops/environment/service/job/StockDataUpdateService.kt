@@ -160,7 +160,7 @@ class StockDataUpdateService @Autowired constructor(
                         "[updateGseAgent]existAgentVersionList:" +
                             existAgentVersionList.joinToString(separator = ", ", transform = { it.toString() })
                     )
-                val ipToExistAgentVersion = existAgentVersionList.associateBy { it.ip }
+                val hostIdToExistAgentVersion = existAgentVersionList.associateBy { it.bkHostId }
                 val newAgentVersionList = queryAgentStatusService.getAgentVersions(existAgentVersionList)
                 if (logger.isDebugEnabled)
                     logger.debug(
@@ -169,9 +169,9 @@ class StockDataUpdateService @Autowired constructor(
                     )
                 // 判断 newAgentVersionList 和 existAgentVersionList 是否一致，不一致则更新对应数据库表
                 val agentUpdateList = newAgentVersionList?.filterNot {
-                    it.installedTag == ipToExistAgentVersion[it.ip]?.installedTag &&
-                        it.version == ipToExistAgentVersion[it.ip]?.version &&
-                        it.status == ipToExistAgentVersion[it.ip]?.status
+                    it.installedTag == hostIdToExistAgentVersion[it.bkHostId]?.installedTag &&
+                        it.version == hostIdToExistAgentVersion[it.bkHostId]?.version &&
+                        it.status == hostIdToExistAgentVersion[it.bkHostId]?.status
                 }
                 logger.info(
                     "[updateGseAgent]agentUpdateList:" +
@@ -188,7 +188,7 @@ class StockDataUpdateService @Autowired constructor(
         existNodeIdToAgentVersionMap: Map<Long, AgentVersion>,
         agentUpdateList: List<AgentVersion>
     ) {
-        val ipToAgentUpdateList = agentUpdateList.associateBy { it.ip }
+        val hostIdToAgentUpdateList = agentUpdateList.associateBy { it.bkHostId }
         val agentUpdateIpList = agentUpdateList.mapNotNull { it.ip }
         val agentUpdateHostIdList = agentUpdateList.mapNotNull { it.bkHostId }
 
@@ -197,9 +197,9 @@ class StockDataUpdateService @Autowired constructor(
         }.map { (key, value) ->
             UpdateTNodeInfo(
                 nodeId = key,
-                nodeStatus = getNodeStatus(ipToAgentUpdateList[value.ip]),
-                agentStatus = AGENT_NORMAL_NODE_STATUS == ipToAgentUpdateList[value.ip]?.status,
-                agentVersion = ipToAgentUpdateList[value.ip]?.version,
+                nodeStatus = getNodeStatus(hostIdToAgentUpdateList[value.bkHostId]),
+                agentStatus = AGENT_NORMAL_NODE_STATUS == hostIdToAgentUpdateList[value.bkHostId]?.status,
+                agentVersion = hostIdToAgentUpdateList[value.bkHostId]?.version,
                 lastModifyTime = LocalDateTime.now()
             )
         }

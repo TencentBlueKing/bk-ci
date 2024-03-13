@@ -388,7 +388,7 @@ data class AgentService @Autowired constructor(
             }
         )
         // 若agent安装任务结束(成功/失败)，同步更新db中节点安装的状态
-        val ipToNodeStatus = mutableMapOf<String, String>()
+        val hostIdToNodeStatus = mutableMapOf<Long, String>()
         val hostInfoToStatusMap = agentQueryAgentTaskStatusRes.data?.list?.associate {
             val status = when (it.status) {
                 AGENT_INSTALL_NORMAL -> NodeStatus.NORMAL.name
@@ -397,20 +397,22 @@ data class AgentService @Autowired constructor(
             }
             Pair(it.ip, it.bkHostId) to status
         }?.filter { (key, value) -> value != NodeStatus.RUNNING.name } // RUNNING的节点不更新
-        hostInfoToStatusMap?.map { (key, value) -> ipToNodeStatus[key.first] = value }
+        hostInfoToStatusMap?.map { (key, value) ->
+            hostIdToNodeStatus[key.second.toLong()] = value
+        }
         // 对于安装失败的节点，再查agent安装状态
-        val ipToAgentVersionInfoMap = hostInfoToStatusMap?.filter {
+        val hostIdToAgentVersionInfoMap = hostInfoToStatusMap?.filter {
             NodeStatus.ABNORMAL.name == it.value
         }?.let { hostInfoToStatus ->
             queryAgentStatusService.getAgentVersions(
                 hostInfoToStatus.map {
-                    AgentVersion(ip = it.key.first, bkHostId = it.key.second?.toLong())
+                    AgentVersion(ip = it.key.first, bkHostId = it.key.second.toLong())
                 }
-            )?.associateBy { it.ip }
+            )?.associateBy { it.bkHostId }
         }
-        val queryAgentIpList = ipToAgentVersionInfoMap?.keys?.filterNotNull()
-        queryAgentIpList?.map { ipToNodeStatus[it] = getNodeStatus(ipToAgentVersionInfoMap[it]) }
-        nodeDao.updateNodeInCCByIp(dslContext, ipToNodeStatus)
+        val queryAgentHostIdList = hostIdToAgentVersionInfoMap?.keys?.filterNotNull()
+        queryAgentHostIdList?.map { hostIdToNodeStatus[it] = getNodeStatus(hostIdToAgentVersionInfoMap[it]) }
+        nodeDao.updateNodeInCCByHostId(dslContext, hostIdToNodeStatus)
         return queryAgentTaskStatusRes
     }
 

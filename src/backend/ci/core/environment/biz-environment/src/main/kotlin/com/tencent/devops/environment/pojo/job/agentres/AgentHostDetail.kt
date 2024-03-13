@@ -37,7 +37,7 @@ data class AgentHostDetail(
     val filterHost: Boolean?,
     @get:Schema(title = "主机ID")
     @JsonProperty("bk_host_id")
-    val bkHostId: Int?,
+    val bkHostId: Int,
     @get:Schema(title = "主机IP地址")
     val ip: String,
     @get:Schema(title = "主机内网IPV4地址")
