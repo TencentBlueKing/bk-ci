@@ -223,34 +223,34 @@
                     }
                 })
             },
-            deleteVersion (row) {
+            async deleteVersion (row) {
                 if (this.releaseVersion !== row.version) {
                     const { projectId, pipelineId } = this.$route.params
                     const content = this.$t('deleteVersionConfirm', [row.versionName])
-                    navConfirm({
+                    const confirm = await navConfirm({
                         content,
                         type: 'error',
                         theme: 'danger'
-                    }).then((val) => {
-                        if (val) {
-                            this.deletePipelineVersion({
+                    })
+                    if (confirm) {
+                        try {
+                            await this.deletePipelineVersion({
                                 projectId,
                                 pipelineId,
                                 version: row.version
-                            }).then(() => {
-                                this.init(1)
-                                this.$showTips({
-                                    message: this.$t('delete') + this.$t('version') + this.$t('success'),
-                                    theme: 'success'
-                                })
-                            }).catch(err => {
-                                this.$showTips({
-                                    message: err.message || err,
-                                    theme: 'error'
-                                })
+                            })
+                            this.init(1)
+                            this.$showTips({
+                                message: this.$t('delete') + this.$t('version') + this.$t('success'),
+                                theme: 'success'
+                            })
+                        } catch (err) {
+                            this.$showTips({
+                                message: err.message || err,
+                                theme: 'error'
                             })
                         }
-                    })
+                    }
                 }
             },
             handleClose () {

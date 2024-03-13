@@ -16,7 +16,6 @@
                     <div
                         v-for="(panel, index) in panels"
                         class="tab-item"
-                        v-enStyle="'margin-right: 28px'"
                         :key="index"
                         :class="{ actived: active === panel.name }"
                         @click="selectTab(panel.name)"
@@ -207,8 +206,8 @@
       padding: 0 24px;
       display: flex;
       align-items: center;
+      justify-content: space-between;
       .tab-item {
-        margin-right: 40px;
         line-height: 40px;
         cursor: pointer;
         font-size: 14px;
