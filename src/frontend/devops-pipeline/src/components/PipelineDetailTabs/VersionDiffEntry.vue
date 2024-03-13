@@ -120,7 +120,7 @@
                         this.fetchPipelineByVersion({
                             projectId: this.$route.params.projectId,
                             pipelineId: this.$route.params.pipelineId,
-                            version: this.latestVersion
+                            version: this.currentVersion
                         })
                     ])
 
@@ -129,7 +129,6 @@
                         this.currentYaml = currentPipeline.yamlPreview.yaml
                         return
                     }
-                    console.log(activePipeline, 'hahaha', currentPipeline)
                     throw new Error(activePipeline?.yamlInvalidMsg)
                 } catch (error) {
                     console.log(error)
