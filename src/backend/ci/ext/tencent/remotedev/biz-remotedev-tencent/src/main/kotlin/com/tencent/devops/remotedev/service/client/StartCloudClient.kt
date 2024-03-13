@@ -34,7 +34,6 @@ class StartCloudClient @Autowired constructor(
     val appName: String = "IEG_BKCI"
 
     fun computerStatus(
-        userId: String,
         cgsIds: Set<String>?
     ): List<StartCloudComputerStatusRespData>? {
         val url = "$apiUrl/openapi/computer/status"
@@ -43,9 +42,9 @@ class StartCloudClient @Autowired constructor(
                 appName = appName,
                 cgsIds = cgsIds
             ),
-                false
+            false
         )
-        logger.debug("User $userId request url: $url, body: $body")
+        logger.debug("computerStatus request url: $url, body: $body")
         val request = Request.Builder()
             .url(url)
             .headers(genStartApiHeaders(body).toHeaders())
