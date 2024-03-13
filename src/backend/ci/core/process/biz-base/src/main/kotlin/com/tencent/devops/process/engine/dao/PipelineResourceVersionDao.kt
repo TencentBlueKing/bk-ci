@@ -402,6 +402,7 @@ class PipelineResourceVersionDao {
         dslContext: DSLContext,
         projectId: String,
         pipelineId: String,
+        versionName: String?,
         creator: String?,
         description: String?
     ): Int {
@@ -413,6 +414,12 @@ class PipelineResourceVersionDao {
                     BRANCH_ACTION.ne(BranchVersionAction.INACTIVE.name)
                         .or(BRANCH_ACTION.isNull)
                 )
+            versionName?.let {
+                query.and(
+                    VERSION.like("%$versionName%")
+                        .or(VERSION_NAME.like("%$versionName%"))
+                )
+            }
             creator?.let { query.and(CREATOR.eq(creator)) }
             description?.let { query.and(DESCRIPTION.like("%$description%")) }
             return query.fetchOne(0, Int::class.java)!!

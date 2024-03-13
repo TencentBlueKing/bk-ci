@@ -325,7 +325,7 @@ class UserPipelineVersionResourceImpl @Autowired constructor(
                 projectId = projectId,
                 pipelineId = pipelineId,
                 fromVersion = fromVersion,
-                versionName = versionName,
+                versionName = versionName?.takeIf { it.isNotBlank() },
                 creator = creator?.takeIf { it.isNotBlank() },
                 description = description?.takeIf { it.isNotBlank() },
                 page = page ?: 1,
