@@ -81,7 +81,7 @@
                 cancelText: this.$t('cancel'),
                 noPermissionTipsConfig: {
                     title: this.$t('noPermission'),
-                    desc: this.$t('history.noPermissionTips'),
+                    desc: this.$t('history.noEditPermissionTips'),
                     btns: [
                         {
                             theme: 'primary',
@@ -120,11 +120,14 @@
                 isCodeMode: 'isCodeMode',
                 getPipelineSubscriptions: 'atom/getPipelineSubscriptions'
             }),
+            pipelineVersion () {
+                return this.pipelineInfo?.version
+            },
             projectId () {
                 return this.$route.params.projectId
             },
             pipelineId () {
-                return this.$route.params.pipelineId
+                return this.pipelineInfo?.pipelineId
             },
             longProjectId () {
                 return this.curProject && this.curProject.projectId ? this.curProject.projectId : ''
@@ -191,11 +194,6 @@
         },
         watch: {
             pipelineId (pipelineId, oldId) {
-                this.$nextTick(() => {
-                    this.init()
-                })
-            },
-            pipelineVersion (v) {
                 this.$nextTick(() => {
                     this.init()
                 })

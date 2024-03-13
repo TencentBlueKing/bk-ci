@@ -9,6 +9,7 @@
 </template>
 
 <script>
+    import { mapActions } from 'vuex'
     import { SET_PIPELINE_INFO } from '@/store/modules/atom/constants'
 
     export default {
@@ -18,13 +19,21 @@
             })
         },
         beforeDestroy () {
-            this.$store.dispatch('atom/setPipeline', null)
-            this.$store.dispatch('atom/setPipelineWithoutTrigger', null)
-            this.$store.dispatch('atom/setPipelineYaml', '')
-            this.$store.dispatch('atom/selectPipelineVersion', null)
+            this.setPipeline(null)
+            this.setPipelineWithoutTrigger(null)
+            this.setPipelineYaml('')
+            this.selectPipelineVersion(null)
             this.$store.commit('atom/resetPipelineSetting', null)
             this.$store.commit(`atom/${SET_PIPELINE_INFO}`, null)
             this.$store.commit('pipelines/updatePipelineList', [])
+        },
+        methods: {
+            ...mapActions('atom', [
+                'setPipeline',
+                'setPipelineYaml',
+                'selectPipelineVersion',
+                'setPipelineWithoutTrigger'
+            ])
         }
     }
 </script>

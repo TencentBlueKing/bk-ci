@@ -4,7 +4,7 @@
             :text="text"
             :outline="outline"
             :theme="theme"
-            @click="diffVersion(version)"
+            @click="initDiff"
         >
             <slot>
                 {{ $t('diff') }}
@@ -21,35 +21,29 @@
         >
             <div class="diff-version-dialog-content" v-bkloading="{ isLoading: isLoadYaml, color: '#1d1d1d' }">
                 <header class="diff-version-header">
-                    <span>
-                        {{ latestVersionName }}
-                        <bk-tag theme="info">{{ $t('template.current') }}</bk-tag>
-                    </span>
-                    <span>
-                        <bk-select
-                            ext-cls="dark-theme-select-trigger"
-                            ext-popover-cls="dark-theme-select-menu"
-                            v-model="activeVersion"
-                            @change="diffVersion"
-                            enable-scroll-load
-                            :scroll-loading="bottomLoadingOptions"
-                            :clearable="false"
-                            @scroll-end="loadMore()"
-                        >
-                            <bk-option
-                                v-for="item in pipelineVersionList"
-                                :key="item.version"
-                                :id="item.version"
-                                :name="item.versionName"
-                            />
-                        </bk-select>
-                    </span>
+                    <VersionSelector
+                        ext-cls="dark-theme-select-trigger"
+                        ext-popover-cls="dark-theme-select-menu"
+                        :show-extension="false"
+                        v-model="activeVersion"
+                        @change="diffActiveVersion"
+                    />
+
+                    <VersionSelector
+                        ext-cls="dark-theme-select-trigger"
+                        ext-popover-cls="dark-theme-select-menu"
+                        :show-extension="false"
+                        v-model="currentVersion"
+                        @change="diffCurrentVersion"
+
+                    />
+
                 </header>
                 <div class="pipeline-yaml-diff-wrapper">
                     <yaml-diff
-                        :old-yaml="currentYaml"
+                        :old-yaml="activeYaml"
                         height="100%"
-                        :new-yaml="activeYaml"
+                        :new-yaml="currentYaml"
                     />
                 </div>
             </div>
@@ -67,10 +61,12 @@
 
 <script>
     import { mapActions } from 'vuex'
+    import VersionSelector from '@/components/PipelineDetailTabs/VersionSelector'
     import YamlDiff from '@/components/YamlDiff'
     export default {
         components: {
-            YamlDiff
+            YamlDiff,
+            VersionSelector
         },
         props: {
             text: {
@@ -96,20 +92,10 @@
                 isLoadYaml: false,
                 showVersionDiffDialog: false,
                 activeVersion: '',
+                currentVersion: '',
                 activeYaml: '',
                 currentYaml: '',
-                pipelineVersionList: [],
-                page: 1,
-                hasNext: true,
-                bottomLoadingOptions: {
-                    size: 'small',
-                    isLoading: false
-                }
-            }
-        },
-        computed: {
-            latestVersionName () {
-                return this.pipelineVersionList.find(item => item.version === this.latestVersion)?.versionName ?? '--'
+                pipelineVersionList: []
             }
         },
 
@@ -120,40 +106,11 @@
             ...mapActions('pipelines', [
                 'requestPipelineVersionList'
             ]),
-            async loadMore (page) {
-                try {
-                    if (!this.hasNext) return
-                    const { projectId, pipelineId } = this.$route.params
-                    const pageSize = 20
-                    this.bottomLoadingOptions.isLoading = true
-                    const res = await this.requestPipelineVersionList({
-                        projectId,
-                        pipelineId,
-                        page: page ?? this.page + 1,
-                        pageSize
-                    })
-                    this.page = res.page
-                    this.hasNext = res.count > res.page * pageSize
-                    if (res.records.length > 0) {
-                        this.pipelineVersionList.push(...res.records.map(item => {
-                            return {
-                                ...item,
-                                versionName: item.versionName || this.$t('editPage.draftVersion', [item.baseVersionName])
-                            }
-                        }))
-                    }
-                } catch (error) {
-                    console.log(error)
-                } finally {
-                    this.bottomLoadingOptions.isLoading = false
-                }
-            },
-            async diffVersion (version) {
+
+            async diffVersion () {
                 try {
                     this.isLoadYaml = true
                     this.showVersionDiffDialog = true
-                    this.loadMore(this.page)
-                    this.activeVersion = version
                     const [activePipeline, currentPipeline] = await Promise.all([
                         this.fetchPipelineByVersion({
                             projectId: this.$route.params.projectId,
@@ -183,6 +140,19 @@
                 } finally {
                     this.isLoadYaml = false
                 }
+            },
+            initDiff () {
+                this.activeVersion = this.version
+                this.currentVersion = this.latestVersion
+                this.diffVersion()
+            },
+            diffActiveVersion (version) {
+                this.activeVersion = version
+                this.diffVersion()
+            },
+            diffCurrentVersion (version) {
+                this.currentVersion = version
+                this.diffVersion()
             }
         }
     }

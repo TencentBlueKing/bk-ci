@@ -1,11 +1,29 @@
 <template>
     <div class="pipeline-config-wrapper" v-bkloading="{ isLoading }">
+
         <bk-alert
             v-if="hasDraftPipeline"
             :title="
                 $t('draftInfoTips', [draftCreator, draftLastUpdateTime])
             "
         />
+        <p v-show="isBranchVersion" id="branch-version-guide-tooltips">
+            <span v-for="i in [1,2,3]" :key="i" v-html="$t(`branchVersionTips${i}`)" />
+        </p>
+        <bk-alert v-if="isBranchVersion">
+            <i class="bk-icon icon-info-circle" />
+            <i18n path="branchVersionNotMergeYet" tag="p" slot="title">
+                <span class="branch-version-operate-btn text-link" v-bk-tooltips="MRGuideTooltips">
+                    <i class="devops-icon icon-helper" />
+                    {{ $t('helpGuide') }}
+                </span>
+                <span class="branch-version-operate-btn text-link" @click="commitMR">
+                    <i class="devops-icon icon-jump-link" />
+                    {{ $t('goTgitCommitMR') }}
+                </span>
+            </i18n>
+        </bk-alert>
+
         <bk-alert
             v-if="hasUnResolveEvent"
         >
@@ -14,6 +32,7 @@
                 <span class="text-link" @click="showVersionSideSlider">{{ $t('goVersionSideslider') }}</span>
             </i18n>
         </bk-alert>
+
         <header class="pipeline-config-header">
             <mode-switch read-only />
         </header>
@@ -37,7 +56,7 @@
 </template>
 
 <script>
-    import { mapActions, mapState, mapGetters } from 'vuex'
+    import { mapState, mapGetters } from 'vuex'
     import ModeSwitch from '@/components/ModeSwitch'
     import YamlEditor from '@/components/YamlEditor'
     import { TriggerTab, NotifyTab } from '@/components/PipelineEditTabs/'
@@ -59,28 +78,23 @@
         data () {
             return {
                 isLoading: false,
-                yaml: '',
-                yamlHighlightBlockMap: {},
-                yamlHighlightBlock: []
+                yaml: ''
             }
         },
         computed: {
             ...mapState('atom', [
                 'pipelineYaml',
                 'pipelineSetting',
-                'pipelineWithoutTrigger',
                 'pipeline',
                 'pipelineInfo',
-                'activePipelineVersion'
-            ]),
-
-            ...mapState([
-                'pipelineMode'
+                'activePipelineVersion',
+                'yamlHighlightBlockMap'
             ]),
             ...mapGetters({
                 isCodeMode: 'isCodeMode',
                 hasDraftPipeline: 'atom/hasDraftPipeline',
-                getPipelineSubscriptions: 'atom/getPipelineSubscriptions'
+                getPipelineSubscriptions: 'atom/getPipelineSubscriptions',
+                isBranchVersion: 'atom/isBranchVersion'
             }),
             projectId () {
                 return this.$route.params.projectId
@@ -94,15 +108,22 @@
             pipelineType () {
                 return this.$route.params.type
             },
+            MRGuideTooltips () {
+                return {
+                    placement: 'bottom',
+                    trigger: 'click',
+                    content: '#branch-version-guide-tooltips',
+                    theme: 'light',
+                    allowHTML: true
+                }
+            },
             hasUnResolveEvent () {
-                return ['DELETED', 'UN_MERGED'].includes(this.pipelineInfo?.yamlInfo?.status)
+                return ['DELETED'].includes(this.pipelineInfo?.yamlInfo?.status)
             },
             unResolveEventTooltips () {
                 switch (this.pipelineInfo?.yamlInfo?.status) {
                     case 'DELETED':
                         return 'ymlDeletedTips'
-                    case 'UN_MERGED':
-                        return 'unMergedTips'
                     default:
                         return ''
                 }
@@ -151,77 +172,39 @@
                     default:
                         return null
                 }
+            },
+            yamlHighlightBlock () {
+                return this.isCodeMode ? (this.yamlHighlightBlockMap?.[this.pipelineType] ?? []) : []
             }
-        },
-        watch: {
-            pipelineType (type) {
-                this.yamlHighlightBlock = this.yamlHighlightBlockMap?.[type] ?? []
-            },
-            isCodeMode (val) {
-                if (val) {
-                    this.yamlHighlightBlock = this.yamlHighlightBlockMap?.[this.pipelineType] ?? []
-                }
-            },
-            'activePipelineVersion.version' (version) {
-                this.$nextTick(() => {
-                    this.init()
-                })
-            },
-            pipelineId (id) {
-                this.$nextTick(() => {
-                    this.init()
-                })
-            }
-        },
-        created () {
-            this.init()
         },
 
         beforeDestroy () {
-            this.$refs.editor?.destroy?.()
-            this.setPipelineYaml('')
-            this.setPipeline(null)
-            this.setPipelineWithoutTrigger(null)
-            this.setPipelineSetting(null)
+            this.$refs.editor?.destroy()
         },
         methods: {
-            ...mapActions('atom', [
-                'requestPipeline',
-                'setPipeline',
-                'setPipelineYaml',
-                'setPipelineSetting',
-                'setPipelineWithoutTrigger'
-            ]),
-            async init () {
-                try {
-                    if (this.activePipelineVersion?.version) {
-                        this.isLoading = true
-                        const yamlHighlightBlockMap = await this.requestPipeline({
-                            ...this.$route.params,
-                            version: this.activePipelineVersion.version
-                        })
-                        this.yamlHighlightBlockMap = yamlHighlightBlockMap
-                        if (this.isCodeMode) {
-                            this.yamlHighlightBlock = this.yamlHighlightBlockMap[this.pipelineType]
-                        }
-                    }
-                } catch (error) {
-                    this.$bkMessage({
-                        theme: 'error',
-                        message: error.message
-                    })
-                } finally {
-                    this.isLoading = false
-                }
-            },
             showVersionSideSlider () {
                 bus.$emit(SHOW_VERSION_HISTORY_SIDESLIDER)
+            },
+            commitMR () {
+                if (this.pipelineInfo?.yamlInfo?.webUrl) {
+                    const url = new URL(`${this.pipelineInfo?.yamlInfo?.webUrl}/merge_requests/new`)
+                    url.searchParams.append('merge_request[source_branch]', this.activePipelineVersion?.versionName)
+                    console.log(url, url.href)
+                    window.open(url.href, '_blank')
+                }
             }
         }
     }
 </script>
 
 <style lang="scss">
+#branch-version-guide-tooltips {
+    display: grid;
+    grid-gap: 6px;
+    b {
+        color: #FF9C01;
+    }
+}
 .pipeline-config-wrapper {
   padding: 24px;
   display: flex;
@@ -230,6 +213,9 @@
   overflow: hidden;
   position: static !important;
   grid-gap: 16px;
+  .branch-version-operate-btn {
+    margin-left: 16px;
+  }
   .pipeline-config-header {
     display: flex;
     align-items: center;

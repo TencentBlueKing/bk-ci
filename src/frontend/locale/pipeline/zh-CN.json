@@ -571,6 +571,7 @@
     "errorCode": "错误码",
     "noBuildRecords": "构建记录为空",
     "noPermissionTips": "你没有查看该流水线的权限，请切换项目或申请相应权限",
+    "noEditPermissionTips": "你没有编辑该流水线的权限，请切换项目或申请相应权限",
     "noReleaseBuildEmptyTips": "流水线尚未发布，请先发布，再启动执行。发布流水线后即可触发执行构建任务。系统将为每次构建分配一个唯一 ID，所有构建记录都会展示在这里。",
     "buildEmptyDesc": "定义了流水线之后，你可以手动触发执行一次构建任务，我们会给每个构建分配一个唯一ID，所有的构建记录都会在这里",
     "startBuildTips": "开始构建流水线",
@@ -1476,7 +1477,6 @@
   "clearFilterCondition": "清空筛选条件",
   "clearFilterConditionTips": "可以尝试 调整关键词 或 {0}",
   "ymlDeletedTips": "默认分支上的YAML文件已删除，以默认分支配置为准的定时/CR/issue/note等触发器已失效，若此流水线已无用可手动删除进行清理",
-  "unMergedTips": "有新的分支版本尚未合并到默认分支，可{0}查看详情",
   "goVersionSideslider": "前往版本历史",
   "pacModePipelineDeleteTips": "已开启PAC模式,请先删除代码库默认分支上的yaml文件,再删除流水线",
   "noPermissionToDelete": "无权限删除",
@@ -1491,6 +1491,12 @@
   "triggerLeastOne": "至少保留一个触发器",
   "goExec": "去执行",
   "switchToReleaseVersion": "切换至最新版本",
-  "switchToReleaseVersionCheck": "切换至最新版本查看",
-  "switch": "切换"
+  "switch": "切换",
+  "branchVersionNotMergeYet": "分支版本尚未合并到默认分支 {0} {1}",
+  "helpGuide": "帮助说明",
+  "goTgitCommitMR": "去工蜂提交MR",
+  "branchVersionTips1": "1、PUSH、MR、TAG事件触发时，流水线配置以触发分支上对应的YAML文件为准",
+  "branchVersionTips2": "2、其他触发方式（定时、手动、ISSUE、REVIEW、NOTE等）时，流水线配置以默认分支上对应的YAML文件为准",
+  "branchVersionTips3": "3、流水线查看页面，展示默认分支上对应的YAML文件内容",
+  "latest": "最新"
 }

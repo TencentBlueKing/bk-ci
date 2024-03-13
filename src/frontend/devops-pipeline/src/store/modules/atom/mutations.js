@@ -65,6 +65,7 @@ import {
     SET_PIPELINE_INFO,
     SET_PIPELINE_WITHOUT_TRIGGER,
     SET_PIPELINE_YAML,
+    SET_PIPELINE_YAML_HIGHLIGHT_MAP,
     SET_REMOTE_TRIGGER_TOKEN,
     SET_REQUEST_ATOM_DATA,
     SET_SAVE_STATUS,
@@ -73,6 +74,7 @@ import {
     SET_STORE_LOADING,
     SET_STORE_SEARCH,
     SET_TEMPLATE,
+    SWITCHING_PIPELINE_VERSION,
     TOGGLE_ATOM_SELECTOR_POPUP,
     TOGGLE_STAGE_REVIEW_PANEL,
     UPDATE_ATOM,
@@ -163,6 +165,10 @@ export default {
     },
     [SET_PIPELINE_YAML]: (state, yaml = '') => {
         Vue.set(state, 'pipelineYaml', yaml)
+        return state
+    },
+    [SET_PIPELINE_YAML_HIGHLIGHT_MAP]: (state, highlightMap = {}) => {
+        Vue.set(state, 'yamlHighlightBlockMap', highlightMap)
         return state
     },
     [RESET_PIPELINE_SETTING_MUNTATION]: (state, payload) => {
@@ -479,6 +485,12 @@ export default {
     [SELECT_PIPELINE_VERSION]: (state, version) => {
         Object.assign(state, {
             activePipelineVersion: version
+        })
+        return state
+    },
+    [SWITCHING_PIPELINE_VERSION]: (state, payload) => {
+        Object.assign(state, {
+            switchingVersion: payload
         })
         return state
     }

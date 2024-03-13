@@ -1,6 +1,6 @@
 <template>
     <bread-crumb :value="breadCrumbPath">
-        <template v-if="pipelineList?.length">
+        <template v-if="pipelineList?.length && !isLoading">
             <bread-crumb-item v-for="(crumb, index) in breadCrumbs" :key="index" v-bind="crumb">
                 <slot v-if="index === breadCrumbs.length - 1"></slot>
             </bread-crumb-item>
@@ -22,7 +22,9 @@
             BreadCrumbItem
         },
         props: {
-            showRecordEntry: Boolean
+            showRecordEntry: Boolean,
+            pipelineName: String,
+            isLoading: Boolean
         },
         data () {
             return {
@@ -36,9 +38,11 @@
                 pipelineList: 'pipelines/getPipelineList'
             }),
             ...mapState('atom', [
+                'pipeline',
                 'pipelineInfo'
             ]),
             breadCrumbs () {
+                console.log('this.pipelineName', this.pipeline)
                 return [{
                     icon: 'pipeline',
                     selectedValue: this.$t('pipeline'),
@@ -47,12 +51,12 @@
                     }
                 }, this.$route.name === 'pipelineImportEdit'
                     ? {
-                        selectedValue: this.pipelineInfo?.pipelineName ?? '--'
+                        selectedValue: this.pipeline?.name ?? '--'
                     }
                     : {
                         paramId: 'pipelineId',
                         paramName: 'pipelineName',
-                        selectedValue: this.pipelineInfo?.pipelineName ?? '--',
+                        selectedValue: this.pipelineName ?? this.pipeline?.name ?? '--',
                         records: this.pipelineList,
                         showTips: true,
                         tipsName: 'switch_pipeline_hint',
@@ -143,6 +147,16 @@
             async doSelectPipeline (pipelineId, cur) {
                 try {
                     const { $route } = this
+                    const name = $route.params.buildNo ? 'pipelinesHistory' : $route.name
+
+                    this.$router.push({
+                        name,
+                        params: {
+                            ...$route.params,
+                            projectId: $route.params.projectId,
+                            pipelineId
+                        }
+                    })
                     await this.requestPipelineSummary({
                         pipelineId,
                         projectId: $route.params.projectId
@@ -156,16 +170,6 @@
                             pipelineId,
                             pipelineName: cur.pipelineName
                         })
-                    })
-                    const name = $route.params.buildNo ? 'pipelinesHistory' : $route.name
-
-                    this.$router.push({
-                        name,
-                        params: {
-                            ...$route.params,
-                            projectId: $route.params.projectId,
-                            pipelineId
-                        }
                     })
                 } catch (error) {
                     this.handleError(error, {

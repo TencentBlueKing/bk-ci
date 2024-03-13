@@ -1,14 +1,16 @@
 <template>
     <div class="pipeline-history-header">
         <div class="pipeline-history-left-aside">
-            <pipeline-bread-crumb />
+            <pipeline-bread-crumb :is-loading="switchingVersion" />
             <pac-tag class="pipeline-pac-indicator" v-if="pacEnabled" :info="yamlInfo" />
-            <VersionSideslider
+            <VersionSelector
                 :value="activePipelineVersion?.version"
+                ref="versionSelectorInstance"
                 @change="handleVersionChange"
+                @showAllVersion="showVersionSideSlider"
             />
             <bk-button
-                v-if="isOutdatedVersion"
+                v-if="!isReleaseVersion"
                 text
                 size="small"
                 theme="primary"
@@ -18,6 +20,7 @@
                 {{ $t("switchToReleaseVersion") }}
             </bk-button>
             <badge
+                v-if="isReleaseVersion"
                 class="pipeline-exec-badge"
                 :project-id="projectId"
                 :pipeline-id="pipelineId"
@@ -83,8 +86,12 @@
                     </bk-button>
                 </span>
             </template>
-            <more-actions />
+            <more-actions v-if="isReleaseVersion" />
         </aside>
+        <VersionHistorySideSlider
+            :show-version-sideslider="showVersionSideslider"
+            @close="closeVersionSideSlider"
+        />
     </div>
 </template>
 
@@ -97,8 +104,9 @@
     import { mapGetters, mapState, mapActions } from 'vuex'
     import MoreActions from './MoreActions.vue'
     import PipelineBreadCrumb from './PipelineBreadCrumb.vue'
-    import VersionSideslider from '@/components/PipelineDetailTabs/VersionSideslider'
     import VersionDiffEntry from '@/components/PipelineDetailTabs/VersionDiffEntry'
+    import VersionSelector from '@/components/PipelineDetailTabs/VersionSelector'
+    import VersionHistorySideSlider from '@/components/PipelineDetailTabs/VersionHistorySideSlider'
     import RollbackEntry from '@/components/PipelineDetailTabs/RollbackEntry'
 
     export default {
@@ -107,17 +115,27 @@
             PacTag,
             Badge,
             MoreActions,
-            VersionSideslider,
+            VersionSelector,
+            VersionHistorySideSlider,
             VersionDiffEntry,
             RollbackEntry
         },
+        props: {
+            updatePipeline: Function
+        },
         data () {
             return {
-                RESOURCE_ACTION
+                RESOURCE_ACTION,
+                showVersionSideslider: false
             }
         },
         computed: {
-            ...mapState('atom', ['pipelineInfo', 'activePipelineVersion']),
+            ...mapState('atom', [
+                'pipeline',
+                'pipelineInfo',
+                'activePipelineVersion',
+                'switchingVersion'
+            ]),
             ...mapGetters({
                 isCurPipelineLocked: 'atom/isCurPipelineLocked',
                 isReleasePipeline: 'atom/isReleasePipeline',
@@ -140,7 +158,7 @@
                 return this.$route.params.projectId
             },
             pipelineId () {
-                return this.$route.params.pipelineId
+                return this.pipelineInfo?.pipelineId
             },
             yamlInfo () {
                 return this.pipelineInfo?.yamlInfo
@@ -152,7 +170,7 @@
                 return this.pipelineInfo?.permissions?.canExecute ?? true
             },
             executable () {
-                return !this.isCurPipelineLocked && this.canManualStartup && this.isReleasePipeline
+                return (!this.isCurPipelineLocked && this.canManualStartup && this.isReleasePipeline) || this.isActiveDraftVersion
             },
             canManualStartup () {
                 return this.pipelineInfo?.canManualStartup ?? true
@@ -166,26 +184,63 @@
                         content: this.$t(!this.isReleasePipeline ? 'draftPipelineExecTips' : this.isCurPipelineLocked ? 'pipelineLockTips' : 'pipelineManualDisable'),
                         delay: [300, 0]
                     }
+            },
+            filters () {
+                return [this.pipelineId, this.activePipelineVersion?.version].join('\\')
             }
         },
         watch: {
-            releaseVersion: {
-                handler (val) {
-                    if (val) {
-                        this.selectPipelineVersion({
-                            version: val
-                        })
-                    }
-                },
-                immediate: true
+            releaseVersion (version) {
+                this.selectPipelineVersion({
+                    version
+                })
+            },
+            filters (filters) {
+                console.log('watch', filters)
+                this.$nextTick(() => {
+                    this.init()
+                })
             }
         },
         methods: {
-            ...mapActions('atom', ['selectPipelineVersion']),
+            ...mapActions('atom', [
+                'selectPipelineVersion',
+                'requestPipeline',
+                'setSwitchingPipelineVersion',
+                'setShowVariable'
+            ]),
             goEdit () {
                 this.$router.push({
                     name: 'pipelinesEdit'
                 })
+            },
+            showVersionSideSlider () {
+                this.setShowVariable(false)
+                this.$refs?.versionSelectorInstance?.close?.()
+                this.showVersionSideslider = true
+            },
+            closeVersionSideSlider () {
+                this.showVersionSideslider = false
+            },
+            async init () {
+                try {
+                    const version = this.activePipelineVersion?.version
+                    if (version) {
+                        this.setSwitchingPipelineVersion(true)
+                        await this.requestPipeline({
+                            projectId: this.projectId,
+                            pipelineId: this.pipelineId,
+                            version
+                        })
+                    }
+                } catch (error) {
+                    this.$bkMessage({
+                        theme: 'error',
+                        message: error.message
+                    })
+                } finally {
+                    this.setSwitchingPipelineVersion(false)
+                }
             },
             goExecPreview () {
                 this.$router.push({
@@ -206,7 +261,7 @@
             },
             handleVersionChange (versionId, version) {
                 this.selectPipelineVersion(version)
-                if (['history', 'triggerEvent'].includes(this.$route.params.type) && versionId < this.releaseVersion) {
+                if (['history', 'triggerEvent'].includes(this.$route.params.type) && !this.isReleaseVersion) {
                     this.$nextTick(() => {
                         this.$router.push({
                             name: 'pipelinesHistory',

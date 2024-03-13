@@ -26,13 +26,16 @@
                 />
             </div>
         </header>
-        <pipeline-table-view
-            ref="pipelineTable"
-            :fetch-pipelines="getPipelines"
-            :filter-params="filters"
-            @selection-change="handleSelectChange"
-            is-patch-view
-        ></pipeline-table-view>
+        <div class="pipeline-list-box" ref="tableBox">
+            <pipeline-table-view
+                ref="pipelineTable"
+                :fetch-pipelines="getPipelines"
+                :filter-params="filters"
+                :max-height="$refs.tableBox?.offsetHeight"
+                @selection-change="handleSelectChange"
+                is-patch-view
+            />
+        </div>
         <add-to-group-dialog
             is-patch
             :add-to-dialog-show="addToDialogShow"
