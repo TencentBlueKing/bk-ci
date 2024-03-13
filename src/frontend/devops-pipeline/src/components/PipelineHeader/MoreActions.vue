@@ -46,6 +46,7 @@
             :is-show="pipelineActionState.isConfirmShow"
             :pipeline-list="pipelineActionState.activePipelineList"
             @close="closeRemoveConfirmDialog"
+            @done="afterRemovePipeline"
         />
         <export-dialog :is-show.sync="showExportDialog"></export-dialog>
         <disable-dialog
@@ -281,6 +282,11 @@
                 const pipelineName = (pipeline.pipelineName + '_copy').substring(0, 128)
                 const { templateId, projectId, templateVersion } = pipeline
                 window.top.location.href = `${location.origin}/console/pipeline/${projectId}/template/${templateId}/createInstance/${templateVersion}/${pipelineName}`
+            },
+            afterRemovePipeline () {
+                this.$router.push({
+                    name: 'PipelineManageList'
+                })
             }
         }
     }

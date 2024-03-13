@@ -1486,5 +1486,7 @@
   "branchVersionTips1": "1、PUSH、MR、TAG事件触发时，流水线配置以触发分支上对应的YAML文件为准",
   "branchVersionTips2": "2、其他触发方式（定时、手动、ISSUE、REVIEW、NOTE等）时，流水线配置以默认分支上对应的YAML文件为准",
   "branchVersionTips3": "3、流水线查看页面，展示默认分支上对应的YAML文件内容",
-  "latest": "最新"
+  "latest": "最新",
+  "noPipelineToDelete": "无流水线待删除",
+  "unGroup": "无分组"
 }

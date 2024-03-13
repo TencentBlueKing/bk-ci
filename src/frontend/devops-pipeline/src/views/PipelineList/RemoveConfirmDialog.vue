@@ -18,7 +18,7 @@
             </span>
 
             <h2 v-if="removedPipelines.length === 0" class="remove-confirm-title">
-                {{ $t('无流水线待删除') }}
+                {{ $t('noPipelineToDelete') }}
             </h2>
             <template v-else>
                 <h2 class="remove-confirm-title">
@@ -75,7 +75,7 @@
                         </bk-popover>
                     </template>
                     <bk-tag v-else>
-                        {{ $t('未分组') }}
+                        {{ $t('unGroup') }}
                     </bk-tag>
                 </div>
                 <span
