@@ -635,8 +635,8 @@ class PipelineRepositoryService constructor(
         pipelineAsCodeSettings: PipelineAsCodeSettings?
     ): DeployPipelineResult {
         // #8161 如果只有一个分支版本的创建操作，流水线状态也为仅有草稿
-        val onlyDraft = versionStatus == VersionStatus.COMMITTING
-            || versionStatus == VersionStatus.BRANCH
+        val onlyDraft = versionStatus == VersionStatus.COMMITTING ||
+            versionStatus == VersionStatus.BRANCH
         val modelVersion = 1
         var versionNum = 1
         var pipelineVersion = 1
