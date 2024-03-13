@@ -4,6 +4,7 @@
         searchable
         :value="value"
         :disabled="isLoading"
+        :loading="isLoading"
         :clearable="false"
         :popover-width="320"
         :ext-cls="extCls"
@@ -13,6 +14,7 @@
         @scroll-end="loadMore()"
         :remote-method="searchVersion"
         @change="switchVersion"
+        @toggle="selectorToggle"
     >
         <div slot="trigger" class="pipeline-version-dropmenu-trigger">
             <i v-if="isActiveDraft" class="devops-icon icon-edit-line" />
@@ -29,7 +31,8 @@
                     {{ $t('latest') }}
                 </i>
             </p>
-            <i class="bk-icon icon-angle-down" />
+            <i v-if="isLoading" class="devops-icon icon-circle-2-1 spin-icon" />
+            <i v-else class="bk-icon icon-angle-down" />
         </div>
         <bk-option
             v-for="item in versionList"
@@ -100,6 +103,10 @@
             value: {
                 type: [String, Number],
                 default: ''
+            },
+            refreshListOnExpand: {
+                type: Boolean,
+                default: false
             }
         },
         data () {
@@ -179,8 +186,12 @@
                 try {
                     if (!this.hasNext) return
                     const { projectId, pipelineId, pagination } = this
+                    if (page === 1) {
+                        this.isLoading = true
+                    } else {
+                        this.bottomLoadingOptions.isLoading = true
+                    }
 
-                    this.bottomLoadingOptions.isLoading = true
                     const res = await this.requestPipelineVersionList({
                         projectId,
                         pipelineId,
@@ -215,6 +226,7 @@
                     console.log(error)
                 } finally {
                     this.bottomLoadingOptions.isLoading = false
+                    this.isLoading = false
                 }
             },
             switchVersion (versionId) {
@@ -223,6 +235,12 @@
                     this.activeVersion = version
                     this.$emit('change', versionId, version)
                     this.$emit('input', versionId, version)
+                }
+            },
+            selectorToggle (status) {
+                if (this.refreshListOnExpand && status) { // 展开时更新列表
+                    this.hasNext = true
+                    this.loadMore(1)
                 }
             },
             isCurrentVersion (version) {
