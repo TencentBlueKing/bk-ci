@@ -738,8 +738,10 @@ class BuildStartControl @Autowired constructor(
                 varName = PIPELINE_TIME_START,
                 varValue = System.currentTimeMillis().toString()
             )
-            // 增加Model版本引用计数
-            pipelineRepositoryVersionService.addVerRef(buildInfo.projectId, buildInfo.pipelineId, buildInfo.version)
+            // 只有正式版本的构建，增加Model版本引用计数
+            if (!buildInfo.debug) pipelineRepositoryVersionService.addVerRef(
+                buildInfo.projectId, buildInfo.pipelineId, buildInfo.version
+            )
         }
 
         val stages = model.stages
