@@ -259,12 +259,17 @@ class PipelineBuildHistoryDataClearJob @Autowired constructor(
         var minId = processMiscService.getMinPipelineInfoIdByProjectId(projectId, archiveFlag)
         do {
             logger.info("pipelineBuildHistoryPastDataClear clearPipelineBuildData projectId:$projectId,minId:$minId")
+            val gapDays = if (archiveFlag == true) {
+                archivePipelineStoreDays
+            } else {
+                null
+            }
             val pipelineIdList = processMiscService.getPipelineIdListByProjectId(
                 projectId = projectId,
                 minId = minId,
                 limit = DEFAULT_PAGE_SIZE.toLong(),
                 archiveFlag = archiveFlag,
-                gapDays = archivePipelineStoreDays
+                gapDays = gapDays
             )
             if (!pipelineIdList.isNullOrEmpty()) {
                 // 重置minId的值
