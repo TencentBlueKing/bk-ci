@@ -129,7 +129,6 @@
                         this.currentYaml = currentPipeline.yamlPreview.yaml
                         return
                     }
-                    console.log(activePipeline, 'hahaha', currentPipeline)
                     throw new Error(activePipeline?.yamlInvalidMsg)
                 } catch (error) {
                     console.log(error)
