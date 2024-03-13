@@ -340,8 +340,7 @@ class PipelineResourceVersionDao {
         description: String?
     ): List<PipelineVersionSimple> {
         with(T_PIPELINE_RESOURCE_VERSION) {
-            val query = dslContext.select(DSL.count(PIPELINE_ID))
-                .from(this)
+            val query = dslContext.selectFrom(this)
                 .where(PIPELINE_ID.eq(pipelineId).and(PROJECT_ID.eq(projectId)))
                 .and(
                     STATUS.ne(VersionStatus.DELETE.name)
