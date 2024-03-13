@@ -184,30 +184,22 @@
                         content: this.$t(!this.isReleasePipeline ? 'draftPipelineExecTips' : this.isCurPipelineLocked ? 'pipelineLockTips' : 'pipelineManualDisable'),
                         delay: [300, 0]
                     }
+            },
+            filters () {
+                return [this.pipelineId, this.activePipelineVersion?.version].join('\\')
             }
         },
         watch: {
-            pipelineId: {
-                handler (id) {
-                    if (id) {
-                        if (this.activePipelineVersion?.version === this.pipelineInfo?.releaseVersion) {
-                            this.init()
-                        } else {
-                            this.selectPipelineVersion({
-                                version: this.pipelineInfo?.releaseVersion
-                            })
-                        }
-                    }
-                }
-
-            }
-        },
-        mounted () {
-            if (this.pipelineInfo?.releaseVersion) {
+            releaseVersion (version) {
                 this.selectPipelineVersion({
-                    version: this.pipelineInfo?.releaseVersion
+                    version
                 })
-                this.init()
+            },
+            filters (filters) {
+                console.log('watch', filters)
+                this.$nextTick(() => {
+                    this.init()
+                })
             }
         },
         methods: {
@@ -232,11 +224,12 @@
             },
             async init () {
                 try {
-                    const version = this.activePipelineVersion?.version ?? this.pipelineInfo?.releaseVersion
+                    const version = this.activePipelineVersion?.version
                     if (version) {
                         this.setSwitchingPipelineVersion(true)
                         await this.requestPipeline({
-                            ...this.$route.params,
+                            projectId: this.projectId,
+                            pipelineId: this.pipelineId,
                             version
                         })
                     }
@@ -268,7 +261,6 @@
             },
             handleVersionChange (versionId, version) {
                 this.selectPipelineVersion(version)
-                this.init()
                 if (['history', 'triggerEvent'].includes(this.$route.params.type) && !this.isReleaseVersion) {
                     this.$nextTick(() => {
                         this.$router.push({
