@@ -401,6 +401,10 @@ class ServiceTxProjectResourceImpl @Autowired constructor(
         return projectTagService.updateExtSystemRouterTag(extSystemTagDTO)
     }
 
+    override fun projectEnableRemotedev(projectCode: String?): Result<Map<String, String>> {
+        return Result(remoteDevService.fetchRemoteDevProject(projectCode))
+    }
+
     companion object {
         private val logger = LoggerFactory.getLogger(ServiceTxProjectResourceImpl::class.java)
     }

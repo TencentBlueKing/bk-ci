@@ -1,6 +1,8 @@
 package com.tencent.devops.remotedev.dao
 
+import com.tencent.devops.common.db.utils.skipCheck
 import com.tencent.devops.model.remotedev.tables.TProjectStartAppLink
+import com.tencent.devops.model.remotedev.tables.records.TProjectStartAppLinkRecord
 import org.jooq.DSLContext
 import org.springframework.stereotype.Repository
 
@@ -24,6 +26,14 @@ class ProjectStartAppLinkDao {
                 detail,
                 appId
             ).execute() > 0
+        }
+    }
+
+    fun fetchAll(
+        dslContext: DSLContext
+    ): List<TProjectStartAppLinkRecord> {
+        with(TProjectStartAppLink.T_PROJECT_START_APP_LINK) {
+            return dslContext.selectFrom(this).skipCheck().fetch()
         }
     }
 }

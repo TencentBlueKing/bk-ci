@@ -7,6 +7,7 @@ import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.auth.api.service.ServiceMonitorSpaceResource
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
+import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.notify.enums.NotifyType
 import com.tencent.devops.notify.api.service.ServiceNotifyMessageTemplateResource
@@ -253,6 +254,28 @@ class ProjectRemoteDevService @Autowired constructor(
                 )
             )
         )
+    }
+
+    fun fetchRemoteDevProject(projectId: String?): Map<String, String> {
+        val sqlLimit = PageUtil.convertPageSizeToSQLLimit(1, 10000)
+        val projects = projectDao.getProjectList(
+            dslContext = dslContext,
+            projectName = null,
+            englishName = projectId,
+            projectType = null,
+            isSecrecy = null,
+            creator = null,
+            approver = null,
+            approvalStatus = null,
+            offset = sqlLimit.offset,
+            limit = sqlLimit.limit,
+            routerTag = null,
+            otherRouterTagMaps = null,
+            remoteDevFlag = true,
+            productId = null
+        )
+
+        return projects.map { it.englishName to it.projectName }.toMap()
     }
 
     companion object {

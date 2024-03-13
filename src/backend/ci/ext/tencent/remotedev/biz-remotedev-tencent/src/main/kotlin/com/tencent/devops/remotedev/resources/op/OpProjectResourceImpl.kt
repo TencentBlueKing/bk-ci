@@ -13,4 +13,9 @@ class OpProjectResourceImpl @Autowired constructor(
     override fun enableOrDisableRemotedev(userId: String, projectId: String, enable: Boolean): Result<Boolean> {
         return Result(remotedevProjectService.enableRemotedev(userId, projectId, enable))
     }
+
+    override fun migrateOldData(userId: String, projectId: String?): Result<Boolean> {
+        remotedevProjectService.migrateOldData(projectId)
+        return Result(true)
+    }
 }

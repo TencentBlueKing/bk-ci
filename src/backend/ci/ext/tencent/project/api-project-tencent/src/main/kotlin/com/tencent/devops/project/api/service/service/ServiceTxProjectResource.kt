@@ -427,4 +427,13 @@ interface ServiceTxProjectResource {
         @Parameter(description = "consulTag请求入参", required = true)
         extSystemTagDTO: ProjectExtSystemTagDTO
     ): com.tencent.devops.common.api.pojo.Result<Boolean>
+
+    @Operation(summary = "查询开启了云研发的项目")
+    @GET
+    @Path("/projectEnableRemotedev")
+    fun projectEnableRemotedev(
+        @Parameter(description = "项目名称", required = true)
+        @QueryParam("projectCode")
+        projectCode: String?,
+    ): Result<Map<String, String>>
 }

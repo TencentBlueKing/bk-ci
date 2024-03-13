@@ -36,4 +36,16 @@ interface OpProjectResource {
         @QueryParam("enable")
         enable: Boolean
     ): Result<Boolean>
+
+    @Operation(summary = "迁移旧数据")
+    @POST
+    @Path("/migrateOldData")
+    fun migrateOldData(
+        @Parameter(description = "用户ID", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "项目ID", required = true)
+        @QueryParam("projectId")
+        projectId: String?
+    ): Result<Boolean>
 }

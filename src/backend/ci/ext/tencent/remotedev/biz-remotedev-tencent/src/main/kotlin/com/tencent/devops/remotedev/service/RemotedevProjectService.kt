@@ -57,6 +57,36 @@ class RemotedevProjectService @Autowired constructor(
         return projectStartAppLinkDao.addLink(dslContext, projectId, project.projectName, appid)
     }
 
+    fun migrateOldData(projectId: String?) {
+        val projectCodeAndNames =
+            client.get(ServiceTxProjectResource::class).projectEnableRemotedev(projectId).data?.toMutableMap()
+        if (projectCodeAndNames.isNullOrEmpty()) {
+            logger.warn("migrateOldData projectCodeAndNames empty")
+            return
+        }
+        val existProjects = projectStartAppLinkDao.fetchAll(dslContext).map { it.appname }.toSet()
+        existProjects.forEach {
+            projectCodeAndNames.remove(it)
+        }
+        projectCodeAndNames.forEach { (appName, detail) ->
+            val appid = try {
+                val t = startCloudClient.appCreate(
+                    appName = appName,
+                    detail = detail
+                )
+                if (t == null) {
+                    logger.error("migrateOldData $appName $detail appid null")
+                    return@forEach
+                }
+                t
+            } catch (e: Exception) {
+                logger.error("migrateOldData $appName $detail error", e)
+                return@forEach
+            }
+            projectStartAppLinkDao.addLink(dslContext, appName, detail, appid)
+        }
+    }
+
     companion object {
         private val logger = LoggerFactory.getLogger(RemotedevProjectService::class.java)
     }
