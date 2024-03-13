@@ -1040,12 +1040,12 @@ class PipelineRepositoryService constructor(
                             currVersion = releaseResource.pipelineVersion ?: 1,
                             originModel = releaseResource.model,
                             newModel = model
-                        )
+                        ).coerceAtLeast(1)
                         triggerVersion = PipelineVersionUtils.getTriggerVersion(
                             currVersion = releaseResource.triggerVersion ?: 1,
                             originModel = releaseResource.model,
                             newModel = model
-                        )
+                        ).coerceAtLeast(1)
                         operationLogType = OperationLogType.RELEASE_MASTER_VERSION
                         // 数据分离：发布记录的版本自增，旧数据保留和版本表中version一致，后续单独用于前端展示
                         versionNum = (releaseResource.versionNum ?: releaseResource.version) + 1
