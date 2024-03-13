@@ -434,6 +434,6 @@ interface ServiceTxProjectResource {
     fun projectEnableRemotedev(
         @Parameter(description = "项目名称", required = true)
         @QueryParam("projectCode")
-        projectCode: String?,
+        projectCode: String?
     ): Result<Map<String, String>>
 }
