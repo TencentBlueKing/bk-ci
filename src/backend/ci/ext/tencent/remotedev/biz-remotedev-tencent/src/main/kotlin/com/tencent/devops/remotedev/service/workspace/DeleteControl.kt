@@ -76,7 +76,6 @@ import com.tencent.devops.remotedev.service.redis.RedisKeys.REDIS_CALL_LIMIT_KEY
 import com.tencent.devops.remotedev.service.tcloud.TCloudCfsService
 import com.tencent.devops.remotedev.service.workspace.NotifyControl.Companion.NOT_ASSIGN_AUTO_DELETE_NOTIFY
 import com.tencent.devops.remotedev.service.workspace.NotifyControl.Companion.SLEEP_7_DAY_AUTO_DELETE_NOTIFY
-import com.tencent.devops.remotedev.utils.CommonUtil
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
@@ -275,7 +274,7 @@ class DeleteControl @Autowired constructor(
 
             // 生成表格数据
             val tableData = workspaces.associate {
-                (CommonUtil.zoneIp2Ip(it.hostName) ?: "") to (lastTimeMap[it.hostName] ?: "")
+                (it.hostName?.substringAfter(".") ?: "") to (lastTimeMap[it.hostName] ?: "")
             }
             val (emailTable, rtxTable) = generateTable(user, tableData)
 

@@ -85,7 +85,6 @@ import com.tencent.devops.remotedev.service.redis.RedisKeys
 import com.tencent.devops.remotedev.service.redis.RedisKeys.REDIS_OFFICIAL_DEVFILE_KEY
 import com.tencent.devops.remotedev.service.tcloud.TCloudCfsService
 import com.tencent.devops.remotedev.service.transfer.RemoteDevGitTransfer
-import com.tencent.devops.remotedev.utils.CommonUtil
 import com.tencent.devops.remotedev.utils.DevfileUtil
 import com.tencent.devops.scm.utils.code.git.GitUtils
 import org.jooq.DSLContext
@@ -504,7 +503,7 @@ class CreateControl @Autowired constructor(
             }
 
             // 创建成功时给 cmdb 添加字段方便监控检索
-            val ip = CommonUtil.zoneIp2Ip(event.environmentIp)
+            val ip = event.environmentIp?.substringAfter(".")
             if (!ip.isNullOrBlank() && ws.workspaceSystemType.checkWindows()) {
                 bkccService.updateHostMonitor(
                     regionId = detail.regionId,
