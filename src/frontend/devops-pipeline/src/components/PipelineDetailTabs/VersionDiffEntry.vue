@@ -120,7 +120,7 @@
                         this.fetchPipelineByVersion({
                             projectId: this.$route.params.projectId,
                             pipelineId: this.$route.params.pipelineId,
-                            version: this.latestVersion
+                            version: this.currentVersion
                         })
                     ])
 
