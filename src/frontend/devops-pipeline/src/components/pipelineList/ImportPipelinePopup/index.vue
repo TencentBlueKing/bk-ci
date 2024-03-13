@@ -21,7 +21,6 @@
 
 <script>
     import { mapState, mapActions } from 'vuex'
-    import { SET_PIPELINE_INFO } from '@/store/modules/atom/constants'
     import { hashID } from '@/utils/util'
     export default {
         name: 'import-pipeline-popup',
@@ -55,6 +54,7 @@
             ]),
             ...mapActions('atom', [
                 'setEditFrom',
+                'setPipelineEditing',
                 'transferPipeline',
                 'setPipeline',
                 'setPipelineYaml',
@@ -157,10 +157,7 @@
                     ...pipeline,
                     stages: result.model.stages.slice(1)
                 })
-                this.$store.commit(`atom/${SET_PIPELINE_INFO}`, {
-                    ...(this.pipelineInfo ?? {}),
-                    pipelineName: newPipelineName
-                })
+                this.setPipelineEditing(true)
                 return true
             },
             checkJosnValid (json) {
