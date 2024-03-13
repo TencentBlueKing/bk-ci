@@ -168,20 +168,12 @@
 
         beforeDestroy () {
             this.resetHistoryFilterCondition()
-            this.setPipeline(null)
-            this.setPipelineWithoutTrigger(null)
-            this.setPipelineYaml('')
             this.selectPipelineVersion(null)
-            this.$store.commit('atom/resetPipelineSetting', null)
         },
         methods: {
             ...mapActions('pipelines', ['resetHistoryFilterCondition']),
             ...mapActions('atom', [
-                'selectPipelineVersion',
-                'setPipeline',
-                'setPipelineYaml',
-                'selectPipelineVersion',
-                'setPipelineWithoutTrigger'
+                'selectPipelineVersion'
             ]),
             getNavComponent (type) {
                 switch (type) {
