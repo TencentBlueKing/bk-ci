@@ -342,22 +342,25 @@ class PipelineResourceVersionDao {
         with(T_PIPELINE_RESOURCE_VERSION) {
             val query = dslContext.selectFrom(this)
                 .where(PIPELINE_ID.eq(pipelineId).and(PROJECT_ID.eq(projectId)))
-                .and(STATUS.ne(VersionStatus.DELETE.name))
+                .and(
+                    STATUS.ne(VersionStatus.DELETE.name)
+                        .or(STATUS.isNull)
+                )
                 .and(
                     BRANCH_ACTION.ne(BranchVersionAction.INACTIVE.name)
                         .or(BRANCH_ACTION.isNull)
                 )
-            creator?.let { query.and(CREATOR.eq(creator)) }
-            description?.let { query.and(DESCRIPTION.like("%$description%")) }
+            excludeVersion?.let {
+                query.and(VERSION.notEqual(excludeVersion))
+            }
             versionName?.let {
                 query.and(
                     VERSION.like("%$versionName%")
                         .or(VERSION_NAME.like("%$versionName%"))
                 )
             }
-            excludeVersion?.let {
-                query.and(VERSION.notEqual(excludeVersion))
-            }
+            creator?.let { query.and(CREATOR.eq(creator)) }
+            description?.let { query.and(DESCRIPTION.like("%$description%")) }
             return query.orderBy(VERSION.desc()).limit(limit).offset(offset).fetch(sampleMapper)
         }
     }
@@ -410,6 +413,10 @@ class PipelineResourceVersionDao {
             val query = dslContext.select(DSL.count(PIPELINE_ID))
                 .from(this)
                 .where(PIPELINE_ID.eq(pipelineId).and(PROJECT_ID.eq(projectId)))
+                .and(
+                    STATUS.ne(VersionStatus.DELETE.name)
+                        .or(STATUS.isNull)
+                )
                 .and(
                     BRANCH_ACTION.ne(BranchVersionAction.INACTIVE.name)
                         .or(BRANCH_ACTION.isNull)
