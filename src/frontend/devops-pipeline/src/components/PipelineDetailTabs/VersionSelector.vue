@@ -157,6 +157,7 @@
             },
             pipelineId: {
                 handler () {
+                    this.hasNext = true
                     this.loadMore(1)
                 },
                 immediate: true
