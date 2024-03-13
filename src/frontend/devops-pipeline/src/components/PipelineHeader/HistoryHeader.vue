@@ -8,6 +8,7 @@
                 ref="versionSelectorInstance"
                 @change="handleVersionChange"
                 @showAllVersion="showVersionSideSlider"
+                refresh-list-on-expand
             />
             <bk-button
                 v-if="!isReleaseVersion"

@@ -106,52 +106,54 @@
             ...mapActions('pipelines', [
                 'requestPipelineVersionList'
             ]),
-
-            async diffVersion () {
+            async fetchPipelineYaml (version) {
                 try {
-                    this.isLoadYaml = true
-                    this.showVersionDiffDialog = true
-                    const [activePipeline, currentPipeline] = await Promise.all([
-                        this.fetchPipelineByVersion({
-                            projectId: this.$route.params.projectId,
-                            pipelineId: this.$route.params.pipelineId,
-                            version: this.activeVersion
-                        }),
-                        this.fetchPipelineByVersion({
-                            projectId: this.$route.params.projectId,
-                            pipelineId: this.$route.params.pipelineId,
-                            version: this.currentVersion
-                        })
-                    ])
-
-                    if (activePipeline?.yamlSupported && currentPipeline?.yamlSupported) {
-                        this.activeYaml = activePipeline.yamlPreview.yaml
-                        this.currentYaml = currentPipeline.yamlPreview.yaml
-                        return
+                    const res = await this.fetchPipelineByVersion({
+                        projectId: this.$route.params.projectId,
+                        pipelineId: this.$route.params.pipelineId,
+                        version
+                    })
+                    if (res?.yamlSupported) {
+                        return res.yamlPreview.yaml
                     }
-                    throw new Error(activePipeline?.yamlInvalidMsg)
+                    throw new Error(res?.yamlInvalidMsg)
                 } catch (error) {
-                    console.log(error)
                     this.$bkMessage({
                         theme: 'error',
                         message: error.message
                     })
-                } finally {
+                    return ''
+                }
+            },
+            async initDiff () {
+                this.activeVersion = this.version
+                this.currentVersion = this.latestVersion
+                this.showVersionDiffDialog = true
+
+                this.isLoadYaml = true
+                const [activeYaml, currentYaml] = await Promise.all([
+                    this.fetchPipelineYaml(this.activeVersion),
+                    this.fetchPipelineYaml(this.currentVersion)
+                ])
+                this.activeYaml = activeYaml
+                this.currentYaml = currentYaml
+                this.isLoadYaml = false
+            },
+            async diffActiveVersion (version, old) {
+                if (version !== this.activeVersion) {
+                    this.activeVersion = version
+                    this.isLoadYaml = true
+                    this.activeYaml = await this.fetchPipelineYaml(this.activeVersion)
                     this.isLoadYaml = false
                 }
             },
-            initDiff () {
-                this.activeVersion = this.version
-                this.currentVersion = this.latestVersion
-                this.diffVersion()
-            },
-            diffActiveVersion (version) {
-                this.activeVersion = version
-                this.diffVersion()
-            },
-            diffCurrentVersion (version) {
-                this.currentVersion = version
-                this.diffVersion()
+            async diffCurrentVersion (version, old) {
+                if (version !== this.currentVersion) {
+                    this.currentVersion = version
+                    this.isLoadYaml = true
+                    this.currentYaml = await this.fetchPipelineYaml(this.currentVersion)
+                    this.isLoadYaml = false
+                }
             }
         }
     }
