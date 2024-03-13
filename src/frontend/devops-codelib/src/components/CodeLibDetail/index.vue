@@ -118,7 +118,7 @@
                     </span>
                 </div>
             </div>
-            <bk-tab :active.sync="active" type="unborder-card">
+            <bk-tab ext-cls="detail-tab" :active.sync="active" type="unborder-card">
                 <bk-tab-panel
                     v-for="(panel, index) in panels"
                     v-bind="panel"
@@ -378,6 +378,7 @@
              * 开启代码库别名编辑状态
              */
             handleEditName () {
+                if (this.curRepo.enablePac) return
                 this.isEditing = true
                 this.oldAliasName = this.repoInfo.aliasName
                 setTimeout(() => {
@@ -667,6 +668,13 @@
             opacity: 0;
             margin-left: 10px;
             cursor: pointer;
+        }
+    }
+</style>
+<style lang="scss">
+    .detail-tab {
+        .bk-tab-section {
+            overflow: auto;
         }
     }
 </style>
