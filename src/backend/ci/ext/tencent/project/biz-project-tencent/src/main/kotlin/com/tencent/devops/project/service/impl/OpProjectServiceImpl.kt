@@ -166,7 +166,7 @@ class OpProjectServiceImpl @Autowired constructor(
             )
         }
 
-        val dbProperties = JsonUtil.toOrNull(dbProjectRecord.properties.toString(), ProjectProperties::class.java)
+        val dbProperties = JsonUtil.toOrNull(dbProjectRecord.properties?.toString(), ProjectProperties::class.java)
         // 更新云研发项目时相关操作
         val enableRemoteDev = dbProperties == null ||
             (dbProperties.remotedev != true && projectInfoRequest.properties?.remotedev == true)
