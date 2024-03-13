@@ -70,7 +70,7 @@
                     @page-change="handlePageChange"
                     @page-limit-change="handlePageLimitChange"
                 >
-                    <bk-table-column :label="$t('environment.nodeInfo.displayName')" prop="displayName" show-overflow-tooltip>
+                    <bk-table-column :label="$t('environment.nodeInfo.displayName')" prop="displayName" :show-overflow-tooltip="!isEditNodeStatus">
                         <template slot-scope="props">
                             <div class="bk-form-content node-item-content" v-if="props.row.isEnableEdit">
                                 <div class="edit-content">
