@@ -51,7 +51,8 @@ import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.model.repository.tables.records.TRepositoryRecord
 import com.tencent.devops.process.api.service.ServicePipelineYamlResource
 import com.tencent.devops.repository.constant.RepositoryMessageCode
-import com.tencent.devops.repository.constant.RepositoryMessageCode.ERROR_DELETE_BECAUSE_ENABLED_PAC
+import com.tencent.devops.repository.constant.RepositoryMessageCode.PAC_REPO_CAN_NOT_DELETE
+import com.tencent.devops.repository.constant.RepositoryMessageCode.PAC_REPO_CAN_NOT_RENAME
 import com.tencent.devops.repository.constant.RepositoryMessageCode.USER_CREATE_PEM_ERROR
 import com.tencent.devops.repository.dao.RepositoryCodeGitDao
 import com.tencent.devops.repository.dao.RepositoryDao
@@ -915,7 +916,7 @@ class RepositoryService @Autowired constructor(
             )
         }
         if (checkPac && record.enablePac == true) {
-            throw ErrorCodeException(errorCode = ERROR_DELETE_BECAUSE_ENABLED_PAC)
+            throw ErrorCodeException(errorCode = PAC_REPO_CAN_NOT_DELETE)
         }
 
         deleteResource(projectId, repositoryId)
@@ -1183,6 +1184,13 @@ class RepositoryService @Autowired constructor(
                 errorCode = RepositoryMessageCode.REPO_NAME_EXIST,
                 params = arrayOf(repoRename.name)
             )
+        }
+        val record = repositoryDao.get(dslContext, repositoryId, projectId)
+        if (record.projectId != projectId) {
+            throw NotFoundException("Repository is not part of the project")
+        }
+        if (record.enablePac == true) {
+            throw ErrorCodeException(errorCode = PAC_REPO_CAN_NOT_RENAME)
         }
         repositoryDao.rename(
             dslContext = dslContext,

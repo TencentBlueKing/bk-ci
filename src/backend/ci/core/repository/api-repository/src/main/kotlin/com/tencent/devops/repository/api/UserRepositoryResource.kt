@@ -301,6 +301,9 @@ interface UserRepositoryResource {
         @Parameter(description = "触发条件MD5", required = false)
         @QueryParam("triggerConditionMd5")
         triggerConditionMd5: String?,
+        @Parameter(description = "插件配置的代码库类型", required = false)
+        @QueryParam("taskRepoType")
+        taskRepoType: RepositoryType?,
         @Parameter(description = "第几页", required = false, example = "1")
         @QueryParam("page")
         page: Int?,

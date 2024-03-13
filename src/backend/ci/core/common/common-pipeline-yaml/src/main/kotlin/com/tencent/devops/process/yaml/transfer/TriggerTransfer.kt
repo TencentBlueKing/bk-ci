@@ -598,7 +598,7 @@ class TriggerTransfer @Autowired(required = false) constructor(
 
         triggerOn.schedules?.let { schedule ->
             schedule.forEach { timer ->
-                val repoType = when {
+                val repositoryType = when {
                     !timer.repoId.isNullOrBlank() ->
                         RepositoryType.ID
                     !timer.repoName.isNullOrBlank() ->
@@ -607,7 +607,7 @@ class TriggerTransfer @Autowired(required = false) constructor(
                 }
                 elementQueue.add(
                     TimerTriggerElement(
-                        repoType = repoType,
+                        repositoryType = repositoryType,
                         repoHashId = timer.repoId,
                         repoName = timer.repoName,
                         branches = timer.branches,
