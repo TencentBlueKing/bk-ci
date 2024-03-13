@@ -82,7 +82,7 @@
                                 title: this.$t(this.isActiveDraftVersion ? 'draftExecRecords' : 'pipelinesHistory'),
                                 disableTooltip: {
                                     content: this.$refs.disableToolTips?.[0],
-                                    disabled: !this.isReleaseVersion,
+                                    disabled: this.isReleaseVersion,
                                     delay: [300, 0]
                                 },
                                 name: 'history'
@@ -91,7 +91,7 @@
                                 title: this.$t('triggerEvent'),
                                 disableTooltip: {
                                     content: this.$refs.disableToolTips?.[1],
-                                    disabled: !this.isReleaseVersion,
+                                    disabled: this.isReleaseVersion,
                                     delay: [300, 0]
                                 },
                                 name: 'triggerEvent'
