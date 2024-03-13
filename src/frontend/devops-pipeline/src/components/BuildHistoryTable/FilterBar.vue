@@ -194,16 +194,21 @@
                     })
                 }
             },
+            formatTime (date) {
+                try {
+                    return moment(date).valueOf() || ''
+                } catch (e) {
+                    return ''
+                }
+            },
             handleDateRangeChange (value) {
                 const name = 'dateTimeRange'
                 const { startTimeStartTime, endTimeEndTime, ...newQuery } = this.historyPageStatus.query
-                if (!!value[0] && !!value[1]) {
-                    const startTime = moment(value[0]).valueOf() || ''
-                    const endTime = moment(value[1]).valueOf() || ''
+                const startTime = this.formatTime(value[0])
+                const endTime = this.formatTime(value[1])
 
-                    newQuery.startTimeStartTime = [startTime]
-                    newQuery.endTimeEndTime = [endTime]
-                }
+                newQuery.startTimeStartTime = startTime ? [startTime] : []
+                newQuery.endTimeEndTime = endTime ? [endTime] : []
                 this.setHistoryPageStatus({
                     [name]: value,
                     query: newQuery
