@@ -29,31 +29,10 @@ package com.tencent.devops.process.yaml.v3.models.on
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.annotation.JsonInclude
-import com.fasterxml.jackson.annotation.JsonProperty
-import com.tencent.devops.process.yaml.pojo.YamlVersion
-import io.swagger.v3.oas.annotations.media.Schema
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonIgnoreProperties(ignoreUnknown = true)
-data class PreTriggerOnV3(
-    @JsonProperty("repo-name")
-    @get:Schema(title = "repo-name")
-    var repoName: String? = null,
-    var type: String? = null,
-    override val push: Any? = null,
-    override val tag: Any? = null,
-    override val mr: Any? = null,
-    override val schedules: Any? = null,
-    override val delete: DeleteRule? = null,
-    override val issue: IssueRule? = null,
-    override val review: ReviewRule? = null,
-    override val note: NoteRule? = null,
-    @get:Schema(title = "repo_hook")
-    @JsonProperty("repo_hook")
-    override val repoHook: List<Any>? = null,
-    override var manual: Any? = null,
-    override val openapi: String? = null,
-    override val remote: Any? = null
-) : IPreTriggerOn {
-    override fun yamlVersion() = YamlVersion.Version.V3_0
-}
+data class RemoteRule(
+    val name: String? = null,
+    val enable: String? = null
+)

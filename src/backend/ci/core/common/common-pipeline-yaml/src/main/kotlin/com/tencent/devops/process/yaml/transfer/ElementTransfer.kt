@@ -69,6 +69,7 @@ import com.tencent.devops.process.yaml.v3.models.job.Job
 import com.tencent.devops.process.yaml.v3.models.job.JobRunsOnType
 import com.tencent.devops.process.yaml.v3.models.on.EnableType
 import com.tencent.devops.process.yaml.v3.models.on.ManualRule
+import com.tencent.devops.process.yaml.v3.models.on.RemoteRule
 import com.tencent.devops.process.yaml.v3.models.on.SchedulesRule
 import com.tencent.devops.process.yaml.v3.models.on.TriggerOn
 import com.tencent.devops.process.yaml.v3.models.step.PreManualReviewUserTaskElement
@@ -169,9 +170,9 @@ class ElementTransfer @Autowired(required = false) constructor(
             }
             if (element is RemoteTriggerElement) {
                 triggerOn.value.remote = if (element.isElementEnable()) {
-                    EnableType.TRUE.value
+                    RemoteRule(element.name, EnableType.TRUE.value)
                 } else {
-                    EnableType.FALSE.value
+                    RemoteRule(element.name, EnableType.FALSE.value)
                 }
             }
         }
@@ -201,7 +202,12 @@ class ElementTransfer @Autowired(required = false) constructor(
             WebHookTriggerElementChanger(it as CodeGitWebHookTriggerElement)
         }
         if (!gitElement.isNullOrEmpty()) {
-            val gitTrigger = triggerTransfer.git2YamlTriggerOn(gitElement, projectId, aspectWrapper)
+            val gitTrigger = triggerTransfer.git2YamlTriggerOn(
+                elements = gitElement,
+                projectId = projectId,
+                aspectWrapper = aspectWrapper,
+                defaultName = "Git事件触发"
+            )
             res.putAll(gitTrigger.groupBy { ScmType.CODE_GIT })
         }
 
@@ -210,7 +216,12 @@ class ElementTransfer @Autowired(required = false) constructor(
             WebHookTriggerElementChanger(it as CodeTGitWebHookTriggerElement)
         }
         if (!tGitElement.isNullOrEmpty()) {
-            val gitTrigger = triggerTransfer.git2YamlTriggerOn(tGitElement, projectId, aspectWrapper)
+            val gitTrigger = triggerTransfer.git2YamlTriggerOn(
+                elements = tGitElement,
+                projectId = projectId,
+                aspectWrapper = aspectWrapper,
+                defaultName = "TGit事件触发"
+            )
             res.putAll(gitTrigger.groupBy { ScmType.CODE_TGIT })
         }
 
@@ -219,7 +230,12 @@ class ElementTransfer @Autowired(required = false) constructor(
             WebHookTriggerElementChanger(it as CodeGithubWebHookTriggerElement)
         }
         if (!githubElement.isNullOrEmpty()) {
-            val gitTrigger = triggerTransfer.git2YamlTriggerOn(githubElement, projectId, aspectWrapper)
+            val gitTrigger = triggerTransfer.git2YamlTriggerOn(
+                elements = githubElement,
+                projectId = projectId,
+                aspectWrapper = aspectWrapper,
+                defaultName = "GitHub事件触发"
+            )
             res.putAll(gitTrigger.groupBy { ScmType.GITHUB })
         }
 
@@ -228,7 +244,12 @@ class ElementTransfer @Autowired(required = false) constructor(
             WebHookTriggerElementChanger(it as CodeSVNWebHookTriggerElement)
         }
         if (!svnElement.isNullOrEmpty()) {
-            val gitTrigger = triggerTransfer.git2YamlTriggerOn(svnElement, projectId, aspectWrapper)
+            val gitTrigger = triggerTransfer.git2YamlTriggerOn(
+                elements = svnElement,
+                projectId = projectId,
+                aspectWrapper = aspectWrapper,
+                defaultName = "SVN事件触发"
+            )
             res.putAll(gitTrigger.groupBy { ScmType.CODE_SVN })
         }
 
@@ -237,7 +258,12 @@ class ElementTransfer @Autowired(required = false) constructor(
             WebHookTriggerElementChanger(it as CodeP4WebHookTriggerElement)
         }
         if (!p4Element.isNullOrEmpty()) {
-            val gitTrigger = triggerTransfer.git2YamlTriggerOn(p4Element, projectId, aspectWrapper)
+            val gitTrigger = triggerTransfer.git2YamlTriggerOn(
+                elements = p4Element,
+                projectId = projectId,
+                aspectWrapper = aspectWrapper,
+                defaultName = "P4事件触发"
+            )
             res.putAll(gitTrigger.groupBy { ScmType.CODE_P4 })
         }
 
@@ -246,7 +272,12 @@ class ElementTransfer @Autowired(required = false) constructor(
             WebHookTriggerElementChanger(it as CodeGitlabWebHookTriggerElement)
         }
         if (!gitlabElement.isNullOrEmpty()) {
-            val gitTrigger = triggerTransfer.git2YamlTriggerOn(gitlabElement, projectId, aspectWrapper)
+            val gitTrigger = triggerTransfer.git2YamlTriggerOn(
+                elements = gitlabElement,
+                projectId = projectId,
+                aspectWrapper = aspectWrapper,
+                defaultName = "Gitlab变更触发"
+            )
             res.putAll(gitTrigger.groupBy { ScmType.CODE_GITLAB })
         }
         return res
