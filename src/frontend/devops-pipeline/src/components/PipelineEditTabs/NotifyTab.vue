@@ -15,6 +15,7 @@
                             <bk-popover class="setting-more-dot-menu"
                                 placement="bottom-start"
                                 theme="project-manage-more-dot-menu light"
+                                trigger="click"
                                 :arrow="false"
                                 :distance="0">
                                 <span class="more-menu-trigger">
