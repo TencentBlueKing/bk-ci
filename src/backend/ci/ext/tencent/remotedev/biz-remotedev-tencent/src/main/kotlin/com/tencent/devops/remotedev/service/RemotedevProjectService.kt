@@ -21,11 +21,6 @@ class RemotedevProjectService @Autowired constructor(
     private val projectStartAppLinkDao: ProjectStartAppLinkDao
 ) {
     fun enableRemotedev(userId: String, projectId: String, enable: Boolean): Boolean {
-        // 先查询之前是否开启过
-        if (enable && projectStartAppLinkDao.fetchByAppName(dslContext, projectId) != null) {
-            return true
-        }
-
         // 调用project逻辑
         val ok = client.get(ServiceTxProjectResource::class).updateRemotedev(
             userId = userId,
