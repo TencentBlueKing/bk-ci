@@ -710,6 +710,7 @@
                     color: #sC4C6CC;
                     em {
                         font-size: 12px;
+                        font-style: normal;
                     }
                 }
                 .template-apply-setting-checkbox-txt {
