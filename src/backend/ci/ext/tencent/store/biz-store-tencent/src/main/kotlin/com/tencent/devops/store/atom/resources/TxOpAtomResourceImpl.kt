@@ -58,4 +58,8 @@ class TxOpAtomResourceImpl @Autowired constructor(
     override fun getVisibleDept(atomCode: String): Result<StoreVisibleDeptResp?> {
         return storeVisibleDeptService.getVisibleDept(atomCode, StoreTypeEnum.ATOM, null)
     }
+
+    override fun refreshAtomCodeRepoGitCIProjectProduct(userId: String): Result<Boolean> {
+        return Result(opAtomService.refreshAllRelationAtomProjectProduct(userId))
+    }
 }

@@ -44,4 +44,9 @@ interface TxOpAtomService {
         groupCode: String?,
         atomCode: String
     ): Result<Boolean>
+
+    /**
+     * 刷新插件代码库关联工蜂CI项目的运营归属
+     */
+    fun refreshAllRelationAtomProjectProduct(userId: String): Boolean
 }
