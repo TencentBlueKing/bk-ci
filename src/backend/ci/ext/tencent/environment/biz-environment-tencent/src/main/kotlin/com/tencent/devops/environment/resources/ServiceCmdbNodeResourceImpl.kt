@@ -67,12 +67,4 @@ class ServiceCmdbNodeResourceImpl @Autowired constructor(
         val addCmdbNodesRes = cmdbNodeService.addCmdbNodes(userId = userId, projectId = projectId, nodeIps = nodeIps)
         return Result(addCmdbNodesRes)
     }
-
-    override fun checkDeployNodesInCmdb(userId: String) {
-        tencentStockDataUpdateService.checkDeployNodes()
-    }
-
-    override fun addNodesToCC(userId: String) {
-        tencentStockDataUpdateService.addNodesToCCOnce()
-    }
 }

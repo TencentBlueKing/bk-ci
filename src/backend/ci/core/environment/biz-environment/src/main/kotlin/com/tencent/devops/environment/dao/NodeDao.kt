@@ -37,8 +37,7 @@ import com.tencent.devops.environment.constant.T_NODE_DISPLAY_NAME
 import com.tencent.devops.environment.model.CreateNodeModel
 import com.tencent.devops.environment.pojo.enums.NodeStatus
 import com.tencent.devops.environment.pojo.enums.NodeType
-import com.tencent.devops.environment.pojo.job.CCUpdateInfo
-import com.tencent.devops.environment.pojo.job.req.Host
+import com.tencent.devops.environment.pojo.job.jobreq.Host
 import com.tencent.devops.model.environment.tables.TNode
 import com.tencent.devops.model.environment.tables.TEnv
 import com.tencent.devops.model.environment.tables.TEnvNode
@@ -61,6 +60,7 @@ import com.tencent.devops.environment.constant.T_NODE_NODE_TYPE
 import com.tencent.devops.environment.constant.T_NODE_PROJECT_ID
 import com.tencent.devops.environment.pojo.job.AgentVersionInfo
 import com.tencent.devops.environment.pojo.job.UpdateTNodeInfo
+import com.tencent.devops.environment.pojo.job.jobresp.CCUpdateInfo
 import org.jooq.Record4
 import org.jooq.Record7
 

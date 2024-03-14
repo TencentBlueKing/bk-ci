@@ -87,22 +87,4 @@ interface ServiceCmdbNodeResource {
         @Parameter(description = "CMDB节点 IP", required = true)
         nodeIps: List<String>
     ): Result<AddCmdbNodesRes>
-
-    @Operation(summary = "部署节点cmdb状态轮询接口")
-    @POST
-    @Path("/stock_data_update/check_deploy_nodes_in_cmdb")
-    fun checkDeployNodesInCmdb(
-        @Parameter(description = "用户ID", required = true)
-        @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String = AUTH_HEADER_USER_ID_DEFAULT_VALUE
-    )
-
-    @Operation(summary = "添加不在cc中的部署节点到cc中的接口")
-    @POST
-    @Path("/stock_data_update/add_nodes_to_cc")
-    fun addNodesToCC(
-        @Parameter(description = "用户ID", required = true)
-        @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String = AUTH_HEADER_USER_ID_DEFAULT_VALUE
-    )
 }

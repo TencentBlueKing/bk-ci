@@ -35,12 +35,16 @@ import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.environment.api.UserNodeResource
 import com.tencent.devops.environment.pojo.DisplayName
 import com.tencent.devops.environment.pojo.NodeWithPermission
+import com.tencent.devops.environment.service.INodeService
 import com.tencent.devops.environment.service.NodeService
 import com.tencent.devops.environment.utils.NodeUtils
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
-class UserNodeResourceImpl @Autowired constructor(private val nodeService: NodeService) : UserNodeResource {
+class UserNodeResourceImpl @Autowired constructor(
+    private val nodeService: NodeService,
+    private val iNodeService: INodeService
+) : UserNodeResource {
 
     @BkTimed(extraTags = ["operate", "getNode"])
     override fun listUsableServerNodes(userId: String, projectId: String): Result<List<NodeWithPermission>> {
@@ -52,7 +56,7 @@ class UserNodeResourceImpl @Autowired constructor(private val nodeService: NodeS
     }
 
     override fun deleteNodes(userId: String, projectId: String, nodeHashIds: List<String>): Result<Boolean> {
-        nodeService.deleteNodes(userId, projectId, nodeHashIds.map { HashUtil.decodeIdToLong(it) })
+        iNodeService.deleteNodes(userId, projectId, nodeHashIds.map { HashUtil.decodeIdToLong(it) })
         return Result(true)
     }
 

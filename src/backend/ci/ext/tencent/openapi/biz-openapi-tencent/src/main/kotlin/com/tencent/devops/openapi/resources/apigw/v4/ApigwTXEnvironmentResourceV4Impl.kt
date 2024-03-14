@@ -4,6 +4,7 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.environment.api.ServiceCmdbNodeResource
+import com.tencent.devops.environment.api.job.ServiceJobResource
 import com.tencent.devops.environment.pojo.job.AddCmdbNodesRes
 import com.tencent.devops.openapi.api.apigw.v4.ApigwTXEnvironmentResourceV4
 import org.springframework.beans.factory.annotation.Autowired
@@ -20,13 +21,5 @@ class ApigwTXEnvironmentResourceV4Impl @Autowired constructor(
         nodeIps: List<String>
     ): Result<AddCmdbNodesRes> {
         return client.get(ServiceCmdbNodeResource::class).addCmdbNodes(userId, projectId, nodeIps)
-    }
-
-    override fun checkDeployNodesInCmdb(userId: String) {
-        client.get(ServiceCmdbNodeResource::class).checkDeployNodesInCmdb(userId)
-    }
-
-    override fun addNodesToCC(userId: String) {
-        client.get(ServiceCmdbNodeResource::class).addNodesToCC(userId)
     }
 }

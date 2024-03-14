@@ -53,8 +53,6 @@ import com.tencent.devops.environment.pojo.NodeWithPermission
 import com.tencent.devops.environment.pojo.enums.NodeStatus
 import com.tencent.devops.environment.pojo.enums.NodeType
 import com.tencent.devops.environment.pojo.enums.OsType
-import com.tencent.devops.environment.pojo.job.req.Host
-import com.tencent.devops.environment.service.job.QueryFromCCService
 import com.tencent.devops.environment.service.node.NodeActionFactory
 import com.tencent.devops.environment.service.slave.SlaveGatewayService
 import com.tencent.devops.environment.utils.AgentStatusUtils.getAgentStatus
@@ -65,7 +63,6 @@ import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import java.time.format.DateTimeFormatter
 import java.util.concurrent.Executors
@@ -85,19 +82,14 @@ class NodeService @Autowired constructor(
     private val environmentPermissionService: EnvironmentPermissionService,
     private val nodeWebsocketService: NodeWebsocketService,
     private val webSocketDispatcher: WebSocketDispatcher,
-    private val slaveGatewayDao: SlaveGatewayDao,
-    private val queryFromCCService: QueryFromCCService
-) {
-    @Value("\${environment.cc.bkBizScopeId:}")
-    private val bkBizScopeId = ""
-
+    private val slaveGatewayDao: SlaveGatewayDao
+) : INodeService {
     companion object {
         private val logger = LoggerFactory.getLogger(NodeService::class.java)
         const val BIZ_SIZE = 1
     }
 
-    val threadPoolExecutor = ThreadPoolExecutor(8, 8, 60, TimeUnit.SECONDS, LinkedBlockingQueue(50))
-    fun deleteNodes(userId: String, projectId: String, nodeLongIds: List<Long>) {
+    override fun deleteNodes(userId: String, projectId: String, nodeLongIds: List<Long>) {
         val canDeleteNodeIds =
             environmentPermissionService.listNodeByPermission(userId, projectId, AuthPermission.DELETE) // 用户所有有权限的 节点id
         val existNodeList = nodeDao.listByIds(dslContext, projectId, nodeLongIds) // 所有要删的且有记录的 节点id记录
@@ -112,33 +104,6 @@ class NodeService @Autowired constructor(
                 errorCode = ERROR_ENV_NO_DEL_PERMISSSION,
                 params = arrayOf(unauthorizedNodeIds.joinToString(",") { HashUtil.encodeLongId(it) })
             )
-        }
-
-        // 判断节点在CC中的业务，为蓝盾对应的公共业务：find_host_biz_relations接口查询出所属业务，看返回值中的data数组中对象的bk_biz_id是否等于蓝盾测试机业务。
-        val hostIdList = existNodeList.filterNot {
-            it.nodeType == NodeType.THIRDPARTY.name || it.nodeType == NodeType.DEVCLOUD.name
-        }.mapNotNull { it.hostId }
-        if (hostIdList.isNotEmpty()) {
-            val hostIdQueryCCRes = queryFromCCService.queryCCFindHostBizRelations(hostIdList)
-            val hostIdQueryCCList = hostIdQueryCCRes.data // 所有cc中返回的节点记录
-
-            // 条件1. 这个业务的bizid等于蓝盾测试机
-            val queryCCEqualBizList = hostIdQueryCCList?.filter { bkBizScopeId == it.bkBizId.toString() } // cc返回记录中，biz是蓝盾测试机的
-            val queryCCEqualBizHostIdList = queryCCEqualBizList?.map { Host(it.bkHostId.toLong()) } ?: listOf()
-
-            // 条件2. 判断节点在蓝盾中的项目，没在其他项目下：用host_id去T_NODE中查记录，只有等于当前项目id的一个项目。
-            val nodeRecordByHostId = nodeDao.getNodesFromHostListByBkHostId(
-                dslContext, queryCCEqualBizHostIdList
-            )
-            if (logger.isDebugEnabled)
-                logger.debug("[deleteNodes]nodeRecordByHostId:${nodeRecordByHostId.joinToString()}")
-            val hostIdToNodeMap = nodeRecordByHostId.groupBy({ it[T_NODE_HOST_ID] as? Long }, { it })
-            val deleteHostIdMap = hostIdToNodeMap.filter { (key, value) ->
-                BIZ_SIZE == value.size // key -> host_id, value -> host_id对应T_NODE表记录
-            } // 只有一个项目
-
-            // 满足以上2个条件，将其从CC蓝盾业务下移出：调用cc的delete接口，将机器从CC中移除。
-            queryFromCCService.deleteHostFromCiBiz(deleteHostIdMap.keys.filterNotNull().toSet())
         }
 
         NodeActionFactory.load(NodeActionFactory.Action.DELETE)?.action(existNodeList)
