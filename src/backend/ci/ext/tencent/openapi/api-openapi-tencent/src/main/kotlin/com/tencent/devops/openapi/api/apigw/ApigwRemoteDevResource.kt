@@ -67,9 +67,9 @@ interface ApigwRemoteDevResource {
         ip: String?
     ): Result<List<WeSecProjectWorkspace>>
 
-    @Operation(summary = "提供给wesec获取云桌面信息，指定IP", tags = ["v4_app_project_workspace_ip"])
+    @Operation(summary = "云研发SDK根据X-BK-NGGW-CLIENT-ADDRESS获取云桌面信息", tags = ["v4_app_remotedev_workspace_detail"])
     @GET
-    @Path("/project/workspace/ip")
+    @Path("/remotedev/workspace/detail")
     fun getProjectWorkspace(
         @Parameter(description = "appCode", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
