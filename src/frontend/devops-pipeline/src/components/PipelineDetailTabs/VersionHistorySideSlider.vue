@@ -56,6 +56,11 @@
                                 :draft-base-version-name="draftBaseVersionName"
                                 :is-active-draft="props.row.isDraft"
                             />
+                            <version-diff-entry
+                                v-if="props.row.version !== releaseVersion"
+                                :version="props.row.version"
+                                :latest-version="releaseVersion"
+                            />
                             <bk-button
                                 text
                                 theme="primary"
@@ -64,11 +69,6 @@
                             >
                                 {{ $t('delete') }}
                             </bk-button>
-                            <version-diff-entry
-                                v-if="props.row.version !== releaseVersion"
-                                :version="props.row.version"
-                                :latest-version="releaseVersion"
-                            />
                         </template>
                     </bk-table-column>
                 </bk-table>
