@@ -236,7 +236,7 @@ const jobOptionConfigMixin = {
                 customCondition: {
                     component: 'vuex-input',
                     default: '',
-                    allowNull: false,
+                    required: true,
                     label: this.$t('storeMap.customConditionExp'),
                     isHidden: (container) => {
                         return container?.jobControlOption?.runCondition !== 'CUSTOM_CONDITION_MATCH'

@@ -45,7 +45,7 @@
                         </template>
                     </bk-table-column>
                     <bk-table-column width="266" :label="$t('operate')">
-                        <template slot-scope="props">
+                        <div slot-scope="props" class="pipeline-history-version-operate">
                             <rollback-entry
                                 v-if="props.row.canRollback"
                                 :has-permission="canEdit"
@@ -69,7 +69,7 @@
                             >
                                 {{ $t('delete') }}
                             </bk-button>
-                        </template>
+                        </div>
                     </bk-table-column>
                 </bk-table>
             </section>
@@ -318,5 +318,9 @@
         color: #C4C6CC;
 
     }
-
+    .pipeline-history-version-operate {
+        display: flex;
+        grid-gap: 16px;
+        align-items: center;
+    }
 </style>

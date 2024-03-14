@@ -24,7 +24,7 @@
                         action: RESOURCE_ACTION.EDIT
                     }
                 }"
-                @click="goEdit"
+                @click="goBack"
             >
                 {{ $t("cancel") }}
             </bk-button>
@@ -37,7 +37,6 @@
             </bk-button>
             <template v-if="executeStep === 2">
                 <bk-button
-                    :theme="isDebugPipeline ? '' : 'primary'"
                     @click="switchExecStep(executeSteps[0])"
                 >
                     {{ $t("prev") }}
@@ -154,10 +153,8 @@
             handleClick () {
                 bus.$emit('start-execute')
             },
-            goEdit () {
-                this.$router.push({
-                    name: 'pipelinesEdit'
-                })
+            goBack () {
+                this.$router.go(-1)
             },
             beforeSwitchStep () {
                 return new Promise((resolve, reject) => {

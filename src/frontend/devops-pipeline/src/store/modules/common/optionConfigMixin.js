@@ -191,7 +191,7 @@ const optionConfigMixin = {
                     rule: {},
                     component: 'vuex-input',
                     default: '',
-                    allowNull: false,
+                    required: true,
                     label: this.$t('storeMap.customConditionExp'),
                     isHidden: (element) => {
                         return element?.additionalOptions?.runCondition !== 'CUSTOM_CONDITION_MATCH'
