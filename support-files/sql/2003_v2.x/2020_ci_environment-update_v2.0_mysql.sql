@@ -39,24 +39,6 @@ BEGIN
     SET AUTOCOMMIT = 0;
     SELECT DATABASE() INTO db;
 
-    CREATE TABLE IF NOT EXISTS `T_NETWORK_AREA` (
-        `NET_AREA_ID` bigint(20) NOT NULL AUTO_INCREMENT,
-        `NET_AREA` varchar(100) DEFAULT NULL COMMENT '网络区域',
-        `NET_SEGMENT` varchar(15000) DEFAULT NULL COMMENT '网段',
-        PRIMARY KEY (`NET_AREA_ID`)
-    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='';
-
-    CREATE TABLE IF NOT EXISTS `T_PROJECT_JOB`
-    (
-        `JOB_INSTANCE_ID` bigint(20) NOT NULL COMMENT 'job实例id',
-        `PROJECT_ID`      varchar(64)     NOT NULL COMMENT '蓝盾项目id',
-        `CREATED_USER`    varchar(64)     DEFAULT NULL COMMENT 'job实例创建人',
-        `CREATED_TIME`    timestamp  NULL DEFAULT NULL COMMENT 'job实例创建时间',
-        PRIMARY KEY (`PROJECT_ID`, `JOB_INSTANCE_ID`),
-        KEY `CREATED_TIME` (`CREATED_TIME`)
-    ) ENGINE = InnoDB
-      DEFAULT CHARSET = utf8mb4 COMMENT ='';
-
     IF NOT EXISTS(SELECT 1
                   FROM information_schema.COLUMNS
                   WHERE TABLE_SCHEMA = db
