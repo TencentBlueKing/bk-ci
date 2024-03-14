@@ -25,53 +25,19 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.store.common.service
+package com.tencent.devops.store.common.resources
 
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.store.pojo.common.PublisherInfo
-import com.tencent.devops.store.pojo.common.PublishersRequest
-import com.tencent.devops.store.pojo.common.StoreDockingPlatformRequest
-import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
+import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.store.api.common.OpStorePublishersResource
+import com.tencent.devops.store.common.service.PublishersDataService
 
-interface PublishersDataService {
+@RestResource
+class OpStorePublishersResourceImpl constructor(
+    private val publishersDataService: PublishersDataService
+) : OpStorePublishersResource {
 
-    /**
-     * 创建发布者信息记录
-     */
-    fun createPublisherData(userId: String, publishers: List<PublishersRequest>): Int
-
-    /**
-     * 删除发布者信息记录
-     */
-    fun deletePublisherData(userId: String, publishers: List<PublishersRequest>): Int
-
-    /**
-     * 更新发布者信息记录
-     */
-    fun updatePublisherData(userId: String, publishers: List<PublishersRequest>): Int
-
-    /**
-     * 创建平台信息记录
-     */
-    fun savePlatformsData(userId: String, storeDockingPlatformRequests: List<StoreDockingPlatformRequest>): Int
-
-    /**
-     * 删除平台信息记录
-     */
-    fun deletePlatformsData(userId: String, storeDockingPlatformRequests: List<StoreDockingPlatformRequest>): Int
-
-    /**
-     * 获取发布者信息
-     */
-    fun getPublishers(userId: String, storeCode: String, storeType: StoreTypeEnum): Result<List<PublisherInfo>>
-
-    /**
-     * 更新平台logo信息
-     */
-    fun updatePlatformsLogoInfo(userId: String, platformCode: String, logoUrl: String): Boolean
-
-    /**
-     * 更新研发商店个人发布者组织架构信息
-     */
-    fun refreshPersonPublisherGroup(): Boolean
+    override fun refreshPersonPublisherGroup(): Result<Boolean> {
+        return Result(publishersDataService.refreshPersonPublisherGroup())
+    }
 }

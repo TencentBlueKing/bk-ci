@@ -43,17 +43,17 @@ class BuildPublishersResourceImpl @Autowired constructor(
 
     @SensitiveApiPermission("syn_publisher_data")
     override fun synAddPublisherData(userId: String, publishers: List<PublishersRequest>): Result<Int> {
-        return Result(publishersDataService.createPublisherData(userId, publishers))
+        return Result(data = publishersDataService.createPublisherData(userId, publishers))
     }
 
     @SensitiveApiPermission("syn_publisher_data")
     override fun synDeletePublisherData(userId: String, publishers: List<PublishersRequest>): Result<Int> {
-        return Result(publishersDataService.deletePublisherData(userId, publishers))
+        return Result(data = publishersDataService.deletePublisherData(userId, publishers))
     }
 
     @SensitiveApiPermission("syn_publisher_data")
     override fun synUpdatePublisherData(userId: String, publishers: List<PublishersRequest>): Result<Int> {
-        return Result(publishersDataService.updatePublisherData(userId, publishers))
+        return Result(data = publishersDataService.updatePublisherData(userId, publishers))
     }
 
     @SensitiveApiPermission("syn_platforms_data")
@@ -61,7 +61,7 @@ class BuildPublishersResourceImpl @Autowired constructor(
         userId: String,
         storeDockingPlatformRequests: List<StoreDockingPlatformRequest>
     ): Result<Int> {
-        return Result(publishersDataService.savePlatformsData(userId, storeDockingPlatformRequests))
+        return Result(data = publishersDataService.savePlatformsData(userId, storeDockingPlatformRequests))
     }
 
     @SensitiveApiPermission("syn_platforms_data")
@@ -69,7 +69,7 @@ class BuildPublishersResourceImpl @Autowired constructor(
         userId: String,
         storeDockingPlatformRequests: List<StoreDockingPlatformRequest>
     ): Result<Int> {
-        return Result(publishersDataService.deletePlatformsData(userId, storeDockingPlatformRequests))
+        return Result(data = publishersDataService.deletePlatformsData(userId, storeDockingPlatformRequests))
     }
 
     @SensitiveApiPermission("syn_platforms_data")
@@ -77,11 +77,11 @@ class BuildPublishersResourceImpl @Autowired constructor(
         userId: String,
         storeDockingPlatformRequests: List<StoreDockingPlatformRequest>
     ): Result<Int> {
-        return Result(publishersDataService.savePlatformsData(userId, storeDockingPlatformRequests))
+        return Result(data = publishersDataService.savePlatformsData(userId, storeDockingPlatformRequests))
     }
 
     @SensitiveApiPermission("syn_platforms_data")
     override fun synUpdatePlatformsLogoInfo(userId: String, platformCode: String, logoUrl: String): Result<Boolean> {
-        return Result(publishersDataService.updatePlatformsLogoInfo(userId, platformCode, logoUrl))
+        return Result(data = publishersDataService.updatePlatformsLogoInfo(userId, platformCode, logoUrl))
     }
 }
