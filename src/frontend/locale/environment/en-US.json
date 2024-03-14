@@ -251,7 +251,7 @@
         "DELETED": "deleted",
         "LOST": "lost",
         "CREATING": "creating",
-        "RUNNING": "running Agent",
+        "RUNNING": "Installing Agent",
         "STARTING": "starting",
         "STOPPING": "stopping",
         "STOPPED": "stopped",
@@ -265,7 +265,10 @@
         "DEVCLOUD": "DevCloud",
         "TSTACK": "DevCloud",
         "OTHER": "Other",
-        "UNKNOWN": "Unknown"
+        "UNKNOWN": "Unknown",
+        "NOT_INSTALLED": "Not installed",
+        "NOT_IN_CC": "Not in BlueKing CC",
+        "NOT_IN_CMDB": "Not in CMDB"
     },
     "newPool": "New Pool",
     "查看构建机监控": "查看构建机监控",

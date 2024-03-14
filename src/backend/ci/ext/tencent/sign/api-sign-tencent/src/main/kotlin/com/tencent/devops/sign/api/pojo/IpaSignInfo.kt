@@ -76,5 +76,11 @@ data class IpaSignInfo(
     @get:Schema(title = "codesign插件额外参数", required = false)
     var codesignExternalStr: String? = null,
     @get:Schema(title = "钥匙串访问组", required = false)
-    var keychainAccessGroupList: List<String>? = null
+    var keychainAccessGroupList: List<String>? = null,
+    @get:Schema(title = "更换的bundleId", required = false)
+    var bundleId: String? = null,
+    @get:Schema(title = "更换的bundle名", required = false)
+    var bundleName: String? = null,
+    @get:Schema(title = "更换的bundle版本号", required = false)
+    var bundleVersion: String? = null
 )

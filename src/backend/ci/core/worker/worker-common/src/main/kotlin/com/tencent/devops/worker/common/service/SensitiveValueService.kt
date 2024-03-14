@@ -37,7 +37,7 @@ object SensitiveValueService {
     /**
      * 每个Job内维护的敏感信息集合
      */
-    val sensitiveStringSet = mutableSetOf<String>()
+    private val sensitiveStringSet = mutableSetOf<String>()
 
     fun addSensitiveValues(sensitiveValues: List<String>?) {
         sensitiveValues?.let {
@@ -45,6 +45,10 @@ object SensitiveValueService {
             sensitiveStringSet.addAll(it)
             logger.info("Sensitive string set size: ${sensitiveStringSet.size}")
         }
+    }
+
+    fun addSensitiveValue(sensitiveValue: String) {
+        sensitiveStringSet.add(sensitiveValue)
     }
 
     fun matchSensitiveValue(value: String): Boolean {

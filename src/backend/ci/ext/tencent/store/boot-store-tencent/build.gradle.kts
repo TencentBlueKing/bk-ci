@@ -26,13 +26,5 @@
  */
 
 dependencies {
-    api(project(":ext:tencent:store:biz-store-op"))
-    api(project(":ext:tencent:store:biz-store-ideatom"))
     api(project(":ext:tencent:store:biz-store-tencent"))
-    api(project(":ext:tencent:store:biz-store-service"))
-    api(project(":ext:tencent:store:biz-store-image-tencent"))
-    api(project(":ext:tencent:store:biz-store-image-op-tencent"))
-    api(project(":ext:tencent:store:biz-store-service-op-tencent"))
 }
-
-
