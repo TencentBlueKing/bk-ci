@@ -349,6 +349,10 @@
           &.bk-form-textarea {
             height: 32px;
           }
+
+          &.bk-textarea-wrapper {
+            margin-bottom: 14px;
+          }
         }
       }
     }

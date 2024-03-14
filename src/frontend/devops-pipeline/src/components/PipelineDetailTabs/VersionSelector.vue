@@ -284,6 +284,7 @@
     grid-template-columns: auto 1fr auto;
     grid-gap: 6px;
     height: 24px;
+    line-height: 24px;
     background: #F0F1F5;
     padding: 0 8px;
     min-width: 200px;

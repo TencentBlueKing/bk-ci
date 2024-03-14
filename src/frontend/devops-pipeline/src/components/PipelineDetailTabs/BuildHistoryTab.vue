@@ -185,7 +185,7 @@
     .build-history-tab-content {
         height: 100%;
         overflow: hidden;
-        padding: 16px 24px;
+        padding: 24px;
         display: flex;
         flex-direction: column;
         align-items: stretch;
