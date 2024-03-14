@@ -32,7 +32,11 @@ import io.swagger.v3.oas.annotations.media.Schema
 @Schema(title = "项目基本信息")
 data class ProjectBaseInfo(
     @get:Schema(title = "主键ID")
-    val id: Long,
+    val id: Long? = null,
     @get:Schema(title = "英文缩写")
-    val englishName: String
+    val englishName: String,
+    @get:Schema(title = "项目名称")
+    val projectName: String? = null,
+    @get:Schema(title = "是否启用")
+    val enabled: Boolean? = null
 )

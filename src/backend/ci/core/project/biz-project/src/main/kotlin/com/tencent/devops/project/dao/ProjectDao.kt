@@ -796,6 +796,16 @@ class ProjectDao {
         }
     }
 
+    fun getProjectListByProductId(
+        dslContext: DSLContext,
+        productId: Int
+    ): Result<Record3<String, String, Boolean>> {
+        return with(TProject.T_PROJECT) {
+            dslContext.select(ENGLISH_NAME, PROJECT_NAME, ENABLED).from(this)
+                .where(PRODUCT_ID.eq(productId)).fetch()
+        }
+    }
+
     fun searchByProjectName(
         dslContext: DSLContext,
         projectName: String,
