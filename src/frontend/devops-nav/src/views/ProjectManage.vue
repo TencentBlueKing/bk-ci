@@ -25,17 +25,25 @@
                         :placeholder="$t('searchProject')"
                     ></bk-input>
                 </div>
+
+                <div class="filter-operation">
+                    <span :class="{ 'is-selected': isEnabled }" @click="isEnabled = true">{{ $t('启用中') }}</span>
+                    <span :class="{ 'is-selected': !isEnabled }" @click="isEnabled = false">{{ $t('已停用') }}</span>
+                </div>
                 <bk-table
-                    class="biz-table mt20"
+                    class="biz-table"
                     size="medium"
                     :data="curProjectList"
+                    :default-sort="sortField"
                     :pagination="pagination"
+                    @sort-change="handleSortChange"
                     @page-change="pageChange"
                     @page-limit-change="limitChange"
                 >
                     <bk-table-column
                         :label="$t('projectName')"
-                        prop="logoAddr"
+                        sortable="custom"
+                        prop="projectName"
                         width="300"
                     >
                         <template slot-scope="{ row }">
@@ -80,12 +88,13 @@
                     </bk-table-column>
                     <bk-table-column
                         :label="$t('projectId')"
+                        sortable="custom"
                         prop="englishName"
                     />
                     <bk-table-column
                         :label="$t('projectDesc')"
                         prop="description"
-                        width="500"
+                        width="300"
                     />
                     <bk-table-column
                         :label="$t('projectCreator')"
@@ -94,9 +103,8 @@
                     <bk-table-column
                         :label="$t('projectStatus')"
                         prop="creator"
-                        width="180"
                     >
-                        <template slot-scope="{ row }">
+                        <template slot-scope="{ row, $index }">
                             <span class="project-status">
                                 <div class="enable-switcher"
                                     v-perm="{
@@ -109,7 +117,7 @@
                                             action: RESOURCE_ACTION.ENABLE
                                         }
                                     }"
-                                    @click="handleChangeEnabled(row)"
+                                    @click="handleChangeEnabled(row, $index)"
                                 >
                                 </div>
                                 <bk-switcher
@@ -195,6 +203,35 @@
             </empty-tips>
             <apply-project-dialog ref="applyProjectDialog"></apply-project-dialog>
         </section>
+        <bk-dialog
+            v-model="showFailedEnableDialog"
+            :width="600"
+            header-position="left"
+            :title="$t('启用项目失败')">
+            {{ $t('项目尚未关联运营产品，启用失败，请先关联所属运营产品再启用项目。') }}
+
+            <div slot="footer">
+                <bk-button class="mr10" theme="primary" @click="handleToProjectManage">{{ $t('去关联运营产品') }}</bk-button>
+                <bk-button @click="showFailedEnableDialog = false">{{ $t('cancel') }}</bk-button>
+            </div>
+        </bk-dialog>
+        <bk-dialog
+            v-model="showDisableProjectDialog"
+            :width="600"
+            header-position="left"
+            :title="$t('确定停用项目吗？')">
+            <i18n
+                tag="div"
+                path="停用项目后，系统将定期清理已停用项目下流水线产生的构建日志、制品、报告。请备份需要的数据后再停用！"
+                class="empty-tips">
+                <span style="color: red">{{$t('流水线产生的构建日志、制品、报告。')}}</span>
+                <span style="color: red">{{$t('备份需要的')}}</span>
+            </i18n>
+            <div slot="footer">
+                <bk-button class="mr10" theme="primary" @click="toggleEnable">{{ $t('confirm') }}</bk-button>
+                <bk-button @click="showDisableProjectDialog = false">{{ $t('cancel') }}</bk-button>
+            </div>
+        </bk-dialog>
     </div>
 </template>
 
@@ -206,6 +243,15 @@
     import { mapActions } from 'vuex'
     import ApplyProjectDialog from '../components/ApplyProjectDialog/index.vue'
 
+    const PROJECT_SORT_FILED = {
+        projectName: 'PROJECT_NAME',
+        englishName: 'ENGLISH_NAME'
+    }
+
+    const ORDER_ENUM = {
+        ascending: 'ASC',
+        descending: 'DESC'
+    }
     export default ({
         name: 'ProjectManage',
         components: {
@@ -233,19 +279,37 @@
                     2: this.$t('已启用'),
                     3: this.$t('创建中'),
                     4: this.$t('已启用')
-                }
+                },
+                isEnabled: true, // 查询过滤-已启用项目
+                showFailedEnableDialog: false,
+                showDisableProjectDialog: false,
+                projectCode: '',
+                selectedProjectInfo: {}
             }
         },
         computed: {
             curProjectList () {
                 const { limit, current } = this.pagination
-                const list = this.projectList.filter(i => i.projectName.includes(this.inputValue)) || []
+                const list = this.projectList.filter(i => i.projectName.includes(this.inputValue) && i.enabled === this.isEnabled) || []
                 this.pagination.count = list.length
                 return list.slice(limit * (current - 1), limit * current)
+            },
+
+            sortField () {
+                const { sortType, collation } = this.$route.query
+                const prop = sortType || localStorage.getItem('projectSortType')
+                const order = collation || localStorage.getItem('projectSortCollation')
+                return {
+                    prop: this.getkeyByValue(PROJECT_SORT_FILED, prop),
+                    order: this.getkeyByValue(ORDER_ENUM, order)
+                }
             }
         },
         watch: {
             inputValue (val) {
+                this.pagination.current = 1
+            },
+            isEnabled (val) {
                 this.pagination.current = 1
             }
         },
@@ -254,9 +318,12 @@
         },
         methods: {
             ...mapActions(['fetchProjectList', 'toggleProjectEnable']),
-            async fetchProjects () {
+            getkeyByValue (obj, value) {
+                return Object.keys(obj).find(key => obj[key] === value)
+            },
+            async fetchProjects (params) {
                 this.isDataLoading = true
-                await this.fetchProjectList().then(res => {
+                await this.fetchProjectList(params).then(res => {
                     this.projectList = res
                 }).catch(() => [])
                 this.isDataLoading = false
@@ -324,18 +391,19 @@
                         break
                 }
             },
-            handleChangeEnabled (row) {
-                if ([1, 3, 4].includes(row.approvalStatus)) return
-                const { englishName: projectCode, enabled, projectName, routerTag } = row
+
+            toggleEnable () {
+                const { englishName: projectCode, enabled, projectName, routerTag } = this.selectedProjectInfo
                 this.toggleProjectEnable({
                     projectCode: projectCode,
                     enabled: !enabled
-                }).then(() => {
-                    row.enabled = !row.enabled
+                }).then(async () => {
+                    this.selectedProjectInfo.enabled = !enabled
                     this.$bkMessage({
-                        message: row.enabled ? this.$t('启用项目成功') : this.$t('停用项目成功'),
+                        message: this.selectedProjectInfo.enabled ? this.$t('启用项目成功') : this.$t('停用项目成功'),
                         theme: 'success'
                     })
+                    this.fetchProjects()
                 }).catch((error) => {
                     if (error.code === 403) {
                         const projectTag = this.getProjectTag(routerTag)
@@ -361,7 +429,26 @@
                             theme: 'error'
                         })
                     }
+                }).finally(() => {
+                    this.selectedProjectInfo = {}
+                    this.showDisableProjectDialog = false
+                    this.showFailedEnableDialog = false
                 })
+            },
+
+            handleChangeEnabled (row) {
+                if ([1, 3, 4].includes(row.approvalStatus)) return
+                this.selectedProjectInfo = row
+                // 启用项目
+                if (!row.productId && !row.enabled) {
+                    this.showFailedEnableDialog = true
+                    this.projectCode = row.englishName
+                } else if (row.productId && !row.enabled) {
+                    this.toggleEnable()
+                } else if (row.enabled) {
+                    // 停用项目
+                    this.showDisableProjectDialog = true
+                }
             },
             getProjectTag (routerTag) {
                 if (/v3/.test(routerTag)) {
@@ -371,6 +458,31 @@
                     return 'rbac'
                 }
                 return 'v0'
+            },
+
+            handleSortChange ({ prop, order }) {
+                const sortType = PROJECT_SORT_FILED[prop] || ''
+                const collation = ORDER_ENUM[order] || ''
+                localStorage.setItem('projectSortType', sortType)
+                localStorage.setItem('projectSortCollation', collation)
+                this.$router.push({
+                    ...this.$route,
+                    query: {
+                        ...this.$route.query,
+                        sortType,
+                        collation
+                    }
+                })
+                this.fetchProjects({
+                    sortType,
+                    collation
+                })
+            },
+
+            handleToProjectManage () {
+                const { origin } = window.location
+                const url = `${origin}/console/manage/${this.projectCode}/edit`
+                window.open(url, '_blank')
             }
         }
     })
@@ -401,6 +513,28 @@
         justify-content: space-between;
         .search-input {
             width: 320px;
+        }
+    }
+    .filter-operation {
+        display: flex;
+        margin-top: 20px;
+        span {
+            display: inline-block;
+            height: 36px;
+            line-height: 36px;
+            padding: 0 20px;
+            border: 1px solid #dfe0e5;
+            border-bottom: none;
+            cursor: pointer;
+            &.is-selected {
+                color: #3a84ff;
+            }
+            &:first-child {
+                border-right: none;
+            }
+            &:hover {
+                color: #3a84ff;
+            }
         }
     }
     .biz-order {
@@ -500,7 +634,7 @@
                 background-color: #3C96FF;
             }
         }
-        
+
     }
     .biz-pm-form {
         margin: 0 auto 15px auto;
@@ -566,6 +700,14 @@
             max-height: 440px;
             // overflow: auto;
             @include scroller(#9e9e9e);
+        }
+    }
+    .failed-enable-dialog {
+        .bk-dialog-body {
+            text-align: center;
+        }
+        .footer {
+            margin-top: 30px;
         }
     }
 </style>

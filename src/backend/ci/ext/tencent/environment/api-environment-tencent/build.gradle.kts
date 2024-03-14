@@ -29,6 +29,6 @@ dependencies {
     api(project(":core:environment:api-environment"))
 }
 
-plugins{
+plugins {
     `task-deploy-to-maven`
 }

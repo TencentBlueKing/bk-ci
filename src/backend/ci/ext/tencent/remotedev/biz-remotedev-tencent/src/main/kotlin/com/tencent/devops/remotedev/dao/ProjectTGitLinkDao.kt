@@ -19,7 +19,8 @@ class ProjectTGitLinkDao {
         tgitId: Long,
         status: TGitRepoStatus,
         oauthUser: String,
-        gitType: String
+        gitType: String,
+        url: String
     ) {
         with(TProjectTgitIdLink.T_PROJECT_TGIT_ID_LINK) {
             dslContext.insertInto(
@@ -28,16 +29,19 @@ class ProjectTGitLinkDao {
                 TGIT_ID,
                 STATUS,
                 OAUTH_USER,
-                GIT_TYPE
+                GIT_TYPE,
+                URL
             ).values(
                 projectId,
                 tgitId,
                 status.name,
                 oauthUser,
-                gitType
+                gitType,
+                url
             ).onDuplicateKeyUpdate()
                 .set(STATUS, status.name)
                 .set(OAUTH_USER, oauthUser)
+                .set(URL, url)
                 .execute()
         }
     }
@@ -45,27 +49,30 @@ class ProjectTGitLinkDao {
     fun batchAdd(
         dslContext: DSLContext,
         projectId: String,
-        urls: List<TGitRepoDaoData>
+        data: List<TGitRepoDaoData>
     ) {
         with(TProjectTgitIdLink.T_PROJECT_TGIT_ID_LINK) {
             dslContext.batch(
-                urls.map {
+                data.map {
                     dslContext.insertInto(
                         this,
                         PROJECT_ID,
                         TGIT_ID,
                         STATUS,
                         OAUTH_USER,
-                        GIT_TYPE
+                        GIT_TYPE,
+                        URL
                     ).values(
                         projectId,
                         it.tgitId,
                         it.status.name,
                         it.oauthUser,
-                        it.gitType
+                        it.gitType,
+                        it.url
                     ).onDuplicateKeyUpdate()
                         .set(STATUS, it.status.name)
                         .set(OAUTH_USER, it.oauthUser)
+                        .set(URL, it.url)
                 }
             ).execute()
         }
@@ -90,6 +97,14 @@ class ProjectTGitLinkDao {
         }
     }
 
+    fun fetchAll(
+        dslContext: DSLContext
+    ): List<TProjectTgitIdLinkRecord> {
+        with(TProjectTgitIdLink.T_PROJECT_TGIT_ID_LINK) {
+            return dslContext.selectFrom(this).skipCheck().fetch()
+        }
+    }
+
     fun fetchOld(
         dslContext: DSLContext,
         projectId: String?
@@ -100,6 +115,17 @@ class ProjectTGitLinkDao {
                 dsl.where(PROJECT_ID.eq(projectId))
             }
             return dsl.skipCheck().fetch()
+        }
+    }
+
+    fun updateUrl(
+        dslContext: DSLContext,
+        projectId: String,
+        tgitId: Long,
+        url: String
+    ) {
+        with(TProjectTgitIdLink.T_PROJECT_TGIT_ID_LINK) {
+            dslContext.update(this).set(URL, url).where(PROJECT_ID.eq(projectId)).and(TGIT_ID.eq(tgitId)).execute()
         }
     }
 }

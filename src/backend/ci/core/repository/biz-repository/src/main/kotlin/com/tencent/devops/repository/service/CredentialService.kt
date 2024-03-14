@@ -37,6 +37,7 @@ import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.repository.constant.RepositoryMessageCode.GET_TICKET_FAIL
 import com.tencent.devops.repository.pojo.Repository
 import com.tencent.devops.repository.pojo.credential.RepoCredentialInfo
+import com.tencent.devops.repository.service.scm.IScmService
 import com.tencent.devops.ticket.api.ServiceCredentialResource
 import com.tencent.devops.ticket.pojo.CredentialInfo
 import com.tencent.devops.ticket.pojo.enums.CredentialType
@@ -47,7 +48,8 @@ import org.springframework.stereotype.Service
 
 @Service
 class CredentialService @Autowired constructor(
-    private val client: Client
+    private val client: Client,
+    private val scmService: IScmService
 ) {
 
     companion object {
@@ -62,9 +64,23 @@ class CredentialService @Autowired constructor(
     /**
      * 获取凭证基础信息
      */
-    fun getCredentialInfo(projectId: String, repository: Repository): RepoCredentialInfo {
+    fun getCredentialInfo(
+        projectId: String,
+        repository: Repository,
+        tryGetSession: Boolean = false
+    ): RepoCredentialInfo {
         val (pair, credential: CredentialInfo) = get(projectId, repository)
-        return buildRepoCredentialInfo(credential, credential.credentialType, pair)
+        val repoCredentialInfo = buildRepoCredentialInfo(credential, credential.credentialType, pair)
+        if (tryGetSession && repoCredentialInfo.credentialType == CredentialType.USERNAME_PASSWORD.name) {
+            logger.info("using credential of type [USERNAME_PASSWORD],loginUser[${repoCredentialInfo.username}]")
+            repoCredentialInfo.token = scmService.getLoginSession(
+                type = repository.getScmType(),
+                username = repoCredentialInfo.username,
+                password = repoCredentialInfo.password,
+                url = repository.url
+            )?.privateToken ?: ""
+        }
+        return repoCredentialInfo
     }
 
     fun get(projectId: String, repository: Repository): Pair<DHKeyPair, CredentialInfo> {

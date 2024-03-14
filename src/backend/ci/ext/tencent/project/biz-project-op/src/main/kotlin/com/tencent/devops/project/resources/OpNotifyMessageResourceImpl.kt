@@ -37,4 +37,22 @@ class OpNotifyMessageResourceImpl constructor(
             )
         )
     }
+
+    override fun sendEmailForProjectOrganizationChange(): Result<Boolean> {
+        return Result(
+            projectNotifyService.sendEmailForProjectOrganizationChange()
+        )
+    }
+
+    override fun sendEmailForProjectProductChange(): Result<Boolean> {
+        return Result(
+            projectNotifyService.sendEmailForProjectProductChange()
+        )
+    }
+
+    override fun sendEmailForVerifyProjectOrganization(): Result<Boolean> {
+        return Result(
+            projectNotifyService.sendEmailForVerifyProjectOrganization()
+        )
+    }
 }

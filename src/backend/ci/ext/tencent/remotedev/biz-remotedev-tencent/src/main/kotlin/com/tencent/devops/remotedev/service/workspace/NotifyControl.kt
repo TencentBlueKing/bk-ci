@@ -28,6 +28,7 @@
 package com.tencent.devops.remotedev.service.workspace
 
 import com.tencent.devops.common.api.exception.ErrorCodeException
+import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.notify.enums.NotifyType
@@ -43,9 +44,10 @@ import com.tencent.devops.project.api.service.ServiceProjectResource
 import com.tencent.devops.project.constant.ProjectMessageCode
 import com.tencent.devops.remotedev.common.Constansts.ADMIN_NAME
 import com.tencent.devops.remotedev.common.exception.ErrorCodeEnum
-import com.tencent.devops.remotedev.dao.RemoteDevSettingDao
 import com.tencent.devops.remotedev.dao.ProjectNotifyDao
+import com.tencent.devops.remotedev.dao.RemoteDevSettingDao
 import com.tencent.devops.remotedev.dao.WorkspaceDao
+import com.tencent.devops.remotedev.dao.WorkspaceSharedDao
 import com.tencent.devops.remotedev.pojo.WebSocketActionType
 import com.tencent.devops.remotedev.pojo.WorkspaceAction
 import com.tencent.devops.remotedev.pojo.WorkspaceMountType
@@ -60,6 +62,7 @@ import com.tencent.devops.remotedev.service.client.TaiClient
 import com.tencent.devops.remotedev.service.client.TaiUserInfoRequest
 import com.tencent.devops.remotedev.websocket.page.WorkspacePageBuild
 import com.tencent.devops.remotedev.websocket.push.WorkspaceWebsocketPush
+import java.time.LocalDateTime
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -76,7 +79,8 @@ class NotifyControl @Autowired constructor(
     private val webSocketDispatcher: WebSocketDispatcher,
     private val remoteDevSettingDao: RemoteDevSettingDao,
     private val taiClient: TaiClient,
-    private val notifyDao: ProjectNotifyDao
+    private val notifyDao: ProjectNotifyDao,
+    private val sharedDao: WorkspaceSharedDao
 ) {
 
     @Value("\${notice.wework:#{null}}")
@@ -111,6 +115,9 @@ class NotifyControl @Autowired constructor(
 
         /*云桌面通知-未登录3天时提醒*/
         const val NOT_LOGIN_NOTIFY = "NOT_LOGIN_NOTIFY"
+
+        /*云桌面通知-您的云桌面已被强制销毁*/
+        const val WORKSPACE_FORCE_DELETE = "WORKSPACE_FORCE_DELETE"
     }
 
     fun notifyWorkspaceInfo(
@@ -148,9 +155,10 @@ class NotifyControl @Autowired constructor(
 
     fun notify4RemoteDevManager(
         projectId: String,
+        cc: MutableSet<String>,
         notifyTemplateCode: String,
         notifyType: MutableSet<RemoteDevNotifyType>,
-        bodyParams: Map<String, String>
+        bodyParams: MutableMap<String, String>
     ) {
         val projectInfo = kotlin.runCatching {
             client.get(ServiceProjectResource::class).get(projectId)
@@ -163,16 +171,43 @@ class NotifyControl @Autowired constructor(
                 ?: mutableSetOf(),
             notifyTemplateCode = notifyTemplateCode,
             notifyType = notifyType,
+            bodyParams = bodyParams,
+            cc = cc
+        )
+    }
+
+    fun notify4UserAndCCRemoteDevManagerAndCCOwnerShareUser(
+        userIds: MutableSet<String>,
+        workspaceName: String,
+        cc: MutableSet<String>,
+        projectId: String,
+        notifyTemplateCode: String,
+        notifyType: MutableSet<RemoteDevNotifyType>,
+        bodyParams: MutableMap<String, String>
+    ) {
+        val shareUser = sharedDao.fetchWorkspaceSharedInfo(
+            dslContext = dslContext,
+            workspaceName = workspaceName,
+            assignType = WorkspaceShared.AssignType.OWNER
+        )
+        cc.addAll(shareUser.map { it.operator })
+        notify4UserAndCCRemoteDevManager(
+            userIds = userIds,
+            cc = cc,
+            projectId = projectId,
+            notifyTemplateCode = notifyTemplateCode,
+            notifyType = notifyType,
             bodyParams = bodyParams
         )
     }
 
     fun notify4UserAndCCRemoteDevManager(
         userIds: MutableSet<String>,
+        cc: MutableSet<String>,
         projectId: String,
         notifyTemplateCode: String,
         notifyType: MutableSet<RemoteDevNotifyType>,
-        bodyParams: Map<String, String>
+        bodyParams: MutableMap<String, String>
     ) {
         val projectInfo = kotlin.runCatching {
             client.get(ServiceProjectResource::class).get(projectId)
@@ -180,13 +215,15 @@ class NotifyControl @Autowired constructor(
             .getOrElse { null }?.data ?: throw ErrorCodeException(
             errorCode = ProjectMessageCode.PROJECT_NOT_EXIST
         )
+        projectInfo.properties?.remotedevManager?.split(";")?.toMutableSet()?.let {
+            cc.addAll(it)
+        }
         notify4User(
             userIds = userIds,
-            cc = projectInfo.properties?.remotedevManager?.split(";")?.toMutableSet()
-                ?: mutableSetOf(),
             notifyTemplateCode = notifyTemplateCode,
             notifyType = notifyType,
-            bodyParams = bodyParams
+            bodyParams = bodyParams,
+            cc = cc
         )
     }
 
@@ -194,12 +231,21 @@ class NotifyControl @Autowired constructor(
         userIds: MutableSet<String>,
         notifyTemplateCode: String,
         notifyType: MutableSet<RemoteDevNotifyType>,
-        bodyParams: Map<String, String>,
+        bodyParams: MutableMap<String, String>,
         cc: MutableSet<String> = mutableSetOf()
     ) {
+        val taiUserNames = userIds.filter { it.contains("@tai") }.toSet()
+        val receiversNameWithCN = remoteDevSettingDao.fetchTaiUserInfo(dslContext, userIds = taiUserNames)
+            .mapValues {
+                if (it.value.first.isNotBlank()) {
+                    "${it.value.first}@${it.value.second}"
+                } else it.key
+            }.values.plus(
+                userIds.filter { !it.contains("@tai") }
+            )
+        bodyParams.putIfAbsent("receiversNameWithCN", receiversNameWithCN.joinToString())
         /* 发外部邮件，需要模板配置email_type=0*/
         if (notifyType.contains(RemoteDevNotifyType.EMAIL)) {
-            val taiUserNames = userIds.filter { it.contains("@tai") }.toSet()
             // 掉接口拿真正邮件地址
             val taiInfos = taiClient.taiUserInfo(
                 TaiUserInfoRequest(usernames = taiUserNames)
@@ -209,16 +255,10 @@ class NotifyControl @Autowired constructor(
                 user.accountEmail
             })
             val receivers = userIds.map { taiInfos[it] ?: it }
-            val receiversNameWithCN = remoteDevSettingDao.fetchTaiUserInfo(dslContext, userIds = taiUserNames)
-                .mapValues { "${it.value.first}@${it.value.second}" }.values.plus(
-                    userIds.filter { !it.contains("@tai") }
-                )
-            logger.info("notify4User EMAIL|$notifyTemplateCode|$receivers|$bodyParams|$receiversNameWithCN")
+            logger.info("notify4User EMAIL|$notifyTemplateCode|$receivers|$bodyParams")
             sendNotifyMessageTemplateRequest(
                 notifyTemplateCode = notifyTemplateCode,
-                bodyParams = bodyParams.plus(
-                    "receiversNameWithCN" to receiversNameWithCN.joinToString()
-                ),
+                bodyParams = bodyParams,
                 notifyType = mutableSetOf(NotifyType.EMAIL.name),
                 receivers = receivers.toMutableSet(),
                 cc = cc,
@@ -263,6 +303,7 @@ class NotifyControl @Autowired constructor(
                 notifyTemplateCode = notifyTemplateCode,
                 bodyParams = bodyParams,
                 notifyType = mutableSetOf(NotifyType.RTX.name),
+                receivers = userIds.plus(cc).toMutableSet(),
                 markdownContent = false
             )
         }
@@ -354,6 +395,9 @@ class NotifyControl @Autowired constructor(
         cc: MutableSet<String> = mutableSetOf(),
         markdownContent: Boolean = false
     ) {
+        /*去掉 ADMIN_NAME 避免失误发送*/
+        receivers.remove(ADMIN_NAME)
+        cc.remove(ADMIN_NAME)
         val request = SendNotifyMessageTemplateRequest(
             templateCode = notifyTemplateCode,
             bodyParams = bodyParams,
@@ -375,13 +419,14 @@ class NotifyControl @Autowired constructor(
         pageSize: Int
     ): List<WorkspaceNotifyListData> {
         val sqlLimit = PageUtil.convertPageSizeToSQLLimit(page, pageSize)
-        return notifyDao.fetch(dslContext, sqlLimit).map {
+        return notifyDao.fetch(dslContext, sqlLimit).sortedByDescending { it.createdTime }.map {
             WorkspaceNotifyListData(
-                projectId = it.projectIds,
-                ip = it.ips,
+                projectId = it.projectIds.removeSurrounding("[", "]"),
+                ip = it.ips.removeSurrounding("[", "]"),
                 title = it.title,
                 desc = it.desc,
-                createTime = it.createdTime.toString()
+                createTime = DateTimeUtil.toDateTime(it.createdTime as LocalDateTime),
+                operator = it.operator
             )
         }
     }

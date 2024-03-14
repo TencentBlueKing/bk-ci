@@ -37,8 +37,8 @@ object IpaFileUtil {
     private const val bufferSize = 8 * 1024
 
     /*
-    * 复制流到目标文件，并计算md5
-    * */
+     * 复制流到目标文件，并计算md5
+     * */
     fun copyInputStreamToFile(
         inputStream: InputStream,
         target: File

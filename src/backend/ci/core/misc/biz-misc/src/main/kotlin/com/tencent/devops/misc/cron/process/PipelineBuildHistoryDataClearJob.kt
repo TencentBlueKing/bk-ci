@@ -354,6 +354,7 @@ class PipelineBuildHistoryDataClearJob @Autowired constructor(
                 if (clearBaseBuildData) {
                     processDataClearService.clearBaseBuildData(projectId, buildId)
                 }
+                processDataClearService.clearSkipRecordTaskData(projectId, buildId)
                 repositoryDataClearService.clearBuildData(buildId)
                 if (isCompletelyDelete) {
                     dispatchDataClearService.clearBuildData(buildId)
