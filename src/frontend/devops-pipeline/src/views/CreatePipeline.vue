@@ -135,7 +135,7 @@
                                 </bk-popover>
                             </bk-radio-group>
                         </bk-form-item>
-                        <bk-form-item :label="$t('copyTempConf')">
+                        <bk-form-item :label="$t('copyTempConf')" label-width="auto">
                             <bk-checkbox-group v-model="applySettings">
                                 <div v-for="item in settingItems"
                                     :key="item.label"
@@ -708,6 +708,9 @@
                     border: 1px solid #DCDEE5;
                     opacity: 0.5;
                     color: #sC4C6CC;
+                    em {
+                        font-size: 12px;
+                    }
                 }
                 .template-apply-setting-checkbox-txt {
                     width: 100%;
