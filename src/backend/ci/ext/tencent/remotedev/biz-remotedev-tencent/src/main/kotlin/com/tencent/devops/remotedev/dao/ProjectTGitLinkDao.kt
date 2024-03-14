@@ -121,4 +121,20 @@ class ProjectTGitLinkDao {
             dslContext.update(this).set(URL, url).where(PROJECT_ID.eq(projectId)).and(TGIT_ID.eq(tgitId)).execute()
         }
     }
+
+    fun batchUpdateStatus(
+        dslContext: DSLContext,
+        projectId: String,
+        tgitIds: Set<Long>,
+        status: TGitRepoStatus
+    ) {
+        with(TProjectTgitIdLink.T_PROJECT_TGIT_ID_LINK) {
+            dslContext.batch(
+                tgitIds.map {
+                    dslContext.update(this).set(STATUS, status.name).where(PROJECT_ID.eq(projectId))
+                        .and(TGIT_ID.eq(it))
+                }
+            ).execute()
+        }
+    }
 }
