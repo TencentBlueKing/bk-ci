@@ -35,7 +35,7 @@ class BuildLessStartHandlerContext(
     var buildLessHost: String = "",
     var buildLessPort: Int = 80,
     var retryTime: Int = 0,
-    var retryMaxTime: Int = 0,
+    var retryMaxTime: Int = 3,
     var buildLogKey: String = "",
     var rejectedExecutionType: RejectedExecutionType = RejectedExecutionType.ABORT_POLICY,
     var unAvailableIpList: Set<String>? = emptySet(),
