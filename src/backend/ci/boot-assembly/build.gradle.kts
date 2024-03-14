@@ -47,6 +47,7 @@ dependencies {
     implementation(project(":core:quality:biz-quality"))
     implementation(project(":core:ticket:biz-ticket"))
     implementation(project(":core:websocket:biz-websocket"))
+    implementation(project(":core:store:biz-store"))
 }
 
 configurations.all {
