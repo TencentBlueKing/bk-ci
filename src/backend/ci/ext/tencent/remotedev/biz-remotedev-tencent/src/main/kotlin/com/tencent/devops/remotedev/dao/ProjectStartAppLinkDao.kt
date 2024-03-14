@@ -36,4 +36,13 @@ class ProjectStartAppLinkDao {
             return dslContext.selectFrom(this).skipCheck().fetch()
         }
     }
+
+    fun fetchByAppName(
+        dslContext: DSLContext,
+        appName: String
+    ): TProjectStartAppLinkRecord? {
+        with(TProjectStartAppLink.T_PROJECT_START_APP_LINK) {
+            return dslContext.selectFrom(this).where(APPNAME.eq(appName)).fetchAny()
+        }
+    }
 }
