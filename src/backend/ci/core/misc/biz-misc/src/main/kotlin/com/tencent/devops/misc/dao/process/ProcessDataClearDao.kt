@@ -199,15 +199,6 @@ class ProcessDataClearDao {
         }
     }
 
-    fun deleteBuildCommits(dslContext: DSLContext, projectId: String, buildId: String) {
-        with(TPipelineBuildCommits.T_PIPELINE_BUILD_COMMITS) {
-            dslContext.deleteFrom(this)
-                .where(PROJECT_ID.eq(projectId))
-                .and(BUILD_ID.eq(buildId))
-                .execute()
-        }
-    }
-
     fun deletePipelineLabelByPipelineId(dslContext: DSLContext, projectId: String, pipelineId: String) {
         with(TPipelineLabelPipeline.T_PIPELINE_LABEL_PIPELINE) {
             dslContext.deleteFrom(this)
