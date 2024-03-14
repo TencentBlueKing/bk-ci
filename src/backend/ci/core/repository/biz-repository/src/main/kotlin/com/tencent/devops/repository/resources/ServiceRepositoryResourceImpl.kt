@@ -38,6 +38,7 @@ import com.tencent.devops.common.pipeline.utils.RepositoryConfigUtils.buildConfi
 import com.tencent.devops.common.service.prometheus.BkTimed
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.repository.api.ServiceRepositoryResource
+import com.tencent.devops.repository.pojo.AtomRefRepositoryInfo
 import com.tencent.devops.repository.pojo.RepoPipelineRefRequest
 import com.tencent.devops.repository.pojo.Repository
 import com.tencent.devops.repository.pojo.RepositoryId
@@ -46,8 +47,8 @@ import com.tencent.devops.repository.pojo.RepositoryInfoWithPermission
 import com.tencent.devops.repository.pojo.enums.Permission
 import com.tencent.devops.repository.service.RepoPipelineService
 import com.tencent.devops.repository.service.RepositoryService
-import org.springframework.beans.factory.annotation.Autowired
 import java.net.URLDecoder
+import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 @Suppress("ALL")
@@ -217,5 +218,23 @@ class ServiceRepositoryResourceImpl @Autowired constructor(
             request = request
         )
         return Result(true)
+    }
+
+    override fun updateAtomRepoFlag(
+        userId: String,
+        atomRefRepositoryInfo: List<AtomRefRepositoryInfo>
+    ): Result<Boolean> {
+        repositoryService.updateAtomRepoFlag(
+            userId = userId,
+            atomRefRepositoryInfo = atomRefRepositoryInfo
+        )
+        return Result(true)
+    }
+
+    override fun getGitProjectIdByRepositoryHashId(
+        userId: String,
+        repositoryHashIdList: List<String>
+    ): Result<List<String>> {
+        return Result(repositoryService.getGitProjectIdByRepositoryHashId(userId, repositoryHashIdList))
     }
 }

@@ -176,4 +176,21 @@ class ProcessDataClearService @Autowired constructor(
             }
         }
     }
+
+    /**
+     * 清除流水线被跳过的任务数据
+     * @param projectId 项目ID
+     * @param buildId 构建ID
+     */
+    fun clearSkipRecordTaskData(
+        projectId: String,
+        buildId: String
+    ) {
+        processDataClearDao.deleteBuildRecordTaskByBuildId(
+            dslContext = dslContext,
+            projectId = projectId,
+            buildId = buildId,
+            skipTaskDeleteFlag = true
+        )
+    }
 }

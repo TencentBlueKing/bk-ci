@@ -27,8 +27,10 @@
 
 package com.tencent.devops.process.pojo.pipeline.record
 
+import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.pipeline.enums.BuildRecordTimeStamp
 import com.tencent.devops.common.pipeline.enums.EnvControlTaskType
+import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.common.pipeline.pojo.element.ElementPostInfo
 import com.tencent.devops.common.pipeline.pojo.time.BuildTimestampType
 import com.tencent.devops.process.engine.pojo.PipelineBuildTask
@@ -52,7 +54,7 @@ data class BuildRecordTask(
     @get:Schema(title = "任务ID", required = true)
     val taskId: String,
     @get:Schema(title = "任务序号", required = true)
-    val taskSeq: Int,
+    var taskSeq: Int,
     @get:Schema(title = "执行次数", required = true)
     val executeCount: Int,
     @get:Schema(title = "执行变量", required = true)
@@ -82,13 +84,14 @@ data class BuildRecordTask(
             buildTaskList.forEach {
                 // 自动填充的构建机控制插件，不需要存入Record
                 if (EnvControlTaskType.parse(it.taskType) != null) return@forEach
+                val element = JsonUtil.to(JsonUtil.toJson(it.taskParams, false), Element::class.java)
                 this.add(
                     BuildRecordTask(
                         projectId = it.projectId, pipelineId = it.pipelineId, buildId = it.buildId,
                         stageId = it.stageId, containerId = it.containerId, taskSeq = it.taskSeq,
                         taskId = it.taskId, classType = it.taskType, atomCode = it.atomCode ?: it.taskAtom,
                         executeCount = it.executeCount ?: 1, resourceVersion = resourceVersion,
-                        taskVar = mutableMapOf(), timestamps = mapOf(),
+                        taskVar = element.initTaskVar(), timestamps = mapOf(),
                         elementPostInfo = it.additionalOptions?.elementPostInfo?.takeIf { info ->
                             info.parentElementId != it.taskId
                         }

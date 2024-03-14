@@ -27,7 +27,7 @@
 
 package com.tencent.devops.stream.trigger.git.pojo.github
 
-import com.tencent.devops.common.sdk.github.response.CommitResponse
+import com.tencent.devops.repository.sdk.github.response.CommitResponse
 import com.tencent.devops.stream.trigger.git.pojo.StreamGitCommitInfo
 
 data class GithubCommitInfo(

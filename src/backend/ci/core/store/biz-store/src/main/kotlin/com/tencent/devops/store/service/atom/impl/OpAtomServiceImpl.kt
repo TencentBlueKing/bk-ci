@@ -43,6 +43,7 @@ import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.utils.ZipUtil
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.model.store.tables.records.TAtomRecord
+import com.tencent.devops.repository.api.ServiceRepositoryResource
 import com.tencent.devops.repository.pojo.enums.VisibilityLevelEnum
 import com.tencent.devops.store.constant.StoreMessageCode
 import com.tencent.devops.store.constant.StoreMessageCode.USER_UPLOAD_FILE_PATH_ERROR
@@ -85,6 +86,7 @@ import com.tencent.devops.store.service.common.action.StoreDecorateFactory
 import com.tencent.devops.store.service.websocket.StoreWebsocketService
 import com.tencent.devops.store.utils.TextReferenceFileAnalysisUtil
 import com.tencent.devops.store.utils.StoreUtils
+import com.tencent.devops.store.utils.ThreadPoolUtil
 import java.io.File
 import java.io.InputStream
 import java.nio.charset.Charset
@@ -97,6 +99,7 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import org.springframework.util.FileSystemUtils
+import java.util.concurrent.ThreadPoolExecutor
 
 @Service
 @Suppress("LongParameterList", "LongMethod", "ReturnCount", "ComplexMethod", "NestedBlockDepth")
@@ -583,6 +586,54 @@ class OpAtomServiceImpl @Autowired constructor(
         } catch (e: Exception) {
             logger.error("set default atom failed , userId:$userId , atomCode:$atomCode")
             false
+        }
+    }
+
+    override fun updateAtomRepoFlag(userId: String, atomCode: String?): Result<Boolean> {
+        ThreadPoolUtil.submitAction(
+            action = {
+                updateAtomRepoFlagAction(
+                    userId = userId,
+                    atomCode = atomCode,
+                    threadPoolExecutor = it
+                )
+            },
+            actionTitle = "updateAtomRepoFlag"
+        )
+        return Result(true)
+    }
+
+    private fun updateAtomRepoFlagAction(
+        userId: String,
+        atomCode: String?,
+        threadPoolExecutor: ThreadPoolExecutor
+    ) {
+        val limit = 100
+        var offset = 0
+        try {
+            do {
+                val atomRecords = atomDao.getAtomRepoInfoByCode(
+                    dslContext = dslContext,
+                    atomCode = atomCode,
+                    limit = limit,
+                    offset = offset
+                )
+                val recordSize = atomRecords.size
+                logger.info("recordSize:$recordSize")
+                try {
+                    client.get(ServiceRepositoryResource::class).updateAtomRepoFlag(
+                        userId = userId,
+                        atomRefRepositoryInfo = atomRecords
+                    )
+                } catch (ignored: Exception) {
+                    logger.warn("fail to insert atom flag|atomRefRepositoryInfos[$atomRecords]", ignored)
+                }
+                offset += limit
+            } while (recordSize == limit)
+        } catch (ignored: Exception) {
+            logger.warn("updateAtomRepoFlag failed", ignored)
+        } finally {
+            threadPoolExecutor.shutdown()
         }
     }
 }
