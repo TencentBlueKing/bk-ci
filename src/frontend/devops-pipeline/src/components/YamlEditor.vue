@@ -18,6 +18,11 @@
  */
 <template>
     <section v-bkloading="{ isLoading }" :style="style">
+        <i
+            :class="['yaml-full-screen-switcher', 'devops-icon', fullScreen ? 'icon-un-full-screen' : 'icon-full-screen']"
+            :title="$t('editPage.isFullScreen')"
+            @click="toggleFullScreen"
+        />
         <div ref="box" :style="style">
         </div>
         <ul v-if="!readOnly" class="yaml-error-summary">
@@ -50,10 +55,6 @@
                 type: Boolean,
                 default: false
             },
-            fullScreen: {
-                type: Boolean,
-                default: false
-            },
             hasError: {
                 type: Boolean,
                 default: false
@@ -75,6 +76,7 @@
             return {
                 // editor: null,
                 isLoading: false,
+                fullScreen: false,
                 errorList: [],
                 style: {
                     height: '100%',
@@ -144,6 +146,9 @@
             this.editor?.dispose?.()
         },
         methods: {
+            toggleFullScreen () {
+                this.fullScreen = !this.fullScreen
+            },
             insertFragmentAtPos (text, { stageIndex, containerIndex, elementIndex }) {
                 try {
                     const doc = YAML.parse(this.value)
@@ -293,6 +298,14 @@
 
 <style lang="scss">
     @import '@/scss/conf';
+    .yaml-full-screen-switcher {
+        cursor: pointer;
+        position: absolute;
+        z-index: 1;
+        right: 24px;
+        top: 24px;
+        color: white;
+    }
     .code-highlight-block {
         background: #3A84FF;
         opacity: .1;
