@@ -125,7 +125,7 @@
 
             this.editor.onDidChangeModelContent(event => {
                 const value = this.editor.getValue()
-                console.log('change', 'value')
+
                 if (this.value !== value) {
                     this.emitChange(value)
                 }
@@ -148,12 +148,15 @@
                 try {
                     const doc = YAML.parse(this.value)
                     const jobs = Object.values(doc.stages[stageIndex].jobs)
-
-                    jobs[containerIndex].steps[elementIndex] = text
+                    jobs[containerIndex].steps[elementIndex] = YAML.parse(text)[0]
                     const result = YAML.stringify(doc)
                     this.emitChange(result)
                 } catch (error) {
                     console.error(error)
+                    this.$bkMessage({
+                        theme: 'error',
+                        message: error.message ?? error
+                    })
                 }
             },
             emitChange (value) {

@@ -937,7 +937,7 @@
                         message = this.$t('subpage.rebuildSuc')
                         theme = 'success'
 
-                        this.$emit('update-table')
+                        this.requestHistory()
                     } else {
                         message = this.$t('subpage.rebuildFail')
                         theme = 'error'
