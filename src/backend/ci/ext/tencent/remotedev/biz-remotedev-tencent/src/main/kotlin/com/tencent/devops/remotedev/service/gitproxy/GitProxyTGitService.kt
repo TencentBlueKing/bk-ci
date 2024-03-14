@@ -169,7 +169,7 @@ class GitProxyTGitService @Autowired constructor(
                         return@projects
                     }
                     val url = (project.httpsUrlToRepo ?: project.httpUrlToRepo)?.removeHttpPrefix()
-                    if ((url != projectUrl) && (url?.startsWith(projectUrl) != true)) {
+                    if ((url != projectUrl) && (url?.startsWith("${projectUrl.removeSuffix("/")}/") != true)) {
                         return@urls
                     }
 

@@ -38,34 +38,6 @@ class BuildContainerPoolNoDao {
         }
     }
 
-    fun getDevCloudBuildLastContainer(
-        dslContext: DSLContext,
-        buildId: String,
-        vmSeqId: String?,
-        executeCount: Int
-    ): List<Pair<String, String?>> {
-        val result = mutableListOf<Pair<String, String?>>()
-        with(TBuildContainerPoolNo.T_BUILD_CONTAINER_POOL_NO) {
-            if (null == vmSeqId) {
-                val records = dslContext.selectFrom(this)
-                    .where(BUILD_ID.eq(buildId))
-                    .and(EXECUTE_COUNT.eq(executeCount))
-                    .fetch()
-                records?.forEach {
-                    result.add(Pair(it.vmSeqId, it.containerName))
-                }
-            } else {
-                val record = dslContext.selectFrom(this)
-                    .where(BUILD_ID.eq(buildId))
-                    .and(EXECUTE_COUNT.eq(executeCount))
-                    .and(VM_SEQ_ID.eq(vmSeqId))
-                    .fetchOne()
-                result.add(Pair(vmSeqId, record?.containerName))
-            }
-        }
-        return result
-    }
-
     fun getDevCloudBuildLastPoolNo(
         dslContext: DSLContext,
         buildId: String,

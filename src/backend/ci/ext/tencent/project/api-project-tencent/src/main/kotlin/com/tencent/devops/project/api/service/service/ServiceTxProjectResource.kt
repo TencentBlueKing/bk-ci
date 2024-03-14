@@ -34,6 +34,8 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_ORGANIZATION_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_ORGANIZATION_TYPE
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE
+import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
+import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.auth.api.pojo.BKAuthProjectRolesResources
 import com.tencent.devops.project.api.pojo.PipelinePermissionInfo
 import com.tencent.devops.project.pojo.AddManagerRequest
@@ -302,7 +304,10 @@ interface ServiceTxProjectResource {
         userId: String,
         @Parameter(description = "工蜂项目名称", required = false)
         @QueryParam("gitProjectName")
-        gitProjectName: String?
+        gitProjectName: String?,
+        @Parameter(description = "项目运营归属", required = false)
+        @QueryParam("productId")
+        productId: Int? = null
     ): Result<ProjectVO>
 
     @POST
@@ -427,6 +432,20 @@ interface ServiceTxProjectResource {
         @Parameter(description = "consulTag请求入参", required = true)
         extSystemTagDTO: ProjectExtSystemTagDTO
     ): com.tencent.devops.common.api.pojo.Result<Boolean>
+
+    @Operation(summary = "更新项目运营归属信息")
+    @Path("/productIds/{productId}/update")
+    @PUT
+    fun batchUpdateProjectProductId(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "项目运营归属ID", required = true)
+        @PathParam("productId")
+        productId: Int,
+        @Parameter(description = "项目ID列表", required = true)
+        projectIds: List<String>
+    ): Result<Boolean>
 
     @Operation(summary = "查询开启了云研发的项目")
     @GET

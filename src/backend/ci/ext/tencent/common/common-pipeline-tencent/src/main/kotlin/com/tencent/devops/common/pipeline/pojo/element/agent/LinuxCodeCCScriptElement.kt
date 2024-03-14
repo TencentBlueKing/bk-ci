@@ -116,7 +116,7 @@ open class LinuxCodeCCScriptElement(
 
     override fun getClassType() = classType
 
-    constructor(): this(
+    constructor() : this(
         name = "",
         id = "",
         status = "",
