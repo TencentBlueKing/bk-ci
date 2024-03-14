@@ -123,6 +123,7 @@ class ElementTransfer @Autowired(required = false) constructor(
             )
             if (element is ManualTriggerElement) {
                 triggerOn.value.manual = ManualRule(
+                    name = element.name,
                     enable = element.isElementEnable().nullIfDefault(true),
                     canElementSkip = element.canElementSkip.nullIfDefault(false),
                     useLatestParameters = element.useLatestParameters.nullIfDefault(false)
@@ -153,6 +154,7 @@ class ElementTransfer @Autowired(required = false) constructor(
                     }
                 schedules.add(
                     SchedulesRule(
+                        name = element.name,
                         interval = week?.let { SchedulesRule.Interval(week, timePoints) },
                         cron = if (element.advanceExpression?.size == 1) {
                             element.advanceExpression?.first()

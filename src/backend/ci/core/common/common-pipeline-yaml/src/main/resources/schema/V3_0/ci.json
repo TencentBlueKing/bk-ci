@@ -502,7 +502,8 @@
                     "type" : "string"
                   },
                   "enable" : {
-                    "type" : "boolean"
+                    "type" : "string",
+                    "pattern" : "(\\benabled\\b|\\bdisabled\\b)"
                   }
                 }
               } ]
@@ -1006,7 +1007,8 @@
                   "type" : "string"
                 },
                 "enable" : {
-                  "type" : "boolean"
+                  "type" : "string",
+                  "pattern" : "(\\benabled\\b|\\bdisabled\\b)"
                 }
               }
             } ]
