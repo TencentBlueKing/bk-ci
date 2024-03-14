@@ -25,12 +25,12 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.store.resources.common
+package com.tencent.devops.store.common.resources
 
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.store.api.common.OpStorePublishersResource
-import com.tencent.devops.store.service.common.PublishersDataService
+import com.tencent.devops.store.common.service.PublishersDataService
 
 @RestResource
 class OpStorePublishersResourceImpl constructor(
