@@ -157,10 +157,10 @@ const optionConfigMixin = {
                             id: 'CUSTOM_VARIABLE_MATCH_NOT_RUN',
                             name: this.$t('storeMap.varNotMatch')
                         },
-                        // {
-                        //     id: 'CUSTOM_CONDITION_MATCH',
-                        //     name: this.$t('storeMap.customCondition')
-                        // },
+                        {
+                            id: 'CUSTOM_CONDITION_MATCH',
+                            name: this.$t('storeMap.customCondition')
+                        },
                         {
                             id: 'PARENT_TASK_CANCELED_OR_TIMEOUT',
                             name: this.$t('storeMap.userCancelExec')
@@ -192,9 +192,9 @@ const optionConfigMixin = {
                     component: 'vuex-input',
                     default: '',
                     allowNull: false,
-                    label: this.$t('storeMap.customVar'),
+                    label: this.$t('storeMap.customConditionExp'),
                     isHidden: (element) => {
-                        return !(element.additionalOptions && element.additionalOptions.runCondition === 'CUSTOM_CONDITION_MATCH')
+                        return element?.additionalOptions?.runCondition !== 'CUSTOM_CONDITION_MATCH'
                     }
                 },
                 otherTask: {
