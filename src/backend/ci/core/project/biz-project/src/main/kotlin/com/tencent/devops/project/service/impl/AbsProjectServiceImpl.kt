@@ -1097,18 +1097,18 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
                 productId = projectInfo.productId
             )
         }
+        projectDao.updateUsableStatus(
+            dslContext = dslContext,
+            userId = userId,
+            projectId = projectInfo.projectId,
+            enabled = enabled
+        )
         projectDispatcher.dispatch(
             ProjectEnableStatusBroadCastEvent(
                 userId = userId ?: "",
                 projectId = englishName,
                 enabled = enabled
             )
-        )
-        projectDao.updateUsableStatus(
-            dslContext = dslContext,
-            userId = userId,
-            projectId = projectInfo.projectId,
-            enabled = enabled
         )
     }
 
