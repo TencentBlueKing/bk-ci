@@ -114,6 +114,7 @@ class ProjectCostAllocationService constructor(
 
             project2Status.put(englishName, status)
 
+            // 连续四周检测项目不合格，需要禁用项目
             if (shouldDisableProject(englishName)) {
                 disableProject(englishName)
                 return
@@ -142,6 +143,7 @@ class ProjectCostAllocationService constructor(
         val key = String.format(NUMBER_OF_PROJECT_ACTIVITY_CHECKS_KEY, englishName)
         val numberOfProjectActivityCheck = redisOperation.get(key)?.toInt() ?: 0
         logger.info("number of project activity check: $key | $numberOfProjectActivityCheck")
+        // 该项目已被检测过三次，此次为第四次检测，应该被禁用
         return numberOfProjectActivityCheck == 3
     }
 
