@@ -43,7 +43,7 @@ import com.tencent.devops.process.utils.BK_DOCKER_TARGE_IMAGE_NAME
 import com.tencent.devops.process.utils.BK_DOCKER_TARGE_IMAGE_TAG
 import com.tencent.devops.process.utils.PIPELINE_START_USER_ID
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
-import com.tencent.devops.store.pojo.dto.UpdateExtServiceEnvInfoDTO
+import com.tencent.devops.store.pojo.extservice.dto.UpdateExtServiceEnvInfoDTO
 import com.tencent.devops.worker.common.api.ApiFactory
 import com.tencent.devops.worker.common.api.archive.ArchiveSDKApi
 import com.tencent.devops.worker.common.api.dispatch.BcsResourceApi

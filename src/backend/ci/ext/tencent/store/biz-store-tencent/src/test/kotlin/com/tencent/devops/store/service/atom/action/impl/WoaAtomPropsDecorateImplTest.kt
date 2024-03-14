@@ -28,8 +28,9 @@
 package com.tencent.devops.store.service.atom.action.impl
 
 import com.tencent.devops.common.api.util.JsonUtil
-import com.tencent.devops.store.service.common.action.StoreDecorateFactory
-import com.tencent.devops.store.service.common.action.impl.FirstStorePropsDecorateImpl
+import com.tencent.devops.store.atom.service.action.impl.WoaAtomPropsDecorateImpl
+import com.tencent.devops.store.common.service.action.StoreDecorateFactory
+import com.tencent.devops.store.common.service.action.impl.FirstStorePropsDecorateImpl
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.Test
 
