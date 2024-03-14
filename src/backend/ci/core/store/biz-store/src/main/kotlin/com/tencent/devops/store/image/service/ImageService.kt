@@ -130,7 +130,6 @@ import org.springframework.stereotype.Service
 
 @Suppress("ALL")
 @RefreshScope
-@Service
 abstract class ImageService @Autowired constructor() {
     @Autowired
     lateinit var dslContext: DSLContext
