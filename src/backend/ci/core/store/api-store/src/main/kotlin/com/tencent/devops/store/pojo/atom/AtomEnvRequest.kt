@@ -44,7 +44,7 @@ data class AtomEnvRequest(
     @get:Schema(title = "支持插件开发语言的最低版本", required = false)
     val minVersion: String? = null,
     @get:Schema(title = "插件执行入口", required = false)
-    val target: String? = "",
+    var target: String? = "",
     @get:Schema(title = "插件SHA签名串", required = false)
     var shaContent: String? = null,
     @get:Schema(title = "插件执行前置命令", required = false)

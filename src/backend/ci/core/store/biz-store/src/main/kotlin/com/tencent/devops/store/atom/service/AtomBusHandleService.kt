@@ -43,4 +43,6 @@ interface AtomBusHandleService {
      * @return 处理后的操作系统cpu架构
      */
     fun handleOsArch(osName: String, osArch: String): String
+
+    fun handleTarget(reqTarget: String?, target: String): String
 }
