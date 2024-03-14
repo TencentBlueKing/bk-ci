@@ -109,7 +109,7 @@ class ProjectCostAllocationService constructor(
                 return
             }
 
-            val status = calculateProjectStatus(projectInfo, isActive)
+            val status = calculateProjectStatus(projectInfo.productId, isActive)
             logger.info("project($englishName) status is ${status.value}")
 
             project2Status.put(englishName, status)
@@ -127,16 +127,13 @@ class ProjectCostAllocationService constructor(
         }
     }
 
-    private fun calculateProjectStatus(projectInfo: ProjectVO, isActive: Boolean): ProjectRelateOBSProductStatusEnum {
+    private fun calculateProjectStatus(productId: Int?, isActive: Boolean): ProjectRelateOBSProductStatusEnum {
         return when {
-            isActive -> {
-                if (projectInfo.productId != null) {
-                    ProjectRelateOBSProductStatusEnum.ACTIVE_BUT_NOT_RELATE_PRODUCT
-                } else {
-                    ProjectRelateOBSProductStatusEnum.RELATE_PRODUCT_BUT_INACTIVE
-                }
-            }
-            projectInfo.productId != null -> ProjectRelateOBSProductStatusEnum.RELATE_PRODUCT_BUT_INACTIVE
+            // 活跃但未关联产品
+            isActive -> ProjectRelateOBSProductStatusEnum.ACTIVE_BUT_NOT_RELATE_PRODUCT
+            // 关联产品但不活跃
+            productId != null -> ProjectRelateOBSProductStatusEnum.RELATE_PRODUCT_BUT_INACTIVE
+            // 未关联产品且不活跃
             else -> ProjectRelateOBSProductStatusEnum.INACTIVE_AND_NOT_RELATE_PRODUCT
         }
     }
