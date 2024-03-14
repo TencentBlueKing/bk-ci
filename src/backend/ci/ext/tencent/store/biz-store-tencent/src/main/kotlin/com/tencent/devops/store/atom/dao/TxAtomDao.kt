@@ -25,7 +25,7 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.store.dao
+package com.tencent.devops.store.atom.dao
 
 import com.tencent.devops.model.store.tables.TAtom
 import org.jooq.DSLContext

@@ -32,10 +32,12 @@ import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.repository.api.ServiceGitRepositoryResource
+import com.tencent.devops.repository.api.ServiceRepositoryResource
 import com.tencent.devops.store.atom.dao.MarketAtomDao
+import com.tencent.devops.store.atom.dao.TxAtomDao
+import com.tencent.devops.store.atom.service.AtomRepositoryService
 import com.tencent.devops.store.common.dao.StoreMemberDao
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
-import com.tencent.devops.store.atom.service.AtomRepositoryService
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired

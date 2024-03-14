@@ -37,6 +37,7 @@ import com.tencent.devops.repository.api.ServiceGitRepositoryResource
 import com.tencent.devops.repository.pojo.enums.TokenTypeEnum
 import com.tencent.devops.scm.pojo.GitProjectInfo
 import com.tencent.devops.store.atom.dao.AtomDao
+import com.tencent.devops.store.atom.service.AtomRepositoryService
 import com.tencent.devops.store.pojo.atom.AtomFeatureUpdateRequest
 import com.tencent.devops.store.atom.service.TxOpAtomService
 import org.jooq.DSLContext
@@ -44,6 +45,7 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
+import java.util.concurrent.Executors
 
 /**
  * 插件OP业务逻辑类
