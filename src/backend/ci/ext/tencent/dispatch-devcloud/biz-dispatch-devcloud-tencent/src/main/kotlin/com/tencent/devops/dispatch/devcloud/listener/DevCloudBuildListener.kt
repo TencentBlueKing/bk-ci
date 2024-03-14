@@ -4,8 +4,6 @@ import com.tencent.devops.common.dispatch.sdk.listener.BuildListener
 import com.tencent.devops.common.dispatch.sdk.pojo.DispatchMessage
 import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.pipeline.type.devcloud.PublicDevCloudDispathcType
-import com.tencent.devops.common.redis.RedisLock
-import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.dispatch.devcloud.constant.DispatchDevcloudMessageCode.BK_PREPARE_CREATE_TENCENT_CLOUD_BUILD_MACHINE
 import com.tencent.devops.dispatch.devcloud.service.DcContainerPrepareHandler
@@ -21,14 +19,11 @@ import org.springframework.stereotype.Component
 
 @Component
 class DevCloudBuildListener @Autowired constructor(
-    private val redisOperation: RedisOperation,
     private val buildLogPrinter: BuildLogPrinter,
     private val dispatchDevcloudService: DispatchDevcloudService,
     private val dcContainerPrepareHandler: DcContainerPrepareHandler,
     private val dcContainerShutdownHandler: DcContainerShutdownHandler
 ) : BuildListener {
-
-    private val shutdownLockBaseKey = "dispatch_devcloud_shutdown_lock_"
 
     override fun getShutdownQueue(): String {
         return ".devcloud.public"
