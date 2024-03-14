@@ -33,7 +33,6 @@ dependencies {
     api(project(":core:common:common-audit"))
     api(project(":core:common:common-auth:common-auth-api"))
     api(project(":core:store:api-store"))
-    api(project(":core:store:api-store-image"))
     api(project(":core:artifactory:api-artifactory"))
     api(project(":core:ticket:api-ticket"))
     api(project(":core:quality:api-quality"))
