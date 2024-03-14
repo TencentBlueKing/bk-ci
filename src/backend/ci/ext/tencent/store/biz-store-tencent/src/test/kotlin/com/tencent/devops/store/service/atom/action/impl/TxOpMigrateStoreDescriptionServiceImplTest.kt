@@ -27,7 +27,7 @@
 
 package com.tencent.devops.store.service.atom.action.impl
 
-import com.tencent.devops.store.service.common.impl.TxOpMigrateStoreDescriptionServiceImpl
+import com.tencent.devops.store.common.service.impl.TxOpMigrateStoreDescriptionServiceImpl
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.Test
 

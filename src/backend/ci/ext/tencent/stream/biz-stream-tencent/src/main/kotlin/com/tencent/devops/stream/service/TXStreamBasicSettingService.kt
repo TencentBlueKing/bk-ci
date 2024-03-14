@@ -157,7 +157,9 @@ class TXStreamBasicSettingService @Autowired constructor(
                 deptId = userDeptDetail.deptId,
                 deptName = userDeptDetail.deptName,
                 centerId = userDeptDetail.centerId,
-                centerName = userDeptDetail.centerName
+                centerName = userDeptDetail.centerName,
+                businessLineId = userDeptDetail.businessLineId,
+                businessLineName = userDeptDetail.businessLineName
             )
         )
     }
