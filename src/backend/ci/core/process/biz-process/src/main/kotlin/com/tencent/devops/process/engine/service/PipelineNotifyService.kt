@@ -21,6 +21,7 @@ import org.springframework.stereotype.Service
 @Service
 class PipelineNotifyService @Autowired constructor(
     val buildVariableService: BuildVariableService,
+    val pipelineRuntimeService: PipelineRuntimeService,
     val pipelineContextService: PipelineContextService,
     val pipelineRepositoryService: PipelineRepositoryService
 ) {
@@ -46,7 +47,15 @@ class PipelineNotifyService @Autowired constructor(
             buildVariableService.getAllVariable(projectId, pipelineId, buildId)
         ).toMutableMap()
 
-        val setting = pipelineRepositoryService.getSetting(projectId, pipelineId) ?: return
+        // #8161 调试中生效调试版本的通知配置
+        val buildInfo = pipelineRuntimeService.getBuildInfo(projectId, pipelineId, buildId) ?: return
+        val setting = if (buildInfo.debug) {
+            pipelineRepositoryService.getSettingByPipelineVersion(
+                projectId, pipelineId, buildInfo.version
+            ) ?: return
+        } else {
+            pipelineRepositoryService.getSetting(projectId, pipelineId) ?: return
+        }
 
         val context = BuildNotifyContext(
             buildId = buildId,

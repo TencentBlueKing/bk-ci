@@ -103,6 +103,7 @@ import com.tencent.devops.common.pipeline.pojo.transfer.TransferActionType
 import com.tencent.devops.common.pipeline.pojo.transfer.TransferBody
 import com.tencent.devops.process.engine.dao.PipelineYamlInfoDao
 import com.tencent.devops.process.service.PipelineOperationLogService
+import com.tencent.devops.process.service.pipeline.PipelineSettingVersionService
 import com.tencent.devops.process.service.pipeline.PipelineTransferYamlService
 import com.tencent.devops.process.util.NotifyTemplateUtils
 import com.tencent.devops.process.utils.PIPELINE_MATRIX_CON_RUNNING_SIZE_MAX
@@ -148,6 +149,7 @@ class PipelineRepositoryService constructor(
     private val templatePipelineDao: TemplatePipelineDao,
     private val templateDao: TemplateDao,
     private val pipelineResourceVersionDao: PipelineResourceVersionDao,
+    private val pipelineSettingVersionService: PipelineSettingVersionService,
     private val pipelineSettingVersionDao: PipelineSettingVersionDao,
     private val pipelineViewGroupDao: PipelineViewGroupDao,
     private val versionConfigure: VersionConfigure,
@@ -632,7 +634,9 @@ class PipelineRepositoryService constructor(
         description: String?,
         pipelineAsCodeSettings: PipelineAsCodeSettings?
     ): DeployPipelineResult {
-        val onlyDraft = versionStatus == VersionStatus.COMMITTING
+        // #8161 如果只有一个分支版本的创建操作，流水线状态也为仅有草稿
+        val onlyDraft = versionStatus == VersionStatus.COMMITTING ||
+            versionStatus == VersionStatus.BRANCH
         val modelVersion = 1
         var versionNum = 1
         var pipelineVersion = 1
@@ -900,11 +904,30 @@ class PipelineRepositoryService constructor(
                     dslContext = transactionContext,
                     projectId = projectId,
                     pipelineId = pipelineId
-                ) ?: throw ErrorCodeException(
-                    statusCode = Response.Status.NOT_FOUND.statusCode,
-                    errorCode = ProcessMessageCode.ERROR_PIPELINE_NOT_EXISTS,
-                    params = arrayOf(pipelineId)
-                )
+                ) ?: run {
+                    // #8161 没有版本表数据的流水线，兜底增加一个当前版本
+                    pipelineResourceVersionDao.create(
+                        dslContext = transactionContext,
+                        projectId = projectId,
+                        pipelineId = pipelineId,
+                        creator = userId,
+                        version = releaseResource.version,
+                        model = releaseResource.model,
+                        yaml = null,
+                        baseVersion = baseVersion,
+                        versionName = releaseResource.versionName ?: PipelineVersionUtils.getVersionName(
+                            releaseResource.version, releaseResource.version, 0, 0
+                        ) ?: "",
+                        versionNum = releaseResource.versionNum,
+                        pipelineVersion = null,
+                        triggerVersion = null,
+                        settingVersion = null,
+                        versionStatus = null,
+                        branchAction = null,
+                        description = "backup"
+                    )
+                    releaseResource
+                }
                 watcher.start("updatePipelineInfo")
                 // 旧逻辑 bak —— 写入INFO表后进行了version的自动+1
                 // 新逻辑 #8161
@@ -1328,10 +1351,7 @@ class PipelineRepositoryService constructor(
                 dslContext = context,
                 projectId = projectId,
                 pipelineId = pipelineId
-            ) ?: throw ErrorCodeException(
-                statusCode = Response.Status.NOT_FOUND.statusCode,
-                errorCode = ProcessMessageCode.ERROR_NO_PIPELINE_VERSION_EXISTS_BY_ID
-            )
+            ) ?: releaseResource
             // 获取目标的版本用于更新草稿
             val targetVersion = pipelineResourceVersionDao.getVersionResource(
                 dslContext = context,
@@ -1584,6 +1604,25 @@ class PipelineRepositoryService constructor(
 
     fun getSetting(projectId: String, pipelineId: String): PipelineSetting? {
         return pipelineSettingDao.getSetting(dslContext, projectId, pipelineId)
+    }
+
+    fun getSettingByPipelineVersion(
+        projectId: String,
+        pipelineId: String,
+        pipelineVersion: Int
+    ): PipelineSetting? {
+        val resource = pipelineResourceVersionDao.getPipelineVersionSimple(
+            dslContext, projectId, pipelineId, pipelineVersion
+        )
+        return resource?.settingVersion?.let {
+            pipelineSettingVersionService.getPipelineSetting(
+                projectId = projectId,
+                pipelineId = pipelineId,
+                userId = null,
+                detailInfo = null,
+                version = it
+            )
+        } ?: pipelineSettingDao.getSetting(dslContext, projectId, pipelineId)
     }
 
     fun saveSetting(

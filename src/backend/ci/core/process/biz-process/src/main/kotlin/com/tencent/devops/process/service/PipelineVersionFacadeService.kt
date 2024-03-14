@@ -653,7 +653,7 @@ class PipelineVersionFacadeService @Autowired constructor(
         page: Int,
         pageSize: Int,
         fromVersion: Int?,
-        versionName: String?,
+        versionName: String? = null,
         creator: String? = null,
         description: String? = null
     ): Page<PipelineVersionWithInfo> {

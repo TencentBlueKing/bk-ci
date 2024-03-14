@@ -47,9 +47,7 @@ import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildLessAto
 import com.tencent.devops.common.pipeline.pojo.setting.PipelineSetting
 import com.tencent.devops.common.pipeline.pojo.setting.Subscription
 import com.tencent.devops.process.constant.ProcessMessageCode
-import com.tencent.devops.process.constant.ProcessMessageCode.BK_INCORRECT_NOTIFICATION_METHOD
-import com.tencent.devops.process.constant.ProcessMessageCode.BK_INVALID_NOTIFICATION_RECIPIENT
-import com.tencent.devops.process.constant.ProcessMessageCode.BK_MESSAGE_CONTENT_EMPTY
+import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_INCORRECT_NOTIFICATION_MESSAGE_CONTENT
 import com.tencent.devops.process.engine.atom.AtomUtils
 import com.tencent.devops.process.engine.common.Timeout
 import com.tencent.devops.process.engine.utils.PipelineUtils
@@ -173,19 +171,16 @@ open class DefaultModelCheckPlugin constructor(
 
     private fun List<Subscription>.checkSubscriptionList() {
         this.forEach { subscription ->
-            if (subscription.types.isEmpty()) {
-                throw ErrorCodeException(
-                    errorCode = BK_INCORRECT_NOTIFICATION_METHOD
-                )
-            }
-            if (subscription.users.isBlank()) {
-                throw ErrorCodeException(
-                    errorCode = BK_INVALID_NOTIFICATION_RECIPIENT
-                )
-            }
+            // #8161 历史数据可能存在没有加通知类型的情况，暂时不加检查
+            //
+//            if (subscription.types.isEmpty()) {
+//                throw ErrorCodeException(
+//                    errorCode = ERROR_INCORRECT_NOTIFICATION_TYPE
+//                )
+//            }
             if (subscription.content.isBlank()) {
                 throw ErrorCodeException(
-                    errorCode = BK_MESSAGE_CONTENT_EMPTY
+                    errorCode = ERROR_INCORRECT_NOTIFICATION_MESSAGE_CONTENT
                 )
             }
         }

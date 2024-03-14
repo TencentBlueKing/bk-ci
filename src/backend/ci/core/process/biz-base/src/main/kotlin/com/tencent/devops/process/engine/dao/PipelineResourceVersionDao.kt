@@ -402,6 +402,7 @@ class PipelineResourceVersionDao {
         dslContext: DSLContext,
         projectId: String,
         pipelineId: String,
+        versionName: String?,
         creator: String?,
         description: String?
     ): Int {
@@ -413,6 +414,12 @@ class PipelineResourceVersionDao {
                     BRANCH_ACTION.ne(BranchVersionAction.INACTIVE.name)
                         .or(BRANCH_ACTION.isNull)
                 )
+            versionName?.let {
+                query.and(
+                    VERSION.like("%$versionName%")
+                        .or(VERSION_NAME.like("%$versionName%"))
+                )
+            }
             creator?.let { query.and(CREATOR.eq(creator)) }
             description?.let { query.and(DESCRIPTION.like("%$description%")) }
             return query.fetchOne(0, Int::class.java)!!
@@ -467,18 +474,9 @@ class PipelineResourceVersionDao {
         version: Int
     ): PipelineVersionSimple? {
         with(T_PIPELINE_RESOURCE_VERSION) {
-            return dslContext.select(
-                PIPELINE_ID,
-                CREATOR,
-                CREATE_TIME,
-                VERSION,
-                VERSION_NAME,
-                REFER_FLAG,
-                REFER_COUNT
-            )
-                .from(this)
+            return dslContext.selectFrom(this)
                 .where(PIPELINE_ID.eq(pipelineId).and(PROJECT_ID.eq(projectId)).and(VERSION.eq(version)))
-                .fetchOneInto(PipelineVersionSimple::class.java)
+                .fetchAny(sampleMapper)
         }
     }
 

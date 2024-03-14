@@ -107,7 +107,7 @@ class ModelTransfer @Autowired constructor(
     }
 
     private fun yamlNotice2Setting(projectId: String, notices: List<Notices>?): List<Subscription> {
-        if (notices.isNullOrEmpty()) return listOf(Subscription())
+        if (notices.isNullOrEmpty()) return listOf()
         return notices.map {
             val res = it.toSubscription()
             prepareModelGroups(projectId, res)

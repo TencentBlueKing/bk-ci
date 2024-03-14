@@ -40,6 +40,7 @@ import com.tencent.devops.process.engine.dao.PipelineResourceVersionDao
 import com.tencent.devops.process.engine.pojo.PipelineInfo
 import com.tencent.devops.process.engine.pojo.PipelineVersionWithInfo
 import com.tencent.devops.process.pojo.setting.PipelineVersionSimple
+import com.tencent.devops.process.utils.PipelineVersionUtils
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.springframework.stereotype.Service
@@ -189,6 +190,7 @@ class PipelineRepositoryVersionService(
             dslContext = dslContext,
             projectId = projectId,
             pipelineId = pipelineId,
+            versionName = versionName,
             creator = creator,
             description = description
         )
@@ -219,7 +221,9 @@ class PipelineRepositoryVersionService(
                         createTime = record.createTime.timestampmilli(),
                         updateTime = record.updateTime?.timestampmilli(),
                         version = record.version,
-                        versionName = record.versionName ?: "",
+                        versionName = record.versionName ?: PipelineVersionUtils.getVersionName(
+                            record.version, record.version, 0, 0
+                        ) ?: "",
                         referFlag = record.referFlag,
                         referCount = record.referCount,
                         versionNum = record.versionNum ?: record.version,
@@ -240,9 +244,9 @@ class PipelineRepositoryVersionService(
             val baseVersion = it.baseVersion
             list.add(
                 PipelineVersionWithInfo(
-                    createTime = pipelineInfo.createTime,
+                    createTime = it.createTime,
                     updateTime = it.updateTime,
-                    creator = pipelineInfo.creator,
+                    creator = it.creator,
                     canElementSkip = pipelineInfo.canElementSkip,
                     canManualStartup = pipelineInfo.canManualStartup,
                     channelCode = pipelineInfo.channelCode,
