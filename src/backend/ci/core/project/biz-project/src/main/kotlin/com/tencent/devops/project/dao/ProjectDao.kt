@@ -52,6 +52,7 @@ import org.jooq.DSLContext
 import org.jooq.Record
 import org.jooq.Record1
 import org.jooq.Record3
+import org.jooq.Record4
 import org.jooq.Result
 import org.jooq.impl.DSL
 import org.springframework.stereotype.Repository
@@ -799,9 +800,9 @@ class ProjectDao {
     fun getProjectListByProductId(
         dslContext: DSLContext,
         productId: Int
-    ): Result<Record3<String, String, Boolean>> {
+    ): Result<Record4<Long, String, String, Boolean>> {
         return with(TProject.T_PROJECT) {
-            dslContext.select(ENGLISH_NAME, PROJECT_NAME, ENABLED).from(this)
+            dslContext.select(ID, ENGLISH_NAME, PROJECT_NAME, ENABLED).from(this)
                 .where(PRODUCT_ID.eq(productId)).fetch()
         }
     }

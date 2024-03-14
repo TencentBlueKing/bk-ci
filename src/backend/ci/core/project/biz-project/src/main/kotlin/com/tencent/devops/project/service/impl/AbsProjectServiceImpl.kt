@@ -1357,9 +1357,10 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
             productId = productId
         ).map {
             ProjectBaseInfo(
-                englishName = it.value1(),
-                projectName = it.value2(),
-                enabled = it.value3()
+                id = it.value1(),
+                englishName = it.value2(),
+                projectName = it.value3(),
+                enabled = it.value4()
             )
         }
     }
