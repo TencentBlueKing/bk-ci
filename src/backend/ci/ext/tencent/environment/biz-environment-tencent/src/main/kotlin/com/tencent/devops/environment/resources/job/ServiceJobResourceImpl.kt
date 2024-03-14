@@ -53,7 +53,6 @@ import com.tencent.devops.environment.pojo.job.jobresp.TaskTerminateResult
 import com.tencent.devops.environment.service.job.JobService
 import com.tencent.devops.environment.service.job.OpService
 import com.tencent.devops.environment.service.job.PermissionManageService
-import com.tencent.devops.environment.service.job.StockDataUpdateService
 import com.tencent.devops.environment.service.job.TencentStockDataUpdateService
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
