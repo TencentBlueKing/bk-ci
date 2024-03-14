@@ -83,7 +83,7 @@ data class LinuxPaasCodeCCScriptElement(
     override fun getClassType() =
         classType
 
-    constructor(): this(
+    constructor() : this(
         name = "",
         id = "",
         status = null,

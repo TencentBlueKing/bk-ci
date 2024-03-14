@@ -28,5 +28,3 @@
 dependencies {
     api(project(":ext:tencent:store:biz-store-tencent"))
 }
-
-

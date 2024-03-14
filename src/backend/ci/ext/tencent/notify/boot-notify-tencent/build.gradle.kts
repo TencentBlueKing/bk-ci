@@ -28,5 +28,3 @@
 dependencies {
     api(project(":ext:tencent:notify:biz-notify-tencent")) // 内部版实现
 }
-
-

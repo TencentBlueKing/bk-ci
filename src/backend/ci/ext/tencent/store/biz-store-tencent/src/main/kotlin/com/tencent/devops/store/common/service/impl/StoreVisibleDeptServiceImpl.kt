@@ -152,7 +152,7 @@ class StoreVisibleDeptServiceImpl @Autowired constructor(
                 deptId = it.deptId,
                 storeType = storeType.type.toByte()
             )
-            if (count>0) {
+            if (count> 0) {
                 return@forEach
             }
             deptIdApprovedList.add(it)

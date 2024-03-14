@@ -40,9 +40,9 @@ import com.tencent.devops.repository.pojo.RepositoryId
 import com.tencent.devops.repository.pojo.RepositoryInfo
 import com.tencent.devops.repository.pojo.RepositoryInfoWithPermission
 import com.tencent.devops.repository.pojo.enums.Permission
-import io.swagger.v3.oas.annotations.tags.Tag
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
+import io.swagger.v3.oas.annotations.tags.Tag
 import javax.ws.rs.Consumes
 import javax.ws.rs.DELETE
 import javax.ws.rs.GET
@@ -244,4 +244,15 @@ interface ServiceRepositoryResource {
         @Parameter(description = "插件代码库关联关系")
         atomRefRepositoryInfo: List<AtomRefRepositoryInfo>
     ): Result<Boolean>
+
+    @Operation(summary = "根据代码库哈希ID查询GIT项目ID")
+    @POST
+    @Path("/git/project/retrieve")
+    fun getGitProjectIdByRepositoryHashId(
+        @Parameter(description = "用户ID", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "代码库哈希ID列表", required = true)
+        repositoryHashIdList: List<String>
+    ): Result<List<String>>
 }
