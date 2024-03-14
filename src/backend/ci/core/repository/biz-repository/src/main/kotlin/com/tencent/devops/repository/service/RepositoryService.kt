@@ -1187,6 +1187,10 @@ class RepositoryService @Autowired constructor(
         }
     }
 
+    fun getGitProjectIdByRepositoryHashId(userId: String, repositoryHashIdList: List<String>): List<String> {
+        return repositoryDao.getGitProjectIdByRepositoryHashId(dslContext, repositoryHashIdList)
+    }
+
     companion object {
         private val logger = LoggerFactory.getLogger(RepositoryService::class.java)
         const val MAX_ALIAS_LENGTH = 255
