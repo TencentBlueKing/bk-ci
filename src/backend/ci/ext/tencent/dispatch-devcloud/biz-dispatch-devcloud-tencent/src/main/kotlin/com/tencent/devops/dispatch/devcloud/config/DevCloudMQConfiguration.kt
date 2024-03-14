@@ -194,7 +194,7 @@ class DevCloudMQConfiguration @Autowired constructor() {
             rabbitAdmin = rabbitAdmin,
             startConsumerMinInterval = 10000,
             consecutiveActiveTrigger = 5,
-            concurrency = 60,
+            concurrency = 100,
             maxConcurrency = 100,
             adapter = adapter,
             prefetchCount = 1
