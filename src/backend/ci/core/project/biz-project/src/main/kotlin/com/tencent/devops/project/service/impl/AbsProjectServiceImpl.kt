@@ -59,7 +59,6 @@ import com.tencent.devops.common.auth.api.pojo.ResourceRegisterInfo
 import com.tencent.devops.common.auth.api.pojo.SubjectScopeInfo
 import com.tencent.devops.common.auth.code.ProjectAuthServiceCode
 import com.tencent.devops.common.client.Client
-import com.tencent.devops.common.client.ClientTokenService
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.Profile
 import com.tencent.devops.common.service.utils.LogUtils
@@ -136,7 +135,6 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
     private val objectMapper: ObjectMapper,
     private val projectExtService: ProjectExtService,
     private val projectApprovalService: ProjectApprovalService,
-    private val clientTokenService: ClientTokenService,
     private val profile: Profile,
     private val projectUpdateHistoryDao: ProjectUpdateHistoryDao
 ) : ProjectService {
@@ -1426,6 +1424,10 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
                 enabled = it.value4()
             )
         }
+    }
+
+    override fun getExistedEnglishName(englishNameList: List<String>): List<String>? {
+        return projectDao.getExistedEnglishName(dslContext, englishNameList)
     }
 
     abstract fun validatePermission(projectCode: String, userId: String, permission: AuthPermission): Boolean

@@ -27,12 +27,12 @@
 
 package com.tencent.devops.environment.service.job
 
+import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.environment.pojo.job.jobreq.OpOperateReq
 import com.tencent.devops.environment.pojo.job.jobresp.OpOperateResult
 import com.tencent.devops.environment.pojo.job.jobresp.ProjectOpInfo
-import com.tencent.devops.misc.service.project.ProjectMiscService
-import org.jooq.DSLContext
+import com.tencent.devops.project.api.service.ServiceProjectResource
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -42,8 +42,7 @@ import org.springframework.stereotype.Service
 @Service("OpService")
 class OpService @Autowired constructor(
     private val redisOperation: RedisOperation,
-    private val dslContext: DSLContext,
-    private val projectMiscService: ProjectMiscService
+    private val client: Client
 ) {
     companion object {
         val logger: Logger = LoggerFactory.getLogger(OpService::class.java)
@@ -373,8 +372,8 @@ class OpService @Autowired constructor(
      */
     private fun queryProjExist(projectCodeList: List<String>?): OpOperateResult? {
         return if (!projectCodeList.isNullOrEmpty()) {
-            val existedProject = projectMiscService.getExistedEnglishName(dslContext, projectCodeList)
-            val notExistedProject = projectCodeList.filterNot { existedProject.contains(it) }
+            val existedProject = client.get(ServiceProjectResource::class).getExistedEnglishName(projectCodeList).data
+            val notExistedProject = projectCodeList.filterNot { existedProject?.contains(it) ?: false }
             if (notExistedProject.isNotEmpty()) {
                 OpOperateResult(
                     code = INVALID_PROJECT_CODE,

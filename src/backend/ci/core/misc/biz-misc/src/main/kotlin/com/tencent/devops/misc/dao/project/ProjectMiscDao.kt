@@ -38,7 +38,6 @@ import org.springframework.stereotype.Repository
 
 @Repository
 class ProjectMiscDao {
-
     fun getMinId(
         dslContext: DSLContext,
         projectIdList: List<String>? = null
@@ -91,15 +90,6 @@ class ProjectMiscDao {
                 ENGLISH_NAME.`as`("ENGLISH_NAME"),
                 CHANNEL.`as`("CHANNEL")
             ).from(this).where(conditions).fetch()
-        }
-    }
-
-    fun getExistedEnglishName(dslContext: DSLContext, englishNameList: List<String>): List<String> {
-        with(TProject.T_PROJECT) {
-            return dslContext.select(ENGLISH_NAME)
-                .from(this)
-                .where(ENGLISH_NAME.`in`(englishNameList))
-                .fetch(ENGLISH_NAME, String::class.java)
         }
     }
 }
