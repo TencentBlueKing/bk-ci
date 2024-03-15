@@ -46,90 +46,106 @@ import com.tencent.devops.sign.service.AsyncSignService
 import com.tencent.devops.sign.service.DownloadService
 import com.tencent.devops.sign.service.SignInfoService
 import com.tencent.devops.sign.service.SignService
-import java.io.InputStream
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
+import java.io.InputStream
 
 @RestResource
 @Suppress("LongParameterList")
-class UserIpaResourceImpl @Autowired constructor(
-    private val signService: SignService,
-    private val syncSignService: AsyncSignService,
-    private val downloadService: DownloadService,
-    private val signInfoService: SignInfoService,
-    private val objectMapper: ObjectMapper,
-    private val authPermissionApi: AuthPermissionApi,
-    private val pipelineAuthServiceCode: PipelineAuthServiceCode
-) : UserIpaResource {
-
-    override fun ipaSign(
-        userId: String,
-        ipaSignInfoHeader: String,
-        ipaInputStream: InputStream
-    ): Result<String?> {
-        val resignId = "s-${UUIDUtil.generate()}"
-        val ipaSignInfo = signInfoService.check(signInfoService.decodeIpaSignInfo(ipaSignInfoHeader, objectMapper))
-        if (!checkParams(ipaSignInfo, userId)) {
-            logger.warn("User ($userId) does not have permission to initiate iOS enterprise resignature in " +
-                    "pipeline (${ipaSignInfo.pipelineId}) of project (${ipaSignInfo.projectId}).")
-            throw PermissionForbiddenException(
-                message = MessageUtil.getMessageByLocale(
-                    messageCode = IOS_ENTERPRISE_RESIGNATURE,
-                    language = I18nUtil.getLanguage(userId),
-                    params = arrayOf(userId, ipaSignInfo.projectId, ipaSignInfo.pipelineId.toString())
-                ))
+class UserIpaResourceImpl
+    @Autowired
+    constructor(
+        private val signService: SignService,
+        private val syncSignService: AsyncSignService,
+        private val downloadService: DownloadService,
+        private val signInfoService: SignInfoService,
+        private val objectMapper: ObjectMapper,
+        private val authPermissionApi: AuthPermissionApi,
+        private val pipelineAuthServiceCode: PipelineAuthServiceCode
+    ) : UserIpaResource {
+        override fun ipaSign(
+            userId: String,
+            ipaSignInfoHeader: String,
+            ipaInputStream: InputStream
+        ): Result<String?> {
+            val resignId = "s-${UUIDUtil.generate()}"
+            val ipaSignInfo = signInfoService.check(signInfoService.decodeIpaSignInfo(ipaSignInfoHeader, objectMapper))
+            if (!checkParams(ipaSignInfo, userId)) {
+                logger.warn(
+                    "User ($userId) does not have permission to initiate iOS enterprise resignature in " +
+                        "pipeline (${ipaSignInfo.pipelineId}) of project (${ipaSignInfo.projectId})."
+                )
+                throw PermissionForbiddenException(
+                    message =
+                        MessageUtil.getMessageByLocale(
+                            messageCode = IOS_ENTERPRISE_RESIGNATURE,
+                            language = I18nUtil.getLanguage(userId),
+                            params = arrayOf(userId, ipaSignInfo.projectId, ipaSignInfo.pipelineId.toString())
+                        )
+                )
+            }
+            var taskExecuteCount = 1
+            try {
+                val (ipaFile, taskExecuteCount2) =
+                    signService.uploadIpaAndDecodeInfo(resignId, ipaSignInfo, ipaSignInfoHeader, ipaInputStream)
+                taskExecuteCount = taskExecuteCount2
+                syncSignService.asyncSign(resignId, ipaSignInfo, ipaFile, taskExecuteCount)
+                return Result(resignId)
+            } catch (ignored: Exception) {
+                signInfoService.failResign(
+                    resignId = resignId,
+                    info = ipaSignInfo,
+                    executeCount = taskExecuteCount,
+                    message = ignored.message ?: "Start sign task with exception"
+                )
+                throw ignored
+            }
         }
-        var taskExecuteCount = 1
-        try {
-            val (ipaFile, taskExecuteCount2) =
-                signService.uploadIpaAndDecodeInfo(resignId, ipaSignInfo, ipaSignInfoHeader, ipaInputStream)
-            taskExecuteCount = taskExecuteCount2
-            syncSignService.asyncSign(resignId, ipaSignInfo, ipaFile, taskExecuteCount)
-            return Result(resignId)
-        } catch (ignored: Exception) {
-            signInfoService.failResign(
-                resignId = resignId,
-                info = ipaSignInfo,
-                executeCount = taskExecuteCount,
-                message = ignored.message ?: "Start sign task with exception"
+
+        override fun getSignStatus(
+            userId: String,
+            resignId: String
+        ): Result<String> {
+            return Result(signService.getSignStatus(resignId).getValue())
+        }
+
+        override fun getSignDetail(
+            userId: String,
+            resignId: String
+        ): Result<SignDetail> {
+            return Result(signService.getSignDetail(resignId))
+        }
+
+        override fun downloadUrl(
+            userId: String,
+            resignId: String
+        ): Result<String> {
+            return Result(
+                downloadService.getDownloadUrl(
+                    userId = userId,
+                    resignId = resignId,
+                    downloadType = "user"
+                )
             )
-            throw ignored
+        }
+
+        private fun checkParams(
+            ipaSignInfo: IpaSignInfo,
+            userId: String
+        ): Boolean {
+            val projectId = ipaSignInfo.projectId
+            val pipelineId = ipaSignInfo.pipelineId ?: ""
+            return authPermissionApi.validateUserResourcePermission(
+                user = userId,
+                serviceCode = pipelineAuthServiceCode,
+                resourceType = AuthResourceType.PIPELINE_DEFAULT,
+                projectCode = projectId,
+                resourceCode = pipelineId,
+                permission = AuthPermission.EXECUTE
+            )
+        }
+
+        companion object {
+            private val logger = LoggerFactory.getLogger(UserIpaResourceImpl::class.java)
         }
     }
-
-    override fun getSignStatus(userId: String, resignId: String): Result<String> {
-        return Result(signService.getSignStatus(resignId).getValue())
-    }
-
-    override fun getSignDetail(userId: String, resignId: String): Result<SignDetail> {
-        return Result(signService.getSignDetail(resignId))
-    }
-
-    override fun downloadUrl(userId: String, resignId: String): Result<String> {
-        return Result(downloadService.getDownloadUrl(
-            userId = userId,
-            resignId = resignId,
-            downloadType = "user")
-        )
-    }
-
-    private fun checkParams(
-        ipaSignInfo: IpaSignInfo,
-        userId: String
-    ): Boolean {
-        val projectId = ipaSignInfo.projectId
-        val pipelineId = ipaSignInfo.pipelineId ?: ""
-        return authPermissionApi.validateUserResourcePermission(
-            user = userId,
-            serviceCode = pipelineAuthServiceCode,
-            resourceType = AuthResourceType.PIPELINE_DEFAULT,
-            projectCode = projectId,
-            resourceCode = pipelineId,
-            permission = AuthPermission.EXECUTE
-        )
-    }
-
-    companion object {
-        private val logger = LoggerFactory.getLogger(UserIpaResourceImpl::class.java)
-    }
-}

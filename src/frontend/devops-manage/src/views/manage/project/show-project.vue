@@ -14,9 +14,9 @@ Message,
 Popover,
 } from 'bkui-vue';
 import {
-  ref,
-  watch,
-  computed,
+ref,
+watch,
+computed,
 } from 'vue';
 import { useI18n } from 'vue-i18n';
 import {
@@ -39,13 +39,15 @@ const exceptionObj = ref({
   type: '',
   title: '',
   description: '',
-  showBtn: false
-})
+  showBtn: false,
+});
+const showFailedEnableDialog = ref(false);
+const showDisableProjectDialog = ref(false);
 const isRbac = computed(() => {
   return authProvider.value === 'rbac'
 })
-const authProvider = ref(window.top.BK_CI_AUTH_PROVIDER || '')
-const projectList = window.parent?.vuexStore.state.projectList || [];
+const authProvider = ref(window.top.BK_CI_AUTH_PROVIDER || '');
+const projectList: any[] = [];
 const fetchProjectData = async () => {
   isLoading.value = true;
   await http
@@ -443,7 +445,7 @@ onMounted(async () => {
                     </span>
                   </div>
                 </bk-form-item>
-                <bk-form-item v-if="isRbac" :label="t('项目性质')" property="authSecrecy">
+                <bk-form-item :label="t('项目性质')" property="authSecrecy">
                   <span class="item-value">{{ projectData.authSecrecy ? t('保密项目') : t('私有项目') }}</span>
                   <div class="diff-content" v-if="projectData.afterAuthSecrecy">
                     <p class="update-title">

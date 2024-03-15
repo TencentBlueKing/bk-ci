@@ -37,9 +37,9 @@ import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.process.pojo.pipeline.ExtServiceBuildInitPipelineReq
 import com.tencent.devops.process.pojo.pipeline.ExtServiceBuildInitPipelineResp
 import com.tencent.devops.process.service.builds.PipelineBuildFacadeService
-import com.tencent.devops.store.pojo.dto.ExtServiceBaseInfoDTO
-import com.tencent.devops.store.pojo.dto.ExtServiceImageInfoDTO
-import com.tencent.devops.store.pojo.enums.ExtServiceStatusEnum
+import com.tencent.devops.store.pojo.extservice.dto.ExtServiceBaseInfoDTO
+import com.tencent.devops.store.pojo.extservice.dto.ExtServiceImageInfoDTO
+import com.tencent.devops.store.pojo.extservice.enums.ExtServiceStatusEnum
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service

@@ -59,6 +59,7 @@ import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.model.project.tables.records.TProjectRecord
 import com.tencent.devops.project.constant.ProjectMessageCode
 import com.tencent.devops.project.dao.ProjectDao
+import com.tencent.devops.project.dao.ProjectUpdateHistoryDao
 import com.tencent.devops.project.dispatch.ProjectDispatcher
 import com.tencent.devops.project.jmx.api.ProjectJmxApi
 import com.tencent.devops.project.pojo.AuthProjectForList
@@ -126,7 +127,8 @@ class TxProjectServiceImpl @Autowired constructor(
     projectJmxApi: ProjectJmxApi,
     redisOperation: RedisOperation,
     client: Client,
-    clientTokenService: ClientTokenService
+    clientTokenService: ClientTokenService,
+    projectUpdateHistoryDao: ProjectUpdateHistoryDao
 ) : AbsProjectServiceImpl(
     projectPermissionService = projectPermissionService,
     dslContext = dslContext,
@@ -142,7 +144,8 @@ class TxProjectServiceImpl @Autowired constructor(
     projectExtService = projectExtService,
     projectApprovalService = projectApprovalService,
     clientTokenService = clientTokenService,
-    profile = profile
+    profile = profile,
+    projectUpdateHistoryDao = projectUpdateHistoryDao
 ) {
 
     @Value("\${iam.v0.url:#{null}}")

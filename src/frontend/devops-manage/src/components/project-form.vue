@@ -2,17 +2,17 @@
 import http from '@/http/api';
 import { Message, Popover } from 'bkui-vue';
 import {
-EditLine,
+  EditLine,
 } from 'bkui-vue/lib/icon';
 import {
-computed,
-getCurrentInstance,
-nextTick,
-onBeforeUnmount,
-onMounted,
-ref,
-shallowRef,
-watch,
+  computed,
+  getCurrentInstance,
+  nextTick,
+  onBeforeUnmount,
+  onMounted,
+  ref,
+  shallowRef,
+  watch,
 } from 'vue';
 import { useI18n } from 'vue-i18n';
 import IAMIframe from './IAM-Iframe';
@@ -46,11 +46,11 @@ const logoFiles = computed(() => {
   }
   return files;
 });
-const isRbac = computed(() => {
-  return authProvider.value === 'rbac'
-})
-const authProvider = ref(window.top.BK_CI_AUTH_PROVIDER || '')
-const projectForm = ref(null);
+const englishNameReg = /^[a-z][a-z0-9-]{1,32}$/;
+const inited = ref(false);
+const authProvider = ref(window.top.BK_CI_AUTH_PROVIDER || '');
+const isRbac = computed(() => authProvider.value === 'rbac');
+const projectForm = ref<any>(null);
 const iframeRef = ref(null);
 const operationalList = ref([]);
 const vm = getCurrentInstance();

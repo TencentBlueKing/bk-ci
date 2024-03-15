@@ -242,7 +242,7 @@
     } from '@/utils/permission'
     import { mapActions } from 'vuex'
     import ApplyProjectDialog from '../components/ApplyProjectDialog/index.vue'
-    
+
     const PROJECT_SORT_FILED = {
         projectName: 'PROJECT_NAME',
         englishName: 'ENGLISH_NAME'
@@ -634,7 +634,7 @@
                 background-color: #3C96FF;
             }
         }
-        
+
     }
     .biz-pm-form {
         margin: 0 auto 15px auto;
