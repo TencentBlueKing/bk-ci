@@ -33,9 +33,7 @@ import com.tencent.devops.artifactory.constant.BKREPO_STORE_PROJECT_ID
 import com.tencent.devops.artifactory.constant.REPO_NAME_PLUGIN
 import java.net.URLEncoder
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
-import org.springframework.stereotype.Service
 
-@Service
 @ConditionalOnMissingBean(StoreI18nMessageServiceImpl::class)
 class SampleStoreI18nMessageServiceImpl : StoreI18nMessageServiceImpl() {
 

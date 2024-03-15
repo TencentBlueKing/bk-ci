@@ -45,9 +45,7 @@ import java.io.File
 import java.net.URLEncoder
 import org.slf4j.LoggerFactory
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
-import org.springframework.stereotype.Service
 
-@Service
 @ConditionalOnMissingBean(StoreFileService::class)
 class SampleStoreFileServiceImpl : StoreFileService() {
 
