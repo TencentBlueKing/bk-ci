@@ -7,12 +7,12 @@ import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.auth.api.service.ServiceMonitorSpaceResource
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
-import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.notify.enums.NotifyType
 import com.tencent.devops.notify.api.service.ServiceNotifyMessageTemplateResource
 import com.tencent.devops.notify.pojo.SendNotifyMessageTemplateRequest
 import com.tencent.devops.project.dao.ProjectDao
+import com.tencent.devops.project.dao.RemoteDevDao
 import com.tencent.devops.project.pojo.ProjectProperties
 import okhttp3.Headers.Companion.toHeaders
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
@@ -34,7 +34,8 @@ class ProjectRemoteDevService @Autowired constructor(
     private val objectMapper: ObjectMapper,
     private val client: Client,
     private val dslContext: DSLContext,
-    private val projectDao: ProjectDao
+    private val projectDao: ProjectDao,
+    private val remoteDevDao: RemoteDevDao
 ) {
 
     @Value("\${remoteDev.appCode:}")
@@ -257,25 +258,12 @@ class ProjectRemoteDevService @Autowired constructor(
     }
 
     fun fetchRemoteDevProject(projectId: String?): Map<String, String> {
-        val sqlLimit = PageUtil.convertPageSizeToSQLLimit(1, 10000)
-        val projects = projectDao.getProjectList(
+        val projects = remoteDevDao.fetchProjectEnableRemoteDev(
             dslContext = dslContext,
-            projectName = null,
             englishName = projectId,
-            projectType = null,
-            isSecrecy = null,
-            creator = null,
-            approver = null,
-            approvalStatus = null,
-            offset = sqlLimit.offset,
-            limit = sqlLimit.limit,
-            routerTag = null,
-            otherRouterTagMaps = null,
-            remoteDevFlag = true,
-            productId = null
         )
 
-        return projects.map { it.englishName to it.projectName }.toMap()
+        return projects.associate { it.englishName to it.projectName }
     }
 
     companion object {
