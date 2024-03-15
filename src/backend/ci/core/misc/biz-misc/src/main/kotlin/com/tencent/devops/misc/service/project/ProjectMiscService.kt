@@ -38,13 +38,6 @@ class ProjectMiscService @Autowired constructor(
     private val dslContext: DSLContext,
     private val projectMiscDao: ProjectMiscDao
 ) {
-    fun getExistedEnglishName(
-        dslContext: DSLContext,
-        englishNameList: List<String>
-    ): List<String> {
-        return projectMiscDao.getExistedEnglishName(dslContext, englishNameList)
-    }
-
     fun getMinId(
         projectIdList: List<String>? = null
     ): Long? {
