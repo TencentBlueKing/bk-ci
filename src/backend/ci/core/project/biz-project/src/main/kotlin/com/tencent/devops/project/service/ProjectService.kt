@@ -96,13 +96,6 @@ interface ProjectService {
     ): ProjectVO?
 
     /**
-     * 根据项目ID/英文ID获取项目信息对象---用于OPEN接口
-     * @param englishName projectCode 英文ID
-     * @return ProjectVO 如果没有则为null
-     */
-    fun getByEnglishNameWithoutPerm(englishName: String): ProjectVO?
-
-    /**
      * 根据项目ID/英文ID获取项目信息对象
      * @param englishName projectCode 英文ID
      * @return ProjectVO 如果没有则为null
@@ -260,7 +253,8 @@ interface ProjectService {
 
     fun updateProjectProductId(
         englishName: String,
-        productName: String
+        productName: String? = null,
+        productId: Int? = null
     )
 
     fun updateOrganizationByEnglishName(
@@ -271,4 +265,8 @@ interface ProjectService {
     fun fixProjectOrganization(
         tProjectRecord: TProjectRecord
     ): ProjectOrganizationInfo
+
+    fun getProjectListByProductId(
+        productId: Int
+    ): List<ProjectBaseInfo>
 }

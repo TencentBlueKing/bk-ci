@@ -89,7 +89,7 @@ class DockerHostUtils @Autowired constructor(
 
         // 获取负载配置
         val dockerHostLoadConfigTriple = getLoadConfig()
-        logger.info("Docker host load config: ${JsonUtil.toJson(dockerHostLoadConfigTriple)}")
+        logger.debug("Docker host load config: ${JsonUtil.toJson(dockerHostLoadConfigTriple)}")
 
         // 先取容量负载比较小的，同时满足负载条件的（负载阈值具体由OP平台配置)，从满足的节点中随机选择一个
         val firstPair = dockerLoadCheck(
