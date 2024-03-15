@@ -150,7 +150,10 @@
             ]),
             async exec (debug) {
                 if (debug && this.isEditing) {
-                    await this.saveDraft()
+                    const result = await this.saveDraft()
+                    if (!result) {
+                        return
+                    }
                 }
                 this.$router.push({
                     name: 'executePreview',
