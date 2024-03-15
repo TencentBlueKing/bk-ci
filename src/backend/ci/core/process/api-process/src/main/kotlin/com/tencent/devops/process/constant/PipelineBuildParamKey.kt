@@ -77,6 +77,7 @@ object PipelineBuildParamKey {
 
     // 流水线基础变量
     const val CI_BUILD_NO = "ci.build-no"
+    const val CI_BUILD_NUM = "ci.build_num"
     const val CI_PIPELINE_CREATOR = "ci.pipeline_creator"
     const val CI_PIPELINE_MODIFIER = "ci.pipeline_modifier"
     const val CI_PIPELINE_VERSION = "ci.pipeline_version"
@@ -85,4 +86,5 @@ object PipelineBuildParamKey {
     const val CI_BUILD_START_TYPE = "ci.build_start_type"
     const val CI_PIPELINE_ID = "ci.pipeline_id"
     const val CI_BUILD_ID = "ci.build_id"
+    const val CI_PIPELINE_NAME = "ci.pipeline_name"
 }

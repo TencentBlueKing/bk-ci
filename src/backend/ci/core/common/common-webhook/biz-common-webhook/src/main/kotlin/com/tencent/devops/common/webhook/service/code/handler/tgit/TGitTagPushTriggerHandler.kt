@@ -40,6 +40,7 @@ import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_TAG_FROM
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_TAG_MESSAGE
 import com.tencent.devops.common.webhook.annotation.CodeWebhookHandler
 import com.tencent.devops.common.webhook.enums.WebhookI18nConstants
+import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_BRANCH
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_PUSH_TOTAL_COMMIT
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_TAG_CREATE_FROM
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_TAG_NAME
@@ -155,6 +156,7 @@ class TGitTagPushTriggerHandler : CodeWebhookTriggerHandler<GitTagPushEvent> {
         }
         startParams[PIPELINE_GIT_EVENT_URL] = "${event.repository.homepage}/-/tags/${getBranchName(event)}"
         startParams[PIPELINE_GIT_TAG_MESSAGE] = event.message ?: ""
+        startParams[BK_REPO_GIT_WEBHOOK_BRANCH] = getBranchName(event)
         return startParams
     }
 
