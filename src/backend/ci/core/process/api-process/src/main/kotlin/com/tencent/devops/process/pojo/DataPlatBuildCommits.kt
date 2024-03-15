@@ -1,4 +1,4 @@
-package com.tencent.devops.lambda.pojo
+package com.tencent.devops.process.pojo
 
 data class DataPlatBuildCommits(
     val projectId: String,
