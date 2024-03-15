@@ -69,7 +69,7 @@ interface ApigwRemoteDevResource {
 
     @Operation(summary = "云研发SDK根据X-BK-NGGW-CLIENT-ADDRESS获取云桌面信息", tags = ["v4_app_remotedev_workspace_detail"])
     @GET
-    @Path("/remotedev/workspace/detail")
+    @Path("/project/workspace/detail")
     fun getProjectWorkspace(
         @Parameter(description = "appCode", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
