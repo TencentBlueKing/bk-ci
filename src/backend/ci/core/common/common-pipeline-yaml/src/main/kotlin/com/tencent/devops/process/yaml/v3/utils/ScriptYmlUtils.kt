@@ -52,6 +52,10 @@ import com.tencent.devops.common.api.util.YamlUtil
 import com.tencent.devops.common.pipeline.pojo.transfer.PreStep
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.yaml.transfer.TransferMapper
+import com.tencent.devops.process.yaml.v3.check.Flow
+import com.tencent.devops.process.yaml.v3.check.PreStageCheck
+import com.tencent.devops.process.yaml.v3.check.StageCheck
+import com.tencent.devops.process.yaml.v3.check.StageReviews
 import com.tencent.devops.process.yaml.v3.enums.ContentFormat
 import com.tencent.devops.process.yaml.v3.enums.StreamMrEventAction
 import com.tencent.devops.process.yaml.v3.enums.TemplateType
@@ -79,6 +83,7 @@ import com.tencent.devops.process.yaml.v3.models.on.MrRule
 import com.tencent.devops.process.yaml.v3.models.on.NoteRule
 import com.tencent.devops.process.yaml.v3.models.on.PreTriggerOnV3
 import com.tencent.devops.process.yaml.v3.models.on.PushRule
+import com.tencent.devops.process.yaml.v3.models.on.RemoteRule
 import com.tencent.devops.process.yaml.v3.models.on.ReviewRule
 import com.tencent.devops.process.yaml.v3.models.on.SchedulesRule
 import com.tencent.devops.process.yaml.v3.models.on.TagRule
@@ -88,10 +93,6 @@ import com.tencent.devops.process.yaml.v3.models.stage.Stage
 import com.tencent.devops.process.yaml.v3.models.stage.StageLabel
 import com.tencent.devops.process.yaml.v3.models.step.Step
 import com.tencent.devops.process.yaml.v3.parameter.ParametersType
-import com.tencent.devops.process.yaml.v3.check.Flow
-import com.tencent.devops.process.yaml.v3.check.PreStageCheck
-import com.tencent.devops.process.yaml.v3.check.StageCheck
-import com.tencent.devops.process.yaml.v3.check.StageReviews
 import java.io.BufferedReader
 import java.io.StringReader
 import java.util.Random
@@ -673,7 +674,7 @@ object ScriptYmlUtils {
             }
 
             preTriggerOn.manual is String && preTriggerOn.manual == EnableType.FALSE.value -> {
-                return ManualRule(false)
+                return ManualRule(enable = false)
             }
 
             preTriggerOn.manual is Map<*, *> -> kotlin.runCatching {
@@ -700,16 +701,29 @@ object ScriptYmlUtils {
 
     private fun remoteRule(
         preTriggerOn: IPreTriggerOn
-    ): String? {
+    ): RemoteRule? {
         if (preTriggerOn.remote == null) {
             return null
         }
 
-        if (preTriggerOn.remote != EnableType.TRUE.value && preTriggerOn.remote != EnableType.FALSE.value) {
-            throw YamlFormatException("not allow remote type ${preTriggerOn.openapi}")
+        if (preTriggerOn.remote is String &&
+            preTriggerOn.remote != EnableType.TRUE.value &&
+            preTriggerOn.remote != EnableType.FALSE.value
+        ) {
+            throw YamlFormatException("not allow remote type ${preTriggerOn.remote}")
         }
 
-        return preTriggerOn.remote
+        if (preTriggerOn.remote is String) {
+            return RemoteRule(enable = preTriggerOn.remote as String)
+        }
+
+        if (preTriggerOn.remote is Map<*, *>) {
+            return kotlin.runCatching {
+                JsonUtil.anyTo(preTriggerOn.remote, object : TypeReference<RemoteRule>() {})
+            }.getOrElse { null }
+        }
+
+        return null
     }
 
     private fun noteRule(

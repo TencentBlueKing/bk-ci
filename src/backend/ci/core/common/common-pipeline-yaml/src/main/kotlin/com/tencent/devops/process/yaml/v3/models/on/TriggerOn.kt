@@ -53,7 +53,7 @@ data class TriggerOn(
     @JsonProperty("repo_hook")
     val repoHook: RepositoryHook? = null,
     var manual: ManualRule? = null,
-    var remote: String? = null,
+    var remote: RemoteRule? = null,
     val openapi: String? = null,
     @JsonProperty("repo-name")
     @get:Schema(title = "repo-name")
@@ -118,7 +118,7 @@ interface IPreTriggerOn : YamlVersion {
     val repoHook: List<Any>?
     val manual: Any?
     val openapi: String?
-    val remote: String?
+    val remote: Any?
 }
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
@@ -137,7 +137,7 @@ data class PreTriggerOn(
     override val repoHook: List<Any>? = null,
     override val manual: Any? = null,
     override val openapi: String? = null,
-    override val remote: String? = null
+    override val remote: Any? = null
 ) : IPreTriggerOn {
     override fun yamlVersion() = YamlVersion.Version.V2_0
 }

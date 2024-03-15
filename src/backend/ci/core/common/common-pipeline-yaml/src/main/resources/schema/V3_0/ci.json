@@ -37,6 +37,9 @@
                 "type" : "object",
                 "additionalProperties" : false,
                 "properties" : {
+                  "name" : {
+                    "type" : "string"
+                  },
                   "enable" : {
                     "type" : "boolean"
                   },
@@ -104,6 +107,9 @@
                 "type" : "object",
                 "additionalProperties" : false,
                 "properties" : {
+                  "name" : {
+                    "type" : "string"
+                  },
                   "enable" : {
                     "type" : "boolean"
                   },
@@ -150,6 +156,9 @@
                 "type" : "object",
                 "additionalProperties" : false,
                 "properties" : {
+                  "name" : {
+                    "type" : "string"
+                  },
                   "enable" : {
                     "type" : "boolean"
                   },
@@ -235,6 +244,9 @@
                   "type" : "object",
                   "additionalProperties" : false,
                   "properties" : {
+                    "name" : {
+                      "type" : "string"
+                    },
                     "enable" : {
                       "type" : "boolean"
                     },
@@ -285,6 +297,9 @@
                 "type" : "object",
                 "additionalProperties" : false,
                 "properties" : {
+                  "name" : {
+                    "type" : "string"
+                  },
                   "enable" : {
                     "type" : "boolean"
                   },
@@ -363,6 +378,9 @@
                 "type" : "object",
                 "additionalProperties" : false,
                 "properties" : {
+                  "name" : {
+                    "type" : "string"
+                  },
                   "enable" : {
                     "type" : "boolean"
                   },
@@ -387,6 +405,9 @@
                 "type" : "object",
                 "additionalProperties" : false,
                 "properties" : {
+                  "name" : {
+                    "type" : "string"
+                  },
                   "enable" : {
                     "type" : "boolean"
                   },
@@ -419,6 +440,9 @@
                 "type" : "object",
                 "additionalProperties" : false,
                 "properties" : {
+                  "name" : {
+                    "type" : "string"
+                  },
                   "enable" : {
                     "type" : "boolean"
                   },
@@ -447,6 +471,12 @@
                 "type" : "object",
                 "additionalProperties" : false,
                 "properties" : {
+                  "name" : {
+                    "type" : "string"
+                  },
+                  "enable" : {
+                    "type" : "boolean"
+                  },
                   "can-skip-step" : {
                     "type" : "boolean"
                   },
@@ -461,8 +491,22 @@
               "pattern" : "(\\benabled\\b|\\bdisabled\\b)"
             },
             "remote" : {
-              "type" : "string",
-              "pattern" : "(\\benabled\\b|\\bdisabled\\b)"
+              "oneOf" : [ {
+                "type" : "string",
+                "pattern" : "(\\benabled\\b|\\bdisabled\\b)"
+              }, {
+                "type" : "object",
+                "additionalProperties" : false,
+                "properties" : {
+                  "name" : {
+                    "type" : "string"
+                  },
+                  "enable" : {
+                    "type" : "string",
+                    "pattern" : "(\\benabled\\b|\\bdisabled\\b)"
+                  }
+                }
+              } ]
             },
             "repo-name" : {
               "type" : "string"
@@ -498,6 +542,9 @@
               "type" : "object",
               "additionalProperties" : false,
               "properties" : {
+                "name" : {
+                  "type" : "string"
+                },
                 "enable" : {
                   "type" : "boolean"
                 },
@@ -565,6 +612,9 @@
               "type" : "object",
               "additionalProperties" : false,
               "properties" : {
+                "name" : {
+                  "type" : "string"
+                },
                 "enable" : {
                   "type" : "boolean"
                 },
@@ -611,6 +661,9 @@
               "type" : "object",
               "additionalProperties" : false,
               "properties" : {
+                "name" : {
+                  "type" : "string"
+                },
                 "enable" : {
                   "type" : "boolean"
                 },
@@ -696,6 +749,9 @@
                 "type" : "object",
                 "additionalProperties" : false,
                 "properties" : {
+                  "name" : {
+                    "type" : "string"
+                  },
                   "enable" : {
                     "type" : "boolean"
                   },
@@ -746,6 +802,9 @@
               "type" : "object",
               "additionalProperties" : false,
               "properties" : {
+                "name" : {
+                  "type" : "string"
+                },
                 "enable" : {
                   "type" : "boolean"
                 },
@@ -824,6 +883,9 @@
               "type" : "object",
               "additionalProperties" : false,
               "properties" : {
+                "name" : {
+                  "type" : "string"
+                },
                 "enable" : {
                   "type" : "boolean"
                 },
@@ -848,6 +910,9 @@
               "type" : "object",
               "additionalProperties" : false,
               "properties" : {
+                "name" : {
+                  "type" : "string"
+                },
                 "enable" : {
                   "type" : "boolean"
                 },
@@ -880,6 +945,9 @@
               "type" : "object",
               "additionalProperties" : false,
               "properties" : {
+                "name" : {
+                  "type" : "string"
+                },
                 "enable" : {
                   "type" : "boolean"
                 },
@@ -908,6 +976,12 @@
               "type" : "object",
               "additionalProperties" : false,
               "properties" : {
+                "name" : {
+                  "type" : "string"
+                },
+                "enable" : {
+                  "type" : "boolean"
+                },
                 "can-skip-step" : {
                   "type" : "boolean"
                 },
@@ -922,8 +996,22 @@
             "pattern" : "(\\benabled\\b|\\bdisabled\\b)"
           },
           "remote" : {
-            "type" : "string",
-            "pattern" : "(\\benabled\\b|\\bdisabled\\b)"
+            "oneOf" : [ {
+              "type" : "string",
+              "pattern" : "(\\benabled\\b|\\bdisabled\\b)"
+            }, {
+              "type" : "object",
+              "additionalProperties" : false,
+              "properties" : {
+                "name" : {
+                  "type" : "string"
+                },
+                "enable" : {
+                  "type" : "string",
+                  "pattern" : "(\\benabled\\b|\\bdisabled\\b)"
+                }
+              }
+            } ]
           },
           "repo-name" : {
             "type" : "string"

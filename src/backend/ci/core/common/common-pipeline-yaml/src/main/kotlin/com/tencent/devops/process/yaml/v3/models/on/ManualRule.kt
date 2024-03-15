@@ -35,6 +35,7 @@ import io.swagger.v3.oas.annotations.media.Schema
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class ManualRule(
+    val name: String? = null,
     val enable: Boolean? = true,
     @get:Schema(title = "手动触发执行时可跳过插件 ", name = "can-skip-step", required = false)
     @JsonProperty("can-skip-step")
