@@ -126,9 +126,9 @@ object SignUtils {
                                 wildcardInfo,
                                 false,
                                 replaceKeyList,
-                                bundleId,
-                                bundleName,
-                                bundleVersion
+                                null,
+                                null,
+                                null
                             )
                             codesignFile(certId, subFile.absolutePath, codeSignPath, codesignExternalStr)
                         }
@@ -234,7 +234,7 @@ object SignUtils {
 
                         // 如果不是app或framework目录，则使用主描述文件进行重签
                         else -> {
-                            overwriteInfo(subFile, info, false, replaceKeyList, bundleId, bundleName, bundleVersion)
+                            overwriteInfo(subFile, info, false, replaceKeyList, null, null, null)
                             codesignFile(certId, subFile.absolutePath, codeSignPath, codesignExternalStr)
                         }
                     }
