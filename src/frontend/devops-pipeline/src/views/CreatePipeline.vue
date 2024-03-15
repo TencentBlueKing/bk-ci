@@ -16,97 +16,9 @@
                 </bk-breadcrumb-item>
 
             </bk-breadcrumb>
-            <div slot="right">
-                <bk-button
-                    theme="primary"
-                    :disabled="isConfirmDisable"
-                    @click="createNewPipeline"
-                >
-                    {{$t('create')}}
-                </bk-button>
-                <bk-button
-                    @click="goList"
-                >
-                    {{$t('cancel')}}
-                </bk-button>
-            </div>
         </pipeline-header>
         <div v-bkloading="{ isLoading }" class="pipeline-template-box">
-            <div class="pipeline-template-box-left-side">
-                <bk-tab :active.sync="activePanel" @tab-change="handleTemplateTypeChange" type="unborder-card">
-                    <bk-tab-panel
-                        v-for="(panel, index) in panels"
-                        v-bind="panel"
-                        :key="index"
-                    >
-                    </bk-tab-panel>
-                </bk-tab>
-                <div class="pipeline-template-search">
-                    <bk-input
-                        v-model.trim="searchName"
-                        icon-right="bk-icon icon-search"
-                        :placeholder="$t('searchPipelineTemplate')"
-                    />
-                </div>
-                <ul class="create-pipeline-template-list" v-if="tempList.length" @scroll.passive="scrollLoadMore">
-                    <li v-for="(temp, tIndex) in tempList"
-                        :class="{
-                            'active': activeTempIndex === tIndex,
-                            'disabled': !temp.installed
-                        }"
-                        :key="temp.name"
-                        @click="selectTemp(tIndex)"
-                    >
-
-                        <span v-if="activeTempIndex === tIndex" class="pipeline-template-corner">
-                            <i class="bk-icon icon-check-1"></i>
-                        </span>
-                        <p class="pipeline-template-logo">
-                            <img :src="temp.logoUrl" v-if="temp.logoUrl">
-                            <logo size="50" :name="temp.icon || 'placeholder'" v-else></logo>
-                        </p>
-                        <div class="pipeline-template-detail">
-                            <p class="pipeline-template-title" :title="temp.name">
-                                <span>{{ temp.name }}</span>
-                                <logo
-                                    v-if="temp.isStore"
-                                    class="is-store-template"
-                                    name="is-store"
-                                    size="22"
-                                />
-                            </p>
-                            <p class="pipeline-template-desc" :title="temp.desc">
-                                {{ temp.desc || '--' }}
-                            </p>
-                        </div>
-                        <div v-if="tIndex > 0" class="pipeline-template-status">
-                            <bk-button
-                                v-if="temp.hasPermission"
-                                text
-                                size="small"
-                                theme="primary"
-                                v-perm="{
-                                    hasPermission: temp.installed || temp.hasPermission,
-                                    disablePermissionApi: true,
-                                    permissionData: {
-                                        projectId: $route.params.projectId,
-                                        resourceType: 'pipeline_template',
-                                        resourceCode: $route.params.projectId,
-                                        action: TEMPLATE_RESOURCE_ACTION.CREATE
-                                    }
-                                }"
-                                @click.stop="handleTemp(temp, tIndex)"
-                            >
-                                {{$t(temp.btnText)}}
-                            </bk-button>
-                            <span v-else>
-                                {{$t('newlist.noInstallPerm')}}
-                            </span>
-                        </div>
-                    </li>
-                </ul>
-            </div>
-            <aside class="pipeline-template-box-right-side">
+            <aside class="pipeline-template-box-left-side">
                 <bk-form form-type="vertical">
                     <bk-form-item :label="$t('pipelineName')">
                         <div class="pipeline-input">
@@ -168,7 +80,96 @@
                         </bk-form-item>
                     </template>
                 </bk-form>
+                <footer style="margin-top: 24px;">
+                    <bk-button
+                        theme="primary"
+                        :disabled="isConfirmDisable"
+                        @click="createNewPipeline"
+                    >
+                        {{$t('create')}}
+                    </bk-button>
+                    <bk-button
+                        @click="goList"
+                    >
+                        {{$t('cancel')}}
+                    </bk-button>
+                </footer>
             </aside>
+            <div class="pipeline-template-box-right-side">
+                <bk-tab :active.sync="activePanel" @tab-change="handleTemplateTypeChange" type="unborder-card">
+                    <div class="pipeline-template-searchbox" slot="setting">
+                        <bk-input
+                            v-model.trim="searchName"
+                            icon-right="bk-icon icon-search"
+                            :placeholder="$t('searchPipelineTemplate')"
+                        />
+                    </div>
+                    <bk-tab-panel
+                        v-for="(panel, index) in panels"
+                        v-bind="panel"
+                        :key="index"
+                    >
+                    </bk-tab-panel>
+                </bk-tab>
+                <ul class="create-pipeline-template-list" v-if="tempList.length" @scroll.passive="scrollLoadMore">
+                    <li v-for="(temp, tIndex) in tempList"
+                        :class="{
+                            'active': activeTempIndex === tIndex,
+                            'disabled': !temp.installed
+                        }"
+                        :key="temp.name"
+                        @click="selectTemp(tIndex)"
+                    >
+
+                        <span v-if="activeTempIndex === tIndex" class="pipeline-template-corner">
+                            <i class="bk-icon icon-check-1"></i>
+                        </span>
+                        <p class="pipeline-template-logo">
+                            <img :src="temp.logoUrl" v-if="temp.logoUrl">
+                            <logo size="50" :name="temp.icon || 'placeholder'" v-else></logo>
+                        </p>
+                        <div class="pipeline-template-detail">
+                            <p class="pipeline-template-title" :title="temp.name">
+                                <span>{{ temp.name }}</span>
+                                <logo
+                                    v-if="temp.isStore"
+                                    class="is-store-template"
+                                    name="is-store"
+                                    size="22"
+                                />
+                            </p>
+                            <p class="pipeline-template-desc" :title="temp.desc">
+                                {{ temp.desc || '--' }}
+                            </p>
+                        </div>
+                        <div v-if="tIndex > 0" class="pipeline-template-status">
+                            <bk-button
+                                v-if="temp.hasPermission"
+                                text
+                                size="small"
+                                theme="primary"
+                                v-perm="{
+                                    hasPermission: temp.installed || temp.hasPermission,
+                                    disablePermissionApi: true,
+                                    permissionData: {
+                                        projectId: $route.params.projectId,
+                                        resourceType: 'pipeline_template',
+                                        resourceCode: $route.params.projectId,
+                                        action: TEMPLATE_RESOURCE_ACTION.CREATE
+                                    }
+                                }"
+                                @click.stop="handleTemp(temp, tIndex)"
+                            >
+                                {{$t(temp.btnText)}}
+                            </bk-button>
+                            <span v-else>
+                                {{$t('newlist.noInstallPerm')}}
+                            </span>
+                        </div>
+                    </li>
+                </ul>
+            </div>
+
         </div>
         <pipeline-template-preview
             v-model="isShowPreview"
@@ -521,122 +522,15 @@
     .pipeline-template-box {
         display: flex;
         flex: 1;
-        margin: 24px;
-        padding: 24px;
-        background: white;
-        box-shadow: 0 2px 2px 0 #00000026;
+        margin: 24px 24px 0 24px;
+        grid-gap: 16px;
         overflow: hidden;
         &-left-side {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            overflow: hidden;
-            padding-right: 24px;
-            .bk-tab.bk-tab-unborder-card .bk-tab-section {
-                padding: 0;
-            }
-            .pipeline-template-search {
-                flex-shrink: 0;
-                margin: 16px 0;
-            }
-            .create-pipeline-template-list {
-                display: grid;
-                grid-gap: 16px;
-                grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
-                grid-auto-rows: 72px;
-                overflow: auto;
-                flex: 1;
-                > li {
-                    position: relative;
-                    padding: 12px 16px;
-                    border: 1px solid #DCDEE5;
-                    border-radius: 2px;
-                    display: grid;
-                    grid-auto-flow: column;
-                    grid-template-columns: 50px 1fr;
-                    grid-gap: 12px;
-                    cursor: pointer;
-                    transition: all .3s ease;
-                    box-shadow: 0 2px 2px 0 rgba(0,0,0,0.16), 0 0 0 1px rgba(0,0,0,0.08);
-                    overflow: hidden;
-
-                    &:hover {
-                        box-shadow: 0 3px 8px 0 rgba(0,0,0,0.2), 0 0 0 1px rgba(0,0,0,0.08);
-                        .pipeline-template-status {
-                            display: block;
-                        }
-                    }
-                    &.disabled {
-                        cursor: not-allowed;
-                        opacity: .5;
-                    }
-                    &.active {
-                        border: 1px solid #3A84FF;
-                        box-shadow: 0;
-                        .pipeline-template-corner {
-                            position: absolute;
-                            border-style: solid;
-                            border-color: #3A84FF;
-                            border-top-width: 12px;
-                            border-bottom-width: 12px;
-                            border-right-width: 10px;
-                            border-left-width: 10px;
-                            border-right-color: transparent;
-                            border-bottom-color: transparent;
-                            width: 0;
-                            height: 0;
-                            color: #fff;
-                            > i {
-                                font-size: 16px;
-                                position: absolute;
-                                top: -12px;
-                                left: -12px;
-                            }
-                        }
-                    }
-                    .pipeline-template-logo {
-                        display: flex;
-                        align-items: center;
-                        justify-content: center;
-                        color: #979BA5;
-                        > img {
-                            width: 100%;
-                            height: 100%;
-                        }
-                    }
-                    .pipeline-template-detail {
-                        font-size: 14px;
-                        overflow: hidden;
-                        .pipeline-template-title {
-                            display: flex;
-                            align-items: center;
-                            grid-gap: 8px;
-                            > span {
-                                @include ellipsis();
-                            }
-                            .is-store-template {
-                                flex-shrink: 0;
-                            }
-                        }
-                        .pipeline-template-desc {
-                            font-size: 12px;
-                            color: #979BA5;
-                        }
-                    }
-                    .pipeline-template-status {
-                        display: none;
-                        font-size: 12px;
-                        color: #979BA5;
-                        align-self: center;
-                    }
-                }
-            }
-        }
-        &-right-side {
             width: 388px;
-            border-left: 1px solid #DCDEE5;
+            box-shadow: 0 2px 2px 0 #00000026;
             flex-shrink: 0;
             padding: 24px;
+            background: white;
             overflow: auto;
 
             .pipeline-input {
@@ -727,6 +621,114 @@
             }
             .pipeline-template-box-right-side-footer {
                 margin-top: 20px;
+            }
+        }
+        &-right-side {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 2px 2px 0 #00000026;
+            overflow: hidden;
+            background: white;
+            .bk-tab.bk-tab-unborder-card .bk-tab-section {
+                padding: 0;
+            }
+            .pipeline-template-searchbox {
+                width: 600px;
+                margin-right: 24px;
+            }
+            .create-pipeline-template-list {
+                display: grid;
+                grid-gap: 16px;
+                margin: 16px 24px;
+                grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
+                grid-auto-rows: 72px;
+                overflow: auto;
+                flex: 1;
+                > li {
+                    position: relative;
+                    padding: 12px 16px;
+                    border: 1px solid #DCDEE5;
+                    border-radius: 2px;
+                    display: grid;
+                    grid-auto-flow: column;
+                    grid-template-columns: 50px 1fr;
+                    grid-gap: 12px;
+                    cursor: pointer;
+                    transition: all .3s ease;
+                    box-shadow: 0 2px 2px 0 rgba(0,0,0,0.16), 0 0 0 1px rgba(0,0,0,0.08);
+                    overflow: hidden;
+
+                    &:hover {
+                        box-shadow: 0 3px 8px 0 rgba(0,0,0,0.2), 0 0 0 1px rgba(0,0,0,0.08);
+                        .pipeline-template-status {
+                            display: block;
+                        }
+                    }
+                    &.disabled {
+                        cursor: not-allowed;
+                        opacity: .5;
+                    }
+                    &.active {
+                        border: 1px solid #3A84FF;
+                        box-shadow: 0;
+                        .pipeline-template-corner {
+                            position: absolute;
+                            border-style: solid;
+                            border-color: #3A84FF;
+                            border-top-width: 12px;
+                            border-bottom-width: 12px;
+                            border-right-width: 10px;
+                            border-left-width: 10px;
+                            border-right-color: transparent;
+                            border-bottom-color: transparent;
+                            width: 0;
+                            height: 0;
+                            color: #fff;
+                            > i {
+                                font-size: 16px;
+                                position: absolute;
+                                top: -12px;
+                                left: -12px;
+                            }
+                        }
+                    }
+                    .pipeline-template-logo {
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                        color: #979BA5;
+                        > img {
+                            width: 100%;
+                            height: 100%;
+                        }
+                    }
+                    .pipeline-template-detail {
+                        font-size: 14px;
+                        overflow: hidden;
+                        .pipeline-template-title {
+                            display: flex;
+                            align-items: center;
+                            grid-gap: 8px;
+                            > span {
+                                @include ellipsis();
+                            }
+                            .is-store-template {
+                                flex-shrink: 0;
+                            }
+                        }
+                        .pipeline-template-desc {
+                            font-size: 12px;
+                            color: #979BA5;
+                        }
+                    }
+                    .pipeline-template-status {
+                        display: none;
+                        font-size: 12px;
+                        color: #979BA5;
+                        align-self: center;
+                    }
+                }
             }
         }
 

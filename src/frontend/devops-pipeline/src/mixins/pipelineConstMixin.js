@@ -13,13 +13,13 @@ const pipelineConstMixin = {
                     index: 1,
                     id: 'stageStatus',
                     label: this.$t('history.stageStatus'),
-                    width: localStorage.getItem('stageStatusWidth') ? localStorage.getItem('stageStatusWidth') : 520
+                    width: localStorage.getItem('stageStatusWidth') ?? 520
                 },
                 material: {
                     index: 2,
                     id: 'material',
                     label: this.$t('editPage.material'),
-                    width: localStorage.getItem('materialWidth') ? localStorage.getItem('materialWidth') : 500
+                    width: localStorage.getItem('materialWidth') ?? 500
                 },
                 startType: {
                     index: 3,
@@ -65,7 +65,8 @@ const pipelineConstMixin = {
                     index: 10,
                     id: 'remark',
                     label: this.$t('history.remark'),
-                    minWidth: 160
+                    minWidth: 160,
+                    width: localStorage.getItem('remarkWidth') ?? 200
                 },
                 recommendVersion: {
                     index: 11,
@@ -110,7 +111,7 @@ const pipelineConstMixin = {
     },
     computed: {
         customColumn () {
-            return ['material', 'stageStatus', 'errorCode']
+            return ['material', 'stageStatus', 'errorCode', 'remark']
         },
         sourceColumns () {
             const historyTableColumns = Object.values(this.BUILD_HISTORY_TABLE_COLUMNS_MAP).sort((c1, c2) => c1.index > c2.index)
