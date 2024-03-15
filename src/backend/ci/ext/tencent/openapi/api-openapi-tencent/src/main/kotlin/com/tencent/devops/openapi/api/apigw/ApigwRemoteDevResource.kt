@@ -79,7 +79,7 @@ interface ApigwRemoteDevResource {
         apigwType: String?,
         @Parameter(description = "IP", required = false)
         @HeaderParam("X-BK-NGGW-CLIENT-ADDRESS")
-        ip: String,
+        ip: String?
     ): Result<WeSecProjectWorkspace?>
 
     @Operation(summary = "提供给wesec获取云桌面信息", tags = ["v4_app_remotedev_project_list"])

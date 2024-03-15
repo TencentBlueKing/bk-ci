@@ -49,7 +49,14 @@ class ApigwRemoteDevResourceImpl @Autowired constructor(private val client: Clie
         )
     }
 
-    override fun getProjectWorkspace(appCode: String?, apigwType: String?, ip: String): Result<WeSecProjectWorkspace?> {
+    override fun getProjectWorkspace(
+        appCode: String?,
+        apigwType: String?,
+        ip: String?
+    ): Result<WeSecProjectWorkspace?> {
+        if (ip.isNullOrBlank()) {
+            return Result(null)
+        }
         logger.info("Get projects workspace ip $ip")
         return client.get(ServiceRemoteDevResource::class).getProjectWorkspaceIp(ip = ip)
     }
