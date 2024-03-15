@@ -149,6 +149,9 @@
                 'updateContainer'
             ]),
             async exec (debug) {
+                if (debug && this.isEditing) {
+                    await this.saveDraft()
+                }
                 this.$router.push({
                     name: 'executePreview',
                     query: {
