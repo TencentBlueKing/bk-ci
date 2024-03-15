@@ -411,7 +411,7 @@ class DeleteControl @Autowired constructor(
                 )
                 return@forEach
             }
-            if (actives[workspace.hostName] != null && actives[workspace.hostName]!! < 5) {
+            if (actives[workspace.hostName] == null || actives[workspace.hostName]!! < 5) {
                 if (workspace.projectId in whiteListProject) {
                     readyDeleteWorkspace.add(
                         "project=${workspace.projectId}, ip=${workspace.hostName}," +
