@@ -375,7 +375,7 @@
 
                     this.importNodeList.splice(0, this.importNodeList.length)
 
-                    res.forEach(item => {
+                    res.records.forEach(item => {
                         item.isChecked = false
                         item.isDisplay = true
                         this.importNodeList.push(item)
