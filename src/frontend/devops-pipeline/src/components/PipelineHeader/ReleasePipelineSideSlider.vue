@@ -854,7 +854,7 @@
 .release-pipeline-side-slider-header {
   display: grid;
   align-items: center;
-  grid-template-columns: min-content min-content 1fr;
+  grid-template-columns: max-content min-content 1fr;
   grid-gap: 12px;
   padding: 0 16px 0 0;
   height: 100%;

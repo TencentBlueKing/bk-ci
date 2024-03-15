@@ -10,6 +10,20 @@
         >
             {{ item.label }}
         </bk-button>
+        <bk-dialog
+            render-directive="if"
+            v-model="leaveConfirmVisisble"
+            :title="$t('tips')"
+            header-position="left"
+            width="500"
+        >
+            {{$t('saveBeforeSwitch')}}
+            <template slot="footer">
+                <bk-button theme="primary" :loading="isSaving" @click="handleConfirm(false)">{{ $t('saveDraft&Switch') }}</bk-button>
+                <bk-button @click="handleConfirm(true)" :loading="isSaving">{{ $t('dropDraft') }}</bk-button>
+                <bk-button @click="handleClose" :loading="isSaving">{{ $t('cancel') }}</bk-button>
+            </template>
+        </bk-dialog>
     </div>
 </template>
 
@@ -36,7 +50,10 @@
         },
         data () {
             return {
-                isSwitching: false
+                isSwitching: false,
+                leaveConfirmVisisble: false,
+                isSaving: false,
+                newMode: ''
             }
         },
         computed: {
@@ -68,6 +85,23 @@
                 updatePipelineMode: 'updatePipelineMode',
                 canSwitchToYaml: 'atom/canSwitchToYaml'
             }),
+            async handleConfirm  (isDrop = false) {
+                let result = true
+                if (!isDrop) {
+                    this.isSaving = true
+                    result = await this.save()
+                    this.isSaving = false
+                }
+                if (result) {
+                    this.updatePipelineMode(this.newMode)
+                    this.$emit('change', this.newMode)
+                }
+                this.handleClose()
+            },
+            handleClose () {
+                this.leaveConfirmVisisble = false
+                this.newMode = ''
+            },
             async detectYamlSupport () {
                 try {
                     if (typeof this.isYamlSupport === 'boolean') {
@@ -106,22 +140,6 @@
                 if (this.isSwitching) {
                     return
                 }
-                if (this.isEditing) {
-                    this.$bkInfo({
-                        title: this.$t('tips'),
-                        subTitle: this.$t('saveBeforeSwitch'),
-                        okText: this.$t('saveDraft&Switch'),
-                        confirmLoading: true,
-                        confirmFn: async () => {
-                            const result = await this.save()
-                            if (result) {
-                                this.updatePipelineMode(mode)
-                                this.$emit('change', mode)
-                            }
-                        }
-                    })
-                    return
-                }
                 if (mode === CODE_MODE) {
                     this.isSwitching = true
                     const { yamlSupported, yamlInvalidMsg } = await this.detectYamlSupport()
@@ -154,6 +172,11 @@
                         return
                     }
                     this.isSwitching = false
+                }
+                if (this.isEditing) {
+                    this.leaveConfirmVisisble = true
+                    this.newMode = mode
+                    return
                 }
                 this.updatePipelineMode(mode)
                 this.$emit('change', mode)
