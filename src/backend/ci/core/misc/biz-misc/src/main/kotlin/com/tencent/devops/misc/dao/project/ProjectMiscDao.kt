@@ -93,4 +93,13 @@ class ProjectMiscDao {
             ).from(this).where(conditions).fetch()
         }
     }
+
+    fun getExistedEnglishName(dslContext: DSLContext, englishNameList: List<String>): List<String> {
+        with(TProject.T_PROJECT) {
+            return dslContext.select(ENGLISH_NAME)
+                .from(this)
+                .where(ENGLISH_NAME.`in`(englishNameList))
+                .fetch(ENGLISH_NAME, String::class.java)
+        }
+    }
 }
