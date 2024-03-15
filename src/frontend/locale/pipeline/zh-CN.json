@@ -1490,5 +1490,6 @@
   "branchVersionTips3": "3、流水线查看页面，展示默认分支上对应的YAML文件内容",
   "latest": "最新",
   "noPipelineToDelete": "无流水线待删除",
-  "unGroup": "无分组"
+  "unGroup": "无分组",
+  "dropDraft": "放弃草稿"
 }
