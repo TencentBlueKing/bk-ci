@@ -385,7 +385,11 @@ class CmdbNodeService @Autowired constructor(
                 projectId = projectId,
                 ips = toAddNodeList.map { it.nodeIp }
             )
-            batchRegisterNodePermissionAndAudit(insertedNodeList = insertedNodeList, userId = userId, projectId = projectId)
+            batchRegisterNodePermissionAndAudit(
+                insertedNodeList = insertedNodeList,
+                userId = userId,
+                projectId = projectId
+            )
         }
         val time7 = LocalDateTime.now()
         logger.info(
