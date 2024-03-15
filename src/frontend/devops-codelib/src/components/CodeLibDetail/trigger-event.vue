@@ -14,18 +14,18 @@
                 @change="handleChangeDaterange"
             >
             </bk-date-picker>
-            <bk-search-select
+            <search-select
                 ref="searchSelect"
-                class="search-select"
+                class="search-input"
                 v-model="searchValue"
                 :data="searchList"
                 clearable
                 :show-condition="false"
-                :placeholder="$t('codelib.触发器类型/事件类型/触发人/流水线名称')"
+                :placeholder="$t('codelib.事件ID/触发器类型/事件类型/触发人/流水线名称')"
                 @menu-child-select="handleMenuChildSelect"
                 :key="repoId"
             >
-            </bk-search-select>
+            </search-select>
             <span class="refresh-icon" @click="handleRefresh">
                 <bk-icon type="refresh" />
             </span>
@@ -69,10 +69,13 @@
     } from 'vuex'
     import EmptyTableStatus from '../empty-table-status.vue'
     import TimelineCollapse from './timeline-collapse.vue'
+    import SearchSelect from '@blueking/search-select'
+    import '@blueking/search-select/dist/styles/index.css'
 
     export default {
         name: 'basicSetting',
         components: {
+            SearchSelect,
             EmptyTableStatus,
             TimelineCollapse
         },
@@ -147,7 +150,13 @@
                     },
                     {
                         name: this.$t('codelib.流水线名称'),
-                        id: 'pipelineName'
+                        id: 'pipelineId',
+                        remoteMethod: (keyword) => {
+                            return this.fetchPipelinesByName({
+                                projectId: this.projectId,
+                                keyword
+                            })
+                        }
                     }
                 ]
                 return list.filter((data) => {
@@ -175,7 +184,6 @@
                 this.isInitTime = true
             },
             daterange (newVal, oldVal) {
-                console.log(newVal, 1111111)
                 if (oldVal[0]) this.isInitTime = false
                 this.page = 1
                 this.hasLoadEnd = false
@@ -253,8 +261,7 @@
         methods: {
             ...mapActions('codelib', [
                 'fetchTriggerEventList',
-                'fetchEventType',
-                'fetchTriggerType'
+                'fetchPipelinesByName'
             ]),
          
             handleScroll (event) {
@@ -343,7 +350,7 @@
 
             handleMenuChildSelect () {
                 setTimeout(() => {
-                    if (this.searchValue.length === 4) {
+                    if (this.searchValue.length === this.searchList.length) {
                         this.$refs.searchSelect.hidePopper()
                     }
                 })
@@ -466,6 +473,13 @@
         }
         ::v-deep .bk-loading {
             background-color: #fff !important;
+        }
+    }
+    .search-input {
+        flex: 1;
+        background: white;
+        ::placeholder {
+            color: #c4c6cc;
         }
     }
 </style>
