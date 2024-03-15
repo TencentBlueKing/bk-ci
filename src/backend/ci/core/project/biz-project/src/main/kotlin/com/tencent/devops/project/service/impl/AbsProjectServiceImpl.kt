@@ -99,6 +99,7 @@ import com.tencent.devops.project.pojo.enums.ProjectApproveStatus
 import com.tencent.devops.project.pojo.enums.ProjectChannelCode
 import com.tencent.devops.project.pojo.enums.ProjectTipsStatus
 import com.tencent.devops.project.pojo.enums.ProjectValidateType
+import com.tencent.devops.project.pojo.mq.ProjectEnableStatusBroadCastEvent
 import com.tencent.devops.project.pojo.mq.ProjectUpdateBroadCastEvent
 import com.tencent.devops.project.pojo.mq.ProjectUpdateLogoBroadCastEvent
 import com.tencent.devops.project.pojo.user.UserDeptDetail
@@ -1157,6 +1158,13 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
             projectId = projectInfo.projectId,
             enabled = enabled
         )
+        projectDispatcher.dispatch(
+            ProjectEnableStatusBroadCastEvent(
+                userId = userId ?: "",
+                projectId = englishName,
+                enabled = enabled
+            )
+        )
     }
 
     override fun searchProjectByProjectName(projectName: String, limit: Int, offset: Int): Page<ProjectVO> {
@@ -1404,6 +1412,20 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
             englishName = englishName,
             projectOrganizationInfo = projectOrganizationInfo
         )
+    }
+
+    override fun getProjectListByProductId(productId: Int): List<ProjectBaseInfo> {
+        return projectDao.getProjectListByProductId(
+            dslContext = dslContext,
+            productId = productId
+        ).map {
+            ProjectBaseInfo(
+                id = it.value1(),
+                englishName = it.value2(),
+                projectName = it.value3(),
+                enabled = it.value4()
+            )
+        }
     }
 
     abstract fun validatePermission(projectCode: String, userId: String, permission: AuthPermission): Boolean
