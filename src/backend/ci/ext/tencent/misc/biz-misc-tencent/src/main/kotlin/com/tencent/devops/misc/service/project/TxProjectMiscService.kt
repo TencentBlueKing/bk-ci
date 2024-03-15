@@ -40,6 +40,12 @@ class TxProjectMiscService @Autowired constructor(
     private val projectMiscDao: ProjectMiscDao,
     private val txProjectMiscDao: TxProjectMiscDao
 ) {
+    fun getExistedEnglishName(
+        dslContext: DSLContext,
+        englishNameList: List<String>
+    ): List<String> {
+        return projectMiscDao.getExistedEnglishName(dslContext, englishNameList)
+    }
 
     fun getMaxId(
         projectIdList: List<String>? = null
