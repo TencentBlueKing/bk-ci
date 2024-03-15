@@ -328,7 +328,9 @@ class PipelineRepositoryService constructor(
                 } else {
                     OperationLogType.NORMAL_SAVE_OPERATION
                 },
-                params = result.versionName ?: "init",
+                params = result.versionName ?: PipelineVersionUtils.getVersionName(
+                    result.version, result.version, 0, 0
+                ) ?: "",
                 description = null
             )
             result

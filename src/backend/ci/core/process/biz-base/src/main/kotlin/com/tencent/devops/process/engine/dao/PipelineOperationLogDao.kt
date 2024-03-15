@@ -130,7 +130,7 @@ class PipelineOperationLogDao {
             val select = dslContext.selectFrom(this)
                 .where(PIPELINE_ID.eq(pipelineId).and(PROJECT_ID.eq(projectId)))
             creator?.let { select.and(OPERATOR.like("%$creator%")) }
-            select.orderBy(CREATE_TIME.asc())
+            select.orderBy(CREATE_TIME.desc())
                 .limit(limit).offset(offset)
                 .fetch(mapper)
         }
