@@ -1414,6 +1414,20 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
         )
     }
 
+    override fun getProjectListByProductId(productId: Int): List<ProjectBaseInfo> {
+        return projectDao.getProjectListByProductId(
+            dslContext = dslContext,
+            productId = productId
+        ).map {
+            ProjectBaseInfo(
+                id = it.value1(),
+                englishName = it.value2(),
+                projectName = it.value3(),
+                enabled = it.value4()
+            )
+        }
+    }
+
     abstract fun validatePermission(projectCode: String, userId: String, permission: AuthPermission): Boolean
 
     abstract fun getDeptInfo(userId: String): UserDeptDetail
