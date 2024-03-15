@@ -260,7 +260,7 @@ class ProjectRemoteDevService @Autowired constructor(
     fun fetchRemoteDevProject(projectId: String?): Map<String, String> {
         val projects = remoteDevDao.fetchProjectEnableRemoteDev(
             dslContext = dslContext,
-            englishName = projectId,
+            englishName = projectId
         )
 
         return projects.associate { it.englishName to it.projectName }
