@@ -1266,6 +1266,7 @@ class WorkspaceService @Autowired constructor(
                     notifyType = mutableSetOf(RemoteDevNotifyType.EMAIL, RemoteDevNotifyType.RTX),
                     bodyParams = mutableMapOf(
                         "cgsIp" to (workspace.hostName ?: ""),
+                        "projectId" to (workspace.projectId),
                         "userId" to userIds.joinToString()
                     )
                 )
@@ -1307,6 +1308,7 @@ class WorkspaceService @Autowired constructor(
                     notifyType = mutableSetOf(RemoteDevNotifyType.EMAIL, RemoteDevNotifyType.RTX),
                     bodyParams = mutableMapOf(
                         "cgsIp" to (workspace.hostName ?: ""),
+                        "projectId" to (workspace.projectId),
                         "userId" to userIds.joinToString()
                     )
                 )

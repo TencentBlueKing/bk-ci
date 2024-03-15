@@ -69,13 +69,12 @@ import com.tencent.devops.model.experience.tables.records.TExperienceGroupOuterR
 import com.tencent.devops.project.api.service.ServiceProjectOrganizationResource
 import com.tencent.devops.project.api.service.ServiceProjectResource
 import com.tencent.devops.project.api.service.service.ServiceTxUserResource
-import org.apache.commons.lang3.StringUtils
+import javax.ws.rs.core.Response
 import org.jooq.DSLContext
 import org.jooq.Result
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
-import javax.ws.rs.core.Response
 
 @SuppressWarnings("LongParameterList")
 @Service
@@ -472,7 +471,9 @@ class GroupService @Autowired constructor(
             if (inner.deptFullName.isNullOrBlank()) {
                 try {
                     client.get(ServiceTxUserResource::class).get(inner.userId).data?.let {
-                        val deptFullName = StringUtils.joinWith("/", it.bgName, it.deptName, it.centerName)
+                        val businessLineName = it.businessLineName ?: ""
+                        val deptFullName = listOf(it.bgName, businessLineName, it.deptName, it.centerName)
+                            .filter { name -> name.isNotBlank() }.joinToString("/")
                         inner.deptFullName = deptFullName
                         experienceGroupInnerDao.updateDeptFullName(dslContext, inner.id, deptFullName)
                     }
@@ -683,12 +684,10 @@ class GroupService @Autowired constructor(
                 if (it.bgId == "0") {
                     it.groupName
                 } else {
-                    StringUtils.joinWith(
-                        "/",
-                        it.bgName,
-                        it.deptName,
-                        it.centerName
-                    ).replace("^/+", "").replace("/+$", "")
+                    val businessLineName = it.businessLineName ?: ""
+                    listOf(it.bgName, businessLineName, it.deptName, it.centerName)
+                        .filter { name -> name.isNotBlank() }.joinToString("/")
+                        .replace("^/+", "").replace("/+$", "")
                 }
             } ?: ""
         } catch (e: Throwable) {
