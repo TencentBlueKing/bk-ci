@@ -38,6 +38,7 @@ import io.swagger.v3.oas.annotations.media.Schema
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class PushRule(
+    val name: String? = null,
     val enable: Boolean? = true,
     val branches: List<String>? = listOf("*"),
 

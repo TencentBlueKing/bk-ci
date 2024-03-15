@@ -34,6 +34,7 @@ import com.tencent.devops.process.yaml.v3.enums.StreamObjectKind
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class DeleteRule(
+    val name: String? = null,
     val types: List<String>
 ) {
     companion object {

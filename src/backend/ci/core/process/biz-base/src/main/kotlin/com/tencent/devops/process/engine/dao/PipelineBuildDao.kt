@@ -1637,13 +1637,13 @@ class PipelineBuildDao {
         }
     }
 
-    fun countTotalBuildNumByVersion(
+    fun countBuildNumByVersion(
         dslContext: DSLContext,
         projectId: String,
         pipelineId: String,
         version: Int
     ): Int {
-        val normal = with(T_PIPELINE_BUILD_HISTORY) {
+        return with(T_PIPELINE_BUILD_HISTORY) {
             val conditions = mutableListOf<Condition>()
             conditions.add(PROJECT_ID.eq(projectId))
             conditions.add(PIPELINE_ID.eq(pipelineId))
@@ -1652,16 +1652,6 @@ class PipelineBuildDao {
                 .where(conditions)
                 .fetchOne(0, Int::class.java)!!
         }
-        val debug = with(T_PIPELINE_BUILD_HISTORY_DEBUG) {
-            val conditions = mutableListOf<Condition>()
-            conditions.add(PROJECT_ID.eq(projectId))
-            conditions.add(PIPELINE_ID.eq(pipelineId))
-            conditions.add(VERSION.eq(version))
-            dslContext.selectCount().from(this)
-                .where(conditions)
-                .fetchOne(0, Int::class.java)!!
-        }
-        return normal + debug
     }
 
     fun getDebugResourceStr(
