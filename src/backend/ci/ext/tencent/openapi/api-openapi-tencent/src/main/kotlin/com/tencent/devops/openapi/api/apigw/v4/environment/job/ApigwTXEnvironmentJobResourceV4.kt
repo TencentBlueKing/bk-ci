@@ -39,7 +39,7 @@ import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
 @Tag(name = "OPENAPI_JOB_V4", description = "OPENAPI-JOB")
-@Path("/{apigwType:apigw-user|apigw-app|apigw}/v4/environment")
+@Path("/{apigwType:apigw-user|apigw-app|apigw}/v4/job")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface ApigwTXEnvironmentJobResourceV4 {
