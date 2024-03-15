@@ -49,8 +49,8 @@ import com.tencent.devops.repository.pojo.RepositoryInfoWithPermission
 import com.tencent.devops.repository.pojo.enums.Permission
 import com.tencent.devops.repository.service.RepoPipelineService
 import com.tencent.devops.repository.service.RepositoryService
-import org.springframework.beans.factory.annotation.Autowired
 import java.net.URLDecoder
+import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 @Suppress("ALL")
@@ -234,5 +234,12 @@ class ServiceRepositoryResourceImpl @Autowired constructor(
             atomRefRepositoryInfo = atomRefRepositoryInfo
         )
         return Result(true)
+    }
+
+    override fun getGitProjectIdByRepositoryHashId(
+        userId: String,
+        repositoryHashIdList: List<String>
+    ): Result<List<String>> {
+        return Result(repositoryService.getGitProjectIdByRepositoryHashId(userId, repositoryHashIdList))
     }
 }
