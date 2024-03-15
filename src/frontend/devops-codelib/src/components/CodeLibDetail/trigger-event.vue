@@ -22,8 +22,6 @@
                 clearable
                 :show-condition="false"
                 :placeholder="$t('codelib.事件ID/触发器类型/事件类型/触发人/流水线名称')"
-                @menu-child-select="handleMenuChildSelect"
-                :key="repoId"
             >
             </search-select>
             <span class="refresh-icon" @click="handleRefresh">
@@ -346,14 +344,6 @@
                 this.eventList = []
                 this.timelineMap = {}
                 this.getListData()
-            },
-
-            handleMenuChildSelect () {
-                setTimeout(() => {
-                    if (this.searchValue.length === this.searchList.length) {
-                        this.$refs.searchSelect.hidePopper()
-                    }
-                })
             },
 
             handleChangeDaterange (date, type) {
