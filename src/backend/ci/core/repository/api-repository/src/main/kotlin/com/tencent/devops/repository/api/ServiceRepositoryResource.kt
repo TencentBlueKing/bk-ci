@@ -33,15 +33,16 @@ import com.tencent.devops.common.api.enums.RepositoryType
 import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.repository.pojo.AtomRefRepositoryInfo
 import com.tencent.devops.repository.pojo.RepoPipelineRefRequest
 import com.tencent.devops.repository.pojo.Repository
 import com.tencent.devops.repository.pojo.RepositoryId
 import com.tencent.devops.repository.pojo.RepositoryInfo
 import com.tencent.devops.repository.pojo.RepositoryInfoWithPermission
 import com.tencent.devops.repository.pojo.enums.Permission
-import io.swagger.v3.oas.annotations.tags.Tag
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
+import io.swagger.v3.oas.annotations.tags.Tag
 import javax.ws.rs.Consumes
 import javax.ws.rs.DELETE
 import javax.ws.rs.GET
@@ -232,4 +233,26 @@ interface ServiceRepositoryResource {
         @Parameter(description = "流水线引用信息", required = true)
         request: RepoPipelineRefRequest
     ): Result<Boolean>
+
+    @Operation(summary = "添加插件库的标志位")
+    @POST
+    @Path("/updateAtomRepoFlag")
+    fun updateAtomRepoFlag(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "插件代码库关联关系")
+        atomRefRepositoryInfo: List<AtomRefRepositoryInfo>
+    ): Result<Boolean>
+
+    @Operation(summary = "根据代码库哈希ID查询GIT项目ID")
+    @POST
+    @Path("/git/project/retrieve")
+    fun getGitProjectIdByRepositoryHashId(
+        @Parameter(description = "用户ID", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "代码库哈希ID列表", required = true)
+        repositoryHashIdList: List<String>
+    ): Result<List<String>>
 }

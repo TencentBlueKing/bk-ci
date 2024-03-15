@@ -90,6 +90,10 @@ data class BuildRecordContainer(
             container.containerHashId?.let {
                 containerVar[Container::containerHashId.name] = it
             }
+            val startVMTaskSeq = container.startVMTaskSeq
+            startVMTaskSeq?.let {
+                containerVar[Container::startVMTaskSeq.name] = it
+            }
             if (container is TriggerContainer) {
                 containerVar[container::params.name] = container.params
                 container.buildNo?.let {
@@ -110,7 +114,7 @@ data class BuildRecordContainer(
                     resourceVersion = context.resourceVersion,
                     buildId = context.buildId,
                     stageId = stageId,
-                    containerId = container.containerId!!,
+                    containerId = container.id!!,
                     containerType = container.getClassType(),
                     executeCount = context.executeCount,
                     matrixGroupFlag = container.matrixGroupFlag,
@@ -124,11 +128,19 @@ data class BuildRecordContainer(
                 if (buildStatus == BuildStatus.SKIP && !ElementUtils.getTaskAddFlag(
                         element = element,
                         stageEnableFlag = stageEnableFlag,
-                        containerEnableFlag = container.isContainerEnable()
+                        containerEnableFlag = container.isContainerEnable(),
+                        originMatrixContainerFlag = container.fetchGroupContainers() != null
                     )
                 ) {
                     // 不保存跳过的非post任务记录或非质量红线记录
                     return@forEachIndexed
+                }
+                val taskSeq = if (startVMTaskSeq != null && startVMTaskSeq > 1 && index < startVMTaskSeq - 1) {
+                    // 开机任务前的任务的序号需要在index基础上加1
+                    index + 1
+                } else {
+                    // 开机任务后的任务的序号需要在index基础上加2
+                    index + 2
                 }
                 taskBuildRecords.add(
                     BuildRecordTask(
@@ -136,13 +148,13 @@ data class BuildRecordContainer(
                         pipelineId = context.pipelineId,
                         buildId = context.buildId,
                         stageId = stageId,
-                        containerId = container.containerId!!,
+                        containerId = container.id!!,
                         taskId = element.id!!,
                         classType = element.getClassType(),
-                        atomCode = element.getTaskAtom(),
+                        atomCode = element.getAtomCode(),
                         executeCount = context.executeCount,
                         resourceVersion = context.resourceVersion,
-                        taskSeq = index + 2, // model中的插件在数据库表的顺序是从2开始
+                        taskSeq = taskSeq,
                         status = buildStatus?.name,
                         taskVar = element.initTaskVar(),
                         timestamps = mapOf(),

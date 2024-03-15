@@ -35,9 +35,11 @@ import com.tencent.devops.model.project.tables.TProject
 import com.tencent.devops.model.project.tables.records.TProjectRecord
 import com.tencent.devops.project.pojo.OpProjectUpdateInfoRequest
 import com.tencent.devops.project.pojo.PaasProject
+import com.tencent.devops.project.pojo.ProjectCollation
 import com.tencent.devops.project.pojo.ProjectCreateInfo
 import com.tencent.devops.project.pojo.ProjectOrganizationInfo
 import com.tencent.devops.project.pojo.ProjectProperties
+import com.tencent.devops.project.pojo.ProjectSortType
 import com.tencent.devops.project.pojo.ProjectUpdateInfo
 import com.tencent.devops.project.pojo.ProjectVO
 import com.tencent.devops.project.pojo.enums.ProjectApproveStatus
@@ -45,6 +47,8 @@ import com.tencent.devops.project.pojo.enums.ProjectAuthSecrecyStatus
 import com.tencent.devops.project.pojo.enums.ProjectChannelCode
 import com.tencent.devops.project.pojo.user.UserDeptDetail
 import com.tencent.devops.project.util.ProjectUtils
+import java.net.URLDecoder
+import java.time.LocalDateTime
 import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.Record
@@ -53,8 +57,6 @@ import org.jooq.Record3
 import org.jooq.Result
 import org.jooq.impl.DSL
 import org.springframework.stereotype.Repository
-import java.net.URLDecoder
-import java.time.LocalDateTime
 
 @Suppress("ALL")
 @Repository
@@ -572,7 +574,9 @@ class ProjectDao {
         limit: Int? = null,
         searchName: String? = null,
         enabled: Boolean? = null,
-        authSecrecyStatus: ProjectAuthSecrecyStatus? = null
+        authSecrecyStatus: ProjectAuthSecrecyStatus? = null,
+        sortType: ProjectSortType? = null,
+        collation: ProjectCollation? = ProjectCollation.DEFAULT
     ): Result<TProjectRecord> {
         with(TProject.T_PROJECT) {
             return dslContext.selectFrom(this)
@@ -582,6 +586,31 @@ class ProjectDao {
                 .let { if (null == searchName) it else it.and(PROJECT_NAME.like("%$searchName%")) }
                 .let { if (null == enabled) it else it.and(ENABLED.eq(enabled)) }
                 .let { if (null == authSecrecyStatus) it else it.and(AUTH_SECRECY.eq(authSecrecyStatus.value)) }
+                .let {
+                    if (sortType != null) {
+                        when (sortType) {
+                            ProjectSortType.PROJECT_NAME -> {
+                                if (collation == ProjectCollation.DEFAULT || collation == ProjectCollation.ASC) {
+                                    it.orderBy(DSL.field("CONVERT({0} USING GBK)", PROJECT_NAME).asc())
+                                } else {
+                                    it.orderBy(DSL.field("CONVERT({0} USING GBK)", PROJECT_NAME).desc())
+                                }
+                            }
+                            ProjectSortType.ENGLISH_NAME -> {
+                                if (collation == ProjectCollation.DEFAULT || collation == ProjectCollation.ASC) {
+                                    it.orderBy(ENGLISH_NAME.asc())
+                                } else {
+                                    it.orderBy(ENGLISH_NAME.desc())
+                                }
+                            }
+                            else -> {
+                                it
+                            }
+                        }
+                    } else {
+                        it
+                    }
+                }
                 .let { if (null == offset || null == limit) it else it.limit(offset, limit) }
                 .fetch()
         }
@@ -930,6 +959,19 @@ class ProjectDao {
             dslContext.update(this)
                 .set(PRODUCT_ID, productId)
                 .where(ENGLISH_NAME.eq(englishName))
+                .execute()
+        }
+    }
+
+    fun batchUpdateProductId(
+        dslContext: DSLContext,
+        englishNames: List<String>,
+        productId: Int
+    ) {
+        with(TProject.T_PROJECT) {
+            dslContext.update(this)
+                .set(PRODUCT_ID, productId)
+                .where(ENGLISH_NAME.`in`(englishNames))
                 .execute()
         }
     }

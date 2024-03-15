@@ -203,6 +203,7 @@ class StartContainerStageCmd(
                 containerId = container.containerId,
                 containerHashId = container.containerHashId,
                 actionType = actionType,
+                executeCount = container.executeCount,
                 errorCode = errorCode,
                 errorTypeName = errorTypeName,
                 reason = commandContext.latestSummary

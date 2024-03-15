@@ -38,6 +38,7 @@ import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.pojo.PipelineAsCodeSettings
 import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.archive.client.BkRepoClient
 import com.tencent.devops.common.auth.api.AuthPermission
@@ -58,6 +59,7 @@ import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.model.project.tables.records.TProjectRecord
 import com.tencent.devops.project.constant.ProjectMessageCode
 import com.tencent.devops.project.dao.ProjectDao
+import com.tencent.devops.project.dao.ProjectUpdateHistoryDao
 import com.tencent.devops.project.dispatch.ProjectDispatcher
 import com.tencent.devops.project.jmx.api.ProjectJmxApi
 import com.tencent.devops.project.pojo.AuthProjectForList
@@ -125,7 +127,8 @@ class TxProjectServiceImpl @Autowired constructor(
     projectJmxApi: ProjectJmxApi,
     redisOperation: RedisOperation,
     client: Client,
-    clientTokenService: ClientTokenService
+    clientTokenService: ClientTokenService,
+    projectUpdateHistoryDao: ProjectUpdateHistoryDao
 ) : AbsProjectServiceImpl(
     projectPermissionService = projectPermissionService,
     dslContext = dslContext,
@@ -141,7 +144,8 @@ class TxProjectServiceImpl @Autowired constructor(
     projectExtService = projectExtService,
     projectApprovalService = projectApprovalService,
     clientTokenService = clientTokenService,
-    profile = profile
+    profile = profile,
+    projectUpdateHistoryDao = projectUpdateHistoryDao
 ) {
 
     @Value("\${iam.v0.url:#{null}}")
@@ -574,6 +578,23 @@ class TxProjectServiceImpl @Autowired constructor(
         return organizationService.getRightProjectOrganization(
             tProjectRecord = tProjectRecord
         )
+    }
+
+    override fun validateProjectRelateProduct(
+        userId: String,
+        enabled: Boolean,
+        productId: Int?
+    ) {
+        // 启用项目时，若未关联OBS产品，需要抛异常
+        if (enabled && productId == null) {
+            throw ErrorCodeException(
+                errorCode = ProjectMessageCode.ERROR_PROJECT_NOT_RELATED_PRODUCT,
+                defaultMessage = MessageUtil.getMessageByLocale(
+                    messageCode = ProjectMessageCode.ERROR_PROJECT_NOT_RELATED_PRODUCT,
+                    language = I18nUtil.getLanguage(userId)
+                )
+            )
+        }
     }
 
     companion object {

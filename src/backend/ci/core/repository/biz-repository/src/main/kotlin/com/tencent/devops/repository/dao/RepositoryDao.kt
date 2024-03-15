@@ -31,18 +31,19 @@ import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.model.repository.tables.TRepository
+import com.tencent.devops.model.repository.tables.TRepositoryCodeGit
 import com.tencent.devops.model.repository.tables.records.TRepositoryRecord
 import com.tencent.devops.repository.constant.RepositoryMessageCode.GIT_NOT_FOUND
 import com.tencent.devops.repository.pojo.enums.RepositorySortEnum
 import com.tencent.devops.repository.pojo.enums.RepositorySortTypeEnum
+import java.time.LocalDateTime
+import javax.ws.rs.NotFoundException
 import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.Record1
 import org.jooq.Result
 import org.jooq.impl.DSL
 import org.springframework.stereotype.Repository
-import java.time.LocalDateTime
-import javax.ws.rs.NotFoundException
 
 @Repository
 @Suppress("ALL")
@@ -54,7 +55,8 @@ class RepositoryDao {
         userId: String,
         aliasName: String,
         url: String,
-        type: ScmType
+        type: ScmType,
+        atom: Boolean? = false
     ): Long {
         val now = LocalDateTime.now()
         var repoId = 0L
@@ -71,7 +73,8 @@ class RepositoryDao {
                     CREATED_TIME,
                     UPDATED_TIME,
                     IS_DELETED,
-                    UPDATED_USER
+                    UPDATED_USER,
+                    ATOM
                 ).values(
                     projectId,
                     userId,
@@ -81,7 +84,8 @@ class RepositoryDao {
                     now,
                     now,
                     false,
-                    userId
+                    userId,
+                    atom
                 )
                     .returning(REPOSITORY_ID)
                     .fetchOne()!!.repositoryId
@@ -418,6 +422,47 @@ class RepositoryDao {
                 .set(UPDATED_TIME, LocalDateTime.now())
                 .where(REPOSITORY_HASH_ID.eq(hashId).and(PROJECT_ID.eq(projectId)))
                 .execute()
+        }
+    }
+
+    fun getById(
+        dslContext: DSLContext,
+        repositoryId: Long
+    ): TRepositoryRecord? {
+        with(TRepository.T_REPOSITORY) {
+            return dslContext.selectFrom(this)
+                .where(
+                    REPOSITORY_ID.eq(repositoryId).and(IS_DELETED.eq(false))
+                )
+                .fetchAny()
+        }
+    }
+
+    fun updateAtomRepoFlag(
+        dslContext: DSLContext,
+        projectId: String,
+        repositoryId: Long,
+        atom: Boolean
+    ) {
+        with(TRepository.T_REPOSITORY) {
+            dslContext.update(this)
+                .set(ATOM, atom)
+                .where(REPOSITORY_ID.eq(repositoryId).and(PROJECT_ID.eq(projectId)))
+                .execute()
+        }
+    }
+
+    fun getGitProjectIdByRepositoryHashId(
+        dslContext: DSLContext,
+        repositoryHashIdList: List<String>
+    ): List<String> {
+        val tRepository = TRepository.T_REPOSITORY
+        with(TRepositoryCodeGit.T_REPOSITORY_CODE_GIT) {
+            return dslContext.select(GIT_PROJECT_ID)
+                .from(this)
+                .join(tRepository).on(REPOSITORY_ID.eq(tRepository.REPOSITORY_ID))
+                .where(tRepository.REPOSITORY_HASH_ID.`in`(repositoryHashIdList))
+                .fetchInto(String::class.java)
         }
     }
 }
