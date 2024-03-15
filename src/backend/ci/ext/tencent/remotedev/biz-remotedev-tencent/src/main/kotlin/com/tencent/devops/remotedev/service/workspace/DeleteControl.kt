@@ -415,19 +415,19 @@ class DeleteControl @Autowired constructor(
                 if (workspace.projectId in whiteListProject) {
                     readyDeleteWorkspace.add(
                         "project=${workspace.projectId}, ip=${workspace.hostName}," +
-                                " 原因=未达到云桌面4星活跃(自然月活跃天数: ${actives[workspace.hostName]!!}" +
+                                " 原因=未达到云桌面4星活跃(自然月活跃天数: ${actives[workspace.hostName]}" +
                                 " 检测期限到 ${limitDay.format(formatter)}) 白名单已命中，只展示，将不会销毁。"
                     )
                     return@forEach
                 }
                 logger.info(
                     "ready to delete when not 4 star active " +
-                            "|${workspace.workspaceName}|${actives[workspace.hostName]!!}|${workspace.hostName}"
+                            "|${workspace.workspaceName}|${actives[workspace.hostName]}|${workspace.hostName}"
                 )
 
                 readyDeleteWorkspace.add(
                     "project=${workspace.projectId}, ip=${workspace.hostName}," +
-                            " 原因=未达到云桌面4星活跃(自然月活跃天数: ${actives[workspace.hostName]!!}" +
+                            " 原因=未达到云桌面4星活跃(自然月活跃天数: ${actives[workspace.hostName]}" +
                             " 检测期限到 ${limitDay.format(formatter)})"
                 )
                 if (onDelete) {
