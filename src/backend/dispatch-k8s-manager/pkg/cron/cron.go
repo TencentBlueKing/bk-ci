@@ -20,8 +20,6 @@ const expiredDay = 5
 func initClearExpiredTaskDBData() error {
 	c := cron.New()
 
-	logs.Info("debug ===================")
-
 	if _, err := c.AddFunc("@every 2h10m", func() {
 		logs.Info("start clear expired task db data")
 		if err := mysql.DeleteTaskByUpdateTime(expiredDay); err != nil {
