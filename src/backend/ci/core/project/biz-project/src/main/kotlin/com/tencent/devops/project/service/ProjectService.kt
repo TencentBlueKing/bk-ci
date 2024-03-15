@@ -265,4 +265,8 @@ interface ProjectService {
     fun fixProjectOrganization(
         tProjectRecord: TProjectRecord
     ): ProjectOrganizationInfo
+
+    fun getProjectListByProductId(
+        productId: Int
+    ): List<ProjectBaseInfo>
 }

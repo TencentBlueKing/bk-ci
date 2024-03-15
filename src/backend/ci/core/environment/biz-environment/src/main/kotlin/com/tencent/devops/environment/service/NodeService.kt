@@ -27,12 +27,19 @@
 
 package com.tencent.devops.environment.service
 
+import com.tencent.bk.audit.annotations.ActionAuditRecord
+import com.tencent.bk.audit.annotations.AuditAttribute
+import com.tencent.bk.audit.annotations.AuditInstanceRecord
+import com.tencent.bk.audit.context.ActionAuditContext
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.PermissionForbiddenException
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.api.util.PageUtil
+import com.tencent.devops.common.audit.ActionAuditContent
+import com.tencent.devops.common.auth.api.ActionId
 import com.tencent.devops.common.auth.api.AuthPermission
+import com.tencent.devops.common.auth.api.ResourceTypeId
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.common.websocket.dispatch.WebSocketDispatcher
 import com.tencent.devops.environment.constant.EnvironmentMessageCode.ERROR_ENV_NO_DEL_PERMISSSION
@@ -88,6 +95,15 @@ class NodeService @Autowired constructor(
         const val BIZ_SIZE = 1
     }
 
+    @ActionAuditRecord(
+        actionId = ActionId.ENV_NODE_DELETE,
+        instance = AuditInstanceRecord(
+            resourceType = ResourceTypeId.ENV_NODE
+        ),
+        attributes = [AuditAttribute(name = ActionAuditContent.PROJECT_CODE_TEMPLATE, value = "#projectId")],
+        scopeId = "#projectId",
+        content = ActionAuditContent.ENV_NODE_DELETE_CONTENT
+    )
     override fun deleteNodes(userId: String, projectId: String, nodeLongIds: List<Long>) {
         val canDeleteNodeIds =
             environmentPermissionService.listNodeByPermission(userId, projectId, AuthPermission.DELETE) // 用户所有有权限的 节点id
@@ -104,7 +120,15 @@ class NodeService @Autowired constructor(
                 params = arrayOf(unauthorizedNodeIds.joinToString(",") { HashUtil.encodeLongId(it) })
             )
         }
-
+        existNodeList.forEach {
+            ActionAuditContext.current()
+                .addInstanceInfo(
+                    it.nodeId.toString(),
+                    it.nodeId.toString(),
+                    null,
+                    null
+                )
+        }
         NodeActionFactory.load(NodeActionFactory.Action.DELETE)?.action(existNodeList)
 
         dslContext.transaction { configuration ->
@@ -120,6 +144,15 @@ class NodeService @Autowired constructor(
         }
     }
 
+    @ActionAuditRecord(
+        actionId = ActionId.ENV_NODE_DELETE,
+        instance = AuditInstanceRecord(
+            resourceType = ResourceTypeId.ENV_NODE
+        ),
+        attributes = [AuditAttribute(name = ActionAuditContent.PROJECT_CODE_TEMPLATE, value = "#projectId")],
+        scopeId = "#projectId",
+        content = ActionAuditContent.ENV_NODE_DELETE_CONTENT
+    )
     fun deleteNodeByAgentId(userId: String, projectId: String, agentId: String) {
         val node = thirdPartyAgentDao.getAgent(dslContext, HashUtil.decodeIdToLong(agentId))?.nodeId ?: return
         deleteNodes(userId, projectId, listOf(node))
@@ -450,6 +483,15 @@ class NodeService @Autowired constructor(
         }
     }
 
+    @ActionAuditRecord(
+        actionId = ActionId.ENV_NODE_EDIT,
+        instance = AuditInstanceRecord(
+            resourceType = ResourceTypeId.ENV_NODE
+        ),
+        attributes = [AuditAttribute(name = ActionAuditContent.PROJECT_CODE_TEMPLATE, value = "#projectId")],
+        scopeId = "#projectId",
+        content = ActionAuditContent.ENV_NODE_EDIT_CONTENT
+    )
     fun updateDisplayName(userId: String, projectId: String, nodeHashId: String, displayName: String) {
         val nodeId = HashUtil.decodeIdToLong(nodeHashId)
         val nodeInDb = nodeDao.get(dslContext, projectId, nodeId) ?: throw ErrorCodeException(
@@ -465,6 +507,11 @@ class NodeService @Autowired constructor(
             )
         }
         checkDisplayName(projectId, nodeId, displayName)
+        ActionAuditContext.current()
+            .setInstanceId(nodeInDb.nodeId.toString())
+            .setOriginInstance(nodeInDb.displayName)
+            .setInstanceName(displayName)
+            .setInstance(displayName)
         dslContext.transaction { configuration ->
             val context = DSL.using(configuration)
             nodeDao.updateDisplayName(dslContext = context, nodeId = nodeId, nodeName = displayName, userId = userId)

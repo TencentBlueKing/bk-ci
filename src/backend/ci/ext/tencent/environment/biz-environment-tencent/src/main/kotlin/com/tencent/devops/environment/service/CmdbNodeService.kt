@@ -27,11 +27,18 @@
 
 package com.tencent.devops.environment.service
 
+import com.tencent.bk.audit.annotations.ActionAuditRecord
+import com.tencent.bk.audit.annotations.AuditAttribute
+import com.tencent.bk.audit.annotations.AuditInstanceRecord
+import com.tencent.bk.audit.context.ActionAuditContext
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.api.util.PageUtil
+import com.tencent.devops.common.audit.ActionAuditContent
+import com.tencent.devops.common.auth.api.ActionId
 import com.tencent.devops.common.auth.api.AuthPermission
+import com.tencent.devops.common.auth.api.ResourceTypeId
 import com.tencent.devops.common.environment.agent.client.EsbAgentClient
 import com.tencent.devops.common.environment.agent.pojo.agent.RawCmdbNode
 import com.tencent.devops.common.redis.RedisOperation
@@ -299,6 +306,15 @@ class CmdbNodeService @Autowired constructor(
      * 测试机导入
      * 如果机器不存在，add一条新纪录
      */
+    @ActionAuditRecord(
+        actionId = ActionId.ENV_NODE_CREATE,
+        instance = AuditInstanceRecord(
+            resourceType = ResourceTypeId.ENV_NODE
+        ),
+        attributes = [AuditAttribute(name = ActionAuditContent.PROJECT_CODE_TEMPLATE, value = "#projectId")],
+        scopeId = "#projectId",
+        content = ActionAuditContent.ENV_NODE_CREATE_CONTENT
+    )
     fun addCmdbNodes(userId: String, projectId: String, nodeIps: List<String>): AddCmdbNodesRes {
         val startTime = LocalDateTime.now()
         // 验证 CMDB 节点IP和责任人
@@ -369,7 +385,7 @@ class CmdbNodeService @Autowired constructor(
                 projectId = projectId,
                 ips = toAddNodeList.map { it.nodeIp }
             )
-            batchRegisterNodePermission(insertedNodeList = insertedNodeList, userId = userId, projectId = projectId)
+            batchRegisterNodePermissionAndAudit(insertedNodeList = insertedNodeList, userId = userId, projectId = projectId)
         }
         val time7 = LocalDateTime.now()
         logger.info(
@@ -564,18 +580,22 @@ class CmdbNodeService @Autowired constructor(
         }
     }
 
-    private fun batchRegisterNodePermission(
+    private fun batchRegisterNodePermissionAndAudit(
         insertedNodeList: List<TNodeRecord>,
         userId: String,
         projectId: String
     ) {
         insertedNodeList.forEach {
+            val nodeName = "${NodeStringIdUtils.getNodeStringId(it)}(${it.nodeIp})"
             environmentPermissionService.createNode(
                 userId = userId,
                 projectId = projectId,
                 nodeId = it.nodeId,
-                nodeName = "${NodeStringIdUtils.getNodeStringId(it)}(${it.nodeIp})"
+                nodeName = nodeName
             )
+            // audit
+            ActionAuditContext.current()
+                .addInstanceInfo(it.nodeId.toString(), nodeName, null, null)
         }
     }
 }

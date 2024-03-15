@@ -27,8 +27,10 @@
 
 package com.tencent.devops.environment.resources
 
+import com.tencent.bk.audit.annotations.AuditEntry
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.auth.api.ActionId
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.environment.api.UserCmdbNodeResource
 import com.tencent.devops.environment.pojo.CmdbNode
@@ -62,6 +64,7 @@ class UserCmdbNodeResourceImpl @Autowired constructor(
         )
     }
 
+    @AuditEntry(actionId = ActionId.ENV_NODE_CREATE)
     override fun addCmdbNodes(userId: String, projectId: String, nodeIps: List<String>): Result<AddCmdbNodesRes> {
         val addCmdbNodesRes = cmdbNodeService.addCmdbNodes(userId = userId, projectId = projectId, nodeIps = nodeIps)
         return Result(addCmdbNodesRes)
