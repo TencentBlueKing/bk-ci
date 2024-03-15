@@ -344,7 +344,10 @@ interface ServiceProjectResource {
         projectCode: String,
         @Parameter(description = "产品名称", required = true)
         @QueryParam("productName")
-        productName: String
+        productName: String? = null,
+        @Parameter(description = "产品ID", required = true)
+        @QueryParam("productId")
+        productId: Int? = null
     ): Result<Boolean>
 
     @PUT
@@ -357,4 +360,13 @@ interface ServiceProjectResource {
         @Parameter(description = "产品名称", required = true)
         projectOrganizationInfo: ProjectOrganizationInfo
     ): Result<Boolean>
+
+    @GET
+    @Path("/getProjectListByProductId")
+    @Operation(summary = "根据运营产品ID获取项目列表接口")
+    fun getProjectListByProductId(
+        @Parameter(description = "产品ID", required = true)
+        @QueryParam("productId")
+        productId: Int
+    ): Result<List<ProjectBaseInfo>>
 }

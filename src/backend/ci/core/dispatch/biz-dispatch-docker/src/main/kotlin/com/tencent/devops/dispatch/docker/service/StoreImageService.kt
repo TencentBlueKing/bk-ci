@@ -30,7 +30,7 @@ package com.tencent.devops.dispatch.docker.service
 import com.tencent.devops.common.api.exception.InvalidParamException
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.dispatch.docker.common.ErrorCodeEnum
-import com.tencent.devops.store.api.image.service.ServiceStoreImageResource
+import com.tencent.devops.store.api.image.ServiceStoreImageResource
 import com.tencent.devops.store.pojo.image.exception.ImageNotInstalledException
 import com.tencent.devops.store.pojo.image.response.ImageRepoInfo
 import org.slf4j.LoggerFactory

@@ -37,6 +37,7 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.container.Stage
 import com.tencent.devops.common.pipeline.container.TriggerContainer
+import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.common.pipeline.pojo.element.agent.CodeGitElement
 import com.tencent.devops.common.pipeline.pojo.element.agent.CodeGitlabElement
@@ -101,11 +102,7 @@ class RepoPipelineRefService @Autowired constructor(
     ) {
         logger.info("updateRepositoryPipelineRef, [$userId|$action|$projectId|$pipelineId]")
         var model: Model? = null
-        val channel = pipelineInfoDao.getPipelineInfo(
-            dslContext = dslContext,
-            projectId = projectId,
-            pipelineId = pipelineId
-        )?.channel ?: return
+        var channel = ""
         if (action != "delete_pipeline") {
             val modelString = pipelineResDao.getLatestVersionModelString(dslContext, projectId, pipelineId)
             if (modelString.isNullOrBlank()) {
@@ -118,6 +115,12 @@ class RepoPipelineRefService @Autowired constructor(
                 logger.warn("parse process($pipelineId) model fail", ignored)
                 return
             }
+            // 渠道
+            channel = pipelineInfoDao.getPipelineInfo(
+                dslContext = dslContext,
+                projectId = projectId,
+                pipelineId = pipelineId
+            )?.channel ?: ChannelCode.BS.name
         }
         try {
             analysisPipelineRefAndSave(

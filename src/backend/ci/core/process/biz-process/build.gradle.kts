@@ -34,7 +34,6 @@ dependencies {
     api(project(":core:common:common-auth:common-auth-api"))
     api(project(":core:common:common-websocket"))
     api(project(":core:store:api-store"))
-    api(project(":core:store:api-store-image"))
     api(project(":core:dispatch:api-dispatch"))
     api(project(":core:project:api-project"))
     api(project(":core:repository:api-repository"))

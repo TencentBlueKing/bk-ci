@@ -27,10 +27,12 @@
 
 package com.tencent.devops.quality.resources
 
+import com.tencent.bk.audit.annotations.AuditEntry
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.PageUtil
+import com.tencent.devops.common.auth.api.ActionId
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.quality.api.UserGroupResource
 import com.tencent.devops.quality.pojo.Group
@@ -65,6 +67,7 @@ class UserGroupResourceImpl @Autowired constructor(
         return Result(qualityNotifyGroupService.getProjectGroupAndUsers(userId, projectId))
     }
 
+    @AuditEntry(actionId = ActionId.QUALITY_GROUP_CREATE)
     override fun create(userId: String, projectId: String, group: GroupCreate): Result<Boolean> {
         checkParam(userId, projectId)
         qualityNotifyGroupService.create(userId, projectId, group)
@@ -81,12 +84,14 @@ class UserGroupResourceImpl @Autowired constructor(
         return Result(qualityNotifyGroupService.getUsers(userId, projectId, groupHashId))
     }
 
+    @AuditEntry(actionId = ActionId.QUALITY_GROUP_EDIT)
     override fun edit(userId: String, projectId: String, groupHashId: String, group: GroupUpdate): Result<Boolean> {
         checkParam(userId, projectId, groupHashId)
         qualityNotifyGroupService.edit(userId, projectId, groupHashId, group)
         return Result(true)
     }
 
+    @AuditEntry(actionId = ActionId.QUALITY_GROUP_DELETE)
     override fun delete(userId: String, projectId: String, groupHashId: String): Result<Boolean> {
         checkParam(userId, projectId, groupHashId)
         qualityNotifyGroupService.delete(userId, projectId, groupHashId)

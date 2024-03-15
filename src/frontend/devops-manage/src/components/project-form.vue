@@ -46,9 +46,11 @@ const logoFiles = computed(() => {
   }
   return files;
 });
-const englishNameReg = /^[a-z][a-z0-9-]{1,32}$/;
-const inited = ref(false);
-const projectForm = ref<any>(null);
+const isRbac = computed(() => {
+  return authProvider.value === 'rbac'
+})
+const authProvider = ref(window.top.BK_CI_AUTH_PROVIDER || '')
+const projectForm = ref(null);
 const iframeRef = ref(null);
 const operationalList = ref([]);
 const vm = getCurrentInstance();
@@ -537,7 +539,12 @@ onBeforeUnmount(() => {
       >
       </bk-select>
     </bk-form-item>
-    <bk-form-item :label="t('项目性质')" property="authSecrecy" :required="true">
+    <bk-form-item
+      v-if="isRbac"
+      :label="t('项目性质')"
+      property="authSecrecy"
+      :required="true"
+    >
       <bk-radio-group
         v-model="projectData.authSecrecy"
         @change="handleChangeForm"
@@ -555,6 +562,7 @@ onBeforeUnmount(() => {
       </bk-radio-group>
     </bk-form-item>
     <bk-form-item
+      v-if="isRbac"
       :label="t('项目最大可授权人员范围')"
       :description="t('该设置表示可以加入项目的成员的最大范围，范围内的用户才可以成功加入项目下的任意用户组')"
       property="subjectScopes"
