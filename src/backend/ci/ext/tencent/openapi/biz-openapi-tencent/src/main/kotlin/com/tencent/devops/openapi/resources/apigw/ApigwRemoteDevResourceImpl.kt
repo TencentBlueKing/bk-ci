@@ -14,8 +14,8 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
-class ApigwRemoteDevResourceImpl @Autowired constructor(private val client: Client)
-    : ApigwRemoteDevResource {
+class ApigwRemoteDevResourceImpl @Autowired constructor(private val client: Client) :
+    ApigwRemoteDevResource {
 
     companion object {
         private val logger = LoggerFactory.getLogger(ApigwProjectResourceImpl::class.java)

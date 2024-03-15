@@ -210,7 +210,8 @@ class DeleteControl @Autowired constructor(
                 notifyType = mutableSetOf(RemoteDevNotifyType.EMAIL, RemoteDevNotifyType.RTX),
                 bodyParams = mutableMapOf(
                     "cgsIp" to (workspace.hostName ?: ""),
-                    "userId" to userIds.joinToString()
+                    "userId" to userIds.joinToString(),
+                    "projectId" to (workspace.projectId)
                 )
             )
         }
@@ -376,7 +377,8 @@ class DeleteControl @Autowired constructor(
                     notifyTemplateCode = NOT_ASSIGN_AUTO_DELETE_NOTIFY,
                     notifyType = mutableSetOf(RemoteDevNotifyType.EMAIL, RemoteDevNotifyType.RTX),
                     bodyParams = mutableMapOf(
-                        "cgsIps" to values.joinToString("\n") { it.first }
+                        "cgsIps" to values.joinToString("\n") { it.first },
+                        "projectId" to projectId
                     )
                 )
             }
@@ -443,6 +445,7 @@ class DeleteControl @Autowired constructor(
                                 notifyType = mutableSetOf(RemoteDevNotifyType.EMAIL, RemoteDevNotifyType.RTX),
                                 bodyParams = mutableMapOf(
                                     "cgsIp" to (workspace.hostName ?: ""),
+                                    "projectId" to (workspace.projectId),
                                     "userId" to userIds.joinToString()
                                 )
                             )

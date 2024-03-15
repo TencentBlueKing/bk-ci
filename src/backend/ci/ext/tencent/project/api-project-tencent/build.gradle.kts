@@ -32,6 +32,6 @@ dependencies {
     api(project(":core:common:common-auth:common-auth-api"))
 }
 
-plugins{
+plugins {
     `task-deploy-to-maven`
 }
