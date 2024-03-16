@@ -196,7 +196,7 @@
                             executeCount: res.executeCount
                         }
                     })
-                    this.$emit('update-table')
+
                     this.$showTips({
                         message: this.$t('subpage.rebuildSuc'),
                         theme: 'success'

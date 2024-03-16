@@ -284,9 +284,12 @@
     grid-template-columns: auto 1fr auto;
     grid-gap: 6px;
     height: 24px;
+    line-height: 24px;
     background: #F0F1F5;
     padding: 0 8px;
     min-width: 200px;
+    width: 100%;
+    overflow: hidden;
     .icon-edit-line,
     .icon-check-circle {
         &.icon-check-circle.is-release-version-icon {
@@ -301,6 +304,7 @@
     .pipeline-version-name {
         display: flex;
         grid-gap: 8px;
+        overflow: hidden;
         > span {
             line-height: 24px;
             @include ellipsis();

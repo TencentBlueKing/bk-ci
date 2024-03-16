@@ -191,7 +191,7 @@
                     case 'setting':
                         return {
                             component: 'PipelineConfig',
-                            showVar: true
+                            showVar: type === 'pipeline'
                         }
                     case 'permission':
                         return {

@@ -249,7 +249,7 @@
         grid-gap: 8px;
         grid-auto-flow: column;
         grid-template-columns: min-content 1fr;
-        margin: 0 0 10px 0;
+        margin: 0 0 16px 0;
         max-height: 66px;
         flex-shrink: 0;
 

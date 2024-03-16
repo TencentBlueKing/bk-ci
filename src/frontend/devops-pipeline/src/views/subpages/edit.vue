@@ -216,33 +216,13 @@
                     this.removeLeaveListener()
                 }
             },
-            isCodeMode: async function (val) {
-                try {
-                    this.togglePropertyPanel({
-                        isShow: false
-                    })
-                    const pipeline = Object.assign({}, this.pipeline, {
-                        stages: [
-                            this.pipeline.stages[0],
-                            ...(this.pipelineWithoutTrigger?.stages ?? [])
-                        ]
-                    })
-                    await this.transferPipeline({
-                        projectId: this.$route.params.projectId,
-                        pipelineId: this.$route.params.pipelineId,
-                        version: this.pipelineVersion,
-                        actionType: val ? 'FULL_MODEL2YAML' : 'FULL_YAML2MODEL',
-                        modelAndSetting: {
-                            model: pipeline,
-                            setting: this.pipelineSetting
-                        },
-                        oldYaml: this.pipelineYaml
-                    })
-                } catch (error) {
-                    this.$bkMessage({
-                        theme: 'error',
-                        message: error.message
-                    })
+            isCodeMode: function (val) {
+                this.togglePropertyPanel({
+                    isShow: false
+                })
+                this.setPipelineEditing(false)
+                if (!this.editfromImport) {
+                    this.init()
                 }
             }
         },
@@ -277,8 +257,7 @@
                 'setPipelineEditing',
                 'setSaveStatus',
                 'setEditFrom',
-                'updatePipelineSetting',
-                'transferPipeline'
+                'updatePipelineSetting'
             ]),
             ...mapActions('common', [
                 'requestQualityAtom',

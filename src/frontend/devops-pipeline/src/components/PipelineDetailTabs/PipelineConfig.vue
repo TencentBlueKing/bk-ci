@@ -2,7 +2,7 @@
     <div class="pipeline-config-wrapper" v-bkloading="{ isLoading }">
 
         <bk-alert
-            v-if="hasDraftPipeline"
+            v-if="isActiveDraftVersion"
             :title="
                 $t('draftInfoTips', [draftCreator, draftLastUpdateTime])
             "
@@ -95,7 +95,7 @@
             ]),
             ...mapGetters({
                 isCodeMode: 'isCodeMode',
-                hasDraftPipeline: 'atom/hasDraftPipeline',
+                isActiveDraftVersion: 'atom/isActiveDraftVersion',
                 getPipelineSubscriptions: 'atom/getPipelineSubscriptions',
                 isBranchVersion: 'atom/isBranchVersion'
             }),

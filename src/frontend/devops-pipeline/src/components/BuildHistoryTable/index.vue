@@ -220,11 +220,11 @@
                                 <template v-else>
                                     <i
                                         class="devops-icon icon-check-small"
-                                        @click="handleRemarkChange(props.row)"
+                                        @click.stop="handleRemarkChange(props.row)"
                                     />
                                     <i
                                         class="devops-icon icon-close-small"
-                                        @click="resetRemark"
+                                        @click.stop="resetRemark"
                                     />
                                 </template>
                             </div>
@@ -815,8 +815,13 @@
                 if (this.customColumn.includes(column.property)) {
                     localStorage.setItem(`${column.property}Width`, newWidth)
                 }
-                console.log(column, event)
                 this.BUILD_HISTORY_TABLE_COLUMNS_MAP[column.property].width = newWidth
+                this.tableSetting.selectedFields = this.tableSetting.selectedFields.map((col) => {
+                    if (col.id === column.property) {
+                        col.width = newWidth
+                    }
+                    return col
+                })
             },
             getArchiveUrl ({ id: buildNo }, type = '', codelib = '') {
                 const { projectId, pipelineId } = this.$route.params
@@ -932,7 +937,7 @@
                         message = this.$t('subpage.rebuildSuc')
                         theme = 'success'
 
-                        this.$emit('update-table')
+                        this.requestHistory()
                     } else {
                         message = this.$t('subpage.rebuildFail')
                         theme = 'error'
@@ -1181,7 +1186,8 @@
           display: none;
           cursor: pointer;
           vertical-align: middle;
-          margin-left: 10px;
+          margin-left: 4px;
+          padding: 6px;
           color: $primaryColor;
 
         }

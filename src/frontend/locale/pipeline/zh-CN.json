@@ -1058,10 +1058,12 @@
     "atomOnlyFail": "只有前面有插件运行失败时才运行",
     "varMatch": "自定义变量全部满足时才运行",
     "varNotMatch": "自定义变量全部满足时不运行",
+    "customCondition": "自定义表达式满足时运行",
     "preStageSuccess": "上游 Stage 成功时",
     "preStageFail": "上游 Stage 失败时",
     "preStageCancel": "上游 Stage 取消时",
     "customVar": "自定义变量",
+    "customConditionExp": "自定义表达式",
     "dependOn": "依赖于",
     "dependOnDesc": "请选择或输入要依赖Job的Job ID，输入时多个Job ID之间以英文逗号分隔",
     "dependOnId": "选择要依赖的Job",
@@ -1327,7 +1329,7 @@
   "triggerBranch": "触发分支",
   "triggerRepo": "触发代码库",
   "noBuildHistory": "暂无执行历史",
-  "noDebugRecords": "暂无调试纪录",
+  "noDebugRecords": "暂无调试记录",
   "buildNow": "立即执行",
   "debugNow": "立即调试",
   "onlyDraftBuildHistoryTips": "流水线尚未发布，请先发布，再启动执行。",
@@ -1431,7 +1433,7 @@
   "executeInfo": "执行信息",
   "triggerEvent": "触发事件",
   "invalidCodeMode": "切换到Code方式失败",
-  "draftExecRecords": "调试纪录",
+  "draftExecRecords": "调试记录",
   "draftExecDetail": "调试详情",
   "disableSuc": "流水线【{0}】禁用成功",
   "enableSuc": "流水线【{0}】启用成功",
@@ -1488,5 +1490,6 @@
   "branchVersionTips3": "3、流水线查看页面，展示默认分支上对应的YAML文件内容",
   "latest": "最新",
   "noPipelineToDelete": "无流水线待删除",
-  "unGroup": "无分组"
+  "unGroup": "无分组",
+  "dropDraft": "放弃草稿"
 }

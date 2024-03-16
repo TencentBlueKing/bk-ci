@@ -16,24 +16,94 @@
                 </bk-breadcrumb-item>
 
             </bk-breadcrumb>
-            <div slot="right">
-                <bk-button
-                    theme="primary"
-                    :disabled="isConfirmDisable"
-                    @click="createNewPipeline"
-                >
-                    {{$t('create')}}
-                </bk-button>
-                <bk-button
-                    @click="goList"
-                >
-                    {{$t('cancel')}}
-                </bk-button>
-            </div>
         </pipeline-header>
         <div v-bkloading="{ isLoading }" class="pipeline-template-box">
-            <div class="pipeline-template-box-left-side">
+            <aside class="pipeline-template-box-left-side">
+                <bk-form form-type="vertical">
+                    <bk-form-item :label="$t('pipelineName')">
+                        <div class="pipeline-input">
+                            <bk-input
+                                ref="pipelineName"
+                                :placeholder="$t('pipelineNameInputTips')"
+                                maxlength="40"
+                                name="newPipelineName"
+                                v-model.trim="newPipelineName"
+                                v-validate.initial="'required'"
+                            />
+                            <span class="border-effect" v-show="!errors.has('newPipelineName')"></span>
+                            <span v-show="errors.has('newPipelineName')" class="validate-fail-border-effect"></span>
+                        </div>
+                    </bk-form-item>
+                    <template v-if="!isActiveTempEmpty">
+                        <bk-form-item :label="$t('type')">
+                            <bk-radio-group class="pipelinte-template-type-group" v-model="templateType">
+                                <bk-popover placement="bottom" v-for="(entry, key) in tplTypes" :key="key">
+                                    <bk-radio
+                                        :value="entry.value"
+                                    >
+                                        <span class="radio-label">{{ entry.label }}</span>
+                                    </bk-radio>
+                                    <div slot="content" style="white-space: normal;">{{entry.tip}}</div>
+                                </bk-popover>
+                            </bk-radio-group>
+                        </bk-form-item>
+                        <bk-form-item :label="$t('copyTempConf')" label-width="auto">
+                            <bk-checkbox-group v-model="applySettings">
+                                <div v-for="item in settingItems"
+                                    :key="item.label"
+                                    :class="['template-setting-apply-checkbox', {
+                                        'disabled-setting': item.disabled
+                                    }]"
+                                >
+                                    <bk-checkbox
+                                        :value="item.value"
+                                        :disabled="item.disabled"
+                                    >
+                                        <p class="template-apply-setting-checkbox-txt">
+                                            <span class="template-apply-setting-checkbox-txt-label">{{ item.label }}</span>
+                                        </p>
+                                    </bk-checkbox>
+                                    <em v-if="item.disabled">
+                                        {{$t('tempWithoutConf')}}
+                                    </em>
+                                    <bk-button
+                                        text
+                                        theme="primary"
+                                        size="small"
+                                        @click.stop="previewSetting(item.value)"
+                                        v-else
+                                    >
+                                        {{$t('pipelinesPreview')}}
+                                    </bk-button>
+                                </div>
+                            </bk-checkbox-group>
+                        </bk-form-item>
+                    </template>
+                </bk-form>
+                <footer style="margin-top: 24px;">
+                    <bk-button
+                        theme="primary"
+                        :disabled="isConfirmDisable"
+                        @click="createNewPipeline"
+                    >
+                        {{$t('create')}}
+                    </bk-button>
+                    <bk-button
+                        @click="goList"
+                    >
+                        {{$t('cancel')}}
+                    </bk-button>
+                </footer>
+            </aside>
+            <div class="pipeline-template-box-right-side">
                 <bk-tab :active.sync="activePanel" @tab-change="handleTemplateTypeChange" type="unborder-card">
+                    <div class="pipeline-template-searchbox" slot="setting">
+                        <bk-input
+                            v-model.trim="searchName"
+                            icon-right="bk-icon icon-search"
+                            :placeholder="$t('searchPipelineTemplate')"
+                        />
+                    </div>
                     <bk-tab-panel
                         v-for="(panel, index) in panels"
                         v-bind="panel"
@@ -41,13 +111,6 @@
                     >
                     </bk-tab-panel>
                 </bk-tab>
-                <div class="pipeline-template-search">
-                    <bk-input
-                        v-model.trim="searchName"
-                        icon-right="bk-icon icon-search"
-                        :placeholder="$t('searchPipelineTemplate')"
-                    />
-                </div>
                 <ul class="create-pipeline-template-list" v-if="tempList.length" @scroll.passive="scrollLoadMore">
                     <li v-for="(temp, tIndex) in tempList"
                         :class="{
@@ -106,69 +169,7 @@
                     </li>
                 </ul>
             </div>
-            <aside class="pipeline-template-box-right-side">
-                <bk-form form-type="vertical">
-                    <bk-form-item :label="$t('pipelineName')">
-                        <div class="pipeline-input">
-                            <bk-input
-                                ref="pipelineName"
-                                :placeholder="$t('pipelineNameInputTips')"
-                                maxlength="40"
-                                name="newPipelineName"
-                                v-model.trim="newPipelineName"
-                                v-validate.initial="'required'"
-                            />
-                            <span class="border-effect" v-show="!errors.has('newPipelineName')"></span>
-                            <span v-show="errors.has('newPipelineName')" class="validate-fail-border-effect"></span>
-                        </div>
-                    </bk-form-item>
-                    <template v-if="!isActiveTempEmpty">
-                        <bk-form-item :label="$t('type')">
-                            <bk-radio-group class="pipelinte-template-type-group" v-model="templateType">
-                                <bk-popover placement="bottom" v-for="(entry, key) in tplTypes" :key="key">
-                                    <bk-radio
-                                        :value="entry.value"
-                                    >
-                                        <span class="radio-label">{{ entry.label }}</span>
-                                    </bk-radio>
-                                    <div slot="content" style="white-space: normal;">{{entry.tip}}</div>
-                                </bk-popover>
-                            </bk-radio-group>
-                        </bk-form-item>
-                        <bk-form-item :label="$t('copyTempConf')">
-                            <bk-checkbox-group v-model="applySettings">
-                                <div v-for="item in settingItems"
-                                    :key="item.label"
-                                    :class="['template-setting-apply-checkbox', {
-                                        'disabled-setting': item.disabled
-                                    }]"
-                                >
-                                    <bk-checkbox
-                                        :value="item.value"
-                                        :disabled="item.disabled"
-                                    >
-                                        <p class="template-apply-setting-checkbox-txt">
-                                            <span class="template-apply-setting-checkbox-txt-label">{{ item.label }}</span>
-                                        </p>
-                                    </bk-checkbox>
-                                    <em v-if="item.disabled">
-                                        {{$t('tempWithoutConf')}}
-                                    </em>
-                                    <bk-button
-                                        text
-                                        theme="primary"
-                                        size="small"
-                                        @click.stop="previewSetting(item.value)"
-                                        v-else
-                                    >
-                                        {{$t('pipelinesPreview')}}
-                                    </bk-button>
-                                </div>
-                            </bk-checkbox-group>
-                        </bk-form-item>
-                    </template>
-                </bk-form>
-            </aside>
+
         </div>
         <pipeline-template-preview
             v-model="isShowPreview"
@@ -521,27 +522,125 @@
     .pipeline-template-box {
         display: flex;
         flex: 1;
-        margin: 24px;
-        padding: 24px;
-        background: white;
-        box-shadow: 0 2px 2px 0 #00000026;
+        margin: 24px 24px 0 24px;
+        grid-gap: 16px;
         overflow: hidden;
         &-left-side {
+            width: 388px;
+            box-shadow: 0 2px 2px 0 #00000026;
+            flex-shrink: 0;
+            padding: 24px;
+            background: white;
+            overflow: auto;
+
+            .pipeline-input {
+                position: relative;
+                margin-bottom: 16px;
+                font-size: 12px;
+                color: #333C48;
+                input,
+                input:focus {
+                    border-color: transparent !important;
+                    border-bottom-color: $borderWeightColor !important;
+                }
+                input:focus + .border-effect {
+                    transform: scaleX(1) translateY(1px);
+                    opacity: 1;
+                }
+                input:blur + .border-effect {
+                    transform: scaleX(1) translateY(1px);
+                    opacity: 1;
+                }
+                .border-effect {
+                    position: absolute;
+                    bottom: 0;
+                    content: '';
+                    height:2px;
+                    width: 100%;
+                    background: $primaryColor;
+                    display: block;
+                    transform: scaleX(0) translateY(1px);
+                    transform-origin: 50%;
+                    opacity: 0;
+                    transition: all .2s ease-in-out;
+                }
+                .validate-fail-border-effect {
+                    position: absolute;
+                    bottom: 0;
+                    left: 0;
+                    content: '';
+                    height:2px;
+                    width: 100%;
+                    background: $failColor;
+                }
+            }
+            .pipelinte-template-type-group {
+                display: grid;
+                grid-gap: 8px;
+                height: 32px;
+                grid-auto-flow: column;
+                align-items: center;
+                grid-template-columns: max-content;
+            }
+            .template-setting-apply-checkbox {
+                border: 1px solid #3A84FF;
+                border-radius: 2px;
+                height: 40px;
+                display: flex;
+                align-items: center;
+                padding: 0 20px;
+                margin-bottom: 10px;
+                .bk-form-checkbox {
+                    display: flex;
+                    align-items: center;
+                    flex: 1;
+                    .bk-checkbox-text {
+                        flex: 1;
+                    }
+                }
+                &.disabled-setting {
+                    border: 1px solid #DCDEE5;
+                    opacity: 0.5;
+                    color: #sC4C6CC;
+                    em {
+                        font-size: 12px;
+                        font-style: normal;
+                    }
+                }
+                .template-apply-setting-checkbox-txt {
+                    width: 100%;
+                    display: grid;
+                    grid-gap: 10px;
+                    grid-template-columns: 1fr max-content;
+                    grid-auto-flow: column;
+                    align-items: center;
+                    &-label {
+                        @include ellipsis();
+                    }
+                }
+            }
+            .pipeline-template-box-right-side-footer {
+                margin-top: 20px;
+            }
+        }
+        &-right-side {
             flex: 1;
             display: flex;
             flex-direction: column;
+            box-shadow: 0 2px 2px 0 #00000026;
             overflow: hidden;
-            padding-right: 24px;
+            background: white;
             .bk-tab.bk-tab-unborder-card .bk-tab-section {
                 padding: 0;
             }
-            .pipeline-template-search {
-                flex-shrink: 0;
-                margin: 16px 0;
+            .pipeline-template-searchbox {
+                width: 600px;
+                margin-right: 24px;
             }
             .create-pipeline-template-list {
                 display: grid;
                 grid-gap: 16px;
+                margin: 16px 24px;
                 grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
                 grid-auto-rows: 72px;
                 overflow: auto;
@@ -630,99 +729,6 @@
                         align-self: center;
                     }
                 }
-            }
-        }
-        &-right-side {
-            width: 388px;
-            border-left: 1px solid #DCDEE5;
-            flex-shrink: 0;
-            padding: 24px;
-            overflow: auto;
-
-            .pipeline-input {
-                position: relative;
-                margin-bottom: 16px;
-                font-size: 12px;
-                color: #333C48;
-                input,
-                input:focus {
-                    border-color: transparent !important;
-                    border-bottom-color: $borderWeightColor !important;
-                }
-                input:focus + .border-effect {
-                    transform: scaleX(1) translateY(1px);
-                    opacity: 1;
-                }
-                input:blur + .border-effect {
-                    transform: scaleX(1) translateY(1px);
-                    opacity: 1;
-                }
-                .border-effect {
-                    position: absolute;
-                    bottom: 0;
-                    content: '';
-                    height:2px;
-                    width: 100%;
-                    background: $primaryColor;
-                    display: block;
-                    transform: scaleX(0) translateY(1px);
-                    transform-origin: 50%;
-                    opacity: 0;
-                    transition: all .2s ease-in-out;
-                }
-                .validate-fail-border-effect {
-                    position: absolute;
-                    bottom: 0;
-                    left: 0;
-                    content: '';
-                    height:2px;
-                    width: 100%;
-                    background: $failColor;
-                }
-            }
-            .pipelinte-template-type-group {
-                display: grid;
-                grid-gap: 8px;
-                height: 32px;
-                grid-auto-flow: column;
-                align-items: center;
-                grid-template-columns: max-content;
-            }
-            .template-setting-apply-checkbox {
-                border: 1px solid #3A84FF;
-                border-radius: 2px;
-                height: 40px;
-                display: flex;
-                align-items: center;
-                padding: 0 20px;
-                margin-bottom: 10px;
-                .bk-form-checkbox {
-                    display: flex;
-                    align-items: center;
-                    flex: 1;
-                    .bk-checkbox-text {
-                        flex: 1;
-                    }
-                }
-                &.disabled-setting {
-                    border: 1px solid #DCDEE5;
-                    opacity: 0.5;
-                    color: #sC4C6CC;
-                }
-                .template-apply-setting-checkbox-txt {
-                    width: 100%;
-                    display: grid;
-                    grid-gap: 10px;
-                    grid-template-columns: 1fr max-content;
-                    grid-auto-flow: column;
-                    align-items: center;
-                    &-label {
-                        @include ellipsis();
-                    }
-                }
-            }
-            .pipeline-template-box-right-side-footer {
-                margin-top: 20px;
             }
         }
 

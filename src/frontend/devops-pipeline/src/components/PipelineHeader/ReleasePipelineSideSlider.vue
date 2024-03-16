@@ -8,8 +8,8 @@
     >
         <header slot="header" class="release-pipeline-side-slider-header">
             {{ $t("releasePipeline") }}
-            <bk-tag radius="10px">{{ $t("releasePipelineVersion", [newReleaseVersionName]) }}</bk-tag>
-            <span>
+            <span v-bk-overflow-tips class="release-pipeline-new-version">{{ $t("releasePipelineVersion", [newReleaseVersionName]) }}</span>
+            <span v-bk-overflow-tips>
                 {{ $t("releasePipelineBaseVersion", [draftBaseVersionName]) }}
             </span>
         </header>
@@ -849,14 +849,33 @@
 
 <style lang="scss">
 @import "@/scss/conf";
+@import "@/scss/mixins/ellipsis";
 
 .release-pipeline-side-slider-header {
-  display: flex;
+  display: grid;
   align-items: center;
+  grid-template-columns: max-content min-content 1fr;
   grid-gap: 12px;
+  padding: 0 16px 0 0;
+  height: 100%;
+  line-height: 1;
+  overflow: hidden;
+  .release-pipeline-new-version {
+    background: #f5f6fa;
+    border-radius: 10px;
+    background: rgba(151,155,165,.1);
+    border-color: rgba(220, 222, 229, .6);
+    height: 22px;
+    line-height: 22px;
+    padding: 0 12px;
+    max-width: 300px;
+  }
   > span {
     color: #979ba5;
     font-size: 12px;
+    flex: 1;
+    flex-shrink: 0;
+    @include ellipsis();
   }
 }
 .release-pipeline-pac-form {
