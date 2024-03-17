@@ -27,10 +27,11 @@
 
 package com.tencent.devops.environment.api.thirdPartyAgent
 
+import com.tencent.devops.common.api.pojo.OS
 import com.tencent.devops.common.web.annotation.BkField
-import io.swagger.v3.oas.annotations.tags.Tag
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
+import io.swagger.v3.oas.annotations.tags.Tag
 import javax.ws.rs.Consumes
 import javax.ws.rs.GET
 import javax.ws.rs.Path
@@ -102,11 +103,17 @@ interface ExternalThirdPartyAgentResource {
         agentHashId: String
     ): Response
 
-    @Operation(summary = "下载agent安装脚本")
+    @Operation(summary = "下载agent批量安装脚本")
     @GET
-    @Path("/install")
+    @Path("/{os}/batchInstall")
     @Produces(MediaType.APPLICATION_OCTET_STREAM)
-    fun downloadAgentInstallScriptNew(
+    fun batchDownloadAgentInstallScript(
+        @Parameter(description = "操作系统", required = true)
+        @PathParam("os")
+        os: OS,
+        @Parameter(description = "TOKEN", required = false)
+        @QueryParam("token")
+        token: String,
         @Parameter(description = "网关地域", required = false)
         @QueryParam("zoneName")
         zoneName: String?

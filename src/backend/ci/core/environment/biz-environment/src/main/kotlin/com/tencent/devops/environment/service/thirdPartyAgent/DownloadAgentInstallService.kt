@@ -80,6 +80,10 @@ class DownloadAgentInstallService @Autowired constructor(
         logger.info("Trying to download the agent($agentId) install script")
         val agentRecord = getAgentRecord(agentId)
 
+        if (agentRecord.status == AgentStatus.IMPORT_OK.status) {
+            throw RuntimeException("Agent already installed. Please obtain the install url again")
+        }
+
         /**
          * agent_url
          * jre_url
