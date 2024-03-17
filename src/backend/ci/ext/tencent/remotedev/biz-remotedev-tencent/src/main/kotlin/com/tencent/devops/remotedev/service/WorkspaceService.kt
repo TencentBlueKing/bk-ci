@@ -1036,8 +1036,8 @@ class WorkspaceService @Autowired constructor(
     }
 
     // 提前7天邮件提醒，云环境即将自动回收
-    fun sendInactivityWorkspaceNotify() {
-        logger.info("sendInactivityWorkspaceNotify")
+    fun sendLinuxInactivityWorkspaceNotify() {
+        logger.info("sendLinuxInactivityWorkspaceNotify")
         val inactivityWorkspaceMap = workspaceDao.getTimeOutInactivityWorkspace(
             timeOutDays = Constansts.timeoutDays - Constansts.sendNotifyDays,
             dslContext = dslContext,
@@ -1048,6 +1048,11 @@ class WorkspaceService @Autowired constructor(
             workspaceMap = inactivityWorkspaceMap,
             templateCode = WorkspaceNotifyTemplateEnum.REMOTEDEV_WORKSPACE_RECYCLE_TEMPLATE.templateCode
         )
+    }
+
+    // 提前7天邮件提醒，云环境即将自动回收
+    fun sendWinInactivityWorkspaceNotify() {
+        logger.info("sendWinInactivityWorkspaceNotify")
 
         val retentionTime = redisCache.get(RedisKeys.REDIS_DESTRUCTION_RETENTION_TIME)?.toInt() ?: 3
         val startWorkspaceMap = workspaceDao.getTimeOutInactivityWorkspace(
@@ -1204,14 +1209,16 @@ class WorkspaceService @Autowired constructor(
                     actionMessage = workspaceCommon.getOpHistory(OpHistoryCopyWriting.TIMEOUT_STOP)
                 )
                 val userIds = permissionService.getWorkspaceOwner(workspace.workspaceName)
-                notifyControl.notify4UserAndCCRemoteDevManager(
+                notifyControl.notify4UserAndCCRemoteDevManagerAndCCOwnerShareUser(
                     userIds = userIds.toMutableSet(),
+                    workspaceName = workspace.workspaceName,
                     cc = mutableSetOf(workspace.createUserId),
                     projectId = workspace.projectId,
                     notifyTemplateCode = SLEEP_3_DAY_NOTIFY,
                     notifyType = mutableSetOf(RemoteDevNotifyType.EMAIL, RemoteDevNotifyType.RTX),
                     bodyParams = mutableMapOf(
                         "cgsIp" to (workspace.hostName ?: ""),
+                        "projectId" to (workspace.projectId),
                         "userId" to userIds.joinToString()
                     )
                 )
@@ -1244,14 +1251,16 @@ class WorkspaceService @Autowired constructor(
                     actionMessage = workspaceCommon.getOpHistory(OpHistoryCopyWriting.TIMEOUT_SLEEP)
                 )
                 val userIds = permissionService.getWorkspaceOwner(workspace.workspaceName)
-                notifyControl.notify4UserAndCCRemoteDevManager(
+                notifyControl.notify4UserAndCCRemoteDevManagerAndCCOwnerShareUser(
                     userIds = userIds.toMutableSet(),
+                    workspaceName = workspace.workspaceName,
                     cc = mutableSetOf(workspace.createUserId),
                     projectId = workspace.projectId,
                     notifyTemplateCode = NOT_LOGIN_NOTIFY,
                     notifyType = mutableSetOf(RemoteDevNotifyType.EMAIL, RemoteDevNotifyType.RTX),
                     bodyParams = mutableMapOf(
                         "cgsIp" to (workspace.hostName ?: ""),
+                        "projectId" to (workspace.projectId),
                         "userId" to userIds.joinToString()
                     )
                 )

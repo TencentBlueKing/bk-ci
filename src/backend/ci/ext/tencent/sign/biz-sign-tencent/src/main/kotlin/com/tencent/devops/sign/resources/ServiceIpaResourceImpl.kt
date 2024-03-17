@@ -48,97 +48,102 @@ import java.io.InputStream
 
 @RestResource
 @Suppress("ALL")
-class ServiceIpaResourceImpl @Autowired constructor(
-    private val dslContext: DSLContext,
-    private val ipaUploadDao: IpaUploadDao,
-    private val signService: SignService,
-    private val syncSignService: AsyncSignService,
-    private val downloadService: DownloadService,
-    private val signInfoService: SignInfoService,
-    private val objectMapper: ObjectMapper
-) : ServiceIpaResource {
+class ServiceIpaResourceImpl
+    @Autowired
+    constructor(
+        private val dslContext: DSLContext,
+        private val ipaUploadDao: IpaUploadDao,
+        private val signService: SignService,
+        private val syncSignService: AsyncSignService,
+        private val downloadService: DownloadService,
+        private val signInfoService: SignInfoService,
+        private val objectMapper: ObjectMapper
+    ) : ServiceIpaResource {
+        override fun getHistorySign(
+            userId: String,
+            startTime: Long?,
+            endTime: Long?,
+            page: Int?,
+            pageSize: Int?
+        ): Result<Page<SignHistory>> {
+            val pageNotNull = page ?: 0
+            val pageSizeNotNull = pageSize?.coerceAtMost(20) ?: 20
+            val limit = PageUtil.convertPageSizeToSQLLimit(pageNotNull, pageSizeNotNull)
+            val result =
+                signInfoService.listHistory(
+                    userId = userId,
+                    startTime = startTime,
+                    endTime = endTime,
+                    offset = limit.offset,
+                    limit = limit.limit
+                )
+            return Result(Page(pageNotNull, pageSizeNotNull, result.count, result.records))
+        }
 
-    override fun getHistorySign(
-        userId: String,
-        startTime: Long?,
-        endTime: Long?,
-        page: Int?,
-        pageSize: Int?
-    ): Result<Page<SignHistory>> {
-        val pageNotNull = page ?: 0
-        val pageSizeNotNull = pageSize?.coerceAtMost(20) ?: 20
-        val limit = PageUtil.convertPageSizeToSQLLimit(pageNotNull, pageSizeNotNull)
-        val result = signInfoService.listHistory(
-            userId = userId,
-            startTime = startTime,
-            endTime = endTime,
-            offset = limit.offset,
-            limit = limit.limit
-        )
-        return Result(Page(pageNotNull, pageSizeNotNull, result.count, result.records))
-    }
+        override fun ipaSign(
+            ipaSignInfoHeader: String,
+            ipaInputStream: InputStream,
+            md5Check: Boolean
+        ): Result<String> {
+            val resignId = "s-${UUIDUtil.generate()}"
+            val ipaSignInfo = signInfoService.check(signInfoService.decodeIpaSignInfo(ipaSignInfoHeader, objectMapper))
+            var taskExecuteCount = 1
+            try {
+                val (ipaFile, taskExecuteCount2) =
+                    signService.uploadIpaAndDecodeInfo(
+                        resignId = resignId,
+                        ipaSignInfo = ipaSignInfo,
+                        ipaSignInfoHeader = ipaSignInfoHeader,
+                        ipaInputStream = ipaInputStream,
+                        md5Check = md5Check
+                    )
+                taskExecuteCount = taskExecuteCount2
+                syncSignService.asyncSign(resignId, ipaSignInfo, ipaFile, taskExecuteCount)
+                return Result(resignId)
+            } catch (e: Exception) {
+                signInfoService.failResign(
+                    resignId = resignId,
+                    info = ipaSignInfo,
+                    executeCount = taskExecuteCount,
+                    message = e.message ?: "Start sign task with exception"
+                )
+                throw e
+            }
+        }
 
-    override fun ipaSign(
-        ipaSignInfoHeader: String,
-        ipaInputStream: InputStream,
-        md5Check: Boolean
-    ): Result<String> {
-        val resignId = "s-${UUIDUtil.generate()}"
-        val ipaSignInfo = signInfoService.check(signInfoService.decodeIpaSignInfo(ipaSignInfoHeader, objectMapper))
-        var taskExecuteCount = 1
-        try {
-            val (ipaFile, taskExecuteCount2) = signService.uploadIpaAndDecodeInfo(
-                resignId = resignId,
-                ipaSignInfo = ipaSignInfo,
-                ipaSignInfoHeader = ipaSignInfoHeader,
-                ipaInputStream = ipaInputStream,
-                md5Check = md5Check
+        override fun getSignToken(
+            userId: String,
+            projectId: String,
+            pipelineId: String,
+            buildId: String
+        ): Result<IpaUploadInfo> {
+            val token = UUIDUtil.generate()
+            ipaUploadDao.save(
+                dslContext = dslContext,
+                userId = userId,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                buildId = buildId,
+                uploadToken = token
             )
-            taskExecuteCount = taskExecuteCount2
-            syncSignService.asyncSign(resignId, ipaSignInfo, ipaFile, taskExecuteCount)
-            return Result(resignId)
-        } catch (e: Exception) {
-            signInfoService.failResign(
-                resignId = resignId,
-                info = ipaSignInfo,
-                executeCount = taskExecuteCount,
-                message = e.message ?: "Start sign task with exception"
+            return Result(IpaUploadInfo(projectId, pipelineId, buildId, token))
+        }
+
+        override fun getSignStatus(resignId: String): Result<String> {
+            return Result(signService.getSignStatus(resignId).getValue())
+        }
+
+        override fun getSignDetail(resignId: String): Result<SignDetail> {
+            return Result(signService.getSignDetail(resignId))
+        }
+
+        override fun downloadUrl(resignId: String): Result<String> {
+            return Result(
+                downloadService.getDownloadUrl(
+                    userId = "",
+                    resignId = resignId,
+                    downloadType = "service"
+                )
             )
-            throw e
         }
     }
-
-    override fun getSignToken(
-        userId: String,
-        projectId: String,
-        pipelineId: String,
-        buildId: String
-    ): Result<IpaUploadInfo> {
-        val token = UUIDUtil.generate()
-        ipaUploadDao.save(
-            dslContext = dslContext,
-            userId = userId,
-            projectId = projectId,
-            pipelineId = pipelineId,
-            buildId = buildId,
-            uploadToken = token
-        )
-        return Result(IpaUploadInfo(projectId, pipelineId, buildId, token))
-    }
-
-    override fun getSignStatus(resignId: String): Result<String> {
-        return Result(signService.getSignStatus(resignId).getValue())
-    }
-
-    override fun getSignDetail(resignId: String): Result<SignDetail> {
-        return Result(signService.getSignDetail(resignId))
-    }
-
-    override fun downloadUrl(resignId: String): Result<String> {
-        return Result(downloadService.getDownloadUrl(
-            userId = "",
-            resignId = resignId,
-            downloadType = "service")
-        )
-    }
-}

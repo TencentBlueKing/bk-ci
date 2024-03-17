@@ -525,8 +525,9 @@ class WorkspaceCommon @Autowired constructor(
             remoteDevSettingDao.fetchOneSetting(dslContext, it.userId)
             whiteListService.shareWorkspace(operator, it.userId)
             if (it.type == WorkspaceShared.AssignType.OWNER) {
-                notifyControl.notify4UserAndCCRemoteDevManager(
+                notifyControl.notify4UserAndCCRemoteDevManagerAndCCOwnerShareUser(
                     userIds = mutableSetOf(it.userId),
+                    workspaceName = workspaceName,
                     cc = mutableSetOf(operator),
                     projectId = projectId,
                     notifyTemplateCode = WINDOWS_GPU_OWNER_CHANGE_NOTIFY,
