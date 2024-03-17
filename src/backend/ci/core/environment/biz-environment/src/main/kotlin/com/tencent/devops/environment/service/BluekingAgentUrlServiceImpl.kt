@@ -66,6 +66,20 @@ class BluekingAgentUrlServiceImpl constructor(
         }
     }
 
+    override fun genAgentBatchInstallScript(
+        os: OS,
+        zoneName: String?,
+        gateway: String?,
+        token: String
+    ): String {
+        val gw = fixGateway(gateway)
+        var url = "curl $gw/ms/environment/api/external/thirdPartyAgent/${os.name}/batchInstall?token=$token"
+        if (!zoneName.isNullOrBlank()) {
+            url += "&zoneName=$zoneName"
+        }
+        return "$url | bash"
+    }
+
     override fun genGateway(agentRecord: TEnvironmentThirdpartyAgentRecord): String {
         return fixGateway(agentRecord.gateway)
     }

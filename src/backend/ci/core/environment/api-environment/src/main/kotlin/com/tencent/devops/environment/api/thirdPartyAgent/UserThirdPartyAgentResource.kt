@@ -41,9 +41,9 @@ import com.tencent.devops.environment.pojo.thirdPartyAgent.ThirdPartyAgentDetail
 import com.tencent.devops.environment.pojo.thirdPartyAgent.ThirdPartyAgentInfo
 import com.tencent.devops.environment.pojo.thirdPartyAgent.ThirdPartyAgentLink
 import com.tencent.devops.environment.pojo.thirdPartyAgent.ThirdPartyAgentStatusWithInfo
-import io.swagger.v3.oas.annotations.tags.Tag
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
+import io.swagger.v3.oas.annotations.tags.Tag
 import javax.ws.rs.Consumes
 import javax.ws.rs.DELETE
 import javax.ws.rs.GET
@@ -91,6 +91,24 @@ interface UserThirdPartyAgentResource {
         @QueryParam("zoneName")
         zoneName: String?
     ): Result<ThirdPartyAgentLink>
+
+    @Operation(summary = "生成批量安装链接")
+    @GET
+    @Path("/projects/{projectId}/os/{os}/generateBatchInstallLink")
+    fun generateBatchInstallLink(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @Parameter(description = "操作系统", required = true)
+        @PathParam("os")
+        os: OS,
+        @Parameter(description = "网关地域", required = false)
+        @QueryParam("zoneName")
+        zoneName: String?
+    ): Result<String>
 
     @Operation(summary = "获取网关列表")
     @GET
