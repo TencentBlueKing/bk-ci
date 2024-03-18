@@ -106,7 +106,7 @@ interface OPRepositoryResource {
 
     @Operation(summary = "批量移除代码库与流水线关联关系")
     @DELETE
-    @Path("/{projectId}/{repoHashId}/batchRemoveRepositoryPipelineRef")
+    @Path("/{projectId}/{repoHashId}/removeRepositoryPipelineRef")
     fun removeRepositoryPipelineRef(
         @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
