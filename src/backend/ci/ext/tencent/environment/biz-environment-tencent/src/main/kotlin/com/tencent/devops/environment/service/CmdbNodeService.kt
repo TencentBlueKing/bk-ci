@@ -27,9 +27,16 @@
 
 package com.tencent.devops.environment.service
 
+import com.tencent.bk.audit.annotations.ActionAuditRecord
+import com.tencent.bk.audit.annotations.AuditAttribute
+import com.tencent.bk.audit.annotations.AuditInstanceRecord
+import com.tencent.bk.audit.context.ActionAuditContext
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.util.PageUtil
+import com.tencent.devops.common.audit.ActionAuditContent
+import com.tencent.devops.common.auth.api.ActionId
+import com.tencent.devops.common.auth.api.ResourceTypeId
 import com.tencent.devops.common.environment.agent.client.EsbAgentClient
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.environment.constant.EnvironmentMessageCode
@@ -97,6 +104,15 @@ class CmdbNodeService @Autowired constructor(
         )
     }
 
+    @ActionAuditRecord(
+        actionId = ActionId.ENV_NODE_CREATE,
+        instance = AuditInstanceRecord(
+            resourceType = ResourceTypeId.ENV_NODE
+        ),
+        attributes = [AuditAttribute(name = ActionAuditContent.PROJECT_CODE_TEMPLATE, value = "#projectId")],
+        scopeId = "#projectId",
+        content = ActionAuditContent.ENV_NODE_CREATE_CONTENT
+    )
     fun addCmdbNodes(userId: String, projectId: String, nodeIps: List<String>) {
         // 验证 CMDB 节点IP和责任人
         val cmdbNodeList = esbAgentClient.getCmdbNodeByIps(userId, nodeIps).nodes
@@ -155,22 +171,30 @@ class CmdbNodeService @Autowired constructor(
                 projectId = projectId,
                 ips = toAddNodeList.map { it.nodeIp }
             )
-            batchRegisterNodePermission(insertedNodeList = insertedNodeList, userId = userId, projectId = projectId)
+            batchRegisterNodePermissionAndAudit(
+                insertedNodeList = insertedNodeList,
+                userId = userId,
+                projectId = projectId
+            )
         }
     }
 
-    private fun batchRegisterNodePermission(
+    private fun batchRegisterNodePermissionAndAudit(
         insertedNodeList: List<TNodeRecord>,
         userId: String,
         projectId: String
     ) {
         insertedNodeList.forEach {
+            val nodeName = "${NodeStringIdUtils.getNodeStringId(it)}(${it.nodeIp})"
             environmentPermissionService.createNode(
                 userId = userId,
                 projectId = projectId,
                 nodeId = it.nodeId,
-                nodeName = "${NodeStringIdUtils.getNodeStringId(it)}(${it.nodeIp})"
+                nodeName = nodeName
             )
+            // audit
+            ActionAuditContext.current()
+                .addInstanceInfo(it.nodeId.toString(), nodeName, null, null)
         }
     }
 }

@@ -97,6 +97,14 @@ class ProjectTGitLinkDao {
         }
     }
 
+    fun fetchAll(
+        dslContext: DSLContext
+    ): List<TProjectTgitIdLinkRecord> {
+        with(TProjectTgitIdLink.T_PROJECT_TGIT_ID_LINK) {
+            return dslContext.selectFrom(this).skipCheck().fetch()
+        }
+    }
+
     fun fetchOld(
         dslContext: DSLContext,
         projectId: String?
@@ -107,6 +115,17 @@ class ProjectTGitLinkDao {
                 dsl.where(PROJECT_ID.eq(projectId))
             }
             return dsl.skipCheck().fetch()
+        }
+    }
+
+    fun updateUrl(
+        dslContext: DSLContext,
+        projectId: String,
+        tgitId: Long,
+        url: String
+    ) {
+        with(TProjectTgitIdLink.T_PROJECT_TGIT_ID_LINK) {
+            dslContext.update(this).set(URL, url).where(PROJECT_ID.eq(projectId)).and(TGIT_ID.eq(tgitId)).execute()
         }
     }
 }

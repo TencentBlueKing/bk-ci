@@ -16,7 +16,7 @@ Popover,
 import {
 ref,
 watch,
-computed
+computed,
 } from 'vue';
 import { useI18n } from 'vue-i18n';
 import {

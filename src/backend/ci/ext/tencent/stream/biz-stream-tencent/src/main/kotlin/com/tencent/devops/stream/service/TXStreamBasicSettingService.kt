@@ -46,6 +46,7 @@ import com.tencent.devops.stream.pojo.StreamGitProjectInfoWithProject
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.annotation.Primary
 import org.springframework.stereotype.Service
 
@@ -68,9 +69,12 @@ class TXStreamBasicSettingService @Autowired constructor(
     streamGitTransferService = streamGitTransferService,
     streamGitConfig = streamGitConfig
 ) {
+
+    @Value("\${bkci.defaultProductId:#{0}}")
+    val defaultBkProductId: Int = 0
+
     companion object {
         private val logger = LoggerFactory.getLogger(TXStreamBasicSettingService::class.java)
-        private const val projectPrefix = "git_"
     }
 
     override fun updateProjectSetting(
@@ -153,7 +157,9 @@ class TXStreamBasicSettingService @Autowired constructor(
                 deptId = userDeptDetail.deptId,
                 deptName = userDeptDetail.deptName,
                 centerId = userDeptDetail.centerId,
-                centerName = userDeptDetail.centerName
+                centerName = userDeptDetail.centerName,
+                businessLineId = userDeptDetail.businessLineId,
+                businessLineName = userDeptDetail.businessLineName
             )
         )
     }
@@ -186,11 +192,18 @@ class TXStreamBasicSettingService @Autowired constructor(
 
             // 增加判断可能存在工蜂侧项目名称删除后，新建同名项目，这时候开启CI就会出现插入project表同名冲突失败的情况,
             checkSameGitProjectName(userId, gitProjectName)
+            val productId =
+                if (setting.url.contains("${streamGitConfig.defaultAtomProjectGroupName}/${setting.name}")) {
+                    defaultBkProductId
+                } else {
+                    null
+                }
             val projectResult =
                 client.get(ServiceTxProjectResource::class).createGitCIProject(
                     gitProjectId = setting.gitProjectId,
                     userId = userId,
-                    gitProjectName = gitProjectName
+                    gitProjectName = gitProjectName,
+                    productId = productId
                 )
             if (projectResult.isNotOk()) {
                 throw RuntimeException("Create git ci project in devops failed, msg: ${projectResult.message}")

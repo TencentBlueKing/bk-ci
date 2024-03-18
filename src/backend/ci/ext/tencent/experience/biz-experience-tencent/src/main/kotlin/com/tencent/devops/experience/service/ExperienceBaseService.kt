@@ -58,13 +58,13 @@ import com.tencent.devops.model.experience.tables.records.TExperienceRecord
 import com.tencent.devops.project.api.service.ServiceProjectOrganizationResource
 import com.tencent.devops.project.api.service.ServiceProjectResource
 import com.tencent.devops.project.api.service.service.ServiceTxUserResource
+import java.time.LocalDateTime
 import org.apache.commons.lang3.StringUtils
 import org.jooq.DSLContext
 import org.jooq.Result
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
-import java.time.LocalDateTime
 
 // 服务共用部分在这里
 @SuppressWarnings("LongParameterList", "TooManyFunctions")
@@ -206,6 +206,7 @@ class ExperienceBaseService @Autowired constructor(
                     deptIds.add(it.deptId)
                     deptIds.add(it.centerId)
                     deptIds.add(it.groupId)
+                    it.businessLineId?.let { businessLineId -> deptIds.add(businessLineId) }
                 }
                 groupIds.addAll(
                     experienceGroupDepartmentDao.listGroupIdsByDeptIds(dslContext, deptIds).map { it.value1() }

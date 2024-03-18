@@ -25,6 +25,6 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-plugins{
+plugins {
     `task-gen-jooq`
 }

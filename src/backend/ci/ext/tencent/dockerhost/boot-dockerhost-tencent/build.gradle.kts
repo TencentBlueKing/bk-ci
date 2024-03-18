@@ -31,5 +31,3 @@ dependencies {
     api(project(":core:dockerhost:plugin-dockerhost-codecc"))
     api(("com.squareup.okhttp3:okhttp"))
 }
-
-
