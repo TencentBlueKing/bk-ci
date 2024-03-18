@@ -58,14 +58,14 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
-class ServiceJobResourceImpl @Autowired constructor(
+class TencentServiceJobResourceImpl @Autowired constructor(
     private val jobService: JobService,
     private val opService: OpService,
     private val permissionManageService: PermissionManageService,
     private val tencentStockDataUpdateService: TencentStockDataUpdateService
 ) : TencentServiceJobResource {
     companion object {
-        private val logger = LoggerFactory.getLogger(ServiceJobResourceImpl::class.java)
+        private val logger = LoggerFactory.getLogger(TencentServiceJobResourceImpl::class.java)
         private const val EXPIRATION_TIME_THREE_MONTH = "three months"
         private const val EXPIRATION_TIME_ONE_MONTH = "one month"
     }

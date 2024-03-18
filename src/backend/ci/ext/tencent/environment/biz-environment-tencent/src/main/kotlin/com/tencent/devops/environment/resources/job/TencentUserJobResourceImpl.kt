@@ -27,7 +27,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import java.io.InputStream
 
 @RestResource
-class UserJobResourceImpl @Autowired constructor(
+class TencentUserJobResourceImpl @Autowired constructor(
     private val jobService: JobService,
     private val agentService: AgentService,
     private val permissionManageService: PermissionManageService
