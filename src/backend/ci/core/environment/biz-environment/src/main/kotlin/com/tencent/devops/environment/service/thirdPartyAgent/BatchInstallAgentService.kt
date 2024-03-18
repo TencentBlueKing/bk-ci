@@ -36,6 +36,7 @@ class BatchInstallAgentService @Autowired constructor(
         zoneName: String?
     ): String {
         val now = LocalDateTime.now()
+        val gateway = slaveGatewayService.getGateway(zoneName)
         // 先确定下是否已经生成过了，以及有没有过期
         val record = agentBatchInstallTokenDao.getToken(
             dslContext = dslContext,
@@ -43,7 +44,12 @@ class BatchInstallAgentService @Autowired constructor(
             userId = userId
         )
         if (record != null && record.expiredTime > now) {
-            return record.token
+            return agentUrlService.genAgentBatchInstallScript(
+                os = os,
+                zoneName = zoneName,
+                gateway = gateway,
+                token = record.token
+            )
         }
 
         // 没有或者过期则重新生成，过期时间默认为3天后
@@ -60,7 +66,6 @@ class BatchInstallAgentService @Autowired constructor(
             expireTime = expireTime
         )
 
-        val gateway = slaveGatewayService.getGateway(zoneName)
         return agentUrlService.genAgentBatchInstallScript(
             os = os,
             zoneName = zoneName,
@@ -102,7 +107,7 @@ class BatchInstallAgentService @Autowired constructor(
         val record = agentBatchInstallTokenDao.getToken(dslContext, decodeSub[0], decodeSub[1])
             ?: return Triple("", "", "token's project and user not find")
 
-        if (record.token != token || record.expiredTime < LocalDateTime.now()) {
+        if (record.token != token || record.expiredTime <= LocalDateTime.now()) {
             return Triple("", "", "token is expired")
         }
 
