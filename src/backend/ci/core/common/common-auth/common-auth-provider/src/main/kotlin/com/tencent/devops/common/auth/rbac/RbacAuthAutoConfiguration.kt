@@ -50,7 +50,6 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.client.ClientTokenService
 import com.tencent.devops.common.redis.RedisOperation
 import org.apache.http.impl.client.CloseableHttpClient
-import org.springframework.boot.autoconfigure.AutoConfigureBefore
 import org.springframework.boot.autoconfigure.AutoConfigureOrder
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
@@ -64,7 +63,6 @@ import org.springframework.core.Ordered
 @Suppress("ALL")
 @Configuration
 @ConditionalOnProperty(prefix = "auth", name = ["idProvider"], havingValue = "rbac")
-@AutoConfigureBefore(name = ["com.tencent.devops.common.auth.mock.MockAuthAutoConfiguration"])
 @ConditionalOnWebApplication
 @AutoConfigureOrder(Ordered.LOWEST_PRECEDENCE)
 @EnableConfigurationProperties(RbacAuthProperties::class)

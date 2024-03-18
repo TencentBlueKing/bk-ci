@@ -29,6 +29,7 @@
 package com.tencent.devops.auth.provider.rbac.config
 
 import com.tencent.devops.auth.dao.AuthItsmCallbackDao
+import com.tencent.devops.auth.provider.rbac.listener.AuthItsmCallbackListener
 import com.tencent.devops.auth.provider.rbac.listener.AuthResourceGroupCreateListener
 import com.tencent.devops.auth.provider.rbac.listener.AuthResourceGroupModifyListener
 import com.tencent.devops.auth.provider.rbac.service.PermissionGradeManagerService
@@ -88,7 +89,7 @@ class RbacMQConfiguration {
         authItsmCallbackDao: AuthItsmCallbackDao,
         permissionGradeManagerService: PermissionGradeManagerService,
         traceEventDispatcher: TraceEventDispatcher
-    ) = com.tencent.devops.auth.provider.rbac.listener.AuthItsmCallbackListener(
+    ) = AuthItsmCallbackListener(
         client = client,
         dslContext = dslContext,
         authItsmCallbackDao = authItsmCallbackDao,
@@ -101,7 +102,7 @@ class RbacMQConfiguration {
         @Autowired connectionFactory: ConnectionFactory,
         @Autowired itsmCallbackQueue: Queue,
         @Autowired rabbitAdmin: RabbitAdmin,
-        @Autowired itsmCallbackListener: com.tencent.devops.auth.provider.rbac.listener.AuthItsmCallbackListener,
+        @Autowired itsmCallbackListener: AuthItsmCallbackListener,
         @Autowired messageConverter: Jackson2JsonMessageConverter
     ): SimpleMessageListenerContainer {
         val adapter = MessageListenerAdapter(itsmCallbackListener, itsmCallbackListener::execute.name)

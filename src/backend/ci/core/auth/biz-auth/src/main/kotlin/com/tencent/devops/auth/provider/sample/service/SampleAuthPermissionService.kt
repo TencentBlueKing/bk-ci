@@ -82,7 +82,7 @@ class SampleAuthPermissionService : PermissionService {
         projectCode: String,
         resourceType: String
     ): List<String> {
-        com.tencent.devops.auth.provider.sample.service.SampleAuthPermissionService.Companion.logger.info("getUserResourceByAction $userId $action $projectCode $resourceType")
+        logger.info("getUserResourceByAction $userId $action $projectCode $resourceType")
         return emptyList()
     }
 
@@ -118,6 +118,6 @@ class SampleAuthPermissionService : PermissionService {
     }
 
     companion object {
-        val logger = LoggerFactory.getLogger(com.tencent.devops.auth.provider.sample.service.SampleAuthPermissionService::class.java)
+        val logger = LoggerFactory.getLogger(SampleAuthPermissionService::class.java)
     }
 }
