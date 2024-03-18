@@ -77,11 +77,11 @@ data class TaiUserInfoResponse(
 data class TaiUserInfo(
     val username: String,
     @JsonProperty("account_name")
-    val accountName: String?,
+    val accountName: String,
     @JsonProperty("account_email")
-    val accountEmail: String?,
+    val accountEmail: String,
     @JsonProperty("company_tags")
-    val companyTags: List<CompanyTags>?,
+    val companyTags: List<CompanyTags>,
     val departments: List<DepartmentsInfo>?
 ) {
     @JsonIgnoreProperties(ignoreUnknown = true)
