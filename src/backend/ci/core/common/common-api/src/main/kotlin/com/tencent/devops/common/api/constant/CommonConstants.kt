@@ -160,6 +160,8 @@ const val KEY_PIPELINE_ID = "pipelineId"
 const val KEY_PIPELINE_NUM = "pipelineNum"
 const val KEY_ARCHIVE = "archive"
 const val KEY_BRANCH_TEST_FLAG = "branchTestFlag"
+const val KEY_TASK_ATOM = "taskAtom"
+const val KEY_ELEMENT_ENABLE = "elementEnable"
 
 const val BK_BUILD_ENV_START_FAILED = "bkBuildEnvStartFailed" // 构建环境启动失败
 const val BK_START_PULL_IMAGE = "bkStartPullImage" // 开始拉取镜像，镜像名称：

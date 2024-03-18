@@ -26,6 +26,5 @@
  */
 
 dependencies {
-    api(project(":core:store:biz-store-sample"))
-    api(project(":core:store:biz-store-image-sample"))
+    api(project(":core:store:biz-store"))
 }

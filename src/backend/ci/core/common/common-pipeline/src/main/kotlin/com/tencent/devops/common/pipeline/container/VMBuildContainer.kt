@@ -112,6 +112,8 @@ data class VMBuildContainer(
     override var matrixGroupFlag: Boolean? = false,
     @get:Schema(title = "各项耗时", required = true)
     override var timeCost: BuildRecordTimeCost? = null,
+    @get:Schema(title = "开机任务序号", required = false, readOnly = true)
+    override var startVMTaskSeq: Int? = null,
     @get:Schema(title = "构建矩阵配置项", required = false)
     var matrixControlOption: MatrixControlOption? = null,
     @get:Schema(title = "所在构建矩阵组的containerHashId（分裂后的子容器特有字段）", required = false)
@@ -153,6 +155,10 @@ data class VMBuildContainer(
 
     override fun fetchMatrixContext(): Map<String, String>? {
         return matrixContext
+    }
+
+    override fun isContainerEnable(): Boolean {
+        return jobControlOption?.enable ?: true
     }
 
     override fun transformCompatibility() {

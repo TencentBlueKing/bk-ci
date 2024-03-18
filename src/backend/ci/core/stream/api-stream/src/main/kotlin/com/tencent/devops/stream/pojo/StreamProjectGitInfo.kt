@@ -27,8 +27,8 @@
 
 package com.tencent.devops.stream.pojo
 
-import com.tencent.devops.common.sdk.github.pojo.GithubRepo
 import com.tencent.devops.repository.pojo.git.GitCodeProjectInfo
+import com.tencent.devops.repository.sdk.github.pojo.GithubRepo
 import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "Git拿到的项目信息")

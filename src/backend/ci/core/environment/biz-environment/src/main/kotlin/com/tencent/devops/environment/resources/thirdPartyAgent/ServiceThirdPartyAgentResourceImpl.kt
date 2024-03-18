@@ -27,18 +27,17 @@
 
 package com.tencent.devops.environment.resources.thirdPartyAgent
 
+import com.tencent.bk.audit.annotations.AuditEntry
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.AgentResult
 import com.tencent.devops.common.api.pojo.OS
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.pojo.agent.NewHeartbeatInfo
-import com.tencent.devops.common.api.util.HashUtil
-import com.tencent.devops.common.auth.api.AuthPermission
+import com.tencent.devops.common.auth.api.ActionId
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.environment.api.thirdPartyAgent.ServiceThirdPartyAgentResource
 import com.tencent.devops.environment.constant.EnvironmentMessageCode
-import com.tencent.devops.environment.constant.EnvironmentMessageCode.ERROR_NODE_NO_VIEW_PERMISSSION
 import com.tencent.devops.environment.permission.EnvironmentPermissionService
 import com.tencent.devops.environment.pojo.AgentPipelineRefRequest
 import com.tencent.devops.environment.pojo.enums.NodeType
@@ -193,6 +192,7 @@ class ServiceThirdPartyAgentResourceImpl @Autowired constructor(
         return Result(slaveGatewayService.getGateway())
     }
 
+    @AuditEntry(actionId = ActionId.ENV_NODE_VIEW)
     override fun getNodeDetail(
         userId: String,
         projectId: String,
@@ -210,17 +210,6 @@ class ServiceThirdPartyAgentResourceImpl @Autowired constructor(
 
             else -> null
         } ?: throw ErrorCodeException(errorCode = EnvironmentMessageCode.ERROR_NODE_NAME_OR_ID_INVALID)
-        if (!permissionService.checkNodePermission(
-                userId = userId,
-                projectId = projectId,
-                nodeId = HashUtil.decodeIdToLong(hashId),
-                permission = AuthPermission.VIEW
-            )
-        ) {
-            throw ErrorCodeException(
-                errorCode = ERROR_NODE_NO_VIEW_PERMISSSION
-            )
-        }
         return Result(thirdPartyAgentService.getAgentDetail(userId, projectId, hashId))
     }
 

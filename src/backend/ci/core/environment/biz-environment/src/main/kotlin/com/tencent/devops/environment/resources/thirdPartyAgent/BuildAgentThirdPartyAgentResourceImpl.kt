@@ -29,11 +29,13 @@ package com.tencent.devops.environment.resources.thirdPartyAgent
 
 import com.google.common.cache.Cache
 import com.google.common.cache.CacheBuilder
+import com.tencent.bk.audit.annotations.AuditEntry
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.enums.AgentStatus
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.pojo.agent.NewHeartbeatInfo
+import com.tencent.devops.common.auth.api.ActionId
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.web.RestResource
@@ -61,6 +63,7 @@ class BuildAgentThirdPartyAgentResourceImpl @Autowired constructor(
     private val agentMetricService: AgentMetricService
 ) : BuildAgentThirdPartyAgentResource {
 
+    @AuditEntry(actionId = ActionId.ENV_NODE_CREATE)
     override fun agentStartup(
         projectId: String,
         agentId: String,
