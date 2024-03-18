@@ -100,35 +100,42 @@ class TxPipelineBuildCommitService @Autowired constructor(
                 if (webhookCommitList.size < size) break
                 page++
             }
-        } catch (ignore: Throwable) {
-            logger.info("save build info err | err is $ignore")
+        } catch (ignored: Throwable) {
+            logger.info("save build info err | err is $ignored")
         }
     }
 
     override fun saveCommits(commits: List<PipelineBuildCommit>) {
-        val buildCommits = commits.map { buildCommit ->
-            with(buildCommit) {
-                DataPlatBuildCommits(
-                    projectId = projectId,
-                    pipelineId = pipelineId,
-                    buildId = buildId,
-                    commitId = commitId,
-                    authorName = authorName,
-                    message = message,
-                    repoType = repoType,
-                    commitTime = commitTime.format(dateTimeFormatter),
-                    createTime = LocalDateTime.now().format(dateTimeFormatter),
-                    mrId = mrId ?: "",
-                    url = url,
-                    eventType = eventType,
-                    channel = channel,
-                    action = action ?: ""
-                )
+        try {
+            val buildCommits = commits.map { buildCommit ->
+                with(buildCommit) {
+                    DataPlatBuildCommits(
+                        projectId = projectId,
+                        pipelineId = pipelineId,
+                        buildId = buildId,
+                        commitId = commitId,
+                        authorName = authorName,
+                        message = message,
+                        repoType = repoType,
+                        commitTime = commitTime.format(dateTimeFormatter),
+                        createTime = LocalDateTime.now().format(dateTimeFormatter),
+                        mrId = mrId ?: "",
+                        url = url,
+                        eventType = eventType,
+                        channel = channel,
+                        action = action ?: ""
+                    )
+                }
             }
+            logger.info(
+                "start send build commit[${buildCommits.first()}...${buildCommits.last()}]|" +
+                        "${buildCommits.size}"
+            )
+            checkParamBlank(processKafkaTopicConfig.buildCommitsTopic, "buildCommitsTopic")
+            kafkaClient.send(processKafkaTopicConfig.buildCommitsTopic!!, JsonUtil.toJson(buildCommits))
+        } catch (ignored: Exception) {
+            logger.info("save build info err | err is $ignored")
         }
-        logger.info("start send build commit[${buildCommits.first()}...${buildCommits.last()}]|${buildCommits.size}")
-        checkParamBlank(processKafkaTopicConfig.buildCommitsTopic, "buildCommitsTopic")
-        kafkaClient.send(processKafkaTopicConfig.buildCommitsTopic!!, JsonUtil.toJson(buildCommits))
     }
 
     private fun checkParamBlank(param: String?, message: String): String {
