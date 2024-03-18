@@ -30,7 +30,6 @@ package com.tencent.devops.misc.dao.process
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.pojo.element.quality.QualityGateInElement
 import com.tencent.devops.common.pipeline.pojo.element.quality.QualityGateOutElement
-import com.tencent.devops.model.process.tables.TPipelineBuildCommits
 import com.tencent.devops.model.process.tables.TPipelineBuildContainer
 import com.tencent.devops.model.process.tables.TPipelineBuildDetail
 import com.tencent.devops.model.process.tables.TPipelineBuildHistory
