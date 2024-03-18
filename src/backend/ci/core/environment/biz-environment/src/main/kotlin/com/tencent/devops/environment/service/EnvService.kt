@@ -645,7 +645,7 @@ class EnvService @Autowired constructor(
                 nodeId = nodeStringId,
                 name = it.nodeName,
                 ip = it.nodeIp,
-                nodeStatus = nodeStatus,
+                nodeStatus = it.nodeStatus,
                 agentStatus = getAgentStatus(it),
                 nodeType = nodeType,
                 osName = it.osName,
