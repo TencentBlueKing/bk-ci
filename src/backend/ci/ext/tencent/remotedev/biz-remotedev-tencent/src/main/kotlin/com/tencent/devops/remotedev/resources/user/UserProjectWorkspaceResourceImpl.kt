@@ -176,7 +176,7 @@ class UserProjectWorkspaceResourceImpl @Autowired constructor(
     }
 
     override fun computerStatus(userId: String, projectId: String): Result<ComputerStatusResp> {
-        return Result(startWorkspaceService.computerStatus(userId, projectId))
+        return Result(startWorkspaceService.computerStatus(projectId))
     }
 
     override fun userLoginTime(userId: String, projectId: String, timeScope: TimeScope?): Result<UserLoginTimeResp> {
