@@ -31,8 +31,8 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.pipeline.PipelineModelWithYaml
-import com.tencent.devops.common.pipeline.PipelineModelWithYamlRequest
+import com.tencent.devops.common.pipeline.PipelineVersionWithModel
+import com.tencent.devops.common.pipeline.PipelineVersionWithModelRequest
 import com.tencent.devops.common.pipeline.pojo.TemplateInstanceCreateRequest
 import com.tencent.devops.common.pipeline.pojo.transfer.PreviewResponse
 import com.tencent.devops.process.engine.pojo.PipelineVersionWithInfo
@@ -147,7 +147,7 @@ interface ServicePipelineVersionResource {
         @Parameter(description = "流水线编排版本", required = true)
         @PathParam("version")
         version: Int
-    ): Result<PipelineModelWithYaml>
+    ): Result<PipelineVersionWithModel>
 
     @Operation(summary = "触发前配置")
     @GET
@@ -179,7 +179,7 @@ interface ServicePipelineVersionResource {
         projectId: String,
         @Parameter(description = "流水线模型与设置", required = true)
         @Valid
-        modelAndYaml: PipelineModelWithYamlRequest
+        modelAndYaml: PipelineVersionWithModelRequest
     ): Result<DeployPipelineResult>
 
     @Operation(summary = "获取流水线编排创建人列表（分页）")

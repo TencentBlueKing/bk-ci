@@ -34,8 +34,8 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthResourceType
-import com.tencent.devops.common.pipeline.PipelineModelWithYaml
-import com.tencent.devops.common.pipeline.PipelineModelWithYamlRequest
+import com.tencent.devops.common.pipeline.PipelineVersionWithModel
+import com.tencent.devops.common.pipeline.PipelineVersionWithModelRequest
 import com.tencent.devops.common.pipeline.enums.PipelineStorageType
 import com.tencent.devops.common.pipeline.pojo.TemplateInstanceCreateRequest
 import com.tencent.devops.common.web.RestResource
@@ -175,7 +175,7 @@ class ServicePipelineVersionResourceImpl @Autowired constructor(
         projectId: String,
         pipelineId: String,
         version: Int
-    ): Result<PipelineModelWithYaml> {
+    ): Result<PipelineVersionWithModel> {
         val permission = AuthPermission.VIEW
         pipelinePermissionService.validPipelinePermission(
             userId = userId,
@@ -234,7 +234,7 @@ class ServicePipelineVersionResourceImpl @Autowired constructor(
     override fun savePipelineDraft(
         userId: String,
         projectId: String,
-        modelAndYaml: PipelineModelWithYamlRequest
+        modelAndYaml: PipelineVersionWithModelRequest
     ): Result<DeployPipelineResult> {
         checkParam(userId, projectId)
         val result = pipelineVersionFacadeService.savePipelineDraft(
@@ -320,7 +320,7 @@ class ServicePipelineVersionResourceImpl @Autowired constructor(
             )
         )
         return Result(
-            pipelineVersionFacadeService.listPipelineVersion(
+            pipelineVersionFacadeService.listPipelineVersionInfo(
                 projectId = projectId,
                 pipelineId = pipelineId,
                 fromVersion = fromVersion,

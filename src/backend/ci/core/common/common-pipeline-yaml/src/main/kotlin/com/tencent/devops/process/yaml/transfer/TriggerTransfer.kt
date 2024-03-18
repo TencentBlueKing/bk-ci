@@ -29,7 +29,6 @@ package com.tencent.devops.process.yaml.transfer
 
 import com.tencent.devops.common.api.enums.RepositoryType
 import com.tencent.devops.common.api.enums.TriggerRepositoryType
-import com.tencent.devops.common.api.util.JsonUtil.deepCopy
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.common.pipeline.pojo.element.ElementAdditionalOptions

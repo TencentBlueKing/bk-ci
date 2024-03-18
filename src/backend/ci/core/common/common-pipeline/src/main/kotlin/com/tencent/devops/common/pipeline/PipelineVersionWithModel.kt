@@ -27,21 +27,29 @@
 
 package com.tencent.devops.common.pipeline
 
-import com.tencent.devops.common.pipeline.enums.PipelineStorageType
 import com.tencent.devops.common.pipeline.pojo.PipelineModelAndSetting
+import com.tencent.devops.common.pipeline.pojo.transfer.PreviewResponse
 import io.swagger.v3.oas.annotations.media.Schema
 
-data class PipelineModelWithYamlRequest(
-    @get:Schema(title = "流水线ID（为空时导入并创建流水线）", required = false)
-    val pipelineId: String?,
-    @get:Schema(title = "草稿的来源版本（前端保存时传递）", required = true)
-    val baseVersion: Int,
+data class PipelineVersionWithModel(
+    @get:Schema(title = "版本号（流水线唯一递增）", required = true)
+    val version: Int,
+    @get:Schema(title = "版本名称", required = true)
+    val versionName: String?,
+    @get:Schema(title = "该版本的源版本号", required = true)
+    val baseVersion: Int?,
+    @get:Schema(title = "该版本的版本号名", required = true)
+    val baseVersionName: String?,
     @get:Schema(title = "流水线模型", required = true)
     val modelAndSetting: PipelineModelAndSetting,
-    @get:Schema(title = "流水线YAML编排（不为空时以YAML为准）", required = false)
-    val yaml: String?,
-    @get:Schema(title = "存储格式", required = false)
-    val storageType: PipelineStorageType? = PipelineStorageType.MODEL,
+    @get:Schema(title = "流水线YAML编排（含高亮）", required = false)
+    val yamlPreview: PreviewResponse?,
+    @get:Schema(title = "是否处在可以调试状态", required = false)
+    val canDebug: Boolean?,
     @get:Schema(title = "版本变更说明", required = false)
-    val description: String? = null
+    val description: String?,
+    @get:Schema(title = "是否支持YAML解析", required = true)
+    val yamlSupported: Boolean,
+    @get:Schema(title = "YAML解析异常信息")
+    val yamlInvalidMsg: String?
 )

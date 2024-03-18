@@ -35,8 +35,8 @@ import com.tencent.devops.common.api.pojo.PipelineAsCodeSettings
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.pipeline.Model
-import com.tencent.devops.common.pipeline.PipelineModelWithYaml
-import com.tencent.devops.common.pipeline.PipelineModelWithYamlRequest
+import com.tencent.devops.common.pipeline.PipelineVersionWithModel
+import com.tencent.devops.common.pipeline.PipelineVersionWithModelRequest
 import com.tencent.devops.common.pipeline.container.Stage
 import com.tencent.devops.common.pipeline.container.TriggerContainer
 import com.tencent.devops.common.pipeline.enums.ChannelCode
@@ -479,7 +479,7 @@ class PipelineVersionFacadeService @Autowired constructor(
         projectId: String,
         pipelineId: String,
         version: Int
-    ): PipelineModelWithYaml {
+    ): PipelineVersionWithModel {
         val resource = pipelineRepositoryService.getPipelineResourceVersion(
             projectId = projectId,
             pipelineId = pipelineId,
@@ -527,7 +527,7 @@ class PipelineVersionFacadeService @Autowired constructor(
             )
             )
         }
-        return PipelineModelWithYaml(
+        return PipelineVersionWithModel(
             modelAndSetting = modelAndSetting,
             yamlPreview = yamlPreview,
             description = resource.description,
@@ -562,7 +562,7 @@ class PipelineVersionFacadeService @Autowired constructor(
     fun savePipelineDraft(
         userId: String,
         projectId: String,
-        modelAndYaml: PipelineModelWithYamlRequest
+        modelAndYaml: PipelineVersionWithModelRequest
     ): DeployPipelineResult {
         val pipelineId = modelAndYaml.pipelineId
         val versionStatus = VersionStatus.COMMITTING
@@ -647,7 +647,7 @@ class PipelineVersionFacadeService @Autowired constructor(
         }
     }
 
-    fun listPipelineVersion(
+    fun listPipelineVersionInfo(
         projectId: String,
         pipelineId: String,
         page: Int,
@@ -690,6 +690,24 @@ class PipelineVersionFacadeService @Autowired constructor(
             pageSize = pageSize,
             count = size.toLong(),
             records = pipelines
+        )
+    }
+
+    fun getPipelineVersionInfo(
+        projectId: String,
+        pipelineId: String,
+        version: Int,
+    ): PipelineVersionWithInfo {
+        val pipelineInfo = pipelineRepositoryService.getPipelineInfo(projectId, pipelineId)
+        return repositoryVersionService.getPipelineVersionWithInfo(
+            pipelineInfo = pipelineInfo,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            version = version
+        ) ?: throw ErrorCodeException(
+            statusCode = Response.Status.NOT_FOUND.statusCode,
+            errorCode = ProcessMessageCode.ERROR_NO_PIPELINE_VERSION_EXISTS_BY_ID,
+            params = arrayOf(version.toString())
         )
     }
 
