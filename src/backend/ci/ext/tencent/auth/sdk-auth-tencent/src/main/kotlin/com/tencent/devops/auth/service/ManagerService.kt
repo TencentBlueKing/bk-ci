@@ -52,6 +52,7 @@ class ManagerService @Autowired constructor(
         .expireAfterWrite(60, TimeUnit.MINUTES)
         .build<String/*userId*/, ProjectOrgInfo?>()
 
+    @Suppress("CyclomaticComplexMethod", "NestedBlockDepth")
     fun isManagerPermission(
         userId: String,
         projectId: String,
@@ -134,7 +135,10 @@ class ManagerService @Autowired constructor(
                         }
 
                         if (orgManagerPermissionList.contains(authPermission)) {
-                            logger.info("$userId has $projectId ${resourceType.value} ${authPermission.value} $projectOrgInfo manager permission")
+                            logger.info(
+                                "$userId has $projectId ${resourceType.value} ${authPermission.value} " +
+                                        "$projectOrgInfo manager permission"
+                            )
                             isManagerPermission = true
                             return@managerPermissionFor
                         }
