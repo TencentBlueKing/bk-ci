@@ -139,27 +139,27 @@ class UserRemoteDevResourceImpl @Autowired constructor(
         userId: String,
         searchCustom: Boolean?
     ): Result<Map<String, Map<String, Int>>> {
-        if (searchCustom == true) {
-            val res = mutableMapOf<String, MutableMap<String, Int>>()
-            client.get(ServiceStartCloudResource::class).getResourceVm(ResourceVmReq(null, null)).data
-                ?.forEach { resource ->
-                    val key = resource.zoneId.replace(Regex("\\d+"), "")
-                    val map = res.getOrPut(key) { mutableMapOf() }
-                    resource.machineResources?.forEach { mas ->
-                        map[mas.machineType] = (map[mas.machineType] ?: 0) + (mas.free ?: 0)
-                    }
-                }
-            return Result(res)
-        }
+        // 自定义镜像为显卡配额，固定镜像为资源池中的配额加上显卡配额
         val res = mutableMapOf<String, MutableMap<String, Int>>()
-        logger.info("allWindowsQuota|$userId")
-        workspaceCommon.syncStartCloudResourceList().forEach {
-            val key = it.zoneId.replace(Regex("\\d+"), "")
-            val map = res.getOrPut(key) { mutableMapOf() }
-            if (it.status == 11 && it.locked != true) {
-                map[it.machineType] = (map[it.machineType] ?: 0) + 1
+
+        if (searchCustom != true) {
+            workspaceCommon.syncStartCloudResourceList().forEach {
+                val key = it.zoneId.replace(Regex("\\d+"), "")
+                val map = res.getOrPut(key) { mutableMapOf() }
+                if (it.status == 11 && it.locked != true) {
+                    map[it.machineType] = (map[it.machineType] ?: 0) + 1
+                }
             }
         }
+
+        client.get(ServiceStartCloudResource::class).getResourceVm(ResourceVmReq(null, null)).data
+            ?.forEach { resource ->
+                val key = resource.zoneId.replace(Regex("\\d+"), "")
+                val map = res.getOrPut(key) { mutableMapOf() }
+                resource.machineResources?.forEach { mas ->
+                    map[mas.machineType] = (map[mas.machineType] ?: 0) + (mas.free ?: 0)
+                }
+            }
         return Result(res)
     }
 
