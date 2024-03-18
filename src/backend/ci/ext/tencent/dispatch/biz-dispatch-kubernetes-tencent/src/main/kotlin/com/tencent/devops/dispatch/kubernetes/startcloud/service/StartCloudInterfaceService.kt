@@ -151,9 +151,7 @@ class StartCloudInterfaceService @Autowired constructor(
                     image = it.basic?.image,
                     cpu = it.basic?.cpuCores.toString(),
                     mem = it.basic?.memoryLimit,
-                    registerCgsTime = ZonedDateTime.parse(
-                        it.basic?.registeCgsTime, DateTimeFormatter.ISO_OFFSET_DATE_TIME
-                    ).toLocalDateTime()
+                    registerCgsTime = null
                 )
             )
         }
