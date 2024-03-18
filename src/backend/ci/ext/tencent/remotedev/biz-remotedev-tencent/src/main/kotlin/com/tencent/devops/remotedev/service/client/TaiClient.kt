@@ -95,9 +95,9 @@ data class TaiUserInfo(
     data class CompanyTags(
         val share: Int?,
         @JsonProperty("tag_id")
-        val tagId: String?,
+        val tagId: String,
         @JsonProperty("tag_name")
-        val tagName: String?,
+        val tagName: String,
         @JsonProperty("tag_type")
         val tagType: Int?,
         @JsonProperty("short_name")
