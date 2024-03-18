@@ -21,7 +21,7 @@ import org.springframework.stereotype.Service
 
 @Service
 @Primary
-class TencentQueryFromCmdbService : IQueryOperatorService {
+class TencentQueryFromCmdbService {
     @Value("\${environment.apigw.bkAppCode:}")
     private val bkAppCode = ""
 
@@ -53,7 +53,7 @@ class TencentQueryFromCmdbService : IQueryOperatorService {
      *  判断：用户or节点导入人 是机器的主备负责人（用户：函数中形参userId；节点导入人：T_NODE表中的createdUser）
      *  ext中实现：从cmdb中 用ip查询机器的主备负责人
      */
-    override fun isOperatorOrBakOperator(userId: String, nodeRecords: Set<Record5<Long, String, Long, Long, String>>) {
+    fun isOperatorOrBakOperator(userId: String, nodeRecords: Set<Record5<Long, String, Long, Long, String>>) {
         val nodeIpList: List<String> = nodeRecords.mapNotNull { it[T_NODE_NODE_IP] as? String } // 所有host对应的ip
         val nodeIpToNodeMap = nodeRecords.associateBy { it[T_NODE_NODE_IP] as? String } // 所有host的：ip - 记录 映射
         val cmdbGetQueryInfoReq = CmdbGetQueryInfoReq(

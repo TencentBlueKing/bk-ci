@@ -49,7 +49,7 @@ class PermissionManageService @Autowired constructor(
     private val jobDao: JobDao,
     private val nodeDao: NodeDao,
     private val environmentPermissionService: EnvironmentPermissionService,
-    private val iQueryOperatorService: IQueryOperatorService
+    private val tencentQueryFromCmdbService: TencentQueryFromCmdbService
 ) {
     companion object {
         private val logger = LoggerFactory.getLogger(PermissionManageService::class.java)
@@ -96,7 +96,7 @@ class PermissionManageService @Autowired constructor(
             )
         } // unauthorizedNodeIds - 为空：用户有所有传进来的host节点的权限；- 不为空：其中的节点用户没权限，抛出异常。
         // 判断：用户or节点导入人 是机器的主备负责人（用户：函数中形参userId；节点导入人：T_NODE表中的createdUser）
-        iQueryOperatorService.isOperatorOrBakOperator(userId, nodeRecords)
+        tencentQueryFromCmdbService.isOperatorOrBakOperator(userId, nodeRecords)
     }
 
     private fun getNodesFromHostList(
