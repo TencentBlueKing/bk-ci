@@ -89,7 +89,7 @@ data class TaiUserInfo(
         @JsonProperty("tag_id")
         val tagId: String,
         @JsonProperty("tag_name")
-        val tagName: String,
+        val tagName: String
     )
 
     @JsonIgnoreProperties(ignoreUnknown = true)
