@@ -548,7 +548,7 @@ class WorkspaceService @Autowired constructor(
         )?.associateBy { it["NAME"] as String }
 
         val allConfig = windowsResourceConfigService.getAllType(true, null).associateBy { it.id!! }
-
+        logger.debug("getProjectWorkspaceList4WeSec|workspaceWindows|$workspaceWindows|allConfig|$allConfig")
         val fetchDetailEndTime = System.currentTimeMillis()
 
         val tailUsers = if (hasDepartmentsInfo == true) {
