@@ -73,9 +73,9 @@ open class TencentAgentUrlServiceImpl constructor(
     override fun genAgentBatchInstallScript(os: OS, zoneName: String?, gateway: String?, token: String): String {
         val gw = fixGateway(gateway)
         var url = "curl -H \"$BATCH_TOKEN_HEADER: $token\" "
-        url += "$gw/ms/environment/api/external/thirdPartyAgent/${os.name}/batchInstall?token=$token"
+        url += "$gw/ms/environment/api/external/thirdPartyAgent/${os.name}/batchInstall"
         if (!zoneName.isNullOrBlank()) {
-            url += "&zoneName=$zoneName"
+            url += "?zoneName=$zoneName"
         }
         return "$url | bash"
     }
