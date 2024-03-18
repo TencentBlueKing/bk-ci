@@ -1,4 +1,7 @@
 <!-- BEGIN MUNGE: GENERATED_TOC -->
+- [v2.1.0-rc.3](#v210-rc3)
+   - [Changelog since v2.1.0-rc.2](#changelog-since-v210-rc2)
+
 - [v2.1.0-rc.2](#v210-rc2)
    - [Changelog since v2.1.0-rc.1](#changelog-since-v210-rc1)
 
@@ -10,6 +13,39 @@
 
 
 <!-- NEW RELEASE NOTES ENTRY -->
+# v2.1.0-rc.3
+## Changelog since v2.1.0-rc.2
+#### 新增
+- [新增] svn webhook接口切换 [链接](http://github.com/TencentBlueKing/bk-ci/issues/9302)
+- [新增] 流水线构建历史表格，拖拽表格列宽记忆功能 [链接](http://github.com/TencentBlueKing/bk-ci/issues/10065)
+- [新增] 项目属性监控 [链接](http://github.com/TencentBlueKing/bk-ci/issues/10032)
+- [新增] 初始化bkrepo可以修改httpSchema [链接](http://github.com/TencentBlueKing/bk-ci/issues/10056)
+- [新增] 新增ipa的scheme获取 [链接](http://github.com/TencentBlueKing/bk-ci/issues/10051)
+- [新增] 项目列表，启用中和已停用项目分开展示 [链接](http://github.com/TencentBlueKing/bk-ci/issues/9781)
+- [新增] 流水线插件关联的代码库增加删除和授权方式限制 [链接](http://github.com/TencentBlueKing/bk-ci/issues/9870)
+- [新增] 进行插件替换时，目标插件的值支持配置默认值参数 [链接](http://github.com/TencentBlueKing/bk-ci/issues/10037)
+- [新增] GoAgent遇到环境中节点启动问题时切换至环境中另一个节点执行 [链接](http://github.com/TencentBlueKing/bk-ci/issues/9910)
+- [新增] sql doc 文档更新 [链接](http://github.com/TencentBlueKing/bk-ci/issues/9974)
+- [新增] 缩减repository微服务的子模块数量 [链接](http://github.com/TencentBlueKing/bk-ci/issues/9226)
+- [新增] 升级swagger和servlet [链接](http://github.com/TencentBlueKing/bk-ci/issues/5994)
+- [新增] api文档优化 [链接](http://github.com/TencentBlueKing/bk-ci/issues/8594)
+- [新增] 缩减metrics微服务的子模块数量 [链接](http://github.com/TencentBlueKing/bk-ci/issues/9229)
+- [新增] 将边缘微服务合并成misc服务 [链接](http://github.com/TencentBlueKing/bk-ci/issues/9770)
+
+#### 优化
+- [优化] 当次构建跳过的task任务数据不保存到数据库 TencentBlueKing [链接](http://github.com/TencentBlueKing/bk-ci/issues/9951)
+
+#### 修复
+- [修复] 重试与构建机状态结束上报执行次数异常 [链接](http://github.com/TencentBlueKing/bk-ci/issues/10066)
+- [修复] 新构建详情页质量红线插件渲染问题修复 [链接](http://github.com/TencentBlueKing/bk-ci/issues/10029)
+- [修复] 优化工蜂接口异常提示 [链接](http://github.com/TencentBlueKing/bk-ci/issues/9794)
+- [修复] 插件测试版本结束测试阶段或审核阶段后最新测试版本标识更新异常 [链接](http://github.com/TencentBlueKing/bk-ci/issues/10020)
+- [修复] 修复新建项目失败 [链接](http://github.com/TencentBlueKing/bk-ci/issues/10045)
+- [修复] 项目管理-项目最大可授权人员范围选择全员显示为空 [链接](http://github.com/TencentBlueKing/bk-ci/issues/10041)
+- [修复] 代码库被流水线引用列表应该忽略codecc渠道流水线 [链接](http://github.com/TencentBlueKing/bk-ci/issues/10011)
+- [修复] 重置Oauth授权,提示请求的资源不存在 [链接](http://github.com/TencentBlueKing/bk-ci/issues/9960)
+- [修复] 修复openapi启动报错 [链接](http://github.com/TencentBlueKing/bk-ci/issues/9997)
+- [修复] 重命名代码库以后, 使用旧别名关联代码库会报错 [链接](http://github.com/TencentBlueKing/bk-ci/issues/9984)
 # v2.1.0-rc.2
 ## Changelog since v2.1.0-rc.1
 #### 新增

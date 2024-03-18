@@ -11,6 +11,8 @@ data class MigrateProjectConditionDTO(
     val deptId: Long? = null,
     @get:Schema(title = "bgId")
     val bgId: Long? = null,
+    @get:Schema(title = "bg列表")
+    val bgIdList: List<Long>? = null,
     @get:Schema(title = "项目创建人")
     val projectCreator: String? = null,
     @get:Schema(title = "排除项目code")
@@ -22,5 +24,7 @@ data class MigrateProjectConditionDTO(
     @get:Schema(title = "路由tag")
     val routerTag: AuthSystemType? = null,
     @get:Schema(title = "是否关联产品")
-    val relatedProduct: Boolean? = null
+    val relatedProduct: Boolean? = null,
+    @get:Schema(title = "排除创建时间大于该值的项目")
+    val excludedCreateTime: String? = null
 )
