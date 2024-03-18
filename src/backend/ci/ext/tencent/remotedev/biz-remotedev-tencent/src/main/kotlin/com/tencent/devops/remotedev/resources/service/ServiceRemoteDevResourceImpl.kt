@@ -21,8 +21,8 @@ import com.tencent.devops.remotedev.pojo.project.RemotedevProject
 import com.tencent.devops.remotedev.pojo.project.WeSecProjectWorkspace
 import com.tencent.devops.remotedev.resources.op.AssignWorkspacePipelineInfo
 import com.tencent.devops.remotedev.resources.op.OpProjectWorkspaceResourceImpl
-import com.tencent.devops.remotedev.service.PermissionService
 import com.tencent.devops.remotedev.service.DesktopWorkspaceService
+import com.tencent.devops.remotedev.service.PermissionService
 import com.tencent.devops.remotedev.service.WindowsResourceConfigService
 import com.tencent.devops.remotedev.service.WorkspaceService
 import com.tencent.devops.remotedev.service.workspace.CreateControl
@@ -46,6 +46,7 @@ class ServiceRemoteDevResourceImpl(
     private val redisOperation: RedisOperation
 ) : ServiceRemoteDevResource {
     private val executor = Executors.newCachedThreadPool()
+
     companion object {
         private val logger = LoggerFactory.getLogger(OpProjectWorkspaceResourceImpl::class.java)
         private const val PIPELINE_CONFIG_INFO = "remotedev:assignWorkspace.pipelineinfo"
@@ -57,8 +58,29 @@ class ServiceRemoteDevResourceImpl(
         )
     }
 
-    override fun getProjectWorkspace(projectId: String?, ip: String?): Result<List<WeSecProjectWorkspace>> {
-        return Result(workspaceService.getProjectWorkspaceList4WeSec(projectId, ip))
+    override fun getProjectWorkspace(
+        projectId: String?,
+        ip: String?
+    ): Result<List<WeSecProjectWorkspace>> {
+        return Result(
+            workspaceService.getProjectWorkspaceList4WeSec(
+                projectId = projectId,
+                ip = ip,
+                hasDepartmentsInfo = null,
+                hasCurrentUser = null
+            )
+        )
+    }
+
+    override fun getProjectWorkspaceIp(ip: String): Result<WeSecProjectWorkspace?> {
+        return Result(
+            workspaceService.getProjectWorkspaceList4WeSec(
+                projectId = null,
+                ip = ip,
+                hasDepartmentsInfo = true,
+                hasCurrentUser = true
+            ).randomOrNull()
+        )
     }
 
     override fun getRemotedevProjects(projectId: String?): Result<List<RemotedevProject>> {
@@ -99,7 +121,8 @@ class ServiceRemoteDevResourceImpl(
             client.get(ServiceTxProjectResource::class).updateRemotedev(
                 userId = operator,
                 projectCode = data.projectId,
-                addcloudDesktopNum = (data.ips?.size ?: 0) + (data.cgsIds?.size ?: 0)
+                addcloudDesktopNum = (data.ips?.size ?: 0) + (data.cgsIds?.size ?: 0),
+                enable = null
             )
         }
         cgsData.forEach { cgs ->

@@ -88,7 +88,8 @@ data class TaiUserInfo(
     @JsonProperty("manage_group_ids")
     val manageGroupIds: List<String>?,
     @JsonProperty("company_tags")
-    val companyTags: List<CompanyTags>?
+    val companyTags: List<CompanyTags>?,
+    val departments: List<DepartmentsInfo>?
 ) {
     @JsonIgnoreProperties(ignoreUnknown = true)
     data class CompanyTags(
@@ -103,5 +104,11 @@ data class TaiUserInfo(
         val shortName: String?,
         @JsonProperty("email_suffix")
         val emailSuffix: String?
+    )
+
+    @JsonIgnoreProperties(ignoreUnknown = true)
+    data class DepartmentsInfo(
+        val id: Long,
+        val name: String
     )
 }
