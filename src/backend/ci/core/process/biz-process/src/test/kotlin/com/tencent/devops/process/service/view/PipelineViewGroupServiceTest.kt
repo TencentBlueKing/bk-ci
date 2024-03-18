@@ -113,7 +113,7 @@ class PipelineViewGroupServiceTest : BkCiAbstractTest() {
         1, //    setId(id);
         "test", //    setPipelineNamePinyin(pipelineNamePinyin);
         now //    setLatestStartTime(latestStartTime);,
-        )
+    )
 
     private val pipelineViewForm = PipelineViewForm(
         id = "test",
