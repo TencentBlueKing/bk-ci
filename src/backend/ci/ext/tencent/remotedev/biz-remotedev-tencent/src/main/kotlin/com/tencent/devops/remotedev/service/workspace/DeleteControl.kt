@@ -49,6 +49,7 @@ import com.tencent.devops.remotedev.cron.HolidayHelper
 import com.tencent.devops.remotedev.dao.RemoteDevBillingDao
 import com.tencent.devops.remotedev.dao.RemoteDevSettingDao
 import com.tencent.devops.remotedev.dao.WorkspaceDao
+import com.tencent.devops.remotedev.dao.WorkspaceJoinDao
 import com.tencent.devops.remotedev.dao.WorkspaceOpHistoryDao
 import com.tencent.devops.remotedev.pojo.OpHistoryCopyWriting
 import com.tencent.devops.remotedev.pojo.WebSocketActionType
@@ -56,8 +57,10 @@ import com.tencent.devops.remotedev.pojo.WorkspaceAction
 import com.tencent.devops.remotedev.pojo.WorkspaceKafkaInfo
 import com.tencent.devops.remotedev.pojo.WorkspaceOwnerType
 import com.tencent.devops.remotedev.pojo.WorkspaceRecord
+import com.tencent.devops.remotedev.pojo.WorkspaceSearch
 import com.tencent.devops.remotedev.pojo.WorkspaceStatus
 import com.tencent.devops.remotedev.pojo.WorkspaceSystemType
+import com.tencent.devops.remotedev.pojo.common.QueryType
 import com.tencent.devops.remotedev.pojo.common.RemoteDevNotifyType
 import com.tencent.devops.remotedev.pojo.event.RemoteDevUpdateEvent
 import com.tencent.devops.remotedev.pojo.event.UpdateEventType
@@ -107,6 +110,7 @@ class DeleteControl @Autowired constructor(
     private val tCloudCfsService: TCloudCfsService,
     private val gitProxyTGitService: GitProxyTGitService,
     private val bkBaseService: BKBaseService,
+    private val workspaceJoinDao: WorkspaceJoinDao,
     private val holidayHelper: HolidayHelper
 ) {
 
@@ -399,10 +403,18 @@ class DeleteControl @Autowired constructor(
         val whiteListProject = redisCache.getSetMembers(
             RedisKeys.REDIS_WORKSPACE_AUTO_DELETE_WHITE_LIST_PROJECT
         ) ?: emptySet()
-        workspaceDao.fetchWorkspace(
+        val highEndWindowsList = redisCache.getSetMembers(
+            RedisKeys.REDIS_WINDOWS_HIGH_END_MODEL
+        ) ?: emptySet()
+        workspaceJoinDao.limitFetchProjectWorkspace(
             dslContext = dslContext,
-            systemType = WorkspaceSystemType.WINDOWS_GPU,
-            notDeleted = true
+            limit = null,
+            queryType = QueryType.WEB,
+            search = WorkspaceSearch(
+                workspaceSystemType = listOf(WorkspaceSystemType.WINDOWS_GPU),
+                size = highEndWindowsList.toList(),
+                onFuzzyMatch = false
+            )
         )?.parallelStream()?.forEach { workspace ->
             if (workspace.createTime > limitDay) {
                 logger.info(
@@ -414,7 +426,7 @@ class DeleteControl @Autowired constructor(
             if (actives[workspace.hostName] == null || actives[workspace.hostName]!! < 5) {
                 if (workspace.projectId in whiteListProject) {
                     readyDeleteWorkspace.add(
-                        "project=${workspace.projectId}, ip=${workspace.hostName}," +
+                        "project=${workspace.projectId}, ip=${workspace.hostName}" +
                                 " 原因=未达到云桌面4星活跃(自然月活跃天数: ${actives[workspace.hostName]}" +
                                 " 检测期限到 ${limitDay.format(formatter)}) 白名单已命中，只展示，将不会销毁。"
                     )
