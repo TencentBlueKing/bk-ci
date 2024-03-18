@@ -20,6 +20,7 @@ class ApigwRemoteDevResourceImpl @Autowired constructor(private val client: Clie
     companion object {
         private val logger = LoggerFactory.getLogger(ApigwProjectResourceImpl::class.java)
     }
+
     override fun validateUserTicket(
         appCode: String?,
         apigwType: String?,
@@ -46,6 +47,18 @@ class ApigwRemoteDevResourceImpl @Autowired constructor(private val client: Clie
             projectId = projectId,
             ip = ip
         )
+    }
+
+    override fun getProjectWorkspace(
+        appCode: String?,
+        apigwType: String?,
+        ip: String?
+    ): Result<WeSecProjectWorkspace?> {
+        if (ip.isNullOrBlank()) {
+            return Result(null)
+        }
+        logger.info("Get projects workspace ip $ip")
+        return client.get(ServiceRemoteDevResource::class).getProjectWorkspaceIp(ip = ip)
     }
 
     override fun queryWorkspaceProjects(
