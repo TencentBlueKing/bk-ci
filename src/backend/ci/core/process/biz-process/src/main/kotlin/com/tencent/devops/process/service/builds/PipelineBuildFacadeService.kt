@@ -2341,6 +2341,7 @@ class PipelineBuildFacadeService(
                         containerId = vmSeqId,
                         containerHashId = container.containerHashId,
                         containerType = container.containerType,
+                        executeCount = container.executeCount,
                         actionType = ActionType.TERMINATE,
                         reason = msg,
                         errorCode = simpleResult.error?.errorCode ?: 0,

@@ -138,6 +138,7 @@ class PipelineRetryFacadeService @Autowired constructor(
                 userId = userId,
                 projectId = taskInfo.projectId,
                 actionType = ActionType.REFRESH,
+                executeCount = taskInfo.executeCount,
                 containerType = ""
             )
         )

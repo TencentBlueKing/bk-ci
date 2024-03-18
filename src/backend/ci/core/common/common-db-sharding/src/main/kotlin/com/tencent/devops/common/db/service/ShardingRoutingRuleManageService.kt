@@ -32,10 +32,10 @@ import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.utils.BkServiceUtil
 import com.tencent.devops.common.service.utils.BkShardingRoutingCacheUtil
 import com.tencent.devops.common.service.utils.CommonUtils
-import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
+import java.util.concurrent.TimeUnit
 
 @Service
 class ShardingRoutingRuleManageService @Autowired constructor(
@@ -43,7 +43,8 @@ class ShardingRoutingRuleManageService @Autowired constructor(
 ) {
 
     companion object {
-        val logger: Logger = LoggerFactory.getLogger(ShardingRoutingRuleManageService::class.java)
+        private val logger = LoggerFactory.getLogger(ShardingRoutingRuleManageService::class.java)
+        private const val DEFAULT_RULE_ACTION_REDIS_CACHE_TIME = 14L // 分片规则操作信息在redis默认缓存时间，单位：天
     }
 
     /**
@@ -53,7 +54,6 @@ class ShardingRoutingRuleManageService @Autowired constructor(
      * @param actionType 操作类型
      * @return 布尔值
      */
-    @Suppress("SpreadOperator")
     fun handleShardingRoutingRuleLocalCache(
         routingName: String,
         routingRule: String? = null,
@@ -83,6 +83,7 @@ class ShardingRoutingRuleManageService @Autowired constructor(
                 routingRule?.let {
                     BkShardingRoutingCacheUtil.put(routingName, routingRule)
                 }
+                refreshShardingRoutingRuleRedisCache(routingName, actionType, ip)
                 logger.info(
                     "[host[$ip] update shardingRoutingRule localCache success，" +
                         "params[$routingName|$routingRule]"
@@ -91,6 +92,15 @@ class ShardingRoutingRuleManageService @Autowired constructor(
 
             else -> {}
         }
+        return true
+    }
+
+    @Suppress("SpreadOperator")
+    private fun refreshShardingRoutingRuleRedisCache(
+        routingName: String,
+        actionType: CrudEnum,
+        ip: String
+    ) {
         val serviceName = BkServiceUtil.findServiceName()
         val key = BkServiceUtil.getServiceRoutingRuleActionFinishKey(serviceName, routingName, actionType)
         // 获取当前微服务的IP列表
@@ -104,6 +114,7 @@ class ShardingRoutingRuleManageService @Autowired constructor(
         }
         // 将缓存操作完成的IP写入redis
         redisOperation.sadd(key, ip)
-        return true
+        // 为key设置超时时间
+        redisOperation.expire(key, TimeUnit.DAYS.toSeconds(DEFAULT_RULE_ACTION_REDIS_CACHE_TIME))
     }
 }

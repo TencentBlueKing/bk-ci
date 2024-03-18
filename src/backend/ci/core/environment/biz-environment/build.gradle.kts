@@ -39,6 +39,7 @@ dependencies {
     api(project(":core:common:common-db"))
     api(project(":core:common:common-websocket"))
     api(project(":core:common:common-auth:common-auth-provider"))
+    api(project(":core:common:common-audit"))
     api("org.apache.commons:commons-compress")
     api("org.json:json")
     api("org.influxdb:influxdb-java")
