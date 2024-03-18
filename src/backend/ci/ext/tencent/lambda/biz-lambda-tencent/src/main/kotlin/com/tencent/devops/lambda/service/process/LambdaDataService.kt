@@ -63,7 +63,6 @@ import com.tencent.devops.lambda.dao.process.LambdaPipelineBuildDao
 import com.tencent.devops.lambda.dao.process.LambdaPipelineLabelDao
 import com.tencent.devops.lambda.dao.process.LambdaPipelineModelDao
 import com.tencent.devops.lambda.dao.process.LambdaPipelineTemplateDao
-import com.tencent.devops.process.pojo.DataPlatBuildCommits
 import com.tencent.devops.lambda.pojo.DataPlatBuildDetail
 import com.tencent.devops.lambda.pojo.DataPlatBuildHistory
 import com.tencent.devops.lambda.pojo.DataPlatJobDetail
@@ -76,6 +75,7 @@ import com.tencent.devops.model.process.tables.records.TPipelineBuildHistoryReco
 import com.tencent.devops.model.process.tables.records.TPipelineBuildTaskRecord
 import com.tencent.devops.process.engine.pojo.BuildInfo
 import com.tencent.devops.process.pojo.BuildStageStatus
+import com.tencent.devops.process.pojo.DataPlatBuildCommits
 import com.tencent.devops.project.api.service.ServiceProjectResource
 import com.tencent.devops.repository.api.ServiceRepositoryResource
 import com.tencent.devops.scm.utils.code.git.GitUtils

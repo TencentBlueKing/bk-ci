@@ -641,14 +641,6 @@ class StreamYamlBaseBuild @Autowired constructor(
                 if (webhookCommitList.size < pageSize) break
                 page++
             }
-            pipelineEventDispatcher.dispatch(
-                PipelineBuildCommitFinishEvent(
-                    source = "build_commits",
-                    projectId = projectId,
-                    pipelineId = pipelineId,
-                    buildId = buildId
-                )
-            )
         } catch (ignore: Throwable) {
             logger.warn("StreamYamlBaseBuild|savePipelineBuildCommit|error", ignore)
         }
