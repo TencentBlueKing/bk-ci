@@ -165,7 +165,7 @@ class OpProjectServiceImpl @Autowired constructor(
             )
         }
 
-        val dbProperties = JsonUtil.toOrNull(dbProjectRecord.properties.toString(), ProjectProperties::class.java)
+        val dbProperties = JsonUtil.toOrNull(dbProjectRecord.properties?.toString(), ProjectProperties::class.java)
         // 更新云研发需要走remotedev的接口，不能在project直接更新会导致没有关联操作，这里报错
         if ((dbProperties?.remotedev != true && projectInfoRequest.properties?.remotedev == true) ||
             (dbProperties?.remotedev == true && projectInfoRequest.properties?.remotedev != true)
