@@ -548,7 +548,7 @@ class WorkspaceService @Autowired constructor(
             workspaceNames = workspaceNames
         )?.associateBy { it["NAME"] as String }
 
-        val allConfig = windowsResourceConfigService.getAllType(true, null).associateBy { it.id!! }
+        val allConfig = windowsResourceConfigService.getAllType(true, null).associateBy { it.id!!.toString() }
         val fetchDetailEndTime = System.currentTimeMillis()
 
         val tailUsers = if (hasDepartmentsInfo == true) {
@@ -611,7 +611,7 @@ class WorkspaceService @Autowired constructor(
                 displayName = res["DISPLAY_NAME"] as String,
                 ownerDepartments = depInfo,
                 currentLoginUsers = currUser,
-                machineType = workspaceWindows?.get(workspaceName)?.let { win -> allConfig[win["WIN_CONFIG_ID"]]?.size }
+                machineType = workspaceWindows?.get(workspaceName)?.let { win -> allConfig[win["WIN_CONFIG_ID"].toString()]?.size }
             )
         }
 
