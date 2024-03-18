@@ -80,7 +80,11 @@ class ApigwTXEnvironmentJobResourceV4Impl @Autowired constructor(
         projectId: String,
         queryJobInstanceLogsReq: QueryJobInstanceLogsReq
     ): JobResult<QueryJobInstanceLogsResult> {
-        return client.get(TencentServiceJobResource::class).queryJobInstanceLogs(userId, projectId, queryJobInstanceLogsReq)
+        return client.get(
+            TencentServiceJobResource::class
+        ).queryJobInstanceLogs(
+            userId, projectId, queryJobInstanceLogsReq
+        )
     }
 
     override fun createAccount(
