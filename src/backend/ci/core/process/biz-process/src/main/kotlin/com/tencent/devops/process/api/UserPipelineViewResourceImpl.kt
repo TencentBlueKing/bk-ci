@@ -27,7 +27,9 @@
 
 package com.tencent.devops.process.api
 
+import com.tencent.bk.audit.annotations.AuditEntry
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.auth.api.ActionId
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.process.api.user.UserPipelineViewResource
 import com.tencent.devops.process.pojo.classify.PipelineNewView
@@ -69,6 +71,7 @@ class UserPipelineViewResourceImpl @Autowired constructor(
         return Result(pipelineViewGroupService.getView(userId, projectId, viewId))
     }
 
+    @AuditEntry(actionId = ActionId.PIPELINE_GROUP_CREATE)
     override fun addView(
         userId: String,
         projectId: String,
@@ -140,18 +143,22 @@ class UserPipelineViewResourceImpl @Autowired constructor(
         return Result(pipelineViewGroupService.listViewIdsByPipelineId(projectId, pipelineId))
     }
 
+    @AuditEntry(actionId = ActionId.PIPELINE_GROUP_ADD_REMOVE)
     override fun bulkAdd(userId: String, projectId: String, bulkAdd: PipelineViewBulkAdd): Result<Boolean> {
         return Result(pipelineViewGroupService.bulkAdd(userId, projectId, bulkAdd))
     }
 
+    @AuditEntry(actionId = ActionId.PIPELINE_GROUP_ADD_REMOVE)
     override fun bulkRemove(userId: String, projectId: String, bulkRemove: PipelineViewBulkRemove): Result<Boolean> {
         return Result(pipelineViewGroupService.bulkRemove(userId, projectId, bulkRemove))
     }
 
+    @AuditEntry(actionId = ActionId.PIPELINE_GROUP_DELETE)
     override fun deleteView(userId: String, projectId: String, viewId: String): Result<Boolean> {
         return Result(pipelineViewGroupService.deleteViewGroup(projectId, userId, viewId))
     }
 
+    @AuditEntry(actionId = ActionId.PIPELINE_GROUP_EDIT)
     override fun updateView(
         userId: String,
         projectId: String,

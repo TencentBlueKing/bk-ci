@@ -480,7 +480,8 @@ class PipelineAtomReplaceCronService @Autowired constructor(
                 userId = template.creator,
                 templateId = templateId,
                 versionName = templateModel.versionName,
-                template = model
+                template = model,
+                checkPermissionFlag = false
             ).toInt()
             val templateVersion = templateModel.version.toInt()
             pipelineAtomReplaceHistoryDao.createAtomReplaceHistory(
@@ -510,7 +511,7 @@ class PipelineAtomReplaceCronService @Autowired constructor(
         baseId: String,
         userId: String
     ) {
-        if (pipelineIdSet == null || pipelineIdSet.isEmpty()) {
+        if (pipelineIdSet.isNullOrEmpty()) {
             logger.info("pipelineIdSet is empty, skip")
             return
         }
@@ -726,7 +727,7 @@ class PipelineAtomReplaceCronService @Autowired constructor(
         if (projectManager == null) {
             val projectManagers =
                 client.get(ServiceUserResource::class).getProjectUserRoles(projectId, BkAuthGroup.MANAGER).data
-            if (projectManagers == null || projectManagers.isEmpty()) {
+            if (projectManagers.isNullOrEmpty()) {
                 throw ErrorCodeException(
                     statusCode = Response.Status.INTERNAL_SERVER_ERROR.statusCode,
                     errorCode = ProcessMessageCode.QUERY_USER_INFO_FAIL
