@@ -46,61 +46,69 @@ import java.io.InputStream
 
 @RestResource
 @Suppress("ALL")
-class ExternalIpaResourceImpl @Autowired constructor(
-    private val dslContext: DSLContext,
-    private val ipaUploadDao: IpaUploadDao,
-    private val signService: SignService,
-    private val syncSignService: AsyncSignService,
-    private val signInfoService: SignInfoService,
-    private val objectMapper: ObjectMapper
-) : ExternalIpaResource {
+class ExternalIpaResourceImpl
+    @Autowired
+    constructor(
+        private val dslContext: DSLContext,
+        private val ipaUploadDao: IpaUploadDao,
+        private val signService: SignService,
+        private val syncSignService: AsyncSignService,
+        private val signInfoService: SignInfoService,
+        private val objectMapper: ObjectMapper
+    ) : ExternalIpaResource {
+        @Value("\${bkci.sign.tokenExpiresInMinutes:120}")
+        private val tokenExpiresInMinutes: Int = 120
 
-    @Value("\${bkci.sign.tokenExpiresInMinutes:120}")
-    private val tokenExpiresInMinutes: Int = 120
+        override fun ipaUpload(
+            ipaSignInfoHeader: String,
+            ipaInputStream: InputStream,
+            token: String
+        ): Result<String> {
+            val resignId = "s-${UUIDUtil.generate()}"
+            val ipaSignInfo = signInfoService.check(signInfoService.decodeIpaSignInfo(ipaSignInfoHeader, objectMapper))
+            val uploadRecord =
+                ipaUploadDao.get(dslContext, token)
+                    ?: throw ErrorCodeException(
+                        errorCode = SignMessageCode.ERROR_UPLOAD_TOKEN_INVALID,
+                        defaultMessage = "使用的上传token无效"
+                    )
 
-    override fun ipaUpload(ipaSignInfoHeader: String, ipaInputStream: InputStream, token: String): Result<String> {
-        val resignId = "s-${UUIDUtil.generate()}"
-        val ipaSignInfo = signInfoService.check(signInfoService.decodeIpaSignInfo(ipaSignInfoHeader, objectMapper))
-        val uploadRecord = ipaUploadDao.get(dslContext, token)
-            ?: throw ErrorCodeException(
-                errorCode = SignMessageCode.ERROR_UPLOAD_TOKEN_INVALID,
-                defaultMessage = "使用的上传token无效"
-            )
+            // 判断token是否过期
+            if (System.currentTimeMillis() - uploadRecord.createTime.timestampmilli() > tokenExpiresInMinutes * 60 * 1000 ||
+                !uploadRecord.resignId.isNullOrBlank()
+            ) {
+                throw ErrorCodeException(
+                    errorCode = SignMessageCode.ERROR_UPLOAD_TOKEN_EXPIRED,
+                    defaultMessage = "使用的上传token已过期"
+                )
+            }
+            // 对签名信息做替换
+            ipaSignInfo.projectId = uploadRecord.projectId
+            ipaSignInfo.pipelineId = uploadRecord.pipelineId
+            ipaSignInfo.buildId = uploadRecord.buildId
 
-        // 判断token是否过期
-        if (System.currentTimeMillis() - uploadRecord.createTime.timestampmilli() > tokenExpiresInMinutes * 60 * 1000 ||
-            !uploadRecord.resignId.isNullOrBlank()) {
-            throw ErrorCodeException(
-                errorCode = SignMessageCode.ERROR_UPLOAD_TOKEN_EXPIRED,
-                defaultMessage = "使用的上传token已过期"
-            )
-        }
-        // 对签名信息做替换
-        ipaSignInfo.projectId = uploadRecord.projectId
-        ipaSignInfo.pipelineId = uploadRecord.pipelineId
-        ipaSignInfo.buildId = uploadRecord.buildId
-
-        var taskExecuteCount = 1
-        try {
-            val (ipaFile, taskExecuteCount2) = signService.uploadIpaAndDecodeInfo(
-                resignId = resignId,
-                ipaSignInfo = ipaSignInfo,
-                ipaSignInfoHeader = ipaSignInfoHeader,
-                ipaInputStream = ipaInputStream,
-                md5Check = false
-            )
-            taskExecuteCount = taskExecuteCount2
-            ipaUploadDao.update(dslContext, token, resignId)
-            syncSignService.asyncSign(resignId, ipaSignInfo, ipaFile, taskExecuteCount)
-            return Result(resignId)
-        } catch (ignored: Exception) {
-            signInfoService.failResign(
-                resignId = resignId,
-                info = ipaSignInfo,
-                executeCount = taskExecuteCount,
-                message = ignored.message ?: "Start sign task with exception"
-            )
-            throw ignored
+            var taskExecuteCount = 1
+            try {
+                val (ipaFile, taskExecuteCount2) =
+                    signService.uploadIpaAndDecodeInfo(
+                        resignId = resignId,
+                        ipaSignInfo = ipaSignInfo,
+                        ipaSignInfoHeader = ipaSignInfoHeader,
+                        ipaInputStream = ipaInputStream,
+                        md5Check = false
+                    )
+                taskExecuteCount = taskExecuteCount2
+                ipaUploadDao.update(dslContext, token, resignId)
+                syncSignService.asyncSign(resignId, ipaSignInfo, ipaFile, taskExecuteCount)
+                return Result(resignId)
+            } catch (ignored: Exception) {
+                signInfoService.failResign(
+                    resignId = resignId,
+                    info = ipaSignInfo,
+                    executeCount = taskExecuteCount,
+                    message = ignored.message ?: "Start sign task with exception"
+                )
+                throw ignored
+            }
         }
     }
-}

@@ -146,14 +146,19 @@
                     <template slot-scope="props">
                         <div class="table-node-item node-item-status"
                             v-if="props.row.nodeStatus === 'BUILDING_IMAGE' && props.row.nodeType === 'DEVCLOUD'">
-                            <span class="node-status-icon normal-stutus-icon"></span>
+                            <span class="node-status-icon"></span>
                             <span class="node-status">{{ $t('environment.nodeInfo.normal') }}</span>
                         </div>
                         <div class="table-node-item node-item-status">
                             <!-- 状态icon -->
-                            <span class="node-status-icon normal-stutus-icon" v-if="successStatus.includes(props.row.nodeStatus)"></span>
+                            <span class="node-status-icon"
+                                v-if="successStatus.includes(props.row.nodeStatus)">
+                            </span>
                             <span class="node-status-icon abnormal-stutus-icon"
                                 v-if="failStatus.includes(props.row.nodeStatus)">
+                            </span>
+                            <span class="node-status-icon normal-stutus-icon"
+                                v-if="['NOT_INSTALLED'].includes(props.row.nodeStatus)">
                             </span>
                             <div class="bk-spin-loading bk-spin-loading-mini bk-spin-loading-primary"
                                 v-if="runningStatus.includes(props.row.nodeStatus)">
@@ -312,9 +317,9 @@
                 lastCliCKNode: {},
                 nodeList: [], // 节点列表
                 gatewayList: [], // 网关列表
-                runningStatus: ['CREATING', 'STARTING', 'STOPPING', 'RESTARTING', 'DELETING', 'BUILDING_IMAGE'],
+                runningStatus: ['RUNNING', 'CREATING', 'STARTING', 'STOPPING', 'RESTARTING', 'DELETING', 'BUILDING_IMAGE'],
                 successStatus: ['NORMAL', 'BUILD_IMAGE_SUCCESS'],
-                failStatus: ['ABNORMAL', 'DELETED', 'LOST', 'BUILD_IMAGE_FAILED', 'UNKNOWN', 'RUNNING'],
+                failStatus: ['ABNORMAL', 'DELETED', 'LOST', 'BUILD_IMAGE_FAILED', 'UNKNOWN', 'NOT_IN_CC', 'NOT_IN_CMDB'],
                 // 页面loading
                 loading: {
                     isLoading: false,
@@ -1056,6 +1061,10 @@
 
         .abnormal-stutus-icon {
             border-color: $failColor;
+        }
+
+        .normal-stutus-icon {
+            border-color: #979ba5;
         }
 
         .delete-node-text {

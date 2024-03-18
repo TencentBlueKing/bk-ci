@@ -36,7 +36,6 @@ sealed class HashAlgorithm(
     private val algorithm: String,
     private val hashLength: Int
 ) {
-
     fun hash(file: File) = hash(file.inputStream().buffered())
 
     fun hash(inputStream: InputStream): String {
@@ -53,9 +52,11 @@ sealed class HashAlgorithm(
         val hashBytes = digest.digest()
         val hashInt = BigInteger(1, hashBytes)
         val hashText = hashInt.toString(16)
-        return if (hashText.length < hashLength)
+        return if (hashText.length < hashLength) {
             "0".repeat(hashLength - hashText.length) + hashText
-        else hashText
+        } else {
+            hashText
+        }
     }
 
     fun hash(string: String): String = hash(string.byteInputStream())
@@ -70,13 +71,19 @@ sealed class HashAlgorithm(
 }
 
 fun InputStream.sha256() = HashAlgorithm.SHA256().hash(this)
+
 fun InputStream.sha1() = HashAlgorithm.SHA1().hash(this)
+
 fun InputStream.md5() = HashAlgorithm.MD5().hash(this)
 
 fun File.sha256() = this.inputStream().buffered().sha256()
+
 fun File.sha1() = this.inputStream().buffered().sha1()
+
 fun File.md5() = this.inputStream().buffered().md5()
 
 fun String.sha256() = this.byteInputStream().sha256()
+
 fun String.sha1() = this.byteInputStream().sha1()
+
 fun String.md5() = this.byteInputStream().md5()

@@ -543,13 +543,20 @@ class ProjectLocalService @Autowired constructor(
         }
     }
 
-    fun createGitCIProject(userId: String, gitProjectId: Long, gitProjectName: String?): ProjectVO {
+    fun createGitCIProject(
+        userId: String,
+        gitProjectId: Long,
+        gitProjectName: String?,
+        productId: Int? = null
+    ): ProjectVO {
         val projectCode = "git_$gitProjectId"
         var gitCiProject = projectDao.getByEnglishName(dslContext, projectCode)
         if (gitCiProject != null) {
             return ProjectUtils.packagingBean(gitCiProject)
         }
-
+        val projectInfo = productId?.let {
+            projectService.getOperationalProducts().find { it.productId == productId }
+        }
         val projectCreateInfo = ProjectCreateInfo(
             projectName = gitProjectName ?: projectCode,
             englishName = projectCode,
@@ -563,7 +570,9 @@ class ProjectLocalService @Autowired constructor(
             centerName = "",
             secrecy = false,
             kind = 0,
-            properties = ProjectProperties(PipelineAsCodeSettings(false))
+            properties = ProjectProperties(PipelineAsCodeSettings(false)),
+            productId = projectInfo?.productId,
+            productName = projectInfo?.productName
         )
 
         try {

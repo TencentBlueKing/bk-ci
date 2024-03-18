@@ -10,9 +10,9 @@ import com.tencent.devops.remotedev.pojo.op.RemotedevCvmData
 import com.tencent.devops.remotedev.pojo.op.WorkspaceNotifyData
 import com.tencent.devops.remotedev.pojo.project.RemotedevProject
 import com.tencent.devops.remotedev.pojo.project.WeSecProjectWorkspace
-import io.swagger.v3.oas.annotations.tags.Tag
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
+import io.swagger.v3.oas.annotations.tags.Tag
 import javax.ws.rs.Consumes
 import javax.ws.rs.GET
 import javax.ws.rs.HeaderParam
@@ -66,6 +66,21 @@ interface ApigwRemoteDevResource {
         @QueryParam("ip")
         ip: String?
     ): Result<List<WeSecProjectWorkspace>>
+
+    @Operation(summary = "云研发SDK根据X-BK-NGGW-CLIENT-ADDRESS获取云桌面信息", tags = ["v4_app_remotedev_workspace_detail"])
+    @GET
+    @Path("/project/workspace/detail")
+    fun getProjectWorkspace(
+        @Parameter(description = "appCode", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
+        appCode: String?,
+        @Parameter(description = "apigw Type", required = true)
+        @PathParam("apigwType")
+        apigwType: String?,
+        @Parameter(description = "IP", required = false)
+        @HeaderParam("X-BK-NGGW-CLIENT-ADDRESS")
+        ip: String?
+    ): Result<WeSecProjectWorkspace?>
 
     @Operation(summary = "提供给wesec获取云桌面信息", tags = ["v4_app_remotedev_project_list"])
     @GET

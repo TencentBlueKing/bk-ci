@@ -20,7 +20,6 @@ class StartWorkspaceService @Autowired constructor(
     private val workspaceDao: WorkspaceDao
 ) {
     fun computerStatus(
-        userId: String,
         projectId: String?,
         cgsIds: MutableSet<String> = mutableSetOf()
     ): ComputerStatusResp {
@@ -38,7 +37,7 @@ class StartWorkspaceService @Autowired constructor(
         }
 
         // 获取状态信息
-        val resp = startCloudClient.computerStatus(userId, cgsIds)
+        val resp = startCloudClient.computerStatus(cgsIds)
             ?: return ComputerStatusResp(0, emptyList(), emptyList())
 
         // 拼接仪表信息
@@ -57,7 +56,7 @@ class StartWorkspaceService @Autowired constructor(
 
             val status = ComputerStatusEnum.getEnumFromStatus(it.state)
             if (status == null) {
-                logger.warn("computerStatus $userId|$projectId get unknown state ${it.state}")
+                logger.warn("computerStatus $projectId get unknown state ${it.state}")
                 return@forEach
             }
             if (statusResMap[status] == null) {
@@ -74,12 +73,10 @@ class StartWorkspaceService @Autowired constructor(
     }
 
     fun loginUsers(
-        userId: String,
         cgsIds: Set<String>
     ): Map<String, List<String>> {
         return kotlin.runCatching {
             computerStatus(
-                userId,
                 null,
                 cgsIds.toMutableSet()
             ).users.find { it.type == ComputerUserEnum.LOGIN }?.names

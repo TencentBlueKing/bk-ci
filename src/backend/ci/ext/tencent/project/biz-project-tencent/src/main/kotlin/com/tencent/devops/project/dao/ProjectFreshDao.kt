@@ -82,6 +82,8 @@ class ProjectFreshDao {
             return dslContext.update(this)
                 .set(BG_ID, projectDeptInfo.bgId.toLong())
                 .set(BG_NAME, projectDeptInfo.bgName)
+                .set(BUSINESS_LINE_ID, projectDeptInfo.businessLineId?.toLong())
+                .set(BUSINESS_LINE_NAME, projectDeptInfo.businessLineName)
                 .set(DEPT_ID, projectDeptInfo.deptId?.toLong())
                 .set(DEPT_NAME, projectDeptInfo.deptName)
                 .set(CENTER_ID, projectDeptInfo.centerId?.toLong())

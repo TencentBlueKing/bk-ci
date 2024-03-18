@@ -5,7 +5,6 @@ import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.notify.enums.NotifyType
 import com.tencent.devops.model.remotedev.tables.records.TProjectTgitIdLinkRecord
-import com.tencent.devops.model.remotedev.tables.records.TProjectTgitLinkRecord
 import com.tencent.devops.notify.api.service.ServiceNotifyMessageTemplateResource
 import com.tencent.devops.notify.pojo.SendNotifyMessageTemplateRequest
 import com.tencent.devops.project.api.service.ServiceProjectResource
@@ -170,7 +169,7 @@ class GitProxyTGitService @Autowired constructor(
                         return@projects
                     }
                     val url = (project.httpsUrlToRepo ?: project.httpUrlToRepo)?.removeHttpPrefix()
-                    if ((url != projectUrl) && (url?.startsWith(projectUrl) != true)) {
+                    if ((url != projectUrl) && (url?.startsWith("${projectUrl.removeSuffix("/")}/") != true)) {
                         return@urls
                     }
 
@@ -476,131 +475,6 @@ class GitProxyTGitService @Autowired constructor(
         }
     }
 
-    fun migrateTGitData(projectId: String?) {
-        val res = projectTGitLinkDao.fetchOld(dslContext, projectId)
-        val recordData = mutableMapOf<String, MutableList<TProjectTgitLinkRecord>>()
-        res.forEach {
-            if (recordData[it.projectId] == null) {
-                recordData[it.projectId] = mutableListOf(it)
-            } else {
-                recordData[it.projectId]?.add(it)
-            }
-        }
-
-        recordData.forEach { (projectId, records) ->
-            val recordsMap = records.associateBy { it.url.trim() }
-
-            val svnData = mutableMapOf<String, MutableSet<String>>()
-            records.filter { it.url.removeHttpPrefix().startsWith(tSvnUrl.removeHttpPrefix()) }.forEach {
-                if (svnData[it.oauthUser] == null) {
-                    svnData[it.oauthUser] = mutableSetOf(it.url)
-                } else {
-                    svnData[it.oauthUser]?.add(it.url)
-                }
-            }
-            val gitData = mutableMapOf<String, MutableSet<String>>()
-            records.filter { !it.url.removeHttpPrefix().startsWith(tSvnUrl.removeHttpPrefix()) }.forEach {
-                if (gitData[it.oauthUser] == null) {
-                    gitData[it.oauthUser] = mutableSetOf(it.url)
-                } else {
-                    gitData[it.oauthUser]?.add(it.url)
-                }
-            }
-
-            val tokenMap = mutableMapOf<String, String>()
-
-            val result = mutableMapOf<Long, Pair<String, Boolean>>()
-
-            // 过滤 git 项目
-            gitData.forEach gitForEach@{ (userId, urls) ->
-                val token = if (tokenMap[userId] != null) {
-                    tokenMap[userId]
-                } else {
-                    val newToken = client.get(ServiceOauthResource::class).tGitGet(userId).data
-                    if (newToken == null) {
-                        logger.warn("addOrRemoveAclIp|get $projectId|$userId token is null")
-                        return@gitForEach
-                    }
-                    tokenMap[userId] = newToken.accessToken
-                    newToken.accessToken
-                } ?: return@gitForEach
-                if (urls.isNotEmpty()) {
-                    filterUrlPermission(urls, token, result, TGitProjectType.GIT, true)
-                }
-                // 入库
-                projectTGitLinkDao.batchAdd(
-                    dslContext = dslContext,
-                    projectId = projectId,
-                    data = result.map {
-                        TGitRepoDaoData(
-                            tgitId = it.key,
-                            status = if (it.value.first.trim() in recordsMap) {
-                                TGitRepoStatus.fromStr(recordsMap[it.value.first.trim()]?.status ?: "")
-                            } else {
-                                if (it.value.second) {
-                                    TGitRepoStatus.AVAILABLE
-                                } else {
-                                    TGitRepoStatus.ABNORMAL
-                                }
-                            },
-                            oauthUser = userId,
-                            gitType = if (it.value.first.removeHttpPrefix().startsWith(tSvnUrl.removeHttpPrefix())) {
-                                TGitProjectType.SVN.name
-                            } else {
-                                TGitProjectType.GIT.name
-                            },
-                            url = it.value.first.removeHttpPrefix()
-                        )
-                    }
-                )
-            }
-
-            // 过滤 svn 项目
-            svnData.forEach svnForEach@{ (userId, urls) ->
-                val token = if (tokenMap[userId] != null) {
-                    tokenMap[userId]
-                } else {
-                    val newToken = client.get(ServiceOauthResource::class).tGitGet(userId).data
-                    if (newToken == null) {
-                        logger.warn("addOrRemoveAclIp|get $projectId|$userId token is null")
-                        return@svnForEach
-                    }
-                    tokenMap[userId] = newToken.accessToken
-                    newToken.accessToken
-                } ?: return@svnForEach
-                if (urls.isNotEmpty()) {
-                    filterUrlPermission(urls, token, result, TGitProjectType.SVN, true)
-                }
-                // 入库
-                projectTGitLinkDao.batchAdd(
-                    dslContext = dslContext,
-                    projectId = projectId,
-                    data = result.map {
-                        TGitRepoDaoData(
-                            tgitId = it.key,
-                            status = if (it.value.first.trim() in recordsMap) {
-                                TGitRepoStatus.fromStr(recordsMap[it.value.first.trim()]?.status ?: "")
-                            } else {
-                                if (it.value.second) {
-                                    TGitRepoStatus.AVAILABLE
-                                } else {
-                                    TGitRepoStatus.ABNORMAL
-                                }
-                            },
-                            oauthUser = userId,
-                            gitType = if (it.value.first.removeHttpPrefix().startsWith(tSvnUrl.removeHttpPrefix())) {
-                                TGitProjectType.SVN.name
-                            } else {
-                                TGitProjectType.GIT.name
-                            },
-                            url = it.value.first.removeHttpPrefix()
-                        )
-                    }
-                )
-            }
-        }
-    }
-
     /**
      * 检查关联的TGit仓库的管理员的权限是否过期
      */
@@ -616,7 +490,7 @@ class GitProxyTGitService @Autowired constructor(
             }
         }
 
-        val result = mutableMapOf<String, MutableMap<String, MutableSet<String>>>()
+        val result = mutableMapOf<String, MutableMap<String, MutableMap<Long, String>>>()
         recordData.forEach { (userId, records) ->
             val svnRecords =
                 records.filter { it.gitType == TGitProjectType.SVN.name }.associateBy { it.tgitId }.toMutableMap()
@@ -643,12 +517,13 @@ class GitProxyTGitService @Autowired constructor(
         logger.debug("dailyUserAuthDoCheck|$projectCodes")
 
         result.forEach { (userId, projectAndIds) ->
-            projectAndIds.forEach project@{ (projectId, urls) ->
+            projectAndIds.forEach project@{ (projectId, idAndUrls) ->
                 val project = projects[projectId]
                 if (project == null) {
                     logger.warn("dailyUserAuthDoCheck|$projectId is null")
                     return@project
                 }
+                projectTGitLinkDao.batchUpdateStatus(dslContext, projectId, idAndUrls.keys, TGitRepoStatus.ABNORMAL)
                 client.get(ServiceNotifyMessageTemplateResource::class).sendNotifyMessageByTemplate(
                     SendNotifyMessageTemplateRequest(
                         templateCode = expiredPermTmpCode,
@@ -656,7 +531,7 @@ class GitProxyTGitService @Autowired constructor(
                         notifyType = mutableSetOf(NotifyType.EMAIL.name),
                         bodyParams = mapOf(
                             "userId" to userId,
-                            "urls" to urls.joinToString(separator = "\n"),
+                            "urls" to idAndUrls.keys.joinToString(separator = "\n"),
                             "projectId" to projectId,
                             "projectName" to project.projectName
                         ),
@@ -672,7 +547,7 @@ class GitProxyTGitService @Autowired constructor(
     private fun filterNoAuthTGitProject(
         records: MutableMap<Long, TProjectTgitIdLinkRecord>,
         token: GitToken,
-        result: MutableMap<String, MutableMap<String, MutableSet<String>>>,
+        result: MutableMap<String, MutableMap<String, MutableMap<Long, String>>>,
         userId: String,
         type: TGitProjectType
     ) {
@@ -725,9 +600,9 @@ class GitProxyTGitService @Autowired constructor(
         }
         records.values.forEach { record ->
             if (gitResult[record.projectId] == null) {
-                gitResult[record.projectId] = mutableSetOf(record.url)
+                gitResult[record.projectId] = mutableMapOf(record.tgitId to record.url)
             } else {
-                gitResult[record.projectId]?.add(record.url)
+                gitResult[record.projectId]?.set(record.tgitId, record.url)
             }
         }
     }

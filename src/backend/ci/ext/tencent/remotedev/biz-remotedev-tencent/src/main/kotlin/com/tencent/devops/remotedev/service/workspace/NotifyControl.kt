@@ -47,6 +47,7 @@ import com.tencent.devops.remotedev.common.exception.ErrorCodeEnum
 import com.tencent.devops.remotedev.dao.ProjectNotifyDao
 import com.tencent.devops.remotedev.dao.RemoteDevSettingDao
 import com.tencent.devops.remotedev.dao.WorkspaceDao
+import com.tencent.devops.remotedev.dao.WorkspaceSharedDao
 import com.tencent.devops.remotedev.pojo.WebSocketActionType
 import com.tencent.devops.remotedev.pojo.WorkspaceAction
 import com.tencent.devops.remotedev.pojo.WorkspaceMountType
@@ -61,12 +62,12 @@ import com.tencent.devops.remotedev.service.client.TaiClient
 import com.tencent.devops.remotedev.service.client.TaiUserInfoRequest
 import com.tencent.devops.remotedev.websocket.page.WorkspacePageBuild
 import com.tencent.devops.remotedev.websocket.push.WorkspaceWebsocketPush
+import java.time.LocalDateTime
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
-import java.time.LocalDateTime
 
 @Service
 @Suppress("LongMethod")
@@ -78,7 +79,8 @@ class NotifyControl @Autowired constructor(
     private val webSocketDispatcher: WebSocketDispatcher,
     private val remoteDevSettingDao: RemoteDevSettingDao,
     private val taiClient: TaiClient,
-    private val notifyDao: ProjectNotifyDao
+    private val notifyDao: ProjectNotifyDao,
+    private val sharedDao: WorkspaceSharedDao
 ) {
 
     @Value("\${notice.wework:#{null}}")
@@ -116,6 +118,9 @@ class NotifyControl @Autowired constructor(
 
         /*云桌面通知-您的云桌面已被强制销毁*/
         const val WORKSPACE_FORCE_DELETE = "WORKSPACE_FORCE_DELETE"
+
+        /*云桌面通知-未达到云桌面4星活跃自动销毁*/
+        const val NOT_4_STAR_ACTIVE_AUTO_DELETE_NOTIFY = "NOT_4_STAR_ACTIVE_AUTO_DELETE_NOTIFY"
 
         /*云桌面通知-您的云桌面已被强制批量销毁*/
         const val WORKSPACE_BATCH_FORCE_DELETE = "WORKSPACE_BATCH_FORCE_DELETE"
@@ -174,6 +179,31 @@ class NotifyControl @Autowired constructor(
             notifyType = notifyType,
             bodyParams = bodyParams,
             cc = cc
+        )
+    }
+
+    fun notify4UserAndCCRemoteDevManagerAndCCOwnerShareUser(
+        userIds: MutableSet<String>,
+        workspaceName: String,
+        cc: MutableSet<String>,
+        projectId: String,
+        notifyTemplateCode: String,
+        notifyType: MutableSet<RemoteDevNotifyType>,
+        bodyParams: MutableMap<String, String>
+    ) {
+        val shareUser = sharedDao.fetchWorkspaceSharedInfo(
+            dslContext = dslContext,
+            workspaceName = workspaceName,
+            assignType = WorkspaceShared.AssignType.OWNER
+        )
+        cc.addAll(shareUser.map { it.operator })
+        notify4UserAndCCRemoteDevManager(
+            userIds = userIds,
+            cc = cc,
+            projectId = projectId,
+            notifyTemplateCode = notifyTemplateCode,
+            notifyType = notifyType,
+            bodyParams = bodyParams
         )
     }
 

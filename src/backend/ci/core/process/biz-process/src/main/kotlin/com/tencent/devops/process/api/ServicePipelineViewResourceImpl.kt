@@ -27,8 +27,10 @@
 
 package com.tencent.devops.process.api
 
+import com.tencent.bk.audit.annotations.AuditEntry
 import com.tencent.devops.common.api.exception.CustomException
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.auth.api.ActionId
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.common.web.utils.I18nUtil
@@ -129,6 +131,7 @@ class ServicePipelineViewResourceImpl @Autowired constructor(
         )
     }
 
+    @AuditEntry(actionId = ActionId.PIPELINE_GROUP_CREATE)
     override fun addView(
         userId: String,
         projectId: String,
@@ -161,6 +164,7 @@ class ServicePipelineViewResourceImpl @Autowired constructor(
         )
     }
 
+    @AuditEntry(actionId = ActionId.PIPELINE_GROUP_DELETE)
     override fun deleteView(
         userId: String,
         projectId: String,
@@ -177,6 +181,7 @@ class ServicePipelineViewResourceImpl @Autowired constructor(
         )
     }
 
+    @AuditEntry(actionId = ActionId.PIPELINE_GROUP_EDIT)
     override fun updateView(
         userId: String,
         projectId: String,
