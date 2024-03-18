@@ -36,6 +36,7 @@ import com.tencent.devops.model.process.Tables.T_PIPELINE_RESOURCE_VERSION
 import com.tencent.devops.model.process.tables.records.TPipelineResourceVersionRecord
 import com.tencent.devops.process.pojo.pipeline.PipelineResourceVersion
 import com.tencent.devops.process.pojo.setting.PipelineVersionSimple
+import com.tencent.devops.process.utils.PipelineVersionUtils
 import org.jooq.DSLContext
 import org.jooq.RecordMapper
 import org.jooq.impl.DSL
@@ -342,22 +343,25 @@ class PipelineResourceVersionDao {
         with(T_PIPELINE_RESOURCE_VERSION) {
             val query = dslContext.selectFrom(this)
                 .where(PIPELINE_ID.eq(pipelineId).and(PROJECT_ID.eq(projectId)))
-                .and(STATUS.ne(VersionStatus.DELETE.name))
+                .and(
+                    STATUS.ne(VersionStatus.DELETE.name)
+                        .or(STATUS.isNull)
+                )
                 .and(
                     BRANCH_ACTION.ne(BranchVersionAction.INACTIVE.name)
                         .or(BRANCH_ACTION.isNull)
                 )
-            creator?.let { query.and(CREATOR.eq(creator)) }
-            description?.let { query.and(DESCRIPTION.like("%$description%")) }
+            excludeVersion?.let {
+                query.and(VERSION.notEqual(excludeVersion))
+            }
             versionName?.let {
                 query.and(
                     VERSION.like("%$versionName%")
                         .or(VERSION_NAME.like("%$versionName%"))
                 )
             }
-            excludeVersion?.let {
-                query.and(VERSION.notEqual(excludeVersion))
-            }
+            creator?.let { query.and(CREATOR.eq(creator)) }
+            description?.let { query.and(DESCRIPTION.like("%$description%")) }
             return query.orderBy(VERSION.desc()).limit(limit).offset(offset).fetch(sampleMapper)
         }
     }
@@ -410,6 +414,10 @@ class PipelineResourceVersionDao {
             val query = dslContext.select(DSL.count(PIPELINE_ID))
                 .from(this)
                 .where(PIPELINE_ID.eq(pipelineId).and(PROJECT_ID.eq(projectId)))
+                .and(
+                    STATUS.ne(VersionStatus.DELETE.name)
+                        .or(STATUS.isNull)
+                )
                 .and(
                     BRANCH_ACTION.ne(BranchVersionAction.INACTIVE.name)
                         .or(BRANCH_ACTION.isNull)
@@ -540,6 +548,11 @@ class PipelineResourceVersionDao {
         override fun map(record: TPipelineResourceVersionRecord?): PipelineResourceVersion? {
             return record?.let {
                 val status = record.status?.let { VersionStatus.valueOf(it) } ?: VersionStatus.RELEASED
+                val versionName = record.versionName.takeIf {
+                    name -> name != "init"
+                } ?: PipelineVersionUtils.getVersionName(
+                    record.version, record.version, 0, 0
+                ) ?: ""
                 PipelineResourceVersion(
                     projectId = record.projectId,
                     pipelineId = record.pipelineId,
@@ -553,7 +566,7 @@ class PipelineResourceVersionDao {
                     } ?: return null,
                     yaml = record.yaml,
                     creator = record.creator,
-                    versionName = record.versionName,
+                    versionName = versionName,
                     createTime = record.createTime,
                     updateTime = record.updateTime,
                     versionNum = record.versionNum.takeIf { status == VersionStatus.RELEASED },
@@ -575,14 +588,19 @@ class PipelineResourceVersionDao {
     class PipelineVersionSimpleJooqMapper : RecordMapper<TPipelineResourceVersionRecord, PipelineVersionSimple> {
         override fun map(record: TPipelineResourceVersionRecord?): PipelineVersionSimple? {
             return record?.let {
-                val status = record.status?.let { VersionStatus.valueOf(it) }
+                val status = record.status?.let { VersionStatus.valueOf(it) } ?: VersionStatus.RELEASED
+                val versionName = record.versionName.takeIf {
+                    name -> name != "init"
+                } ?: PipelineVersionUtils.getVersionName(
+                    record.version, record.version, 0, 0
+                ) ?: ""
                 PipelineVersionSimple(
                     pipelineId = record.pipelineId,
                     creator = record.creator ?: "unknown",
                     createTime = record.createTime.timestampmilli(),
                     updateTime = record.updateTime.timestampmilli(),
                     version = record.version ?: 1,
-                    versionName = record.versionName ?: "",
+                    versionName = versionName,
                     referFlag = record.referFlag,
                     referCount = record.referCount,
                     versionNum = (record.versionNum ?: record.version ?: 1)

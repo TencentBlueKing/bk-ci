@@ -53,7 +53,7 @@ data class PreTriggerOnV3(
     override val repoHook: List<Any>? = null,
     override var manual: Any? = null,
     override val openapi: String? = null,
-    override val remote: String? = null
+    override val remote: Any? = null
 ) : IPreTriggerOn {
     override fun yamlVersion() = YamlVersion.Version.V3_0
 }

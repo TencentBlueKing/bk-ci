@@ -119,4 +119,17 @@ data class PipelineSetting(
     fun concurrencySettingIsNull(): Boolean {
         return this.runLockType != PipelineRunLockType.GROUP_LOCK
     }
+
+    fun fixSubscriptions() {
+        if (successSubscriptionList.isNullOrEmpty()) {
+            successSubscriptionList = listOf(this.successSubscription)
+        } else {
+            successSubscription = successSubscriptionList!!.first()
+        }
+        if (failSubscriptionList.isNullOrEmpty()) {
+            failSubscriptionList = listOf(this.failSubscription)
+        } else {
+            failSubscription = failSubscriptionList!!.first()
+        }
+    }
 }

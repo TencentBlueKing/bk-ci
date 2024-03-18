@@ -95,6 +95,17 @@ interface BuildListener {
 
             // 校验流水线是否在运行中，且处在构建机未启动状态
             if (!dispatchService.checkRunning(event)) {
+                if (event.retryTime > 1) {
+                    // 重试的请求如果流水线已结束，主动把配额记录删除
+                    getJobQuotaService().removeRunningJob(
+                        projectId = event.projectId,
+                        pipelineId = event.pipelineId,
+                        buildId = event.buildId,
+                        vmSeqId = event.vmSeqId,
+                        executeCount = event.executeCount
+                    )
+                }
+
                 return
             }
 

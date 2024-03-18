@@ -31,18 +31,19 @@ import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.model.repository.tables.TRepository
+import com.tencent.devops.model.repository.tables.TRepositoryCodeGit
 import com.tencent.devops.model.repository.tables.records.TRepositoryRecord
 import com.tencent.devops.repository.constant.RepositoryMessageCode.GIT_NOT_FOUND
 import com.tencent.devops.repository.pojo.enums.RepositorySortEnum
 import com.tencent.devops.repository.pojo.enums.RepositorySortTypeEnum
+import java.time.LocalDateTime
+import javax.ws.rs.NotFoundException
 import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.Record1
 import org.jooq.Result
 import org.jooq.impl.DSL
 import org.springframework.stereotype.Repository
-import java.time.LocalDateTime
-import javax.ws.rs.NotFoundException
 
 @Repository
 @Suppress("ALL")
@@ -470,6 +471,20 @@ class RepositoryDao {
                 .set(ATOM, atom)
                 .where(REPOSITORY_ID.eq(repositoryId).and(PROJECT_ID.eq(projectId)))
                 .execute()
+        }
+    }
+
+    fun getGitProjectIdByRepositoryHashId(
+        dslContext: DSLContext,
+        repositoryHashIdList: List<String>
+    ): List<String> {
+        val tRepository = TRepository.T_REPOSITORY
+        with(TRepositoryCodeGit.T_REPOSITORY_CODE_GIT) {
+            return dslContext.select(GIT_PROJECT_ID)
+                .from(this)
+                .join(tRepository).on(REPOSITORY_ID.eq(tRepository.REPOSITORY_ID))
+                .where(tRepository.REPOSITORY_HASH_ID.`in`(repositoryHashIdList))
+                .fetchInto(String::class.java)
         }
     }
 
