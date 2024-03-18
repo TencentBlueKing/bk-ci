@@ -30,7 +30,7 @@ package com.tencent.devops.environment.resources.job
 import com.tencent.devops.common.api.exception.OauthForbiddenException
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.environment.api.job.ServiceJobResource
+import com.tencent.devops.environment.api.job.TencentServiceJobResource
 import com.tencent.devops.environment.pojo.job.jobreq.CreateAccountReq
 import com.tencent.devops.environment.pojo.job.jobreq.DeleteAccountReq
 import com.tencent.devops.environment.pojo.job.jobreq.FileDistributeReq
@@ -63,7 +63,7 @@ class ServiceJobResourceImpl @Autowired constructor(
     private val opService: OpService,
     private val permissionManageService: PermissionManageService,
     private val tencentStockDataUpdateService: TencentStockDataUpdateService
-) : ServiceJobResource {
+) : TencentServiceJobResource {
     companion object {
         private val logger = LoggerFactory.getLogger(ServiceJobResourceImpl::class.java)
         private const val EXPIRATION_TIME_THREE_MONTH = "three months"

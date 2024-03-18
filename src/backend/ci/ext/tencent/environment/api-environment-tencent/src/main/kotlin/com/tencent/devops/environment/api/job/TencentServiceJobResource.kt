@@ -65,7 +65,7 @@ import javax.ws.rs.core.MediaType
 @Path("/service/job")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
-interface ServiceJobResource {
+interface TencentServiceJobResource {
     @Operation(summary = "脚本执行的Job接口")
     @POST
     @Path("/{projectId}/script_execute")

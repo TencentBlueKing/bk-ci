@@ -2,7 +2,7 @@ package com.tencent.devops.openapi.resources.apigw.v4.environment.job
 
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.environment.api.job.ServiceJobResource
+import com.tencent.devops.environment.api.job.TencentServiceJobResource
 import com.tencent.devops.environment.pojo.job.jobreq.CreateAccountReq
 import com.tencent.devops.environment.pojo.job.jobreq.DeleteAccountReq
 import com.tencent.devops.environment.pojo.job.jobreq.FileDistributeReq
@@ -37,7 +37,7 @@ class ApigwTXEnvironmentJobResourceV4Impl @Autowired constructor(
         projectId: String,
         scriptExecuteReq: ScriptExecuteReq
     ): JobResult<ScriptExecuteResult> {
-        return client.get(ServiceJobResource::class).executeScript(userId, projectId, scriptExecuteReq)
+        return client.get(TencentServiceJobResource::class).executeScript(userId, projectId, scriptExecuteReq)
     }
 
     override fun distributeFile(
@@ -47,7 +47,7 @@ class ApigwTXEnvironmentJobResourceV4Impl @Autowired constructor(
         projectId: String,
         fileDistributeReq: FileDistributeReq
     ): JobResult<FileDistributeResult> {
-        return client.get(ServiceJobResource::class).distributeFile(userId, projectId, fileDistributeReq)
+        return client.get(TencentServiceJobResource::class).distributeFile(userId, projectId, fileDistributeReq)
     }
 
     override fun terminateTask(
@@ -57,7 +57,7 @@ class ApigwTXEnvironmentJobResourceV4Impl @Autowired constructor(
         projectId: String,
         taskTerminateReq: TaskTerminateReq
     ): JobResult<TaskTerminateResult> {
-        return client.get(ServiceJobResource::class).terminateTask(userId, projectId, taskTerminateReq)
+        return client.get(TencentServiceJobResource::class).terminateTask(userId, projectId, taskTerminateReq)
     }
 
     override fun queryJobInstanceStatus(
@@ -68,7 +68,7 @@ class ApigwTXEnvironmentJobResourceV4Impl @Autowired constructor(
         jobInstanceId: Long,
         returnIpResult: Boolean?
     ): JobResult<QueryJobInstanceStatusResult> {
-        return client.get(ServiceJobResource::class).queryJobInstanceStatus(
+        return client.get(TencentServiceJobResource::class).queryJobInstanceStatus(
             userId, projectId, jobInstanceId, returnIpResult
         )
     }
@@ -80,7 +80,7 @@ class ApigwTXEnvironmentJobResourceV4Impl @Autowired constructor(
         projectId: String,
         queryJobInstanceLogsReq: QueryJobInstanceLogsReq
     ): JobResult<QueryJobInstanceLogsResult> {
-        return client.get(ServiceJobResource::class).queryJobInstanceLogs(userId, projectId, queryJobInstanceLogsReq)
+        return client.get(TencentServiceJobResource::class).queryJobInstanceLogs(userId, projectId, queryJobInstanceLogsReq)
     }
 
     override fun createAccount(
@@ -90,7 +90,7 @@ class ApigwTXEnvironmentJobResourceV4Impl @Autowired constructor(
         projectId: String,
         createAccountReq: CreateAccountReq
     ): JobResult<CreateAccountResult> {
-        return client.get(ServiceJobResource::class).createAccount(userId, projectId, createAccountReq)
+        return client.get(TencentServiceJobResource::class).createAccount(userId, projectId, createAccountReq)
     }
 
     override fun deleteAccount(
@@ -100,7 +100,7 @@ class ApigwTXEnvironmentJobResourceV4Impl @Autowired constructor(
         projectId: String,
         deleteAccountReq: DeleteAccountReq
     ): JobResult<DeleteAccountResult> {
-        return client.get(ServiceJobResource::class).deleteAccount(userId, projectId, deleteAccountReq)
+        return client.get(TencentServiceJobResource::class).deleteAccount(userId, projectId, deleteAccountReq)
     }
 
     override fun getAccountList(
@@ -114,7 +114,7 @@ class ApigwTXEnvironmentJobResourceV4Impl @Autowired constructor(
         start: Int?,
         length: Int?
     ): JobResult<GetAccountListResult> {
-        return client.get(ServiceJobResource::class).getAccountList(
+        return client.get(TencentServiceJobResource::class).getAccountList(
             userId, projectId, account, alias, category, start, length
         )
     }
@@ -127,7 +127,7 @@ class ApigwTXEnvironmentJobResourceV4Impl @Autowired constructor(
         jobInstanceId: Long,
         stepInstanceId: Long
     ): JobResult<GetStepInstanceDetailResult> {
-        return client.get(ServiceJobResource::class).getStepInstanceDetail(
+        return client.get(TencentServiceJobResource::class).getStepInstanceDetail(
             userId, projectId, jobInstanceId, stepInstanceId
         )
     }
@@ -147,25 +147,25 @@ class ApigwTXEnvironmentJobResourceV4Impl @Autowired constructor(
         status: Int?,
         tag: String?
     ): JobResult<GetStepInstanceStatusResult> {
-        return client.get(ServiceJobResource::class).getStepInstanceStatus(
+        return client.get(TencentServiceJobResource::class).getStepInstanceStatus(
             userId, projectId, jobInstanceId, stepInstanceId, executeCount,
             batch, maxHostNumPerGroup, keyword, searchIp, status, tag
         )
     }
 
     override fun operateOpProject(userId: String, opOperateReq: OpOperateReq): OpOperateResult {
-        return client.get(ServiceJobResource::class).operateOpProject(userId, opOperateReq)
+        return client.get(TencentServiceJobResource::class).operateOpProject(userId, opOperateReq)
     }
 
     override fun checkDeployNodesInCmdb(userId: String) {
-        client.get(ServiceJobResource::class).checkDeployNodesInCmdb(userId)
+        client.get(TencentServiceJobResource::class).checkDeployNodesInCmdb(userId)
     }
 
     override fun updateGseAgent(userId: String) {
-        client.get(ServiceJobResource::class).updateGseAgent(userId)
+        client.get(TencentServiceJobResource::class).updateGseAgent(userId)
     }
 
     override fun addStockNodeToCC(userId: String) {
-        client.get(ServiceJobResource::class).addStockNodeToCC(userId)
+        client.get(TencentServiceJobResource::class).addStockNodeToCC(userId)
     }
 }
