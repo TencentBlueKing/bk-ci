@@ -71,7 +71,7 @@ class ExternalThirdPartyAgentResourceImpl @Autowired constructor(
         return downloadAgentInstallService.downloadInstallAgentBatchFile(newAgentId)
     }
 
-    override fun batchDownloadAgentInstallScript(os: OS, token: String, zoneName: String?): Response {
+    override fun batchDownloadAgentInstallScript(token: String, os: OS, zoneName: String?): Response {
         return batchInstallAgentService.genAgentInstallScript(
             token = token,
             os = os,
