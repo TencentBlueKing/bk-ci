@@ -27,9 +27,11 @@
 
 package com.tencent.devops.experience.resources.service
 
+import com.tencent.bk.audit.annotations.AuditEntry
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.HashUtil
+import com.tencent.devops.common.auth.api.ActionId
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.experience.api.service.ServiceExperienceResource
@@ -66,6 +68,7 @@ class ServiceExperienceResourceImpl @Autowired constructor(
         return Result(experienceService.count(projectIds ?: setOf(), expired))
     }
 
+    @AuditEntry(actionId = ActionId.EXPERIENCE_TASK_VIEW)
     override fun get(userId: String, projectId: String, experienceHashId: String): Result<Experience> {
         checkParam(userId, projectId)
         return Result(experienceService.get(userId, experienceHashId, false))
@@ -85,6 +88,7 @@ class ServiceExperienceResourceImpl @Autowired constructor(
         return Result(experienceDownloadService.jumpInfo(projectId, bundleIdentifier, platform))
     }
 
+    @AuditEntry(actionId = ActionId.EXPERIENCE_TASK_EDIT)
     override fun edit(
         userId: String,
         projectId: String,
@@ -105,6 +109,7 @@ class ServiceExperienceResourceImpl @Autowired constructor(
         return Result(experienceService.listForBuild(userId, projectId, pipelineId, buildId))
     }
 
+    @AuditEntry(actionId = ActionId.EXPERIENCE_TASK_DELETE)
     override fun offline(userId: String?, projectId: String, experienceHashId: String): Result<Boolean> {
         checkParam(userId, projectId, experienceHashId)
         experienceService.updateOnline(
@@ -116,6 +121,7 @@ class ServiceExperienceResourceImpl @Autowired constructor(
         return Result(true)
     }
 
+    @AuditEntry(actionId = ActionId.EXPERIENCE_TASK_DELETE)
     override fun online(userId: String?, projectId: String, experienceHashId: String): Result<Boolean> {
         checkParam(userId, projectId, experienceHashId)
         experienceService.updateOnline(

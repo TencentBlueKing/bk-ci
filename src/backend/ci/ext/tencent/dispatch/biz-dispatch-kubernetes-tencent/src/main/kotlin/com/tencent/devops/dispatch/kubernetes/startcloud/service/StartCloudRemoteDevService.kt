@@ -45,6 +45,7 @@ import com.tencent.devops.dispatch.kubernetes.pojo.kubernetes.TaskStatus
 import com.tencent.devops.dispatch.kubernetes.pojo.kubernetes.TaskStatusEnum
 import com.tencent.devops.dispatch.kubernetes.pojo.kubernetes.WorkspaceInfo
 import com.tencent.devops.dispatch.kubernetes.pojo.mq.WorkspaceCreateEvent
+import com.tencent.devops.dispatch.kubernetes.pojo.remotedev.ResourceVmReq
 import com.tencent.devops.dispatch.kubernetes.startcloud.client.WorkspaceStartCloudClient
 import com.tencent.devops.dispatch.kubernetes.startcloud.common.ErrorCodeEnum
 import com.tencent.devops.dispatch.kubernetes.startcloud.pojo.EnvironmentCreate
@@ -69,7 +70,8 @@ class StartCloudRemoteDevService @Autowired constructor(
     private val dispatchWorkspaceOpHisDao: DispatchWorkspaceOpHisDao,
     private val workspaceClient: WorkspaceStartCloudClient,
     private val workspaceRedisUtils: WorkspaceRedisUtils,
-    private val startCloudRedisUtils: StartCloudRedisUtils
+    private val startCloudRedisUtils: StartCloudRedisUtils,
+    private val startCloudInterfaceService: StartCloudInterfaceService
 ) : RemoteDevInterface {
 
     @Value("\${startCloud.appName}")
@@ -105,31 +107,33 @@ class StartCloudRemoteDevService @Autowired constructor(
         // 生产创建start资源的订单号
         val orderId = appName + "_" + event.projectId + "_${UUIDUtil.generate().takeLast(16)}"
 
-        val resourceInZoneId = workspaceClient.getResourceList().asSequence().filter {
-            it.zoneId.replace(Regex("\\d+"), "") == event.devFile.zoneId
-        }
-        val resourceInType = resourceInZoneId.filter {
-            it.machineType == event.devFile.machineType
-        }
-
-        val zoneId: String
-        val machineType: String
-        if (!event.devFile.imageCosFile.isNullOrBlank()) {
-            val random = resourceInType.toList().randomOrNull() ?: throw BuildFailureException(
-                ErrorCodeEnum.CREATE_ENVIRONMENT_INTERFACE_FAIL.errorType,
-                ErrorCodeEnum.CREATE_ENVIRONMENT_INTERFACE_FAIL.errorCode,
-                ErrorCodeEnum.CREATE_ENVIRONMENT_INTERFACE_FAIL.formatErrorMessage,
-                " ${event.devFile.zoneId}地区${event.devFile.machineType}型云桌面资源不足"
-            )
-            logger.info("get random resource to running|$random")
-            zoneId = random.zoneId
-            machineType = random.machineType
-        } else {
-            val resourceInAvailable = resourceInType.filter {
-                it.status == 11
+        // 先检查基础镜像在池子中是否有配额，再看有没有可以新生产的显卡
+        var zoneId = ""
+        var createFlag = false
+        if (event.devFile.imageCosFile.isNullOrBlank()) {
+            val random = startCloudInterfaceService.syncStartCloudResourceList().filter {
+                it.status == 11 &&
+                    it.machineType == event.devFile.machineType &&
+                    it.zoneId.replace(Regex("\\d+"), "") == event.devFile.zoneId &&
+                    it.locked != true
+            }.randomOrNull()
+            if (random != null) {
+                logger.info("get random resource to running|$random")
+                createFlag = true
+                zoneId = random.zoneId
             }
-
-            val random = resourceInAvailable.toList().randomOrNull() ?: throw BuildFailureException(
+        }
+        // 说明池子中没有，或者是自定义镜像，需要使用显卡重新创建
+        if (!createFlag) {
+            val random = workspaceClient.getResourceVm(
+                ResourceVmReq(
+                    zoneId = event.devFile.zoneId,
+                    machineType = event.devFile.machineType
+                )
+            )?.filter {
+                (it.zoneId.replace(Regex("\\d+"), "") == event.devFile.zoneId) &&
+                        (it.machineResources?.any { ma -> ma.machineType == event.devFile.machineType } == true)
+            }?.randomOrNull() ?: throw BuildFailureException(
                 ErrorCodeEnum.CREATE_ENVIRONMENT_INTERFACE_FAIL.errorType,
                 ErrorCodeEnum.CREATE_ENVIRONMENT_INTERFACE_FAIL.errorCode,
                 ErrorCodeEnum.CREATE_ENVIRONMENT_INTERFACE_FAIL.formatErrorMessage,
@@ -137,7 +141,6 @@ class StartCloudRemoteDevService @Autowired constructor(
             )
             logger.info("get random resource to running|$random")
             zoneId = random.zoneId
-            machineType = random.machineType
         }
 
         val res = workspaceClient.createWorkspace(
@@ -148,7 +151,7 @@ class StartCloudRemoteDevService @Autowired constructor(
                     appName = appName,
                     pipelineId = orderId,
                     zoneId = zoneId,
-                    machineType = machineType,
+                    machineType = event.devFile.machineType,
                     cgsId = event.devFile.cgsId,
                     projectId = event.projectId,
                     image = event.devFile.imageCosFile

@@ -41,4 +41,5 @@ dependencies {
     api(project(":core:common:common-archive"))
     api(project(":core:common:common-codecc"))
     api(project(":ext:tencent:artifactory:api-artifactory-tencent"))
+    api(project(":ext:tencent:process:api-process-tencent"))
 }
