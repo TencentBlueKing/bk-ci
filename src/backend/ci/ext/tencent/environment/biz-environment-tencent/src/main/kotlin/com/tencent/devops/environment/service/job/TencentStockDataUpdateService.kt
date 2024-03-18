@@ -28,6 +28,8 @@
 package com.tencent.devops.environment.service.job
 
 import com.tencent.devops.common.api.util.PageUtil
+import com.tencent.devops.common.redis.RedisLock
+import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.environment.constant.T_NODE_AGENT_STATUS
 import com.tencent.devops.environment.constant.T_NODE_AGENT_VERSION
 import com.tencent.devops.environment.constant.T_NODE_CLOUD_AREA_ID
@@ -61,7 +63,7 @@ class TencentStockDataUpdateService @Autowired constructor(
     private val tencentQueryFromCmdbService: TencentQueryFromCmdbService,
     private val queryFromCCService: QueryFromCCService,
     private val cmdbNodeService: CmdbNodeService,
-    private val stockDataUpdateService: StockDataUpdateService,
+    private val redisOperation: RedisOperation,
     private val queryAgentStatusService: QueryAgentStatusService,
     private val opService: OpService
 ) {
@@ -73,6 +75,7 @@ class TencentStockDataUpdateService @Autowired constructor(
         private const val SCHEDULED_UPDATE_GSE_AGENT_TIMEOUT_LOCK_KEY = "scheduled_update_gse_agent_timeout_lock"
 
         private const val DEFAULT_PAGE_SIZE = 100
+        private const val EXPIRATION_TIME_OF_THE_LOCK = 200L
 
         const val AGENT_ABNORMAL_NODE_STATUS = 0
         const val AGENT_NORMAL_NODE_STATUS = 1
@@ -90,7 +93,7 @@ class TencentStockDataUpdateService @Autowired constructor(
      */
     @Scheduled(cron = "0 7,37 * * * ?")
     fun checkDeployNodes() {
-        stockDataUpdateService.taskWithRedisLock(SCHEDULED_CHECK_NODES_TIMEOUT_LOCK_KEY, ::checkDeployNodesIsInCmdb)
+        taskWithRedisLock(SCHEDULED_CHECK_NODES_TIMEOUT_LOCK_KEY, ::checkDeployNodesIsInCmdb)
     }
 
     /**
@@ -102,7 +105,7 @@ class TencentStockDataUpdateService @Autowired constructor(
      */
     @Scheduled(cron = "0 17 * * * ?")
     fun scheduledUpdateGseAgent() {
-        stockDataUpdateService.taskWithRedisLock(SCHEDULED_UPDATE_GSE_AGENT_TIMEOUT_LOCK_KEY, ::updateGseAgent)
+        taskWithRedisLock(SCHEDULED_UPDATE_GSE_AGENT_TIMEOUT_LOCK_KEY, ::updateGseAgent)
     }
 
     /**
@@ -113,7 +116,7 @@ class TencentStockDataUpdateService @Autowired constructor(
      * 提供apigw接口
      */
     fun addNodesToCCOnce() {
-        stockDataUpdateService.taskWithRedisLock(ADD_NODES_TO_CC_TIMEOUT_LOCK_KEY, ::addNodesToCC)
+        taskWithRedisLock(ADD_NODES_TO_CC_TIMEOUT_LOCK_KEY, ::addNodesToCC)
     }
 
     private fun checkDeployNodesIsInCmdb() {
@@ -354,5 +357,22 @@ class TencentStockDataUpdateService @Autowired constructor(
             NodeStatus.NORMAL.name
         else
             NodeStatus.NOT_INSTALLED.name
+    }
+
+    private fun taskWithRedisLock(lockKey: String, operation: () -> Unit) {
+        val redisLock = RedisLock(redisOperation, lockKey, EXPIRATION_TIME_OF_THE_LOCK)
+        try {
+            val lockSuccess = redisLock.tryLock()
+            if (lockSuccess) {
+                logger.info("[taskWithRedisLock]Locked.")
+                operation()
+            } else {
+                logger.info("[taskWithRedisLock]Lock failed.")
+            }
+        } catch (e: Throwable) {
+            logger.error("[taskWithRedisLock]exception: ", e)
+        } finally {
+            redisLock.unlock()
+        }
     }
 }

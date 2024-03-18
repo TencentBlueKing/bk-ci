@@ -122,16 +122,6 @@ class NodeDao {
         }
     }
 
-    fun getBuildNodesLimit(dslContext: DSLContext, page: Int, pageSize: Int): Result<Record1<Long>> {
-        with(TNode.T_NODE) {
-            return dslContext.select(NODE_ID.`as`(T_NODE_NODE_ID)).from(this)
-                .where(NODE_TYPE.`in`(NodeType.DEVCLOUD.name, NodeType.THIRDPARTY.name))
-                .orderBy(NODE_ID.desc())
-                .limit(pageSize).offset((page - 1) * pageSize)
-                .fetch()
-        }
-    }
-
     fun countBuildNodes(dslContext: DSLContext): Int {
         with(TNode.T_NODE) {
             return dslContext.selectCount()
@@ -175,19 +165,6 @@ class NodeDao {
                         .set(NODE_STATUS, it.nodeStatus)
                         .set(AGENT_STATUS, it.agentStatus)
                         .set(AGENT_VERSION, it.agentVersion)
-                        .where(NODE_ID.eq(it.nodeId))
-                }
-            )
-            batchUpdate.execute()
-        }
-    }
-
-    fun batchUpdateDisplayName(dslContext: DSLContext, updateAgentInfo: List<UpdateTNodeInfo>) {
-        with(TNode.T_NODE) {
-            val batchUpdate = dslContext.batch(
-                updateAgentInfo.map {
-                    dslContext.update(this)
-                        .set(DISPLAY_NAME, it.displayName)
                         .where(NODE_ID.eq(it.nodeId))
                 }
             )
@@ -306,42 +283,6 @@ class NodeDao {
             ).from(this)
                 .where(NODE_TYPE.eq(NodeType.CMDB.name))
                 .limit(pageSize).offset((page - 1) * pageSize)
-                .fetch()
-        }
-    }
-
-    fun countDisplayNameEmptyNodes(dslContext: DSLContext): Int {
-        with(TNode.T_NODE) {
-            return dslContext.selectCount()
-                .from(TNode.T_NODE)
-                .where(DISPLAY_NAME.isNull)
-                .or(DISPLAY_NAME.eq(""))
-                .fetchOne(0, Int::class.java)!!
-        }
-    }
-
-    fun getNodesWhoseDisplayNameIsEmpty(dslContext: DSLContext, page: Int, pageSize: Int): Result<Record3<Long, String, String>> {
-        with(TNode.T_NODE) {
-            return dslContext.select(
-                NODE_ID.`as`(T_NODE_NODE_ID),
-                NODE_TYPE.`as`(T_NODE_NODE_TYPE),
-                NODE_HASH_ID.`as`(T_NODE_NODE_HASH_ID)
-            ).from(this)
-                .where(DISPLAY_NAME.isNull)
-                .or(DISPLAY_NAME.eq(""))
-                .orderBy(NODE_ID.desc())
-                .limit(pageSize).offset((page - 1) * pageSize)
-                .fetch()
-        }
-    }
-
-    fun getNodesByNodeId(dslContext: DSLContext, nodeIdList: List<Long>): Result<Record2<Long, String>> {
-        with(TNode.T_NODE) {
-            return dslContext.select(
-                NODE_ID.`as`(T_NODE_NODE_ID),
-                DISPLAY_NAME.`as`(T_NODE_DISPLAY_NAME)
-            ).from(this)
-                .where(NODE_ID.`in`(nodeIdList))
                 .fetch()
         }
     }
