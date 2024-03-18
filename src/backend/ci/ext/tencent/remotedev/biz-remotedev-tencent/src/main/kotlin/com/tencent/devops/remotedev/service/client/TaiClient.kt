@@ -80,28 +80,28 @@ data class TaiUserInfo(
     @JsonProperty("account_id")
     val accountId: String?,
     @JsonProperty("account_name")
-    val accountName: String,
+    val accountName: String?,
     @JsonProperty("account_email")
-    val accountEmail: String,
+    val accountEmail: String?,
     val phone: String?,
     val state: Int?,
     @JsonProperty("manage_group_ids")
     val manageGroupIds: List<String>?,
     @JsonProperty("company_tags")
-    val companyTags: List<CompanyTags>
+    val companyTags: List<CompanyTags>?
 ) {
     @JsonIgnoreProperties(ignoreUnknown = true)
     data class CompanyTags(
-        val share: Int,
+        val share: Int?,
         @JsonProperty("tag_id")
-        val tagId: String,
+        val tagId: String?,
         @JsonProperty("tag_name")
-        val tagName: String,
+        val tagName: String?,
         @JsonProperty("tag_type")
-        val tagType: Int,
+        val tagType: Int?,
         @JsonProperty("short_name")
-        val shortName: String,
+        val shortName: String?,
         @JsonProperty("email_suffix")
-        val emailSuffix: String
+        val emailSuffix: String?
     )
 }
