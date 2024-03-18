@@ -7,9 +7,9 @@ import com.tencent.devops.remotedev.pojo.op.RemotedevCvmData
 import com.tencent.devops.remotedev.pojo.op.WorkspaceNotifyData
 import com.tencent.devops.remotedev.pojo.project.RemotedevProject
 import com.tencent.devops.remotedev.pojo.project.WeSecProjectWorkspace
-import io.swagger.v3.oas.annotations.tags.Tag
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
+import io.swagger.v3.oas.annotations.tags.Tag
 import javax.ws.rs.Consumes
 import javax.ws.rs.GET
 import javax.ws.rs.HeaderParam
@@ -50,6 +50,15 @@ interface ServiceRemoteDevResource {
         @QueryParam("ip")
         ip: String?
     ): Result<List<WeSecProjectWorkspace>>
+
+    @Operation(summary = "提供给wesec获取项目下云桌面信息")
+    @GET
+    @Path("/project/workspace/ip")
+    fun getProjectWorkspaceIp(
+        @Parameter(description = "ip", required = false)
+        @QueryParam("ip")
+        ip: String
+    ): Result<WeSecProjectWorkspace?>
 
     @Operation(summary = "提供给wesec获取创建云桌面的项目")
     @GET

@@ -157,6 +157,9 @@ class BuildLessContainerService(
             return
         }
 
+        // 删除缓存信息
+        redisUtils.deleteBuildLessPoolContainer(containerId)
+
         try {
             // docker stop
             val containerInfo = httpDockerCli.inspectContainerCmd(containerId).exec()
@@ -181,6 +184,7 @@ class BuildLessContainerService(
                 ignored
             )
         } finally {
+            // 最终确认缓存已被清理
             redisUtils.deleteBuildLessPoolContainer(containerId)
         }
     }

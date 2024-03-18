@@ -66,6 +66,7 @@ CREATE TABLE IF NOT EXISTS T_WINDOWS_GPU_POOL
     IMAGESTANDARD  boolean      default true             not null comment '是否基础镜像',
     NODE varchar(64)  DEFAULT '' NOT NULL COMMENT '母机IP',
     IMAGE varchar(256)  DEFAULT '' NOT NULL COMMENT '镜像地址',
+    REGISTER_TIME  timestamp NULL DEFAULT NULL COMMENT '注册cgs时间',
     UNIQUE KEY `uni_1` (`ZONE_ID`,`CGS_IP`)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='START云桌面的资源列表';
 

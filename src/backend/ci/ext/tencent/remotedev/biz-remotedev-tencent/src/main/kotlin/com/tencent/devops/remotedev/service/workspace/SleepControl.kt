@@ -340,14 +340,18 @@ class SleepControl @Autowired constructor(
                                         "${workspace.hostName}"
                             )
                             if (it) {
-                                notifyControl.notify4UserAndCCRemoteDevManager(
-                                    userIds = permissionService.getWorkspaceOwner(workspace.workspaceName)
-                                        .toMutableSet(),
+                                val userIds = permissionService.getWorkspaceOwner(workspace.workspaceName)
+                                notifyControl.notify4UserAndCCRemoteDevManagerAndCCOwnerShareUser(
+                                    userIds = userIds.toMutableSet(),
+                                    workspaceName = workspace.workspaceName,
+                                    cc = mutableSetOf(workspace.createUserId),
                                     projectId = workspace.projectId,
                                     notifyTemplateCode = NotifyControl.NOT_LOGIN_AUTO_SLEEP_NOTIFY,
-                                    notifyType = mutableSetOf(RemoteDevNotifyType.EMAIL),
-                                    bodyParams = mapOf(
-                                        "cgsIp" to (workspace.hostName ?: "")
+                                    notifyType = mutableSetOf(RemoteDevNotifyType.EMAIL, RemoteDevNotifyType.RTX),
+                                    bodyParams = mutableMapOf(
+                                        "cgsIp" to (workspace.hostName ?: ""),
+                                        "projectId" to (workspace.projectId),
+                                        "userId" to userIds.joinToString()
                                     )
                                 )
                             }

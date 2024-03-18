@@ -43,7 +43,9 @@ if is_devx then
     end
 else
     local double_check = true and ngx.var.http_host == config.bkci.host and
-    not string.find(ngx.var.request_uri, '^/prebuild')
+        not string.find(ngx.var.request_uri, '^/prebuild') and not string.find(ngx.var.request_uri, '^/ms/prebuild') and
+        not string.find(ngx.var.request_uri, '^/remotedev') and not string.find(ngx.var.request_uri, '^/ms/remotedev') and
+        not string.find(ngx.var.request_uri, '^/websocket') and not string.find(ngx.var.request_uri , '^/ms/project/api/user/users')
     local tof_staffname
     if double_check then
         --- TOF登录

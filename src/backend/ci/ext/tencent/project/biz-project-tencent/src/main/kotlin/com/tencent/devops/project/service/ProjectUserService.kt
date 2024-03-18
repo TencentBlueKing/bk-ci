@@ -74,8 +74,10 @@ class ProjectUserService @Autowired constructor(
             centerId = userRecord!!.centerId?.toString() ?: "",
             deptName = userRecord.deptName,
             deptId = userRecord.deptId?.toString() ?: "",
-            groupName = userRecord.groupName,
-            groupId = userRecord.groypId?.toString() ?: ""
+            groupName = userRecord.groupName ?: "",
+            groupId = userRecord.groypId?.toString() ?: "",
+            businessLineId = userRecord.businessLineId?.toString(),
+            businessLineName = userRecord.businessLineName
         )
     }
 
@@ -94,14 +96,16 @@ class ProjectUserService @Autowired constructor(
             UserDeptDetail(
                 bgName = it!!.bgName,
                 bgId = it.bgId?.toString() ?: "",
-                centerName = it.centerName,
+                centerName = it.centerName ?: "",
                 centerId = it.centerId?.toString() ?: "",
-                deptName = it.deptName,
+                deptName = it.deptName ?: "",
                 deptId = it.deptId?.toString() ?: "",
-                groupName = it.groupName,
+                groupName = it.groupName ?: "",
                 groupId = it.groypId?.toString() ?: "",
                 userId = it.userId,
-                name = it.name
+                name = it.name,
+                businessLineId = it.businessLineId?.toString(),
+                businessLineName = it.businessLineName
             )
         }
     }

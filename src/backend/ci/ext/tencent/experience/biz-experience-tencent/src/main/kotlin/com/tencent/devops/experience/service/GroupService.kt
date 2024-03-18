@@ -28,11 +28,18 @@ package com.tencent.devops.experience.service
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
+import com.tencent.bk.audit.annotations.ActionAuditRecord
+import com.tencent.bk.audit.annotations.AuditAttribute
+import com.tencent.bk.audit.annotations.AuditInstanceRecord
+import com.tencent.bk.audit.context.ActionAuditContext
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.api.util.MessageUtil
+import com.tencent.devops.common.audit.ActionAuditContent
+import com.tencent.devops.common.auth.api.ActionId
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthProjectApi
+import com.tencent.devops.common.auth.api.ResourceTypeId
 import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
 import com.tencent.devops.common.auth.code.ExperienceAuthServiceCode
 import com.tencent.devops.common.client.Client
@@ -69,13 +76,12 @@ import com.tencent.devops.model.experience.tables.records.TExperienceGroupOuterR
 import com.tencent.devops.project.api.service.ServiceProjectOrganizationResource
 import com.tencent.devops.project.api.service.ServiceProjectResource
 import com.tencent.devops.project.api.service.service.ServiceTxUserResource
-import org.apache.commons.lang3.StringUtils
+import javax.ws.rs.core.Response
 import org.jooq.DSLContext
 import org.jooq.Result
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
-import javax.ws.rs.core.Response
 
 @SuppressWarnings("LongParameterList")
 @Service
@@ -193,6 +199,15 @@ class GroupService @Autowired constructor(
         }
     }
 
+    @ActionAuditRecord(
+        actionId = ActionId.EXPERIENCE_GROUP_CREATE,
+        instance = AuditInstanceRecord(
+            resourceType = ResourceTypeId.EXPERIENCE_GROUP
+        ),
+        attributes = [AuditAttribute(name = ActionAuditContent.PROJECT_CODE_TEMPLATE, value = "#projectId")],
+        scopeId = "#projectId",
+        content = ActionAuditContent.EXPERIENCE_GROUP_CREATE_CONTENT
+    )
     fun create(projectId: String, userId: String, group: GroupCreate): String {
         if (!experiencePermissionService.validateCreateGroupPermission(
                 user = userId,
@@ -223,6 +238,10 @@ class GroupService @Autowired constructor(
             creator = userId,
             updator = userId
         )
+        ActionAuditContext.current()
+            .setInstanceId(groupId.toString())
+            .setInstanceName(group.name)
+            .setInstance(group)
 
         // 增加权限
         group.innerUsers.forEach {
@@ -242,6 +261,15 @@ class GroupService @Autowired constructor(
         return HashUtil.encodeLongId(groupId)
     }
 
+    @ActionAuditRecord(
+        actionId = ActionId.EXPERIENCE_GROUP_VIEW,
+        instance = AuditInstanceRecord(
+            resourceType = ResourceTypeId.EXPERIENCE_GROUP
+        ),
+        attributes = [AuditAttribute(name = ActionAuditContent.PROJECT_CODE_TEMPLATE, value = "#projectId")],
+        scopeId = "#projectId",
+        content = ActionAuditContent.EXPERIENCE_GROUP_VIEW_CONTENT
+    )
     fun get(userId: String, projectId: String, groupHashId: String): Group {
         val groupId = HashUtil.decodeIdToLong(groupHashId)
         experiencePermissionService.validateGroupPermission(
@@ -258,6 +286,9 @@ class GroupService @Autowired constructor(
         val userIds = experienceGroupInnerDao.listByGroupIds(dslContext, setOf(groupId)).map { it.userId }.toSet()
         val outers = experienceGroupOuterDao.listByGroupIds(dslContext, setOf(groupId)).map { it.outer }.toSet()
         val depts = experienceGroupDepartmentDao.listByGroupIds(dslContext, setOf(groupId)).map { it.deptName }.toSet()
+        ActionAuditContext.current()
+            .setInstanceId(groupId.toString())
+            .setInstanceName(groupRecord.name)
         return Group(
             groupHashId = groupHashId,
             name = groupRecord.name,
@@ -281,6 +312,15 @@ class GroupService @Autowired constructor(
         return GroupUsers(innerUsers, outerUsers)
     }
 
+    @ActionAuditRecord(
+        actionId = ActionId.EXPERIENCE_GROUP_EDIT,
+        instance = AuditInstanceRecord(
+            resourceType = ResourceTypeId.EXPERIENCE_GROUP
+        ),
+        attributes = [AuditAttribute(name = ActionAuditContent.PROJECT_CODE_TEMPLATE, value = "#projectId")],
+        scopeId = "#projectId",
+        content = ActionAuditContent.EXPERIENCE_GROUP_EDIT_CONTENT
+    )
     fun edit(userId: String, projectId: String, groupHashId: String, group: GroupUpdate) {
         val groupId = HashUtil.decodeIdToLong(groupHashId)
         experiencePermissionService.validateGroupPermission(
@@ -294,22 +334,24 @@ class GroupService @Autowired constructor(
                 params = arrayOf(projectId, groupHashId)
             )
         )
-        if (groupDao.getOrNull(dslContext, groupId) == null) {
-            throw ErrorCodeException(
-                statusCode = Response.Status.NOT_FOUND.statusCode,
-                errorCode = ExperienceMessageCode.EXP_GROUP_NOT_EXISTS,
-                params = arrayOf(groupHashId)
-            )
-        }
+        groupDao.getOrNull(dslContext, groupId) ?: throw ErrorCodeException(
+            statusCode = Response.Status.NOT_FOUND.statusCode,
+            errorCode = ExperienceMessageCode.EXP_GROUP_NOT_EXISTS,
+            params = arrayOf(groupHashId)
+        )
         if (groupDao.has(dslContext, projectId, group.name, groupId)) {
             throw ErrorCodeException(
                 errorCode = ExperienceMessageCode.EXP_GROUP_IS_EXISTS,
                 params = arrayOf(group.name)
             )
         }
-
         val innerUsersCount = group.innerUsers.size
-
+        // audit
+        ActionAuditContext.current()
+            .setInstanceId(groupId.toString())
+            .setInstanceName(group.name)
+            .setOriginInstance(get(userId, projectId, groupHashId))
+            .setInstance(group)
         groupDao.update(
             dslContext = dslContext,
             id = groupId,
@@ -404,6 +446,15 @@ class GroupService @Autowired constructor(
         }
     }
 
+    @ActionAuditRecord(
+        actionId = ActionId.EXPERIENCE_GROUP_DELETE,
+        instance = AuditInstanceRecord(
+            resourceType = ResourceTypeId.EXPERIENCE_GROUP
+        ),
+        attributes = [AuditAttribute(name = ActionAuditContent.PROJECT_CODE_TEMPLATE, value = "#projectId")],
+        scopeId = "#projectId",
+        content = ActionAuditContent.EXPERIENCE_GROUP_DELETE_CONTENT
+    )
     fun delete(userId: String, projectId: String, groupHashId: String) {
         val groupId = HashUtil.decodeIdToLong(groupHashId)
         experiencePermissionService.validateGroupPermission(
@@ -416,7 +467,10 @@ class GroupService @Autowired constructor(
                 params = arrayOf(projectId, groupHashId)
             )
         )
-
+        val groupInfo = groupDao.get(dslContext, groupId)
+        ActionAuditContext.current()
+            .setInstanceId(groupId.toString())
+            .setInstanceName(groupInfo.name)
         experiencePermissionService.deleteGroupResource(projectId, groupId)
         groupDao.delete(dslContext, groupId)
         experienceGroupDao.deleteByGroupId(dslContext, groupId)
@@ -424,6 +478,15 @@ class GroupService @Autowired constructor(
         experienceGroupOuterDao.deleteByGroupId(dslContext, groupId)
     }
 
+    @ActionAuditRecord(
+        actionId = ActionId.EXPERIENCE_GROUP_VIEW,
+        instance = AuditInstanceRecord(
+            resourceType = ResourceTypeId.EXPERIENCE_GROUP
+        ),
+        attributes = [AuditAttribute(name = ActionAuditContent.PROJECT_CODE_TEMPLATE, value = "#projectId")],
+        scopeId = "#projectId",
+        content = ActionAuditContent.EXPERIENCE_GROUP_VIEW_CONTENT
+    )
     fun getUsersV2(userId: String, projectId: String, groupHashId: String): GroupV2 {
         val groupId = HashUtil.decodeIdToLong(groupHashId)
         experiencePermissionService.validateGroupPermission(
@@ -437,6 +500,9 @@ class GroupService @Autowired constructor(
             )
         )
         val groupRecord = groupDao.get(dslContext, groupId)
+        ActionAuditContext.current()
+            .setInstanceId(groupId.toString())
+            .setInstanceName(groupRecord.name)
         val inners = experienceGroupInnerDao.listByGroupIds(dslContext, setOf(groupId))
         updateDeptFullName(inners)
         val outers = experienceGroupOuterDao.listByGroupIds(dslContext, setOf(groupId))
@@ -472,7 +538,9 @@ class GroupService @Autowired constructor(
             if (inner.deptFullName.isNullOrBlank()) {
                 try {
                     client.get(ServiceTxUserResource::class).get(inner.userId).data?.let {
-                        val deptFullName = StringUtils.joinWith("/", it.bgName, it.deptName, it.centerName)
+                        val businessLineName = it.businessLineName ?: ""
+                        val deptFullName = listOf(it.bgName, businessLineName, it.deptName, it.centerName)
+                            .filter { name -> name.isNotBlank() }.joinToString("/")
                         inner.deptFullName = deptFullName
                         experienceGroupInnerDao.updateDeptFullName(dslContext, inner.id, deptFullName)
                     }
@@ -484,17 +552,16 @@ class GroupService @Autowired constructor(
         }
     }
 
-    @SuppressWarnings("LongMethod")
-    fun commit(userId: String, projectId: String, groupCommit: GroupCommit): Boolean {
-        if (groupCommit.groupHashId == null) { // 新建用户组
-            createForCommit(groupCommit, userId, projectId)
-        } else { // 更新用户组
-            updateForCommit(groupCommit, userId, projectId)
-        }
-        return true
-    }
-
-    private fun updateForCommit(
+    @ActionAuditRecord(
+        actionId = ActionId.EXPERIENCE_GROUP_EDIT,
+        instance = AuditInstanceRecord(
+            resourceType = ResourceTypeId.EXPERIENCE_GROUP
+        ),
+        attributes = [AuditAttribute(name = ActionAuditContent.PROJECT_CODE_TEMPLATE, value = "#projectId")],
+        scopeId = "#projectId",
+        content = ActionAuditContent.EXPERIENCE_GROUP_EDIT_CONTENT
+    )
+    fun updateForCommit(
         groupCommit: GroupCommit,
         userId: String,
         projectId: String
@@ -520,6 +587,12 @@ class GroupService @Autowired constructor(
             remark = groupCommit.remark,
             updator = userId
         )
+        // audit
+        ActionAuditContext.current()
+            .setInstanceName(groupCommit.name)
+            .setInstanceId(groupId.toString())
+            .setOriginInstance(get(userId, projectId, groupCommit.groupHashId!!))
+            .setInstance(groupCommit)
         // 内部体验人员
         val originalInnerUsers = experienceGroupInnerDao
             .listByGroupIds(dslContext = dslContext, groupIds = setOf(groupId))
@@ -591,11 +664,20 @@ class GroupService @Autowired constructor(
         )
     }
 
-    private fun createForCommit(
+    @ActionAuditRecord(
+        actionId = ActionId.EXPERIENCE_GROUP_CREATE,
+        instance = AuditInstanceRecord(
+            resourceType = ResourceTypeId.EXPERIENCE_GROUP
+        ),
+        attributes = [AuditAttribute(name = ActionAuditContent.PROJECT_CODE_TEMPLATE, value = "#projectId")],
+        scopeId = "#projectId",
+        content = ActionAuditContent.EXPERIENCE_GROUP_CREATE_CONTENT
+    )
+    fun createForCommit(
         groupCommit: GroupCommit,
         userId: String,
         projectId: String
-    ) {
+    ): String {
         if (!experiencePermissionService.validateCreateGroupPermission(
                 user = userId,
                 projectId = projectId
@@ -624,6 +706,10 @@ class GroupService @Autowired constructor(
             creator = userId,
             updator = userId
         )
+        ActionAuditContext.current()
+            .setInstanceName(groupCommit.name)
+            .setInstanceId(groupId.toString())
+            .setInstance(groupCommit)
         // 内部体验人员
         groupCommit.members.filter { GroupMemberType.INNER.eq(it.type) }.forEach {
             val gdfn = getGDFNByUser(it.id)
@@ -665,6 +751,7 @@ class GroupService @Autowired constructor(
             groupId = groupId,
             groupName = groupCommit.name
         )
+        return userId
     }
 
     fun batchDeptFullName(groupBatchName: GroupBatchName): List<GroupDeptFullName> {
@@ -683,12 +770,10 @@ class GroupService @Autowired constructor(
                 if (it.bgId == "0") {
                     it.groupName
                 } else {
-                    StringUtils.joinWith(
-                        "/",
-                        it.bgName,
-                        it.deptName,
-                        it.centerName
-                    ).replace("^/+", "").replace("/+$", "")
+                    val businessLineName = it.businessLineName ?: ""
+                    listOf(it.bgName, businessLineName, it.deptName, it.centerName)
+                        .filter { name -> name.isNotBlank() }.joinToString("/")
+                        .replace("^/+", "").replace("/+$", "")
                 }
             } ?: ""
         } catch (e: Throwable) {

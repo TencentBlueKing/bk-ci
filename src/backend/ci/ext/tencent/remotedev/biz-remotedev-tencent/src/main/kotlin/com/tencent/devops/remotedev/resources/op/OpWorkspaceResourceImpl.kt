@@ -95,7 +95,9 @@ class OpWorkspaceResourceImpl @Autowired constructor(
     }
 
     override fun deleteInactivityWorkspace(userId: String): Result<Boolean> {
-        deleteControl.deleteInactivityWorkspace()
+        deleteControl.deleteLinuxInactivityWorkspace()
+        /*暂时去掉个人win的控制*/
+//        deleteControl.deleteWinInactivityWorkspace()
         return Result(true)
     }
 
@@ -104,7 +106,8 @@ class OpWorkspaceResourceImpl @Autowired constructor(
             "delete" -> {
                 logger.info("read to delete not use workspace")
                 deleteControl.autoDeleteWhenNotAssign(true)
-                deleteControl.autoDeleteWhenSleep7Day(true)
+                deleteControl.autoDeleteWhenSleep14Day(true)
+                deleteControl.autoDeleteWhenNot4StarActive(true)
             }
 
             "sleep" -> {
