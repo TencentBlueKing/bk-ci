@@ -56,7 +56,7 @@ object RbacAuthUtils {
 
     fun getAuthPermissionByAction(action: String): AuthPermission {
         val permissionStr = action.substringAfterLast("_")
-        return com.tencent.devops.common.auth.api.AuthPermission.get(permissionStr)
+        return AuthPermission.get(permissionStr)
     }
 
     fun getResourceTypeByStr(resourceTypeStr: String): AuthResourceType {
