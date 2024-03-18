@@ -725,7 +725,7 @@ class UserPipelineResourceImpl @Autowired constructor(
     ): Result<Page<PipelineVersionWithInfo>> {
         checkParam(userId, projectId)
         return Result(
-            pipelineVersionFacadeService.listPipelineVersion(
+            pipelineVersionFacadeService.listPipelineVersionInfo(
                 projectId = projectId,
                 pipelineId = pipelineId,
                 fromVersion = null,
