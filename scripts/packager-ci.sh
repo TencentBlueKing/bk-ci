@@ -130,7 +130,7 @@ else
   ci_ms_wip="${ci_ms_wip:-sign}"  # sign需要重构优化, 暂不能用.
   # 编译后的目录, 其他目录为code_dir的相对路径, 不提供修改.
   ci_bin_frontend_dir="${ci_bin_frontend_dir:-$ci_code_dir/src/frontend/frontend/}"
-  ci_bin_goagent_dir=${ci_bin_goagent_dir:-$ci_code_dir/src/agent/bin/}
+  ci_bin_goagent_dir=${ci_bin_goagent_dir:-$ci_code_dir/src/agent/agent/bin/}
   ci_bin_agentjar_dir=${ci_bin_agentjar_dir:-$ci_code_dir/src/backend/ci/release/}
   ci_bin_msjar_dir=${ci_bin_msjar_dir:-$ci_code_dir/src/backend/ci/release/}
   packager_ci

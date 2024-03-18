@@ -43,15 +43,25 @@ import com.tencent.devops.common.pipeline.type.docker.ImageType
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.model.store.tables.records.TImageRecord
 import com.tencent.devops.project.api.service.ServiceProjectResource
-import com.tencent.devops.store.constant.StoreMessageCode
-import com.tencent.devops.store.constant.StoreMessageCode.GET_INFO_NO_PERMISSION
-import com.tencent.devops.store.constant.StoreMessageCode.NO_COMPONENT_ADMIN_PERMISSION
-import com.tencent.devops.store.constant.StoreMessageCode.USER_IMAGE_VERSION_NOT_EXIST
 import com.tencent.devops.store.common.dao.CategoryDao
 import com.tencent.devops.store.common.dao.ClassifyDao
 import com.tencent.devops.store.common.dao.StoreHonorDao
 import com.tencent.devops.store.common.dao.StoreMemberDao
 import com.tencent.devops.store.common.dao.StoreProjectRelDao
+import com.tencent.devops.store.common.service.ClassifyService
+import com.tencent.devops.store.common.service.StoreCommentService
+import com.tencent.devops.store.common.service.StoreCommonService
+import com.tencent.devops.store.common.service.StoreHonorService
+import com.tencent.devops.store.common.service.StoreIndexManageService
+import com.tencent.devops.store.common.service.StoreMemberService
+import com.tencent.devops.store.common.service.StoreTotalStatisticService
+import com.tencent.devops.store.common.service.StoreUserService
+import com.tencent.devops.store.common.service.action.StoreDecorateFactory
+import com.tencent.devops.store.common.utils.image.ImageUtil
+import com.tencent.devops.store.constant.StoreMessageCode
+import com.tencent.devops.store.constant.StoreMessageCode.GET_INFO_NO_PERMISSION
+import com.tencent.devops.store.constant.StoreMessageCode.NO_COMPONENT_ADMIN_PERMISSION
+import com.tencent.devops.store.constant.StoreMessageCode.USER_IMAGE_VERSION_NOT_EXIST
 import com.tencent.devops.store.image.dao.Constants
 import com.tencent.devops.store.image.dao.Constants.KEY_IMAGE_CODE
 import com.tencent.devops.store.image.dao.Constants.KEY_IMAGE_FEATURE_PUBLIC_FLAG
@@ -105,16 +115,6 @@ import com.tencent.devops.store.pojo.image.response.MarketImageItem
 import com.tencent.devops.store.pojo.image.response.MarketImageMain
 import com.tencent.devops.store.pojo.image.response.MarketImageResp
 import com.tencent.devops.store.pojo.image.response.MyImage
-import com.tencent.devops.store.common.service.ClassifyService
-import com.tencent.devops.store.common.service.StoreCommentService
-import com.tencent.devops.store.common.service.StoreCommonService
-import com.tencent.devops.store.common.service.StoreHonorService
-import com.tencent.devops.store.common.service.StoreIndexManageService
-import com.tencent.devops.store.common.service.StoreMemberService
-import com.tencent.devops.store.common.service.StoreTotalStatisticService
-import com.tencent.devops.store.common.service.StoreUserService
-import com.tencent.devops.store.common.service.action.StoreDecorateFactory
-import com.tencent.devops.store.common.utils.image.ImageUtil
 import java.time.LocalDateTime
 import java.util.Date
 import kotlin.math.ceil
@@ -126,11 +126,9 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.cloud.context.config.annotation.RefreshScope
-import org.springframework.stereotype.Service
 
 @Suppress("ALL")
 @RefreshScope
-@Service
 abstract class ImageService @Autowired constructor() {
     @Autowired
     lateinit var dslContext: DSLContext

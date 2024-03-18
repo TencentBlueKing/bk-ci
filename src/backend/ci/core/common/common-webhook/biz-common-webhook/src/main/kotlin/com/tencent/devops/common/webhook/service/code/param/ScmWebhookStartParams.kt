@@ -34,6 +34,7 @@ import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_REPO
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_REPO_GROUP
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_REPO_ID
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_REPO_NAME
+import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_SHA
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_WEBHOOK_HASH_ID
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_WEBHOOK_REPO_ALIAS_NAME
@@ -155,6 +156,7 @@ interface ScmWebhookStartParams<T : WebHookTriggerElement> {
         val (group, name) = GitUtils.getRepoGroupAndName(gitProjectName)
         startParams[PIPELINE_GIT_REPO_NAME] = name
         startParams[PIPELINE_GIT_REPO_GROUP] = group
+        startParams[PIPELINE_GIT_SHA] = matcher.getRevision()
         return startParams
     }
 

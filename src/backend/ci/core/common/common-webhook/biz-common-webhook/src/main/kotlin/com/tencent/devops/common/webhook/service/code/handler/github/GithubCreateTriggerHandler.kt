@@ -34,6 +34,7 @@ import com.tencent.devops.common.webhook.enums.WebhookI18nConstants
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GITHUB_WEBHOOK_CREATE_REF_NAME
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GITHUB_WEBHOOK_CREATE_REF_TYPE
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GITHUB_WEBHOOK_CREATE_USERNAME
+import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_BRANCH
 import com.tencent.devops.common.webhook.pojo.code.WebHookParams
 import com.tencent.devops.common.webhook.pojo.code.github.GithubBaseInfo
 import com.tencent.devops.common.webhook.pojo.code.github.GithubCreateEvent
@@ -108,6 +109,7 @@ class GithubCreateTriggerHandler : GitHookTriggerHandler<GithubCreateEvent> {
         startParams[BK_REPO_GITHUB_WEBHOOK_CREATE_REF_NAME] = event.ref
         startParams[BK_REPO_GITHUB_WEBHOOK_CREATE_REF_TYPE] = event.ref_type
         startParams[BK_REPO_GITHUB_WEBHOOK_CREATE_USERNAME] = event.sender.login
+        startParams[BK_REPO_GIT_WEBHOOK_BRANCH] = getBranchName(event)
         return startParams
     }
 
