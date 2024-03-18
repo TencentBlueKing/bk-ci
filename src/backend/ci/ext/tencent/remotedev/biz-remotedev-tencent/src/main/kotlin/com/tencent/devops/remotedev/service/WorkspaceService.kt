@@ -612,7 +612,7 @@ class WorkspaceService @Autowired constructor(
                 displayName = res["DISPLAY_NAME"] as String,
                 ownerDepartments = depInfo,
                 currentLoginUsers = currUser,
-                machineType = workspaceWindows?.get(workspaceName)?.let { allConfig[it["WIN_CONFIG_ID"] as Long]?.size }
+                machineType = workspaceWindows?.get(workspaceName)?.let { allConfig[it.get("WIN_CONFIG_ID")]?.size }
             )
         }
 
