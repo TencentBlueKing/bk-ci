@@ -39,10 +39,8 @@ import com.tencent.devops.project.service.ProjectApprovalService
 import com.tencent.devops.project.service.ProjectExtService
 import com.tencent.devops.project.service.ProjectPermissionService
 import com.tencent.devops.project.service.impl.StreamProjectPermissionServiceImpl
-import com.tencent.devops.project.service.permission.BluekingProjectPermissionServiceImpl
 import com.tencent.devops.project.service.permission.ProjectPermissionServiceImpl
 import com.tencent.devops.project.service.permission.RbacProjectPermissionService
-import com.tencent.devops.project.service.permission.V3ProjectPermissionServiceImpl
 import org.jooq.DSLContext
 import org.springframework.boot.autoconfigure.AutoConfigureOrder
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
@@ -57,18 +55,6 @@ import org.springframework.core.Ordered
 @AutoConfigureOrder(Ordered.LOWEST_PRECEDENCE)
 class ProjectPermissionConfiguration {
     @Bean
-    @ConditionalOnProperty(prefix = "auth", name = ["idProvider"], havingValue = "bk_login")
-    fun projectPermissionService(
-        authProjectApi: AuthProjectApi,
-        authResourceApi: AuthResourceApi,
-        projectAuthServiceCode: ProjectAuthServiceCode
-    ): ProjectPermissionService = BluekingProjectPermissionServiceImpl(
-        authProjectApi = authProjectApi,
-        authResourceApi = authResourceApi,
-        projectAuthServiceCode = projectAuthServiceCode
-    )
-
-    @Bean
     @ConditionalOnProperty(prefix = "auth", name = ["idProvider"], havingValue = "sample")
     fun sampleProjectPermissionService(
         dslContext: DSLContext,
@@ -82,25 +68,6 @@ class ProjectPermissionConfiguration {
         authProjectApi = authProjectApi,
         authResourceApi = authResourceApi,
         projectAuthServiceCode = projectAuthServiceCode
-    )
-
-    @Bean
-    @ConditionalOnProperty(prefix = "auth", name = ["idProvider"], havingValue = "bk_login_v3")
-    fun v3ProjectPermissionService(
-        client: Client,
-        authProjectApi: AuthProjectApi,
-        authResourceApi: AuthResourceApi,
-        authPermissionApi: AuthPermissionApi,
-        projectAuthServiceCode: ProjectAuthServiceCode,
-        projectDao: ProjectDao,
-        dslContext: DSLContext
-    ): ProjectPermissionService = V3ProjectPermissionServiceImpl(
-        authProjectApi = authProjectApi,
-        authPermissionApi = authPermissionApi,
-        projectAuthServiceCode = projectAuthServiceCode,
-        projectDao = projectDao,
-        dslContext = dslContext,
-        authResourceApi = authResourceApi
     )
 
     @Bean

@@ -27,16 +27,12 @@
 
 package com.tencent.devops.log.config
 
-import com.tencent.devops.common.auth.api.AuthPermissionApi
-import com.tencent.devops.common.auth.code.PipelineAuthServiceCode
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.client.ClientTokenService
 import com.tencent.devops.log.service.LogPermissionService
-import com.tencent.devops.log.service.impl.BluekingLogPermissionService
 import com.tencent.devops.log.service.impl.RbacLogPermissionService
 import com.tencent.devops.log.service.impl.SimpleLogPermissionService
 import com.tencent.devops.log.service.impl.StreamLogPermissionService
-import com.tencent.devops.log.service.impl.V3LogPermissionService
 import org.springframework.boot.autoconfigure.AutoConfigureOrder
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication
@@ -51,30 +47,8 @@ import org.springframework.core.Ordered
 class LogPermissionConfiguration {
 
     @Bean
-    @ConditionalOnProperty(prefix = "auth", name = ["idProvider"], havingValue = "bk_login")
-    fun bkLogPermissionService(
-        authPermissionApi: AuthPermissionApi,
-        pipelineAuthServiceCode: PipelineAuthServiceCode
-    ): LogPermissionService = BluekingLogPermissionService(
-        authPermissionApi = authPermissionApi,
-        pipelineAuthServiceCode = pipelineAuthServiceCode
-    )
-
-    @Bean
     @ConditionalOnProperty(prefix = "auth", name = ["idProvider"], havingValue = "sample")
     fun sampleLogPermissionService(): LogPermissionService = SimpleLogPermissionService()
-
-    @Bean
-    @ConditionalOnProperty(prefix = "auth", name = ["idProvider"], havingValue = "bk_login_v3")
-    fun bkV3LogPermissionService(
-        authPermissionApi: AuthPermissionApi,
-        pipelineAuthServiceCode: PipelineAuthServiceCode,
-        client: Client
-    ): LogPermissionService = V3LogPermissionService(
-        authPermissionApi = authPermissionApi,
-        pipelineAuthServiceCode = pipelineAuthServiceCode,
-        client = client
-    )
 
     @Bean
     @ConditionalOnProperty(prefix = "auth", name = ["idProvider"], havingValue = "rbac")

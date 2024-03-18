@@ -42,11 +42,6 @@ import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.context.annotation.Import
 
-/**
- * 兜底bean,可能存在有些auth.idProvider声明了这些bean,有些没有声明,没有的就需要创建一个mock bean
- * 注意: 这个类要放在其他声明auth.idProvider配置类之后
- *
- */
 @Configuration
 @ConditionalOnWebApplication
 @ConditionalOnProperty(prefix = "auth", name = ["idProvider"], havingValue = "sample")
