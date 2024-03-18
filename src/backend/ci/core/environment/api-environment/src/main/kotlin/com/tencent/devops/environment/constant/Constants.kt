@@ -31,3 +31,4 @@ const val THIRD_PARTY_AGENT_HEARTBEAT_INTERVAL = 5L
 const val DEFAULT_SYTEM_USER = "devops"
 const val BK_PROJECT_NO_ENVIRONMENT = "bkProjectNoEnvironment" // 项目下无环境
 const val BK_PROJECT_NO_NODE = "bkProjectNoNode" // 项目下无节点
+const val BATCH_TOKEN_HEADER = "X-DEVOPS-AGENT-INSTALL-TOKEN" // 批量安装agent token的header

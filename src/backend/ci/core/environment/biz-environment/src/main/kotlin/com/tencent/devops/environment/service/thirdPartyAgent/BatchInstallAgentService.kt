@@ -130,7 +130,7 @@ class BatchInstallAgentService @Autowired constructor(
     }
 
     companion object {
-        private const val ASE_SECRET = "&=*P0nTG0N2vyNuD9cioMQ=="
+        private const val ASE_SECRET = "6fQyK-&Ht49zlBwhB8TW*xAJ/JZz0ZreVcDVCSj+5bY="
         private val logger = LoggerFactory.getLogger(BatchInstallAgentService::class.java)
     }
 }
