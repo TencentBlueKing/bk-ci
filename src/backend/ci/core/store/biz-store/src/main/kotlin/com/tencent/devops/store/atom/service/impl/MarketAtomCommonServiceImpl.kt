@@ -88,6 +88,11 @@ import com.tencent.devops.store.common.service.StoreCommonService
 import com.tencent.devops.store.common.utils.BkInitProjectCacheUtil
 import com.tencent.devops.store.common.utils.StoreUtils
 import com.tencent.devops.store.common.utils.VersionUtils
+import com.tencent.devops.store.constant.StoreMessageCode.BK_DEFAULT_FAIL_POLICY
+import com.tencent.devops.store.constant.StoreMessageCode.BK_DEFAULT_RETRY_POLICY
+import com.tencent.devops.store.constant.StoreMessageCode.BK_DEFAULT_TIMEOUT
+import com.tencent.devops.store.constant.StoreMessageCode.BK_RETRY_TIMES
+import javax.ws.rs.core.Response
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
