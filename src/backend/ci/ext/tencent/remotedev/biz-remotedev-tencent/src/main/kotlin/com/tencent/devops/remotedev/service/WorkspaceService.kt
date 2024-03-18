@@ -549,7 +549,6 @@ class WorkspaceService @Autowired constructor(
         )?.associateBy { it["NAME"] as String }
 
         val allConfig = windowsResourceConfigService.getAllType(true, null).associateBy { it.id!! }
-        logger.debug("getProjectWorkspaceList4WeSec|workspaceWindows|$workspaceWindows|allConfig|$allConfig")
         val fetchDetailEndTime = System.currentTimeMillis()
 
         val tailUsers = if (hasDepartmentsInfo == true) {
@@ -599,8 +598,6 @@ class WorkspaceService @Autowired constructor(
             } else {
                 null
             }
-            logger.debug("workspaceWindows.workspaceName|${workspaceWindows?.get(workspaceName)?.get("WIN_CONFIG_ID")}")
-
             WeSecProjectWorkspace(
                 workspaceName = workspaceName,
                 projectId = res["PROJECT_ID"] as String,
@@ -614,7 +611,7 @@ class WorkspaceService @Autowired constructor(
                 displayName = res["DISPLAY_NAME"] as String,
                 ownerDepartments = depInfo,
                 currentLoginUsers = currUser,
-                machineType = workspaceWindows?.get(workspaceName)?.let { allConfig[it.get("WIN_CONFIG_ID")]?.size }
+                machineType = workspaceWindows?.get(workspaceName)?.let { win -> allConfig[win["WIN_CONFIG_ID"]]?.size }
             )
         }
 
