@@ -37,7 +37,7 @@ data class ManualReviewParam(
     @get:Schema(title = "参数名", required = true)
     var key: String = "",
     @get:Schema(title = "参数内容(Any 类型)", required = true, type = "string")
-    var value: Any? = "",
+    var value: Any? = null,
     @get:Schema(title = "参数类型", required = false)
     val valueType: ManualReviewParamType = ManualReviewParamType.STRING,
     @get:Schema(title = "是否必填", required = true)

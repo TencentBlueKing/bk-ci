@@ -95,6 +95,9 @@ object PipelineUtils {
             when (param.valueType) {
                 ManualReviewParamType.MULTIPLE -> {
                     val value = param.value
+                    if (value is String && value.isBlank()) {
+                        param.value = null
+                    }
                     if (value is List<*>) {
                         value.forEach { checkVariablesLength(param.key, it.toString()) }
                     }
