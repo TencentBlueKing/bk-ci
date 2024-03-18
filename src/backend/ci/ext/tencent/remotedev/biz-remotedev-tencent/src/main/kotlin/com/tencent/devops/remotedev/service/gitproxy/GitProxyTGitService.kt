@@ -490,7 +490,7 @@ class GitProxyTGitService @Autowired constructor(
             }
         }
 
-        val result = mutableMapOf<String, MutableMap<String, MutableSet<String>>>()
+        val result = mutableMapOf<String, MutableMap<String, MutableMap<Long, String>>>()
         recordData.forEach { (userId, records) ->
             val svnRecords =
                 records.filter { it.gitType == TGitProjectType.SVN.name }.associateBy { it.tgitId }.toMutableMap()
@@ -517,12 +517,13 @@ class GitProxyTGitService @Autowired constructor(
         logger.debug("dailyUserAuthDoCheck|$projectCodes")
 
         result.forEach { (userId, projectAndIds) ->
-            projectAndIds.forEach project@{ (projectId, urls) ->
+            projectAndIds.forEach project@{ (projectId, idAndUrls) ->
                 val project = projects[projectId]
                 if (project == null) {
                     logger.warn("dailyUserAuthDoCheck|$projectId is null")
                     return@project
                 }
+                projectTGitLinkDao.batchUpdateStatus(dslContext, projectId, idAndUrls.keys, TGitRepoStatus.ABNORMAL)
                 client.get(ServiceNotifyMessageTemplateResource::class).sendNotifyMessageByTemplate(
                     SendNotifyMessageTemplateRequest(
                         templateCode = expiredPermTmpCode,
@@ -530,7 +531,7 @@ class GitProxyTGitService @Autowired constructor(
                         notifyType = mutableSetOf(NotifyType.EMAIL.name),
                         bodyParams = mapOf(
                             "userId" to userId,
-                            "urls" to urls.joinToString(separator = "\n"),
+                            "urls" to idAndUrls.keys.joinToString(separator = "\n"),
                             "projectId" to projectId,
                             "projectName" to project.projectName
                         ),
@@ -546,7 +547,7 @@ class GitProxyTGitService @Autowired constructor(
     private fun filterNoAuthTGitProject(
         records: MutableMap<Long, TProjectTgitIdLinkRecord>,
         token: GitToken,
-        result: MutableMap<String, MutableMap<String, MutableSet<String>>>,
+        result: MutableMap<String, MutableMap<String, MutableMap<Long, String>>>,
         userId: String,
         type: TGitProjectType
     ) {
@@ -599,9 +600,9 @@ class GitProxyTGitService @Autowired constructor(
         }
         records.values.forEach { record ->
             if (gitResult[record.projectId] == null) {
-                gitResult[record.projectId] = mutableSetOf(record.url)
+                gitResult[record.projectId] = mutableMapOf(record.tgitId to record.url)
             } else {
-                gitResult[record.projectId]?.add(record.url)
+                gitResult[record.projectId]?.set(record.tgitId, record.url)
             }
         }
     }
