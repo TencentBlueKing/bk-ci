@@ -87,7 +87,6 @@ import com.tencent.devops.environment.service.node.EnvCreatorFactory
 import com.tencent.devops.environment.service.slave.SlaveGatewayService
 import com.tencent.devops.environment.utils.AgentStatusUtils.getAgentStatus
 import com.tencent.devops.environment.utils.NodeStringIdUtils
-import com.tencent.devops.environment.utils.NodeUtils
 import com.tencent.devops.model.environment.tables.records.TEnvRecord
 import com.tencent.devops.project.api.service.ServiceProjectResource
 import org.jooq.DSLContext
