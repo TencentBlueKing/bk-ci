@@ -131,7 +131,7 @@ class BkAccessTokenApi @Autowired constructor(
     }
 
     companion object {
-        private val logger = LoggerFactory.getLogger(BSAuthTokenApi::class.java)
+        private val logger = LoggerFactory.getLogger(BkAccessTokenApi::class.java)
         private const val SleepMills = 100L
         private const val AccessTokenExpiredInSecond: Long = 3600 * 3
         private const val expiredTimeInSeconds: Long = 10
