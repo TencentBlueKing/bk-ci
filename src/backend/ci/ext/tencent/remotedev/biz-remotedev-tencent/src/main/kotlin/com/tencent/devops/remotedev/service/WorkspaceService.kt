@@ -122,6 +122,7 @@ import java.time.Duration
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.util.concurrent.TimeUnit
+import kotlin.math.log
 
 @Service
 @Suppress("ALL")
@@ -598,6 +599,7 @@ class WorkspaceService @Autowired constructor(
             } else {
                 null
             }
+            logger.debug("workspaceWindows.workspaceName|${workspaceWindows?.get(workspaceName)?.get("WIN_CONFIG_ID")}")
 
             WeSecProjectWorkspace(
                 workspaceName = workspaceName,
