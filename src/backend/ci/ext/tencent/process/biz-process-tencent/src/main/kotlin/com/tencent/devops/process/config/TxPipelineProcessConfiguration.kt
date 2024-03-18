@@ -31,7 +31,6 @@ import com.tencent.devops.auth.service.ManagerService
 import com.tencent.devops.common.auth.api.AuthPermissionApi
 import com.tencent.devops.common.auth.api.AuthProjectApi
 import com.tencent.devops.common.auth.api.AuthResourceApi
-import com.tencent.devops.common.auth.api.AuthResourceApiStr
 import com.tencent.devops.common.auth.code.PipelineAuthServiceCode
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.client.ClientTokenService
@@ -39,7 +38,6 @@ import com.tencent.devops.process.engine.dao.PipelineInfoDao
 import com.tencent.devops.process.permission.PipelinePermissionService
 import com.tencent.devops.process.permission.PipelinePermissionServiceImpl
 import com.tencent.devops.process.permission.StreamPipelinePermissionServiceImpl
-import com.tencent.devops.process.permission.V3PipelinePermissionServiceImpl
 import com.tencent.devops.process.websocket.page.DefaultRecordPageBuild
 import com.tencent.devops.process.ws.GitCIDetailPageBuild
 import com.tencent.devops.process.ws.GitCIHistoryPageBuild
@@ -101,25 +99,6 @@ class TxPipelineProcessConfiguration {
     @Bean
     @ConditionalOnProperty(prefix = "cluster", name = ["tag"], havingValue = "stream")
     fun recordPage() = DefaultRecordPageBuild()
-
-    @Bean
-    @ConditionalOnProperty(prefix = "auth", name = ["idProvider"], havingValue = "new_v3")
-    fun txV3PipelinePermissionService(
-        txV3AuthPermission: AuthPermissionApi,
-        txV3AuthProjectApi: AuthProjectApi,
-        pipelineAuthServiceCode: PipelineAuthServiceCode,
-        dslContext: DSLContext,
-        pipelineInfoDao: PipelineInfoDao,
-        authResourceApi: AuthResourceApiStr
-    ): PipelinePermissionService =
-        V3PipelinePermissionServiceImpl(
-            authPermissionApi = txV3AuthPermission,
-            authProjectApi = txV3AuthProjectApi,
-            pipelineAuthServiceCode = pipelineAuthServiceCode,
-            dslContext = dslContext,
-            pipelineInfoDao = pipelineInfoDao,
-            authResourceApi = authResourceApi
-        )
 
     @Bean
     @ConditionalOnProperty(prefix = "auth", name = ["idProvider"], havingValue = "git")

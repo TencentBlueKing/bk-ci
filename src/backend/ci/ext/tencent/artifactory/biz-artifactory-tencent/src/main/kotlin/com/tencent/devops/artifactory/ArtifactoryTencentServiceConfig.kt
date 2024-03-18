@@ -36,7 +36,6 @@ import com.tencent.devops.artifactory.service.permission.DefaultPipelineServiceI
 import com.tencent.devops.artifactory.service.permission.MockArtPipelineServiceImpl
 import com.tencent.devops.artifactory.service.permission.RbacArtPipelineServiceImpl
 import com.tencent.devops.artifactory.service.permission.StreamArtPipelineServiceImpl
-import com.tencent.devops.artifactory.service.permission.TxV3ArtPipelineServiceImpl
 import com.tencent.devops.common.archive.client.BkRepoClient
 import com.tencent.devops.common.auth.api.AuthPermissionApi
 import com.tencent.devops.common.auth.api.AuthProjectApi
@@ -113,13 +112,6 @@ class ArtifactoryTencentServiceConfig {
         client: Client,
         tokenCheckService: ClientTokenService
     ) = StreamArtPipelineServiceImpl(client, tokenCheckService)
-
-    @Bean
-    @ConditionalOnProperty(prefix = "auth", name = ["idProvider"], havingValue = "new_v3")
-    fun txV3ArtPipelineServiceImpl(
-        client: Client,
-        tokenCheckService: ClientTokenService
-    ) = TxV3ArtPipelineServiceImpl(client, tokenCheckService)
 
     @Bean
     @ConditionalOnProperty(prefix = "auth", name = ["idProvider"], havingValue = "rbac")
