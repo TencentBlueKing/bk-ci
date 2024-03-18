@@ -27,30 +27,30 @@
 
 package com.tencent.devops.repository.pojo
 
+import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.repository.pojo.enums.RepoAuthType
 import com.tencent.devops.scm.utils.code.git.GitUtils
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("代码库模型-Code平台GitLab")
+@Schema(title = "代码库模型-Code平台GitLab")
 data class CodeGitlabRepository(
-    @ApiModelProperty("代码库别名", required = true)
+    @get:Schema(title = "代码库别名", required = true)
     override val aliasName: String,
-    @ApiModelProperty("URL", required = true)
+    @get:Schema(title = "URL", required = true)
     override val url: String,
-    @ApiModelProperty("凭据id", required = true)
+    @get:Schema(title = "凭据id", required = true)
     override val credentialId: String,
-    @ApiModelProperty("gitlab项目名称", example = "devops/devops_ci_example_proj", required = true)
+    @get:Schema(title = "gitlab项目名称", example = "devops/devops_ci_example_proj", required = true)
     override val projectName: String,
-    @ApiModelProperty("用户名", required = true)
+    @get:Schema(title = "用户名", required = true)
     override var userName: String,
-    @ApiModelProperty("项目id", required = true)
+    @get:Schema(title = "项目id", required = true)
     override var projectId: String?,
-    @ApiModelProperty("仓库hash id", required = false)
+    @get:Schema(title = "仓库hash id", required = false)
     override val repoHashId: String?,
-    @ApiModelProperty("仓库认证类型", required = false)
+    @get:Schema(title = "仓库认证类型", required = false)
     val authType: RepoAuthType? = RepoAuthType.HTTP,
-    @ApiModelProperty("Gitlab仓库ID", required = false)
+    @get:Schema(title = "Gitlab仓库ID", required = false)
     val gitProjectId: Long?
 ) : Repository {
     companion object {
@@ -74,4 +74,8 @@ data class CodeGitlabRepository(
                 GitUtils.isLegalSshUrl(url)
         }
     }
+
+    override fun getScmType() = ScmType.CODE_GITLAB
+
+    override fun getExternalId(): String = gitProjectId?.toString() ?: ""
 }

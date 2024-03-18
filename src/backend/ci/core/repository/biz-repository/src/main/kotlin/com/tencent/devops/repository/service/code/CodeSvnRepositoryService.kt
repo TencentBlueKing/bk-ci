@@ -31,8 +31,10 @@ import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.util.HashUtil
+import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.model.repository.tables.records.TRepositoryRecord
+import com.tencent.devops.repository.constant.RepositoryMessageCode
 import com.tencent.devops.repository.constant.RepositoryMessageCode.REPO_TYPE_NO_NEED_CERTIFICATION
 import com.tencent.devops.repository.constant.RepositoryMessageCode.SVN_INVALID
 import com.tencent.devops.repository.dao.RepositoryCodeSvnDao
@@ -107,6 +109,16 @@ class CodeSvnRepositoryService @Autowired constructor(
         if (!StringUtils.equals(record.type, ScmType.CODE_SVN.name)) {
             throw OperationException(I18nUtil.getCodeLanMessage(SVN_INVALID))
         }
+        // 不得切换代码库
+        if (diffRepoUrl(record, repository)) {
+            logger.warn("can not switch repo url|sourceUrl[${record.url}]|targetUrl[${repository.url}]")
+            throw OperationException(
+                MessageUtil.getMessageByLocale(
+                    RepositoryMessageCode.CAN_NOT_SWITCH_REPO_URL,
+                    I18nUtil.getLanguage(userId)
+                )
+            )
+        }
         val repositoryId = HashUtil.decodeOtherIdToLong(repositoryHashId)
         checkCredentialInfo(projectId = projectId, repository = repository)
         dslContext.transaction { configuration ->
@@ -115,7 +127,8 @@ class CodeSvnRepositoryService @Autowired constructor(
                 dslContext = transactionContext,
                 repositoryId = repositoryId,
                 aliasName = repository.aliasName,
-                url = repository.getFormatURL()
+                url = repository.getFormatURL(),
+                updateUser = userId
             )
             repositoryCodeSvnDao.edit(
                 dslContext = transactionContext,
@@ -152,6 +165,7 @@ class CodeSvnRepositoryService @Autowired constructor(
         repoCredentialInfo: RepoCredentialInfo,
         repository: CodeSvnRepository
     ): TokenCheckResult {
+        val projectName = SvnUtils.getSvnProjectName(repository.getFormatURL())
         return when (repository.svnType) {
             SVN_TYPE_HTTP -> {
                 var username = repoCredentialInfo.username
@@ -171,7 +185,7 @@ class CodeSvnRepositoryService @Autowired constructor(
                     )
                 }
                 scmService.checkUsernameAndPassword(
-                    projectName = repository.projectName,
+                    projectName = projectName,
                     url = repository.getFormatURL(),
                     type = ScmType.CODE_SVN,
                     username = username,
@@ -183,12 +197,12 @@ class CodeSvnRepositoryService @Autowired constructor(
             }
             SVN_TYPE_SSH -> {
                 scmService.checkPrivateKeyAndToken(
-                    projectName = repository.projectName,
+                    projectName = projectName,
                     url = repository.getFormatURL(),
                     type = ScmType.CODE_SVN,
                     privateKey = repoCredentialInfo.privateKey,
                     passPhrase = repoCredentialInfo.passPhrase,
-                    token = "",
+                    token = repoCredentialInfo.token,
                     region = repository.region,
                     userName = repository.userName
                 )
@@ -244,6 +258,25 @@ class CodeSvnRepositoryService @Autowired constructor(
             projectId = projectId,
             repository = repository
         )
+    }
+
+    fun diffRepoUrl(
+        sourceRepo: TRepositoryRecord,
+        targetRepo: CodeSvnRepository
+    ): Boolean {
+        val sourceRepoUrl = sourceRepo.url
+        val targetRepoUrl = targetRepo.url
+        val sourceProjectName = SvnUtils.getSvnProjectName(sourceRepoUrl)
+        val targetProjectName = SvnUtils.getSvnProjectName(targetRepoUrl)
+        val targetSubPath = targetRepoUrl.substring(
+            targetRepoUrl.indexOf(targetRepoUrl) +
+                    targetRepoUrl.length
+        )
+        val sourceSubPath = targetRepoUrl.substring(
+            targetRepoUrl.indexOf(targetRepoUrl) +
+                    targetRepoUrl.length
+        )
+        return sourceProjectName != targetProjectName || targetSubPath != sourceSubPath
     }
 
     companion object {

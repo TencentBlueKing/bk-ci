@@ -5,6 +5,7 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.webhook.util.EventCacheUtil
 import com.tencent.devops.repository.api.ServiceP4Resource
 import com.tencent.devops.repository.pojo.Repository
+import com.tencent.devops.repository.sdk.github.response.PullRequestResponse
 import com.tencent.devops.scm.code.p4.api.P4ChangeList
 import com.tencent.devops.scm.code.p4.api.P4ServerInfo
 import com.tencent.devops.scm.pojo.GitCommit
@@ -155,11 +156,13 @@ class EventCacheService @Autowired constructor(
     ): P4ServerInfo? {
         val eventCache = EventCacheUtil.getOrInitRepoCache(projectId = projectId, repo = repo)
         return eventCache?.serverInfo ?: run {
-            client.get(ServiceP4Resource::class).getServerInfo(
+            val p4ServerInfo = client.get(ServiceP4Resource::class).getServerInfo(
                 projectId = projectId,
                 repositoryId = repositoryId,
                 repositoryType = repositoryType
             ).data
+            eventCache?.serverInfo = p4ServerInfo
+            p4ServerInfo
         }
     }
 
@@ -181,6 +184,24 @@ class EventCacheService @Autowired constructor(
             )
             eventCache?.gitCommitReviewInfo = commitReviewInfo
             commitReviewInfo
+        }
+    }
+
+    fun getPrInfo(
+        githubRepoName: String,
+        pullNumber: String,
+        repo: Repository,
+        projectId: String
+    ): PullRequestResponse? {
+        val eventCache = EventCacheUtil.getOrInitRepoCache(projectId = projectId, repo = repo)
+        return eventCache?.githubPrInfo ?: run {
+            val prInfo = gitScmService.getPrInfo(
+                repo = repo,
+                githubRepoName = githubRepoName,
+                pullNumber = pullNumber
+            )
+            eventCache?.githubPrInfo = prInfo
+            prInfo
         }
     }
 }

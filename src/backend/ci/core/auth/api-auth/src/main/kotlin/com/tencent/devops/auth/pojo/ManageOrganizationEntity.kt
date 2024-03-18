@@ -27,31 +27,30 @@
 
 package com.tencent.devops.auth.pojo
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel
+@Schema
 data class ManageOrganizationEntity(
-    @ApiModelProperty("授权Id")
+    @get:Schema(title = "授权Id")
     val id: Int,
-    @ApiModelProperty("授权名称")
+    @get:Schema(title = "授权名称")
     val name: String,
-    @ApiModelProperty("授权策略Id")
+    @get:Schema(title = "授权策略Id")
     val strategyId: Int,
-    @ApiModelProperty("授权策略Name")
+    @get:Schema(title = "授权策略Name")
     val strategyName: String,
-    @ApiModelProperty("组织名称")
+    @get:Schema(title = "组织名称")
     val organizationName: String,
-    @ApiModelProperty("组织Id")
+    @get:Schema(title = "组织Id")
     val organizationId: Int,
-    @ApiModelProperty("组织级别")
+    @get:Schema(title = "组织级别")
     val organizationLevel: Int,
-    @ApiModelProperty("父级组织信息")
+    @get:Schema(title = "父级组织信息")
     val parentOrganizations: List<OrganizationEntity>?,
-    @ApiModelProperty("用户数")
+    @get:Schema(title = "用户数")
     var userCount: Int? = 0,
-    @ApiModelProperty("添加人")
+    @get:Schema(title = "添加人")
     val createUser: String,
-    @ApiModelProperty("添加时间")
+    @get:Schema(title = "添加时间")
     val createTime: String
 )

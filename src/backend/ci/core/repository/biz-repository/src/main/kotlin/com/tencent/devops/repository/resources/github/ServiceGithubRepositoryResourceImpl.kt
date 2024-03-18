@@ -28,21 +28,21 @@
 package com.tencent.devops.repository.resources.github
 
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.sdk.github.pojo.GithubRepo
-import com.tencent.devops.common.sdk.github.pojo.GithubUser
-import com.tencent.devops.common.sdk.github.pojo.RepositoryContent
-import com.tencent.devops.common.sdk.github.pojo.RepositoryPermissions
-import com.tencent.devops.common.sdk.github.request.CreateOrUpdateFileContentsRequest
-import com.tencent.devops.common.sdk.github.request.GetRepositoryContentRequest
-import com.tencent.devops.common.sdk.github.request.GetRepositoryPermissionsRequest
-import com.tencent.devops.common.sdk.github.request.GetRepositoryRequest
-import com.tencent.devops.common.sdk.github.request.ListRepositoriesRequest
-import com.tencent.devops.common.sdk.github.request.ListRepositoryCollaboratorsRequest
-import com.tencent.devops.common.sdk.github.request.SearchRepositoriesRequest
-import com.tencent.devops.common.sdk.github.response.CreateOrUpdateFileContentsResponse
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.repository.api.github.ServiceGithubRepositoryResource
-import com.tencent.devops.repository.github.service.GithubRepositoryService
+import com.tencent.devops.repository.sdk.github.pojo.GithubRepo
+import com.tencent.devops.repository.sdk.github.pojo.GithubUser
+import com.tencent.devops.repository.sdk.github.pojo.RepositoryContent
+import com.tencent.devops.repository.sdk.github.pojo.RepositoryPermissions
+import com.tencent.devops.repository.sdk.github.request.CreateOrUpdateFileContentsRequest
+import com.tencent.devops.repository.sdk.github.request.GetRepositoryContentRequest
+import com.tencent.devops.repository.sdk.github.request.GetRepositoryPermissionsRequest
+import com.tencent.devops.repository.sdk.github.request.GetRepositoryRequest
+import com.tencent.devops.repository.sdk.github.request.ListRepositoriesRequest
+import com.tencent.devops.repository.sdk.github.request.ListRepositoryCollaboratorsRequest
+import com.tencent.devops.repository.sdk.github.request.SearchRepositoriesRequest
+import com.tencent.devops.repository.sdk.github.response.CreateOrUpdateFileContentsResponse
+import com.tencent.devops.repository.sdk.github.service.GithubRepositoryService
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource

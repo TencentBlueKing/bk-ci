@@ -132,6 +132,7 @@
   notifyTypeScope:
   - "EMAIL"
   - "WEWORK"
+  - "VOICE"
   priority: 1
   source: 0
   emailTemplate:
@@ -146,6 +147,10 @@
     sender: "DevOps"
     title: "BK-CI pipeline [${pipelineName}] # ${buildNum} built successfully"
     body: "✔️ ${successContent}\nView details: ${detailUrl}"
+  voiceTemplate:
+    id: "jgj46v0knzlkhcah57rcutao30tqza5v"
+    taskName: "Build Success"
+    content: "${successContent}"
   creator: "system"
   modifior: "system"
 - index: 7
@@ -331,6 +336,7 @@
   notifyTypeScope:
   - "EMAIL"
   - "WEWORK"
+  - "VOICE"
   priority: 1
   source: 0
   emailTemplate:
@@ -345,6 +351,10 @@
     sender: "DevOps"
     title: "Failed to build Blue Shield pipeline [${pipelineName}] # ${buildNum}"
     body: "❌${failContent}"
+  voiceTemplate:
+    id: "qlzxaotr2zvr8gnj1dkpj2x5lx19wkpt"
+    taskName: "Build Failure"
+    content: "${failContent}"
   creator: "system"
   modifior: "system"
 - index: 17
@@ -449,6 +459,7 @@
   notifyTypeScope:
   - "EMAIL"
   - "WEWORK"
+  - "VOICE"
   priority: 1
   source: 0
   emailTemplate:
@@ -463,6 +474,10 @@
     sender: "DevOps"
     title: "Failed to build Blue Shield pipeline [${pipelineName}] # ${buildNum}"
     body: "❌ ${failContent}\n\nView details: ${detailUrl}"
+  voiceTemplate:
+    id: "x79oetbqquqfjhep7zifheqe9b3tkwvx"
+    taskName: "Build Failure"
+    content: "${failContent}"
   creator: "system"
   modifior: "system"
 - index: 23
@@ -587,6 +602,7 @@
   notifyTypeScope:
   - "EMAIL"
   - "WEWORK"
+  - "VOICE"
   priority: 1
   source: 0
   emailTemplate:
@@ -601,6 +617,10 @@
     sender: "DevOps"
     title: "Blue Shield pipeline [${pipelineName}] # ${buildNum} built successfully"
     body: "✔️${successContent}"
+  voiceTemplate:
+    id: "zjeufw8tfnf53tnibu4s43leju8xgnor"
+    taskName: "Build Success"
+    content: "${successContent}"
   creator: "system"
   modifior: "system"
 - index: 29
@@ -763,11 +783,11 @@
     id: "aab3cc905f004b9392773d388d64daef"
     sender: "DevOps"
     title: "The pipeline under the project [${projectName}] [${pipelineName}] # ${buildNum} builds Stage audit"
-    body: "The build status is stage sucess, and your audit is required to implement the follow-up process.\nAudit description: ${reviewDesc}\nClick ${reviewUrl} on the computer side\nClick ${reviewAppUrl} on the mobile phone"
+    body: "The build status is stage success, and your audit is required to implement the follow-up process.\nAudit description: ${reviewDesc}\nClick ${reviewUrl} on the computer side\nClick ${reviewAppUrl} on the mobile phone"
   weworkGroupTemplate:
     id: "cead07553b364b5a9c3f0290e35c82da"
     title: "The pipeline under the project [${projectName}] [${pipelineName}] # ${buildNum} builds Stage audit"
-    body: "The build status is stage sucess, and an audit of \"${reviewers}\" is required to execute the subsequent process.\n\nAudit description:\n${reviewDesc}\n\n[click on the computer side] (${reviewUrl})\n[click on mobile] (${reviewAppUrl})"
+    body: "The build status is stage success, and an audit of \"${reviewers}\" is required to execute the subsequent process.\n\nAudit description:\n${reviewDesc}\n\n[click on the computer side] (${reviewUrl})\n[click on mobile] (${reviewAppUrl})"
   creator: "system"
   modifior: "system"
 - index: 37
@@ -847,7 +867,7 @@
 - index: 41
   id: "ea98239a51a74f8db0a012a809bc2017"
   templateCode: "MIGRATE_PROCESS_PROJECT_DATA_SUCCESS_TEMPLATE"
-  templateName: "迁移PROCESS数据库中项目的数据成功提醒"
+  templateName: "Reminder for successful migration of project data in the PROCESS database"
   notifyTypeScope:
     - "WEWORK"
   priority: 0
@@ -857,5 +877,50 @@
     sender: "DevOps"
     title: "Successfully migrated the data of the project [${projectId}] in the PROCESS database"
     body: "Successfully migrated the data of the project [${projectId}] in the PROCESS database,there are a total of [${pipelineNum}] simulations that have been successfully migrated."
+  creator: "system"
+  modifior: "system"
+- index: 42
+  id: "ea98239a51a74f8db0a012a809bc2018"
+  templateCode: "MIGRATE_PROCESS_PIPELINE_DATA_FAIL_TEMPLATE"
+  templateName: "Data migration failure reminder for the pipeline under the project"
+  notifyTypeScope:
+    - "WEWORK"
+  priority: 0
+  source: 0
+  weworkTemplate:
+    id: "390987c50179422388dd742924fc2003"
+    sender: "DevOps"
+    title: "Failed to migrate data of pipeline [${pipelineId}] under project [${projectId}]"
+    body: "Failed to migrate data of pipeline [${pipelineId}] under project [${projectId}]. Failure reason: ${failMsg}"
+  creator: "system"
+  modifior: "system"
+- index: 43
+  id: "ea98239a51a74f8db0a012a809bc2019"
+  templateCode: "MIGRATE_PROCESS_PIPELINE_DATA_SUCCESS_TEMPLATE"
+  templateName: "Reminder of successful data migration in the pipeline under the project"
+  notifyTypeScope:
+    - "WEWORK"
+  priority: 0
+  source: 0
+  weworkTemplate:
+    id: "390987c50179422388dd742924fc2004"
+    sender: "DevOps"
+    title: "The data of the pipeline [${pipelineId}] under the project [${projectId}] was successfully migrated"
+    body: "The data of the pipeline [${pipelineId}] under the project [${projectId}] was successfully migrated, and there was a total of 1 successfully migrated pipeline."
+  creator: "system"
+  modifior: "system"
+- index: 44
+  id: "8565a48174524fedb68bfcccb5305d0c"
+  templateCode: "THIRD_AGENT_WORKER_ERROR"
+  templateName: "Third-party build machine worker startup failure template"
+  notifyTypeScope:
+    - "WEWORK"
+  priority: 0
+  source: 0
+  weworkTemplate:
+    id: "2513d77c0b6b463f8dff122f975641f0"
+    sender: "DevOps"
+    title: "[Project ${projectCode}] Third-party build machine ${agentId} failed to start the build"
+    body: "[Build link|${buildUrl}]\n[Third-party build machine connection|${agentUrl}]\nBuild triggerer: ${userId}\nBuild machine owner: ${agentOwner}"
   creator: "system"
   modifior: "system"

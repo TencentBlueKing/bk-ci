@@ -36,6 +36,7 @@ import com.tencent.devops.model.project.tables.records.TProjectRecord
 import com.tencent.devops.project.constant.ProjectMessageCode
 import com.tencent.devops.project.dao.ProjectApprovalDao
 import com.tencent.devops.project.dao.ProjectDao
+import com.tencent.devops.project.dao.ProjectUpdateHistoryDao
 import com.tencent.devops.project.dispatch.ProjectDispatcher
 import com.tencent.devops.project.pojo.ProjectApprovalInfo
 import com.tencent.devops.project.pojo.ProjectCreateExtInfo
@@ -58,7 +59,8 @@ class ProjectApprovalService @Autowired constructor(
     private val projectApprovalDao: ProjectApprovalDao,
     private val projectDao: ProjectDao,
     private val projectExtService: ProjectExtService,
-    private val projectDispatcher: ProjectDispatcher
+    private val projectDispatcher: ProjectDispatcher,
+    private val projectUpdateHistoryDao: ProjectUpdateHistoryDao
 ) {
 
     companion object {
@@ -275,6 +277,8 @@ class ProjectApprovalService @Autowired constructor(
                 description = description ?: "",
                 bgId = bgId?.toLong() ?: 0L,
                 bgName = bgName ?: "",
+                businessLineId = businessLineId,
+                businessLineName = businessLineName,
                 deptId = deptId?.toLong() ?: 0L,
                 deptName = deptName ?: "",
                 centerId = centerId?.toLong() ?: 0L,
@@ -285,7 +289,8 @@ class ProjectApprovalService @Autowired constructor(
                 ccAppId = projectInfo.ccAppId,
                 ccAppName = projectInfo.ccAppName,
                 kind = projectInfo.kind,
-                projectType = projectType ?: 0
+                projectType = projectType ?: 0,
+                productId = projectApprovalInfo.productId
             )
         }
         val logoAddress = projectUpdateInfo.logoAddress
@@ -305,6 +310,11 @@ class ProjectApprovalService @Autowired constructor(
                 projectUpdateInfo = projectUpdateInfo,
                 subjectScopesStr = JsonUtil.toJson(projectUpdateInfo.subjectScopes!!),
                 logoAddress = logoAddress
+            )
+            projectUpdateHistoryDao.updateProjectHistoryStatus(
+                dslContext = context,
+                englishName = projectId,
+                approvalStatus = ProjectApproveStatus.APPROVED.status
             )
             projectDispatcher.dispatch(
                 ProjectUpdateBroadCastEvent(
@@ -354,6 +364,11 @@ class ProjectApprovalService @Autowired constructor(
                 englishName = projectId,
                 approver = approver,
                 approvalStatus = ProjectApproveStatus.APPROVED.status
+            )
+            projectUpdateHistoryDao.updateProjectHistoryStatus(
+                dslContext = context,
+                englishName = projectId,
+                approvalStatus = ProjectApproveStatus.UPDATE_REJECT_OR_REVOKE.status
             )
         }
     }

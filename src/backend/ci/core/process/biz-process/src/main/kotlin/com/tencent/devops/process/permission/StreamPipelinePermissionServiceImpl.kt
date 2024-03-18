@@ -45,17 +45,19 @@ class StreamPipelinePermissionServiceImpl @Autowired constructor(
     val dslContext: DSLContext,
     val checkTokenService: ClientTokenService
 ) : PipelinePermissionService {
+
     override fun checkPipelinePermission(
         userId: String,
         projectId: String,
-        permission: AuthPermission
+        permission: AuthPermission,
+        authResourceType: AuthResourceType?
     ): Boolean {
         return client.get(ServicePermissionAuthResource::class).validateUserResourcePermission(
             userId = userId,
-            token = checkTokenService.getSystemToken(null) ?: "",
+            token = checkTokenService.getSystemToken() ?: "",
             action = permission.value,
             projectCode = projectId,
-            resourceCode = AuthResourceType.PIPELINE_DEFAULT.value
+            resourceCode = authResourceType?.value ?: AuthResourceType.PIPELINE_DEFAULT.value
         ).data ?: false
     }
 
@@ -63,12 +65,14 @@ class StreamPipelinePermissionServiceImpl @Autowired constructor(
         userId: String,
         projectId: String,
         pipelineId: String,
-        permission: AuthPermission
+        permission: AuthPermission,
+        authResourceType: AuthResourceType?
     ): Boolean {
         return checkPipelinePermission(
             userId = userId,
             projectId = projectId,
-            permission = permission
+            permission = permission,
+            authResourceType = authResourceType
         )
     }
 
@@ -139,7 +143,7 @@ class StreamPipelinePermissionServiceImpl @Autowired constructor(
         group: BkAuthGroup?
     ): Boolean {
         return client.get(ServiceProjectAuthResource::class).isProjectUser(
-            token = checkTokenService.getSystemToken(null)!!,
+            token = checkTokenService.getSystemToken(),
             userId = userId,
             projectCode = projectId
         ).data ?: false
@@ -147,7 +151,7 @@ class StreamPipelinePermissionServiceImpl @Autowired constructor(
 
     override fun checkProjectManager(userId: String, projectId: String): Boolean {
         return client.get(ServiceProjectAuthResource::class).checkProjectManager(
-            token = checkTokenService.getSystemToken(null)!!,
+            token = checkTokenService.getSystemToken(),
             userId = userId,
             projectCode = projectId
         ).data ?: false

@@ -18,6 +18,8 @@ CREATE TABLE IF NOT EXISTS `T_REPOSITORY` (
   `CREATED_TIME` timestamp NOT NULL DEFAULT '2019-08-01 00:00:00' COMMENT '创建时间',
   `UPDATED_TIME` timestamp NOT NULL DEFAULT '2019-08-01 00:00:00' ON UPDATE CURRENT_TIMESTAMP COMMENT '修改时间',
   `IS_DELETED` bit(1) NOT NULL COMMENT '是否删除 0 可用 1删除',
+  `UPDATED_USER` varchar(64) NULL DEFAULT NULL COMMENT '代码库最近修改人 ',
+  `ATOM` bit(1) DEFAULT b'0' COMMENT '是否为插件库(插件库不得修改和删除)',
   PRIMARY KEY (`REPOSITORY_ID`),
   KEY `PROJECT_ID` (`PROJECT_ID`),
   KEY `inx_alias_name` (`ALIAS_NAME`)
@@ -158,6 +160,7 @@ CREATE TABLE IF NOT EXISTS `T_REPOSITORY_GIT_CHECK` (
   `REPO_NAME` varchar(128) DEFAULT NULL COMMENT '代码库别名',
   `CONTEXT` varchar(255) DEFAULT NULL COMMENT '内容',
   `SOURCE` varchar(64) NOT NULL COMMENT '事件来源',
+  `TARGET_BRANCH` varchar(1024) NOT NULL DEFAULT '' COMMENT '目标分支',
   PRIMARY KEY (`ID`),
   KEY `PIPELINE_ID_COMMIT_ID` (`PIPELINE_ID`,`COMMIT_ID`) USING BTREE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='工蜂oauth token表';
@@ -190,5 +193,52 @@ CREATE TABLE IF NOT EXISTS `T_REPOSITORY_TGIT_TOKEN`
     constraint `USER_ID`
         unique (`USER_ID`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 comment '外网工蜂OAUTH token表';
+
+CREATE TABLE IF NOT EXISTS `T_REPOSITORY_PIPELINE_REF`
+(
+    `ID`              bigint auto_increment,
+    `PROJECT_ID`      varchar(64)  NOT NULL COMMENT '蓝盾项目ID',
+    `PIPELINE_ID`     varchar(64)  NOT NULL COMMENT '流水线ID',
+    `PIPELINE_NAME`   varchar(255) NOT NULL COMMENT '流水线名称',
+    `REPOSITORY_ID`   bigint(20)   NOT NULL COMMENT '代码库ID',
+    `TASK_ID`         varchar(64)  NOT NULL COMMENT '任务ID',
+    `TASK_NAME`       varchar(128) NULL COMMENT '原子名称，用户是可以修改',
+    `ATOM_CODE`       varchar(32)  NOT NULL DEFAULT '' COMMENT '插件的唯一标识',
+    `ATOM_CATEGORY`   varchar(10)  NOT NULL DEFAULT '' COMMENT '插件类别',
+    `TASK_PARAMS`     text         NOT NULL COMMENT '插件参数',
+    `TASK_REPO_TYPE`     varchar(10)         NOT NULL COMMENT '插件代码库类型配置',
+    `TASK_REPO_HASH_ID`     varchar(64)      NULL COMMENT '插件代码库hashId配置',
+    `TASK_REPO_NAME`     varchar(255)      NULL COMMENT '插件代码库别名配置',
+    `TRIGGER_TYPE`    varchar(64)  NULL COMMENT '触发类型',
+    `EVENT_TYPE`      varchar(64)  NULL COMMENT '事件类型',
+    `TRIGGER_CONDITION` text       NULL COMMENT '触发条件',
+    `TRIGGER_CONDITION_MD5` varchar(64)  NULL COMMENT '触发条件md5',
+    `CREATE_TIME`     timestamp    NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    `UPDATE_TIME`     timestamp    NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '更新时间',
+    `CHANNEL` varchar(32) DEFAULT 'BS' COMMENT '流水线渠道',
+    PRIMARY KEY (`ID`),
+    UNIQUE KEY `UQE_PROJECT_PIPELINE_TASK` (`PROJECT_ID`, `PIPELINE_ID`, `TASK_ID`),
+    INDEX `IDX_PROJECT_REPOSITORY` (`PROJECT_ID`, `REPOSITORY_ID`)
+) ENGINE = InnoDB CHARACTER SET = utf8mb4 COMMENT = '流水线引用代码库表';
+
+
+-- ----------------------------
+-- Table structure for T_REPOSITORY_WEBHOOK_REQUEST
+-- ----------------------------
+
+CREATE TABLE IF NOT EXISTS `T_REPOSITORY_WEBHOOK_REQUEST`
+(
+    `REQUEST_ID`      varchar(64)  NOT NULL COMMENT '请求ID',
+    `EXTERNAL_ID`     varchar(255)                       DEFAULT NULL COMMENT '代码库平台ID',
+    `REPOSITORY_TYPE` varchar(32)                        DEFAULT NULL COMMENT '触发类型',
+    `EVENT_TYPE`      varchar(255)                       DEFAULT NULL COMMENT '事件类型',
+    `TRIGGER_USER`    varchar(100)              NOT NULL COMMENT '触发用户',
+    `EVENT_MESSAGE`   text                      NOT NULL COMMENT '事件信息',
+    `REQUEST_HEADER`  text COMMENT '事件请求头',
+    `REQUEST_PARAM`   text COMMENT '事件请求参数',
+    `REQUEST_BODY`    text COMMENT '事件请求体',
+    `CREATE_TIME`     timestamp                 NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    PRIMARY KEY (`REQUEST_ID`, `CREATE_TIME`)
+) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COMMENT ='代码库WEBHOOK请求表';
 
 SET FOREIGN_KEY_CHECKS = 1;

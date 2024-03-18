@@ -235,6 +235,7 @@ class TGitMrActionGit(
                 logger.warn("TGit MR action cache mrInfo/mrReviewInfo error", e)
             }
         }
+        data.context.mrTargetBranch = event.object_attributes.target_branch
     }
 
     override fun tryGetMrInfoFromCache(): TGitMrInfo? {

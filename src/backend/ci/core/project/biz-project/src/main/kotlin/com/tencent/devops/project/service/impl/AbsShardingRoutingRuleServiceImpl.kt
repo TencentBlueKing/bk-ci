@@ -43,6 +43,7 @@ import com.tencent.devops.project.dispatch.ShardingRoutingRuleDispatcher
 import com.tencent.devops.project.service.ShardingRoutingRuleService
 import org.jooq.DSLContext
 import org.springframework.beans.factory.annotation.Autowired
+import java.util.concurrent.TimeUnit
 
 abstract class AbsShardingRoutingRuleServiceImpl @Autowired constructor(
     val dslContext: DSLContext,
@@ -50,6 +51,9 @@ abstract class AbsShardingRoutingRuleServiceImpl @Autowired constructor(
     private val shardingRoutingRuleDao: ShardingRoutingRuleDao,
     private val shardingRoutingRuleDispatcher: ShardingRoutingRuleDispatcher
 ) : ShardingRoutingRuleService {
+    companion object {
+        private val DEFAULT_RULE_REDIS_CACHE_TIME = TimeUnit.DAYS.toSeconds(14) // 分片规则在redis默认缓存时间
+    }
 
     /**
      * 添加分片路由规则
@@ -87,7 +91,7 @@ abstract class AbsShardingRoutingRuleServiceImpl @Autowired constructor(
             redisOperation.set(
                 key = key,
                 value = shardingRoutingRule.routingRule,
-                expired = false
+                expiredInSecond = DEFAULT_RULE_REDIS_CACHE_TIME
             )
             // 发送规则新增事件消息
             shardingRoutingRuleDispatcher.dispatch(
@@ -175,7 +179,7 @@ abstract class AbsShardingRoutingRuleServiceImpl @Autowired constructor(
             redisOperation.set(
                 key = key,
                 value = shardingRoutingRule.routingRule,
-                expired = false
+                expiredInSecond = DEFAULT_RULE_REDIS_CACHE_TIME
             )
             // 发送规则更新事件消息
             shardingRoutingRuleDispatcher.dispatch(
@@ -277,7 +281,7 @@ abstract class AbsShardingRoutingRuleServiceImpl @Autowired constructor(
                 redisOperation.set(
                     key = key,
                     value = record.routingRule,
-                    expired = false
+                    expiredInSecond = DEFAULT_RULE_REDIS_CACHE_TIME
                 )
                 ShardingRoutingRule(
                     clusterName = record.clusterName ?: "",
@@ -304,23 +308,46 @@ abstract class AbsShardingRoutingRuleServiceImpl @Autowired constructor(
                 )
             } else {
                 // 生成数据库表的分片规则
-                val dbShardingRoutingRule = getShardingRoutingRuleByName(
+                generateTableShardingRoutingRule(
                     moduleCode = moduleCode,
-                    ruleType = ShardingRuleTypeEnum.DB,
-                    routingName = routingName
+                    ruleType = ruleType,
+                    routingName = routingName,
+                    routingRule = routingRule,
+                    tableName = tableName
                 )
-                dbShardingRoutingRule?.let {
-                    ShardingRoutingRule(
-                        clusterName = clusterName,
-                        moduleCode = moduleCode,
-                        dataSourceName = it.dataSourceName,
-                        tableName = tableName,
-                        type = ruleType,
-                        routingName = routingName,
-                        routingRule = routingRule
-                    )
-                }
             }
+        }
+    }
+
+    private fun generateTableShardingRoutingRule(
+        moduleCode: SystemModuleEnum,
+        ruleType: ShardingRuleTypeEnum,
+        routingName: String,
+        routingRule: String,
+        tableName: String?
+    ): ShardingRoutingRule? {
+        val dbRuleType = if (ruleType == ShardingRuleTypeEnum.ARCHIVE_TABLE) {
+            ShardingRuleTypeEnum.ARCHIVE_DB
+        } else {
+            ShardingRuleTypeEnum.DB
+        }
+        val dbShardingRoutingRule = getShardingRoutingRuleByName(
+            moduleCode = moduleCode,
+            ruleType = dbRuleType,
+            routingName = routingName
+        )
+        return if (dbShardingRoutingRule != null) {
+            ShardingRoutingRule(
+                clusterName = CommonUtils.getDbClusterName(),
+                moduleCode = moduleCode,
+                dataSourceName = dbShardingRoutingRule.dataSourceName,
+                tableName = tableName,
+                type = ruleType,
+                routingName = routingName,
+                routingRule = routingRule
+            )
+        } else {
+            null
         }
     }
 }

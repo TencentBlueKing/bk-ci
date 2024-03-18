@@ -70,6 +70,10 @@ object DateTimeUtil {
 
     const val YYYYMMDD = "yyyyMMdd"
 
+    const val YYYYMMDDHHMMSS = "yyyyMMddHHmmss"
+
+    const val ONE_THOUSAND_MS = 1000L
+
     /**
      * 单位转换，分钟转换秒
      */
@@ -107,6 +111,10 @@ object DateTimeUtil {
         cd.time = convertLocalDateTimeToDate(localDateTime)
         cd.add(unit, timeSpan)
         return cd.time
+    }
+
+    fun getFutureTimestamp(seconds: Long): Long {
+        return System.currentTimeMillis() / 1000 + seconds
     }
 
     /**

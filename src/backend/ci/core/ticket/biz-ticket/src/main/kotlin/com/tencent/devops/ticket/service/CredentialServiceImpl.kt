@@ -27,6 +27,11 @@
 
 package com.tencent.devops.ticket.service
 
+import com.tencent.bk.audit.annotations.ActionAuditRecord
+import com.tencent.bk.audit.annotations.AuditAttribute
+import com.tencent.bk.audit.annotations.AuditEntry
+import com.tencent.bk.audit.annotations.AuditInstanceRecord
+import com.tencent.bk.audit.context.ActionAuditContext
 import com.tencent.devops.common.api.constant.TEMPLATE_ACROSS_INFO_ID
 import com.tencent.devops.common.api.exception.CustomException
 import com.tencent.devops.common.api.exception.ErrorCodeException
@@ -35,7 +40,10 @@ import com.tencent.devops.common.api.model.SQLPage
 import com.tencent.devops.common.api.util.DHUtil
 import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.api.util.timestamp
+import com.tencent.devops.common.audit.ActionAuditContent
+import com.tencent.devops.common.auth.api.ActionId
 import com.tencent.devops.common.auth.api.AuthPermission
+import com.tencent.devops.common.auth.api.ResourceTypeId
 import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.web.utils.I18nUtil
@@ -56,13 +64,13 @@ import com.tencent.devops.ticket.pojo.CredentialSettingUpdate
 import com.tencent.devops.ticket.pojo.CredentialUpdate
 import com.tencent.devops.ticket.pojo.CredentialWithPermission
 import com.tencent.devops.ticket.pojo.enums.CredentialType
-import java.util.Base64
-import javax.ws.rs.NotFoundException
-import javax.ws.rs.core.Response
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
+import java.util.Base64
+import javax.ws.rs.NotFoundException
+import javax.ws.rs.core.Response
 
 @Suppress("ALL")
 @Service
@@ -118,6 +126,17 @@ class CredentialServiceImpl @Autowired constructor(
         )
     }
 
+    @ActionAuditRecord(
+        actionId = ActionId.CREDENTIAL_CREATE,
+        instance = AuditInstanceRecord(
+            resourceType = ResourceTypeId.CREDENTIAL,
+            instanceIds = "#credential?.credentialId",
+            instanceNames = "#credential?.credentialName"
+        ),
+        attributes = [AuditAttribute(name = ActionAuditContent.PROJECT_CODE_TEMPLATE, value = "#projectId")],
+        scopeId = "#projectId",
+        content = ActionAuditContent.CREDENTIAL_CREATE_CONTENT
+    )
     override fun userCreate(
         userId: String,
         projectId: String,
@@ -140,7 +159,6 @@ class CredentialServiceImpl @Autowired constructor(
                 )
             )
         )
-
         if (credentialDao.has(dslContext, projectId, credential.credentialId)) {
             throw ErrorCodeException(
                 errorCode = TicketMessageCode.CREDENTIAL_EXIST,
@@ -196,7 +214,21 @@ class CredentialServiceImpl @Autowired constructor(
         credentialPermissionService.createResource(userId, projectId, credential.credentialId, authGroupList)
     }
 
-    override fun userEdit(userId: String, projectId: String, credentialId: String, credential: CredentialUpdate) {
+    @ActionAuditRecord(
+        actionId = ActionId.CREDENTIAL_EDIT,
+        instance = AuditInstanceRecord(
+            resourceType = ResourceTypeId.CREDENTIAL
+        ),
+        attributes = [AuditAttribute(name = ActionAuditContent.PROJECT_CODE_TEMPLATE, value = "#projectId")],
+        scopeId = "#projectId",
+        content = ActionAuditContent.CREDENTIAL_EDIT_CONTENT
+    )
+    override fun userEdit(
+        userId: String,
+        projectId: String,
+        credentialId: String,
+        credential: CredentialUpdate
+    ) {
         val edit = AuthPermission.EDIT
         credentialPermissionService.validatePermission(
             userId = userId,
@@ -214,7 +246,10 @@ class CredentialServiceImpl @Autowired constructor(
                 )
             )
         )
-
+        ActionAuditContext.current()
+            .setInstanceId(credentialId)
+            .setInstanceName(credential.credentialName)
+            .setInstance(credential)
         serviceEdit(
             userId = userId,
             projectId = projectId,
@@ -223,6 +258,17 @@ class CredentialServiceImpl @Autowired constructor(
         )
     }
 
+    @ActionAuditRecord(
+        actionId = ActionId.CREDENTIAL_EDIT,
+        instance = AuditInstanceRecord(
+            resourceType = ResourceTypeId.CREDENTIAL,
+            instanceIds = "#credentialId",
+            instanceNames = "#credentialId"
+        ),
+        attributes = [AuditAttribute(name = ActionAuditContent.PROJECT_CODE_TEMPLATE, value = "#projectId")],
+        scopeId = "#projectId",
+        content = ActionAuditContent.CREDENTIAL_EDIT_SETTING_CONTENT
+    )
     override fun userSettingEdit(
         userId: String,
         projectId: String,
@@ -247,6 +293,10 @@ class CredentialServiceImpl @Autowired constructor(
             )
         )
 
+        ActionAuditContext.current()
+            .setInstanceId(credentialId)
+            .setInstanceName(credentialId)
+            .setInstance(credentialSetting)
         return credentialDao.updateSetting(
             dslContext = dslContext,
             projectId = projectId,
@@ -255,6 +305,17 @@ class CredentialServiceImpl @Autowired constructor(
         ) > 0
     }
 
+    @ActionAuditRecord(
+        actionId = ActionId.CREDENTIAL_DELETE,
+        instance = AuditInstanceRecord(
+            resourceType = ResourceTypeId.CREDENTIAL,
+            instanceIds = "#credentialId",
+            instanceNames = "#credentialId"
+        ),
+        attributes = [AuditAttribute(name = ActionAuditContent.PROJECT_CODE_TEMPLATE, value = "#projectId")],
+        scopeId = "#projectId",
+        content = ActionAuditContent.CREDENTIAL_DELETE_CONTENT
+    )
     override fun userDelete(userId: String, projectId: String, credentialId: String) {
         val delete = AuthPermission.DELETE
         credentialPermissionService.validatePermission(
@@ -273,7 +334,6 @@ class CredentialServiceImpl @Autowired constructor(
                 )
             )
         )
-
         logger.info("$userId delete credential $credentialId")
         credentialPermissionService.deleteResource(projectId, credentialId)
         credentialDao.delete(dslContext, projectId, credentialId)
@@ -416,6 +476,15 @@ class CredentialServiceImpl @Autowired constructor(
         }
     }
 
+    @ActionAuditRecord(
+        actionId = ActionId.CREDENTIAL_VIEW,
+        instance = AuditInstanceRecord(
+            resourceType = ResourceTypeId.CREDENTIAL
+        ),
+        attributes = [AuditAttribute(name = ActionAuditContent.PROJECT_CODE_TEMPLATE, value = "#projectId")],
+        scopeId = "#projectId",
+        content = ActionAuditContent.CREDENTIAL_VIEW_CONTENT
+    )
     override fun userShow(userId: String, projectId: String, credentialId: String): CredentialWithPermission {
         val view = AuthPermission.VIEW
         credentialPermissionService.validatePermission(
@@ -434,7 +503,6 @@ class CredentialServiceImpl @Autowired constructor(
                 )
             )
         )
-
         val hasViewPermission = true
         val hasDeletePermission =
             credentialPermissionService.validatePermission(userId, projectId, credentialId, AuthPermission.DELETE)
@@ -443,6 +511,9 @@ class CredentialServiceImpl @Autowired constructor(
 
         val credentialRecord = credentialDao.get(dslContext, projectId, credentialId)
 
+        ActionAuditContext.current()
+            .setInstanceName(credentialRecord.credentialName)
+            .setInstanceId(credentialRecord.credentialId)
         return CredentialWithPermission(
             credentialId = credentialId,
             credentialName = credentialRecord.credentialName ?: credentialId,
@@ -462,6 +533,15 @@ class CredentialServiceImpl @Autowired constructor(
         )
     }
 
+    @ActionAuditRecord(
+        actionId = ActionId.CREDENTIAL_VIEW,
+        instance = AuditInstanceRecord(
+            resourceType = ResourceTypeId.CREDENTIAL
+        ),
+        attributes = [AuditAttribute(name = ActionAuditContent.PROJECT_CODE_TEMPLATE, value = "#projectId")],
+        scopeId = "#projectId",
+        content = ActionAuditContent.CREDENTIAL_VIEW_CONTENT
+    )
     override fun userGet(userId: String, projectId: String, credentialId: String): CredentialWithPermission {
         val view = AuthPermission.VIEW
         credentialPermissionService.validatePermission(
@@ -480,7 +560,6 @@ class CredentialServiceImpl @Autowired constructor(
                 )
             )
         )
-
         val hasViewPermission = true
         val hasDeletePermission =
             credentialPermissionService.validatePermission(userId, projectId, credentialId, AuthPermission.DELETE)
@@ -488,6 +567,10 @@ class CredentialServiceImpl @Autowired constructor(
             credentialPermissionService.validatePermission(userId, projectId, credentialId, AuthPermission.EDIT)
 
         val credentialRecord = credentialDao.get(dslContext, projectId, credentialId)
+
+        ActionAuditContext.current()
+            .setInstanceId(credentialRecord.credentialId)
+            .setInstanceName(credentialRecord.credentialName)
         return CredentialWithPermission(
             credentialId = credentialId,
             credentialName = credentialRecord.credentialName ?: credentialId,
@@ -508,6 +591,17 @@ class CredentialServiceImpl @Autowired constructor(
         )
     }
 
+    @ActionAuditRecord(
+        actionId = ActionId.CREDENTIAL_VIEW,
+        instance = AuditInstanceRecord(
+            resourceType = ResourceTypeId.CREDENTIAL,
+            instanceNames = "#credentialId",
+            instanceIds = "#credentialId"
+        ),
+        attributes = [AuditAttribute(name = ActionAuditContent.PROJECT_CODE_TEMPLATE, value = "#projectId")],
+        scopeId = "#projectId",
+        content = ActionAuditContent.CREDENTIAL_VIEW_CONTENT
+    )
     override fun buildGet(
         projectId: String,
         buildId: String,
@@ -580,12 +674,34 @@ class CredentialServiceImpl @Autowired constructor(
         return ret
     }
 
+    @ActionAuditRecord(
+        actionId = ActionId.CREDENTIAL_VIEW,
+        instance = AuditInstanceRecord(
+            resourceType = ResourceTypeId.CREDENTIAL,
+            instanceNames = "#credentialId",
+            instanceIds = "#credentialId"
+        ),
+        attributes = [AuditAttribute(name = ActionAuditContent.PROJECT_CODE_TEMPLATE, value = "#projectId")],
+        scopeId = "#projectId",
+        content = ActionAuditContent.CREDENTIAL_VIEW_CONTENT
+    )
     override fun serviceGet(projectId: String, credentialId: String, publicKey: String): CredentialInfo? {
         val credentialRecord = credentialDao.getOrNull(dslContext, projectId, credentialId) ?: return null
 
         return credentialInfo(publicKey, credentialRecord)
     }
 
+    @ActionAuditRecord(
+        actionId = ActionId.CREDENTIAL_VIEW,
+        instance = AuditInstanceRecord(
+            resourceType = ResourceTypeId.CREDENTIAL,
+            instanceNames = "#credentialId",
+            instanceIds = "#credentialId"
+        ),
+        attributes = [AuditAttribute(name = ActionAuditContent.PROJECT_CODE_TEMPLATE, value = "#targetProjectId")],
+        scopeId = "#targetProjectId",
+        content = ActionAuditContent.CREDENTIAL_VIEW_CONTENT
+    )
     override fun serviceGetAcrossProject(
         targetProjectId: String,
         credentialId: String,
@@ -641,6 +757,17 @@ class CredentialServiceImpl @Autowired constructor(
         )
     }
 
+    @ActionAuditRecord(
+        actionId = ActionId.CREDENTIAL_VIEW,
+        instance = AuditInstanceRecord(
+            resourceType = ResourceTypeId.CREDENTIAL,
+            instanceNames = "#credentialId",
+            instanceIds = "#credentialId"
+        ),
+        attributes = [AuditAttribute(name = ActionAuditContent.PROJECT_CODE_TEMPLATE, value = "#projectId")],
+        scopeId = "#projectId",
+        content = ActionAuditContent.CREDENTIAL_VIEW_CONTENT
+    )
     override fun serviceGet(projectId: String, credentialId: String): Credential {
         val record = credentialDao.get(dslContext, projectId, credentialId)
 
@@ -679,6 +806,16 @@ class CredentialServiceImpl @Autowired constructor(
         )
     }
 
+    @AuditEntry(actionId = ActionId.CREDENTIAL_VIEW)
+    @ActionAuditRecord(
+        actionId = ActionId.CREDENTIAL_VIEW,
+        instance = AuditInstanceRecord(
+            resourceType = ResourceTypeId.CREDENTIAL
+        ),
+        attributes = [AuditAttribute(name = ActionAuditContent.PROJECT_CODE_TEMPLATE, value = "#projectId")],
+        scopeId = "#projectId",
+        content = ActionAuditContent.CREDENTIAL_VIEW_CONTENT
+    )
     override fun getCredentialByIds(projectId: String?, credentialIds: Set<String>): List<Credential>? {
         val records = credentialDao.listByProject(
             dslContext = dslContext,
@@ -690,6 +827,12 @@ class CredentialServiceImpl @Autowired constructor(
             keyword = null
         )
         return records.map {
+            ActionAuditContext.current().addInstanceInfo(
+                it.credentialId,
+                it.credentialName,
+                null,
+                null
+            )
             Credential(
                 credentialId = it.credentialId,
                 credentialName = it.credentialName ?: it.credentialId,

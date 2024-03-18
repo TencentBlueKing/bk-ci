@@ -30,11 +30,18 @@ package com.tencent.devops.process.service.view
 import com.fasterxml.jackson.core.type.TypeReference
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.github.benmanes.caffeine.cache.Caffeine
+import com.tencent.bk.audit.annotations.ActionAuditRecord
+import com.tencent.bk.audit.annotations.AuditAttribute
+import com.tencent.bk.audit.annotations.AuditInstanceRecord
+import com.tencent.bk.audit.context.ActionAuditContext
 import com.tencent.devops.auth.api.service.ServiceProjectAuthResource
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.api.util.Watcher
 import com.tencent.devops.common.api.util.timestamp
+import com.tencent.devops.common.audit.ActionAuditContent
+import com.tencent.devops.common.auth.api.ActionId
+import com.tencent.devops.common.auth.api.ResourceTypeId
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.client.ClientTokenService
 import com.tencent.devops.common.pipeline.enums.ChannelCode
@@ -118,12 +125,25 @@ class PipelineViewGroupService @Autowired constructor(
         return result
     }
 
+    @ActionAuditRecord(
+        actionId = ActionId.PIPELINE_GROUP_CREATE,
+        instance = AuditInstanceRecord(
+            resourceType = ResourceTypeId.PIPELINE_GROUP
+        ),
+        attributes = [AuditAttribute(name = ActionAuditContent.PROJECT_CODE_TEMPLATE, value = "#projectId")],
+        scopeId = "#projectId",
+        content = ActionAuditContent.PIPELINE_GROUP_CREATE_CONTENT
+    )
     fun addViewGroup(projectId: String, userId: String, pipelineView: PipelineViewForm): String {
         checkPermission(userId, projectId, pipelineView.projected)
         var viewId = 0L
         dslContext.transaction { t ->
             val context = DSL.using(t)
             viewId = pipelineViewService.addView(userId, projectId, pipelineView, context)
+            ActionAuditContext.current()
+                .setInstanceName(pipelineView.name)
+                .setInstanceId(viewId.toString())
+                .addExtendData("pipelineView", pipelineView)
             initViewGroup(
                 context = context,
                 pipelineView = pipelineView,
@@ -135,6 +155,15 @@ class PipelineViewGroupService @Autowired constructor(
         return HashUtil.encodeLongId(viewId)
     }
 
+    @ActionAuditRecord(
+        actionId = ActionId.PIPELINE_GROUP_EDIT,
+        instance = AuditInstanceRecord(
+            resourceType = ResourceTypeId.PIPELINE_GROUP
+        ),
+        attributes = [AuditAttribute(name = ActionAuditContent.PROJECT_CODE_TEMPLATE, value = "#projectId")],
+        scopeId = "#projectId",
+        content = ActionAuditContent.PIPELINE_GROUP_EDIT_CONTENT
+    )
     fun updateViewGroup(
         projectId: String,
         userId: String,
@@ -158,6 +187,10 @@ class PipelineViewGroupService @Autowired constructor(
         if (pipelineView.viewType == PipelineViewType.UNCLASSIFIED) {
             pipelineView.viewType = oldView.viewType
         }
+        ActionAuditContext.current()
+            .setInstanceId(viewId.toString())
+            .setInstanceName(pipelineView.name)
+            .setInstance(pipelineView)
         // 更新视图
         var result = false
         dslContext.transaction { t ->
@@ -213,6 +246,15 @@ class PipelineViewGroupService @Autowired constructor(
         )
     }
 
+    @ActionAuditRecord(
+        actionId = ActionId.PIPELINE_GROUP_DELETE,
+        instance = AuditInstanceRecord(
+            resourceType = ResourceTypeId.PIPELINE_GROUP
+        ),
+        attributes = [AuditAttribute(name = ActionAuditContent.PROJECT_CODE_TEMPLATE, value = "#projectId")],
+        scopeId = "#projectId",
+        content = ActionAuditContent.PIPELINE_GROUP_DELETE_CONTENT
+    )
     fun deleteViewGroup(
         projectId: String,
         userId: String,
@@ -224,6 +266,10 @@ class PipelineViewGroupService @Autowired constructor(
             params = arrayOf(viewIdEncode)
         )
         checkPermission(userId, projectId, oldView.isProject, oldView.createUser)
+        ActionAuditContext.current()
+            .setInstanceId(viewId.toString())
+            .setInstanceName(oldView.name)
+
         var result = false
         dslContext.transaction { t ->
             val context = DSL.using(t)
@@ -564,6 +610,15 @@ class PipelineViewGroupService @Autowired constructor(
         } ?: emptyList()
     }
 
+    @ActionAuditRecord(
+        actionId = ActionId.PIPELINE_GROUP_ADD_REMOVE,
+        instance = AuditInstanceRecord(
+            resourceType = ResourceTypeId.PIPELINE_GROUP
+        ),
+        attributes = [AuditAttribute(name = ActionAuditContent.PROJECT_CODE_TEMPLATE, value = "#projectId")],
+        scopeId = "#projectId",
+        content = ActionAuditContent.PIPELINE_GROUP_ADD_REMOVE_CONTENT
+    )
     fun bulkAdd(userId: String, projectId: String, bulkAdd: PipelineViewBulkAdd): Boolean {
         val isProjectManager = hasPermission(userId, projectId)
         val viewIds = pipelineViewDao.list(
@@ -592,6 +647,11 @@ class PipelineViewGroupService @Autowired constructor(
             logger.warn("bulkAdd , empty pipelineIds")
             return false
         }
+        ActionAuditContext.current()
+            .addAttribute(ActionAuditContent.PROJECT_ADD_OR_REMOVE_TEMPLATE, "add")
+            .setInstanceId(viewIds.toString())
+            .setInstanceName(viewIds.toString())
+            .addExtendData("pipelineIds", bulkAdd.pipelineIds)
         PipelineViewGroupLock(redisOperation, projectId).lockAround {
             for (viewId in viewIds) {
                 val existPipelineIds =
@@ -614,6 +674,15 @@ class PipelineViewGroupService @Autowired constructor(
         return true
     }
 
+    @ActionAuditRecord(
+        actionId = ActionId.PIPELINE_GROUP_ADD_REMOVE,
+        instance = AuditInstanceRecord(
+            resourceType = ResourceTypeId.PIPELINE_GROUP
+        ),
+        attributes = [AuditAttribute(name = ActionAuditContent.PROJECT_CODE_TEMPLATE, value = "#projectId")],
+        scopeId = "#projectId",
+        content = ActionAuditContent.PIPELINE_GROUP_ADD_REMOVE_CONTENT
+    )
     fun bulkRemove(userId: String, projectId: String, bulkRemove: PipelineViewBulkRemove): Boolean {
         val viewId = HashUtil.decodeIdToLong(bulkRemove.viewId)
         val view = pipelineViewDao.get(
@@ -636,13 +705,18 @@ class PipelineViewGroupService @Autowired constructor(
                 defaultMessage = "user:$userId has no permission to edit view group, project:$projectId"
             )
         }
+        ActionAuditContext.current()
+            .addAttribute(ActionAuditContent.PROJECT_ADD_OR_REMOVE_TEMPLATE, "remove")
+            .setInstanceId(viewId.toString())
+            .setInstanceName(view.name)
+            .addExtendData("pipelineIds", bulkRemove.pipelineIds)
         pipelineViewGroupDao.batchRemove(dslContext, projectId, viewId, bulkRemove.pipelineIds)
         return true
     }
 
     fun hasPermission(userId: String, projectId: String) =
         client.get(ServiceProjectAuthResource::class)
-            .checkManager(clientTokenService.getSystemToken(null)!!, userId, projectId).data ?: false
+            .checkManager(clientTokenService.getSystemToken()!!, userId, projectId).data ?: false
 
     fun listView(userId: String, projectId: String, projected: Boolean?, viewType: Int?): List<PipelineNewViewSummary> {
         val views = pipelineViewDao.list(dslContext, userId, projectId, projected, viewType)
@@ -657,17 +731,17 @@ class PipelineViewGroupService @Autowired constructor(
                 pipelineInfoDao.countExcludePipelineIds(dslContext, projectId, classifiedPipelineIds, ChannelCode.BS)
             summaries.add(
                 0, PipelineNewViewSummary(
-                    id = PIPELINE_VIEW_UNCLASSIFIED,
-                    projectId = projectId,
-                    name = I18nUtil.getCodeLanMessage(PIPELINE_VIEW_UNCLASSIFIED),
-                    projected = true,
-                    createTime = LocalDateTime.now().timestamp(),
-                    updateTime = LocalDateTime.now().timestamp(),
-                    creator = "admin",
-                    top = false,
-                    viewType = PipelineViewType.UNCLASSIFIED,
-                    pipelineCount = unclassifiedCount
-                )
+                id = PIPELINE_VIEW_UNCLASSIFIED,
+                projectId = projectId,
+                name = I18nUtil.getCodeLanMessage(PIPELINE_VIEW_UNCLASSIFIED),
+                projected = true,
+                createTime = LocalDateTime.now().timestamp(),
+                updateTime = LocalDateTime.now().timestamp(),
+                creator = "admin",
+                top = false,
+                viewType = PipelineViewType.UNCLASSIFIED,
+                pipelineCount = unclassifiedCount
+            )
             )
         }
         return summaries

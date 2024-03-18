@@ -93,10 +93,10 @@ import com.tencent.devops.process.utils.PipelineVarUtil
 import io.micrometer.core.instrument.Counter
 import io.micrometer.core.instrument.MeterRegistry
 import java.time.LocalDateTime
+import kotlin.math.max
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
-import kotlin.math.max
 
 /**
  * 构建控制器
@@ -321,6 +321,26 @@ class BuildStartControl @Autowired constructor(
                         params = arrayOf(concurrencyGroup)
                     )
                 )
+                if (setting.concurrencyCancelInProgress) {
+                    val detailUrl = pipelineUrlBean.genBuildDetailUrl(
+                        projectCode = projectId,
+                        pipelineId = buildInfo.pipelineId,
+                        buildId = buildInfo.buildId,
+                        position = null,
+                        stageId = null,
+                        needShortUrl = false
+                    )
+                    concurrencyGroupRunning.forEach { (pipelineId, buildId) ->
+                        pipelineRuntimeService.concurrencyCancelBuildPipeline(
+                            projectId = projectId,
+                            pipelineId = pipelineId,
+                            buildId = buildId,
+                            userId = buildInfo.startUser,
+                            groupName = concurrencyGroup,
+                            detailUrl = detailUrl
+                        )
+                    }
+                }
                 val detailUrl = pipelineUrlBean.genBuildDetailUrl(
                     projectCode = projectId,
                     pipelineId = concurrencyGroupRunning.first().first,
@@ -466,7 +486,7 @@ class BuildStartControl @Autowired constructor(
                         projectId = buildInfo.projectId,
                         buildId = buildInfo.buildId,
                         stageId = stage.id!!,
-                        containerId = container.containerId!!,
+                        containerId = container.id!!,
                         startTime = now,
                         endTime = now,
                         buildStatus = BuildStatus.SUCCEED
@@ -476,7 +496,7 @@ class BuildStartControl @Autowired constructor(
                         pipelineId = buildInfo.pipelineId,
                         buildId = buildInfo.buildId,
                         stageId = stage.id!!,
-                        containerId = container.containerId!!,
+                        containerId = container.id!!,
                         taskId = taskId,
                         buildStatus = BuildStatus.SUCCEED,
                         executeCount = executeCount,
@@ -524,7 +544,7 @@ class BuildStartControl @Autowired constructor(
         container.startVMStatus = BuildStatus.SUCCEED.name
         containerRecordService.updateContainerRecord(
             projectId = buildInfo.projectId, pipelineId = buildInfo.pipelineId, buildId = buildInfo.buildId,
-            executeCount = executeCount, containerId = container.containerId!!, buildStatus = BuildStatus.SUCCEED,
+            executeCount = executeCount, containerId = container.id!!, buildStatus = BuildStatus.SUCCEED,
             containerVar = mutableMapOf(
                 Container::startEpoch.name to nowMills,
                 Container::systemElapsed.name to (stage.elapsed ?: 0),

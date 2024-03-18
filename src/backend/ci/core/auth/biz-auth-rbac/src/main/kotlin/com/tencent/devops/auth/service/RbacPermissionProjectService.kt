@@ -28,16 +28,12 @@
 
 package com.tencent.devops.auth.service
 
-import com.tencent.bk.sdk.iam.config.IamConfiguration
-import com.tencent.bk.sdk.iam.dto.InstanceDTO
-import com.tencent.bk.sdk.iam.dto.manager.ManagerMember
-import com.tencent.bk.sdk.iam.dto.manager.dto.ManagerMemberGroupDTO
 import com.tencent.bk.sdk.iam.helper.AuthHelper
-import com.tencent.bk.sdk.iam.service.v2.V2ManagerService
 import com.tencent.devops.auth.constant.AuthMessageCode
 import com.tencent.devops.auth.dao.AuthResourceGroupDao
 import com.tencent.devops.auth.pojo.vo.ProjectPermissionInfoVO
 import com.tencent.devops.auth.service.iam.PermissionProjectService
+import com.tencent.devops.auth.service.iam.PermissionResourceMemberService
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthResourceType
@@ -55,20 +51,17 @@ import java.util.concurrent.TimeUnit
 class RbacPermissionProjectService(
     private val authHelper: AuthHelper,
     private val authResourceService: AuthResourceService,
-    private val iamV2ManagerService: V2ManagerService,
-    private val iamConfiguration: IamConfiguration,
     private val authResourceGroupDao: AuthResourceGroupDao,
     private val dslContext: DSLContext,
     private val rbacCacheService: RbacCacheService,
-    private val deptService: DeptService,
     private val resourceGroupMemberService: RbacPermissionResourceMemberService,
-    private val client: Client
+    private val client: Client,
+    private val resourceMemberService: PermissionResourceMemberService
 ) : PermissionProjectService {
 
     companion object {
         private val logger = LoggerFactory.getLogger(RbacPermissionProjectService::class.java)
         private const val expiredAt = 365L
-        private const val USER_TYPE = "user"
     }
 
     override fun getProjectUsers(
@@ -101,12 +94,20 @@ class RbacPermissionProjectService(
 
     override fun getUserProjectsByPermission(
         userId: String,
-        action: String
+        action: String,
+        resourceType: String?
     ): List<String> {
         logger.info("[rbac] get user projects by permission|$userId|$action")
         val startEpoch = System.currentTimeMillis()
         try {
-            val useAction = RbacAuthUtils.buildAction(AuthPermission.get(action), AuthResourceType.PROJECT)
+            val finalResourceType = if (resourceType == null) {
+                AuthResourceType.PROJECT
+            } else {
+                AuthResourceType.get(resourceType)
+            }
+            val useAction = RbacAuthUtils.buildAction(
+                AuthPermission.get(action), finalResourceType
+            )
             val instanceMap = authHelper.groupRbacInstanceByType(userId, useAction)
             return if (instanceMap.contains("*")) {
                 logger.info("super manager has all project|$userId")
@@ -135,14 +136,11 @@ class RbacPermissionProjectService(
             if (managerPermission || checkCiManager) {
                 return managerPermission
             }
-            val instanceDTO = InstanceDTO()
-            instanceDTO.system = iamConfiguration.systemId
-            instanceDTO.id = projectCode
-            instanceDTO.type = AuthResourceType.PROJECT.value
-            return authHelper.isAllowed(
-                userId,
-                RbacAuthUtils.buildAction(AuthPermission.VISIT, authResourceType = AuthResourceType.PROJECT),
-                instanceDTO
+
+            return rbacCacheService.validateUserProjectPermission(
+                userId = userId,
+                projectCode = projectCode,
+                permission = AuthPermission.VISIT
             )
         } finally {
             logger.info(
@@ -166,41 +164,20 @@ class RbacPermissionProjectService(
         members: List<String>
     ): Boolean {
         logger.info("batchCreateProjectUser:$userId|$projectCode|$roleCode|$members")
-        members.forEach {
-            deptService.getUserInfo(
-                userId = "admin",
-                name = it
-            ) ?: throw ErrorCodeException(
-                errorCode = AuthMessageCode.USER_NOT_EXIST,
-                params = arrayOf(it),
-                defaultMessage = "user $it not exist"
-            )
-        }
-        val iamGroupId = if (roleCode == BkAuthGroup.CI_MANAGER.value) {
-            authResourceGroupDao.getByGroupName(
-                dslContext = dslContext,
-                projectCode = projectCode,
-                resourceType = AuthResourceType.PROJECT.value,
-                resourceCode = projectCode,
-                groupName = BkAuthGroup.CI_MANAGER.groupName
-            )?.relationId
-        } else {
-            authResourceGroupDao.get(
-                dslContext = dslContext,
-                projectCode = projectCode,
-                resourceType = AuthResourceType.PROJECT.value,
-                resourceCode = projectCode,
-                groupCode = roleCode
-            )?.relationId
-        } ?: throw ErrorCodeException(
-            errorCode = AuthMessageCode.ERROR_AUTH_GROUP_NOT_EXIST,
-            params = arrayOf(roleCode),
-            defaultMessage = "group $roleCode not exist"
+        // 根据roleCode获取到对应的iam组ID
+        val iamGroupId = resourceGroupMemberService.roleCodeToIamGroupId(
+            projectCode = projectCode,
+            roleCode = roleCode
         )
-        val iamMemberInfos = members.map { ManagerMember(USER_TYPE, it) }
+        logger.info("batch add project user:$userId|$projectCode|$roleCode|$members")
         val expiredTime = System.currentTimeMillis() / 1000 + TimeUnit.DAYS.toSeconds(expiredAt)
-        val managerMemberGroup = ManagerMemberGroupDTO.builder().members(iamMemberInfos).expiredAt(expiredTime).build()
-        iamV2ManagerService.createRoleGroupMemberV2(iamGroupId.toInt(), managerMemberGroup)
+        resourceMemberService.batchAddResourceGroupMembers(
+            userId = userId,
+            projectCode = projectCode,
+            iamGroupId = iamGroupId,
+            expiredTime = expiredTime,
+            members = members
+        )
         return true
     }
 

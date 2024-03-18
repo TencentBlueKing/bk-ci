@@ -32,12 +32,13 @@ import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.OauthForbiddenException
 import com.tencent.devops.common.api.exception.ParamBlankException
+import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.AESUtil
 import com.tencent.devops.common.api.util.DHUtil
 import com.tencent.devops.common.client.Client
-import com.tencent.devops.repository.api.ServiceOauthResource
-import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.utils.I18nUtil
+import com.tencent.devops.repository.api.ServiceOauthResource
+import com.tencent.devops.repository.api.scm.ServiceScmResource
 import com.tencent.devops.repository.constant.RepositoryMessageCode.NOT_AUTHORIZED_BY_OAUTH
 import com.tencent.devops.repository.dao.GitTokenDao
 import com.tencent.devops.repository.dao.TGitTokenDao
@@ -59,15 +60,19 @@ import com.tencent.devops.repository.utils.Credential
 import com.tencent.devops.repository.utils.CredentialUtils
 import com.tencent.devops.repository.utils.RepositoryUtils
 import com.tencent.devops.scm.code.svn.ISvnService
+import com.tencent.devops.scm.pojo.DownloadGitRepoFileRequest
+import com.tencent.devops.scm.pojo.RepoSessionRequest
 import com.tencent.devops.scm.utils.code.svn.SvnUtils
 import com.tencent.devops.ticket.api.ServiceCredentialResource
+import java.util.Base64
+import javax.servlet.http.HttpServletResponse
+import javax.ws.rs.NotFoundException
+import com.tencent.devops.ticket.pojo.enums.CredentialType
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
-import java.util.Base64
-import javax.ws.rs.NotFoundException
 
 @Service
 @Suppress("ALL")
@@ -342,6 +347,30 @@ class RepoFileService @Autowired constructor(
         )
     }
 
+    fun downloadTGitRepoFile(
+        repo: Repository,
+        sha: String?,
+        tokenType: TokenTypeEnum,
+        filePath: String?,
+        format: String?,
+        isProjectPathWrapped: Boolean?,
+        response: HttpServletResponse
+    ) {
+        val token = client.get(ServiceOauthResource::class).gitGet(repo.userName).data?.accessToken ?: ""
+        gitService.downloadGitRepoFile(
+            token = token,
+            tokenType = tokenType,
+            request = DownloadGitRepoFileRequest(
+                repoName = repo.projectName,
+                sha = sha,
+                filePath = filePath,
+                format = format,
+                isProjectPathWrapped = isProjectPathWrapped ?: false
+            ),
+            response = response
+        )
+    }
+
     private fun getTGitSingleFile(
         repo: CodeTGitRepository,
         filePath: String,
@@ -477,6 +506,26 @@ class RepoFileService @Autowired constructor(
                 partAPrivateKey = pair.privateKey
             )
         )
+
+        // username+password 关联的git代码库
+        if ((repository is CodeGitRepository || repository is CodeTGitRepository) &&
+            (credential.credentialType == CredentialType.USERNAME_PASSWORD)
+        ) {
+            // USERNAME_PASSWORD v1 = username, v2 = password
+            val session = client.get(ServiceScmResource::class).getLoginSession(
+                RepoSessionRequest(
+                    type = repository.getScmType(),
+                    username = privateKey,
+                    password = passPhrase,
+                    url = repository.url
+                )
+            ).data
+            return Credential(
+                username = privateKey,
+                privateKey = session?.privateToken ?: "",
+                passPhrase = passPhrase
+            )
+        }
 
         val list = if (passPhrase.isBlank()) {
             listOf(privateKey)

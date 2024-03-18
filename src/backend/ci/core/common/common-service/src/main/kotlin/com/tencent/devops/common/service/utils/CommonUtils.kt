@@ -29,6 +29,7 @@ package com.tencent.devops.common.service.utils
 
 import com.fasterxml.jackson.core.type.TypeReference
 import com.tencent.devops.common.api.constant.CommonMessageCode
+import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.MessageUtil
@@ -40,17 +41,18 @@ import com.tencent.devops.common.service.PROFILE_PRODUCTION
 import com.tencent.devops.common.service.PROFILE_STREAM
 import com.tencent.devops.common.service.PROFILE_TEST
 import com.tencent.devops.common.service.Profile
+import org.apache.commons.lang3.StringUtils
+import org.jooq.DSLContext
+import org.slf4j.LoggerFactory
+import org.springframework.context.i18n.LocaleContextHolder
+import org.springframework.web.context.request.RequestContextHolder
+import org.springframework.web.context.request.ServletRequestAttributes
 import java.io.File
 import java.net.Inet4Address
 import java.net.InetAddress
 import java.net.NetworkInterface
 import java.net.SocketException
 import java.util.Enumeration
-import org.apache.commons.lang3.StringUtils
-import org.slf4j.LoggerFactory
-import org.springframework.context.i18n.LocaleContextHolder
-import org.springframework.web.context.request.RequestContextHolder
-import org.springframework.web.context.request.ServletRequestAttributes
 
 object CommonUtils {
 
@@ -143,11 +145,11 @@ object CommonUtils {
         serviceUrlPrefix: String,
         file: File,
         fileChannelType: String,
-        logo: Boolean = false,
+        staticFlag: Boolean = false,
         language: String
     ): Result<String?> {
         val serviceUrl = "$serviceUrlPrefix/service/artifactories/file/upload" +
-                "?userId=$userId&fileChannelType=$fileChannelType&logo=$logo"
+                "?userId=$userId&fileChannelType=$fileChannelType&staticFlag=$staticFlag"
         logger.info("the serviceUrl is:$serviceUrl")
         OkhttpUtils.uploadFile(serviceUrl, file).use { response ->
             val responseContent = response.body!!.string()
@@ -247,6 +249,23 @@ object CommonUtils {
             else -> {
                 PROFILE_PRODUCTION
             }
+        }
+    }
+
+    /**
+     * 获取jooq上下文对象
+     * @param archiveFlag 归档标识
+     * @param archiveDslContextName 归档jooq上下文名称
+     * @return jooq上下文对象
+     */
+    fun getJooqDslContext(archiveFlag: Boolean? = null, archiveDslContextName: String? = null): DSLContext {
+        return if (archiveFlag == true) {
+            if (archiveDslContextName.isNullOrBlank()) {
+                throw ErrorCodeException(errorCode = CommonMessageCode.SYSTEM_ERROR)
+            }
+            SpringContextUtil.getBean(DSLContext::class.java, archiveDslContextName)
+        } else {
+            SpringContextUtil.getBean(DSLContext::class.java)
         }
     }
 }

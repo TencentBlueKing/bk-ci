@@ -27,7 +27,7 @@
 
 dependencies {
     api("javax.ws.rs:javax.ws.rs-api")
-    api("io.swagger:swagger-annotations")
+    api("io.swagger.core.v3:swagger-annotations")
     api("org.hashids:hashids")
     api("com.fasterxml.jackson.module:jackson-module-kotlin")
     api("com.fasterxml.jackson.core:jackson-databind")
@@ -52,4 +52,5 @@ dependencies {
     api("org.apache.commons:commons-csv")
     api("com.github.ben-manes.caffeine:caffeine")
     api("com.fasterxml.jackson.datatype:jackson-datatype-jsr310")
+    api("com.jakewharton:disklrucache")
 }

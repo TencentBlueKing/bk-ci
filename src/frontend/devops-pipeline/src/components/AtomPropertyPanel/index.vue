@@ -138,7 +138,7 @@
                 @include ellipsis();
             }
             > .bk-form-input {
-                width: 450px;
+                width: 420px;
             }
             .icon-edit {
                 cursor: pointer;

@@ -32,6 +32,7 @@ import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.repository.utils.scm.QualityUtils
 import com.tencent.devops.scm.ScmFactory
 import com.tencent.devops.scm.code.git.CodeGitWebhookEvent
+import com.tencent.devops.scm.code.git.api.GitHook
 import com.tencent.devops.scm.config.GitConfig
 import com.tencent.devops.scm.config.P4Config
 import com.tencent.devops.scm.config.SVNConfig
@@ -44,6 +45,7 @@ import com.tencent.devops.scm.pojo.GitMrChangeInfo
 import com.tencent.devops.scm.pojo.GitMrInfo
 import com.tencent.devops.scm.pojo.GitMrReviewInfo
 import com.tencent.devops.scm.pojo.GitProjectInfo
+import com.tencent.devops.scm.pojo.LoginSession
 import com.tencent.devops.scm.pojo.RevisionInfo
 import com.tencent.devops.scm.pojo.TokenCheckResult
 import com.tencent.devops.scm.utils.code.svn.SvnUtils
@@ -278,9 +280,6 @@ class ScmService @Autowired constructor(
                     ScmType.CODE_GITLAB -> {
                         gitConfig.gitlabHookUrl
                     }
-                    ScmType.CODE_SVN -> {
-                        svnConfig.svnHookUrl
-                    }
                     ScmType.CODE_TGIT -> {
                         gitConfig.tGitHookUrl
                     }
@@ -305,6 +304,79 @@ class ScmService @Autowired constructor(
                 event = event
             )
                 .addWebHook(hookUrl = realHookUrl)
+        } finally {
+            logger.info("It took ${System.currentTimeMillis() - startEpoch}ms to add web hook")
+        }
+    }
+
+    override fun getWebHooks(projectName: String, url: String, type: ScmType, token: String?): List<GitHook> {
+        return ScmFactory.getScm(
+            projectName = projectName,
+            url = url,
+            type = type,
+            branchName = null,
+            privateKey = null,
+            passPhrase = null,
+            token = token,
+            region = null,
+            userName = null
+        ).getWebHooks()
+    }
+
+    override fun updateWebHook(
+        hookId: Long,
+        projectName: String,
+        url: String,
+        type: ScmType,
+        privateKey: String?,
+        passPhrase: String?,
+        token: String?,
+        region: CodeSvnRegion?,
+        userName: String,
+        event: String?,
+        hookUrl: String?
+    ) {
+        logger.info("[$projectName|$url|$type|$region|$userName|$event|$hookUrl] Start to add web hook")
+        if (type == ScmType.CODE_SVN) {
+            logger.info("svn webhook api does not support, ignore")
+            return
+        }
+        val startEpoch = System.currentTimeMillis()
+        try {
+            val realHookUrl = if (!hookUrl.isNullOrBlank()) {
+                hookUrl
+            } else {
+                when (type) {
+                    ScmType.CODE_GIT -> {
+                        gitConfig.gitHookUrl
+                    }
+                    ScmType.CODE_GITLAB -> {
+                        gitConfig.gitlabHookUrl
+                    }
+                    ScmType.CODE_TGIT -> {
+                        gitConfig.tGitHookUrl
+                    }
+                    ScmType.CODE_P4 -> {
+                        p4Config.p4HookUrl
+                    }
+                    else -> {
+                        throw IllegalArgumentException("Unknown repository type ($type) when add webhook")
+                    }
+                }
+            }
+            ScmFactory.getScm(
+                projectName = projectName,
+                url = url,
+                type = type,
+                branchName = null,
+                privateKey = privateKey,
+                passPhrase = passPhrase,
+                token = token,
+                region = region,
+                userName = userName,
+                event = event
+            )
+                .updateWebHook(hookId = hookId, hookUrl = realHookUrl)
         } finally {
             logger.info("It took ${System.currentTimeMillis() - startEpoch}ms to add web hook")
         }
@@ -602,6 +674,25 @@ class ScmService @Autowired constructor(
             region = null,
             userName = null
         ).getCommitReviewInfo(crId = crId)
+    }
+
+    override fun getLoginSession(
+        type: ScmType,
+        username: String,
+        password: String,
+        url: String
+    ): LoginSession? {
+        return ScmFactory.getScm(
+            projectName = "",
+            url = url,
+            type = type,
+            branchName = null,
+            privateKey = username,
+            passPhrase = password,
+            token = "",
+            region = null,
+            userName = null
+        ).getLoginSession()
     }
 
     companion object {

@@ -247,7 +247,8 @@ const actions = {
     resetPipelineSetting: ({ commit }, payload) => {
         commit(RESET_PIPELINE_SETTING_MUNTATION, payload)
     },
-    setPipelineSetting: ({ commit }, pipelineSetting) => {
+    setPipelineSetting: ({ commit }, pipelineSetting = {}) => {
+        console.log(pipelineSetting, 'pipelineSetting')
         commit(PIPELINE_SETTING_MUTATION, {
             pipelineSetting
         })

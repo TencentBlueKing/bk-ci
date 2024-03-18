@@ -37,8 +37,6 @@ import com.tencent.devops.process.bean.PipelineUrlBean
 import com.tencent.devops.process.constant.ProcessMessageCode.BK_MAX_PARALLEL
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_PIPELINE_QUEUE_FULL
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_PIPELINE_SUMMARY_NOT_FOUND
-import com.tencent.devops.process.engine.common.Timeout
-import com.tencent.devops.process.engine.control.lock.BuildIdLock
 import com.tencent.devops.process.engine.control.lock.PipelineNextQueueLock
 import com.tencent.devops.process.engine.pojo.Response
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildCancelEvent
@@ -47,8 +45,6 @@ import com.tencent.devops.process.engine.service.PipelineRuntimeExtService
 import com.tencent.devops.process.engine.service.PipelineRuntimeService
 import com.tencent.devops.process.engine.service.PipelineTaskService
 import com.tencent.devops.process.pojo.setting.PipelineRunLockType
-import com.tencent.devops.process.util.TaskUtils
-import java.util.concurrent.TimeUnit
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
@@ -285,7 +281,7 @@ class QueueInterceptor @Autowired constructor(
                         )
                     }
                     builds.forEach { (pipelineId, buildId) ->
-                        cancelBuildPipeline(
+                        pipelineRuntimeService.concurrencyCancelBuildPipeline(
                             projectId = projectId,
                             pipelineId = pipelineId,
                             buildId = buildId,
@@ -315,64 +311,6 @@ class QueueInterceptor @Autowired constructor(
             // 满足条件
             else ->
                 Response(data = BuildStatus.RUNNING)
-        }
-    }
-
-    private fun cancelBuildPipeline(
-        projectId: String,
-        pipelineId: String,
-        buildId: String,
-        userId: String,
-        groupName: String,
-        detailUrl: String
-    ) {
-        val redisLock = BuildIdLock(redisOperation = redisOperation, buildId = buildId)
-        try {
-            redisLock.lock()
-            val buildInfo = pipelineRuntimeService.getBuildInfo(projectId, pipelineId, buildId)
-            val tasks = pipelineTaskService.getRunningTask(projectId, buildId)
-            tasks.forEach { task ->
-                val taskId = task["taskId"]?.toString() ?: ""
-                logger.info("build($buildId) shutdown by $userId, taskId: $taskId, status: ${task["status"] ?: ""}")
-                val containerId = task["containerId"]?.toString() ?: ""
-                // #7599 兼容短时间取消状态异常优化
-                val cancelTaskSetKey = TaskUtils.getCancelTaskIdRedisKey(buildId, containerId, false)
-                redisOperation.addSetValue(cancelTaskSetKey, taskId)
-                redisOperation.expire(cancelTaskSetKey, TimeUnit.DAYS.toSeconds(Timeout.MAX_JOB_RUN_DAYS))
-                buildLogPrinter.addYellowLine(
-                    buildId = buildId,
-                    message = "[concurrency] Canceling since <a target='_blank' href='$detailUrl'>" +
-                        "a higher priority waiting request</a> for group($groupName) exists",
-                    tag = taskId,
-                    jobId = task["containerId"]?.toString() ?: "",
-                    executeCount = task["executeCount"] as? Int ?: 1
-                )
-            }
-            if (tasks.isEmpty()) {
-                buildLogPrinter.addRedLine(
-                    buildId = buildId,
-                    message = "[concurrency] Canceling all since <a target='_blank' href='$detailUrl'>" +
-                        "a higher priority waiting request</a> for group($groupName) exists",
-                    tag = "QueueInterceptor",
-                    jobId = "",
-                    executeCount = 1
-                )
-            }
-            try {
-                pipelineRuntimeService.cancelBuild(
-                    projectId = projectId,
-                    pipelineId = pipelineId,
-                    buildId = buildId,
-                    userId = userId,
-                    executeCount = buildInfo?.executeCount ?: 1,
-                    buildStatus = BuildStatus.CANCELED
-                )
-                logger.info("Cancel the pipeline($pipelineId) of instance($buildId) by the user($userId)")
-            } catch (t: Throwable) {
-                logger.warn("Fail to shutdown the build($buildId) of pipeline($pipelineId)", t)
-            }
-        } finally {
-            redisLock.unlock()
         }
     }
 }

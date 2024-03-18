@@ -28,48 +28,47 @@
 package com.tencent.devops.repository.pojo.git
 
 import com.fasterxml.jackson.annotation.JsonProperty
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("更新git项目信息")
+@Schema(title = "更新git项目信息")
 data class UpdateGitProjectInfo(
-    @ApiModelProperty("项目名", name = "name")
+    @get:Schema(title = "项目名", description = "name")
     @JsonProperty("name")
     val name: String? = null,
-    @ApiModelProperty("项目是否可以被fork", name = "fork_enabled")
+    @get:Schema(title = "项目是否可以被fork", description = "fork_enabled")
     @JsonProperty("fork_enabled")
     val forkEnabled: Boolean? = null,
-    @ApiModelProperty("项目描述", name = "description")
+    @get:Schema(title = "项目描述", description = "description")
     @JsonProperty("description")
     val description: String? = null,
-    @ApiModelProperty("项目默认分支", name = "default_branch")
+    @get:Schema(title = "项目默认分支", description = "default_branch")
     @JsonProperty("default_branch")
     val defaultBranch: String? = null,
-    @ApiModelProperty("文件大小限制，单位:MB", name = "limit_file_size")
+    @get:Schema(title = "文件大小限制，单位:MB", description = "limit_file_size")
     @JsonProperty("limit_file_size")
     val limitFileSize: Float? = null,
-    @ApiModelProperty("LFS文件大小限制，单位:MB", name = "limit_lfs_file_size")
+    @get:Schema(title = "LFS文件大小限制，单位:MB", description = "limit_lfs_file_size")
     @JsonProperty("limit_lfs_file_size")
     val limitLfsFileSize: Float? = null,
-    @ApiModelProperty("缺陷配置", name = "issues_enabled")
+    @get:Schema(title = "缺陷配置", description = "issues_enabled")
     @JsonProperty("issues_enabled")
     val issuesEnabled: Boolean? = null,
-    @ApiModelProperty("合并请求配置", name = "merge_requests_enabled")
+    @get:Schema(title = "合并请求配置", description = "merge_requests_enabled")
     @JsonProperty("merge_requests_enabled")
     val mergeRequestsEnabled: Boolean? = null,
-    @ApiModelProperty("维基配置", name = "wiki_enabled")
+    @get:Schema(title = "维基配置", description = "wiki_enabled")
     @JsonProperty("wiki_enabled")
     val wikiEnabled: Boolean? = null,
-    @ApiModelProperty("评审配置", name = "review_enabled")
+    @get:Schema(title = "评审配置", description = "review_enabled")
     @JsonProperty("review_enabled")
     val reviewEnabled: Boolean? = null,
-    @ApiModelProperty("推送或创建tag规则", name = "tag_name_regex")
+    @get:Schema(title = "推送或创建tag规则", description = "tag_name_regex")
     @JsonProperty("tag_name_regex")
     val tagNameRegex: String? = null,
-    @ApiModelProperty("推送或创建tag权限", name = "tag_create_push_level")
+    @get:Schema(title = "推送或创建tag权限", description = "tag_create_push_level")
     @JsonProperty("tag_create_push_level")
     val tagCreatePushLevel: Int? = null,
-    @ApiModelProperty("项目可视范围", name = "visibility_level")
+    @get:Schema(title = "项目可视范围", description = "visibility_level")
     @JsonProperty("visibility_level")
     val visibilityLevel: Int? = null
 )

@@ -32,58 +32,57 @@ import com.tencent.devops.common.webhook.enums.code.github.GithubPushOperationKi
 import com.tencent.devops.common.webhook.enums.code.tgit.TGitPushActionKind
 import com.tencent.devops.common.webhook.enums.code.tgit.TGitPushOperationKind
 import com.tencent.devops.common.webhook.pojo.code.CodeWebhookEvent
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
 // 将git event统一处理方便前端展示
-@ApiModel("stream 触发请求")
+@Schema(title = "stream 触发请求")
 data class GitRequestEvent(
-    @ApiModelProperty("ID")
+    @get:Schema(title = "ID")
     var id: Long?,
-    @ApiModelProperty("事件类型")
+    @get:Schema(title = "事件类型")
     val objectKind: String,
-    @ApiModelProperty("操作类型")
+    @get:Schema(title = "操作类型")
     val operationKind: String?,
     // 对于Push是action对于Mr是extension
-    @ApiModelProperty("拓展操作")
+    @get:Schema(title = "拓展操作")
     val extensionAction: String?,
-    @ApiModelProperty("stream 项目ID")
+    @get:Schema(title = "stream 项目ID")
     val gitProjectId: Long,
-    @ApiModelProperty("源stream 项目ID")
+    @get:Schema(title = "源stream 项目ID")
     val sourceGitProjectId: Long?,
-    @ApiModelProperty("分支名")
+    @get:Schema(title = "分支名")
     val branch: String,
-    @ApiModelProperty("目标分支名")
+    @get:Schema(title = "目标分支名")
     val targetBranch: String?,
-    @ApiModelProperty("提交ID")
+    @get:Schema(title = "提交ID")
     val commitId: String,
-    @ApiModelProperty("提交说明")
+    @get:Schema(title = "提交说明")
     val commitMsg: String?,
-    @ApiModelProperty("提交时间")
+    @get:Schema(title = "提交时间")
     val commitTimeStamp: String?,
     // 目前只在上下文中传递，后续看需求是否保存至数据库
-    @ApiModelProperty("提交用户")
+    @get:Schema(title = "提交用户")
     val commitAuthorName: String?,
-    @ApiModelProperty("用户")
+    @get:Schema(title = "用户")
     val userId: String,
-    @ApiModelProperty("提交总数")
+    @get:Schema(title = "提交总数")
     val totalCommitCount: Long,
     // 这里保存的是MR 的 iid 不是 mrId
-    @ApiModelProperty("合并请求ID")
+    @get:Schema(title = "合并请求ID")
     val mergeRequestId: Long?,
-    @ApiModelProperty("事件原文")
+    @get:Schema(title = "事件原文")
     val event: String,
-    @ApiModelProperty("描述（已废弃）")
+    @get:Schema(title = "描述（已废弃）")
     var description: String?,
-    @ApiModelProperty("合并请求标题")
+    @get:Schema(title = "合并请求标题")
     var mrTitle: String?,
-    @ApiModelProperty("Git事件对象")
+    @get:Schema(title = "Git事件对象")
     var gitEvent: CodeWebhookEvent?,
-    @ApiModelProperty("去掉头部url的homepage")
+    @get:Schema(title = "去掉头部url的homepage")
     var gitProjectName: String?,
-    @ApiModelProperty("远程仓库触发时得到的主库流水线列表")
+    @get:Schema(title = "远程仓库触发时得到的主库流水线列表")
     var repoTriggerPipelineList: List<StreamRepoHookEvent>? = null,
-    @ApiModelProperty("变更的yaml文件")
+    @get:Schema(title = "变更的yaml文件")
     var changeYamlList: List<ChangeYamlList> = emptyList()
 ) {
     companion object {

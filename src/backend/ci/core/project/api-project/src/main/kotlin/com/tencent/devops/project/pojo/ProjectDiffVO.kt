@@ -28,90 +28,93 @@
 package com.tencent.devops.project.pojo
 
 import com.tencent.devops.common.auth.api.pojo.SubjectScopeInfo
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
 @Suppress("ALL")
-@ApiModel("项目-显示模型")
+@Schema(title = "项目-显示模型")
 data class ProjectDiffVO(
-    @ApiModelProperty("主键ID")
+    @get:Schema(title = "主键ID")
     val id: Long,
-    @ApiModelProperty("项目ID")
-    // @JsonProperty("project_id")
+    @get:Schema(title = "项目ID")
     val projectId: String,
-    @ApiModelProperty("项目名称")
-    // @JsonProperty("project_name")
+    @get:Schema(title = "项目名称")
     val projectName: String,
-    @ApiModelProperty("审批中项目名称")
-    // @JsonProperty("project_name")
+    @get:Schema(title = "审批中项目名称")
     val afterProjectName: String,
-    @ApiModelProperty("项目代码")
-    // @JsonProperty("project_code")
+    @get:Schema(title = "项目代码")
     val projectCode: String,
-    @ApiModelProperty("审批状态")
-    // @JsonProperty("approval_status")
+    @get:Schema(title = "审批状态")
     val approvalStatus: Int?,
-    @ApiModelProperty("审批时间")
-    // @JsonProperty("approval_time")
+    @get:Schema(title = "审批时间")
     val approvalTime: String?,
-    @ApiModelProperty("审批人")
+    @get:Schema(title = "审批人")
     val approver: String?,
-    @ApiModelProperty("创建时间")
-    // @JsonProperty("created_at")
+    @get:Schema(title = "创建时间")
     val createdAt: String?,
-    @ApiModelProperty("创建人")
+    @get:Schema(title = "创建人")
     val creator: String?,
-    @ApiModelProperty("事业群ID")
+    @get:Schema(title = "事业群ID")
     val bgId: String?,
-    @ApiModelProperty("审批中事业群ID")
+    @get:Schema(title = "审批中事业群ID")
     val afterBgId: String?,
-    @ApiModelProperty("事业群名字")
+    @get:Schema(title = "事业群名字")
     val bgName: String?,
-    @ApiModelProperty("审批中事业群名字")
+    @get:Schema(title = "审批中事业群名字")
     val afterBgName: String?,
-    @ApiModelProperty("中心ID")
+    @get:Schema(title = "事业线ID")
+    val businessLineId: String?,
+    @get:Schema(title = "审批中事业线ID")
+    val afterBusinessLineId: Long?,
+    @get:Schema(title = "事业线名称")
+    val businessLineName: String?,
+    @get:Schema(title = "审批中事业线名称")
+    val afterBusinessLineName: String?,
+    @get:Schema(title = "中心ID")
     val centerId: String?,
-    @ApiModelProperty("审批中中心ID")
+    @get:Schema(title = "审批中中心ID")
     val afterCenterId: String?,
-    @ApiModelProperty("中心名称")
+    @get:Schema(title = "中心名称")
     val centerName: String?,
-    @ApiModelProperty("审批中中心名称")
+    @get:Schema(title = "审批中中心名称")
     val afterCenterName: String?,
-    @ApiModelProperty("部门ID")
+    @get:Schema(title = "部门ID")
     val deptId: String?,
-    @ApiModelProperty("审批中部门ID")
+    @get:Schema(title = "审批中部门ID")
     val afterDeptId: String?,
-    @ApiModelProperty("部门名称")
+    @get:Schema(title = "部门名称")
     val deptName: String?,
-    @ApiModelProperty("审批中部门名称")
+    @get:Schema(title = "审批中部门名称")
     val afterDeptName: String?,
-    @ApiModelProperty("描述")
+    @get:Schema(title = "描述")
     val description: String?,
-    @ApiModelProperty("审批中描述")
+    @get:Schema(title = "审批中描述")
     val afterDescription: String?,
-    @ApiModelProperty("英文缩写")
+    @get:Schema(title = "英文缩写")
     val englishName: String,
-    @ApiModelProperty("logo地址")
+    @get:Schema(title = "logo地址")
     val logoAddr: String?,
-    @ApiModelProperty("审批中logo地址")
+    @get:Schema(title = "审批中logo地址")
     val afterLogoAddr: String?,
-    @ApiModelProperty("评论")
+    @get:Schema(title = "评论")
     val remark: String?,
-    @ApiModelProperty("修改时间")
-    // @JsonProperty("updated_at")
+    @get:Schema(title = "修改时间")
     val updatedAt: String?,
-    @ApiModelProperty("修改人")
+    @get:Schema(title = "修改人")
     val updator: String?,
-    @ApiModelProperty("项目最大可授权人员范围")
+    @get:Schema(title = "项目最大可授权人员范围")
     val subjectScopes: List<SubjectScopeInfo>?,
-    @ApiModelProperty("审批中的项目最大可授权人员范围")
+    @get:Schema(title = "审批中的项目最大可授权人员范围")
     val afterSubjectScopes: List<SubjectScopeInfo>?,
-    @ApiModelProperty("项目性质")
+    @get:Schema(title = "项目性质")
     val authSecrecy: Int?,
-    @ApiModelProperty("审批中项目性质")
+    @get:Schema(title = "审批中项目性质")
     val afterAuthSecrecy: Int? = null,
-    @ApiModelProperty("项目类型")
+    @get:Schema(title = "项目类型")
     val projectType: Int?,
-    @ApiModelProperty("审批中项目类型")
-    val afterProjectType: Int?
+    @get:Schema(title = "审批中项目类型")
+    val afterProjectType: Int?,
+    @get:Schema(title = "运营产品ID")
+    val productId: Int? = null,
+    @get:Schema(title = "审批中运营产品ID")
+    val afterProductId: Int? = null
 )

@@ -29,12 +29,7 @@ package com.tencent.devops.scm.code.git.api
 
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.constant.CommonMessageCode
-import com.tencent.devops.common.api.constant.HTTP_400
-import com.tencent.devops.common.api.constant.HTTP_401
 import com.tencent.devops.common.api.constant.HTTP_403
-import com.tencent.devops.common.api.constant.HTTP_404
-import com.tencent.devops.common.api.constant.HTTP_405
-import com.tencent.devops.common.api.constant.HTTP_422
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.service.prometheus.BkTimedAspect
@@ -53,6 +48,8 @@ import com.tencent.devops.scm.pojo.GitMrChangeInfo
 import com.tencent.devops.scm.pojo.GitMrInfo
 import com.tencent.devops.scm.pojo.GitMrReviewInfo
 import com.tencent.devops.scm.pojo.GitProjectInfo
+import com.tencent.devops.scm.pojo.GitServerError
+import com.tencent.devops.scm.pojo.LoginSession
 import com.tencent.devops.scm.pojo.TapdWorkItem
 import io.micrometer.core.instrument.MeterRegistry
 import io.micrometer.core.instrument.Tag
@@ -144,7 +141,7 @@ open class GitApi {
         val existHooks = getHooks(host, token, projectName)
         if (existHooks.isNotEmpty()) {
             existHooks.forEach {
-                if (it.url == hookUrl) {
+                if (it.url.contains(hookUrl)) {
                     val exist = when (event) {
                         null -> {
                             it.pushEvents
@@ -315,7 +312,7 @@ open class GitApi {
         return JsonUtil.getObjectMapper().writeValueAsString(params)
     }
 
-    private fun updateHook(
+    fun updateHook(
         host: String,
         hookId: Long,
         token: String,
@@ -341,7 +338,7 @@ open class GitApi {
         }
     }
 
-    private fun getHooks(host: String, token: String, projectName: String): List<GitHook> {
+    fun getHooks(host: String, token: String, projectName: String): List<GitHook> {
         try {
             val request = get(host, token, "projects/${urlEncode(projectName)}/hooks", "")
             val result = JsonUtil.getObjectMapper().readValue<List<GitHook>>(
@@ -449,19 +446,8 @@ open class GitApi {
 
     private fun handleApiException(operation: String, code: Int, body: String) {
         logger.warn("Fail to call git api because of code $code and message $body")
-        val msg = when (code) {
-            HTTP_400 -> getMessageByLocale(CommonMessageCode.PARAM_ERROR)
-            HTTP_401 -> getMessageByLocale(CommonMessageCode.AUTH_FAIL, arrayOf("Git token"))
-            HTTP_403 -> getMessageByLocale(CommonMessageCode.ACCOUNT_NO_OPERATION_PERMISSIONS, arrayOf(operation))
-            HTTP_404 -> getMessageByLocale(
-                CommonMessageCode.REPO_NOT_EXIST_OR_NO_OPERATION_PERMISSION,
-                arrayOf("GIT", operation)
-            )
-            HTTP_405 -> getMessageByLocale(CommonMessageCode.GIT_INTERFACE_NOT_EXIST, arrayOf("GIT", operation))
-            HTTP_422 -> getMessageByLocale(CommonMessageCode.GIT_CANNOT_OPERATION, arrayOf("GIT", operation))
-            else -> "Git platform $operation fail"
-        }
-        throw GitApiException(code, msg)
+        val apiError = JsonUtil.to(body, GitServerError::class.java)
+        throw GitApiException(code, apiError.message ?: "")
     }
 
     fun listCommits(
@@ -658,5 +644,29 @@ open class GitApi {
                 request
             )
         )
+    }
+
+    fun getGitSession(
+        host: String,
+        url: String,
+        username: String,
+        password: String
+    ): LoginSession? {
+        val body = JsonUtil.toJson(
+            mapOf(
+                "login" to username,
+                "password" to password
+            ),
+            false
+        )
+        val request = post(host, "", url, body)
+        val responseBody = getBody(
+            getMessageByLocale(CommonMessageCode.GET_SESSION_INFO),
+            request
+        ).ifBlank {
+            logger.warn("get session is blank, please check the username and password")
+            return null
+        }
+        return JsonUtil.getObjectMapper().readValue(responseBody)
     }
 }

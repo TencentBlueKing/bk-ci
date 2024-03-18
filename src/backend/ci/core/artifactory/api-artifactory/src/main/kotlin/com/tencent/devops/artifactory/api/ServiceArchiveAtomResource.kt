@@ -29,9 +29,10 @@ package com.tencent.devops.artifactory.api
 
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.pojo.Result
-import io.swagger.annotations.Api
-import io.swagger.annotations.ApiOperation
-import io.swagger.annotations.ApiParam
+import io.swagger.v3.oas.annotations.tags.Tag
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.Parameter
+import javax.servlet.http.HttpServletResponse
 import javax.ws.rs.Consumes
 import javax.ws.rs.DELETE
 import javax.ws.rs.GET
@@ -41,55 +42,67 @@ import javax.ws.rs.Path
 import javax.ws.rs.PathParam
 import javax.ws.rs.Produces
 import javax.ws.rs.QueryParam
+import javax.ws.rs.core.Context
 import javax.ws.rs.core.MediaType
 
-@Api(tags = ["SERVICE_ARTIFACTORY"], description = "仓库-插件")
+@Tag(name = "SERVICE_ARTIFACTORY", description = "仓库-插件")
 @Path("/service/artifactories/")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface ServiceArchiveAtomResource {
 
-    @ApiOperation("获取插件包文件内容")
+    @Operation(summary = "获取插件包文件内容")
     @GET
     @Path("/atom/file/content")
     fun getAtomFileContent(
-        @ApiParam("文件路径", required = true)
+        @Parameter(description = "文件路径", required = true)
         @QueryParam("filePath")
         filePath: String
     ): Result<String>
 
-    @ApiOperation("删除插件包文件")
+    @Operation(summary = "下载插件包文件")
+    @GET
+    @Path("/atom/file/download")
+    fun downloadAtomFile(
+        @Parameter(description = "文件路径", required = true)
+        @QueryParam("filePath")
+        filePath: String,
+        @Context
+        response: HttpServletResponse
+    )
+
+    @Operation(summary = "删除插件包文件")
     @DELETE
     @Path("/atom/file/delete")
     fun deleteAtomFile(
-        @ApiParam("用户ID", required = true)
+        @Parameter(description = "用户ID", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("项目编码", required = true)
+        @Parameter(description = "项目编码", required = true)
         @QueryParam("projectCode")
         projectCode: String,
-        @ApiParam("插件代码", required = true)
+        @Parameter(description = "插件代码", required = true)
         @QueryParam("atomCode")
         atomCode: String
     ): Result<Boolean>
 
-    @ApiOperation("更新插件包文件内容")
+    @Operation(summary = "更新插件包文件内容")
     @PUT
     @Path("/projectCodes/{projectCode}/atoms/{atomCode}/file/content")
     fun updateArchiveFile(
-        @ApiParam("项目编码", required = true)
+        @Parameter(description = "项目编码", required = true)
         @PathParam("projectCode")
         projectCode: String,
-        @ApiParam("插件编码", required = true)
+        @Parameter(description = "插件编码", required = true)
         @PathParam("atomCode")
         atomCode: String,
-        @ApiParam("插件版本号", required = true)
+        @Parameter(description = "插件版本号", required = true)
         @QueryParam("version")
         version: String,
-        @ApiParam("文件名", required = true)
+        @Parameter(description = "文件名", required = true)
         @QueryParam("fileName")
         fileName: String,
-        @ApiParam("文件内容", required = true)
+        @Parameter(description = "文件内容", required = true)
         content: String
     ): Result<Boolean>
 }

@@ -66,6 +66,7 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.event.dispatcher.trace.TraceEventDispatcher
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.project.api.service.ServiceProjectApprovalResource
+import com.tencent.devops.project.pojo.ProjectApprovalInfo
 import com.tencent.devops.project.pojo.enums.ProjectApproveStatus
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
@@ -169,6 +170,7 @@ class PermissionGradeManagerService @Autowired constructor(
                 .authorization_scopes(authorizationScopes)
                 .subject_scopes(subjectScopes)
                 .sync_perm(true)
+                .syncSubjectTemplate(true)
                 .groupName(manageGroupConfig.groupName)
                 .build()
             val gradeManagerId = iamV2ManagerService.createManagerV2(createManagerDTO)
@@ -180,8 +182,7 @@ class PermissionGradeManagerService @Autowired constructor(
                 projectName = projectName,
                 projectId = projectCode,
                 desc = projectApprovalInfo.description ?: "",
-                organization =
-                "${projectApprovalInfo.bgName}-${projectApprovalInfo.deptName}-${projectApprovalInfo.centerName}",
+                organization = getOrganizationStr(projectApprovalInfo),
                 authSecrecy = projectApprovalInfo.authSecrecy,
                 subjectScopes = projectApprovalInfo.subjectScopes ?: listOf(
                     SubjectScopeInfo(
@@ -189,7 +190,8 @@ class PermissionGradeManagerService @Autowired constructor(
                         type = ALL_MEMBERS,
                         name = ALL_MEMBERS_NAME
                     )
-                )
+                ),
+                productName = projectApprovalInfo.productName!!
             )
             val gradeManagerApplicationCreateDTO = GradeManagerApplicationCreateDTO
                 .builder()
@@ -199,6 +201,7 @@ class PermissionGradeManagerService @Autowired constructor(
                 .authorizationScopes(authorizationScopes)
                 .subjectScopes(subjectScopes)
                 .syncPerm(true)
+                .syncSubjectTemplate(true)
                 .groupName(manageGroupConfig.groupName)
                 .applicant(userId)
                 .reason(
@@ -215,7 +218,7 @@ class PermissionGradeManagerService @Autowired constructor(
                 .title(
                     I18nUtil.getCodeLanMessage(
                         messageCode = BK_CREATE_BKCI_PROJECT_APPLICATION,
-                        params = arrayOf(projectName)
+                        params = arrayOf(userId, projectName)
                     )
                 )
                 .build()
@@ -251,6 +254,7 @@ class PermissionGradeManagerService @Autowired constructor(
                 params = arrayOf(projectCode),
                 defaultMessage = "the resource not exists, projectCode:$projectCode"
             )
+        logger.info("modify grade manager:$projectApprovalInfo")
         val name = IamGroupUtils.buildGradeManagerName(
             projectName = projectName
         )
@@ -296,12 +300,12 @@ class PermissionGradeManagerService @Autowired constructor(
             true
         } else {
             val callbackId = UUIDUtil.generate()
+
             val itsmContentDTO = itsmService.buildGradeManagerItsmContentDTO(
                 projectName = projectName,
                 projectId = projectCode,
                 desc = projectApprovalInfo.description ?: "",
-                organization =
-                "${projectApprovalInfo.bgName}-${projectApprovalInfo.deptName}-${projectApprovalInfo.centerName}",
+                organization = getOrganizationStr(projectApprovalInfo),
                 authSecrecy = projectApprovalInfo.authSecrecy,
                 subjectScopes = projectApprovalInfo.subjectScopes ?: listOf(
                     SubjectScopeInfo(
@@ -309,7 +313,9 @@ class PermissionGradeManagerService @Autowired constructor(
                         type = ALL_MEMBERS,
                         name = ALL_MEMBERS_NAME
                     )
-                )
+                ),
+                productName = projectApprovalInfo.productName!!,
+                isCreateProject = false
             )
             val gradeManagerDetail = iamV2ManagerService.getGradeManagerDetail(gradeManagerId)
             val gradeManagerApplicationUpdateDTO = GradeManagerApplicationUpdateDTO.builder()
@@ -335,7 +341,7 @@ class PermissionGradeManagerService @Autowired constructor(
                 .title(
                     I18nUtil.getCodeLanMessage(
                         messageCode = BK_REVISE_BKCI_PROJECT_APPLICATION,
-                        params = arrayOf(projectName)
+                        params = arrayOf(projectApprovalInfo.updator!!, projectName)
                     )
                 )
                 .build()
@@ -351,6 +357,14 @@ class PermissionGradeManagerService @Autowired constructor(
                 applicant = projectApprovalInfo.updator!!
             )
             false
+        }
+    }
+
+    private fun getOrganizationStr(projectApprovalInfo: ProjectApprovalInfo): String {
+        return with(projectApprovalInfo) {
+            listOf(
+                bgName, businessLineName, deptName, centerName
+            ).filter { !it.isNullOrBlank() }.joinToString("-")
         }
     }
 
@@ -418,6 +432,7 @@ class PermissionGradeManagerService @Autowired constructor(
             val managerRoleGroupDTO = ManagerRoleGroupDTO.builder()
                 .groups(listOf(managerRoleGroup))
                 .createAttributes(false)
+                .syncSubjectTemplate(true)
                 .build()
             val iamGroupId = iamV2ManagerService.batchCreateRoleGroupV2(gradeManagerId, managerRoleGroupDTO)
             authResourceGroupDao.create(

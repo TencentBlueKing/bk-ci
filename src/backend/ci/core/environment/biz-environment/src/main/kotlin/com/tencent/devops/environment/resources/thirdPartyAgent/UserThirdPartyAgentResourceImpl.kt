@@ -27,11 +27,13 @@
 
 package com.tencent.devops.environment.resources.thirdPartyAgent
 
+import com.tencent.bk.audit.annotations.AuditEntry
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.OS
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.auth.api.ActionId
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.environment.api.thirdPartyAgent.UserThirdPartyAgentResource
 import com.tencent.devops.environment.pojo.EnvVar
@@ -112,11 +114,13 @@ class UserThirdPartyAgentResourceImpl @Autowired constructor(
         return Result(thirdPartyAgentService.getAgentStatusWithInfo(userId, projectId, agentId))
     }
 
+    @AuditEntry(actionId = ActionId.ENV_NODE_CREATE)
     override fun importAgent(userId: String, projectId: String, agentId: String): Result<Boolean> {
         importService.importAgent(userId, projectId, agentId)
         return Result(true)
     }
 
+    @AuditEntry(actionId = ActionId.ENV_NODE_DELETE)
     override fun deleteAgent(userId: String, projectId: String, nodeHashId: String): Result<Boolean> {
         thirdPartyAgentService.deleteAgent(userId, projectId, nodeHashId)
         return Result(true)
@@ -180,6 +184,7 @@ class UserThirdPartyAgentResourceImpl @Autowired constructor(
         return Result(true)
     }
 
+    @AuditEntry(actionId = ActionId.ENV_NODE_VIEW)
     override fun getThirdPartyAgentDetail(
         userId: String,
         projectId: String,
@@ -207,7 +212,17 @@ class UserThirdPartyAgentResourceImpl @Autowired constructor(
         checkUserId(userId)
         checkProjectId(projectId)
         checkNodeId(nodeHashId)
-        return Result(thirdPartyAgentService.listAgentBuilds(userId, projectId, nodeHashId, page, pageSize))
+        return Result(
+            thirdPartyAgentService.listAgentBuilds(
+                userId = userId,
+                projectId = projectId,
+                nodeHashId = nodeHashId,
+                status = null,
+                pipelineId = null,
+                page = page,
+                pageSize = pageSize
+            )
+        )
     }
 
     override fun listAgentActions(

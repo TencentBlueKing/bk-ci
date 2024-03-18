@@ -21,4 +21,28 @@ class SamplePermissionResourceMemberService : PermissionResourceMemberService {
     ): List<BkAuthGroupAndUserList> {
         return emptyList()
     }
+
+    override fun batchAddResourceGroupMembers(
+        userId: String,
+        projectCode: String,
+        iamGroupId: Int,
+        expiredTime: Long,
+        members: List<String>?,
+        departments: List<String>?
+    ) = true
+
+    override fun batchDeleteResourceGroupMembers(
+        userId: String,
+        projectCode: String,
+        iamGroupId: Int,
+        members: List<String>?,
+        departments: List<String>?
+    ): Boolean = true
+
+    override fun roleCodeToIamGroupId(
+        projectCode: String,
+        roleCode: String
+    ): Int = 0
+
+    override fun autoRenewal(projectCode: String, resourceType: String, resourceCode: String) = Unit
 }

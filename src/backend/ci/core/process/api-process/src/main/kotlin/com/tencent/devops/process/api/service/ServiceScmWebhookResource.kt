@@ -29,15 +29,13 @@ package com.tencent.devops.process.api.service
 
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_PROJECT_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
-import com.tencent.devops.common.api.model.SQLPage
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.webhook.pojo.code.github.GithubWebhook
 import com.tencent.devops.process.pojo.code.WebhookCommit
 import com.tencent.devops.process.pojo.webhook.PipelineWebhook
-import com.tencent.devops.process.pojo.webhook.PipelineWebhookBuildLogDetail
-import io.swagger.annotations.Api
-import io.swagger.annotations.ApiOperation
-import io.swagger.annotations.ApiParam
+import io.swagger.v3.oas.annotations.tags.Tag
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.Parameter
 import javax.ws.rs.Consumes
 import javax.ws.rs.GET
 import javax.ws.rs.HeaderParam
@@ -48,30 +46,30 @@ import javax.ws.rs.Produces
 import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
-@Api(tags = ["SERVICE_SCM"], description = "服务-SCM")
+@Tag(name = "SERVICE_SCM", description = "服务-SCM")
 @Path("/service/scm")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface ServiceScmWebhookResource {
 
-    @ApiOperation("Github仓库提交")
+    @Operation(summary = "Github仓库提交")
     @POST
     @Path("/github/commit")
     fun webHookCodeGithubCommit(
         webhook: GithubWebhook
     ): Result<Boolean>
 
-    @ApiOperation("Webhook代码库提交")
+    @Operation(summary = "Webhook代码库提交")
     @POST
     @Path("/webhook/commit")
     fun webhookCommit(
-        @ApiParam("项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_PROJECT_ID)
         projectId: String,
         webhookCommit: WebhookCommit
     ): Result<String>
 
-    @ApiOperation("获取流水线的webhook列表")
+    @Operation(summary = "获取流水线的webhook列表")
     @GET
     @Path("/{projectId}/{pipelineId}")
     fun listScmWebhook(
@@ -81,36 +79,11 @@ interface ServiceScmWebhookResource {
         projectId: String,
         @PathParam("pipelineId")
         pipelineId: String,
-        @ApiParam("页码", required = false)
+        @Parameter(description = "页码", required = false)
         @QueryParam("page")
         page: Int?,
-        @ApiParam("每页大小", required = false)
+        @Parameter(description = "每页大小", required = false)
         @QueryParam("pageSize")
         pageSize: Int?
     ): Result<List<PipelineWebhook>>
-
-    @ApiOperation("获取流水线的webhook构建日志列表")
-    @GET
-    @Path("/{projectId}/{pipelineId}/buildLog")
-    @Suppress("ALL")
-    fun listPipelineWebhookBuildLog(
-        @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String,
-        @PathParam("projectId")
-        projectId: String,
-        @PathParam("pipelineId")
-        pipelineId: String,
-        @ApiParam("仓库名", required = false)
-        @QueryParam("repoName")
-        repoName: String?,
-        @ApiParam("commitId", required = false)
-        @QueryParam("commitId")
-        commitId: String?,
-        @ApiParam("页码", required = false)
-        @QueryParam("page")
-        page: Int?,
-        @ApiParam("每页大小", required = false)
-        @QueryParam("pageSize")
-        pageSize: Int?
-    ): Result<SQLPage<PipelineWebhookBuildLogDetail>?>
 }

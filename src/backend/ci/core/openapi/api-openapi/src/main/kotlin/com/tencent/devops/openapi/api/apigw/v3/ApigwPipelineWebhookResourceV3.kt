@@ -30,13 +30,11 @@ package com.tencent.devops.openapi.api.apigw.v3
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_APP_CODE
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID
-import com.tencent.devops.common.api.model.SQLPage
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.process.pojo.webhook.PipelineWebhook
-import com.tencent.devops.process.pojo.webhook.PipelineWebhookBuildLogDetail
-import io.swagger.annotations.Api
-import io.swagger.annotations.ApiOperation
-import io.swagger.annotations.ApiParam
+import io.swagger.v3.oas.annotations.tags.Tag
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.Parameter
 import javax.ws.rs.Consumes
 import javax.ws.rs.GET
 import javax.ws.rs.HeaderParam
@@ -46,68 +44,34 @@ import javax.ws.rs.Produces
 import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
-@Api(tags = ["OPENAPI_WEBHOOK_V3"], description = "webhook-代码事件触发")
+@Tag(name = "OPENAPI_WEBHOOK_V3", description = "webhook-代码事件触发")
 @Path("/{apigwType:apigw-user|apigw-app|apigw}/v3/{projectId}/{pipelineId}/webhook")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 @Suppress("ALL")
 interface ApigwPipelineWebhookResourceV3 {
 
-    @ApiOperation("获取流水线的webhook列表", tags = ["v3_user_pipeline_webhook_list", "v3_app_pipeline_webhook_list"])
+    @Operation(summary = "获取流水线的webhook列表", tags = ["v3_user_pipeline_webhook_list", "v3_app_pipeline_webhook_list"])
     @GET
     fun listScmWebhook(
-        @ApiParam(value = "appCode", required = true, defaultValue = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
+        @Parameter(description = "appCode", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
         appCode: String?,
-        @ApiParam(value = "apigw Type", required = true)
+        @Parameter(description = "apigw Type", required = true)
         @PathParam("apigwType")
         apigwType: String?,
-        @ApiParam("userId", required = true)
+        @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String,
         @PathParam("projectId")
         projectId: String,
         @PathParam("pipelineId")
         pipelineId: String,
-        @ApiParam("页码", required = false)
+        @Parameter(description = "页码", required = false)
         @QueryParam("page")
         page: Int?,
-        @ApiParam("每页大小", required = false)
+        @Parameter(description = "每页条数(默认20, 最大100)", required = false)
         @QueryParam("pageSize")
         pageSize: Int?
     ): Result<List<PipelineWebhook>>
-
-    @ApiOperation(
-        "获取流水线的webhook构建日志列表",
-        tags = ["v3_user_pipeline_webhook_build_log", "v3_app_pipeline_webhook_build_log"]
-    )
-    @GET
-    @Path("/buildLog")
-    fun listPipelineWebhookBuildLog(
-        @ApiParam(value = "appCode", required = true, defaultValue = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
-        @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
-        appCode: String?,
-        @ApiParam(value = "apigw Type", required = true)
-        @PathParam("apigwType")
-        apigwType: String?,
-        @ApiParam("userId", required = true)
-        @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
-        userId: String,
-        @PathParam("projectId")
-        projectId: String,
-        @PathParam("pipelineId")
-        pipelineId: String,
-        @ApiParam("仓库名", required = false)
-        @QueryParam("repoName")
-        repoName: String?,
-        @ApiParam("commitId", required = false)
-        @QueryParam("commitId")
-        commitId: String?,
-        @ApiParam("页码", required = false)
-        @QueryParam("page")
-        page: Int?,
-        @ApiParam("每页大小", required = false)
-        @QueryParam("pageSize")
-        pageSize: Int?
-    ): Result<SQLPage<PipelineWebhookBuildLogDetail>?>
 }
