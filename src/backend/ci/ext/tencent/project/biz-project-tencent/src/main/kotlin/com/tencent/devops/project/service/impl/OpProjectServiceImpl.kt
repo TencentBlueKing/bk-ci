@@ -52,7 +52,6 @@ import com.tencent.devops.project.pojo.mq.ProjectCreateBroadCastEvent
 import com.tencent.devops.project.pojo.mq.ProjectUpdateBroadCastEvent
 import com.tencent.devops.project.service.ProjectPaasCCService
 import com.tencent.devops.project.service.ProjectService
-import com.tencent.devops.project.service.remotedev.EnableBkRepoData
 import com.tencent.devops.project.service.remotedev.ProjectRemoteDevService
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
@@ -61,7 +60,7 @@ import org.springframework.dao.DuplicateKeyException
 import org.springframework.stereotype.Service
 import org.springframework.util.CollectionUtils
 
-@Suppress("LongParameterList")
+@Suppress("LongParameterList", "ComplexCondition")
 @Service
 class OpProjectServiceImpl @Autowired constructor(
     private val dslContext: DSLContext,
@@ -167,51 +166,29 @@ class OpProjectServiceImpl @Autowired constructor(
         }
 
         val dbProperties = JsonUtil.toOrNull(dbProjectRecord.properties.toString(), ProjectProperties::class.java)
-        // 更新云研发项目时相关操作
-        val enableRemoteDev = dbProperties == null ||
-            (dbProperties.remotedev != true && projectInfoRequest.properties?.remotedev == true)
-        if (enableRemoteDev) {
-            projectRemoteDevService.enableRemoteDev(
-                userId = userId,
-                projectCode = dbProjectRecord.englishName,
-                enableRepoData = EnableBkRepoData(
-                    projectName = projectInfoRequest.projectName,
-                    projectCode = dbProjectRecord.englishName,
-                    bgId = projectInfoRequest.bgId.toString(),
-                    bgName = projectInfoRequest.bgName,
-                    centerId = projectInfoRequest.centerId.toString(),
-                    centerName = projectInfoRequest.centerName,
-                    deptId = projectInfoRequest.deptId.toString(),
-                    deptName = projectInfoRequest.deptName,
-                    englishName = dbProjectRecord.englishName,
-                    productId = projectInfoRequest.productId ?: dbProjectRecord.productId
-                )
-            )
+        // 更新云研发需要走remotedev的接口，不能在project直接更新会导致没有关联操作，这里报错
+        if ((dbProperties?.remotedev != true && projectInfoRequest.properties?.remotedev == true) ||
+            (dbProperties?.remotedev == true && projectInfoRequest.properties?.remotedev != true)
+        ) {
+            throw OperationException("开启或关闭云研发项目需要在Remotedev服务接口操作")
         }
-        // 新开启的云研发项目给所有管理员发通知或者已经开启的项目管理员新增时发送通知
-        val newManager = projectInfoRequest.properties?.remotedevManager
-            ?.split(";")?.filter { it.isNotBlank() }?.toSet()
-            ?: emptySet()
-        val subManager = newManager.subtract(
-            (
-                dbProperties?.remotedevManager?.split(";")?.filter { it.isNotBlank() }?.toSet()
-                    ?: emptySet()
-                ).toSet()
-        )
-        if (enableRemoteDev) {
-            projectRemoteDevService.sendEnableRemoteDevNotify(
-                sendNotifyUser = newManager,
-                projectCode = dbProjectRecord.englishName,
-                projectName = dbProjectRecord.projectName,
-                cloudDesktopNum = projectInfoRequest.properties?.cloudDesktopNum ?: 0
-            )
-        } else if (dbProperties?.remotedev == true && subManager.isNotEmpty()) {
-            projectRemoteDevService.sendEnableRemoteDevNotify(
-                sendNotifyUser = subManager,
-                projectCode = dbProjectRecord.englishName,
-                projectName = dbProjectRecord.projectName,
-                cloudDesktopNum = projectInfoRequest.properties?.cloudDesktopNum ?: 0
-            )
+
+        // 已经开启的项目管理员新增时发送通知
+        if (dbProperties?.remotedev == true && projectInfoRequest.properties?.remotedev == true) {
+            val newManager = projectInfoRequest.properties?.remotedevManager
+                ?.split(";")?.filter { it.isNotBlank() }?.toSet()
+                ?: emptySet()
+            val oldManager = dbProperties.remotedevManager?.split(";")?.filter { it.isNotBlank() }?.toSet()
+                ?: emptySet()
+            val subManager = newManager.subtract(oldManager)
+            if (subManager.isNotEmpty()) {
+                projectRemoteDevService.sendEnableRemoteDevNotify(
+                    sendNotifyUser = subManager,
+                    projectCode = dbProjectRecord.englishName,
+                    projectName = dbProjectRecord.projectName,
+                    cloudDesktopNum = projectInfoRequest.properties?.cloudDesktopNum ?: 0
+                )
+            }
         }
 
         return if (!flag) {

@@ -12,6 +12,7 @@ import com.tencent.devops.common.notify.enums.NotifyType
 import com.tencent.devops.notify.api.service.ServiceNotifyMessageTemplateResource
 import com.tencent.devops.notify.pojo.SendNotifyMessageTemplateRequest
 import com.tencent.devops.project.dao.ProjectDao
+import com.tencent.devops.project.dao.RemoteDevDao
 import com.tencent.devops.project.pojo.ProjectProperties
 import okhttp3.Headers.Companion.toHeaders
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
@@ -33,7 +34,8 @@ class ProjectRemoteDevService @Autowired constructor(
     private val objectMapper: ObjectMapper,
     private val client: Client,
     private val dslContext: DSLContext,
-    private val projectDao: ProjectDao
+    private val projectDao: ProjectDao,
+    private val remoteDevDao: RemoteDevDao
 ) {
 
     @Value("\${remoteDev.appCode:}")
@@ -165,14 +167,68 @@ class ProjectRemoteDevService @Autowired constructor(
         }
     }
 
-    fun updateRemoteDevInfo(projectCode: String, addcloudDesktopNum: Int): Boolean {
+    fun updateRemoteDevInfo(
+        userId: String,
+        projectCode: String,
+        addcloudDesktopNum: Int?,
+        enableRemotedev: Boolean?
+    ): Boolean {
+        if (addcloudDesktopNum == null && enableRemotedev == null) {
+            return true
+        }
         val record = projectDao.getByEnglishName(dslContext, projectCode) ?: return false
-        if (record.properties == null) {
+        if (record.properties == null && enableRemotedev == null) {
             return false
         }
-        val prop = JsonUtil.to(record.properties, ProjectProperties::class.java)
-        val newProp = prop.copy(cloudDesktopNum = prop.cloudDesktopNum + addcloudDesktopNum)
-        return projectDao.updatePropertiesByCode(dslContext, projectCode, newProp) > 0
+        var prop = if (record.properties != null) {
+            JsonUtil.to(record.properties, ProjectProperties::class.java)
+        } else {
+            ProjectProperties()
+        }
+        if (addcloudDesktopNum != null) {
+            prop = prop.copy(cloudDesktopNum = prop.cloudDesktopNum + addcloudDesktopNum)
+        }
+        if (enableRemotedev != null) {
+            prop = prop.copy(remotedev = enableRemotedev)
+            val dbProperties = if (record.properties != null) {
+                JsonUtil.to(record.properties, ProjectProperties::class.java)
+            } else {
+                ProjectProperties()
+            }
+            // 更新云研发项目时相关操作
+            val enableRemoteDev = dbProperties.remotedev != true && enableRemotedev == true
+            if (enableRemoteDev) {
+                enableRemoteDev(
+                    userId = userId,
+                    projectCode = record.englishName,
+                    enableRepoData = EnableBkRepoData(
+                        projectName = record.projectName,
+                        projectCode = record.englishName,
+                        bgId = record.bgId.toString(),
+                        bgName = record.bgName,
+                        centerId = record.centerId.toString(),
+                        centerName = record.centerName,
+                        deptId = record.deptId.toString(),
+                        deptName = record.deptName,
+                        englishName = record.englishName,
+                        productId = record.productId
+                    )
+                )
+                // 新开启的云研发项目给所有管理员发通知
+                val manager = dbProperties.remotedevManager
+                    ?.split(";")?.filter { it.isNotBlank() }?.toSet()
+                    ?: emptySet()
+
+                sendEnableRemoteDevNotify(
+                    sendNotifyUser = manager,
+                    projectCode = record.englishName,
+                    projectName = record.projectName,
+                    cloudDesktopNum = prop.cloudDesktopNum
+                )
+            }
+        }
+
+        return projectDao.updatePropertiesByCode(dslContext, projectCode, prop) > 0
     }
 
     fun sendEnableRemoteDevNotify(
@@ -199,6 +255,15 @@ class ProjectRemoteDevService @Autowired constructor(
                 )
             )
         )
+    }
+
+    fun fetchRemoteDevProject(projectId: String?): Map<String, String> {
+        val projects = remoteDevDao.fetchProjectEnableRemoteDev(
+            dslContext = dslContext,
+            englishName = projectId
+        )
+
+        return projects.associate { it.englishName to it.projectName }
     }
 
     companion object {

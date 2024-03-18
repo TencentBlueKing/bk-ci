@@ -37,10 +37,10 @@ import com.tencent.devops.remotedev.service.gitproxy.GitProxyService
 import com.tencent.devops.remotedev.service.workspace.CreateControl
 import com.tencent.devops.remotedev.service.workspace.NotifyControl
 import com.tencent.devops.remotedev.service.workspace.WorkspaceCommon
-import java.util.concurrent.Executors
-import javax.ws.rs.core.Response
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
+import java.util.concurrent.Executors
+import javax.ws.rs.core.Response
 
 @Suppress("ALL")
 @RestResource
@@ -81,7 +81,8 @@ class OpProjectWorkspaceResourceImpl @Autowired constructor(
             client.get(ServiceTxProjectResource::class).updateRemotedev(
                 userId = userId,
                 projectCode = data.projectId,
-                addcloudDesktopNum = (data.ips?.size ?: 0) + (data.cgsIds?.size ?: 0)
+                addcloudDesktopNum = (data.ips?.size ?: 0) + (data.cgsIds?.size ?: 0),
+                enable = null
             )
         }
         // 判断是不是特殊机型，如果是特殊机型增加特殊机型份额

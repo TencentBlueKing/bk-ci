@@ -99,7 +99,8 @@ class ServiceRemoteDevResourceImpl(
             client.get(ServiceTxProjectResource::class).updateRemotedev(
                 userId = operator,
                 projectCode = data.projectId,
-                addcloudDesktopNum = (data.ips?.size ?: 0) + (data.cgsIds?.size ?: 0)
+                addcloudDesktopNum = (data.ips?.size ?: 0) + (data.cgsIds?.size ?: 0),
+                enable = null
             )
         }
         cgsData.forEach { cgs ->
