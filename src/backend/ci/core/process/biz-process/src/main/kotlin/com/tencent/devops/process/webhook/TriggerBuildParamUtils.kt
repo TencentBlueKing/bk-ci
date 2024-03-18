@@ -48,6 +48,7 @@ import com.tencent.devops.process.constant.PipelineBuildParamKey.CI_BRANCH
 import com.tencent.devops.process.constant.PipelineBuildParamKey.CI_BUILD_ID
 import com.tencent.devops.process.constant.PipelineBuildParamKey.CI_BUILD_MSG
 import com.tencent.devops.process.constant.PipelineBuildParamKey.CI_BUILD_NO
+import com.tencent.devops.process.constant.PipelineBuildParamKey.CI_BUILD_NUM
 import com.tencent.devops.process.constant.PipelineBuildParamKey.CI_BUILD_START_TYPE
 import com.tencent.devops.process.constant.PipelineBuildParamKey.CI_COMMIT_AUTHOR
 import com.tencent.devops.process.constant.PipelineBuildParamKey.CI_COMMIT_MESSAGE
@@ -82,6 +83,7 @@ import com.tencent.devops.process.constant.PipelineBuildParamKey.CI_NOTE_TYPE
 import com.tencent.devops.process.constant.PipelineBuildParamKey.CI_PIPELINE_CREATOR
 import com.tencent.devops.process.constant.PipelineBuildParamKey.CI_PIPELINE_ID
 import com.tencent.devops.process.constant.PipelineBuildParamKey.CI_PIPELINE_MODIFIER
+import com.tencent.devops.process.constant.PipelineBuildParamKey.CI_PIPELINE_NAME
 import com.tencent.devops.process.constant.PipelineBuildParamKey.CI_PIPELINE_VERSION
 import com.tencent.devops.process.constant.PipelineBuildParamKey.CI_PROJECT_ID
 import com.tencent.devops.process.constant.PipelineBuildParamKey.CI_PROJECT_NAME
@@ -133,11 +135,12 @@ object TriggerBuildParamUtils {
             CI_ACTOR,
             CI_BUILD_MSG,
             CI_BUILD_NO,
+            CI_BUILD_NUM,
             CI_BUILD_ID,
             CI_PIPELINE_ID,
             CI_PROJECT_ID,
             CI_PROJECT_NAME,
-            CI_PIPELINE_ID,
+            CI_PIPELINE_NAME,
             CI_PIPELINE_CREATOR,
             CI_PIPELINE_MODIFIER,
             CI_PIPELINE_VERSION,
