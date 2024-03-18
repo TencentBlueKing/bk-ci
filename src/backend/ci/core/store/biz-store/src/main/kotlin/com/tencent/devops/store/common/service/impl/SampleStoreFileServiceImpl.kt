@@ -38,17 +38,15 @@ import com.tencent.devops.common.api.constant.MASTER
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.service.utils.CommonUtils
 import com.tencent.devops.common.web.utils.I18nUtil
-import com.tencent.devops.store.pojo.common.TextReferenceFileDownloadRequest
 import com.tencent.devops.store.common.service.StoreFileService
 import com.tencent.devops.store.common.utils.TextReferenceFileAnalysisUtil.isDirectoryNotEmpty
+import com.tencent.devops.store.pojo.common.TextReferenceFileDownloadRequest
 import java.io.File
 import java.net.URLEncoder
 import org.slf4j.LoggerFactory
-import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
 import org.springframework.stereotype.Service
 
 @Service
-@ConditionalOnMissingBean(StoreFileService::class)
 class SampleStoreFileServiceImpl : StoreFileService() {
 
     companion object {

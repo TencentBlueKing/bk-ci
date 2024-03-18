@@ -50,6 +50,7 @@ import com.tencent.devops.dispatch.kubernetes.pojo.remotedev.ResourceVmReq
 import com.tencent.devops.dispatch.kubernetes.pojo.remotedev.ResourceVmRespData
 import com.tencent.devops.project.api.service.ServiceProjectResource
 import com.tencent.devops.project.api.service.service.ServiceTxUserResource
+import com.tencent.devops.project.pojo.ProjectVO
 import com.tencent.devops.remotedev.common.Constansts
 import com.tencent.devops.remotedev.common.exception.ErrorCodeEnum
 import com.tencent.devops.remotedev.config.RemoteDevCommonConfig
@@ -63,6 +64,8 @@ import com.tencent.devops.remotedev.dao.WorkspaceWindowsDao
 import com.tencent.devops.remotedev.pojo.OpHistoryCopyWriting
 import com.tencent.devops.remotedev.pojo.ProjectWorkspaceCreate
 import com.tencent.devops.remotedev.pojo.WebSocketActionType
+import com.tencent.devops.remotedev.pojo.WindowsResourceTypeConfig
+import com.tencent.devops.remotedev.pojo.WindowsResourceZoneConfig
 import com.tencent.devops.remotedev.pojo.Workspace
 import com.tencent.devops.remotedev.pojo.WorkspaceAction
 import com.tencent.devops.remotedev.pojo.WorkspaceCreate
@@ -160,8 +163,6 @@ class CreateControl @Autowired constructor(
         workspaceCreate: ProjectWorkspaceCreate
     ) {
         logger.info("start async create workspace |$pmUserId|$projectId|$cgsId|$autoAssign|$workspaceCreate")
-        val mountType = WorkspaceMountType.START
-        val systemType = WorkspaceSystemType.WINDOWS_GPU
         val windowsConfig = windowsResourceConfigService.getTypeConfig(workspaceCreate.windowsType)
             ?: throw ErrorCodeException(
                 errorCode = ErrorCodeEnum.WINDOWS_CONFIG_NOT_FIND.errorCode,
@@ -235,48 +236,85 @@ class CreateControl @Autowired constructor(
             }
         }
 
-        // 检查自定义和非自定义镜像额度
-        if (workspaceCreate.imageCosFile.isNotBlank()) {
-            val data = client.get(ServiceStartCloudResource::class).getResourceVm(
-                ResourceVmReq(
-                    zoneId = windowsZone.zoneShortName,
-                    machineType = windowsConfig.size
+        // 自定义镜像检查是否有相对的显卡
+        // 非自定义镜像先检查池子里是否有已经生产出来的可以直接用，没有再去看显卡
+        var newNum = 0
+        if (workspaceCreate.imageCosFile.isBlank()) {
+            val resourceCount = startCloudResourceCountCheck(workspaceCreate.windowsType, workspaceCreate.windowsZone)
+            if (cgsId != null || resourceCount > workspaceCreate.count) {
+                doCreateWorkspace(
+                    workspaceCreate = workspaceCreate,
+                    projectId = projectId,
+                    pmUserId = pmUserId,
+                    windowsConfig = windowsConfig,
+                    projectInfo = projectInfo,
+                    windowsZone = windowsZone,
+                    cgsId = cgsId,
+                    autoAssign = autoAssign
                 )
-            ).data
-            val free = sumResourceVmFree(
-                res = data,
-                zoneShortName = windowsZone.zoneShortName,
-                size = windowsConfig.size
-            ) ?: throw ErrorCodeException(
+                return
+            }
+            newNum = workspaceCreate.count - resourceCount
+        } else {
+            // 自定义镜像都是新生产的
+            newNum = workspaceCreate.count
+        }
+
+        val data = client.get(ServiceStartCloudResource::class).getResourceVm(
+            ResourceVmReq(
+                zoneId = windowsZone.zoneShortName,
+                machineType = windowsConfig.size
+            )
+        ).data
+        val free = sumResourceVmFree(
+            res = data,
+            zoneShortName = windowsZone.zoneShortName,
+            size = windowsConfig.size
+        ) ?: throw ErrorCodeException(
+            errorCode = ErrorCodeEnum.ZONE_VM_RESOURCE_NOT_ENOUGH.errorCode,
+            params = arrayOf(
+                windowsZone.zone,
+                windowsConfig.size,
+                "0",
+                newNum.toString()
+            )
+        )
+        if (free < newNum) {
+            throw ErrorCodeException(
                 errorCode = ErrorCodeEnum.ZONE_VM_RESOURCE_NOT_ENOUGH.errorCode,
                 params = arrayOf(
                     windowsZone.zone,
                     windowsConfig.size,
-                    "0",
-                    workspaceCreate.count.toString()
+                    free.toString(),
+                    newNum.toString()
                 )
             )
-            if (free < workspaceCreate.count) {
-                throw ErrorCodeException(
-                    errorCode = ErrorCodeEnum.ZONE_VM_RESOURCE_NOT_ENOUGH.errorCode,
-                    params = arrayOf(
-                        windowsZone.zone,
-                        windowsConfig.size,
-                        free.toString(),
-                        workspaceCreate.count.toString()
-                    )
-                )
-            }
-        } else {
-            val resourceCount = startCloudResourceCountCheck(workspaceCreate.windowsType, workspaceCreate.windowsZone)
-            if (cgsId == null && resourceCount < workspaceCreate.count) {
-                throw ErrorCodeException(
-                    errorCode = ErrorCodeEnum.DESKTOP_RESOURCES_INSUFFICIENT.errorCode,
-                    params = arrayOf(resourceCount.toString())
-                )
-            }
         }
 
+        doCreateWorkspace(
+            workspaceCreate = workspaceCreate,
+            projectId = projectId,
+            pmUserId = pmUserId,
+            windowsConfig = windowsConfig,
+            projectInfo = projectInfo,
+            windowsZone = windowsZone,
+            cgsId = cgsId,
+            autoAssign = autoAssign
+        )
+    }
+
+    private fun doCreateWorkspace(
+        workspaceCreate: ProjectWorkspaceCreate,
+        projectId: String,
+        pmUserId: String,
+        windowsConfig: WindowsResourceTypeConfig,
+        projectInfo: ProjectVO,
+        windowsZone: WindowsResourceZoneConfig,
+        cgsId: String?,
+        autoAssign: Boolean?
+    ) {
+        val mountType = WorkspaceMountType.START
+        val systemType = WorkspaceSystemType.WINDOWS_GPU
         for (i in 0 until workspaceCreate.count) {
             logger.info("createWorkspace|mountType|$mountType")
             val workspaceName = generateWorkspaceName(projectId)

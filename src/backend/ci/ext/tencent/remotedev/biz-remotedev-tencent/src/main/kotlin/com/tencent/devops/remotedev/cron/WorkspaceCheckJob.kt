@@ -234,9 +234,16 @@ class WorkspaceCheckJob @Autowired constructor(
                 }.onFailure {
                     logger.warn("autoDeleteWhenNotAssign fail ${it.message}", it)
                 }
-                // 云桌面通知-关机超过14天时自动销毁
+                // 未达到云桌面4星活跃：自然月（排除法定节假日）内小于 5 天达到日活标准的云桌面，并邮件提醒
                 kotlin.runCatching {
-                    deleteControl.autoDeleteWhenSleep7Day(false, readyDeleteWorkspace)
+                    deleteControl.autoDeleteWhenNot4StarActive(false, readyDeleteWorkspace)
+                }.onFailure {
+                    logger.warn("autoDeleteWhenNot4StarActive fail ${it.message}", it)
+                }
+
+                // 关机超过14天时自动销毁
+                kotlin.runCatching {
+                    deleteControl.autoDeleteWhenSleep14Day(false, readyDeleteWorkspace)
                     if (readyDeleteWorkspace.isNotEmpty()) {
                         logger.info("read to notify system manager|$readyDeleteWorkspace")
                         OkhttpUtils.doPost(

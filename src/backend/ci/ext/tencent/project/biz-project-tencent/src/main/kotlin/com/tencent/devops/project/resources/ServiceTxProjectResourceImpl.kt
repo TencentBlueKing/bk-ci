@@ -398,8 +398,13 @@ class ServiceTxProjectResourceImpl @Autowired constructor(
         )
     }
 
-    override fun updateRemotedev(userId: String, projectCode: String, addcloudDesktopNum: Int): Result<Boolean> {
-        return Result(remoteDevService.updateRemoteDevInfo(projectCode, addcloudDesktopNum))
+    override fun updateRemotedev(
+        userId: String,
+        projectCode: String,
+        addcloudDesktopNum: Int?,
+        enable: Boolean?
+    ): Result<Boolean> {
+        return Result(remoteDevService.updateRemoteDevInfo(userId, projectCode, addcloudDesktopNum, enable))
     }
 
     override fun setExtSystemTagByProject(
@@ -414,6 +419,10 @@ class ServiceTxProjectResourceImpl @Autowired constructor(
         projectIds: List<String>
     ): Result<Boolean> {
         return Result(projectTxService.batchUpdateProjectProductId(projectIds, productId))
+    }
+
+    override fun projectEnableRemotedev(projectCode: String?): Result<Map<String, String>> {
+        return Result(remoteDevService.fetchRemoteDevProject(projectCode))
     }
 
     companion object {
