@@ -3,7 +3,7 @@ package com.tencent.devops.environment.resources.job
 import com.tencent.devops.common.api.exception.OauthForbiddenException
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.environment.api.job.UserJobResource
+import com.tencent.devops.environment.api.job.TencentUserJobResource
 import com.tencent.devops.environment.pojo.job.agentreq.QueryAgentTaskStatusReq
 import com.tencent.devops.environment.pojo.job.jobreq.QueryJobInstanceLogsReq
 import com.tencent.devops.environment.pojo.job.agentreq.RetryAgentInstallTaskReq
@@ -31,7 +31,7 @@ class TencentUserJobResourceImpl @Autowired constructor(
     private val jobService: JobService,
     private val agentService: AgentService,
     private val permissionManageService: PermissionManageService
-) : UserJobResource {
+) : TencentUserJobResource {
     override fun queryJobInstanceStatus(
         userId: String,
         projectId: String,

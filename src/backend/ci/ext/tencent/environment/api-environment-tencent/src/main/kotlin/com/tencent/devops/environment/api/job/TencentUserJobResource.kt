@@ -37,7 +37,7 @@ import javax.ws.rs.core.MediaType
 @Path("/user/job")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
-interface UserJobResource {
+interface TencentUserJobResource {
     @Operation(summary = "查询任务状态的Job接口")
     @GET
     @Path("/{projectId}/query_job_instance_status")
