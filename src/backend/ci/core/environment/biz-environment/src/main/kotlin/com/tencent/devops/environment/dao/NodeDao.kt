@@ -1022,7 +1022,8 @@ class NodeDao {
 
     fun countByNodeIdList(dslContext: DSLContext, projectId: String, nodeIds: Collection<Long>): Int {
         with(TNode.T_NODE) {
-            return dslContext.selectFrom(this)
+            return dslContext.selectCount()
+                .from(TNode.T_NODE)
                 .where(PROJECT_ID.eq(projectId))
                 .and(NODE_ID.`in`(nodeIds))
                 .fetchOne(0, Int::class.java)!!
