@@ -134,12 +134,17 @@ class UserEnvironmentResourceImpl @Autowired constructor(
     }
 
     @BkTimed(extraTags = ["operate", "getEnv"])
-    override fun listNodes(userId: String, projectId: String, envHashId: String): Result<List<NodeBaseInfo>> {
+    override fun listNodes(
+        userId: String,
+        projectId: String,
+        page: Int?,
+        pageSize: Int?,
+        envHashId: String
+    ): Result<Page<NodeBaseInfo>> {
         if (envHashId.isBlank()) {
             throw ErrorCodeException(errorCode = EnvironmentMessageCode.ERROR_ENV_ID_NULL)
         }
-
-        return Result(envService.listAllEnvNodes(userId, projectId, listOf(envHashId)))
+        return Result(envService.listAllEnvNodes(userId, projectId, page, pageSize, listOf(envHashId)))
     }
 
     @BkTimed(extraTags = ["operate", "createNode"])

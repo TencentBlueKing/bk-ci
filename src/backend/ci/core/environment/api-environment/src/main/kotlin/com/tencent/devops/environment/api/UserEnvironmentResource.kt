@@ -185,10 +185,16 @@ interface UserEnvironmentResource {
         @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
+        @Parameter(description = "第几页", required = false)
+        @QueryParam("page")
+        page: Int? = 1,
+        @Parameter(description = "每页多少条", required = false)
+        @QueryParam("pageSize")
+        pageSize: Int? = 20,
         @Parameter(description = "环境 hashId", required = true)
         @PathParam("envHashId")
         envHashId: String
-    ): Result<List<NodeBaseInfo>>
+    ): Result<Page<NodeBaseInfo>>
 
     @Operation(summary = "添加节点到环境")
     @POST
