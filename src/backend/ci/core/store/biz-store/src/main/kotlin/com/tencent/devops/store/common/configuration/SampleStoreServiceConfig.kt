@@ -30,25 +30,19 @@ package com.tencent.devops.store.common.configuration
 import com.tencent.devops.store.atom.service.AtomNotifyService
 import com.tencent.devops.store.atom.service.impl.AtomCooperationServiceImpl
 import com.tencent.devops.store.atom.service.impl.AtomMemberServiceImpl
-import com.tencent.devops.store.atom.service.impl.AtomReleaseServiceImpl
-import com.tencent.devops.store.atom.service.impl.AtomServiceImpl
-import com.tencent.devops.store.atom.service.impl.MarketAtomServiceImpl
 import com.tencent.devops.store.atom.service.impl.SampleAtomCooperationServiceImpl
 import com.tencent.devops.store.atom.service.impl.SampleAtomMemberServiceImpl
 import com.tencent.devops.store.atom.service.impl.SampleAtomNotifyServiceImpl
-import com.tencent.devops.store.atom.service.impl.SampleAtomReleaseServiceImpl
-import com.tencent.devops.store.atom.service.impl.SampleAtomServiceImpl
-import com.tencent.devops.store.atom.service.impl.SampleMarketAtomServiceImpl
 import com.tencent.devops.store.common.service.StoreNotifyService
 import com.tencent.devops.store.common.service.StoreUserService
+import com.tencent.devops.store.common.service.impl.ContainerServiceImpl
+import com.tencent.devops.store.common.service.impl.SampleContainerServiceImpl
 import com.tencent.devops.store.common.service.impl.SampleStoreCommonServiceImpl
 import com.tencent.devops.store.common.service.impl.SampleStoreLogoServiceImpl
 import com.tencent.devops.store.common.service.impl.SampleStoreNotifyServiceImpl
 import com.tencent.devops.store.common.service.impl.SampleStoreUserServiceImpl
 import com.tencent.devops.store.common.service.impl.StoreCommonServiceImpl
 import com.tencent.devops.store.common.service.impl.StoreLogoServiceImpl
-import com.tencent.devops.store.common.service.impl.ContainerServiceImpl
-import com.tencent.devops.store.common.service.impl.SampleContainerServiceImpl
 import com.tencent.devops.store.template.service.TemplateNotifyService
 import com.tencent.devops.store.template.service.impl.MarketTemplateServiceImpl
 import com.tencent.devops.store.template.service.impl.SampleMarketTemplateServiceImpl
@@ -76,20 +70,8 @@ class SampleStoreServiceConfig {
     fun storeNotifyService() = SampleStoreNotifyServiceImpl()
 
     @Bean
-    @ConditionalOnMissingBean(AtomServiceImpl::class)
-    fun atomService() = SampleAtomServiceImpl()
-
-    @Bean
-    @ConditionalOnMissingBean(MarketAtomServiceImpl::class)
-    fun marketAtomService() = SampleMarketAtomServiceImpl()
-
-    @Bean
     @ConditionalOnMissingBean(AtomMemberServiceImpl::class)
     fun atomMemberService() = SampleAtomMemberServiceImpl()
-
-    @Bean
-    @ConditionalOnMissingBean(AtomReleaseServiceImpl::class)
-    fun atomReleaseService() = SampleAtomReleaseServiceImpl()
 
     @Bean
     @ConditionalOnMissingBean(AtomNotifyService::class)
