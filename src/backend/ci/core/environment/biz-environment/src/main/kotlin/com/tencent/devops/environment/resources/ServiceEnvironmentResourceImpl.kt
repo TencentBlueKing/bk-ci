@@ -31,6 +31,7 @@ import com.tencent.bk.audit.annotations.AuditEntry
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.OS
+import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.auth.api.ActionId
 import com.tencent.devops.common.service.prometheus.BkTimed
@@ -132,12 +133,14 @@ class ServiceEnvironmentResourceImpl @Autowired constructor(
     override fun listNodesByEnvIds(
         userId: String,
         projectId: String,
+        page: Int?,
+        pageSize: Int?,
         envHashIds: List<String>
-    ): Result<List<NodeBaseInfo>> {
+    ): Result<Page<NodeBaseInfo>> {
         if (envHashIds.isEmpty()) {
             throw ErrorCodeException(errorCode = CommonMessageCode.ERROR_NEED_PARAM_, params = arrayOf("envHashIds"))
         }
-        return Result(envService.listAllEnvNodes(userId, projectId, envHashIds))
+        return Result(envService.listAllEnvNodes(userId, projectId, page, pageSize, envHashIds))
     }
 
     @BkTimed(extraTags = ["operate", "getEnv"])

@@ -40,6 +40,7 @@ import com.tencent.devops.common.api.exception.PermissionForbiddenException
 import com.tencent.devops.common.api.pojo.OS
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.util.HashUtil
+import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.api.util.timestamp
 import com.tencent.devops.common.audit.ActionAuditContent
 import com.tencent.devops.common.auth.api.ActionId
@@ -86,6 +87,7 @@ import com.tencent.devops.environment.service.node.EnvCreatorFactory
 import com.tencent.devops.environment.service.slave.SlaveGatewayService
 import com.tencent.devops.environment.utils.AgentStatusUtils.getAgentStatus
 import com.tencent.devops.environment.utils.NodeStringIdUtils
+import com.tencent.devops.environment.utils.NodeUtils
 import com.tencent.devops.model.environment.tables.records.TEnvRecord
 import com.tencent.devops.project.api.service.ServiceProjectResource
 import org.jooq.DSLContext
@@ -601,7 +603,13 @@ class EnvService @Autowired constructor(
         return nodeService.formatNodeWithPermissions(userId, projectId, nodes)
     }
 
-    override fun listAllEnvNodes(userId: String, projectId: String, envHashIds: List<String>): List<NodeBaseInfo> {
+    override fun listAllEnvNodes(
+        userId: String,
+        projectId: String,
+        page: Int?,
+        pageSize: Int?,
+        envHashIds: List<String>
+    ): Page<NodeBaseInfo> {
         val envIds = envHashIds.map { HashUtil.decodeIdToLong(it) }
         val canViewEnvIdList = environmentPermissionService.listEnvByViewPermission(userId, projectId)
         val invalidEnvIds = envIds.filterNot { canViewEnvIdList.contains(it) }
@@ -614,11 +622,16 @@ class EnvService @Autowired constructor(
 
         val envNodeRecordList = envNodeDao.list(dslContext, projectId, envIds)
         val nodeIds = envNodeRecordList.map { it.nodeId }.toSet()
-        val nodeList = nodeDao.listByIds(dslContext, projectId, nodeIds)
+        val nodeList = if (-1 != pageSize) {
+            val sqlLimit = PageUtil.convertPageSizeToSQLLimit(page ?: 1, pageSize ?: 20)
+            nodeDao.listNodesByIdListWithPageLimit(dslContext, projectId, sqlLimit.limit, sqlLimit.offset, nodeIds)
+        } else {
+            nodeDao.listByIds(dslContext, projectId, nodeIds)
+        }
 
         val thirdPartyAgentMap =
             thirdPartyAgentDao.getAgentsByNodeIds(dslContext, nodeIds, projectId).associateBy { it.nodeId }
-        return nodeList.map {
+        val nodeRecList = nodeList.map {
             val thirdPartyAgent = thirdPartyAgentMap[it.nodeId]
             val gatewayShowName = if (thirdPartyAgent != null) {
                 slaveGatewayService.getShowName(thirdPartyAgent.gateway)
@@ -644,6 +657,13 @@ class EnvService @Autowired constructor(
                 displayName = NodeStringIdUtils.getRefineDisplayName(nodeStringId, it.displayName)
             )
         }
+        val count = nodeDao.countByNodeIdList(dslContext, projectId, nodeIds).toLong()
+        return Page(
+            page = page ?: 1,
+            pageSize = pageSize ?: 20,
+            count = count,
+            records = nodeRecList
+        )
     }
 
     @ActionAuditRecord(

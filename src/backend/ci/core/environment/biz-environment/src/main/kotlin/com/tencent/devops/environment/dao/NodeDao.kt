@@ -632,6 +632,23 @@ class NodeDao {
         }
     }
 
+    fun listNodesByIdListWithPageLimit(
+        dslContext: DSLContext,
+        projectId: String,
+        limit: Int,
+        offset: Int,
+        nodeIds: Collection<Long>
+    ): List<TNodeRecord> {
+        with(TNode.T_NODE) {
+            return dslContext.selectFrom(this)
+                .where(PROJECT_ID.eq(projectId))
+                .and(NODE_ID.`in`(nodeIds))
+                .orderBy(NODE_ID.desc())
+                .limit(limit).offset(offset)
+                .fetch()
+        }
+    }
+
     fun countImportNode(dslContext: DSLContext, projectId: String): Int {
         with(TNode.T_NODE) {
             return dslContext.selectCount()
@@ -1000,6 +1017,15 @@ class NodeDao {
                     .where(PROJECT_ID.eq(project))
                     .fetchOne(0, Int::class.java)!!
             }
+        }
+    }
+
+    fun countByNodeIdList(dslContext: DSLContext, projectId: String, nodeIds: Collection<Long>): Int {
+        with(TNode.T_NODE) {
+            return dslContext.selectFrom(this)
+                .where(PROJECT_ID.eq(projectId))
+                .and(NODE_ID.`in`(nodeIds))
+                .fetchOne(0, Int::class.java)!!
         }
     }
 
