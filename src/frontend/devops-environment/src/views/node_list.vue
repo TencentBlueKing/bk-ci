@@ -1306,6 +1306,7 @@
             },
             
             handlePageLimitChange (limit) {
+                this.pagination.current = 1
                 this.pagination.limit = limit
                 this.requestList(this.requestParams)
             },
