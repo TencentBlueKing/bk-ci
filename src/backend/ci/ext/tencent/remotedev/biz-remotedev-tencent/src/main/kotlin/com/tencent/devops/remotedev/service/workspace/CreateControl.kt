@@ -88,6 +88,7 @@ import com.tencent.devops.remotedev.service.redis.RedisKeys
 import com.tencent.devops.remotedev.service.redis.RedisKeys.REDIS_OFFICIAL_DEVFILE_KEY
 import com.tencent.devops.remotedev.service.tcloud.TCloudCfsService
 import com.tencent.devops.remotedev.service.transfer.RemoteDevGitTransfer
+import com.tencent.devops.remotedev.utils.CommonUtil
 import com.tencent.devops.remotedev.utils.DevfileUtil
 import com.tencent.devops.scm.utils.code.git.GitUtils
 import org.jooq.DSLContext
@@ -326,7 +327,11 @@ class CreateControl @Autowired constructor(
                 hostName = "",
                 workspaceMountType = mountType,
                 workspaceSystemType = systemType,
-                ownerType = WorkspaceOwnerType.PROJECT,
+                ownerType = if (CommonUtil.ifProjectPersonal(projectId)) {
+                    WorkspaceOwnerType.PERSONAL
+                } else {
+                    WorkspaceOwnerType.PROJECT
+                },
                 gpu = windowsConfig.gpu,
                 cpu = windowsConfig.cpu,
                 memory = windowsConfig.memory,
