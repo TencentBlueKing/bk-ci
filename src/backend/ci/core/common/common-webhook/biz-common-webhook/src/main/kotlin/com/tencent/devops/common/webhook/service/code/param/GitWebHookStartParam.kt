@@ -84,7 +84,6 @@ class GitWebHookStartParam @Autowired constructor(
         startParams[BK_REPO_GIT_WEBHOOK_FINAL_INCLUDE_PATH] = matchResult.extra[MATCH_PATHS] ?: ""
         startParams[BK_REPO_GIT_MANUAL_UNLOCK] = matcher.getEnv()[BK_REPO_GIT_MANUAL_UNLOCK] ?: false
         startParams[BK_REPO_GIT_WEBHOOK_ENABLE_CHECK] = element.enableCheck ?: true
-        startParams[PIPELINE_GIT_REPO_ID] = element.repositoryName ?: ""
         startParams[BK_REPO_WEBHOOK_REPO_AUTH_USER] =
             if (repo is CodeGitRepository && repo.authType == RepoAuthType.OAUTH) {
                 repo.userName

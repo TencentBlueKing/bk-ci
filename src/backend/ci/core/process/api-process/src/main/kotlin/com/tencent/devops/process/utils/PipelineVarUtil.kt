@@ -63,6 +63,8 @@ import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_TAG_FROM
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_TAG_MESSAGE
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_UPDATE_USER
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_YAML_PATH
+import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GITHUB_WEBHOOK_CREATE_REF_NAME
+import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GITHUB_WEBHOOK_CREATE_REF_TYPE
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_BRANCH
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_ISSUE_DESCRIPTION
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_ISSUE_ID
@@ -280,7 +282,9 @@ object PipelineVarUtil {
         "ci.project_name" to PROJECT_NAME_CHINESE,
         "ci.build_start_type" to PIPELINE_START_TYPE,
         "ci.repo_type" to BK_REPO_WEBHOOK_REPO_TYPE,
-        "ci.branch" to BK_REPO_GIT_WEBHOOK_BRANCH
+        "ci.branch" to BK_REPO_GIT_WEBHOOK_BRANCH,
+        "ci.create_ref" to BK_REPO_GITHUB_WEBHOOK_CREATE_REF_NAME,
+        "ci.create_type" to BK_REPO_GITHUB_WEBHOOK_CREATE_REF_TYPE,
     )
 
     /**
