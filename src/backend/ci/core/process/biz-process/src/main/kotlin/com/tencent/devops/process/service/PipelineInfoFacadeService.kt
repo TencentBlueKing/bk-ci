@@ -1056,7 +1056,7 @@ class PipelineInfoFacadeService @Autowired constructor(
                 statusCode = Response.Status.NOT_FOUND.statusCode,
                 errorCode = ProcessMessageCode.ERROR_PIPELINE_MODEL_NOT_EXISTS
             )
-            if (versionStatus == VersionStatus.RELEASED) {
+            if (versionStatus?.isReleasing() == true) {
                 // 对已经存在的模型做处理
                 val param = BeforeDeleteParam(
                     userId = userId,

@@ -440,7 +440,7 @@ class PipelineRepositoryService constructor(
                 e.id = modelTaskIdGenerator.getNextId()
             }
             distIds.add(e.id!!)
-            if (versionStatus == VersionStatus.RELEASED) {
+            if (versionStatus?.isReleasing() == true) {
                 ElementBizRegistrar.getPlugin(e)?.afterCreate(
                     element = e,
                     projectId = projectId,
@@ -560,7 +560,7 @@ class PipelineRepositoryService constructor(
                 }
 
                 // 补偿动作--未来拆分出来，针对复杂的东西异步处理
-                if (versionStatus == VersionStatus.RELEASED) {
+                if (versionStatus?.isReleasing() == true) {
                     ElementBizRegistrar.getPlugin(e)?.afterCreate(
                         element = e,
                         projectId = projectId,
@@ -1058,17 +1058,17 @@ class PipelineRepositoryService constructor(
                             versionName = newVersionName
                             operationLogParams = newVersionName
                         }
-                        version = if (draftVersion == null) {
-                            // 兼容逻辑：没有已有草稿保存正式版本时，直接增加正式版本，基准为上一个发布版本
-                            // 创建新版本记录
-                            realBaseVersion = realBaseVersion ?: releaseResource.version
-                            latestVersion.version + 1
-                        } else {
+                        version = if (versionStatus == VersionStatus.DRAFT_RELEASE && draftVersion != null) {
                             // 更新草稿版本为正式版本
                             if (draftVersion.baseVersion != baseVersion) throw ErrorCodeException(
                                 errorCode = ProcessMessageCode.ERROR_PIPELINE_IS_NOT_THE_LATEST
                             )
                             draftVersion.version
+                        } else {
+                            // 兼容逻辑：没有已有草稿保存正式版本时，直接增加正式版本，基准为上一个发布版本
+                            // 创建新版本记录
+                            realBaseVersion = realBaseVersion ?: releaseResource.version
+                            latestVersion.version + 1
                         }
                         logger.info("PROCESS|releasePipeline|version=$version|versionName=$versionName")
                         watcher.start("updatePipelineResource")
@@ -1659,7 +1659,7 @@ class PipelineRepositoryService constructor(
             if (old?.pipelineName != null) {
                 oldName = old.pipelineName
             }
-            if (versionStatus == VersionStatus.RELEASED) pipelineInfoDao.update(
+            if (versionStatus.isReleasing()) pipelineInfoDao.update(
                 dslContext = context,
                 projectId = setting.projectId,
                 pipelineId = setting.pipelineId,
@@ -1689,7 +1689,7 @@ class PipelineRepositoryService constructor(
                     ).data
                 )
             }
-            if (versionStatus == VersionStatus.RELEASED) pipelineSettingDao.saveSetting(context, setting).toString()
+            if (versionStatus.isReleasing()) pipelineSettingDao.saveSetting(context, setting).toString()
         }
 
         return PipelineName(name = setting.pipelineName, oldName = oldName)
