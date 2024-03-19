@@ -13,10 +13,16 @@ import com.tencent.devops.remotedev.pojo.project.RemotedevProject
 import com.tencent.devops.remotedev.pojo.project.WeSecProjectWorkspace
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Value
 
 @RestResource
 class ApigwRemoteDevResourceImpl @Autowired constructor(private val client: Client) :
     ApigwRemoteDevResource {
+
+    @Value("\${devx.gwToken:}")
+    val devxGwToken = ""
+    @Value("\${devx.originalHost:}")
+    val devxOriginalHost = ""
 
     companion object {
         private val logger = LoggerFactory.getLogger(ApigwProjectResourceImpl::class.java)
@@ -53,10 +59,27 @@ class ApigwRemoteDevResourceImpl @Autowired constructor(private val client: Clie
     override fun getProjectWorkspace(
         appCode: String?,
         apigwType: String?,
-        ip: String?
+        ip: String?,
+        originalHost: String?,
+        devxToken: String?
     ): Result<WeSecProjectWorkspace?> {
         if (ip.isNullOrBlank()) {
-            return Result(null)
+            return Result(
+                message = "获取到的云桌面IP为空",
+                data = null
+            )
+        }
+        if (!originalHost.isNullOrBlank() && originalHost != devxOriginalHost) {
+            return Result(
+                message = "来源请求域名不符",
+                data = null
+            )
+        }
+        if (!devxToken.isNullOrBlank() && devxToken != devxGwToken) {
+            return Result(
+                message = "来源请求token不符",
+                data = null
+            )
         }
         logger.info("Get projects workspace ip $ip")
         return client.get(ServiceRemoteDevResource::class).getProjectWorkspaceIp(ip = ip)

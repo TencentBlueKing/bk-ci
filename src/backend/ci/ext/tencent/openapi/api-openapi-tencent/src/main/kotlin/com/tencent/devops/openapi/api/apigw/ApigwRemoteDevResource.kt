@@ -2,6 +2,7 @@ package com.tencent.devops.openapi.api.apigw
 
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_APP_CODE
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE
+import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_ORIGINAL_HOST
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Result
@@ -14,6 +15,7 @@ import com.tencent.devops.remotedev.pojo.project.WeSecProjectWorkspace
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.tags.Tag
+import org.springframework.beans.factory.annotation.Value
 import javax.ws.rs.Consumes
 import javax.ws.rs.GET
 import javax.ws.rs.HeaderParam
@@ -29,6 +31,7 @@ import javax.ws.rs.core.MediaType
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface ApigwRemoteDevResource {
+
     @Operation(summary = "提供给START云桌面校验用户登录是否有效", tags = ["v4_app_ticket_validate"])
     @GET
     @Path("/ticket/validate")
@@ -80,7 +83,13 @@ interface ApigwRemoteDevResource {
         apigwType: String?,
         @Parameter(description = "IP", required = false)
         @HeaderParam("X-BK-NGGW-CLIENT-ADDRESS")
-        ip: String?
+        ip: String?,
+        @Parameter(description = "original host", required = false)
+        @HeaderParam(AUTH_HEADER_DEVOPS_ORIGINAL_HOST)
+        originalHost: String?,
+        @Parameter(description = "devx token", required = false)
+        @HeaderParam("X-DEVOPS-DEVX-GW-TOKEN")
+        devxToken: String?
     ): Result<WeSecProjectWorkspace?>
 
     @Operation(summary = "提供给wesec获取云桌面信息", tags = ["v4_app_remotedev_project_list"])
