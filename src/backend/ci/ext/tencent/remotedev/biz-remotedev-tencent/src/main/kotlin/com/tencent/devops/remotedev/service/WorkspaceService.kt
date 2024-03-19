@@ -818,7 +818,7 @@ class WorkspaceService @Autowired constructor(
             sleepingCount = status.count { it.checkSleeping() },
             deleteCount = status.count { it.checkDeleted() },
             chargeableTime = endBilling.second +
-                    (notEndBillingTime + endBilling.first - discountTime * 60).coerceAtLeast(0),
+                (notEndBillingTime + endBilling.first - discountTime * 60).coerceAtLeast(0),
             usageTime = usageTime,
             sleepingTime = sleepingTime,
             discountTime = discountTime,
@@ -901,7 +901,7 @@ class WorkspaceService @Autowired constructor(
                 status = workspace.status,
                 lastUpdateTime = updateTime.timestamp(),
                 chargeableTime = endBilling.second +
-                        (notEndBillingTime + endBilling.first - discountTime * 60).coerceAtLeast(0),
+                    (notEndBillingTime + endBilling.first - discountTime * 60).coerceAtLeast(0),
                 usageTime = usageTime,
                 sleepingTime = sleepingTime,
                 cpu = cpu,
@@ -1253,7 +1253,7 @@ class WorkspaceService @Autowired constructor(
             if ((workspace.lastStatusUpdateTime ?: LocalDateTime.now()) < limitDay) {
                 logger.info(
                     "ready to notify when sleep in 3 day " +
-                            "|${workspace.workspaceName}|${workspace.lastStatusUpdateTime}|${workspace.hostName}"
+                        "|${workspace.workspaceName}|${workspace.lastStatusUpdateTime}|${workspace.hostName}"
                 )
                 workspaceOpHistoryDao.createWorkspaceHistory(
                     dslContext = dslContext,
@@ -1295,7 +1295,7 @@ class WorkspaceService @Autowired constructor(
             ) {
                 logger.info(
                     "ready to notify when not login in 3 day " +
-                            "|${workspace.workspaceName}|${workspace.lastStatusUpdateTime}|${workspace.hostName}"
+                        "|${workspace.workspaceName}|${workspace.lastStatusUpdateTime}|${workspace.hostName}"
                 )
                 workspaceOpHistoryDao.createWorkspaceHistory(
                     dslContext = dslContext,
@@ -1351,27 +1351,27 @@ class WorkspaceService @Autowired constructor(
                 return@forEach
             }
             if (actives[workspace.hostName] == null || actives[workspace.hostName]!! < 5) {
-                    workspaceOpHistoryDao.createWorkspaceHistory(
-                        dslContext = dslContext,
-                        workspaceName = workspace.workspaceName,
-                        operator = ADMIN_NAME,
-                        action = WorkspaceAction.NOTIFY,
-                        actionMessage = workspaceCommon.getOpHistory(OpHistoryCopyWriting.TIMEOUT_STOP)
+                workspaceOpHistoryDao.createWorkspaceHistory(
+                    dslContext = dslContext,
+                    workspaceName = workspace.workspaceName,
+                    operator = ADMIN_NAME,
+                    action = WorkspaceAction.NOTIFY,
+                    actionMessage = workspaceCommon.getOpHistory(OpHistoryCopyWriting.TIMEOUT_STOP)
+                )
+                val userIds = permissionService.getWorkspaceOwner(workspace.workspaceName)
+                notifyControl.notify4UserAndCCRemoteDevManagerAndCCOwnerShareUser(
+                    userIds = userIds.toMutableSet(),
+                    workspaceName = workspace.workspaceName,
+                    cc = mutableSetOf(workspace.createUserId),
+                    projectId = workspace.projectId,
+                    notifyTemplateCode = NotifyControl.NOT_4_STAR_ACTIVE_AUTO_DELETE_NOTIFY,
+                    notifyType = mutableSetOf(RemoteDevNotifyType.EMAIL, RemoteDevNotifyType.RTX),
+                    bodyParams = mutableMapOf(
+                        "cgsIp" to (workspace.hostName ?: ""),
+                        "projectId" to (workspace.projectId),
+                        "userId" to userIds.joinToString()
                     )
-                                val userIds = permissionService.getWorkspaceOwner(workspace.workspaceName)
-                                notifyControl.notify4UserAndCCRemoteDevManagerAndCCOwnerShareUser(
-                                    userIds = userIds.toMutableSet(),
-                                    workspaceName = workspace.workspaceName,
-                                    cc = mutableSetOf(workspace.createUserId),
-                                    projectId = workspace.projectId,
-                                    notifyTemplateCode = NotifyControl.NOT_4_STAR_ACTIVE_AUTO_DELETE_NOTIFY,
-                                    notifyType = mutableSetOf(RemoteDevNotifyType.EMAIL, RemoteDevNotifyType.RTX),
-                                    bodyParams = mutableMapOf(
-                                        "cgsIp" to (workspace.hostName ?: ""),
-                                        "projectId" to (workspace.projectId),
-                                        "userId" to userIds.joinToString()
-                                    )
-                                )
+                )
             }
         }
     }
