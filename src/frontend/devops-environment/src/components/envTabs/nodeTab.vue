@@ -20,46 +20,47 @@
 
         <div class="node-table" v-if="showContent && nodeList.length">
             <bk-table
+                v-bkloading="{ isLoading: tableLoading }"
                 ref="shareDiaglogTable"
                 :data="nodeList"
+                :pagination="pagination"
+                @page-change="handlePageChange"
+                @page-limit-change="handlePageLimitChange"
             >
-                <bk-table-column :label="$t('environment.envInfo.name')" prop="displayName"></bk-table-column>
-                <bk-table-column :width="150" label="IP" prop="ip"></bk-table-column>
-                <bk-table-column :label="`${$t('environment.nodeInfo.source')}/${$t('environment.nodeInfo.importer')}`">
+                <bk-table-column :label="$t('environment.envInfo.name')" width="150" prop="displayName" show-overflow-tooltip></bk-table-column>
+                <bk-table-column :width="150" label="IP" prop="ip" show-overflow-tooltip></bk-table-column>
+                <bk-table-column :label="`${$t('environment.nodeInfo.source')}/${$t('environment.nodeInfo.importer')}`" show-overflow-tooltip>
                     <template slot-scope="props">
                         <span class="node-name">{{ props.row.nodeType }}</span>
                         <span>({{ props.row.createdUser }})</span>
                     </template>
                 </bk-table-column>
-                <bk-table-column :width="80" :label="$t('environment.nodeInfo.os')" prop="osName"></bk-table-column>
-                <bk-table-column :width="80" :label="$t('environment.nodeInfo.gateway')" prop="gateway"></bk-table-column>
+                <bk-table-column :width="150" :label="$t('environment.nodeInfo.os')" prop="osName"></bk-table-column>
+                <bk-table-column :width="150" :label="$t('environment.nodeInfo.gateway')" prop="gateway" show-overflow-tooltip></bk-table-column>
                 <bk-table-column :label="$t('environment.nodeInfo.cpuStatus')">
                     <template slot-scope="props">
-                        <div
-                            v-if="props.row.nodeStatusIcon === 'creating'"
-                            class="bk-spin-loading bk-spin-loading-mini bk-spin-loading-primary"
-                        >
-                            <div
-                                v-for="i in [1,2,3,4,5,6,7,8]"
-                                :key="i"
-                                :class="`rotate rotate${i}`"
-                            ></div>
+                        <div class="status-cell">
+                            <StatusIcon v-if="successStatus.includes(props.row.nodeStatus)" status="success" />
+                            <StatusIcon v-else-if="failStatus.includes(props.row.nodeStatus)" status="error" />
+                            <StatusIcon v-else-if="['NOT_INSTALLED'].includes(props.row.nodeStatus)" status="normal" />
+                                
+                            <div v-else-if="runningStatus.includes(props.row.nodeStatus)"
+                                class="bk-spin-loading bk-spin-loading-mini bk-spin-loading-primary loading-icon"
+                            >
+                                <div class="rotate rotate1"></div>
+                                <div class="rotate rotate2"></div>
+                                <div class="rotate rotate3"></div>
+                                <div class="rotate rotate4"></div>
+                                <div class="rotate rotate5"></div>
+                                <div class="rotate rotate6"></div>
+                                <div class="rotate rotate7"></div>
+                                <div class="rotate rotate8"></div>
+                            </div>
+                            <span class="node-status">{{ $t('environment.nodeStatusMap')[props.row.nodeStatus] }}</span>
                         </div>
-                        <span
-                            v-if="props.row.nodeStatusIcon === 'normal'"
-                            class="node-status-icon normal-stutus-icon"
-                        >
-                        </span>
-                        <span
-                            v-if="props.row.nodeStatusIcon === 'unnormal'"
-                            class="node-status-icon abnormal-stutus-icon"
-                        >
-                        </span>
-
-                        <span class="node-status">{{ props.row.nodeStatus }}</span>
                     </template>
                 </bk-table-column>
-                <bk-table-column :width="80" :label="$t('environment.operation')">
+                <bk-table-column :width="180" :label="$t('environment.operation')">
                     <template slot-scope="props">
                         <span
                             v-perm="{
@@ -101,11 +102,13 @@
 
 <script>
     import nodeSelect from '@/components/devops/environment/node-select-dialog'
+    import StatusIcon from '@/components/status-icon.vue'
     import { ENV_RESOURCE_ACTION, ENV_RESOURCE_TYPE } from '@/utils/permission'
     export default {
         name: 'node-tab',
         components: {
-            nodeSelect
+            nodeSelect,
+            StatusIcon
         },
         props: {
             projectId: {
@@ -160,7 +163,16 @@
                     unselected: true,
                     importText: this.$t('environment.import')
                 },
-                showContent: false
+                showContent: false,
+                pagination: {
+                    current: 1,
+                    count: 0,
+                    limit: 10
+                },
+                tableLoading: false,
+                runningStatus: ['CREATING', 'RUNNING', 'STARTING', 'STOPPING', 'RESTARTING', 'DELETING', 'BUILDING_IMAGE'],
+                successStatus: ['NORMAL', 'BUILD_IMAGE_SUCCESS'],
+                failStatus: ['ABNORMAL', 'DELETED', 'LOST', 'BUILD_IMAGE_FAILED', 'UNKNOWN']
             }
         },
         computed: {
@@ -252,44 +264,22 @@
                 this.nodeSelectConf.isShow = true
                 this.requestNodeList()
             },
-
-            getNodeStatusIcon (nodeStatus) {
-                console.log(nodeStatus)
-                const i18nPrefix = 'environment.nodeInfo'
-                const statusArray = [
-                    'abnormal',
-                    'unknown',
-                    'deleted',
-                    'loss'
-                ]
-            
-                switch (true) {
-                    case nodeStatus === this.$t(`${i18nPrefix}.creating`):
-                        return 'ceating'
-                    case nodeStatus === this.$t(`${i18nPrefix}.normal`):
-                        return 'normal'
-                    case statusArray.some(status => nodeStatus === this.$t(`${i18nPrefix}.${status}`)):
-                    default:
-                        return 'unnormal'
-                }
-            },
             /**
              * 获取环境节点列表
              */
             async requestList () {
                 try {
+                    this.tableLoading = true
                     const res = await this.$store.dispatch('environment/requestEnvNodeList', {
                         projectId: this.projectId,
-                        envHashId: this.envHashId
+                        envHashId: this.envHashId,
+                        page: this.pagination.current,
+                        pageSize: this.pagination.limit
                     })
 
-                    this.nodeList.splice(0, this.nodeList.length)
-                    res.forEach(item => {
-                        this.nodeList.push({
-                            ...item,
-                            nodeStatusIcon: this.getNodeStatusIcon(item.nodeStatus)
-                        })
-                    })
+                    this.tableLoading = false
+                    this.nodeList = res.records
+                    this.pagination.count = res.count
 
                     if (this.importNodeList.length) {
                         this.nodeList.forEach(vv => {
@@ -344,9 +334,9 @@
 
                 for (let i = 0; i < this.nodeList.length; i++) {
                     const target = this.nodeList[i]
-                    if (target.nodeType === this.$t('environment.BCSVirtualMachine') && (target.nodeStatus === this.$t('environment.nodeInfo.abnormal')
-                        || target.nodeStatus === this.$t('environment.nodeInfo.creating')
-                        || target.nodeStatus === this.$t('environment.nodeInfo.unknown')
+                    if (target.nodeType === this.$t('environment.BCSVirtualMachine') && (target.nodeStatus === 'ABNORMAL'
+                        || this.runningStatus.includes(target.nodeStatus)
+                        || target.nodeStatus === 'UNKNOWN'
                         || !target.agentStatus)) {
                         res = true
                         break
@@ -628,6 +618,15 @@
                         }
                     }
                 })
+            },
+            handlePageChange (page) {
+                this.pagination.current = page
+                this.requestList()
+            },
+            handlePageLimitChange (limit) {
+                this.pagination.current = 1
+                this.pagination.limit = limit
+                this.requestList()
             }
         }
     }
@@ -638,5 +637,9 @@
         margin-top: 24px;
         height: calc(95% - 32px);
         overflow: auto;
+    }
+    .loading-icon {
+        display: inline-flex;
+        margin-right: 5px;
     }
 </style>

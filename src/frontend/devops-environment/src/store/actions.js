@@ -102,8 +102,11 @@ const actions = {
     /**
      * 环境的节点列表
      */
-    requestEnvNodeList ({ commit }, { projectId, envHashId }) {
-        return vue.$ajax.post(`${prefix}/user/environment/${projectId}/${envHashId}/listNodes`, { }).then(response => {
+    requestEnvNodeList ({ commit }, { projectId, envHashId, page, pageSize }) {
+        return vue.$ajax.post(`${prefix}/user/environment/${projectId}/${envHashId}/listNodes`, {
+            page,
+            pageSize
+        }).then(response => {
             return response
         })
     },
