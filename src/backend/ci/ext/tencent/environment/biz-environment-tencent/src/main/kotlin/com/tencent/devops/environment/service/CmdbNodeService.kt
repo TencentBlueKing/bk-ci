@@ -69,7 +69,6 @@ import com.tencent.devops.environment.pojo.job.ccres.CCResp
 import com.tencent.devops.environment.pojo.job.ccres.QueryCCListHostWithoutBizData
 import com.tencent.devops.environment.pojo.job.jobreq.Host
 import com.tencent.devops.environment.pojo.job.jobreq.OpOperateReq
-import com.tencent.devops.environment.service.NodeService.Companion.BIZ_SIZE
 import com.tencent.devops.environment.service.job.AgentService
 import com.tencent.devops.environment.service.job.OpService
 import com.tencent.devops.environment.service.job.QueryAgentStatusService
@@ -128,6 +127,7 @@ class CmdbNodeService @Autowired constructor(
         const val OS_TYPE_CC_CODE_FREEBSD = "7"
 
         const val NS_TO_S = 1000000000
+        const val BIZ_SIZE = 1
     }
 
     fun getUserCmdbNodesNew(
@@ -463,7 +463,9 @@ class CmdbNodeService @Autowired constructor(
             } // 只有一个项目
 
             // 满足以上2个条件，将其从CC蓝盾业务下移出：调用cc的delete接口，将机器从CC中移除。
-            queryFromCCService.deleteHostFromCiBiz(deleteHostIdMap.keys.filterNotNull().toSet())
+            if (deleteHostIdMap.isNotEmpty()){
+                queryFromCCService.deleteHostFromCiBiz(deleteHostIdMap.keys.filterNotNull().toSet())
+            }
         }
 
         NodeActionFactory.load(NodeActionFactory.Action.DELETE)?.action(existNodeList)

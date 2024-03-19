@@ -67,7 +67,7 @@ BEGIN
         UPDATE T_NODE
             JOIN T_ENVIRONMENT_THIRDPARTY_AGENT ON T_NODE.NODE_ID = T_ENVIRONMENT_THIRDPARTY_AGENT.NODE_ID
         SET T_NODE.AGENT_VERSION = T_ENVIRONMENT_THIRDPARTY_AGENT.MASTER_VERSION
-        WHERE T_NODE.NODE_TYPE IN ('DEVCLOUD', 'THIRDPARTY');
+        WHERE T_NODE.NODE_TYPE  = 'THIRDPARTY';
     END IF;
 
     IF NOT EXISTS(SELECT 1
@@ -77,15 +77,6 @@ BEGIN
                     AND COLUMN_NAME = 'OS_TYPE') THEN
         ALTER TABLE `T_NODE`
             ADD COLUMN `OS_TYPE` varchar(64) default null comment '从CC中查到的os类型';
-    END IF;
-
-    IF NOT EXISTS(SELECT 1
-                  FROM information_schema.statistics
-                  WHERE TABLE_SCHEMA = db
-                    AND TABLE_NAME = 'T_NODE'
-                    AND INDEX_NAME = 'IDX_HOST') THEN
-        ALTER TABLE `T_ENV_NODE`
-            ADD INDEX `NODE_ID` (`NODE_ID`);
     END IF;
 
     IF NOT EXISTS(SELECT 1
@@ -110,63 +101,9 @@ BEGIN
                   FROM information_schema.statistics
                   WHERE TABLE_SCHEMA = db
                     AND TABLE_NAME = 'T_NODE'
-                    AND INDEX_NAME = 'NODE_TYPE') THEN
-        ALTER TABLE `T_NODE`
-            ADD INDEX `NODE_TYPE` (`NODE_TYPE`);
-    END IF;
-
-    IF NOT EXISTS(SELECT 1
-                  FROM information_schema.statistics
-                  WHERE TABLE_SCHEMA = db
-                    AND TABLE_NAME = 'T_NODE'
                     AND INDEX_NAME = 'NODE_IP') THEN
         ALTER TABLE `T_NODE`
             ADD INDEX `NODE_IP` (`NODE_IP`);
-    END IF;
-
-    IF NOT EXISTS(SELECT 1
-                  FROM information_schema.statistics
-                  WHERE TABLE_SCHEMA = db
-                    AND TABLE_NAME = 'T_NODE'
-                    AND INDEX_NAME = 'DISPLAY_NAME') THEN
-        ALTER TABLE `T_NODE`
-            ADD INDEX `DISPLAY_NAME` (`DISPLAY_NAME`);
-    END IF;
-
-    IF NOT EXISTS(SELECT 1
-                  FROM information_schema.statistics
-                  WHERE TABLE_SCHEMA = db
-                    AND TABLE_NAME = 'T_NODE'
-                    AND INDEX_NAME = 'LAST_MODIFY_TIME') THEN
-        ALTER TABLE `T_NODE`
-            ADD INDEX `LAST_MODIFY_TIME` (`LAST_MODIFY_TIME`);
-    END IF;
-
-    IF NOT EXISTS(SELECT 1
-                  FROM information_schema.statistics
-                  WHERE TABLE_SCHEMA = db
-                    AND TABLE_NAME = 'T_NODE'
-                    AND INDEX_NAME = 'IDX_HOST_PROJ') THEN
-        ALTER TABLE `T_NODE`
-            ADD INDEX `IDX_HOST_PROJ` (`HOST_ID`, `PROJECT_ID`);
-    END IF;
-
-    IF NOT EXISTS(SELECT 1
-                  FROM information_schema.statistics
-                  WHERE TABLE_SCHEMA = db
-                    AND TABLE_NAME = 'T_NODE'
-                    AND INDEX_NAME = 'IDX_TYPE_HOST') THEN
-        ALTER TABLE `T_NODE`
-            ADD INDEX `IDX_TYPE_HOST` (`NODE_TYPE`, `HOST_ID`);
-    END IF;
-
-    IF NOT EXISTS(SELECT 1
-                  FROM information_schema.statistics
-                  WHERE TABLE_SCHEMA = db
-                    AND TABLE_NAME = 'T_NODE'
-                    AND INDEX_NAME = 'IDX_STAT_TYPE') THEN
-        ALTER TABLE `T_NODE`
-            ADD INDEX `IDX_STAT_TYPE` (`NODE_STATUS`, `NODE_TYPE`);
     END IF;
 
     COMMIT;

@@ -120,15 +120,6 @@ class NodeDao {
         }
     }
 
-    fun countBuildNodes(dslContext: DSLContext): Int {
-        with(TNode.T_NODE) {
-            return dslContext.selectCount()
-                .from(TNode.T_NODE)
-                .where(NODE_TYPE.`in`(NodeType.DEVCLOUD.name, NodeType.THIRDPARTY.name))
-                .fetchOne(0, Int::class.java)!!
-        }
-    }
-
     fun updateDevopsAgentVersionByNodeId(dslContext: DSLContext, nodeId: Long, agentVersion: String) {
         with(TNode.T_NODE) {
             dslContext.update(this)

@@ -92,7 +92,6 @@ class NodeService @Autowired constructor(
 ) : INodeService {
     companion object {
         private val logger = LoggerFactory.getLogger(NodeService::class.java)
-        const val BIZ_SIZE = 1
     }
 
     @ActionAuditRecord(
