@@ -18,7 +18,7 @@
             </bk-button>
         </div>
 
-        <div class="node-table" v-if="showContent && nodeList.length">
+        <div class="node-table">
             <bk-table
                 v-bkloading="{ isLoading: tableLoading }"
                 ref="shareDiaglogTable"
@@ -80,10 +80,6 @@
                 </bk-table-column>
             </bk-table>
         </div>
-        <bk-exception
-            v-if="showContent && !nodeList.length"
-            class="exception-wrap-item exception-part" type="empty" scene="part"
-        />
         <node-select :node-select-conf="nodeSelectConf"
             :search-info="searchInfo"
             :cur-user-info="curUserInfo"
@@ -163,7 +159,6 @@
                     unselected: true,
                     importText: this.$t('environment.import')
                 },
-                showContent: false,
                 pagination: {
                     current: 1,
                     count: 0,
@@ -304,7 +299,6 @@
                         theme
                     })
                 }
-                this.showContent = true
             },
             async init () {
                 try {
