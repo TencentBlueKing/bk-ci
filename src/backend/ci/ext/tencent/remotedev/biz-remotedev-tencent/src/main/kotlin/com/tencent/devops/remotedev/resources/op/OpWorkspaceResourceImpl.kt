@@ -107,7 +107,6 @@ class OpWorkspaceResourceImpl @Autowired constructor(
                 logger.info("read to delete not use workspace")
                 deleteControl.autoDeleteWhenNotAssign(true)
                 deleteControl.autoDeleteWhenSleep14Day(true)
-                deleteControl.autoDeleteWhenNot4StarActive(true)
             }
 
             "sleep" -> {
