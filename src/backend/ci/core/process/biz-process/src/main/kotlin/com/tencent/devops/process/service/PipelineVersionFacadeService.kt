@@ -298,7 +298,7 @@ class PipelineVersionFacadeService @Autowired constructor(
             )
             Pair(VersionStatus.BRANCH_RELEASE, baseVersion.versionName)
         } else {
-            Pair(VersionStatus.RELEASED, null)
+            Pair(VersionStatus.DRAFT_RELEASE, null)
         }
         if (enabled) {
             if (request.yamlInfo == null) throw ErrorCodeException(
@@ -344,7 +344,7 @@ class PipelineVersionFacadeService @Autowired constructor(
             versionStatus = versionStatus,
             setting = targetSettings
         )
-        if (versionStatus == VersionStatus.RELEASED) {
+        if (versionStatus.isReleasing()) {
             val existModel = pipelineRepositoryService.getPipelineResourceVersion(
                 projectId = projectId,
                 pipelineId = pipelineId,
@@ -696,7 +696,7 @@ class PipelineVersionFacadeService @Autowired constructor(
     fun getPipelineVersionInfo(
         projectId: String,
         pipelineId: String,
-        version: Int,
+        version: Int
     ): PipelineVersionWithInfo {
         val pipelineInfo = pipelineRepositoryService.getPipelineInfo(projectId, pipelineId)
         return repositoryVersionService.getPipelineVersionWithInfo(
