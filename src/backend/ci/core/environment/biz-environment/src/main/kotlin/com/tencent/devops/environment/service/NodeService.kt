@@ -133,7 +133,7 @@ class NodeService @Autowired constructor(
         dslContext.transaction { configuration ->
             val context = DSL.using(configuration)
             nodeDao.batchDeleteNode(context, projectId, existNodeIdList)
-            envNodeDao.deleteByNodeIds(context, existNodeIdList)
+            envNodeDao.deleteByNodeIds(context, projectId, existNodeIdList)
             existNodeIdList.forEach {
                 environmentPermissionService.deleteNode(projectId, it)
             }
