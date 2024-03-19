@@ -25,6 +25,7 @@ import com.tencent.devops.remotedev.resources.op.OpProjectWorkspaceResourceImpl
 import com.tencent.devops.remotedev.service.DesktopWorkspaceService
 import com.tencent.devops.remotedev.service.PermissionService
 import com.tencent.devops.remotedev.service.WindowsResourceConfigService
+import com.tencent.devops.remotedev.service.WorkspaceLoginService
 import com.tencent.devops.remotedev.service.WorkspaceService
 import com.tencent.devops.remotedev.service.workspace.CreateControl
 import com.tencent.devops.remotedev.service.workspace.NotifyControl
@@ -44,7 +45,8 @@ class ServiceRemoteDevResourceImpl(
     private val windowsResourceConfigService: WindowsResourceConfigService,
     private val notifyControl: NotifyControl,
     private val client: Client,
-    private val redisOperation: RedisOperation
+    private val redisOperation: RedisOperation,
+    private val workspaceLoginService: WorkspaceLoginService
 ) : ServiceRemoteDevResource {
     private val executor = Executors.newCachedThreadPool()
 
@@ -54,9 +56,17 @@ class ServiceRemoteDevResourceImpl(
     }
 
     override fun validateUserTicket(userId: String, isOffshore: Boolean, ticket: String): Result<Boolean> {
-        return Result(
-            permissionService.checkAndGetUser1Password(URLDecoder.decode(ticket, "UTF-8")).userId == userId
-        )
+        val data = permissionService.checkAndGetUser1Password(URLDecoder.decode(ticket, "UTF-8"))
+        val result = (data.userId == userId)
+        if (!result) {
+            return Result(false)
+        }
+        try {
+            workspaceLoginService.addUserLogin(data.userId, data.workspaceName)
+        } catch (e: Exception) {
+            logger.error("validateUserTicket error", e)
+        }
+        return Result(true)
     }
 
     override fun getProjectWorkspace(
