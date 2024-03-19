@@ -431,6 +431,8 @@
     import FilterBar from '@/components/BuildHistoryTable/FilterBar'
     import TableColumnSetting from '@/components/BuildHistoryTable/TableColumnSetting'
     import EmptyException from '@/components/common/exception'
+    import webSocketMessage from '@/utils/webSocketMessage'
+
     import {
         RESOURCE_ACTION
     } from '@/utils/permission'
@@ -659,6 +661,14 @@
                     }
                 })
             }
+        },
+
+        mounted () {
+            webSocketMessage.installWsMessage(this.requestHistory)
+        },
+
+        beforeDestroy () {
+            webSocketMessage.unInstallWsMessage()
         },
 
         methods: {

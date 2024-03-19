@@ -105,11 +105,13 @@
         methods: {
             ...mapActions({
                 searchPipelineList: 'pipelines/searchPipelineList',
+                setSwitchingPipelineVersion: 'atom/setSwitchingPipelineVersion',
                 requestPipelineSummary: 'atom/requestPipelineSummary'
             }),
             async fetchPipelineList (searchName) {
                 const { projectId, pipelineId } = this.$route.params
                 try {
+                    this.setSwitchingPipelineVersion(true)
                     const [list, pipelineInfo] = await Promise.all([
                         this.searchPipelineList({
                             projectId,
@@ -130,6 +132,8 @@
                         resourceCode: pipelineId,
                         action: RESOURCE_ACTION.VIEW
                     })
+                } finally {
+                    // this.setSwitchingPipelineVersion(false)
                 }
             },
             async setBreadCrumbPipelineList (list, pipeline) {

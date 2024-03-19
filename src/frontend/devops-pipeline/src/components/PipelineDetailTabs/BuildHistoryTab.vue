@@ -18,7 +18,6 @@
         handlePipelineNoPermission,
         RESOURCE_ACTION
     } from '@/utils/permission'
-    import webSocketMessage from '@/utils/webSocketMessage'
 
     export default {
         name: 'build-history-tab',
@@ -127,7 +126,6 @@
                 const isBuildId = /^#b-+/.test(this.$route.hash) // 检查是否是合法的buildId
                 isBuildId && this.showLog(this.$route.hash.slice(1), '', true)
             }
-            webSocketMessage.installWsMessage(this.refreshBuildHistoryList)
         },
 
         updated () {
@@ -136,10 +134,6 @@
                 this.currentBuildNum = ''
                 this.currentShowStatus = false
             }
-        },
-
-        beforeDestroy () {
-            webSocketMessage.unInstallWsMessage()
         },
 
         methods: {
