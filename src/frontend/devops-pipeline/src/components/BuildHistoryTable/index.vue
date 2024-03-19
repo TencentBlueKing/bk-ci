@@ -62,6 +62,7 @@
                 class="bkdevops-build-history-table"
                 :max-height="$refs?.tableBox?.offsetHeight"
                 :data="buildHistoryList"
+                :key="tableColumnKeys.join('-')"
                 :row-class-name="handleRowStyle"
                 :empty-text="$t('history.filterNullTips')"
                 :pagination="pagination"
@@ -69,9 +70,8 @@
                 @header-dragend="handleDragend"
                 @page-change="handlePageChange"
                 @page-limit-change="handleLimitChange"
-                :size="tableSetting.size"
             >
-                <bk-table-column v-for="col in tableSetting.selectedFields" v-bind="col" :prop="col.id" :key="col.id" show-overflow-tooltip>
+                <bk-table-column v-for="col in tableColumnFields" v-bind="col" :prop="col.id" :label="$t(col.label)" :key="col.id" show-overflow-tooltip>
                     <template v-if="col.id === 'buildNum'" v-slot="props">
                         <span class="build-num-status">
                             <router-link
@@ -299,12 +299,13 @@
                     </template>
                 </bk-table-column>
                 <bk-table-column type="setting" :tippy-options="{ zIndex: 3000 }">
-                    <bk-table-setting-content
-                        :fields="sourceColumns"
-                        :selected="tableSetting.selectedFields"
-                        :max="tableSetting.max"
-                        @setting-change="handleTableSettingChange">
-                    </bk-table-setting-content>
+                    <TableColumnSetting
+                        ref="tableSetting"
+                        :selected-column-keys="tableColumnKeys"
+                        :all-table-column-map="allTableColumnMap"
+                        @change="handleColumnChange"
+                        @reset="handleColumnReset"
+                    />
                 </bk-table-column>
                 <empty-exception slot="empty" type="search-empty" @clear="clearFilter" />
             </bk-table>
@@ -415,21 +416,25 @@
 </template>
 
 <script>
-    import FilterBar from '@/components/BuildHistoryTable/FilterBar'
-    import MaterialItem from '@/components/ExecDetail/MaterialItem'
+    import { mapActions, mapGetters, mapState } from 'vuex'
     import Logo from '@/components/Logo'
-    import StageSteps from '@/components/StageSteps'
-    import EmptyException from '@/components/common/exception'
+    import { convertFileSize, convertTime, convertMStoString, getQueryParamString } from '@/utils/util'
+    import {
+        errorTypeMap,
+        extForFile,
+        BUILD_HISTORY_TABLE_DEFAULT_COLUMNS,
+        BUILD_HISTORY_TABLE_COLUMNS_MAP
+    } from '@/utils/pipelineConst'
     import qrcode from '@/components/devops/qrcode'
-    import pipelineConstMixin from '@/mixins/pipelineConstMixin'
+    import StageSteps from '@/components/StageSteps'
+    import MaterialItem from '@/components/ExecDetail/MaterialItem'
+    import FilterBar from '@/components/BuildHistoryTable/FilterBar'
+    import TableColumnSetting from '@/components/BuildHistoryTable/TableColumnSetting'
+    import EmptyException from '@/components/common/exception'
     import {
         RESOURCE_ACTION
     } from '@/utils/permission'
-    import { BUILD_HISTORY_TABLE_DEFAULT_COLUMNS, errorTypeMap, extForFile } from '@/utils/pipelineConst'
-    import { convertFileSize, convertMStoString, convertTime, getQueryParamString } from '@/utils/util'
-    import { mapActions, mapGetters, mapState } from 'vuex'
-
-    const LS_COLUMNS_KEYS = 'shownColumns'
+    const LS_COLUMN_KEY = 'shownColumnsKeys'
     export default {
         name: 'build-history-table',
         components: {
@@ -438,9 +443,9 @@
             StageSteps,
             MaterialItem,
             FilterBar,
+            TableColumnSetting,
             EmptyException
         },
-        mixins: [pipelineConstMixin],
         props: {
             showLog: {
                 type: Function
@@ -449,6 +454,8 @@
             isDebug: Boolean
         },
         data () {
+            const lsColumns = localStorage.getItem(LS_COLUMN_KEY)
+            const initSortedColumns = lsColumns ? JSON.parse(lsColumns) : BUILD_HISTORY_TABLE_DEFAULT_COLUMNS
             return {
                 RESOURCE_ACTION,
                 isShowMoreMaterial: false,
@@ -463,12 +470,7 @@
                 buildHistories: [],
                 stoping: {},
                 isLoading: false,
-                tableSetting: {
-                    selectedFields: [],
-                    size: 'small',
-                    max: 3
-                }
-
+                tableColumnKeys: initSortedColumns
             }
         },
         computed: {
@@ -481,11 +483,17 @@
             ...mapState('atom', [
                 'pipelineInfo'
             ]),
+            allTableColumnMap () {
+                return BUILD_HISTORY_TABLE_COLUMNS_MAP
+            },
+            tableColumnFields () {
+                return this.tableColumnKeys.map(key => this.allTableColumnMap[key])
+            },
             projectId () {
                 return this.$route.params.projectId
             },
             pipelineId () {
-                return this.pipelineInfo?.pipelineId
+                return this.$route.params.pipelineId
             },
             canEdit () {
                 return this.pipelineInfo?.permissions.canEdit ?? true
@@ -647,10 +655,6 @@
             }
         },
         created () {
-            const lsColumns = localStorage && localStorage.getItem(LS_COLUMNS_KEYS)
-            const initShownColumns = lsColumns ? JSON.parse(lsColumns) : BUILD_HISTORY_TABLE_DEFAULT_COLUMNS
-            this.tableSetting.selectedFields = initShownColumns.map(column => this.BUILD_HISTORY_TABLE_COLUMNS_MAP[column]).filter((m) => !!m)
-
             if (location.search) { // 路径上带有参数，需要将参数传递给store
                 this.setHistoryPageStatus({
                     queryStr: getQueryParamString(this.$route.query),
@@ -668,12 +672,15 @@
                 'setHistoryPageStatus',
                 'resetHistoryFilterCondition'
             ]),
-            handleTableSettingChange ({ fields: selectedFields, size }) {
-                Object.assign(this.tableSetting, {
-                    selectedFields,
-                    size
-                })
-                localStorage.setItem(LS_COLUMNS_KEYS, JSON.stringify(selectedFields.map(column => column.id)))
+            handleColumnChange (columns) {
+                this.tableColumnKeys = columns
+                this.$refs.tableSetting.$parent.instance?.hide()
+                localStorage.setItem(LS_COLUMN_KEY, JSON.stringify(columns))
+            },
+            handleColumnReset () {
+                const lsColumns = localStorage.getItem(LS_COLUMN_KEY)
+                this.tableColumnKeys = lsColumns ? JSON.parse(lsColumns) : BUILD_HISTORY_TABLE_DEFAULT_COLUMNS
+                this.$refs.tableSetting.$parent.instance?.hide()
             },
             async requestHistory () {
                 try {
@@ -816,19 +823,14 @@
                 }
             },
             handleDragend (newWidth, oldWidth, column, event) {
-                if (this.customColumn.includes(column.property)) {
-                    localStorage.setItem(`${column.property}Width`, newWidth)
+                console.log(column)
+                localStorage.setItem(`${column.property}Width`, newWidth)
+                if (this.allTableColumnMap[column.property]?.width) {
+                    this.allTableColumnMap[column.property].width = newWidth
                 }
-                this.BUILD_HISTORY_TABLE_COLUMNS_MAP[column.property].width = newWidth
-                this.tableSetting.selectedFields = this.tableSetting.selectedFields.map((col) => {
-                    if (col.id === column.property) {
-                        col.width = newWidth
-                    }
-                    return col
-                })
             },
             getArchiveUrl ({ id: buildNo }, type = '', codelib = '') {
-                const { projectId, pipelineId } = this.$route.params
+                const { projectId, pipelineId } = this
                 return {
                     name: 'pipelinesDetail',
                     params: {
@@ -887,7 +889,7 @@
                     })
                     window.open(url, '_self')
                 } catch (err) {
-                    const { projectId, pipelineId } = this.$route.params
+                    const { projectId, pipelineId } = this
                     this.handleError(err, {
                         projectId,
                         resourceCode: pipelineId,
@@ -898,7 +900,7 @@
             async copyToCustom (artifactory) {
                 let message, theme
                 try {
-                    const { projectId, pipelineId } = this.$route.params
+                    const { projectId, pipelineId } = this
                     const params = {
                         files: [artifactory.name],
                         copyAll: false
@@ -948,7 +950,7 @@
                         theme = 'error'
                     }
                 } catch (err) {
-                    const { projectId, pipelineId } = this.$route.params
+                    const { projectId, pipelineId } = this
                     this.handleError(err, {
                         projectId,
                         resourceCode: pipelineId,

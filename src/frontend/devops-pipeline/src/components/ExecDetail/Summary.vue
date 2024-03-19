@@ -67,7 +67,7 @@
                         </div>
                     </bk-popover>
 
-                    {{execDetail.versionName }}
+                    {{execDetail.curVersionName }}
                 </div>
             </div>
             <div class="exec-remark-block">

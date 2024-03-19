@@ -247,7 +247,7 @@ const routes = [
                     },
                     {
                         // 执行历史
-                        path: 'history/:type?',
+                        path: 'history/:type/:version?',
                         name: 'pipelinesHistory',
                         components: {
                             header: HistoryHeader,

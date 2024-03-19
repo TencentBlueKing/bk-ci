@@ -67,8 +67,7 @@
                 type: String,
                 required: true
             },
-            isActiveDraft: Boolean,
-            isReleaseVersion: Boolean
+            isActiveDraft: Boolean
         },
         data () {
             return {

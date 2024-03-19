@@ -43,12 +43,21 @@
 </script>
 
 <style lang="scss">
+@import '~@/scss/conf';
 .pipeline-draft-debug-header {
     width: 100%;
     display: flex;
     align-items: center;
     justify-content: space-between;
     padding: 0 24px 0 14px;
+    .pipeline-draft-version {
+        display: flex;
+        align-items: center;
 
+        .bk-icon {
+            margin: 0 8px 0 0;
+            color: $primaryColor;
+        }
+    }
 }
 </style>

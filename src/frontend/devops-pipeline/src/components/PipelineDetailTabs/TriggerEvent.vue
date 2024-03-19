@@ -40,10 +40,11 @@
     import EmptyException from '@/components/common/exception'
     import SearchSelect from '@blueking/search-select'
     import { mapActions } from 'vuex'
+    import { weekAgo } from '@/utils/util'
     import TriggerEventTimeline from './TriggerEventTimeline.vue'
 
     import '@blueking/search-select/dist/styles/index.css'
-    const DEFAULT_DATE_RANGE = [new Date(new Date().getTime() - 3600 * 1000 * 24 * 7), new Date()]
+    const DEFAULT_DATE_RANGE = weekAgo()
     export default {
         components: {
             SearchSelect,

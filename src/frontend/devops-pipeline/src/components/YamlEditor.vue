@@ -109,6 +109,9 @@
                 model: this.monaco.editor.createModel(this.value, 'yaml', this.monaco.Uri.parse(this.yamlUri)),
                 automaticLayout: true,
                 formatOnPaste: true,
+                unicodeHighlight: {
+                    ambiguousCharacters: false
+                },
                 minimap: {
                     enabled: false
                 },

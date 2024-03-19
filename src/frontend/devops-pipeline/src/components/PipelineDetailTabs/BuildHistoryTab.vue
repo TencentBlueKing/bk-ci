@@ -18,7 +18,6 @@
         handlePipelineNoPermission,
         RESOURCE_ACTION
     } from '@/utils/permission'
-    import pipelineConstMixin from '@/mixins/pipelineConstMixin'
     import webSocketMessage from '@/utils/webSocketMessage'
 
     export default {
@@ -27,8 +26,6 @@
             BuildHistoryTable,
             emptyTips
         },
-
-        mixins: [pipelineConstMixin],
         props: {
             isDebug: Boolean,
             pipelineVersion: Number
