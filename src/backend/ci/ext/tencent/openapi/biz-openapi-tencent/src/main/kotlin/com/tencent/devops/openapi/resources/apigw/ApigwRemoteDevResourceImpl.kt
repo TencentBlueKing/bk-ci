@@ -63,26 +63,24 @@ class ApigwRemoteDevResourceImpl @Autowired constructor(private val client: Clie
         originalHost: String?,
         devxToken: String?
     ): Result<WeSecProjectWorkspace?> {
-        if (ip.isNullOrBlank()) {
-            return Result(
+        return when {
+            ip.isNullOrBlank() -> Result(
                 message = "获取到的云桌面IP为空",
                 data = null
             )
-        }
-        if (!originalHost.isNullOrBlank() && originalHost != devxOriginalHost) {
-            return Result(
+            !originalHost.isNullOrBlank() && originalHost != devxOriginalHost -> Result(
                 message = "来源请求域名不符",
                 data = null
             )
-        }
-        if (!devxToken.isNullOrBlank() && devxToken != devxGwToken) {
-            return Result(
+            !devxToken.isNullOrBlank() && devxToken != devxGwToken -> Result(
                 message = "来源请求token不符",
                 data = null
             )
+            else -> {
+                logger.info("Get projects workspace ip $ip")
+                client.get(ServiceRemoteDevResource::class).getProjectWorkspaceIp(ip = ip)
+            }
         }
-        logger.info("Get projects workspace ip $ip")
-        return client.get(ServiceRemoteDevResource::class).getProjectWorkspaceIp(ip = ip)
     }
 
     override fun queryWorkspaceProjects(
