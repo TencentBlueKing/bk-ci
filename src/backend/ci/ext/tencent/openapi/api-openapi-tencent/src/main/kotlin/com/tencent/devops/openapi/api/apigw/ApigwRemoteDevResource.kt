@@ -15,7 +15,6 @@ import com.tencent.devops.remotedev.pojo.project.WeSecProjectWorkspace
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.tags.Tag
-import org.springframework.beans.factory.annotation.Value
 import javax.ws.rs.Consumes
 import javax.ws.rs.GET
 import javax.ws.rs.HeaderParam
