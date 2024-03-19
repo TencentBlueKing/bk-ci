@@ -543,6 +543,7 @@
                 }
                 .select-atom-btn:hover {
                     background-color: $primaryColor;
+                    border-color: $primaryColor;
                     color: white;
                 }
                 .atom-link {
