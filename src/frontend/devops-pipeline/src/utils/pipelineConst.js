@@ -250,7 +250,7 @@ export const BUILD_HISTORY_TABLE_COLUMNS_MAP = {
         index: 13,
         id: 'entry',
         label: 'history.tableMap.entry',
-        width: localStorage.getItem('entryWidth') ?? 120,,
+        width: localStorage.getItem('entryWidth') ?? 120,
         hiddenInHistory: true,
         entries: [{
             type: '',

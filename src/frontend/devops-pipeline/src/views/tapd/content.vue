@@ -80,7 +80,6 @@
     import stageReviewPanel from '@/components/StageReviewPanel'
     import StartParams from '@/components/StartParams'
     import pipelineOperateMixin from '@/mixins/pipeline-operate-mixin'
-    import pipelineConstMixin from '@/mixins/pipelineConstMixin'
     import {
         handlePipelineNoPermission,
         RESOURCE_ACTION
@@ -106,7 +105,7 @@
             AtomPropertyPanel,
             Summary
         },
-        mixins: [pipelineOperateMixin, pipelineConstMixin],
+        mixins: [pipelineOperateMixin],
 
         data () {
             return {
