@@ -1490,5 +1490,6 @@
   "latest": "Latest",
   "noPipelineToDelete": "No pipeline to delete",
   "unGroup": "Ungrouped",
-  "dropDraft": "Abandon"
+  "dropDraft": "Abandon",
+  "tableColSettings": "Table Settings"
 }

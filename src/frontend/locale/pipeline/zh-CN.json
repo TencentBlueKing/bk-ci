@@ -1491,5 +1491,6 @@
   "latest": "最新",
   "noPipelineToDelete": "无流水线待删除",
   "unGroup": "无分组",
-  "dropDraft": "放弃草稿"
+  "dropDraft": "放弃草稿",
+  "tableColSettings": "表格设置"
 }

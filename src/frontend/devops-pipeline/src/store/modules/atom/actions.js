@@ -826,6 +826,9 @@ export default {
     },
     setSwitchingPipelineVersion ({ commit }, isSwitching) {
         commit(SWITCHING_PIPELINE_VERSION, isSwitching)
+    },
+    getPipelineVersionInfo ({ commit }, { projectId, pipelineId, version }) {
+        return request.get(`/${PROCESS_API_URL_PREFIX}/user/version/projects/${projectId}/pipelines/${pipelineId}/versions/${version}/info`)
     }
 
 }

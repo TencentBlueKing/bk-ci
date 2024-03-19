@@ -51,19 +51,6 @@ export const buildEnvMap = {
     tstackAgentId: 'TSTACK'
 }
 
-export const BUILD_HISTORY_TABLE_DEFAULT_COLUMNS = [
-    'buildNum',
-    'material',
-    'startType',
-    'startTime',
-    'endTime',
-    'executeTime',
-    'artifactList',
-    'pipelineVersion',
-    'remark',
-    'errorCode'
-]
-
 export const VIEW_CONDITION = {
     LIKE: 'LIKE',
     INCLUDE: 'INCLUDE'
@@ -164,4 +151,122 @@ export const templateTypeEnum = {
     FREEDOM: 'FREEDOM',
     PUBLIC: 'PUBLIC',
     CUSTOMIZE: 'CUSTOMIZE'
+}
+
+export const BUILD_HISTORY_TABLE_DEFAULT_COLUMNS = [
+    'buildNum',
+    'material',
+    'startType',
+    'startTime',
+    'endTime',
+    'executeTime',
+    'artifactList',
+    'pipelineVersion',
+    'remark',
+    'errorCode'
+]
+export const BUILD_HISTORY_TABLE_COLUMNS_MAP = {
+    buildNum: {
+        index: 0,
+        id: 'buildNum',
+        label: 'buildNum',
+        width: 120
+    },
+    stageStatus: {
+        index: 1,
+        id: 'stageStatus',
+        label: 'history.stageStatus',
+        width: localStorage.getItem('stageStatusWidth') ?? 520
+    },
+    material: {
+        index: 2,
+        id: 'material',
+        label: 'editPage.material',
+        width: localStorage.getItem('materialWidth') ?? 500
+    },
+    startType: {
+        index: 3,
+        id: 'startType',
+        label: 'history.triggerType',
+        width: 120
+    },
+    queueTime: {
+        index: 4,
+        id: 'queueTime',
+        label: 'history.tableMap.queueTime',
+        width: 120
+    },
+    startTime: {
+        index: 5,
+        id: 'startTime',
+        label: 'history.tableMap.startTime',
+        width: 120
+    },
+    endTime: {
+        index: 6,
+        id: 'endTime',
+        label: 'history.tableMap.endTime',
+        width: 120
+    },
+    executeTime: {
+        index: 7,
+        id: 'executeTime',
+        label: 'details.totalCost'
+    },
+    artifactList: {
+        index: 8,
+        id: 'artifactList',
+        label: 'history.artifactList',
+        width: 180
+    },
+    appVersions: {
+        index: 9,
+        id: 'appVersions',
+        label: 'history.tableMap.appVersions'
+    },
+    remark: {
+        index: 10,
+        id: 'remark',
+        label: 'history.remark',
+        minWidth: 160,
+        width: localStorage.getItem('remarkWidth') ?? 200
+    },
+    recommendVersion: {
+        index: 11,
+        id: 'recommendVersion',
+        label: 'history.tableMap.recommendVersion'
+    },
+    pipelineVersion: {
+        index: 12,
+        id: 'pipelineVersion',
+        label: 'history.tableMap.pipelineVersion'
+    },
+    entry: {
+        index: 13,
+        id: 'entry',
+        label: 'history.tableMap.entry',
+        width: 120,
+        hiddenInHistory: true,
+        entries: [{
+            type: '',
+            label: 'detail'
+
+        }, {
+            type: 'partView',
+            label: 'details.partView'
+
+        }, {
+            type: 'codeRecords',
+            label: 'details.codeRecords'
+        }, {
+            type: 'output',
+            label: 'details.outputReport'
+        }]
+    },
+    errorCode: {
+        index: 14,
+        width: 280,
+        id: 'errorCode',
+        label: 'history.errorCode'
+    }
 }

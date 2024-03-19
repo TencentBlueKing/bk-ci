@@ -191,7 +191,6 @@
                     } else {
                         this.bottomLoadingOptions.isLoading = true
                     }
-
                     const res = await this.requestPipelineVersionList({
                         projectId,
                         pipelineId,

@@ -103,9 +103,6 @@
             ...mapActions('atom', [
                 'fetchPipelineByVersion'
             ]),
-            ...mapActions('pipelines', [
-                'requestPipelineVersionList'
-            ]),
             async fetchPipelineYaml (version) {
                 try {
                     const res = await this.fetchPipelineByVersion({

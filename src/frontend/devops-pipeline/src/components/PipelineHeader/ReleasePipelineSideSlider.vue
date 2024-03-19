@@ -700,7 +700,8 @@
                                                         params: {
                                                             projectId,
                                                             pipelineId,
-                                                            type: 'pipeline'
+                                                            type: 'pipeline',
+                                                            version
                                                         }
                                                     })
                                                 }

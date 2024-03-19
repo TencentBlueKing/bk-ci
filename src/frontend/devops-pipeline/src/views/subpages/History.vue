@@ -165,7 +165,14 @@
                 ]
             }
         },
-
+        watch: {
+            pipelineId: {
+                handler () {
+                    this.fetchVersionInfo()
+                },
+                immediate: true
+            }
+        },
         beforeDestroy () {
             this.resetHistoryFilterCondition()
             this.selectPipelineVersion(null)
@@ -173,8 +180,29 @@
         methods: {
             ...mapActions('pipelines', ['resetHistoryFilterCondition']),
             ...mapActions('atom', [
-                'selectPipelineVersion'
+                'selectPipelineVersion',
+                'getPipelineVersionInfo'
             ]),
+
+            async fetchVersionInfo () {
+                try {
+                    if (!this.$route.params.version) return
+                    const { data } = await this.getPipelineVersionInfo(this.$route.params)
+                    const isDraft = data.status === 'COMMITTING'
+                    const isBranchVersion = data.status === 'BRANCH'
+
+                    this.selectPipelineVersion({
+                        ...data,
+                        displayName: isDraft ? this.$t('draft') : data.versionName,
+                        description: isDraft ? this.$t('baseOn', [data.baseVersionName]) : (data.description || '--'),
+                        isBranchVersion,
+                        isDraft,
+                        isRelease: data.status === 'RELEASED'
+                    })
+                } catch (error) {
+                    console.log(error)
+                }
+            },
             getNavComponent (type) {
                 switch (type) {
                     case 'triggerEvent':
@@ -226,11 +254,11 @@
                 })
             },
             switchToReleaseVersion () {
-                this.selectPipelineVersion({
-                    version: this.pipelineInfo?.releaseVersion,
-                    versionName: this.pipelineInfo?.releaseVersionName,
-                    isDraft: false,
-                    displayName: this.pipelineInfo?.releaseVersionName
+                this.$router.push({
+                    params: {
+                        ...this.$route.params,
+                        version: this.pipelineInfo?.releaseVersion
+                    }
                 })
             }
         }

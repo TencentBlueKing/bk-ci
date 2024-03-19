@@ -67,7 +67,8 @@
                                 name: 'pipelinesHistory',
                                 params: {
                                     ...this.$route.params,
-                                    type: 'history'
+                                    type: 'history',
+                                    version: this.$route.params.version ?? this.pipelineInfo?.releaseVersion
                                 }
                             },
                         handleSelected: this.doSelectPipeline,
