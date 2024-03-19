@@ -318,7 +318,11 @@ class CreateControl @Autowired constructor(
         val systemType = WorkspaceSystemType.WINDOWS_GPU
         for (i in 0 until workspaceCreate.count) {
             logger.info("createWorkspace|mountType|$mountType")
-            val workspaceName = generateWorkspaceName(projectId)
+            val workspaceName = if (CommonUtil.ifProjectPersonal(projectId)) {
+                generateWorkspaceName(projectId.removePrefix("_"))
+            } else {
+                generateWorkspaceName(projectId)
+            }
             val ws = Workspace(
                 workspaceId = null,
                 workspaceName = workspaceName,
