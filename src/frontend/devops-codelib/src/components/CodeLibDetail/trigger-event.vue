@@ -67,13 +67,10 @@
     } from 'vuex'
     import EmptyTableStatus from '../empty-table-status.vue'
     import TimelineCollapse from './timeline-collapse.vue'
-    import SearchSelect from '@blueking/search-select'
-    import '@blueking/search-select/dist/styles/index.css'
 
     export default {
         name: 'basicSetting',
         components: {
-            SearchSelect,
             EmptyTableStatus,
             TimelineCollapse
         },

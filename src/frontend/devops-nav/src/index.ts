@@ -34,6 +34,9 @@ import 'bk-permission/dist/main.css'
 import { handleProjectNoPermission } from './utils/permission'
 import VueCompositionAPI from '@vue/composition-api'
 
+import SearchSelect from '@blueking/search-select'
+import '@blueking/search-select/dist/styles/index.css'
+
 // 全量引入 bk-magic-vue
 import bkMagic from 'bk-magic-vue'
 // 全量引入 bk-magic-vue 样式
@@ -61,6 +64,7 @@ Vue.component('EmptyTips', EmptyTips)
 Vue.component('ShowTooltip', ShowTooltip)
 Vue.component('DevopsFormItem', DevopsFormItem)
 Vue.component('BigSelect', BigSelect)
+Vue.component('SearchSelect', SearchSelect)
 
 const { i18n, dynamicLoadModule, setLocale, localeList } = createLocale(require.context('@locale/nav/', false, /\.json$/), true)
 
