@@ -171,7 +171,7 @@ export const BUILD_HISTORY_TABLE_COLUMNS_MAP = {
         index: 0,
         id: 'buildNum',
         label: 'buildNum',
-        width: 120
+        width: localStorage.getItem('buildNumWidth') ?? 120
     },
     stageStatus: {
         index: 1,
@@ -189,41 +189,43 @@ export const BUILD_HISTORY_TABLE_COLUMNS_MAP = {
         index: 3,
         id: 'startType',
         label: 'history.triggerType',
-        width: 120
+        width: localStorage.getItem('triggerTypeWidth') ?? 120
     },
     queueTime: {
         index: 4,
         id: 'queueTime',
         label: 'history.tableMap.queueTime',
-        width: 120
+        width: localStorage.getItem('queueTimeWidth') ?? 120
     },
     startTime: {
         index: 5,
         id: 'startTime',
         label: 'history.tableMap.startTime',
-        width: 120
+        width: localStorage.getItem('startTimeWidth') ?? 120
     },
     endTime: {
         index: 6,
         id: 'endTime',
         label: 'history.tableMap.endTime',
-        width: 120
+        width: localStorage.getItem('endTimeWidth') ?? 120
     },
     executeTime: {
         index: 7,
         id: 'executeTime',
-        label: 'details.totalCost'
+        label: 'details.totalCost',
+        width: localStorage.getItem('executeTimeWidth') ?? 120
     },
     artifactList: {
         index: 8,
         id: 'artifactList',
         label: 'history.artifactList',
-        width: 180
+        width: localStorage.getItem('artifactListWidth') ?? 180
     },
     appVersions: {
         index: 9,
         id: 'appVersions',
-        label: 'history.tableMap.appVersions'
+        label: 'history.tableMap.appVersions',
+        width: localStorage.getItem('appVersionsWidth') ?? 120
     },
     remark: {
         index: 10,
@@ -235,18 +237,20 @@ export const BUILD_HISTORY_TABLE_COLUMNS_MAP = {
     recommendVersion: {
         index: 11,
         id: 'recommendVersion',
-        label: 'history.tableMap.recommendVersion'
+        label: 'history.tableMap.recommendVersion',
+        width: localStorage.getItem('recommendVersionWidth') ?? 120
     },
     pipelineVersion: {
         index: 12,
         id: 'pipelineVersion',
-        label: 'history.tableMap.pipelineVersion'
+        label: 'history.tableMap.pipelineVersion',
+        width: localStorage.getItem('pipelineVersionWidth') ?? 120
     },
     entry: {
         index: 13,
         id: 'entry',
         label: 'history.tableMap.entry',
-        width: 120,
+        width: localStorage.getItem('entryWidth') ?? 120,,
         hiddenInHistory: true,
         entries: [{
             type: '',
@@ -266,7 +270,7 @@ export const BUILD_HISTORY_TABLE_COLUMNS_MAP = {
     },
     errorCode: {
         index: 14,
-        width: 280,
+        width: localStorage.getItem('errorCodeWidth') ?? 280,
         id: 'errorCode',
         label: 'history.errorCode'
     }
