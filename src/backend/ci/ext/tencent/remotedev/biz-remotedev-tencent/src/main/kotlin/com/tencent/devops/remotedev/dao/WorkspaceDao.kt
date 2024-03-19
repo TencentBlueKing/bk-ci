@@ -46,8 +46,6 @@ import com.tencent.devops.remotedev.pojo.WorkspaceShared
 import com.tencent.devops.remotedev.pojo.WorkspaceStatus
 import com.tencent.devops.remotedev.pojo.WorkspaceSystemType
 import com.tencent.devops.remotedev.pojo.project.WorkspaceProperty
-import java.sql.Timestamp
-import java.time.LocalDateTime
 import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.DatePart
@@ -59,6 +57,8 @@ import org.jooq.RecordMapper
 import org.jooq.Result
 import org.jooq.impl.DSL
 import org.springframework.stereotype.Repository
+import java.sql.Timestamp
+import java.time.LocalDateTime
 
 @Suppress("ALL")
 @Repository
@@ -821,6 +821,17 @@ class WorkspaceDao {
             dslContext.selectFrom(this)
                 .where(WORKSPACE_NAME.`in`(workspaceNames))
                 .fetch()
+        }
+    }
+
+    fun fetchWorkspaces(
+        dslContext: DSLContext,
+        workspaceNames: Set<String>
+    ): List<WorkspaceRecord> {
+        with(TWorkspace.T_WORKSPACE) {
+            return dslContext.selectFrom(this)
+                .where(NAME.`in`(workspaceNames))
+                .fetch(workspaceMapper)
         }
     }
 

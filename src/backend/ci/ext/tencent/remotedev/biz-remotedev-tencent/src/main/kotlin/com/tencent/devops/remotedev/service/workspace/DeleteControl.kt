@@ -42,6 +42,8 @@ import com.tencent.devops.dispatch.kubernetes.api.service.ServiceRemoteDevResour
 import com.tencent.devops.dispatch.kubernetes.pojo.kubernetes.EnvStatusEnum
 import com.tencent.devops.dispatch.kubernetes.pojo.mq.WorkspaceOperateEvent
 import com.tencent.devops.environment.api.ServiceNodeResource
+import com.tencent.devops.project.api.service.ServiceProjectResource
+import com.tencent.devops.project.constant.ProjectMessageCode
 import com.tencent.devops.remotedev.common.Constansts
 import com.tencent.devops.remotedev.common.Constansts.ADMIN_NAME
 import com.tencent.devops.remotedev.common.exception.ErrorCodeEnum
@@ -78,16 +80,16 @@ import com.tencent.devops.remotedev.service.tcloud.TCloudCfsService
 import com.tencent.devops.remotedev.service.workspace.NotifyControl.Companion.NOT_4_STAR_ACTIVE_AUTO_DELETE_NOTIFY
 import com.tencent.devops.remotedev.service.workspace.NotifyControl.Companion.NOT_ASSIGN_AUTO_DELETE_NOTIFY
 import com.tencent.devops.remotedev.service.workspace.NotifyControl.Companion.SLEEP_7_DAY_AUTO_DELETE_NOTIFY
-import java.time.Duration
-import java.time.LocalDateTime
-import java.time.format.DateTimeFormatter
-import java.util.concurrent.TimeUnit
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.slf4j.MDC
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
+import java.time.Duration
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
+import java.util.concurrent.TimeUnit
 
 @Service
 @Suppress("LongMethod")
@@ -225,12 +227,109 @@ class DeleteControl @Autowired constructor(
         return res
     }
 
+    fun batchDeleteWorkspace4OP(
+        userId: String,
+        workspaceNames: Set<String>
+    ): Map<String, Boolean> {
+        val result = mutableMapOf<String, Boolean>()
+        workspaceNames.forEach {
+            result[it] = deleteWorkspace4System(userId, it)
+        }
+        // 只发送删除成功的机器
+        val deletedWorkspaces = result.filter { it.value }.keys
+
+        val workspaces = workspaceDao.fetchWorkspaces(dslContext, deletedWorkspaces).associateBy {
+            it.workspaceName
+        }
+
+        // 将工作空间按工作空间拥有者划分
+        val data = mutableMapOf<String, MutableSet<WorkspaceRecord>>()
+        deletedWorkspaces.forEach { workspaceName ->
+            val workspace = workspaces[workspaceName]
+            if (workspace == null) {
+                logger.error("batchDeleteWorkspace4OP $workspaceName not find in records $workspaces")
+                return@forEach
+            }
+            val userIds = permissionService.getWorkspaceOwner(workspaceName)
+            userIds.forEach { userId ->
+                if (data[userId] == null) {
+                    data[userId] = mutableSetOf(workspace)
+                } else {
+                    data[userId]!!.add(workspace)
+                }
+            }
+        }
+
+        // 获取机器最后上线时间
+        val lastTimeMap = bkBaseService.fetchLastOnline(data.values.flatten().toSet().map { it.workspaceName }.toSet())
+
+        data.forEach { (user, workspaces) ->
+            // 同时抄送给工作空间所属项目的管理员和工作空间的创建人
+            val projects = kotlin.runCatching {
+                client.get(ServiceProjectResource::class)
+                    .listByProjectCodeList(workspaces.map { it.projectId }.toList())
+            }.onFailure {
+                logger.warn("get project ${workspaces.map { w -> w.projectId }.toList()} info error|${it.message}")
+            }.getOrElse { null }?.data ?: throw ErrorCodeException(
+                errorCode = ProjectMessageCode.PROJECT_NOT_EXIST
+            )
+
+            val cc = projects.map {
+                it.properties?.remotedevManager?.split(";")?.toSet() ?: emptySet()
+            }.flatten().toMutableSet()
+            cc.addAll(workspaces.map { w -> w.createUserId }.toSet())
+
+            // 生成表格数据
+            val tableData = workspaces.associate {
+                (it.hostName?.substringAfter(".") ?: "") to (lastTimeMap[it.hostName] ?: "")
+            }
+            val (emailTable, rtxTable) = generateTable(user, tableData)
+
+            notifyControl.notify4UserAndCCRemoteDevManager(
+                userIds = mutableSetOf(user),
+                cc = cc,
+                projectId = null,
+                notifyTemplateCode = NotifyControl.WORKSPACE_BATCH_FORCE_DELETE,
+                notifyType = mutableSetOf(RemoteDevNotifyType.EMAIL, RemoteDevNotifyType.RTX),
+                bodyParams = mutableMapOf(
+                    "userId" to user,
+                    "rtxTable" to rtxTable,
+                    "emailTable" to emailTable
+                )
+            )
+        }
+
+        return result
+    }
+
+    fun generateTable(
+        userId: String,
+        data: Map<String, String>
+    ): Pair<String, String> {
+        val emailSb = StringBuilder()
+        val td = "<td style=\"border: 1px solid black; padding: 4px; text-align: left;\">%s</td>"
+        data.forEach { (ip, lastTime) ->
+            emailSb.append("<tr>")
+            emailSb.append(td.format(ip))
+            emailSb.append(td.format(userId))
+            emailSb.append(td.format(lastTime))
+            emailSb.append("</tr>")
+        }
+
+        val rtxSb = StringBuilder()
+        data.keys.forEach {
+            rtxSb.append(it).append("\n")
+        }
+        rtxSb.removeSuffix("\n")
+        rtxSb.toString()
+
+        return Pair(emailSb.toString(), rtxSb.toString())
+    }
+
     @ActionAuditRecord(
         actionId = ActionId.CGS_DELETE,
         instance = AuditInstanceRecord(
-            resourceType = ResourceTypeId.CGS,
-            instanceNames = "#workspaceName",
-            instanceIds = "#workspaceName"
+            resourceType = ResourceTypeId.CGS
         ),
         content = ActionAuditContent.CGS_DELETE_CONTENT
     )
@@ -252,6 +351,9 @@ class DeleteControl @Autowired constructor(
                 )
             // 审计
             ActionAuditContext.current()
+                .addInstanceInfo(
+                    workspaceName, workspaceName, null, null
+                )
                 .addAttribute(ActionAuditContent.PROJECT_CODE_TEMPLATE, workspace.projectId)
                 .scopeId = workspace.projectId
 

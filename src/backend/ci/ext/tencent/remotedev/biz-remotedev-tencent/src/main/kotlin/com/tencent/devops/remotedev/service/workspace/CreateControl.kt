@@ -541,8 +541,7 @@ class CreateControl @Autowired constructor(
             }
 
             // 创建成功时给 cmdb 添加字段方便监控检索
-            val hostIdSub = event.environmentIp?.split(".")
-            val ip = hostIdSub?.subList(1, hostIdSub.size)?.joinToString(separator = ".")
+            val ip = event.environmentIp?.substringAfter(".")
             if (!ip.isNullOrBlank() && ws.workspaceSystemType.checkWindows()) {
                 bkccService.updateHostMonitor(
                     regionId = detail.regionId,
