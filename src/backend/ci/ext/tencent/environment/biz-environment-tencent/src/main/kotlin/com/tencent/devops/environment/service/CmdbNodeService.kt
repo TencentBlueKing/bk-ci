@@ -463,7 +463,7 @@ class CmdbNodeService @Autowired constructor(
             } // 只有一个项目
 
             // 满足以上2个条件，将其从CC蓝盾业务下移出：调用cc的delete接口，将机器从CC中移除。
-            if (deleteHostIdMap.isNotEmpty()){
+            if (deleteHostIdMap.isNotEmpty()) {
                 queryFromCCService.deleteHostFromCiBiz(deleteHostIdMap.keys.filterNotNull().toSet())
             }
         }
