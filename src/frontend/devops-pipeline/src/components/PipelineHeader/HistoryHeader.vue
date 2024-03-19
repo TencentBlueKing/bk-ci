@@ -11,7 +11,7 @@
                 refresh-list-on-expand
             />
             <bk-button
-                v-if="!isReleaseVersion"
+                v-if="!isReleaseVersion && isReleasePipeline"
                 text
                 size="small"
                 theme="primary"
