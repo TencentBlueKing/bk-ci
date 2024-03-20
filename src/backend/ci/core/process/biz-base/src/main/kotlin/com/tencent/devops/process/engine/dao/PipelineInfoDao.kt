@@ -771,7 +771,8 @@ class PipelineInfoDao {
         channelCode: ChannelCode?
     ): Int {
         return with(T_PIPELINE_INFO) {
-            val update = dslContext.update(this).set(DELETE, true)
+            val update = dslContext.update(this)
+                .set(DELETE, true)
                 .set(UPDATE_TIME, LocalDateTime.now())
                 .set(LAST_MODIFY_USER, userId)
                 .where(PIPELINE_ID.eq(pipelineId))

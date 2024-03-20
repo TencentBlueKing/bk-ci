@@ -184,7 +184,7 @@ class AtomCommonDao : AbstractStoreCommonDao() {
             return dslContext.select(REPOSITORY_HASH_ID)
                 .from(this)
                 .where(ATOM_CODE.eq(storeCode))
-                .fetchOneInto(String::class.java)
+                .fetchOne()?.into(String::class.java)
         }
     }
 }
