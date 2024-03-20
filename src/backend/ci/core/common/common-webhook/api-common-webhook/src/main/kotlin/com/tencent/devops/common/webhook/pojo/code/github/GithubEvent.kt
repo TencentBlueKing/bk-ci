@@ -318,7 +318,7 @@ data class GithubRepository(
     createdAt = createdAt
 ) {
     fun getRepoUrl() = if (htmlUrl.isNullOrBlank()) {
-        "${GITHUB_HOME_PAGE_URL}/${fullName}"
+        "$GITHUB_HOME_PAGE_URL/$fullName"
     } else {
         htmlUrl
     }

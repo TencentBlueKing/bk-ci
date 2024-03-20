@@ -39,7 +39,6 @@ import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GITHUB_WEBHOOK_CREATE
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GITHUB_WEBHOOK_CREATE_USERNAME
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_BRANCH
 import com.tencent.devops.common.webhook.pojo.code.WebHookParams
-import com.tencent.devops.common.webhook.pojo.code.github.GithubBaseInfo
 import com.tencent.devops.common.webhook.pojo.code.github.GithubCreateEvent
 import com.tencent.devops.common.webhook.service.code.filter.WebhookFilter
 import com.tencent.devops.common.webhook.service.code.handler.GitHookTriggerHandler
@@ -126,9 +125,9 @@ class GithubCreateTriggerHandler : GitHookTriggerHandler<GithubCreateEvent> {
 
     private fun GithubCreateEvent.getI18nCodeAndLinkUrl() = if (ref_type == "tag") {
         WebhookI18nConstants.GITHUB_CREATE_TAG_EVENT_DESC to
-                "${repository.getRepoUrl()}/releases/tag/${ref}"
+                "${repository.getRepoUrl()}/releases/tag/$ref"
     } else {
         WebhookI18nConstants.GITHUB_CREATE_BRANCH_EVENT_DESC to
-                "${repository.getRepoUrl()}/tree/${ref}"
+                "${repository.getRepoUrl()}/tree/$ref"
     }
 }
