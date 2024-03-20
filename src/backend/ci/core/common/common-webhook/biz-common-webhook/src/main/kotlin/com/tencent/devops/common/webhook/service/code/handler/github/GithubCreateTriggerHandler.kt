@@ -108,8 +108,9 @@ class GithubCreateTriggerHandler : GitHookTriggerHandler<GithubCreateEvent> {
         startParams[BK_REPO_GITHUB_WEBHOOK_CREATE_USERNAME] = event.sender.login
         startParams[BK_REPO_GIT_WEBHOOK_BRANCH] = getBranchName(event)
         startParams[PIPELINE_GIT_ACTION] = "create"
-        startParams[PIPELINE_GIT_REPO_URL] = event.repository.url
+        startParams[PIPELINE_GIT_REPO_URL] = event.repository.getRepoUrl()
         startParams[PIPELINE_GIT_EVENT_URL] = event.getI18nCodeAndLinkUrl().second
+        startParams[BK_REPO_GIT_WEBHOOK_BRANCH] = event.repository.defaultBranch
         return startParams
     }
 
@@ -125,9 +126,9 @@ class GithubCreateTriggerHandler : GitHookTriggerHandler<GithubCreateEvent> {
 
     private fun GithubCreateEvent.getI18nCodeAndLinkUrl() = if (ref_type == "tag") {
         WebhookI18nConstants.GITHUB_CREATE_TAG_EVENT_DESC to
-                "${GithubBaseInfo.GITHUB_HOME_PAGE_URL}/${repository.fullName}/releases/tag/${ref}"
+                "${repository.getRepoUrl()}/releases/tag/${ref}"
     } else {
         WebhookI18nConstants.GITHUB_CREATE_BRANCH_EVENT_DESC to
-                "${GithubBaseInfo.GITHUB_HOME_PAGE_URL}/${repository.fullName}/tree/${ref}"
+                "${repository.getRepoUrl()}/tree/${ref}"
     }
 }
