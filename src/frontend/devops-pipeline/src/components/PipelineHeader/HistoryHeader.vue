@@ -150,7 +150,7 @@
                 return !this.isActiveDraftVersion && !this.isReleaseVersion
             },
             currentVersion () {
-                return parseInt(this.$route.params.version ?? this.activePipelineVersion?.version)
+                return parseInt(this.$route.params.version)
             },
             releaseVersion () {
                 return this.pipelineInfo?.releaseVersion
@@ -188,23 +188,24 @@
                         content: this.$t(!this.isReleasePipeline ? 'draftPipelineExecTips' : this.isCurPipelineLocked ? 'pipelineLockTips' : 'pipelineManualDisable'),
                         delay: [300, 0]
                     }
-            },
-            filters () {
-                return [this.pipelineId, this.currentVersion].join('\\')
             }
         },
         watch: {
-            releaseVersion (version, old) {
-                console.log('watch, releaseVersion', version, old, this.$route.params.version)
-                if (old || (!old && !this.$route.params.version)) {
-                    this.handleVersionChange(version)
+            pipelineInfo: {
+                deep: true,
+                handler (val, oldVal) {
+                    if (val?.pipelineId !== oldVal?.pipelineId) {
+                        if (val.releaseVersion === oldVal?.releaseVersion) {
+                            this.init()
+                        }
+                        if (oldVal || !this.currentVersion) {
+                            this.handleVersionChange(val.releaseVersion)
+                        }
+                    }
                 }
             },
-            filters (filters) {
-                console.log('watch', filters)
-                this.$nextTick(() => {
-                    this.init()
-                })
+            currentVersion (val) {
+                this.init()
             }
         },
         created () {
@@ -269,11 +270,12 @@
                 this.handleVersionChange(this.releaseVersion)
             },
             handleVersionChange (versionId, version) {
-                console.log('handleVersionChange', versionId)
+                console.log('handleVersionChange', versionId, version)
                 let routeType = 'history'
+
                 if (version) {
                     this.selectPipelineVersion(version)
-                    const noRecordVersion = ['history', 'triggerEvent'].includes(this.$route.params.type) && !version.isRelease && !version.isDraft
+                    const noRecordVersion = ['history', 'triggerEvent'].includes(this.$route.params.type) && !(versionId === this.releaseVersion || version.isDraft)
                     routeType = noRecordVersion ? 'pipeline' : this.$route.params.type
                 }
                 this.$router.push({

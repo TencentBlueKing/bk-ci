@@ -5,7 +5,6 @@
             v-else
             :show-log="showLog"
             :is-debug="isDebug"
-            :pipeline-version="pipelineVersion"
         />
     </div>
 </template>
@@ -26,8 +25,7 @@
             emptyTips
         },
         props: {
-            isDebug: Boolean,
-            pipelineVersion: Number
+            isDebug: Boolean
         },
         data () {
             return {
@@ -82,10 +80,7 @@
                         disabled: this.executeStatus,
                         loading: this.executeStatus,
                         handler: () => {
-                            const params = {
-                                ...this.$route.params,
-                                version: this.pipelineVersion
-                            }
+                            const params = this.$route.params
                             if (this.isReleasePipeline) {
                                 return this.$router.push({
                                     name: 'pipelinesEdit',
