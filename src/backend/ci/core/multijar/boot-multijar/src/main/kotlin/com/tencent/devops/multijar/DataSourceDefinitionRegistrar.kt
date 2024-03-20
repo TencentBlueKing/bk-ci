@@ -25,43 +25,45 @@ class DataSourceDefinitionRegistrar : ImportBeanDefinitionRegistrar {
         registry: BeanDefinitionRegistry,
         importBeanNameGenerator: BeanNameGenerator
     ) {
-        multiDataSource.forEach forEach@{ dataSourceName ->
-            logger.info("register beanDefinitions :$dataSourceName")
+        multiModuleName.forEach forEach@{ moduleName ->
+            logger.info("register datasource bean definitions :$moduleName")
             registerBeanDefinition(
-                dataSourceName = dataSourceName,
+                moduleName = moduleName,
                 registry = registry
             )
         }
     }
 
     @Suppress("LongParameterList")
-    fun  registerBeanDefinition(
-        dataSourceName: String,
+    fun registerBeanDefinition(
+        moduleName: String,
         registry: BeanDefinitionRegistry
     ) {
         val beanDefinitionBuilder = BeanDefinitionBuilder.rootBeanDefinition(HikariDataSource::class.java)
-            .addPropertyValue("poolName", "DBPool-$dataSourceName")
+            .addPropertyValue("poolName", "DBPool-$moduleName")
             .addPropertyValue(
-                "jdbcUrl", "jdbc:mysql://${System.getProperty("spring.datasource.url")}/devops_ci_$dataSourceName?useSSL=false&autoReconnect=true&serverTimezone=GMT%2B8&useUnicode=true&characterEncoding=utf8" +
+                "jdbcUrl", "jdbc:mysql://$dataSourceUrl/devops_ci_$moduleName?useSSL=false&autoReconnect=true&serverTimezone=GMT%2B8&useUnicode=true&characterEncoding=utf8" +
                 "&allowMultiQueries=true&sessionVariables=sql_mode=%27STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION%27"
             )
-            .addPropertyValue("username", System.getProperty("spring.datasource.username"))
-            .addPropertyValue("password", System.getProperty("spring.datasource.password"))
+            .addPropertyValue("username", dataSourceUserName)
+            .addPropertyValue("password", dataSourcePassword)
             .addPropertyValue("driverClassName", Driver::class.java.name)
             .addPropertyValue("minimumIdle", 10)
             .addPropertyValue("maximumPoolSize", 50)
             .addPropertyValue("idleTimeout", 60000)
             .setPrimary(false)
-        registry.registerBeanDefinition("${convertToCamelCase(dataSourceName)}DataSource", beanDefinitionBuilder.beanDefinition)
+        registry.registerBeanDefinition("${convertToCamelCase(moduleName)}DataSource", beanDefinitionBuilder.beanDefinition)
     }
 
     companion object {
         private val logger = LoggerFactory.getLogger(DataSourceDefinitionRegistrar::class.java)
+        private val dataSourceUrl = System.getProperty("spring.datasource.url")
+        private val dataSourceUserName = System.getProperty("spring.datasource.username")
+        private val dataSourcePassword = System.getProperty("spring.datasource.password")
         private val notNeedDataSourceService = listOf(
-            "buildless", "dockerhost", "metrics", "monitoring", "worker", "process",
-            "websocket", "dispatch-docker"
+            "buildless", "metrics", "monitoring", "worker", "process", "websocket", "dispatch-docker"
         )
-        private val multiDataSource = System.getProperty("devops.multi.from")
+        private val multiModuleName = System.getProperty("devops.multi.from")
             .split(",").filterNot { notNeedDataSourceService.contains(it) }
     }
 }

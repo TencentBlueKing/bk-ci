@@ -25,7 +25,7 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.log.configuration
+package com.tencent.devops.log.es
 
 import com.tencent.devops.common.es.ESAutoConfiguration
 import com.tencent.devops.common.es.ESProperties

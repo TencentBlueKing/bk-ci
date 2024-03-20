@@ -96,7 +96,6 @@ import org.springframework.stereotype.Service
     "ReturnCount",
     "ComplexMethod"
 )
-@Service
 class LogServiceESImpl(
     private val logClient: LogClient,
     private val indexService: IndexService,
