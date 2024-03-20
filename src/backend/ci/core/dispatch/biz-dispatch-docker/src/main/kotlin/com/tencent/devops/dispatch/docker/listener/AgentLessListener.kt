@@ -78,7 +78,8 @@ class AgentLessListener @Autowired constructor(
                         executeCount = executeCount,
                         jobType = JobQuotaVmType.BUILD_LESS,
                         demoteQueueRouteKeySuffix = "",
-                        startupEvent = event
+                        startupEvent = event,
+                        queueTimeoutMinutes = event.queueTimeoutMinutes ?: 10
                     )
                 }
                 return
