@@ -163,7 +163,7 @@ class GithubIssueTriggerHandler : CodeWebhookTriggerHandler<GithubIssuesEvent> {
             startParams[BK_REPO_GIT_WEBHOOK_ISSUE_MILESTONE_ID] = milestone?.id ?: ""
             startParams[BK_REPO_GIT_WEBHOOK_ISSUE_ACTION] = event.action
             startParams[PIPELINE_GIT_EVENT_URL] = buildIssuesUrl(event)
-            startParams[PIPELINE_GIT_REPO_URL] = event.repository.url
+            startParams[PIPELINE_GIT_REPO_URL] = event.repository.getRepoUrl()
             startParams[BK_REPO_GIT_WEBHOOK_BRANCH] = event.repository.defaultBranch
             startParams[PIPELINE_GIT_ACTION] = event.convertAction()
         }
@@ -179,6 +179,6 @@ class GithubIssueTriggerHandler : CodeWebhookTriggerHandler<GithubIssuesEvent> {
     }
 
     private fun buildIssuesUrl(event: GithubIssuesEvent) = with(event) {
-        issue.htmlUrl ?: "${GithubBaseInfo.GITHUB_HOME_PAGE_URL}/${repository.fullName}/issues/${issue.number}"
+        issue.htmlUrl ?: "${repository.getRepoUrl()}/issues/${issue.number}"
     }
 }

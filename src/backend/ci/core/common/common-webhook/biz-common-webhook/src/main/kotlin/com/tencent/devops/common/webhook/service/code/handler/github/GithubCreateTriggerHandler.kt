@@ -109,7 +109,6 @@ class GithubCreateTriggerHandler : GitHookTriggerHandler<GithubCreateEvent> {
         startParams[PIPELINE_GIT_ACTION] = "create"
         startParams[PIPELINE_GIT_REPO_URL] = event.repository.getRepoUrl()
         startParams[PIPELINE_GIT_EVENT_URL] = event.getI18nCodeAndLinkUrl().second
-        startParams[BK_REPO_GIT_WEBHOOK_BRANCH] = event.repository.defaultBranch
         return startParams
     }
 
