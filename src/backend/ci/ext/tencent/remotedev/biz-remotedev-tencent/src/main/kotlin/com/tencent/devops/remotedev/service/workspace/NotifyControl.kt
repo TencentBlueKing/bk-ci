@@ -121,6 +121,9 @@ class NotifyControl @Autowired constructor(
 
         /*云桌面通知-未达到云桌面4星活跃自动销毁*/
         const val NOT_4_STAR_ACTIVE_AUTO_DELETE_NOTIFY = "NOT_4_STAR_ACTIVE_AUTO_DELETE_NOTIFY"
+
+        /*云桌面通知-您的云桌面已被强制批量销毁*/
+        const val WORKSPACE_BATCH_FORCE_DELETE = "WORKSPACE_BATCH_FORCE_DELETE"
     }
 
     fun notifyWorkspaceInfo(
@@ -207,19 +210,21 @@ class NotifyControl @Autowired constructor(
     fun notify4UserAndCCRemoteDevManager(
         userIds: MutableSet<String>,
         cc: MutableSet<String>,
-        projectId: String,
+        projectId: String?,
         notifyTemplateCode: String,
         notifyType: MutableSet<RemoteDevNotifyType>,
         bodyParams: MutableMap<String, String>
     ) {
-        val projectInfo = kotlin.runCatching {
-            client.get(ServiceProjectResource::class).get(projectId)
-        }.onFailure { logger.warn("get project $projectId info error|${it.message}") }
-            .getOrElse { null }?.data ?: throw ErrorCodeException(
-            errorCode = ProjectMessageCode.PROJECT_NOT_EXIST
-        )
-        projectInfo.properties?.remotedevManager?.split(";")?.toMutableSet()?.let {
-            cc.addAll(it)
+        if (projectId != null) {
+            val projectInfo = kotlin.runCatching {
+                client.get(ServiceProjectResource::class).get(projectId)
+            }.onFailure { logger.warn("get project $projectId info error|${it.message}") }
+                .getOrElse { null }?.data ?: throw ErrorCodeException(
+                errorCode = ProjectMessageCode.PROJECT_NOT_EXIST
+            )
+            projectInfo.properties?.remotedevManager?.split(";")?.toMutableSet()?.let {
+                cc.addAll(it)
+            }
         }
         notify4User(
             userIds = userIds,

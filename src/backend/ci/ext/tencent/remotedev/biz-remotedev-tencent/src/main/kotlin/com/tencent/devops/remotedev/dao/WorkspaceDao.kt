@@ -46,8 +46,6 @@ import com.tencent.devops.remotedev.pojo.WorkspaceShared
 import com.tencent.devops.remotedev.pojo.WorkspaceStatus
 import com.tencent.devops.remotedev.pojo.WorkspaceSystemType
 import com.tencent.devops.remotedev.pojo.project.WorkspaceProperty
-import java.sql.Timestamp
-import java.time.LocalDateTime
 import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.DatePart
@@ -59,6 +57,8 @@ import org.jooq.RecordMapper
 import org.jooq.Result
 import org.jooq.impl.DSL
 import org.springframework.stereotype.Repository
+import java.sql.Timestamp
+import java.time.LocalDateTime
 
 @Suppress("ALL")
 @Repository
@@ -537,7 +537,8 @@ class WorkspaceDao {
         status: WorkspaceStatus? = null,
         mountType: WorkspaceMountType? = null,
         projectIds: Set<String>? = null,
-        ips: Set<String>? = null
+        ips: Set<String>? = null,
+        workspaceNames: Set<String>? = null
     ): Result<out Record>? {
         val t1 = TWorkspace.T_WORKSPACE.`as`("t1")
         val t2 = TWorkspaceWindows.T_WORKSPACE_WINDOWS.`as`("t2")
@@ -552,6 +553,9 @@ class WorkspaceDao {
         }
         mountType?.let {
             conditions.add(t1.WORKSPACE_MOUNT_TYPE.eq(mountType.name))
+        }
+        workspaceNames?.let {
+            conditions.add(t1.NAME.`in`(workspaceNames))
         }
 
         if (!projectIds.isNullOrEmpty()) {
@@ -571,7 +575,7 @@ class WorkspaceDao {
         }
 
         return dslContext.selectDistinct(
-            t1.NAME, t1.DISPLAY_NAME, t1.PROJECT_ID, t1.CREATOR, t1.STATUS, t1.CREATE_TIME
+            t1.NAME, t1.DISPLAY_NAME, t1.PROJECT_ID, t1.CREATOR, t1.STATUS, t1.CREATE_TIME, t2.WIN_CONFIG_ID
         )
             .from(t1).innerJoin(t2).on(t1.NAME.eq(t2.WORKSPACE_NAME))
             .where(conditions)
@@ -817,6 +821,17 @@ class WorkspaceDao {
             dslContext.selectFrom(this)
                 .where(WORKSPACE_NAME.`in`(workspaceNames))
                 .fetch()
+        }
+    }
+
+    fun fetchWorkspaces(
+        dslContext: DSLContext,
+        workspaceNames: Set<String>
+    ): List<WorkspaceRecord> {
+        with(TWorkspace.T_WORKSPACE) {
+            return dslContext.selectFrom(this)
+                .where(NAME.`in`(workspaceNames))
+                .fetch(workspaceMapper)
         }
     }
 

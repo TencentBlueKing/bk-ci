@@ -14,6 +14,7 @@ import com.tencent.devops.project.api.service.service.ServiceTxProjectResource
 import com.tencent.devops.remotedev.api.service.ServiceRemoteDevResource
 import com.tencent.devops.remotedev.common.Constansts
 import com.tencent.devops.remotedev.pojo.ProjectWorkspaceCreate
+import com.tencent.devops.remotedev.pojo.WindowsResourceTypeConfig
 import com.tencent.devops.remotedev.pojo.op.OpProjectWorkspaceAssignData
 import com.tencent.devops.remotedev.pojo.op.RemotedevCvmData
 import com.tencent.devops.remotedev.pojo.op.WorkspaceNotifyData
@@ -206,5 +207,9 @@ class ServiceRemoteDevResourceImpl(
             notifyData = notifyData
         )
         return Result(true)
+    }
+
+    override fun getWindowsResourceList(): Result<List<WindowsResourceTypeConfig>> {
+        return Result(windowsResourceConfigService.getAllType(true, null))
     }
 }

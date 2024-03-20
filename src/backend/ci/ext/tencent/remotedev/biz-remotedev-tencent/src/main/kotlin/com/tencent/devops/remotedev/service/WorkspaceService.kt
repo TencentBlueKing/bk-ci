@@ -541,6 +541,13 @@ class WorkspaceService @Autowired constructor(
         val detailMap = workspaceDao.fetchWorkspaceDetailByNames(dslContext, workspaceNames)
             .associateBy { it.workspaceName }
 
+        val workspaceWindows = workspaceDao.fetchNotifyWorkspaces(
+            dslContext = dslContext,
+            mountType = WorkspaceMountType.START,
+            workspaceNames = workspaceNames
+        )?.associateBy { it["NAME"] as String }
+
+        val allConfig = windowsResourceConfigService.getAllType(true, null).associateBy { it.id!!.toString() }
         val fetchDetailEndTime = System.currentTimeMillis()
 
         val tailUsers = if (hasDepartmentsInfo == true) {
@@ -590,7 +597,6 @@ class WorkspaceService @Autowired constructor(
             } else {
                 null
             }
-
             WeSecProjectWorkspace(
                 workspaceName = workspaceName,
                 projectId = res["PROJECT_ID"] as String,
@@ -603,8 +609,8 @@ class WorkspaceService @Autowired constructor(
                 status = WorkspaceStatus.values()[res["STATUS"] as Int],
                 displayName = res["DISPLAY_NAME"] as String,
                 ownerDepartments = depInfo,
-                currentLoginUsers = currUser
-
+                currentLoginUsers = currUser,
+                machineType = workspaceWindows?.get(workspaceName)?.let { win -> allConfig[win["WIN_CONFIG_ID"].toString()]?.size }
             )
         }
 
