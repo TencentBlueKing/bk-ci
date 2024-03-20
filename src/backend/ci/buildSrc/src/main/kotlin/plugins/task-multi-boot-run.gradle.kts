@@ -73,5 +73,5 @@ fun loadProperties(basePath: String): Properties {
 fun joinPath(vararg folders: String) = folders.joinToString(File.separator)
 tasks.getByName("compileKotlin").dependsOn("replacePlaceholders")
 
-val localRunMultiServices = "process,auth,environment,repository,ticket,project,notify,openapi,quality,dispatch," +
+val localRunMultiServices = "process,auth,environment,repository,ticket,project,notify,quality,dispatch," +
     "dispatch-kubernetes,artifactory,monitoring,plugin,websocket,worker,misc,store,log,image"

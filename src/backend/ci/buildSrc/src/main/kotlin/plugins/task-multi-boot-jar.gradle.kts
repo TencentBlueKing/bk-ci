@@ -46,5 +46,5 @@ fun addDependencies(path: String) {
 }
 
 val localRunMultiModules = "process,auth,image,environment,repository,ticket,project," +
-    "notify,openapi,quality,dispatch,dispatch-docker,dispatch-kubernetes,artifactory," +
+    "notify,quality,dispatch,dispatch-docker,dispatch-kubernetes,artifactory," +
     "monitoring,plugin,websocket,worker,misc,store,log"

@@ -10,7 +10,6 @@ spring:
       - repository
       - project
       - notify
-      - openapi
       - dispatch
       - dispatch-docker
       - dispatch-kubernetes
