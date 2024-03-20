@@ -30,6 +30,7 @@ import com.tencent.devops.common.db.config.DBBaseConfiguration
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.jooq.impl.DefaultConfiguration
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.InjectionPoint
 import org.springframework.beans.factory.NoSuchBeanDefinitionException
 import org.springframework.beans.factory.config.ConfigurableBeanFactory
@@ -43,6 +44,7 @@ import java.lang.reflect.Constructor
 import java.lang.reflect.Field
 import java.lang.reflect.Method
 
+
 /**
  *
  * Powered By Tencent
@@ -50,6 +52,7 @@ import java.lang.reflect.Method
 @Configuration
 @Import(DBBaseConfiguration::class, DataSourceDefinitionRegistrar::class, JooqDefinitionRegistrar::class)
 class MultijarDslContextConfiguration {
+
     @Bean
     @Primary
     @Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
@@ -57,38 +60,62 @@ class MultijarDslContextConfiguration {
         configurationMap: Map<String?, DefaultConfiguration?>,
         injectionPoint: InjectionPoint
     ): DSLContext {
-        val annotatedElement: AnnotatedElement = injectionPoint.annotatedElement
-        if (annotatedElement !is Constructor<*> && annotatedElement !is Method && annotatedElement !is Field
-        ) {
-            throw IllegalArgumentException("Invalid annotatedElement type")
-        }
-        val declaringClass: Class<*> = when (annotatedElement) {
+        val annotatedElement = injectionPoint.annotatedElement
+        validateAnnotatedElementType(annotatedElement)
+
+        val declaringClass = when (annotatedElement) {
             is Constructor<*> -> annotatedElement.declaringClass
             is Method -> annotatedElement.declaringClass
             is Field -> annotatedElement.declaringClass
             else -> throw IllegalArgumentException("Invalid annotatedElement type")
         }
 
-        val packageName = declaringClass.`package`.name
-        val serviceName = multiModelService.find { packageName.contains(it) }
+        val currentPackageName = declaringClass.`package`.name
+        val matchingModuleName = multiModuleName.find { currentPackageName.contains(it) }
             ?: throw NoSuchBeanDefinitionException("no jooq configuration")
-        val configurationName = if (packageName.contains(".misc")) {
-            val matchResult = miscServiceRegex.find(packageName)
-            "${matchResult?.groupValues?.get(1) ?: "default"}JooqConfiguration"
-        } else if (packageName.contains(".store")) {
-            "storeJooqConfiguration"
-        } else {
-            serviceName.plus("JooqConfiguration")
+
+        val configurationName = when {
+            currentPackageName.contains(".misc") -> {
+                val matchResult = miscServiceRegex.find(currentPackageName)
+                "${matchResult?.groupValues?.get(1) ?: "default"}JooqConfiguration"
+            }
+            currentPackageName.contains(".store") -> "storeJooqConfiguration"
+            currentPackageName.contains(".dispatch") -> handleDispatchModuleDslContext(currentPackageName)
+            else -> matchingModuleName.plus("JooqConfiguration")
         }
 
         val configuration = configurationMap[configurationName]
-            ?: throw NoSuchBeanDefinitionException("no $configurationName")
+            ?: throw NoSuchBeanDefinitionException("no $configurationName $currentPackageName")
 
         return DSL.using(configuration)
     }
 
+    fun validateAnnotatedElementType(annotatedElement: AnnotatedElement) {
+        if (annotatedElement !is Constructor<*> && annotatedElement !is Method && annotatedElement !is Field) {
+            throw IllegalArgumentException("Invalid annotatedElement type")
+        }
+    }
+
+    fun handleDispatchModuleDslContext(packageName: String): String {
+        return when {
+            packageName.startsWith("com.tencent.devops.dispatch.kubernetes") ||
+                packageName.startsWith("com.tencent.devops.dispatch.startcloud") ||
+                packageName.startsWith("com.tencent.devops.dispatch.devcloud") -> {
+                logger.info("dslContext Configuration: dispatchKubernetesJooqConfiguration")
+                "dispatchKubernetesJooqConfiguration"
+            }
+            packageName.startsWith("com.tencent.devops.dispatch.") -> {
+                logger.info("dslContext Configuration: dispatchJooqConfiguration|$packageName")
+                "dispatchJooqConfiguration"
+            }
+            else -> "defaultJooqConfiguration"
+        }
+    }
+
     companion object {
-        private val multiModelService = System.getProperty("devops.multi.from").split(",")
-        private val miscServiceRegex = "\\.(process|project|repository|dispatch|plugin|quality|artifactory|environment)".toRegex()
+        private val logger = LoggerFactory.getLogger(MultijarDslContextConfiguration::class.java)
+        private val multiModuleName = System.getProperty("devops.multi.from").split(",")
+        private val miscServiceRegex = ("\\.(process|project|repository|dispatch|plugin" +
+            "|quality|artifactory|environment)").toRegex()
     }
 }

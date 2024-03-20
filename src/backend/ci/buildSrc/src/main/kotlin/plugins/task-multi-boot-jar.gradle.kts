@@ -25,24 +25,18 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 tasks.register("multiBootJar") {
-    val finalServices = System.getProperty("devops.multi.from") ?: localRunMultiServices
+    val finalServices = System.getProperty("devops.multi.from") ?: localRunMultiModules
     val finalServiceList = finalServices.split(",").toMutableList()
     rootProject.subprojects.filter {
         isSpecifiedModulePath(it.path, finalServiceList)
     }.forEach { subProject -> addDependencies(subProject.path) }
     dependsOn("copyToRelease")
-
 }
 
 fun isSpecifiedModulePath(path: String, multiModuleList: List<String>): Boolean {
     if (!path.contains("core"))
         return false
-    // store服务存在子模块 biz-store-image，该模块会单独在打包image服务时，误打包
-    return if (path.contains("biz") && path.contains("image") && path.contains("store")) {
-        multiModuleList.contains("store")
-    } else {
-        path.contains("biz") && multiModuleList.any { module -> path.contains(module) }
-    }
+    return path.contains("biz") && multiModuleList.any { module -> path.contains(module) }
 }
 
 fun addDependencies(path: String) {
@@ -51,6 +45,6 @@ fun addDependencies(path: String) {
     }
 }
 
-val localRunMultiServices = "process,auth,image,environment,repository,ticket,project," +
+val localRunMultiModules = "process,auth,image,environment,repository,ticket,project," +
     "notify,openapi,quality,dispatch,dispatch-docker,dispatch-kubernetes,artifactory," +
     "monitoring,plugin,websocket,worker,misc,store,log"

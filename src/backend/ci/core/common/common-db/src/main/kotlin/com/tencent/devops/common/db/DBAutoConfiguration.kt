@@ -55,6 +55,7 @@ import javax.sql.DataSource
 @AutoConfigureBefore(DataSourceAutoConfiguration::class, JooqAutoConfiguration::class)
 @Import(DBBaseConfiguration::class)
 @EnableTransactionManagement
+@ConditionalOnMissingClass("com.tencent.devops.multijar.MultijarDslContextConfiguration")
 class DBAutoConfiguration {
 
     @Value("\${spring.datasource.url:#{null}}")

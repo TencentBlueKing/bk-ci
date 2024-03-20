@@ -85,6 +85,7 @@ import org.elasticsearch.search.builder.SearchSourceBuilder
 import org.elasticsearch.search.fetch.subphase.highlight.HighlightBuilder
 import org.elasticsearch.search.sort.SortOrder
 import org.slf4j.LoggerFactory
+import org.springframework.stereotype.Service
 
 @Suppress(
     "LongParameterList",
@@ -95,6 +96,7 @@ import org.slf4j.LoggerFactory
     "ReturnCount",
     "ComplexMethod"
 )
+@Service
 class LogServiceESImpl(
     private val logClient: LogClient,
     private val indexService: IndexService,

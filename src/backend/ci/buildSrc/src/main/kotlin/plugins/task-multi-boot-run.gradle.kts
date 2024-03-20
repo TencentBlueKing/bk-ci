@@ -26,10 +26,22 @@
  */
 import org.springframework.boot.gradle.tasks.bundling.BootJar
 import org.springframework.boot.gradle.tasks.run.BootRun
+import java.util.Properties
 
 tasks.register<BootRun>("multiBootRun") {
+
+    val bkEnvPath = joinPath(projectDir.absolutePath, "bkenv.properties")
+    val bkEnvProperties = Properties()
+    file(bkEnvPath).let {
+        if (it.exists()) {
+            bkEnvProperties.load(it.inputStream())
+        }
+    }
     doFirst {
         systemProperty("devops.multi.from", localRunMultiServices)
+        systemProperty("spring.datasource.url", System.getProperty("mysqlURL"))
+        systemProperty("spring.datasource.username", System.getProperty("mysqlUser"))
+        systemProperty("spring.datasource.password",  System.getProperty("mysqlPasswd"))
         systemProperty("spring.main.allow-circular-references", "true")
         systemProperty("spring.cloud.config.enabled", "false")
         systemProperty("spring.cloud.config.fail-fast", "true")
@@ -48,12 +60,18 @@ tasks.register<BootRun>("multiBootRun") {
     mainClass.set(bootJarTask.mainClass)
     classpath = bootJarTask.classpath
 }
+
+fun loadProperties(basePath: String): Properties {
+    val properties = Properties()
+    properties.load(file(basePath).inputStream())
+    return properties
+}
+
 /**
  * 返回路径
  */
 fun joinPath(vararg folders: String) = folders.joinToString(File.separator)
 tasks.getByName("compileKotlin").dependsOn("replacePlaceholders")
 
-val localRunMultiServices = "process,auth,image,environment,repository,ticket,project," +
-    "notify,openapi,quality,dispatch,dispatch-docker,dispatch-kubernetes,artifactory," +
-    "monitoring,plugin,websocket,worker,misc,store,log"
+val localRunMultiServices = "process,auth,environment,repository,ticket,project,notify,openapi,quality,dispatch," +
+    "dispatch-kubernetes,artifactory,monitoring,plugin,websocket,worker,misc,store,log,image"

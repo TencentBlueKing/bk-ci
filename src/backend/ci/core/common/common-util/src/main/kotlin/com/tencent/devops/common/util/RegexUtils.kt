@@ -27,6 +27,8 @@
 
 package com.tencent.devops.common.util
 
+import java.util.Locale
+
 @Suppress("MagicNumber", "ReturnCount")
 object RegexUtils {
 
@@ -61,6 +63,26 @@ object RegexUtils {
             groups[line]!!.value + groups[domain]!!.value + (groups[liPort]?.value ?: "") + groups[context]!!.value
         } else {
             url
+        }
+    }
+
+
+    /**
+    * 转换驼峰，将dispatch-kubernetes类似字符串，转化为dispatchKubernetes
+    * */
+    fun convertToCamelCase(input: String): String {
+        val words = input.split("-")
+        return if (words.size > 1) {
+            val camelCaseWords = words.mapIndexed { index, word ->
+                if (index == 0) {
+                    word
+                } else {
+                    word.replaceFirstChar { if (it.isLowerCase()) it.titlecase(Locale.getDefault()) else it.toString() }
+                }
+            }
+            camelCaseWords.joinToString("")
+        } else {
+            input
         }
     }
 }

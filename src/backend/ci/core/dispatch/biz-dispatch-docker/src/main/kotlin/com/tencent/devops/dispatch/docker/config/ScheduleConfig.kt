@@ -8,7 +8,7 @@ import java.util.concurrent.ThreadPoolExecutor
 import java.util.concurrent.TimeUnit
 
 @Configuration
-class DispatchDockerScheduleConfig : SchedulingConfigurer {
+class ScheduleConfig : SchedulingConfigurer {
     override fun configureTasks(taskRegistrar: ScheduledTaskRegistrar) {
         val scheduler = ScheduledThreadPoolExecutor(5)
         scheduler.maximumPoolSize = 5
