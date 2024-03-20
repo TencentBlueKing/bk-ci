@@ -27,16 +27,10 @@
 
 package com.tencent.devops.dispatch.docker.client
 
-import com.tencent.devops.common.api.pojo.ErrorType
-import com.tencent.devops.common.client.Client
-import com.tencent.devops.common.dispatch.sdk.BuildFailureException
-import com.tencent.devops.common.dispatch.sdk.DispatchSdkErrorCode
 import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.service.BkTag
 import com.tencent.devops.dispatch.docker.client.context.BuildLessStartHandlerContext
-import com.tencent.devops.process.api.service.ServicePipelineTaskResource
 import com.tencent.devops.process.engine.common.VMUtils
-import com.tencent.devops.process.pojo.mq.PipelineBuildLessStartupDispatchEvent
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
@@ -44,7 +38,6 @@ import org.springframework.stereotype.Service
 @Service
 class BuildLessStartPrepareHandler @Autowired constructor(
     private val bkTag: BkTag,
-    private val client: Client,
     private val buildLogPrinter: BuildLogPrinter,
     private val buildLessStartDispatchHandler: BuildLessStartDispatchHandler
 ) : Handler<BuildLessStartHandlerContext>() {
@@ -72,6 +65,4 @@ class BuildLessStartPrepareHandler @Autowired constructor(
             buildLessStartDispatchHandler.handlerRequest(this)
         }
     }
-
-
 }
