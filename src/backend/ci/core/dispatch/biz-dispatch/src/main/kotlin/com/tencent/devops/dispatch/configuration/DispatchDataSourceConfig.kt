@@ -48,7 +48,7 @@ import javax.sql.DataSource
 @AutoConfigureOrder(Ordered.HIGHEST_PRECEDENCE)
 @EnableTransactionManagement
 @ConditionalOnMissingClass("com.tencent.devops.multijar.MultijarDslContextConfiguration")
-class DataSourceConfig {
+class DispatchDataSourceConfig {
 
     @Bean
     @Primary

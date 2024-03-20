@@ -47,7 +47,7 @@ import org.springframework.core.Ordered
 @Suppress("ALL")
 @Configuration
 @ConditionalOnWebApplication
-//@DependsOn(value = ["jooqConfiguration"])
+@DependsOn(value = ["dispatchJooqConfiguration"])
 @AutoConfigureOrder(Ordered.LOWEST_PRECEDENCE)
 class DispatchDockerBeanConfiguration @Autowired constructor(
     private val dslContext: DSLContext
