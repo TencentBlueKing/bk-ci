@@ -86,7 +86,7 @@
                                 <StatusIcon v-if="successStatus.includes(row.nodeStatus)" status="success" />
                                 <StatusIcon v-else-if="failStatus.includes(row.nodeStatus)" status="error" />
                                 <StatusIcon v-else-if="['NOT_INSTALLED'].includes(row.nodeStatus)" status="normal" />
-                                {{ $t('environment.nodeStatusMap')[row.nodeStatus] }}
+                                {{ row.nodeStatus === 'NOT_IN_CC' ? '' : $t('environment.nodeStatusMap')[row.nodeStatus] }}
                             </span>
                         </template>
                     </bk-table-column>
@@ -147,7 +147,7 @@
                 },
                 selectedNodeList: [],
                 successStatus: ['NORMAL', 'BUILD_IMAGE_SUCCESS'],
-                failStatus: ['NOT_IN_CC', 'ABNORMAL', 'DELETED', 'LOST', 'BUILD_IMAGE_FAILED', 'UNKNOWN']
+                failStatus: ['ABNORMAL', 'DELETED', 'LOST', 'BUILD_IMAGE_FAILED', 'UNKNOWN']
             }
         },
         computed: {

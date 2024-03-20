@@ -139,8 +139,8 @@ const nodeSelectMixin = {
                 this.nodeDialogLoading.isLoading = false
                 this.$emit('refresh')
                 setting.getNodeList(this.projectId, this.envHashId).then((res) => {
-                    this.nodeList = res
-                    this.agentList = res
+                    this.nodeList = res.records
+                    this.agentList = res.records
                 })
             })
         },

@@ -79,7 +79,7 @@ export default {
     },
 
     getSystemNodeList (projectId) {
-        return api.get(`${ENVIRNMENT_PERFIX}/user/envnode/${projectId}`)
+        return api.get(`${ENVIRNMENT_PERFIX}/user/envnode/${projectId}?page=-1`)
     },
 
     getNodeList (projectId, poolHash) {
@@ -137,7 +137,7 @@ export default {
     },
 
     requestNodeList (projectId) {
-        return api.get(`${ENVIRNMENT_PERFIX}/user/envnode/${projectId}`)
+        return api.get(`${ENVIRNMENT_PERFIX}/user/envnode/${projectId}?page=-1`)
     },
 
     importEnvNode (projectId, envHashId, params) {
