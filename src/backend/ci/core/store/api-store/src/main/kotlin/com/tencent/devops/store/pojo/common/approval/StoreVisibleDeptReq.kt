@@ -30,8 +30,12 @@ package com.tencent.devops.store.pojo.common.approval
 import com.tencent.devops.store.pojo.common.DeptInfo
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(title = "store组件可见范围响应报文体")
-data class StoreVisibleDeptResp(
+@Schema(title = "组件可见范围请求报文体")
+data class StoreVisibleDeptReq(
+    @get:Schema(title = "组件类型", required = true)
+    val storeType: String,
+    @get:Schema(title = "组件代码", required = true)
+    val storeCode: String,
     @get:Schema(title = "机构列表", required = true)
     val deptInfos: List<DeptInfo>
 )
