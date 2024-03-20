@@ -66,7 +66,6 @@ object RegexUtils {
         }
     }
 
-
     /**
      * 转换驼峰，将dispatch-kubernetes类似字符串，转化为dispatchKubernetes
      * */
