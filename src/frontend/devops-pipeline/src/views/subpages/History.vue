@@ -74,7 +74,6 @@
                 return this.getNavComponent(this.activeMenuItem)
             },
             asideNav () {
-                console.log('watch, ', !this.isReleaseVersion, !this.isActiveDraftVersion)
                 return [
                     {
                         title: this.$t('executeInfo'),
@@ -237,8 +236,7 @@
                         return {
                             component: 'BuildHistoryTab',
                             props: {
-                                isDebug: this.isActiveDraftVersion,
-                                pipelineVersion: this.activePipelineVersion?.version
+                                isDebug: this.isActiveDraftVersion
                             }
                         }
                 }

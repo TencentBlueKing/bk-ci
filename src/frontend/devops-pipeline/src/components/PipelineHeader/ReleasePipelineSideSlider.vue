@@ -590,6 +590,10 @@
                         type: 'success',
                         title: this.$t(isPacMR ? 'pacMRRelaseTips' : 'releaseSuc'),
                         width: 600,
+                        position: {
+                            top: 100,
+                            left: 100
+                        },
                         showFooter: false,
                         subHeader: h('div', {}, [
                             h('h3', {
