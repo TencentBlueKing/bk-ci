@@ -40,9 +40,10 @@
                                         action: RESOURCE_ACTION.USE
                                     }
                                 }"
+                                v-bk-tooltips="$t('codelib.重放此事件，符合条件的流水线将触发执行')"
                                 @click.stop="handleReplayAll(eventId)"
                             >
-                                {{ $t('codelib.一键重新触发') }}
+                                {{ $t('codelib.全部重放') }}
                             </a>
                             <bk-icon
                                 :class="{
@@ -96,9 +97,10 @@
                                                         action: RESOURCE_ACTION.USE
                                                     }
                                                 }"
+                                                v-bk-tooltips="$t('codelib.重放此事件，仅触发当前流水线')"
                                                 @click="handleReplay(detail)"
                                             >
-                                                {{ $t('codelib.重新触发') }}
+                                                {{ $t('codelib.重放') }}
                                             </a>
                                         </div>
                                     </td>
@@ -191,11 +193,11 @@
             ]),
 
             /**
-             * 一键重新触发
+             * 全部重放
              */
             handleReplayAll (eventId) {
                 this.$bkInfo({
-                    title: this.$t('codelib.是否一键重新触发？'),
+                    title: this.$t('codelib.是否全部重放？'),
                     subTitle: this.$t('codelib.将使用此事件重新触发关联的流水线'),
                     confirmLoading: true,
                     confirmFn: async () => {

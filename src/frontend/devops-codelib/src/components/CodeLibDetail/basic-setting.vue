@@ -122,6 +122,9 @@
                     </bk-switcher>
                     <span class="ml10" v-if="!repoInfo.enablePac && pacProjectName">
                         {{ $t('codelib.当前代码库已在【】项目中开启 PAC 模式', [pacProjectName]) }}
+                        <i
+                            v-bk-tooltips="$t('codelib.相同代码库只支持在一个蓝盾项目下开启 PAC 模式')"
+                            class="bk-icon bk-dialog-mark bk-dialog-warning icon-exclamation info-icon" />
                     </span>
 
                     <div class="pac-enable">
@@ -346,13 +349,17 @@
             header-position="left"
             :border="true"
             width="720"
-            :title="$t('codelib.代码库同步失败')">
+            :title="$t('codelib.代码库同步失败13')">
 
             <div class="title-tips">{{ $t('codelib.检测到代码库中以下流水线 YAML 文件同步失败，请处理后重试') }}</div>
             <bk-table
                 :data="syncFailedPipelineList"
             >
-                <bk-table-column :label="$t('codelib.流水线文件')" width="220" prop="filePath"></bk-table-column>
+                <bk-table-column :label="$t('codelib.流水线文件')" width="220" prop="filePath">
+                    <template slot-scope="{ row }">
+                        <a :href="row.fileUrl" target="_blank">{{ row.filePath }}</a>
+                    </template>
+                </bk-table-column>
                 <bk-table-column :label="$t('codelib.失败详情')" prop="reasonDetail">
                 </bk-table-column>
             </bk-table>
@@ -980,6 +987,17 @@
                 line-height: 16px;
                 color: #fff;
                 border-radius: 50%;
+            }
+            .info-icon {
+                display: inline-block;
+                background-color: #ccc;
+                width: 16px;
+                height: 16px;
+                line-height: 16px;
+                color: #fff;
+                border-radius: 50%;
+                margin-right: 5px;
+                cursor: pointer;
             }
             .help-icon {
                 cursor: pointer;
