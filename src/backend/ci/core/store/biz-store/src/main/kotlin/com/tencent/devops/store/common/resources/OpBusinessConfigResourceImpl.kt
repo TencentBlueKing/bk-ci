@@ -30,8 +30,8 @@ package com.tencent.devops.store.common.resources
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.store.api.common.OpBusinessConfigResource
-import com.tencent.devops.store.pojo.common.BusinessConfigRequest
-import com.tencent.devops.store.pojo.common.BusinessConfigResponse
+import com.tencent.devops.store.pojo.common.config.BusinessConfigRequest
+import com.tencent.devops.store.pojo.common.config.BusinessConfigResponse
 import com.tencent.devops.store.common.service.BusinessConfigService
 import org.springframework.beans.factory.annotation.Autowired
 

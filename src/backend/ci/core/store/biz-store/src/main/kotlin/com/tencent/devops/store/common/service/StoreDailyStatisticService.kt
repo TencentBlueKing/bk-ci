@@ -27,7 +27,7 @@
 
 package com.tencent.devops.store.common.service
 
-import com.tencent.devops.store.pojo.common.StoreDailyStatistic
+import com.tencent.devops.store.pojo.common.statistic.StoreDailyStatistic
 import java.time.LocalDateTime
 
 interface StoreDailyStatisticService {

@@ -69,7 +69,7 @@ import com.tencent.devops.store.common.dao.StoreProjectRelDao
 import com.tencent.devops.store.template.dao.MarketTemplateDao
 import com.tencent.devops.store.template.dao.TemplateCategoryRelDao
 import com.tencent.devops.store.template.dao.TemplateLabelRelDao
-import com.tencent.devops.store.pojo.atom.MarketMainItemLabel
+import com.tencent.devops.store.pojo.common.MarketMainItemLabel
 import com.tencent.devops.store.pojo.atom.enums.AtomStatusEnum
 import com.tencent.devops.store.pojo.common.DeptInfo
 import com.tencent.devops.store.pojo.common.HOTTEST
@@ -211,7 +211,8 @@ abstract class MarketTemplateServiceImpl @Autowired constructor() : MarketTempla
                         storeCode = atomRecord.atomCode,
                         storeName = atomRecord.name,
                         version = atomRecord.version,
-                        publicFlag = atomRecord.defaultFlag
+                        publicFlag = atomRecord.defaultFlag,
+                        status = AtomStatusEnum.getAtomStatus(atomRecord.atomStatus.toInt())
                     )
                     Optional.of(storeBaseInfo)
                 } else {

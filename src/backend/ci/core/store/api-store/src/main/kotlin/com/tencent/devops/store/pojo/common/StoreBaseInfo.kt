@@ -40,5 +40,7 @@ data class StoreBaseInfo(
     @get:Schema(title = "组件版本号", required = true)
     val version: String,
     @get:Schema(title = "是否为公共组件", required = true)
-    val publicFlag: Boolean
+    val publicFlag: Boolean,
+    @get:Schema(title = "状态", required = true)
+    val status: String = ""
 )

@@ -35,8 +35,8 @@ import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.store.common.dao.BusinessConfigDao
 import com.tencent.devops.store.common.dao.CategoryDao
 import com.tencent.devops.store.common.service.CategoryService
-import com.tencent.devops.store.pojo.common.Category
-import com.tencent.devops.store.pojo.common.CategoryRequest
+import com.tencent.devops.store.pojo.common.category.Category
+import com.tencent.devops.store.pojo.common.category.CategoryRequest
 import com.tencent.devops.store.pojo.common.KEY_CATEGORY_CODE
 import com.tencent.devops.store.pojo.common.KEY_CATEGORY_ICON_URL
 import com.tencent.devops.store.pojo.common.KEY_CATEGORY_ID

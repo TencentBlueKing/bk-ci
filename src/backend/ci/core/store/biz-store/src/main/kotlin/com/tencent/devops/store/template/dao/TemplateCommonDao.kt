@@ -32,6 +32,7 @@ import com.tencent.devops.model.store.tables.TTemplate
 import com.tencent.devops.store.common.dao.AbstractStoreCommonDao
 import com.tencent.devops.store.pojo.common.KEY_STORE_CODE
 import com.tencent.devops.store.pojo.common.StoreBaseInfo
+import com.tencent.devops.store.pojo.template.enums.TemplateStatusEnum
 import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.Record
@@ -124,7 +125,8 @@ class TemplateCommonDao : AbstractStoreCommonDao() {
                     storeCode = templateRecord.templateCode,
                     storeName = templateRecord.templateName,
                     version = templateRecord.version,
-                    publicFlag = templateRecord.publicFlag
+                    publicFlag = templateRecord.publicFlag,
+                    status = TemplateStatusEnum.getTemplateStatus(templateRecord.templateStatus.toInt())
                 )
             } else {
                 null

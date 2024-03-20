@@ -34,9 +34,9 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.store.constant.StoreMessageCode
 import com.tencent.devops.store.common.dao.StoreLogoDao
-import com.tencent.devops.store.pojo.common.Logo
-import com.tencent.devops.store.pojo.common.StoreLogoInfo
-import com.tencent.devops.store.pojo.common.StoreLogoReq
+import com.tencent.devops.store.pojo.common.logo.Logo
+import com.tencent.devops.store.pojo.common.logo.StoreLogoInfo
+import com.tencent.devops.store.pojo.common.logo.StoreLogoReq
 import com.tencent.devops.store.common.service.StoreLogoService
 import java.io.File
 import java.io.InputStream
