@@ -35,8 +35,9 @@ class JooqDefinitionRegistrar : ImportBeanDefinitionRegistrar {
                 "${finalModuleName}DataSource"
             }
 
-            val dataSourceConnectionProvider = BeanDefinitionBuilder.genericBeanDefinition(DataSourceConnectionProvider::class.java)
-                .addConstructorArgReference(dataSource)
+            val dataSourceConnectionProvider = BeanDefinitionBuilder.genericBeanDefinition(
+                DataSourceConnectionProvider::class.java
+            ).addConstructorArgReference(dataSource)
             registry.registerBeanDefinition(
                 "${finalModuleName}ConnectionProvider",
                 dataSourceConnectionProvider.beanDefinition
