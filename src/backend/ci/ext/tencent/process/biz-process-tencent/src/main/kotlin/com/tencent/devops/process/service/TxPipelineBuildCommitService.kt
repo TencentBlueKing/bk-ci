@@ -71,6 +71,10 @@ class TxPipelineBuildCommitService @Autowired constructor(
                     page = page,
                     size = size
                 )
+                if (webhookCommitList.isEmpty()) {
+                    logger.info("the pipeline build commit is empty|$projectId|$pipelineId|$buildId|$repo")
+                    return
+                }
                 val buildCommits = webhookCommitList.map {
                     with(it) {
                         DataPlatBuildCommits(
@@ -126,6 +130,10 @@ class TxPipelineBuildCommitService @Autowired constructor(
                         action = action ?: ""
                     )
                 }
+            }
+            if (buildCommits.isEmpty()) {
+                logger.info("the pipeline build commit is empty")
+                return
             }
             logger.info(
                 "start send build commit[${buildCommits.first()}...${buildCommits.last()}]|" +
