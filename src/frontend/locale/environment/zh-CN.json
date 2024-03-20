@@ -265,7 +265,8 @@
         "BUILD_IMAGE_FAILED": "制作镜像失败",
         "UNKNOWN": "未知",
         "NOT_INSTALLED": "未安装",
-        "NOT_IN_CC": "节点已从蓝鲸CC移除"
+        "NOT_IN_CC": "节点已从蓝鲸CC移除",
+        "NOT_IN_CMDB": "节点已从CMDB移除"
     },
     "newPool": "创建",
     "查看构建机监控": "查看构建机监控",

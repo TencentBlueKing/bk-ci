@@ -7,11 +7,11 @@
             <div class="node-list-header">
                 <div class="title">{{ $t('environment.nodeInfo.selectNodeTip') }}
                     <span class="selected-node-prompt">
-                        {{ $t('environment.nodeInfo.total') }}<span class="node-count"> {{ selectHandlercConf.curTotalCount }}
+                        {{ $t('environment.nodeInfo.total') }}<span class="node-count"> {{ selectHandlerConf.curTotalCount }}
                         </span>{{ $t('environment.nodes') }}
                     </span>
                     <span class="selected-node-prompt">
-                        {{ $t('environment.selected') }}<span class="node-count"> {{ selectHandlercConf.selectedNodeCount }}
+                        {{ $t('environment.selected') }}<span class="node-count"> {{ selectHandlerConf.selectedNodeCount }}
                         </span>{{ $t('environment.nodes') }}
                     </span>
                 </div>
@@ -100,7 +100,7 @@
                             <StatusIcon v-if="successStatus.includes(row.nodeStatus)" status="success" />
                             <StatusIcon v-else-if="failStatus.includes(row.nodeStatus)" status="error" />
                             <StatusIcon v-else-if="['NOT_INSTALLED'].includes(row.nodeStatus)" status="normal" />
-                            {{ row.nodeStatus === 'NOT_IN_CC' ? '' : $t('environment.nodeStatusMap')[row.nodeStatus] }}
+                            {{ ['NOT_IN_CC', 'NOT_IN_CMDB'].includes(row.nodeStatus) ? '' : $t('environment.nodeStatusMap')[row.nodeStatus] }}
                         </template>
                     </bk-table-column>
                     <!-- <bk-table-column :min-width="82"
@@ -110,13 +110,13 @@
                             <span v-else>
                                 <span class="node-agstatus normal-status-node" v-if="row.nodeType === 'BCSVM'" :class="{
                                     'refresh-status-node': !row.agentStatus,
-                                    'over-content': selectHandlercConf.curDisplayCount > 6
+                                    'over-content': selectHandlerConf.curDisplayCount > 6
                                 }">{{ row.agentStatus ? $t('environment.nodeInfo.normal') :
                                     $t('environment.nodeInfo.refreshing') }}
                                 </span>
                                 <span class="node-agstatus normal-status-node" v-else :class="{
                                     'abnormal-status-node': !row.agentStatus,
-                                    'over-content': selectHandlercConf.curDisplayCount > 6
+                                    'over-content': selectHandlerConf.curDisplayCount > 6
                                 }">{{ row.agentStatus ? $t('environment.nodeInfo.normal') :
                                     $t('environment.nodeInfo.abnormal') }}
                                 </span>
@@ -146,7 +146,7 @@
             nodeSelectConf: Object,
             loading: Object,
             curUserInfo: Object,
-            selectHandlercConf: Object,
+            selectHandlerConf: Object,
             rowList: Array,
             confirmFn: Function,
             toggleAllSelect: Function,
@@ -192,9 +192,6 @@
                 this.pagination.count = list.length
                 const { current, limit } = this.pagination
                 return list.splice(limit * (current - 1), limit * current)
-            },
-            isAllSelected () {
-                return this.selectHandlercConf.allNodeSelected
             }
 
         },
@@ -312,12 +309,12 @@
                 return <bk-checkbox
                         true-value={true}
                         false-value={false}
-                        v-model={this.isAllSelected}
+                        v-model={this.selectHandlerConf.allNodeSelected}
                         onChange={this.allSelectChange}
                         />
             },
-            allSelectChange () {
-                this.toggleAllSelect(!this.isAllSelected)
+            allSelectChange (value) {
+                this.toggleAllSelect(value)
             },
             handlePageChange (page) {
                 this.pagination.current = page

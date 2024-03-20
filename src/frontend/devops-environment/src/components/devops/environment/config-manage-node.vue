@@ -86,7 +86,7 @@
                                 <StatusIcon v-if="successStatus.includes(row.nodeStatus)" status="success" />
                                 <StatusIcon v-else-if="failStatus.includes(row.nodeStatus)" status="error" />
                                 <StatusIcon v-else-if="['NOT_INSTALLED'].includes(row.nodeStatus)" status="normal" />
-                                {{ row.nodeStatus === 'NOT_IN_CC' ? '' : $t('environment.nodeStatusMap')[row.nodeStatus] }}
+                                {{ ['NOT_IN_CC', 'NOT_IN_CMDB'].includes(row.nodeStatus) ? '' : $t('environment.nodeStatusMap')[row.nodeStatus] }}
                             </span>
                         </template>
                     </bk-table-column>

@@ -36,7 +36,6 @@
                     </template>
                 </bk-table-column>
                 <bk-table-column :width="150" :label="$t('environment.nodeInfo.os')" prop="osName"></bk-table-column>
-                <bk-table-column :width="150" :label="$t('environment.nodeInfo.gateway')" prop="gateway" show-overflow-tooltip></bk-table-column>
                 <bk-table-column :label="$t('environment.nodeInfo.cpuStatus')">
                     <template slot-scope="props">
                         <div class="status-cell">
@@ -85,7 +84,7 @@
             :cur-user-info="curUserInfo"
             :row-list="importNodeList"
             :change-created-user="changeCreatedUser"
-            :select-handlerc-conf="selectHandlercConf"
+            :select-handler-conf="selectHandlerConf"
             :confirm-fn="confirmFn"
             :toggle-all-select="toggleAllSelect"
             :loading="nodeDialogLoading"
@@ -144,7 +143,7 @@
                     search: ''
                 },
                 // 选择节点
-                selectHandlercConf: {
+                selectHandlerConf: {
                     curTotalCount: 0,
                     curDisplayCount: 0,
                     selectedNodeCount: 0,
@@ -167,7 +166,7 @@
                 tableLoading: false,
                 runningStatus: ['CREATING', 'RUNNING', 'STARTING', 'STOPPING', 'RESTARTING', 'DELETING', 'BUILDING_IMAGE'],
                 successStatus: ['NORMAL', 'BUILD_IMAGE_SUCCESS'],
-                failStatus: ['ABNORMAL', 'DELETED', 'LOST', 'BUILD_IMAGE_FAILED', 'UNKNOWN']
+                failStatus: ['ABNORMAL', 'DELETED', 'LOST', 'BUILD_IMAGE_FAILED', 'UNKNOWN', 'NOT_IN_CC', 'NOT_IN_CMDB']
             }
         },
         computed: {
@@ -194,7 +193,7 @@
                         if (item.isChecked && !item.isEixtEnvNode) curCount++
                     })
 
-                    this.selectHandlercConf.selectedNodeCount = curCount
+                    this.selectHandlerConf.selectedNodeCount = curCount
                     this.decideToggle()
                 }
             }
@@ -393,16 +392,16 @@
                         if (item.isDisplay) curCount++
                     })
 
-                    this.selectHandlercConf.curTotalCount = curCount
+                    this.selectHandlerConf.curTotalCount = curCount
 
                     const result = this.importNodeList.some(element => {
                         return element.isDisplay
                     })
 
                     if (result) {
-                        this.selectHandlercConf.searchEmpty = false
+                        this.selectHandlerConf.searchEmpty = false
                     } else {
-                        this.selectHandlercConf.searchEmpty = true
+                        this.selectHandlerConf.searchEmpty = true
                     }
                 } catch (err) {
                     const message = err.message ? err.message : err
@@ -481,19 +480,20 @@
                     }
                 })
 
-                this.selectHandlercConf.curDisplayCount = curCount
+                this.selectHandlerConf.curDisplayCount = curCount
 
                 if (curCount === curCheckCount) {
-                    this.selectHandlercConf.allNodeSelected = true
+                    this.selectHandlerConf.allNodeSelected = true
                 } else {
-                    this.selectHandlercConf.allNodeSelected = false
+                    this.selectHandlerConf.allNodeSelected = false
                 }
             },
             /**
              * 节点全选
              */
-            toggleAllSelect () {
-                if (this.selectHandlercConf.allNodeSelected) {
+            toggleAllSelect (value) {
+                this.selectHandlerConf.allNodeSelected = value
+                if (this.selectHandlerConf.allNodeSelected) {
                     this.importNodeList.forEach(item => {
                         if (item.isDisplay && !item.isEixtEnvNode) {
                             item.isChecked = true
@@ -544,12 +544,12 @@
                     })
 
                     if (result) {
-                        this.selectHandlercConf.searchEmpty = false
+                        this.selectHandlerConf.searchEmpty = false
                     } else {
-                        this.selectHandlercConf.searchEmpty = true
+                        this.selectHandlerConf.searchEmpty = true
                     }
                 } else {
-                    this.selectHandlercConf.searchEmpty = false
+                    this.selectHandlerConf.searchEmpty = false
 
                     if (this.curEnvDetail.envType === 'BUILD') {
                         this.importNodeList.forEach(item => {
@@ -585,7 +585,7 @@
             cancelFn () {
                 if (!this.nodeDialogLoading.isLoading) {
                     this.nodeSelectConf.isShow = false
-                    this.selectHandlercConf.searchEmpty = false
+                    this.selectHandlerConf.searchEmpty = false
                     this.nodeSelectConf.importText = this.$t('environment.import')
                 }
             },
