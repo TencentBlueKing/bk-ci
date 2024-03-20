@@ -30,8 +30,8 @@ import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.store.api.common.OpStoreAuditResource
-import com.tencent.devops.store.pojo.common.StoreApproveRequest
-import com.tencent.devops.store.pojo.common.VisibleAuditInfo
+import com.tencent.devops.store.pojo.common.approval.StoreApproveRequest
+import com.tencent.devops.store.pojo.common.approval.VisibleAuditInfo
 import com.tencent.devops.store.pojo.common.enums.DeptStatusEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.common.service.OpStoreAuditConfService

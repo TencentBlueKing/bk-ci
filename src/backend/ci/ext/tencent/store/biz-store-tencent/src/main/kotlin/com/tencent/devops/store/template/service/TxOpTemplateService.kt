@@ -28,7 +28,7 @@
 package com.tencent.devops.store.template.service
 
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.store.pojo.common.VisibleApproveReq
+import com.tencent.devops.store.pojo.common.approval.VisibleApproveReq
 
 interface TxOpTemplateService {
 

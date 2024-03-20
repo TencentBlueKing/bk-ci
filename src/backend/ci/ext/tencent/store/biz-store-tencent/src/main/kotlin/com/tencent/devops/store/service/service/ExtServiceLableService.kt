@@ -29,8 +29,8 @@ package com.tencent.devops.store.service.service
 
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.store.common.service.LabelService
+import com.tencent.devops.store.pojo.common.label.Label
 import com.tencent.devops.store.service.dao.ExtServiceLableRelDao
-import com.tencent.devops.store.pojo.common.Label
 import org.jooq.DSLContext
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service

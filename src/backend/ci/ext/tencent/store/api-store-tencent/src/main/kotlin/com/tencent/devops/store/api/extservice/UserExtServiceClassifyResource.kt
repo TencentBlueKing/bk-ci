@@ -28,9 +28,9 @@
 package com.tencent.devops.store.api.extservice
 
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.store.pojo.common.Classify
-import io.swagger.v3.oas.annotations.tags.Tag
+import com.tencent.devops.store.pojo.common.classify.Classify
 import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.tags.Tag
 import javax.ws.rs.Consumes
 import javax.ws.rs.GET
 import javax.ws.rs.Path
@@ -43,8 +43,8 @@ import javax.ws.rs.core.MediaType
 @Consumes(MediaType.APPLICATION_JSON)
 interface UserExtServiceClassifyResource {
 
-    @Operation(summary = "获取所有流水线插件分类信息")
+    @Operation(summary = "获取所有微扩展分类信息")
     @GET
     @Path("/")
-    fun getAllAtomClassifys(): Result<List<Classify>>
+    fun getAllServiceClassifies(): Result<List<Classify>>
 }

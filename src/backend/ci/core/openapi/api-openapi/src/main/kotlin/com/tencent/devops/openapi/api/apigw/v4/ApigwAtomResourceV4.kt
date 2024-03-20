@@ -37,7 +37,7 @@ import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.store.pojo.atom.AtomPipeline
 import com.tencent.devops.store.pojo.atom.AtomVersion
 import com.tencent.devops.store.pojo.atom.InstallAtomReq
-import com.tencent.devops.store.pojo.common.StoreStatistic
+import com.tencent.devops.store.pojo.common.statistic.StoreStatistic
 import io.swagger.v3.oas.annotations.tags.Tag
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter

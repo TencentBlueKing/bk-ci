@@ -34,8 +34,8 @@ import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.store.constant.StoreMessageCode
 import com.tencent.devops.store.common.dao.ReasonDao
 import com.tencent.devops.store.common.dao.ReasonRelDao
-import com.tencent.devops.store.pojo.common.Reason
-import com.tencent.devops.store.pojo.common.ReasonReq
+import com.tencent.devops.store.pojo.common.reason.Reason
+import com.tencent.devops.store.pojo.common.reason.ReasonReq
 import com.tencent.devops.store.pojo.common.enums.ReasonTypeEnum
 import com.tencent.devops.store.common.service.ReasonService
 import org.jooq.DSLContext

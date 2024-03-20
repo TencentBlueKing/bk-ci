@@ -37,7 +37,7 @@ import com.tencent.devops.store.atom.dao.MarketAtomDao
 import com.tencent.devops.store.pojo.atom.enums.AtomStatusEnum
 import com.tencent.devops.store.pojo.common.ATOM_POST_VERSION_TEST_FLAG_KEY_PREFIX
 import com.tencent.devops.store.pojo.common.STORE_LATEST_TEST_FLAG_KEY_PREFIX
-import com.tencent.devops.store.pojo.common.StoreBuildResultRequest
+import com.tencent.devops.store.pojo.common.publication.StoreBuildResultRequest
 import com.tencent.devops.store.atom.service.AtomReleaseService
 import com.tencent.devops.store.atom.service.MarketAtomService
 import com.tencent.devops.store.common.service.AbstractStoreHandleBuildResultService

@@ -31,7 +31,7 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.store.pojo.atom.AtomEnv
 import com.tencent.devops.store.pojo.atom.AtomEnvRequest
 import com.tencent.devops.store.pojo.atom.AtomRunInfo
-import com.tencent.devops.store.pojo.common.StoreVersion
+import com.tencent.devops.store.pojo.common.version.StoreVersion
 import org.springframework.stereotype.Service
 
 /**

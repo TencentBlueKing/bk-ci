@@ -29,7 +29,7 @@ package com.tencent.devops.store.common.service
 
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.pipeline.enums.BuildStatus
-import com.tencent.devops.store.pojo.common.StoreBuildResultRequest
+import com.tencent.devops.store.pojo.common.publication.StoreBuildResultRequest
 
 interface StoreBuildService {
 

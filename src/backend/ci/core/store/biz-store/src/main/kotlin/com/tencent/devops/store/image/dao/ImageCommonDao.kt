@@ -39,6 +39,7 @@ import com.tencent.devops.store.pojo.common.KEY_STORE_CODE
 import com.tencent.devops.store.pojo.common.StoreBaseInfo
 import com.tencent.devops.store.pojo.common.enums.StoreProjectTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
+import com.tencent.devops.store.pojo.image.enums.ImageStatusEnum
 import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.Record
@@ -143,7 +144,8 @@ class ImageCommonDao : AbstractStoreCommonDao() {
                 storeCode = imageRecord.imageCode,
                 storeName = imageRecord.imageName,
                 version = imageRecord.version,
-                publicFlag = publicFlag
+                publicFlag = publicFlag,
+                status = ImageStatusEnum.getImageStatus(imageRecord.imageStatus.toInt())
             )
         } else {
             null

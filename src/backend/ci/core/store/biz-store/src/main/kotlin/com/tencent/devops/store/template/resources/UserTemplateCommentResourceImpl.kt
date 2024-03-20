@@ -31,9 +31,9 @@ import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.store.api.template.UserTemplateCommentResource
-import com.tencent.devops.store.pojo.common.StoreCommentInfo
-import com.tencent.devops.store.pojo.common.StoreCommentRequest
-import com.tencent.devops.store.pojo.common.StoreCommentScoreInfo
+import com.tencent.devops.store.pojo.common.comment.StoreCommentInfo
+import com.tencent.devops.store.pojo.common.comment.StoreCommentRequest
+import com.tencent.devops.store.pojo.common.comment.StoreCommentScoreInfo
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.common.service.StoreCommentService
 import com.tencent.devops.store.common.service.StoreStatisticService

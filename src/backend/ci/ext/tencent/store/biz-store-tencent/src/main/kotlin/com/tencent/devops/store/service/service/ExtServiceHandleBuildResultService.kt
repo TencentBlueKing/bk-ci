@@ -32,11 +32,11 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.store.common.service.AbstractStoreHandleBuildResultService
-import com.tencent.devops.store.service.dao.ExtServiceDao
-import com.tencent.devops.store.service.dao.ExtServiceFeatureDao
-import com.tencent.devops.store.pojo.common.StoreBuildResultRequest
+import com.tencent.devops.store.pojo.common.publication.StoreBuildResultRequest
 import com.tencent.devops.store.pojo.extservice.ExtServiceFeatureUpdateInfo
 import com.tencent.devops.store.pojo.extservice.enums.ExtServiceStatusEnum
+import com.tencent.devops.store.service.dao.ExtServiceDao
+import com.tencent.devops.store.service.dao.ExtServiceFeatureDao
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory

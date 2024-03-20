@@ -27,7 +27,7 @@
 
 package com.tencent.devops.store.common.service
 
-import com.tencent.devops.store.pojo.common.StoreDockingPlatformInfo
+import com.tencent.devops.store.pojo.common.platform.StoreDockingPlatformInfo
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 
 interface StoreDockingPlatformRelService {

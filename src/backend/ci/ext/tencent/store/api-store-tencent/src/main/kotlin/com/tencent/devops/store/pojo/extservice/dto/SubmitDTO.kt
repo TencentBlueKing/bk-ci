@@ -60,7 +60,7 @@ data class SubmitDTO(
     val latestFlag: Int? = 0,
     @get:Schema(title = "描述录入类型")
     val descInputType: DescInputTypeEnum? = DescInputTypeEnum.MANUAL,
-    @get:Schema(title = "发布类型，NEW：新上架 INCOMPATIBILITY_UPGRADE：非兼容性升级 COMPATIBILITY_UPGRADE：兼容性功能更新 COMPATIBILITY_FIX：兼容性问题修正", required = true)
+    @get:Schema(title = "发布类型", required = true)
     val releaseType: ReleaseTypeEnum? = ReleaseTypeEnum.NEW,
     @get:Schema(title = "版本日志内容", required = true)
     val versionContent: String? = "",

@@ -27,7 +27,7 @@
 
 package com.tencent.devops.store.pojo.ideatom
 
-import com.tencent.devops.store.pojo.common.Category
+import com.tencent.devops.store.pojo.common.category.Category
 import com.tencent.devops.store.pojo.ideatom.enums.IdeAtomStatusEnum
 import com.tencent.devops.store.pojo.ideatom.enums.IdeAtomTypeEnum
 import io.swagger.v3.oas.annotations.media.Schema

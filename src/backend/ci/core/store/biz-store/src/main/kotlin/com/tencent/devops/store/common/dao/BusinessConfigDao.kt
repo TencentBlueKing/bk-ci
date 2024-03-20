@@ -30,7 +30,7 @@ package com.tencent.devops.store.common.dao
 import com.tencent.devops.common.db.utils.skipCheck
 import com.tencent.devops.model.store.tables.TBusinessConfig
 import com.tencent.devops.model.store.tables.records.TBusinessConfigRecord
-import com.tencent.devops.store.pojo.common.BusinessConfigRequest
+import com.tencent.devops.store.pojo.common.config.BusinessConfigRequest
 import org.jooq.DSLContext
 import org.jooq.Result
 import org.springframework.stereotype.Repository

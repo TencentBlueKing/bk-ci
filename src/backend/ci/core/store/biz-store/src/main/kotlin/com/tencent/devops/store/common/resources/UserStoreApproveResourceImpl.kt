@@ -31,9 +31,9 @@ import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.store.api.common.UserStoreApproveResource
-import com.tencent.devops.store.pojo.common.StoreApproveDetail
-import com.tencent.devops.store.pojo.common.StoreApproveInfo
-import com.tencent.devops.store.pojo.common.StoreApproveRequest
+import com.tencent.devops.store.pojo.common.approval.StoreApproveDetail
+import com.tencent.devops.store.pojo.common.approval.StoreApproveInfo
+import com.tencent.devops.store.pojo.common.approval.StoreApproveRequest
 import com.tencent.devops.store.pojo.common.enums.ApproveStatusEnum
 import com.tencent.devops.store.pojo.common.enums.ApproveTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum

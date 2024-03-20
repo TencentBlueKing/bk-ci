@@ -34,7 +34,7 @@ import com.tencent.devops.model.store.tables.TStoreStatisticsDaily
 import com.tencent.devops.model.store.tables.records.TStoreStatisticsDailyRecord
 import com.tencent.devops.store.pojo.common.BK_SUM_DAILY_FAIL_NUM
 import com.tencent.devops.store.pojo.common.BK_SUM_DAILY_SUCCESS_NUM
-import com.tencent.devops.store.pojo.common.StoreDailyStatisticRequest
+import com.tencent.devops.store.pojo.common.statistic.StoreDailyStatisticRequest
 import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.Record2

@@ -30,7 +30,7 @@ package com.tencent.devops.store.common.service.impl
 import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.store.common.dao.StoreStatisticDailyDao
-import com.tencent.devops.store.pojo.common.StoreDailyStatistic
+import com.tencent.devops.store.pojo.common.statistic.StoreDailyStatistic
 import com.tencent.devops.store.common.service.StoreDailyStatisticService
 import org.jooq.DSLContext
 import org.springframework.beans.factory.annotation.Autowired

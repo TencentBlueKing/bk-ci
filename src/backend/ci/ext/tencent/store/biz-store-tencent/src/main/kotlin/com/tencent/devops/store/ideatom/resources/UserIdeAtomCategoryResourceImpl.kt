@@ -31,7 +31,7 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.store.api.ideatom.UserIdeAtomCategoryResource
 import com.tencent.devops.store.common.service.CategoryService
-import com.tencent.devops.store.pojo.common.Category
+import com.tencent.devops.store.pojo.common.category.Category
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import org.springframework.beans.factory.annotation.Autowired
 

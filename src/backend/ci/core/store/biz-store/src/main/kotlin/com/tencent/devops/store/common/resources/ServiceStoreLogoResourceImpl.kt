@@ -30,7 +30,7 @@ package com.tencent.devops.store.common.resources
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.store.api.common.ServiceStoreLogoResource
-import com.tencent.devops.store.pojo.common.StoreLogoInfo
+import com.tencent.devops.store.pojo.common.logo.StoreLogoInfo
 import com.tencent.devops.store.common.service.StoreLogoService
 import java.io.InputStream
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition

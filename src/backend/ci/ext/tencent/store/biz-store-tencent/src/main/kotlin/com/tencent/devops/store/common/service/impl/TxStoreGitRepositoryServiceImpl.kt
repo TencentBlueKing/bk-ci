@@ -33,8 +33,8 @@ import com.tencent.devops.repository.api.ServiceGitRepositoryResource
 import com.tencent.devops.repository.pojo.enums.TokenTypeEnum
 import com.tencent.devops.scm.enums.GitAccessLevelEnum
 import com.tencent.devops.store.common.service.TxStoreGitRepositoryService
-import com.tencent.devops.store.pojo.common.StoreMemberReq
 import com.tencent.devops.store.pojo.common.enums.StoreMemberTypeEnum
+import com.tencent.devops.store.pojo.common.member.StoreMemberReq
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service

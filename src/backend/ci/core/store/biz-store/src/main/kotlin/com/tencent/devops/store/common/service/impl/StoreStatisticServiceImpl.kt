@@ -29,8 +29,8 @@ package com.tencent.devops.store.common.service.impl
 
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.store.common.dao.StoreCommentDao
-import com.tencent.devops.store.pojo.common.ScoreItemInfo
-import com.tencent.devops.store.pojo.common.StoreCommentScoreInfo
+import com.tencent.devops.store.pojo.common.statistic.ScoreItemInfo
+import com.tencent.devops.store.pojo.common.comment.StoreCommentScoreInfo
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.common.service.StoreStatisticService
 import org.jooq.DSLContext

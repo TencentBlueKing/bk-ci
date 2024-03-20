@@ -30,8 +30,8 @@ package com.tencent.devops.store.ideatom.service.impl
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.store.common.service.CategoryService
 import com.tencent.devops.store.ideatom.dao.IdeAtomCategoryRelDao
-import com.tencent.devops.store.pojo.common.Category
 import com.tencent.devops.store.ideatom.service.IdeAtomCategoryService
+import com.tencent.devops.store.pojo.common.category.Category
 import org.jooq.DSLContext
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service

@@ -29,8 +29,8 @@ package com.tencent.devops.store.api.extservice
 
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.store.pojo.common.StoreCommentReplyInfo
-import com.tencent.devops.store.pojo.common.StoreCommentReplyRequest
+import com.tencent.devops.store.pojo.common.comment.StoreCommentReplyInfo
+import com.tencent.devops.store.pojo.common.comment.StoreCommentReplyRequest
 import io.swagger.v3.oas.annotations.tags.Tag
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
@@ -49,7 +49,7 @@ import javax.ws.rs.core.MediaType
 @Consumes(MediaType.APPLICATION_JSON)
 interface UserExtServiceCommentReplyResource {
 
-    @Operation(summary = "获取插件相应评论的回复列表")
+    @Operation(summary = "获取微扩展相应评论的回复列表")
     @GET
     @Path("/comments/{commentId}/replys")
     fun getStoreCommentReplysByCommentId(
@@ -58,7 +58,7 @@ interface UserExtServiceCommentReplyResource {
         commentId: String
     ): Result<List<StoreCommentReplyInfo>?>
 
-    @Operation(summary = "插件评论回复")
+    @Operation(summary = "微扩展评论回复")
     @POST
     @Path("/comments/{commentId}/reply")
     fun addStoreCommentReply(

@@ -43,7 +43,7 @@ import com.tencent.devops.store.common.dao.StoreProjectRelDao
 import com.tencent.devops.store.common.dao.StoreStatisticDailyDao
 import com.tencent.devops.store.common.dao.StoreStatisticDao
 import com.tencent.devops.store.pojo.common.InstalledProjRespItem
-import com.tencent.devops.store.pojo.common.StoreDailyStatisticRequest
+import com.tencent.devops.store.pojo.common.statistic.StoreDailyStatisticRequest
 import com.tencent.devops.store.pojo.common.enums.StoreProjectTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.common.service.StoreProjectService

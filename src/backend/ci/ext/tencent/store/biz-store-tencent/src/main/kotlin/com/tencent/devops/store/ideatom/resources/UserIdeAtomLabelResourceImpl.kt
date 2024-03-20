@@ -31,9 +31,9 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.store.api.ideatom.UserIdeAtomLabelResource
 import com.tencent.devops.store.common.service.LabelService
-import com.tencent.devops.store.pojo.common.Label
-import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.ideatom.service.IdeAtomLabelService
+import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
+import com.tencent.devops.store.pojo.common.label.Label
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource

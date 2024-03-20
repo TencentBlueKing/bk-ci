@@ -37,8 +37,8 @@ import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.model.store.tables.records.TStoreDeptRelRecord
 import com.tencent.devops.store.common.dao.AbstractStoreCommonDao
 import com.tencent.devops.store.common.dao.StoreAuditConfDao
-import com.tencent.devops.store.pojo.common.StoreApproveRequest
-import com.tencent.devops.store.pojo.common.VisibleAuditInfo
+import com.tencent.devops.store.pojo.common.approval.StoreApproveRequest
+import com.tencent.devops.store.pojo.common.approval.VisibleAuditInfo
 import com.tencent.devops.store.pojo.common.enums.DeptStatusEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.common.service.OpStoreAuditConfService

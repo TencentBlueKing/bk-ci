@@ -34,7 +34,6 @@ import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.pipeline.type.docker.ImageType
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.store.constant.StoreMessageCode.BK_HISTORY_DATA_MIGRATE_PASS
-import com.tencent.devops.store.image.dao.OpImageDao
 import com.tencent.devops.store.image.dao.Constants
 import com.tencent.devops.store.image.dao.Constants.KEY_IMAGE_CODE
 import com.tencent.devops.store.image.dao.Constants.KEY_IMAGE_FEATURE_PUBLIC_FLAG
@@ -51,8 +50,8 @@ import com.tencent.devops.store.image.dao.ImageCategoryRelDao
 import com.tencent.devops.store.image.dao.ImageDao
 import com.tencent.devops.store.image.dao.ImageFeatureDao
 import com.tencent.devops.store.image.dao.MarketImageDao
+import com.tencent.devops.store.image.dao.OpImageDao
 import com.tencent.devops.store.image.exception.ImageNotExistException
-import com.tencent.devops.store.pojo.common.Category
 import com.tencent.devops.store.pojo.common.KEY_CATEGORY_CODE
 import com.tencent.devops.store.pojo.common.KEY_CATEGORY_ICON_URL
 import com.tencent.devops.store.pojo.common.KEY_CATEGORY_ID
@@ -68,6 +67,7 @@ import com.tencent.devops.store.pojo.common.KEY_PUB_TIME
 import com.tencent.devops.store.pojo.common.KEY_UPDATE_TIME
 import com.tencent.devops.store.pojo.common.KEY_VERSION_LOG_CONTENT
 import com.tencent.devops.store.pojo.common.PASS
+import com.tencent.devops.store.pojo.common.category.Category
 import com.tencent.devops.store.pojo.image.enums.CategoryTypeEnum
 import com.tencent.devops.store.pojo.image.enums.ImageAgentTypeEnum
 import com.tencent.devops.store.pojo.image.enums.ImageRDTypeEnum
@@ -80,12 +80,12 @@ import com.tencent.devops.store.pojo.image.request.MarketImageUpdateRequest
 import com.tencent.devops.store.pojo.image.request.OpImageSortTypeEnum
 import com.tencent.devops.store.pojo.image.response.OpImageItem
 import com.tencent.devops.store.pojo.image.response.OpImageResp
-import java.time.LocalDateTime
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
+import java.time.LocalDateTime
 
 @Service
 class OpImageService @Autowired constructor(
