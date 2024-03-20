@@ -327,7 +327,11 @@ class CreateControl @Autowired constructor(
                 workspaceId = null,
                 workspaceName = workspaceName,
                 projectId = projectId,
-                createUserId = pmUserId,
+                createUserId = if (CommonUtil.ifProjectPersonal(projectId)) {
+                    projectId.removePrefix("_")
+                } else {
+                    pmUserId
+                },
                 hostName = "",
                 workspaceMountType = mountType,
                 workspaceSystemType = systemType,
