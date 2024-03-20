@@ -87,7 +87,7 @@
                                         <div class="cell">
                                             <a
                                                 :class="{
-                                                    'click-trigger': isZh
+                                                    'click-trigger': isZH
                                                 }"
                                                 v-perm="{
                                                     hasPermission: curRepo.canUse,
