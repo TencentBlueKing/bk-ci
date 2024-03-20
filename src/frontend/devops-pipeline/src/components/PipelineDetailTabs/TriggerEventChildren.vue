@@ -23,6 +23,7 @@
                 text
                 size="small"
                 theme="primary"
+                v-bk-tooltips="$t('reTriggerTips')"
                 @click="triggerEvent(event)"
             >
                 {{$t('reTrigger')}}

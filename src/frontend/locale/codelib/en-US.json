@@ -145,8 +145,8 @@
     "触发器类型/事件类型/触发人/流水线名称": "Trigger Type / Event Type / Trigger / Pipeline Name",
     "加载更多": "Load More",
     "到底啦": "End",
-    "一键重新触发": "Replay Event",
-    "重新触发": "Re-trigger",
+    "全部重放": "Replay Event",
+    "重放": "Re-trigger",
     "重放成功": "Replay Successfully",
     "触发器类型/事件类型": "Trigger type / Event type",
     "事件": "Event",
@@ -169,7 +169,7 @@
     "昨天": "Yesterday",
     "近3天": "Last 3 days",
     "近7天": "Last 7 days",
-    "是否一键重新触发？": "Replay event?",
+    "是否全部重放？": "Replay event?",
     "将使用此事件重新触发关联的流水线": "Will be re-trigger the associated pipeline by this event.",
     "是否重新触发？": "Re-trigger pipeline?",
     "确认以此事件重新触发流水线X吗？": "Re-trigger the pipeline [{0}] with this event？",
@@ -207,5 +207,8 @@
     "以下流水线通过别名方式使用此代码库": "The following pipelines use this repository through aliases",
     "别名变更后，使用旧别名引用的流水线将引用不到当前代码库，请评估变更是否合理": "After the alias is changed, pipelines that reference the old alias will not be able to reference the current repository. Please assess whether the change is reasonable.",
     "确认更改": "Confirm Changes",
-    "PAC 模式下不允许修改别名": "Alias modifications are not allowed in PAC mode"
+    "PAC 模式下不允许修改别名": "Alias modifications are not allowed in PAC mode",
+    "重放此事件，符合条件的流水线将触发执行": "Replay this event will trigger the execution of pipelines that meet the conditions",
+    "重放此事件，仅触发当前流水线": "Replay this event, will only trigger the current pipeline",
+    "相同代码库只支持在一个蓝盾项目下开启 PAC 模式": "The same repository only supports enabling PAC mode under one Blue Shield project."
 }

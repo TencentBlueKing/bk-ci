@@ -1366,6 +1366,7 @@
   "diff": "Diff",
   "reTrigger": "Re-trigger",
   "reTriggerSuc": "Re-trigger successful",
+  "reTriggerTips": "Replay this event, will only trigger the current pipeline",
   "refVersionTips": "This variable can be referenced in the plugin, used to set the version number or other places where this variable is needed",
   "buildParams": "Input Parameters",
   "requiredParams": "Required",
