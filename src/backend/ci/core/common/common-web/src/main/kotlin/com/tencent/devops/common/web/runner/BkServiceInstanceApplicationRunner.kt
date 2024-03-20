@@ -51,7 +51,6 @@ class BkServiceInstanceApplicationRunner constructor(
                     redisOperation.delete(cacheKey)
                     // 把微服务的最新主机IP列表写入redis中
                     redisOperation.sadd(cacheKey, *serviceHosts)
-
                 }
             }.start()
         }

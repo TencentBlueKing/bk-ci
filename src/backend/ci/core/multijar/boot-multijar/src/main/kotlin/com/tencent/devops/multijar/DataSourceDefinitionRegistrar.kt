@@ -14,7 +14,6 @@ import org.springframework.core.Ordered
 import org.springframework.core.type.AnnotationMetadata
 import org.springframework.transaction.annotation.EnableTransactionManagement
 
-
 @Configuration
 @AutoConfigureOrder(Ordered.HIGHEST_PRECEDENCE)
 @EnableTransactionManagement

@@ -68,8 +68,8 @@ object RegexUtils {
 
 
     /**
-    * 转换驼峰，将dispatch-kubernetes类似字符串，转化为dispatchKubernetes
-    * */
+     * 转换驼峰，将dispatch-kubernetes类似字符串，转化为dispatchKubernetes
+     * */
     fun convertToCamelCase(input: String): String {
         val words = input.split("-")
         return if (words.size > 1) {

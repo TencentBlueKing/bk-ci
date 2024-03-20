@@ -30,6 +30,7 @@ dependencies {
     api(project(":core:common:common-db-base"))
     api(project(":core:common:common-util"))
     api("mysql:mysql-connector-java")
+    api("com.tencent.devops.leaf:leaf-boot-starter")
     implementation(kotlin("stdlib"))
 }
 plugins {
