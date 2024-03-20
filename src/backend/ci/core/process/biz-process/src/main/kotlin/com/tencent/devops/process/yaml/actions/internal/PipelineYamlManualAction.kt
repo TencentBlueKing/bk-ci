@@ -110,7 +110,7 @@ class PipelineYamlManualAction : BaseAction {
 
     override fun getYamlPathList(): List<YamlPathListEntry> {
         val homePage = data.context.homePage
-        val commit = data.eventCommon.commit
+        val commit = data.eventCommon.commit.commitId
         return GitActionCommon.getYamlPathList(
             action = this,
             gitProjectId = this.getGitProjectIdOrName(),
