@@ -55,6 +55,7 @@ class PipelineYamlSyncDao {
                 PROJECT_ID,
                 REPO_HASH_ID,
                 FILE_PATH,
+                FILE_URL,
                 SYNC_STATUS,
                 CREATE_TIME,
                 UPDATE_TIME
@@ -64,6 +65,7 @@ class PipelineYamlSyncDao {
                         projectId,
                         repoHashId,
                         syncFileInfo.filePath,
+                        syncFileInfo.fileUrl,
                         syncFileInfo.syncStatus.name,
                         now,
                         now
