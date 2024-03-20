@@ -68,11 +68,15 @@ class ApigwRemoteDevResourceImpl @Autowired constructor(private val client: Clie
                 message = "获取到的云桌面IP为空",
                 data = null
             )
-            !originalHost.isNullOrBlank() && originalHost != devxOriginalHost -> Result(
+            devxToken.isNullOrBlank() -> Result(
+                message = "来源请求token不能为空",
+                data = null
+            )
+            originalHost != devxOriginalHost -> Result(
                 message = "来源请求域名不符",
                 data = null
             )
-            !devxToken.isNullOrBlank() && devxToken != devxGwToken -> Result(
+            devxToken != devxGwToken -> Result(
                 message = "来源请求token不符",
                 data = null
             )
