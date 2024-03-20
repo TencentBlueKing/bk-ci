@@ -78,6 +78,7 @@
     import {
         DEFAULT_PARAM,
         PARAM_LIST,
+        CONST_TYPE_LIST,
         STRING
     } from '@/store/modules/atom/paramsConfig'
 
@@ -123,7 +124,8 @@
         },
         data () {
             return {
-                propsItem: {},
+                // 点开编辑框时的初始值
+                initParamItem: {},
                 param: {}
             }
         },
@@ -143,12 +145,13 @@
                 return this.paramType === 'constant' ? this.$t('newui.pipelineParam.constType') : this.$t('editPage.paramsType')
             },
             paramsList () {
-                return PARAM_LIST.map(item => {
+                const list = PARAM_LIST.map(item => {
                     return {
                         id: item.id,
                         name: this.$t(`storeMap.${item.name}`)
                     }
                 })
+                return this.paramType === 'constant' ? list.filter(item => CONST_TYPE_LIST.includes(item.id)) : list
             }
         },
         created () {
@@ -160,8 +163,8 @@
                 this.resetEditItem(this.param)
             } else {
                 this.param = deepCopy(this.editItem)
-                this.propsItem = deepCopy(this.editItem)
             }
+            this.initParamItem = deepCopy(this.param)
         },
         methods: {
             handleParamTypeChange (key, value) {
@@ -179,7 +182,10 @@
             },
             getUniqueArgs (field) {
                 // 新增跟编辑时，list不一样
-                return this.globalParams.map(p => p[field]).filter(item => item !== this.propsItem[field]).join(',')
+                return this.globalParams.map(p => p[field]).filter(item => item !== this.initParamItem[field]).join(',')
+            },
+            isParamChanged () {
+                return JSON.stringify(this.initParamItem) !== JSON.stringify(this.param)
             }
         }
     }

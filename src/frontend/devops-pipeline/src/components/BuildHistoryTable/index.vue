@@ -452,7 +452,6 @@
             showLog: {
                 type: Function
             },
-            pipelineVersion: Number,
             isDebug: Boolean
         },
         data () {
@@ -472,7 +471,9 @@
                 buildHistories: [],
                 stoping: {},
                 isLoading: false,
-                tableColumnKeys: initSortedColumns
+                tableColumnKeys: initSortedColumns,
+                pipelineChanged: false,
+                initedVersion: false
             }
         },
         computed: {
@@ -483,7 +484,8 @@
                 isActiveDraftVersion: 'atom/isActiveDraftVersion'
             }),
             ...mapState('atom', [
-                'pipelineInfo'
+                'pipelineInfo',
+                'activePipelineVersion'
             ]),
             allTableColumnMap () {
                 return BUILD_HISTORY_TABLE_COLUMNS_MAP
@@ -643,17 +645,18 @@
             }
         },
         watch: {
-            pipelineId: {
-                handler () {
-                    this.handlePageChange(1)
-                },
-                immediate: true
-            },
-            isActiveDraftVersion: {
-                handler (val) {
-                    this.handlePageChange(1)
+            activePipelineVersion: {
+                deep: true,
+                handler (newVal, oldVal) {
+                    if (this.pipelineChanged || !this.initedVersion || (newVal?.version !== oldVal?.version && newVal?.isDraft !== oldVal?.isDraft)) {
+                        this.pipelineChanged = false
+                        this.initedVersion = true
+                        this.handlePageChange(1)
+                    }
                 }
-
+            },
+            pipelineId () {
+                this.pipelineChanged = true
             }
         },
         created () {
@@ -669,6 +672,10 @@
 
         mounted () {
             webSocketMessage.installWsMessage(this.requestHistory)
+            if (this.$route.params.version) {
+                this.initedVersion = true
+                this.requestHistory()
+            }
         },
 
         beforeDestroy () {
@@ -694,8 +701,7 @@
             },
             async requestHistory () {
                 try {
-                    const version = this.pipelineVersion ?? this.pipelineInfo?.releaseVersion
-                    console.log(this.pipelineVersion, version, 1111)
+                    const version = this.$route.params.version
                     if (!version) return
                     this.isLoading = true
                     this.resetRemark()
@@ -706,7 +712,7 @@
                     const res = await this.requestPipelinesHistory({
                         projectId,
                         pipelineId,
-                        version: this.pipelineVersion
+                        version
                     })
                     this.setHistoryPageStatus({
                         count: res.count

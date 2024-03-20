@@ -10,7 +10,7 @@
             <i class="bk-icon icon-angle-double-right"></i>
             {{$t('newui.variable')}}
         </div>
-        <div v-if="showVariable" class="variable-version-container">
+        <div v-show="showVariable" class="variable-version-container">
             <div class="select-tab-container">
                 <div class="tab-content">
                     <div
@@ -41,7 +41,7 @@
                     v-else
                     :params="params"
                     :disabled="!editable"
-                    :build-no="buildNo"
+                    :container="container"
                     :update-container-params="handleContainerChange"
                 />
             </div>
@@ -51,8 +51,8 @@
 
 <script>
     import { mapActions, mapState } from 'vuex'
-    import AtomOutputVar from './components/atom-output-var'
     import PipelineParam from './components/pipeline-param'
+    import AtomOutputVar from './components/atom-output-var'
     import PipelineVersion from './components/pipeline-version'
     import SystemVar from './components/system-var'
 
@@ -200,7 +200,7 @@
   border: 1px solid #dcdee5;
   border-top: 0;
   .select-tab-container {
-    border-bottom: 1px solid #ebf0f5;
+    border-bottom: 1px solid #DCDEE5;
     .tab-content {
       height: 40px;
       padding: 0 24px;
