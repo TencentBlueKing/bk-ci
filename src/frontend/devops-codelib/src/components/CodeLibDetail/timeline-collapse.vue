@@ -86,7 +86,9 @@
                                     <td class="replay-btn">
                                         <div class="cell">
                                             <a
-                                                class="click-trigger"
+                                                :class="{
+                                                    'click-trigger': isZh
+                                                }"
                                                 v-perm="{
                                                     hasPermission: curRepo.canUse,
                                                     disablePermissionApi: true,
@@ -177,13 +179,17 @@
                     current: 1,
                     limit: 10,
                     count: 0
-                }
+                },
+                isZH: true
             }
         },
         computed: {
             projectId () {
                 return this.$route.params.projectId
             }
+        },
+        created () {
+            this.isZH = ['zh-CN', 'zh', 'zh_cn'].includes(document.documentElement.lang)
         },
         methods: {
             ...mapActions('codelib', [
@@ -410,6 +416,9 @@
             .cell {
                 display: inline-block;
                 width: 110px;
+            }
+            .click-trigger {
+                padding-left: 22px;
             }
         }
     }

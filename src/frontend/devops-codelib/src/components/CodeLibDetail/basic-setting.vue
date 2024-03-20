@@ -349,7 +349,7 @@
             header-position="left"
             :border="true"
             width="720"
-            :title="$t('codelib.代码库同步失败13')">
+            :title="$t('codelib.代码库同步失败')">
 
             <div class="title-tips">{{ $t('codelib.检测到代码库中以下流水线 YAML 文件同步失败，请处理后重试') }}</div>
             <bk-table
