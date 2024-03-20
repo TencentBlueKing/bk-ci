@@ -59,9 +59,6 @@ class BuildLessStartPrepareHandler @Autowired constructor(
             handlerContext.buildLogKey = "${event.pipelineId}|${event.buildId}|${event.vmSeqId}|$retryTime"
             logger.info("$buildLogKey start select buildLess.")
 
-            // Check if the pipeline is running
-            checkPipelineRunning(event)
-
             if (event.retryTime == 0) {
                 buildLogPrinter.addLine(
                     buildId = event.buildId,
@@ -76,35 +73,5 @@ class BuildLessStartPrepareHandler @Autowired constructor(
         }
     }
 
-    private fun checkPipelineRunning(event: PipelineBuildLessStartupDispatchEvent) {
-        // 判断流水线当前container是否在运行中
-        val statusResult = client.get(ServicePipelineTaskResource::class).getTaskStatus(
-            projectId = event.projectId,
-            buildId = event.buildId,
-            taskId = VMUtils.genStartVMTaskId(event.containerId)
-        )
 
-        if (statusResult.isNotOk() || statusResult.data == null) {
-            logger.warn(
-                "The build event($event) fail to check if pipeline task is running " +
-                    "because of ${statusResult.message}"
-            )
-            throw BuildFailureException(
-                errorType = ErrorType.SYSTEM,
-                errorCode = DispatchSdkErrorCode.PIPELINE_STATUS_ERROR,
-                formatErrorMessage = "无法获取流水线JOB状态，构建停止",
-                errorMessage = "无法获取流水线JOB状态，构建停止"
-            )
-        }
-
-        if (!statusResult.data!!.isRunning()) {
-            logger.warn("The build event($event) is not running")
-            throw BuildFailureException(
-                errorType = ErrorType.USER,
-                errorCode = DispatchSdkErrorCode.PIPELINE_NOT_RUNNING,
-                formatErrorMessage = "流水线JOB已经不再运行，构建停止",
-                errorMessage = "流水线JOB已经不再运行，构建停止"
-            )
-        }
-    }
 }

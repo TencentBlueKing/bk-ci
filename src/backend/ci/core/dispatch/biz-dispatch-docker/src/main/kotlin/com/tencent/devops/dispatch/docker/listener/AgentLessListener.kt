@@ -30,6 +30,7 @@ package com.tencent.devops.dispatch.docker.listener
 import com.tencent.devops.common.api.exception.ClientException
 import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.dispatch.sdk.BuildFailureException
 import com.tencent.devops.common.dispatch.sdk.DispatchSdkErrorCode
 import com.tencent.devops.common.dispatch.sdk.service.JobQuotaService
 import com.tencent.devops.common.log.utils.BuildLogPrinter
@@ -41,6 +42,7 @@ import com.tencent.devops.dispatch.docker.client.BuildLessStartPrepareHandler
 import com.tencent.devops.dispatch.docker.exception.DockerServiceException
 import com.tencent.devops.dispatch.pojo.enums.JobQuotaVmType
 import com.tencent.devops.process.api.service.ServiceBuildResource
+import com.tencent.devops.process.api.service.ServicePipelineTaskResource
 import com.tencent.devops.process.engine.common.VMUtils
 import com.tencent.devops.process.pojo.mq.PipelineBuildLessShutdownDispatchEvent
 import com.tencent.devops.process.pojo.mq.PipelineBuildLessStartupDispatchEvent
@@ -60,6 +62,9 @@ class AgentLessListener @Autowired constructor(
     fun listenAgentStartUpEvent(event: PipelineBuildLessStartupDispatchEvent) {
         try {
             logger.info("start build less($event)")
+
+            // 校验当前流水线job是否还在运行中
+            checkPipelineRunning(event)
 
             // 开始启动无编译构建，增加构建次数
             if (!jobQuotaService.checkAndAddRunningJob(event, JobQuotaVmType.BUILD_LESS)) {
@@ -130,6 +135,38 @@ class AgentLessListener @Autowired constructor(
                 buildId = event.buildId,
                 vmSeqId = event.vmSeqId,
                 executeCount = event.executeCount
+            )
+        }
+    }
+
+    private fun checkPipelineRunning(event: PipelineBuildLessStartupDispatchEvent) {
+        // 判断流水线当前container是否在运行中
+        val statusResult = client.get(ServicePipelineTaskResource::class).getTaskStatus(
+            projectId = event.projectId,
+            buildId = event.buildId,
+            taskId = VMUtils.genStartVMTaskId(event.containerId)
+        )
+
+        if (statusResult.isNotOk() || statusResult.data == null) {
+            logger.warn(
+                "The build event($event) fail to check if pipeline task is running " +
+                        "because of ${statusResult.message}"
+            )
+            throw BuildFailureException(
+                errorType = ErrorType.SYSTEM,
+                errorCode = DispatchSdkErrorCode.PIPELINE_STATUS_ERROR,
+                formatErrorMessage = "无法获取流水线JOB状态，构建停止",
+                errorMessage = "无法获取流水线JOB状态，构建停止"
+            )
+        }
+
+        if (!statusResult.data!!.isRunning()) {
+            logger.warn("The build event($event) is not running")
+            throw BuildFailureException(
+                errorType = ErrorType.USER,
+                errorCode = DispatchSdkErrorCode.PIPELINE_NOT_RUNNING,
+                formatErrorMessage = "流水线JOB已经不再运行，构建停止",
+                errorMessage = "流水线JOB已经不再运行，构建停止"
             )
         }
     }
