@@ -629,5 +629,4 @@ interface ServicePipelineResource {
         @QueryParam("page")
         channelCode: ChannelCode?
     ): Result<Boolean>
-
 }
