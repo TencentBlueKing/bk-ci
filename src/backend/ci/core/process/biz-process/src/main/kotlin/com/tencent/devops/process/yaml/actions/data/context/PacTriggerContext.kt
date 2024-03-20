@@ -46,6 +46,8 @@ data class PacTriggerContext(
     var eventId: Long? = null,
     var pipeline: YamlTriggerPipeline? = null,
     var yamlFile: YamlPathListEntry? = null,
+    // 仓库homePage
+    var homePage: String? = null,
     // 默认分支
     var defaultBranch: String? = null,
     // 缓存
