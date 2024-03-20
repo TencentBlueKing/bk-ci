@@ -226,6 +226,9 @@ export const CHECK_PARAM_LIST = Object.keys(CHECK_DEFAULT_PARAM).map(key => ({
     name: DEFAULT_PARAM[key].typeDesc
 }))
 
+// 常量时展示的变量列表
+export const CONST_TYPE_LIST = [STRING, TEXTAREA, ENUM, MULTIPLE]
+
 export const PARAM_LIST = Object.keys(DEFAULT_PARAM).map(key => ({
     id: key,
     name: DEFAULT_PARAM[key].typeDesc

@@ -149,7 +149,14 @@
                         col: 'content',
                         label: this.$t('settings.noticeContent')
                     }
-                ]
+                ],
+                notifyTypeMap: {
+                    EMAIL: this.$t('settings.emailNotice'),
+                    WEWORK: this.$t('settings.rtxNotice'),
+                    VOICE: this.$t('settings.voice'),
+                    WECHAT: this.$t('settings.wechatNotice'),
+                    SMS: this.$t('settings.smsNotice')
+                }
             }
         },
         computed: {
@@ -166,7 +173,8 @@
             getShowContent (col, val) {
                 let res = ''
                 if (col === 'types') {
-                    res = val.join(',')
+                    const showTypes = val.map(item => this.notifyTypeMap[item] || item)
+                    return showTypes.join(',')
                 } else if (col === 'groups') {
                     res = val.join(',')
                 } else {

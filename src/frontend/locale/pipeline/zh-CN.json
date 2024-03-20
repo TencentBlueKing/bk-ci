@@ -943,6 +943,7 @@
     "remoteCurlTips": "添加本插件后，当前流水线可通过特定的URL触发构建（启动人是流水线的最后编辑人，可通过 X-DEVOPS-UID 传入触发人）",
     "example": "示例",
     "confirmMsg": "离开后，新编辑的数据将会丢失",
+    "closeConfirmMsg": "关闭后，新编辑的数据将会丢失",
     "confirmTitle": "确认要离开",
     "operateSuc": "操作成功",
     "publicResTips": "由蓝盾官方提供的构建集群，你无需担心资源不足、安全等问题。",
