@@ -19,6 +19,7 @@
                 :editable="editable"
                 :key="group.key"
                 :title="group.title"
+                :tips="group.tips"
                 :list="group.list"
                 :handle-edit="handleEdit"
                 :handle-delete="handleDelete"
@@ -27,11 +28,12 @@
 
         <div v-else-if="editable" class="current-edit-param-item">
             <div class="edit-var-header">
-                <bk-icon style="font-size: 28px;" type="arrows-left" class="back-icon" @click="showSlider = false" />
+                <bk-icon style="font-size: 28px;" type="arrows-left" class="back-icon" @click="hideSlider" />
                 {{sliderTitle}}
             </div>
             <div class="edit-var-content">
                 <pipeline-param-form
+                    ref="pipelineParamFormRef"
                     :edit-item="sliderEditItem"
                     :global-params="globalParams"
                     :edit-index="editIndex"
@@ -52,7 +54,7 @@
 </template>
 
 <script>
-    import { deepCopy } from '@/utils/util'
+    import { navConfirm, deepCopy } from '@/utils/util'
     import { allVersionKeyList } from '@/utils/pipelineConst'
     import ParamGroup from './children/param-group'
     import PipelineParamForm from './pipeline-param-form'
@@ -82,7 +84,9 @@
                 editIndex: -1,
                 paramType: 'var',
                 sliderEditItem: {},
-                searchStr: ''
+                searchStr: '',
+                confirmMsg: this.$t('editPage.closeConfirmMsg'),
+                cancelText: this.$t('cancel')
             }
         },
         computed: {
@@ -105,6 +109,7 @@
                     {
                         key: 'requiredParam',
                         title: this.$t('newui.pipelineParam.buildParam'),
+                        tips: this.$t('newui.pipelineParam.buildParamTips'),
                         list: this.renderParams.filter(item => !item.constant && item.required)
                     },
                     {
@@ -152,7 +157,7 @@
                             this.globalParams.push(this.sliderEditItem)
                         }
                         this.updateContainerParams('params', [...this.globalParams, ...this.versions])
-                        this.hideSlider()
+                        this.hideSlider(false)
                     }
                 })
             },
@@ -162,10 +167,23 @@
             resetEditItem (param = {}) {
                 this.sliderEditItem = param
             },
-            hideSlider () {
-                this.showSlider = false
-                this.editIndex = -1
-                this.sliderEditItem = {}
+            // 关闭前需要check是否需要弹窗确认离开
+            hideSlider (needCheckChange = true) {
+                const hasChange = this.$refs.pipelineParamFormRef?.isParamChanged()
+
+                const close = () => {
+                    this.showSlider = false
+                    this.editIndex = -1
+                    this.sliderEditItem = {}
+                }
+                if (needCheckChange && hasChange) {
+                    navConfirm({ content: this.confirmMsg, type: 'warning', cancelText: this.cancelText })
+                        .then((leave) => {
+                            leave && close()
+                        })
+                } else {
+                    close()
+                }
             }
         }
     }

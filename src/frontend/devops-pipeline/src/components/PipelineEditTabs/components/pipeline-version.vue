@@ -133,9 +133,9 @@
                 type: Array,
                 default: () => ([])
             },
-            buildNo: {
+            container: {
                 type: Object,
-                default: () => ({})
+                required: true
             },
             updateContainerParams: {
                 type: Function,
@@ -186,6 +186,9 @@
             },
             versionConfig () {
                 return getVersionConfig()
+            },
+            buildNo () {
+                return this.container?.buildNo || {}
             },
             execuVisible () {
                 return this.buildNo && this.buildNo.required ? this.buildNo.required : false
