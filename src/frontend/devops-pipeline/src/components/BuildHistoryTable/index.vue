@@ -472,7 +472,8 @@
                 stoping: {},
                 isLoading: false,
                 tableColumnKeys: initSortedColumns,
-                pipelineChanged: false
+                pipelineChanged: false,
+                initedVersion: false
             }
         },
         computed: {
@@ -643,11 +644,10 @@
             activePipelineVersion: {
                 deep: true,
                 handler (newVal, oldVal) {
-                    if (this.pipelineChanged || (newVal?.version !== oldVal?.version && newVal?.isDraft !== oldVal?.isDraft)) {
-                        if (oldVal || !this.$route.params.version) {
-                            this.pipelineChanged = false
-                            this.handlePageChange(1)
-                        }
+                    if (this.pipelineChanged || !this.initedVersion || (newVal?.version !== oldVal?.version && newVal?.isDraft !== oldVal?.isDraft)) {
+                        this.pipelineChanged = false
+                        this.initedVersion = true
+                        this.handlePageChange(1)
                     }
                 }
             },
@@ -669,6 +669,7 @@
         mounted () {
             webSocketMessage.installWsMessage(this.requestHistory)
             if (this.$route.params.version) {
+                this.initedVersion = true
                 this.requestHistory()
             }
         },
