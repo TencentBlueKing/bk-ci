@@ -366,7 +366,7 @@ class StoreProjectRelDao {
                 .set(PROJECT_CODE, storeProjectInfo.projectId)
                 .set(MODIFIER, userId)
                 .where(STORE_CODE.eq(storeProjectInfo.storeCode))
-                .and(STORE_TYPE.eq(storeProjectInfo.storeType.toByte()))
+                .and(STORE_TYPE.eq(storeProjectInfo.storeType.type.toByte()))
                 .and(TYPE.eq(StoreProjectTypeEnum.INIT.type.toByte()))
                 .execute()
         }
