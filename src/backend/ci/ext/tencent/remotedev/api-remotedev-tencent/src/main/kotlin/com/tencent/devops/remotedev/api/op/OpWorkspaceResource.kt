@@ -97,17 +97,6 @@ interface OpWorkspaceResource {
         id: Long
     ): Result<Boolean>
 
-    @Operation(summary = "转移工作空间detail数据到db")
-    @GET
-    @Path("/detail/move")
-    fun moveWorkspaceDetail(
-        @Parameter(description = "用户ID", required = true)
-        @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String,
-        @QueryParam("workspaceName")
-        workspaceName: String
-    ): Result<Boolean>
-
     @Operation(summary = "变更工作空间状态")
     @GET
     @Path("/status_change")

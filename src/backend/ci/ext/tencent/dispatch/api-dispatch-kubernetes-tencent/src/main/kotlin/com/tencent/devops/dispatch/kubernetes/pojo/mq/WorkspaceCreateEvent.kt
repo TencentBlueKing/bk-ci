@@ -59,6 +59,8 @@ data class WorkspaceCreateEvent(
     val ownerType: WorkspaceOwnerType? = WorkspaceOwnerType.PERSONAL,
     @get:Schema(title = "projectId")
     val projectId: String? = null,
+    @get:Schema(title = "gameId")
+    val gameId: String?,
     override var delayMills: Int = 0,
     override var retryTime: Int = 0
 ) : WorkspaceEvent(userId, traceId, workspaceName, delayMills, retryTime)

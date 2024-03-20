@@ -45,6 +45,7 @@ import com.tencent.devops.dispatch.kubernetes.pojo.kubernetes.TaskStatus
 import com.tencent.devops.dispatch.kubernetes.pojo.kubernetes.TaskStatusEnum
 import com.tencent.devops.dispatch.kubernetes.pojo.kubernetes.WorkspaceInfo
 import com.tencent.devops.dispatch.kubernetes.pojo.mq.WorkspaceCreateEvent
+import com.tencent.devops.dispatch.kubernetes.pojo.mq.WorkspaceOperateEvent
 import com.tencent.devops.dispatch.kubernetes.pojo.remotedev.ResourceVmReq
 import com.tencent.devops.dispatch.kubernetes.startcloud.client.WorkspaceStartCloudClient
 import com.tencent.devops.dispatch.kubernetes.startcloud.common.ErrorCodeEnum
@@ -73,12 +74,12 @@ class StartCloudRemoteDevService @Autowired constructor(
     private val startCloudRedisUtils: StartCloudRedisUtils,
     private val startCloudInterfaceService: StartCloudInterfaceService
 ) : RemoteDevInterface {
+//
+//    @Value("\${startCloud.appName}")
+//    val appName: String = "IEG_BKCI"
 
-    @Value("\${startCloud.appName}")
-    val appName: String = "IEG_BKCI"
-
-    @Value("\${startCloud.curLaunchId}")
-    val curLaunchId: Int = 980007
+//    @Value("\${startCloud.curLaunchId}")
+//    val curLaunchId: Int = 980007
 
     override fun createWorkspace(userId: String, event: WorkspaceCreateEvent): CreateWorkspaceRes {
         logger.info("User $userId create workspace: ${JsonUtil.toJson(event)}")
@@ -95,7 +96,14 @@ class StartCloudRemoteDevService @Autowired constructor(
             return CreateWorkspaceRes(event.devFile.environmentUid!!, event.devFile.uid!!, 0, "")
         }
 
-        kotlin.runCatching { workspaceClient.createUser(userId, EnvironmentUserCreate(userId, appName)) }.onFailure {
+
+
+        kotlin.runCatching {
+            workspaceClient.createUser(
+                userId,
+                EnvironmentUserCreate(userId, checkNotNull(event.gameId))
+            )
+        }.onFailure {
             logger.warn("create user failed.|${it.message}")
             if (it is BuildFailureException &&
                 it.errorCode == ErrorCodeEnum.CREATE_ENVIRONMENT_INTERFACE_ERROR.errorCode
@@ -105,7 +113,7 @@ class StartCloudRemoteDevService @Autowired constructor(
         }
 
         // 生产创建start资源的订单号
-        val orderId = appName + "_" + event.projectId + "_${UUIDUtil.generate().takeLast(16)}"
+        val orderId = checkNotNull(event.gameId) + "_" + event.projectId + "_${UUIDUtil.generate().takeLast(16)}"
 
         // 先检查基础镜像在池子中是否有配额，再看有没有可以新生产的显卡
         var zoneId = ""
@@ -113,9 +121,9 @@ class StartCloudRemoteDevService @Autowired constructor(
         if (event.devFile.imageCosFile.isNullOrBlank()) {
             val random = startCloudInterfaceService.syncStartCloudResourceList().filter {
                 it.status == 11 &&
-                    it.machineType == event.devFile.machineType &&
-                    it.zoneId.replace(Regex("\\d+"), "") == event.devFile.zoneId &&
-                    it.locked != true
+                        it.machineType == event.devFile.machineType &&
+                        it.zoneId.replace(Regex("\\d+"), "") == event.devFile.zoneId &&
+                        it.locked != true
             }.randomOrNull()
             if (random != null) {
                 logger.info("get random resource to running|$random")
@@ -148,7 +156,7 @@ class StartCloudRemoteDevService @Autowired constructor(
             EnvironmentCreate(
                 basicBody = EnvironmentCreateBasicBody(
                     userId = userId,
-                    appName = appName,
+                    appName = checkNotNull(event.gameId),
                     pipelineId = orderId,
                     zoneId = zoneId,
                     machineType = event.devFile.machineType,
@@ -218,36 +226,34 @@ class StartCloudRemoteDevService @Autowired constructor(
         return resp.taskUid
     }
 
-    override fun deleteWorkspace(userId: String, workspaceName: String): String {
+    override fun deleteWorkspace(userId: String, event: WorkspaceOperateEvent): String {
         val resp = workspaceClient.operateWorkspace(
             userId = userId,
             action = EnvironmentAction.DELETE_VM,
-            workspaceName = workspaceName,
+            workspaceName = event.workspaceName,
             environmentOperate = EnvironmentOperate(
-                uid = getEnvironmentUid(workspaceName),
-                appName = appName,
+                uid = getEnvironmentUid(event.workspaceName),
+                appName = event.gameId,
                 userId = userId,
-                pipelineId = startCloudRedisUtils.getStartCloudOrder(workspaceName)
+                pipelineId = startCloudRedisUtils.getStartCloudOrder(event.workspaceName)
             )
         )
-
         return resp.taskUid
     }
 
-    override fun makeWorkspaceImage(userId: String, workspaceName: String, cgsId: String?): String {
+    override fun makeWorkspaceImage(userId: String, event: WorkspaceOperateEvent): String {
         val resp = workspaceClient.operateWorkspace(
             userId = userId,
             action = EnvironmentAction.MAKE_IMAGE,
-            workspaceName = workspaceName,
+            workspaceName = event.workspaceName,
             environmentOperate = EnvironmentOperate(
-                uid = getEnvironmentUid(workspaceName),
-                appName = appName,
+                uid = getEnvironmentUid(event.workspaceName),
+                appName = event.gameId,
                 userId = userId,
-                pipelineId = startCloudRedisUtils.getStartCloudOrder(workspaceName),
-                cgsId = cgsId
+                pipelineId = startCloudRedisUtils.getStartCloudOrder(event.workspaceName),
+                cgsId = event.cgsId
             )
         )
-
         return resp.taskUid
     }
 
@@ -295,7 +301,6 @@ class StartCloudRemoteDevService @Autowired constructor(
             environmentHost = workspaceStatus.environmentIP,
             ready = true,
             started = true,
-            curLaunchId = curLaunchId,
             regionId = workspaceInfo.regionId
         )
     }

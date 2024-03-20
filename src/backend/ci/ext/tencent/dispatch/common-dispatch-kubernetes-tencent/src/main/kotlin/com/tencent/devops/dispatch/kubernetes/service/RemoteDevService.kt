@@ -232,7 +232,7 @@ class RemoteDevService @Autowired constructor(
         }
 
         val taskId = remoteDevServiceFactory.loadRemoteDevService(event.mountType)
-            .makeWorkspaceImage(event.userId, event.workspaceName, event.cgsId)
+            .makeWorkspaceImage(event.userId, event)
         val (taskStatus, taskMessage) = remoteDevServiceFactory.loadRemoteDevService(event.mountType)
             .waitTaskFinish(event.userId, taskId, event.type)
 
@@ -441,7 +441,7 @@ class RemoteDevService @Autowired constructor(
 
     fun deleteWorkspace(event: WorkspaceOperateEvent): Boolean {
         val taskId = remoteDevServiceFactory.loadRemoteDevService(event.mountType)
-            .deleteWorkspace(event.userId, event.workspaceName)
+            .deleteWorkspace(event.userId, event)
         val (taskStatus, failedMsg) = remoteDevServiceFactory.loadRemoteDevService(event.mountType)
             .waitTaskFinish(event.userId, taskId, event.type)
 

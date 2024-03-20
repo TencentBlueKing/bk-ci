@@ -136,6 +136,7 @@ class SleepControl @Autowired constructor(
             )
 
             val bizId = MDC.get(TraceTag.BIZID) ?: TraceTag.buildBiz()
+            val gameId = workspaceCommon.getGameIdAndAppId(workspace.projectId)
 
             // 发送处理事件
             dispatcher.dispatch(
@@ -144,7 +145,8 @@ class SleepControl @Autowired constructor(
                     traceId = bizId,
                     type = UpdateEventType.STOP,
                     workspaceName = workspace.workspaceName,
-                    mountType = workspace.workspaceMountType
+                    mountType = workspace.workspaceMountType,
+                    gameId = gameId.first
                 )
             )
 
@@ -246,6 +248,7 @@ class SleepControl @Autowired constructor(
             )
 
             val bizId = MDC.get(TraceTag.BIZID) ?: TraceTag.buildBiz()
+            val gameId = workspaceCommon.getGameIdAndAppId(workspace.projectId)
 
             dispatcher.dispatch(
                 WorkspaceOperateEvent(
@@ -253,7 +256,8 @@ class SleepControl @Autowired constructor(
                     traceId = bizId,
                     type = UpdateEventType.STOP,
                     workspaceName = workspace.workspaceName,
-                    mountType = workspace.workspaceMountType
+                    mountType = workspace.workspaceMountType,
+                    gameId = gameId.first
                 )
             )
 

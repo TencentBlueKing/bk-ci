@@ -146,6 +146,7 @@ class StopWorkspaceHandler @Autowired constructor(
                 status = WorkspaceStatus.STOPPING
             )
 
+            val gameId = workspaceCommon.getGameIdAndAppId(workspace.projectId)
             dispatcher.dispatch(
                 WorkspaceOperateEvent(
                     userId = userId,
@@ -160,7 +161,8 @@ class StopWorkspaceHandler @Autowired constructor(
                     workspaceName = workspaceName,
                     settingEnvs = remoteDevSettingDao.fetchOneSetting(dslContext, userId).envsForVariable,
                     bkTicket = "",
-                    mountType = WorkspaceMountType.START
+                    mountType = WorkspaceMountType.START,
+                    gameId = gameId.first
                 )
             )
 

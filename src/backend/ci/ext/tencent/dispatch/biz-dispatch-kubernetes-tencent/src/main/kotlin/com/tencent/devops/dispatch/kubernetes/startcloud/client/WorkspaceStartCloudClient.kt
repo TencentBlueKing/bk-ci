@@ -515,31 +515,6 @@ class WorkspaceStartCloudClient @Autowired constructor(
         }
     }
 
-    fun getResourceList(): List<EnvironmentResourceData> {
-        var cgsPage = DEFAULT_CGS_PAGE
-        val cgsData = mutableListOf<EnvironmentResourceData>()
-        run outside@{
-            while (true) {
-                val request = CgsQueryReq(
-                    appName = appName,
-                    query = null,
-                    page = Page(
-                        start = cgsPage,
-                        limit = DEFAULT_CGS_PER_PAGE,
-                        sort = null
-                    )
-                )
-                val cgsPageList = queryCgsPageList(request)
-                cgsData.addAll(cgsPageList)
-                if (cgsPageList.size < DEFAULT_CGS_PER_PAGE) {
-                    return@outside
-                }
-                cgsPage++
-            }
-        }
-        return cgsData
-    }
-
     fun queryCgsPageList(cgsQueryReq: CgsQueryReq): List<EnvironmentResourceData> {
         val url = "$apiUrl/openapi/cgs/list"
         val body = JsonUtil.toJson(cgsQueryReq, false)

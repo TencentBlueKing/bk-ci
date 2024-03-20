@@ -177,6 +177,7 @@ class StartControl @Autowired constructor(
                     createWorkspaceHistoryForStart(userId, workspaceName)
                     updateWorkspaceStatus(workspace.workspaceName, workspace.status, userId)
                     val bizId = MDC.get(TraceTag.BIZID) ?: TraceTag.buildBiz()
+                    val gameId = workspaceCommon.getGameIdAndAppId(workspace.projectId)
                     dispatcher.dispatch(
                         WorkspaceOperateEvent(
                             userId = userId,
@@ -191,7 +192,8 @@ class StartControl @Autowired constructor(
                             workspaceName = workspace.workspaceName,
                             settingEnvs = remoteDevSettingDao.fetchOneSetting(dslContext, userId).envsForVariable,
                             bkTicket = bkTicket,
-                            mountType = workspace.workspaceMountType
+                            mountType = workspace.workspaceMountType,
+                            gameId = gameId.first
                         )
                     )
 
@@ -329,6 +331,7 @@ class StartControl @Autowired constructor(
 
             workspaceCommon.updateWorkspaceDetail(
                 workspaceName,
+                workspace.projectId,
                 workspace.workspaceMountType
             )
             if (workspace.workspaceSystemType.needHeartbeat()) {

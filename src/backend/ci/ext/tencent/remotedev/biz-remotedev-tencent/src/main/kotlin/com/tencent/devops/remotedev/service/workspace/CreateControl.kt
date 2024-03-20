@@ -315,6 +315,7 @@ class CreateControl @Autowired constructor(
     ) {
         val mountType = WorkspaceMountType.START
         val systemType = WorkspaceSystemType.WINDOWS_GPU
+        val gameId = workspaceCommon.getGameIdAndAppId(projectId)
         for (i in 0 until workspaceCreate.count) {
             logger.info("createWorkspace|mountType|$mountType")
             val workspaceName = generateWorkspaceName(projectId)
@@ -374,7 +375,8 @@ class CreateControl @Autowired constructor(
                     projectId = projectId,
                     mountType = mountType,
                     ownerType = ws.ownerType,
-                    delayMills = i * 2000
+                    delayMills = i * 2000,
+                    gameId = gameId.first
                 )
             )
         }
@@ -514,7 +516,12 @@ class CreateControl @Autowired constructor(
                 }
             }
 
-            val detail = workspaceCommon.getOrSaveWorkspaceDetail(event.workspaceName, event.mountType, event)
+            val detail = workspaceCommon.getOrSaveWorkspaceDetail(
+                workspaceName = event.workspaceName,
+                projectId = ws.projectId,
+                mountType = event.mountType,
+                event = event
+            )
 
             if (ws.workspaceSystemType.needHeartbeat()) {
                 redisHeartBeat.refreshHeartbeat(event.workspaceName)
@@ -634,6 +641,7 @@ class CreateControl @Autowired constructor(
             oldWs.ownerType == WorkspaceOwnerType.PROJECT -> oldWs.projectId
             else -> null
         }
+        val gameId = workspaceCommon.getGameIdAndAppId(projectId)
 
         val workspaceName = generateWorkspaceName(projectId ?: userId)
         val ownerType = if (projectId != null) WorkspaceOwnerType.PROJECT else WorkspaceOwnerType.PERSONAL
@@ -713,7 +721,8 @@ class CreateControl @Autowired constructor(
                 projectId = projectId,
                 mountType = mountType,
                 ownerType = ws.ownerType,
-                delayMills = 2000
+                delayMills = 2000,
+                gameId = gameId.first
             )
         )
         if (oldWs?.status?.checkDelivering() == true) {
@@ -857,6 +866,8 @@ class CreateControl @Autowired constructor(
         }
 
         val bizId = MDC.get(TraceTag.BIZID)
+
+        val gameId = workspaceCommon.getGameIdAndAppId(projectId)
         // 发送给k8s
         dispatcher.dispatch(
             WorkspaceCreateEvent(
@@ -871,7 +882,8 @@ class CreateControl @Autowired constructor(
                 settingEnvs = remoteDevSettingDao.fetchOneSetting(dslContext, userId).envsForVariable,
                 bkTicket = bkTicket,
                 projectId = projectId,
-                mountType = mountType
+                mountType = mountType,
+                gameId = gameId.first
             )
         )
 
@@ -942,6 +954,7 @@ class CreateControl @Autowired constructor(
         doPreparing(workspace)
 
         val bizId = MDC.get(TraceTag.BIZID)
+        val gameId = workspaceCommon.getGameIdAndAppId(projectId)
         // 发送给k8s
         dispatcher.dispatch(
             WorkspaceCreateEvent(
@@ -959,7 +972,8 @@ class CreateControl @Autowired constructor(
                 settingEnvs = remoteDevSettingDao.fetchOneSetting(dslContext, userId).envsForVariable,
                 bkTicket = bkTicket,
                 projectId = projectId,
-                mountType = mountType
+                mountType = mountType,
+                gameId = gameId.first
             )
         )
 

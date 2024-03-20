@@ -38,9 +38,9 @@ import com.tencent.devops.dispatch.kubernetes.pojo.remotedev.ResourceVmReq
 import com.tencent.devops.dispatch.kubernetes.pojo.remotedev.ResourceVmRespData
 import com.tencent.devops.remotedev.pojo.CgsResourceConfig
 import com.tencent.devops.remotedev.pojo.image.StandardVmImage
-import io.swagger.v3.oas.annotations.tags.Tag
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
+import io.swagger.v3.oas.annotations.tags.Tag
 import javax.ws.rs.Consumes
 import javax.ws.rs.GET
 import javax.ws.rs.POST
@@ -61,7 +61,10 @@ interface ServiceStartCloudResource {
     fun createStartCloudUser(
         @Parameter(description = "user", required = true)
         @QueryParam("user")
-        user: String
+        user: String,
+        @Parameter(description = "gameId", required = true)
+        @QueryParam("gameId")
+        gameId: String?
     ): Result<Boolean>
 
     @Operation(summary = "同步更新START云桌面的资源池")
@@ -104,6 +107,9 @@ interface ServiceStartCloudResource {
         @Parameter(description = "cgsId", required = false)
         @QueryParam("cgsId")
         cgsId: String,
+        @Parameter(description = "gameId", required = false)
+        @QueryParam("gameId")
+        gameId: String?,
         receivers: List<String>
     ): Result<String>
 

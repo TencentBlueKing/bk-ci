@@ -111,6 +111,10 @@ import com.tencent.devops.remotedev.service.workspace.NotifyControl.Companion.NO
 import com.tencent.devops.remotedev.service.workspace.NotifyControl.Companion.SLEEP_3_DAY_NOTIFY
 import com.tencent.devops.remotedev.service.workspace.WorkspaceCommon
 import com.tencent.devops.scm.utils.code.git.GitUtils
+import java.time.Duration
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
+import java.util.concurrent.TimeUnit
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
@@ -118,10 +122,6 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import org.springframework.web.context.request.RequestContextHolder
 import org.springframework.web.context.request.ServletRequestAttributes
-import java.time.Duration
-import java.time.LocalDateTime
-import java.time.format.DateTimeFormatter
-import java.util.concurrent.TimeUnit
 
 @Service
 @Suppress("ALL")
@@ -291,8 +291,9 @@ class WorkspaceService @Autowired constructor(
 
             // 共享时创建START云桌面的用户
             if (workspace.workspaceMountType == WorkspaceMountType.START) {
+                val gameId = workspaceCommon.getGameIdAndAppId(workspace.projectId)
                 client.get(ServiceStartCloudResource::class)
-                    .createStartCloudUser(sharedUser)
+                    .createStartCloudUser(sharedUser, gameId.first)
             }
             if (workspaceSharedDao.existWorkspaceSharedInfo(workspaceName, sharedUser, dslContext)) {
                 logger.info("$workspaceName has already shared to $sharedUser")
@@ -1014,6 +1015,7 @@ class WorkspaceService @Autowired constructor(
         return workspace?.let {
             workspaceCommon.getOrSaveWorkspaceDetail(
                 workspaceName,
+                workspace.projectId,
                 workspace.workspaceMountType
             ).let {
                 WorkspaceProxyDetail(
@@ -1033,7 +1035,7 @@ class WorkspaceService @Autowired constructor(
         workspaceDao.fetchWorkspace(
             dslContext, userId = userId, status = WorkspaceStatus.RUNNING
         )?.parallelStream()?.forEach {
-            workspaceCommon.updateWorkspaceDetail(it.workspaceName, it.workspaceMountType)
+            workspaceCommon.updateWorkspaceDetail(it.workspaceName, it.projectId, it.workspaceMountType)
         }
     }
 

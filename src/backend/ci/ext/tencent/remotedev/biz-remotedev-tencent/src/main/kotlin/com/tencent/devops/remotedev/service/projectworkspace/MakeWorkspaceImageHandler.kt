@@ -174,6 +174,7 @@ class MakeWorkspaceImageHandler @Autowired constructor(
                 dslContext = dslContext
             )
 
+            val gameId = workspaceCommon.getGameIdAndAppId(workspace.projectId)
             dispatcher.dispatch(
                 WorkspaceOperateEvent(
                     userId = userId,
@@ -190,7 +191,8 @@ class MakeWorkspaceImageHandler @Autowired constructor(
                     bkTicket = "",
                     cgsId = workspaceWindowsDao.fetchAnyWorkspaceWindowsInfo(dslContext, workspaceName)?.hostIp ?: "",
                     imageId = imageId,
-                    mountType = WorkspaceMountType.START
+                    mountType = WorkspaceMountType.START,
+                    gameId = gameId.first
                 )
             )
 

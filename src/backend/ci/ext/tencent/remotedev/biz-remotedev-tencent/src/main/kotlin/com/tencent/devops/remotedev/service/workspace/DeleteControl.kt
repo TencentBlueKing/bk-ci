@@ -167,6 +167,8 @@ class DeleteControl @Autowired constructor(
 
             val bizId = MDC.get(TraceTag.BIZID) ?: TraceTag.buildBiz()
 
+            val gameId = workspaceCommon.getGameIdAndAppId(workspace.projectId)
+
             // 发送处理事件
             dispatcher.dispatch(
                 WorkspaceOperateEvent(
@@ -174,7 +176,8 @@ class DeleteControl @Autowired constructor(
                     traceId = bizId,
                     type = UpdateEventType.DELETE,
                     workspaceName = workspace.workspaceName,
-                    mountType = workspace.workspaceMountType
+                    mountType = workspace.workspaceMountType,
+                    gameId = gameId.first
                 )
             )
 
@@ -262,6 +265,7 @@ class DeleteControl @Autowired constructor(
             doDeleteWS(true, userId, workspaceName, null)
 
             val bizId = MDC.get(TraceTag.BIZID) ?: TraceTag.buildBiz()
+            val gameId = workspaceCommon.getGameIdAndAppId(workspace.projectId)
 
             // 发送处理事件
             dispatcher.dispatch(
@@ -270,7 +274,8 @@ class DeleteControl @Autowired constructor(
                     traceId = bizId,
                     type = UpdateEventType.DELETE,
                     workspaceName = workspace.workspaceName,
-                    mountType = workspace.workspaceMountType
+                    mountType = workspace.workspaceMountType,
+                    gameId = gameId.first
                 )
             )
             return true
@@ -582,13 +587,15 @@ class DeleteControl @Autowired constructor(
                 actionMessage = workspaceCommon.getOpHistory(OpHistoryCopyWriting.TIMEOUT_STOP)
             )
             val bizId = MDC.get(TraceTag.BIZID) ?: TraceTag.buildBiz()
+            val gameId = workspaceCommon.getGameIdAndAppId(workspace.projectId)
             dispatcher.dispatch(
                 WorkspaceOperateEvent(
                     userId = workspaceCommon.getSystemOperator(workspace.createUserId, workspace.workspaceMountType),
                     traceId = bizId,
                     type = UpdateEventType.DELETE,
                     workspaceName = workspace.workspaceName,
-                    mountType = workspace.workspaceMountType
+                    mountType = workspace.workspaceMountType,
+                    gameId = gameId.first
                 )
             )
 
