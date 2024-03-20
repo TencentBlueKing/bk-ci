@@ -676,4 +676,13 @@ class ServicePipelineResourceImpl @Autowired constructor(
             throw InvalidParamException("Number of pipelines is too large, size:${pipelineIds.size}")
         }
     }
+
+    override fun softDelete(userId: String, pipelineId: String, channelCode: ChannelCode?): Result<Boolean> {
+        pipelineRepositoryService.softDelete(
+            pipelineId = pipelineId,
+            userId = userId,
+            channelCode = channelCode
+        )
+        return Result(true)
+    }
 }

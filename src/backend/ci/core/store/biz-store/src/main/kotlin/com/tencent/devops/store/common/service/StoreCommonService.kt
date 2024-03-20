@@ -129,4 +129,12 @@ interface StoreCommonService {
         releaseType: ReleaseTypeEnum?,
         version: String?
     ): StoreShowVersionInfo
+
+    /**
+     * 根据标识获取组件关联代码库hashId
+     */
+    fun getStoreRepoHashIdByCode(
+        storeCode: String,
+        storeType: StoreTypeEnum
+    ): String?
 }

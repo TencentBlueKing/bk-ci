@@ -31,15 +31,16 @@ import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.model.store.tables.TStoreMember
 import com.tencent.devops.model.store.tables.TStoreProjectRel
 import com.tencent.devops.model.store.tables.records.TStoreProjectRelRecord
+import com.tencent.devops.store.pojo.common.StoreProjectInfo
 import com.tencent.devops.store.pojo.common.enums.StoreProjectTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
+import java.time.LocalDateTime
 import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.Record1
 import org.jooq.Record2
 import org.jooq.Result
 import org.springframework.stereotype.Repository
-import java.time.LocalDateTime
 
 @Suppress("ALL")
 @Repository
@@ -354,6 +355,21 @@ class StoreProjectRelDao {
             .and(b.CREATOR.eq(userId))
             .and(a.STORE_TYPE.eq(storeType.type.toByte()))
         return finalStep.fetchOne(0, String::class.java)
+    }
+
+    /**
+     * 更新组件关联初始化项目信息
+     */
+    fun updateStoreInitProject(dslContext: DSLContext, userId: String, storeProjectInfo: StoreProjectInfo) {
+        with(TStoreProjectRel.T_STORE_PROJECT_REL) {
+            dslContext.update(this)
+                .set(PROJECT_CODE, storeProjectInfo.projectId)
+                .set(MODIFIER, userId)
+                .where(STORE_CODE.eq(storeProjectInfo.storeCode))
+                .and(STORE_TYPE.eq(storeProjectInfo.storeType.toByte()))
+                .and(TYPE.eq(StoreProjectTypeEnum.INIT.type.toByte()))
+                .execute()
+        }
     }
 
     /**

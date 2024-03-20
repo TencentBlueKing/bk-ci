@@ -51,9 +51,9 @@ import com.tencent.devops.process.pojo.pipeline.DeployPipelineResult
 import com.tencent.devops.process.pojo.pipeline.SimplePipeline
 import com.tencent.devops.process.pojo.setting.PipelineModelAndSetting
 import com.tencent.devops.process.pojo.setting.PipelineSetting
-import io.swagger.v3.oas.annotations.tags.Tag
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
+import io.swagger.v3.oas.annotations.tags.Tag
 import javax.validation.Valid
 import javax.ws.rs.Consumes
 import javax.ws.rs.DELETE
@@ -614,4 +614,20 @@ interface ServicePipelineResource {
         @QueryParam("pageSize")
         pageSize: Int?
     ): Result<Page<Pipeline>>
+
+    @Operation(summary = "删除构建流水线信息")
+    @PUT
+    @Path("/delete")
+    fun softDelete(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "第几页", required = false, example = "1")
+        @QueryParam("page")
+        pipelineId: String,
+        @Parameter(description = "第几页", required = false, example = "1")
+        @QueryParam("page")
+        channelCode: ChannelCode?
+    ): Result<Boolean>
+
 }

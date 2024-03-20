@@ -95,13 +95,13 @@ import com.tencent.devops.process.pojo.setting.Subscription
 import com.tencent.devops.process.utils.PIPELINE_MATRIX_CON_RUNNING_SIZE_MAX
 import com.tencent.devops.project.api.service.ServiceAllocIdResource
 import com.tencent.devops.project.api.service.ServiceProjectResource
+import java.util.concurrent.atomic.AtomicInteger
+import javax.ws.rs.core.Response
 import org.joda.time.LocalDateTime
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
-import java.util.concurrent.atomic.AtomicInteger
-import javax.ws.rs.core.Response
 
 @Suppress(
     "LongParameterList",
@@ -1337,6 +1337,19 @@ class PipelineRepositoryService constructor(
             projectId = projectId,
             pipelineId = pipelineId,
             maxConRunningQueueSize = maxConRunningQueueSize
+        )
+    }
+
+    fun softDelete(
+        pipelineId: String,
+        userId: String,
+        channelCode: ChannelCode?
+    ) {
+        pipelineInfoDao.softDelete(
+            dslContext = dslContext,
+            pipelineId = pipelineId,
+            userId = userId,
+            channelCode = channelCode
         )
     }
 
