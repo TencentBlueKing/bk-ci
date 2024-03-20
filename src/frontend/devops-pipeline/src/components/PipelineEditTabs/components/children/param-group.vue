@@ -4,6 +4,11 @@
             <slot name="header">
                 <bk-icon class="toggle-icon" type="right-shape" />
                 <span>{{title}}</span>
+                <i
+                    v-if="tips"
+                    v-bk-tooltips="{ content: tips }"
+                    class="bk-icon icon-info-circle">
+                </i>
             </slot>
         </header>
         <transition name="slideLeft">
@@ -53,6 +58,10 @@
             title: {
                 type: String,
                 required: true
+            },
+            tips: {
+                type: String,
+                default: ''
             },
             list: {
                 type: Array,
@@ -118,6 +127,10 @@
                 margin-right: 4px;
                 color: #979BA5;
                 transition: all 0.3s ease;
+            }
+            .icon-info-circle {
+                margin-left: 4px;
+                color: #979BA5;
             }
             &[active] {
                 .toggle-icon {
