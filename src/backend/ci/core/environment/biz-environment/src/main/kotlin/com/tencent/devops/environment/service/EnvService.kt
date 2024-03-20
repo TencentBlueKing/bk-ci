@@ -621,7 +621,7 @@ class EnvService @Autowired constructor(
 
         val envNodeRecordList = envNodeDao.list(dslContext, projectId, envIds)
         val nodeIds = envNodeRecordList.map { it.nodeId }.toSet()
-        val nodeList = if (-1 != pageSize) {
+        val nodeList = if (-1 != page) {
             val sqlLimit = PageUtil.convertPageSizeToSQLLimit(page ?: 1, pageSize ?: 20)
             nodeDao.listNodesByIdListWithPageLimit(dslContext, projectId, sqlLimit.limit, sqlLimit.offset, nodeIds)
         } else {
