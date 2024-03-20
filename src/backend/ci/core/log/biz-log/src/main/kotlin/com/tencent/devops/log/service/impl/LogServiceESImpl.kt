@@ -30,7 +30,9 @@ package com.tencent.devops.log.service.impl
 import com.github.benmanes.caffeine.cache.Caffeine
 import com.tencent.devops.common.api.exception.ExecuteException
 import com.tencent.devops.common.api.pojo.Page
+import com.tencent.devops.common.es.ESClient
 import com.tencent.devops.common.es.client.LogClient
+import com.tencent.devops.common.log.constant.Constants
 import com.tencent.devops.common.log.constant.LogMessageCode.LOG_INDEX_HAS_BEEN_CLEANED
 import com.tencent.devops.common.log.pojo.EndPageQueryLogs
 import com.tencent.devops.common.log.pojo.LogLine
@@ -43,7 +45,6 @@ import com.tencent.devops.common.log.pojo.message.LogMessageWithLineNo
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.web.utils.I18nUtil
-import com.tencent.devops.common.es.ESClient
 import com.tencent.devops.log.event.LogOriginEvent
 import com.tencent.devops.log.event.LogStatusEvent
 import com.tencent.devops.log.event.LogStorageEvent
@@ -54,17 +55,8 @@ import com.tencent.devops.log.service.IndexService
 import com.tencent.devops.log.service.LogService
 import com.tencent.devops.log.service.LogStatusService
 import com.tencent.devops.log.service.LogTagService
-import com.tencent.devops.common.log.constant.Constants
 import com.tencent.devops.log.util.ESIndexUtils
 import com.tencent.devops.log.util.IndexNameUtils
-import java.io.IOException
-import java.sql.Date
-import java.text.SimpleDateFormat
-import java.util.concurrent.TimeUnit
-import javax.ws.rs.core.MediaType
-import javax.ws.rs.core.Response
-import javax.ws.rs.core.StreamingOutput
-import kotlin.math.ceil
 import org.elasticsearch.ElasticsearchStatusException
 import org.elasticsearch.action.admin.indices.open.OpenIndexRequest
 import org.elasticsearch.action.bulk.BulkRequest
@@ -85,7 +77,14 @@ import org.elasticsearch.search.builder.SearchSourceBuilder
 import org.elasticsearch.search.fetch.subphase.highlight.HighlightBuilder
 import org.elasticsearch.search.sort.SortOrder
 import org.slf4j.LoggerFactory
-import org.springframework.stereotype.Service
+import java.io.IOException
+import java.sql.Date
+import java.text.SimpleDateFormat
+import java.util.concurrent.TimeUnit
+import javax.ws.rs.core.MediaType
+import javax.ws.rs.core.Response
+import javax.ws.rs.core.StreamingOutput
+import kotlin.math.ceil
 
 @Suppress(
     "LongParameterList",
@@ -144,7 +143,7 @@ class LogServiceESImpl(
                     if (doAddMultiLines(buf, event.buildId) == 0) {
                         throw ExecuteException(
                             "None of lines is inserted successfully to ES " +
-                                    "[${event.buildId}|${event.retryTime}]"
+                                "[${event.buildId}|${event.retryTime}]"
                         )
                     } else {
                         buf.clear()
@@ -691,7 +690,7 @@ class LogServiceESImpl(
             )
             logger.info(
                 "[$index|$buildId|$tag|$subTag|$jobId|$executeCount] " +
-                        "doQueryInitLogs get the query builder: $boolQueryBuilder"
+                    "doQueryInitLogs get the query builder: $boolQueryBuilder"
             )
 
             val searchRequest = SearchRequest(index)
@@ -763,7 +762,7 @@ class LogServiceESImpl(
 
             logger.info(
                 "[$index|$buildId|$tag|$subTag|$jobId|$executeCount] " +
-                        "doQueryLogsAfterLine get the query builder: $boolQueryBuilder"
+                    "doQueryLogsAfterLine get the query builder: $boolQueryBuilder"
             )
             val searchRequest = SearchRequest(index)
                 .source(
@@ -874,7 +873,7 @@ class LogServiceESImpl(
                 .must(QueryBuilders.rangeQuery("lineNo").lte(end))
             logger.info(
                 "[$index|$buildId|$tag|$subTag|$jobId|$executeCount] " +
-                        "doQueryLogsBeforeLine get the query builder: $boolQueryBuilder"
+                    "doQueryLogsBeforeLine get the query builder: $boolQueryBuilder"
             )
             val searchRequest = SearchRequest(index)
                 .source(
@@ -1154,7 +1153,7 @@ class LogServiceESImpl(
         return try {
             logger.info(
                 "[${createClient.clusterName}][$index]|createIndex|: shards[${createClient.shards}]" +
-                        " replicas[${createClient.replicas}] shardsPerNode[${createClient.shardsPerNode}]"
+                    " replicas[${createClient.replicas}] shardsPerNode[${createClient.shardsPerNode}]"
             )
             val request = CreateIndexRequest(index)
                 .settings(

@@ -25,10 +25,10 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 tasks.register("multiBootJar") {
-    val finalServices = System.getProperty("devops.multi.from") ?: localRunMultiModules
-    val finalServiceList = finalServices.split(",").toMutableList()
+    val finalModules = System.getProperty("devops.multi.from") ?: localRunMultiModules
+    val finalModulesList = finalModules.split(",").toMutableList()
     rootProject.subprojects.filter {
-        isSpecifiedModulePath(it.path, finalServiceList)
+        isSpecifiedModulePath(it.path, finalModulesList)
     }.forEach { subProject -> addDependencies(subProject.path) }
     dependsOn("copyToRelease")
 }
