@@ -372,7 +372,11 @@ class CreateControl @Autowired constructor(
             // 发送给k8s
             dispatcher.dispatch(
                 WorkspaceCreateEvent(
-                    userId = pmUserId,
+                    userId = if (CommonUtil.ifProjectPersonal(projectId)) {
+                        projectId.removePrefix("_")
+                    } else {
+                        pmUserId
+                    },
                     traceId = bizId,
                     workspaceName = ws.workspaceName,
                     devFilePath = ws.devFilePath,
