@@ -54,26 +54,26 @@ BEGIN
     ALTER TABLE T_AUTH_RESOURCE_GROUP ADD INDEX `PROJECT_CODE_RELATION_ID_IDX` (`PROJECT_CODE`,`RELATION_ID`);
     END IF;
 
-    IF NOT EXISTS(SELECT 1
+    IF EXISTS(SELECT 1
                       FROM information_schema.COLUMNS
                       WHERE TABLE_SCHEMA = db
                         AND TABLE_NAME = 'T_AUTH_RESOURCE'
                         AND COLUMN_NAME = 'RESOURCE_CODE'
-                        AND COLLATION_NAME != 'utf8_bin'
+                        AND COLLATION_NAME != 'utf8mb4_bin'
                         ) THEN
     ALTER TABLE T_AUTH_RESOURCE
-        MODIFY `RESOURCE_CODE` varchar(255) collate utf8_bin not null comment '资源ID';
+        MODIFY `RESOURCE_CODE` varchar(255) collate utf8mb4_bin not null comment '资源ID';
     END IF;
 
-     IF NOT EXISTS(SELECT 1
+     IF EXISTS(SELECT 1
                           FROM information_schema.COLUMNS
                           WHERE TABLE_SCHEMA = db
-                            AND TABLE_NAME = 'T_AUTH_RESOURCE'
+                            AND TABLE_NAME = 'T_AUTH_RESOURCE_GROUP'
                             AND COLUMN_NAME = 'RESOURCE_CODE'
-                            AND COLLATION_NAME != 'utf8_bin'
+                            AND COLLATION_NAME != 'utf8mb4_bin'
                             ) THEN
         ALTER TABLE T_AUTH_RESOURCE_GROUP
-            MODIFY `RESOURCE_CODE` varchar(255) collate utf8_bin not null comment '资源ID';
+            MODIFY `RESOURCE_CODE` varchar(255) collate utf8mb4_bin not null comment '资源ID';
         END IF;
 
     COMMIT;
