@@ -23,7 +23,7 @@
             read-only
             :highlight-ranges="highlightMarkList"
         />
-        <bk-tab v-else v-model="activePanel" type="unborder-card">
+        <bk-tab v-else :active.sync="activePanel" type="unborder-card">
             <bk-tab-panel
                 v-for="panel in panels"
                 :key="panel.name"
@@ -144,6 +144,9 @@
         watch: {
             value (val) {
                 if (val) {
+                    if (this.previewSettingType) {
+                        this.activePanel = 'baseConfig'
+                    }
                     this.init()
                 } else {
                     this.highlightMarkList = []
@@ -174,10 +177,6 @@
                     this.isYamlSupport = res.yamlSupported
                     this.yamlInvalidMsg = res.yamlInvalidMsg
                     this.pipelineSetting = res.setting
-
-                    if (this.previewSettingType) {
-                        this.activePanel = 'baseConfig'
-                    }
                 } catch (error) {
                     this.$bkMessage({
                         theme: 'error',
