@@ -369,13 +369,12 @@ class PipelineVersionFacadeService @Autowired constructor(
             channelCode = ChannelCode.BS,
             create = false,
             updateLastModifyUser = true,
-            savedSetting = savedSetting,
+            setting = savedSetting,
             versionStatus = versionStatus,
             branchName = branchName,
             description = request.description?.takeIf { it.isNotBlank() } ?: draftVersion.description,
             yamlStr = draftVersion.yaml,
-            baseVersion = draftVersion.baseVersion,
-            pipelineAsCodeSettings = savedSetting.pipelineAsCodeSettings
+            baseVersion = draftVersion.baseVersion
         )
         // 添加标签
         pipelineGroupService.addPipelineLabel(
@@ -612,6 +611,7 @@ class PipelineVersionFacadeService @Autowired constructor(
                 userId = userId,
                 projectId = projectId,
                 model = model ?: modelAndYaml.modelAndSetting.model,
+                setting = setting ?: modelAndYaml.modelAndSetting.setting,
                 channelCode = ChannelCode.BS,
                 checkPermission = true,
                 versionStatus = versionStatus,

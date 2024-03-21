@@ -299,6 +299,7 @@ class PipelineInfoFacadeService @Autowired constructor(
         projectId: String,
         model: Model,
         channelCode: ChannelCode,
+        setting: PipelineSetting? = null,
         yaml: String? = null,
         checkPermission: Boolean = true,
         fixPipelineId: String? = null,
@@ -446,8 +447,7 @@ class PipelineInfoFacadeService @Autowired constructor(
                     templateId = templateId,
                     description = description,
                     yamlStr = yaml,
-                    baseVersion = null,
-                    pipelineAsCodeSettings = pipelineAsCodeSettings
+                    baseVersion = null
                 )
                 pipelineId = result.pipelineId
                 watcher.stop()
@@ -566,7 +566,6 @@ class PipelineInfoFacadeService @Autowired constructor(
         description: String? = null,
         aspects: LinkedList<IPipelineTransferAspect>? = null
     ): DeployPipelineResult {
-        val pipelineAsCodeSettings = PipelineAsCodeSettings(enable = true)
         val versionStatus = if (isDefaultBranch) {
             VersionStatus.RELEASED
         } else {
@@ -580,29 +579,36 @@ class PipelineInfoFacadeService @Autowired constructor(
             branchName = branchName,
             aspects = aspects
         )
-        val pipelineName = newResource.model.name.ifBlank { yamlFileName }
+        // 流水线名称实际取值优先级：setting > model > fileName
+        val pipelineName = newResource.setting.pipelineName.takeIf {
+            it.isNotBlank()
+        } ?: newResource.model.name.ifBlank {
+            yamlFileName
+        }
+        // 通过PAC模式创建或保存的流水线均打开PAC
+        // 修正创建时的流水线名和增加PAC开关参数
+        val newSetting = newResource.setting.copy(
+            pipelineName = pipelineName,
+            pipelineAsCodeSettings = PipelineAsCodeSettings(enable = true)
+        )
         val result = createPipeline(
             userId = userId,
             projectId = projectId,
             model = newResource.model.copy(name = pipelineName),
+            setting = newSetting,
             channelCode = ChannelCode.BS,
             yaml = yaml,
             versionStatus = versionStatus,
             branchName = branchName,
-            description = description,
-            pipelineAsCodeSettings = pipelineAsCodeSettings
+            description = description
         )
         newResource.setting.projectId = projectId
         newResource.setting.pipelineId = result.pipelineId
-        // 通过PAC模式创建或保存的流水线均打开PAC
         pipelineSettingFacadeService.saveSetting(
             userId = userId,
             projectId = projectId,
             pipelineId = result.pipelineId,
-            setting = newResource.setting.copy(
-                pipelineName = pipelineName,
-                pipelineAsCodeSettings = pipelineAsCodeSettings
-            ),
+            setting = newSetting,
             versionStatus = versionStatus,
             checkPermission = false
         )
@@ -620,7 +626,6 @@ class PipelineInfoFacadeService @Autowired constructor(
         description: String? = null,
         aspects: LinkedList<IPipelineTransferAspect>? = null
     ): DeployPipelineResult {
-        val pipelineAsCodeSettings = PipelineAsCodeSettings(enable = true)
         val versionStatus = if (isDefaultBranch) {
             VersionStatus.RELEASED
         } else {
@@ -637,6 +642,7 @@ class PipelineInfoFacadeService @Autowired constructor(
         newResource.setting.projectId = projectId
         newResource.setting.pipelineId = pipelineId
         // 通过PAC模式创建或保存的流水线均打开PAC
+        // 修正创建时的流水线名和增加PAC开关参数
         val pipelineName = newResource.model.name.ifBlank { yamlFileName }
         val savedSetting = pipelineSettingFacadeService.saveSetting(
             userId = userId,
@@ -644,7 +650,7 @@ class PipelineInfoFacadeService @Autowired constructor(
             pipelineId = pipelineId,
             setting = newResource.setting.copy(
                 pipelineName = pipelineName,
-                pipelineAsCodeSettings = pipelineAsCodeSettings
+                pipelineAsCodeSettings = PipelineAsCodeSettings(enable = true)
             ),
             checkPermission = false,
             versionStatus = versionStatus,
@@ -660,8 +666,7 @@ class PipelineInfoFacadeService @Autowired constructor(
             savedSetting = savedSetting,
             versionStatus = versionStatus,
             branchName = branchName,
-            description = description,
-            pipelineAsCodeSettings = pipelineAsCodeSettings
+            description = description
         )
     }
 
@@ -983,8 +988,7 @@ class PipelineInfoFacadeService @Autowired constructor(
         versionStatus: VersionStatus? = VersionStatus.RELEASED,
         branchName: String? = null,
         description: String? = null,
-        baseVersion: Int? = null,
-        pipelineAsCodeSettings: PipelineAsCodeSettings? = null
+        baseVersion: Int? = null
     ): DeployPipelineResult {
         if (checkTemplate && templateService.isTemplatePipeline(projectId, pipelineId)) {
             throw ErrorCodeException(
@@ -1076,13 +1080,12 @@ class PipelineInfoFacadeService @Autowired constructor(
                 channelCode = channelCode,
                 create = false,
                 updateLastModifyUser = updateLastModifyUser,
-                savedSetting = savedSetting,
+                setting = savedSetting,
                 versionStatus = versionStatus,
                 branchName = branchName,
                 description = description,
                 yamlStr = yaml,
-                baseVersion = baseVersion,
-                pipelineAsCodeSettings = pipelineAsCodeSettings
+                baseVersion = baseVersion
             )
             if (checkPermission) {
                 pipelinePermissionService.modifyResource(projectId, pipelineId, model.name)

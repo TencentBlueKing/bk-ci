@@ -32,7 +32,6 @@ import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.exception.DependNotFoundException
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.InvalidParamException
-import com.tencent.devops.common.api.pojo.PipelineAsCodeSettings
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.api.util.Watcher
@@ -221,11 +220,10 @@ class PipelineRepositoryService constructor(
         useConcurrencyGroup: Boolean? = false,
         templateId: String? = null,
         updateLastModifyUser: Boolean? = true,
-        savedSetting: PipelineSetting? = null,
+        setting: PipelineSetting? = null,
         versionStatus: VersionStatus? = VersionStatus.RELEASED,
         branchName: String? = null,
-        description: String? = null,
-        pipelineAsCodeSettings: PipelineAsCodeSettings? = null
+        description: String? = null
     ): DeployPipelineResult {
 
         // 生成流水线ID,新流水线以p-开头，以区分以前旧数据
@@ -270,7 +268,7 @@ class PipelineRepositoryService constructor(
         }
 
         return if (!create) {
-            val pipelineSetting = savedSetting
+            val pipelineSetting = setting
                 ?: pipelineSettingDao.getSetting(dslContext, projectId, pipelineId)
             // 只在更新操作时检查stage数量不为1
             if (model.stages.size <= 1) throw ErrorCodeException(
@@ -288,7 +286,7 @@ class PipelineRepositoryService constructor(
                 buildNo = buildNo,
                 modelTasks = modelTasks,
                 channelCode = channelCode,
-                setting = pipelineSetting?.copy(pipelineAsCodeSettings = pipelineAsCodeSettings),
+                setting = pipelineSetting,
                 updateLastModifyUser = updateLastModifyUser,
                 versionStatus = versionStatus,
                 branchName = branchName,
@@ -301,6 +299,7 @@ class PipelineRepositoryService constructor(
                 projectId = projectId,
                 pipelineId = pipelineId,
                 model = model,
+                customSetting = setting,
                 yamlStr = yamlStr,
                 userId = userId,
                 channelCode = channelCode,
@@ -315,8 +314,7 @@ class PipelineRepositoryService constructor(
                 versionStatus = versionStatus,
                 branchName = branchName,
                 description = description,
-                baseVersion = baseVersion,
-                pipelineAsCodeSettings = pipelineAsCodeSettings
+                baseVersion = baseVersion
             )
             operationLogService.addOperationLog(
                 userId = userId,
@@ -619,6 +617,7 @@ class PipelineRepositoryService constructor(
         projectId: String,
         pipelineId: String,
         model: Model,
+        customSetting: PipelineSetting?,
         yamlStr: String?,
         userId: String,
         channelCode: ChannelCode,
@@ -633,8 +632,7 @@ class PipelineRepositoryService constructor(
         templateId: String? = null,
         versionStatus: VersionStatus? = VersionStatus.RELEASED,
         branchName: String?,
-        description: String?,
-        pipelineAsCodeSettings: PipelineAsCodeSettings?
+        description: String?
     ): DeployPipelineResult {
         // #8161 如果只有一个分支版本的创建操作，流水线状态也为仅有草稿
         val onlyDraft = versionStatus == VersionStatus.COMMITTING ||
@@ -674,11 +672,11 @@ class PipelineRepositoryService constructor(
                     onlyDraft = onlyDraft
                 )
                 model.latestVersion = modelVersion
-                var savedSetting = PipelineSetting(
+                var newSetting = customSetting ?: PipelineSetting(
                     pipelineId = pipelineId,
                     pipelineName = model.name,
                     desc = model.desc ?: "",
-                    pipelineAsCodeSettings = pipelineAsCodeSettings
+                    pipelineAsCodeSettings = null
                 )
 
                 if (model.instanceFromTemplate != true) {
@@ -716,7 +714,7 @@ class PipelineRepositoryService constructor(
                             }
                             setting.pipelineAsCodeSettings = null
                             pipelineSettingDao.saveSetting(dslContext, setting)
-                            savedSetting = setting
+                            newSetting = setting
                         } else {
                             // #3311
                             // 蓝盾正常的BS渠道的默认没设置setting的，将发通知改成失败才发通知
@@ -741,7 +739,7 @@ class PipelineRepositoryService constructor(
                                 pipelineName = model.name,
                                 failNotifyTypes = notifyTypes,
                                 maxPipelineResNum = maxPipelineResNum,
-                                pipelineAsCodeSettings = pipelineAsCodeSettings,
+                                pipelineAsCodeSettings = customSetting?.pipelineAsCodeSettings,
                                 settingVersion = settingVersion
                             )?.let { setting ->
                                 pipelineSettingVersionDao.saveSetting(
@@ -751,7 +749,7 @@ class PipelineRepositoryService constructor(
                                         .generateSegmentId(PIPELINE_SETTING_VERSION_BIZ_TAG_NAME).data,
                                     version = settingVersion
                                 )
-                                savedSetting = setting
+                                newSetting = setting
                             }
                         }
                     } else {
@@ -761,7 +759,7 @@ class PipelineRepositoryService constructor(
                             pipelineId = pipelineId,
                             name = model.name,
                             desc = model.desc ?: ""
-                        )?.let { savedSetting = it }
+                        )?.let { newSetting = it }
                     }
                 }
                 // 如果不是草稿保存，最新版本永远是新增逻辑
@@ -781,7 +779,7 @@ class PipelineRepositoryService constructor(
                         data = TransferBody(
                             modelAndSetting = PipelineModelAndSetting(
                                 model = model,
-                                setting = savedSetting
+                                setting = newSetting
                             )
                         )
                     ).newYaml ?: ""
@@ -1059,9 +1057,17 @@ class PipelineRepositoryService constructor(
                             operationLogParams = newVersionName
                         }
                         version = if (versionStatus == VersionStatus.DRAFT_RELEASE && draftVersion != null) {
-                            // 更新草稿版本为正式版本
+                            // 更新草稿版本为正式版本的草稿检查
                             if (draftVersion.baseVersion != baseVersion) throw ErrorCodeException(
                                 errorCode = ProcessMessageCode.ERROR_PIPELINE_IS_NOT_THE_LATEST
+                            )
+                            // 如果当前草稿和正式版本一致则拦截发布
+                            if (
+                                pipelineVersion == releaseResource.pipelineVersion &&
+                                triggerVersion == releaseResource.triggerVersion &&
+                                settingVersion == releaseResource.settingVersion
+                            ) throw ErrorCodeException(
+                                errorCode = ProcessMessageCode.ERROR_VERSION_IS_NOT_UPDATED
                             )
                             draftVersion.version
                         } else {
