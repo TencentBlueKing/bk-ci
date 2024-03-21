@@ -27,14 +27,27 @@
 
 package com.tencent.devops.websocket.utils
 
-object PageUtils {
+import org.junit.jupiter.api.Assertions
+import org.junit.jupiter.api.Test
 
-    @Suppress("ALL")
-    fun buildNormalPage(page: String): String {
-        if (page.contains("/list/") && !page.endsWith("/list")) {
-            val index = page.indexOf("/list")
-            return page.substring(0, index + 5)
-        }
-        return page
+class WebsocketPageUtilsTest {
+
+    @Test
+    fun getNormalPage() {
+        val url = "/console/pipeline/project-1/p-xxx/history"
+        val url1 = "/console/pipeline/project-1/p-xxx/draftDebug/4"
+        val url2 = "/console/pipeline/project-1/p-xxx/history/history/3"
+        val url3 = "/console/pipeline/project-1/p-xxx/history/pipeline/3"
+        val page = WebsocketPageUtils.buildNormalPage(url)
+        val page1 = WebsocketPageUtils.buildNormalPage(url1)
+        val page2 = WebsocketPageUtils.buildNormalPage(url2)
+        val page3 = WebsocketPageUtils.buildNormalPage(url3)
+        val historyPage = "/console/pipeline/project-1/p-xxx/history"
+        Assertions.assertEquals(historyPage, page)
+        Assertions.assertEquals(historyPage, page1)
+        Assertions.assertEquals(historyPage, page2)
+        Assertions.assertEquals(
+            "/console/pipeline/project-1/p-xxx/history/pipeline/3", page3
+        )
     }
 }
