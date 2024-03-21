@@ -101,13 +101,12 @@ class MigratePermissionHandoverService constructor(
                         USER_TYPE,
                         handoverFrom
                     )
-                } catch (ex: Exception) {
+                } catch (ignore: Exception) {
                     logger.warn(
                         "handover permissions|operate group failed:$projectCode|" +
-                            "${resourceManagerGroup!!.relationId}"
+                            "${resourceManagerGroup!!.relationId}|${ignore.message}"
                     )
                 }
-
             }
         }
     }
