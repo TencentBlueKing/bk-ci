@@ -1,4 +1,7 @@
 <!-- BEGIN MUNGE: GENERATED_TOC -->
+- [v2.1.0-rc.4](#v210-rc4)
+   - [Changelog since v2.1.0-rc.3](#changelog-since-v210-rc3)
+
 - [v2.1.0-rc.3](#v210-rc3)
    - [Changelog since v2.1.0-rc.2](#changelog-since-v210-rc2)
 
@@ -13,6 +16,28 @@
 
 
 <!-- NEW RELEASE NOTES ENTRY -->
+# v2.1.0-rc.4
+## Changelog since v2.1.0-rc.3
+#### 新增
+- [新增] 项目启用停用广播通知 [链接](http://github.com/TencentBlueKing/bk-ci/issues/10080)
+- [新增] 支持根据运营产品ID获取项目列表接口 [链接](http://github.com/TencentBlueKing/bk-ci/issues/10107)
+- [新增] 非活跃项目自动停用 [链接](http://github.com/TencentBlueKing/bk-ci/issues/10087)
+- [新增] 优化无编译环境异常重试调度逻辑 [链接](http://github.com/TencentBlueKing/bk-ci/issues/10048)
+- [新增] 流水线归档库数据库清理 [链接](http://github.com/TencentBlueKing/bk-ci/issues/10010)
+- [新增] Turbo编译加速提供导出机器资源的使用量接口 [链接](http://github.com/TencentBlueKing/bk-ci/issues/10071)
+- [新增] 缩减store微服务的子模块数量 [链接](http://github.com/TencentBlueKing/bk-ci/issues/9225)
+- [新增] 插件代码库自动开启 stream ci 时，项目归属信息优化 [链接](http://github.com/TencentBlueKing/bk-ci/issues/9996)
+- [新增] 接入审计中心（二期） [链接](http://github.com/TencentBlueKing/bk-ci/issues/9732)
+
+#### 优化
+- [优化] 插件迁移工具迁移模板内的插件时屏蔽权限校验 [链接](http://github.com/TencentBlueKing/bk-ci/issues/10093)
+- [优化] redis存储db分片规则优化 TencentBlueKing [链接](http://github.com/TencentBlueKing/bk-ci/issues/10081)
+
+#### 修复
+- [修复] store服务抽象类注解优化 [链接](http://github.com/TencentBlueKing/bk-ci/issues/10116)
+- [修复] 用户组织架构新增线一级别组织层级，用户信息获取逻辑未更新导致部分组织架构校验逻辑校验失败 [链接](http://github.com/TencentBlueKing/bk-ci/issues/9967)
+- [修复] 删除流水线时，代码库关联关系未删除 [链接](http://github.com/TencentBlueKing/bk-ci/issues/10111)
+- [修复] 定时触发插件检查SVN代码库最新版本时, 无需调用会话接口 [链接](http://github.com/TencentBlueKing/bk-ci/issues/10096)
 # v2.1.0-rc.3
 ## Changelog since v2.1.0-rc.2
 #### 新增
