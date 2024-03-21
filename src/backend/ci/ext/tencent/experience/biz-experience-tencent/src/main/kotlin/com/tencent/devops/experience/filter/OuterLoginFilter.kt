@@ -42,7 +42,7 @@ class OuterLoginFilter @Autowired constructor(
                 }
                 // 路径过滤
                 val resourceMethod = resourceInfo!!.resourceMethod
-                if (resourceMethod.annotations.filterIsInstance<AllowOuter>().isEmpty()) {
+                if (resourceMethod.isAnnotationPresent(AllowOuter::class.java)) {
                     logger.warn(
                         "this method is not allowed by outer , class:{} , method:{}",
                         resourceMethod.declaringClass,
