@@ -239,7 +239,7 @@ const optionConfigMixin = {
                 let str = ''
                 switch (i) {
                     case 'AUTO_RETRY':
-                        str = 'continueWhenFailed'
+                        str = 'retryWhenFailed'
                         break
                     case 'MANUALLY_RETRY':
                         str = 'MANUAL_RETRY'
