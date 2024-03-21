@@ -1196,7 +1196,7 @@
             }
           } ]
         },
-        "template" : {
+        "^template$" : {
           "$ref" : "#/definitions/template"
         },
         "^[A-Z][A-Z0-9_]{0,63}$" : {
