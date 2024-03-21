@@ -30,7 +30,6 @@ package com.tencent.devops.environment.service.prometheus
 import io.micrometer.core.instrument.Gauge
 import io.micrometer.core.instrument.MeterRegistry
 import io.micrometer.core.instrument.binder.MeterBinder
-import org.slf4j.LoggerFactory
 
 class AgentStatusUpdateThreadMetrics : MeterBinder {
     companion object {
@@ -67,7 +66,7 @@ class AgentStatusUpdateThreadMetrics : MeterBinder {
     ) {
         Gauge.builder(
             THREAD_METRICS_PREFIX.plus(name),
-            map,
+            map
         ) { m -> m[name] ?: -1.0 }
             .description(description)
             .register(registry)
