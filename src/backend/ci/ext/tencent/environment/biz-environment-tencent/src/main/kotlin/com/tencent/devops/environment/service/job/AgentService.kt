@@ -65,11 +65,13 @@ import com.tencent.devops.environment.pojo.job.agentres.QueryAgentTaskStatusResu
 import com.tencent.devops.environment.pojo.job.agentres.RetryAgentInstallTaskResult
 import com.tencent.devops.environment.pojo.job.agentres.Statistics
 import com.tencent.devops.environment.pojo.job.agentres.TerminalAgentInstallTaskResult
+import com.tencent.devops.environment.service.prometheus.AgentStatusUpdateThreadMetrics
 import com.tencent.devops.environment.utils.FileUtils
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
+import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Service
 import java.io.InputStream
 import java.time.Duration
@@ -87,7 +89,8 @@ data class AgentService @Autowired constructor(
     private val nodeDao: NodeDao,
     private val redisOperation: RedisOperation,
     private val queryFromCCService: QueryFromCCService,
-    private val queryAgentStatusService: QueryAgentStatusService
+    private val queryAgentStatusService: QueryAgentStatusService,
+    private val agentStatusUpdateThreadMetrics: AgentStatusUpdateThreadMetrics
 ) {
     @Value("\${environment.cc.bkBizScopeId:#{null}}")
     val bkBizScopeId: Int = 0
@@ -141,6 +144,20 @@ data class AgentService @Autowired constructor(
         const val AGENT_NOT_INSTALLED_TAG = false
 
         private const val NS_TO_S = 1000000000
+
+        private const val GAUGE_NAME_ACTIVE_THREAD_COUNT = "activeThreadCount" // 活跃线程数
+        private const val GAUGE_NAME_CORE_THREAD_COUNT = "coreThreadCount" // 核心线程数
+        private const val GAUGE_NAME_MAX_THREAD_COUNT = "maxThreadCount" // 最大线程数
+    }
+
+    @Scheduled(cron = "0/15 * * * * ?")
+    fun monitorCheckAgentStatusExecutorTask() {
+        agentStatusUpdateThreadMetrics.map[GAUGE_NAME_ACTIVE_THREAD_COUNT] =
+            checkAgentStatusExecutor.activeCount.toDouble()
+        agentStatusUpdateThreadMetrics.map[GAUGE_NAME_CORE_THREAD_COUNT] =
+            checkAgentStatusExecutor.corePoolSize.toDouble()
+        agentStatusUpdateThreadMetrics.map[GAUGE_NAME_MAX_THREAD_COUNT] =
+            checkAgentStatusExecutor.maximumPoolSize.toDouble()
     }
 
     fun installAgent(
