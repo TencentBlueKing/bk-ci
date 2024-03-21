@@ -40,6 +40,9 @@
             atomVersion () {
                 return this.element.version
             },
+            atomOptionConfig () {
+                return this.atomPropsModel.config || {}
+            },
             optionModel () {
                 const model = { ...this.ATOM_OPTION }
                 const failControlManualRetryOption = {
