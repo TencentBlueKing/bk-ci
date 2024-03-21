@@ -27,12 +27,15 @@
 
 package com.tencent.devops.store.pojo.common.publication
 
+import com.tencent.devops.store.pojo.common.enums.RdTypeEnum
 import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "工作台-组件特性信息请求报文体")
 data class StoreBaseFeatureRequest(
     @get:Schema(title = "类型", required = false)
     val type: String? = null,
+    @get:Schema(title = "研发类型", required = false)
+    val rdType: RdTypeEnum? = null,
     @get:Schema(title = "特性扩展信息", required = false)
     val extBaseFeatureInfo: Map<String, Any>? = null
 )
