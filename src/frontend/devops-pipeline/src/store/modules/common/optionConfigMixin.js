@@ -217,7 +217,9 @@ const optionConfigMixin = {
                 } else {
                     formProps[key] = this.ATOM_OPTION[key].default
                 }
-            })
+                
+                return formProps
+            }, {})
             const { continueWhenFailed, retryWhenFailed, manualRetry } = atomValues
             if (continueWhenFailed || retryWhenFailed || manualRetry) {
                 atomValues.failControl = [
