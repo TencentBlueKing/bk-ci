@@ -107,17 +107,6 @@ function installAgentService()
   ${workspace}/start.sh
 }
 
-function writeSSHConfig()
-{
-  echo "writeSSHConfig"
-}
-
-# if [[ "${workspace}" = ~ ]]; then
-#   echo 'agent should not install in root of user home directory'
-#   echo 'please run install script in an empty directory with full permission'
-#   exit 1
-# fi
-
 cd ${workspace}
 
 initArch
@@ -133,11 +122,5 @@ echo "ARCH: ${arch1}"
 echo "check java version"
 jdk/Contents/Home/bin/java -version
 
-echo "check and write ssh config"
-writeSSHConfig
-
 uninstallAgentService
 installAgentService
-
-
-
