@@ -69,6 +69,7 @@ import com.tencent.devops.project.pojo.OperationalProductVO
 import com.tencent.devops.project.pojo.ProjectCreateInfo
 import com.tencent.devops.project.pojo.ProjectCreateUserInfo
 import com.tencent.devops.project.pojo.ProjectOrganizationInfo
+import com.tencent.devops.project.pojo.ProjectProductValidateDTO
 import com.tencent.devops.project.pojo.ProjectProperties
 import com.tencent.devops.project.pojo.ProjectTagUpdateDTO
 import com.tencent.devops.project.pojo.ProjectUpdateInfo
@@ -77,6 +78,7 @@ import com.tencent.devops.project.pojo.ResourceUpdateInfo
 import com.tencent.devops.project.pojo.Result
 import com.tencent.devops.project.pojo.enums.ProjectApproveStatus
 import com.tencent.devops.project.pojo.enums.ProjectChannelCode
+import com.tencent.devops.project.pojo.enums.ProjectOperation
 import com.tencent.devops.project.pojo.user.UserDeptDetail
 import com.tencent.devops.project.service.ProjectApprovalService
 import com.tencent.devops.project.service.ProjectExtOrganizationService
@@ -581,12 +583,28 @@ class TxProjectServiceImpl @Autowired constructor(
     }
 
     override fun validateProjectRelateProduct(
-        userId: String,
-        enabled: Boolean,
-        productId: Int?
+        projectProductValidateDTO: ProjectProductValidateDTO
     ) {
-        // 启用项目时，若未关联OBS产品，需要抛异常
-        if (enabled && productId == null) {
+        with(projectProductValidateDTO) {
+            when (projectOperation) {
+                ProjectOperation.ENABLE -> validateProductIdNotNull()
+                ProjectOperation.CREATE -> {
+                    if (channelCode == ProjectChannelCode.BS) {
+                        validateProductIdNotNull()
+                        validateProductExists()
+                    }
+                }
+                ProjectOperation.UPDATE -> {
+                    validateProductIdNotNull()
+                    validateProductExists()
+                }
+                else -> {}
+            }
+        }
+    }
+
+    private fun ProjectProductValidateDTO.validateProductIdNotNull() {
+        if (productId == null) {
             throw ErrorCodeException(
                 errorCode = ProjectMessageCode.ERROR_PROJECT_NOT_RELATED_PRODUCT,
                 defaultMessage = MessageUtil.getMessageByLocale(
@@ -595,6 +613,17 @@ class TxProjectServiceImpl @Autowired constructor(
                 )
             )
         }
+    }
+
+    private fun ProjectProductValidateDTO.validateProductExists() {
+        val products = getOperationalProducts()
+        products.firstOrNull { it.productId == productId } ?: throw ErrorCodeException(
+            errorCode = ProjectMessageCode.ERROR_PRODUCT_NOT_EXIST,
+            defaultMessage = MessageUtil.getMessageByLocale(
+                messageCode = ProjectMessageCode.ERROR_PRODUCT_NOT_EXIST,
+                language = I18nUtil.getLanguage(userId)
+            )
+        )
     }
 
     companion object {
