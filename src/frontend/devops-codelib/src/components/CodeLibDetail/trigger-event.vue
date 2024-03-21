@@ -350,8 +350,8 @@
             },
 
             handleChangeDaterange (date, type) {
-                const startTime = new Date(`${date[0]} 00:00:00`).getTime() || ''
-                const endTime = new Date(`${date[1]} 23:59:59`).getTime() || ''
+                const startTime = new Date(date[0]).getTime() || ''
+                const endTime = new Date(date[1]).getTime() || ''
                 this.daterange = [startTime, endTime]
             },
 
