@@ -1105,14 +1105,16 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
                     I18nUtil.getCodeLanMessage(ProjectMessageCode.PEM_CHECK_FAIL)
                 )
             }
-            validateProjectRelateProduct(
-                ProjectProductValidateDTO(
-                    englishName = englishName,
-                    userId = userId,
-                    projectOperation = ProjectOperation.ENABLE,
-                    productId = projectInfo.productId
+            if (enabled){
+                validateProjectRelateProduct(
+                    ProjectProductValidateDTO(
+                        englishName = englishName,
+                        userId = userId,
+                        projectOperation = ProjectOperation.ENABLE,
+                        productId = projectInfo.productId
+                    )
                 )
-            )
+            }
         }
         projectDao.updateUsableStatus(
             dslContext = dslContext,
