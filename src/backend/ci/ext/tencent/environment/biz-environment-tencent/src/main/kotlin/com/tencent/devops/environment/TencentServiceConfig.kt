@@ -43,6 +43,7 @@ import com.tencent.devops.environment.permission.impl.EnvironmentPermissionServi
 import com.tencent.devops.environment.permission.impl.TxV3EnvironmentPermissionService
 import com.tencent.devops.environment.service.TencentAgentUrlServiceImpl
 import com.tencent.devops.environment.service.TencentGITCIAgentUrlServiceImpl
+import com.tencent.devops.environment.service.prometheus.AgentStatusUpdateThreadMetrics
 import org.jooq.DSLContext
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.context.annotation.Bean
@@ -121,4 +122,7 @@ class TencentServiceConfig {
         envDao = envDao,
         tokenCheckService = tokenCheckService
     )
+
+    @Bean
+    fun agentStatusUpdateThreadMetrics() = AgentStatusUpdateThreadMetrics()
 }
