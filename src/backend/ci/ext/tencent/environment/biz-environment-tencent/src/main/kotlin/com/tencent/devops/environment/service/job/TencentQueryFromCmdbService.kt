@@ -86,8 +86,12 @@ class TencentQueryFromCmdbService {
         if (invalidIpList.isNotEmpty()) {
             logger.warn("[isOperatorOrBakOperator] invalidIpList: ${invalidIpList.joinToString()}")
             throw ErrorCodeException(
-                errorCode = EnvironmentMessageCode.ERROR_NODE_IP_ILLEGAL_USER,
-                params = arrayOf(invalidIpList.joinToString(","))
+                errorCode = EnvironmentMessageCode.ERROR_NODE_IP_ILLEGAL,
+                params = arrayOf(
+                    invalidIpList.joinToString(","),
+                    userId,
+                    nodeIpToNodeMap.entries.joinToString(separator = ", ") { (key, value) -> "$key - $value" }
+                )
             )
         }
     }

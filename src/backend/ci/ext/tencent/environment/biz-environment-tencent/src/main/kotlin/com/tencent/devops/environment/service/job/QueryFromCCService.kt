@@ -133,7 +133,7 @@ class QueryFromCCService {
                 logger.warn("[isOperatorOrBakOperator] invalidIpList: ${invalidIpList.joinToString()}")
                 throw ErrorCodeException(
                     errorCode = EnvironmentMessageCode.ERROR_NODE_IP_ILLEGAL_USER,
-                    params = arrayOf(invalidIpList.joinToString(","))
+                    params = arrayOf(invalidIpList.joinToString(","), userId)
                 )
             }
         }

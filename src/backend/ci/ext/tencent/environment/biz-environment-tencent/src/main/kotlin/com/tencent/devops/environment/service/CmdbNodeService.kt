@@ -500,7 +500,7 @@ class CmdbNodeService @Autowired constructor(
         if (invalidIps.isNotEmpty()) {
             throw ErrorCodeException(
                 errorCode = EnvironmentMessageCode.ERROR_NODE_IP_ILLEGAL_USER,
-                params = arrayOf(invalidIps.joinToString(","))
+                params = arrayOf(invalidIps.joinToString(","), userId)
             )
         }
         return cmdbIpToNodeMap
