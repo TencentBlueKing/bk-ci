@@ -107,12 +107,16 @@ class ProjectUserRefreshService @Autowired constructor(
             try {
                 Thread.sleep(5)
                 try {
-                    val tofDeptInfo = tofService.getDeptFromTof(null, it.userId!!, "", false)
+                    val tofDeptInfo = tofService.getDeptFromTof(
+                        operator = null,
+                        userId = it.userId!!,
+                        bkTicket = "",
+                        userCache = false
+                    )
                     if (tofDeptInfo == null) {
                         projectUserDao.delete(dslContext, it.userId!!)
                         logger.info("user ${it.userId} is level office, delete t_user info")
-                    } else if (
-                        isUserInfoChange(
+                    } else if (isUserInfoChange(
                             tofDeptInfo = tofDeptInfo,
                             dbUserRecord = it
                         )

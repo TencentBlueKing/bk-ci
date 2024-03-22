@@ -519,20 +519,19 @@ class TOFService @Autowired constructor(
         userCache: Boolean? = true
     ): UserDeptDetail? {
         logger.info("[$operator}|$userId|$bkTicket] Start to get the dept info")
-        val staffInfo = getStaffInfo(operator, userId, bkTicket, userCache)
+        val staffInfo = getStaffInfo(
+            operator = operator,
+            userId = userId,
+            bkTicket = bkTicket,
+            userCache = userCache
+        )
         if (checkUserLeave(staffInfo)) return null
-        val lowestLevelOrganization = getDeptInfo(id = staffInfo.groupId.toInt())
         val parentDeptInfo = getParentDeptInfo(staffInfo.groupId, 10)
-        val deptInfos = if (OrganizationType.isGroup(lowestLevelOrganization.typeId.toInt())) {
-            // 若最底层的组织是小组，直接获取小组的祖先，因为其祖先已经包含 bg,业务线，部门，中心
-            parentDeptInfo
-        } else {
-            // 若最底层的组织不是小组，需要获取当前组织以及组织的祖先
-            parentDeptInfo.plus(getDeptInfo(id = staffInfo.groupId.toInt()))
-        }
+        // 获取用户当前部门及祖先部门
+        val deptInfos = parentDeptInfo.plus(getDeptInfo(id = staffInfo.groupId.toInt()))
         var groupId = "0"
         var groupName = ""
-        var bgId = "0"
+        var bgId = ""
         var bgName = ""
         var deptId = "0"
         var deptName = ""
@@ -540,28 +539,31 @@ class TOFService @Autowired constructor(
         var centerName = ""
         var businessLineId: String? = null
         var businessLineName: String? = null
-        groupId = staffInfo.groupId
-        groupName = staffInfo.groupName
         for (deptInfo in deptInfos) {
             val typeId = deptInfo.typeId.toInt()
             val name = deptInfo.name
+            val id = deptInfo.id
             when (typeId) {
                 OrganizationType.bg.typeId -> {
                     bgName = name
-                    bgId = deptInfo.id
+                    bgId = id
                 }
                 OrganizationType.businessLine.typeId -> {
                     businessLineName = name
-                    businessLineId = deptInfo.id
+                    businessLineId = id
                 }
                 OrganizationType.dept.typeId -> {
                     deptName = name
-                    deptId = deptInfo.id
+                    deptId = id
                 }
 
                 OrganizationType.center.typeId -> {
                     centerName = name
-                    centerId = deptInfo.id
+                    centerId = id
+                }
+                OrganizationType.group.typeId -> {
+                    groupName = name
+                    groupId = id
                 }
             }
         }
