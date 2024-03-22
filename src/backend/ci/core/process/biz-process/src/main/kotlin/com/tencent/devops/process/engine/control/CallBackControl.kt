@@ -56,7 +56,6 @@ import com.tencent.devops.process.engine.pojo.event.PipelineStreamEnabledEvent
 import com.tencent.devops.process.engine.service.PipelineBuildDetailService
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.engine.service.ProjectPipelineCallBackService
-import com.tencent.devops.process.engine.service.ProjectPipelineCallBackUrlGenerator
 import com.tencent.devops.process.pojo.CallBackHeader
 import com.tencent.devops.process.pojo.ProjectPipelineCallBackHistory
 import com.tencent.devops.project.api.service.ServiceAllocIdResource
@@ -94,8 +93,7 @@ class CallBackControl @Autowired constructor(
     private val projectPipelineCallBackService: ProjectPipelineCallBackService,
     private val client: Client,
     private val callbackCircuitBreakerRegistry: CircuitBreakerRegistry,
-    private val meterRegistry: MeterRegistry,
-    private val pipelineCallBackUrlGenerator: ProjectPipelineCallBackUrlGenerator
+    private val meterRegistry: MeterRegistry
 ) {
 
     @Value("\${callback.failureDisableTimePeriod:#{43200000}}")
@@ -131,9 +129,7 @@ class CallBackControl @Autowired constructor(
         // 增加回调度量监控
         .eventListener(
             OkHttpMetricsEventListener.builder(meterRegistry, "okhttp3-pipeline-callback")
-                .uriMapper { request ->
-                    pipelineCallBackUrlGenerator.decodeCallbackUrl(request.url.toString())
-                }.build()
+                .uriMapper { request -> request.url.toString() }.build()
         )
         .build()
 
