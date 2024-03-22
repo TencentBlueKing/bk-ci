@@ -68,9 +68,9 @@ class ParseHashListService @Autowired constructor(
     }
 
     fun getHostFromEnvList(projectId: String, envHashIdList: List<String>?/*环境hashId列表*/): List<Host>? {
-        return envHashIdList.takeIf { !it.isNullOrEmpty() }.run {
+        return if (!envHashIdList.isNullOrEmpty()) {
             val envRecord = nodeDao.getEnvsByEnvHashIdList(
-                dslContext, projectId, envHashIdList!!
+                dslContext, projectId, envHashIdList
             )
             val envIdList = envRecord.map { it[T_ENV_ENV_ID] as Long }
 
@@ -94,13 +94,13 @@ class ParseHashListService @Autowired constructor(
                     "Host from env list: ${nodeHostList.joinToString(separator = ", ", transform = { it.toString() })}"
                 )
             nodeHostList
-        }
+        } else null
     }
 
     fun getHostFromNodeList(projectId: String, nodeHashIdList: List<String>?/*节点hashId列表*/): List<Host>? {
-        return nodeHashIdList.takeIf { !it.isNullOrEmpty() }.run {
+        return if (!nodeHashIdList.isNullOrEmpty()) {
             val nodeRecord = nodeDao.getNodesByNodeHashIdList(
-                dslContext, projectId, nodeHashIdList!!
+                dslContext, projectId, nodeHashIdList
             )
             if (logger.isDebugEnabled) logger.debug("[getHostFromNodeList] nodeRecord: $nodeRecord")
             val hostList = nodeRecord.map {
@@ -120,6 +120,6 @@ class ParseHashListService @Autowired constructor(
                     "Host from node list: ${hostList.joinToString(separator = ", ", transform = { it.toString() })}"
                 )
             hostList
-        }
+        } else null
     }
 }
