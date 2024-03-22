@@ -1492,5 +1492,6 @@
   "noPipelineToDelete": "No pipeline to delete",
   "unGroup": "Ungrouped",
   "dropDraft": "Abandon",
-  "tableColSettings": "Table Settings"
+  "tableColSettings": "Table Settings",
+  "draftRecordEntryTitle": "Debug Records"
 }

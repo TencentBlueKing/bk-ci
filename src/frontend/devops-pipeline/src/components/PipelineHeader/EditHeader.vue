@@ -43,6 +43,7 @@
                     {{ $t("debug") }}
                     <b>|</b>
                     <i
+                        v-bk-tooltips="$t('draftRecordEntryTitle')"
                         :class="['devops-icon icon-txt', {
                             'icon-txt-disabled': !canDebug
                         }]"
