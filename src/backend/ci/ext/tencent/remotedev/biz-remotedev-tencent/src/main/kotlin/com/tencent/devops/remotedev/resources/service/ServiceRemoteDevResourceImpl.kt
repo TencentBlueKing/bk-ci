@@ -78,7 +78,7 @@ class ServiceRemoteDevResourceImpl(
                 projectId = projectId,
                 ip = ip,
                 hasDepartmentsInfo = null,
-                hasCurrentUser = null
+                hasCurrentUser = true
             )
         )
     }
