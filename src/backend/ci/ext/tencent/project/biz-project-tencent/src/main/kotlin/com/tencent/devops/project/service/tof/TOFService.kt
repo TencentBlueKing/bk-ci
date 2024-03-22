@@ -59,6 +59,7 @@ import com.tencent.devops.project.pojo.tof.StaffInfoRequest
 import com.tencent.devops.project.pojo.user.UserDeptDetail
 import com.tencent.devops.project.service.ProjectUserService
 import com.tencent.devops.project.utils.CostUtils
+import java.util.concurrent.TimeUnit
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.Request
 import okhttp3.RequestBody
@@ -66,7 +67,6 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
-import java.util.concurrent.TimeUnit
 
 /**
  * API
@@ -537,8 +537,8 @@ class TOFService @Autowired constructor(
         var deptName = ""
         var centerId = "0"
         var centerName = ""
-        var businessLineId: String? = null
-        var businessLineName: String? = null
+        var businessLineId = "0"
+        var businessLineName = ""
         for (deptInfo in deptInfos) {
             val typeId = deptInfo.typeId.toInt()
             val name = deptInfo.name
