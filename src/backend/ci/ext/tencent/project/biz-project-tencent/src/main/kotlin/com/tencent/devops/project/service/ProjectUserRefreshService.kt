@@ -121,11 +121,7 @@ class ProjectUserRefreshService @Autowired constructor(
                             dbUserRecord = it
                         )
                     ) {
-                        logger.info(
-                            "${it.userId} cent id is diff, " +
-                                "tof ${tofDeptInfo.centerId} ${tofDeptInfo.centerName}, " +
-                                "local ${it.centerId} ${it.centerName}"
-                        )
+                        logger.info("The user organization changes|${it.userId}|${tofDeptInfo}|$it")
                         userDao.update(dslContext, tofDeptInfo)
                     }
                 } catch (oe: OperationException) {
