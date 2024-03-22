@@ -181,13 +181,13 @@ class CmdbNodeService @Autowired constructor(
             mutableCmdbIpList.remove(it.ip)
         }
         // 2. 不在 - 重新查询节点状态：在不在CC（得到host_id）-> nodeman中查是否已经安装 -> job中查agent状态+版本号
-        val nodeCCInfoList = mutableCmdbIpList.takeIf { it.isNotEmpty() }.run {
+        val nodeCCInfoList = if (mutableCmdbIpList.isNotEmpty()) {
             queryFromCCService.queryCCListHostWithoutBizByInRules(
                 listOf(FIELD_BK_HOST_ID, FIELD_BK_HOST_INNERIP),
                 mutableCmdbIpList,
                 FIELD_BK_HOST_INNERIP
             ).data?.info
-        }
+        } else null
         // 2.1 在cc
         val ipToAgentVersionInfoMap = if (!nodeCCInfoList.isNullOrEmpty()) {
             nodeCCInfoList.map {
@@ -199,13 +199,13 @@ class CmdbNodeService @Autowired constructor(
                 }
             )?.associateBy { it.ip }
         } else null
-        ipToAgentVersionInfoMap.takeIf { !it.isNullOrEmpty() }.run {
+        if (!ipToAgentVersionInfoMap.isNullOrEmpty()) {
             pageFromCmdb.records.filterNot { it.ip in ipToCmdbNodeRecordMap.keys }.map {
-                it.nodeStatus = getNodeStatus(ipToAgentVersionInfoMap!![it.ip])
+                it.nodeStatus = getNodeStatus(ipToAgentVersionInfoMap[it.ip])
             }
         }
         // 2.2 不在cc
-        mutableCmdbIpList.takeIf { it.isNotEmpty() }.run {
+        if (mutableCmdbIpList.isNotEmpty()) {
             pageFromCmdb.records.filter { it.ip in mutableCmdbIpList }.map {
                 it.nodeStatus = NodeStatus.NOT_IN_CC.name
             }
@@ -253,9 +253,9 @@ class CmdbNodeService @Autowired constructor(
                 AgentVersion(ip = it?.bkHostInnerip, bkHostId = it?.bkHostId)
             }
         )?.associateBy { it.ip }
-        val agentStatusMap = ipToAgentVersionInfoMap.takeIf { !it.isNullOrEmpty() }.run {
-            esbAgentClient.getAgentStatus(userId, ipToAgentVersionInfoMap!!.keys.filterNotNull().toList())
-        }
+        val agentStatusMap = if (!ipToAgentVersionInfoMap.isNullOrEmpty()) {
+            esbAgentClient.getAgentStatus(userId, ipToAgentVersionInfoMap.keys.filterNotNull().toList())
+        } else null
         val opInfo = opService.operateOpProject("", OpOperateReq(2, listOf(projectId))).projGrayStatus?.get(0)
         val grayTag = projectId == opInfo?.englishName && true == opInfo.projGrayStatus
         val updateNodeInfo = nodeRecords.map {
@@ -279,7 +279,7 @@ class CmdbNodeService @Autowired constructor(
                 agentStatus = if (grayTag) {
                     1 == ipToAgentVersionInfoMap?.get(it[T_NODE_NODE_IP] as String)?.status
                 } else {
-                    agentStatusMap[it[T_NODE_NODE_IP] as String] ?: false
+                    agentStatusMap?.get(it[T_NODE_NODE_IP] as String) ?: false
                 },
                 agentVersion = if (grayTag)
                     ipToAgentVersionInfoMap?.get(it[T_NODE_NODE_IP] as String)?.version

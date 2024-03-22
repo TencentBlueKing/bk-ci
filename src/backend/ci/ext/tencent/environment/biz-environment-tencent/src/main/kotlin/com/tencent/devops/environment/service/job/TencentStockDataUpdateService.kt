@@ -179,20 +179,20 @@ class TencentStockDataUpdateService @Autowired constructor(
         // 要判断在不在cc中的 所有节点ip
         val nodeIpList = nodeRecords.map { it[T_NODE_NODE_IP] as String }.toSet()
         // cc记录
-        val nodeCCInfoList = nodeIpList.takeIf { it.isNotEmpty() }.run {
+        val nodeCCInfoList = if (nodeIpList.isNotEmpty()) {
             queryFromCCService.queryCCListHostWithoutBizByInRules(
                 listOf(QueryFromCCService.FIELD_BK_HOST_ID, QueryFromCCService.FIELD_BK_HOST_INNERIP),
                 nodeIpList,
                 QueryFromCCService.FIELD_BK_HOST_INNERIP
             ).data?.info
-        }
-        var ipToCCInfoMap: Map<String?, CCInfo>?
-        nodeCCInfoList.takeIf { !it.isNullOrEmpty() }.run {
+        } else null
+        var ipToCCInfoMap: Map<String?, CCInfo> = mapOf()
+        if (!nodeCCInfoList.isNullOrEmpty()) {
             // ip - cc记录 映射
-            ipToCCInfoMap = nodeCCInfoList!!.associateBy { it.bkHostInnerip }
+            ipToCCInfoMap = nodeCCInfoList.associateBy { it.bkHostInnerip }
             // 2.1 在CC - 查询节点agent状态并更新
             val inCCIpList = nodeCCInfoList.mapNotNull { it.bkHostInnerip }
-            inCCIpList.takeIf { it.isNotEmpty() }.run {
+            if (inCCIpList.isNotEmpty()) {
                 val ipToAgentVersionInfoMap = queryAgentStatusService.getAgentVersions(
                     nodeCCInfoList.map {
                         AgentVersion(ip = it.bkHostInnerip, bkHostId = it.bkHostId)
@@ -203,14 +203,14 @@ class TencentStockDataUpdateService @Autowired constructor(
                 nodeDao.updateNodeInCCByIp(dslContext, ipToNodeStatus)
                 // 4. CC中信息（host_id和云区域id）改变 - 更新信息，不变 - 不操作
                 val nodeUpdateInfoList = nodeRecords.filterNot {
-                    it[T_NODE_HOST_ID] as? Long == ipToCCInfoMap!![it[T_NODE_NODE_IP] as String]?.bkHostId &&
-                        it[T_NODE_CLOUD_AREA_ID] as? Long == ipToCCInfoMap!![it[T_NODE_NODE_IP] as String]
+                    it[T_NODE_HOST_ID] as? Long == ipToCCInfoMap[it[T_NODE_NODE_IP] as String]?.bkHostId &&
+                        it[T_NODE_CLOUD_AREA_ID] as? Long == ipToCCInfoMap[it[T_NODE_NODE_IP] as String]
                         ?.bkCloudId?.toLong()
                 }.takeIf { it.isNotEmpty() }?.map {
                     CCUpdateInfo(
                         nodeId = it[T_NODE_NODE_ID] as Long,
-                        bkCloudId = ipToCCInfoMap!![it[T_NODE_NODE_IP] as String]?.bkCloudId?.toLong(),
-                        bkHostId = ipToCCInfoMap!![it[T_NODE_NODE_IP] as String]?.bkHostId
+                        bkCloudId = ipToCCInfoMap[it[T_NODE_NODE_IP] as String]?.bkCloudId?.toLong(),
+                        bkHostId = ipToCCInfoMap[it[T_NODE_NODE_IP] as String]?.bkHostId
                     )
                 }
                 if (!nodeUpdateInfoList.isNullOrEmpty()) {
@@ -219,8 +219,8 @@ class TencentStockDataUpdateService @Autowired constructor(
             }
         }
         // 2.2 不在cc中: 置空 host_id 和 云区域id，且 NODE_STATUS 改成 NOT_IN_CC
-        val invalidIpList = nodeIpList.filterNot { ipToCCInfoMap?.containsKey(it) ?: false }
-        invalidIpList.takeIf { it.isNotEmpty() }.run {
+        val invalidIpList = nodeIpList.filterNot { ipToCCInfoMap.containsKey(it) }
+        if (invalidIpList.isNotEmpty()) {
             nodeDao.updateNodeNotInCCByIp(dslContext, invalidIpList)
         }
     }
@@ -270,8 +270,8 @@ class TencentStockDataUpdateService @Autowired constructor(
                     "[updateGseAgent]agentUpdateList:" +
                         agentUpdateList?.joinToString(separator = ", ", transform = { it.toString() })
                 )
-                agentUpdateList.takeIf { !it.isNullOrEmpty() }.run {
-                    batchUpdateAgent(existNodeIdToAgentVersionMap, agentUpdateList!!)
+                if (!agentUpdateList.isNullOrEmpty()) {
+                    batchUpdateAgent(existNodeIdToAgentVersionMap, agentUpdateList)
                 }
             }
         }
@@ -321,8 +321,8 @@ class TencentStockDataUpdateService @Autowired constructor(
         val cmdbNodesIp = cmdbNodesRecords.map { it[T_NODE_NODE_IP] as String }.toSet() // 所有"部署"节点 ip
         val nodeIpToNodesRecords = cmdbNodesRecords.associateBy { it[T_NODE_NODE_IP] as String } // 所有"部署"节点 ip - record
         val ipToCmdbInfoMap = tencentQueryFromCmdbService.queryCmdbInfoFromIp(cmdbNodesIp) // 所有"部署"节点 ip - cmdb信息
-        ipToCmdbInfoMap.takeIf { !it.isNullOrEmpty() }.run {
-            val svrIdToCmdbInfoMap = ipToCmdbInfoMap!!.values
+        if (!ipToCmdbInfoMap.isNullOrEmpty()) {
+            val svrIdToCmdbInfoMap = ipToCmdbInfoMap.values
                 .associateBy { it.serverId?.toLong() } // 所有"部署"节点 svrId - cmdb信息
             val svrIdList = ipToCmdbInfoMap.values.mapNotNull { it.serverId?.toLong() } // 所有"部署"节点 svrId
             // 所有"部署"节点 用svrId查询在不在CC中
