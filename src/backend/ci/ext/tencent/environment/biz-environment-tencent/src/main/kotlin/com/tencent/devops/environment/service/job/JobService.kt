@@ -111,7 +111,7 @@ class JobService @Autowired constructor(
         val allHostList: List<Host>? = scriptExecuteReq.executeTarget?.let {
             parseHashListService.getAllHostList(projectId, it)
         }
-        if (!allHostList.isNullOrEmpty()){
+        if (!allHostList.isNullOrEmpty()) {
             permissionManageService.isUserHasAllPermission(userId, projectId, allHostList)
         }
         val jobCloudScriptExecuteReq = JobCloudScriptExecuteReq(
