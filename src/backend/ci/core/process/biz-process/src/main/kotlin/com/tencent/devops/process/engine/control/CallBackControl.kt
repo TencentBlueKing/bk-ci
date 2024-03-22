@@ -95,7 +95,7 @@ class CallBackControl @Autowired constructor(
     private val client: Client,
     private val callbackCircuitBreakerRegistry: CircuitBreakerRegistry,
     private val meterRegistry: MeterRegistry,
-    private val pipelineCallBackUrlGenerator: ProjectPipelineCallBackUrlGenerator
+    private val projectPipelineCallBackUrlGenerator: ProjectPipelineCallBackUrlGenerator
 ) {
 
     @Value("\${callback.failureDisableTimePeriod:#{43200000}}")
@@ -132,7 +132,9 @@ class CallBackControl @Autowired constructor(
         .eventListener(
             OkHttpMetricsEventListener.builder(meterRegistry, "okhttp3-pipeline-callback")
                 .uriMapper { request ->
-                    pipelineCallBackUrlGenerator.decodeCallbackUrl(request.url.toString())
+                    projectPipelineCallBackUrlGenerator.decodeCallbackUrl(
+                        request.url.toString().substringBefore("?")
+                    )
                 }.build()
         )
         .build()
