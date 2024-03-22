@@ -220,4 +220,24 @@ class ProjectPipelineCallbackDao {
                 .execute()
         }
     }
+
+    fun updateFailureTime(
+        dslContext: DSLContext,
+        projectId: String,
+        id: Long,
+        failureTime: LocalDateTime?
+    ) {
+        with(TProjectPipelineCallback.T_PROJECT_PIPELINE_CALLBACK) {
+            dslContext.update(this).let {
+                if (failureTime == null) {
+                    it.setNull(FAILURE_TIME)
+                } else {
+                    it.set(FAILURE_TIME, failureTime)
+                }
+            }
+                .where(ID.eq(id))
+                .and(PROJECT_ID.eq(projectId))
+                .execute()
+        }
+    }
 }
