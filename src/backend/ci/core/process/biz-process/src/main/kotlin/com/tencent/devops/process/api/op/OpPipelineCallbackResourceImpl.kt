@@ -86,6 +86,17 @@ class OpPipelineCallbackResourceImpl @Autowired constructor(
         return Result(true)
     }
 
+    override fun disableCallbackByIds(projectId: String, callbackIds: String): Result<Boolean> {
+        if (projectId.isEmpty()) {
+            throw ParamBlankException("Invalid projectId")
+        }
+        if (callbackIds.isEmpty()) {
+            throw ParamBlankException("Invalid callbackIds")
+        }
+        projectPipelineCallBackService.batchDisable(projectId = projectId, callbackIds = callbackIds)
+        return Result(true)
+    }
+
     companion object {
         private val logger = LoggerFactory.getLogger(OpPipelineCallbackResourceImpl::class.java)
     }
