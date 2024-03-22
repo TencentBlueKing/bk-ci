@@ -34,8 +34,8 @@ import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.common.webhook.service.code.matcher.ScmWebhookMatcher
 import com.tencent.devops.lambda.LambdaMessageCode
+import com.tencent.devops.lambda.pojo.DataPlatBuildCommits
 import com.tencent.devops.process.config.ProcessKafkaTopicConfig
-import com.tencent.devops.process.pojo.DataPlatBuildCommits
 import com.tencent.devops.process.pojo.code.PipelineBuildCommit
 import com.tencent.devops.process.service.builds.PipelineBuildCommitService
 import com.tencent.devops.repository.pojo.Repository
