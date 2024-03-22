@@ -149,9 +149,9 @@ class WorkspaceCheckJob @Autowired constructor(
                         // 针对已经休眠或销毁的容器，删除上报心跳记录。
                         if (it is ErrorCodeException &&
                             (
-                                    it.errorCode == ErrorCodeEnum.WORKSPACE_STATUS_CHANGE_FAIL.errorCode ||
-                                            it.errorCode == ErrorCodeEnum.WORKSPACE_NOT_FIND.errorCode
-                                    )
+                                it.errorCode == ErrorCodeEnum.WORKSPACE_STATUS_CHANGE_FAIL.errorCode ||
+                                    it.errorCode == ErrorCodeEnum.WORKSPACE_NOT_FIND.errorCode
+                                )
                         ) {
                             redisHeartBeat.deleteWorkspaceHeartbeat(ADMIN_NAME, workspaceName)
                         }
@@ -234,12 +234,6 @@ class WorkspaceCheckJob @Autowired constructor(
                 }.onFailure {
                     logger.warn("autoDeleteWhenNotAssign fail ${it.message}", it)
                 }
-                // 未达到云桌面4星活跃：自然月（排除法定节假日）内小于 5 天达到日活标准的云桌面，并邮件提醒
-                kotlin.runCatching {
-                    deleteControl.autoDeleteWhenNot4StarActive(false, readyDeleteWorkspace)
-                }.onFailure {
-                    logger.warn("autoDeleteWhenNot4StarActive fail ${it.message}", it)
-                }
 
                 // 关机超过14天时自动销毁
                 kotlin.runCatching {
@@ -300,6 +294,12 @@ class WorkspaceCheckJob @Autowired constructor(
                     workspaceService.notifyWinNotLogin3Day()
                 }.onFailure {
                     logger.warn("notifyWinNotLogin3Day fail ${it.message}", it)
+                }
+                // 未达到云桌面4星活跃：自然月（排除法定节假日）内小于 5 天达到日活标准的云桌面，并邮件提醒
+                kotlin.runCatching {
+                    workspaceService.notifyWhenNot4StarActive()
+                }.onFailure {
+                    logger.warn("autoDeleteWhenNot4StarActive fail ${it.message}", it)
                 }
             }
         } catch (e: Throwable) {
