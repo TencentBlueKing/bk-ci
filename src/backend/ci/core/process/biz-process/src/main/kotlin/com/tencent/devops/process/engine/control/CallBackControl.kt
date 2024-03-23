@@ -131,10 +131,11 @@ class CallBackControl @Autowired constructor(
         // 增加回调度量监控
         .eventListener(
             OkHttpMetricsEventListener.builder(meterRegistry, "okhttp3-pipeline-callback")
+                // url只保留路径,不需要参数
                 .uriMapper { request ->
                     projectPipelineCallBackUrlGenerator.decodeCallbackUrl(
-                        request.url.toString().substringBefore("?")
-                    )
+                        request.url.toString()
+                    ).substringBefore("?")
                 }.build()
         )
         .build()
