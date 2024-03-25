@@ -1494,5 +1494,6 @@
   "unGroup": "无分组",
   "dropDraft": "放弃草稿",
   "tableColSettings": "表格设置",
-  "draftRecordEntryTitle": "查看调试记录"
+  "draftRecordEntryTitle": "查看调试记录",
+  "checkDiff": "查看差异"
 }
