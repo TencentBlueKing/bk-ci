@@ -223,7 +223,7 @@ interface ApigwRemoteDevResource {
 
     @Operation(summary = "提供获取云桌面信息", tags = ["v4_project_workspace"])
     @GET
-    @Path("/project/workspace")
+    @Path("/project/workspace_sg")
     fun querySGProjectWorkspace(
         @Parameter(description = "appCode", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
