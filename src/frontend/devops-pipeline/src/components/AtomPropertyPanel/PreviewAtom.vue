@@ -8,7 +8,9 @@
                             <component :is="obj.type" :container="container" :atom-value="atomValue" :name="key" v-validate.initial="Object.assign({}, obj.rule, { required: !!obj.required })" :handle-change="handleUpdatePreviewInput" :value="atomValue[key]" v-bind="obj" :placeholder="getPlaceholder(obj, atomValue)"></component>
                             <route-tips v-bind="getComponentTips(obj, atomValue)"></route-tips>
                         </form-field>
+                        
                     </template>
+                    
                 </template>
                 <accordion v-else show-checkbox :show-content="group.isExpanded" :key="groupKey">
                     <header class="var-header" slot="header">
@@ -26,7 +28,7 @@
                 </accordion>
             </template>
         </template>
-        <template>
+        <template v-else>
             <template v-for="(group, groupKey) in paramsGroupMap">
                 <accordion v-if="group.isInputGroup && rely(group, atomValue)" show-checkbox :show-content="group.isExpanded" :key="groupKey">
                     <header class="var-header" slot="header">
