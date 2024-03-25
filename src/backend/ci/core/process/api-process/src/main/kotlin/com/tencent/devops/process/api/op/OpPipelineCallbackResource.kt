@@ -32,11 +32,11 @@ interface OpPipelineCallbackResource {
 
     @Operation(summary = "根据Url恢复回调接口")
     @PUT
-    @Path("/{projectId}/enableCallback/byUrl")
+    @Path("enableCallback/byUrl")
     fun enableCallbackByUrl(
         @Parameter(description = "蓝盾项目Id(项目英文名)", required = true)
-        @PathParam("projectId")
-        projectId: String,
+        @QueryParam("projectId")
+        projectId: String?,
         @Parameter(description = "回调url", required = true)
         @QueryParam("url")
         url: String

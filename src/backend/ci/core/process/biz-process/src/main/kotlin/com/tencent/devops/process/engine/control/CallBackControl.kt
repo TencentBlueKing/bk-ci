@@ -29,8 +29,8 @@ package com.tencent.devops.process.engine.control
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.tencent.devops.common.api.exception.RemoteServiceException
-import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.Watcher
+import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.event.enums.ActionType
 import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildStatusBroadCastEvent
@@ -373,14 +373,15 @@ class CallBackControl @Autowired constructor(
             )
             // 如果请求已经连续12个小时100%失败，则说明回调地址已经失效，禁用
             val duration = if (callBack.failureTime != null) {
-                System.currentTimeMillis() - DateTimeUtil.convertLocalDateTimeToTimestamp(callBack.failureTime)
+                System.currentTimeMillis() - callBack.failureTime!!.timestampmilli()
             } else {
                 0
             }
             if (duration >= failureDisableTimePeriod) {
                 logger.warn(
                     "disable callbacks because of 100% failure rate|" +
-                            "[${callBack.projectId}]|CALL_BACK|url=${callBack.callBackUrl}|${callBack.events}"
+                            "[${callBack.projectId}]|CALL_BACK|url=${callBack.callBackUrl}|${callBack.events}|" +
+                            "duration=$duration"
                 )
                 projectPipelineCallBackService.disable(projectId = callBack.projectId, id = callBack.id!!)
             }

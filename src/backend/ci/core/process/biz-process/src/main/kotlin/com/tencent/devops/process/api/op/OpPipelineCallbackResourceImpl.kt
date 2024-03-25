@@ -53,10 +53,7 @@ class OpPipelineCallbackResourceImpl @Autowired constructor(
         return Result(true)
     }
 
-    override fun enableCallbackByUrl(projectId: String, url: String): Result<Boolean> {
-        if (projectId.isEmpty()) {
-            throw ParamBlankException("Invalid projectId")
-        }
+    override fun enableCallbackByUrl(projectId: String?, url: String): Result<Boolean> {
         if (url.isEmpty()) {
             throw ParamBlankException("Invalid url")
         }
