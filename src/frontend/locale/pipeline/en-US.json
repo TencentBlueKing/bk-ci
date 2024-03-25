@@ -693,6 +693,7 @@
     "triggerRepo": "Trigger Materials",
     "addRemarkForBuild": "Add Remark",
     "hideSkipStep": "Hide Skipped Steps",
+    "isExpandMatrix": "Toggle Matrix Job",
     "num": "No.",
     "times": "Times, {0}",
     "copyTo": "Copy",

@@ -35,18 +35,18 @@
     import { eventBus, hashID, isTriggerContainer } from './util'
 
     import {
-        CLICK_EVENT_NAME,
-        DELETE_EVENT_NAME,
-        COPY_EVENT_NAME,
-        ATOM_REVIEW_EVENT_NAME,
-        ATOM_QUALITY_CHECK_EVENT_NAME,
+        ADD_STAGE,
+        ATOM_ADD_EVENT_NAME,
         ATOM_CONTINUE_EVENT_NAME,
         ATOM_EXEC_EVENT_NAME,
-        ATOM_ADD_EVENT_NAME,
-        ADD_STAGE,
+        ATOM_QUALITY_CHECK_EVENT_NAME,
+        ATOM_REVIEW_EVENT_NAME,
+        CLICK_EVENT_NAME,
+        COPY_EVENT_NAME,
+        DEBUG_CONTAINER,
+        DELETE_EVENT_NAME,
         STAGE_CHECK,
-        STAGE_RETRY,
-        DEBUG_CONTAINER
+        STAGE_RETRY
     } from './constants'
 
     const customEvents = [
@@ -109,6 +109,10 @@
             matchRules: {
                 type: Array,
                 default: () => []
+            },
+            isExpandAllMatrix: {
+                type: Boolean,
+                default: true
             }
         },
         provide () {
@@ -122,7 +126,8 @@
                 'isExecDetail',
                 'isLatestBuild',
                 'canSkipElement',
-                'cancelUserId'
+                'cancelUserId',
+                'isExpandAllMatrix'
             ].forEach((key) => {
                 Object.defineProperty(reactiveData, key, {
                     enumerable: true,
@@ -271,14 +276,14 @@
                     }
                 })
             },
-            expandMatrix (stageId, matrixId, containerId) {
+            expandMatrix (stageId, matrixId, containerId, expand = true) {
                 console.log('expandMatrix', stageId, matrixId, containerId)
                 return new Promise((resolve, reject) => {
                     try {
                         const jobInstance = this.$refs?.[stageId]?.[0]?.$refs?.[matrixId]?.[0]?.$refs?.jobBox
-                        jobInstance?.toggleMatrixOpen?.(true)
+                        jobInstance?.toggleMatrixOpen?.(expand)
                         this.$nextTick(() => {
-                            jobInstance?.$refs[containerId]?.[0]?.toggleShowAtom(true)
+                            jobInstance?.$refs[containerId]?.[0]?.toggleShowAtom(expand)
                             resolve(true)
                         })
                     } catch (error) {

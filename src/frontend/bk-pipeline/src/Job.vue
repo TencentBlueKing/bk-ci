@@ -51,7 +51,6 @@
             >
             </Logo>
             <Logo
-                v-if="showMatrixFold"
                 name="angle-circle-down"
                 size="18"
                 @click.stop="toggleShowAtom()"
@@ -74,7 +73,7 @@
             />
         </h3>
         <atom-list
-            v-if="showAtomList || !showMatrixFold"
+            v-if="showAtomList"
             ref="atomList"
             :stage="stage"
             :container="container"
@@ -151,7 +150,7 @@
             return {
                 showContainerName: false,
                 showAtomName: false,
-                showAtomList: false,
+                showAtomList: true,
                 cruveHeight: 0
             }
         },

@@ -72,6 +72,15 @@
                 >
                     {{ $t("details.hideSkipStep") }}
                 </bk-checkbox>
+                <bk-checkbox
+                    :true-value="true"
+                    :false-value="false"
+                    v-model="isExpandAllMatrix"
+                    @change="expandAllMatrix"
+                    style="margin-right: 16px;"
+                >
+                    {{ $t("details.isExpandMatrix") }}
+                </bk-checkbox>
                 <bk-button text theme="primary" @click="showCompleteLog">
                     <i class="devops-icon icon-txt"></i>
                     {{ $t("history.viewLog") }}
@@ -254,7 +263,7 @@
     import { convertMillSec, convertTime } from '@/utils/util'
     import simplebar from 'simplebar-vue'
     import 'simplebar-vue/dist/simplebar.min.css'
-    import { mapActions, mapState } from 'vuex'
+    import { mapActions, mapGetters, mapState } from 'vuex'
     export default {
         components: {
             simplebar,
@@ -275,6 +284,7 @@
                 showLog: false,
                 retryTaskId: '',
                 skipTask: false,
+                isExpandAllMatrix: true,
                 failedContainer: false,
                 activeTab: 'errors',
                 currentAtom: {},
@@ -292,7 +302,7 @@
         computed: {
             ...mapState('common', ['ruleList', 'templateRuleList']),
             ...mapState('atom', ['hideSkipExecTask', 'showPanelType', 'isPropertyPanelVisible']),
-
+            ...mapGetters('atom', ['getAllContainers']),
             panels () {
                 return [
                     {
@@ -490,6 +500,7 @@
                 viewportContent.style.height = `${parent?.scrollHeight}px`
                 this.scrollElement = '.pipeline-model-scroll-viewport'
                 this.initMiniMapScroll()
+                this.expandAllMatrix()
             })
         },
         beforeDestroy () {
@@ -879,6 +890,24 @@
                 const tab = window.open('about:blank')
                 const url = `${WEB_URL_PREFIX}/pipeline/${projectId}/dockerConsole/?pipelineId=${pipelineId}&dispatchType=${buildResourceType}&vmSeqId=${vmSeqId}${buildIdStr}`
                 tab.location = url
+            },
+            expandAllMatrix () {
+                try {
+                    for (let i = 0; i < this.execDetail.model.stages.length; i++) {
+                        const stage = this.execDetail.model.stages[i]
+                        for (let j = 0; j < stage.containers.length; j++) {
+                            const matrix = stage.containers[j]
+                            if (matrix.matrixGroupFlag) {
+                                for (let k = 0; k < matrix.groupContainers.length; k++) {
+                                    const container = matrix.groupContainers[k]
+                                    this.$refs.bkPipeline.expandMatrix(stage.id, matrix.id, container.id, this.isExpandAllMatrix)
+                                }
+                            }
+                        }
+                    }
+                } catch (error) {
+                    console.log('expaned error', error)
+                }
             }
         }
     }
