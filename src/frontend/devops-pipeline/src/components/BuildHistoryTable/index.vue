@@ -691,9 +691,9 @@
                 localStorage.setItem(LS_COLUMN_KEY, JSON.stringify(columns))
             },
             handleColumnReset () {
-                const lsColumns = localStorage.getItem(LS_COLUMN_KEY)
-                this.tableColumnKeys = lsColumns ? JSON.parse(lsColumns) : BUILD_HISTORY_TABLE_DEFAULT_COLUMNS
-                // this.$refs.tableSetting.$parent.instance?.hide()
+                this.tableColumnKeys = [...BUILD_HISTORY_TABLE_DEFAULT_COLUMNS]
+                localStorage.setItem(LS_COLUMN_KEY, JSON.stringify(BUILD_HISTORY_TABLE_DEFAULT_COLUMNS))
+                this.$refs.tableSetting.$parent.instance?.hide()
             },
             async requestHistory () {
                 try {

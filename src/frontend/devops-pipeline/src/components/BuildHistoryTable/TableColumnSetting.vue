@@ -1,11 +1,11 @@
 <template>
     <section class="pipeline-table-column-setting">
         <h2>{{ $t('tableColSettings') }}</h2>
-        <draggable class="pipeline-table-column-ul" v-model="allTableColumns" @change="handleSortColumn">
+        <draggable class="pipeline-table-column-ul" v-model="allTableColumns">
             <li v-for="col in allTableColumns" :key="col.id">
                 <bk-checkbox
                     class="pipeline-table-column-column-checkbox"
-                    :checked="shownColumns.has(col.id)"
+                    :checked="col.checked"
                     @change="handleColumnCheck(col.id)"
                     :label="col.id"
                 >
@@ -35,41 +35,36 @@
             default: () => ({})
         }
     })
-    console.log('props', props)
+
     const emit = defineEmits(['change', 'reset'])
-    const shownColumns = ref(new Set(props.selectedColumnKeys))
 
-    const allTableColumns = ref([
-        ...props.selectedColumnKeys.map((key) => props.allTableColumnMap[key]),
-        ...Object.values(props.allTableColumnMap).filter(col => !props.selectedColumnKeys.includes(col.id))
-    ])
-
+    const allTableColumns = ref(generateColumnList(props.selectedColumnKeys, props.allTableColumnMap))
     watch(() => props.selectedColumnKeys, (newVal) => {
-        shownColumns.value = new Set(newVal)
-        allTableColumns.value = [
-            ...newVal.map((key) => props.allTableColumnMap[key]),
-            ...Object.values(props.allTableColumnMap).filter(col => !newVal.includes(col.id))
-        ]
+        allTableColumns.value = generateColumnList(newVal, props.allTableColumnMap)
     })
 
     function handleColumnCheck (id) {
-        if (shownColumns.value.has(id)) {
-            shownColumns.value.delete(id)
-        } else {
-            shownColumns.value.add(id)
-        }
+        const col = allTableColumns.value.find(col => col.id === id)
+        col.checked = !col.checked
     }
     function handleConfirm () {
-        emit('change', allTableColumns.value.filter((col) => shownColumns.value.has(col.id)).map((col) => col.id))
+        emit('change', allTableColumns.value.filter((col) => col.checked).map((col) => col.id))
     }
     function handleReset () {
-        console.log('reset')
         emit('reset')
     }
-
-    function handleSortColumn (...args) {
-        console.log('handleSortColumn', allTableColumns.value.filter((col) => shownColumns.value.has(col.id)))
-        // emit('change', allTableColumns.value.filter((col) => shownColumns.has(col.id)))
+    function generateColumnList (checkedIds, allColumnMap) {
+        const shownColumns = new Set(checkedIds)
+        return [
+            ...checkedIds.map((key) => ({
+                ...allColumnMap[key],
+                checked: true
+            })),
+            ...Object.values(allColumnMap).filter(col => !shownColumns.has(col.id)).map(col => ({
+                ...col,
+                checked: false
+            }))
+        ]
     }
 </script>
 
