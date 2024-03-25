@@ -56,18 +56,19 @@
 </template>
 
 <script>
-    import { mapState, mapGetters } from 'vuex'
-    import ModeSwitch from '@/components/ModeSwitch'
-    import YamlEditor from '@/components/YamlEditor'
-    import { TriggerTab, NotifyTab } from '@/components/PipelineEditTabs/'
-    import PipelineModel from './PipelineModel'
-    import BaseConfig from './BaseConfig'
     import Logo from '@/components/Logo'
-    import { convertTime } from '@/utils/util'
-    import { bus, SHOW_VERSION_HISTORY_SIDESLIDER } from '@/utils/bus'
+    import ModeSwitch from '@/components/ModeSwitch'
+    import { NotifyTab, TriggerTab } from '@/components/PipelineEditTabs/'
+    import YamlEditor from '@/components/YamlEditor'
+    import { SHOW_VERSION_HISTORY_SIDESLIDER, bus } from '@/utils/bus'
     import {
         RESOURCE_ACTION
     } from '@/utils/permission'
+    import { pipelineTabIdMap } from '@/utils/pipelineConst'
+    import { convertTime } from '@/utils/util'
+    import { mapGetters, mapState } from 'vuex'
+    import BaseConfig from './BaseConfig'
+    import PipelineModel from './PipelineModel'
     export default {
         components: {
             ModeSwitch,
@@ -139,12 +140,12 @@
             },
             dynamicComponentConf () {
                 switch (this.pipelineType) {
-                    case 'pipeline':
+                    case pipelineTabIdMap.pipeline:
                         return {
                             is: PipelineModel,
                             props: {}
                         }
-                    case 'trigger':
+                    case pipelineTabIdMap.trigger:
                         return {
                             is: TriggerTab,
                             props: {
@@ -153,7 +154,7 @@
                                 isLoading: !this.pipeline
                             }
                         }
-                    case 'notice':
+                    case pipelineTabIdMap.notice:
                         return {
                             is: NotifyTab,
                             props: {
@@ -162,7 +163,7 @@
                                 successSubscriptionList: this.getPipelineSubscriptions('success')
                             }
                         }
-                    case 'setting':
+                    case pipelineTabIdMap.setting:
                         return {
                             is: BaseConfig,
                             props: {

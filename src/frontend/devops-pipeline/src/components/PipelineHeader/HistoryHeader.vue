@@ -97,19 +97,19 @@
 </template>
 
 <script>
-    import { mapGetters, mapState, mapActions } from 'vuex'
-
+    import Badge from '@/components/Badge.vue'
+    import PacTag from '@/components/PacTag.vue'
+    import RollbackEntry from '@/components/PipelineDetailTabs/RollbackEntry'
+    import VersionDiffEntry from '@/components/PipelineDetailTabs/VersionDiffEntry'
+    import VersionHistorySideSlider from '@/components/PipelineDetailTabs/VersionHistorySideSlider'
+    import VersionSelector from '@/components/PipelineDetailTabs/VersionSelector'
     import {
         RESOURCE_ACTION
     } from '@/utils/permission'
+    import { pipelineTabIdMap } from '@/utils/pipelineConst'
+    import { mapActions, mapGetters, mapState } from 'vuex'
     import MoreActions from './MoreActions.vue'
     import PipelineBreadCrumb from './PipelineBreadCrumb.vue'
-    import PacTag from '@/components/PacTag.vue'
-    import Badge from '@/components/Badge.vue'
-    import VersionSelector from '@/components/PipelineDetailTabs/VersionSelector'
-    import VersionHistorySideSlider from '@/components/PipelineDetailTabs/VersionHistorySideSlider'
-    import VersionDiffEntry from '@/components/PipelineDetailTabs/VersionDiffEntry'
-    import RollbackEntry from '@/components/PipelineDetailTabs/RollbackEntry'
 
     export default {
         components: {
@@ -232,7 +232,10 @@
             ]),
             goEdit () {
                 this.$router.push({
-                    name: 'pipelinesEdit'
+                    name: 'pipelinesEdit',
+                    params: {
+                        tab: pipelineTabIdMap[this.$route.params.type] ?? 'pipeline'
+                    }
                 })
             },
             showVersionSideSlider () {
@@ -283,10 +286,10 @@
                 console.log('handleVersionChange', versionId, version)
                 let routeType = 'history'
 
-                if (version) {
+                if (version && this.releaseVersion) {
                     this.selectPipelineVersion(version)
                     const noRecordVersion = ['history', 'triggerEvent'].includes(this.$route.params.type) && !(versionId === this.releaseVersion || version.isDraft)
-                    routeType = noRecordVersion ? 'pipeline' : this.$route.params.type
+                    routeType = noRecordVersion ? pipelineTabIdMap.pipeline : this.$route.params.type
                 }
                 this.$router.push({
                     params: {

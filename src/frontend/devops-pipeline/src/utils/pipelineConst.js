@@ -270,3 +270,10 @@ export const BUILD_HISTORY_TABLE_COLUMNS_MAP = {
         label: 'history.errorCode'
     }
 }
+
+export const pipelineTabIdMap = {
+    pipeline: 'pipeline',
+    trigger: 'trigger',
+    notice: 'notice',
+    setting: 'setting'
+}

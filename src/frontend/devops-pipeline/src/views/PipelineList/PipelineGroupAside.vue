@@ -58,7 +58,8 @@
                             :key="item.id"
                             @click="switchViewId(item.id)"
                         >
-                            <logo v-if="item.icon" size="12" class="pipeline-group-item-icon" :name="item.icon" />
+                            <i v-if="item.pac" class="pipeline-group-item-icon devops-icon icon-pac" />
+                            <logo v-else-if="item.icon" size="12" class="pipeline-group-item-icon" :name="item.icon" />
                             <bk-input
                                 v-if="item.id === editingGroupId"
                                 v-bk-focus="1"
