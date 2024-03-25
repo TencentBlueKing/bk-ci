@@ -6,33 +6,44 @@
             :show-log="showLog"
             :is-debug="isDebug"
         />
+        <complete-log
+            v-if="completeLogVisible"
+            @close="hideCompleteLog"
+            :execute-count="1"
+            :exec-detail="execDetail"
+        />
     </div>
 </template>
 
 <script>
     import BuildHistoryTable from '@/components/BuildHistoryTable/'
+    import completeLog from '@/components/ExecDetail/completeLog.vue'
     import emptyTips from '@/components/devops/emptyTips'
-    import { mapGetters, mapActions, mapState } from 'vuex'
     import {
-        handlePipelineNoPermission,
-        RESOURCE_ACTION
+        RESOURCE_ACTION,
+        handlePipelineNoPermission
     } from '@/utils/permission'
+    import { mapActions, mapGetters, mapState } from 'vuex'
 
     export default {
         name: 'build-history-tab',
         components: {
             BuildHistoryTable,
+            completeLog,
             emptyTips
         },
         props: {
-            isDebug: Boolean
+            isDebug: Boolean,
+            pipelineName: {
+                type: String,
+                default: '--'
+            }
         },
         data () {
             return {
                 hasNoPermission: false,
-                currentBuildNo: '',
-                currentBuildNum: '',
-                currentShowStatus: false
+                execDetail: {},
+                completeLogVisible: false
             }
         },
 
@@ -42,9 +53,6 @@
                 isReleasePipeline: 'atom/isReleasePipeline',
                 isCurPipelineLocked: 'atom/isCurPipelineLocked'
             }),
-            ...mapState('atom', [
-                'isPropertyPanelVisible'
-            ]),
             ...mapState('pipelines', [
                 'executeStatus'
             ]),
@@ -119,15 +127,10 @@
         async mounted () {
             if (this.$route.hash) { // 带上buildId时，弹出日志弹窗
                 const isBuildId = /^#b-+/.test(this.$route.hash) // 检查是否是合法的buildId
-                isBuildId && this.showLog(this.$route.hash.slice(1), '', true)
-            }
-        },
-
-        updated () {
-            if (!this.isPropertyPanelVisible) {
-                this.currentBuildNo = ''
-                this.currentBuildNum = ''
-                this.currentShowStatus = false
+                isBuildId && this.showLog({
+                    id: this.$route.hash.slice(1),
+                    status: true
+                })
             }
         },
 
@@ -154,14 +157,17 @@
                 }
             },
 
-            showLog (buildId, buildNum, status) {
-                this.togglePropertyPanel({
-                    isShow: true
-                })
-
-                this.currentBuildNo = buildId
-                this.currentBuildNum = buildNum
-                this.currentShowStatus = status
+            showLog (buildRecord) {
+                this.completeLogVisible = true
+                this.execDetail = {
+                    id: buildRecord.id,
+                    status: buildRecord.status,
+                    pipelineName: this.pipelineName
+                }
+            },
+            hideCompleteLog () {
+                this.completeLogVisible = false
+                this.execDetail = {}
             }
         }
     }

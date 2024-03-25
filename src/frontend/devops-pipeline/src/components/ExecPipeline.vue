@@ -236,7 +236,7 @@
             </ul>
         </div>
         <template v-if="execDetail && showLog">
-            <complete-log @close="hideCompleteLog" :execute-count="executeCount"></complete-log>
+            <complete-log @close="hideCompleteLog" :execute-count="executeCount" :exec-detail="execDetail"></complete-log>
         </template>
     </div>
 </template>
@@ -248,10 +248,10 @@
     import MiniMap from '@/components/MiniMap'
     import { errorTypeMap } from '@/utils/pipelineConst'
     import { convertMillSec, convertTime } from '@/utils/util'
+    import BkPipeline, { loadI18nMessages } from 'bkui-pipeline'
     import simplebar from 'simplebar-vue'
     import 'simplebar-vue/dist/simplebar.min.css'
     import { mapActions, mapState } from 'vuex'
-    import BkPipeline, { loadI18nMessages } from 'bkui-pipeline'
     export default {
         components: {
             simplebar,

@@ -44,15 +44,15 @@
 </template>
 
 <script>
-    import { mapActions, mapState, mapGetters } from 'vuex'
     import Logo from '@/components/Logo'
     import {
         BuildHistoryTab,
-        TriggerEvent,
+        ChangeLog,
         PipelineConfig,
-        ChangeLog
+        TriggerEvent
     } from '@/components/PipelineDetailTabs'
-    import { ShowVariable, AuthorityTab } from '@/components/PipelineEditTabs/'
+    import { AuthorityTab, ShowVariable } from '@/components/PipelineEditTabs/'
+    import { mapActions, mapGetters, mapState } from 'vuex'
 
     export default {
         components: {
@@ -236,7 +236,8 @@
                         return {
                             component: 'BuildHistoryTab',
                             props: {
-                                isDebug: this.isActiveDraftVersion
+                                isDebug: this.isActiveDraftVersion,
+                                pipelineName: this.pipeline?.name
                             }
                         }
                 }

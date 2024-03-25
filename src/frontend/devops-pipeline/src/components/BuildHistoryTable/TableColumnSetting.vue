@@ -16,14 +16,14 @@
         </draggable>
         <footer>
             <bk-button theme="primary" @click="handleConfirm">{{$t('confirm')}}</bk-button>
-            <bk-button @click="handleReset">{{$t('reset')}}</bk-button>
+            <bk-button @click="handleReset">{{$t('history.reset')}}</bk-button>
         </footer>
     </section>
 </template>
 
 <script setup>
+    import { ref, watch } from 'vue'
     import draggable from 'vuedraggable'
-    import { watch, ref } from 'vue'
 
     const props = defineProps({
         selectedColumnKeys: {
