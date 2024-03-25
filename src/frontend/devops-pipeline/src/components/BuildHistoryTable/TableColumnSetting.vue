@@ -46,6 +46,10 @@
 
     watch(() => props.selectedColumnKeys, (newVal) => {
         shownColumns.value = new Set(newVal)
+        allTableColumns.value = [
+            ...newVal.map((key) => props.allTableColumnMap[key]),
+            ...Object.values(props.allTableColumnMap).filter(col => !newVal.includes(col.id))
+        ]
     })
 
     function handleColumnCheck (id) {
