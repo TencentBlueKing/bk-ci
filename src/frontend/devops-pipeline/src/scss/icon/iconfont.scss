@@ -37,7 +37,10 @@
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
 }
-.devops-icon.icon-pipeline-edit:before {
+.devops-icon.icon-pac:before {
+    content: "\ea18";
+  }
+  .devops-icon.icon-pipeline-edit:before {
     content: "\e9bb";
   }
   .devops-icon.icon-drag:before {

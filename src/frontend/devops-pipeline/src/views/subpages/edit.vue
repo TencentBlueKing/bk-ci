@@ -54,6 +54,7 @@
     import emptyTips from '@/components/devops/emptyTips'
     import pipelineOperateMixin from '@/mixins/pipeline-operate-mixin'
     import { RESOURCE_ACTION, handlePipelineNoPermission } from '@/utils/permission'
+    import { pipelineTabIdMap } from '@/utils/pipelineConst'
     import { navConfirm } from '@/utils/util'
     import { mapActions, mapGetters, mapState } from 'vuex'
     import YamlPipelineEditor from './YamlPipelineEditor'
@@ -141,7 +142,7 @@
             panels () {
                 return [
                     {
-                        name: 'pipeline',
+                        name: pipelineTabIdMap.pipeline,
                         label: this.$t('pipeline'),
                         component: 'PipelineEditTab',
                         bindData: {
@@ -150,7 +151,7 @@
                         }
                     },
                     {
-                        name: 'trigger',
+                        name: pipelineTabIdMap.trigger,
                         label: this.$t('settings.trigger'),
                         component: 'TriggerTab',
                         bindData: {
@@ -159,7 +160,7 @@
                         }
                     },
                     {
-                        name: 'notify',
+                        name: pipelineTabIdMap.notice,
                         label: this.$t('settings.notify'),
                         component: 'NotifyTab',
                         bindData: {
@@ -178,7 +179,7 @@
                         }
                     },
                     {
-                        name: 'baseSetting',
+                        name: pipelineTabIdMap.setting,
                         label: this.$t('editPage.baseSetting'),
                         component: 'BaseSettingTab',
                         bindData: {

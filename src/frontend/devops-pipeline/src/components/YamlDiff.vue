@@ -52,7 +52,10 @@
                 {
                     language: 'yaml',
                     readOnly: this.readOnly,
-                    automaticLayout: true
+                    automaticLayout: true,
+                    unicodeHighlight: {
+                        ambiguousCharacters: false
+                    }
                 }
             )
             this.diff(this.oldYaml, this.newYaml)
