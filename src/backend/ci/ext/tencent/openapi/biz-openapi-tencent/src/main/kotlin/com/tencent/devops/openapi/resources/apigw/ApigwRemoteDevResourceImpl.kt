@@ -182,7 +182,7 @@ class ApigwRemoteDevResourceImpl @Autowired constructor(private val client: Clie
         return client.get(ServiceRemoteDevResource::class).getWindowsResourceList()
     }
 
-    override fun queryTimiProjectWorkspace(
+    override fun querySGProjectWorkspace(
         appCode: String?,
         apigwType: String?,
         userId: String,
