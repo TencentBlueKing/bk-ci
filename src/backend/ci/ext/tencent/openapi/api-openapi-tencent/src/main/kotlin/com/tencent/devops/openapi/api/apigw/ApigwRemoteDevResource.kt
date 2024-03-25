@@ -221,7 +221,7 @@ interface ApigwRemoteDevResource {
         apigwType: String?
     ): Result<List<WindowsResourceTypeConfig>>
 
-    @Operation(summary = "提供获取云桌面信息", tags = ["v4_project_workspace"])
+    @Operation(summary = "提供获取云桌面信息", tags = ["v4_sg_project_workspace"])
     @GET
     @Path("/project/workspace_sg")
     fun querySGProjectWorkspace(
