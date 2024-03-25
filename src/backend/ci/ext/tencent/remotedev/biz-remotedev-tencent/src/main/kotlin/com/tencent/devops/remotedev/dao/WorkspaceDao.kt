@@ -522,7 +522,6 @@ class WorkspaceDao {
                 } else {
                     it
                 }
-
             }
             .and(t1.OWNER_TYPE.eq(WorkspaceOwnerType.PROJECT.name))
             .unionAll(
