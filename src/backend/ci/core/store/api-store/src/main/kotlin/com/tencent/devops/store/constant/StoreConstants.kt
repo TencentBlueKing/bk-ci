@@ -29,6 +29,23 @@ package com.tencent.devops.store.constant
 
 object StoreConstants {
 
+    const val BK_OTHER = "bkOther" // 其他
+    const val BK_PIPELINED_JOB = "bkPipelinedJob" // 流水线Job
+    const val BK_IMAGE_STORE_ONLINE = "bkImageStoreOnline" // 容器镜像商店上线，历史镜像数据自动生成
+    const val BK_OLD_VERSION_BUILD_IMAGE = "bkOldVersionBuildImage" // 旧版的构建镜像，通过拷贝为构建镜像入口生成
+    const val BK_AUTOMATICALLY_CONVERTED = "bkAutomaticallyConverted" // 已自动转换为容器镜像商店数据，请项目管理员在研发商店工作台进行管理。
+    const val BK_COPY_FOR_BUILD_IMAGE = "bkCopyForBuildImage" // 旧版的构建镜像，通过蓝盾版本仓库“拷贝为构建镜像”入口生成。
+    const val BK_AFTER_IMAGE_STORE_ONLINE = "bkAfterImageStoreOnline" // 容器镜像商店上线后，旧版入口已下线。因历史原因，此类镜像没有办法对应到实际的镜像推送人，暂时先挂到项目管理员名下。
+    const val BK_PROJECT_MANAGER_CAN_OPERATION = "bkProjectManagerCanOperation" // 项目管理员可在研发商店工作台进行上架/升级/下架等操作，或者交接给实际负责人进行管理。
+    const val BK_HISTORY_DATA_MIGRATE_PASS = "bkHistoryDataMigratePass" // historyData数据迁移自动通过
+    const val BK_WORKER_BEE_PROJECT_NOT_EXIST = "bkWorkerBeeProjectNotExist" // 工蜂项目信息不存在，请检查链接
+    const val BK_WORKER_BEE_PROJECT_NOT_STREAM_ENABLED = "bkWorkerBeeProjectNotStreamEnabled" // 工蜂项目未开启Stream，请前往仓库的CI/CD进行配置
+    // 研发商店：插件配置文件[task.json]config配置格式不正确，defaultTimeout应为1-10080之间的正整数
+    const val TASK_JSON_CONFIG_DEFAULT_TIMEOUT_FIELD_IS_INVALID = "bkTaskJsonConfigDefaultTimeoutFieldIsInvalid"
+    // 研发商店：插件配置文件[task.json]config配置格式不正确，retryTimes应为1～5之间的正整数
+    const val TASK_JSON_CONFIG_RETRY_TIME_FIELD_IS_INVALID = "bkTaskJsonConfigRetryTimeFieldIsInvalid"
+    // 研发商店：插件配置文件[task.json]config配置格式不正确，当 defaultFailPolicy = AUTO-CONTINUE 时，defaultRetryPolicy 不能设置为 MANUALLY-RETRY
+    const val TASK_JSON_CONFIG_POLICY_FIELD_IS_INVALID = "bkTaskJsonConfigPolicyFieldIsInvalid"
     const val STORE_INDEX_CODE = "INDEX_CODE"
     const val STORE_INDEX_NAME = "INDEX_NAME"
     const val STORE_INDEX_ICON_URL = "ICON_URL"
@@ -50,4 +67,8 @@ object StoreConstants {
     const val STORE_UPDATE_TIME = "UPDATE_TIME"
     const val STORE_HONOR_MOUNT_FLAG = "MOUNT_FLAG"
     const val CREATE_TIME = "CREATE_TIME"
+    const val BK_DEFAULT_TIMEOUT = "defaultTimeout"
+    const val BK_DEFAULT_FAIL_POLICY = "defaultFailPolicy"
+    const val BK_DEFAULT_RETRY_POLICY = "defaultRetryPolicy"
+    const val BK_RETRY_TIMES = "retryTimes"
 }
