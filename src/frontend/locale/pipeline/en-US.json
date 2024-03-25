@@ -1508,5 +1508,6 @@
   "unGroup": "Ungrouped",
   "dropDraft": "Abandon",
   "tableColSettings": "Table Settings",
-  "draftRecordEntryTitle": "Debug Records"
+  "draftRecordEntryTitle": "Debug Records",
+  "checkDiff": "Diff"
 }
