@@ -96,10 +96,10 @@ data class AgentService @Autowired constructor(
     val bkBizScopeId: Int = 0
 
     @Value("\${environment.checkAgentStatus.corePoolSize:#{null}}")
-    final val corePoolSize: Int = 1
+    final val corePoolSize: Int = 2
 
     @Value("\${environment.checkAgentStatus.maximumPoolSize:#{null}}")
-    final val maximumPoolSize: Int = 5
+    final val maximumPoolSize: Int = 6
 
     @Value("\${environment.checkAgentStatus.keepAliveTime:#{null}}")
     final val keepAliveTime: Long = 0L
