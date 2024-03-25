@@ -182,6 +182,15 @@ BEGIN
             ADD COLUMN `BUSINESS_LINE_NAME` varchar(255) DEFAULT NULL COMMENT '业务线名称';
     END IF;
 
+    IF NOT EXISTS(SELECT 1
+                  FROM information_schema.statistics
+                  WHERE TABLE_SCHEMA = db
+                    AND TABLE_NAME = 'T_PROJECT'
+                    AND INDEX_NAME = 'PRODUCT_ID_IDX') THEN
+        ALTER TABLE T_PROJECT ADD INDEX `PRODUCT_ID_IDX` (`PRODUCT_ID`);
+    END IF;
+
+
     COMMIT;
 END <CI_UBF>
 DELIMITER ;
