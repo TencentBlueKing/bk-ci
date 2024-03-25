@@ -55,11 +55,14 @@ import com.tencent.devops.store.common.service.StoreCommonService
 import com.tencent.devops.store.common.utils.BkInitProjectCacheUtil
 import com.tencent.devops.store.common.utils.StoreUtils
 import com.tencent.devops.store.common.utils.VersionUtils
+import com.tencent.devops.store.constant.StoreConstants.BK_DEFAULT_FAIL_POLICY
+import com.tencent.devops.store.constant.StoreConstants.BK_DEFAULT_RETRY_POLICY
+import com.tencent.devops.store.constant.StoreConstants.BK_DEFAULT_TIMEOUT
+import com.tencent.devops.store.constant.StoreConstants.BK_RETRY_TIMES
+import com.tencent.devops.store.constant.StoreConstants.TASK_JSON_CONFIG_DEFAULT_TIMEOUT_FIELD_IS_INVALID
+import com.tencent.devops.store.constant.StoreConstants.TASK_JSON_CONFIG_POLICY_FIELD_IS_INVALID
+import com.tencent.devops.store.constant.StoreConstants.TASK_JSON_CONFIG_RETRY_TIME_FIELD_IS_INVALID
 import com.tencent.devops.store.constant.StoreMessageCode
-import com.tencent.devops.store.constant.StoreMessageCode.BK_DEFAULT_FAIL_POLICY
-import com.tencent.devops.store.constant.StoreMessageCode.BK_DEFAULT_RETRY_POLICY
-import com.tencent.devops.store.constant.StoreMessageCode.BK_DEFAULT_TIMEOUT
-import com.tencent.devops.store.constant.StoreMessageCode.BK_RETRY_TIMES
 import com.tencent.devops.store.pojo.atom.AtomEnvRequest
 import com.tencent.devops.store.pojo.atom.AtomPostInfo
 import com.tencent.devops.store.pojo.atom.AtomRunInfo
@@ -533,21 +536,34 @@ class MarketAtomCommonServiceImpl : MarketAtomCommonService {
     }
 
     private fun validateConfigMap(configMap: Map<String, Any>) {
+        val message: String?
         val defaultTimeout = configMap[BK_DEFAULT_TIMEOUT] as? Int ?: defaultAtomTimeout
         if (defaultTimeout !in minAtomTimeout..maxAtomTimeout) {
-            throw ErrorCodeException(errorCode = StoreMessageCode.TASK_JSON_CONFIG_DEFAULT_TIMEOUT_FIELD_IS_INVALID)
+            message = I18nUtil.getCodeLanMessage(messageCode = TASK_JSON_CONFIG_DEFAULT_TIMEOUT_FIELD_IS_INVALID)
+            throw ErrorCodeException(
+                errorCode = StoreMessageCode.TASK_JSON_CONFIG_IS_INVALID,
+                params = arrayOf(message)
+            )
         }
         val defaultFailPolicy = configMap[BK_DEFAULT_FAIL_POLICY] as? String
         val defaultRetryPolicy = configMap[BK_DEFAULT_RETRY_POLICY] as? List<String>
         if (!defaultRetryPolicy.isNullOrEmpty()) {
             if (defaultFailPolicy == AtomFailPolicyEnum.AUTO_CONTINUE.name &&
                 AtomRetryPolicyEnum.MANUALLY_RETRY.name in defaultRetryPolicy) {
-                throw ErrorCodeException(errorCode = StoreMessageCode.TASK_JSON_CONFIG_POLICY_FIELD_IS_INVALID)
+                message = I18nUtil.getCodeLanMessage(messageCode = TASK_JSON_CONFIG_POLICY_FIELD_IS_INVALID)
+                throw ErrorCodeException(
+                    errorCode = StoreMessageCode.TASK_JSON_CONFIG_IS_INVALID,
+                    params = arrayOf(message)
+                )
             }
             val retryTimes = configMap[BK_RETRY_TIMES] as? Int ?: minAtomRetryTimes
             if (AtomRetryPolicyEnum.AUTO_RETRY.name in defaultRetryPolicy &&
                 retryTimes !in minAtomRetryTimes..maxAtomRetryTimes) {
-                throw ErrorCodeException(errorCode = StoreMessageCode.TASK_JSON_CONFIG_RETRY_TIME_FIELD_IS_INVALID)
+                message = I18nUtil.getCodeLanMessage(messageCode = TASK_JSON_CONFIG_RETRY_TIME_FIELD_IS_INVALID)
+                throw ErrorCodeException(
+                    errorCode = StoreMessageCode.TASK_JSON_CONFIG_IS_INVALID,
+                    params = arrayOf(message)
+                )
             }
         }
     }
