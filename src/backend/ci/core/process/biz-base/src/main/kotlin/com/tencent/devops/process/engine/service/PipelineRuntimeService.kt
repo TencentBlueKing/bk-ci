@@ -971,15 +971,27 @@ class PipelineRuntimeService @Autowired constructor(
             context.pipelineParamMap[PIPELINE_BUILD_NUM] = BuildParameters(
                 key = PIPELINE_BUILD_NUM, value = context.buildNum.toString(), readOnly = true
             )
-
-            context.watcher.start("startBuildBatchSaveWithoutThreadSafety")
-            buildVariableService.startBuildBatchSaveWithoutThreadSafety(
-                dslContext = transactionContext,
-                projectId = context.projectId,
-                pipelineId = context.pipelineId,
-                buildId = context.buildId,
-                variables = context.pipelineParamMap
-            )
+            if (buildHistoryRecord != null) {
+                // 重试构建需要增加锁保护更新VAR表
+                context.watcher.start("startBuildBatchSetVariable")
+                buildVariableService.batchSetVariable(
+                    dslContext = transactionContext,
+                    projectId = context.projectId,
+                    pipelineId = context.pipelineId,
+                    buildId = context.buildId,
+                    variables = context.pipelineParamMap
+                )
+            } else {
+                // 全新构建不需要锁保护更新VAR表
+                context.watcher.start("startBuildBatchSaveWithoutThreadSafety")
+                buildVariableService.startBuildBatchSaveWithoutThreadSafety(
+                    dslContext = transactionContext,
+                    projectId = context.projectId,
+                    pipelineId = context.pipelineId,
+                    buildId = context.buildId,
+                    variables = context.pipelineParamMap
+                )
+            }
             context.watcher.start("saveBuildRuntimeRecord")
             saveBuildRuntimeRecord(
                 transactionContext = transactionContext,
