@@ -1,5 +1,4 @@
 const path = require('path')
-const webpack = require('webpack')
 const MiniCssExtractPlugin = require('mini-css-extract-plugin')
 const CssMinimizerPlugin = require('css-minimizer-webpack-plugin')
 const { VueLoaderPlugin } = require('vue-loader')
@@ -96,7 +95,6 @@ module.exports = ({ entry, publicPath, dist, port = 8080, argv, env }) => {
         },
         plugins: [
             // new BundleAnalyzerPlugin(),
-            new webpack.HotModuleReplacementPlugin(),
             new VueLoaderPlugin(),
             new BundleWebpackPlugin({
                 dist: envDist,
