@@ -28,6 +28,8 @@
 package com.tencent.devops.process.service.builds
 
 import com.tencent.devops.common.api.exception.ErrorCodeException
+import com.tencent.devops.common.auth.api.AuthPermission
+import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.event.enums.ActionType
 import com.tencent.devops.common.log.utils.BuildLogPrinter
@@ -45,6 +47,7 @@ import com.tencent.devops.process.engine.service.PipelineContainerService
 import com.tencent.devops.process.engine.service.PipelineTaskService
 import com.tencent.devops.process.engine.service.record.ContainerBuildRecordService
 import com.tencent.devops.process.engine.service.record.PipelineBuildRecordService
+import com.tencent.devops.process.permission.PipelinePermissionService
 import com.tencent.devops.process.pojo.pipeline.record.BuildRecordContainer
 import com.tencent.devops.process.pojo.pipeline.record.BuildRecordTask
 import com.tencent.devops.process.pojo.pipeline.record.BuildRecordTask.Companion.addRecords
@@ -64,7 +67,8 @@ class PipelineRetryFacadeService @Autowired constructor(
     val pipelineContainerService: PipelineContainerService,
     val pipelineBuildRecordService: PipelineBuildRecordService,
     val containerBuildRecordService: ContainerBuildRecordService,
-    private val buildLogPrinter: BuildLogPrinter
+    private val buildLogPrinter: BuildLogPrinter,
+    private val pipelinePermissionService: PipelinePermissionService
 ) {
 
     /**
@@ -175,9 +179,20 @@ class PipelineRetryFacadeService @Autowired constructor(
             val task = t.copy(executeCount = executeCount)
             if (task.taskId == taskId) {
                 // issues_6831: 若设置了手动跳过 且重试时选择了跳过当前插件则不刷新当前失败的插件,直接把task内状态改为SKIP
-                if (task.additionalOptions?.manualSkip == true && skipFailedTask!!) {
-                    pipelineTaskService.updateTaskStatus(task = task, userId = userId, buildStatus = BuildStatus.SKIP)
-                    return@forEach
+                if (skipFailedTask!!) {
+                    val isSkipTask = isSkipTask(
+                        userId = userId,
+                        projectId = projectId,
+                        manualSkip = task.additionalOptions?.manualSkip
+                    )
+                    if (isSkipTask) {
+                        pipelineTaskService.updateTaskStatus(
+                            task = task,
+                            userId = userId,
+                            buildStatus = BuildStatus.SKIP
+                        )
+                        return@forEach
+                    }
                 }
                 startAndEndTask.add(task)
                 taskRecords.addRecords(mutableListOf(task), resourceVersion)
@@ -244,6 +259,25 @@ class PipelineRetryFacadeService @Autowired constructor(
             containerId = containerInfo.containerId,
             buildStatus = BuildStatus.QUEUE
         )
+    }
+
+    fun isSkipTask(
+        userId: String,
+        projectId: String,
+        manualSkip: Boolean?
+    ): Boolean {
+        // 若该task具有手动跳过配置或者用户拥有API特殊操作权限，才允许跳过.
+        return manualSkip == true || try {
+            pipelinePermissionService.checkPipelinePermission(
+                userId = userId,
+                projectId = projectId,
+                authResourceType = AuthResourceType.PROJECT,
+                permission = AuthPermission.API_OPERATE
+            )
+        } catch (ignore: Exception) {
+            logger.warn("refresh task And check api operate permission failed:$userId|$projectId|$ignore")
+            false
+        }
     }
 
     companion object {

@@ -94,6 +94,15 @@ class SamplePermissionResourceGroupService : PermissionResourceGroupService {
         return true
     }
 
+    override fun createGroupByGroupCode(
+        userId: String,
+        projectId: String,
+        resourceType: String,
+        groupCode: String,
+    ): Boolean {
+        return true
+    }
+
     override fun rename(
         userId: String,
         projectId: String,

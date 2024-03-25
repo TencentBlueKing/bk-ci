@@ -34,15 +34,18 @@ import com.tencent.bk.sdk.iam.dto.manager.ManagerMember
 import com.tencent.bk.sdk.iam.dto.manager.ManagerRoleGroup
 import com.tencent.bk.sdk.iam.dto.manager.dto.GroupMemberRenewApplicationDTO
 import com.tencent.bk.sdk.iam.dto.manager.dto.ManagerMemberGroupDTO
+import com.tencent.bk.sdk.iam.dto.manager.dto.ManagerRoleGroupDTO
 import com.tencent.bk.sdk.iam.dto.manager.dto.SearchGroupDTO
 import com.tencent.bk.sdk.iam.service.v2.V2ManagerService
 import com.tencent.devops.auth.constant.AuthI18nConstants
 import com.tencent.devops.auth.constant.AuthMessageCode.AUTH_GROUP_MEMBER_EXPIRED_DESC
+import com.tencent.devops.auth.constant.AuthMessageCode.DEFAULT_GROUP_CONFIG_NOT_FOUND
 import com.tencent.devops.auth.constant.AuthMessageCode.ERROR_DEFAULT_GROUP_DELETE_FAIL
 import com.tencent.devops.auth.constant.AuthMessageCode.ERROR_DEFAULT_GROUP_RENAME_FAIL
 import com.tencent.devops.auth.constant.AuthMessageCode.ERROR_GROUP_NAME_TO_LONG
 import com.tencent.devops.auth.constant.AuthMessageCode.ERROR_GROUP_NAME_TO_SHORT
 import com.tencent.devops.auth.constant.AuthMessageCode.GROUP_EXIST
+import com.tencent.devops.auth.dao.AuthResourceGroupConfigDao
 import com.tencent.devops.auth.dao.AuthResourceGroupDao
 import com.tencent.devops.auth.pojo.dto.GroupMemberRenewalDTO
 import com.tencent.devops.auth.pojo.dto.RenameGroupDTO
@@ -66,18 +69,19 @@ import org.springframework.beans.factory.annotation.Autowired
 class RbacPermissionResourceGroupService @Autowired constructor(
     private val iamV2ManagerService: V2ManagerService,
     private val authResourceService: AuthResourceService,
-    private val permissionGradeManagerService: PermissionGradeManagerService,
     private val permissionSubsetManagerService: PermissionSubsetManagerService,
     private val permissionResourceService: PermissionResourceService,
     private val permissionGroupPoliciesService: PermissionGroupPoliciesService,
     private val dslContext: DSLContext,
-    private val authResourceGroupDao: AuthResourceGroupDao
+    private val authResourceGroupDao: AuthResourceGroupDao,
+    private val permissionGradeManagerService: PermissionGradeManagerService
 ) : PermissionResourceGroupService {
 
     companion object {
         private val logger = LoggerFactory.getLogger(RbacPermissionResourceGroupService::class.java)
         private const val MAX_GROUP_NAME_LENGTH = 32
         private const val MIN_GROUP_NAME_LENGTH = 5
+
         // 毫秒转换
         private const val MILLISECOND = 1000
     }
@@ -98,12 +102,15 @@ class RbacPermissionResourceGroupService @Autowired constructor(
         val validPageSize = PageUtil.getValidPageSize(pageSize)
         val iamGroupInfoList = if (resourceType == AuthResourceType.PROJECT.value) {
             val searchGroupDTO = SearchGroupDTO.builder().inherit(false).build()
-            permissionGradeManagerService.listGroup(
-                gradeManagerId = resourceInfo.relationId,
-                searchGroupDTO = searchGroupDTO,
-                page = validPage,
-                pageSize = validPageSize
+            val pageInfoDTO = V2PageInfoDTO()
+            pageInfoDTO.page = page
+            pageInfoDTO.pageSize = pageSize
+            val iamGroupInfoList = iamV2ManagerService.getGradeManagerRoleGroupV2(
+                resourceInfo.relationId,
+                searchGroupDTO,
+                pageInfoDTO
             )
+            iamGroupInfoList.results
         } else {
             permissionSubsetManagerService.listGroup(
                 subsetManagerId = resourceInfo.relationId,
@@ -288,6 +295,28 @@ class RbacPermissionResourceGroupService @Autowired constructor(
             authResourceGroupDao.deleteByIds(
                 dslContext = dslContext,
                 ids = listOf(authResourceGroup.id)
+            )
+        }
+        return true
+    }
+
+    override fun createGroupByGroupCode(
+        userId: String,
+        projectId: String,
+        resourceType: String,
+        groupCode: String,
+    ): Boolean {
+        logger.info("create group|$userId|$projectId|$groupCode|$resourceType")
+        permissionResourceService.hasManagerPermission(
+            userId = userId,
+            projectId = projectId,
+            resourceType = AuthResourceType.PROJECT.value,
+            resourceCode = projectId
+        )
+        if (resourceType == AuthResourceType.PROJECT.value){
+            permissionGradeManagerService.createProjectGroupByGroupCode(
+                projectCode = projectId,
+                groupCode = groupCode
             )
         }
         return true

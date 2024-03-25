@@ -292,6 +292,7 @@ object ProcessMessageCode {
     const val GROUP_IS_EXIST = "2101186" // 分组({0})已存在/group ({0}) is already exist
     const val GROUP_LABEL_IS_EXIST = "2101187" // 分组标签({0})已存在/group label ({0}) is already exist
     const val ERROR_NO_PERMISSION_OPERATION_TEMPLATE = "2101189" // 用户没有操作模板的权限
+    const val ERROR_TASK_NOT_ALLOWED_TO_BE_SKIPPED = "2101220" // task不允许被跳过
 
     const val ERROR_TRIGGER_DETAIL_NOT_FOUND = "2101181" // 触发详情{0}不存在
     const val ERROR_TRIGGER_EVENT_NOT_FOUND = "2101182" // 触发事件{0}不存在
