@@ -523,7 +523,9 @@ class WorkspaceService @Autowired constructor(
         projectId: String?,
         ip: String?,
         hasDepartmentsInfo: Boolean?,
-        hasCurrentUser: Boolean?
+        hasCurrentUser: Boolean?,
+        businessLineName: String? = null,
+        ownerName: String? = null
     ): List<WeSecProjectWorkspace> {
         val startTime = System.currentTimeMillis()
 

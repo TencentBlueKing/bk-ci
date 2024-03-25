@@ -52,7 +52,9 @@ class ApigwRemoteDevResourceImpl @Autowired constructor(private val client: Clie
         logger.info("Get  projects workspace ,projectId:$projectId")
         return client.get(ServiceRemoteDevResource::class).getProjectWorkspace(
             projectId = projectId,
-            ip = ip
+            ip = ip,
+            businessLineName = null,
+            ownerName = null
         )
     }
 
@@ -138,7 +140,9 @@ class ApigwRemoteDevResourceImpl @Autowired constructor(private val client: Clie
         logger.info("List  projects workspace ,projectId:$projectId")
         return client.get(ServiceRemoteDevResource::class).getProjectWorkspace(
             projectId = projectId,
-            ip = null
+            ip = null,
+            businessLineName = null,
+            ownerName = null
         )
     }
 
@@ -170,5 +174,15 @@ class ApigwRemoteDevResourceImpl @Autowired constructor(private val client: Clie
 
     override fun getWindowsResourceList(appCode: String?, apigwType: String?): Result<List<WindowsResourceTypeConfig>> {
         return client.get(ServiceRemoteDevResource::class).getWindowsResourceList()
+    }
+
+    override fun queryTimiProjectWorkspace(appCode: String?, apigwType: String?, taiUser: String): Result<List<WeSecProjectWorkspace>> {
+        logger.info("Get timi projects workspace ,taiUser:$taiUser")
+        return client.get(ServiceRemoteDevResource::class).getProjectWorkspace(
+            businessLineName = "天美工作室群",
+            ownerName = taiUser,
+            ip = null,
+            projectId = null
+        )
     }
 }
