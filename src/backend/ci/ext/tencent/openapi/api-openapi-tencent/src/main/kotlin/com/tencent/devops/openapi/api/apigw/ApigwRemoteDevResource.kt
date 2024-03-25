@@ -221,7 +221,7 @@ interface ApigwRemoteDevResource {
         apigwType: String?
     ): Result<List<WindowsResourceTypeConfig>>
 
-    @Operation(summary = "提供给天美获取云桌面信息", tags = ["v4_app_timi_project_workspace"])
+    @Operation(summary = "提供获取云桌面信息", tags = ["v4_project_workspace"])
     @GET
     @Path("/project/workspace")
     fun queryTimiProjectWorkspace(
@@ -231,6 +231,9 @@ interface ApigwRemoteDevResource {
         @Parameter(description = "apigw Type", required = true)
         @PathParam("apigwType")
         apigwType: String?,
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
+        userId: String,
         @Parameter(description = "ip", required = true)
         @QueryParam("taiUser")
         taiUser: String
