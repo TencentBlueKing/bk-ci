@@ -153,6 +153,7 @@
                 notifyTypeMap: {
                     EMAIL: this.$t('settings.emailNotice'),
                     WEWORK: this.$t('settings.rtxNotice'),
+                    RTX: this.$t('settings.rtxNotice'),
                     VOICE: this.$t('settings.voice'),
                     WECHAT: this.$t('settings.wechatNotice'),
                     SMS: this.$t('settings.smsNotice')
