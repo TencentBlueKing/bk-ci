@@ -77,6 +77,7 @@ import com.tencent.devops.environment.service.job.QueryFromCCService.Companion.F
 import com.tencent.devops.environment.service.job.QueryFromCCService.Companion.FIELD_BK_HOST_ID
 import com.tencent.devops.environment.service.job.QueryFromCCService.Companion.FIELD_BK_HOST_INNERIP
 import com.tencent.devops.environment.service.node.NodeActionFactory
+import com.tencent.devops.environment.utils.ComputeTimeUtils
 import com.tencent.devops.environment.utils.ImportServerNodeUtils
 import com.tencent.devops.environment.utils.NodeStringIdUtils
 import com.tencent.devops.model.environment.tables.records.TNodeRecord
@@ -393,14 +394,14 @@ class CmdbNodeService @Autowired constructor(
         }
         val time7 = LocalDateTime.now()
         logger.info(
-            "[addCmdbNodes]Total: ${Duration.between(startTime, time7).toNanos().toDouble() / NS_TO_S}s, " +
-                "checkUserOperator(cmdb): ${Duration.between(startTime, time1).toNanos().toDouble() / NS_TO_S}s, " +
-                "checkImportCount: ${Duration.between(time1, time2).toNanos().toDouble() / NS_TO_S}s, " +
-                "addNodeToCC: ${Duration.between(time2, time3).toNanos().toDouble() / NS_TO_S}s, " +
-                "agent status from esb: ${Duration.between(time3, time4).toNanos().toDouble() / NS_TO_S}s, " +
-                "agent versions from nodeman/job: ${Duration.between(time4, time5).toNanos().toDouble() / NS_TO_S}s, " +
-                "toAddNodeList: ${Duration.between(time5, time6).toNanos().toDouble() / NS_TO_S}s, " +
-                "batchAddNode: ${Duration.between(time6, time7).toNanos().toDouble() / NS_TO_S}s, "
+            "[addCmdbNodes]Total: ${ComputeTimeUtils.calculateDuration(startTime, time7)}s, " +
+                "checkUserOperator(cmdb): ${ComputeTimeUtils.calculateDuration(startTime, time1)}s, " +
+                "checkImportCount: ${ComputeTimeUtils.calculateDuration(time1, time2)}s, " +
+                "addNodeToCC: ${ComputeTimeUtils.calculateDuration(time2, time3)}s, " +
+                "agent status from esb: ${ComputeTimeUtils.calculateDuration(time3, time4)}s, " +
+                "agent versions from nodeman/job: ${ComputeTimeUtils.calculateDuration(time4, time5)}s, " +
+                "toAddNodeList: ${ComputeTimeUtils.calculateDuration(time5, time6)}s, " +
+                "batchAddNode: ${ComputeTimeUtils.calculateDuration(time6, time7)}s, "
         )
         return AddCmdbNodesRes(
             nodeStatus = true,

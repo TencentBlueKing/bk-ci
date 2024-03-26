@@ -46,6 +46,7 @@ import com.tencent.devops.environment.pojo.job.ccres.CCInfo
 import com.tencent.devops.environment.pojo.job.jobreq.OpOperateReq
 import com.tencent.devops.environment.pojo.job.jobresp.CCUpdateInfo
 import com.tencent.devops.environment.service.CmdbNodeService
+import com.tencent.devops.environment.utils.ComputeTimeUtils
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -130,7 +131,7 @@ class TencentStockDataUpdateService @Autowired constructor(
             }
             logger.info(
                 "[checkDeployNodesIsInCmdb]total time: " +
-                    "${Duration.between(startTime, LocalDateTime.now()).toNanos().toDouble() / NS_TO_S}s"
+                    "${ComputeTimeUtils.calculateDuration(startTime, LocalDateTime.now())}s"
             )
         }
         // 2.2 节点在cmdb中，查询CC: 在CC-改为NORMAL，不在CC-改为NOT_IN_CC
@@ -168,7 +169,7 @@ class TencentStockDataUpdateService @Autowired constructor(
             }
             logger.info(
                 "[checkDeployNodesIsInCC]total time: " +
-                    "${Duration.between(startTime, LocalDateTime.now()).toNanos().toDouble() / NS_TO_S}s"
+                    "${ComputeTimeUtils.calculateDuration(startTime, LocalDateTime.now())}s"
             )
         }
     }

@@ -66,6 +66,7 @@ import com.tencent.devops.environment.pojo.job.agentres.RetryAgentInstallTaskRes
 import com.tencent.devops.environment.pojo.job.agentres.Statistics
 import com.tencent.devops.environment.pojo.job.agentres.TerminalAgentInstallTaskResult
 import com.tencent.devops.environment.service.prometheus.AgentStatusUpdateThreadMetrics
+import com.tencent.devops.environment.utils.ComputeTimeUtils
 import com.tencent.devops.environment.utils.FileUtils
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
@@ -317,7 +318,7 @@ data class AgentService @Autowired constructor(
         } finally {
             logger.info(
                 "Agent install finish takes " +
-                    "${Duration.between(startTime, LocalDateTime.now()).toNanos().toDouble() / NS_TO_S}s."
+                    "${ComputeTimeUtils.calculateDuration(startTime, LocalDateTime.now())}s."
             )
         }
     }
