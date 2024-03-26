@@ -237,7 +237,7 @@ class EventCacheService @Autowired constructor(
                     }
                     webhookCommitList.addAll(list)
                     // 超过目标条数
-                    if (webhookCommitList.size < size || webhookCommitList.size > maxCount) break
+                    if (webhookCommitList.size < size || webhookCommitList.size >= maxCount) break
                     page++
                 }
             } catch (ignored: Throwable) {
