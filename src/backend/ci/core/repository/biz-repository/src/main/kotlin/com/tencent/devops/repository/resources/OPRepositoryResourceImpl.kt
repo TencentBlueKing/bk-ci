@@ -95,4 +95,12 @@ class OPRepositoryResourceImpl @Autowired constructor(
         )
         return Result(true)
     }
+
+    override fun removeRepositoryPipelineRef(projectId: String, repoHashId: String): Result<Boolean> {
+        opRepositoryService.removeRepositoryPipelineRef(
+            projectId = projectId,
+            repoHashId = repoHashId
+        )
+        return Result(true)
+    }
 }
