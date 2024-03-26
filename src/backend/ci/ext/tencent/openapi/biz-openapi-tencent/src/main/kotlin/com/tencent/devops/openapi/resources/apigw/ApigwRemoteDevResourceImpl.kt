@@ -192,6 +192,7 @@ class ApigwRemoteDevResourceImpl @Autowired constructor(private val client: Clie
         val userInfo = client.get(ServiceUserResource::class).getDetailFromCache(userId).data
         if (userInfo?.businessLineName.isNullOrBlank()) {
             logger.info("Get projects workspace from user $userId ,businessLineName is null")
+            return Result(emptyList())
         }
         return client.get(ServiceRemoteDevResource::class).getProjectWorkspace(
             businessLineName = userInfo?.businessLineName,
