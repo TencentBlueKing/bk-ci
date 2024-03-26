@@ -8,5 +8,15 @@ import com.fasterxml.jackson.annotation.JsonInclude
 data class JobSchema(
     val jobSchemaId: String,
     val jobSchemaName: String,
-    val schema: Map<String, Any>?
+    val schema: Map<String, Any>?,
+    val jobType: JobType?
+)
+
+data class JobSchemaCreateData(
+    val jobId: String,
+    val jobName: String,
+    val jobSchema: Map<String, Any>,
+    val jobType: JobType,
+    val jobActionType: JobActionType,
+    val jobActionExtraParam: JobActionExtraParam
 )

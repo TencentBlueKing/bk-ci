@@ -1,4 +1,4 @@
-package com.tencent.devops.remotedev.service.job
+package com.tencent.devops.remotedev.pojo.job
 
 interface JobReceiptInfo
 

@@ -10,13 +10,6 @@ enum class JobActionType {
     CRON_POWER_ON,
     PIPELINE;
 
-    fun isBackend(): Boolean {
-        return when (this) {
-            PIPELINE -> false
-            else -> true
-        }
-    }
-
     companion object {
         fun fromStr(v: String): JobActionType? {
             return values().firstOrNull { it.name == v }

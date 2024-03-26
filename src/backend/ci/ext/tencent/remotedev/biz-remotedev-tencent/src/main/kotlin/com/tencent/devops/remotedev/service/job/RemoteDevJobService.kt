@@ -14,13 +14,18 @@ import com.tencent.devops.remotedev.dao.RemoteDevJobExecRecordDao
 import com.tencent.devops.remotedev.dao.RemoteDevJobSchemaDao
 import com.tencent.devops.remotedev.pojo.job.CronJob
 import com.tencent.devops.remotedev.pojo.job.CronJobSearchParam
+import com.tencent.devops.remotedev.pojo.job.CronPowerOnParam
 import com.tencent.devops.remotedev.pojo.job.JobActionType
+import com.tencent.devops.remotedev.pojo.job.JobBackendActionExtraParam
 import com.tencent.devops.remotedev.pojo.job.JobCreateData
+import com.tencent.devops.remotedev.pojo.job.JobPipelineActionExtraParam
 import com.tencent.devops.remotedev.pojo.job.JobRecord
 import com.tencent.devops.remotedev.pojo.job.JobRecordSearchParam
 import com.tencent.devops.remotedev.pojo.job.JobRecordStatus
-import com.tencent.devops.remotedev.pojo.job.JobSchema
-import com.tencent.devops.remotedev.pojo.job.JobType
+import com.tencent.devops.remotedev.pojo.job.JobSchemaParam
+import com.tencent.devops.remotedev.pojo.job.KeyMapDataType
+import com.tencent.devops.remotedev.pojo.job.NotifyRemoteDevDesktopParam
+import com.tencent.devops.remotedev.pojo.job.PipelineParam
 import org.jooq.DSLContext
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
@@ -36,28 +41,6 @@ class RemoteDevJobService @Autowired constructor(
     private val remoteDevCronJobDao: RemoteDevCronJobDao,
     private val remoteDevActionService: RemoteDevJobActionService
 ) {
-    fun getJobIdAndNames(
-        jobType: JobType
-    ): List<JobSchema> {
-        return remoteDevJobSchemaDao.fetchSchema(dslContext, jobType).map {
-            JobSchema(
-                jobSchemaId = it.jobId,
-                jobSchemaName = it.jobName,
-                schema = null
-            )
-        }
-    }
-
-    fun getSchema(
-        jobId: String
-    ): JobSchema? {
-        val record = remoteDevJobSchemaDao.getSchema(dslContext, jobId) ?: return null
-        return JobSchema(
-            jobSchemaId = record.jobId,
-            jobSchemaName = record.jobName,
-            schema = objectMapper.readValue<Map<String, Any>>(record.jobSchema.data())
-        )
-    }
 
     fun createJob(
         userId: String,
@@ -94,7 +77,6 @@ class RemoteDevJobService @Autowired constructor(
                     scope = data.jobScope,
                     machineType = data.machineType,
                     owners = data.owners,
-                    type = JobActionType.NOTIFY_REMOTEDEV_DESKTOP,
                     title = title,
                     content = content
                 )
@@ -120,8 +102,7 @@ class RemoteDevJobService @Autowired constructor(
                 val param = CronPowerOnParam(
                     scope = data.jobScope,
                     machineType = data.machineType,
-                    owners = data.owners,
-                    type = JobActionType.CRON_POWER_ON
+                    owners = data.owners
                 )
                 remoteDevCronJobDao.createCronJob(
                     dslContext = dslContext,
@@ -162,7 +143,6 @@ class RemoteDevJobService @Autowired constructor(
                     scope = data.jobScope,
                     machineType = data.machineType,
                     owners = data.owners,
-                    type = JobActionType.PIPELINE,
                     userId = exParam.userId,
                     projectId = exParam.projectId,
                     pipelineId = exParam.pipelineId,

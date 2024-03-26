@@ -4,9 +4,9 @@ import com.tencent.devops.common.api.model.SQLLimit
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.model.remotedev.tables.TRemotedevJobExecRecord
 import com.tencent.devops.model.remotedev.tables.records.TRemotedevJobExecRecordRecord
+import com.tencent.devops.remotedev.pojo.job.JobReceiptInfo
 import com.tencent.devops.remotedev.pojo.job.JobRecordStatus
-import com.tencent.devops.remotedev.service.job.JobReceiptInfo
-import com.tencent.devops.remotedev.service.job.JobSchemaParam
+import com.tencent.devops.remotedev.pojo.job.JobSchemaParam
 import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.JSON

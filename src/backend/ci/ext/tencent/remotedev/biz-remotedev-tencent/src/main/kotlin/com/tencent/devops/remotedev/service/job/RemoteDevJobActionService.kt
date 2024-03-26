@@ -1,14 +1,15 @@
 package com.tencent.devops.remotedev.service.job
 
-import com.fasterxml.jackson.databind.ObjectMapper
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.process.api.service.ServiceBuildResource
-import com.tencent.devops.remotedev.dao.RemoteDevCronJobDao
 import com.tencent.devops.remotedev.dao.RemoteDevJobExecRecordDao
-import com.tencent.devops.remotedev.dao.RemoteDevJobSchemaDao
+import com.tencent.devops.remotedev.pojo.job.CronPowerOnParam
 import com.tencent.devops.remotedev.pojo.job.JobRecordStatus
+import com.tencent.devops.remotedev.pojo.job.NotifyRemoteDevDesktopParam
+import com.tencent.devops.remotedev.pojo.job.PipelineJobReceiptInfo
+import com.tencent.devops.remotedev.pojo.job.PipelineParam
 import org.jooq.DSLContext
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
@@ -18,10 +19,7 @@ import java.time.LocalDateTime
 class RemoteDevJobActionService @Autowired constructor(
     private val client: Client,
     private val dslContext: DSLContext,
-    private val objectMapper: ObjectMapper,
-    private val remoteDevJobSchemaDao: RemoteDevJobSchemaDao,
-    private val remoteDevJobExecRecordDao: RemoteDevJobExecRecordDao,
-    private val remoteDevCronJobDao: RemoteDevCronJobDao
+    private val remoteDevJobExecRecordDao: RemoteDevJobExecRecordDao
 ) {
 
     // 一键通知云桌面

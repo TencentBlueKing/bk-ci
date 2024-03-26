@@ -12,19 +12,21 @@ import com.tencent.devops.remotedev.pojo.job.JobRecordSearchParam
 import com.tencent.devops.remotedev.pojo.job.JobSchema
 import com.tencent.devops.remotedev.pojo.job.JobType
 import com.tencent.devops.remotedev.service.job.RemoteDevJobService
+import com.tencent.devops.remotedev.service.job.RemoteDevSchemaService
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 class UserRemoteDevJobResourceImpl @Autowired constructor(
+    private val remoteDevSchemaService: RemoteDevSchemaService,
     private val remoteDevJobService: RemoteDevJobService
 ) : UserRemoteDevJobResource {
     override fun fetchJobSchemaList(userId: String, type: JobType): Result<List<JobSchema>> {
         // TODO: 是否需要鉴权
-        return Result(remoteDevJobService.getJobIdAndNames(type))
+        return Result(remoteDevSchemaService.getJobIdAndNames(type))
     }
 
     override fun getJobSchema(userId: String, schemaId: String): Result<JobSchema?> {
-        return Result(remoteDevJobService.getSchema(schemaId))
+        return Result(remoteDevSchemaService.getSchema(schemaId))
     }
 
     override fun createJob(userId: String, data: JobCreateData): Result<Boolean> {

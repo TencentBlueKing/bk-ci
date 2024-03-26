@@ -4,7 +4,7 @@ import com.tencent.devops.common.api.model.SQLLimit
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.model.remotedev.tables.TRemotedevCronJob
 import com.tencent.devops.model.remotedev.tables.records.TRemotedevCronJobRecord
-import com.tencent.devops.remotedev.service.job.JobSchemaParam
+import com.tencent.devops.remotedev.pojo.job.JobSchemaParam
 import org.jooq.DSLContext
 import org.jooq.JSON
 import org.springframework.stereotype.Repository

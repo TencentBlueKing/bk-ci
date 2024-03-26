@@ -1,4 +1,4 @@
-package com.tencent.devops.remotedev.service.job
+package com.tencent.devops.remotedev.pojo.job
 
 /**
  * @param keyMap 作为执行时schema参数映射，keyMap中的key为执行放需要的key，value为schema中对应的可以取值的
