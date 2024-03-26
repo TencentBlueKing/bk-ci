@@ -142,6 +142,25 @@
                 show-overflow-tooltip
             >
                 <template slot-scope="props">
+                    <bk-button
+                        v-if="props.row.type === 'CODE_GIT'"
+                        theme="primary"
+                        text
+                        class="mr10"
+                        v-perm="{
+                            hasPermission: props.row.canView,
+                            disablePermissionApi: true,
+                            permissionData: {
+                                projectId: projectId,
+                                resourceType: RESOURCE_TYPE,
+                                resourceCode: props.row.repositoryHashId,
+                                action: RESOURCE_ACTION.VIEW
+                            }
+                        }"
+                        @click.stop="handleShowDetail(props.row)"
+                    >
+                        {{ $t('codelib.去开启PAC') }}
+                    </bk-button>
                     <span v-bk-tooltips="{
                         content: $t('codelib.请先关闭 PAC 模式，再删除代码库'),
                         disabled: !props.row.enablePac
