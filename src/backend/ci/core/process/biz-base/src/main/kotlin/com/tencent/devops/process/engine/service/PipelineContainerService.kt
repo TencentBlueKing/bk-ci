@@ -557,7 +557,8 @@ class PipelineContainerService @Autowired constructor(
         }
         container.startVMTaskSeq = startVMTaskSeq
         // 构建矩阵没有对应的重试插件，单独增加重试记录
-        if (container.matrixGroupFlag == true) {
+        if (context.isRetryFailedContainer(container = container, stage = stage) &&
+            container.matrixGroupFlag == true) {
             needUpdateContainer = true
         }
 
