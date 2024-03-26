@@ -25,31 +25,41 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.dispatch.docker.pojo.enums
+package com.tencent.devops.dispatch.kubernetes.api.service
 
-enum class DockerHostClusterType {
-    /**
-     * 公共构建机集群
-     */
-    COMMON,
+import com.tencent.devops.buildless.pojo.BuildLessEndInfo
+import com.tencent.devops.buildless.pojo.BuildLessStartInfo
+import com.tencent.devops.common.api.annotation.ServiceInterface
+import com.tencent.devops.common.api.pojo.Result
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.Parameter
+import io.swagger.v3.oas.annotations.tags.Tag
+import javax.ws.rs.Consumes
+import javax.ws.rs.POST
+import javax.ws.rs.Path
+import javax.ws.rs.Produces
+import javax.ws.rs.core.MediaType
 
-    /**
-     * 无编译环境构建机群
-     */
-    AGENT_LESS,
+@Tag(name = "SERVICE_DISPATCH_BASE_BUILDLESS", description = "SERVICE_DISPATCH_BASE_BUILDLESS")
+@Path("/service/buildless")
+@ServiceInterface("dispatch-kubernetes") // 指明接入到哪个微服务
+@Produces(MediaType.APPLICATION_JSON)
+@Consumes(MediaType.APPLICATION_JSON)
+interface ServiceBaseBuildLessResource {
 
-    /**
-     * 无编译环境构建机群(new)
-     */
-    BUILD_LESS,
+    @POST
+    @Path("/start")
+    @Operation(summary = "启动无编译构建")
+    fun startBuildLess(
+        @Parameter(description = "请求体", required = true)
+        buildLessStartInfo: BuildLessStartInfo
+    ): Result<Boolean>
 
-    /**
-     * 无编译环境构建机群(k8s)
-     */
-    K8S_BUILD_LESS,
-
-    /**
-     * mac构建机群
-     */
-    MACOS
+    @POST
+    @Path("/end")
+    @Operation(summary = "停止无编译构建")
+    fun endBuildLess(
+        @Parameter(description = "请求体", required = true)
+        buildLessEndInfo: BuildLessEndInfo
+    ): Result<Boolean>
 }
