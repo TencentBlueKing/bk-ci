@@ -6,9 +6,9 @@
 </template>
 
 <script>
-    import { mapState } from 'vuex'
     import ImportPipelineHeader from '@/components/PipelineHeader/ImportPipelineHeader'
     import { SET_PIPELINE_INFO } from '@/store/modules/atom/constants'
+    import { mapState } from 'vuex'
     export default {
         components: {
             ImportPipelineHeader
@@ -36,7 +36,6 @@
             this.$store.dispatch('atom/selectPipelineVersion', null)
             this.$store.commit('atom/resetPipelineSetting', null)
             this.$store.commit(`atom/${SET_PIPELINE_INFO}`, null)
-            this.$store.commit('pipelines/updatePipelineList', [])
         }
     }
 </script>

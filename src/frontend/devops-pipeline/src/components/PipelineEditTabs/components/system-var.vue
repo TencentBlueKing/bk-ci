@@ -14,6 +14,7 @@
                 v-for="(group) in renderSysParamList"
                 :key="group.name"
                 :title="group.name"
+                :item-num="group.params.length"
                 :show-content="group.isOpen === true"
             >
                 <section slot="content">

@@ -9,8 +9,8 @@
 </template>
 
 <script>
-    import { mapActions } from 'vuex'
     import { SET_PIPELINE_INFO } from '@/store/modules/atom/constants'
+    import { mapActions } from 'vuex'
 
     export default {
         created () {
@@ -25,7 +25,6 @@
             this.selectPipelineVersion(null)
             this.$store.commit('atom/resetPipelineSetting', null)
             this.$store.commit(`atom/${SET_PIPELINE_INFO}`, null)
-            this.$store.commit('pipelines/updatePipelineList', [])
         },
         methods: {
             ...mapActions('atom', [

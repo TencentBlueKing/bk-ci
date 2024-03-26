@@ -1,6 +1,6 @@
 <template>
     <bread-crumb :value="breadCrumbPath">
-        <template v-if="pipelineList?.length && !isLoading">
+        <template v-if="!isLoading">
             <bread-crumb-item v-for="(crumb, index) in breadCrumbs" :key="index" v-bind="crumb">
                 <slot v-if="index === breadCrumbs.length - 1"></slot>
             </bread-crumb-item>
@@ -10,11 +10,11 @@
 </template>
 
 <script>
-    import { mapActions, mapGetters, mapState } from 'vuex'
     import BreadCrumb from '@/components/BreadCrumb'
     import BreadCrumbItem from '@/components/BreadCrumb/BreadCrumbItem'
     import { RESOURCE_ACTION } from '@/utils/permission'
     import { debounce } from '@/utils/util'
+    import { mapActions, mapState } from 'vuex'
 
     export default {
         components: {
@@ -28,15 +28,13 @@
         },
         data () {
             return {
-                searchName: '',
                 pipelineListSearching: false,
+                pipelineList: [],
                 breadCrumbPath: []
             }
         },
         computed: {
-            ...mapGetters({
-                pipelineList: 'pipelines/getPipelineList'
-            }),
+
             ...mapState('atom', [
                 'pipeline',
                 'pipelineInfo'
@@ -100,6 +98,7 @@
             }
         },
         created () {
+            this.setSwitchingPipelineVersion(true)
             this.fetchPipelineList()
         },
         methods: {
@@ -108,46 +107,29 @@
                 setSwitchingPipelineVersion: 'atom/setSwitchingPipelineVersion',
                 requestPipelineSummary: 'atom/requestPipelineSummary'
             }),
-            async fetchPipelineList (searchName) {
+            async fetchPipelineList () {
                 const { projectId, pipelineId } = this.$route.params
                 try {
-                    this.setSwitchingPipelineVersion(true)
                     const [list, pipelineInfo] = await Promise.all([
-                        this.searchPipelineList({
-                            projectId,
-                            searchName
-                        }),
-                        ...(pipelineId
-                            ? [this.requestPipelineSummary({
-                                projectId,
-                                pipelineId
-                            })]
-                            : [])
+                        this.search(),
+                        ...(
+                            pipelineId
+                                ? [this.requestPipelineSummary({
+                                    projectId,
+                                    pipelineId
+                                })]
+                                : []
+                        )
                     ])
 
-                    this.setBreadCrumbPipelineList(list, pipelineInfo ?? this.pipelineInfo)
+                    this.pipelineList = this.generatePipelineList(list, pipelineInfo)
                 } catch (err) {
                     this.handleError(err, {
                         projectId,
                         resourceCode: pipelineId,
                         action: RESOURCE_ACTION.VIEW
                     })
-                } finally {
-                    // this.setSwitchingPipelineVersion(false)
                 }
-            },
-            async setBreadCrumbPipelineList (list, pipeline) {
-                if (pipeline && list.every(ele => ele.pipelineId !== pipeline.pipelineId)) {
-                    list = [
-                        {
-                            pipelineId: pipeline.pipelineId,
-                            pipelineName: pipeline.pipelineName
-                        },
-                        ...list
-                    ]
-                }
-
-                this.$store.commit('pipelines/updatePipelineList', list)
             },
             async doSelectPipeline (pipelineId, cur) {
                 try {
@@ -168,14 +150,8 @@
                     })
 
                     // 清空搜索
-                    this.searchPipelineList({
-                        projectId: $route.params.projectId
-                    }).then((list) => {
-                        this.setBreadCrumbPipelineList(list, {
-                            pipelineId,
-                            pipelineName: cur.pipelineName
-                        })
-                    })
+                    const list = await this.search()
+                    this.pipelineList = this.generatePipelineList(list, cur)
                 } catch (error) {
                     this.handleError(error, {
                         projectId: this.$route.params.projectId,
@@ -187,8 +163,25 @@
             async handleSearchPipeline (value) {
                 if (this.pipelineListSearching) return
                 this.pipelineListSearching = true
-                await this.fetchPipelineList(value)
+
+                const list = await this.search(value)
+                this.pipelineList = this.generatePipelineList(list, this.pipelineInfo)
                 this.pipelineListSearching = false
+            },
+            search (searchName = '') {
+                return this.searchPipelineList({
+                    projectId: this.$route.params.projectId,
+                    searchName
+                })
+            },
+            generatePipelineList (list, curPipeline) {
+                return [
+                    {
+                        pipelineId: curPipeline.pipelineId,
+                        pipelineName: curPipeline.pipelineName
+                    },
+                    ...list.filter(item => item.pipelineId !== curPipeline.pipelineId)
+                ]
             }
         }
     }
