@@ -24,20 +24,22 @@
                     <VersionSelector
                         ext-cls="dark-theme-select-trigger"
                         ext-popover-cls="dark-theme-select-menu"
+                        :editable="canSwitchVersion"
+                        :show-draft-tag="!canSwitchVersion"
                         :show-extension="false"
                         v-model="activeVersion"
                         @change="diffActiveVersion"
                     />
-
                     <VersionSelector
                         ext-cls="dark-theme-select-trigger"
                         ext-popover-cls="dark-theme-select-menu"
+                        :editable="canSwitchVersion"
+                        :show-draft-tag="!canSwitchVersion"
                         :show-extension="false"
                         v-model="currentVersion"
                         @change="diffCurrentVersion"
 
                     />
-
                 </header>
                 <div class="pipeline-yaml-diff-wrapper">
                     <yaml-diff
@@ -60,9 +62,9 @@
 </template>
 
 <script>
-    import { mapActions } from 'vuex'
     import VersionSelector from '@/components/PipelineDetailTabs/VersionSelector'
     import YamlDiff from '@/components/YamlDiff'
+    import { mapActions } from 'vuex'
     export default {
         components: {
             YamlDiff,
@@ -85,6 +87,10 @@
             latestVersion: {
                 type: Number,
                 required: true
+            },
+            canSwitchVersion: {
+                type: Boolean,
+                default: true
             }
         },
         data () {
@@ -174,7 +180,16 @@
                         height: 100%;
                         .diff-version-header {
                             flex-shrink: 0;
+                            height: 40px;
+                            background: #1d1d1d;
+                            display: grid;
+                            grid-auto-flow: column;
+                            grid-template-columns: 1fr 1fr;
+                            align-items: center;
+                            padding: 0 24px;
+                            color: #C4C6CC;
                         }
+
                         .pipeline-yaml-diff-wrapper {
                             flex: 1;
                             overflow: hidden;

@@ -307,17 +307,6 @@
         overflow: auto;
         position: relative;
     }
-    .diff-version-header {
-        height: 40px;
-        background: #1d1d1d;
-        display: grid;
-        grid-auto-flow: column;
-        grid-template-columns: 1fr 1fr;
-        align-items: center;
-        padding: 0 24px;
-        color: #C4C6CC;
-
-    }
     .pipeline-history-version-operate {
         display: flex;
         grid-gap: 16px;
