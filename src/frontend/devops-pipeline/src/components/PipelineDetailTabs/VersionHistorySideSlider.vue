@@ -2,13 +2,27 @@
     <bk-sideslider
         quick-close
         :width="950"
-        :title="$t('template.versionList')"
         :is-show="showVersionSideslider"
         :before-close="handleClose"
         @shown="handleShown"
         ext-cls="pipeline-version-sideslider"
         :transfer="false"
     >
+        <header slot="header">
+            {{$t('template.versionList')}}
+            <bk-popover class="pipeline-version-rule-tips">
+                <span class="pipeline-version-rule-tips-trigger">
+                    <i class="devops-icon icon-question-circle" />
+                    {{ $t('versionRule') }}
+                </span>
+                <div slot="content">
+                    <p>{{ $t('versionRule') }}</p>
+                    <p>{{ $t('versionRuleP') }}</p>
+                    <p>{{ $t('versionRuleT') }}</p>
+                    <p>{{ $t('versionRuleA') }}</p>
+                </div>
+            </bk-popover>
+        </header>
         <main slot="content" class="pipeline-version-history" v-bkloading="{ isLoading }">
             <header class="pipeline-version-history-header">
                 <search-select
@@ -78,14 +92,14 @@
 </template>
 
 <script>
-    import SearchSelect from '@blueking/search-select'
-    import { mapActions, mapState, mapGetters } from 'vuex'
-    import { convertTime, navConfirm } from '@/utils/util'
-    import VersionDiffEntry from './VersionDiffEntry'
-    import RollbackEntry from './RollbackEntry'
-    import EmptyException from '@/components/common/exception'
     import Logo from '@/components/Logo'
+    import EmptyException from '@/components/common/exception'
+    import { convertTime, navConfirm } from '@/utils/util'
+    import SearchSelect from '@blueking/search-select'
     import '@blueking/search-select/dist/styles/index.css'
+    import { mapActions, mapGetters, mapState } from 'vuex'
+    import RollbackEntry from './RollbackEntry'
+    import VersionDiffEntry from './VersionDiffEntry'
     export default {
         components: {
             SearchSelect,
@@ -267,6 +281,7 @@
 </script>
 
 <style lang="scss">
+    @import "@/scss/conf";
     @import "@/scss/select-dark-theme.scss";
     .pipeline-version-history {
         padding: 24px;
@@ -311,5 +326,18 @@
         display: flex;
         grid-gap: 16px;
         align-items: center;
+    }
+    .pipeline-version-rule-tips {
+        margin-left: 24px;
+        color: $primaryColor;
+        .pipeline-version-rule-tips-trigger {
+            display: flex;
+            align-items: center;
+            grid-gap: 4px;
+            font-size: 12px;
+            > i {
+                font-size: 14px;
+            }
+        }
     }
 </style>

@@ -39,8 +39,6 @@ function rootCommit (commit, ACTION_CONST, payload) {
 }
 
 const state = {
-    pipelineList: [],
-    allPipelineList: [],
     hasCreatePermission: false,
     templateSetting: {},
     pipelineAuthority: {},
@@ -54,11 +52,6 @@ const state = {
         addToDialogShow: false,
         isDisableDialogShow: false
     }
-}
-
-const getters = {
-    getPipelineList: state => state.pipelineList,
-    getAllPipelineList: state => state.allPipelineList
 }
 
 const mutations = {
@@ -87,88 +80,7 @@ const mutations = {
     updateCreatePermission (state, hasPermission) {
         state.hasCreatePermission = hasPermission
     },
-    /**
-     * 操作 store.pipeline 中的 pipelineList
-     *
-     * @param {Object} state store state
-     * @param {String} type 操作类型，insert，replace，update，remove
-     * @param {Object/Array} params 操作后的数据
-     * @param {Number} index 操作的位置
-     */
-    addPipeline (state, { item }) {
-        state.allPipelineList.unshift(item)
-    },
-    /**
-     * 更新 store.pipeline 中的 allPipelineList
-     *
-     * @param {Object} state store state
-     * @param {Array} list pipelineList 列表
-     */
-    updateAllPipelineList (state, list) {
-        state.allPipelineList.splice(0, state.allPipelineList.length, ...list)
-    },
-    /**
-     * 更新 store.pipeline 中的 pipelineList
-     *
-     * @param {Object} state store state
-     * @param {Array} list pipelineList 列表
-     */
-    updatePipelineList (state, list) {
-        state.pipelineList.splice(0, state.pipelineList.length, ...list)
-    },
-    /**
-     * 删除 store.pipeline 中的某一项
-     *
-     * @param {Object} state store state
-     * @param {String} pipelineId
-     */
-    removePipelineById (state, pipelineId) {
-        state.allPipelineList.forEach((item, index) => {
-            if (item.pipelineId === pipelineId) {
-                state.allPipelineList.splice(index, 1)
-            }
-        })
-    },
 
-    /**
-     * 更新 store.pipeline 中的 pipelineList 中的某一项的某个key的value
-     *
-     * @param {Object} state store state
-     * @param {Number} index 更新的位置
-     * @param {String} key 要更新的key
-     * @param {String} value 要更新的value
-     */
-    updatePipelineValueById (state, { pipelineId, obj }) {
-        const targetPipeline = state.allPipelineList.find(item => item.pipelineId === pipelineId)
-
-        if (!targetPipeline) {
-            return
-        }
-        const target = targetPipeline.feConfig
-
-        if (!target) return
-
-        for (const key in obj) {
-            const val = target[key]
-            const _target = obj[key]
-
-            if (val instanceof Array) {
-                if (_target.index === undefined) {
-                    val.splice(0, val.length, ..._target)
-                } else {
-                    _target.index.forEach((_index, i) => {
-                        val[_index][_target.key[i]] = _target.value[i]
-                    })
-                }
-            } else if (val.toString().toLowerCase() === '[object object]') {
-                _target.key.forEach((item, i) => {
-                    val[item] = _target.value[i]
-                })
-            } else {
-                target[key] = _target
-            }
-        }
-    },
     updatePipelineActionState (state, params) {
         Object.assign(state.pipelineActionState, params)
     }
@@ -508,7 +420,6 @@ const actions = {
 export default {
     namespaced: true,
     state,
-    getters,
     mutations,
     actions
 }

@@ -1494,5 +1494,9 @@
   "dropDraft": "Abandon",
   "tableColSettings": "Table Settings",
   "draftRecordEntryTitle": "Debug Records",
-  "checkDiff": "Diff"
+  "checkDiff": "Diff",
+  "versionRule": "Version Rule",
+  "versionRuleP": "P: Pipeline arrangement version, including Stage, Job, Step, and variables",
+  "versionRuleT": "T: Pipeline trigger version",                  
+  "versionRuleA": "Additional bits: Modified version of other information of the pipeline, such as name, description, running settings, etc."
 }

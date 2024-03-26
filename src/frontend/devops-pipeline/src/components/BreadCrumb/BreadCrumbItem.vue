@@ -58,7 +58,7 @@
         },
         computed: {
             hasRecords () {
-                return Array.isArray(this.records) && this.records.length
+                return Array.isArray(this.records)
             }
         },
         methods: {
