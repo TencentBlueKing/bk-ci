@@ -1,14 +1,18 @@
 <template>
-    <div class="param-container">
+    <div class="bk-param-container">
         <header :active="isShow" @click="toggleContent" class="var-header">
             <slot name="header">
-                <bk-icon class="toggle-icon" type="right-shape" />
-                <span>{{title}}</span>
-                <i
-                    v-if="tips"
-                    v-bk-tooltips="{ content: tips }"
-                    class="bk-icon icon-info-circle">
-                </i>
+                <section class="header-content">
+                    <bk-icon class="toggle-icon" type="right-shape" />
+                    <span class="item-title">{{title}}</span>
+                    <i
+                        v-if="tips"
+                        v-bk-tooltips="{ content: tips }"
+                        class="bk-icon icon-info-circle">
+                    </i>
+                </section>
+                
+                <span class="item-num">{{itemNum}}</span>
             </slot>
         </header>
         <transition name="slideLeft">
@@ -63,6 +67,10 @@
                 type: String,
                 default: ''
             },
+            itemNum: {
+                type: Number,
+                default: 0
+            },
             list: {
                 type: Array,
                 default: () => ([])
@@ -109,38 +117,56 @@
 
 <style lang="scss">
     @import "@/scss/mixins/ellipsis.scss";
-    .param-container {
+    .bk-param-container {
         margin-bottom: 16px;
         .var-header {
             display: flex;
-            color: #313238;
-            padding: 0 12px;
             align-items: center;
+            justify-content: space-between;
             cursor: pointer;
             height: 32px;
             font-size: 14px;
+            color: #313238;
             background: #EAEBF0;
             border-radius: 2px 2px 0 0;
-
+            padding: 0 12px;
+            &[active] {
+                .toggle-icon {
+                    transform: rotate(90deg)
+                }
+            }
             .toggle-icon {
                 display: block;
                 margin-right: 4px;
                 color: #979BA5;
                 transition: all 0.3s ease;
             }
-            .icon-info-circle {
-                margin-left: 4px;
-                color: #979BA5;
-            }
-            &[active] {
-                .toggle-icon {
-                    transform: rotate(90deg)
+            .header-content {
+                display: flex;
+                align-items: center;
+                
+                .item-title {
+                    overflow: hidden;
+                    text-overflow: ellipsis;
+                    white-space: nowrap;
+                    max-width: 350px;
+                }
+                .icon-info-circle {
+                    margin-left: 4px;
+                    color: #979BA5;
                 }
             }
+            .item-num {
+                padding: 2px 8px;
+                background: #F0F1F5;
+                border-radius: 8px;
+                color: #979BA5;
+                font-size: 12px;
+            }
         }
+        
         .var-content {
             width: 100%;
-            /* min-height: 64px; */
             .variable-empty {
                 height: 64px;
                 border-bottom: 1px solid #DCDEE5;

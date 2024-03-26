@@ -20,6 +20,7 @@
                 :key="group.key"
                 :title="group.title"
                 :tips="group.tips"
+                :item-num="group.list.length"
                 :list="group.list"
                 :handle-edit="handleEdit"
                 :handle-delete="handleDelete"
