@@ -143,11 +143,13 @@ class AuthResourceCodeConverter @Autowired constructor(
      *
      * 凭证和证书名可能太长,超过iam限制,需要由auth生成
      * 流水线ID太长会导致表达式很长,影响性能,需要由auth生辰
+     * 代码库是因为hashId会大小写敏感,权限中心是大小写不敏感
      */
     private fun needConvert(resourceType: String): Boolean {
         return resourceType == AuthResourceType.TICKET_CREDENTIAL.value ||
-            resourceType == AuthResourceType.TICKET_CERT.value ||
-            resourceType == AuthResourceType.PIPELINE_DEFAULT.value ||
-            resourceType == AuthResourceType.PIPELINE_TEMPLATE.value
+                resourceType == AuthResourceType.TICKET_CERT.value ||
+                resourceType == AuthResourceType.PIPELINE_DEFAULT.value ||
+                resourceType == AuthResourceType.PIPELINE_TEMPLATE.value ||
+                resourceType == AuthResourceType.CODE_REPERTORY.value
     }
 }
