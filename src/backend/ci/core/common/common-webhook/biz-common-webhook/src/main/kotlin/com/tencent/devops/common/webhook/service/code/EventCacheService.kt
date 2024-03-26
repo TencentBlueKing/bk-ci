@@ -208,6 +208,7 @@ class EventCacheService @Autowired constructor(
         }
     }
 
+    @SuppressWarnings("NestedBlockDepth")
     fun getWebhookCommitList(
         repo: Repository,
         maxCount: Int,
