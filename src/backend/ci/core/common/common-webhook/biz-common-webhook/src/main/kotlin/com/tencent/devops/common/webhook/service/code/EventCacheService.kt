@@ -243,7 +243,11 @@ class EventCacheService @Autowired constructor(
             } catch (ignored: Throwable) {
                 logger.info("fail to get webhook commit list | err is $ignored")
             }
-            val simpleWebhookCommitList = webhookCommitList.subList(0, maxCount)
+            val simpleWebhookCommitList = if (webhookCommitList.size > maxCount) {
+                webhookCommitList.subList(0, maxCount)
+            } else {
+                webhookCommitList
+            }
             eventCache?.webhookCommitList = simpleWebhookCommitList
             simpleWebhookCommitList
         }
