@@ -24,5 +24,5 @@ data class EventRepositoryCache(
     var p4ShelveChangeFiles: P4ChangeList? = null,
     var serverInfo: P4ServerInfo? = null,
     var githubPrInfo: PullRequestResponse? = null,
-    var webhookCommitList:List<WebhookCommit>? = null
+    var webhookCommitList: List<WebhookCommit>? = null
 )
