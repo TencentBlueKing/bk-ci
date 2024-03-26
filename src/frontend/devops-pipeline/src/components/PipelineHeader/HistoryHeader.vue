@@ -286,10 +286,12 @@
                 console.log('handleVersionChange', versionId, version)
                 let routeType = 'history'
 
-                if (version && this.releaseVersion) {
+                if (version) {
                     this.selectPipelineVersion(version)
-                    const noRecordVersion = ['history', 'triggerEvent'].includes(this.$route.params.type) && !(versionId === this.releaseVersion || version.isDraft)
-                    routeType = noRecordVersion ? pipelineTabIdMap.pipeline : this.$route.params.type
+                    if (this.releaseVersion) {
+                        const noRecordVersion = ['history', 'triggerEvent'].includes(this.$route.params.type) && !(versionId === this.releaseVersion || version.isDraft)
+                        routeType = noRecordVersion ? pipelineTabIdMap.pipeline : this.$route.params.type
+                    }
                 }
                 this.$router.push({
                     params: {
