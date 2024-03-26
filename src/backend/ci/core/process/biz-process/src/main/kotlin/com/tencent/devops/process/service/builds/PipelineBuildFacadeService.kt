@@ -373,9 +373,7 @@ class PipelineBuildFacadeService(
             )
         }
 
-        val redisLock = BuildIdLock(redisOperation = redisOperation, buildId = buildId)
-        try {
-
+        BuildIdLock(redisOperation = redisOperation, buildId = buildId).use { redisLock ->
             redisLock.lock()
 
             val buildInfo = pipelineRuntimeService.getBuildInfo(projectId, buildId)
@@ -391,7 +389,9 @@ class PipelineBuildFacadeService(
 
             // 运行中的task重试走全新的处理逻辑
             if (!buildInfo.isFinish()) {
-                if (pipelineRetryFacadeService.runningBuildTaskRetry(
+                // 当前流水线整体状态为STAGE_SUCCESS，表示流水线处于stage审核中，不接受重试
+                if (!buildInfo.isStageSuccess() &&
+                    pipelineRetryFacadeService.runningBuildTaskRetry(
                         userId = userId,
                         projectId = projectId,
                         pipelineId = pipelineId,
@@ -405,10 +405,7 @@ class PipelineBuildFacadeService(
                     return BuildId(buildId, buildInfo.executeCount ?: 1, projectId, pipelineId)
                 }
 
-                // 对不合法的重试进行拦截，防止重复提交
-                throw ErrorCodeException(
-                    errorCode = ProcessMessageCode.ERROR_DUPLICATE_BUILD_RETRY_ACT
-                )
+                throw ErrorCodeException(errorCode = ProcessMessageCode.ERROR_DUPLICATE_BUILD_RETRY_ACT)
             }
 
             val readyToBuildPipelineInfo =
@@ -552,8 +549,6 @@ class PipelineBuildFacadeService(
                 handlePostFlag = false,
                 webHookStartParam = webHookStartParam
             )
-        } finally {
-            redisLock.unlock()
         }
     }
 
