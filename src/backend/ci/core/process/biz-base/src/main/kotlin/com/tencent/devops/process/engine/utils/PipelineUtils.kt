@@ -36,7 +36,7 @@ import com.tencent.devops.common.pipeline.enums.BuildFormPropertyType
 import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
 import com.tencent.devops.common.pipeline.pojo.BuildNo
 import com.tencent.devops.common.pipeline.pojo.element.atom.ManualReviewParam
-import com.tencent.devops.common.pipeline.pojo.element.atom.ManualReviewParamType
+import com.tencent.devops.common.pipeline.pojo.element.atom.ManualReviewParamType.*
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.engine.common.VMUtils
@@ -93,7 +93,7 @@ object PipelineUtils {
     fun checkStageReviewParam(reviewParams: List<ManualReviewParam>?) {
         reviewParams?.forEach { param ->
             when (param.valueType) {
-                ManualReviewParamType.MULTIPLE -> {
+                MULTIPLE -> {
                     val value = param.value
                     if (value is String && value.isBlank()) {
                         param.value = null
@@ -106,6 +106,20 @@ object PipelineUtils {
                 else -> {
                     checkVariablesLength(param.key, param.value.toString())
                 }
+            }
+        }
+    }
+
+    fun checkStageBlankManualReviewParam(reviewParams: List<ManualReviewParam>?) {
+        reviewParams?.forEach { param ->
+            when (param.valueType) {
+                MULTIPLE -> {
+                    val value = param.value
+                    if (value is String && value.isBlank()) {
+                        param.value = null
+                    }
+                }
+                else -> {}
             }
         }
     }

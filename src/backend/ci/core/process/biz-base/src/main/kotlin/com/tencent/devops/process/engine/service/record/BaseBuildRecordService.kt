@@ -180,7 +180,7 @@ open class BaseBuildRecordService(
             watcher.start("fillElementWhenNewBuild")
             val fullModel = JsonUtil.to(resourceStr, Model::class.java)
             fullModel.stages.forEach {
-                PipelineUtils.checkStageReviewParam(it.checkIn?.reviewParams)
+                PipelineUtils.checkStageBlankManualReviewParam(it.checkIn?.reviewParams)
             }
             val baseModelMap = JsonUtil.toMutableMap(bean = fullModel, skipEmpty = false)
             val mergeBuildRecordParam = MergeBuildRecordParam(
