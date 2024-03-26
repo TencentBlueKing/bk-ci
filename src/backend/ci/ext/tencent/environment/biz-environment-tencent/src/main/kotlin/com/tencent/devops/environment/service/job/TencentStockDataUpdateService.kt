@@ -285,6 +285,9 @@ class TencentStockDataUpdateService @Autowired constructor(
         val hostIdToAgentUpdateList = agentUpdateList.associateBy { it.bkHostId }
         val agentUpdateIpList = agentUpdateList.mapNotNull { it.ip }
         val agentUpdateHostIdList = agentUpdateList.mapNotNull { it.bkHostId }
+        if (logger.isDebugEnabled) logger.debug("[batchUpdateAgent] hostIdToAgentUpdateList:$hostIdToAgentUpdateList")
+        if (logger.isDebugEnabled) logger.debug("[batchUpdateAgent] agentUpdateIpList:$agentUpdateIpList")
+        if (logger.isDebugEnabled) logger.debug("[batchUpdateAgent] agentUpdateHostIdList:$agentUpdateHostIdList")
 
         val agentUpdateRecords = existNodeIdToAgentVersionMap.filter { (key, value) ->
             agentUpdateIpList.contains(value.ip) || agentUpdateHostIdList.contains(value.bkHostId)
