@@ -803,24 +803,10 @@ class PipelineRuntimeService @Autowired constructor(
                     return@nextContainer
                 }
 
+                // --- 第3层循环：Element遍历处理 ---
                 /*
                     #4518 整合组装Task和刷新已有Container的逻辑
-                    构建矩阵特殊处理，即使重试也要重新计算执行策略
                 */
-                if (context.needRerunStage(stage) && container.matrixGroupFlag == true) {
-                    container.retryFreshMatrixOption()
-                    pipelineContainerService.cleanContainersInMatrixGroup(
-                        transactionContext = dslContext,
-                        projectId = context.projectId,
-                        pipelineId = context.pipelineId,
-                        buildId = context.buildId,
-                        matrixGroupId = container.id!!
-                    )
-                    // 去掉要重试的矩阵内部数据
-                    updateExistsTask.removeIf { it.containerId == container.id }
-                    updateExistsContainerWithDetail.removeIf { it.first.matrixGroupId == container.id }
-                }
-                // --- 第3层循环：Element遍历处理 ---
                 pipelineContainerService.prepareBuildContainerTasks(
                     container = container,
                     context = context,
