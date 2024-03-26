@@ -367,15 +367,16 @@ class CallBackControl @Autowired constructor(
         callBack: ProjectPipelineCallBack
     ) {
         if (breaker.metrics.failureRate == 100.0F) {
-            projectPipelineCallBackService.updateFailureTime(
-                projectId = callBack.projectId,
-                id = callBack.id!!,
-                failureTime = LocalDateTime.now()
-            )
             // 如果请求已经连续12个小时100%失败，则说明回调地址已经失效，禁用
             val duration = if (callBack.failureTime != null) {
                 System.currentTimeMillis() - callBack.failureTime!!.timestampmilli()
             } else {
+                // 记录第一次100%失败的时间
+                projectPipelineCallBackService.updateFailureTime(
+                    projectId = callBack.projectId,
+                    id = callBack.id!!,
+                    failureTime = LocalDateTime.now()
+                )
                 0
             }
             if (duration >= failureDisableTimePeriod) {
