@@ -143,7 +143,7 @@
             >
                 <template slot-scope="props">
                     <bk-button
-                        v-if="props.row.type === 'CODE_GIT'"
+                        v-if="props.row.type === 'CODE_GIT' && !props.row.enablePac"
                         theme="primary"
                         text
                         class="mr10"
@@ -157,7 +157,7 @@
                                 action: RESOURCE_ACTION.VIEW
                             }
                         }"
-                        @click.stop="handleShowDetail(props.row)"
+                        @click="toDetailInit(props.row)"
                     >
                         {{ $t('codelib.去开启PAC') }}
                     </bk-button>
@@ -484,28 +484,30 @@
 
             handleRowSelect (row) {
                 this.$emit('update:curRepo', row)
-                if (this.isListFlod) {
-                    this.selectId = row.repositoryHashId
-                    this.scmType = row.type
-                    this.$router.push({
-                        query: {
-                            ...this.$route.query,
-                            id: row.repositoryHashId,
-                            page: this.page,
-                            scmType: row.type,
-                            limit: this.pagination.limit
-                        }
-                    })
-                    localStorage.setItem(CODE_REPOSITORY_CACHE, JSON.stringify({
-                        scmType: row.type,
+                if (this.isListFlod) this.toDetailInit(row)
+            },
+
+            toDetailInit (row) {
+                this.selectId = row.repositoryHashId
+                this.scmType = row.type
+                this.$router.push({
+                    query: {
+                        ...this.$route.query,
                         id: row.repositoryHashId,
                         page: this.page,
-                        limit: this.pagination.limit,
-                        projectId: this.projectId
-                    }))
-                    this.$emit('updateFlod', true)
-                    this.$emit('update:curRepoId', row.repositoryHashId)
-                }
+                        scmType: row.type,
+                        limit: this.pagination.limit
+                    }
+                })
+                localStorage.setItem(CODE_REPOSITORY_CACHE, JSON.stringify({
+                    scmType: row.type,
+                    id: row.repositoryHashId,
+                    page: this.page,
+                    limit: this.pagination.limit,
+                    projectId: this.projectId
+                }))
+                this.$emit('update:isListFlod', true)
+                this.$emit('update:curRepoId', row.repositoryHashId)
             },
 
             handleSettingChange ({ fields, size }) {
