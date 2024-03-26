@@ -151,11 +151,14 @@ module.exports = ({ entry, publicPath, dist, port = 8080, argv, env }) => {
             vuex: 'Vuex'
         },
         devServer: {
-            static: path.join(__dirname, envDist),
+            static: {
+                directory: path.join(__dirname, envDist),
+                watch: false
+            },
             allowedHosts: 'all',
             historyApiFallback: true,
             client: {
-                webSocketURL: 'auto://127.0.0.1:' + port + '/ws'
+                webSocketURL: 'ws://127.0.0.1:' + port + '/ws'
             },
             hot: isDev,
             port
