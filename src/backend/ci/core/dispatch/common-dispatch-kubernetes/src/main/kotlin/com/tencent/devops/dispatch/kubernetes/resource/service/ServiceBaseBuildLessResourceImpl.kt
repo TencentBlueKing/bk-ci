@@ -25,25 +25,26 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.pipeline.event
+package com.tencent.devops.dispatch.kubernetes.resource.service
 
-import io.swagger.v3.oas.annotations.media.Schema
-import java.time.LocalDateTime
+import com.tencent.devops.buildless.pojo.BuildLessEndInfo
+import com.tencent.devops.buildless.pojo.BuildLessStartInfo
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.dispatch.kubernetes.api.service.ServiceBaseBuildLessResource
+import com.tencent.devops.dispatch.kubernetes.service.DispatchBaseBuildLessService
+import org.springframework.beans.factory.annotation.Autowired
 
-@Schema(title = "项目的流水线回调配置")
-data class ProjectPipelineCallBack(
-    @get:Schema(title = "流水线id", required = false)
-    val id: Long? = null,
-    @get:Schema(title = "项目id", required = false)
-    val projectId: String,
-    @get:Schema(title = "回调url地址", required = false)
-    val callBackUrl: String,
-    @get:Schema(title = "事件", required = false)
-    val events: String,
-    @get:Schema(title = "密钥", required = false)
-    val secretToken: String?,
-    @get:Schema(title = "回调是否启用", required = false)
-    val enable: Boolean? = true,
-    @get:Schema(title = "回调是否启用", required = false)
-    val failureTime: LocalDateTime? = null
-)
+@RestResource
+class ServiceBaseBuildLessResourceImpl @Autowired constructor(
+    private val dispatchBaseBuildLessService: DispatchBaseBuildLessService
+) : ServiceBaseBuildLessResource {
+
+    override fun startBuildLess(buildLessStartInfo: BuildLessStartInfo): Result<Boolean> {
+        return Result(dispatchBaseBuildLessService.startBuildLess(buildLessStartInfo))
+    }
+
+    override fun endBuildLess(buildLessEndInfo: BuildLessEndInfo): Result<Boolean> {
+        return Result(dispatchBaseBuildLessService.endBuildLess(buildLessEndInfo))
+    }
+}

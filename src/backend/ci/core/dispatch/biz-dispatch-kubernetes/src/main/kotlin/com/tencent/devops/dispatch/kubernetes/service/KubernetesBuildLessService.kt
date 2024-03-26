@@ -25,25 +25,27 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.pipeline.event
+package com.tencent.devops.dispatch.kubernetes.service
 
-import io.swagger.v3.oas.annotations.media.Schema
-import java.time.LocalDateTime
+import com.tencent.devops.buildless.pojo.BuildLessEndInfo
+import com.tencent.devops.buildless.pojo.BuildLessStartInfo
+import com.tencent.devops.dispatch.kubernetes.client.KubernetesBuildLessClient
+import com.tencent.devops.dispatch.kubernetes.interfaces.BuildLessService
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.stereotype.Service
 
-@Schema(title = "项目的流水线回调配置")
-data class ProjectPipelineCallBack(
-    @get:Schema(title = "流水线id", required = false)
-    val id: Long? = null,
-    @get:Schema(title = "项目id", required = false)
-    val projectId: String,
-    @get:Schema(title = "回调url地址", required = false)
-    val callBackUrl: String,
-    @get:Schema(title = "事件", required = false)
-    val events: String,
-    @get:Schema(title = "密钥", required = false)
-    val secretToken: String?,
-    @get:Schema(title = "回调是否启用", required = false)
-    val enable: Boolean? = true,
-    @get:Schema(title = "回调是否启用", required = false)
-    val failureTime: LocalDateTime? = null
-)
+@Service("kubernetesBuildLessService")
+class KubernetesBuildLessService @Autowired constructor(
+    private val kubernetesBuildLessClient: KubernetesBuildLessClient
+) : BuildLessService {
+
+    override fun startBuildLess(buildLessStartInfo: BuildLessStartInfo): Boolean {
+        kubernetesBuildLessClient.startBuildLess(buildLessStartInfo)
+        return true
+    }
+
+    override fun endBuildLess(buildLessEndInfo: BuildLessEndInfo): Boolean {
+        kubernetesBuildLessClient.endBuildLess(buildLessEndInfo)
+        return true
+    }
+}

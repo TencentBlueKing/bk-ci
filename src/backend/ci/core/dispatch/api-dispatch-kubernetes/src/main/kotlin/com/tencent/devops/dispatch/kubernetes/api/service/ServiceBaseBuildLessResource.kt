@@ -25,25 +25,41 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.pipeline.event
+package com.tencent.devops.dispatch.kubernetes.api.service
 
-import io.swagger.v3.oas.annotations.media.Schema
-import java.time.LocalDateTime
+import com.tencent.devops.buildless.pojo.BuildLessEndInfo
+import com.tencent.devops.buildless.pojo.BuildLessStartInfo
+import com.tencent.devops.common.api.annotation.ServiceInterface
+import com.tencent.devops.common.api.pojo.Result
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.Parameter
+import io.swagger.v3.oas.annotations.tags.Tag
+import javax.ws.rs.Consumes
+import javax.ws.rs.POST
+import javax.ws.rs.Path
+import javax.ws.rs.Produces
+import javax.ws.rs.core.MediaType
 
-@Schema(title = "项目的流水线回调配置")
-data class ProjectPipelineCallBack(
-    @get:Schema(title = "流水线id", required = false)
-    val id: Long? = null,
-    @get:Schema(title = "项目id", required = false)
-    val projectId: String,
-    @get:Schema(title = "回调url地址", required = false)
-    val callBackUrl: String,
-    @get:Schema(title = "事件", required = false)
-    val events: String,
-    @get:Schema(title = "密钥", required = false)
-    val secretToken: String?,
-    @get:Schema(title = "回调是否启用", required = false)
-    val enable: Boolean? = true,
-    @get:Schema(title = "回调是否启用", required = false)
-    val failureTime: LocalDateTime? = null
-)
+@Tag(name = "SERVICE_DISPATCH_BASE_BUILDLESS", description = "SERVICE_DISPATCH_BASE_BUILDLESS")
+@Path("/service/buildless")
+@ServiceInterface("dispatch-kubernetes") // 指明接入到哪个微服务
+@Produces(MediaType.APPLICATION_JSON)
+@Consumes(MediaType.APPLICATION_JSON)
+interface ServiceBaseBuildLessResource {
+
+    @POST
+    @Path("/start")
+    @Operation(summary = "启动无编译构建")
+    fun startBuildLess(
+        @Parameter(description = "请求体", required = true)
+        buildLessStartInfo: BuildLessStartInfo
+    ): Result<Boolean>
+
+    @POST
+    @Path("/end")
+    @Operation(summary = "停止无编译构建")
+    fun endBuildLess(
+        @Parameter(description = "请求体", required = true)
+        buildLessEndInfo: BuildLessEndInfo
+    ): Result<Boolean>
+}
