@@ -48,14 +48,10 @@ object Constants {
      */
     const val QPC_WHITE_LIST_KEY_PREFIX = "dispatchdocker:qpc_white_list"
 
-    /**
-     * docker路由Key
-     */
-    const val DOCKER_ROUTING_KEY_PREFIX = "dispatchdocker:docker_routing"
-
     const val DOCKERHOST_STARTUP_URI = "/api/docker/build/start"
-    const val DOCKERHOST_AGENTLESS_STARTUP_URI = "/api/docker-agentless/build/start"
+    const val DOCKERHOST_END_URI = "/api/docker/build/end"
     const val BUILD_LESS_STARTUP_URI = "/api/service/build/start"
     const val BUILD_LESS_END_URI = "/api/service/build/end"
-    const val DOCKERHOST_END_URI = "/api/docker/build/end"
+    const val K8S_BUILD_LESS_STARTUP_URI = "/api/buildless/build/start"
+    const val K8S_BUILD_LESS_END_URI = "/api/buildless/build/end"
 }

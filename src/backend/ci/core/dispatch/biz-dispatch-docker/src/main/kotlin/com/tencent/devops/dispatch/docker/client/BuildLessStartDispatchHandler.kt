@@ -55,17 +55,20 @@ class BuildLessStartDispatchHandler @Autowired constructor(
 
     override fun handlerRequest(handlerContext: BuildLessStartHandlerContext) {
         with(handlerContext) {
-            // 获取可用节点
-            val (buildLessHost, buildLessPort) = dockerHostUtils.getAvailableDockerIpWithSpecialIps(
-                projectId = event.projectId,
-                pipelineId = event.pipelineId,
-                vmSeqId = event.vmSeqId,
-                specialIpSet = emptySet(),
-                unAvailableIpList = emptySet(),
-                clusterName = DockerHostClusterType.BUILD_LESS
-            )
-            handlerContext.buildLessHost = buildLessHost
-            handlerContext.buildLessPort = buildLessPort
+
+            if (clusterType == DockerHostClusterType.BUILD_LESS) {
+                // 获取可用节点(docker无编译构建集群)
+                val (buildLessHost, buildLessPort) = dockerHostUtils.getAvailableDockerIpWithSpecialIps(
+                    projectId = event.projectId,
+                    pipelineId = event.pipelineId,
+                    vmSeqId = event.vmSeqId,
+                    specialIpSet = emptySet(),
+                    unAvailableIpList = emptySet(),
+                    clusterName = DockerHostClusterType.BUILD_LESS
+                )
+                handlerContext.buildLessHost = buildLessHost
+                handlerContext.buildLessPort = buildLessPort
+            }
 
             // 存储构建记录
             val (agentId, secretKey) = saveBuildHistoryAndRedis(handlerContext)
