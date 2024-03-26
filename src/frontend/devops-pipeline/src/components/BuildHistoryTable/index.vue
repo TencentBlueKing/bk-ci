@@ -193,7 +193,7 @@
                     <template v-else-if="col.id === 'entry'" v-slot="props">
                         <p
                             class="entry-link"
-                            @click.stop="showLog(props.row.id, props.row.buildNum, true)"
+                            @click.stop="showLog(props.row)"
                         >
                             {{ $t("history.completedLog") }}
                         </p>
@@ -416,22 +416,22 @@
 </template>
 
 <script>
-    import { mapActions, mapGetters, mapState } from 'vuex'
-    import Logo from '@/components/Logo'
-    import { convertFileSize, convertTime, convertMStoString, getQueryParamString } from '@/utils/util'
-    import {
-        errorTypeMap,
-        extForFile,
-        BUILD_HISTORY_TABLE_DEFAULT_COLUMNS,
-        BUILD_HISTORY_TABLE_COLUMNS_MAP
-    } from '@/utils/pipelineConst'
-    import qrcode from '@/components/devops/qrcode'
-    import StageSteps from '@/components/StageSteps'
-    import MaterialItem from '@/components/ExecDetail/MaterialItem'
     import FilterBar from '@/components/BuildHistoryTable/FilterBar'
     import TableColumnSetting from '@/components/BuildHistoryTable/TableColumnSetting'
+    import MaterialItem from '@/components/ExecDetail/MaterialItem'
+    import Logo from '@/components/Logo'
+    import StageSteps from '@/components/StageSteps'
     import EmptyException from '@/components/common/exception'
+    import qrcode from '@/components/devops/qrcode'
+    import {
+        BUILD_HISTORY_TABLE_COLUMNS_MAP,
+        BUILD_HISTORY_TABLE_DEFAULT_COLUMNS,
+        errorTypeMap,
+        extForFile
+    } from '@/utils/pipelineConst'
+    import { convertFileSize, convertMStoString, convertTime, getQueryParamString } from '@/utils/util'
     import webSocketMessage from '@/utils/webSocketMessage'
+    import { mapActions, mapGetters, mapState } from 'vuex'
 
     import {
         RESOURCE_ACTION
@@ -695,8 +695,8 @@
                 localStorage.setItem(LS_COLUMN_KEY, JSON.stringify(columns))
             },
             handleColumnReset () {
-                const lsColumns = localStorage.getItem(LS_COLUMN_KEY)
-                this.tableColumnKeys = lsColumns ? JSON.parse(lsColumns) : BUILD_HISTORY_TABLE_DEFAULT_COLUMNS
+                this.tableColumnKeys = [...BUILD_HISTORY_TABLE_DEFAULT_COLUMNS]
+                localStorage.setItem(LS_COLUMN_KEY, JSON.stringify(BUILD_HISTORY_TABLE_DEFAULT_COLUMNS))
                 this.$refs.tableSetting.$parent.instance?.hide()
             },
             async requestHistory () {

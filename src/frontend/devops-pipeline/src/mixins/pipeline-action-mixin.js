@@ -37,7 +37,7 @@ import {
     UNCLASSIFIED_PIPELINE_VIEW_ID
 } from '@/store/constants'
 
-import { ORDER_ENUM, PIPELINE_SORT_FILED } from '@/utils/pipelineConst'
+import { ORDER_ENUM, PIPELINE_SORT_FILED, pipelineTabIdMap } from '@/utils/pipelineConst'
 
 export default {
     data () {
@@ -109,7 +109,7 @@ export default {
                             params: {
                                 projectId: item.projectId,
                                 pipelineId: item.pipelineId,
-                                type: item.onlyDraft ? 'pipeline' : 'history'
+                                type: item.onlyDraft ? pipelineTabIdMap.pipeline : 'history'
                             }
                         },
                         latestBuildRoute: {

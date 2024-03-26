@@ -235,27 +235,34 @@
             >
                 {{ $t("release") }}
             </bk-button>
-            <bk-button v-if="releaseParams.enablePac" :disabled="releasing || previewing" :loading="previewing" @click="hanldePreviewYaml">
-                {{ $t("previewYaml") }}
-            </bk-button>
+            <version-diff-entry
+                v-if="releaseParams.enablePac"
+                :text="false"
+                theme=""
+                :disabled="releasing"
+                :can-switch-version="false"
+                :version="pipelineInfo?.releaseVersion"
+                :latest-version="version"
+            >
+                {{ $t("checkDiff") }}
+            </version-diff-entry>
             <bk-button :disabled="releasing" @click="cancelRelease">
                 {{ $t("cancelRelease") }}
             </bk-button>
-            <YamlPreviewPopup :yaml="previewYaml" v-if="releaseParams.enablePac && showYamlPreivewPopup" @close="closePreviewYaml" />
         </footer>
     </bk-sideslider>
 </template>
 
 <script>
     import PipelineGroupSelector from '@/components/PipelineActionDialog/PipelineGroupSelector'
-    import YamlPreviewPopup from '@/components/YamlPreviewPopup'
+    import VersionDiffEntry from '@/components/PipelineDetailTabs/VersionDiffEntry'
     import { UPDATE_PIPELINE_INFO } from '@/store/modules/atom/constants'
     import { mapActions, mapGetters, mapState } from 'vuex'
 
     export default {
         components: {
             PipelineGroupSelector,
-            YamlPreviewPopup
+            VersionDiffEntry
         },
         props: {
             value: {
@@ -302,17 +309,13 @@
                     labels: this.pipelineSetting?.labels || [],
                     staticViews: []
                 },
-                staticGroups: [],
-                previewing: false,
-                showYamlPreivewPopup: false,
-                previewYaml: ''
+                staticGroups: []
             }
         },
         computed: {
             ...mapState('atom', [
                 'pipelineInfo',
                 'pipelineSetting',
-                'pipelineWithoutTrigger',
                 'pipeline'
             ]),
             ...mapState('pipelines', ['isManage']),
@@ -322,7 +325,7 @@
                 return this.pipelineInfo?.baseVersionName || '--'
             },
             pipelineName () {
-                return this.pipelineInfo?.pipelineName
+                return this.pipeline?.name
             },
             viewNames () {
                 return this.pipelineInfo?.viewNames || []
@@ -427,7 +430,6 @@
                 'releaseDraftPipeline',
                 'setSaveStatus',
                 'listPermissionStaticViews',
-                'transfer',
                 'prefetchPipelineVersion'
             ]),
             ...mapActions('common', ['isPACOAuth', 'getSupportPacScmTypeList', 'getPACRepoList']),
@@ -756,9 +758,6 @@
             },
             cancelRelease () {
                 this.$emit('input', false)
-                this.showYamlPreivewPopup = false
-                this.previewYaml = ''
-                this.preivewing = false
             },
             togglePacCodelibSettingForm () {
                 this.showPacCodelibSetting = !this.showPacCodelibSetting
@@ -815,38 +814,6 @@
                 return filePath.startsWith(this.filePathDir)
                     ? filePath.replace(this.filePathDir, '')
                     : filePath
-            },
-            async hanldePreviewYaml () {
-                try {
-                    this.previewing = true
-                    const pipeline = Object.assign({}, this.pipeline, {
-                        stages: [
-                            this.pipeline.stages[0],
-                            ...(this.pipelineWithoutTrigger?.stages ?? [])
-                        ]
-                    })
-                    const res = await this.transfer({
-                        projectId: this.$route.params.projectId,
-                        actionType: 'FULL_MODEL2YAML',
-                        modelAndSetting: {
-                            model: pipeline,
-                            setting: this.pipelineSetting
-                        },
-                        oldYaml: ''
-                    })
-                    this.previewYaml = res.newYaml
-                    this.showYamlPreivewPopup = true
-                } catch (error) {
-                    this.$bkMessage({
-                        theme: 'error',
-                        message: error.message
-                    })
-                } finally {
-                    this.previewing = false
-                }
-            },
-            closePreviewYaml () {
-                this.showYamlPreivewPopup = false
             }
         }
     }
