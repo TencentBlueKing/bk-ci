@@ -79,6 +79,7 @@ import java.time.LocalDateTime
 import java.util.concurrent.SynchronousQueue
 import java.util.concurrent.ThreadPoolExecutor
 import java.util.concurrent.TimeUnit
+import javax.annotation.PostConstruct
 import javax.ws.rs.core.Response
 
 @Service("AgentService")
@@ -103,14 +104,6 @@ data class AgentService @Autowired constructor(
 
     @Value("\${environment.checkAgentStatus.keepAliveTime:#{null}}")
     final val keepAliveTime: Long = 0L
-
-    private val checkAgentStatusExecutor = ThreadPoolExecutor(
-        corePoolSize,
-        maximumPoolSize,
-        keepAliveTime,
-        TimeUnit.MILLISECONDS,
-        SynchronousQueue()
-    )
 
     companion object {
         private val logger = LoggerFactory.getLogger(AgentService::class.java)
@@ -146,6 +139,19 @@ data class AgentService @Autowired constructor(
         private const val GAUGE_NAME_ACTIVE_THREAD_COUNT = "activeThreadCount" // 活跃线程数
         private const val GAUGE_NAME_CORE_THREAD_COUNT = "coreThreadCount" // 核心线程数
         private const val GAUGE_NAME_MAX_THREAD_COUNT = "maxThreadCount" // 最大线程数
+    }
+
+    lateinit var checkAgentStatusExecutor: ThreadPoolExecutor
+
+    @PostConstruct
+    fun init() {
+        checkAgentStatusExecutor = ThreadPoolExecutor(
+            corePoolSize,
+            maximumPoolSize,
+            keepAliveTime,
+            TimeUnit.MILLISECONDS,
+            SynchronousQueue()
+        )
     }
 
     @Scheduled(cron = "0/15 * * * * ?")
