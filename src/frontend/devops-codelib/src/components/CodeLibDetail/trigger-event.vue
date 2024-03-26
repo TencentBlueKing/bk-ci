@@ -96,10 +96,17 @@
         },
         data () {
             const setDefaultDaterange = () => {
-                const endTime = new Date()
-                const startTime = new Date()
-                startTime.setTime(startTime.getTime() - 3600 * 1000 * 24 * 7)
-                return [startTime, endTime]
+                // 获取当前日期
+                const now = new Date()
+
+                // 获取一周前的日期
+                const oneWeekAgo = new Date()
+                oneWeekAgo.setDate(now.getDate() - 7)
+
+                // 创建开始和结束日期对象
+                const start = new Date(oneWeekAgo.setHours(0, 0, 0))
+                const end = new Date(now.setHours(23, 59, 59))
+                return [start, end]
             }
             
             return {
