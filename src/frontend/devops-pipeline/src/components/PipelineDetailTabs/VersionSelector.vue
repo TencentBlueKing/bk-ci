@@ -23,9 +23,13 @@
                 'is-release-version-icon': isCurrentVersion(activeVersion)
             }]" />
             <p class="pipeline-version-name">
-                <template v-if="isActiveDraft">{{ $t('editPage.draftVersion', [draftBaseVersionName]) }}</template>
-                <span v-bk-overflow-tips v-else>
-                    {{ activeDisplayName }}
+                <span v-bk-overflow-tips>
+                    <template v-if="isActiveDraft">
+                        {{ $t('editPage.draftVersion', [draftBaseVersionName]) }}
+                    </template>
+                    <template v-else>
+                        {{ activeDisplayName }}
+                    </template>
                 </span>
                 <i v-if="isCurrentVersion(activeVersion)" class="pipeline-release-version-tag">
                     {{ $t('latest') }}
