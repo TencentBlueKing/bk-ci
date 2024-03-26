@@ -278,7 +278,7 @@ class DeleteControl @Autowired constructor(
 
             // 生成表格数据
             val tableData = workspaces.associate {
-                (it.hostName?.substringAfter(".") ?: "") to (lastTimeMap[it.hostName] ?: "")
+                (it.hostName?.substringAfter(".") ?: "") to Pair((lastTimeMap[it.hostName] ?: ""), it.projectId)
             }
             val (emailTable, rtxTable) = generateTable(user, tableData)
 
@@ -301,15 +301,16 @@ class DeleteControl @Autowired constructor(
 
     fun generateTable(
         userId: String,
-        data: Map<String, String>
+        data: Map<String, Pair<String, String>>
     ): Pair<String, String> {
         val emailSb = StringBuilder()
         val td = "<td style=\"border: 1px solid black; padding: 4px; text-align: left;\">%s</td>"
-        data.forEach { (ip, lastTime) ->
+        data.forEach { (ip, workspace) ->
             emailSb.append("<tr>")
             emailSb.append(td.format(ip))
             emailSb.append(td.format(userId))
-            emailSb.append(td.format(lastTime))
+            emailSb.append(td.format(workspace.second))
+            emailSb.append(td.format(workspace.first))
             emailSb.append("</tr>")
         }
 
