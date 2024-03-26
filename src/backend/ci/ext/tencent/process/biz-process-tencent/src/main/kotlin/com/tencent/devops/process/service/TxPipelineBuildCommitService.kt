@@ -32,6 +32,7 @@ import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.kafka.KafkaClient
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.web.utils.I18nUtil
+import com.tencent.devops.common.webhook.service.code.EventCacheService
 import com.tencent.devops.common.webhook.service.code.matcher.ScmWebhookMatcher
 import com.tencent.devops.lambda.LambdaMessageCode
 import com.tencent.devops.lambda.pojo.DataPlatBuildCommits
@@ -50,7 +51,8 @@ import java.time.format.DateTimeFormatter
 @Primary
 class TxPipelineBuildCommitService @Autowired constructor(
     private val kafkaClient: KafkaClient,
-    private val processKafkaTopicConfig: ProcessKafkaTopicConfig
+    private val processKafkaTopicConfig: ProcessKafkaTopicConfig,
+    private val eventCacheService: EventCacheService
 ) : PipelineBuildCommitService() {
 
     @SuppressWarnings("NestedBlockDepth")
@@ -62,52 +64,43 @@ class TxPipelineBuildCommitService @Autowired constructor(
         repo: Repository
     ) {
         try {
-            var page = 1
-            val size = 200
-            while (true) {
-                if (page > PAGE_MAX_SIZE) {
-                    return
+            val webhookCommitList = eventCacheService.getWebhookCommitList(
+                projectId = projectId,
+                pipelineId = pipelineId,
+                buildId = buildId,
+                matcher = matcher,
+                repo = repo,
+                maxCount = WEBHOOK_COMMIT_LIST_MAX_COUNT
+            )
+            if (webhookCommitList.isEmpty()) {
+                logger.info("the pipeline build commit is empty|$projectId|$pipelineId|$buildId|$repo")
+                return
+            }
+            logger.info(
+                "start send build commit[${webhookCommitList.first()}...${webhookCommitList.last()}]|" +
+                        "${webhookCommitList.size}"
+            )
+            webhookCommitList.forEach {
+                val dataPlatBuildCommit = with(it) {
+                    DataPlatBuildCommits(
+                        projectId = projectId,
+                        pipelineId = pipelineId,
+                        buildId = buildId,
+                        commitId = commitId,
+                        authorName = authorName,
+                        message = message,
+                        repoType = repoType,
+                        commitTime = commitTime.format(dateTimeFormatter),
+                        createTime = LocalDateTime.now().format(dateTimeFormatter),
+                        mrId = mrId ?: "",
+                        url = repo.url,
+                        eventType = eventType,
+                        channel = ChannelCode.BS.name,
+                        action = action
+                    )
                 }
-                val webhookCommitList = matcher.getWebhookCommitList(
-                    projectId = projectId,
-                    pipelineId = pipelineId,
-                    repository = repo,
-                    page = page,
-                    size = size
-                )
-                if (webhookCommitList.isEmpty()) {
-                    logger.info("the pipeline build commit is empty|$projectId|$pipelineId|$buildId|$repo")
-                    return
-                }
-                logger.info(
-                    "start send build commit[${webhookCommitList.first()}...${webhookCommitList.last()}]|" +
-                            "${webhookCommitList.size}"
-                )
-                webhookCommitList.forEach {
-                    val dataPlatBuildCommit = with(it) {
-                        DataPlatBuildCommits(
-                            projectId = projectId,
-                            pipelineId = pipelineId,
-                            buildId = buildId,
-                            commitId = commitId,
-                            authorName = authorName,
-                            message = message,
-                            repoType = repoType,
-                            commitTime = commitTime.format(dateTimeFormatter),
-                            createTime = LocalDateTime.now().format(dateTimeFormatter),
-                            mrId = mrId ?: "",
-                            url = repo.url,
-                            eventType = eventType,
-                            channel = ChannelCode.BS.name,
-                            action = action
-                        )
-                    }
-                    checkParamBlank(processKafkaTopicConfig.buildCommitsTopic, "buildCommitsTopic")
-                    kafkaClient.send(processKafkaTopicConfig.buildCommitsTopic!!, JsonUtil.toJson(dataPlatBuildCommit))
-                }
-                // 超过目标条数
-                if (webhookCommitList.size < size) break
-                page++
+                checkParamBlank(processKafkaTopicConfig.buildCommitsTopic, "buildCommitsTopic")
+                kafkaClient.send(processKafkaTopicConfig.buildCommitsTopic!!, JsonUtil.toJson(dataPlatBuildCommit))
             }
         } catch (ignored: Throwable) {
             logger.info("save build info err | err is $ignored")
@@ -167,7 +160,7 @@ class TxPipelineBuildCommitService @Autowired constructor(
         private val logger = LoggerFactory.getLogger(TxPipelineBuildCommitService::class.java)
         private val dateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
 
-        // 分页查询最大页数
-        const val PAGE_MAX_SIZE = 5
+        // 提交信息最大长度
+        const val WEBHOOK_COMMIT_LIST_MAX_COUNT = 800
     }
 }
