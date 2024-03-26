@@ -2,6 +2,7 @@ package com.tencent.devops.common.webhook.service.code
 
 import com.tencent.devops.common.api.enums.RepositoryType
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.webhook.service.code.matcher.ScmWebhookMatcher
 import com.tencent.devops.common.webhook.util.EventCacheUtil
 import com.tencent.devops.repository.api.ServiceP4Resource
 import com.tencent.devops.repository.pojo.Repository
@@ -12,6 +13,8 @@ import com.tencent.devops.scm.pojo.GitCommit
 import com.tencent.devops.scm.pojo.GitCommitReviewInfo
 import com.tencent.devops.scm.pojo.GitMrInfo
 import com.tencent.devops.scm.pojo.GitMrReviewInfo
+import com.tencent.devops.scm.pojo.WebhookCommit
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
@@ -203,5 +206,49 @@ class EventCacheService @Autowired constructor(
             eventCache?.githubPrInfo = prInfo
             prInfo
         }
+    }
+
+    fun getWebhookCommitList(
+        repo: Repository,
+        maxCount: Int,
+        matcher: ScmWebhookMatcher,
+        projectId: String,
+        pipelineId: String,
+        buildId: String
+    ): List<WebhookCommit> {
+        val eventCache = EventCacheUtil.getOrInitRepoCache(projectId = projectId, repo = repo)
+        return eventCache?.webhookCommitList ?: run {
+            val webhookCommitList = mutableListOf<WebhookCommit>()
+            try {
+                var page = 1
+                val size = 200
+                while (true) {
+                    val list = matcher.getWebhookCommitList(
+                        projectId = projectId,
+                        pipelineId = pipelineId,
+                        repository = repo,
+                        page = page,
+                        size = size
+                    )
+                    if (list.isEmpty()) {
+                        logger.info("the pipeline build commit is empty|$projectId|$pipelineId|$buildId|$repo")
+                        break
+                    }
+                    webhookCommitList.addAll(list)
+                    // 超过目标条数
+                    if (webhookCommitList.size < size || webhookCommitList.size > maxCount) break
+                    page++
+                }
+            } catch (ignored: Throwable) {
+                logger.info("fail to get webhook commit list | err is $ignored")
+            }
+            val simpleWebhookCommitList = webhookCommitList.subList(0, maxCount)
+            eventCache?.webhookCommitList = simpleWebhookCommitList
+            simpleWebhookCommitList
+        }
+    }
+
+    companion object {
+        private val logger = LoggerFactory.getLogger(EventCacheService::class.java)
     }
 }
