@@ -418,7 +418,8 @@
                 width: 110px;
             }
             .click-trigger {
-                padding-left: 22px;
+                display: inline-block;
+                margin-left: 22px;
             }
         }
     }
