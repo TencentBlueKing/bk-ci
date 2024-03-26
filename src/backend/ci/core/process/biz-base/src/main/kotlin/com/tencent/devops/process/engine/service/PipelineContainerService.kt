@@ -244,7 +244,7 @@ class PipelineContainerService @Autowired constructor(
         )
     }
 
-    fun cleanContainersInMatrixGroup(
+    private fun cleanContainersInMatrixGroup(
         transactionContext: DSLContext?,
         projectId: String,
         pipelineId: String,
@@ -556,9 +556,20 @@ class PipelineContainerService @Autowired constructor(
             }
         }
         container.startVMTaskSeq = startVMTaskSeq
+
         // 构建矩阵没有对应的重试插件，单独增加重试记录
-        if (context.needRerunStage(stage = stage) &&
-            container.matrixGroupFlag == true) {
+        if (context.needRerunStage(stage = stage) && container.matrixGroupFlag == true) {
+            container.retryFreshMatrixOption()
+            cleanContainersInMatrixGroup(
+                transactionContext = dslContext,
+                projectId = context.projectId,
+                pipelineId = context.pipelineId,
+                buildId = context.buildId,
+                matrixGroupId = container.id!!
+            )
+            // 去掉要重试的矩阵内部数据
+            updateExistsTask.removeIf { it.containerId == container.id }
+            updateExistsContainer.removeIf { it.first.matrixGroupId == container.id }
             needUpdateContainer = true
         }
 
