@@ -299,8 +299,16 @@ class WorkspaceCheckJob @Autowired constructor(
                 kotlin.runCatching {
                     workspaceService.notifyWhenNot4StarActive()
                 }.onFailure {
-                    logger.warn("autoDeleteWhenNot4StarActive fail ${it.message}", it)
+                    logger.warn("notifyWhenNot4StarActive fail ${it.message}", it)
                 }
+                // 云桌面连续14天活跃度不足10小时通知
+                kotlin.runCatching {
+                    workspaceService.notifyWhenNotActiveIn14Days()
+                }.onFailure {
+                    logger.warn("notifyWhenNotActiveIn14Days fail ${it.message}", it)
+                }
+
+
             }
         } catch (e: Throwable) {
             logger.error("projectWinJob failed", e)

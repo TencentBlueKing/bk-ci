@@ -183,6 +183,37 @@ class BKBaseService @Autowired constructor(
         return result
     }
 
+    // 获取云桌面的活跃时长
+    fun fetchActiveTimes(
+        date: LocalDateTime,
+        limit: Int = 1000,
+        offset: Int = 0,
+        result: MutableMap<String, Int> = mutableMapOf()
+    ): Map<String, Int> {
+        val sql = "select zone_id,inner_ip,sum(activity_minus_cnt) as cnt " +
+            "from 100656_ads_desktop_daily_activity_res " +
+            "where thedate > '${date.format(theDateFormat)}' and activity_flag > 0 " +
+            "group by inner_ip,zone_id LIMIT $limit OFFSET $offset"
+
+        val resp = doHttp(sql) ?: return result
+
+        try {
+            resp.data?.list?.forEach { l ->
+                result["${l["zone_id"] as String}.${l["inner_ip"] as String}"] = l["cnt"] as Int
+            } ?: return result
+            if (resp.data.list.size == limit) {
+                fetchActiveIps(
+                    date, offset + limit, limit, result
+                )
+            }
+        } catch (e: Exception) {
+            logger.error("fetchActiveIps parse data error", e)
+            return result
+        }
+
+        return result
+    }
+
     private fun doHttp(
         sql: String
     ): BakeBaseQuerySyncResp? {
