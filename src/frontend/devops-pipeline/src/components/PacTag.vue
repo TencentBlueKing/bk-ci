@@ -1,10 +1,10 @@
 <template>
-    <bk-popover theme="light" trigger="click" :max-width="360">
+    <bk-popover theme="light" trigger="click" :disabled="!info" :max-width="360">
         <span class="pac-tag">
             <i class="devops-icon icon-code" />
             PAC
         </span>
-        <section slot="content">
+        <section v-if="info" slot="content">
             <h6 class="pac-enable-tip">{{ $t('pacEnableTips') }}</h6>
             <div class="pac-info">
                 <p class="pac-info-row">
@@ -44,12 +44,7 @@
         },
         props: {
             info: {
-                type: Object,
-                default: () => ({
-                    codeType: 'CODE_GIT',
-                    codelibUrl: 'bkdevops-plugins/FIS-SyncTaskProgressFIS-SyncTaskProgressFIS-SyncTaskProgressFIS-SyncTaskProgress',
-                    ymlUrl: '.ci/build.yml'
-                })
+                type: Object
             }
         }
     }
@@ -62,6 +57,7 @@
         border-radius: 12px;
         width: 60px;
         height: 24px;
+        line-height: 1;
         display: grid;
         align-items: center;
         grid-auto-flow: column;

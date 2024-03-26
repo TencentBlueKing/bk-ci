@@ -6,8 +6,11 @@
         @hidden="hideReleaseSlider"
         ext-cls="release-pipeline-side-slider"
     >
-        <header slot="header" class="release-pipeline-side-slider-header">
+        <header slot="header" :class="['release-pipeline-side-slider-header', {
+            'has-pac-tag': pacEnabled
+        }]">
             {{ $t("releasePipeline") }}
+            <PacTag v-if="pacEnabled" />
             <span v-bk-overflow-tips class="release-pipeline-new-version">{{ $t("releasePipelineVersion", [newReleaseVersionName]) }}</span>
             <span v-bk-overflow-tips>
                 {{ $t("releasePipelineBaseVersion", [draftBaseVersionName]) }}
@@ -18,7 +21,7 @@
             v-bkloading="{ isLoading: isLoading || releasing }"
             class="release-pipeline-pac-form"
         >
-            <div class="release-pipeline-pac-conf">
+            <div v-if="!pacEnabled" class="release-pipeline-pac-conf">
                 <aside class="release-pipeline-pac-conf-leftside">
                     <label for="enablePac">
                         {{ $t("pacMode") }}
@@ -169,27 +172,6 @@
                         </bk-radio-group>
                     </bk-form-item>
                 </div>
-                <div class="release-pipeline-pac-pipeline-conf">
-                    <header class="release-pac-pipeline-form-header">
-                        {{ $t("pipelineSetting") }}
-                    </header>
-                    <PipelineGroupSelector
-                        v-model="groupValue"
-                        :dynamic-group-editable="!releaseParams.enablePac"
-                        :pipeline-name="pipelineName"
-                        ref="pipelineGroupSelector"
-                        :has-manage-permission="isManage"
-                        :static-groups="staticGroups"
-                    />
-                    <section class="belongs-to-groups-box">
-                        <p>{{ $t('prePipelineGroup') }}</p>
-                        <div>
-                            <bk-tag v-for="(group, index) in viewNames" :key="index">
-                                {{ group }}
-                            </bk-tag>
-                        </div>
-                    </section>
-                </div>
             </bk-form>
             <div
                 v-if="releaseParams.enablePac && !hasOauth"
@@ -254,15 +236,15 @@
 </template>
 
 <script>
-    import PipelineGroupSelector from '@/components/PipelineActionDialog/PipelineGroupSelector'
+    import PacTag from '@/components/PacTag.vue'
     import VersionDiffEntry from '@/components/PipelineDetailTabs/VersionDiffEntry'
     import { UPDATE_PIPELINE_INFO } from '@/store/modules/atom/constants'
     import { mapActions, mapGetters, mapState } from 'vuex'
 
     export default {
         components: {
-            PipelineGroupSelector,
-            VersionDiffEntry
+            VersionDiffEntry,
+            PacTag
         },
         props: {
             value: {
@@ -304,18 +286,12 @@
                     repoHashId: '',
                     filePath: '',
                     targetAction: ''
-                },
-                groupValue: {
-                    labels: this.pipelineSetting?.labels || [],
-                    staticViews: []
-                },
-                staticGroups: []
+                }
             }
         },
         computed: {
             ...mapState('atom', [
                 'pipelineInfo',
-                'pipelineSetting',
                 'pipeline'
             ]),
             ...mapState('pipelines', ['isManage']),
@@ -411,12 +387,6 @@
                     }
                 },
                 immediate: true
-            },
-            'pipelineSetting.labels': {
-                handler: function (val) {
-                    this.groupValue.labels = val
-                },
-                immediate: true
             }
         },
         mounted () {
@@ -429,7 +399,6 @@
             ...mapActions('atom', [
                 'releaseDraftPipeline',
                 'setSaveStatus',
-                'listPermissionStaticViews',
                 'prefetchPipelineVersion'
             ]),
             ...mapActions('common', ['isPACOAuth', 'getSupportPacScmTypeList', 'getPACRepoList']),
@@ -448,7 +417,6 @@
                             ]
                             : []
                         ),
-                        this.listPermissionStaticViews(params),
                         this.prefetchPipelineVersion({
                             ...params,
                             version: this.version
@@ -456,7 +424,6 @@
                     ])
 
                     this.releaseParams.scmType = this.pacSupportScmTypeList[0]?.id
-                    this.staticGroups = results[enablePac ? 1 : 0]
                     const newReleaseVersion = results[enablePac ? 2 : 1]
                     this.newReleaseVersionName = newReleaseVersion?.newVersionName || '--'
                     if (enablePac) {
@@ -551,14 +518,12 @@
                         version: this.version,
                         params: {
                             ...rest,
-                            staticViews: this.groupValue.staticViews,
                             ...(rest.enablePac
                                 ? {
                                     targetAction
                                 }
-                                : {
-                                    labels: this.groupValue.labels
-                                }),
+                                : {}
+                            ),
                             yamlInfo: rest.enablePac
                                 ? {
                                     scmType,
@@ -832,6 +797,9 @@
   height: 100%;
   line-height: 1;
   overflow: hidden;
+  &.has-pac-tag {
+    grid-template-columns: max-content max-content min-content 1fr;
+  }
   .release-pipeline-new-version {
     background: #f5f6fa;
     border-radius: 10px;

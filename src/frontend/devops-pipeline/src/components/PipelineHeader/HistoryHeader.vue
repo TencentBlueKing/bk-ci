@@ -3,13 +3,20 @@
         <div class="pipeline-history-left-aside">
             <pipeline-bread-crumb :is-loading="switchingVersion" />
             <pac-tag class="pipeline-pac-indicator" v-if="pacEnabled" :info="yamlInfo" />
-            <VersionSelector
-                :value="currentVersion"
-                ref="versionSelectorInstance"
-                @change="handleVersionChange"
-                @showAllVersion="showVersionSideSlider"
-                refresh-list-on-expand
-            />
+            <bk-popover :delay="[666, 0]">
+                <VersionSelector
+                    :value="currentVersion"
+                    ref="versionSelectorInstance"
+                    @change="handleVersionChange"
+                    @showAllVersion="showVersionSideSlider"
+                    refresh-list-on-expand
+                />
+                <div slot="content">
+                    <p>{{ $t('versionRuleP') }}</p>
+                    <p>{{ $t('versionRuleT') }}</p>
+                    <p>{{ $t('versionRuleA') }}</p>
+                </div>
+            </bk-popover>
             <bk-button
                 v-if="!isReleaseVersion && isReleasePipeline"
                 text
