@@ -7,7 +7,7 @@ type ConfigYaml struct {
 	Kubernetes        Kubernetes        `json:"kubernetes"`
 	Gateway           Gateway           `json:"gateway"`
 	Dispatch          Dispatch          `json:"dispatch"`
-	BuildLess		  BuildLess	        `json:"buildless"`
+	BuildLess         BuildLess         `json:"buildless"`
 	BuildAndPushImage BuildAndPushImage `json:"buildAndPushImage"`
 	ApiServer         ApiServer         `json:"apiServer"`
 }

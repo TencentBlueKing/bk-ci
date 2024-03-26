@@ -27,25 +27,18 @@
 
 package com.tencent.devops.dispatch.docker.client
 
-import com.tencent.devops.common.api.pojo.ErrorType
-import com.tencent.devops.common.client.Client
-import com.tencent.devops.common.dispatch.sdk.BuildFailureException
-import com.tencent.devops.common.dispatch.sdk.DispatchSdkErrorCode
 import com.tencent.devops.common.dispatch.sdk.pojo.docker.DockerRoutingType
 import com.tencent.devops.common.dispatch.sdk.service.DockerRoutingSdkService
 import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.dispatch.docker.client.context.BuildLessStartHandlerContext
 import com.tencent.devops.dispatch.docker.pojo.enums.DockerHostClusterType
-import com.tencent.devops.process.api.service.ServicePipelineTaskResource
 import com.tencent.devops.process.engine.common.VMUtils
-import com.tencent.devops.process.pojo.mq.PipelineBuildLessStartupDispatchEvent
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
 @Service
 class BuildLessStartPrepareHandler @Autowired constructor(
-    private val client: Client,
     private val buildLogPrinter: BuildLogPrinter,
     private val dockerRoutingSdkService: DockerRoutingSdkService,
     private val buildLessStartDispatchHandler: BuildLessStartDispatchHandler
@@ -54,9 +47,6 @@ class BuildLessStartPrepareHandler @Autowired constructor(
 
     override fun handlerRequest(handlerContext: BuildLessStartHandlerContext) {
         with(handlerContext) {
-            // 检查流水线是否处于运行状态中
-            checkPipelineRunning(event)
-
             // 设置日志打印关键字
             handlerContext.buildLogKey = "${event.pipelineId}|${event.buildId}|${event.vmSeqId}|$retryTime"
             logger.info("$buildLogKey start select buildLess.")
@@ -78,38 +68,6 @@ class BuildLessStartPrepareHandler @Autowired constructor(
             }
 
             buildLessStartDispatchHandler.handlerRequest(this)
-        }
-    }
-
-    private fun checkPipelineRunning(event: PipelineBuildLessStartupDispatchEvent) {
-        // 判断流水线当前container是否在运行中
-        val statusResult = client.get(ServicePipelineTaskResource::class).getTaskStatus(
-            projectId = event.projectId,
-            buildId = event.buildId,
-            taskId = VMUtils.genStartVMTaskId(event.containerId)
-        )
-
-        if (statusResult.isNotOk() || statusResult.data == null) {
-            logger.warn(
-                "The build event($event) fail to check if pipeline task is running " +
-                    "because of ${statusResult.message}"
-            )
-            throw BuildFailureException(
-                errorType = ErrorType.SYSTEM,
-                errorCode = DispatchSdkErrorCode.PIPELINE_STATUS_ERROR,
-                formatErrorMessage = "无法获取流水线JOB状态，构建停止",
-                errorMessage = "无法获取流水线JOB状态，构建停止"
-            )
-        }
-
-        if (!statusResult.data!!.isRunning()) {
-            logger.warn("The build event($event) is not running")
-            throw BuildFailureException(
-                errorType = ErrorType.USER,
-                errorCode = DispatchSdkErrorCode.PIPELINE_NOT_RUNNING,
-                formatErrorMessage = "流水线JOB已经不再运行，构建停止",
-                errorMessage = "流水线JOB已经不再运行，构建停止"
-            )
         }
     }
 }
