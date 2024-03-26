@@ -25,30 +25,28 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.dispatch.docker.utils
+package com.tencent.devops.dispatch.kubernetes.interfaces
 
-import com.tencent.devops.common.redis.RedisLock
-import com.tencent.devops.common.redis.RedisOperation
-import kotlin.math.min
+import com.tencent.devops.buildless.pojo.BuildLessEndInfo
+import com.tencent.devops.buildless.pojo.BuildLessStartInfo
 
-class DockerHostLock(redisOperation: RedisOperation, pipelineId: String? = "") {
+/**
+ * 用来获取不同类型的dispatchType的buildless service来调用相关实现
+ * 注：仅在构建相关接口使用使用此类
+ */
+interface BuildLessService {
 
-    private val redisLock = RedisLock(redisOperation, "DISPATCH_REDIS_LOCK_DOCKER_HOST_KEY_$pipelineId", 60L)
+    /**
+     * 开始无编译构建
+     */
+    fun startBuildLess(
+        buildLessStartInfo: BuildLessStartInfo
+    ): Boolean
 
-//    fun tryLock() = tryLockElapse(timeout = 0, interval = 0)
-
-    fun tryLock(timeout: Long = 0, interval: Long = 40): Boolean {
-        val sleep = min(interval, timeout) // 不允许sleep过长时间，最大1000ms
-        val start = System.currentTimeMillis()
-        var tryLock = redisLock.tryLock()
-        while (timeout > 0 && !tryLock && timeout > (System.currentTimeMillis() - start)) {
-            Thread.sleep(sleep)
-            tryLock = redisLock.tryLock()
-        }
-        return tryLock
-    }
-
-    fun lock() = redisLock.lock()
-
-    fun unlock() = redisLock.unlock()
+    /**
+     * 结束无编译构建
+     */
+    fun endBuildLess(
+        buildLessEndInfo: BuildLessEndInfo
+    ): Boolean
 }
