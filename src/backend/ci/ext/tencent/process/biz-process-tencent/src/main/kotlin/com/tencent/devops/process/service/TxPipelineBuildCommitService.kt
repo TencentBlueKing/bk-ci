@@ -53,6 +53,7 @@ class TxPipelineBuildCommitService @Autowired constructor(
     private val processKafkaTopicConfig: ProcessKafkaTopicConfig
 ) : PipelineBuildCommitService() {
 
+    @SuppressWarnings("NestedBlockDepth")
     override fun create(
         projectId: String,
         pipelineId: String,
