@@ -49,7 +49,7 @@ import javax.ws.rs.PathParam
 import javax.ws.rs.Produces
 import javax.ws.rs.core.MediaType
 
-@Tag(name = "USER_STORE_RELEASE", description = "研发商店-发布")
+@Tag(name = "USER_STORE_RELEASE", description = "研发商店-发布管理")
 @Path("/user/store/releases")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)

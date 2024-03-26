@@ -25,20 +25,30 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.store.pojo.common.publication
+package com.tencent.devops.store.pojo.common.enums
 
-import com.tencent.devops.store.pojo.common.handler.HandlerRequest
-import io.swagger.v3.oas.annotations.media.Schema
-import javax.validation.Valid
+import com.tencent.devops.common.api.util.MessageUtil
 
-@Schema(title = "工作台-新增组件请求报文体")
-data class StoreCreateRequest(
-    @get:Schema(title = "项目代码", required = true)
-    val projectCode: String,
-    @get:Schema(title = "基础信息", required = true)
-    @Valid
-    val baseInfo: StoreBaseCreateRequest,
-    override val requestId: String
-) : HandlerRequest(
-    requestId = requestId
-)
+enum class StoreStatusEnum {
+    INIT, // 初始化
+    COMMITTING, // 提交中
+    BUILDING, // 构建中
+    BUILD_FAIL, // 构建失败
+    CHECKING, // 验证中
+    CHECK_FAIL, // 验证失败
+    TESTING, // 测试中
+    AUDITING, // 审核中
+    AUDIT_REJECT, // 审核驳回
+    RELEASED, // 已发布
+    GROUNDING_SUSPENSION, // 上架中止
+    UNDERCARRIAGING, // 下架中
+    UNDERCARRIAGED, // 已下架
+    TESTED; // 测试结束(仅分支测试使用)
+
+    fun getI18n(language: String): String {
+        return MessageUtil.getMessageByLocale(
+            messageCode = "STORE_BASE_STATUS_${this.name}",
+            language = language
+        )
+    }
+}

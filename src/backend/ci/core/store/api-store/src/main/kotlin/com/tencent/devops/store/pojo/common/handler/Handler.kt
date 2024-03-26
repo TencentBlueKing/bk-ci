@@ -25,20 +25,28 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.store.pojo.common.publication
+package com.tencent.devops.store.pojo.common.handler
 
-import com.tencent.devops.store.pojo.common.handler.HandlerRequest
-import io.swagger.v3.oas.annotations.media.Schema
-import javax.validation.Valid
+interface Handler<T : HandlerRequest> {
 
-@Schema(title = "工作台-新增组件请求报文体")
-data class StoreCreateRequest(
-    @get:Schema(title = "项目代码", required = true)
-    val projectCode: String,
-    @get:Schema(title = "基础信息", required = true)
-    @Valid
-    val baseInfo: StoreBaseCreateRequest,
-    override val requestId: String
-) : HandlerRequest(
-    requestId = requestId
-)
+    /**
+     * 能否满足运行条件
+     */
+    fun canExecute(handlerRequest: T): Boolean
+
+    /**
+     * 核心处理逻辑
+     */
+    fun execute(handlerRequest: T)
+
+    /**
+     * 执行总入口，将调用[canExecute]判断是否满足再执行[execute]函数，
+     * 并将[chain]链式传递[handlerRequest]继续执行下去
+     */
+    fun doExecute(handlerRequest: T, chain: HandlerChain<T>) {
+        if (canExecute(handlerRequest)) {
+            execute(handlerRequest)
+        }
+        chain.handleRequest(handlerRequest)
+    }
+}

@@ -25,20 +25,29 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.store.pojo.common.publication
+package com.tencent.devops.store.common.handler
 
-import com.tencent.devops.store.pojo.common.handler.HandlerRequest
-import io.swagger.v3.oas.annotations.media.Schema
-import javax.validation.Valid
+import com.tencent.devops.common.api.constant.CommonMessageCode
+import com.tencent.devops.common.api.exception.ErrorCodeException
+import com.tencent.devops.common.web.utils.I18nUtil
+import com.tencent.devops.store.common.service.StoreBaseManageService
+import com.tencent.devops.store.pojo.common.handler.Handler
+import com.tencent.devops.store.pojo.common.publication.StoreUpdateRequest
+import org.springframework.stereotype.Service
 
-@Schema(title = "工作台-新增组件请求报文体")
-data class StoreCreateRequest(
-    @get:Schema(title = "项目代码", required = true)
-    val projectCode: String,
-    @get:Schema(title = "基础信息", required = true)
-    @Valid
-    val baseInfo: StoreBaseCreateRequest,
-    override val requestId: String
-) : HandlerRequest(
-    requestId = requestId
-)
+@Service
+class StoreUpdateDataPersistHandler(
+    private val storeBaseManageService: StoreBaseManageService
+) : Handler<StoreUpdateRequest> {
+
+    override fun canExecute(handlerRequest: StoreUpdateRequest): Boolean {
+        return true
+    }
+
+    override fun execute(handlerRequest: StoreUpdateRequest) {
+        // 持久化更新组件数据
+        val userId = I18nUtil.getRequestUserId()
+            ?: throw ErrorCodeException(errorCode = CommonMessageCode.ERROR_CLIENT_REST_ERROR)
+        storeBaseManageService.doStoreUpdateDataPersistent(userId, handlerRequest)
+    }
+}

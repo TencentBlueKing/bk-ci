@@ -25,20 +25,35 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.store.pojo.common.publication
+package com.tencent.devops.store.common.service
 
-import com.tencent.devops.store.pojo.common.handler.HandlerRequest
-import io.swagger.v3.oas.annotations.media.Schema
-import javax.validation.Valid
+import com.tencent.devops.store.pojo.common.publication.StoreUpdateRequest
 
-@Schema(title = "工作台-新增组件请求报文体")
-data class StoreCreateRequest(
-    @get:Schema(title = "项目代码", required = true)
-    val projectCode: String,
-    @get:Schema(title = "基础信息", required = true)
-    @Valid
-    val baseInfo: StoreBaseCreateRequest,
-    override val requestId: String
-) : HandlerRequest(
-    requestId = requestId
-)
+interface StoreBaseManageService {
+
+    /**
+     * 对更新组件请求参数进行国际化转换
+     * @param storeUpdateRequest 更新组件请求报文
+     */
+    fun doStoreI18nConversion(
+        storeUpdateRequest: StoreUpdateRequest
+    )
+
+    /**
+     * 检查更新组件请求参数合法性
+     * @param storeUpdateRequest 更新组件请求报文
+     */
+    fun checkStoreUpdateParam(
+        storeUpdateRequest: StoreUpdateRequest
+    )
+
+    /**
+     * 持久化更新组件数据
+     *  @param userId 用户ID
+     * @param storeUpdateRequest 更新组件请求报文
+     */
+    fun doStoreUpdateDataPersistent(
+        userId: String,
+        storeUpdateRequest: StoreUpdateRequest
+    )
+}

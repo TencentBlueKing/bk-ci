@@ -27,18 +27,30 @@
 
 package com.tencent.devops.store.pojo.common.publication
 
-import com.tencent.devops.store.pojo.common.handler.HandlerRequest
+import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import io.swagger.v3.oas.annotations.media.Schema
-import javax.validation.Valid
+import java.time.LocalDateTime
 
-@Schema(title = "工作台-新增组件请求报文体")
-data class StoreCreateRequest(
-    @get:Schema(title = "项目代码", required = true)
-    val projectCode: String,
-    @get:Schema(title = "基础信息", required = true)
-    @Valid
-    val baseInfo: StoreBaseCreateRequest,
-    override val requestId: String
-) : HandlerRequest(
-    requestId = requestId
+@Schema(title = "组件基本扩展数据PO")
+data class StoreBaseExtDataPO(
+    @get:Schema(title = "主键ID")
+    val id: String,
+    @get:Schema(title = "组件ID")
+    val storeId: String,
+    @get:Schema(title = "组件标识")
+    val storeCode: String,
+    @get:Schema(title = "组件类型")
+    val storeType: StoreTypeEnum,
+    @get:Schema(title = "字段名称")
+    val fieldName: String,
+    @get:Schema(title = "字段值")
+    val fieldValue: String,
+    @get:Schema(title = "创建人")
+    val creator: String,
+    @get:Schema(title = "修改人")
+    val modifier: String,
+    @get:Schema(title = "创建时间")
+    val createTime: LocalDateTime = LocalDateTime.now(),
+    @get:Schema(title = "更新时间")
+    val updateTime: LocalDateTime = LocalDateTime.now()
 )
