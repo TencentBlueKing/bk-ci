@@ -62,7 +62,7 @@ class RemoteDevJobExecRecordDao {
                 .set(ERROR_MSG, errMsg)
                 .set(END_TIME, endTime)
             if (resetReceipt) {
-                dsl.set(RECEIPT_INFO, JSON.json(""))
+                dsl.set(RECEIPT_INFO, JSON.valueOf(null))
             }
             dsl.where(ID.eq(id)).execute()
         }

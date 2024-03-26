@@ -3,8 +3,11 @@ package com.tencent.devops.remotedev.resources.op
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.remotedev.api.op.OpRemoteDevJobResource
+import com.tencent.devops.remotedev.pojo.job.JobActionType
 import com.tencent.devops.remotedev.pojo.job.JobSchema
+import com.tencent.devops.remotedev.pojo.job.JobSchemaConstValResp
 import com.tencent.devops.remotedev.pojo.job.JobSchemaCreateData
+import com.tencent.devops.remotedev.pojo.job.JobType
 import com.tencent.devops.remotedev.service.job.RemoteDevSchemaService
 import org.springframework.beans.factory.annotation.Autowired
 
@@ -12,6 +15,15 @@ import org.springframework.beans.factory.annotation.Autowired
 class OpRemoteDevJobResourceImpl @Autowired constructor(
     private val remoteDevSchemaService: RemoteDevSchemaService
 ) : OpRemoteDevJobResource {
+    override fun getJobSchemaConstval(userId: String): Result<JobSchemaConstValResp> {
+        return Result(
+            JobSchemaConstValResp(
+                jobType = JobType.values().toSet(),
+                jobActionType = JobActionType.values().toSet()
+            )
+        )
+    }
+
     override fun createJobSchema(userId: String, data: JobSchemaCreateData): Result<Boolean> {
         remoteDevSchemaService.createOrUpdateSchema(data)
         return Result(true)

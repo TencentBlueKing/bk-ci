@@ -3,6 +3,7 @@ package com.tencent.devops.remotedev.api.op
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.remotedev.pojo.job.JobSchema
+import com.tencent.devops.remotedev.pojo.job.JobSchemaConstValResp
 import com.tencent.devops.remotedev.pojo.job.JobSchemaCreateData
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
@@ -21,6 +22,15 @@ import javax.ws.rs.core.MediaType
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface OpRemoteDevJobResource {
+    @Operation(summary = "获取jobSchmema的一些配置项")
+    @GET
+    @Path("/schema/constval")
+    fun getJobSchemaConstval(
+        @Parameter(description = "用户ID", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String
+    ): Result<JobSchemaConstValResp>
+
     @Operation(summary = "创建或更新jobSchema")
     @POST
     @Path("/schema/createOrUpdate")
