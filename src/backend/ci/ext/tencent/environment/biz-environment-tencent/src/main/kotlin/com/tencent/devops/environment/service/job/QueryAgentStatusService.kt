@@ -66,8 +66,8 @@ class QueryAgentStatusService @Autowired constructor(
     }
 
     fun getAgentVersions(ipAndHostIdList: List<AgentVersion>): List<AgentVersion>? {
-        val hostIdList = ipAndHostIdList.mapNotNull { it.bkHostId }
-        val ipList = ipAndHostIdList.mapNotNull { it.ip }
+        val hostIdList = ipAndHostIdList.mapNotNull { it.bkHostId }.distinct()
+        val ipList = ipAndHostIdList.mapNotNull { it.ip }.distinct()
         val hostIdToAgentVersionMap = ipAndHostIdList.associateBy { it.bkHostId }
         // 1. 调用nodeman接口查询 是否已安装agent
         val nodemanRes = getAgentVersionsFromNodeman(hostIdList, ipList)

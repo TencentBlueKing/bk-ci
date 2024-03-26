@@ -234,10 +234,7 @@ class TencentStockDataUpdateService @Autowired constructor(
                     val opInfo = opService.operateOpProject(
                         "", OpOperateReq(2, listOf(it[T_NODE_PROJECT_ID] as String))
                     ).projGrayStatus?.get(0)
-                    val value = it[T_NODE_PROJECT_ID] as String == opInfo?.englishName
-                        && true == opInfo.projGrayStatus
-                    if (logger.isDebugEnabled) logger.debug("[updateGseAgent]opInfo:$opInfo, value:$value")
-                    value
+                    it[T_NODE_PROJECT_ID] as String == opInfo?.englishName && true == opInfo.projGrayStatus
                 }.associate {
                     it[T_NODE_NODE_ID] as Long to
                         AgentVersion(
@@ -245,7 +242,7 @@ class TencentStockDataUpdateService @Autowired constructor(
                             bkHostId = it[T_NODE_HOST_ID] as? Long,
                             installedTag = NodeStatus.NOT_INSTALLED.name != it[T_NODE_NODE_STATUS] as String,
                             version = it[T_NODE_AGENT_VERSION] as? String,
-                            status = if (it[T_NODE_AGENT_STATUS] as Boolean) 1 else 0
+                            status = if (NodeStatus.NORMAL.name == it[T_NODE_NODE_STATUS] as String) 1 else 0
                         )
                 }
                 val existAgentVersionList = existNodeIdToAgentVersionMap.values.toList()

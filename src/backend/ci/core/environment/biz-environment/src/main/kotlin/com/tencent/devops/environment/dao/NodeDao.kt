@@ -60,7 +60,7 @@ import com.tencent.devops.environment.pojo.job.AgentVersionInfo
 import com.tencent.devops.environment.pojo.job.UpdateTNodeInfo
 import com.tencent.devops.environment.pojo.job.jobresp.CCUpdateInfo
 import org.jooq.Record4
-import org.jooq.Record7
+import org.jooq.Record6
 
 @Suppress("ALL")
 @Repository
@@ -259,14 +259,13 @@ class NodeDao {
         dslContext: DSLContext,
         page: Int,
         pageSize: Int
-    ): Result<Record7<String, Long, String, String, Boolean, String, Long>> {
+    ): Result<Record6<String, Long, String, String, String, Long>> {
         with(TNode.T_NODE) {
             return dslContext.select(
                 NODE_IP.`as`(T_NODE_NODE_IP),
                 HOST_ID.`as`(T_NODE_HOST_ID),
                 NODE_STATUS.`as`(T_NODE_NODE_STATUS),
                 AGENT_VERSION.`as`(T_NODE_AGENT_VERSION),
-                AGENT_STATUS.`as`(T_NODE_AGENT_STATUS),
                 PROJECT_ID.`as`(T_NODE_PROJECT_ID),
                 NODE_ID.`as`(T_NODE_NODE_ID)
             ).from(this)
@@ -648,7 +647,7 @@ class NodeDao {
     ): Result<TNodeRecord> {
         with(TNode.T_NODE) {
             val condition = mutableListOf(PROJECT_ID.eq(projectId), DISPLAY_NAME.eq(displayName))
-            if (nodeType != null && nodeType.isNotEmpty()) {
+            if (!nodeType.isNullOrEmpty()) {
                 condition.add(NODE_TYPE.`in`(nodeType))
             }
             return dslContext.selectFrom(this)
