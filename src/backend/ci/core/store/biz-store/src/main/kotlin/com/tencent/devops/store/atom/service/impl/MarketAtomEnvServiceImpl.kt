@@ -478,9 +478,10 @@ class MarketAtomEnvServiceImpl @Autowired constructor(
                 if (!osName.isNullOrBlank() && !osArch.isNullOrBlank()) {
                     atomEnvRequest.osArch = atomBusHandleService.handleOsArch(osName, osArch)
                 }
-                atomEnvRequest.target?.let { Target ->
+                // 对系统预置的执行指令及用户自定义execution.target执行指令做处理
+                atomEnvRequest.target?.let { buildTarget ->
                     atomEnvRequest.target =
-                        atomBusHandleService.handleTarget(Target, atomEnvRecord?.target ?: "")
+                        atomBusHandleService.handleTarget(buildTarget, atomEnvRecord?.target ?: "")
                 }
             }
             atomEnvRecord?.let {
