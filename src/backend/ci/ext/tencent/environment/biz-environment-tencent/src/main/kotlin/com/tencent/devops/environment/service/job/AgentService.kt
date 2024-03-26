@@ -307,16 +307,15 @@ data class AgentService @Autowired constructor(
                 }
             }
         }
-        val startTime = LocalDateTime.now()
         try {
-            checkAgentStatusExecutor.submit(task)
-        } catch (e: Exception) {
-            logger.warn("Check agent status failed. Exception: $e")
-        } finally {
+            val startTime = LocalDateTime.now()
+            checkAgentStatusExecutor.submit(task).get()
             logger.info(
                 "Agent install finish takes " +
                     "${ComputeTimeUtils.calculateDuration(startTime, LocalDateTime.now())}s."
             )
+        } catch (e: Exception) {
+            logger.warn("Check agent status failed. Exception: $e")
         }
     }
 
