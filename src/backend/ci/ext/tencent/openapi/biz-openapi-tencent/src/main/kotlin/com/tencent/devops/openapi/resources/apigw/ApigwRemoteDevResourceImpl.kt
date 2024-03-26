@@ -4,6 +4,7 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.openapi.api.apigw.ApigwRemoteDevResource
+import com.tencent.devops.project.api.service.ServiceUserResource
 import com.tencent.devops.remotedev.api.service.ServiceRemoteDevResource
 import com.tencent.devops.remotedev.pojo.WindowsResourceTypeConfig
 import com.tencent.devops.remotedev.pojo.op.OpProjectWorkspaceAssignData
@@ -21,6 +22,7 @@ class ApigwRemoteDevResourceImpl @Autowired constructor(private val client: Clie
 
     @Value("\${devx.gwToken:}")
     val devxGwToken = ""
+
     @Value("\${devx.originalHost:}")
     val devxOriginalHost = ""
 
@@ -52,7 +54,9 @@ class ApigwRemoteDevResourceImpl @Autowired constructor(private val client: Clie
         logger.info("Get  projects workspace ,projectId:$projectId")
         return client.get(ServiceRemoteDevResource::class).getProjectWorkspace(
             projectId = projectId,
-            ip = ip
+            ip = ip,
+            businessLineName = null,
+            ownerName = null
         )
     }
 
@@ -68,18 +72,22 @@ class ApigwRemoteDevResourceImpl @Autowired constructor(private val client: Clie
                 message = "获取到的云桌面IP为空",
                 data = null
             )
+
             devxToken.isNullOrBlank() -> Result(
                 message = "来源请求token不能为空",
                 data = null
             )
+
             originalHost != devxOriginalHost -> Result(
                 message = "来源请求域名不符",
                 data = null
             )
+
             devxToken != devxGwToken -> Result(
                 message = "来源请求token不符",
                 data = null
             )
+
             else -> {
                 logger.info("Get projects workspace ip $ip")
                 client.get(ServiceRemoteDevResource::class).getProjectWorkspaceIp(ip = ip)
@@ -138,7 +146,9 @@ class ApigwRemoteDevResourceImpl @Autowired constructor(private val client: Clie
         logger.info("List  projects workspace ,projectId:$projectId")
         return client.get(ServiceRemoteDevResource::class).getProjectWorkspace(
             projectId = projectId,
-            ip = null
+            ip = null,
+            businessLineName = null,
+            ownerName = null
         )
     }
 
@@ -170,5 +180,25 @@ class ApigwRemoteDevResourceImpl @Autowired constructor(private val client: Clie
 
     override fun getWindowsResourceList(appCode: String?, apigwType: String?): Result<List<WindowsResourceTypeConfig>> {
         return client.get(ServiceRemoteDevResource::class).getWindowsResourceList()
+    }
+
+    override fun querySGProjectWorkspace(
+        appCode: String?,
+        apigwType: String?,
+        userId: String,
+        taiUser: String
+    ): Result<List<WeSecProjectWorkspace>> {
+        logger.info("Get projects workspace from user $userId ,taiUser:$taiUser")
+        val userInfo = client.get(ServiceUserResource::class).getDetailFromCache(userId).data
+        if (userInfo?.businessLineName.isNullOrBlank()) {
+            logger.info("Get projects workspace from user $userId ,businessLineName is null")
+            return Result(emptyList())
+        }
+        return client.get(ServiceRemoteDevResource::class).getProjectWorkspace(
+            businessLineName = userInfo?.businessLineName,
+            ownerName = taiUser,
+            ip = null,
+            projectId = null
+        )
     }
 }

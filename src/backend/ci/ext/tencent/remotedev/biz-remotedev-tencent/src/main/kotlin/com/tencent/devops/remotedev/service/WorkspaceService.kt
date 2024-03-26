@@ -111,6 +111,10 @@ import com.tencent.devops.remotedev.service.workspace.NotifyControl.Companion.NO
 import com.tencent.devops.remotedev.service.workspace.NotifyControl.Companion.SLEEP_3_DAY_NOTIFY
 import com.tencent.devops.remotedev.service.workspace.WorkspaceCommon
 import com.tencent.devops.scm.utils.code.git.GitUtils
+import java.time.Duration
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
+import java.util.concurrent.TimeUnit
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
@@ -118,10 +122,6 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import org.springframework.web.context.request.RequestContextHolder
 import org.springframework.web.context.request.ServletRequestAttributes
-import java.time.Duration
-import java.time.LocalDateTime
-import java.time.format.DateTimeFormatter
-import java.util.concurrent.TimeUnit
 
 @Service
 @Suppress("ALL")
@@ -523,7 +523,9 @@ class WorkspaceService @Autowired constructor(
         projectId: String?,
         ip: String?,
         hasDepartmentsInfo: Boolean?,
-        hasCurrentUser: Boolean?
+        hasCurrentUser: Boolean?,
+        businessLineName: String? = null,
+        ownerName: String? = null
     ): List<WeSecProjectWorkspace> {
         val startTime = System.currentTimeMillis()
 
@@ -531,7 +533,9 @@ class WorkspaceService @Autowired constructor(
             dslContext = dslContext,
             mountType = WorkspaceMountType.START,
             projectIds = projectId?.let { setOf(projectId) },
-            ip = ip
+            ip = ip,
+            businessLineName = businessLineName,
+            ownerName = ownerName
         ) ?: emptyList()
 
         val fetchWorkspaceWithOwnerEndTime = System.currentTimeMillis()
@@ -610,7 +614,8 @@ class WorkspaceService @Autowired constructor(
                 displayName = res["DISPLAY_NAME"] as String,
                 ownerDepartments = depInfo,
                 currentLoginUsers = currUser,
-                machineType = workspaceWindows?.get(workspaceName)?.let { win -> allConfig[win["WIN_CONFIG_ID"].toString()]?.size }
+                machineType = workspaceWindows?.get(workspaceName)
+                    ?.let { win -> allConfig[win["WIN_CONFIG_ID"].toString()]?.size }
             )
         }
 
