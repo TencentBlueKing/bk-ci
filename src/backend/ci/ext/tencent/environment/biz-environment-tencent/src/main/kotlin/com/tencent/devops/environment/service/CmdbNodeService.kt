@@ -126,7 +126,6 @@ class CmdbNodeService @Autowired constructor(
         const val OS_TYPE_CC_CODE_SOLARIS = "5"
         const val OS_TYPE_CC_CODE_FREEBSD = "7"
 
-        const val NS_TO_S = 1000000000
         const val BIZ_SIZE = 1
     }
 

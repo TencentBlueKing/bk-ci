@@ -29,13 +29,13 @@ package com.tencent.devops.environment.service.job
 
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.environment.dao.job.NetworkAreaDao
+import com.tencent.devops.environment.utils.ComputeTimeUtils
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import java.net.InetAddress
 import java.nio.ByteBuffer
-import java.time.Duration
 import java.time.LocalDateTime
 
 @Service("AutoChooseAgentInstallChannelIdService")
@@ -50,8 +50,6 @@ class ChooseAgentInstallChannelIdService @Autowired constructor(
         private const val PROD_NETWORK_AREA_OSS = 6
         private const val PROD_NETWORK_AREA_DEVNET = 5 // 正式环境安装通道数值
         private const val PROD_NETWORK_AREA_DEFAULT = -1
-
-        const val NS_TO_S = 1000000000
     }
 
     fun autoChooseAgentInstallChannelId(ip: String): Int {
@@ -77,7 +75,7 @@ class ChooseAgentInstallChannelIdService @Autowired constructor(
                 }
             }
         }
-        val costTime = Duration.between(startTime, LocalDateTime.now()).toNanos().toDouble() / NS_TO_S
+        val costTime = ComputeTimeUtils.calculateDuration(startTime, LocalDateTime.now())
         logger.info("Ip: $ip, Auto choose agent install channel: $networkArea, cost time:${costTime}s.")
 
         return when (networkArea) {

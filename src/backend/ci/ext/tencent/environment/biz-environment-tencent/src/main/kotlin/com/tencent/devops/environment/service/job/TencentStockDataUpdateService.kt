@@ -80,8 +80,6 @@ class TencentStockDataUpdateService @Autowired constructor(
         const val AGENT_ABNORMAL_NODE_STATUS = 0
         const val AGENT_NORMAL_NODE_STATUS = 1
         const val AGENT_NOT_INSTALLED_TAG = false
-
-        const val NS_TO_S = 1000000000
     }
 
     /**

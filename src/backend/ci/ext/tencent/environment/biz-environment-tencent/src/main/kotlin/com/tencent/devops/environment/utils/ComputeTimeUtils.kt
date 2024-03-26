@@ -27,12 +27,13 @@
 
 package com.tencent.devops.environment.utils
 
-import com.tencent.devops.environment.service.job.TencentStockDataUpdateService
 import java.time.Duration
 import java.time.LocalDateTime
 
 object ComputeTimeUtils {
+    private const val NS_TO_S = 1000000000
+
     fun calculateDuration(startTime: LocalDateTime, endTime: LocalDateTime): Double {
-        return Duration.between(startTime, endTime).toNanos().toDouble() / TencentStockDataUpdateService.NS_TO_S
+        return Duration.between(startTime, endTime).toNanos().toDouble() / NS_TO_S
     }
 }

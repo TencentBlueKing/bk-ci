@@ -143,8 +143,6 @@ data class AgentService @Autowired constructor(
         const val AGENT_NORMAL_NODE_STATUS = 1
         const val AGENT_NOT_INSTALLED_TAG = false
 
-        private const val NS_TO_S = 1000000000
-
         private const val GAUGE_NAME_ACTIVE_THREAD_COUNT = "activeThreadCount" // 活跃线程数
         private const val GAUGE_NAME_CORE_THREAD_COUNT = "coreThreadCount" // 核心线程数
         private const val GAUGE_NAME_MAX_THREAD_COUNT = "maxThreadCount" // 最大线程数
