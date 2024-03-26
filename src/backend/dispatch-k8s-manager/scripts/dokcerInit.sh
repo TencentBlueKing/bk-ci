@@ -1,6 +1,16 @@
 #!/bin/bash
 set -x
 
+if [ -z "${BUILDLESS_STARTUP_FLAG}" ]; then
+    # MY_ENV_VAR 未设置，将其设置为 "new"
+    export BUILDLESS_STARTUP_FLAG="NEW"
+    echo "BUILDLESS_STARTUP_FLAG is not set, setting its value to 'NEW'"
+else
+    # BUILDLESS_STARTUP_FLAG 已存在，将其设置为 "second"
+    export BUILDLESS_STARTUP_FLAG="RESTART"
+    echo "BUILDLESS_STARTUP_FLAG is set, changing its value to 'RESTART'"
+fi
+
 mkdir  -p /data/devops
 cd /data/devops
 
@@ -22,6 +32,7 @@ else
 fi
 
 ## Download the docker.jar
+cd /data/devops
 echo "start to download the docker.jar..." >> logs/docker.log
 
 curl -k -s -H "X-DEVOPS-BUILD-TYPE: DOCKER" -H "X-DEVOPS-PROJECT-ID: ${devops_project_id}" -H "X-DEVOPS-AGENT-ID: ${devops_agent_id}" -H "X-DEVOPS-AGENT-SECRET-KEY: ${devops_agent_secret_key}"  -o docker.jar "${devops_gateway}/static/local/files/jar/worker-agent.jar"

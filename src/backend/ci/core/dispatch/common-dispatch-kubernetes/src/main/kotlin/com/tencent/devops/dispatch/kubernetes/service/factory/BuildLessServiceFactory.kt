@@ -25,31 +25,25 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.dispatch.docker.pojo.enums
+package com.tencent.devops.dispatch.kubernetes.service.factory
 
-enum class DockerHostClusterType {
-    /**
-     * 公共构建机集群
-     */
-    COMMON,
+import com.tencent.devops.common.dispatch.sdk.service.DockerRoutingSdkService
+import com.tencent.devops.common.service.utils.SpringContextUtil
+import com.tencent.devops.dispatch.kubernetes.interfaces.BuildLessService
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.stereotype.Service
 
-    /**
-     * 无编译环境构建机群
-     */
-    AGENT_LESS,
+@Service
+class BuildLessServiceFactory @Autowired constructor(
+    private val dockerRoutingSdkService: DockerRoutingSdkService
+) {
 
-    /**
-     * 无编译环境构建机群(new)
-     */
-    BUILD_LESS,
+    fun load(projectId: String): BuildLessService {
+        val dockerRoutingType = dockerRoutingSdkService.getDockerRoutingType(projectId)
 
-    /**
-     * 无编译环境构建机群(k8s)
-     */
-    K8S_BUILD_LESS,
-
-    /**
-     * mac构建机群
-     */
-    MACOS
+        return SpringContextUtil.getBean(
+            BuildLessService::class.java,
+            dockerRoutingType.name.toLowerCase() + "BuildLessService"
+        )
+    }
 }
