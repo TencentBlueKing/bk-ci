@@ -1385,7 +1385,7 @@ class WorkspaceService @Autowired constructor(
     fun notifyWhenNotActiveIn14Days() {
         val limitDay = holidayHelper.getLastWorkingDays(14).last()
         logger.info("autoDeleteWhenNotActiveIn14Days|$limitDay")
-        val actives = bkBaseService.fetchActiveTimes (limitDay)
+        val actives = bkBaseService.fetchActiveTimes(limitDay)
         workspaceJoinDao.limitFetchProjectWorkspace(
             dslContext = dslContext,
             limit = null,

@@ -307,8 +307,6 @@ class WorkspaceCheckJob @Autowired constructor(
                 }.onFailure {
                     logger.warn("notifyWhenNotActiveIn14Days fail ${it.message}", it)
                 }
-
-
             }
         } catch (e: Throwable) {
             logger.error("projectWinJob failed", e)
