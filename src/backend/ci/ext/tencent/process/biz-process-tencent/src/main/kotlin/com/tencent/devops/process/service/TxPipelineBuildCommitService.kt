@@ -64,6 +64,9 @@ class TxPipelineBuildCommitService @Autowired constructor(
             var page = 1
             val size = 200
             while (true) {
+                if (page > PAGE_MAX_SIZE) {
+                    return
+                }
                 val webhookCommitList = matcher.getWebhookCommitList(
                     projectId = projectId,
                     pipelineId = pipelineId,
@@ -75,8 +78,12 @@ class TxPipelineBuildCommitService @Autowired constructor(
                     logger.info("the pipeline build commit is empty|$projectId|$pipelineId|$buildId|$repo")
                     return
                 }
-                val buildCommits = webhookCommitList.map {
-                    with(it) {
+                logger.info(
+                    "start send build commit[${webhookCommitList.first()}...${webhookCommitList.last()}]|" +
+                            "${webhookCommitList.size}"
+                )
+                webhookCommitList.forEach {
+                    val dataPlatBuildCommit = with(it) {
                         DataPlatBuildCommits(
                             projectId = projectId,
                             pipelineId = pipelineId,
@@ -84,7 +91,7 @@ class TxPipelineBuildCommitService @Autowired constructor(
                             commitId = commitId,
                             authorName = authorName,
                             message = message,
-                            repoType = matcher.getCodeType().name,
+                            repoType = repoType,
                             commitTime = commitTime.format(dateTimeFormatter),
                             createTime = LocalDateTime.now().format(dateTimeFormatter),
                             mrId = mrId ?: "",
@@ -94,13 +101,10 @@ class TxPipelineBuildCommitService @Autowired constructor(
                             action = action
                         )
                     }
+                    checkParamBlank(processKafkaTopicConfig.buildCommitsTopic, "buildCommitsTopic")
+                    kafkaClient.send(processKafkaTopicConfig.buildCommitsTopic!!, JsonUtil.toJson(dataPlatBuildCommit))
                 }
-                logger.info(
-                    "start send build commit[${buildCommits.first()}...${buildCommits.last()}]|" +
-                            "${buildCommits.size}"
-                )
-                checkParamBlank(processKafkaTopicConfig.buildCommitsTopic, "buildCommitsTopic")
-                kafkaClient.send(processKafkaTopicConfig.buildCommitsTopic!!, JsonUtil.toJson(buildCommits))
+                // 超过目标条数
                 if (webhookCommitList.size < size) break
                 page++
             }
@@ -111,8 +115,16 @@ class TxPipelineBuildCommitService @Autowired constructor(
 
     override fun saveCommits(commits: List<PipelineBuildCommit>) {
         try {
-            val buildCommits = commits.map { buildCommit ->
-                with(buildCommit) {
+            if (commits.isEmpty()) {
+                logger.info("the pipeline build commit is empty")
+                return
+            }
+            logger.info(
+                "start send build commit[${commits.first()}...${commits.last()}]|" +
+                        "${commits.size}"
+            )
+            commits.forEach { buildCommit ->
+                val dataPlatBuildCommit = with(buildCommit) {
                     DataPlatBuildCommits(
                         projectId = projectId,
                         pipelineId = pipelineId,
@@ -130,17 +142,9 @@ class TxPipelineBuildCommitService @Autowired constructor(
                         action = action ?: ""
                     )
                 }
+                checkParamBlank(processKafkaTopicConfig.buildCommitsTopic, "buildCommitsTopic")
+                kafkaClient.send(processKafkaTopicConfig.buildCommitsTopic!!, JsonUtil.toJson(dataPlatBuildCommit))
             }
-            if (buildCommits.isEmpty()) {
-                logger.info("the pipeline build commit is empty")
-                return
-            }
-            logger.info(
-                "start send build commit[${buildCommits.first()}...${buildCommits.last()}]|" +
-                        "${buildCommits.size}"
-            )
-            checkParamBlank(processKafkaTopicConfig.buildCommitsTopic, "buildCommitsTopic")
-            kafkaClient.send(processKafkaTopicConfig.buildCommitsTopic!!, JsonUtil.toJson(buildCommits))
         } catch (ignored: Exception) {
             logger.info("save build info err | err is $ignored")
         }
@@ -161,5 +165,8 @@ class TxPipelineBuildCommitService @Autowired constructor(
     companion object {
         private val logger = LoggerFactory.getLogger(TxPipelineBuildCommitService::class.java)
         private val dateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
+
+        // 分页查询最大页数
+        const val PAGE_MAX_SIZE = 5
     }
 }
