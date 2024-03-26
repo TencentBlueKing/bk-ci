@@ -4,7 +4,7 @@
             <bk-date-picker
                 class="date-picker mr15"
                 :value="daterange"
-                type="daterange"
+                type="datetimerange"
                 :placeholder="$t('codelib.选择日期范围')"
                 :options="{
                     disabledDate: time => time.getTime() > Date.now()
@@ -350,8 +350,8 @@
             },
 
             handleChangeDaterange (date, type) {
-                const startTime = new Date(`${date[0]} 00:00:00`).getTime() || ''
-                const endTime = new Date(`${date[1]} 23:59:59`).getTime() || ''
+                const startTime = new Date(date[0]).getTime() || ''
+                const endTime = new Date(date[1]).getTime() || ''
                 this.daterange = [startTime, endTime]
             },
 
@@ -391,8 +391,8 @@
             cursor: pointer;
         }
         .date-picker {
-            max-width: 300px;
-            min-width: 200px;
+            max-width: 400px;
+            min-width: 340px;
         }
         .search-select {
             width: 100%;

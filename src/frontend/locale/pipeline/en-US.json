@@ -977,7 +977,9 @@
     "stageOption": "Control Options",
     "pipelineVersionSaveAt": "Version {0} save at {1}",
     "every": "Remind every",
-    "remindTime": "hours"
+    "remindTime": "hours",
+    "codelib": "Code Repositories",
+    "branchs": "Branch"
   },
   "storeMap": {
     "textarea": "Textarea",

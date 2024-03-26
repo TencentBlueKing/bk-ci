@@ -10,31 +10,61 @@
         :draggable="false"
         :on-close="handleClose"
     >
-        <span class="using-pipeline-warning-icon">
-            <i class="devops-icon icon-exclamation" />
-        </span>
-
-        <span class="using-confirm-title">
-            {{ $t('codelib.以下流水线仍在使用此代码库') }}
-        </span>
-        <p class="using-confirm-desc">
-            {{ $t('codelib.请前往流水线处理后，再删除代码库') }}
-        </p>
-        <ul
-            class="operate-pipeline-list"
-            @scroll.passive="handleScroll"
-        >
-            <li
-                v-for="pipeline in pipelinesList"
-                :key="pipeline.pipelineId"
-               
+        <template v-if="taskRepoType === 'NAME'">
+            <span class="using-pipeline-warning-icon">
+                <i class="devops-icon icon-exclamation" />
+            </span>
+    
+            <span class="using-confirm-title">
+                {{ $t('codelib.以下流水线通过别名方式使用此代码库') }}
+            </span>
+            <p class="using-confirm-desc">
+                {{ $t('codelib.别名变更后，使用旧别名引用的流水线将引用不到当前代码库，请评估变更是否合理') }}
+            </p>
+            <ul
+                class="operate-pipeline-list"
+                @scroll.passive="handleScroll"
             >
-                <a @click="handleToPipeline(pipeline)">{{ pipeline.pipelineName }}</a>
-            </li>
-        </ul>
-        <footer>
-            <bk-button @click="handleClose">{{$t('codelib.关闭')}}</bk-button>
-        </footer>
+                <li
+                    v-for="pipeline in pipelinesList"
+                    :key="pipeline.pipelineId"
+                   
+                >
+                    <a @click="handleToPipeline(pipeline)">{{ pipeline.pipelineName }}</a>
+                </li>
+            </ul>
+            <footer>
+                <bk-button theme="primary" @click="handleConfirm">{{$t('codelib.确认更改')}}</bk-button>
+                <bk-button @click="handleClose">{{$t('codelib.取消')}}</bk-button>
+            </footer>
+        </template>
+        <template v-else>
+            <span class="using-pipeline-warning-icon">
+                <i class="devops-icon icon-exclamation" />
+            </span>
+    
+            <span class="using-confirm-title">
+                {{ $t('codelib.以下流水线仍在使用此代码库') }}
+            </span>
+            <p class="using-confirm-desc">
+                {{ $t('codelib.请前往流水线处理后，再删除代码库') }}
+            </p>
+            <ul
+                class="operate-pipeline-list"
+                @scroll.passive="handleScroll"
+            >
+                <li
+                    v-for="pipeline in pipelinesList"
+                    :key="pipeline.pipelineId"
+                   
+                >
+                    <a @click="handleToPipeline(pipeline)">{{ pipeline.pipelineName }}</a>
+                </li>
+            </ul>
+            <footer>
+                <bk-button @click="handleClose">{{$t('codelib.关闭')}}</bk-button>
+            </footer>
+        </template>
     </bk-dialog>
 </template>
 
@@ -53,6 +83,10 @@
             },
             fetchPipelinesList: {
                 type: Function
+            },
+            taskRepoType: {
+                type: String,
+                default: ''
             }
         },
         computed: {
@@ -61,6 +95,9 @@
             }
         },
         methods: {
+            handleConfirm () {
+                this.$emit('confirm')
+            },
             handleClose () {
                 this.$emit('update:isShow', false)
             },
@@ -74,7 +111,7 @@
             },
 
             handleToPipeline (pipeline) {
-                window.open(`/console/pipeline/${this.projectId}/${pipeline.pipelineId}`, '__blank')
+                window.open(`/console/pipeline/${this.projectId}/${pipeline.pipelineId}/history/pipeline`, '__blank')
             }
         }
     }

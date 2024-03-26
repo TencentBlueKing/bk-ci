@@ -85,7 +85,7 @@
                 </bk-input>
             </bk-form-item>
             
-            <!-- <bk-form-item
+            <bk-form-item
                 :label="$t('codelib.PACmode')"
             >
                 <div class="pac-item">
@@ -115,12 +115,11 @@
                                 <p>{{ $t('codelib.同步规则：') }}</p>
                                 <p>- {{ $t('codelib.新增 YAML 时，当前项目下将新增一条对应的流水线') }}</p>
                                 <p>- {{ $t('codelib.修改 YAML 后，新触发自动以最新的 YAML 配置为准') }}</p>
-                                <p>- {{ $t('codelib.删除 YAML 时，若触发过 CI 的所有分支上的 YAML 均已删除，则同步删除蓝盾上的流水线（包括基本信息和执行历史）') }}</p>
                             </div>
                         </bk-popover>
                     </p>
                 </div>
-            </bk-form-item> -->
+            </bk-form-item>
         </template>
         <template v-else-if="!isOAUTH">
             <bk-form-item
