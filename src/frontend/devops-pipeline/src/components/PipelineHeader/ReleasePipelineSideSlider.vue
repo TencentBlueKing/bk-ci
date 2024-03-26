@@ -240,6 +240,7 @@
                 :text="false"
                 theme=""
                 :disabled="releasing"
+                :can-switch-version="false"
                 :version="pipelineInfo?.releaseVersion"
                 :latest-version="version"
             >

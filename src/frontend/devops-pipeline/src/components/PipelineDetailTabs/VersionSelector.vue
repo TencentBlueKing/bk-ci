@@ -3,7 +3,7 @@
         ref="versionSelector"
         searchable
         :value="value"
-        :disabled="isLoading"
+        :disabled="isLoading || !editable"
         :loading="isLoading"
         :clearable="false"
         :popover-width="320"
@@ -29,6 +29,9 @@
                 </span>
                 <i v-if="isCurrentVersion(activeVersion)" class="pipeline-release-version-tag">
                     {{ $t('latest') }}
+                </i>
+                <i v-else-if="isActiveDraft && showDraftTag" class="pipeline-draft-version-tag">
+                    {{ $t('待发布') }}
                 </i>
             </p>
             <i v-if="isLoading" class="devops-icon icon-circle-2-1 spin-icon" />
@@ -74,8 +77,8 @@
 </template>
 <script>
     import Logo from '@/components/Logo'
-    import { convertTime } from '@/utils/util'
     import { bus, SHOW_VERSION_HISTORY_SIDESLIDER } from '@/utils/bus'
+    import { convertTime } from '@/utils/util'
     import { mapActions, mapState } from 'vuex'
     export default {
         name: 'VersionSelector',
@@ -105,6 +108,10 @@
                 default: ''
             },
             refreshListOnExpand: {
+                type: Boolean,
+                default: false
+            },
+            showDraftTag: {
                 type: Boolean,
                 default: false
             }
@@ -316,7 +323,8 @@
         font-size: 20px;
     }
 }
-.pipeline-release-version-tag {
+.pipeline-release-version-tag,
+.pipeline-draft-version-tag {
     display: inline-flex;
     align-items: center;
     background: #E4FAF0 ;
@@ -330,6 +338,11 @@
     align-self: center;
     font-style: normal;
     flex-shrink: 0;
+}
+.pipeline-draft-version-tag {
+    background: #3A2F18;
+    border: 1px solid #523F1E;
+    color: #FC943B;
 }
 
 .pipeline-version-option-item {
