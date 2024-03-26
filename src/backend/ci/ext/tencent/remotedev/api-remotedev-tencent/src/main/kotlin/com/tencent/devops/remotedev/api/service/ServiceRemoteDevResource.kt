@@ -49,7 +49,13 @@ interface ServiceRemoteDevResource {
         projectId: String?,
         @Parameter(description = "ip", required = false)
         @QueryParam("ip")
-        ip: String?
+        ip: String?,
+        @Parameter(description = "businessLineName", required = false)
+        @QueryParam("businessLineName")
+        businessLineName: String?,
+        @Parameter(description = "ownerName", required = false)
+        @QueryParam("ownerName")
+        ownerName: String?
     ): Result<List<WeSecProjectWorkspace>>
 
     @Operation(summary = "提供给wesec获取项目下云桌面信息")

@@ -459,7 +459,9 @@ class WorkspaceDao {
         projectIds: Set<String>? = null,
         ip: String? = null,
         assignType: WorkspaceShared.AssignType? = null,
-        workspaceName: String? = null
+        workspaceName: String? = null,
+        businessLineName: String? = null,
+        ownerName: String? = null
     ): Result<out Record>? {
         val t1 = TWorkspace.T_WORKSPACE.`as`("t1")
         val t2 = TWorkspaceShared.T_WORKSPACE_SHARED.`as`("t2")
@@ -479,6 +481,9 @@ class WorkspaceDao {
         }
         workspaceName?.let {
             conditions.add(t1.NAME.eq(it))
+        }
+        businessLineName?.let {
+            conditions.add(t1.CREATOR_DEPT_NAME.eq(businessLineName).or(t1.BUSINESS_LINE_NAME.eq(businessLineName)))
         }
 
         if (!projectIds.isNullOrEmpty()) {
@@ -509,6 +514,13 @@ class WorkspaceDao {
                     it.and(t2.ASSIGN_TYPE.eq(assignType.name))
                 } else {
                     it.and(t2.ASSIGN_TYPE.eq(WorkspaceShared.AssignType.OWNER.name).or(t2.ASSIGN_TYPE.isNull))
+                }
+            }
+            .let {
+                if (!ownerName.isNullOrBlank()) {
+                    it.and(t2.SHARED_USER.eq(ownerName))
+                } else {
+                    it
                 }
             }
             .and(t1.OWNER_TYPE.eq(WorkspaceOwnerType.PROJECT.name))
