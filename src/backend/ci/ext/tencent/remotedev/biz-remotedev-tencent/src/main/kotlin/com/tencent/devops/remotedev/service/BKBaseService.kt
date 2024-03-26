@@ -192,7 +192,7 @@ class BKBaseService @Autowired constructor(
     ): Map<String, Int> {
         val sql = "select zone_id,inner_ip,sum(activity_minus_cnt) as cnt " +
             "from 100656_ads_desktop_daily_activity_res " +
-            "where thedate > '${date.format(theDateFormat)}' and activity_flag > 0 " +
+            "where thedate > '${date.format(theDateFormat)}' " +
             "group by inner_ip,zone_id LIMIT $limit OFFSET $offset"
 
         val resp = doHttp(sql) ?: return result
@@ -202,12 +202,12 @@ class BKBaseService @Autowired constructor(
                 result["${l["zone_id"] as String}.${l["inner_ip"] as String}"] = l["cnt"] as Int
             } ?: return result
             if (resp.data.list.size == limit) {
-                fetchActiveIps(
+                fetchActiveTimes(
                     date, offset + limit, limit, result
                 )
             }
         } catch (e: Exception) {
-            logger.error("fetchActiveIps parse data error", e)
+            logger.error("fetchActiveTimes parse data error", e)
             return result
         }
 
