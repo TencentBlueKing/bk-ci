@@ -86,8 +86,7 @@ BK-CI后台主要技术栈
       |- common                   # 通用模块
         |- common-auth            # 权限模块
           |- common-auth-api      # 权限模块的接口抽象
-          |- common-auth-sample   # 权限模块示例实现
-          |- common-auth-blueking # 对接蓝鲸权限中心的实现
+          |- common-auth-provider   # 权限模块提供者
       |- artifactory 							# 对接制品仓库微服务
       |- dispatch    							# 第三方构建机调度,Docker公共构建机调度微服务
       |- dockerhost     					# Docker公共构建机&无编译环境 母机上运行的类似Agent的服务，用于接收构建任务并与Docker进行交互拉起构建任务

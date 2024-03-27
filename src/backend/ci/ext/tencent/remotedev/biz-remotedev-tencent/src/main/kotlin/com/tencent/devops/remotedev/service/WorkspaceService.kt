@@ -1381,6 +1381,53 @@ class WorkspaceService @Autowired constructor(
         }
     }
 
+    // 云桌面连续14天活跃度不足，总活跃时长小于10小时
+    fun notifyWhenNotActiveIn14Days() {
+        val limitDay = holidayHelper.getLastWorkingDays(14).last()
+        logger.info("autoDeleteWhenNotActiveIn14Days|$limitDay")
+        val actives = bkBaseService.fetchActiveTimes(limitDay)
+        workspaceJoinDao.limitFetchProjectWorkspace(
+            dslContext = dslContext,
+            limit = null,
+            queryType = QueryType.WEB,
+            search = WorkspaceSearch(
+                workspaceSystemType = listOf(WorkspaceSystemType.WINDOWS_GPU),
+                onFuzzyMatch = false
+            )
+        )?.parallelStream()?.forEach { workspace ->
+            if (workspace.createTime > limitDay) {
+                logger.info(
+                    "skip check| workspace create time less than limit day|" +
+                        "${workspace.workspaceName}|${workspace.createTime}|$limitDay"
+                )
+                return@forEach
+            }
+            if (actives[workspace.hostName] == null || actives[workspace.hostName]!! < 10 * 60) {
+                workspaceOpHistoryDao.createWorkspaceHistory(
+                    dslContext = dslContext,
+                    workspaceName = workspace.workspaceName,
+                    operator = ADMIN_NAME,
+                    action = WorkspaceAction.NOTIFY,
+                    actionMessage = workspaceCommon.getOpHistory(OpHistoryCopyWriting.TIMEOUT_STOP)
+                )
+                val userIds = permissionService.getWorkspaceOwner(workspace.workspaceName)
+                notifyControl.notify4UserAndCCRemoteDevManagerAndCCOwnerShareUser(
+                    userIds = userIds.toMutableSet(),
+                    workspaceName = workspace.workspaceName,
+                    cc = mutableSetOf(workspace.createUserId),
+                    projectId = workspace.projectId,
+                    notifyTemplateCode = NotifyControl.NOT_ACTIVE_IN_14_DAYS_NOTIFY,
+                    notifyType = mutableSetOf(RemoteDevNotifyType.EMAIL, RemoteDevNotifyType.RTX),
+                    bodyParams = mutableMapOf(
+                        "cgsIp" to (workspace.hostName ?: ""),
+                        "projectId" to (workspace.projectId),
+                        "userId" to userIds.joinToString()
+                    )
+                )
+            }
+        }
+    }
+
     fun projectAccessDevicePermissions(
         userId: String,
         macAddress: String

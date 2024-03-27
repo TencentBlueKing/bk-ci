@@ -40,15 +40,14 @@ import com.tencent.devops.common.api.pojo.PipelineAsCodeSettings
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
-import com.tencent.devops.common.archive.client.BkRepoClient
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthPermissionApi
 import com.tencent.devops.common.auth.api.AuthProjectApi
 import com.tencent.devops.common.auth.api.AuthResourceType
-import com.tencent.devops.common.auth.api.BSAuthTokenApi
-import com.tencent.devops.common.auth.code.BSPipelineAuthServiceCode
+import com.tencent.devops.common.auth.code.PipelineAuthServiceCode
 import com.tencent.devops.common.auth.code.ProjectAuthServiceCode
 import com.tencent.devops.common.auth.enums.AuthSystemType
+import com.tencent.devops.common.auth.service.BkAccessTokenApi
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.client.ClientTokenService
 import com.tencent.devops.common.redis.RedisOperation
@@ -82,7 +81,6 @@ import com.tencent.devops.project.service.ProjectApprovalService
 import com.tencent.devops.project.service.ProjectExtOrganizationService
 import com.tencent.devops.project.service.ProjectExtPermissionService
 import com.tencent.devops.project.service.ProjectExtService
-import com.tencent.devops.project.service.ProjectPaasCCService
 import com.tencent.devops.project.service.ProjectPermissionService
 import com.tencent.devops.project.service.ProjectTagService
 import com.tencent.devops.project.service.ShardingRoutingRuleAssignService
@@ -101,15 +99,13 @@ import java.io.File
 @Service
 class TxProjectServiceImpl @Autowired constructor(
     private val tofService: TOFService,
-    private val bkRepoClient: BkRepoClient,
-    private val projectPaasCCService: ProjectPaasCCService,
     private val authProjectApi: AuthProjectApi,
-    private val bsPipelineAuthServiceCode: BSPipelineAuthServiceCode,
+    private val pipelineAuthServiceCode: PipelineAuthServiceCode,
     private val config: CommonConfig,
     private val projectDispatcher: ProjectDispatcher,
     private val managerService: ManagerService,
     private val tokenService: ClientTokenService,
-    private val bsAuthTokenApi: BSAuthTokenApi,
+    private val bkAccessTokenApi: BkAccessTokenApi,
     private val projectExtPermissionService: ProjectExtPermissionService,
     private val projectTagService: ProjectTagService,
     private val bkTag: BkTag,
@@ -323,7 +319,7 @@ class TxProjectServiceImpl @Autowired constructor(
     override fun validatePermission(projectCode: String, userId: String, permission: AuthPermission): Boolean {
         return authProjectApi.validateUserProjectPermission(
             user = userId,
-            serviceCode = bsPipelineAuthServiceCode,
+            serviceCode = pipelineAuthServiceCode,
             permission = permission,
             projectCode = projectCode
         )
@@ -435,7 +431,7 @@ class TxProjectServiceImpl @Autowired constructor(
 
     private fun getV0UserProject(userId: String?, accessToken: String?): List<String> {
         val token = if (accessToken.isNullOrEmpty()) {
-            bsAuthTokenApi.getAccessToken(bsPipelineAuthServiceCode)
+            bkAccessTokenApi.getPipelineAccessToken()
         } else {
             accessToken
         }
