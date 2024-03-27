@@ -47,7 +47,7 @@ interface OpRemoteDevJobResource {
     fun getSchemaList(
         @Parameter(description = "用户ID", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String,
+        userId: String
     ): Result<List<JobSchema>>
 
     @Operation(summary = "获取schema详情")
