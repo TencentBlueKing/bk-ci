@@ -25,30 +25,39 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.project.config
+package com.tencent.devops.project.service.secret
 
-import com.tencent.devops.project.listener.ProjectEventListener
-import com.tencent.devops.project.listener.SampleProjectEventListener
-import com.tencent.devops.project.service.ProjectCallbackControl
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.boot.autoconfigure.AutoConfigureOrder
-import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
-import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication
-import org.springframework.context.annotation.Bean
-import org.springframework.context.annotation.Configuration
-import org.springframework.core.Ordered
+import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.project.pojo.ProjectCallBackDefaultRequest
+import com.tencent.devops.project.pojo.ProjectCallbackData
+import com.tencent.devops.project.pojo.SecretRequestParam
+import com.tencent.devops.project.pojo.secret.DefaultSecretParam
 
-@Suppress("ALL")
-@Configuration
-@ConditionalOnWebApplication
-@AutoConfigureOrder(Ordered.LOWEST_PRECEDENCE)
-class ProjectConfiguration {
+class DefaultSecretTokenService : ISecretTokenService<DefaultSecretParam> {
 
-    @Bean
-    @ConditionalOnMissingBean(ProjectEventListener::class)
-    fun projectEventListener(
-        @Autowired projectCallbackControl: ProjectCallbackControl
-    ): ProjectEventListener = SampleProjectEventListener(
-        projectCallbackControl = projectCallbackControl
-    )
+    override fun getSecretRequestParam(
+        userId: String,
+        projectId: String,
+        secretParam: DefaultSecretParam
+    ): SecretRequestParam = with(secretParam) {
+        SecretRequestParam(
+            url = url,
+            header = headers,
+            params = params,
+            secretType = DefaultSecretParam.classType
+        )
+    }
+
+    override fun getRequestBody(secretParam: DefaultSecretParam, projectCallbackData: ProjectCallbackData): String {
+        return with(projectCallbackData) {
+            JsonUtil.toJson(
+                ProjectCallBackDefaultRequest(
+                    event = event,
+                    updateInfo = updateInfo,
+                    createInfo = createInfo
+                ),
+                false
+            )
+        }
+    }
 }

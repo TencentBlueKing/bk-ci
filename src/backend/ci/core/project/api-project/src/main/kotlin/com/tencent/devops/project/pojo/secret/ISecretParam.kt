@@ -25,30 +25,25 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.project.config
+package com.tencent.devops.project.pojo.secret
 
-import com.tencent.devops.project.listener.ProjectEventListener
-import com.tencent.devops.project.listener.SampleProjectEventListener
-import com.tencent.devops.project.service.ProjectCallbackControl
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.boot.autoconfigure.AutoConfigureOrder
-import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
-import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication
-import org.springframework.context.annotation.Bean
-import org.springframework.context.annotation.Configuration
-import org.springframework.core.Ordered
+import com.fasterxml.jackson.annotation.JsonSubTypes
+import com.fasterxml.jackson.annotation.JsonTypeInfo
+import com.tencent.devops.project.pojo.secret.bkrepo.BkrepoModelSecretParam
+import com.tencent.devops.project.pojo.secret.bkrepo.BkrepoProjectSecretParam
 
-@Suppress("ALL")
-@Configuration
-@ConditionalOnWebApplication
-@AutoConfigureOrder(Ordered.LOWEST_PRECEDENCE)
-class ProjectConfiguration {
+@JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY, property = "@type")
+@JsonSubTypes(
+    JsonSubTypes.Type(value = BcsSecretParam::class, name = BcsSecretParam.classType),
+    JsonSubTypes.Type(value = BkrepoProjectSecretParam::class, name = BkrepoProjectSecretParam.classType),
+    JsonSubTypes.Type(value = BkrepoModelSecretParam::class, name = BkrepoModelSecretParam.classType),
+    JsonSubTypes.Type(value = BlueWhaleSecretParam::class, name = BlueWhaleSecretParam.classType),
+    JsonSubTypes.Type(value = DefaultSecretParam::class, name = DefaultSecretParam.classType)
+)
+interface ISecretParam {
+    val url: String
 
-    @Bean
-    @ConditionalOnMissingBean(ProjectEventListener::class)
-    fun projectEventListener(
-        @Autowired projectCallbackControl: ProjectCallbackControl
-    ): ProjectEventListener = SampleProjectEventListener(
-        projectCallbackControl = projectCallbackControl
-    )
+    val userId: String
+
+    fun getSecretType(): String
 }

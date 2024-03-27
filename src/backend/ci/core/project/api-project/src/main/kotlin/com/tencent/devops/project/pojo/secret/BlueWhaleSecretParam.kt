@@ -25,30 +25,16 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.project.config
+package com.tencent.devops.project.pojo.secret
 
-import com.tencent.devops.project.listener.ProjectEventListener
-import com.tencent.devops.project.listener.SampleProjectEventListener
-import com.tencent.devops.project.service.ProjectCallbackControl
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.boot.autoconfigure.AutoConfigureOrder
-import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
-import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication
-import org.springframework.context.annotation.Bean
-import org.springframework.context.annotation.Configuration
-import org.springframework.core.Ordered
+data class BlueWhaleSecretParam(
+    val pipelineSecret: String,
+    override val url: String,
+    override val userId: String
+) : ISecretParam {
 
-@Suppress("ALL")
-@Configuration
-@ConditionalOnWebApplication
-@AutoConfigureOrder(Ordered.LOWEST_PRECEDENCE)
-class ProjectConfiguration {
-
-    @Bean
-    @ConditionalOnMissingBean(ProjectEventListener::class)
-    fun projectEventListener(
-        @Autowired projectCallbackControl: ProjectCallbackControl
-    ): ProjectEventListener = SampleProjectEventListener(
-        projectCallbackControl = projectCallbackControl
-    )
+    override fun getSecretType() = BcsSecretParam.classType
+    companion object {
+        const val classType = "buleWhale"
+    }
 }

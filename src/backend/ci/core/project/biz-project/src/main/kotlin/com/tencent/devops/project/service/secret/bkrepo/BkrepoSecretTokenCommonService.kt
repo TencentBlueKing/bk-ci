@@ -25,30 +25,25 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.project.config
+package com.tencent.devops.project.service.secret.bkrepo
 
-import com.tencent.devops.project.listener.ProjectEventListener
-import com.tencent.devops.project.listener.SampleProjectEventListener
-import com.tencent.devops.project.service.ProjectCallbackControl
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.boot.autoconfigure.AutoConfigureOrder
-import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
-import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication
-import org.springframework.context.annotation.Bean
-import org.springframework.context.annotation.Configuration
-import org.springframework.core.Ordered
+import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_PROJECT_ID
+import com.tencent.devops.common.security.util.EnvironmentUtil
+import com.tencent.devops.project.constant.BK_REPO_PROJECT_ID
+import com.tencent.devops.project.constant.BK_REPO_UID
+import com.tencent.devops.project.constant.DEVOPS_TOKEN
+import com.tencent.devops.project.pojo.secret.bkrepo.BkrepoCommonSecretParam
+import com.tencent.devops.project.service.secret.ISecretTokenService
 
-@Suppress("ALL")
-@Configuration
-@ConditionalOnWebApplication
-@AutoConfigureOrder(Ordered.LOWEST_PRECEDENCE)
-class ProjectConfiguration {
+interface BkrepoSecretTokenCommonService<T : BkrepoCommonSecretParam> : ISecretTokenService<T> {
 
-    @Bean
-    @ConditionalOnMissingBean(ProjectEventListener::class)
-    fun projectEventListener(
-        @Autowired projectCallbackControl: ProjectCallbackControl
-    ): ProjectEventListener = SampleProjectEventListener(
-        projectCallbackControl = projectCallbackControl
-    )
+    fun getCommonHeaders(userId: String, projectId: String): MutableMap<String, String> {
+        val headers = mutableMapOf<String, String>()
+        headers[BK_REPO_UID] = userId
+        headers[BK_REPO_PROJECT_ID] = projectId
+        headers[AUTH_HEADER_DEVOPS_PROJECT_ID] = projectId
+        val devopsToken = EnvironmentUtil.gatewayDevopsToken()
+        devopsToken?.let { headers[DEVOPS_TOKEN] = it }
+        return headers
+    }
 }

@@ -25,30 +25,31 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.project.config
+package com.tencent.devops.project.service.secret
 
-import com.tencent.devops.project.listener.ProjectEventListener
-import com.tencent.devops.project.listener.SampleProjectEventListener
-import com.tencent.devops.project.service.ProjectCallbackControl
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.boot.autoconfigure.AutoConfigureOrder
-import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
-import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication
-import org.springframework.context.annotation.Bean
-import org.springframework.context.annotation.Configuration
-import org.springframework.core.Ordered
+import com.tencent.devops.project.pojo.secret.ISecretParam
+import org.slf4j.LoggerFactory
+import java.util.concurrent.ConcurrentHashMap
 
-@Suppress("ALL")
-@Configuration
-@ConditionalOnWebApplication
-@AutoConfigureOrder(Ordered.LOWEST_PRECEDENCE)
-class ProjectConfiguration {
+object SecretTokenServiceFactory {
+    private val secretTokenServiceMap = ConcurrentHashMap<String, ISecretTokenService<*>>()
 
-    @Bean
-    @ConditionalOnMissingBean(ProjectEventListener::class)
-    fun projectEventListener(
-        @Autowired projectCallbackControl: ProjectCallbackControl
-    ): ProjectEventListener = SampleProjectEventListener(
-        projectCallbackControl = projectCallbackControl
-    )
+    /**
+     * 注册secretTokenService
+     */
+    fun register(cls: Class<out ISecretParam>, secretTokenService: ISecretTokenService<out ISecretParam>) {
+        logger.info("register secretTokenService ${cls.name}")
+        secretTokenServiceMap[cls.name] = secretTokenService
+    }
+
+    /**
+     * 获取服务
+     */
+    fun <T : ISecretParam> getSecretTokenService(secretParam: T): ISecretTokenService<T> {
+        val secretTokenService = secretTokenServiceMap[secretParam::class.java.name]
+            ?: throw IllegalArgumentException("Unknown secretType $secretParam")
+        return (secretTokenService as ISecretTokenService<T>)
+    }
+
+    val logger = LoggerFactory.getLogger(SecretTokenServiceFactory::class.java)
 }

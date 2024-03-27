@@ -25,30 +25,22 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.project.config
+package com.tencent.devops.project.service.secret
 
-import com.tencent.devops.project.listener.ProjectEventListener
-import com.tencent.devops.project.listener.SampleProjectEventListener
-import com.tencent.devops.project.service.ProjectCallbackControl
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.boot.autoconfigure.AutoConfigureOrder
-import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
-import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication
-import org.springframework.context.annotation.Bean
-import org.springframework.context.annotation.Configuration
-import org.springframework.core.Ordered
+import com.tencent.devops.project.pojo.ProjectCallbackData
+import com.tencent.devops.project.pojo.SecretRequestParam
+import com.tencent.devops.project.pojo.secret.BcsSecretParam
 
-@Suppress("ALL")
-@Configuration
-@ConditionalOnWebApplication
-@AutoConfigureOrder(Ordered.LOWEST_PRECEDENCE)
-class ProjectConfiguration {
+class BcsSecretTokenService: ISecretTokenService<BcsSecretParam> {
+    override fun getSecretRequestParam(
+        userId: String,
+        projectId: String,
+        secretParam: BcsSecretParam
+    ): SecretRequestParam {
+        TODO("Not yet implemented")
+    }
 
-    @Bean
-    @ConditionalOnMissingBean(ProjectEventListener::class)
-    fun projectEventListener(
-        @Autowired projectCallbackControl: ProjectCallbackControl
-    ): ProjectEventListener = SampleProjectEventListener(
-        projectCallbackControl = projectCallbackControl
-    )
+    override fun getRequestBody(secretParam: BcsSecretParam, projectCallbackData: ProjectCallbackData): String {
+        TODO("Not yet implemented")
+    }
 }

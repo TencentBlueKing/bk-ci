@@ -27,15 +27,39 @@
 
 package com.tencent.devops.project.listener
 
+import com.tencent.devops.project.enum.ProjectEventType
+import com.tencent.devops.project.pojo.ProjectCallbackData
 import com.tencent.devops.project.pojo.mq.ProjectCreateBroadCastEvent
 import com.tencent.devops.project.pojo.mq.ProjectUpdateBroadCastEvent
 import com.tencent.devops.project.pojo.mq.ProjectUpdateLogoBroadCastEvent
+import com.tencent.devops.project.service.ProjectCallbackControl
+import org.springframework.beans.factory.annotation.Autowired
 
-class SampleProjectEventListener : ProjectEventListener {
+class SampleProjectEventListener @Autowired constructor(
+    val projectCallbackControl: ProjectCallbackControl
+) : ProjectEventListener {
 
-    override fun onReceiveProjectCreate(event: ProjectCreateBroadCastEvent) = Unit
+    override fun onReceiveProjectCreate(event: ProjectCreateBroadCastEvent) {
+        projectCallbackControl.callBackProjectEvent(
+            eventType = ProjectEventType.CREATE,
+            callbackData = ProjectCallbackData(
+                event = ProjectEventType.CREATE,
+                createInfo = event.projectInfo,
+                userId = event.userId
+            )
+        )
+    }
 
-    override fun onReceiveProjectUpdate(event: ProjectUpdateBroadCastEvent) = Unit
+    override fun onReceiveProjectUpdate(event: ProjectUpdateBroadCastEvent) {
+        projectCallbackControl.callBackProjectEvent(
+            eventType = ProjectEventType.UPDATE,
+            callbackData = ProjectCallbackData(
+                event = ProjectEventType.UPDATE,
+                updateInfo = event.projectInfo,
+                userId = event.userId
+            )
+        )
+    }
 
     override fun onReceiveProjectUpdateLogo(event: ProjectUpdateLogoBroadCastEvent) = Unit
 }

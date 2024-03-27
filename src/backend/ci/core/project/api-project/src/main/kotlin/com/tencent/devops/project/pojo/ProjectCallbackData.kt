@@ -25,52 +25,20 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.project.listener
+package com.tencent.devops.project.pojo
 
-import com.tencent.devops.common.event.listener.Listener
+import com.tencent.devops.project.enum.ProjectEventType
 import com.tencent.devops.project.pojo.mq.ProjectBroadCastEvent
-import com.tencent.devops.project.pojo.mq.ProjectCreateBroadCastEvent
-import com.tencent.devops.project.pojo.mq.ProjectUpdateBroadCastEvent
-import com.tencent.devops.project.pojo.mq.ProjectUpdateLogoBroadCastEvent
 
-/**
- * 项目事件监听器
- */
-interface ProjectEventListener : Listener<ProjectBroadCastEvent> {
-
-    /**
-     * 默认实现了Listener的消息处理方法做转换处理
-     * @param event ProjectBroadCastEvent抽象类的处理，如有扩展请到子类操作
-     */
-    override fun execute(event: ProjectBroadCastEvent) {
-        when (event) {
-            is ProjectUpdateBroadCastEvent -> {
-                onReceiveProjectUpdate(event)
-            }
-            is ProjectUpdateLogoBroadCastEvent -> {
-                onReceiveProjectUpdateLogo(event)
-            }
-            is ProjectCreateBroadCastEvent -> {
-                onReceiveProjectCreate(event)
-            }
-        }
+class ProjectCallbackData(
+    val event: ProjectEventType,
+    val userId: String,
+    val updateInfo: ProjectUpdateInfo? = null,
+    val createInfo: ProjectCreateInfo? = null
+) {
+    fun getProjectId() = if (event == ProjectEventType.CREATE) {
+        createInfo!!.englishName
+    } else {
+        updateInfo!!.englishName
     }
-
-    /**
-     *  处理创建项目事件
-     *  @param event ProjectCreateBroadCastEvent
-     */
-    fun onReceiveProjectCreate(event: ProjectCreateBroadCastEvent)
-
-    /**
-     *  处理更新项目事件
-     *  @param event ProjectUpdateBroadCastEvent
-     */
-    fun onReceiveProjectUpdate(event: ProjectUpdateBroadCastEvent)
-
-    /**
-     *  处理更新Logo项目事件
-     *  @param event ProjectUpdateLogoBroadCastEvent
-     */
-    fun onReceiveProjectUpdateLogo(event: ProjectUpdateLogoBroadCastEvent)
 }
