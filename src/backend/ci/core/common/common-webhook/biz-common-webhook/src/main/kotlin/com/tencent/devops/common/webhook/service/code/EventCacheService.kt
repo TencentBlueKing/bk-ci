@@ -268,7 +268,7 @@ class EventCacheService @Autowired constructor(
         maxCount: Int
     ): List<WebhookCommit> {
         // 需要滚动滚动查询时，第一页数据已经有了不需要重复请求接口，直接从第二页开始查，避免再次调接口
-        var page = if(useScrollPage) 2 else 1
+        var page = if (useScrollPage) 2 else 1
         val webhookCommitList = mutableListOf<WebhookCommit>()
         try {
             while (true) {
