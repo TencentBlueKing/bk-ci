@@ -167,7 +167,7 @@ class DeleteControl @Autowired constructor(
 
             val bizId = MDC.get(TraceTag.BIZID) ?: TraceTag.buildBiz()
 
-            val gameId = workspaceCommon.getGameIdAndAppId(workspace.projectId)
+            val gameId = workspaceCommon.getGameIdAndAppId(workspace.projectId, workspace.ownerType)
 
             // 发送处理事件
             dispatcher.dispatch(
@@ -265,7 +265,7 @@ class DeleteControl @Autowired constructor(
             doDeleteWS(true, userId, workspaceName, null)
 
             val bizId = MDC.get(TraceTag.BIZID) ?: TraceTag.buildBiz()
-            val gameId = workspaceCommon.getGameIdAndAppId(workspace.projectId)
+            val gameId = workspaceCommon.getGameIdAndAppId(workspace.projectId, workspace.ownerType)
 
             // 发送处理事件
             dispatcher.dispatch(
@@ -587,7 +587,7 @@ class DeleteControl @Autowired constructor(
                 actionMessage = workspaceCommon.getOpHistory(OpHistoryCopyWriting.TIMEOUT_STOP)
             )
             val bizId = MDC.get(TraceTag.BIZID) ?: TraceTag.buildBiz()
-            val gameId = workspaceCommon.getGameIdAndAppId(workspace.projectId)
+            val gameId = workspaceCommon.getGameIdAndAppId(workspace.projectId, workspace.ownerType)
             dispatcher.dispatch(
                 WorkspaceOperateEvent(
                     userId = workspaceCommon.getSystemOperator(workspace.createUserId, workspace.workspaceMountType),

@@ -315,7 +315,7 @@ class CreateControl @Autowired constructor(
     ) {
         val mountType = WorkspaceMountType.START
         val systemType = WorkspaceSystemType.WINDOWS_GPU
-        val gameId = workspaceCommon.getGameIdAndAppId(projectId)
+        val gameId = workspaceCommon.getGameIdAndAppId(projectId, WorkspaceOwnerType.PROJECT)
         for (i in 0 until workspaceCreate.count) {
             logger.info("createWorkspace|mountType|$mountType")
             val workspaceName = generateWorkspaceName(projectId)
@@ -520,7 +520,8 @@ class CreateControl @Autowired constructor(
                 workspaceName = event.workspaceName,
                 projectId = ws.projectId,
                 mountType = event.mountType,
-                event = event
+                event = event,
+                ownerType = ws.ownerType
             )
 
             if (ws.workspaceSystemType.needHeartbeat()) {
@@ -641,10 +642,10 @@ class CreateControl @Autowired constructor(
             oldWs.ownerType == WorkspaceOwnerType.PROJECT -> oldWs.projectId
             else -> null
         }
-        val gameId = workspaceCommon.getGameIdAndAppId(projectId)
+        val ownerType = if (projectId != null) WorkspaceOwnerType.PROJECT else WorkspaceOwnerType.PERSONAL
+        val gameId = workspaceCommon.getGameIdAndAppId(projectId, ownerType)
 
         val workspaceName = generateWorkspaceName(projectId ?: userId)
-        val ownerType = if (projectId != null) WorkspaceOwnerType.PROJECT else WorkspaceOwnerType.PERSONAL
         val mountType = WorkspaceMountType.START
         val systemType = WorkspaceSystemType.WINDOWS_GPU
         val windowsConfig = windowsResourceConfigService.getTypeConfig(vm.machineType)
@@ -867,7 +868,7 @@ class CreateControl @Autowired constructor(
 
         val bizId = MDC.get(TraceTag.BIZID)
 
-        val gameId = workspaceCommon.getGameIdAndAppId(projectId)
+        val gameId = workspaceCommon.getGameIdAndAppId(projectId, workspace.ownerType)
         // 发送给k8s
         dispatcher.dispatch(
             WorkspaceCreateEvent(
@@ -954,7 +955,7 @@ class CreateControl @Autowired constructor(
         doPreparing(workspace)
 
         val bizId = MDC.get(TraceTag.BIZID)
-        val gameId = workspaceCommon.getGameIdAndAppId(projectId)
+        val gameId = workspaceCommon.getGameIdAndAppId(projectId, workspace.ownerType)
         // 发送给k8s
         dispatcher.dispatch(
             WorkspaceCreateEvent(

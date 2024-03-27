@@ -47,6 +47,7 @@ import com.tencent.devops.remotedev.pojo.CgsResourceConfig
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 
 @Service("startcloudInterfaceService")
@@ -57,15 +58,20 @@ class StartCloudInterfaceService @Autowired constructor(
     private val workspaceRedisUtils: WorkspaceRedisUtils,
     private val workspaceStartCloudClient: WorkspaceStartCloudClient
 ) {
-//    @Value("\${startCloud.appName}")
-//    val appName: String = "IEG_BKCI"
+    @Value("\${startCloud.appName}")
+    val contentProviderName: String = "IEG_BKCI"
 
     companion object {
         private val logger = LoggerFactory.getLogger(StartCloudInterfaceService::class.java)
     }
 
     fun createStartCloudUser(userId: String, gameId: String?): Boolean {
-        kotlin.runCatching { workspaceClient.createUser(userId, EnvironmentUserCreate(userId, checkNotNull(gameId))) }
+        kotlin.runCatching {
+            workspaceClient.createUser(
+                userId,
+                EnvironmentUserCreate(userId, contentProviderName, checkNotNull(gameId))
+            )
+        }
             .onFailure {
                 logger.warn("create user failed.|${it.message}")
                 if (it is BuildFailureException &&

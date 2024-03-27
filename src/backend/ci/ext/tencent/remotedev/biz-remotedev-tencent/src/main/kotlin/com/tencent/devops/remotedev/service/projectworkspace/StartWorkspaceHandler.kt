@@ -151,7 +151,7 @@ class StartWorkspaceHandler @Autowired constructor(
                 )
             )
 
-            val gameId = workspaceCommon.getGameIdAndAppId(workspace.projectId)
+            val gameId = workspaceCommon.getGameIdAndAppId(workspace.projectId, workspace.ownerType)
             dispatcher.dispatch(
                 WorkspaceOperateEvent(
                     userId = userId,

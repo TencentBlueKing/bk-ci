@@ -171,7 +171,8 @@ class DeliverControl @Autowired constructor(
                     projectId = workspace.projectId,
                     operator = userId,
                     assigns = listOf(assign2Owner),
-                    mountType = WorkspaceMountType.START
+                    mountType = WorkspaceMountType.START,
+                    ownerType = workspace.ownerType
                 )
                 if (workspace.status.checkDistributing()) {
                     workspaceDao.updateWorkspaceStatus(
@@ -202,7 +203,8 @@ class DeliverControl @Autowired constructor(
                                 expiration = null
                             )
                         ),
-                        mountType = WorkspaceMountType.START
+                        mountType = WorkspaceMountType.START,
+                        ownerType = workspace.ownerType
                     )
                 }
             }
@@ -216,7 +218,8 @@ class DeliverControl @Autowired constructor(
                 projectId = workspace.projectId,
                 operator = userId,
                 assigns = add,
-                mountType = WorkspaceMountType.START
+                mountType = WorkspaceMountType.START,
+                ownerType = workspace.ownerType
             )
         }
 

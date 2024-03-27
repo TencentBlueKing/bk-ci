@@ -291,7 +291,7 @@ class WorkspaceService @Autowired constructor(
 
             // 共享时创建START云桌面的用户
             if (workspace.workspaceMountType == WorkspaceMountType.START) {
-                val gameId = workspaceCommon.getGameIdAndAppId(workspace.projectId)
+                val gameId = workspaceCommon.getGameIdAndAppId(workspace.projectId, workspace.ownerType)
                 client.get(ServiceStartCloudResource::class)
                     .createStartCloudUser(sharedUser, gameId.first)
             }
@@ -308,7 +308,8 @@ class WorkspaceService @Autowired constructor(
                 projectId = workspace.projectId,
                 operator = userId,
                 assigns = listOf(ProjectWorkspaceAssign(sharedUser, WorkspaceShared.AssignType.VIEWER, null)),
-                mountType = workspace.workspaceMountType
+                mountType = workspace.workspaceMountType,
+                ownerType = workspace.ownerType
             )
             workspaceOpHistoryDao.createWorkspaceHistory(
                 dslContext = dslContext,
@@ -813,7 +814,7 @@ class WorkspaceService @Autowired constructor(
             sleepingCount = status.count { it.checkSleeping() },
             deleteCount = status.count { it.checkDeleted() },
             chargeableTime = endBilling.second +
-                    (notEndBillingTime + endBilling.first - discountTime * 60).coerceAtLeast(0),
+                (notEndBillingTime + endBilling.first - discountTime * 60).coerceAtLeast(0),
             usageTime = usageTime,
             sleepingTime = sleepingTime,
             discountTime = discountTime,
@@ -896,7 +897,7 @@ class WorkspaceService @Autowired constructor(
                 status = workspace.status,
                 lastUpdateTime = updateTime.timestamp(),
                 chargeableTime = endBilling.second +
-                        (notEndBillingTime + endBilling.first - discountTime * 60).coerceAtLeast(0),
+                    (notEndBillingTime + endBilling.first - discountTime * 60).coerceAtLeast(0),
                 usageTime = usageTime,
                 sleepingTime = sleepingTime,
                 cpu = cpu,
@@ -1014,9 +1015,10 @@ class WorkspaceService @Autowired constructor(
 
         return workspace?.let {
             workspaceCommon.getOrSaveWorkspaceDetail(
-                workspaceName,
-                workspace.projectId,
-                workspace.workspaceMountType
+                workspaceName = workspaceName,
+                projectId = workspace.projectId,
+                mountType = workspace.workspaceMountType,
+                ownerType = workspace.ownerType
             ).let {
                 WorkspaceProxyDetail(
                     workspaceName = workspaceName,
@@ -1035,7 +1037,7 @@ class WorkspaceService @Autowired constructor(
         workspaceDao.fetchWorkspace(
             dslContext, userId = userId, status = WorkspaceStatus.RUNNING
         )?.parallelStream()?.forEach {
-            workspaceCommon.updateWorkspaceDetail(it.workspaceName, it.projectId, it.workspaceMountType)
+            workspaceCommon.updateWorkspaceDetail(it.workspaceName, it.projectId, it.workspaceMountType, it.ownerType)
         }
     }
 
@@ -1249,7 +1251,7 @@ class WorkspaceService @Autowired constructor(
             if ((workspace.lastStatusUpdateTime ?: LocalDateTime.now()) < limitDay) {
                 logger.info(
                     "ready to notify when sleep in 3 day " +
-                            "|${workspace.workspaceName}|${workspace.lastStatusUpdateTime}|${workspace.hostName}"
+                        "|${workspace.workspaceName}|${workspace.lastStatusUpdateTime}|${workspace.hostName}"
                 )
                 workspaceOpHistoryDao.createWorkspaceHistory(
                     dslContext = dslContext,
@@ -1291,7 +1293,7 @@ class WorkspaceService @Autowired constructor(
             ) {
                 logger.info(
                     "ready to notify when not login in 3 day " +
-                            "|${workspace.workspaceName}|${workspace.lastStatusUpdateTime}|${workspace.hostName}"
+                        "|${workspace.workspaceName}|${workspace.lastStatusUpdateTime}|${workspace.hostName}"
                 )
                 workspaceOpHistoryDao.createWorkspaceHistory(
                     dslContext = dslContext,

@@ -74,9 +74,9 @@ class StartCloudRemoteDevService @Autowired constructor(
     private val startCloudRedisUtils: StartCloudRedisUtils,
     private val startCloudInterfaceService: StartCloudInterfaceService
 ) : RemoteDevInterface {
-//
-//    @Value("\${startCloud.appName}")
-//    val appName: String = "IEG_BKCI"
+    //
+    @Value("\${startCloud.appName}")
+    val contentProviderName: String = "IEG_BKCI"
 
 //    @Value("\${startCloud.curLaunchId}")
 //    val curLaunchId: Int = 980007
@@ -101,7 +101,7 @@ class StartCloudRemoteDevService @Autowired constructor(
         kotlin.runCatching {
             workspaceClient.createUser(
                 userId,
-                EnvironmentUserCreate(userId, checkNotNull(event.gameId))
+                EnvironmentUserCreate(userId, contentProviderName, checkNotNull(event.gameId))
             )
         }.onFailure {
             logger.warn("create user failed.|${it.message}")
@@ -121,9 +121,9 @@ class StartCloudRemoteDevService @Autowired constructor(
         if (event.devFile.imageCosFile.isNullOrBlank()) {
             val random = startCloudInterfaceService.syncStartCloudResourceList().filter {
                 it.status == 11 &&
-                        it.machineType == event.devFile.machineType &&
-                        it.zoneId.replace(Regex("\\d+"), "") == event.devFile.zoneId &&
-                        it.locked != true
+                    it.machineType == event.devFile.machineType &&
+                    it.zoneId.replace(Regex("\\d+"), "") == event.devFile.zoneId &&
+                    it.locked != true
             }.randomOrNull()
             if (random != null) {
                 logger.info("get random resource to running|$random")
@@ -140,7 +140,7 @@ class StartCloudRemoteDevService @Autowired constructor(
                 )
             )?.filter {
                 (it.zoneId.replace(Regex("\\d+"), "") == event.devFile.zoneId) &&
-                        (it.machineResources?.any { ma -> ma.machineType == event.devFile.machineType } == true)
+                    (it.machineResources?.any { ma -> ma.machineType == event.devFile.machineType } == true)
             }?.randomOrNull() ?: throw BuildFailureException(
                 ErrorCodeEnum.CREATE_ENVIRONMENT_INTERFACE_FAIL.errorType,
                 ErrorCodeEnum.CREATE_ENVIRONMENT_INTERFACE_FAIL.errorCode,

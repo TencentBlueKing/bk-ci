@@ -136,7 +136,7 @@ class SleepControl @Autowired constructor(
             )
 
             val bizId = MDC.get(TraceTag.BIZID) ?: TraceTag.buildBiz()
-            val gameId = workspaceCommon.getGameIdAndAppId(workspace.projectId)
+            val gameId = workspaceCommon.getGameIdAndAppId(workspace.projectId, workspace.ownerType)
 
             // 发送处理事件
             dispatcher.dispatch(
@@ -248,7 +248,7 @@ class SleepControl @Autowired constructor(
             )
 
             val bizId = MDC.get(TraceTag.BIZID) ?: TraceTag.buildBiz()
-            val gameId = workspaceCommon.getGameIdAndAppId(workspace.projectId)
+            val gameId = workspaceCommon.getGameIdAndAppId(workspace.projectId, workspace.ownerType)
 
             dispatcher.dispatch(
                 WorkspaceOperateEvent(

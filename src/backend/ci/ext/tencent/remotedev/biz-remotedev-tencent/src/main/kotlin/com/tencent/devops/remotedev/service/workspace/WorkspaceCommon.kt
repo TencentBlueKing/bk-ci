@@ -142,10 +142,17 @@ class WorkspaceCommon @Autowired constructor(
         workspaceName: String,
         projectId: String,
         mountType: WorkspaceMountType,
+        ownerType: WorkspaceOwnerType,
         event: RemoteDevUpdateEvent? = null
     ): WorkSpaceCacheInfo {
         return getWorkspaceDetail(workspaceName) ?: run {
-            return updateWorkspaceDetail(workspaceName, projectId, mountType, event)
+            return updateWorkspaceDetail(
+                workspaceName = workspaceName,
+                projectId = projectId,
+                mountType = mountType,
+                ownerType = ownerType,
+                event = event
+            )
         }
     }
 
@@ -153,6 +160,7 @@ class WorkspaceCommon @Autowired constructor(
         workspaceName: String,
         projectId: String,
         mountType: WorkspaceMountType,
+        ownerType: WorkspaceOwnerType,
         event: RemoteDevUpdateEvent? = null
     ): WorkSpaceCacheInfo {
         logger.info("$workspaceName update workspaceDetail, $event")
@@ -164,7 +172,7 @@ class WorkspaceCommon @Autowired constructor(
             )
         }
 
-        val gameId = getGameIdAndAppId(projectId)
+        val gameId = getGameIdAndAppId(projectId, ownerType)
         val cache = if (mountType == WorkspaceMountType.START && event != null) {
             val workspaceInfo = client.get(ServiceRemoteDevResource::class)
                 .getWorkspaceInfo(event.userId, workspaceName, mountType).data!!
@@ -507,7 +515,8 @@ class WorkspaceCommon @Autowired constructor(
         projectId: String,
         operator: String,
         assigns: List<ProjectWorkspaceAssign>,
-        mountType: WorkspaceMountType
+        mountType: WorkspaceMountType,
+        ownerType: WorkspaceOwnerType
     ) {
         // 获取workspaceName对应的cgsId
         val cgsId = workspaceWindowsDao.fetchAnyWorkspaceWindowsInfo(dslContext, workspaceName)?.hostIp
@@ -520,7 +529,7 @@ class WorkspaceCommon @Autowired constructor(
             )
 
         val resourceId = if (mountType == WorkspaceMountType.START) {
-            val gameId = getGameIdAndAppId(projectId)
+            val gameId = getGameIdAndAppId(projectId, ownerType)
             client.get(ServiceStartCloudResource::class)
                 .shareWorkspace(
                     operator = operator,
@@ -718,8 +727,8 @@ class WorkspaceCommon @Autowired constructor(
         }
     }
 
-    fun getGameIdAndAppId(projectId: String?): Pair<String, Long> {
-        if (projectId.isNullOrBlank()) {
+    fun getGameIdAndAppId(projectId: String?, ownerType: WorkspaceOwnerType): Pair<String, Long> {
+        if (projectId.isNullOrBlank() || ownerType == WorkspaceOwnerType.PERSONAL) {
             return appName to curLaunchId
         }
         return projectStartAppLinkDao.getAppId(dslContext, projectId)?.let { projectId to it } ?: kotlin.run {

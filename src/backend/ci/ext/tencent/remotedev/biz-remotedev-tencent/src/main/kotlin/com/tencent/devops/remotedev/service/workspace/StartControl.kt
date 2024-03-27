@@ -177,7 +177,7 @@ class StartControl @Autowired constructor(
                     createWorkspaceHistoryForStart(userId, workspaceName)
                     updateWorkspaceStatus(workspace.workspaceName, workspace.status, userId)
                     val bizId = MDC.get(TraceTag.BIZID) ?: TraceTag.buildBiz()
-                    val gameId = workspaceCommon.getGameIdAndAppId(workspace.projectId)
+                    val gameId = workspaceCommon.getGameIdAndAppId(workspace.projectId, workspace.ownerType)
                     dispatcher.dispatch(
                         WorkspaceOperateEvent(
                             userId = userId,
@@ -332,7 +332,8 @@ class StartControl @Autowired constructor(
             workspaceCommon.updateWorkspaceDetail(
                 workspaceName,
                 workspace.projectId,
-                workspace.workspaceMountType
+                workspace.workspaceMountType,
+                workspace.ownerType
             )
             if (workspace.workspaceSystemType.needHeartbeat()) {
                 redisHeartBeat.refreshHeartbeat(workspaceName)
