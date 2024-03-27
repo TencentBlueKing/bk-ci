@@ -288,7 +288,7 @@ class PipelineYamlFacadeService @Autowired constructor(
         pipelineId: String,
         version: Int
     ): PipelineYamlVersion? {
-        return pipelineYamlService.getPipelineYamlVersion(
+        return pipelineYamlService.getPipelineYamlVersionByCommitId(
             projectId = projectId,
             pipelineId = pipelineId,
             version = version

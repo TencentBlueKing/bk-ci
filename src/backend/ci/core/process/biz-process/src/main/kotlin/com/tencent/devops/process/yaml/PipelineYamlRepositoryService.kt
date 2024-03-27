@@ -146,34 +146,25 @@ class PipelineYamlRepositoryService @Autowired constructor(
         action: BaseAction,
         yamlFile: YamlPathListEntry
     ) {
-        val pipelineYamlVersion = pipelineYamlService.getPipelineYamlVersion(
+        val commitId = action.data.eventCommon.commit.commitId
+        val pipelineYamlVersion = pipelineYamlService.getPipelineYamlVersionByCommitId(
             projectId = projectId,
             repoHashId = action.data.setting.repoHashId,
             filePath = yamlFile.yamlPath,
-            blobId = yamlFile.blobId!!
+            commitId = commitId
         )
         val defaultBranch = action.data.context.defaultBranch
         val branch = action.data.eventCommon.branch
-        // yaml版本不存在
-        if (pipelineYamlVersion == null) {
+        // yaml版本不存在或者分支合入主干,需要新增版本
+        if (pipelineYamlVersion == null ||
+            (branch == defaultBranch && pipelineYamlVersion.ref != defaultBranch)
+        ) {
             updateYamlPipeline(
                 projectId = projectId,
                 pipelineId = pipelineId,
                 action = action,
-                yamlFile = yamlFile,
-                needDeleteVersion = false
+                yamlFile = yamlFile
             )
-        } else {
-            // 默认分支推送，并且版本的创建分支不是从默认分支,说明分支合入主干,需要将分支版本转换成稳定版本
-            if (branch == defaultBranch && pipelineYamlVersion.ref != defaultBranch) {
-                updateYamlPipeline(
-                    projectId = projectId,
-                    pipelineId = pipelineId,
-                    action = action,
-                    yamlFile = yamlFile,
-                    needDeleteVersion = true
-                )
-            }
         }
     }
 
@@ -233,15 +224,11 @@ class PipelineYamlRepositoryService @Autowired constructor(
         )
     }
 
-    /**
-     * @param needDeleteVersion 是否需要删除旧的version
-     */
     private fun updateYamlPipeline(
         projectId: String,
         pipelineId: String,
         action: BaseAction,
-        yamlFile: YamlPathListEntry,
-        needDeleteVersion: Boolean
+        yamlFile: YamlPathListEntry
     ) {
         logger.info("update yaml pipeline|$projectId|$yamlFile")
         val yamlContent = action.getYamlContent(yamlFile.yamlPath)
@@ -276,8 +263,7 @@ class PipelineYamlRepositoryService @Autowired constructor(
             pipelineId = deployPipelineResult.pipelineId,
             version = deployPipelineResult.version,
             userId = action.data.getUserId(),
-            webhooks = webhooks,
-            needDeleteVersion = needDeleteVersion
+            webhooks = webhooks
         )
     }
 
@@ -449,11 +435,11 @@ class PipelineYamlRepositoryService @Autowired constructor(
                 userId = userId
             )
         } else {
-            val pipelineYamlVersion = pipelineYamlService.getPipelineYamlVersion(
+            val pipelineYamlVersion = pipelineYamlService.getPipelineYamlVersionByCommitId(
                 projectId = projectId,
                 repoHashId = repoHashId,
                 filePath = filePath,
-                blobId = blobId
+                commitId = commitId
             )
             if (pipelineYamlVersion == null) {
                 logger.info("push yaml pipeline|update yaml|$projectId|$pipelineId|$version")
@@ -468,8 +454,7 @@ class PipelineYamlRepositoryService @Autowired constructor(
                     pipelineId = pipelineId,
                     version = version,
                     userId = userId,
-                    webhooks = webhooks,
-                    needDeleteVersion = false
+                    webhooks = webhooks
                 )
             }
         }

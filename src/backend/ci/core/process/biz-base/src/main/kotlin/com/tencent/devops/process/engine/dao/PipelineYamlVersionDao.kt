@@ -86,7 +86,7 @@ class PipelineYamlVersionDao {
         }
     }
 
-    fun get(
+    fun getByBlobId(
         dslContext: DSLContext,
         projectId: String,
         repoHashId: String,
@@ -99,7 +99,27 @@ class PipelineYamlVersionDao {
                 .and(REPO_HASH_ID.eq(repoHashId))
                 .and(FILE_PATH.eq(filePath))
                 .and(BLOB_ID.eq(blobId))
-                .fetchOne()
+                .orderBy(VERSION.desc())
+                .fetchAny()
+            return record?.let { convert(it) }
+        }
+    }
+
+    fun getByCommitId(
+        dslContext: DSLContext,
+        projectId: String,
+        repoHashId: String,
+        filePath: String,
+        commitId: String
+    ): PipelineYamlVersion? {
+        with(TPipelineYamlVersion.T_PIPELINE_YAML_VERSION) {
+            val record = dslContext.selectFrom(this)
+                .where(PROJECT_ID.eq(projectId))
+                .and(REPO_HASH_ID.eq(repoHashId))
+                .and(FILE_PATH.eq(filePath))
+                .and(COMMIT_ID.eq(commitId))
+                .orderBy(VERSION.desc())
+                .fetchAny()
             return record?.let { convert(it) }
         }
     }

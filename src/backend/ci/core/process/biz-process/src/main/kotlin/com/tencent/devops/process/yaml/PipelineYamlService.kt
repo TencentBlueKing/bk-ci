@@ -131,8 +131,7 @@ class PipelineYamlService(
         ref: String,
         defaultBranch: String?,
         version: Int,
-        webhooks: List<PipelineWebhookVersion>,
-        needDeleteVersion: Boolean
+        webhooks: List<PipelineWebhookVersion>
     ) {
         dslContext.transaction { configuration ->
             val transactionContext = DSL.using(configuration)
@@ -143,15 +142,6 @@ class PipelineYamlService(
                 filePath = filePath,
                 userId = userId
             )
-            if (needDeleteVersion) {
-                pipelineYamlVersionDao.deleteByBlobId(
-                    dslContext = transactionContext,
-                    projectId = projectId,
-                    repoHashId = repoHashId,
-                    filePath = filePath,
-                    blobId = blobId
-                )
-            }
             pipelineYamlVersionDao.save(
                 dslContext = transactionContext,
                 projectId = projectId,
@@ -186,6 +176,9 @@ class PipelineYamlService(
         }
     }
 
+    /**
+     * 当非默认分支文件删除或者merge时,刷新yaml流水线状态
+     */
     fun refreshPipelineYamlStatus(
         projectId: String,
         repoHashId: String,
@@ -205,8 +198,11 @@ class PipelineYamlService(
             filePath = filePath
         ) ?: return
         val status = when {
+            // 没有任何分支与当前yaml关联,说明yaml文件已经全部删除
             branchList.isEmpty() -> PipelineYamlStatus.DELETED.name
+            // 有且仅在主干对yaml文件做过变更,其他分支没有对yaml文件有变更过
             branchList.size == 1 && branchList.contains(defaultBranch) -> PipelineYamlStatus.OK.name
+            // 除了主干,还存在其他文件对文件有过变更
             branchList.isNotEmpty() && branchList.contains(defaultBranch) -> PipelineYamlStatus.UN_MERGED.name
             else -> null
         }
@@ -275,13 +271,34 @@ class PipelineYamlService(
         )
     }
 
-    fun getPipelineYamlVersion(
+    /**
+     * 通过commitId获取最新的流水线版本
+     */
+    fun getPipelineYamlVersionByCommitId(
+        projectId: String,
+        repoHashId: String,
+        filePath: String,
+        commitId: String
+    ): PipelineYamlVersion? {
+        return pipelineYamlVersionDao.getByCommitId(
+            dslContext = dslContext,
+            projectId = projectId,
+            repoHashId = repoHashId,
+            filePath = filePath,
+            commitId = commitId
+        )
+    }
+
+    /**
+     * 通过blobId获取最新的流水线版本
+     */
+    fun getPipelineYamlVersionByBlobId(
         projectId: String,
         repoHashId: String,
         filePath: String,
         blobId: String
     ): PipelineYamlVersion? {
-        return pipelineYamlVersionDao.get(
+        return pipelineYamlVersionDao.getByBlobId(
             dslContext = dslContext,
             projectId = projectId,
             repoHashId = repoHashId,
@@ -349,7 +366,7 @@ class PipelineYamlService(
         }
     }
 
-    fun getPipelineYamlVersion(
+    fun getPipelineYamlVersionByCommitId(
         projectId: String,
         pipelineId: String,
         version: Int

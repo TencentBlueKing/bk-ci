@@ -67,7 +67,7 @@ class PipelineYamlBuildService @Autowired constructor(
                 return
             }
 
-            val pipelineYamlVersion = pipelineYamlVersionDao.get(
+            val pipelineYamlVersion = pipelineYamlVersionDao.getByBlobId(
                 dslContext = dslContext,
                 projectId = projectId,
                 repoHashId = repoHashId,
