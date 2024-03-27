@@ -1,8 +1,10 @@
 <template>
     <div class="pipeline-edit-header">
         <pipeline-bread-crumb :pipeline-name="pipelineSetting?.pipelineName">
-            <PacTag v-if="pacEnabled" />
-            <bk-tag>{{ currentVersionName }}</bk-tag>
+            <span class="pipeline-edit-header-tag">
+                <PacTag v-if="pacEnabled" :info="pipelineInfo?.yamlInfo" />
+                <bk-tag>{{ currentVersionName }}</bk-tag>
+            </span>
         </pipeline-bread-crumb>
         <mode-switch :save="saveDraft" />
         <aside class="pipeline-edit-right-aside">
@@ -282,6 +284,15 @@
   justify-content: space-between;
   padding: 0 0 0 14px;
   align-self: stretch;
+  .pipeline-edit-header-tag {
+    display: flex;
+    align-items: center;
+    grid-gap: 8px;
+    line-height: 1;
+    .bk-tag {
+        margin: 0;
+    }
+  }
   .debug-pipeline-draft-btn {
     display: flex;
     align-items: center;
