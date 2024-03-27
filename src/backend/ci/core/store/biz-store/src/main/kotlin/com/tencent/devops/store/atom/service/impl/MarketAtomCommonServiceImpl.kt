@@ -59,9 +59,8 @@ import com.tencent.devops.store.constant.StoreConstants.BK_DEFAULT_FAIL_POLICY
 import com.tencent.devops.store.constant.StoreConstants.BK_DEFAULT_RETRY_POLICY
 import com.tencent.devops.store.constant.StoreConstants.BK_DEFAULT_TIMEOUT
 import com.tencent.devops.store.constant.StoreConstants.BK_RETRY_TIMES
-import com.tencent.devops.store.constant.StoreConstants.TASK_JSON_CONFIG_DEFAULT_TIMEOUT_FIELD_IS_INVALID
+import com.tencent.devops.store.constant.StoreConstants.DEFAULT_PARAM_FIELD_IS_INVALID
 import com.tencent.devops.store.constant.StoreConstants.TASK_JSON_CONFIG_POLICY_FIELD_IS_INVALID
-import com.tencent.devops.store.constant.StoreConstants.TASK_JSON_CONFIG_RETRY_TIME_FIELD_IS_INVALID
 import com.tencent.devops.store.constant.StoreMessageCode
 import com.tencent.devops.store.pojo.atom.AtomEnvRequest
 import com.tencent.devops.store.pojo.atom.AtomPostInfo
@@ -539,7 +538,10 @@ class MarketAtomCommonServiceImpl : MarketAtomCommonService {
         val message: String?
         val defaultTimeout = configMap[BK_DEFAULT_TIMEOUT] as? Int ?: defaultAtomTimeout
         if (defaultTimeout !in minAtomTimeout..maxAtomTimeout) {
-            message = I18nUtil.getCodeLanMessage(messageCode = TASK_JSON_CONFIG_DEFAULT_TIMEOUT_FIELD_IS_INVALID)
+            message = I18nUtil.getCodeLanMessage(
+                messageCode = DEFAULT_PARAM_FIELD_IS_INVALID,
+                params = arrayOf("defaultTimeout", "$minAtomTimeout~$maxAtomTimeout")
+            )
             throw ErrorCodeException(
                 errorCode = StoreMessageCode.TASK_JSON_CONFIG_IS_INVALID,
                 params = arrayOf(message)
@@ -559,7 +561,10 @@ class MarketAtomCommonServiceImpl : MarketAtomCommonService {
             val retryTimes = configMap[BK_RETRY_TIMES] as? Int ?: minAtomRetryTimes
             if (AtomRetryPolicyEnum.AUTO_RETRY.name in defaultRetryPolicy &&
                 retryTimes !in minAtomRetryTimes..maxAtomRetryTimes) {
-                message = I18nUtil.getCodeLanMessage(messageCode = TASK_JSON_CONFIG_RETRY_TIME_FIELD_IS_INVALID)
+                message = I18nUtil.getCodeLanMessage(
+                    messageCode = DEFAULT_PARAM_FIELD_IS_INVALID,
+                    params = arrayOf("retryTimes", "$minAtomRetryTimes~$maxAtomRetryTimes")
+                )
                 throw ErrorCodeException(
                     errorCode = StoreMessageCode.TASK_JSON_CONFIG_IS_INVALID,
                     params = arrayOf(message)
