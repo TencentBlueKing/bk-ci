@@ -89,7 +89,7 @@ class NodeService @Autowired constructor(
     private val nodeWebsocketService: NodeWebsocketService,
     private val webSocketDispatcher: WebSocketDispatcher,
     private val slaveGatewayDao: SlaveGatewayDao
-) : INodeService {
+) {
     companion object {
         private val logger = LoggerFactory.getLogger(NodeService::class.java)
     }
@@ -103,7 +103,7 @@ class NodeService @Autowired constructor(
         scopeId = "#projectId",
         content = ActionAuditContent.ENV_NODE_DELETE_CONTENT
     )
-    override fun deleteNodes(userId: String, projectId: String, nodeLongIds: List<Long>) {
+    fun deleteNodes(userId: String, projectId: String, nodeLongIds: List<Long>) {
         val canDeleteNodeIds =
             environmentPermissionService.listNodeByPermission(userId, projectId, AuthPermission.DELETE) // 用户所有有权限的 节点id
         val existNodeList = nodeDao.listByIds(dslContext, projectId, nodeLongIds) // 所有要删的且有记录的 节点id记录
