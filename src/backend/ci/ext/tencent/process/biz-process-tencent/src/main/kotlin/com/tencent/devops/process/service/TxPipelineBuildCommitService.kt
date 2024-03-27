@@ -161,6 +161,6 @@ class TxPipelineBuildCommitService @Autowired constructor(
         private val dateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
 
         // 提交信息最大长度
-        const val WEBHOOK_COMMIT_LIST_MAX_COUNT = 800
+        const val WEBHOOK_COMMIT_LIST_MAX_COUNT = 999
     }
 }
