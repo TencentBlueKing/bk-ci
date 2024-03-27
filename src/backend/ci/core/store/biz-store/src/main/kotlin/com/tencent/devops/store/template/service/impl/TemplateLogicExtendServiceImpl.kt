@@ -13,7 +13,6 @@ import com.tencent.devops.store.constant.StoreMessageCode
 import com.tencent.devops.store.pojo.common.KEY_CATEGORY_CODE
 import com.tencent.devops.store.pojo.common.publication.StoreBaseDataPO
 import com.tencent.devops.store.pojo.common.publication.StoreBaseFeatureDataPO
-import com.tencent.devops.store.pojo.template.InstallProjectTemplateDTO
 import com.tencent.devops.store.template.dao.TemplateCategoryRelDao
 import com.tencent.devops.store.template.service.MarketTemplateService
 import org.jooq.DSLContext
@@ -95,26 +94,6 @@ class TemplateLogicExtendServiceImpl @Autowired constructor(
             addMarketTemplateResult.data?.let {
                 projectTemplateMap.putAll(it)
             }
-        }
-        val templateProjectInfos = client.get(ServicePTemplateResource::class)
-            .getTemplateIdBySrcCode(
-                srcTemplateId = storeBaseDataPO.storeCode,
-                projectIds = projectCodeList
-            ).data ?: emptyList()
-        val installProjectTemplateDTO = templateProjectInfos.map { optionalTemplateInfo ->
-            InstallProjectTemplateDTO(
-                name = optionalTemplateInfo.name,
-                templateId = optionalTemplateInfo.templateId,
-                projectId = optionalTemplateInfo.projectId,
-                version = optionalTemplateInfo.srcTemplateVersion,
-                versionName = optionalTemplateInfo.versionName,
-                templateType = optionalTemplateInfo.templateType,
-                templateTypeDesc = optionalTemplateInfo.templateTypeDesc,
-                category = optionalTemplateInfo.category,
-                logoUrl = optionalTemplateInfo.logoUrl,
-                stages = optionalTemplateInfo.stages,
-                srcTemplateId = optionalTemplateInfo.srcTemplateId
-            )
         }
         projectCodeList.removeAll(addMarketTemplateResultKeys)
         // 更新生成的模板的红线规则
