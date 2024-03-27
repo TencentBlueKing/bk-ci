@@ -218,42 +218,75 @@ class EventCacheService @Autowired constructor(
         buildId: String
     ): List<WebhookCommit> {
         val eventCache = EventCacheUtil.getOrInitRepoCache(projectId = projectId, repo = repo)
-        return eventCache?.webhookCommitList ?: run {
-            val webhookCommitList = mutableListOf<WebhookCommit>()
-            try {
-                var page = 1
-                val size = 200
-                while (true) {
-                    val list = matcher.getWebhookCommitList(
-                        projectId = projectId,
-                        pipelineId = pipelineId,
-                        repository = repo,
-                        page = page,
-                        size = size
-                    )
-                    if (list.isEmpty()) {
-                        logger.info("the pipeline build commit is empty|$projectId|$pipelineId|$buildId|$repo")
-                        break
-                    }
-                    webhookCommitList.addAll(list)
-                    // 超过目标条数
-                    if (webhookCommitList.size < size || webhookCommitList.size >= maxCount) break
-                    page++
-                }
-            } catch (ignored: Throwable) {
-                logger.info("fail to get webhook commit list | err is $ignored")
-            }
-            val simpleWebhookCommitList = if (webhookCommitList.size > maxCount) {
-                webhookCommitList.subList(0, maxCount)
-            } else {
-                webhookCommitList
-            }
-            eventCache?.webhookCommitList = simpleWebhookCommitList
-            simpleWebhookCommitList
+        // 缓存第一页的数据,如果缓存全部数据,可能会导致OOM。目前只有少量的数据才会分页，能够减少大量请求数。
+        val firstPageWebhookCommitList = eventCache?.webhookCommitList ?: run {
+            getWebhookCommitList(
+                repo = repo,
+                matcher = matcher,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                useScrollPage = false,
+                maxCount = maxCount
+            )
         }
+        return if (firstPageWebhookCommitList.size == WEBHOOK_COMMIT_PAGE_SIZE) {
+            getWebhookCommitList(
+                repo = repo,
+                matcher = matcher,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                useScrollPage = true,
+                maxCount = maxCount
+            )
+        } else {
+            firstPageWebhookCommitList
+        }.let {
+            // 超过最大数量
+            if (it.size > maxCount) {
+                it.subList(0, maxCount)
+            } else {
+                it
+            }
+        }
+    }
+
+    /**
+     * @param useScrollPage 是否需要分页查询, true-需要滚动, false-不需要滚动
+     */
+    private fun getWebhookCommitList(
+        repo: Repository,
+        matcher: ScmWebhookMatcher,
+        projectId: String,
+        pipelineId: String,
+        useScrollPage: Boolean,
+        maxCount: Int
+    ): List<WebhookCommit> {
+        var page = 1
+        val webhookCommitList = mutableListOf<WebhookCommit>()
+        try {
+            while (true) {
+                val list = matcher.getWebhookCommitList(
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    repository = repo,
+                    page = page,
+                    size = WEBHOOK_COMMIT_PAGE_SIZE
+                )
+                webhookCommitList.addAll(list)
+                if (webhookCommitList.size < WEBHOOK_COMMIT_PAGE_SIZE ||
+                    !useScrollPage ||
+                    webhookCommitList.size < maxCount
+                ) break
+                page++
+            }
+        } catch (ignored: Throwable) {
+            logger.info("fail to get webhook commit list | err is $ignored")
+        }
+        return webhookCommitList
     }
 
     companion object {
         private val logger = LoggerFactory.getLogger(EventCacheService::class.java)
+        private const val WEBHOOK_COMMIT_PAGE_SIZE = 500
     }
 }
