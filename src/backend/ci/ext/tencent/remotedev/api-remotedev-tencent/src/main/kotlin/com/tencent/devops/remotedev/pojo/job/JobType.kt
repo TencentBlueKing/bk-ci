@@ -30,5 +30,6 @@ enum class JobScope {
 enum class JobRecordStatus {
     RUNNING,
     FAIL,
-    SUCCESS
+    SUCCESS,
+    UNKNOWN
 }

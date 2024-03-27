@@ -3,6 +3,7 @@ package com.tencent.devops.remotedev.service.job
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.remotedev.dao.RemoteDevJobSchemaDao
+import com.tencent.devops.remotedev.pojo.job.JobActionType
 import com.tencent.devops.remotedev.pojo.job.JobSchema
 import com.tencent.devops.remotedev.pojo.job.JobSchemaCreateData
 import com.tencent.devops.remotedev.pojo.job.JobType
@@ -56,13 +57,17 @@ class RemoteDevSchemaService @Autowired constructor(
         data: JobSchemaCreateData
     ) {
         remoteDevJobSchemaDao.createOrUpdateSchema(
-            dslContext,
-            data.jobId,
-            data.jobName,
-            data.jobSchema,
-            data.jobType,
-            data.jobActionType,
-            data.jobActionExtraParam
+            dslContext = dslContext,
+            jobId = data.jobId,
+            jobName = data.jobName,
+            jobSchema = data.jobSchema,
+            jobType = data.jobType,
+            jobActionType = data.jobActionType,
+            jobActionExtraParam = when (data.jobActionType) {
+                JobActionType.NOTIFY_REMOTEDEV_DESKTOP -> data.jobNotifyRemoteDevDesktopActionExtraParam!!
+                JobActionType.CRON_POWER_ON -> data.jobNotifyCronPowerOnActionExtraParam!!
+                JobActionType.PIPELINE -> data.jobPipelineActionExtraParam!!
+            }
         )
     }
 }

@@ -60,4 +60,15 @@ interface OpRemoteDevJobResource {
         @QueryParam("schemaId")
         schemaId: String
     ): Result<JobSchema?>
+
+    @Operation(summary = "回调更新流水线任务状态")
+    @POST
+    @Path("/callback/pipeline/end")
+    fun callBackUpdateJobStatus(
+        @Parameter(description = "用户ID", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @QueryParam("jobId")
+        jobId: Long
+    ): Result<Boolean>
 }
