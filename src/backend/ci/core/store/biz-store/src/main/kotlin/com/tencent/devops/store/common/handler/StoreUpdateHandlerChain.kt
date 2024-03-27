@@ -25,24 +25,16 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.store.pojo.common.publication
+package com.tencent.devops.store.common.handler
 
-import com.tencent.devops.store.pojo.common.handler.HandlerRequest
-import io.swagger.v3.oas.annotations.media.Schema
-import javax.validation.Valid
+import com.tencent.devops.store.pojo.common.handler.Handler
+import com.tencent.devops.store.pojo.common.handler.HandlerChain
+import com.tencent.devops.store.pojo.common.publication.StoreUpdateRequest
 
-@Schema(title = "工作台-更新组件请求报文体")
-data class StoreUpdateRequest(
-    @get:Schema(title = "项目代码", required = true)
-    val projectCode: String,
-    @get:Schema(title = "基础信息", required = true)
-    @Valid
-    val baseInfo: StoreBaseUpdateRequest,
-    @get:Schema(title = "请求ID", required = true)
-    override val requestId: String,
-    @get:Schema(title = "商店上下文", required = true)
-    override val bkStoreContext: MutableMap<String, Any>
-) : HandlerRequest(
-    requestId = requestId,
-    bkStoreContext = bkStoreContext
-)
+class StoreUpdateHandlerChain(private val handlerList: MutableList<Handler<StoreUpdateRequest>>) :
+    HandlerChain<StoreUpdateRequest> {
+
+    override fun nextHandler(handlerRequest: StoreUpdateRequest): Handler<StoreUpdateRequest>? {
+        return handlerList.removeFirstOrNull()
+    }
+}

@@ -27,7 +27,7 @@
 
 package com.tencent.devops.store.common.handler
 
-import com.tencent.devops.store.common.service.StoreBaseManageService
+import com.tencent.devops.store.common.service.StoreBaseUpdateService
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.pojo.common.handler.Handler
 import com.tencent.devops.store.pojo.common.publication.StoreUpdateRequest
@@ -35,7 +35,7 @@ import org.springframework.stereotype.Service
 
 @Service
 class StoreUpdateParamI18nConvertHandler(
-    private val storeBaseManageService: StoreBaseManageService
+    private val storeBaseUpdateService: StoreBaseUpdateService
 ) : Handler<StoreUpdateRequest> {
 
     override fun canExecute(handlerRequest: StoreUpdateRequest): Boolean {
@@ -44,6 +44,6 @@ class StoreUpdateParamI18nConvertHandler(
 
     override fun execute(handlerRequest: StoreUpdateRequest) {
         // 对请求参数进行国际化转换
-        storeBaseManageService.doStoreI18nConversion(handlerRequest)
+        storeBaseUpdateService.doStoreI18nConversion(handlerRequest)
     }
 }

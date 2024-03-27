@@ -27,14 +27,14 @@
 
 package com.tencent.devops.store.common.handler
 
-import com.tencent.devops.store.common.service.StoreBaseManageService
+import com.tencent.devops.store.common.service.StoreBaseUpdateService
 import com.tencent.devops.store.pojo.common.handler.Handler
 import com.tencent.devops.store.pojo.common.publication.StoreUpdateRequest
 import org.springframework.stereotype.Service
 
 @Service
 class StoreUpdateParamCheckHandler(
-    private val storeBaseManageService: StoreBaseManageService
+    private val storeBaseUpdateService: StoreBaseUpdateService
 ) : Handler<StoreUpdateRequest> {
 
     override fun canExecute(handlerRequest: StoreUpdateRequest): Boolean {
@@ -43,6 +43,6 @@ class StoreUpdateParamCheckHandler(
 
     override fun execute(handlerRequest: StoreUpdateRequest) {
         // 检查请求参数的合法性
-        storeBaseManageService.checkStoreUpdateParam(handlerRequest)
+        storeBaseUpdateService.checkStoreUpdateParam(handlerRequest)
     }
 }

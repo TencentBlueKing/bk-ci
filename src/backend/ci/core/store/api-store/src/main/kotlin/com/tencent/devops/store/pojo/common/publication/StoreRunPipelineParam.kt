@@ -25,35 +25,20 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.store.common.service
+package com.tencent.devops.store.pojo.common.publication
 
-import com.tencent.devops.store.pojo.common.publication.StoreUpdateRequest
+import io.swagger.v3.oas.annotations.media.Schema
 
-interface StoreBaseManageService {
-
-    /**
-     * 对更新组件请求参数进行国际化转换
-     * @param storeUpdateRequest 更新组件请求报文
-     */
-    fun doStoreI18nConversion(
-        storeUpdateRequest: StoreUpdateRequest
-    )
-
-    /**
-     * 检查更新组件请求参数合法性
-     * @param storeUpdateRequest 更新组件请求报文
-     */
-    fun checkStoreUpdateParam(
-        storeUpdateRequest: StoreUpdateRequest
-    )
-
-    /**
-     * 持久化更新组件数据
-     *  @param userId 用户ID
-     * @param storeUpdateRequest 更新组件请求报文
-     */
-    fun doStoreUpdateDataPersistent(
-        userId: String,
-        storeUpdateRequest: StoreUpdateRequest
-    )
-}
+@Schema(title = "store组件运行流水线参数")
+data class StoreRunPipelineParam(
+    @get:Schema(title = "用户Id", required = true)
+    val userId: String,
+    @get:Schema(title = "store组件Id", required = true)
+    val storeId: String,
+    @get:Schema(title = "分支", required = false)
+    val branch: String? = null,
+    @get:Schema(title = "是否有可用的操作系统名称标识", required = false)
+    val validOsNameFlag: Boolean? = null,
+    @get:Schema(title = "是否有可用的操作系统cpu架构标识", required = false)
+    val validOsArchFlag: Boolean? = null
+)

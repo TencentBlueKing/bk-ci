@@ -28,6 +28,7 @@
 package com.tencent.devops.store.common.dao
 
 import com.tencent.devops.model.store.tables.TStoreBase
+import com.tencent.devops.store.pojo.common.enums.StoreStatusEnum
 import com.tencent.devops.store.pojo.common.publication.StoreBaseDataPO
 import org.jooq.DSLContext
 import org.springframework.stereotype.Repository
@@ -89,6 +90,26 @@ class StoreBaseManageDao {
                 .set(CLASSIFY_ID, storeBaseDataPO.classifyId)
                 .set(MODIFIER, storeBaseDataPO.modifier)
                 .set(UPDATE_TIME, LocalDateTime.now())
+                .execute()
+        }
+    }
+
+    fun updateStoreStatusById(
+        dslContext: DSLContext,
+        userId: String,
+        storeId: String,
+        status: StoreStatusEnum,
+        msg: String? = null
+    ) {
+        with(TStoreBase.T_STORE_BASE) {
+            val baseStep = dslContext.update(this)
+                .set(STATUS, status.name)
+            if (!msg.isNullOrEmpty()) {
+                baseStep.set(STATUS_MSG, msg)
+            }
+            baseStep.set(MODIFIER, userId)
+                .set(UPDATE_TIME, LocalDateTime.now())
+                .where(ID.eq(storeId))
                 .execute()
         }
     }

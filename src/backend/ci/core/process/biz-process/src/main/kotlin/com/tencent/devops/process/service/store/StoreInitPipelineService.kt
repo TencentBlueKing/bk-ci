@@ -32,70 +32,49 @@ import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.StartType
-import com.tencent.devops.common.pipeline.pojo.CheckImageInitPipelineReq
-import com.tencent.devops.process.pojo.CheckImageInitPipelineResp
+import com.tencent.devops.common.pipeline.pojo.StoreInitPipelineReq
+import com.tencent.devops.common.pipeline.pojo.StoreInitPipelineResp
 import com.tencent.devops.process.service.PipelineInfoFacadeService
 import com.tencent.devops.process.service.builds.PipelineBuildFacadeService
-import com.tencent.devops.store.pojo.image.enums.ImageStatusEnum
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
-@Suppress("ALL")
 @Service
-class CheckImageInitPipelineService @Autowired constructor(
+class StoreInitPipelineService @Autowired constructor(
     private val pipelineInfoFacadeService: PipelineInfoFacadeService,
     private val pipelineBuildFacadeService: PipelineBuildFacadeService
 ) {
-    private val logger = LoggerFactory.getLogger(CheckImageInitPipelineService::class.java)
+    private val logger = LoggerFactory.getLogger(StoreInitPipelineService::class.java)
 
     /**
-     * 初始化流水线进行验证镜像合法性
+     * 初始化流水线
      */
-    fun initCheckImagePipeline(
+    fun initPipeline(
         userId: String,
-        projectCode: String,
-        checkImageInitPipelineReq: CheckImageInitPipelineReq
-    ): Result<CheckImageInitPipelineResp> {
-        val imageCode = checkImageInitPipelineReq.imageCode
-        val imageName = checkImageInitPipelineReq.imageName
-        val version = checkImageInitPipelineReq.version
-        val imageType = checkImageInitPipelineReq.imageType
-        val registryUser = checkImageInitPipelineReq.registryUser
-        val registryPwd = checkImageInitPipelineReq.registryPwd
-        val registryHost = checkImageInitPipelineReq.registryHost
+        projectId: String,
+        storeInitPipelineReq: StoreInitPipelineReq
+    ): Result<StoreInitPipelineResp> {
         // 保存流水线信息
-        val model = JsonUtil.to(checkImageInitPipelineReq.pipelineModel, Model::class.java)
-        val pipelineId = pipelineInfoFacadeService.createPipeline(userId, projectCode, model, ChannelCode.AM)
-        logger.info("createPipeline result is:$pipelineId")
+        val model = JsonUtil.to(storeInitPipelineReq.pipelineModel, Model::class.java)
+        val pipelineId = pipelineInfoFacadeService.createPipeline(userId, projectId, model, ChannelCode.AM)
         // 异步启动流水线
-        val startParams = mutableMapOf<String, String>() // 启动参数
-        startParams["imageCode"] = imageCode
-        startParams["imageName"] = imageName
-        startParams["version"] = version
-        registryHost?.let { startParams["registryHost"] = it }
-        imageType?.let { startParams["imageType"] = it }
-        registryUser?.let { startParams["registryUser"] = it }
-        registryPwd?.let { startParams["registryPwd"] = it }
-        var imageCheckStatus = ImageStatusEnum.CHECKING
         var buildId: String? = null
         try {
             buildId = pipelineBuildFacadeService.buildManualStartup(
                 userId = userId,
                 startType = StartType.SERVICE,
-                projectId = projectCode,
+                projectId = projectId,
                 pipelineId = pipelineId,
-                values = startParams,
+                values = storeInitPipelineReq.startParams,
                 channelCode = ChannelCode.AM,
                 checkPermission = false,
                 isMobile = false,
                 startByMessage = null
             ).id
-            logger.info("buildManualStartup result is:$buildId")
-        } catch (t: Throwable) {
-            logger.error("$pipelineId buildManualStartup error:", t)
-            imageCheckStatus = ImageStatusEnum.CHECK_FAIL
+        } catch (ignored: Throwable) {
+            logger.error("pipeline[$pipelineId] buildManualStartup error!", ignored)
         }
-        return Result(CheckImageInitPipelineResp(pipelineId, buildId, imageCheckStatus))
+        return Result(StoreInitPipelineResp(pipelineId, buildId))
     }
 }

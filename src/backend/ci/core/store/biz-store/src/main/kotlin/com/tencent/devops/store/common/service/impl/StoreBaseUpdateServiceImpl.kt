@@ -31,7 +31,6 @@ import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.constant.INIT_VERSION
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.JsonUtil
-import com.tencent.devops.common.api.util.ReflectUtil
 import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.model.store.tables.records.TStoreBaseRecord
@@ -44,12 +43,14 @@ import com.tencent.devops.store.common.dao.StoreBaseFeatureManageDao
 import com.tencent.devops.store.common.dao.StoreBaseManageDao
 import com.tencent.devops.store.common.dao.StoreBaseQueryDao
 import com.tencent.devops.store.common.dao.StoreVersionLogDao
-import com.tencent.devops.store.common.service.StoreBaseManageService
+import com.tencent.devops.store.common.service.StoreBaseUpdateService
 import com.tencent.devops.store.common.service.StoreCommonService
 import com.tencent.devops.store.common.service.StoreSpecBusService
-import com.tencent.devops.store.common.service.StoreWebsocketService
+import com.tencent.devops.store.common.utils.StoreUtils
 import com.tencent.devops.store.common.utils.VersionUtils
 import com.tencent.devops.store.constant.StoreMessageCode
+import com.tencent.devops.store.pojo.common.KEY_CLASSIFY_ID
+import com.tencent.devops.store.pojo.common.KEY_STORE_ID
 import com.tencent.devops.store.pojo.common.enums.ReleaseTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreStatusEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
@@ -70,7 +71,7 @@ import org.springframework.stereotype.Service
 
 @Service
 @Suppress("LongParameterList")
-class StoreBaseManageServiceImpl @Autowired constructor(
+class StoreBaseUpdateServiceImpl @Autowired constructor(
     private val dslContext: DSLContext,
     private val classifyDao: ClassifyDao,
     private val storeBaseQueryDao: StoreBaseQueryDao,
@@ -81,11 +82,10 @@ class StoreBaseManageServiceImpl @Autowired constructor(
     private val storeBaseEnvManageDao: StoreBaseEnvManageDao,
     private val storeBaseEnvExtManageDao: StoreBaseEnvExtManageDao,
     private val storeVersionLogDao: StoreVersionLogDao,
-    private val storeCommonService: StoreCommonService,
-    private val storeWebsocketService: StoreWebsocketService
-) : StoreBaseManageService {
+    private val storeCommonService: StoreCommonService
+) : StoreBaseUpdateService {
 
-    private val logger = LoggerFactory.getLogger(StoreBaseManageServiceImpl::class.java)
+    private val logger = LoggerFactory.getLogger(StoreBaseUpdateServiceImpl::class.java)
 
     override fun doStoreI18nConversion(storeUpdateRequest: StoreUpdateRequest) {
         val storeBaseUpdateRequest = storeUpdateRequest.baseInfo
@@ -108,11 +108,7 @@ class StoreBaseManageServiceImpl @Autowired constructor(
                 errorCode = CommonMessageCode.PARAMETER_IS_INVALID,
                 params = arrayOf(classifyCode)
             )
-        var extBaseInfo = storeBaseUpdateRequest.extBaseInfo
-        if (extBaseInfo == null) {
-            extBaseInfo = mutableMapOf()
-        }
-        extBaseInfo[classifyCode] = classifyRecord.id
+        storeUpdateRequest.bkStoreContext[KEY_CLASSIFY_ID] = classifyRecord.id
         // 判断名称是否重复（升级允许名称一样）
         validateStoreName(storeType = storeType, storeCode = storeCode, name = name)
         // 校验前端传的版本号是否正确
@@ -134,7 +130,9 @@ class StoreBaseManageServiceImpl @Autowired constructor(
                 errorCode = CommonMessageCode.PARAMETER_IS_INVALID,
                 params = arrayOf(storeCode)
             )
+        // 判断当次发布是否是新增版本
         val newVersionFlag = !(releaseType == ReleaseTypeEnum.NEW || releaseType == ReleaseTypeEnum.CANCEL_RE_RELEASE)
+        // 获取组件ID
         val storeId = if (newVersionFlag) {
             DigestUtils.md5Hex("$storeType-$storeCode-$version")
         } else {
@@ -151,6 +149,8 @@ class StoreBaseManageServiceImpl @Autowired constructor(
         } else {
             baseRecord.latestFlag
         }
+        val bkStoreContext = storeUpdateRequest.bkStoreContext
+        bkStoreContext[KEY_STORE_ID] = storeId
         val status = getStoreSpecBusService(storeType).getStoreUpdateStatus()
         val extBaseInfo = storeBaseUpdateRequest.extBaseInfo
         val storeBaseDataPO = StoreBaseDataPO(
@@ -163,7 +163,7 @@ class StoreBaseManageServiceImpl @Autowired constructor(
             logoUrl = storeBaseUpdateRequest.logoUrl,
             latestFlag = latestFlag,
             publisher = versionInfo.publisher,
-            classifyId = extBaseInfo?.get(storeBaseUpdateRequest.classifyCode)?.toString() ?: "",
+            classifyId = bkStoreContext[KEY_CLASSIFY_ID].toString(),
             creator = userId,
             modifier = userId
         )
@@ -283,11 +283,10 @@ class StoreBaseManageServiceImpl @Autowired constructor(
     }
 
     private fun getStoreSpecBusService(storeType: StoreTypeEnum): StoreSpecBusService {
-        return SpringContextUtil.getBean(StoreSpecBusService::class.java, getSpecBusServiceBeanName(storeType))
-    }
-
-    private fun getSpecBusServiceBeanName(storeType: StoreTypeEnum): String {
-        return "${storeType}_SPEC_BUS_SERVICE"
+        return SpringContextUtil.getBean(
+            StoreSpecBusService::class.java,
+            StoreUtils.getSpecBusServiceBeanName(storeType)
+        )
     }
 
     private fun validateStoreVersion(
