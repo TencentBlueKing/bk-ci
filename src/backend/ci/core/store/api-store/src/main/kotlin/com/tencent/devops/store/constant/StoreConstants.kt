@@ -45,10 +45,7 @@ object StoreConstants {
     const val BK_WORKER_BEE_PROJECT_NOT_EXIST = "bkWorkerBeeProjectNotExist" // 工蜂项目信息不存在，请检查链接
     // 工蜂项目未开启Stream，请前往仓库的CI/CD进行配置
     const val BK_WORKER_BEE_PROJECT_NOT_STREAM_ENABLED = "bkWorkerBeeProjectNotStreamEnabled"
-    // 研发商店：插件配置文件[task.json]config配置格式不正确，defaultTimeout应为1-10080之间的正整数
-    const val TASK_JSON_CONFIG_DEFAULT_TIMEOUT_FIELD_IS_INVALID = "bkTaskJsonConfigDefaultTimeoutFieldIsInvalid"
-    // 研发商店：插件配置文件[task.json]config配置格式不正确，retryTimes应为1～5之间的正整数
-    const val TASK_JSON_CONFIG_RETRY_TIME_FIELD_IS_INVALID = "bkTaskJsonConfigRetryTimeFieldIsInvalid"
+    const val DEFAULT_PARAM_FIELD_IS_INVALID = "bkDefaultParamFieldIsInvalid" // {0}参数应为{1}
     // 研发商店：插件配置文件[task.json]config配置格式不正确，当 defaultFailPolicy = AUTO-CONTINUE 时，defaultRetryPolicy 不能设置为 MANUALLY-RETRY
     const val TASK_JSON_CONFIG_POLICY_FIELD_IS_INVALID = "bkTaskJsonConfigPolicyFieldIsInvalid"
     const val STORE_INDEX_CODE = "INDEX_CODE"
