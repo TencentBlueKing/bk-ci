@@ -25,17 +25,19 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.environment.pojo.job
+package com.tencent.devops.environment.pojo.job.jobreq
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-data class DisplayNameInfo(
-    @get:Schema(title = "节点ID")
-    val nodeId: Long?,
-    @get:Schema(title = "节点类型")
-    val nodeType: String?,
-    @get:Schema(title = "节点HASH ID")
-    val nodeHashId: String?,
-    @get:Schema(title = "前端显示名称")
-    val displayName: String?
-)
+@Schema(title = "主机结构")
+data class Host(
+    @get:Schema(title = "云区域ID")
+    val bkCloudId: Long?,
+    @get:Schema(title = "主机ID")
+    val bkHostId: Long?,
+    @get:Schema(title = "IP地址")
+    val ip: String?
+) {
+    constructor(bkHostId: Long?) : this(0, bkHostId, null)
+    constructor(bkCloudId: Long?, ip: String?) : this(bkCloudId, null, ip)
+}
