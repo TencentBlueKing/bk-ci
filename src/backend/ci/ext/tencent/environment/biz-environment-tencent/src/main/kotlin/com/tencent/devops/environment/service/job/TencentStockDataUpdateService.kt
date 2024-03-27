@@ -264,12 +264,12 @@ class TencentStockDataUpdateService @Autowired constructor(
                         item.installedTag == hostIdToExistAgentVersion[it.bkHostId]?.get(0)?.installedTag &&
                             item.version == hostIdToExistAgentVersion[it.bkHostId]?.get(0)?.version &&
                             item.status == hostIdToExistAgentVersion[it.bkHostId]?.get(0)?.status
-                    } ?: false ||
-                        ( // 2. 这个分组（同一个hostId）的AgentVersion相同，判断第一个元素的值，新查的和db中的是否相同，不同则更新
-                            it.installedTag == hostIdToExistAgentVersion[it.bkHostId]?.get(0)?.installedTag &&
-                                it.version == hostIdToExistAgentVersion[it.bkHostId]?.get(0)?.version &&
-                                it.status == hostIdToExistAgentVersion[it.bkHostId]?.get(0)?.status
-                            )
+                    } ?: false && (
+                        // 2. 这个分组（同一个hostId）的AgentVersion相同，判断第一个元素的值，新查的和db中的是否相同，不同则更新
+                        it.installedTag == hostIdToExistAgentVersion[it.bkHostId]?.get(0)?.installedTag &&
+                            it.version == hostIdToExistAgentVersion[it.bkHostId]?.get(0)?.version &&
+                            it.status == hostIdToExistAgentVersion[it.bkHostId]?.get(0)?.status
+                        )
                 }
                 logger.info(
                     "[updateGseAgent]agentUpdateList:" +
