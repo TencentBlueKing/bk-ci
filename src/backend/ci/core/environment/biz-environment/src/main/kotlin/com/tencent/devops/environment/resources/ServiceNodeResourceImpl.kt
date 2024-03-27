@@ -40,7 +40,6 @@ import com.tencent.devops.environment.pojo.NodeBaseInfo
 import com.tencent.devops.environment.pojo.NodeWithPermission
 import com.tencent.devops.environment.pojo.enums.NodeType
 import com.tencent.devops.environment.service.EnvService
-import com.tencent.devops.environment.service.INodeService
 import com.tencent.devops.environment.service.NodeService
 import com.tencent.devops.environment.utils.NodeUtils
 import org.springframework.beans.factory.annotation.Autowired
@@ -48,8 +47,7 @@ import org.springframework.beans.factory.annotation.Autowired
 @RestResource
 class ServiceNodeResourceImpl @Autowired constructor(
     private val nodeService: NodeService,
-    private val envService: EnvService,
-    private val iNodeService: INodeService
+    private val envService: EnvService
 ) : ServiceNodeResource {
 
     @BkTimed(extraTags = ["operate", "getNode"])
@@ -115,7 +113,7 @@ class ServiceNodeResourceImpl @Autowired constructor(
 
     @AuditEntry(actionId = ActionId.ENV_NODE_DELETE)
     override fun deleteNodes(userId: String, projectId: String, nodeHashIds: List<String>): Result<Boolean> {
-        iNodeService.deleteNodes(userId, projectId, nodeHashIds.map { HashUtil.decodeIdToLong(it) })
+        nodeService.deleteNodes(userId, projectId, nodeHashIds.map { HashUtil.decodeIdToLong(it) })
         return Result(true)
     }
 
