@@ -28,6 +28,7 @@
 package com.tencent.devops.store.common.service
 
 import com.tencent.devops.store.pojo.common.enums.StoreStatusEnum
+import com.tencent.devops.store.pojo.common.publication.StoreRunPipelineParam
 import com.tencent.devops.store.pojo.common.publication.StoreUpdateRequest
 
 interface StoreSpecBusService {
@@ -54,4 +55,17 @@ interface StoreSpecBusService {
      */
     fun getStoreUpdateStatus(): StoreStatusEnum
 
+    /**
+     * 获取组件运行流水线启动参数
+     * @param storeRunPipelineParam 运行流水线参数
+     * @return 启动参数
+     */
+    fun getStoreRunPipelineStartParams(storeRunPipelineParam: StoreRunPipelineParam): MutableMap<String, String>
+
+    /**
+     * 获取组件运行流水线组件状态
+     * @param buildId 构建ID
+     * @return 组件状态
+     */
+    fun getStoreRunPipelineStatus(buildId: String?): StoreStatusEnum?
 }
