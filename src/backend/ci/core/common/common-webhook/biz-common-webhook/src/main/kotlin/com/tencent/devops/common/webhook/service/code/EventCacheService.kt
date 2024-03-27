@@ -232,7 +232,7 @@ class EventCacheService @Autowired constructor(
             webhookCommitList
         }
         return if (firstPageWebhookCommitList.size == WEBHOOK_COMMIT_PAGE_SIZE) {
-            getWebhookCommitList(
+            val otherWebhookCommitList = getWebhookCommitList(
                 repo = repo,
                 matcher = matcher,
                 projectId = projectId,
@@ -240,6 +240,8 @@ class EventCacheService @Autowired constructor(
                 useScrollPage = true,
                 maxCount = maxCount
             )
+            firstPageWebhookCommitList.toMutableList().addAll(otherWebhookCommitList)
+            firstPageWebhookCommitList
         } else {
             firstPageWebhookCommitList
         }.let {
@@ -263,7 +265,8 @@ class EventCacheService @Autowired constructor(
         useScrollPage: Boolean,
         maxCount: Int
     ): List<WebhookCommit> {
-        var page = 1
+        // 需要滚动滚动查询时，第一页数据已经有了不需要重复请求接口，直接从第二页开始查，避免再次调接口
+        var page = if(useScrollPage) 2 else 1
         val webhookCommitList = mutableListOf<WebhookCommit>()
         try {
             while (true) {
