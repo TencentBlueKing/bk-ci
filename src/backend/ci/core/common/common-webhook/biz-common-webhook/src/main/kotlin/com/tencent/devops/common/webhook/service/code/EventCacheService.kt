@@ -277,7 +277,7 @@ class EventCacheService @Autowired constructor(
                 webhookCommitList.addAll(list)
                 if (webhookCommitList.size < WEBHOOK_COMMIT_PAGE_SIZE ||
                     !useScrollPage ||
-                    webhookCommitList.size < maxCount
+                    webhookCommitList.size >= maxCount
                 ) break
                 page++
             }
