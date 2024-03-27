@@ -28,26 +28,39 @@
 package com.tencent.devops.store.common.handler
 
 import com.tencent.devops.common.api.constant.CommonMessageCode
+import com.tencent.devops.common.api.constant.KEY_VALID_OS_ARCH_FLAG
+import com.tencent.devops.common.api.constant.KEY_VALID_OS_NAME_FLAG
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.web.utils.I18nUtil
-import com.tencent.devops.store.common.service.StoreBaseUpdateService
+import com.tencent.devops.store.common.service.StorePipelineService
+import com.tencent.devops.store.pojo.common.KEY_STORE_ID
+import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.pojo.common.handler.Handler
+import com.tencent.devops.store.pojo.common.publication.StoreRunPipelineParam
 import com.tencent.devops.store.pojo.common.publication.StoreUpdateRequest
 import org.springframework.stereotype.Service
 
 @Service
-class StoreUpdateDataPersistHandler(
-    private val storeBaseUpdateService: StoreBaseUpdateService
+class StoreUpdateRunPipelineHandler(
+    private val storePipelineService: StorePipelineService
 ) : Handler<StoreUpdateRequest> {
 
     override fun canExecute(handlerRequest: StoreUpdateRequest): Boolean {
-        return true
+        return handlerRequest.baseInfo.storeType != StoreTypeEnum.TEMPLATE
     }
 
     override fun execute(handlerRequest: StoreUpdateRequest) {
-        // 持久化更新组件数据
+        // 运行组件内置流水线
         val userId = I18nUtil.getRequestUserId()
             ?: throw ErrorCodeException(errorCode = CommonMessageCode.ERROR_CLIENT_REST_ERROR)
-        storeBaseUpdateService.doStoreUpdateDataPersistent(userId, handlerRequest)
+        val bkStoreContext = handlerRequest.bkStoreContext
+        // 生成运行流水线参数
+        val storeRunPipelineParam = StoreRunPipelineParam(
+            userId = userId,
+            storeId = bkStoreContext[KEY_STORE_ID].toString(),
+            validOsNameFlag = bkStoreContext[KEY_VALID_OS_NAME_FLAG] as? Boolean,
+            validOsArchFlag = bkStoreContext[KEY_VALID_OS_ARCH_FLAG] as? Boolean
+        )
+        storePipelineService.runPipeline(storeRunPipelineParam)
     }
 }

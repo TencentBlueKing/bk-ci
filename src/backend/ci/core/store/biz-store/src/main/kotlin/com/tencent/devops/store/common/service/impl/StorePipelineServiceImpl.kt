@@ -38,11 +38,16 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.pipeline.enums.BuildStatus
+import com.tencent.devops.common.pipeline.enums.ChannelCode
+import com.tencent.devops.common.pipeline.pojo.StoreInitPipelineReq
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.gray.Gray
 import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.model.store.tables.TStoreProjectRel
+import com.tencent.devops.process.api.service.ServiceBuildResource
+import com.tencent.devops.process.api.service.ServicePipelineInitResource
 import com.tencent.devops.process.api.service.ServicePipelineSettingResource
 import com.tencent.devops.process.pojo.setting.PipelineModelVersion
 import com.tencent.devops.process.pojo.setting.UpdatePipelineModelRequest
@@ -51,8 +56,16 @@ import com.tencent.devops.process.utils.KEY_PIPELINE_NAME
 import com.tencent.devops.store.common.dao.AbstractStoreCommonDao
 import com.tencent.devops.store.common.dao.BusinessConfigDao
 import com.tencent.devops.store.common.dao.OperationLogDao
+import com.tencent.devops.store.common.dao.StoreBaseManageDao
+import com.tencent.devops.store.common.dao.StoreBaseQueryDao
 import com.tencent.devops.store.common.dao.StoreBuildInfoDao
+import com.tencent.devops.store.common.dao.StorePipelineBuildRelDao
+import com.tencent.devops.store.common.dao.StorePipelineRelDao
 import com.tencent.devops.store.common.dao.StoreProjectRelDao
+import com.tencent.devops.store.common.service.StorePipelineService
+import com.tencent.devops.store.common.service.StoreSpecBusService
+import com.tencent.devops.store.common.utils.StoreUtils
+import com.tencent.devops.store.constant.StoreMessageCode
 import com.tencent.devops.store.pojo.common.KEY_CREATOR
 import com.tencent.devops.store.pojo.common.KEY_LANGUAGE
 import com.tencent.devops.store.pojo.common.KEY_PROJECT_CODE
@@ -62,41 +75,30 @@ import com.tencent.devops.store.pojo.common.UpdateStorePipelineModelRequest
 import com.tencent.devops.store.pojo.common.enums.ScopeTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreOperationTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
-import com.tencent.devops.store.common.service.StorePipelineService
-import java.util.concurrent.Executors
+import com.tencent.devops.store.pojo.common.publication.StoreRunPipelineParam
 import org.apache.commons.lang3.StringEscapeUtils
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
+import java.util.concurrent.Executors
 
 @Suppress("ALL")
 @Service
-class StorePipelineServiceImpl : StorePipelineService {
-
-    @Autowired
-    private lateinit var storeProjectRelDao: StoreProjectRelDao
-
-    @Autowired
-    private lateinit var businessConfigDao: BusinessConfigDao
-
-    @Autowired
-    private lateinit var storeBuildInfoDao: StoreBuildInfoDao
-
-    @Autowired
-    private lateinit var operationLogDao: OperationLogDao
-
-    @Autowired
-    private lateinit var redisOperation: RedisOperation
-
-    @Autowired
-    private lateinit var gray: Gray
-
-    @Autowired
-    private lateinit var dslContext: DSLContext
-
-    @Autowired
-    private lateinit var client: Client
+class StorePipelineServiceImpl @Autowired constructor(
+    private val dslContext: DSLContext,
+    private val redisOperation: RedisOperation,
+    private val client: Client,
+    private val gray: Gray,
+    private val storeProjectRelDao: StoreProjectRelDao,
+    private val storePipelineRelDao: StorePipelineRelDao,
+    private val storePipelineBuildRelDao: StorePipelineBuildRelDao,
+    private val businessConfigDao: BusinessConfigDao,
+    private val storeBuildInfoDao: StoreBuildInfoDao,
+    private val operationLogDao: OperationLogDao,
+    private val storeBaseQueryDao: StoreBaseQueryDao,
+    private val storeBaseManageDao: StoreBaseManageDao
+) : StorePipelineService {
 
     private final val pageSize = 50
 
@@ -193,6 +195,103 @@ class StorePipelineServiceImpl : StorePipelineService {
             }
         }
         return Result(true)
+    }
+
+    override fun runPipeline(storeRunPipelineParam: StoreRunPipelineParam): Boolean {
+        val userId = storeRunPipelineParam.userId
+        val storeId = storeRunPipelineParam.storeId
+        val storeBaseRecord = storeBaseQueryDao.getComponentById(dslContext, storeId) ?: return false
+        val storeCode = storeBaseRecord.storeCode
+        val storeType = StoreTypeEnum.getStoreTypeObj(storeBaseRecord.storeType.toInt())
+        val storePipelineRelRecord = storePipelineRelDao.getStorePipelineRel(dslContext, storeCode, storeType)
+        val storeSpecBusService = SpringContextUtil.getBean(
+            StoreSpecBusService::class.java,
+            StoreUtils.getSpecBusServiceBeanName(storeType)
+        )
+        // 查找组件初始化项目
+        val initProjectCode = storeProjectRelDao.getInitProjectCodeByStoreCode(
+            dslContext = dslContext,
+            storeCode = storeCode,
+            storeType = storeType.type.toByte()
+        )!!
+        // 生成流水线启动参数
+        val startParams = storeSpecBusService.getStoreRunPipelineStartParams(storeRunPipelineParam)
+        if (null == storePipelineRelRecord) {
+            val pipelineModelConfig = businessConfigDao.get(
+                dslContext = dslContext,
+                business = storeType.name,
+                feature = "initBuildPipeline",
+                businessValue = "PIPELINE_MODEL"
+            )
+            var pipelineModel = pipelineModelConfig!!.configValue
+            val pipelineName = "am-$storeType-$storeCode-${UUIDUtil.generate()}"
+            val storeInitPipelineReq = StoreInitPipelineReq(
+                pipelineModel = pipelineModel,
+                startParams = startParams
+            )
+            val paramMap = mapOf(
+                KEY_PIPELINE_NAME to pipelineName
+            )
+            // 将流水线模型中的变量替换成具体的值
+            paramMap.forEach { (key, value) ->
+                pipelineModel = pipelineModel.replace("#{$key}", value)
+            }
+            val storeInitPipelineResp = client.get(ServicePipelineInitResource::class)
+                .initStorePipeline(userId, initProjectCode, storeInitPipelineReq).data
+            logger.info("runStorePipeline storeInitPipelineResp is:$storeInitPipelineResp")
+            if (null != storeInitPipelineResp) {
+                val pipelineId = storeInitPipelineResp.pipelineId
+                storePipelineRelDao.add(
+                    dslContext = dslContext,
+                    storeCode = storeCode,
+                    storeType = storeType,
+                    pipelineId = pipelineId
+                )
+                val buildId = storeInitPipelineResp.buildId
+                if (!buildId.isNullOrBlank()) {
+                    storePipelineBuildRelDao.add(
+                        dslContext = dslContext,
+                        storeId = storeId,
+                        pipelineId = pipelineId,
+                        buildId = buildId
+                    )
+                }
+                val storeStatus = storeSpecBusService.getStoreRunPipelineStatus(buildId)
+                storeStatus?.let {
+                  storeBaseManageDao.updateStoreStatusById(
+                      dslContext = dslContext,
+                      userId = userId,
+                      storeId = storeId,
+                      status = storeStatus
+                  )
+                }
+            }
+        } else {
+            val buildInfoRecord = storePipelineBuildRelDao.getStorePipelineBuildRel(dslContext, storeId)
+            // 判断插件版本最近一次的构建是否完成
+            val buildResult = if (buildInfoRecord != null) {
+                client.get(ServiceBuildResource::class).getBuildStatus(
+                    userId = userId,
+                    projectId = initProjectCode,
+                    pipelineId = buildInfoRecord.pipelineId,
+                    buildId = buildInfoRecord.buildId,
+                    channelCode = ChannelCode.AM
+                ).data
+            } else {
+                null
+            }
+            if (buildResult != null) {
+                val buildStatus = BuildStatus.parse(buildResult.status)
+                if (!buildStatus.isFinish()) {
+                    // 最近一次构建还未完全结束，给出错误提示
+                    throw ErrorCodeException(
+                        errorCode = StoreMessageCode.STORE_VERSION_IS_NOT_FINISH,
+                        params = arrayOf(storeBaseRecord.name, storeBaseRecord.version)
+                    )
+                }
+            }
+        }
+        return true
     }
 
     private fun handleStorePipelineModel(

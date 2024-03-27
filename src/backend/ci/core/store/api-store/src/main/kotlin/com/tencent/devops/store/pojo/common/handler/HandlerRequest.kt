@@ -30,5 +30,6 @@ package com.tencent.devops.store.pojo.common.handler
 import com.tencent.devops.common.api.util.UUIDUtil
 
 open class HandlerRequest(
-    open val requestId: String = UUIDUtil.generate()
+    open val requestId: String = UUIDUtil.generate(),
+    open val bkStoreContext: MutableMap<String, Any> = mutableMapOf()
 )

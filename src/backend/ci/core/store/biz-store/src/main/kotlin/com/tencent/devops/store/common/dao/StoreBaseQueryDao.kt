@@ -87,6 +87,17 @@ class StoreBaseQueryDao {
         }
     }
 
+    fun getComponentById(
+        dslContext: DSLContext,
+        storeId: String
+    ): TStoreBaseRecord? {
+        return with(TStoreBase.T_STORE_BASE) {
+            dslContext.selectFrom(this)
+                .where(ID.eq(storeId))
+                .fetchOne()
+        }
+    }
+
     fun getComponent(
         dslContext: DSLContext,
         storeCode: String,

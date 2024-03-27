@@ -25,20 +25,35 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.pipeline.pojo
+package com.tencent.devops.store.common.service
 
-import io.swagger.v3.oas.annotations.media.Schema
+import com.tencent.devops.store.pojo.common.publication.StoreUpdateRequest
 
-@Schema(title = "插件市场初始化流水线请求报文体")
-data class AtomMarketInitPipelineReq(
-    @get:Schema(title = "流水线模型", required = true)
-    val pipelineModel: String,
-    @get:Schema(title = "脚本任务插件Shell执行脚本", required = true)
-    val script: String,
-    @get:Schema(title = "插件基本信息", required = true)
-    val atomBaseInfo: AtomBaseInfo,
-    @get:Schema(title = "是否有可用的操作系统名称配置", required = false)
-    val validOsNameFlag: Boolean? = null,
-    @get:Schema(title = "是否有可用的操作系统cpu架构配置", required = false)
-    val validOsArchFlag: Boolean? = null
-)
+interface StoreBaseUpdateService {
+
+    /**
+     * 对更新组件请求参数进行国际化转换
+     * @param storeUpdateRequest 更新组件请求报文
+     */
+    fun doStoreI18nConversion(
+        storeUpdateRequest: StoreUpdateRequest
+    )
+
+    /**
+     * 检查更新组件请求参数合法性
+     * @param storeUpdateRequest 更新组件请求报文
+     */
+    fun checkStoreUpdateParam(
+        storeUpdateRequest: StoreUpdateRequest
+    )
+
+    /**
+     * 持久化更新组件数据
+     * @param userId 用户ID
+     * @param storeUpdateRequest 更新组件请求报文
+     */
+    fun doStoreUpdateDataPersistent(
+        userId: String,
+        storeUpdateRequest: StoreUpdateRequest
+    )
+}

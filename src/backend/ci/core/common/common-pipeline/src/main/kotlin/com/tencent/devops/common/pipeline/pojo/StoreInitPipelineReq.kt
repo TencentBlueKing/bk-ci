@@ -25,17 +25,14 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.pojo
+package com.tencent.devops.common.pipeline.pojo
 
-import com.tencent.devops.store.pojo.atom.enums.AtomStatusEnum
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(title = "插件市场初始化流水线报文响应体")
-data class AtomMarketInitPipelineResp(
-    @get:Schema(title = "流水线ID", required = true)
-    val pipelineId: String,
-    @get:Schema(title = "构建ID", required = false)
-    val buildId: String?,
-    @get:Schema(title = "构建状态", required = true)
-    val atomBuildStatus: AtomStatusEnum
+@Schema(title = "研发商店初始化流水线请求报文体")
+data class StoreInitPipelineReq(
+    @get:Schema(title = "流水线模型", required = true)
+    val pipelineModel: String,
+    @get:Schema(title = "流水线启动参数", required = true)
+    val startParams: Map<String, String>
 )

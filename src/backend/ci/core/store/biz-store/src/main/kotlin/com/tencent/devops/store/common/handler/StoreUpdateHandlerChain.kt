@@ -25,47 +25,16 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.store.common.service
+package com.tencent.devops.store.common.handler
 
-import com.tencent.devops.store.pojo.common.enums.StoreStatusEnum
-import com.tencent.devops.store.pojo.common.publication.StoreRunPipelineParam
+import com.tencent.devops.store.pojo.common.handler.Handler
+import com.tencent.devops.store.pojo.common.handler.HandlerChain
 import com.tencent.devops.store.pojo.common.publication.StoreUpdateRequest
 
-interface StoreSpecBusService {
+class StoreUpdateHandlerChain(private val handlerList: MutableList<Handler<StoreUpdateRequest>>) :
+    HandlerChain<StoreUpdateRequest> {
 
-    /**
-     * 对更新组件请求参数进行国际化转换个性化逻辑
-     * @param storeUpdateRequest 更新组件请求报文
-     */
-    fun doStoreI18nConversionSpecBus(
-        storeUpdateRequest: StoreUpdateRequest
-    )
-
-    /**
-     * 处理检查组件升级参数个性化逻辑
-     * @param storeUpdateRequest 更新组件请求报文
-     */
-    fun doCheckStoreUpdateParamSpecBus(
-        storeUpdateRequest: StoreUpdateRequest
-    )
-
-    /**
-     * 获取组件升级时组件状态
-     * @return 组件状态
-     */
-    fun getStoreUpdateStatus(): StoreStatusEnum
-
-    /**
-     * 获取组件运行流水线启动参数
-     * @param storeRunPipelineParam 运行流水线参数
-     * @return 启动参数
-     */
-    fun getStoreRunPipelineStartParams(storeRunPipelineParam: StoreRunPipelineParam): MutableMap<String, String>
-
-    /**
-     * 获取组件运行流水线组件状态
-     * @param buildId 构建ID
-     * @return 组件状态
-     */
-    fun getStoreRunPipelineStatus(buildId: String?): StoreStatusEnum?
+    override fun nextHandler(handlerRequest: StoreUpdateRequest): Handler<StoreUpdateRequest>? {
+        return handlerList.removeFirstOrNull()
+    }
 }
