@@ -67,10 +67,8 @@ class TxPipelineBuildCommitService @Autowired constructor(
             val webhookCommitList = eventCacheService.getWebhookCommitList(
                 projectId = projectId,
                 pipelineId = pipelineId,
-                buildId = buildId,
                 matcher = matcher,
-                repo = repo,
-                maxCount = WEBHOOK_COMMIT_LIST_MAX_COUNT
+                repo = repo
             )
             if (webhookCommitList.isEmpty()) {
                 logger.info("the pipeline build commit is empty|$projectId|$pipelineId|$buildId|$repo")
@@ -159,8 +157,5 @@ class TxPipelineBuildCommitService @Autowired constructor(
     companion object {
         private val logger = LoggerFactory.getLogger(TxPipelineBuildCommitService::class.java)
         private val dateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
-
-        // 提交信息最大长度
-        const val WEBHOOK_COMMIT_LIST_MAX_COUNT = 1000
     }
 }
