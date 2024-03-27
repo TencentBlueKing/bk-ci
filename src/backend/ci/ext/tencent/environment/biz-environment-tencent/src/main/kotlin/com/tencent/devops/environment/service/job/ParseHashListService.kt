@@ -32,7 +32,9 @@ import com.tencent.devops.environment.constant.T_NODE_CLOUD_AREA_ID
 import com.tencent.devops.environment.constant.T_NODE_HOST_ID
 import com.tencent.devops.environment.constant.T_NODE_NODE_ID
 import com.tencent.devops.environment.constant.T_NODE_NODE_IP
-import com.tencent.devops.environment.dao.NodeDao
+import com.tencent.devops.environment.dao.job.CmdbEnvDao
+import com.tencent.devops.environment.dao.job.CmdbEnvNodeDao
+import com.tencent.devops.environment.dao.job.CmdbNodeDao
 import com.tencent.devops.environment.pojo.job.jobreq.ExecuteTarget
 import com.tencent.devops.environment.pojo.job.jobreq.Host
 import org.jooq.DSLContext
@@ -43,7 +45,9 @@ import org.springframework.stereotype.Service
 @Service("ParseHashListService")
 class ParseHashListService @Autowired constructor(
     private val dslContext: DSLContext,
-    private val nodeDao: NodeDao
+    private val cmdbNodeDao: CmdbNodeDao,
+    private val cmdbEnvDao: CmdbEnvDao,
+    private val cmdbEnvNodeDao: CmdbEnvNodeDao
 ) {
     companion object {
         private val logger = LoggerFactory.getLogger(ParseHashListService::class.java)
@@ -69,17 +73,17 @@ class ParseHashListService @Autowired constructor(
 
     fun getHostFromEnvList(projectId: String, envHashIdList: List<String>?/*环境hashId列表*/): List<Host>? {
         return if (!envHashIdList.isNullOrEmpty()) {
-            val envRecord = nodeDao.getEnvsByEnvHashIdList(
+            val envRecord = cmdbEnvDao.getEnvsByEnvHashIdList(
                 dslContext, projectId, envHashIdList
             )
             val envIdList = envRecord.map { it[T_ENV_ENV_ID] as Long }
 
-            val envNodeRecord = nodeDao.getNodeIdsByEnvIdList(
+            val envNodeRecord = cmdbEnvNodeDao.getNodeIdsByEnvIdList(
                 dslContext, projectId, envIdList
             )
             val nodeIdList = envNodeRecord.map { it[T_NODE_NODE_ID] as Long }
 
-            val nodeRecord = nodeDao.getNodesByNodeIdList(
+            val nodeRecord = cmdbNodeDao.getNodesByNodeIdList(
                 dslContext, projectId, nodeIdList
             )
             val nodeHostList = nodeRecord.map {
@@ -99,7 +103,7 @@ class ParseHashListService @Autowired constructor(
 
     fun getHostFromNodeList(projectId: String, nodeHashIdList: List<String>?/*节点hashId列表*/): List<Host>? {
         return if (!nodeHashIdList.isNullOrEmpty()) {
-            val nodeRecord = nodeDao.getNodesByNodeHashIdList(
+            val nodeRecord = cmdbNodeDao.getNodesByNodeHashIdList(
                 dslContext, projectId, nodeHashIdList
             )
             if (logger.isDebugEnabled) logger.debug("[getHostFromNodeList] nodeRecord: $nodeRecord")

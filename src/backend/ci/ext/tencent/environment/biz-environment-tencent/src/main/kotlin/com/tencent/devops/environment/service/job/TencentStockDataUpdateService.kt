@@ -38,7 +38,7 @@ import com.tencent.devops.environment.constant.T_NODE_NODE_IP
 import com.tencent.devops.environment.constant.T_NODE_NODE_STATUS
 import com.tencent.devops.environment.constant.T_NODE_OS_TYPE
 import com.tencent.devops.environment.constant.T_NODE_PROJECT_ID
-import com.tencent.devops.environment.dao.NodeDao
+import com.tencent.devops.environment.dao.job.CmdbNodeDao
 import com.tencent.devops.environment.pojo.enums.NodeStatus
 import com.tencent.devops.environment.pojo.job.AgentVersion
 import com.tencent.devops.environment.pojo.job.UpdateTNodeInfo
@@ -59,7 +59,7 @@ import java.time.LocalDateTime
 @Primary
 class TencentStockDataUpdateService @Autowired constructor(
     private val dslContext: DSLContext,
-    private val nodeDao: NodeDao,
+    private val cmdbNodeDao: CmdbNodeDao,
     private val tencentQueryFromCmdbService: TencentQueryFromCmdbService,
     private val queryFromCCService: QueryFromCCService,
     private val cmdbNodeService: CmdbNodeService,
@@ -123,7 +123,7 @@ class TencentStockDataUpdateService @Autowired constructor(
     }
 
     private fun checkDeployNodesIsInCmdb() {
-        val countNodeInCmdb = nodeDao.countDeployNodes(dslContext)
+        val countNodeInCmdb = cmdbNodeDao.countDeployNodes(dslContext)
         logger.info("Node(s) count in cmdb: $countNodeInCmdb")
         countNodeInCmdb.takeIf { it > 0 }.run {
             val totalPages = PageUtil.calTotalPage(DEFAULT_PAGE_SIZE, countNodeInCmdb.toLong())
@@ -143,14 +143,14 @@ class TencentStockDataUpdateService @Autowired constructor(
 
     private fun checkDeployNodesIsInCmdbByPage(page: Int) {
         // 1. 节点：类型为部署："CMDB"，"UNKNOW"，"OTHER"
-        val cmdbNodesRecords = nodeDao.getDeployNodesLimit(dslContext, page, DEFAULT_PAGE_SIZE)
+        val cmdbNodesRecords = cmdbNodeDao.getDeployNodesLimit(dslContext, page, DEFAULT_PAGE_SIZE)
         // 节点ip
         val nodeIpList = cmdbNodesRecords.map { it[T_NODE_NODE_IP] as String }.toSet()
         // 节点：ip - cmdb record（从cmdb查到的，节点在cmdb中）
         val ipToCmdbInfoMap = tencentQueryFromCmdbService.queryCmdbInfoFromIp(nodeIpList)
         // 2.1 不在cmdb中，置空 host_id 和 云区域id, 对应节点的 NODE_STATUS字段 要改成 NOT_IN_CMDB
         val invalidIpList = nodeIpList.filterNot { ipToCmdbInfoMap?.containsKey(it) ?: false }
-        nodeDao.updateNodeNotInCmdb(dslContext, invalidIpList)
+        cmdbNodeDao.updateNodeNotInCmdb(dslContext, invalidIpList)
     }
 
     /**
@@ -161,7 +161,7 @@ class TencentStockDataUpdateService @Autowired constructor(
      * cron：每小时执行一次。
      */
     private fun checkDeployNodesIsInCC() {
-        val countHostIdNotNullRecord = nodeDao.countDeployNodesInCmdb(dslContext)
+        val countHostIdNotNullRecord = cmdbNodeDao.countDeployNodesInCmdb(dslContext)
         logger.info("Check deploy node(s) is in CC, node(s) count:$countHostIdNotNullRecord.")
         countHostIdNotNullRecord.takeIf { it > 0 }.run {
             val totalPagesHostIdNotNull = PageUtil.calTotalPage(DEFAULT_PAGE_SIZE, countHostIdNotNullRecord.toLong())
@@ -178,7 +178,7 @@ class TencentStockDataUpdateService @Autowired constructor(
 
     private fun checkDeployNodesIsInCCByPage(page: Int) {
         // 1. 节点record："部署"类型
-        val nodeRecords = nodeDao.getDeployNodesInCmdbLimit(dslContext, page, DEFAULT_PAGE_SIZE)
+        val nodeRecords = cmdbNodeDao.getDeployNodesInCmdbLimit(dslContext, page, DEFAULT_PAGE_SIZE)
         // 要判断在不在cc中的 所有节点ip
         val nodeIpList = nodeRecords.map { it[T_NODE_NODE_IP] as String }.toSet()
         // cc记录
@@ -203,15 +203,15 @@ class TencentStockDataUpdateService @Autowired constructor(
                 )?.associateBy { it.ip }
                 val ipToNodeStatus = mutableMapOf<String, String>()
                 inCCIpList.map { ipToNodeStatus[it] = getNodeStatus(ipToAgentVersionInfoMap?.get(it)) }
-                nodeDao.updateNodeInCCByIp(dslContext, ipToNodeStatus)
+                cmdbNodeDao.updateNodeInCCByIp(dslContext, ipToNodeStatus)
                 // 4. CC中信息（host_id、云区域id、操作系统类型）改变 - 更新信息，不变 - 不操作
                 val nodeUpdateInfoList = nodeRecords.filterNot {
                     it[T_NODE_HOST_ID] as? Long == ipToCCInfoMap[it[T_NODE_NODE_IP] as String]?.bkHostId &&
                         it[T_NODE_CLOUD_AREA_ID] as? Long == ipToCCInfoMap[it[T_NODE_NODE_IP] as String]
-                            ?.bkCloudId?.toLong() &&
+                        ?.bkCloudId?.toLong() &&
                         it[T_NODE_OS_TYPE] as? String == cmdbNodeService.getOsTypeByCCCode(
-                            ipToCCInfoMap[it[T_NODE_NODE_IP] as String]?.osType
-                        )
+                        ipToCCInfoMap[it[T_NODE_NODE_IP] as String]?.osType
+                    )
                 }.takeIf { it.isNotEmpty() }?.map {
                     CCUpdateInfo(
                         nodeId = it[T_NODE_NODE_ID] as Long,
@@ -221,24 +221,24 @@ class TencentStockDataUpdateService @Autowired constructor(
                     )
                 }
                 if (!nodeUpdateInfoList.isNullOrEmpty()) {
-                    nodeDao.updateHostIdAndCloudAreaIdByNodeId(dslContext, nodeUpdateInfoList)
+                    cmdbNodeDao.updateHostIdAndCloudAreaIdByNodeId(dslContext, nodeUpdateInfoList)
                 }
             }
         }
         // 2.2 不在cc中: 置空 host_id、云区域id、操作系统类型、agent版本，且 NODE_STATUS 改成 NOT_IN_CC
         val invalidIpList = nodeIpList.filterNot { ipToCCInfoMap.containsKey(it) }
         if (invalidIpList.isNotEmpty()) {
-            nodeDao.updateNodeNotInCCByIp(dslContext, invalidIpList)
+            cmdbNodeDao.updateNodeNotInCCByIp(dslContext, invalidIpList)
         }
     }
 
     private fun updateGseAgent() {
-        val countCmdbNodes = nodeDao.countCmdbNodes(dslContext)
+        val countCmdbNodes = cmdbNodeDao.countCmdbNodes(dslContext)
         logger.info("Update gse agent, node(s) quantity: $countCmdbNodes.")
         countCmdbNodes.takeIf { it > 0 }?.run {
             val totalPages = PageUtil.calTotalPage(DEFAULT_PAGE_SIZE, countCmdbNodes.toLong())
             for (page in 1..totalPages) {
-                val cmdbNodesRecords = nodeDao.getCmdbNodes(dslContext, page, DEFAULT_PAGE_SIZE)
+                val cmdbNodesRecords = cmdbNodeDao.getCmdbNodes(dslContext, page, DEFAULT_PAGE_SIZE)
                 val existNodeIdToAgentVersionMap = cmdbNodesRecords.filter {
                     val opInfo = opService.operateOpProject(
                         "", OpOperateReq(2, listOf(it[T_NODE_PROJECT_ID] as String))
@@ -315,11 +315,11 @@ class TencentStockDataUpdateService @Autowired constructor(
                 "[batchUpdateAgent]agentUpdateRecords:" +
                     agentUpdateRecords.joinToString(separator = ", ", transform = { it.toString() })
             )
-        nodeDao.batchUpdateAgentInfo(dslContext, agentUpdateRecords)
+        cmdbNodeDao.batchUpdateAgentInfo(dslContext, agentUpdateRecords)
     }
 
     private fun addNodesToCC() {
-        val countCmdbNodes = nodeDao.countCmdbNodes(dslContext)
+        val countCmdbNodes = cmdbNodeDao.countCmdbNodes(dslContext)
         logger.info("Add to cc cmdb node(s) quantity: $countCmdbNodes")
         countCmdbNodes.takeIf { it > 0 }?.run {
             val totalPages = PageUtil.calTotalPage(DEFAULT_PAGE_SIZE, countCmdbNodes.toLong())
@@ -331,7 +331,7 @@ class TencentStockDataUpdateService @Autowired constructor(
 
     private fun addNodeToCCByPage(page: Int) {
         val cmdbNodesRecords =
-            nodeDao.getCmdbNodesHostIdNullLimit(dslContext, page, DEFAULT_PAGE_SIZE) // 所有"部署"节点 record
+            cmdbNodeDao.getCmdbNodesHostIdNullLimit(dslContext, page, DEFAULT_PAGE_SIZE) // 所有"部署"节点 record
         val cmdbNodesIp = cmdbNodesRecords.map { it[T_NODE_NODE_IP] as String }.toSet() // 所有"部署"节点 ip
         val nodeIpToNodesRecords = cmdbNodesRecords.associateBy { it[T_NODE_NODE_IP] as String } // 所有"部署"节点 ip - record
         val ipToCmdbInfoMap = tencentQueryFromCmdbService.queryCmdbInfoFromIp(cmdbNodesIp) // 所有"部署"节点 ip - cmdb信息
@@ -358,7 +358,7 @@ class TencentStockDataUpdateService @Autowired constructor(
                     )
                 }
                 if (!addToCCInfoList.isNullOrEmpty()) {
-                    nodeDao.updateHostIdAndCloudAreaIdByNodeId(dslContext, addToCCInfoList)
+                    cmdbNodeDao.updateHostIdAndCloudAreaIdByNodeId(dslContext, addToCCInfoList)
                 }
             }
         }

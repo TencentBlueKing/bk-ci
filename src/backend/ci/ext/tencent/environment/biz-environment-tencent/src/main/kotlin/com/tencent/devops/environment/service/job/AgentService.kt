@@ -33,7 +33,7 @@ import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.exception.CustomException
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.redis.RedisOperation
-import com.tencent.devops.environment.dao.NodeDao
+import com.tencent.devops.environment.dao.job.CmdbNodeDao
 import com.tencent.devops.environment.pojo.enums.NodeStatus
 import com.tencent.devops.environment.pojo.job.AgentVersion
 import com.tencent.devops.environment.pojo.job.agentreq.AgentHostForInstallAgent
@@ -87,7 +87,7 @@ data class AgentService @Autowired constructor(
     private val nodeManApi: NodeManApi,
     private val chooseAgentInstallChannelIdService: ChooseAgentInstallChannelIdService,
     private val dslContext: DSLContext,
-    private val nodeDao: NodeDao,
+    private val cmdbNodeDao: CmdbNodeDao,
     private val redisOperation: RedisOperation,
     private val queryFromCCService: QueryFromCCService,
     private val queryAgentStatusService: QueryAgentStatusService,
@@ -267,7 +267,7 @@ data class AgentService @Autowired constructor(
         }
         if (null == ipList) return
         val runningIpList = ipList.toMutableList()
-        nodeDao.updateNodeStatusByNodeIp(dslContext, ipList, NodeStatus.RUNNING.name, null, jobId.toLong())
+        cmdbNodeDao.updateNodeStatusByNodeIp(dslContext, ipList, NodeStatus.RUNNING.name, null, jobId.toLong())
         val task = object : Runnable {
             var count = 0
             override fun run() {
@@ -291,7 +291,7 @@ data class AgentService @Autowired constructor(
                                 if (AGENT_INSTALL_NORMAL == it.status) NodeStatus.NORMAL.name
                                 else getNodeStatus(agentInfo?.get(0)) // agent安装任务失败，重新查询节点agent安装状态
                             val nodeAgentVersion = agentInfo?.get(0)?.version
-                            nodeDao.updateNodeStatusByNodeIp(
+                            cmdbNodeDao.updateNodeStatusByNodeIp(
                                 dslContext, listOf(it.ip), nodeStatus, nodeAgentVersion, null
                             )
                             runningIpList.remove(it.ip)
@@ -309,7 +309,9 @@ data class AgentService @Autowired constructor(
                 }
                 if (count >= MAXIMUM_RETRY_TIMES) {
                     logger.info("Agent install task abnormal ip: $runningIpList")
-                    nodeDao.updateNodeStatusByNodeIp(dslContext, runningIpList, NodeStatus.ABNORMAL.name, null, null)
+                    cmdbNodeDao.updateNodeStatusByNodeIp(
+                        dslContext, runningIpList, NodeStatus.ABNORMAL.name, null, null
+                    )
                 }
             }
         }
@@ -432,7 +434,7 @@ data class AgentService @Autowired constructor(
         }
         val queryAgentHostIdList = hostIdToAgentVersionInfoMap?.keys?.filterNotNull()
         queryAgentHostIdList?.map { hostIdToNodeStatus[it] = getNodeStatus(hostIdToAgentVersionInfoMap[it]) }
-        nodeDao.updateNodeInCCByHostId(dslContext, hostIdToNodeStatus)
+        cmdbNodeDao.updateNodeInCCByHostId(dslContext, hostIdToNodeStatus)
         return queryAgentTaskStatusRes
     }
 

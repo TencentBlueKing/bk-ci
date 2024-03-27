@@ -35,6 +35,7 @@ import com.tencent.devops.common.api.util.SecurityUtil
 import com.tencent.devops.environment.constant.T_ENVIRONMENT_THIRDPARTY_AGENT_MASTER_VERSION
 import com.tencent.devops.environment.constant.T_ENVIRONMENT_THIRDPARTY_AGENT_NODE_ID
 import com.tencent.devops.environment.dao.NodeDao
+import com.tencent.devops.environment.dao.job.CmdbNodeDao
 import com.tencent.devops.environment.dao.thirdpartyagent.ThirdPartyAgentDao
 import com.tencent.devops.environment.permission.EnvironmentPermissionService
 import com.tencent.devops.environment.pojo.enums.NodeStatus
@@ -55,6 +56,7 @@ class PreBuildAgentMgrService @Autowired constructor(
     private val dslContext: DSLContext,
     private val thirdPartyAgentDao: ThirdPartyAgentDao,
     private val nodeDao: NodeDao,
+    private val cmdbNodeDao: CmdbNodeDao,
     private val slaveGatewayService: SlaveGatewayService,
     private val agentUrlService: AgentUrlService,
     private val environmentPermissionService: EnvironmentPermissionService
@@ -142,7 +144,7 @@ class PreBuildAgentMgrService @Autowired constructor(
                     agentVersion = it[T_ENVIRONMENT_THIRDPARTY_AGENT_MASTER_VERSION] as? String
                 )
             }
-            nodeDao.updateBuildAgentVersionByNodeId(dslContext, buildNodeUpdateInfo)
+            cmdbNodeDao.updateBuildAgentVersionByNodeId(dslContext, buildNodeUpdateInfo)
 
             thirdPartyAgentDao.updateStatus(context, agentId, nodeId, projectId, AgentStatus.IMPORT_EXCEPTION)
             environmentPermissionService.createNode(

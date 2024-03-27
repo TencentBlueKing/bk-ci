@@ -33,7 +33,7 @@ import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.environment.constant.EnvironmentMessageCode
 import com.tencent.devops.environment.constant.T_NODE_NODE_ID
 import com.tencent.devops.environment.constant.T_NODE_NODE_IP
-import com.tencent.devops.environment.dao.NodeDao
+import com.tencent.devops.environment.dao.job.CmdbNodeDao
 import com.tencent.devops.environment.dao.job.JobDao
 import com.tencent.devops.environment.permission.EnvironmentPermissionService
 import com.tencent.devops.environment.pojo.job.jobreq.Host
@@ -47,7 +47,7 @@ import org.springframework.stereotype.Service
 class PermissionManageService @Autowired constructor(
     private val dslContext: DSLContext,
     private val jobDao: JobDao,
-    private val nodeDao: NodeDao,
+    private val cmdbNodeDao: CmdbNodeDao,
     private val environmentPermissionService: EnvironmentPermissionService,
     private val tencentQueryFromCmdbService: TencentQueryFromCmdbService
 ) {
@@ -110,7 +110,7 @@ class PermissionManageService @Autowired constructor(
             if (null != it.bkHostId) recordByHostIdList.add(it)
             else getRecordByIpAndBkCloudId.add(it)
         }
-        return nodeDao.getNodesFromHostListByBkHostId(dslContext, projectId, recordByHostIdList) +
-            nodeDao.getNodesFromHostListByIpAndBkCloudId(dslContext, projectId, getRecordByIpAndBkCloudId)
+        return cmdbNodeDao.getNodesFromHostListByBkHostId(dslContext, projectId, recordByHostIdList) +
+            cmdbNodeDao.getNodesFromHostListByIpAndBkCloudId(dslContext, projectId, getRecordByIpAndBkCloudId)
     }
 }

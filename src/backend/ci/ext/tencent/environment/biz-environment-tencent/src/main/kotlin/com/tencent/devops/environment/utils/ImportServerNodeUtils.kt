@@ -34,8 +34,8 @@ import com.tencent.devops.common.environment.agent.client.EsbAgentClient
 import com.tencent.devops.common.environment.agent.pojo.agent.CmdbServerPage
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.environment.constant.EnvironmentMessageCode
-import com.tencent.devops.environment.dao.NodeDao
 import com.tencent.devops.environment.dao.ProjectConfigDao
+import com.tencent.devops.environment.dao.job.CmdbNodeDao
 import org.jooq.DSLContext
 
 @Suppress("ALL")
@@ -69,14 +69,14 @@ object ImportServerNodeUtils {
     fun checkImportCount(
         dslContext: DSLContext,
         projectConfigDao: ProjectConfigDao,
-        nodeDao: NodeDao,
+        cmdbNodeDao: CmdbNodeDao,
         projectId: String,
         userId: String,
         toAddNodeCount: Int
     ) {
         val projectConfig = projectConfigDao.get(dslContext, projectId, userId)
         val importQuata = projectConfig.importQuota
-        val existImportNodeCount = nodeDao.countImportNode(dslContext, projectId)
+        val existImportNodeCount = cmdbNodeDao.countImportNode(dslContext, projectId)
         if (toAddNodeCount + existImportNodeCount > importQuata) {
             throw ErrorCodeException(
                 errorCode = EnvironmentMessageCode.ERROR_NODE_IMPORT_EXCEED,

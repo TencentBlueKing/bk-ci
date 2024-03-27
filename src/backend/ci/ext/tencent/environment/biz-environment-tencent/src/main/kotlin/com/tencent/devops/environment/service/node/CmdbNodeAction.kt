@@ -28,7 +28,7 @@
 package com.tencent.devops.environment.service.node
 
 import com.tencent.devops.environment.constant.T_NODE_HOST_ID
-import com.tencent.devops.environment.dao.NodeDao
+import com.tencent.devops.environment.dao.job.CmdbNodeDao
 import com.tencent.devops.environment.pojo.enums.NodeType
 import com.tencent.devops.environment.pojo.job.jobreq.Host
 import com.tencent.devops.environment.service.job.QueryFromCCService
@@ -42,7 +42,7 @@ import org.springframework.stereotype.Service
 @Service
 class CmdbNodeAction @Autowired constructor(
     private val dslContext: DSLContext,
-    private val nodeDao: NodeDao,
+    private val cmdbNodeDao: CmdbNodeDao,
     private val queryFromCCService: QueryFromCCService
 ) : NodeAction {
     @Value("\${environment.cc.bkBizScopeId:}")
@@ -72,7 +72,7 @@ class CmdbNodeAction @Autowired constructor(
             val queryCCEqualBizHostIdList = queryCCEqualBizList?.map { Host(it.bkHostId.toLong()) } ?: listOf()
 
             // 条件2. 判断节点在蓝盾中的项目，没在其他项目下：用host_id去T_NODE中查记录，只有等于当前项目id的一个项目。
-            val nodeRecordByHostId = nodeDao.getNodesFromHostListByBkHostId(
+            val nodeRecordByHostId = cmdbNodeDao.getNodesFromHostListByBkHostId(
                 dslContext, queryCCEqualBizHostIdList
             )
             if (logger.isDebugEnabled)

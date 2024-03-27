@@ -46,8 +46,8 @@ import com.tencent.devops.environment.constant.T_NODE_AGENT_VERSION
 import com.tencent.devops.environment.constant.T_NODE_NODE_ID
 import com.tencent.devops.environment.constant.T_NODE_NODE_IP
 import com.tencent.devops.environment.constant.T_NODE_NODE_STATUS
-import com.tencent.devops.environment.dao.NodeDao
 import com.tencent.devops.environment.dao.ProjectConfigDao
+import com.tencent.devops.environment.dao.job.CmdbNodeDao
 import com.tencent.devops.environment.model.CreateNodeModel
 import com.tencent.devops.environment.permission.EnvironmentPermissionService
 import com.tencent.devops.environment.pojo.CmdbNode
@@ -86,7 +86,7 @@ import java.time.LocalDateTime
 @Primary
 class CmdbNodeService @Autowired constructor(
     private val dslContext: DSLContext,
-    private val nodeDao: NodeDao,
+    private val cmdbNodeDao: CmdbNodeDao,
     private val projectConfigDao: ProjectConfigDao,
     private val redisOperation: RedisOperation,
     private val esbAgentClient: EsbAgentClient,
@@ -152,7 +152,7 @@ class CmdbNodeService @Autowired constructor(
         )
         // 判断cmdbNodePage中的nodes，是否在蓝盾db中
         val cmdbIpList = cmdbNodePage.nodes.map { it.ip }
-        val cmdbNodeRecord = nodeDao.getCmdbNodesByIpAndProjectId(
+        val cmdbNodeRecord = cmdbNodeDao.getCmdbNodesByIpAndProjectId(
             dslContext, projectId, cmdbIpList
         )
         val ipToCmdbNodeRecordMap = cmdbNodeRecord.associateBy { it[T_NODE_NODE_IP] as String }
@@ -230,7 +230,7 @@ class CmdbNodeService @Autowired constructor(
         reImportCmdbNodeInfoList.forEach {
             nodeIdToCCInfoMap[it.nodeId] = queryCCIpToCCInfoMap[it.nodeIp]
         }
-        val nodeRecords = nodeDao.getCmdbNodesByNodeIdList(dslContext, nodeIdList)
+        val nodeRecords = cmdbNodeDao.getCmdbNodesByNodeIdList(dslContext, nodeIdList)
         val ipToAgentVersionInfoMap = queryAgentStatusService.getAgentVersions(
             nodeIdToCCInfoMap.values.mapNotNull {
                 AgentVersion(ip = it?.bkHostInnerip, bkHostId = it?.bkHostId)
@@ -270,7 +270,7 @@ class CmdbNodeService @Autowired constructor(
                 lastModifyTime = LocalDateTime.now()
             )
         }
-        nodeDao.batchUpdateCCInfo(dslContext, updateNodeInfo)
+        cmdbNodeDao.batchUpdateCCInfo(dslContext, updateNodeInfo)
         return AddCmdbNodesRes(
             nodeStatus = true,
             nodesAgentList = nodeRecords.map {
@@ -303,7 +303,7 @@ class CmdbNodeService @Autowired constructor(
         // 验证 CMDB 节点IP和责任人
         val cmdbIpToNodeMap = checkUserOperator(userId, nodeIps)
         // 只添加不存在的节点
-        val existIpList = nodeDao.listServerAndDevCloudNodes(dslContext, projectId) // 已存在 节点db记录
+        val existIpList = cmdbNodeDao.listServerAndDevCloudNodes(dslContext, projectId) // 已存在 节点db记录
             .map { it.nodeIp }.toSet() // 已存在 节点ip
         val toAddIpList = nodeIps.filterNot { existIpList.contains(it) }.filterNot { it.isEmpty() } // 要添加的 节点ip
             .toSet() // 去重
@@ -312,7 +312,7 @@ class CmdbNodeService @Autowired constructor(
         ImportServerNodeUtils.checkImportCount(
             dslContext = dslContext,
             projectConfigDao = projectConfigDao,
-            nodeDao = nodeDao,
+            cmdbNodeDao = cmdbNodeDao,
             projectId = projectId,
             userId = userId,
             toAddNodeCount = toAddIpList.size
@@ -362,8 +362,8 @@ class CmdbNodeService @Autowired constructor(
             )
         dslContext.transaction { configuration ->
             val context = DSL.using(configuration)
-            nodeDao.batchAddNode(context, toAddNodeList)
-            val insertedNodeList = nodeDao.listServerNodesByIps(
+            cmdbNodeDao.batchAddNode(context, toAddNodeList)
+            val insertedNodeList = cmdbNodeDao.listServerNodesByIps(
                 dslContext = context,
                 projectId = projectId,
                 ips = toAddNodeList.map { it.nodeIp }
