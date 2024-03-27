@@ -1395,7 +1395,13 @@ class WorkspaceService @Autowired constructor(
                 onFuzzyMatch = false
             )
         )?.parallelStream()?.forEach { workspace ->
-
+            if (workspace.createTime > limitDay) {
+                logger.info(
+                    "skip check| workspace create time less than limit day|" +
+                        "${workspace.workspaceName}|${workspace.createTime}|$limitDay"
+                )
+                return@forEach
+            }
             if (actives[workspace.hostName] == null || actives[workspace.hostName]!! < 10 * 60) {
                 workspaceOpHistoryDao.createWorkspaceHistory(
                     dslContext = dslContext,
