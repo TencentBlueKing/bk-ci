@@ -220,7 +220,7 @@ class EventCacheService @Autowired constructor(
         val eventCache = EventCacheUtil.getOrInitRepoCache(projectId = projectId, repo = repo)
         // 缓存第一页的数据,如果缓存全部数据,可能会导致OOM。目前只有少量的数据才会分页，能够减少大量请求数。
         val firstPageWebhookCommitList = eventCache?.webhookCommitList ?: run {
-            getWebhookCommitList(
+            val webhookCommitList = getWebhookCommitList(
                 repo = repo,
                 matcher = matcher,
                 projectId = projectId,
@@ -228,6 +228,8 @@ class EventCacheService @Autowired constructor(
                 useScrollPage = false,
                 maxCount = maxCount
             )
+            eventCache?.webhookCommitList = webhookCommitList
+            webhookCommitList
         }
         return if (firstPageWebhookCommitList.size == WEBHOOK_COMMIT_PAGE_SIZE) {
             getWebhookCommitList(
