@@ -6,6 +6,7 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo
 /**
  * 用来给job记录做重放时存储
  */
+@Suppress("UnnecessaryAbstractClass")
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY, property = "type")
 @JsonSubTypes(
     JsonSubTypes.Type(value = NotifyRemoteDevDesktopParam::class, name = NotifyRemoteDevDesktopParam.CLASS_TYPE),
