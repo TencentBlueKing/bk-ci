@@ -38,6 +38,4 @@ data class CCUpdateInfo(
     val bkHostId: Long?,
     @get:Schema(title = "操作系统类型")
     val osType: String?
-) {
-    constructor(nodeId: Long?, bkCloudId: Long?, bkHostId: Long?) : this(nodeId, bkCloudId, bkHostId, null)
-}
+)
