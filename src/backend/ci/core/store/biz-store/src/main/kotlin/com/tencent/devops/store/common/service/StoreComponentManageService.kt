@@ -27,31 +27,49 @@
 
 package com.tencent.devops.store.common.service
 
-import com.tencent.devops.store.pojo.common.enums.StoreStatusEnum
-import com.tencent.devops.store.pojo.common.publication.StoreUpdateRequest
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.pipeline.enums.ChannelCode
+import com.tencent.devops.store.pojo.common.InstallStoreReq
+import com.tencent.devops.store.pojo.common.StoreBaseInfoUpdateRequest
+import com.tencent.devops.store.pojo.common.UnInstallReq
 
-interface StoreSpecBusService {
-
-    /**
-     * 对更新组件请求参数进行国际化转换个性化逻辑
-     * @param storeUpdateRequest 更新组件请求报文
-     */
-    fun doStoreI18nConversionSpecBus(
-        storeUpdateRequest: StoreUpdateRequest
-    )
+interface StoreComponentManageService {
 
     /**
-     * 处理检查组件升级参数个性化逻辑
-     * @param storeUpdateRequest 更新组件请求报文
+     * 更新组件基本信息
+     * @param storeBaseInfoUpdateRequest 组件基本信息修改请求报文体
      */
-    fun doCheckStoreUpdateParamSpecBus(
-        storeUpdateRequest: StoreUpdateRequest
-    )
+    fun updateComponentBaseInfo(
+        userId: String,
+        storeType: String,
+        storeCode: String,
+        storeBaseInfoUpdateRequest: StoreBaseInfoUpdateRequest
+    ): Result<Boolean>
 
     /**
-     * 获取组件升级时组件状态
-     * @return 组件状态
+     * 安装组件到项目
+     * @param installStoreReq 安装组件到项目请求报文
      */
-    fun getStoreUpdateStatus(): StoreStatusEnum
+    fun installComponent(
+        userId: String,
+        channelCode: ChannelCode,
+        installStoreReq: InstallStoreReq
+    ): Result<Boolean>
 
+    /**
+     * 卸载组件
+     * @param unInstallReq 卸载组件请求包体
+     */
+    fun uninstallComponent(
+        userId: String,
+        projectCode: String,
+        storeType: String,
+        storeCode: String,
+        unInstallReq: UnInstallReq
+    ): Result<Boolean>
+
+    /**
+     * 删除工作台组件
+     */
+    fun deleteComponent(userId: String, storeType: String, storeCode: String): Result<Boolean>
 }

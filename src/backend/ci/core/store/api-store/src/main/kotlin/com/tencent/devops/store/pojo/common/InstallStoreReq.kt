@@ -25,33 +25,17 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.store.common.service
+package com.tencent.devops.store.pojo.common
 
-import com.tencent.devops.store.pojo.common.enums.StoreStatusEnum
-import com.tencent.devops.store.pojo.common.publication.StoreUpdateRequest
+import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
+import io.swagger.v3.oas.annotations.media.Schema
 
-interface StoreSpecBusService {
-
-    /**
-     * 对更新组件请求参数进行国际化转换个性化逻辑
-     * @param storeUpdateRequest 更新组件请求报文
-     */
-    fun doStoreI18nConversionSpecBus(
-        storeUpdateRequest: StoreUpdateRequest
-    )
-
-    /**
-     * 处理检查组件升级参数个性化逻辑
-     * @param storeUpdateRequest 更新组件请求报文
-     */
-    fun doCheckStoreUpdateParamSpecBus(
-        storeUpdateRequest: StoreUpdateRequest
-    )
-
-    /**
-     * 获取组件升级时组件状态
-     * @return 组件状态
-     */
-    fun getStoreUpdateStatus(): StoreStatusEnum
-
-}
+@Schema(title = "安装组件到项目请求报文")
+data class InstallStoreReq(
+    @get:Schema(title = "项目标识", required = true)
+    val projectCodes: ArrayList<String>,
+    @get:Schema(title = "组件标识", required = true)
+    val storeCode: String,
+    @get:Schema(title = "store代码", required = true)
+    val storeType: StoreTypeEnum
+)

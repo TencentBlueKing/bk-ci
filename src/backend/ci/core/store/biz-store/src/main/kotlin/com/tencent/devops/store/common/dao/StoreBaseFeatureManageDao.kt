@@ -28,11 +28,13 @@
 package com.tencent.devops.store.common.dao
 
 import com.tencent.devops.model.store.tables.TStoreBaseFeature
+import com.tencent.devops.model.store.tables.records.TStoreBaseFeatureRecord
+import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.pojo.common.publication.StoreBaseFeatureDataPO
+import java.time.LocalDateTime
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.springframework.stereotype.Repository
-import java.time.LocalDateTime
 
 @Repository
 class StoreBaseFeatureManageDao {
@@ -95,6 +97,19 @@ class StoreBaseFeatureManageDao {
                 .set(MODIFIER, storeBaseFeatureDataPO.modifier)
                 .set(UPDATE_TIME, LocalDateTime.now())
                 .execute()
+        }
+    }
+
+    fun getComponentFeatureDataByCode(
+        dslContext: DSLContext,
+        storeCode: String,
+        storeType: StoreTypeEnum
+    ): TStoreBaseFeatureRecord? {
+        with(TStoreBaseFeature.T_STORE_BASE_FEATURE) {
+            return dslContext.selectFrom(this)
+                .where(STORE_CODE.eq(storeCode).and(STORE_TYPE.eq(storeType.type.toByte())))
+                .limit(1)
+                .fetchOne()
         }
     }
 }

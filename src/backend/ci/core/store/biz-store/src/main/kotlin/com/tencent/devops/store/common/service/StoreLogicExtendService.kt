@@ -27,31 +27,28 @@
 
 package com.tencent.devops.store.common.service
 
-import com.tencent.devops.store.pojo.common.enums.StoreStatusEnum
-import com.tencent.devops.store.pojo.common.publication.StoreUpdateRequest
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.store.pojo.common.publication.StoreBaseDataPO
+import com.tencent.devops.store.pojo.common.publication.StoreBaseFeatureDataPO
 
-interface StoreSpecBusService {
+interface StoreLogicExtendService {
+
+  /**
+     * 组件安装校验扩展
+     */
+    fun validateInstallExt(
+        userId: String,
+        storeCode: String,
+        projectCodeList: ArrayList<String>
+    ): Result<Boolean>
 
     /**
-     * 对更新组件请求参数进行国际化转换个性化逻辑
-     * @param storeUpdateRequest 更新组件请求报文
+     * 组件安装校逻辑扩展
      */
-    fun doStoreI18nConversionSpecBus(
-        storeUpdateRequest: StoreUpdateRequest
-    )
-
-    /**
-     * 处理检查组件升级参数个性化逻辑
-     * @param storeUpdateRequest 更新组件请求报文
-     */
-    fun doCheckStoreUpdateParamSpecBus(
-        storeUpdateRequest: StoreUpdateRequest
-    )
-
-    /**
-     * 获取组件升级时组件状态
-     * @return 组件状态
-     */
-    fun getStoreUpdateStatus(): StoreStatusEnum
-
+    fun installComponentExt(
+        userId: String,
+        projectCodeList: ArrayList<String>,
+        storeBaseDataPO: StoreBaseDataPO,
+        storeBaseFeatureDataPO: StoreBaseFeatureDataPO?
+    ): Result<Boolean>
 }
