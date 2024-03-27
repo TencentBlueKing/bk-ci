@@ -112,4 +112,16 @@ class StoreBaseFeatureManageDao {
                 .fetchOne()
         }
     }
+
+    fun isPublic(
+        dslContext: DSLContext,
+        storeCode: String,
+        storeType: StoreTypeEnum
+    ): Boolean {
+        with(TStoreBaseFeature.T_STORE_BASE_FEATURE) {
+            return dslContext.select(PUBLIC_FLAG).from(this)
+                .where(STORE_CODE.eq(storeCode).and(STORE_TYPE.eq(storeType.type.toByte())))
+                .fetchOne(0, Boolean::class.java)!!
+        }
+    }
 }

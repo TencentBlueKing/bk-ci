@@ -44,5 +44,7 @@ data class StoreBaseInfoUpdateRequest(
     @get:Schema(title = "发布者", required = false)
     val publisher: String? = null,
     @get:Schema(title = "原子标签列表", required = false)
-    val labelIdList: ArrayList<String>? = null
+    val labelIdList: ArrayList<String>? = null,
+    @get:Schema(title = "基础扩展信息", required = false)
+    val extBaseInfo: Map<String, Any>? = null
 )
