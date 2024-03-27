@@ -232,16 +232,18 @@ class EventCacheService @Autowired constructor(
             webhookCommitList
         }
         return if (firstPageWebhookCommitList.size == WEBHOOK_COMMIT_PAGE_SIZE) {
-            val otherWebhookCommitList = getWebhookCommitList(
-                repo = repo,
-                matcher = matcher,
-                projectId = projectId,
-                pipelineId = pipelineId,
-                useScrollPage = true,
-                maxCount = maxCount
+            val list = firstPageWebhookCommitList.toMutableList()
+            list.addAll(
+                getWebhookCommitList(
+                    repo = repo,
+                    matcher = matcher,
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    useScrollPage = true,
+                    maxCount = maxCount
+                )
             )
-            firstPageWebhookCommitList.toMutableList().addAll(otherWebhookCommitList)
-            firstPageWebhookCommitList
+            list
         } else {
             firstPageWebhookCommitList
         }.let {
