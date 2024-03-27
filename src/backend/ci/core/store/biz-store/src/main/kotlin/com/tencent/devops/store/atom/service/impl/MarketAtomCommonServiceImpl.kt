@@ -548,8 +548,40 @@ class MarketAtomCommonServiceImpl : MarketAtomCommonService {
             )
         }
         val defaultFailPolicy = configMap[BK_DEFAULT_FAIL_POLICY] as? String
+        if (defaultFailPolicy !in listOf(
+                AtomFailPolicyEnum.AUTO_CONTINUE.name,
+                AtomFailPolicyEnum.MANUALLY_CONTINUE.name, null)
+        ) {
+            message = I18nUtil.getCodeLanMessage(
+                messageCode = DEFAULT_PARAM_FIELD_IS_INVALID,
+                params = arrayOf(
+                    "defaultFailPolicy",
+                    "${AtomFailPolicyEnum.AUTO_CONTINUE}/${AtomFailPolicyEnum.MANUALLY_CONTINUE}"
+                )
+            )
+            throw ErrorCodeException(
+                errorCode = StoreMessageCode.TASK_JSON_CONFIG_IS_INVALID,
+                params = arrayOf(message)
+            )
+        }
         val defaultRetryPolicy = configMap[BK_DEFAULT_RETRY_POLICY] as? List<String>
         if (!defaultRetryPolicy.isNullOrEmpty()) {
+            val invalidValues = defaultRetryPolicy.filter {
+                it !in setOf(AtomRetryPolicyEnum.AUTO_RETRY.name, AtomRetryPolicyEnum.MANUALLY_RETRY.name)
+            }
+            if (invalidValues.isNotEmpty()) {
+                message = I18nUtil.getCodeLanMessage(
+                    messageCode = DEFAULT_PARAM_FIELD_IS_INVALID,
+                    params = arrayOf(
+                        "defaultRetryPolicy",
+                        "${AtomRetryPolicyEnum.AUTO_RETRY}/${AtomRetryPolicyEnum.MANUALLY_RETRY}"
+                    )
+                )
+                throw ErrorCodeException(
+                    errorCode = StoreMessageCode.TASK_JSON_CONFIG_IS_INVALID,
+                    params = arrayOf(message)
+                )
+            }
             if (defaultFailPolicy == AtomFailPolicyEnum.AUTO_CONTINUE.name &&
                 AtomRetryPolicyEnum.MANUALLY_RETRY.name in defaultRetryPolicy) {
                 message = I18nUtil.getCodeLanMessage(messageCode = TASK_JSON_CONFIG_POLICY_FIELD_IS_INVALID)
