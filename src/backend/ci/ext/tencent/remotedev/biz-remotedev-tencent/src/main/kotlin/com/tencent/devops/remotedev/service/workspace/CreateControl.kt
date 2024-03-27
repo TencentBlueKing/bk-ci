@@ -90,13 +90,13 @@ import com.tencent.devops.remotedev.service.tcloud.TCloudCfsService
 import com.tencent.devops.remotedev.service.transfer.RemoteDevGitTransfer
 import com.tencent.devops.remotedev.utils.DevfileUtil
 import com.tencent.devops.scm.utils.code.git.GitUtils
+import java.util.concurrent.Executors
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.slf4j.MDC
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
-import java.util.concurrent.Executors
 
 @Service
 @Suppress("ALL")
@@ -376,7 +376,8 @@ class CreateControl @Autowired constructor(
                     mountType = mountType,
                     ownerType = ws.ownerType,
                     delayMills = i * 2000,
-                    gameId = gameId.first
+                    appName = gameId.first,
+                    gameId = gameId.second
                 )
             )
         }
@@ -723,7 +724,8 @@ class CreateControl @Autowired constructor(
                 mountType = mountType,
                 ownerType = ws.ownerType,
                 delayMills = 2000,
-                gameId = gameId.first
+                appName = gameId.first,
+                gameId = gameId.second
             )
         )
         if (oldWs?.status?.checkDelivering() == true) {
@@ -884,7 +886,8 @@ class CreateControl @Autowired constructor(
                 bkTicket = bkTicket,
                 projectId = projectId,
                 mountType = mountType,
-                gameId = gameId.first
+                appName = gameId.first,
+                gameId = gameId.second
             )
         )
 
@@ -974,7 +977,8 @@ class CreateControl @Autowired constructor(
                 bkTicket = bkTicket,
                 projectId = projectId,
                 mountType = mountType,
-                gameId = gameId.first
+                appName = gameId.first,
+                gameId = gameId.second
             )
         )
 

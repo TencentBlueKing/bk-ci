@@ -101,7 +101,7 @@ class StartCloudRemoteDevService @Autowired constructor(
         kotlin.runCatching {
             workspaceClient.createUser(
                 userId,
-                EnvironmentUserCreate(userId, contentProviderName, checkNotNull(event.gameId))
+                EnvironmentUserCreate(userId, contentProviderName, checkNotNull(event.appName))
             )
         }.onFailure {
             logger.warn("create user failed.|${it.message}")
@@ -113,7 +113,7 @@ class StartCloudRemoteDevService @Autowired constructor(
         }
 
         // 生产创建start资源的订单号
-        val orderId = checkNotNull(event.gameId) + "_" + event.projectId + "_${UUIDUtil.generate().takeLast(16)}"
+        val orderId = checkNotNull(event.appName) + "_" + event.projectId + "_${UUIDUtil.generate().takeLast(16)}"
 
         // 先检查基础镜像在池子中是否有配额，再看有没有可以新生产的显卡
         var zoneId = ""
@@ -156,7 +156,8 @@ class StartCloudRemoteDevService @Autowired constructor(
             EnvironmentCreate(
                 basicBody = EnvironmentCreateBasicBody(
                     userId = userId,
-                    appName = checkNotNull(event.gameId),
+                    appName = checkNotNull(event.appName),
+                    gameId = checkNotNull(event.gameId).toString(),
                     pipelineId = orderId,
                     zoneId = zoneId,
                     machineType = event.devFile.machineType,
