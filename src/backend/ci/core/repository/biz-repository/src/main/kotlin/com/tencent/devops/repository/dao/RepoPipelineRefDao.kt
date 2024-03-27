@@ -280,4 +280,13 @@ class RepoPipelineRefDao {
             dslContext.selectFrom(this).where(ID.`in`(ids)).orderBy(EVENT_TYPE.asc()).fetch()
         }
     }
+
+    fun removeRepositoryPipelineRefsById(
+        dslContext: DSLContext,
+        repoId: Long
+    ): Int {
+        return with(TRepositoryPipelineRef.T_REPOSITORY_PIPELINE_REF) {
+            dslContext.deleteFrom(this).where(REPOSITORY_ID.eq(repoId)).execute()
+        }
+    }
 }

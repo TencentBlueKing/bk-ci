@@ -337,7 +337,7 @@
             },
             sumCost () {
                 const timeCost = this.execDetail?.model?.timeCost
-                return convertMillSec(timeCost?.totalCost + timeCost?.queueCost, true)
+                return convertMillSec(timeCost?.totalCost, true)
             },
             errorsTableColumns () {
                 return [

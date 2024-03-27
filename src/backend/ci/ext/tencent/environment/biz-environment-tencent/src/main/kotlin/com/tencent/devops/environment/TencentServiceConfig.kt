@@ -30,7 +30,6 @@ package com.tencent.devops.environment
 import com.tencent.devops.auth.service.ManagerService
 import com.tencent.devops.common.auth.api.AuthPermissionApi
 import com.tencent.devops.common.auth.api.AuthResourceApi
-import com.tencent.devops.common.auth.api.AuthResourceApiStr
 import com.tencent.devops.common.auth.code.EnvironmentAuthServiceCode
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.client.ClientTokenService
@@ -40,7 +39,6 @@ import com.tencent.devops.environment.dao.NodeDao
 import com.tencent.devops.environment.permission.EnvironmentPermissionService
 import com.tencent.devops.environment.permission.StreamEnvironmentPermissionServiceImp
 import com.tencent.devops.environment.permission.impl.EnvironmentPermissionServiceImpl
-import com.tencent.devops.environment.permission.impl.TxV3EnvironmentPermissionService
 import com.tencent.devops.environment.service.TencentAgentUrlServiceImpl
 import com.tencent.devops.environment.service.TencentGITCIAgentUrlServiceImpl
 import org.jooq.DSLContext
@@ -86,24 +84,6 @@ class TencentServiceConfig {
         envDao = envDao,
         nodeDao = nodeDao,
         dslContext = dslContext
-    )
-
-    @Bean
-    @ConditionalOnProperty(prefix = "auth", name = ["idProvider"], havingValue = "new_v3")
-    fun txV3EnvironmentPermissionService(
-        client: Client,
-        envDao: EnvDao,
-        nodeDao: NodeDao,
-        dslContext: DSLContext,
-        tokenCheckService: ClientTokenService,
-        authResourceApiStr: AuthResourceApiStr
-    ) = TxV3EnvironmentPermissionService(
-        client = client,
-        envDao = envDao,
-        nodeDao = nodeDao,
-        dslContext = dslContext,
-        tokenCheckService = tokenCheckService,
-        authResourceApiStr = authResourceApiStr
     )
 
     @Bean

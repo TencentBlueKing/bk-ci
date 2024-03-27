@@ -14,18 +14,16 @@
                 @change="handleChangeDaterange"
             >
             </bk-date-picker>
-            <bk-search-select
+            <search-select
                 ref="searchSelect"
-                class="search-select"
+                class="search-input"
                 v-model="searchValue"
                 :data="searchList"
                 clearable
                 :show-condition="false"
-                :placeholder="$t('codelib.触发器类型/事件类型/触发人/流水线名称')"
-                @menu-child-select="handleMenuChildSelect"
-                :key="repoId"
+                :placeholder="$t('codelib.事件ID/触发器类型/事件类型/触发人/流水线名称')"
             >
-            </bk-search-select>
+            </search-select>
             <span class="refresh-icon" @click="handleRefresh">
                 <bk-icon type="refresh" />
             </span>
@@ -69,12 +67,14 @@
     } from 'vuex'
     import EmptyTableStatus from '../empty-table-status.vue'
     import TimelineCollapse from './timeline-collapse.vue'
+    import '@blueking/search-select/dist/styles/index.css'
 
     export default {
         name: 'basicSetting',
         components: {
             EmptyTableStatus,
-            TimelineCollapse
+            TimelineCollapse,
+            SearchSelect: () => import('@blueking/search-select')
         },
         props: {
             curRepo: {
@@ -96,10 +96,17 @@
         },
         data () {
             const setDefaultDaterange = () => {
-                const endTime = new Date()
-                const startTime = new Date()
-                startTime.setTime(startTime.getTime() - 3600 * 1000 * 24 * 7)
-                return [startTime, endTime]
+                // 获取当前日期
+                const now = new Date()
+
+                // 获取一周前的日期
+                const oneWeekAgo = new Date()
+                oneWeekAgo.setDate(now.getDate() - 7)
+
+                // 创建开始和结束日期对象
+                const start = new Date(oneWeekAgo.setHours(0, 0, 0))
+                const end = new Date(now.setHours(23, 59, 59))
+                return [start, end]
             }
             
             return {
@@ -147,7 +154,13 @@
                     },
                     {
                         name: this.$t('codelib.流水线名称'),
-                        id: 'pipelineName'
+                        id: 'pipelineId',
+                        remoteMethod: (keyword) => {
+                            return this.fetchPipelinesByName({
+                                projectId: this.projectId,
+                                keyword
+                            })
+                        }
                     }
                 ]
                 return list.filter((data) => {
@@ -175,7 +188,6 @@
                 this.isInitTime = true
             },
             daterange (newVal, oldVal) {
-                console.log(newVal, 1111111)
                 if (oldVal[0]) this.isInitTime = false
                 this.page = 1
                 this.hasLoadEnd = false
@@ -253,8 +265,7 @@
         methods: {
             ...mapActions('codelib', [
                 'fetchTriggerEventList',
-                'fetchEventType',
-                'fetchTriggerType'
+                'fetchPipelinesByName'
             ]),
          
             handleScroll (event) {
@@ -339,14 +350,6 @@
                 this.eventList = []
                 this.timelineMap = {}
                 this.getListData()
-            },
-
-            handleMenuChildSelect () {
-                setTimeout(() => {
-                    if (this.searchValue.length === 4) {
-                        this.$refs.searchSelect.hidePopper()
-                    }
-                })
             },
 
             handleChangeDaterange (date, type) {
@@ -466,6 +469,13 @@
         }
         ::v-deep .bk-loading {
             background-color: #fff !important;
+        }
+    }
+    .search-input {
+        flex: 1;
+        background: white;
+        ::placeholder {
+            color: #c4c6cc;
         }
     }
 </style>

@@ -28,81 +28,62 @@
 package com.tencent.devops.common.auth
 
 import com.fasterxml.jackson.databind.ObjectMapper
-import com.tencent.bk.sdk.iam.config.IamConfiguration
-import com.tencent.bk.sdk.iam.service.impl.ApigwHttpClientServiceImpl
-import com.tencent.bk.sdk.iam.service.impl.ManagerServiceImpl
-import com.tencent.devops.common.auth.api.BSAuthPermissionApi
-import com.tencent.devops.common.auth.api.BSAuthProjectApi
-import com.tencent.devops.common.auth.api.BSAuthResourceApi
-import com.tencent.devops.common.auth.api.BSAuthTokenApi
+import com.tencent.devops.auth.service.ManagerService
+import com.tencent.devops.common.auth.api.AuthTokenApi
 import com.tencent.devops.common.auth.api.BSCCProjectApi
 import com.tencent.devops.common.auth.api.BkAuthProperties
+import com.tencent.devops.common.auth.api.BkCCProperties
+import com.tencent.devops.common.auth.code.PipelineAuthServiceCode
 import com.tencent.devops.common.auth.jmx.JmxAuthApi
+import com.tencent.devops.common.auth.service.BkAccessTokenApi
+import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.redis.RedisOperation
-import org.springframework.boot.autoconfigure.AutoConfigureBefore
-import org.springframework.boot.autoconfigure.AutoConfigureOrder
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.context.annotation.Primary
-import org.springframework.core.Ordered
-import com.tencent.devops.common.client.Client
+import org.springframework.jmx.export.MBeanExporter
 
 @Configuration
 @ConditionalOnWebApplication
-@AutoConfigureOrder(Ordered.LOWEST_PRECEDENCE)
-@ConditionalOnProperty(prefix = "auth", name = ["idProvider"], havingValue = "client")
-@AutoConfigureBefore(name = ["com.tencent.devops.common.auth.MockAuthAutoConfiguration"])
 class AuthAutoConfiguration {
 
     @Bean
+    @ConditionalOnMissingBean
+    fun managerService(client: Client) = ManagerService(client)
+
+    @Bean
+    fun jmxAuthApi(mBeanExporter: MBeanExporter) = JmxAuthApi(mBeanExporter)
+
+    @Bean
     @Primary
+    fun bkCCProperties() = BkCCProperties()
+
+    @Bean
+    @Primary
+    fun bkCCProjectApi(
+        pipelineAuthServiceCode: PipelineAuthServiceCode,
+        bkCCProperties: BkCCProperties,
+        objectMapper: ObjectMapper,
+        authTokenApi: AuthTokenApi
+    ) =
+        BSCCProjectApi(bkCCProperties, objectMapper, authTokenApi, pipelineAuthServiceCode)
+
+    /**
+     * 获取蓝鲸accessToken依赖这个配置,所以不管使用哪个权限中心,都需要配置这个bean
+     */
+    @Bean
     fun bkAuthProperties() = BkAuthProperties()
 
     @Bean
-    @Primary
-    fun bsAuthTokenApi(bkAuthProperties: BkAuthProperties, objectMapper: ObjectMapper, redisOperation: RedisOperation) =
-        BSAuthTokenApi(bkAuthProperties, objectMapper, redisOperation)
-
-    @Bean
-    @Primary
-    fun bsAuthPermissionApi(
+    fun bkAccessTokenApi(
         bkAuthProperties: BkAuthProperties,
         objectMapper: ObjectMapper,
-        bsAuthTokenApi: BSAuthTokenApi,
-        jmxAuthApi: JmxAuthApi,
-        client: Client
-    ) =
-        BSAuthPermissionApi(bkAuthProperties, objectMapper, bsAuthTokenApi, jmxAuthApi, client)
-
-    @Bean
-    @Primary
-    fun bsAuthResourceApi(
-        bkAuthProperties: BkAuthProperties,
-        objectMapper: ObjectMapper,
-        bsAuthTokenApi: BSAuthTokenApi,
-        client: Client
-    ) =
-        BSAuthResourceApi(bkAuthProperties, objectMapper, bsAuthTokenApi, client)
-
-    @Bean
-    @Primary
-    fun bsAuthProjectApi(
-        bkAuthProperties: BkAuthProperties,
-        objectMapper: ObjectMapper,
-        bsAuthTokenApi: BSAuthTokenApi,
-        bsCCProjectApi: BSCCProjectApi
-    ) =
-        BSAuthProjectApi(bkAuthProperties, objectMapper, bsAuthTokenApi, bsCCProjectApi)
-
-    @Bean
-    fun apigwHttpClientServiceImpl(
-        iamConfiguration: IamConfiguration
-    ) = ApigwHttpClientServiceImpl(iamConfiguration)
-
-    @Bean
-    fun iamManagerService(
-        iamConfiguration: IamConfiguration
-    ) = ManagerServiceImpl(apigwHttpClientServiceImpl(iamConfiguration), iamConfiguration)
+        redisOperation: RedisOperation
+    ) = BkAccessTokenApi(
+        bkAuthProperties = bkAuthProperties,
+        objectMapper = objectMapper,
+        redisOperation = redisOperation
+    )
 }

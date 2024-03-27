@@ -46,8 +46,6 @@ import com.tencent.devops.remotedev.pojo.WorkspaceShared
 import com.tencent.devops.remotedev.pojo.WorkspaceStatus
 import com.tencent.devops.remotedev.pojo.WorkspaceSystemType
 import com.tencent.devops.remotedev.pojo.project.WorkspaceProperty
-import java.sql.Timestamp
-import java.time.LocalDateTime
 import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.DatePart
@@ -59,6 +57,8 @@ import org.jooq.RecordMapper
 import org.jooq.Result
 import org.jooq.impl.DSL
 import org.springframework.stereotype.Repository
+import java.sql.Timestamp
+import java.time.LocalDateTime
 
 @Suppress("ALL")
 @Repository
@@ -362,7 +362,8 @@ class WorkspaceDao {
         status: WorkspaceStatus? = null,
         mountType: WorkspaceMountType? = null,
         projectId: String? = null,
-        systemType: WorkspaceSystemType? = null
+        systemType: WorkspaceSystemType? = null,
+        notDeleted: Boolean ? = false
     ): List<WorkspaceRecord>? {
         with(TWorkspace.T_WORKSPACE) {
             val condition = mixCondition(
@@ -372,6 +373,10 @@ class WorkspaceDao {
                 projectId = projectId,
                 systemType = systemType
             )
+
+            if (notDeleted == true) {
+                condition.add(STATUS.notEqual(WorkspaceStatus.DELETED.ordinal))
+            }
 
             if (condition.isEmpty()) {
                 return null
@@ -454,7 +459,9 @@ class WorkspaceDao {
         projectIds: Set<String>? = null,
         ip: String? = null,
         assignType: WorkspaceShared.AssignType? = null,
-        workspaceName: String? = null
+        workspaceName: String? = null,
+        businessLineName: String? = null,
+        ownerName: String? = null
     ): Result<out Record>? {
         val t1 = TWorkspace.T_WORKSPACE.`as`("t1")
         val t2 = TWorkspaceShared.T_WORKSPACE_SHARED.`as`("t2")
@@ -474,6 +481,9 @@ class WorkspaceDao {
         }
         workspaceName?.let {
             conditions.add(t1.NAME.eq(it))
+        }
+        businessLineName?.let {
+            conditions.add(t1.CREATOR_DEPT_NAME.eq(businessLineName).or(t1.BUSINESS_LINE_NAME.eq(businessLineName)))
         }
 
         if (!projectIds.isNullOrEmpty()) {
@@ -506,6 +516,13 @@ class WorkspaceDao {
                     it.and(t2.ASSIGN_TYPE.eq(WorkspaceShared.AssignType.OWNER.name).or(t2.ASSIGN_TYPE.isNull))
                 }
             }
+            .let {
+                if (!ownerName.isNullOrBlank()) {
+                    it.and(t2.SHARED_USER.eq(ownerName))
+                } else {
+                    it
+                }
+            }
             .and(t1.OWNER_TYPE.eq(WorkspaceOwnerType.PROJECT.name))
             .unionAll(
                 dslContext.selectDistinct(
@@ -532,7 +549,8 @@ class WorkspaceDao {
         status: WorkspaceStatus? = null,
         mountType: WorkspaceMountType? = null,
         projectIds: Set<String>? = null,
-        ips: Set<String>? = null
+        ips: Set<String>? = null,
+        workspaceNames: Set<String>? = null
     ): Result<out Record>? {
         val t1 = TWorkspace.T_WORKSPACE.`as`("t1")
         val t2 = TWorkspaceWindows.T_WORKSPACE_WINDOWS.`as`("t2")
@@ -547,6 +565,9 @@ class WorkspaceDao {
         }
         mountType?.let {
             conditions.add(t1.WORKSPACE_MOUNT_TYPE.eq(mountType.name))
+        }
+        workspaceNames?.let {
+            conditions.add(t1.NAME.`in`(workspaceNames))
         }
 
         if (!projectIds.isNullOrEmpty()) {
@@ -566,7 +587,7 @@ class WorkspaceDao {
         }
 
         return dslContext.selectDistinct(
-            t1.NAME, t1.DISPLAY_NAME, t1.PROJECT_ID, t1.CREATOR, t1.STATUS, t1.CREATE_TIME
+            t1.NAME, t1.DISPLAY_NAME, t1.PROJECT_ID, t1.CREATOR, t1.STATUS, t1.CREATE_TIME, t2.WIN_CONFIG_ID
         )
             .from(t1).innerJoin(t2).on(t1.NAME.eq(t2.WORKSPACE_NAME))
             .where(conditions)
@@ -580,7 +601,7 @@ class WorkspaceDao {
         mountType: WorkspaceMountType? = null,
         projectId: String? = null,
         systemType: WorkspaceSystemType? = null
-    ): List<Condition> {
+    ): MutableList<Condition> {
         val condition = mutableListOf<Condition>()
         with(TWorkspace.T_WORKSPACE) {
             if (!userId.isNullOrBlank()) {
@@ -812,6 +833,17 @@ class WorkspaceDao {
             dslContext.selectFrom(this)
                 .where(WORKSPACE_NAME.`in`(workspaceNames))
                 .fetch()
+        }
+    }
+
+    fun fetchWorkspaces(
+        dslContext: DSLContext,
+        workspaceNames: Set<String>
+    ): List<WorkspaceRecord> {
+        with(TWorkspace.T_WORKSPACE) {
+            return dslContext.selectFrom(this)
+                .where(NAME.`in`(workspaceNames))
+                .fetch(workspaceMapper)
         }
     }
 

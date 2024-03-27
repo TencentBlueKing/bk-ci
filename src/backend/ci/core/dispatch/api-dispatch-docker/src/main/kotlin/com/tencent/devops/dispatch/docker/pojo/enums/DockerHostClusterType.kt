@@ -44,6 +44,11 @@ enum class DockerHostClusterType {
     BUILD_LESS,
 
     /**
+     * 无编译环境构建机群(k8s)
+     */
+    K8S_BUILD_LESS,
+
+    /**
      * mac构建机群
      */
     MACOS

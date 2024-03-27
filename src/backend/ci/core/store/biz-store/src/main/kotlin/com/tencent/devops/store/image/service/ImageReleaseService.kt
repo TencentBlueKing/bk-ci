@@ -51,10 +51,6 @@ import com.tencent.devops.model.store.tables.records.TImageRecord
 import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.process.api.service.ServicePipelineInitResource
 import com.tencent.devops.project.api.service.ServiceProjectResource
-import com.tencent.devops.store.constant.StoreMessageCode
-import com.tencent.devops.store.constant.StoreMessageCode.IMAGE_ADD_NO_PROJECT_MEMBER
-import com.tencent.devops.store.constant.StoreMessageCode.IMAGE_PUBLISH_REPO_NO_PERMISSION
-import com.tencent.devops.store.constant.StoreMessageCode.NO_COMPONENT_ADMIN_PERMISSION
 import com.tencent.devops.store.common.dao.BusinessConfigDao
 import com.tencent.devops.store.common.dao.StoreMemberDao
 import com.tencent.devops.store.common.dao.StorePipelineBuildRelDao
@@ -62,6 +58,12 @@ import com.tencent.devops.store.common.dao.StorePipelineRelDao
 import com.tencent.devops.store.common.dao.StoreProjectRelDao
 import com.tencent.devops.store.common.dao.StoreReleaseDao
 import com.tencent.devops.store.common.dao.StoreStatisticTotalDao
+import com.tencent.devops.store.common.service.StoreCommonService
+import com.tencent.devops.store.common.utils.VersionUtils
+import com.tencent.devops.store.constant.StoreMessageCode
+import com.tencent.devops.store.constant.StoreMessageCode.IMAGE_ADD_NO_PROJECT_MEMBER
+import com.tencent.devops.store.constant.StoreMessageCode.IMAGE_PUBLISH_REPO_NO_PERMISSION
+import com.tencent.devops.store.constant.StoreMessageCode.NO_COMPONENT_ADMIN_PERMISSION
 import com.tencent.devops.store.image.dao.ImageAgentTypeDao
 import com.tencent.devops.store.image.dao.ImageCategoryRelDao
 import com.tencent.devops.store.image.dao.ImageDao
@@ -91,8 +93,6 @@ import com.tencent.devops.store.pojo.image.request.ImageStatusInfoUpdateRequest
 import com.tencent.devops.store.pojo.image.request.MarketImageRelRequest
 import com.tencent.devops.store.pojo.image.request.MarketImageUpdateRequest
 import com.tencent.devops.store.pojo.image.response.ImageAgentTypeInfo
-import com.tencent.devops.store.common.service.StoreCommonService
-import com.tencent.devops.store.common.utils.VersionUtils
 import com.tencent.devops.ticket.api.ServiceCredentialResource
 import java.time.LocalDateTime
 import java.util.Base64
@@ -101,10 +101,8 @@ import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
-import org.springframework.stereotype.Service
 
 @Suppress("ALL")
-@Service
 abstract class ImageReleaseService {
 
     private final val CATEGORY_PIPELINE_JOB = "PIPELINE_JOB"

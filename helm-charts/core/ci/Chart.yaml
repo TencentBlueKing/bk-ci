@@ -39,6 +39,6 @@ dependencies:
   repository: https://raw.githubusercontent.com/bitnami/charts/eb5f9a9513d987b519f0ecd732e7031241c50328/bitnami
   condition: mongodb.enabled
 - name: kubernetes-manager
-  version: 0.0.37
+  version: 0.0.45
   repository: "file://./local_chart/kubernetes-management"
   condition: kubernetes-manager.enabled
