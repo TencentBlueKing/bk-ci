@@ -55,6 +55,7 @@ import com.tencent.devops.environment.constant.T_NODE_HOST_ID
 import com.tencent.devops.environment.constant.T_NODE_NODE_ID
 import com.tencent.devops.environment.constant.T_NODE_NODE_STATUS
 import com.tencent.devops.environment.constant.T_NODE_NODE_TYPE
+import com.tencent.devops.environment.constant.T_NODE_OS_TYPE
 import com.tencent.devops.environment.constant.T_NODE_PROJECT_ID
 import com.tencent.devops.environment.pojo.job.AgentVersionInfo
 import com.tencent.devops.environment.pojo.job.UpdateTNodeInfo
@@ -139,6 +140,7 @@ class NodeDao {
                     dslContext.update(this)
                         .set(HOST_ID, it.bkHostId)
                         .set(CLOUD_AREA_ID, it.bkCloudId)
+                        .set(OS_TYPE, it.osType)
                         .where(NODE_ID.eq(it.nodeId))
                 }
             )
@@ -193,14 +195,15 @@ class NodeDao {
         }
     }
 
-    fun getDeployNodesInCmdbLimit(dslContext: DSLContext, page: Int, pageSize: Int): Result<Record5<Long, String, String, Long, Long>> {
+    fun getDeployNodesInCmdbLimit(dslContext: DSLContext, page: Int, pageSize: Int): Result<Record6<Long, String, String, Long, Long, String>> {
         with(TNode.T_NODE) {
             return dslContext.select(
                 NODE_ID.`as`(T_NODE_NODE_ID),
                 NODE_TYPE.`as`(T_NODE_NODE_TYPE),
                 NODE_IP.`as`(T_NODE_NODE_IP),
                 HOST_ID.`as`(T_NODE_HOST_ID),
-                CLOUD_AREA_ID.`as`(T_NODE_CLOUD_AREA_ID)
+                CLOUD_AREA_ID.`as`(T_NODE_CLOUD_AREA_ID),
+                OS_TYPE.`as`(T_NODE_OS_TYPE)
             ).from(this)
                 .where(NODE_TYPE.`in`(NodeType.CMDB.name, NodeType.UNKNOWN.name, NodeType.OTHER.name))
                 .and(NODE_STATUS.notEqual(NodeStatus.NOT_IN_CMDB.name))
@@ -278,11 +281,15 @@ class NodeDao {
     fun updateNodeNotInCCByIp(dslContext: DSLContext, notInCCIpList: List<String>) {
         val hostIdDefault: Long? = null
         val cloudAreaIdDefault: Long? = null
+        val osTypeDefault: String? = null
+        val agentVersionDefault: String? = null
         with(TNode.T_NODE) {
             dslContext.update(this)
                 .set(NODE_STATUS, NodeStatus.NOT_IN_CC.name)
                 .set(HOST_ID, hostIdDefault)
                 .set(CLOUD_AREA_ID, cloudAreaIdDefault)
+                .set(OS_TYPE, osTypeDefault)
+                .set(AGENT_VERSION, agentVersionDefault)
                 .where(NODE_IP.`in`(notInCCIpList))
                 .and(NODE_TYPE.`in`(NodeType.CMDB.name, NodeType.UNKNOWN.name, NodeType.OTHER.name))
                 .and(NODE_STATUS.notEqual(NodeStatus.NOT_IN_CC.name))
