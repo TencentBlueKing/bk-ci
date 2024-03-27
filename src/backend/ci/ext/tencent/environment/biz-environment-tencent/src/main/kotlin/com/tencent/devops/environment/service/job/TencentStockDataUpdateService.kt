@@ -250,7 +250,7 @@ class TencentStockDataUpdateService @Autowired constructor(
                         "[updateGseAgent]existAgentVersionList:" +
                             existAgentVersionList.joinToString(separator = ", ", transform = { it.toString() })
                     )
-                val hostIdToExistAgentVersion = existAgentVersionList.associateBy { it.bkHostId }
+                val hostIdToExistAgentVersion = existAgentVersionList.groupBy { it.bkHostId }
                 val newAgentVersionList = queryAgentStatusService.getAgentVersions(existAgentVersionList)
                 if (logger.isDebugEnabled)
                     logger.debug(
@@ -259,9 +259,17 @@ class TencentStockDataUpdateService @Autowired constructor(
                     )
                 // 判断 newAgentVersionList 和 existAgentVersionList 是否一致，不一致则更新对应数据库表
                 val agentUpdateList = newAgentVersionList?.filterNot {
-                    it.installedTag == hostIdToExistAgentVersion[it.bkHostId]?.installedTag &&
-                        it.version == hostIdToExistAgentVersion[it.bkHostId]?.version &&
-                        it.status == hostIdToExistAgentVersion[it.bkHostId]?.status
+                    hostIdToExistAgentVersion[it.bkHostId]?.all { item ->
+                        // 1. 判断一个分组（同一个hostId）中的AgentVersion是否相同，不同则统一重新重新写入
+                        item.installedTag == hostIdToExistAgentVersion[it.bkHostId]?.get(0)?.installedTag &&
+                            item.version == hostIdToExistAgentVersion[it.bkHostId]?.get(0)?.version &&
+                            item.status == hostIdToExistAgentVersion[it.bkHostId]?.get(0)?.status
+                    } ?: false ||
+                        ( // 2. 这个分组（同一个hostId）的AgentVersion相同，判断第一个元素的值，新查的和db中的是否相同，不同则更新
+                            it.installedTag == hostIdToExistAgentVersion[it.bkHostId]?.get(0)?.installedTag &&
+                                it.version == hostIdToExistAgentVersion[it.bkHostId]?.get(0)?.version &&
+                                it.status == hostIdToExistAgentVersion[it.bkHostId]?.get(0)?.status
+                            )
                 }
                 logger.info(
                     "[updateGseAgent]agentUpdateList:" +
