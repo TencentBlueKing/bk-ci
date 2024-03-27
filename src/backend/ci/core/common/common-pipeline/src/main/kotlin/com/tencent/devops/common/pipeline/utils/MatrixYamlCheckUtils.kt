@@ -48,7 +48,6 @@ object MatrixYamlCheckUtils {
                 null
             } catch (ignore: Throwable) {
                 throw InvalidParamException("[include] field is not a legal yaml or fromJSON method")
-
             },
             exclude = try {
                 MatrixContextUtils.schemaCheck(
