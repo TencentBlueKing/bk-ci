@@ -34,13 +34,11 @@ import com.tencent.devops.environment.api.ServiceCmdbNodeResource
 import com.tencent.devops.environment.pojo.CmdbNode
 import com.tencent.devops.environment.pojo.job.AddCmdbNodesRes
 import com.tencent.devops.environment.service.CmdbNodeService
-import com.tencent.devops.environment.service.job.TencentStockDataUpdateService
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 class ServiceCmdbNodeResourceImpl @Autowired constructor(
-    private val cmdbNodeService: CmdbNodeService,
-    private val tencentStockDataUpdateService: TencentStockDataUpdateService
+    private val cmdbNodeService: CmdbNodeService
 ) : ServiceCmdbNodeResource {
 
     override fun listUserCmdbNodesNew(
