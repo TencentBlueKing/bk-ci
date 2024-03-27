@@ -211,85 +211,28 @@ class EventCacheService @Autowired constructor(
     @SuppressWarnings("NestedBlockDepth")
     fun getWebhookCommitList(
         repo: Repository,
-        maxCount: Int,
         matcher: ScmWebhookMatcher,
         projectId: String,
-        pipelineId: String,
-        buildId: String
+        pipelineId: String
     ): List<WebhookCommit> {
         val eventCache = EventCacheUtil.getOrInitRepoCache(projectId = projectId, repo = repo)
-        // 缓存第一页的数据,如果缓存全部数据,可能会导致OOM。目前只有少量的数据才会分页，能够减少大量请求数。
-        val firstPageWebhookCommitList = eventCache?.webhookCommitList ?: run {
-            val webhookCommitList = getWebhookCommitList(
-                repo = repo,
-                matcher = matcher,
-                projectId = projectId,
-                pipelineId = pipelineId,
-                useScrollPage = false,
-                maxCount = maxCount
-            )
-            eventCache?.webhookCommitList = webhookCommitList
-            webhookCommitList
-        }
-        return if (firstPageWebhookCommitList.size == WEBHOOK_COMMIT_PAGE_SIZE) {
-            val list = firstPageWebhookCommitList.toMutableList()
-            list.addAll(
-                getWebhookCommitList(
-                    repo = repo,
-                    matcher = matcher,
-                    projectId = projectId,
-                    pipelineId = pipelineId,
-                    useScrollPage = true,
-                    maxCount = maxCount - WEBHOOK_COMMIT_PAGE_SIZE
-                )
-            )
-            list
-        } else {
-            firstPageWebhookCommitList
-        }.let {
-            // 超过最大数量
-            if (it.size > maxCount) {
-                it.subList(0, maxCount)
-            } else {
-                it
-            }
-        }
-    }
-
-    /**
-     * @param useScrollPage 是否需要分页查询, true-需要滚动, false-不需要滚动
-     */
-    private fun getWebhookCommitList(
-        repo: Repository,
-        matcher: ScmWebhookMatcher,
-        projectId: String,
-        pipelineId: String,
-        useScrollPage: Boolean,
-        maxCount: Int
-    ): List<WebhookCommit> {
-        // 需要滚动滚动查询时，第一页数据已经有了不需要重复请求接口，直接从第二页开始查，避免再次调接口
-        var page = if (useScrollPage) 2 else 1
-        val webhookCommitList = mutableListOf<WebhookCommit>()
-        try {
-            while (true) {
-                val list = matcher.getWebhookCommitList(
+        // 缓存第一页的数据
+        return eventCache?.webhookCommitList ?: run {
+            try {
+                val webhookCommitList = matcher.getWebhookCommitList(
                     projectId = projectId,
                     pipelineId = pipelineId,
                     repository = repo,
-                    page = page,
+                    page = 1,
                     size = WEBHOOK_COMMIT_PAGE_SIZE
                 )
-                webhookCommitList.addAll(list)
-                if (webhookCommitList.size < WEBHOOK_COMMIT_PAGE_SIZE ||
-                    !useScrollPage ||
-                    webhookCommitList.size >= maxCount
-                ) break
-                page++
+                eventCache?.webhookCommitList = webhookCommitList
+                webhookCommitList
+            } catch (ignored: Throwable) {
+                logger.info("fail to get webhook commit list | err is $ignored")
+                emptyList()
             }
-        } catch (ignored: Throwable) {
-            logger.info("fail to get webhook commit list | err is $ignored")
         }
-        return webhookCommitList
     }
 
     companion object {
