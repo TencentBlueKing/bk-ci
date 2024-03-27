@@ -10,6 +10,7 @@ import com.tencent.devops.remotedev.pojo.job.JobCreateData
 import com.tencent.devops.remotedev.pojo.job.JobRecord
 import com.tencent.devops.remotedev.pojo.job.JobRecordSearchParam
 import com.tencent.devops.remotedev.pojo.job.JobSchema
+import com.tencent.devops.remotedev.pojo.job.JobSchemaShort
 import com.tencent.devops.remotedev.pojo.job.JobType
 import com.tencent.devops.remotedev.service.job.RemoteDevJobService
 import com.tencent.devops.remotedev.service.job.RemoteDevSchemaService
@@ -20,13 +21,13 @@ class UserRemoteDevJobResourceImpl @Autowired constructor(
     private val remoteDevSchemaService: RemoteDevSchemaService,
     private val remoteDevJobService: RemoteDevJobService
 ) : UserRemoteDevJobResource {
-    override fun fetchJobSchemaList(userId: String, type: JobType): Result<List<JobSchema>> {
+    override fun fetchJobSchemaList(userId: String, type: JobType): Result<List<JobSchemaShort>> {
         // TODO: 是否需要鉴权
         return Result(remoteDevSchemaService.getJobIdAndNames(type))
     }
 
     override fun getJobSchema(userId: String, schemaId: String): Result<JobSchema?> {
-        return Result(remoteDevSchemaService.getSchema(schemaId))
+        return Result(remoteDevSchemaService.getSchema(schemaId, false))
     }
 
     override fun createJob(userId: String, data: JobCreateData): Result<Boolean> {

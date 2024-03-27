@@ -36,7 +36,7 @@ class OpRemoteDevJobResourceImpl @Autowired constructor(
     }
 
     override fun getSchema(userId: String, schemaId: String): Result<JobSchema?> {
-        return Result(remoteDevSchemaService.getSchema(schemaId))
+        return Result(remoteDevSchemaService.getSchema(schemaId, true))
     }
 
     override fun callBackUpdateJobStatus(userId: String, jobId: Long): Result<Boolean> {

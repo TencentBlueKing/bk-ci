@@ -10,6 +10,7 @@ import com.tencent.devops.remotedev.pojo.job.JobCreateData
 import com.tencent.devops.remotedev.pojo.job.JobRecord
 import com.tencent.devops.remotedev.pojo.job.JobRecordSearchParam
 import com.tencent.devops.remotedev.pojo.job.JobSchema
+import com.tencent.devops.remotedev.pojo.job.JobSchemaShort
 import com.tencent.devops.remotedev.pojo.job.JobType
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
@@ -40,7 +41,7 @@ interface UserRemoteDevJobResource {
         @Parameter(description = "类型一次性，周期等", required = true)
         @QueryParam("type")
         type: JobType
-    ): Result<List<JobSchema>>
+    ): Result<List<JobSchemaShort>>
 
     @Operation(summary = "获取job schema")
     @GET
