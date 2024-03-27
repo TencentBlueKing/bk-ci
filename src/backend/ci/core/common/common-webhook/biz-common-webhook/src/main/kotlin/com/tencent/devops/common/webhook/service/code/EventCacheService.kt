@@ -240,7 +240,7 @@ class EventCacheService @Autowired constructor(
                     projectId = projectId,
                     pipelineId = pipelineId,
                     useScrollPage = true,
-                    maxCount = maxCount
+                    maxCount = maxCount - WEBHOOK_COMMIT_PAGE_SIZE
                 )
             )
             list
