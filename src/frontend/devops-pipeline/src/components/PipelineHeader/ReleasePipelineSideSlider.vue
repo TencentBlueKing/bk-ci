@@ -10,7 +10,7 @@
             'has-pac-tag': pacEnabled
         }]">
             {{ $t("releasePipeline") }}
-            <PacTag v-if="pacEnabled" />
+            <PacTag v-if="pacEnabled" :info="pipelineInfo?.yamlInfo" />
             <span v-bk-overflow-tips class="release-pipeline-new-version">{{ $t("releasePipelineVersion", [newReleaseVersionName]) }}</span>
             <span v-bk-overflow-tips>
                 {{ $t("releasePipelineBaseVersion", [draftBaseVersionName]) }}
