@@ -26,26 +26,28 @@
                 </accordion>
             </template>
         </template>
-        <template v-for="(group, groupKey) in paramsGroupMap">
-            <accordion v-if="group.isInputGroup && rely(group, atomValue)" show-checkbox :show-content="group.isExpanded" :key="groupKey">
-                <header class="var-header" slot="header">
-                    <span>{{ group.label }}</span>
-                    <i class="devops-icon icon-angle-down" style="display: block"></i>
-                </header>
-                <div slot="content">
-                    <template v-for="(obj, key) in group.props">
-                        <form-field v-if="!isHidden(obj, atomValue)" :class="{ 'changed-prop': atomVersionChangedKeys.includes(key) }" :key="key" :desc="obj.desc" :desc-link="obj.descLink" :desc-link-text="obj.descLinkText" :required="obj.required" :label="obj.label" :is-error="errors.has(groupKey)" :error-msg="errors.first(groupKey)">
-                            <component :is="obj.type" :container="container" :atom-value="atomValue" :name="key" v-validate.initial="Object.assign({}, { max: getMaxLengthByType(obj.type) }, obj.rule, { required: !!obj.required })" :handle-change="handleUpdateAtomInput" :value="atomValue[key]" v-bind="obj" :placeholder="getPlaceholder(obj, atomValue)"></component>
-                            <route-tips v-bind="getComponentTips(obj, atomValue)"></route-tips>
-                        </form-field>
-                    </template>
-                </div>
-            </accordion>
-            <template v-else>
-                <form-field v-if="!isHidden(group, atomValue) && rely(group, atomValue)" :class="{ 'changed-prop': atomVersionChangedKeys.includes(groupKey) }" :key="groupKey" :desc="group.desc" :desc-link="group.descLink" :desc-link-text="group.descLinkText" :required="group.required" :label="group.label" :is-error="errors.has(groupKey)" :error-msg="errors.first(groupKey)">
-                    <component :is="group.type" :container="container" :atom-value="atomValue" :disabled="disabled" :name="groupKey" v-validate.initial="Object.assign({}, { max: getMaxLengthByType(group.type) }, group.rule, { required: !!group.required })" :handle-change="handleUpdateAtomInput" :value="atomValue[groupKey]" v-bind="group" :get-atom-key-modal="getAtomKeyModal" :placeholder="getPlaceholder(group, atomValue)"></component>
-                    <route-tips v-bind="getComponentTips(group, atomValue)"></route-tips>
-                </form-field>
+        <template v-else>
+            <template v-for="(group, groupKey) in paramsGroupMap">
+                <accordion v-if="group.isInputGroup && rely(group, atomValue)" show-checkbox :show-content="group.isExpanded" :key="groupKey">
+                    <header class="var-header" slot="header">
+                        <span>{{ group.label }}</span>
+                        <i class="devops-icon icon-angle-down" style="display: block"></i>
+                    </header>
+                    <div slot="content">
+                        <template v-for="(obj, key) in group.props">
+                            <form-field v-if="!isHidden(obj, atomValue)" :class="{ 'changed-prop': atomVersionChangedKeys.includes(key) }" :key="key" :desc="obj.desc" :desc-link="obj.descLink" :desc-link-text="obj.descLinkText" :required="obj.required" :label="obj.label" :is-error="errors.has(groupKey)" :error-msg="errors.first(groupKey)">
+                                <component :is="obj.type" :container="container" :atom-value="atomValue" :name="key" v-validate.initial="Object.assign({}, { max: getMaxLengthByType(obj.type) }, obj.rule, { required: !!obj.required })" :handle-change="handleUpdateAtomInput" :value="atomValue[key]" v-bind="obj" :placeholder="getPlaceholder(obj, atomValue)"></component>
+                                <route-tips v-bind="getComponentTips(obj, atomValue)"></route-tips>
+                            </form-field>
+                        </template>
+                    </div>
+                </accordion>
+                <template v-else>
+                    <form-field v-if="!isHidden(group, atomValue) && rely(group, atomValue)" :class="{ 'changed-prop': atomVersionChangedKeys.includes(groupKey) }" :key="groupKey" :desc="group.desc" :desc-link="group.descLink" :desc-link-text="group.descLinkText" :required="group.required" :label="group.label" :is-error="errors.has(groupKey)" :error-msg="errors.first(groupKey)">
+                        <component :is="group.type" :container="container" :atom-value="atomValue" :disabled="disabled" :name="groupKey" v-validate.initial="Object.assign({}, { max: getMaxLengthByType(group.type) }, group.rule, { required: !!group.required })" :handle-change="handleUpdateAtomInput" :value="atomValue[groupKey]" v-bind="group" :get-atom-key-modal="getAtomKeyModal" :placeholder="getPlaceholder(group, atomValue)"></component>
+                        <route-tips v-bind="getComponentTips(group, atomValue)"></route-tips>
+                    </form-field>
+                </template>
             </template>
         </template>
         <atom-output :element="element" :atom-props-model="atomPropsModel" :set-parent-validate="() => {}"></atom-output>
@@ -89,7 +91,7 @@
             appIdProps () {
                 let appIdProps
                 Object.keys(this.atomPropsModel.input).every(key => {
-                    if (this.atomPropsModel.input[key].type && this.atomPropsModel.input[key].type.indexOf('app-id') > -1) {
+                    if (this.atomPropsModel.input[key].type?.indexOf('app-id') > -1) {
                         appIdProps = {
                             ...this.atomPropsModel.input[key],
                             atomPropsName: key
