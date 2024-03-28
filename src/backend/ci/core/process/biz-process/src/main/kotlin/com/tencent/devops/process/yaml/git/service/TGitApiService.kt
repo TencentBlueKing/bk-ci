@@ -35,6 +35,7 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.enums.CodeTargetAction
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.constant.ProcessMessageCode
+import com.tencent.devops.process.yaml.actions.GitActionCommon
 import com.tencent.devops.process.yaml.git.pojo.ApiRequestRetryInfo
 import com.tencent.devops.process.yaml.git.pojo.PacGitCommitInfo
 import com.tencent.devops.process.yaml.git.pojo.PacGitCred
@@ -339,7 +340,8 @@ class TGitApiService @Autowired constructor(
             filePath = filePath,
             branch = branchName,
             blobId = fileInfo!!.blobId,
-            lastCommitId = commitInfo!!.commitId,
+            commitId = commitInfo!!.commitId,
+            commitTime = GitActionCommon.getCommitTimeStamp(commitInfo.commitDate),
             mrUrl = mrUrl
         )
     }

@@ -483,7 +483,6 @@ class PipelineBuildWebhookService @Autowired constructor(
     fun webhookCommitTriggerPipelineBuild(projectId: String, webhookCommit: WebhookCommit): BuildId? {
         val userId = webhookCommit.userId
         val pipelineId = webhookCommit.pipelineId
-        val version = webhookCommit.version
         val startParams = webhookCommit.params
 
         val repoName = webhookCommit.repoName
@@ -493,9 +492,14 @@ class PipelineBuildWebhookService @Autowired constructor(
         if (pipelineInfo.onlyDraft == true) throw ErrorCodeException(
             errorCode = ProcessMessageCode.ERROR_NO_RELEASE_PIPELINE_VERSION
         )
+        val version = webhookCommit.version ?: pipelineInfo.version
         checkPermission(pipelineInfo.lastModifyUser, projectId = projectId, pipelineId = pipelineId)
 
-        val resource = pipelineRepositoryService.getPipelineResourceVersion(projectId, pipelineId)
+        val resource = pipelineRepositoryService.getPipelineResourceVersion(
+            projectId = projectId,
+            pipelineId = pipelineId,
+            version = version
+        )
         if (resource == null) {
             logger.warn("[$pipelineId]| Fail to get the model")
             return null
@@ -527,7 +531,7 @@ class PipelineBuildWebhookService @Autowired constructor(
                 channelCode = pipelineInfo.channelCode,
                 isMobile = false,
                 model = model,
-                signPipelineVersion = version ?: pipelineInfo.version,
+                signPipelineVersion = version,
                 frequencyLimit = false,
                 versionName = resource.versionName
             )

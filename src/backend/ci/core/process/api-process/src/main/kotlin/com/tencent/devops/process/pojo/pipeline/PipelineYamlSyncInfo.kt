@@ -35,6 +35,8 @@ import io.swagger.v3.oas.annotations.media.Schema
 data class PipelineYamlSyncInfo(
     @get:Schema(title = "文件路径", required = true)
     val filePath: String,
+    @get:Schema(title = "文件url", required = true)
+    val fileUrl: String? = null,
     @get:Schema(title = "同步状态", required = true)
     val syncStatus: RepoYamlSyncStatusEnum = RepoYamlSyncStatusEnum.SYNC,
     @get:Schema(title = "原因", required = false)

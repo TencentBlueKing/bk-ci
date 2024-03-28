@@ -88,6 +88,7 @@ class TGitMrActionGit(
             gitProjectId = event.object_attributes.target_project_id.toString(),
             scmType = ScmType.CODE_GIT,
             sourceGitProjectId = event.object_attributes.source_project_id.toString(),
+            sourceGitNamespace = event.object_attributes.source.namespace,
             branch = if (event.object_attributes.action == TGitMergeActionKind.MERGE.value) {
                 event.object_attributes.target_branch
             } else {

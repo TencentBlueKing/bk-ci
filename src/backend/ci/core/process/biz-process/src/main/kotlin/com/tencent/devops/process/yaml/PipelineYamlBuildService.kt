@@ -34,6 +34,7 @@ import com.tencent.devops.process.engine.dao.PipelineYamlVersionDao
 import com.tencent.devops.process.service.webhook.PipelineBuildWebhookService
 import com.tencent.devops.process.webhook.WebhookEventFactory
 import com.tencent.devops.process.yaml.actions.BaseAction
+import com.tencent.devops.process.yaml.actions.GitActionCommon
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -59,6 +60,10 @@ class PipelineYamlBuildService @Autowired constructor(
         try {
             val yamlFile = action.data.context.yamlFile!!
             val repoHashId = action.data.setting.repoHashId
+            val branch = action.data.eventCommon.branch
+            val filePath = yamlFile.yamlPath
+            val blobId = yamlFile.blobId!!
+            val ref = GitActionCommon.getRef(action.data.eventCommon.sourceGitNamespace, branch)
 
             val matcher = webhookEventFactory.createScmWebHookMatcher(scmType = scmType, event = action.data.event)
             val preMatch = matcher.preMatch()
@@ -67,12 +72,23 @@ class PipelineYamlBuildService @Autowired constructor(
                 return
             }
 
-            val pipelineYamlVersion = pipelineYamlVersionDao.get(
+            /*
+            1. 获取当前分支有没有存到文件blob_id对应的版本,如果存在则直接使用当前版本
+            2. 如果不存在,则获取当前blob_id对应的最新版本
+             */
+            val pipelineYamlVersion = pipelineYamlVersionDao.getLatestVersion(
                 dslContext = dslContext,
                 projectId = projectId,
                 repoHashId = repoHashId,
-                filePath = yamlFile.yamlPath,
-                blobId = yamlFile.blobId!!
+                filePath = filePath,
+                ref = ref,
+                blobId = blobId
+            ) ?: pipelineYamlVersionDao.getLatestVersion(
+                dslContext = dslContext,
+                projectId = projectId,
+                repoHashId = repoHashId,
+                filePath = filePath,
+                blobId = yamlFile.blobId
             ) ?: run {
                 logger.info("pac yaml build not found pipeline version|$projectId|$repoHashId|$yamlFile")
                 return

@@ -64,14 +64,15 @@ class PipelineYamlManualAction : BaseAction {
     private fun initCommonData(): PipelineYamlManualAction {
         val event = event()
         val gitProjectId = getGitProjectIdOrName()
-        val defaultBranch = api.getGitProjectInfo(
+        val projectInfo = api.getGitProjectInfo(
             cred = this.getGitCred(),
             gitProjectId = gitProjectId,
             retry = ApiRequestRetryInfo(true)
-        )!!.defaultBranch!!
+        )!!
+        val defaultBranch = projectInfo.defaultBranch!!
         val latestCommit = api.getGitCommitInfo(
             cred = this.getGitCred(),
-            gitProjectId = gitProjectId.toString(),
+            gitProjectId = gitProjectId,
             sha = defaultBranch,
             retry = ApiRequestRetryInfo(retry = true)
         )
@@ -89,6 +90,7 @@ class PipelineYamlManualAction : BaseAction {
             scmType = event.scmType
         )
         this.data.context.defaultBranch = defaultBranch
+        this.data.context.homePage = projectInfo.homepage
         return this
     }
 
@@ -107,12 +109,21 @@ class PipelineYamlManualAction : BaseAction {
     }
 
     override fun getYamlPathList(): List<YamlPathListEntry> {
+        val homePage = data.context.homePage
+        val commit = data.eventCommon.commit.commitId
         return GitActionCommon.getYamlPathList(
             action = this,
             gitProjectId = this.getGitProjectIdOrName(),
             ref = this.data.eventCommon.branch
         ).map { (name, blobId) ->
-            YamlPathListEntry(name, CheckType.NEED_CHECK, this.data.eventCommon.branch, blobId)
+            val yamlUrl = "$homePage/blob/$commit/$name"
+            YamlPathListEntry(
+                yamlPath = name,
+                checkType = CheckType.NEED_CHECK,
+                ref = this.data.eventCommon.branch,
+                blobId = blobId,
+                yamlUrl = yamlUrl
+            )
         }
     }
 
