@@ -62,7 +62,12 @@ class UserNodeResourceImpl @Autowired constructor(
     }
 
     @BkTimed(extraTags = ["operate", "getNode"])
-    override fun list(
+    override fun list(userId: String, projectId: String): Result<List<NodeWithPermission>> {
+        return Result(NodeUtils.sortByUser(nodeService.list(userId, projectId), userId))
+    }
+
+    @BkTimed(extraTags = ["operate", "getNode"])
+    override fun listNew(
         userId: String,
         projectId: String,
         page: Int?,
@@ -73,7 +78,7 @@ class UserNodeResourceImpl @Autowired constructor(
         lastModifiedUser: String?
     ): Result<Page<NodeWithPermission>> {
         return Result(
-            nodeService.list(userId, projectId, page, pageSize, nodeIp, displayName, createdUser, lastModifiedUser)
+            nodeService.listNew(userId, projectId, page, pageSize, nodeIp, displayName, createdUser, lastModifiedUser)
         )
     }
 
