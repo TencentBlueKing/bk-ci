@@ -2,6 +2,7 @@ package com.tencent.devops.remotedev.api.service
 
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.remotedev.pojo.WindowsResourceTypeConfig
 import com.tencent.devops.remotedev.pojo.op.OpProjectWorkspaceAssignData
 import com.tencent.devops.remotedev.pojo.op.RemotedevCvmData
 import com.tencent.devops.remotedev.pojo.op.WorkspaceNotifyData
@@ -48,7 +49,13 @@ interface ServiceRemoteDevResource {
         projectId: String?,
         @Parameter(description = "ip", required = false)
         @QueryParam("ip")
-        ip: String?
+        ip: String?,
+        @Parameter(description = "businessLineName", required = false)
+        @QueryParam("businessLineName")
+        businessLineName: String?,
+        @Parameter(description = "ownerName", required = false)
+        @QueryParam("ownerName")
+        ownerName: String?
     ): Result<List<WeSecProjectWorkspace>>
 
     @Operation(summary = "提供给wesec获取项目下云桌面信息")
@@ -144,4 +151,9 @@ interface ServiceRemoteDevResource {
         @Parameter(description = "通知信息", required = true)
         notifyData: WorkspaceNotifyData
     ): Result<Boolean>
+
+    @Operation(summary = "获取windows硬件配置")
+    @GET
+    @Path("/resourceType/list")
+    fun getWindowsResourceList(): Result<List<WindowsResourceTypeConfig>>
 }

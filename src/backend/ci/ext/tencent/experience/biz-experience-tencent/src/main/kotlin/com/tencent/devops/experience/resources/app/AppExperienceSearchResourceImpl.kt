@@ -30,6 +30,7 @@ package com.tencent.devops.experience.resources.app
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.experience.api.app.AppExperienceSearchResource
+import com.tencent.devops.experience.constant.ExperienceConstant.ORGANIZATION_OUTER
 import com.tencent.devops.experience.filter.annotions.AllowOuter
 import com.tencent.devops.experience.pojo.search.SearchAppInfoVO
 import com.tencent.devops.experience.pojo.search.SearchRecommendVO
@@ -50,6 +51,9 @@ class AppExperienceSearchResourceImpl @Autowired constructor(
         experiencePublic: Boolean,
         minigame: Boolean?
     ): Result<List<SearchAppInfoVO>> {
+        if (experiencePublic && organization == ORGANIZATION_OUTER) {
+            return Result(emptyList())
+        }
         return experienceSearchService.search(
             userId = userId,
             platform = platform,
@@ -61,7 +65,10 @@ class AppExperienceSearchResourceImpl @Autowired constructor(
     }
 
     @AllowOuter
-    override fun recommends(userId: String, platform: Int?): Result<List<SearchRecommendVO>> {
+    override fun recommends(userId: String, platform: Int?, organization: String?): Result<List<SearchRecommendVO>> {
+        if (organization == ORGANIZATION_OUTER) {
+            return Result(emptyList())
+        }
         return experienceSearchService.recommends(userId, platform)
     }
 }

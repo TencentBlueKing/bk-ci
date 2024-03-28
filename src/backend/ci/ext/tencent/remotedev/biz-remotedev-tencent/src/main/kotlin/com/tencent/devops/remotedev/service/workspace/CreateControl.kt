@@ -88,6 +88,7 @@ import com.tencent.devops.remotedev.service.redis.RedisKeys
 import com.tencent.devops.remotedev.service.redis.RedisKeys.REDIS_OFFICIAL_DEVFILE_KEY
 import com.tencent.devops.remotedev.service.tcloud.TCloudCfsService
 import com.tencent.devops.remotedev.service.transfer.RemoteDevGitTransfer
+import com.tencent.devops.remotedev.utils.CommonUtil
 import com.tencent.devops.remotedev.utils.DevfileUtil
 import com.tencent.devops.scm.utils.code.git.GitUtils
 import org.jooq.DSLContext
@@ -317,16 +318,28 @@ class CreateControl @Autowired constructor(
         val systemType = WorkspaceSystemType.WINDOWS_GPU
         for (i in 0 until workspaceCreate.count) {
             logger.info("createWorkspace|mountType|$mountType")
-            val workspaceName = generateWorkspaceName(projectId)
+            val workspaceName = if (CommonUtil.ifProjectPersonal(projectId)) {
+                generateWorkspaceName(projectId.removePrefix("_"))
+            } else {
+                generateWorkspaceName(projectId)
+            }
             val ws = Workspace(
                 workspaceId = null,
                 workspaceName = workspaceName,
                 projectId = projectId,
-                createUserId = pmUserId,
+                createUserId = if (CommonUtil.ifProjectPersonal(projectId)) {
+                    projectId.removePrefix("_")
+                } else {
+                    pmUserId
+                },
                 hostName = "",
                 workspaceMountType = mountType,
                 workspaceSystemType = systemType,
-                ownerType = WorkspaceOwnerType.PROJECT,
+                ownerType = if (CommonUtil.ifProjectPersonal(projectId)) {
+                    WorkspaceOwnerType.PERSONAL
+                } else {
+                    WorkspaceOwnerType.PROJECT
+                },
                 gpu = windowsConfig.gpu,
                 cpu = windowsConfig.cpu,
                 memory = windowsConfig.memory,
@@ -359,7 +372,11 @@ class CreateControl @Autowired constructor(
             // 发送给k8s
             dispatcher.dispatch(
                 WorkspaceCreateEvent(
-                    userId = pmUserId,
+                    userId = if (CommonUtil.ifProjectPersonal(projectId)) {
+                        projectId.removePrefix("_")
+                    } else {
+                        pmUserId
+                    },
                     traceId = bizId,
                     workspaceName = ws.workspaceName,
                     devFilePath = ws.devFilePath,
@@ -541,8 +558,7 @@ class CreateControl @Autowired constructor(
             }
 
             // 创建成功时给 cmdb 添加字段方便监控检索
-            val hostIdSub = event.environmentIp?.split(".")
-            val ip = hostIdSub?.subList(1, hostIdSub.size)?.joinToString(separator = ".")
+            val ip = event.environmentIp?.substringAfter(".")
             if (!ip.isNullOrBlank() && ws.workspaceSystemType.checkWindows()) {
                 bkccService.updateHostMonitor(
                     regionId = detail.regionId,
