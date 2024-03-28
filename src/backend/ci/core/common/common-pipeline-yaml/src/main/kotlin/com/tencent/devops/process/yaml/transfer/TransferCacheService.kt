@@ -11,7 +11,7 @@ import com.tencent.devops.common.pipeline.type.BuildType
 import com.tencent.devops.dispatch.docker.api.service.ServiceDockerResourceConfigResource
 import com.tencent.devops.dispatch.docker.pojo.resource.UserDockerResourceOptionsVO
 import com.tencent.devops.environment.api.ServiceEnvironmentResource
-import com.tencent.devops.environment.api.thirdPartyAgent.ServiceThirdPartyAgentResource
+import com.tencent.devops.environment.api.thirdpartyagent.ServiceThirdPartyAgentResource
 import com.tencent.devops.process.api.service.ServicePipelineGroupResource
 import com.tencent.devops.process.api.service.ServicePipelineResource
 import com.tencent.devops.process.pojo.classify.PipelineGroup
@@ -19,7 +19,7 @@ import com.tencent.devops.process.yaml.v3.models.job.JobRunsOnPoolType
 import com.tencent.devops.repository.api.ServiceRepositoryResource
 import com.tencent.devops.repository.pojo.Repository
 import com.tencent.devops.store.api.atom.ServiceMarketAtomResource
-import com.tencent.devops.store.api.image.service.ServiceStoreImageResource
+import com.tencent.devops.store.api.image.ServiceStoreImageResource
 import com.tencent.devops.store.pojo.atom.ElementThirdPartySearchParam
 import com.tencent.devops.store.pojo.image.response.ImageDetail
 import java.util.concurrent.TimeUnit
