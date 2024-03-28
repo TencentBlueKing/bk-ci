@@ -32,9 +32,9 @@ import com.tencent.devops.model.store.tables.TAtom
 import com.tencent.devops.model.store.tables.TAtomEnvInfo
 import com.tencent.devops.model.store.tables.TStoreProjectRel
 import com.tencent.devops.model.store.tables.records.TAtomEnvInfoRecord
+import com.tencent.devops.store.common.utils.VersionUtils
 import com.tencent.devops.store.pojo.atom.AtomEnvRequest
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
-import com.tencent.devops.store.common.utils.VersionUtils
 import java.time.LocalDateTime
 import org.jooq.Condition
 import org.jooq.DSLContext
@@ -327,5 +327,21 @@ class MarketAtomEnvInfoDao {
             .on(tAtomEnvInfo.ATOM_ID.eq(tAtom.ID))
             .where(tAtom.ATOM_CODE.eq(atomCode).and(tAtom.VERSION.eq(version)))
             .fetchOne(0, String::class.java)
+    }
+
+    fun updateMarketAtomEnvPreCmd(
+        dslContext: DSLContext,
+        userId: String,
+        atomEnvId: String,
+        preCmd: String
+    ) {
+        with(TAtomEnvInfo.T_ATOM_ENV_INFO) {
+            dslContext.update(this)
+                .set(PRE_CMD, preCmd)
+                .set(UPDATE_TIME, LocalDateTime.now())
+                .set(MODIFIER, userId)
+                .where(ID.eq(atomEnvId))
+                .execute()
+        }
     }
 }

@@ -74,4 +74,8 @@ class NodeJsAtomBusHandleHandleServiceImpl : AtomBusHandleService {
             }
         }
     }
+
+    override fun handleAtomReleasePreCmd(preCmd: String): String {
+        return preCmd
+    }
 }

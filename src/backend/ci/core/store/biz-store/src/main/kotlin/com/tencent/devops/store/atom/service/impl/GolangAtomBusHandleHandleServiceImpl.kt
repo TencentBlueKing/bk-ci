@@ -68,4 +68,8 @@ class GolangAtomBusHandleHandleServiceImpl : AtomBusHandleService {
             }
         }
     }
+
+    override fun handleAtomReleasePreCmd(preCmd: String): String {
+        return preCmd
+    }
 }

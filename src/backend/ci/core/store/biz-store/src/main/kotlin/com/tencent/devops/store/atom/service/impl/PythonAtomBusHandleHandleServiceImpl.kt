@@ -27,7 +27,9 @@
 
 package com.tencent.devops.store.atom.service.impl
 
+import com.fasterxml.jackson.core.type.TypeReference
 import com.tencent.devops.common.api.enums.OSType
+import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.store.atom.service.AtomBusHandleService
 
 class PythonAtomBusHandleHandleServiceImpl : AtomBusHandleService {
@@ -43,5 +45,14 @@ class PythonAtomBusHandleHandleServiceImpl : AtomBusHandleService {
     override fun handleOsArch(osName: String, osArch: String): String {
         // python插件目前没有用到osArch，无需转换
         return osArch
+    }
+
+    override fun handleAtomReleasePreCmd(preCmd: String): String {
+        val preCmdList = JsonUtil.to(preCmd, object : TypeReference<MutableList<String>>() {})
+        if (preCmdList.isNotEmpty()) {
+            preCmdList[0] = "${preCmdList[0]} --ignore-installed"
+            return JsonUtil.toJson(preCmdList, false)
+        }
+        return preCmd
     }
 }
