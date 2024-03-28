@@ -25,19 +25,24 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.store.atom.service
+package com.tencent.devops.repository.pojo.git
 
-import com.tencent.devops.store.pojo.atom.AtomProp
+import com.fasterxml.jackson.annotation.JsonProperty
+import com.tencent.devops.repository.constant.RepositoryConstants.INITIALIZED_BRANCH_RULE_NAME
+import io.swagger.v3.oas.annotations.media.Schema
 
-interface AtomPropService {
-
-    /**
-     * 获取插件属性列表
-     * @param atomCodes 插件代码集合
-     * @return 插件属性集合
-     */
-    fun getAtomProps(
-        projectCode: String,
-        atomCodes: Set<String>
-    ): Map<String, AtomProp>?
-}
+@Schema(title = "git项目保护分支规则默认信息")
+data class GitProjectProtectionBranchDefaultRule(
+    @get:Schema(title = "名称")
+    @JsonProperty("name")
+    val name: String = INITIALIZED_BRANCH_RULE_NAME,
+    @get:Schema(title = "允许合并操作等级")
+    @JsonProperty("push_access_level")
+    val pushAccessLevel: Int,
+    @get:Schema(title = "允许推送操作等级")
+    @JsonProperty("merge_access_level")
+    val mergeAccessLevel: Int,
+    @get:Schema(title = "是否允许创建者自己通过评审")
+    @JsonProperty("creator_can_approve")
+    val creatorCanApprove: Boolean = true
+)

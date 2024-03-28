@@ -123,6 +123,7 @@ const val REQUEST_IP = "X-Forwarded-For" // 请求IP
 const val BK_CREATE = "bkCreate" // 创建
 const val BK_REVISE = "bkRevise" // 修改
 const val FAIL_MSG = "failMsg" // 失败信息
+const val DEFAULT_PROTECTION_BRANCH_RULE_NAME = "init_master_branch_rule"
 
 const val KEY_START_TIME = "startTime"
 const val KEY_END_TIME = "endTime"

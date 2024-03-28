@@ -23,21 +23,11 @@
  * NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ *
  */
 
-package com.tencent.devops.store.atom.service
+package com.tencent.devops.repository.constant
 
-import com.tencent.devops.store.pojo.atom.AtomProp
-
-interface AtomPropService {
-
-    /**
-     * 获取插件属性列表
-     * @param atomCodes 插件代码集合
-     * @return 插件属性集合
-     */
-    fun getAtomProps(
-        projectCode: String,
-        atomCodes: Set<String>
-    ): Map<String, AtomProp>?
+object RepositoryConstants {
+    const val INITIALIZED_BRANCH_RULE_NAME = "initialized_branch_rule"
 }

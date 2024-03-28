@@ -81,6 +81,6 @@ class TemplateAtomService @Autowired constructor(
         val model = JsonUtil.to(modelStr, Model::class.java)
         // 获取流水线下插件标识集合
         val atomCodes = ModelUtils.getModelAtoms(model)
-        return client.get(ServiceAtomResource::class).getAtomProps(atomCodes)
+        return client.get(ServiceAtomResource::class).getAtomProps(projectId, atomCodes)
     }
 }

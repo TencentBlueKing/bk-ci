@@ -33,6 +33,7 @@ import com.fasterxml.jackson.module.kotlin.readValue
 import com.google.gson.JsonParser
 import com.tencent.devops.common.api.exception.CustomException
 import com.tencent.devops.common.api.exception.RemoteServiceException
+import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.api.util.OkhttpUtils.stringLimit
@@ -42,8 +43,10 @@ import com.tencent.devops.repository.pojo.enums.GitCodeProjectsOrder
 import com.tencent.devops.repository.pojo.enums.RepoAuthType
 import com.tencent.devops.repository.pojo.enums.TokenTypeEnum
 import com.tencent.devops.repository.pojo.git.GitCodeProjectInfo
+import com.tencent.devops.repository.pojo.git.GitProjectProtectionBranchDefaultRule
 import com.tencent.devops.repository.pojo.git.GitUserInfo
 import com.tencent.devops.repository.pojo.oauth.GitToken
+import com.tencent.devops.repository.utils.scm.GitCodeUtils
 import com.tencent.devops.scm.code.git.api.GitBranch
 import com.tencent.devops.scm.code.git.api.GitBranchCommit
 import com.tencent.devops.scm.code.git.api.GitTag
@@ -437,6 +440,156 @@ class TGitService @Autowired constructor(
         }
 
         return result
+    }
+
+    override fun getProtectBranchRuleId(
+        token: String,
+        tokenType: TokenTypeEnum,
+        gitProjectId: String,
+        branch: String
+    ): Result<Int?> {
+        val url = StringBuilder(
+            "${gitConfig.tGitApiUrl}/projects/${URLEncoder.encode(gitProjectId, "UTF8")}/" +
+                    "repository/branches/$branch/protect"
+        )
+        setToken(tokenType, url, token)
+        val request = Request.Builder()
+            .url(url.toString())
+            .get()
+            .build()
+        val ruleId = OkhttpUtils.doHttp(request).use {
+            if (!it.isSuccessful) {
+                throw CustomException(
+                    status = Response.Status.fromStatusCode(it.code) ?: Response.Status.BAD_REQUEST,
+                    message = "(${it.code})${it.message}"
+                )
+            }
+            val data = it.body!!.string()
+            val protectBranchDetail = JsonUtil.toMap(data)
+            protectBranchDetail["rule_id"] as? Int
+        }
+        return Result(ruleId)
+    }
+
+    override fun createProtectBranchRules(
+        token: String,
+        tokenType: TokenTypeEnum,
+        gitProjectId: String,
+        gitProjectProtectionBranchDefaultRule: GitProjectProtectionBranchDefaultRule
+    ): Result<Int> {
+        val url = StringBuilder(
+            "${gitConfig.tGitApiUrl}/projects/${URLEncoder.encode(gitProjectId, "UTF8")}" +
+                    "/protected_branch_rules"
+        )
+        setToken(tokenType, url, token)
+        val request = Request.Builder()
+            .url(url.toString())
+            .post(
+                RequestBody.create(
+                    "application/json;charset=utf-8".toMediaTypeOrNull(),
+                    JsonUtil.toJson(gitProjectProtectionBranchDefaultRule)
+                )
+            )
+            .build()
+        OkhttpUtils.doHttp(request).use {
+            logger.info("request: $request createProtectBranchRules resp: $it")
+            if (!it.isSuccessful) {
+                throw GitCodeUtils.handleErrorMessage(it)
+            }
+            val body = it.body!!.string()
+            val rulesInfo = JsonUtil.toMap(body)
+            return Result(rulesInfo["id"] as Int)
+        }
+    }
+
+    override fun setupProtectBranch(
+        token: String,
+        tokenType: TokenTypeEnum,
+        gitProjectId: String,
+        branch: String,
+        ruleId: Int
+    ): Result<Boolean> {
+        val url = StringBuilder(
+            "${gitConfig.tGitApiUrl}/projects/${URLEncoder.encode(gitProjectId, "UTF8")}/" +
+                    "protected_branch_rules/$ruleId/branches?branch=$branch"
+        )
+        setToken(tokenType, url, token)
+        val request = Request.Builder()
+            .url(url.toString())
+            .post(
+                RequestBody.create(
+                    "application/json;charset=utf-8".toMediaTypeOrNull(),
+                    "{}"
+                )
+            )
+            .build()
+        OkhttpUtils.doHttp(request).use {
+            logger.info("request: $request setupProtectBranch resp: $it")
+            if (!it.isSuccessful) {
+                throw GitCodeUtils.handleErrorMessage(it)
+            }
+            return Result(true)
+        }
+    }
+
+    override fun updateProtectBranchRule(
+        token: String,
+        tokenType: TokenTypeEnum,
+        gitProjectId: String,
+        ruleId: Int,
+        gitProjectProtectionBranchDefaultRule: GitProjectProtectionBranchDefaultRule
+    ): Result<Boolean> {
+        val url = StringBuilder(
+            "${gitConfig.tGitApiUrl}/projects/${URLEncoder.encode(gitProjectId, "UTF8")}/" +
+                    "protected_branch_rules/$ruleId"
+        )
+        setToken(tokenType, url, token)
+        val requestBody = RequestBody.create(
+            "application/json;charset=utf-8".toMediaTypeOrNull(),
+            JsonUtil.toJson(gitProjectProtectionBranchDefaultRule)
+        )
+        val request = Request.Builder()
+            .url(url.toString())
+            .addHeader("Content-type", "application/json")
+            .put(requestBody)
+            .build()
+        OkhttpUtils.doHttp(request).use {
+            logger.info("requestBody: $gitProjectProtectionBranchDefaultRule update protect branch rule resp: $it")
+            if (!it.isSuccessful) {
+                throw GitCodeUtils.handleErrorMessage(it)
+            }
+            return Result(true)
+        }
+    }
+
+    override fun updateProjectUserAccessLevel(
+        userId: Int,
+        token: String,
+        tokenType: TokenTypeEnum,
+        gitProjectId: String,
+        accessLevel: Int
+    ): Result<Boolean> {
+        val url = StringBuilder(
+            "${gitConfig.tGitApiUrl}/projects/${URLEncoder.encode(gitProjectId, "UTF8")}/members/$userId"
+        )
+        setToken(tokenType, url, token)
+        val handle = mapOf<String, Any>("access_level" to accessLevel)
+        val request = Request.Builder()
+            .url(url.toString())
+            .put(
+                RequestBody.create(
+                    "application/json;charset=utf-8".toMediaTypeOrNull(),
+                    JsonUtil.toJson(handle)
+                )
+            )
+            .build()
+        OkhttpUtils.doHttp(request).use {
+            logger.info("request: $request updateProjectUserAccessLevel: $it")
+            if (!it.isSuccessful) {
+                throw GitCodeUtils.handleErrorMessage(it)
+            }
+            return Result(true)
+        }
     }
 
     private fun setToken(tokenType: TokenTypeEnum, url: StringBuilder, token: String) {

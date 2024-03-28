@@ -104,8 +104,11 @@ interface ServiceAtomResource {
 
     @Operation(summary = "获取插件属性列表")
     @POST
-    @Path("/prop/list")
+    @Path("/projects/{projectCode}//prop/list")
     fun getAtomProps(
+        @Parameter(description = "项目代码", required = true)
+        @PathParam("projectCode")
+        projectCode: String,
         @Parameter(description = "插件标识列表", required = true)
         atomCodes: Set<String>
     ): Result<Map<String, AtomProp>?>
