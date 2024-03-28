@@ -86,7 +86,13 @@ object PipelineVersionUtils {
     ): Int {
         val originStages = originModel.stages.drop(1)
         val newStages = newModel.stages.drop(1)
-        return if (originStages == newStages) currVersion else currVersion + 1
+        val originParams = (originModel.stages.first().containers.first() as TriggerContainer).params
+        val newParams = (newModel.stages.first().containers.first() as TriggerContainer).params
+        return if (originStages == newStages && originParams == newParams) {
+            currVersion
+        } else {
+            currVersion + 1
+        }
     }
 
     /**

@@ -32,6 +32,7 @@ import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.exception.DependNotFoundException
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.InvalidParamException
+import com.tencent.devops.common.api.pojo.PipelineAsCodeSettings
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.api.util.Watcher
@@ -672,11 +673,17 @@ class PipelineRepositoryService constructor(
                     onlyDraft = onlyDraft
                 )
                 model.latestVersion = modelVersion
-                var newSetting = customSetting ?: PipelineSetting(
+                var newSetting = customSetting?.copy(
+                    projectId = projectId,
                     pipelineId = pipelineId,
                     pipelineName = model.name,
                     desc = model.desc ?: "",
-                    pipelineAsCodeSettings = null
+                    pipelineAsCodeSettings = PipelineAsCodeSettings()
+                ) ?: PipelineSetting(
+                    pipelineId = pipelineId,
+                    pipelineName = model.name,
+                    desc = model.desc ?: "",
+                    pipelineAsCodeSettings = PipelineAsCodeSettings()
                 )
 
                 if (model.instanceFromTemplate != true) {

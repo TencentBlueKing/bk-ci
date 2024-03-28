@@ -238,30 +238,14 @@ class PipelineInfoFacadeService @Autowired constructor(
                 )
             }
         }
-        val newPipelineId = createPipeline(
+        return createPipeline(
             userId = userId,
             projectId = projectId,
             model = model,
+            setting = pipelineModelAndSetting.setting,
             channelCode = ChannelCode.BS,
             checkPermission = true
         ).pipelineId
-
-        val newSetting = pipelineSettingFacadeService.rebuildSetting(
-            oldSetting = pipelineModelAndSetting.setting,
-            projectId = projectId,
-            newPipelineId = newPipelineId,
-            pipelineName = model.name
-        )
-        // setting pipeline需替换成新流水线的
-        pipelineSettingFacadeService.saveSetting(
-            userId = userId,
-            projectId = projectId,
-            pipelineId = newSetting.pipelineId,
-            setting = newSetting,
-            checkPermission = true,
-            dispatchPipelineUpdateEvent = false
-        )
-        return newPipelineId
     }
 
     private fun exportStringToFile(content: String, fileName: String): Response {
@@ -312,8 +296,7 @@ class PipelineInfoFacadeService @Autowired constructor(
         useSubscriptionSettings: Boolean? = false,
         useLabelSettings: Boolean? = false,
         useConcurrencyGroup: Boolean? = false,
-        description: String? = null,
-        pipelineAsCodeSettings: PipelineAsCodeSettings? = null
+        description: String? = null
     ): DeployPipelineResult {
         val watcher =
             Watcher(id = "createPipeline|$projectId|$userId|$channelCode|$checkPermission|$instanceType|$fixPipelineId")
@@ -435,6 +418,7 @@ class PipelineInfoFacadeService @Autowired constructor(
                 watcher.start("deployPipeline")
                 val result = pipelineRepositoryService.deployPipeline(
                     model = instance,
+                    setting = setting,
                     projectId = projectId,
                     signPipelineId = fixPipelineId,
                     userId = userId,
