@@ -255,4 +255,19 @@ interface ServiceRepositoryResource {
         @Parameter(description = "代码库哈希ID列表", required = true)
         repositoryHashIdList: List<String>
     ): Result<List<String>>
+
+    @Operation(summary = "更新组件代码库关联项目信息")
+    @POST
+    @Path("/store/project/update")
+    fun updateStoreRepoProject(
+        @Parameter(description = "代码库负责人")
+        @QueryParam("userId")
+        userId: String,
+        @Parameter(description = "项目ID")
+        @QueryParam("projectId")
+        projectId: String,
+        @Parameter(description = "代码库ID")
+        @QueryParam("repositoryId")
+        repositoryId: Long
+    ): Result<Boolean>
 }

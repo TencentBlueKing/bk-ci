@@ -242,4 +242,8 @@ class ServiceRepositoryResourceImpl @Autowired constructor(
     ): Result<List<String>> {
         return Result(repositoryService.getGitProjectIdByRepositoryHashId(userId, repositoryHashIdList))
     }
+
+    override fun updateStoreRepoProject(userId: String, projectId: String, repositoryId: Long): Result<Boolean> {
+        return repositoryService.updateStoreRepoProject(userId, projectId, repositoryId)
+    }
 }

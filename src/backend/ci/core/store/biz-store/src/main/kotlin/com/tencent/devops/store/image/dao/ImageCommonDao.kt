@@ -149,4 +149,8 @@ class ImageCommonDao : AbstractStoreCommonDao() {
             null
         }
     }
+
+    override fun getStoreRepoHashIdByCode(dslContext: DSLContext, storeCode: String): String? {
+        return null
+    }
 }
