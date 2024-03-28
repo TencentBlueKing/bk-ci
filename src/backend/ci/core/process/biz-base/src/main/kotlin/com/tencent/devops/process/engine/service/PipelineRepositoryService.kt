@@ -675,8 +675,7 @@ class PipelineRepositoryService constructor(
                     projectId = projectId,
                     pipelineId = pipelineId,
                     pipelineName = model.name,
-                    desc = model.desc ?: "",
-                    pipelineAsCodeSettings = PipelineAsCodeSettings()
+                    desc = model.desc ?: ""
                 ) ?: PipelineSetting(
                     pipelineId = pipelineId,
                     pipelineName = model.name,

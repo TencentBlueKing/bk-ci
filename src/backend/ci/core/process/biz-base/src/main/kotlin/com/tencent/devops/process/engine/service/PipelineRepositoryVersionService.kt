@@ -51,7 +51,6 @@ class PipelineRepositoryVersionService(
     private val dslContext: DSLContext,
     private val pipelineResourceDao: PipelineResourceDao,
     private val pipelineResourceVersionDao: PipelineResourceVersionDao,
-    private val pipelineSettingVersionDao: PipelineSettingVersionDao,
     private val pipelineBuildDao: PipelineBuildDao,
     private val redisOperation: RedisOperation
 ) {
