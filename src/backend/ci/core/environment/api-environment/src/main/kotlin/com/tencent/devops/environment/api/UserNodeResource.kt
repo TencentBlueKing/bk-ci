@@ -90,7 +90,6 @@ interface UserNodeResource {
         projectId: String
     ): Result<List<NodeWithPermission>>
 
-
     @Operation(summary = "获取项目节点列表")
     @GET
     @Path("/{projectId}/listNew")
