@@ -131,7 +131,7 @@
                 return this.pipelineInfo?.pipelineId
             },
             currentTab () {
-                return this.$route.params.tab || 'pipeline'
+                return this.$route.query.tab || 'pipeline'
             },
             curPanel () {
                 return this.panels.find((panel) => panel.name === this.currentTab)
@@ -277,7 +277,7 @@
             },
             switchTab (tab) {
                 this.$router.push({
-                    params: {
+                    query: {
                         tab: tab.name
                     }
                 })

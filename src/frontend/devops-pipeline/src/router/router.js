@@ -241,7 +241,7 @@ const routes = [
                     },
                     {
                         // 流水线编辑
-                        path: 'edit/:version?/:tab?',
+                        path: 'edit/:version?',
                         name: 'pipelinesEdit',
                         components: {
                             header: EditHeader,

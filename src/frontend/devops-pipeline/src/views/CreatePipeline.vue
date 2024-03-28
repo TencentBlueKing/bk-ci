@@ -601,7 +601,7 @@
                 &.disabled-setting {
                     border: 1px solid #DCDEE5;
                     opacity: 0.5;
-                    color: #sC4C6CC;
+                    color: #C4C6CC;
                     em {
                         font-size: 12px;
                         font-style: normal;

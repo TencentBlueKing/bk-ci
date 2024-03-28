@@ -118,7 +118,8 @@
                                 this.$router.push({
                                     name: 'pipelinesEdit',
                                     params: {
-                                        pipelineId: this.pipelineId
+                                        projectId,
+                                        pipelineId
                                     }
                                 })
                             } catch (err) {

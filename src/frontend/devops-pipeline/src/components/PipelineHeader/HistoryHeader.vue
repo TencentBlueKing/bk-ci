@@ -240,7 +240,7 @@
             goEdit () {
                 this.$router.push({
                     name: 'pipelinesEdit',
-                    params: {
+                    query: {
                         tab: pipelineTabIdMap[this.$route.params.type] ?? 'pipeline'
                     }
                 })
