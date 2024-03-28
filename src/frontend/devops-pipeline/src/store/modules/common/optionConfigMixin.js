@@ -64,7 +64,9 @@ const optionConfigMixin = {
             manualSkip: {
                 component: 'enum-input',
                 // label: this.$t('storeMap.skipType'),
-                default: this.atomOptionConfig.defaultFailPolicy !== 'AUTO_CONTINUE',
+                default: this.atomOptionConfig.defaultFailPolicy
+                    ? this.atomOptionConfig.defaultFailPolicy !== 'AUTO_CONTINUE'
+                    : false,
                 list: [{
                     value: false,
                     label: this.$t('storeMap.autoSkip')
@@ -234,8 +236,8 @@ const optionConfigMixin = {
         },
 
         getDefaultFailControl () {
-            if (!this.atomOptionConfig.defaultRetryPolicy.length) return []
-            return this.atomOptionConfig.defaultRetryPolicy.map(i => {
+            if (!this.atomOptionConfig.defaultRetryPolicy?.length) return []
+            return this.atomOptionConfig.defaultRetryPolicy?.map(i => {
                 let str = ''
                 switch (i) {
                     case 'AUTO_RETRY':
