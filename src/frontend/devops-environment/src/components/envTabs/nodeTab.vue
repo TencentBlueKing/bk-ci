@@ -207,7 +207,7 @@
                 const params = []
 
                 this.nodeDialogLoading.isLoading = true
-                this.nodeSelectConf.importText = `${this.$t('environment.nodeType.importing')}...`
+                this.nodeSelectConf.importText = `${this.$t('environment.nodeInfo.importing')}...`
 
                 nodeArr.forEach(item => {
                     params.push(item)
