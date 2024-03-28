@@ -602,7 +602,52 @@ class EnvService @Autowired constructor(
         return nodeService.formatNodeWithPermissions(userId, projectId, nodes)
     }
 
-    override fun listAllEnvNodes(
+    override fun listAllEnvNodes(userId: String, projectId: String, envHashIds: List<String>): List<NodeBaseInfo> {
+        val envIds = envHashIds.map { HashUtil.decodeIdToLong(it) }
+        val canViewEnvIdList = environmentPermissionService.listEnvByViewPermission(userId, projectId)
+        val invalidEnvIds = envIds.filterNot { canViewEnvIdList.contains(it) }
+        if (invalidEnvIds.isNotEmpty()) {
+            throw ErrorCodeException(
+                errorCode = ERROR_NODE_INSUFFICIENT_PERMISSIONS,
+                params = arrayOf(invalidEnvIds.joinToString(","))
+            )
+        }
+
+        val envNodeRecordList = envNodeDao.list(dslContext, projectId, envIds)
+        val nodeIds = envNodeRecordList.map { it.nodeId }.toSet()
+        val nodeList = nodeDao.listByIds(dslContext, projectId, nodeIds)
+
+        val thirdPartyAgentMap =
+            thirdPartyAgentDao.getAgentsByNodeIds(dslContext, nodeIds, projectId).associateBy { it.nodeId }
+        return nodeList.map {
+            val thirdPartyAgent = thirdPartyAgentMap[it.nodeId]
+            val gatewayShowName = if (thirdPartyAgent != null) {
+                slaveGatewayService.getShowName(thirdPartyAgent.gateway)
+            } else {
+                ""
+            }
+            val nodeType = I18nUtil.getCodeLanMessage("ENV_NODE_TYPE_${it.nodeType}")
+            val nodeStatus = I18nUtil.getCodeLanMessage("envNodeStatus.${it.nodeStatus}")
+            val nodeStringId = NodeStringIdUtils.getNodeStringId(it)
+            NodeBaseInfo(
+                nodeHashId = HashUtil.encodeLongId(it.nodeId),
+                nodeId = nodeStringId,
+                name = it.nodeName,
+                ip = it.nodeIp,
+                nodeStatus = nodeStatus,
+                agentStatus = getAgentStatus(it),
+                nodeType = nodeType,
+                osName = it.osName,
+                createdUser = it.createdUser,
+                operator = it.operator,
+                bakOperator = it.bakOperator,
+                gateway = gatewayShowName,
+                displayName = NodeStringIdUtils.getRefineDisplayName(nodeStringId, it.displayName)
+            )
+        }
+    }
+
+    override fun listAllEnvNodesNew(
         userId: String,
         projectId: String,
         page: Int?,
@@ -618,7 +663,6 @@ class EnvService @Autowired constructor(
                 params = arrayOf(invalidEnvIds.joinToString(","))
             )
         }
-
         val envNodeRecordList = envNodeDao.list(dslContext, projectId, envIds)
         val nodeIds = envNodeRecordList.map { it.nodeId }.toSet()
         val nodeList = if (-1 != page) {
@@ -627,7 +671,6 @@ class EnvService @Autowired constructor(
         } else {
             nodeDao.listByIds(dslContext, projectId, nodeIds)
         }
-
         val thirdPartyAgentMap =
             thirdPartyAgentDao.getAgentsByNodeIds(dslContext, nodeIds, projectId).associateBy { it.nodeId }
         val nodeRecList = nodeList.map {
