@@ -174,17 +174,19 @@ class PipelineYamlRepositoryService @Autowired constructor(
     ) {
         logger.info("create yaml pipeline|$projectId|$yamlFile")
         val yamlContent = action.getYamlContent(yamlFile.yamlPath)
+        val fork = action.data.eventCommon.fork
         val branch = action.data.eventCommon.branch
         val userId = action.data.getUserId()
         val repoHashId = action.data.setting.repoHashId
         val directory = GitActionCommon.getCiDirectory(yamlFile.yamlPath)
-        val isDefaultBranch = branch == action.data.context.defaultBranch
+        // 不是fork仓库，并且分支等于默认分支
+        val isDefaultBranch = !fork && branch == action.data.context.defaultBranch
         val commitId = action.data.eventCommon.commit.commitId
         val commitTime = action.data.eventCommon.commit.commitTimeStamp?.let {
             DateTimeUtil.stringToLocalDateTime(it)
         } ?: LocalDateTime.now()
         // 如果是fork仓库,ref应该加上fork库的namespace
-        val ref = GitActionCommon.getRef(action.data.eventCommon.sourceGitNamespace, branch)
+        val ref = GitActionCommon.getRef(fork, action.data.eventCommon.sourceGitNamespace, branch)
         val deployPipelineResult = pipelineInfoFacadeService.createYamlPipeline(
             userId = action.data.setting.enableUser,
             projectId = projectId,
@@ -238,14 +240,17 @@ class PipelineYamlRepositoryService @Autowired constructor(
     ) {
         logger.info("update yaml pipeline|$projectId|$yamlFile")
         val yamlContent = action.getYamlContent(yamlFile.yamlPath)
+        val fork = action.data.eventCommon.fork
         val branch = action.data.eventCommon.branch
         val defaultBranch = action.data.context.defaultBranch
+        // 不是fork仓库，并且分支等于默认分支
+        val isDefaultBranch = !fork && branch == action.data.context.defaultBranch
         val commitId = action.data.eventCommon.commit.commitId
         val commitTime = action.data.eventCommon.commit.commitTimeStamp?.let {
             DateTimeUtil.stringToLocalDateTime(it)
         } ?: LocalDateTime.now()
         // 如果是fork仓库,ref应该加上fork库的namespace
-        val ref = GitActionCommon.getRef(action.data.eventCommon.sourceGitNamespace, branch)
+        val ref = GitActionCommon.getRef(fork, action.data.eventCommon.sourceGitNamespace, branch)
 
         val deployPipelineResult = pipelineInfoFacadeService.updateYamlPipeline(
             userId = action.data.setting.enableUser,
@@ -254,7 +259,7 @@ class PipelineYamlRepositoryService @Autowired constructor(
             yaml = yamlContent.content,
             yamlFileName = yamlFile.yamlPath.removePrefix(".ci/"),
             branchName = ref,
-            isDefaultBranch = branch == defaultBranch,
+            isDefaultBranch = isDefaultBranch,
             description = action.data.eventCommon.commit.commitMsg,
             aspects = PipelineTransferAspectLoader.initByDefaultTriggerOn(defaultRepo = {
                 action.data.setting.aliasName

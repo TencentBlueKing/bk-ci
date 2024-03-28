@@ -83,11 +83,11 @@ object GitActionCommon {
         }
     }
 
-    fun getRef(namespace: String?, branch: String): String {
-        return if (namespace.isNullOrBlank()) {
-            branch
-        } else {
+    fun getRef(fork: Boolean, namespace: String?, branch: String): String {
+        return if (fork) {
             "$namespace:$branch"
+        } else {
+            branch
         }
     }
 

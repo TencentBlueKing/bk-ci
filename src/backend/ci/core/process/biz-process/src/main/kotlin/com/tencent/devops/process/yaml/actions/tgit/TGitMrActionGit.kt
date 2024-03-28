@@ -89,6 +89,7 @@ class TGitMrActionGit(
             scmType = ScmType.CODE_GIT,
             sourceGitProjectId = event.object_attributes.source_project_id.toString(),
             sourceGitNamespace = event.object_attributes.source.namespace,
+            fork = event.isMrForkEvent(),
             branch = if (event.object_attributes.action == TGitMergeActionKind.MERGE.value) {
                 event.object_attributes.target_branch
             } else {
@@ -157,15 +158,20 @@ class TGitMrActionGit(
             yamlPathFiles.addAll(targetBranchFiles)
             // 如果分支已经合入默认分支,则需要将源分支产生的分支版本删除
             if (event.object_attributes.target_branch == data.context.defaultBranch) {
+                val ref = GitActionCommon.getRef(
+                    fork = event().isMrForkEvent(),
+                    namespace = event.object_attributes.source.namespace,
+                    branch = event.object_attributes.source_branch
+                )
                 val sourceBranchFiles = pipelineYamlService.getAllBranchFilePath(
                     projectId = data.setting.projectId,
                     repoHashId = data.setting.repoHashId,
-                    branch = event.object_attributes.source_branch
+                    branch = ref
                 ).map { filePath ->
                     YamlPathListEntry(
                         filePath,
                         CheckType.MERGED,
-                        event.object_attributes.source_branch,
+                        ref,
                         null
                     )
                 }
