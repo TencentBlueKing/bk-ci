@@ -1,5 +1,5 @@
 <template>
-    <bk-form form-type="vertical" class="pipeline-exeute-params-form">
+    <bk-form form-type="vertical" class="pipeline-execute-params-form">
         <form-field
             v-for="param in paramList"
             :key="param.id" :required="param.required"
@@ -217,10 +217,10 @@
 <style lang="scss" scoped>
     @import '@/scss/conf';
     @import '@/scss/mixins/ellipsis';
-    .pipeline-exeute-params-form {
+    .pipeline-execute-params-form {
         display: grid;
         grid-template-columns: repeat(2, 1fr);
-        grid-gap: 24px;
+        grid-gap: 0 24px;
         &.bk-form.bk-form-vertical .bk-form-item+.bk-form-item {
             margin-top: 0 !important;
         }
