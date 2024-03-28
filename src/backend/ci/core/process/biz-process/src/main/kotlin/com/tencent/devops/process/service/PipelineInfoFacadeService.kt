@@ -572,10 +572,11 @@ class PipelineInfoFacadeService @Autowired constructor(
         // 通过PAC模式创建或保存的流水线均打开PAC
         // 修正创建时的流水线名和增加PAC开关参数
         val newSetting = newResource.setting.copy(
+            projectId = projectId,
             pipelineName = pipelineName,
             pipelineAsCodeSettings = PipelineAsCodeSettings(enable = true)
         )
-        val result = createPipeline(
+        return  createPipeline(
             userId = userId,
             projectId = projectId,
             model = newResource.model.copy(name = pipelineName),
@@ -586,17 +587,6 @@ class PipelineInfoFacadeService @Autowired constructor(
             branchName = branchName,
             description = description
         )
-        newResource.setting.projectId = projectId
-        newResource.setting.pipelineId = result.pipelineId
-        pipelineSettingFacadeService.saveSetting(
-            userId = userId,
-            projectId = projectId,
-            pipelineId = result.pipelineId,
-            setting = newSetting,
-            versionStatus = versionStatus,
-            checkPermission = false
-        )
-        return result
     }
 
     fun updateYamlPipeline(

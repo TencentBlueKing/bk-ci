@@ -943,7 +943,7 @@ class PipelineRuntimeService @Autowired constructor(
             context.pipelineParamMap[PIPELINE_BUILD_NUM] = BuildParameters(
                 key = PIPELINE_BUILD_NUM, value = context.buildNum.toString(), readOnly = true
             )
-            if (buildHistoryRecord != null) {
+            if (buildInfo != null) {
                 // 重试构建需要增加锁保护更新VAR表
                 context.watcher.start("startBuildBatchSetVariable")
                 buildVariableService.batchSetVariable(
