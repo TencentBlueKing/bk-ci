@@ -1,6 +1,7 @@
 package com.tencent.devops.common.web.runner
 
 import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.api.util.PropertyUtil
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.BkTag
 import com.tencent.devops.common.service.utils.BkServiceUtil
@@ -24,30 +25,34 @@ class BkServiceInstanceApplicationRunner constructor(
 
     @Suppress("SpreadOperator")
     override fun run(args: ApplicationArguments) {
-        object : Thread() {
-            override fun run() {
-                val serviceName = BkServiceUtil.findServiceName()
-                logger.info("initServiceHostInfo serviceName:$serviceName begin")
-                val cacheKey = BkServiceUtil.getServiceHostKey(serviceName)
-                logger.info("initServiceHostInfo serviceName:$serviceName cacheKey:$cacheKey")
-                val discoveryTag = bkTag.getFinalTag()
-                val namespace = discoveryTag.replace("kubernetes-", "")
-                val svrName = KubernetesUtils.getSvrName(serviceName, namespace)
-                // 睡眠一会儿以便从注册最新拿到微服务最新的IP列表
-                sleep(THREAD_SLEEP_TIMEOUT)
-                val serviceHosts = compositeDiscoveryClient.getInstances(svrName).map { it.host }.toTypedArray()
-                logger.info(
-                    "initServiceHostInfo serviceName:[$serviceName],IP:[${CommonUtils.getInnerIP()}],serviceHosts:${
-                        JsonUtil.toJson(
-                            serviceHosts
-                        )
-                    }"
-                )
-                // 清空redis中微服务的主机IP列表
-                redisOperation.delete(cacheKey)
-                // 把微服务的最新主机IP列表写入redis中
-                redisOperation.sadd(cacheKey, *serviceHosts)
-            }
-        }.start()
+        // 当本地运行时为单体服务，不需要存储各服务的实例ip
+        if (!PropertyUtil.isLocalRun()) {
+            object : Thread() {
+                override fun run() {
+                    val serviceName = BkServiceUtil.findServiceName()
+                    logger.info("initServiceHostInfo serviceName:$serviceName begin")
+                    val cacheKey = BkServiceUtil.getServiceHostKey(serviceName)
+                    logger.info("initServiceHostInfo serviceName:$serviceName cacheKey:$cacheKey")
+                    val discoveryTag = bkTag.getFinalTag()
+                    val namespace = discoveryTag.replace("kubernetes-", "")
+                    val svrName = KubernetesUtils.getSvrName(serviceName, namespace)
+                    // 睡眠一会儿以便从注册最新拿到微服务最新的IP列表
+                    sleep(THREAD_SLEEP_TIMEOUT)
+                    val serviceHosts = compositeDiscoveryClient.getInstances(svrName).map { it.host }.toTypedArray()
+                    logger.info(
+                        "initServiceHostInfo serviceName:[$serviceName],IP:[${CommonUtils.getInnerIP()}],serviceHosts:${
+                            JsonUtil.toJson(
+                                serviceHosts
+                            )
+                        }"
+                    )
+
+                    // 清空redis中微服务的主机IP列表
+                    redisOperation.delete(cacheKey)
+                    // 把微服务的最新主机IP列表写入redis中
+                    redisOperation.sadd(cacheKey, *serviceHosts)
+                }
+            }.start()
+        }
     }
 }

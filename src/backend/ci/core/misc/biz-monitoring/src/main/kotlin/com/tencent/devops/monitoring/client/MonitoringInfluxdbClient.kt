@@ -44,9 +44,9 @@ import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicInteger
 
 @Component
-class InfluxdbClient {
+class MonitoringInfluxdbClient {
     companion object {
-        private val logger = LoggerFactory.getLogger(InfluxdbClient::class.java)
+        private val logger = LoggerFactory.getLogger(MonitoringInfluxdbClient::class.java)
         private const val actions = 1000
         private const val flushDuration = 100
         private const val bufferLimit = 100

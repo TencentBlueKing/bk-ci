@@ -24,40 +24,26 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
+package com.tencent.devops.openapi.service
 
-package com.tencent.devops.misc.dao.project
+import com.google.common.cache.CacheBuilder
+import org.springframework.stereotype.Service
+import java.util.concurrent.TimeUnit
 
-import com.tencent.devops.common.api.enums.SystemModuleEnum
-import com.tencent.devops.model.project.tables.TDataSource
-import com.tencent.devops.model.project.tables.records.TDataSourceRecord
-import org.jooq.Condition
-import org.jooq.DSLContext
-import org.jooq.Result
-import org.springframework.stereotype.Repository
+@Service
+class OpenApiIndexService {
+    private val indexCache = CacheBuilder.newBuilder()
+        .maximumSize(100000)
+        .expireAfterAccess(30, TimeUnit.MINUTES)
+        .build<String/*buildId*/, String>()
 
-@Repository
-class DataSourceDao {
-
-    fun listByModule(
-        dslContext: DSLContext,
-        clusterName: String,
-        moduleCode: SystemModuleEnum,
-        fullFlag: Boolean? = false,
-        dataTag: String? = null
-    ): Result<TDataSourceRecord>? {
-        return with(TDataSource.T_DATA_SOURCE) {
-            val conditions = mutableListOf<Condition>()
-            conditions.add(CLUSTER_NAME.eq(clusterName))
-            conditions.add(MODULE_CODE.eq(moduleCode.name))
-            if (fullFlag != null) {
-                conditions.add(FULL_FLAG.eq(fullFlag))
-            }
-            if (dataTag != null) {
-                conditions.add(TAG.eq(dataTag))
-            } else {
-                conditions.add(TAG.isNull)
-            }
-            dslContext.selectFrom(this).where(conditions).orderBy(DATA_SOURCE_NAME.asc()).fetch()
+    fun getHandle(buildId: String, action: () -> String): String {
+        var index = indexCache.getIfPresent(buildId)
+        if (index != null) {
+            return index
         }
+        index = action()
+        indexCache.put(buildId, index)
+        return index
     }
 }

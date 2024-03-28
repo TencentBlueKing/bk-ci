@@ -38,6 +38,7 @@ import org.springframework.beans.factory.InjectionPoint
 import org.springframework.beans.factory.NoSuchBeanDefinitionException
 import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.beans.factory.config.ConfigurableBeanFactory
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingClass
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.context.annotation.Import
@@ -52,11 +53,12 @@ import javax.sql.DataSource
  * Powered By Tencent
  */
 @Configuration
-@Import(DataSourceConfig::class, DBBaseConfiguration::class)
-class JooqConfiguration {
+@Import(DispatchDataSourceConfig::class, DBBaseConfiguration::class)
+@ConditionalOnMissingClass("com.tencent.devops.multijar.MultijarDslContextConfiguration")
+class DispatchJooqConfiguration {
 
     companion object {
-        private val LOG = LoggerFactory.getLogger(JooqConfiguration::class.java)
+        private val LOG = LoggerFactory.getLogger(DispatchJooqConfiguration::class.java)
     }
 
     @Bean

@@ -10,8 +10,8 @@ server:
   port: __BK_CI_BUILDLESS_API_PORT__
 
 containerPool:
-  coreSize: # 表示容器池默认初始容器数大小，默认：20
-  maxSize: # 表示容器池最大可创建容器数大小，默认：30
+  coreSize: 20 # 表示容器池默认初始容器数大小，默认：20
+  maxSize: 30 # 表示容器池最大可创建容器数大小，默认：30
   baseImage: # 表示容器池容器默认镜像，默认：blueking/bk-ci
 
 gateway: __BK_CI_PUBLIC_URL__

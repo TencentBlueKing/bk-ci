@@ -28,7 +28,7 @@
 package com.tencent.devops.misc.service.project
 
 import com.tencent.devops.common.api.enums.SystemModuleEnum
-import com.tencent.devops.misc.dao.project.DataSourceDao
+import com.tencent.devops.misc.dao.project.MiscDataSourceDao
 import com.tencent.devops.project.pojo.DataSource
 import org.jooq.DSLContext
 import org.springframework.beans.factory.annotation.Autowired
@@ -37,7 +37,7 @@ import org.springframework.stereotype.Service
 @Service
 class DataSourceService @Autowired constructor(
     private val dslContext: DSLContext,
-    private val dataSourceDao: DataSourceDao
+    private val miscDataSourceDao: MiscDataSourceDao
 ) {
 
     fun listByModule(
@@ -46,7 +46,7 @@ class DataSourceService @Autowired constructor(
         fullFlag: Boolean? = false,
         dataTag: String? = null
     ): List<DataSource>? {
-        val dataSourceRecords = dataSourceDao.listByModule(
+        val dataSourceRecords = miscDataSourceDao.listByModule(
             dslContext = dslContext,
             clusterName = clusterName,
             moduleCode = moduleCode,

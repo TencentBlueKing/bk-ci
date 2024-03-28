@@ -225,3 +225,6 @@ include(":core:metrics:api-metrics")
 include(":core:metrics:biz-metrics")
 include(":core:metrics:boot-metrics")
 include(":core:metrics:model-metrics")
+
+include("core:multijar")
+include("core:multijar:boot-multijar")

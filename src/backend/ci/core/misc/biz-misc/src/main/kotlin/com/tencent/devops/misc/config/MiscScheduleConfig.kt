@@ -35,7 +35,7 @@ import java.util.concurrent.ThreadPoolExecutor
 import java.util.concurrent.TimeUnit
 
 @Configuration
-class ScheduleConfig : SchedulingConfigurer {
+class MiscScheduleConfig : SchedulingConfigurer {
     override fun configureTasks(taskRegistrar: ScheduledTaskRegistrar) {
         val scheduler = ScheduledThreadPoolExecutor(20)
         scheduler.maximumPoolSize = 500
