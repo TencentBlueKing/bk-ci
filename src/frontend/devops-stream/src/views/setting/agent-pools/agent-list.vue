@@ -131,8 +131,8 @@
             getNodeList () {
                 this.isLoading = true
                 setting.getNodeList(this.projectId, this.$route.params.poolId).then((res) => {
-                    this.agentList = res
-                    this.nodeList = res
+                    this.agentList = res.records
+                    this.nodeList = res.records
                 }).catch((err) => {
                     this.$bkMessage({ theme: 'error', message: err.message || err })
                 }).finally(() => {

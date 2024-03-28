@@ -27,6 +27,7 @@
 
 package com.tencent.devops.misc.dao.environment
 
+import com.tencent.devops.common.db.utils.skipCheck
 import com.tencent.devops.environment.pojo.enums.NodeStatus
 import com.tencent.devops.environment.pojo.enums.NodeType
 import com.tencent.devops.model.environment.tables.TNode
@@ -58,23 +59,11 @@ class EnvironmentNodeDao {
         }
     }
 
-    fun listAllServerNodes(dslContext: DSLContext): List<TNodeRecord> {
-        with(TNode.T_NODE) {
-            return dslContext.selectFrom(this)
-                .where(
-                    NODE_TYPE.`in`(
-                        NodeType.CMDB.name,
-                        NodeType.OTHER.name
-                    )
-                )
-                .fetch()
-        }
-    }
-
     fun listAllNodesByType(dslContext: DSLContext, nodeType: NodeType): List<TNodeRecord> {
         with(TNode.T_NODE) {
             return dslContext.selectFrom(this)
                 .where(NODE_TYPE.eq(nodeType.name))
+                .skipCheck()
                 .fetch()
         }
     }

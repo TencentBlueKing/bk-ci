@@ -29,7 +29,5 @@ dependencies {
     api(project(":core:dispatch:biz-dispatch-docker"))
     api(project(":core:dispatch:biz-dispatch-kubernetes"))
 
-    api(project(":core:common:common-auth:common-auth-mock"))
-    api(project(":core:common:common-auth:common-auth-blueking"))
-    api(project(":core:common:common-auth:common-auth-v3"))
+    api(project(":core:common:common-auth:common-auth-provider"))
 }

@@ -138,6 +138,15 @@ BEGIN
     END IF;
 
     IF NOT EXISTS(SELECT 1
+                      FROM information_schema.COLUMNS
+                      WHERE TABLE_SCHEMA = db
+                        AND TABLE_NAME = 'T_PROJECT_PIPELINE_CALLBACK'
+                        AND COLUMN_NAME = 'FAILURE_TIME') THEN
+        ALTER TABLE T_PROJECT_PIPELINE_CALLBACK
+            ADD COLUMN `FAILURE_TIME` datetime COMMENT '失败时间';
+    END IF;
+
+    IF NOT EXISTS(SELECT 1
                   FROM information_schema.COLUMNS
                   WHERE TABLE_SCHEMA = db
                     AND TABLE_NAME = 'T_PIPELINE_BUILD_SUMMARY'
