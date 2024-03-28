@@ -27,6 +27,10 @@
 
 package com.tencent.devops.environment.service.thirdPartyAgent
 
+import com.tencent.bk.audit.annotations.ActionAuditRecord
+import com.tencent.bk.audit.annotations.AuditAttribute
+import com.tencent.bk.audit.annotations.AuditInstanceRecord
+import com.tencent.bk.audit.context.ActionAuditContext
 import com.tencent.devops.common.api.check.Preconditions
 import com.tencent.devops.common.api.enums.AgentStatus
 import com.tencent.devops.common.api.exception.ErrorCodeException
@@ -36,7 +40,10 @@ import com.tencent.devops.common.api.pojo.OS
 import com.tencent.devops.common.api.util.ApiUtil
 import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.api.util.SecurityUtil
+import com.tencent.devops.common.audit.ActionAuditContent
+import com.tencent.devops.common.auth.api.ActionId
 import com.tencent.devops.common.auth.api.AuthPermission
+import com.tencent.devops.common.auth.api.ResourceTypeId
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.redis.concurrent.SimpleRateLimiter
 import com.tencent.devops.common.web.utils.I18nUtil
@@ -50,12 +57,12 @@ import com.tencent.devops.environment.pojo.enums.NodeStatus
 import com.tencent.devops.environment.pojo.enums.NodeType
 import com.tencent.devops.environment.service.NodeWebsocketService
 import com.tencent.devops.environment.service.slave.SlaveGatewayService
-import javax.ws.rs.NotFoundException
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
+import javax.ws.rs.NotFoundException
 
 @Service
 @Suppress("LongParameterList", "ThrowsCount")
@@ -126,6 +133,15 @@ class ImportService @Autowired constructor(
         }
     }
 
+    @ActionAuditRecord(
+        actionId = ActionId.ENV_NODE_CREATE,
+        instance = AuditInstanceRecord(
+            resourceType = ResourceTypeId.ENV_NODE
+        ),
+        attributes = [AuditAttribute(name = ActionAuditContent.PROJECT_CODE_TEMPLATE, value = "#projectId")],
+        scopeId = "#projectId",
+        content = ActionAuditContent.ENV_NODE_CREATE_CONTENT
+    )
     fun importAgent(userId: String, projectId: String, agentId: String) {
 
         val id = HashUtil.decodeIdToLong(agentId)
@@ -135,16 +151,22 @@ class ImportService @Autowired constructor(
                 LOG.info("$agentId duplicate import, skip")
                 return
             }
-            import(id, projectId, agentId, userId)
+            val nodeId = import(id, projectId, agentId, userId)
+            if (nodeId != null) {
+                // audit
+                ActionAuditContext.current()
+                    .setInstanceName(nodeId.toString())
+                    .setInstanceId(nodeId.toString())
+            }
         }
     }
 
-    private fun import(id: Long, projectId: String, agentId: String, userId: String) {
+    private fun import(id: Long, projectId: String, agentId: String, userId: String): Long? {
         val agentRecord = thirdPartyAgentDao.getAgent(dslContext, id)
             ?: throw NotFoundException("The agent($agentId) is not exist")
 
         if (agentRecord.status == AgentStatus.IMPORT_OK.status) { // 忽略重复导入
-            return
+            return null
         }
 
         Preconditions.checkTrue(
@@ -161,12 +183,12 @@ class ImportService @Autowired constructor(
                 )
             )
         )
-
+        var nodeId = 0L
         LOG.info("Trying to import the agent($agentId) of project($projectId) by user($userId)")
         dslContext.transaction { configuration ->
             val context = DSL.using(configuration)
 
-            val nodeId = nodeDao.addNode(
+            nodeId = nodeDao.addNode(
                 dslContext = context,
                 projectId = projectId,
                 ip = agentRecord.ip,
@@ -185,7 +207,6 @@ class ImportService @Autowired constructor(
                 displayName = nodeStringId,
                 userId = userId
             )
-
             val count = thirdPartyAgentDao.updateStatus(context, id, nodeId, projectId, AgentStatus.IMPORT_OK)
             if (count != 1) {
                 LOG.warn("Fail to update the agent($id) to OK status")
@@ -202,5 +223,6 @@ class ImportService @Autowired constructor(
             )
         }
         webSocketDispatcher.dispatch(websocketService.buildDetailMessage(projectId = projectId, userId = userId))
+        return nodeId
     }
 }

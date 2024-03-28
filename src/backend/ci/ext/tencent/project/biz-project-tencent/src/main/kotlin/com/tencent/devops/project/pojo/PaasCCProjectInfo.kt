@@ -28,41 +28,41 @@
 package com.tencent.devops.project.pojo
 
 import com.fasterxml.jackson.annotation.JsonProperty
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
 data class PaasCCProjectInfo(
-    @ApiModelProperty("项目名称", name = "project_name")
+    @get:Schema(title = "项目名称", description = "project_name")
     @JsonProperty("project_name")
     val projectName: String,
-    @ApiModelProperty("英文缩写", name = "english_name")
+    @get:Schema(title = "英文缩写", description = "english_name")
     @JsonProperty("english_name")
     val englishName: String,
-    @ApiModelProperty("项目类型", name = "project_type")
+    @get:Schema(title = "项目类型", description = "project_type")
     @JsonProperty("project_type")
     val projectType: Int,
-    @ApiModelProperty("描述")
+    @get:Schema(title = "描述")
     val description: String,
-    @ApiModelProperty("一级部门ID", name = "bg_id")
+    @get:Schema(title = "一级部门ID", description = "bg_id")
     @JsonProperty("bg_id")
     val bgId: Long,
-    @ApiModelProperty("一级部门名字", name = "bg_name")
+    @get:Schema(title = "一级部门名字", description = "bg_name")
     @JsonProperty("bg_name")
     val bgName: String,
-    @ApiModelProperty("二级部门ID", name = "dept_id")
+    @get:Schema(title = "二级部门ID", description = "dept_id")
     @JsonProperty("dept_id")
     val deptId: Long,
-    @ApiModelProperty("二级部门名称", name = "dept_name")
+    @get:Schema(title = "二级部门名称", description = "dept_name")
     @JsonProperty("dept_name")
     val deptName: String,
-    @ApiModelProperty("三级部门ID", name = "center_id")
+    @get:Schema(title = "三级部门ID", description = "center_id")
     @JsonProperty("center_id")
     val centerId: Long,
-    @ApiModelProperty("三级部门名称", name = "center_name")
+    @get:Schema(title = "三级部门名称", description = "center_name")
     @JsonProperty("center_name")
     val centerName: String,
-    @ApiModelProperty("是否保密", name = "is_secrecy")
+    @get:Schema(title = "是否保密", description = "is_secrecy")
     @get:JsonProperty("is_secrecy")
     var secrecy: Boolean = false,
-    @ApiModelProperty("kind")
+    @get:Schema(title = "kind")
     val kind: Int = 0
 )

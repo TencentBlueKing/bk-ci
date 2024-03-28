@@ -252,7 +252,7 @@ class PipelineContextService @Autowired constructor(
             // 兼容通过BK_CI_RETRY_TASK_ID的老方式，如果 BK_CI_RETRY_TASK_ID 有值
             // 并且其对应的container id是当前运行的，就正常返回
             val taskId = variables[PIPELINE_RETRY_START_TASK_ID]
-            if (taskId != null && taskBuildRecordService.getTaskInfo(
+            if (taskId != null && taskBuildRecordService.getTaskBuildRecord(
                     projectId = projectId,
                     pipelineId = pipelineId,
                     buildId = buildId,

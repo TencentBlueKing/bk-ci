@@ -1,10 +1,9 @@
 package com.tencent.devops.experience.pojo.outer
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("是否可以添加外部用户--请求")
+@Schema(title = "是否可以添加外部用户--请求")
 data class OuterCanAddParam(
-    @ApiModelProperty("用户列表,用英文,分隔", required = true)
+    @get:Schema(title = "用户列表,用英文,分隔", required = true)
     val userIds: String
 )

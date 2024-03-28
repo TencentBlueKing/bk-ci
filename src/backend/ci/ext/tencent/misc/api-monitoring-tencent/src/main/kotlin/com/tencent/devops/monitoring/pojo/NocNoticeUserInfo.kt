@@ -27,15 +27,14 @@
 package com.tencent.devops.monitoring.pojo
 
 import com.fasterxml.jackson.annotation.JsonProperty
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("NOC告警通知用户信息")
+@Schema(title = "NOC告警通知用户信息")
 data class NocNoticeUserInfo(
-    @ApiModelProperty("用户名", required = true, name = "username")
+    @get:Schema(title = "用户名", required = true, description = "username")
     @JsonProperty("username")
     val username: String,
-    @ApiModelProperty("手机号", required = false, name = "mobile_phone")
+    @get:Schema(title = "手机号", required = false, description = "mobile_phone")
     @JsonProperty("mobile_phone")
     val mobilePhone: String? = null
 )

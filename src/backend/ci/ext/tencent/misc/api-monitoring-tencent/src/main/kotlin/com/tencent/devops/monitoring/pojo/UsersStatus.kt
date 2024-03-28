@@ -27,33 +27,32 @@
 package com.tencent.devops.monitoring.pojo
 
 import com.tencent.devops.common.pipeline.enums.ChannelCode
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("project接口，users接口的状态上报")
+@Schema(title = "project接口，users接口的状态上报")
 data class UsersStatus(
-    @ApiModelProperty("蓝盾项目ID", required = false)
+    @get:Schema(title = "蓝盾项目ID", required = false)
     val projectId: String?,
-    @ApiModelProperty("流水线ID", required = false)
+    @get:Schema(title = "流水线ID", required = false)
     val pipelineId: String?,
-    @ApiModelProperty("构建ID", required = false)
+    @get:Schema(title = "构建ID", required = false)
     val buildId: String?,
-    @ApiModelProperty("vmSeqId", required = false)
+    @get:Schema(title = "vmSeqId", required = false)
     val vmSeqId: String?,
-    @ApiModelProperty("channelCode", required = false)
+    @get:Schema(title = "channelCode", required = false)
     val channelCode: ChannelCode?,
-    @ApiModelProperty("请求时间(时间戳，毫秒)", required = true)
+    @get:Schema(title = "请求时间(时间戳，毫秒)", required = true)
     val requestTime: Long,
-    @ApiModelProperty("响应时间(时间戳，毫秒)", required = true)
+    @get:Schema(title = "响应时间(时间戳，毫秒)", required = true)
     val responseTime: Long,
-    @ApiModelProperty("耗时(毫秒)", required = true)
+    @get:Schema(title = "耗时(毫秒)", required = true)
     val elapseTime: Long,
-    @ApiModelProperty("Http状态码", required = false)
+    @get:Schema(title = "Http状态码", required = false)
     val statusCode: String?,
-    @ApiModelProperty("状态码对应的错误信息", required = false)
+    @get:Schema(title = "状态码对应的错误信息", required = false)
     val statusMessage: String?,
-    @ApiModelProperty("蓝盾错误码", required = true)
+    @get:Schema(title = "蓝盾错误码", required = true)
     val errorCode: String,
-    @ApiModelProperty("错误信息", required = false)
+    @get:Schema(title = "错误信息", required = false)
     val errorMsg: String?
 )

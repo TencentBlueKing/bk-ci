@@ -27,17 +27,16 @@
 
 package com.tencent.devops.remotedev.pojo
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("工作空间时间轴（分页）")
+@Schema(title = "工作空间时间轴（分页）")
 data class WorkspaceOpHistory(
-    @ApiModelProperty("操作时间")
+    @get:Schema(title = "操作时间")
     val createdTime: Long,
-    @ApiModelProperty("操作人")
+    @get:Schema(title = "操作人")
     val operator: String,
-    @ApiModelProperty("操作类型")
+    @get:Schema(title = "操作类型")
     val action: WorkspaceAction,
-    @ApiModelProperty("操作描述")
+    @get:Schema(title = "操作描述")
     val actionMessage: String
 )

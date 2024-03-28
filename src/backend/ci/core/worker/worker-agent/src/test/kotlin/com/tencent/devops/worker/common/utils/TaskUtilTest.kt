@@ -112,7 +112,8 @@ class TaskUtilTest {
                 mapOf()
             },
             buildVariable = mapOf(),
-            containerType = "normal"
+            containerType = "normal",
+            executeCount = 1
         )
     }
 }

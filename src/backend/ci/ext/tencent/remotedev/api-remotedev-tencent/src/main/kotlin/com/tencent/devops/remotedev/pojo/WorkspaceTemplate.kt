@@ -27,23 +27,22 @@
 
 package com.tencent.devops.remotedev.pojo
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("工作空间模板配置")
+@Schema(title = "工作空间模板配置")
 data class WorkspaceTemplate(
-    @ApiModelProperty("模板ID")
+    @get:Schema(title = "模板ID")
     val wsTemplateId: Int,
-    @ApiModelProperty("模板镜像")
+    @get:Schema(title = "模板镜像")
     val image: String,
-    @ApiModelProperty("模板名称")
+    @get:Schema(title = "模板名称")
     val name: String,
-    @ApiModelProperty("模板来源")
+    @get:Schema(title = "模板来源")
     val source: String,
-    @ApiModelProperty("模板LOGO")
+    @get:Schema(title = "模板LOGO")
     val logo: String,
-    @ApiModelProperty("模板对应项目URL")
+    @get:Schema(title = "模板对应项目URL")
     val url: String,
-    @ApiModelProperty("模板描述")
+    @get:Schema(title = "模板描述")
     val description: String
 )

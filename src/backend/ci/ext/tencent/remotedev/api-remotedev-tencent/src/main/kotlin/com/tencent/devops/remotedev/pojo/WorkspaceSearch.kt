@@ -27,40 +27,39 @@
 
 package com.tencent.devops.remotedev.pojo
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("工作空间搜索模型,为什么是list，因为支持同时匹配多个目标")
+@Schema(title = "工作空间搜索模型,为什么是list，因为支持同时匹配多个目标")
 data class WorkspaceSearch(
-    @ApiModelProperty("工作空间名称")
+    @get:Schema(title = "工作空间名称")
     val workspaceName: List<String>? = null,
-    @ApiModelProperty("工作空间备注名称")
+    @get:Schema(title = "工作空间备注名称")
     val displayName: List<String>? = null,
-    @ApiModelProperty("操作系统类型")
+    @get:Schema(title = "操作系统类型")
     val workspaceSystemType: List<WorkspaceSystemType>? = null,
-    @ApiModelProperty("工作空间状态")
+    @get:Schema(title = "工作空间状态")
     val status: List<WorkspaceStatus>? = null,
-    @ApiModelProperty("区域简称，SZ,NJ")
+    @get:Schema(title = "区域简称，SZ,NJ")
     var zoneShortName: List<String>? = null,
-    @ApiModelProperty("资源类型：M，L，XL，S")
+    @get:Schema(title = "资源类型：M，L，XL，S")
     val size: List<String>? = null,
-    @ApiModelProperty("工作空间对应的IP")
+    @get:Schema(title = "工作空间对应的IP")
     val ips: List<String>? = null,
-    @ApiModelProperty("云桌面对应的mac地址")
+    @get:Schema(title = "云桌面对应的mac地址")
     val macAddress: List<String>? = null,
-    @ApiModelProperty("拥有者_CN")
+    @get:Schema(title = "拥有者_CN")
     val ownerCN: List<String>? = null,
-    @ApiModelProperty("拥有者")
+    @get:Schema(title = "拥有者")
     val owner: List<String>? = null,
-    @ApiModelProperty("查看者_CN")
+    @get:Schema(title = "查看者_CN")
     val viewersCN: List<String>? = null,
-    @ApiModelProperty("查看者")
+    @get:Schema(title = "查看者")
     var viewers: List<String>? = null,
-    @ApiModelProperty("项目id")
+    @get:Schema(title = "项目id")
     var projectId: List<String>? = null,
-    @ApiModelProperty("协助工单，仅op有效")
+    @get:Schema(title = "协助工单，仅op有效")
     var expertSupId: List<Long>? = null,
-    @ApiModelProperty("是否模糊匹配，可以关闭，查询会更快。")
+    @get:Schema(title = "是否模糊匹配，可以关闭，查询会更快。")
     val onFuzzyMatch: Boolean = true
 ) {
     fun onlyNeedCheckWorkspace() = !needCheckDetail() &&

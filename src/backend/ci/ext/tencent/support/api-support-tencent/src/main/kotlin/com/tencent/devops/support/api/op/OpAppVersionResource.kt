@@ -27,9 +27,9 @@
 
 package com.tencent.devops.support.api.op
 
-import io.swagger.annotations.Api
-import io.swagger.annotations.ApiOperation
-import io.swagger.annotations.ApiParam
+import io.swagger.v3.oas.annotations.tags.Tag
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.Parameter
 import javax.ws.rs.core.MediaType
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.support.model.app.pojo.AppVersion
@@ -47,58 +47,58 @@ import javax.ws.rs.Produces
  * Created by Freyzheng on 2018/9/26.
  */
 
-@Api(tags = ["OP_APP_VERSION"], description = "OP-APP-VERSION")
+@Tag(name = "OP_APP_VERSION", description = "OP-APP-VERSION")
 @Path("/op/app/version")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface OpAppVersionResource {
 
-    @ApiOperation("获取所有app版本日志")
+    @Operation(summary = "获取所有app版本日志")
     @GET
     @Path("/")
     fun getAllAppVersion(): Result<List<AppVersion>>
 
-    @ApiOperation("获取app版本日志")
+    @Operation(summary = "获取app版本日志")
     @GET
     @Path("/{appVersionId}")
     fun getAppVersion(
-        @ApiParam(value = "app版本号id", required = true)
+        @Parameter(description = "app版本号id", required = true)
         @PathParam("appVersionId")
         appVersionId: Long
     ): Result<AppVersion?>
 
-    @ApiOperation("新增app版本日志")
+    @Operation(summary = "新增app版本日志")
     @POST
     @Path("/")
     fun addAppVersion(
-        @ApiParam(value = "APP版本", required = true)
+        @Parameter(description = "APP版本", required = true)
         appVersionRequest: AppVersionRequest
     ): Result<Int>
 
-    @ApiOperation("新增多个app版本日志")
+    @Operation(summary = "新增多个app版本日志")
     @POST
     @Path("/multi")
     fun addAppVersions(
-        @ApiParam(value = "APP版本", required = true)
+        @Parameter(description = "APP版本", required = true)
         appVersionRequests: List<AppVersionRequest>
     ): Result<Int>
 
-    @ApiOperation("更新app版本日志")
+    @Operation(summary = "更新app版本日志")
     @PUT
     @Path("/{appVersionId}")
     fun updateAppVersion(
-        @ApiParam(value = "app版本号id", required = true)
+        @Parameter(description = "app版本号id", required = true)
         @PathParam("appVersionId")
         appVersionId: Long,
-        @ApiParam(value = "APP版本", required = true)
+        @Parameter(description = "APP版本", required = true)
         appVersionRequest: AppVersionRequest
     ): Result<Int>
 
-    @ApiOperation("删除app版本日志")
+    @Operation(summary = "删除app版本日志")
     @DELETE
     @Path("/{appVersionId}")
     fun deleteAppVersion(
-        @ApiParam(value = "app版本号id", required = true)
+        @Parameter(description = "app版本号id", required = true)
         @PathParam("appVersionId")
         appVersionId: Long
     ): Result<Int>

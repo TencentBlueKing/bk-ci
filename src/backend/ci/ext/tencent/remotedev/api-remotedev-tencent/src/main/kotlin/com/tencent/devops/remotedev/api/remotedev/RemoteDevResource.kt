@@ -32,9 +32,9 @@ import com.tencent.devops.remotedev.pojo.ImageSpec
 import com.tencent.devops.remotedev.pojo.RemoteDevOauthBack
 import com.tencent.devops.remotedev.pojo.WebSocketActionType
 import com.tencent.devops.remotedev.pojo.WorkspaceProxyDetail
-import io.swagger.annotations.Api
-import io.swagger.annotations.ApiOperation
-import io.swagger.annotations.ApiParam
+import io.swagger.v3.oas.annotations.tags.Tag
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.Parameter
 import javax.ws.rs.Consumes
 import javax.ws.rs.GET
 import javax.ws.rs.HeaderParam
@@ -44,91 +44,91 @@ import javax.ws.rs.Produces
 import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
-@Api(tags = ["REMOTE_DEV"], description = "remoteDev")
+@Tag(name = "REMOTE_DEV", description = "remoteDev")
 @Path("remotedev/")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface RemoteDevResource {
-    @ApiOperation("获取oauth")
+    @Operation(summary = "获取oauth")
     @GET
     @Path("/oauth")
     fun oauth(
-        @ApiParam(value = "secretKey签名(sha256)", required = true)
+        @Parameter(description = "secretKey签名(sha256)", required = true)
         @HeaderParam("X-Signature")
         signature: String,
-        @ApiParam(value = "public key", required = true)
+        @Parameter(description = "public key", required = true)
         @HeaderParam("X-Key")
         key: String,
-        @ApiParam(value = "user id", required = true)
+        @Parameter(description = "user id", required = true)
         @QueryParam("userId")
         userId: String,
-        @ApiParam(value = "workspace name", required = true)
+        @Parameter(description = "workspace name", required = true)
         @QueryParam("workspaceName")
         workspaceName: String,
-        @ApiParam(value = "时间戳", required = true)
+        @Parameter(description = "时间戳", required = true)
         @QueryParam("timestamp")
         timestamp: String
     ): Result<RemoteDevOauthBack>
 
-    @ApiOperation("提供给ws-proxy在完成拉取代码后上报")
+    @Operation(summary = "提供给ws-proxy在完成拉取代码后上报")
     @POST
     @Path("/workspace/complete_pull_code")
     fun completePullCode(
-        @ApiParam(value = "secretKey签名(sha256)", required = true)
+        @Parameter(description = "secretKey签名(sha256)", required = true)
         @HeaderParam("X-Signature")
         signature: String,
-        @ApiParam(value = "工作空间ID", required = true)
+        @Parameter(description = "工作空间ID", required = true)
         @QueryParam("workspaceName")
         workspaceName: String,
-        @ApiParam(value = "类型", required = false)
+        @Parameter(description = "类型", required = false)
         @QueryParam("type")
         type: WebSocketActionType?,
-        @ApiParam(value = "时间戳", required = true)
+        @Parameter(description = "时间戳", required = true)
         @QueryParam("timestamp")
         timestamp: String
     ): Result<Boolean>
 
-    @ApiOperation("提供给ws-proxy上报工作空间心跳")
+    @Operation(summary = "提供给ws-proxy上报工作空间心跳")
     @POST
     @Path("/workspace/heartbeat")
     fun workspaceHeartbeat(
-        @ApiParam(value = "secretKey签名(sha256)", required = true)
+        @Parameter(description = "secretKey签名(sha256)", required = true)
         @HeaderParam("X-Signature")
         signature: String,
-        @ApiParam(value = "工作空间ID", required = true)
+        @Parameter(description = "工作空间ID", required = true)
         @QueryParam("workspaceName")
         workspaceName: String,
-        @ApiParam(value = "时间戳", required = true)
+        @Parameter(description = "时间戳", required = true)
         @QueryParam("timestamp")
         timestamp: String
     ): Result<Boolean>
 
-    @ApiOperation("获取工作空间详情")
+    @Operation(summary = "获取工作空间详情")
     @GET
     @Path("/workspace-proxy/detail")
     fun getWorkspaceDetail(
-        @ApiParam(value = "secretKey签名(sha256)", required = true)
+        @Parameter(description = "secretKey签名(sha256)", required = true)
         @HeaderParam("X-Signature")
         signature: String,
-        @ApiParam(value = "工作空间ID", required = true)
+        @Parameter(description = "工作空间ID", required = true)
         @QueryParam("workspaceName")
         workspaceName: String,
-        @ApiParam(value = "时间戳", required = true)
+        @Parameter(description = "时间戳", required = true)
         @QueryParam("timestamp")
         timestamp: String
     ): Result<WorkspaceProxyDetail>
 
-    @ApiOperation("获取工作空间镜像信息")
+    @Operation(summary = "获取工作空间镜像信息")
     @GET
     @Path("/workspace/image/spec")
     fun getWorkspaceImageSpec(
-        @ApiParam(value = "secretKey签名(sha256)", required = true)
+        @Parameter(description = "secretKey签名(sha256)", required = true)
         @HeaderParam("X-Signature")
         signature: String,
-        @ApiParam(value = "工作空间ID", required = true)
+        @Parameter(description = "工作空间ID", required = true)
         @QueryParam("workspaceName")
         workspaceName: String,
-        @ApiParam(value = "时间戳", required = true)
+        @Parameter(description = "时间戳", required = true)
         @QueryParam("timestamp")
         timestamp: String
     ): Result<ImageSpec?>

@@ -28,33 +28,33 @@
 package com.tencent.devops.process.pojo
 
 import com.tencent.devops.common.pipeline.container.Stage
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
 data class PipelineTemplateInfo(
-    @ApiModelProperty("模版名称", required = true)
+    @get:Schema(title = "模版名称", required = true)
     val name: String,
-    @ApiModelProperty("模版ID", required = true)
+    @get:Schema(title = "模版ID", required = true)
     val templateId: String,
-    @ApiModelProperty("项目ID", required = true)
+    @get:Schema(title = "项目ID", required = true)
     val projectId: String,
-    @ApiModelProperty("当前模板版本ID", required = true)
+    @get:Schema(title = "当前模板版本ID", required = true)
     val version: Long,
-    @ApiModelProperty("父模板版本ID", required = true)
+    @get:Schema(title = "父模板版本ID", required = true)
     val srcTemplateVersion: Long,
-    @ApiModelProperty("最新版本号", required = true)
+    @get:Schema(title = "最新版本号", required = true)
     val versionName: String,
-    @ApiModelProperty("模板类型", required = true)
+    @get:Schema(title = "模板类型", required = true)
     val templateType: String,
-    @ApiModelProperty("模板类型描述", required = true)
+    @get:Schema(title = "模板类型描述", required = true)
     val templateTypeDesc: String,
-    @ApiModelProperty("应用范畴", required = true)
+    @get:Schema(title = "应用范畴", required = true)
     val category: List<String?>,
-    @ApiModelProperty("模版logo", required = true)
+    @get:Schema(title = "模版logo", required = true)
     val logoUrl: String,
-    @ApiModelProperty("阶段集合", required = true)
+    @get:Schema(title = "阶段集合", required = true)
     val stages: List<Stage>,
-    @ApiModelProperty("模版名称，兼容老代码", required = true)
+    @get:Schema(title = "模版名称，兼容老代码", required = true)
     val templateName: String,
-    @ApiModelProperty("父模板ID", required = true)
+    @get:Schema(title = "父模板ID", required = true)
     val srcTemplateId: String
 )

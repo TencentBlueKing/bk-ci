@@ -44,16 +44,8 @@
 |- bk-ci/src
   |- backend/ci
     |- store                    # 研发商店微服务总目录
-      |- api-store              # 公共基础api定义模块(包含插件和模板的业务)
-      |- api-store-image        # 容器镜像api定义模块
-      |- api-store-xxx          # 研发商店xxx组件api定义模块（新增模块，依赖api-store）
-      |- api-store-sample       # 开源版基础api定义模块
-      |- biz-store              # 公共基础api和业务服务实现模块(包含插件和模板的业务)
-      |- biz-store-image        # 容器镜像api和业务服务实现模块
-      |- biz-store-xxx          # 研发商店xxx组件api和业务服务实现模块（新增模块，依赖biz-store）
-      |- biz-store-sample       # 开源版基础api和业务服务实现模块
-      |- biz-store-image-sample # 开源版容器镜像api和业务服务实现模块
-      |- biz-store-xxx-sample   # 开源版研发商店xxx组件api和业务服务实现模块（新增模块）
+      |- api-store              # 公共基础api定义模块
+      |- biz-store              # 公共基础api和业务服务实现模块
       |- boot-store             # 构建springboot微服务包，设置依赖构建并输出到release目录
       |- model-store            # 使用JOOQ从db中动态生成的PO，表结构有变更需要clean后重新build
 ```

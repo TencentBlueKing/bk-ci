@@ -107,6 +107,20 @@ class DispatchWorkspaceOpHisDao {
         }
     }
 
+    fun updateStatusByWorkspaceName(
+        dslContext: DSLContext,
+        workspaceName: String,
+        status: EnvironmentActionStatus,
+        fStatus: EnvironmentActionStatus
+    ): Int {
+        with(TDispatchWorkspaceOpHis.T_DISPATCH_WORKSPACE_OP_HIS) {
+            return dslContext.update(this)
+                .set(STATUS, status.name)
+                .where(WORKSPACE_NAME.eq(workspaceName))
+                .and(STATUS.eq(fStatus.name)).execute()
+        }
+    }
+
     class RecordJooqMapper : RecordMapper<TDispatchWorkspaceOpHisRecord, DispatchWorkspaceOpHisRecord> {
         override fun map(record: TDispatchWorkspaceOpHisRecord?): DispatchWorkspaceOpHisRecord? {
             return record?.run {

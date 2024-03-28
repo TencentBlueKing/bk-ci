@@ -27,17 +27,18 @@
 
 package com.tencent.devops.store.pojo.atom
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("插件参数替换信息")
+@Schema(title = "插件参数替换信息")
 data class AtomParamReplaceInfo(
-    @ApiModelProperty("被替换插件参数名称", required = true)
+    @get:Schema(title = "被替换插件参数名称", required = true)
     val fromParamName: String,
-    @ApiModelProperty("替换插件参数名称", required = true)
+    @get:Schema(title = "替换插件参数名称", required = true)
     val toParamName: String,
-    @ApiModelProperty("替换插件参数值，不传默认用被替换插件参数值替换", required = false)
+    @get:Schema(title = "替换插件参数值，不传默认用被替换插件参数值替换", required = false)
     val toParamValue: Any? = null,
-    @ApiModelProperty("参数自定义转换接口url地址，接口参数结构需统一", required = false)
+    @get:Schema(title = "替换插件默认参数值，如果没有指定替换插件参数值且被替换插件参数没有值则用该默认值作为替换插件参数值", required = false)
+    val toParamDefaultValue: Any? = null,
+    @get:Schema(title = "参数自定义转换接口url地址，接口参数结构需统一", required = false)
     val paramConvertUrl: String? = null
 )

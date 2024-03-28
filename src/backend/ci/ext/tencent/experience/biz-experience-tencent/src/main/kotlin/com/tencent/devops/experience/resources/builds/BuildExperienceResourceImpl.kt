@@ -27,8 +27,10 @@
 
 package com.tencent.devops.experience.resources.builds
 
+import com.tencent.bk.audit.annotations.AuditEntry
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.auth.api.ActionId
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.experience.ExperienceNotificationReq
 import com.tencent.devops.experience.api.builds.BuildExperienceResource
@@ -42,6 +44,7 @@ import org.springframework.beans.factory.annotation.Autowired
 class BuildExperienceResourceImpl @Autowired constructor(private val experienceService: ExperienceService) :
     BuildExperienceResource {
 
+    @AuditEntry(actionId = ActionId.EXPERIENCE_TASK_CREATE)
     override fun create(
         userId: String,
         projectId: String,

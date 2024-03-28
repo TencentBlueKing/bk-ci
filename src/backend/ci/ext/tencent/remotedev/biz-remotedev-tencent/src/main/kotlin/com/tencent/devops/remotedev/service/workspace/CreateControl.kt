@@ -50,6 +50,7 @@ import com.tencent.devops.dispatch.kubernetes.pojo.remotedev.ResourceVmReq
 import com.tencent.devops.dispatch.kubernetes.pojo.remotedev.ResourceVmRespData
 import com.tencent.devops.project.api.service.ServiceProjectResource
 import com.tencent.devops.project.api.service.service.ServiceTxUserResource
+import com.tencent.devops.project.pojo.ProjectVO
 import com.tencent.devops.remotedev.common.Constansts
 import com.tencent.devops.remotedev.common.exception.ErrorCodeEnum
 import com.tencent.devops.remotedev.config.RemoteDevCommonConfig
@@ -63,6 +64,8 @@ import com.tencent.devops.remotedev.dao.WorkspaceWindowsDao
 import com.tencent.devops.remotedev.pojo.OpHistoryCopyWriting
 import com.tencent.devops.remotedev.pojo.ProjectWorkspaceCreate
 import com.tencent.devops.remotedev.pojo.WebSocketActionType
+import com.tencent.devops.remotedev.pojo.WindowsResourceTypeConfig
+import com.tencent.devops.remotedev.pojo.WindowsResourceZoneConfig
 import com.tencent.devops.remotedev.pojo.Workspace
 import com.tencent.devops.remotedev.pojo.WorkspaceAction
 import com.tencent.devops.remotedev.pojo.WorkspaceCreate
@@ -78,20 +81,23 @@ import com.tencent.devops.remotedev.service.BkTicketService
 import com.tencent.devops.remotedev.service.PermissionService
 import com.tencent.devops.remotedev.service.WhiteListService
 import com.tencent.devops.remotedev.service.WindowsResourceConfigService
+import com.tencent.devops.remotedev.service.gitproxy.GitProxyTGitService
 import com.tencent.devops.remotedev.service.redis.RedisCacheService
 import com.tencent.devops.remotedev.service.redis.RedisHeartBeat
 import com.tencent.devops.remotedev.service.redis.RedisKeys
 import com.tencent.devops.remotedev.service.redis.RedisKeys.REDIS_OFFICIAL_DEVFILE_KEY
+import com.tencent.devops.remotedev.service.tcloud.TCloudCfsService
 import com.tencent.devops.remotedev.service.transfer.RemoteDevGitTransfer
+import com.tencent.devops.remotedev.utils.CommonUtil
 import com.tencent.devops.remotedev.utils.DevfileUtil
 import com.tencent.devops.scm.utils.code.git.GitUtils
-import java.util.concurrent.Executors
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.slf4j.MDC
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
+import java.util.concurrent.Executors
 
 @Service
 @Suppress("ALL")
@@ -117,7 +123,9 @@ class CreateControl @Autowired constructor(
     private val deliverControl: DeliverControl,
     private val bkccService: BKCCService,
     private val windowsSpecResourceDao: WindowsSpecResourceDao,
-    private val notifyControl: NotifyControl
+    private val notifyControl: NotifyControl,
+    private val tCloudCfsService: TCloudCfsService,
+    private val gitProxyTGitService: GitProxyTGitService
 ) {
     private val executor = Executors.newCachedThreadPool()
 
@@ -129,7 +137,7 @@ class CreateControl @Autowired constructor(
         fun sumResourceVmFree(res: List<ResourceVmRespData>?, zoneShortName: String, size: String): Int? {
             return res?.filter {
                 it.zoneId.startsWith(zoneShortName) &&
-                        it.machineResources?.any { ma -> ma.machineType == size } == true
+                    it.machineResources?.any { ma -> ma.machineType == size } == true
             }?.sumOf {
                 it.machineResources
                     ?.filter { res -> res.machineType == size }
@@ -156,8 +164,6 @@ class CreateControl @Autowired constructor(
         workspaceCreate: ProjectWorkspaceCreate
     ) {
         logger.info("start async create workspace |$pmUserId|$projectId|$cgsId|$autoAssign|$workspaceCreate")
-        val mountType = WorkspaceMountType.START
-        val systemType = WorkspaceSystemType.WINDOWS_GPU
         val windowsConfig = windowsResourceConfigService.getTypeConfig(workspaceCreate.windowsType)
             ?: throw ErrorCodeException(
                 errorCode = ErrorCodeEnum.WINDOWS_CONFIG_NOT_FIND.errorCode,
@@ -231,60 +237,109 @@ class CreateControl @Autowired constructor(
             }
         }
 
-        // 检查自定义和非自定义镜像额度
-        if (workspaceCreate.imageCosFile.isNotBlank()) {
-            val data = client.get(ServiceStartCloudResource::class).getResourceVm(
-                ResourceVmReq(
-                    zoneId = windowsZone.zoneShortName,
-                    machineType = windowsConfig.size
+        // 自定义镜像检查是否有相对的显卡
+        // 非自定义镜像先检查池子里是否有已经生产出来的可以直接用，没有再去看显卡
+        var newNum = 0
+        if (workspaceCreate.imageCosFile.isBlank()) {
+            val resourceCount = startCloudResourceCountCheck(workspaceCreate.windowsType, workspaceCreate.windowsZone)
+            if (cgsId != null || resourceCount > workspaceCreate.count) {
+                doCreateWorkspace(
+                    workspaceCreate = workspaceCreate,
+                    projectId = projectId,
+                    pmUserId = pmUserId,
+                    windowsConfig = windowsConfig,
+                    projectInfo = projectInfo,
+                    windowsZone = windowsZone,
+                    cgsId = cgsId,
+                    autoAssign = autoAssign
                 )
-            ).data
-            val free = sumResourceVmFree(
-                res = data,
-                zoneShortName = windowsZone.zoneShortName,
-                size = windowsConfig.size
-            ) ?: throw ErrorCodeException(
+                return
+            }
+            newNum = workspaceCreate.count - resourceCount
+        } else {
+            // 自定义镜像都是新生产的
+            newNum = workspaceCreate.count
+        }
+
+        val data = client.get(ServiceStartCloudResource::class).getResourceVm(
+            ResourceVmReq(
+                zoneId = windowsZone.zoneShortName,
+                machineType = windowsConfig.size
+            )
+        ).data
+        val free = sumResourceVmFree(
+            res = data,
+            zoneShortName = windowsZone.zoneShortName,
+            size = windowsConfig.size
+        ) ?: throw ErrorCodeException(
+            errorCode = ErrorCodeEnum.ZONE_VM_RESOURCE_NOT_ENOUGH.errorCode,
+            params = arrayOf(
+                windowsZone.zone,
+                windowsConfig.size,
+                "0",
+                newNum.toString()
+            )
+        )
+        if (free < newNum) {
+            throw ErrorCodeException(
                 errorCode = ErrorCodeEnum.ZONE_VM_RESOURCE_NOT_ENOUGH.errorCode,
                 params = arrayOf(
                     windowsZone.zone,
                     windowsConfig.size,
-                    "0",
-                    workspaceCreate.count.toString()
+                    free.toString(),
+                    newNum.toString()
                 )
             )
-            if (free < workspaceCreate.count) {
-                throw ErrorCodeException(
-                    errorCode = ErrorCodeEnum.ZONE_VM_RESOURCE_NOT_ENOUGH.errorCode,
-                    params = arrayOf(
-                        windowsZone.zone,
-                        windowsConfig.size,
-                        free.toString(),
-                        workspaceCreate.count.toString()
-                    )
-                )
-            }
-        } else {
-            val resourceCount = startCloudResourceCountCheck(workspaceCreate.windowsType, workspaceCreate.windowsZone)
-            if (cgsId == null && resourceCount < workspaceCreate.count) {
-                throw ErrorCodeException(
-                    errorCode = ErrorCodeEnum.DESKTOP_RESOURCES_INSUFFICIENT.errorCode,
-                    params = arrayOf(resourceCount.toString())
-                )
-            }
         }
 
+        doCreateWorkspace(
+            workspaceCreate = workspaceCreate,
+            projectId = projectId,
+            pmUserId = pmUserId,
+            windowsConfig = windowsConfig,
+            projectInfo = projectInfo,
+            windowsZone = windowsZone,
+            cgsId = cgsId,
+            autoAssign = autoAssign
+        )
+    }
+
+    private fun doCreateWorkspace(
+        workspaceCreate: ProjectWorkspaceCreate,
+        projectId: String,
+        pmUserId: String,
+        windowsConfig: WindowsResourceTypeConfig,
+        projectInfo: ProjectVO,
+        windowsZone: WindowsResourceZoneConfig,
+        cgsId: String?,
+        autoAssign: Boolean?
+    ) {
+        val mountType = WorkspaceMountType.START
+        val systemType = WorkspaceSystemType.WINDOWS_GPU
         for (i in 0 until workspaceCreate.count) {
             logger.info("createWorkspace|mountType|$mountType")
-            val workspaceName = generateWorkspaceName(projectId)
+            val workspaceName = if (CommonUtil.ifProjectPersonal(projectId)) {
+                generateWorkspaceName(projectId.removePrefix("_"))
+            } else {
+                generateWorkspaceName(projectId)
+            }
             val ws = Workspace(
                 workspaceId = null,
                 workspaceName = workspaceName,
                 projectId = projectId,
-                createUserId = pmUserId,
+                createUserId = if (CommonUtil.ifProjectPersonal(projectId)) {
+                    projectId.removePrefix("_")
+                } else {
+                    pmUserId
+                },
                 hostName = "",
                 workspaceMountType = mountType,
                 workspaceSystemType = systemType,
-                ownerType = WorkspaceOwnerType.PROJECT,
+                ownerType = if (CommonUtil.ifProjectPersonal(projectId)) {
+                    WorkspaceOwnerType.PERSONAL
+                } else {
+                    WorkspaceOwnerType.PROJECT
+                },
                 gpu = windowsConfig.gpu,
                 cpu = windowsConfig.cpu,
                 memory = windowsConfig.memory,
@@ -301,7 +356,8 @@ class CreateControl @Autowired constructor(
                 centerName = projectInfo.centerName,
                 groupName = null,
                 dslContext = dslContext,
-                projectName = projectInfo.projectName
+                projectName = projectInfo.projectName,
+                businessLineNmae = projectInfo.businessLineName ?: ""
             )
 
             // 审计
@@ -316,7 +372,11 @@ class CreateControl @Autowired constructor(
             // 发送给k8s
             dispatcher.dispatch(
                 WorkspaceCreateEvent(
-                    userId = pmUserId,
+                    userId = if (CommonUtil.ifProjectPersonal(projectId)) {
+                        projectId.removePrefix("_")
+                    } else {
+                        pmUserId
+                    },
                     traceId = bizId,
                     workspaceName = ws.workspaceName,
                     devFilePath = ws.devFilePath,
@@ -498,9 +558,8 @@ class CreateControl @Autowired constructor(
             }
 
             // 创建成功时给 cmdb 添加字段方便监控检索
-            val hostIdSub = event.environmentIp?.split(".")
-            if (!hostIdSub.isNullOrEmpty() && ws.workspaceSystemType.checkWindows()) {
-                val ip = hostIdSub.subList(1, hostIdSub.size).joinToString(separator = ".")
+            val ip = event.environmentIp?.substringAfter(".")
+            if (!ip.isNullOrBlank() && ws.workspaceSystemType.checkWindows()) {
                 bkccService.updateHostMonitor(
                     regionId = detail.regionId,
                     workspaceName = null,
@@ -512,7 +571,14 @@ class CreateControl @Autowired constructor(
                 executor.execute {
                     workspaceCommon.makeDiskMount(ip, event.userId)
                 }
+
+                // 给有cfs的机器绑定权限组
+                tCloudCfsService.addOrRemoveCfsPermissionRule(ws.projectId, ip, false)
+
+                // 关联tgit相关
+                gitProxyTGitService.addOrRemoveAclIp(ws.projectId, ip, false)
             }
+
             if (!ws.workspaceSystemType.afterCreateNeedWs(ws.ownerType)) {
                 // 直接return 不做websocket
                 return
@@ -626,7 +692,8 @@ class CreateControl @Autowired constructor(
                 centerName = projectInfo.centerName,
                 groupName = null,
                 dslContext = dslContext,
-                projectName = projectInfo.projectName
+                projectName = projectInfo.projectName,
+                businessLineNmae = projectInfo.businessLineName
             )
         } else {
             val userInfo = kotlin.runCatching {
@@ -641,7 +708,8 @@ class CreateControl @Autowired constructor(
                 centerName = userInfo?.centerName,
                 groupName = userInfo?.groupName,
                 dslContext = dslContext,
-                projectName = ws.projectId ?: ""
+                projectName = ws.projectId ?: "",
+                businessLineNmae = userInfo?.businessLineName
             )
         }
 
@@ -732,7 +800,7 @@ class CreateControl @Autowired constructor(
         if (yaml.isBlank()) {
             logger.warn(
                 "create workspace get devfile blank,return." +
-                        "|useOfficialDevfile=${workspaceCreate.useOfficialDevfile}"
+                    "|useOfficialDevfile=${workspaceCreate.useOfficialDevfile}"
             )
             throw ErrorCodeException(
                 errorCode = ErrorCodeEnum.DEVFILE_ERROR.errorCode,
@@ -936,9 +1004,9 @@ class CreateControl @Autowired constructor(
     private fun startCloudResourceCountCheck(type: String, zone: String) =
         workspaceCommon.syncStartCloudResourceList().count {
             it.status == 11 &&
-                    it.machineType == type &&
-                    it.zoneId.replace(Regex("\\d+"), "") == zone &&
-                    it.locked != true
+                it.machineType == type &&
+                it.zoneId.replace(Regex("\\d+"), "") == zone &&
+                it.locked != true
         }
 
     private fun doPreparing(workspace: Workspace) {
@@ -955,7 +1023,8 @@ class CreateControl @Autowired constructor(
             centerName = userInfo?.centerName,
             groupName = userInfo?.groupName,
             dslContext = dslContext,
-            projectName = workspace.projectId ?: ""
+            projectName = workspace.projectId ?: "",
+            businessLineNmae = userInfo?.businessLineName
         )
     }
 
@@ -966,7 +1035,7 @@ class CreateControl @Autowired constructor(
             userId
         }
         return subUserId.replace(Regex("[@_]"), "-") +
-                "-${UUIDUtil.generate().takeLast(Constansts.workspaceNameSuffixLimitLen)}"
+            "-${UUIDUtil.generate().takeLast(Constansts.workspaceNameSuffixLimitLen)}"
     }
 
     // 判断用户定义的镜像是否在默认镜像白名单列表中

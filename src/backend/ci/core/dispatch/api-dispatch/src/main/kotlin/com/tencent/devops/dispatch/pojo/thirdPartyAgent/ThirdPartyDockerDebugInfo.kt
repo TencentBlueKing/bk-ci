@@ -1,24 +1,23 @@
 package com.tencent.devops.dispatch.pojo.thirdPartyAgent
 
 import com.tencent.devops.common.pipeline.type.agent.DockerOptions
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("第三方构建Docker登录调试信息")
+@Schema(title = "第三方构建Docker登录调试信息")
 data class ThirdPartyDockerDebugInfo(
-    @ApiModelProperty("项目id")
+    @get:Schema(title = "项目id")
     val projectId: String,
-    @ApiModelProperty("构建id")
+    @get:Schema(title = "构建id")
     val buildId: String,
-    @ApiModelProperty("构建机编排序号")
+    @get:Schema(title = "构建机编排序号")
     val vmSeqId: String,
-    @ApiModelProperty("工作空间")
+    @get:Schema(title = "工作空间")
     val workspace: String,
-    @ApiModelProperty("流水线ID")
+    @get:Schema(title = "流水线ID")
     val pipelineId: String,
-    @ApiModelProperty("调试用户")
+    @get:Schema(title = "调试用户")
     val debugUserId: String,
-    @ApiModelProperty("debugId")
+    @get:Schema(title = "debugId")
     val debugId: Long,
     val image: String,
     val credential: ThirdPartyBuildDockerInfoCredential?,

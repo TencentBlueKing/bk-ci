@@ -28,23 +28,22 @@
 package com.tencent.devops.environment.pojo
 
 import com.tencent.devops.environment.pojo.enums.SharedEnvType
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("VM虚拟机配额")
+@Schema(title = "VM虚拟机配额")
 data class SharedProjectInfo(
-    @ApiModelProperty("蓝盾项目Id", required = true)
+    @get:Schema(title = "蓝盾项目Id", required = true)
     val projectId: String,
-    @ApiModelProperty("工蜂项目ID", required = true)
+    @get:Schema(title = "工蜂项目ID", required = true)
     val gitProjectId: String?,
-    @ApiModelProperty("项目名称，工蜂项目则为groupName/projectName", required = true)
+    @get:Schema(title = "项目名称，工蜂项目则为groupName/projectName", required = true)
     val name: String,
-    @ApiModelProperty("类型，预留", required = true)
+    @get:Schema(title = "类型，预留", required = true)
     val type: SharedEnvType,
-    @ApiModelProperty("导入服务器配额", required = true)
+    @get:Schema(title = "导入服务器配额", required = true)
     val creator: String?,
-    @ApiModelProperty("允许使用DevCloud虚拟机功能", required = true)
+    @get:Schema(title = "允许使用DevCloud虚拟机功能", required = true)
     val createTime: Long,
-    @ApiModelProperty("DevCloud虚拟机配额", required = true)
+    @get:Schema(title = "DevCloud虚拟机配额", required = true)
     val updateTime: Long
 )

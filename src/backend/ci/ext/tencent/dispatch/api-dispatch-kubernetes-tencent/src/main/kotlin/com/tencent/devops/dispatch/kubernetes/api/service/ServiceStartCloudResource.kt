@@ -38,9 +38,9 @@ import com.tencent.devops.dispatch.kubernetes.pojo.remotedev.ResourceVmReq
 import com.tencent.devops.dispatch.kubernetes.pojo.remotedev.ResourceVmRespData
 import com.tencent.devops.remotedev.pojo.CgsResourceConfig
 import com.tencent.devops.remotedev.pojo.image.StandardVmImage
-import io.swagger.annotations.Api
-import io.swagger.annotations.ApiOperation
-import io.swagger.annotations.ApiParam
+import io.swagger.v3.oas.annotations.tags.Tag
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.Parameter
 import javax.ws.rs.Consumes
 import javax.ws.rs.GET
 import javax.ws.rs.POST
@@ -49,103 +49,103 @@ import javax.ws.rs.Produces
 import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
-@Api(tags = ["SERVICE_DISPATCH_KUBERNETES_REMOTE_DEV"], description = "START云桌面接口模块")
+@Tag(name = "SERVICE_DISPATCH_KUBERNETES_REMOTE_DEV", description = "START云桌面接口模块")
 @Path("/service/startCloud")
 @ServiceInterface("dispatch") // 指明接入到哪个微服务
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface ServiceStartCloudResource {
-    @ApiOperation("创建START云桌面用户")
+    @Operation(summary = "创建START云桌面用户")
     @GET
     @Path("/startCloud/user/create")
     fun createStartCloudUser(
-        @ApiParam("user", required = true)
+        @Parameter(description = "user", required = true)
         @QueryParam("user")
         user: String
     ): Result<Boolean>
 
-    @ApiOperation("同步更新START云桌面的资源池")
+    @Operation(summary = "同步更新START云桌面的资源池")
     @GET
     @Path("/startCloud/resourece/list")
     fun syncStartCloudResourceList(): Result<List<EnvironmentResourceData>>
 
-    @ApiOperation("根据cgsId获取资源信息")
+    @Operation(summary = "根据cgsId获取资源信息")
     @POST
     @Path("/startCloud/cgs")
     fun getCgsData(
-        @ApiParam("查询数据")
+        @Parameter(description = "查询数据")
         data: FetchWinPoolData
     ): Result<List<EnvironmentResourceData>>
 
-    @ApiOperation("根据cgsId确认是否云桌面已有使用中的记录")
+    @Operation(summary = "根据cgsId确认是否云桌面已有使用中的记录")
     @GET
     @Path("/workspace/check")
     fun checkCgsRunning(
-        @ApiParam("cgsId", required = true)
+        @Parameter(description = "cgsId", required = true)
         @QueryParam("cgsId")
         cgsId: String,
-        @ApiParam("status", required = true)
+        @Parameter(description = "status", required = true)
         @QueryParam("status")
         status: EnvStatusEnum? = EnvStatusEnum.running
     ): Result<Boolean>
 
-    @ApiOperation("获取CGS资源池的区域和机型列表")
+    @Operation(summary = "获取CGS资源池的区域和机型列表")
     @GET
     @Path("/windows/pool/config")
     fun getCgsConfig(): Result<CgsResourceConfig>
 
-    @ApiOperation("根据cgsId确认是否云桌面已有使用中的记录")
+    @Operation(summary = "根据cgsId确认是否云桌面已有使用中的记录")
     @POST
     @Path("/workspace/share")
     fun shareWorkspace(
-        @ApiParam("operator", required = true)
+        @Parameter(description = "operator", required = true)
         @QueryParam("operator")
         operator: String,
-        @ApiParam("cgsId", required = false)
+        @Parameter(description = "cgsId", required = false)
         @QueryParam("cgsId")
         cgsId: String,
         receivers: List<String>
     ): Result<String>
 
-    @ApiOperation("根据cgsId确认是否云桌面已有使用中的记录")
+    @Operation(summary = "根据cgsId确认是否云桌面已有使用中的记录")
     @POST
     @Path("/workspace/unShare")
     fun unShareWorkspace(
-        @ApiParam("operator", required = true)
+        @Parameter(description = "operator", required = true)
         @QueryParam("operator")
         operator: String,
-        @ApiParam("resourceId", required = true)
+        @Parameter(description = "resourceId", required = true)
         @QueryParam("resourceId")
         resourceId: String,
         receivers: List<String>
     ): Result<Boolean>
 
-    @ApiOperation("查询vm集群资源数")
+    @Operation(summary = "查询vm集群资源数")
     @POST
     @Path("/resource/vm")
     fun getResourceVm(
         data: ResourceVmReq
     ): Result<List<ResourceVmRespData>?>
 
-    @ApiOperation("根据eid拿到对应vm信息")
+    @Operation(summary = "根据eid拿到对应vm信息")
     @GET
     @Path("/workspace/eid")
     fun getWorkspaceInfoByEid(
-        @ApiParam("uid", required = true)
+        @Parameter(description = "uid", required = true)
         @QueryParam("eid")
         eid: String
     ): Result<WorkspaceInfo>
 
-    @ApiOperation("根据uid拿到对应task回调信息")
+    @Operation(summary = "根据uid拿到对应task回调信息")
     @GET
     @Path("/workspace/uid")
     fun getTaskInfoByUid(
-        @ApiParam("uid", required = true)
+        @Parameter(description = "uid", required = true)
         @QueryParam("uid")
         uid: String
     ): Result<TaskStatus?>
 
-    @ApiOperation("查询VM基础镜像")
+    @Operation(summary = "查询VM基础镜像")
     @POST
     @Path("/resource/standard/image")
     fun getVmStandardImages(): Result<List<StandardVmImage>?>

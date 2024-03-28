@@ -27,8 +27,10 @@
 
 package com.tencent.devops.environment.resources
 
+import com.tencent.bk.audit.annotations.AuditEntry
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.HashUtil
+import com.tencent.devops.common.auth.api.ActionId
 import com.tencent.devops.common.service.prometheus.BkTimed
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.environment.api.UserNodeResource
@@ -50,6 +52,7 @@ class UserNodeResourceImpl @Autowired constructor(private val nodeService: NodeS
         return Result(nodeService.hasCreatePermission(userId, projectId))
     }
 
+    @AuditEntry(actionId = ActionId.ENV_NODE_DELETE)
     override fun deleteNodes(userId: String, projectId: String, nodeHashIds: List<String>): Result<Boolean> {
         nodeService.deleteNodes(userId, projectId, nodeHashIds.map { HashUtil.decodeIdToLong(it) })
         return Result(true)
@@ -65,6 +68,7 @@ class UserNodeResourceImpl @Autowired constructor(private val nodeService: NodeS
         return Result(true)
     }
 
+    @AuditEntry(actionId = ActionId.ENV_NODE_EDIT)
     override fun updateDisplayName(
         userId: String,
         projectId: String,

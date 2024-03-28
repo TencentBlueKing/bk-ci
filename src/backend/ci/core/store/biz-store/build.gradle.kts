@@ -42,4 +42,6 @@ dependencies {
     api("net.coobird:thumbnailator")
     api("org.springframework.boot:spring-boot-starter-aop")
     api(project(":core:metrics:api-metrics"))
+    api(project(":core:misc:api-image"))
+    api(project(":core:notify:api-notify"))
 }

@@ -34,9 +34,9 @@ import com.tencent.devops.store.pojo.template.OpTemplateResp
 import com.tencent.devops.store.pojo.template.enums.OpTemplateSortTypeEnum
 import com.tencent.devops.store.pojo.template.enums.TemplateStatusEnum
 import com.tencent.devops.store.pojo.template.enums.TemplateTypeEnum
-import io.swagger.annotations.Api
-import io.swagger.annotations.ApiOperation
-import io.swagger.annotations.ApiParam
+import io.swagger.v3.oas.annotations.tags.Tag
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.Parameter
 import javax.ws.rs.Consumes
 import javax.ws.rs.GET
 import javax.ws.rs.HeaderParam
@@ -47,65 +47,65 @@ import javax.ws.rs.Produces
 import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
-@Api(tags = ["OP_PIPELINE_TEMPLATE"], description = "OP-流水线-模版")
+@Tag(name = "OP_PIPELINE_TEMPLATE", description = "OP-流水线-模版")
 @Path("/op/pipeline/template")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface OpTemplateResource {
 
-    @ApiOperation("获取市场模版")
+    @Operation(summary = "获取市场模版")
     @GET
     @Path("/list")
     fun listTemplates(
-        @ApiParam("userId", required = true)
+        @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("模版名称", required = false)
+        @Parameter(description = "模版名称", required = false)
         @QueryParam("templateName")
         templateName: String?,
-        @ApiParam("模版状态", required = false)
+        @Parameter(description = "模版状态", required = false)
         @QueryParam("templateStatus")
         templateStatus: TemplateStatusEnum?,
-        @ApiParam("模版类型", required = false)
+        @Parameter(description = "模版类型", required = false)
         @QueryParam("templateType")
         templateType: TemplateTypeEnum?,
-        @ApiParam("模版分类", required = false)
+        @Parameter(description = "模版分类", required = false)
         @QueryParam("classifyCode")
         classifyCode: String?,
-        @ApiParam("应用范畴", required = false)
+        @Parameter(description = "应用范畴", required = false)
         @QueryParam("category")
         category: String?,
-        @ApiParam("功能标签", required = false)
+        @Parameter(description = "功能标签", required = false)
         @QueryParam("labelCode")
         labelCode: String?,
-        @ApiParam("是否最新", required = false)
+        @Parameter(description = "是否最新", required = false)
         @QueryParam("latestFlag")
         latestFlag: Boolean?,
-        @ApiParam("排序", required = false)
+        @Parameter(description = "排序", required = false)
         @QueryParam("sortType")
         sortType: OpTemplateSortTypeEnum ? = OpTemplateSortTypeEnum.UPDATE_TIME,
-        @ApiParam("排序", required = false)
+        @Parameter(description = "排序", required = false)
         @QueryParam("desc")
         desc: Boolean?,
-        @ApiParam("页码", required = false)
+        @Parameter(description = "页码", required = false)
         @QueryParam("page")
         page: Int?,
-        @ApiParam("每页数量", required = false)
+        @Parameter(description = "每页数量", required = false)
         @QueryParam("pageSize")
         pageSize: Int?
     ): Result<OpTemplateResp>
 
-    @ApiOperation("审核模版")
+    @Operation(summary = "审核模版")
     @Path("/{templateId}/approve")
     @PUT
     fun approveTemplate(
-        @ApiParam(value = "用户ID", required = true)
+        @Parameter(description = "用户ID", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("ID", required = true)
+        @Parameter(description = "ID", required = true)
         @PathParam("templateId")
         templateId: String,
-        @ApiParam("审核模版请求报文")
+        @Parameter(description = "审核模版请求报文")
         approveReq: ApproveReq
     ): Result<Boolean>
 }

@@ -11,6 +11,7 @@ import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.notify.api.service.ServiceNotifyMessageTemplateResource
 import com.tencent.devops.notify.pojo.SendNotifyMessageTemplateRequest
 import com.tencent.devops.process.api.service.ServiceBuildResource
+import com.tencent.devops.remotedev.common.Constansts.ADMIN_NAME
 import com.tencent.devops.remotedev.common.exception.ErrorCodeEnum
 import com.tencent.devops.remotedev.dao.ExpertSupportDao
 import com.tencent.devops.remotedev.dao.WorkspaceDao
@@ -136,6 +137,7 @@ class ExpertSupportService @Autowired constructor(
                 info.buildParam.forEach { (k, v) ->
                     when (v) {
                         "ip" -> newParam[k] = ip
+                        "projectId" -> newParam[k] = data.projectId
                         else -> newParam[k] = v
                     }
                 }
@@ -226,7 +228,8 @@ class ExpertSupportService @Autowired constructor(
         // 分配
         workspaceCommon.shareWorkspace(
             workspaceName = workspaceName,
-            operator = "system",
+            projectId = record.projectId,
+            operator = ADMIN_NAME,
             assigns = listOf(
                 ProjectWorkspaceAssign(
                     userId = userId,

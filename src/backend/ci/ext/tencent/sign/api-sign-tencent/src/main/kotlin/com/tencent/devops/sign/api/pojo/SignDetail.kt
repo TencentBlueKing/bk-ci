@@ -27,15 +27,14 @@
 
 package com.tencent.devops.sign.api.pojo
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("签名状态查询结果")
+@Schema(title = "签名状态查询结果")
 data class SignDetail(
-    @ApiModelProperty("签名ID", required = true)
+    @get:Schema(title = "签名ID", required = true)
     val resignId: String,
-    @ApiModelProperty("是否完成", required = true)
+    @get:Schema(title = "是否完成", required = true)
     val status: String,
-    @ApiModelProperty("描述信息", required = true)
+    @get:Schema(title = "描述信息", required = true)
     val message: String
 )

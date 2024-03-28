@@ -1,16 +1,15 @@
 package com.tencent.devops.auth.pojo.dto
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("Oauth2授权操作信息请求实体")
+@Schema(title = "Oauth2授权操作信息请求实体")
 data class ScopeOperationDTO(
-    @ApiModelProperty("主键ID")
+    @get:Schema(title = "主键ID")
     val id: Int,
-    @ApiModelProperty("授权操作ID")
+    @get:Schema(title = "授权操作ID")
     val operationId: String,
-    @ApiModelProperty("授权操作中文名称")
+    @get:Schema(title = "授权操作中文名称")
     val operationNameCn: String,
-    @ApiModelProperty("授权操作英文名称")
+    @get:Schema(title = "授权操作英文名称")
     val operationNameEn: String
 )

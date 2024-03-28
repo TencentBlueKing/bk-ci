@@ -26,6 +26,8 @@ import com.tencent.devops.remotedev.pojo.ProjectWorkspaceFetchData
 import com.tencent.devops.remotedev.pojo.op.OpProjectWorkspaceAssignData
 import com.tencent.devops.remotedev.pojo.op.OpUpdateCCHostData
 import com.tencent.devops.remotedev.pojo.op.WindowsSpecResInfo
+import com.tencent.devops.remotedev.pojo.op.WorkspaceNotifyData
+import com.tencent.devops.remotedev.pojo.op.WorkspaceNotifyListData
 import com.tencent.devops.remotedev.pojo.windows.FetchOwnerAndAdminData
 import com.tencent.devops.remotedev.service.DesktopWorkspaceService
 import com.tencent.devops.remotedev.service.WindowsResourceConfigService
@@ -33,6 +35,7 @@ import com.tencent.devops.remotedev.service.WorkspaceService
 import com.tencent.devops.remotedev.service.WorkspaceXlsxExportService
 import com.tencent.devops.remotedev.service.gitproxy.GitProxyService
 import com.tencent.devops.remotedev.service.workspace.CreateControl
+import com.tencent.devops.remotedev.service.workspace.NotifyControl
 import com.tencent.devops.remotedev.service.workspace.WorkspaceCommon
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -50,6 +53,7 @@ class OpProjectWorkspaceResourceImpl @Autowired constructor(
     private val gitProxyService: GitProxyService,
     private val xlsxExportService: WorkspaceXlsxExportService,
     private val client: Client,
+    private val notifyControl: NotifyControl,
     private val redisOperation: RedisOperation
 ) : OpProjectWorkspaceResource {
     private val executor = Executors.newCachedThreadPool()
@@ -77,7 +81,8 @@ class OpProjectWorkspaceResourceImpl @Autowired constructor(
             client.get(ServiceTxProjectResource::class).updateRemotedev(
                 userId = userId,
                 projectCode = data.projectId,
-                addcloudDesktopNum = (data.ips?.size ?: 0) + (data.cgsIds?.size ?: 0)
+                addcloudDesktopNum = (data.ips?.size ?: 0) + (data.cgsIds?.size ?: 0),
+                enable = null
             )
         }
         // 判断是不是特殊机型，如果是特殊机型增加特殊机型份额
@@ -129,7 +134,7 @@ class OpProjectWorkspaceResourceImpl @Autowired constructor(
                     count = 1
                 )
             )
-            Thread.sleep(500)
+            Thread.sleep(200)
         }
 
         // 启动流水线完成剩下的分配工作
@@ -179,7 +184,7 @@ class OpProjectWorkspaceResourceImpl @Autowired constructor(
         userId: String,
         data: ProjectWorkspaceFetchData
     ): Result<Page<ProjectWorkspace>> {
-        return Result(workspaceService.getProjectWorkspaceList4Op(data))
+        return Result(workspaceService.getProjectWorkspaceList4Op(userId, data))
     }
 
     override fun fetchOwnerAndAdmin(
@@ -198,7 +203,19 @@ class OpProjectWorkspaceResourceImpl @Autowired constructor(
     }
 
     override fun exportProjectWorkspaceList(userId: String, data: ProjectWorkspaceFetchData): Response {
-        return xlsxExportService.exportProjectWorkspaceListOp(data)
+        return xlsxExportService.exportProjectWorkspaceListOp(userId, data)
+    }
+
+    override fun notify(userId: String, notifyData: WorkspaceNotifyData): Result<Boolean> {
+        notifyControl.notifyWorkspaceInfo(
+            userId = userId,
+            notifyData = notifyData
+        )
+        return Result(true)
+    }
+
+    override fun fetchNotifyList(userId: String, page: Int, pageSize: Int): Result<List<WorkspaceNotifyListData>> {
+        return Result(notifyControl.fetchNotifyList(page, pageSize))
     }
 
     companion object {

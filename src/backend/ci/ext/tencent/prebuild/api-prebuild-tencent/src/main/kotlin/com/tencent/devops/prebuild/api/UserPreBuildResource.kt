@@ -44,9 +44,9 @@ import com.tencent.devops.prebuild.pojo.UserProject
 import com.tencent.devops.prebuild.pojo.enums.PreBuildPluginType
 import com.tencent.devops.process.pojo.BuildId
 import com.tencent.devops.process.pojo.pipeline.ModelDetail
-import io.swagger.annotations.Api
-import io.swagger.annotations.ApiOperation
-import io.swagger.annotations.ApiParam
+import io.swagger.v3.oas.annotations.tags.Tag
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.Parameter
 import javax.ws.rs.Consumes
 import javax.ws.rs.DELETE
 import javax.ws.rs.GET
@@ -58,221 +58,221 @@ import javax.ws.rs.Produces
 import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
-@Api(tags = ["USER_PREBUILD"], description = "用户-PREBUILD资源")
+@Tag(name = "USER_PREBUILD", description = "用户-PREBUILD资源")
 @Path("/user/prebuild")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface UserPreBuildResource {
-    @ApiOperation("获取用户项目信息（蓝盾项目，CHANEL=PREBUILD）")
+    @Operation(summary = "获取用户项目信息（蓝盾项目，CHANEL=PREBUILD）")
     @GET
     @Path("/project/userProject")
     fun getUserProject(
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam(value = "accessToken", required = true)
+        @Parameter(description = "accessToken", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_ACCESS_TOKEN)
         accessToken: String
     ): Result<UserProject>
 
-    @ApiOperation("初始化Agent")
+    @Operation(summary = "初始化Agent")
     @POST
     @Path("/agent/init/{os}/{ip}/{hostName}")
     fun getOrCreateAgent(
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("操作系统类型", required = true)
+        @Parameter(description = "操作系统类型", required = true)
         @PathParam("os")
         os: OS,
-        @ApiParam("IP", required = true)
+        @Parameter(description = "IP", required = true)
         @PathParam("ip")
         ip: String,
-        @ApiParam("hostName", required = true)
+        @Parameter(description = "hostName", required = true)
         @PathParam("hostName")
         hostName: String,
-        @ApiParam("指定生成node的别名", required = false)
+        @Parameter(description = "指定生成node的别名", required = false)
         @QueryParam("nodeStingId")
         nodeStingId: String?
     ): Result<ThirdPartyAgentStaticInfo>
 
-    @ApiOperation("获取agent状态")
+    @Operation(summary = "获取agent状态")
     @GET
     @Path("/agent/status/{os}/{ip}/{hostName}")
     fun getAgentStatus(
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("操作系统类型", required = true)
+        @Parameter(description = "操作系统类型", required = true)
         @PathParam("os")
         os: OS,
-        @ApiParam("IP", required = true)
+        @Parameter(description = "IP", required = true)
         @PathParam("ip")
         ip: String,
-        @ApiParam("hostName", required = true)
+        @Parameter(description = "hostName", required = true)
         @PathParam("hostName")
         hostName: String
     ): Result<AgentStatus>
 
-    @ApiOperation("查询所有PreBuild项目")
+    @Operation(summary = "查询所有PreBuild项目")
     @GET
     @Path("/project/preProject/list")
     fun listPreProject(
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String
     ): Result<List<PreProject>>
 
-    @ApiOperation("查询prebuild项目是否存在")
+    @Operation(summary = "查询prebuild项目是否存在")
     @GET
     @Path("/project/preProject/nameExist")
     fun preProjectNameExist(
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("prebuild项目ID", required = true)
+        @Parameter(description = "prebuild项目ID", required = true)
         @QueryParam("preProjectId")
         preProjectId: String
     ): Result<Boolean>
 
-    @ApiOperation("手动启动构建")
+    @Operation(summary = "手动启动构建")
     @POST
     @Path("/project/preProject/{preProjectId}/startup")
     fun manualStartup(
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("preProjectId", required = true)
+        @Parameter(description = "preProjectId", required = true)
         @PathParam("preProjectId")
         preProjectId: String,
-        @ApiParam("yaml文件", required = true)
+        @Parameter(description = "yaml文件", required = true)
         startUpReq: StartUpReq
     ): Result<BuildId>
 
-    @ApiOperation("手动停止流水线")
+    @Operation(summary = "手动停止流水线")
     @DELETE
     @Path("/project/preProject/{preProjectId}/{buildId}/shutdown")
     fun manualShutdown(
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam(value = "accessToken", required = true)
+        @Parameter(description = "accessToken", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_ACCESS_TOKEN)
         accessToken: String,
-        @ApiParam("preProjectId", required = true)
+        @Parameter(description = "preProjectId", required = true)
         @PathParam("preProjectId")
         preProjectId: String,
-        @ApiParam("构建ID", required = true)
+        @Parameter(description = "构建ID", required = true)
         @PathParam("buildId")
         buildId: String
     ): Result<Boolean>
 
-    @ApiOperation("获取构建详情")
+    @Operation(summary = "获取构建详情")
     @GET
     @Path("/project/preProject/{preProjectId}/build/{buildId}")
     fun getBuildDetail(
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("preProjectId", required = true)
+        @Parameter(description = "preProjectId", required = true)
         @PathParam("preProjectId")
         preProjectId: String,
-        @ApiParam("构建ID", required = true)
+        @Parameter(description = "构建ID", required = true)
         @PathParam("buildId")
         buildId: String
     ): Result<ModelDetail>
 
-    @ApiOperation("根据构建ID获取初始化所有日志")
+    @Operation(summary = "根据构建ID获取初始化所有日志")
     @GET
     @Path("/project/{preProjectId}/build/{buildId}/logs")
     fun getBuildLogs(
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("preProjectId", required = true)
+        @Parameter(description = "preProjectId", required = true)
         @PathParam("preProjectId")
         preProjectId: String,
-        @ApiParam("构建ID", required = true)
+        @Parameter(description = "构建ID", required = true)
         @PathParam("buildId")
         buildId: String,
-        @ApiParam("是否拉取DEBUG日志", required = false)
+        @Parameter(description = "是否拉取DEBUG日志", required = false)
         @QueryParam("debugLog")
         debugLog: Boolean?
     ): Result<QueryLogs>
 
-    @ApiOperation("获取某行后的日志")
+    @Operation(summary = "获取某行后的日志")
     @GET
     @Path("/project/{preProjectId}/build/{buildId}/logs/after")
     fun getAfterLogs(
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("preProjectId", required = true)
+        @Parameter(description = "preProjectId", required = true)
         @PathParam("preProjectId")
         preProjectId: String,
-        @ApiParam("构建ID", required = true)
+        @Parameter(description = "构建ID", required = true)
         @PathParam("buildId")
         buildId: String,
-        @ApiParam("起始行号", required = true)
+        @Parameter(description = "起始行号", required = true)
         @QueryParam("start")
         start: Long,
-        @ApiParam("是否拉取DEBUG日志", required = false)
+        @Parameter(description = "是否拉取DEBUG日志", required = false)
         @QueryParam("debugLog")
         debugLog: Boolean?
     ): Result<QueryLogs>
 
-    @ApiOperation("获取build蓝盾链接")
+    @Operation(summary = "获取build蓝盾链接")
     @GET
     @Path("/build/link/{preProjectId}/{buildId}")
     fun getBuildLink(
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("preProjectId", required = true)
+        @Parameter(description = "preProjectId", required = true)
         @PathParam("preProjectId")
         preProjectId: String,
-        @ApiParam("构建ID", required = true)
+        @Parameter(description = "构建ID", required = true)
         @PathParam(value = "buildId")
         buildId: String
     ): Result<String>
 
-    @ApiOperation("获取build历史")
+    @Operation(summary = "获取build历史")
     @GET
     @Path("/history/{preProjectId}")
     fun getHistory(
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("preProjectId", required = true)
+        @Parameter(description = "preProjectId", required = true)
         @PathParam("preProjectId")
         preProjectId: String,
-        @ApiParam("第几页", required = false, defaultValue = "1")
+        @Parameter(description = "第几页", required = false, example = "1")
         @QueryParam("page")
         page: Int?,
-        @ApiParam("每页多少条", required = false, defaultValue = "20")
+        @Parameter(description = "每页多少条", required = false, example = "20")
         @QueryParam("pageSize")
         pageSize: Int?
     ): Result<List<HistoryResponse>>
 
-    @ApiOperation("校验yaml格式")
+    @Operation(summary = "校验yaml格式")
     @POST
     @Path("/checkYaml")
     fun checkYaml(
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("yaml内容", required = true)
+        @Parameter(description = "yaml内容", required = true)
         yaml: GitYamlString
     ): Result<String>
 
-    @ApiOperation("获取插件版本信息")
+    @Operation(summary = "获取插件版本信息")
     @GET
     @Path("/pluginVersion")
     fun getPluginVersion(
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("用户的编译器类型", required = true)
+        @Parameter(description = "用户的编译器类型", required = true)
         @QueryParam("pluginType")
         pluginType: PreBuildPluginType
     ): Result<PrePluginVersion?>

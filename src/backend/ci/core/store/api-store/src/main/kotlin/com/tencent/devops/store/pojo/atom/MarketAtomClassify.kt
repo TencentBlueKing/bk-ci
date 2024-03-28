@@ -27,21 +27,20 @@
 
 package com.tencent.devops.store.pojo.atom
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("流水线-插件分类信息")
+@Schema(title = "流水线-插件分类信息")
 data class MarketAtomClassify(
-    @ApiModelProperty("插件分类ID", required = true)
+    @get:Schema(title = "插件分类ID", required = true)
     val id: String,
-    @ApiModelProperty("插件分类编码", required = true)
+    @get:Schema(title = "插件分类编码", required = true)
     val classifyCode: String,
-    @ApiModelProperty("插件分类名称", required = true)
+    @get:Schema(title = "插件分类名称", required = true)
     val classifyName: String,
-    @ApiModelProperty("插件数量", required = true)
+    @get:Schema(title = "插件数量", required = true)
     val atomNum: Int,
-    @ApiModelProperty("创建日期")
+    @get:Schema(title = "创建日期")
     val createTime: Long = 0,
-    @ApiModelProperty("更新日期")
+    @get:Schema(title = "更新日期")
     val updateTime: Long = 0
 )

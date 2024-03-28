@@ -1,23 +1,23 @@
 package com.tencent.devops.notify.tencentcloud.pojo
 
 import com.fasterxml.jackson.annotation.JsonProperty
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
 data class EmailBody(
     @JsonProperty("Destination")
-    @ApiModelProperty("收件者信息")
+    @get:Schema(title = "收件者信息")
     val destination: List<String>,
     @JsonProperty("FromEmailAddress")
-    @ApiModelProperty("发送者信息")
+    @get:Schema(title = "发送者信息")
     val fromEmailAddress: String, // QCLOUDTEAM <noreply@mail.qcloud.com>
     @JsonProperty("ReplyToAddresses")
-    @ApiModelProperty("回复地址")
+    @get:Schema(title = "回复地址")
     val replyToAddresses: String? = null, // qcloud@tencent.com
     @JsonProperty("Template")
-    @ApiModelProperty("邮件模板内容")
+    @get:Schema(title = "邮件模板内容")
     val template: Template,
     @JsonProperty("Subject")
-    @ApiModelProperty("主题")
+    @get:Schema(title = "主题")
     val subject: String // YourTestSubject
 )
 

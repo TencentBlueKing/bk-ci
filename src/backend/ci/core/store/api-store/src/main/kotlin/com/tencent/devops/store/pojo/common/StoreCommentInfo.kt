@@ -27,33 +27,32 @@
 
 package com.tencent.devops.store.pojo.common
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("评论信息")
+@Schema(title = "评论信息")
 data class StoreCommentInfo(
-    @ApiModelProperty("评论ID", required = true)
+    @get:Schema(title = "评论ID", required = true)
     val commentId: String,
-    @ApiModelProperty("评论者", required = true)
+    @get:Schema(title = "评论者", required = true)
     val commenter: String,
-    @ApiModelProperty("评论内容", required = true)
+    @get:Schema(title = "评论内容", required = true)
     val commentContent: String,
-    @ApiModelProperty("评论者组织架构信息", required = true)
+    @get:Schema(title = "评论者组织架构信息", required = true)
     val commenterDept: String,
-    @ApiModelProperty("评论者头像url地址", required = false)
+    @get:Schema(title = "评论者头像url地址", required = false)
     val profileUrl: String,
-    @ApiModelProperty("点赞个数", required = true)
+    @get:Schema(title = "点赞个数", required = true)
     val praiseCount: Int,
-    @ApiModelProperty("点赞用户列表", required = false)
+    @get:Schema(title = "点赞用户列表", required = false)
     val praiseUsers: List<String>?,
-    @ApiModelProperty("是否已点赞 true:是，false:否", required = true)
+    @get:Schema(title = "是否已点赞 true:是，false:否", required = true)
     val praiseFlag: Boolean,
-    @ApiModelProperty("评分", required = true)
+    @get:Schema(title = "评分", required = true)
     val score: Int,
-    @ApiModelProperty("评论回复个数", required = true)
+    @get:Schema(title = "评论回复个数", required = true)
     val replyCount: Int,
-    @ApiModelProperty("评论创建时间", required = true)
+    @get:Schema(title = "评论创建时间", required = true)
     val commentTime: Long,
-    @ApiModelProperty("评论更新时间", required = true)
+    @get:Schema(title = "评论更新时间", required = true)
     val updateTime: Long
 )

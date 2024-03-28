@@ -47,12 +47,13 @@ type NodeMatch struct {
 }
 
 type Container struct {
-	Image        string
-	Resources    corev1.ResourceRequirements
-	Env          []corev1.EnvVar
-	Command      []string
-	VolumeMounts []corev1.VolumeMount
-	Args         []string
+	Image         string
+	Resources     corev1.ResourceRequirements
+	Env           []corev1.EnvVar
+	Command       []string
+	VolumeMounts  []corev1.VolumeMount
+	Args          []string
+	LivenessProbe *corev1.Probe
 }
 
 type DockerSecret struct {

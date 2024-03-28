@@ -27,13 +27,12 @@
 
 package com.tencent.devops.plugin.pojo.tcm
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("tcm应用类型")
+@Schema(title = "tcm应用类型")
 data class TcmApp(
-    @ApiModelProperty("应用id")
+    @get:Schema(title = "应用id")
     val buid: String,
-    @ApiModelProperty("应用名称")
+    @get:Schema(title = "应用名称")
     val buname: String
 )

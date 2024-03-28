@@ -1,10 +1,9 @@
 package com.tencent.devops.experience.pojo.outer
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("外部用户--选择信息")
+@Schema(title = "外部用户--选择信息")
 data class OuterSelectorVO(
-    @ApiModelProperty("ID")
+    @get:Schema(title = "ID")
     val username: String
 )

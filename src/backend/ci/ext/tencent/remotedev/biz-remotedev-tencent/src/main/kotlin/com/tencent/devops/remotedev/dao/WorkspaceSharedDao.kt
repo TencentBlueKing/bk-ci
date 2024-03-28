@@ -74,7 +74,7 @@ class WorkspaceSharedDao {
 
     fun batchFetchWorkspaceSharedInfo(
         dslContext: DSLContext,
-        workspaceNames: List<String>
+        workspaceNames: Set<String>
     ): List<WorkspaceShared> {
         with(TWorkspaceShared.T_WORKSPACE_SHARED) {
             return dslContext.selectFrom(this).where(WORKSPACE_NAME.`in`(workspaceNames)).fetch(sharedMapper)

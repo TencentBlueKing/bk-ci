@@ -27,13 +27,12 @@
 
 package com.tencent.devops.stream.pojo
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("Git事件类型")
+@Schema(title = "Git事件类型")
 data class EventTypeConf(
-    @ApiModelProperty("事件ID")
+    @get:Schema(title = "事件ID")
     val id: String,
-    @ApiModelProperty("事件名称")
+    @get:Schema(title = "事件名称")
     val name: String
 )

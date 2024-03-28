@@ -29,24 +29,23 @@ package com.tencent.devops.common.pipeline.element
 
 import com.tencent.devops.common.pipeline.element.ktlint.KtlintReporter
 import com.tencent.devops.common.pipeline.pojo.element.Element
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("ktlint代码静态检查", description = KtlintStyleElement.classType)
+@Schema(title = "ktlint代码静态检查")
 class KtlintStyleElement(
-    @ApiModelProperty("任务名称", required = true)
+    @get:Schema(title = "任务名称", required = true)
     override val name: String = "执行Linux脚本",
-    @ApiModelProperty("id", required = false)
+    @get:Schema(title = "id", required = false)
     override var id: String? = null,
-    @ApiModelProperty("状态", required = false)
+    @get:Schema(title = "状态", required = false)
     override var status: String? = null,
-    @ApiModelProperty("代码存放路径", required = false)
+    @get:Schema(title = "代码存放路径", required = false)
     val path: String? = null,
-    @ApiModelProperty("ktlint要检查的文件pattern", required = false)
+    @get:Schema(title = "ktlint要检查的文件pattern", required = false)
     val patterns: String?,
-    @ApiModelProperty("ktlint命令行参数", required = false)
+    @get:Schema(title = "ktlint命令行参数", required = false)
     val flags: String?,
-    @ApiModelProperty("ktlint reporters", required = false)
+    @get:Schema(title = "ktlint reporters", required = false)
     val reporters: List<KtlintReporter>?
 ) : Element(name, id, status) {
 

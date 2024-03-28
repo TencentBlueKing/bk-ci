@@ -35,9 +35,9 @@ import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.web.annotation.BkApiPermission
 import com.tencent.devops.common.web.constant.BkApiHandleType
 import com.tencent.devops.process.pojo.Pipeline
-import io.swagger.annotations.Api
-import io.swagger.annotations.ApiOperation
-import io.swagger.annotations.ApiParam
+import io.swagger.v3.oas.annotations.tags.Tag
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.Parameter
 import javax.ws.rs.Consumes
 import javax.ws.rs.HeaderParam
 import javax.ws.rs.POST
@@ -46,33 +46,33 @@ import javax.ws.rs.Produces
 import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
-@Api(tags = ["SERVICE_PIPELINE_V2"], description = "服务-流水线资源-V2")
+@Tag(name = "SERVICE_PIPELINE_V2", description = "服务-流水线资源-V2")
 @Path("/service/v2/projectPipelines/")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface ServiceProjectPipelineResource {
 
-    @ApiOperation("根据多个项目获取流水线编排列表")
+    @Operation(summary = "根据多个项目获取流水线编排列表")
     @POST
     @Path("/projectIds")
     @BkApiPermission([BkApiHandleType.API_NO_AUTH_CHECK])
     fun listPipelinesByProjectIds(
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("第几页", required = false, defaultValue = "1")
+        @Parameter(description = "第几页", required = false, example = "1")
         @QueryParam("page")
         page: Int = 1,
-        @ApiParam("每页多少条", required = false, defaultValue = "20")
+        @Parameter(description = "每页多少条", required = false, example = "20")
         @QueryParam("pageSize")
         pageSize: Int = 20,
-        @ApiParam("渠道号，默认为DS", required = false)
+        @Parameter(description = "渠道号，默认为DS", required = false)
         @QueryParam("channelCode")
         channelCode: ChannelCode? = ChannelCode.BS,
-        @ApiParam("是否校验权限", required = false)
+        @Parameter(description = "是否校验权限", required = false)
         @QueryParam("checkPermission")
         checkPermission: Boolean? = true,
-        @ApiParam("项目id列表", required = true)
+        @Parameter(description = "项目id列表", required = true)
         projectIds: Set<String>
     ): Result<Page<Pipeline>>
 }

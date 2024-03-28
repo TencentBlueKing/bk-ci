@@ -34,6 +34,7 @@ import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.remotedev.api.user.UserProjectWorkspaceImageResource
 import com.tencent.devops.remotedev.pojo.image.ProjectImage
 import com.tencent.devops.remotedev.pojo.image.StandardVmImage
+import com.tencent.devops.remotedev.pojo.image.UpdateImageNameInfo
 import com.tencent.devops.remotedev.service.projectworkspace.image.ImageManageService
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -42,7 +43,6 @@ import org.springframework.beans.factory.annotation.Autowired
 @Suppress("ALL")
 class UserProjectWorkspaceImageResourceImpl @Autowired constructor(
     private val projectImageManageService: ImageManageService
-
 ) : UserProjectWorkspaceImageResource {
     companion object {
         val logger = LoggerFactory.getLogger(UserProjectWorkspaceImageResourceImpl::class.java)!!
@@ -61,5 +61,10 @@ class UserProjectWorkspaceImageResourceImpl @Autowired constructor(
     override fun getVmStandardImages(userId: String, projectId: String): Result<List<StandardVmImage>> {
         logger.info("UserImageManageResourceImpl|getProjectImageList|userId|$userId|projectId|$projectId")
         return Result(projectImageManageService.getVmStandardImages())
+    }
+
+    override fun updateImageName(userId: String, projectId: String, data: UpdateImageNameInfo): Result<Boolean> {
+        projectImageManageService.updateImageName(data.id, data.imageName)
+        return Result(true)
     }
 }

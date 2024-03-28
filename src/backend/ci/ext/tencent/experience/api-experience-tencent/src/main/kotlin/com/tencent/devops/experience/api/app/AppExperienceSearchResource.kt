@@ -34,9 +34,9 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.experience.pojo.search.SearchAppInfoVO
 import com.tencent.devops.experience.pojo.search.SearchRecommendVO
-import io.swagger.annotations.Api
-import io.swagger.annotations.ApiOperation
-import io.swagger.annotations.ApiParam
+import io.swagger.v3.oas.annotations.tags.Tag
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.Parameter
 import javax.ws.rs.Consumes
 import javax.ws.rs.GET
 import javax.ws.rs.HeaderParam
@@ -46,44 +46,44 @@ import javax.ws.rs.Produces
 import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
-@Api(tags = ["APP_EXPERIENCE_SEARCH"], description = "版本体验-搜索")
+@Tag(name = "APP_EXPERIENCE_SEARCH", description = "版本体验-搜索")
 @Path("/app/experiences/search")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface AppExperienceSearchResource {
 
-    @ApiOperation("搜索")
+    @Operation(summary = "搜索")
     @Path("/{experienceName}")
     @GET
     fun search(
-        @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("平台", required = true)
+        @Parameter(description = "平台", required = true)
         @HeaderParam(AUTH_HEADER_PLATFORM)
         platform: Int?,
-        @ApiParam("组织", required = false)
+        @Parameter(description = "组织", required = false)
         @HeaderParam(AUTH_HEADER_DEVOPS_ORGANIZATION_NAME)
         organization: String? = null,
-        @ApiParam("搜索内容(UrlEncode)", required = true)
+        @Parameter(description = "搜索内容(UrlEncode)", required = true)
         @PathParam("experienceName")
         experienceName: String,
-        @ApiParam("是否搜索公开体验", required = true)
+        @Parameter(description = "是否搜索公开体验", required = true)
         @QueryParam("experiencePublic")
         experiencePublic: Boolean,
-        @ApiParam("是否搜索minigame", required = true)
+        @Parameter(description = "是否搜索minigame", required = true)
         @QueryParam("minigame")
         minigame: Boolean? = null
     ): Result<List<SearchAppInfoVO>>
 
-    @ApiOperation("推荐搜索")
+    @Operation(summary = "推荐搜索")
     @Path("/recommends")
     @GET
     fun recommends(
-        @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("平台", required = true)
+        @Parameter(description = "平台", required = true)
         @HeaderParam(AUTH_HEADER_PLATFORM)
         platform: Int?
     ): Result<List<SearchRecommendVO>>

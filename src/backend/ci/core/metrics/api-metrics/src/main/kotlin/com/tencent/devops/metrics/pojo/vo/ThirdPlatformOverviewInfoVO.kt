@@ -30,15 +30,14 @@ package com.tencent.devops.metrics.pojo.vo
 import com.tencent.devops.metrics.pojo.`do`.CodeCheckInfoDO
 import com.tencent.devops.metrics.pojo.`do`.QualityInfoDO
 import com.tencent.devops.metrics.pojo.`do`.TurboInfoDO
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("第三方平台度量概览")
+@Schema(title = "第三方平台度量概览")
 data class ThirdPlatformOverviewInfoVO(
-    @ApiModelProperty("CodeCC度量信息")
+    @get:Schema(title = "CodeCC度量信息")
     val codeCheckInfo: CodeCheckInfoDO,
-    @ApiModelProperty("质量红线度量信息")
+    @get:Schema(title = "质量红线度量信息")
     val qualityInfo: QualityInfoDO,
-    @ApiModelProperty("编译加速度量信息")
+    @get:Schema(title = "编译加速度量信息")
     val turboInfo: TurboInfoDO
 )

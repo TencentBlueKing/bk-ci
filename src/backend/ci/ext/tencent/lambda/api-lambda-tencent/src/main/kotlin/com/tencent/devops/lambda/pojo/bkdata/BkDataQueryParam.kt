@@ -26,13 +26,12 @@
  */
 package com.tencent.devops.lambda.pojo.bkdata
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("数据平台查询接口参数")
+@Schema(title = "数据平台查询接口参数")
 data class BkDataQueryParam(
-    @ApiModelProperty("查询SQL", required = true)
+    @get:Schema(title = "查询SQL", required = true)
     val sql: String,
-    @ApiModelProperty("查询引擎", required = false)
+    @get:Schema(title = "查询引擎", required = false)
     var preferStorage: String? = null
 )

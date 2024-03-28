@@ -27,17 +27,16 @@
 
 package com.tencent.devops.engine.api.pojo
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("心跳信息")
+@Schema(title = "心跳信息")
 data class HeartBeatInfo(
-    @ApiModelProperty("项目ID")
+    @get:Schema(title = "项目ID")
     val projectId: String,
-    @ApiModelProperty("构建ID")
+    @get:Schema(title = "构建ID")
     val buildId: String,
-    @ApiModelProperty("项目ID")
+    @get:Schema(title = "项目ID")
     val vmSeqId: String,
-    @ApiModelProperty("取消的task任务的id集合")
+    @get:Schema(title = "取消的task任务的id集合")
     val cancelTaskIds: Set<String>? = null
 )

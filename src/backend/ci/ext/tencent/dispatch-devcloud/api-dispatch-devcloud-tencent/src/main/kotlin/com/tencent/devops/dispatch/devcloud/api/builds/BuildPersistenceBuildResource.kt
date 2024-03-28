@@ -32,9 +32,9 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_PROJECT_ID
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.dispatch.devcloud.pojo.persistence.PersistenceBuildInfo
 import com.tencent.devops.dispatch.devcloud.pojo.persistence.PersistenceBuildWithStatus
-import io.swagger.annotations.Api
-import io.swagger.annotations.ApiOperation
-import io.swagger.annotations.ApiParam
+import io.swagger.v3.oas.annotations.tags.Tag
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.Parameter
 import javax.ws.rs.Consumes
 import javax.ws.rs.GET
 import javax.ws.rs.HeaderParam
@@ -43,35 +43,35 @@ import javax.ws.rs.Path
 import javax.ws.rs.Produces
 import javax.ws.rs.core.MediaType
 
-@Api(tags = ["BUILD_DEVCLOUD_AGENT_BUILD"], description = "DevCloud接入agent资源")
+@Tag(name = "BUILD_DEVCLOUD_AGENT_BUILD", description = "DevCloud接入agent资源")
 @Path("/buildAgent/agent/devcloud")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface BuildPersistenceBuildResource {
 
-    @ApiOperation("尝试启动构建")
+    @Operation(summary = "尝试启动构建")
     @GET
     @Path("/startup")
     fun startBuild(
-        @ApiParam("项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_PROJECT_ID)
         projectId: String,
-        @ApiParam("Agent ID", required = true)
+        @Parameter(description = "Agent ID", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_AGENT_ID)
         agentId: String
     ): Result<PersistenceBuildInfo?>
 
-    @ApiOperation("worker构建结束")
+    @Operation(summary = "worker构建结束")
     @POST
     @Path("/workerBuildFinish")
     fun workerBuildFinish(
-        @ApiParam("项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_PROJECT_ID)
         projectId: String,
-        @ApiParam("Agent ID", required = true)
+        @Parameter(description = "Agent ID", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_AGENT_ID)
         agentId: String,
-        @ApiParam("构建信息", required = true)
+        @Parameter(description = "构建信息", required = true)
         buildInfo: PersistenceBuildWithStatus
     ): Result<Boolean>
 }

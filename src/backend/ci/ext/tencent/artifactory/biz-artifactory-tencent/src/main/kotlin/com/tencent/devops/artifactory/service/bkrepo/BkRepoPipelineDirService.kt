@@ -58,9 +58,9 @@ class BkRepoPipelineDirService @Autowired constructor(
         val isRootDir = pipelineService.isRootDir(normalizedPath)
         val isPipelineDir = pipelineService.isPipelineDir(normalizedPath)
         val pageSize = when {
-            isRootDir -> 500      // pipeline
-            isPipelineDir -> 200  // build
-            else -> 5000          // others
+            isRootDir -> 500 // pipeline
+            isPipelineDir -> 200 // build
+            else -> 5000 // others
         }
         val fileList = bkRepoClient.listFileByQuery(
             userId = userId,

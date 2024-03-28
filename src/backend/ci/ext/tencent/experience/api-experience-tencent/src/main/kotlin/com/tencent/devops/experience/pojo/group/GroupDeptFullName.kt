@@ -1,12 +1,11 @@
 package com.tencent.devops.experience.pojo.group
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("体验组--组织架构")
+@Schema(title = "体验组--组织架构")
 data class GroupDeptFullName(
-    @ApiModelProperty("名称")
+    @get:Schema(title = "名称")
     val name: String,
-    @ApiModelProperty("组织架构")
+    @get:Schema(title = "组织架构")
     val deptFullName: String
 )

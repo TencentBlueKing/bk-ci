@@ -28,8 +28,7 @@
 package com.tencent.devops.support.model.approval
 
 import com.fasterxml.jackson.annotation.JsonProperty
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
 /**
  * ESB创建微信审批单参数
@@ -38,36 +37,36 @@ import io.swagger.annotations.ApiModelProperty
  * @version: $Revision$ $Date$ $LastChangedBy$
  *.
  */
-@ApiModel("ESB创建微信审批单参数")
+@Schema(title = "ESB创建微信审批单参数")
 open class CreateEsbWechatApproveParam(
-    @ApiModelProperty("app标识", required = true, name = "app_code")
+    @get:Schema(title = "app标识", required = true, description = "app_code")
     @JsonProperty("app_code")
     val appCode: String = "",
-    @ApiModelProperty("app私密key", required = true, name = "app_secret")
+    @get:Schema(title = "app私密key", required = true, description = "app_secret")
     @JsonProperty("app_secret")
     val appSecret: String = "",
-    @ApiModelProperty("用户access_token", required = false, name = "access_token")
+    @get:Schema(title = "用户access_token", required = false, description = "access_token")
     @JsonProperty("access_token")
     var accessToken: String? = null,
-    @ApiModelProperty("内部版用户登录态", required = false, name = "bk_ticket")
+    @get:Schema(title = "内部版用户登录态", required = false, description = "bk_ticket")
     @JsonProperty("bk_ticket")
     var bkTicket: String? = null,
-    @ApiModelProperty("操作者RTX英文名", required = false, name = "operator")
+    @get:Schema(title = "操作者RTX英文名", required = false, description = "operator")
     @JsonProperty("operator")
     var operator: String? = null,
-    @ApiModelProperty("蓝鲸APP名称", required = true, name = "app_name")
+    @get:Schema(title = "蓝鲸APP名称", required = true, description = "app_name")
     @JsonProperty("app_name")
     val appName: String,
-    @ApiModelProperty("审批人，多个以逗号分隔", required = true, name = "verifier")
+    @get:Schema(title = "审批人，多个以逗号分隔", required = true, description = "verifier")
     @JsonProperty("verifier")
     val verifier: String,
-    @ApiModelProperty("消息内容", required = true, name = "message")
+    @get:Schema(title = "消息内容", required = true, description = "message")
     @JsonProperty("message")
     val message: String,
-    @ApiModelProperty("任务ID", required = true, name = "taskid")
+    @get:Schema(title = "任务ID", required = true, description = "taskid")
     @JsonProperty("taskid")
     val taskId: String,
-    @ApiModelProperty("回调URL", required = false, name = "url")
+    @get:Schema(title = "回调URL", required = false, description = "url")
     @JsonProperty("url")
     val url: String? = null
 )

@@ -29,9 +29,9 @@ package com.tencent.devops.stream.api.service
 
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.stream.pojo.StreamBasicSetting
-import io.swagger.annotations.Api
-import io.swagger.annotations.ApiOperation
-import io.swagger.annotations.ApiParam
+import io.swagger.v3.oas.annotations.tags.Tag
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.Parameter
 import javax.ws.rs.Consumes
 import javax.ws.rs.GET
 import javax.ws.rs.Path
@@ -39,17 +39,17 @@ import javax.ws.rs.PathParam
 import javax.ws.rs.Produces
 import javax.ws.rs.core.MediaType
 
-@Api(tags = ["SERVICE_STREAM_SETTING"], description = "service-setting")
+@Tag(name = "SERVICE_STREAM_SETTING", description = "service-setting")
 @Path("/service/stream/basic/setting")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface ServiceStreamBasicSettingResource {
 
-    @ApiOperation("查询Stream项目配置")
+    @Operation(summary = "查询Stream项目配置")
     @GET
     @Path("/{projectId}")
     fun getStreamConf(
-        @ApiParam(value = "蓝盾项目ID", required = true)
+        @Parameter(description = "蓝盾项目ID", required = true)
         @PathParam("projectId")
         projectId: String
     ): Result<StreamBasicSetting?>

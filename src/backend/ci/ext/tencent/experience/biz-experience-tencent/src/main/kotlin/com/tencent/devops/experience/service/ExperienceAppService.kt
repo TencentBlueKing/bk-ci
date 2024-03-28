@@ -29,6 +29,9 @@ package com.tencent.devops.experience.service
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
+import com.tencent.bk.audit.annotations.ActionAuditRecord
+import com.tencent.bk.audit.annotations.AuditInstanceRecord
+import com.tencent.bk.audit.context.ActionAuditContext
 import com.tencent.devops.artifactory.api.service.ServiceArtifactoryResource
 import com.tencent.devops.artifactory.pojo.enums.ArtifactoryType
 import com.tencent.devops.artifactory.pojo.enums.Permission
@@ -40,6 +43,9 @@ import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.api.util.VersionUtil
 import com.tencent.devops.common.api.util.timestamp
 import com.tencent.devops.common.api.util.timestampmilli
+import com.tencent.devops.common.audit.ActionAuditContent
+import com.tencent.devops.common.auth.api.ActionId
+import com.tencent.devops.common.auth.api.ResourceTypeId
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.experience.constant.ExperienceConditionEnum
@@ -66,7 +72,6 @@ import com.tencent.devops.model.experience.tables.records.TExperienceRecord
 import com.tencent.devops.project.api.service.ServiceProjectResource
 import org.apache.commons.lang3.StringUtils
 import org.jooq.DSLContext
-import org.jooq.impl.DSL.timestamp
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import java.net.URI
@@ -112,6 +117,13 @@ class ExperienceAppService(
     }
 
     @SuppressWarnings("ComplexMethod", "LongMethod")
+    @ActionAuditRecord(
+        actionId = ActionId.EXPERIENCE_TASK_CREATE,
+        instance = AuditInstanceRecord(
+            resourceType = ResourceTypeId.EXPERIENCE_TASK
+        ),
+        content = ActionAuditContent.EXPERIENCE_TASK_CREATE_CONTENT
+    )
     fun detail(
         userId: String,
         experienceHashId: String,
@@ -123,6 +135,7 @@ class ExperienceAppService(
         var experienceId = HashUtil.decodeIdToLong(experienceHashId)
         var experience = experienceDao.get(dslContext, experienceId)
         val projectId = experience.projectId
+
         val bundleIdentifier = experience.bundleIdentifier
         val platform = experience.platform
         val newestPublic = experienceBaseService.getNewestPublic(projectId, bundleIdentifier, platform)
@@ -178,7 +191,12 @@ class ExperienceAppService(
 
         // 同步文件大小到数据表
         syncExperienceSize(experience, projectId, artifactoryType, path)
-
+        // audit
+        ActionAuditContext.current()
+            .setInstanceId(experienceId.toString())
+            .setInstanceName(experience.experienceName)
+            .setScopeId(projectId)
+            .addAttribute(ActionAuditContent.PROJECT_CODE_TEMPLATE, projectId)
         return AppExperienceDetail(
             experienceHashId = experienceHashId,
             size = experience.size,
@@ -205,8 +223,8 @@ class ExperienceAppService(
             experienceCondition = experienceCondition.id,
             appScheme = experience.scheme,
             lastDownloadHashId = lastDownloadMap[experience.projectId +
-                    experience.bundleIdentifier +
-                    experience.platform]
+                experience.bundleIdentifier +
+                experience.platform]
                 ?.let { l -> HashUtil.encodeLongId(l) } ?: ""
         )
     }

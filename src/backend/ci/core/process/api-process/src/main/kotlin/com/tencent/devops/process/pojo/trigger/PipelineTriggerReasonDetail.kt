@@ -28,17 +28,16 @@
 
 package com.tencent.devops.process.pojo.trigger
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("流水线触发原因详情")
+@Schema(title = "流水线触发原因详情")
 data class PipelineTriggerReasonDetail(
-    @ApiModelProperty("触发插件ID")
+    @get:Schema(title = "触发插件ID")
     val elementId: String?,
-    @ApiModelProperty("触发插件Code")
+    @get:Schema(title = "触发插件Code")
     val elementAtomCode: String,
-    @ApiModelProperty("触发插件名称")
+    @get:Schema(title = "触发插件名称")
     val elementName: String,
-    @ApiModelProperty("触发原因，JSON字符串，便于国际化")
+    @get:Schema(title = "触发原因，JSON字符串，便于国际化")
     val reasonMsg: String
 )

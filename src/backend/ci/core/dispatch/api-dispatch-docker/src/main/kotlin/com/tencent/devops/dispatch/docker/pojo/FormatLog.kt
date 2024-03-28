@@ -27,16 +27,15 @@
 
 package com.tencent.devops.dispatch.docker.pojo
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("Log消息体模型")
+@Schema(title = "Log消息体模型")
 data class FormatLog(
-    @ApiModelProperty("日志类型")
+    @get:Schema(title = "日志类型")
     val logType: LogType,
-    @ApiModelProperty("处理时间")
+    @get:Schema(title = "处理时间")
     val washTime: String,
-    @ApiModelProperty("日志信息map")
+    @get:Schema(title = "日志信息map")
     val logMessageMap: Map<String, String>
 )
 

@@ -32,14 +32,11 @@ import com.tencent.devops.common.auth.api.AuthResourceApi
 import com.tencent.devops.common.auth.code.CodeAuthServiceCode
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.client.ClientTokenService
-import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.repository.dao.RepositoryDao
 import com.tencent.devops.repository.service.RepositoryPermissionService
-import com.tencent.devops.repository.service.permission.BluekingRepositoryPermissionService
 import com.tencent.devops.repository.service.permission.MockRepositoryPermissionService
 import com.tencent.devops.repository.service.permission.RbacRepositoryPermissionService
 import com.tencent.devops.repository.service.permission.StreamRepositoryPermissionServiceImpl
-import com.tencent.devops.repository.service.permission.V3RepositoryPermissionService
 import org.jooq.DSLContext
 import org.springframework.boot.autoconfigure.AutoConfigureOrder
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
@@ -55,18 +52,6 @@ import org.springframework.core.Ordered
 class RepositoryPermConfiguration {
 
     @Bean
-    @ConditionalOnProperty(prefix = "auth", name = ["idProvider"], havingValue = "bk_login")
-    fun repositoryPermissionService(
-        authResourceApi: AuthResourceApi,
-        authPermissionApi: AuthPermissionApi,
-        codeAuthServiceCode: CodeAuthServiceCode
-    ): RepositoryPermissionService = BluekingRepositoryPermissionService(
-        authResourceApi = authResourceApi,
-        authPermissionApi = authPermissionApi,
-        codeAuthServiceCode = codeAuthServiceCode
-    )
-
-    @Bean
     @ConditionalOnProperty(prefix = "auth", name = ["idProvider"], havingValue = "sample")
     fun mockRepositoryPermissionService(
         dslContext: DSLContext,
@@ -80,26 +65,6 @@ class RepositoryPermConfiguration {
         authResourceApi = authResourceApi,
         authPermissionApi = authPermissionApi,
         codeAuthServiceCode = codeAuthServiceCode
-    )
-
-    @Bean
-    @ConditionalOnProperty(prefix = "auth", name = ["idProvider"], havingValue = "bk_login_v3")
-    fun v3RepositoryPermissionService(
-        dslContext: DSLContext,
-        client: Client,
-        redisOperation: RedisOperation,
-        repositoryDao: RepositoryDao,
-        authResourceApi: AuthResourceApi,
-        authPermissionApi: AuthPermissionApi,
-        codeAuthServiceCode: CodeAuthServiceCode
-    ): RepositoryPermissionService = V3RepositoryPermissionService(
-        dslContext = dslContext,
-        repositoryDao = repositoryDao,
-        authResourceApi = authResourceApi,
-        authPermissionApi = authPermissionApi,
-        codeAuthServiceCode = codeAuthServiceCode,
-        client = client,
-        redisOperation = redisOperation
     )
 
     @Bean

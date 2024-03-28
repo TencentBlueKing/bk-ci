@@ -9,9 +9,9 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.dispatch.devcloud.pojo.DestroyContainerReq
 import com.tencent.devops.dispatch.devcloud.pojo.DevCloudDebugResponse
 import com.tencent.devops.dispatch.devcloud.pojo.performance.UserPerformanceOptionsVO
-import io.swagger.annotations.Api
-import io.swagger.annotations.ApiOperation
-import io.swagger.annotations.ApiParam
+import io.swagger.v3.oas.annotations.tags.Tag
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.Parameter
 import javax.ws.rs.Consumes
 import javax.ws.rs.GET
 import javax.ws.rs.HeaderParam
@@ -22,7 +22,7 @@ import javax.ws.rs.Produces
 import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
-@Api(tags = ["SERVICE_DISPATCH_DEVCLOUD"], description = "SERVICE_DISPATCH_DEVCLOUD")
+@Tag(name = "SERVICE_DISPATCH_DEVCLOUD", description = "SERVICE_DISPATCH_DEVCLOUD")
 @Path("/service/dispatchDevcloud")
 @ServiceInterface("dispatch-devcloud")
 @Produces(MediaType.APPLICATION_JSON)
@@ -31,63 +31,63 @@ interface ServiceDispatchDcResource {
 
     @GET
     @Path("/project/{projectId}/performanceConfig/list")
-    @ApiOperation("获取devcloud性能配置列表")
+    @Operation(summary = "获取devcloud性能配置列表")
     fun getDcPerformanceConfigList(
-        @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String,
-        @ApiParam("projectId", required = true)
+        @Parameter(description = "projectId", required = true)
         @PathParam("projectId")
         projectId: String
     ): Result<UserPerformanceOptionsVO>
 
     @POST
     @Path("/startDebug/projects/{projectId}/pipeline/{pipelineId}/vmSeq/{vmSeqId}")
-    @ApiOperation("devcloud获取登录调试ws")
+    @Operation(summary = "devcloud获取登录调试ws")
     fun startDebug(
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("projectId", required = true)
+        @Parameter(description = "projectId", required = true)
         @PathParam("projectId")
         projectId: String,
-        @ApiParam("pipelineId", required = true)
+        @Parameter(description = "pipelineId", required = true)
         @PathParam("pipelineId")
         pipelineId: String,
-        @ApiParam("vmSeqId", required = true)
+        @Parameter(description = "vmSeqId", required = true)
         @PathParam("vmSeqId")
         vmSeqId: String,
-        @ApiParam("构建id", required = false)
+        @Parameter(description = "构建id", required = false)
         @QueryParam("buildId")
         buildId: String?
     ): Result<DevCloudDebugResponse>
 
     @POST
     @Path("/stopDebug/pipeline/{pipelineId}/vmSeq/{vmSeqId}")
-    @ApiOperation("关闭调试")
+    @Operation(summary = "关闭调试")
     fun stopDebug(
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("pipelineId", required = true)
+        @Parameter(description = "pipelineId", required = true)
         @PathParam("pipelineId")
         pipelineId: String,
-        @ApiParam("vmSeqId", required = true)
+        @Parameter(description = "vmSeqId", required = true)
         @PathParam("vmSeqId")
         vmSeqId: String,
-        @ApiParam("容器名称", required = false)
+        @Parameter(description = "容器名称", required = false)
         @QueryParam("containerName")
         containerName: String
     ): Result<Boolean>
 
     @POST
     @Path("/container/destroy")
-    @ApiOperation("销毁devcloud容器")
+    @Operation(summary = "销毁devcloud容器")
     fun destroyContainer(
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("请求报文", required = true)
+        @Parameter(description = "请求报文", required = true)
         destroyContainerReq: DestroyContainerReq
     ): Result<Boolean>
 }

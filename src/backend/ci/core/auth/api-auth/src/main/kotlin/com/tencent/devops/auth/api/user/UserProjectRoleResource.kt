@@ -33,9 +33,9 @@ import com.tencent.devops.auth.pojo.dto.ProjectRoleDTO
 import com.tencent.devops.auth.pojo.vo.GroupInfoVo
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.pojo.Result
-import io.swagger.annotations.Api
-import io.swagger.annotations.ApiOperation
-import io.swagger.annotations.ApiParam
+import io.swagger.v3.oas.annotations.tags.Tag
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.Parameter
 import javax.ws.rs.Consumes
 import javax.ws.rs.DELETE
 import javax.ws.rs.GET
@@ -48,80 +48,80 @@ import javax.ws.rs.Produces
 import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
-@Api(tags = ["USER_PROJECT_ROLE"], description = "项目-用户组")
+@Tag(name = "USER_PROJECT_ROLE", description = "项目-用户组")
 @Path("/user/project/roles")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface UserProjectRoleResource {
     @POST
     @Path("/projectIds/{projectId}/")
-    @ApiOperation("项目下添加指定组")
+    @Operation(summary = "项目下添加指定组")
     fun createProjectRole(
-        @ApiParam(name = "用户名", required = true)
+        @Parameter(description = "用户名", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam(name = "项目标识", required = true)
+        @Parameter(description = "项目标识", required = true)
         @PathParam("projectId")
         projectId: Int,
-        @ApiParam(name = "项目标识", required = true)
+        @Parameter(description = "项目标识", required = true)
         @QueryParam("projectCode")
         projectCode: String,
-        @ApiParam("用户组信息", required = true)
+        @Parameter(description = "用户组信息", required = true)
         groupInfo: ProjectRoleDTO
     ): Result<String>
 
     @PUT
     @Path("/projectIds/{projectId}/roleIds/{roleId}")
-    @ApiOperation("用户组重命名")
+    @Operation(summary = "用户组重命名")
     fun updateProjectRole(
-        @ApiParam(name = "用户名", required = true)
+        @Parameter(description = "用户名", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam(name = "项目标识", required = true)
+        @Parameter(description = "项目标识", required = true)
         @PathParam("projectId")
         projectId: Int,
-        @ApiParam(name = "角色Id", required = true)
+        @Parameter(description = "角色Id", required = true)
         @PathParam("roleId")
         roleId: Int,
-        @ApiParam(name = "用户组信息", required = true)
+        @Parameter(description = "用户组信息", required = true)
         groupInfo: ProjectRoleDTO
     ): Result<Boolean>
 
     @GET
     @Path("/projectIds/{projectId}")
-    @ApiOperation("获取用户组")
+    @Operation(summary = "获取用户组")
     fun getProjectRoles(
-        @ApiParam(name = "用户名", required = true)
+        @Parameter(description = "用户名", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam(name = "项目标识", required = true)
+        @Parameter(description = "项目标识", required = true)
         @PathParam("projectId")
         projectId: Int
     ): Result<List<GroupInfoVo>>
 
     @DELETE
     @Path("/projectIds/{projectId}/roles/{roleId}")
-    @ApiOperation("删除用户组")
+    @Operation(summary = "删除用户组")
     fun deleteProjectRole(
-        @ApiParam(name = "用户名", required = true)
+        @Parameter(description = "用户名", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam(name = "项目标识", required = true)
+        @Parameter(description = "项目标识", required = true)
         @PathParam("projectId")
         projectId: Int,
-        @ApiParam(name = "角色Id", required = true)
+        @Parameter(description = "角色Id", required = true)
         @PathParam("roleId")
         roleId: Int
     ): Result<Boolean>
 
     @GET
     @Path("/projects/{projectId}/manager/hasPermission")
-    @ApiOperation("是否有项目管理操作的权限")
+    @Operation(summary = "是否有项目管理操作的权限")
     fun hashPermission(
-        @ApiParam(name = "用户名", required = true)
+        @Parameter(description = "用户名", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam(name = "项目标识", required = true)
+        @Parameter(description = "项目标识", required = true)
         @PathParam("projectId")
         projectId: Int
     ): Result<Boolean>
@@ -129,7 +129,7 @@ interface UserProjectRoleResource {
     @GET
     @Path("/default/role")
     fun getDefaultRole(
-        @ApiParam(name = "用户名", required = true)
+        @Parameter(description = "用户名", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String
     ): Result<List<DefaultGroup>>

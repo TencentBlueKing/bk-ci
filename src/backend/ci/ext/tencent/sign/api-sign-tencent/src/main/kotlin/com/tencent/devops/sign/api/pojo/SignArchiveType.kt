@@ -34,7 +34,7 @@ package com.tencent.devops.sign.api.pojo
 enum class SignArchiveType {
     PIPELINE, // 流水线仓库
     CUSTOM, // 自定义仓库
-    OTHERS // 其他
+    OTHERS, // 其他
     ;
 
     companion object {

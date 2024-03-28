@@ -9,6 +9,16 @@ import com.tencent.devops.remotedev.config.BkConfig
 import com.tencent.devops.remotedev.pojo.windows.TimeScope
 import com.tencent.devops.remotedev.pojo.windows.UserLoginTimeResp
 import com.tencent.devops.remotedev.pojo.windows.UserLoginTimeRespData
+import java.security.cert.CertificateException
+import java.text.SimpleDateFormat
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
+import java.util.Calendar
+import java.util.concurrent.TimeUnit
+import javax.net.ssl.SSLContext
+import javax.net.ssl.SSLSocketFactory
+import javax.net.ssl.TrustManager
+import javax.net.ssl.X509TrustManager
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.OkHttpClient
 import okhttp3.Request
@@ -16,14 +26,6 @@ import okhttp3.RequestBody.Companion.toRequestBody
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
-import java.security.cert.CertificateException
-import java.text.SimpleDateFormat
-import java.util.Calendar
-import java.util.concurrent.TimeUnit
-import javax.net.ssl.SSLContext
-import javax.net.ssl.SSLSocketFactory
-import javax.net.ssl.TrustManager
-import javax.net.ssl.X509TrustManager
 
 @Suppress("ALL")
 @Service
@@ -151,8 +153,192 @@ class BKBaseService @Autowired constructor(
         return UserLoginTimeResp(resp.data.totalRecords, result)
     }
 
+    fun fetchActiveIps(
+        date: LocalDateTime,
+        limit: Int = 1000,
+        offset: Int = 0,
+        result: MutableMap<String, Int> = mutableMapOf()
+    ): Map<String, Int> {
+        val sql = "select zone_id,inner_ip,count(distinct thedate) as cnt " +
+                "from 100656_ads_desktop_daily_activity_res " +
+                "where thedate > '${date.format(theDateFormat)}' and activity_flag > 0 " +
+                "group by inner_ip,zone_id LIMIT $limit OFFSET $offset"
+
+        val resp = doHttp(sql) ?: return result
+
+        try {
+            resp.data?.list?.forEach { l ->
+                result["${l["zone_id"] as String}.${l["inner_ip"] as String}"] = l["cnt"] as Int
+            } ?: return result
+            if (resp.data.list.size == limit) {
+                fetchActiveIps(
+                    date, offset + limit, limit, result
+                )
+            }
+        } catch (e: Exception) {
+            logger.error("fetchActiveIps parse data error", e)
+            return result
+        }
+
+        return result
+    }
+
+    // 获取云桌面的活跃时长
+    fun fetchActiveTimes(
+        date: LocalDateTime,
+        limit: Int = 1000,
+        offset: Int = 0,
+        result: MutableMap<String, Int> = mutableMapOf()
+    ): Map<String, Int> {
+        val sql = "select zone_id,inner_ip,sum(activity_minus_cnt) as cnt " +
+            "from 100656_ads_desktop_daily_activity_res " +
+            "where thedate > '${date.format(theDateFormat)}' " +
+            "group by inner_ip,zone_id LIMIT $limit OFFSET $offset"
+
+        val resp = doHttp(sql) ?: return result
+
+        try {
+            resp.data?.list?.forEach { l ->
+                result["${l["zone_id"] as String}.${l["inner_ip"] as String}"] = l["cnt"] as Int
+            } ?: return result
+            if (resp.data.list.size == limit) {
+                fetchActiveTimes(
+                    date, offset + limit, limit, result
+                )
+            }
+        } catch (e: Exception) {
+            logger.error("fetchActiveTimes parse data error", e)
+            return result
+        }
+
+        return result
+    }
+
+    private fun doHttp(
+        sql: String
+    ): BakeBaseQuerySyncResp? {
+        val body = BakeBaseQuerySyncReq(
+            bkdataDataToken = bkConfig.baseToken,
+            bkAppCode = bkConfig.appCode,
+            bkAppSecret = bkConfig.appSecret,
+            sql = sql
+        )
+        val url = "${bkConfig.baseUrl}/prod/v3/queryengine/query_sync/"
+        val request = Request.Builder()
+            .url(url)
+            .post(JsonUtil.toJson(body).toRequestBody("application/json; charset=utf-8".toMediaTypeOrNull()))
+            .build()
+        try {
+            okHttpClient.newCall(request).execute().use { response ->
+                val data = response.body!!.string()
+                logger.info("fetchOnlineUserMin｜req|{}|response code|{}|content|{}", body, response.code, data)
+                if (!response.isSuccessful) {
+                    logger.error("fetchOnlineUserMin｜req|{}|response code|{}|content|{}", body, response.code, data)
+                    return null
+                }
+
+                val resp = objectMapper.readValue<BakeBaseQuerySyncResp>(data)
+                if (!resp.result) {
+                    logger.error("fetchOnlineUserMin｜req|{}|response code|{}|content|{}", body, response.code, data)
+                    return null
+                }
+                return resp
+            }
+        } catch (e: Exception) {
+            logger.error("fetchOnlineUserMin request error", e)
+            return null
+        }
+    }
+
+    fun fetchOnlineIps(
+        date: LocalDateTime,
+        limit: Int = 1000,
+        offset: Int = 0,
+        result: MutableMap<String, String> = mutableMapOf()
+    ): Map<String, String> {
+        val sql = "SELECT node_id, MAX(dtEventTime) " +
+                "FROM 100656_cgs_report_game_all " +
+                "WHERE thedate >= '${date.format(theDateFormat)}' " +
+                "GROUP BY node_id LIMIT $limit OFFSET $offset"
+
+        val resp = doHttp(sql) ?: return result
+
+        try {
+            resp.data?.list?.forEach { l ->
+                result.put(l["node_id"] as String, l["_col1"] as String)
+            } ?: return result
+            if (resp.data.list.size == limit) {
+                fetchOnlineIps(
+                    date, offset + limit, limit, result
+                )
+            }
+        } catch (e: Exception) {
+            logger.error("fetchOnlineUserMin parse data error", e)
+            return result
+        }
+
+        return result
+    }
+
+    fun fetchLastOnline(
+        nodeIds: Set<String>
+    ): Map<String, String> {
+        val sql = "SELECT node_id, MAX(dtEventTime) " +
+            "FROM 100656_cgs_report_game_all " +
+            "WHERE where node_id in (${
+            nodeIds.joinToString(separator = "','", prefix = "'", postfix = "'")
+            }) " +
+            "GROUP BY node_id"
+
+        val url = "${bkConfig.baseUrl}/prod/v3/queryengine/query_sync/"
+        val body = BakeBaseQuerySyncReq(
+            bkdataDataToken = bkConfig.baseToken,
+            bkAppCode = bkConfig.appCode,
+            bkAppSecret = bkConfig.appSecret,
+            sql = sql
+        )
+        val request = Request.Builder()
+            .url(url)
+            .post(JsonUtil.toJson(body).toRequestBody("application/json; charset=utf-8".toMediaTypeOrNull()))
+            .build()
+
+        val resp = try {
+            okHttpClient.newCall(request).execute().use { response ->
+                val data = response.body!!.string()
+                logger.debug("fetchLastOnline｜req|{}|response code|{}|content|{}", body, response.code, data)
+                if (!response.isSuccessful) {
+                    logger.error("fetchLastOnline｜req|{}|response code|{}|content|{}", body, response.code, data)
+                    return emptyMap()
+                }
+
+                val resp = objectMapper.readValue<BakeBaseQuerySyncResp>(data)
+                if (!resp.result) {
+                    logger.error("fetchLastOnline｜req|{}|response code|{}|content|{}", body, response.code, data)
+                    return emptyMap()
+                }
+                resp
+            }
+        } catch (e: Exception) {
+            logger.error("fetchLastOnline request error", e)
+            return emptyMap()
+        }
+
+        val result = mutableMapOf<String, String>()
+        try {
+            resp.data?.list?.forEach { l ->
+                result[l["node_id"] as String] = l["_col1"] as String
+            } ?: return result
+        } catch (e: Exception) {
+            logger.error("fetchLastOnline parse data error", e)
+            return result
+        }
+
+        return result
+    }
+
     companion object {
         private val dateFormat = SimpleDateFormat("yyyy-MM-dd HH:mm:ss")
+        private val theDateFormat = DateTimeFormatter.ofPattern("yyyyMMdd")
         private val dataInputFormat = SimpleDateFormat("yyyyMMddHHmm")
         private val logger = LoggerFactory.getLogger(BKBaseService::class.java)
 

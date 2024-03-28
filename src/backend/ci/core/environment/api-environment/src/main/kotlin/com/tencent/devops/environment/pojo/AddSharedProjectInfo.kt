@@ -28,19 +28,18 @@
 package com.tencent.devops.environment.pojo
 
 import com.tencent.devops.environment.pojo.enums.SharedEnvType
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("VM虚拟机配额")
+@Schema(title = "VM虚拟机配额")
 data class AddSharedProjectInfo(
     @Deprecated("普通项目也支持 , 请使用projectId")
-    @ApiModelProperty("工蜂项目ID", required = false)
+    @get:Schema(title = "工蜂项目ID", required = false)
     val gitProjectId: String? = null,
-    @ApiModelProperty("项目名称，工蜂项目则为groupName/projectName", required = true)
+    @get:Schema(title = "项目名称，工蜂项目则为groupName/projectName", required = true)
     val name: String,
-    @ApiModelProperty("类型，预留", required = true)
+    @get:Schema(title = "类型，预留", required = true)
     val type: SharedEnvType,
-    @ApiModelProperty("项目ID", required = true)
+    @get:Schema(title = "项目ID", required = true)
     val projectId: String? = null
 ) {
     @SuppressWarnings("TooGenericExceptionThrown")

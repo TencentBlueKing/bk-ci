@@ -30,9 +30,9 @@ package com.tencent.devops.environment.api.thirdPartyAgent
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_AGENT_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_AGENT_SECRET_KEY
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_PROJECT_ID
-import io.swagger.annotations.Api
-import io.swagger.annotations.ApiOperation
-import io.swagger.annotations.ApiParam
+import io.swagger.v3.oas.annotations.tags.Tag
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.Parameter
 import javax.ws.rs.Consumes
 import javax.ws.rs.GET
 import javax.ws.rs.HeaderParam
@@ -42,30 +42,30 @@ import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 import javax.ws.rs.core.Response
 
-@Api(tags = ["BUILD_ENVIRONMENT_THIRD_PARTY_AGENT_UPGRADE"], description = "第三方构建机升级资源")
+@Tag(name = "BUILD_ENVIRONMENT_THIRD_PARTY_AGENT_UPGRADE", description = "第三方构建机升级资源")
 @Path("/buildAgent/agent/thirdPartyAgent/upgrade")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface BuildAgentThirdPartyAgentUpgradeResource {
 
-    @ApiOperation("下载指定文件")
+    @Operation(summary = "下载指定文件")
     @GET
     @Path("/files/download")
     @Produces(MediaType.APPLICATION_OCTET_STREAM)
     fun downloadUpgrade(
-        @ApiParam("项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_PROJECT_ID)
         projectId: String,
-        @ApiParam("Agent ID", required = true)
+        @Parameter(description = "Agent ID", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_AGENT_ID)
         agentId: String,
-        @ApiParam("秘钥", required = true)
+        @Parameter(description = "秘钥", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_AGENT_SECRET_KEY)
         secretKey: String,
-        @ApiParam("文件名", required = true)
+        @Parameter(description = "文件名", required = true)
         @QueryParam("file")
         file: String,
-        @ApiParam("本地eTag标签", required = false)
+        @Parameter(description = "本地eTag标签", required = false)
         @QueryParam("eTag")
         eTag: String?
     ): Response

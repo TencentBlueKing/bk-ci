@@ -28,22 +28,21 @@
 package com.tencent.devops.common.archive.element
 
 import com.tencent.devops.common.pipeline.pojo.element.Element
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("拉取自定义仓库构件", description = CustomizeArchiveGetElement.classType)
+@Schema(title = "拉取自定义仓库构件", description = CustomizeArchiveGetElement.classType)
 data class CustomizeArchiveGetElement(
-    @ApiModelProperty("任务名称", required = true)
+    @get:Schema(title = "任务名称", required = true)
     override val name: String = "拉取自定义仓库构件",
-    @ApiModelProperty("id", required = false)
+    @get:Schema(title = "id", required = false)
     override var id: String? = null,
-    @ApiModelProperty("状态", required = false)
+    @get:Schema(title = "状态", required = false)
     override var status: String? = null,
-    @ApiModelProperty("待下载文件路径（支持正则表达式，多个用逗号隔开）", required = true)
+    @get:Schema(title = "待下载文件路径（支持正则表达式，多个用逗号隔开）", required = true)
     val downloadPaths: String = "",
-    @ApiModelProperty("下载到本地的路径（默认为当前工作空间）", required = false)
+    @get:Schema(title = "下载到本地的路径（默认为当前工作空间）", required = false)
     val destPath: String = "",
-    @ApiModelProperty("是否找不到文件报404退出", required = false)
+    @get:Schema(title = "是否找不到文件报404退出", required = false)
     val notFoundContinue: Boolean? = false
 ) : Element(name, id, status) {
 

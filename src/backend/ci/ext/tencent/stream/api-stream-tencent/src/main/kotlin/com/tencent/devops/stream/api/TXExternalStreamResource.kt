@@ -27,9 +27,9 @@
 
 package com.tencent.devops.stream.api
 
-import io.swagger.annotations.Api
-import io.swagger.annotations.ApiOperation
-import io.swagger.annotations.ApiParam
+import io.swagger.v3.oas.annotations.tags.Tag
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.Parameter
 import javax.ws.rs.Consumes
 import javax.ws.rs.GET
 import javax.ws.rs.Path
@@ -38,20 +38,20 @@ import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 import javax.ws.rs.core.Response
 
-@Api(tags = ["EXTERNAL_STREAM"], description = "外部-STREAM资源获取")
+@Tag(name = "EXTERNAL_STREAM", description = "外部-STREAM资源获取")
 @Path("/external/stream")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface TXExternalStreamResource {
 
-    @ApiOperation("工蜂回调请求")
+    @Operation(summary = "工蜂回调请求")
     @GET
     @Path("/git/callback")
     fun gitCallback(
-        @ApiParam(value = "code")
+        @Parameter(description = "code")
         @QueryParam("code")
         code: String,
-        @ApiParam(value = "state")
+        @Parameter(description = "state")
         @QueryParam("state")
         state: String
     ): Response

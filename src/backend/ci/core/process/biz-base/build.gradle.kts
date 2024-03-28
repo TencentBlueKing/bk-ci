@@ -40,7 +40,7 @@ dependencies {
     api("org.springframework.boot:spring-boot-starter-jooq")
     api("com.zaxxer:HikariCP")
     api("org.jooq:jooq")
-    api("mysql:mysql-connector-java")
+    api("com.mysql:mysql-connector-j")
     implementation("com.github.ben-manes.caffeine:caffeine")
     testImplementation(project(":core:common:common-test"))
 }

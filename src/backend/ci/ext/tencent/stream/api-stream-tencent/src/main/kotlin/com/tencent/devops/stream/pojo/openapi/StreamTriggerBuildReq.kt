@@ -29,29 +29,28 @@ package com.tencent.devops.stream.pojo.openapi
 
 import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.ci.OBJECT_KIND_MANUAL
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("StreamTriggerBuild请求")
+@Schema(title = "StreamTriggerBuild请求")
 data class StreamTriggerBuildReq(
-    @ApiModelProperty("分支")
+    @get:Schema(title = "分支")
     val branch: String?,
-    @ApiModelProperty("Custom commit message")
+    @get:Schema(title = "Custom commit message")
     val customCommitMsg: String?,
-    @ApiModelProperty("yaml")
+    @get:Schema(title = "yaml")
     val yaml: String?,
-    @ApiModelProperty("描述")
+    @get:Schema(title = "描述")
     val description: String?,
-    @ApiModelProperty("用户选择的触发CommitId")
+    @get:Schema(title = "用户选择的触发CommitId")
     val commitId: String? = null,
-    @ApiModelProperty("模拟代码库事件请求体")
+    @get:Schema(title = "模拟代码库事件请求体")
     val payload: String? = null,
-    @ApiModelProperty("模拟代码库类型,预留字段")
+    @get:Schema(title = "模拟代码库类型,预留字段")
     val scmType: ScmType = ScmType.CODE_GIT,
-    @ApiModelProperty("模拟代码事件类型,预留字段")
+    @get:Schema(title = "模拟代码事件类型,预留字段")
     val eventType: String? = null,
-    @ApiModelProperty("触发方式")
+    @get:Schema(title = "触发方式")
     val objectKind: String = OBJECT_KIND_MANUAL,
-    @ApiModelProperty("yaml文件路径")
+    @get:Schema(title = "yaml文件路径")
     val path: String? = null
 )

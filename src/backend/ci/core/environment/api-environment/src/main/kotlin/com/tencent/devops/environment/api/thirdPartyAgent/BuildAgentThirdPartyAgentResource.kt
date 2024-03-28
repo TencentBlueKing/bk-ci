@@ -38,9 +38,9 @@ import com.tencent.devops.environment.pojo.thirdPartyAgent.ThirdPartyAgentHeartb
 import com.tencent.devops.environment.pojo.thirdPartyAgent.ThirdPartyAgentPipeline
 import com.tencent.devops.environment.pojo.thirdPartyAgent.ThirdPartyAgentStartInfo
 import com.tencent.devops.environment.pojo.thirdPartyAgent.pipeline.PipelineResponse
-import io.swagger.annotations.Api
-import io.swagger.annotations.ApiOperation
-import io.swagger.annotations.ApiParam
+import io.swagger.v3.oas.annotations.tags.Tag
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.Parameter
 import javax.ws.rs.Consumes
 import javax.ws.rs.GET
 import javax.ws.rs.HeaderParam
@@ -51,142 +51,142 @@ import javax.ws.rs.Produces
 import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
-@Api(tags = ["BUILD_ENVIRONMENT_THIRD_PARTY_AGENT"], description = "第三方构建机资源")
+@Tag(name = "BUILD_ENVIRONMENT_THIRD_PARTY_AGENT", description = "第三方构建机资源")
 @Path("/buildAgent/agent/thirdPartyAgent")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface BuildAgentThirdPartyAgentResource {
 
-    @ApiOperation("Agent启动")
+    @Operation(summary = "Agent启动")
     @POST
     @Path("/startup")
     fun agentStartup(
-        @ApiParam("项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_PROJECT_ID)
         projectId: String,
-        @ApiParam("Agent ID", required = true)
+        @Parameter(description = "Agent ID", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_AGENT_ID)
         agentId: String,
-        @ApiParam("秘钥", required = true)
+        @Parameter(description = "秘钥", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_AGENT_SECRET_KEY)
         secretKey: String,
-        @ApiParam("Agent Start Info", required = true)
+        @Parameter(description = "Agent Start Info", required = true)
         startInfo: ThirdPartyAgentStartInfo
     ): Result<AgentStatus>
 
-    @ApiOperation("Agent关闭")
+    @Operation(summary = "Agent关闭")
     @POST
     @Path("/shutdown")
     fun agentShutdown(
-        @ApiParam("项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_PROJECT_ID)
         projectId: String,
-        @ApiParam("Agent ID", required = true)
+        @Parameter(description = "Agent ID", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_AGENT_ID)
         agentId: String,
-        @ApiParam("秘钥", required = true)
+        @Parameter(description = "秘钥", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_AGENT_SECRET_KEY)
         secretKey: String,
-        @ApiParam("正常关闭", required = true)
+        @Parameter(description = "正常关闭", required = true)
         @QueryParam("shutdownNormal")
         shutdownNormal: Boolean
     ): Result<AgentStatus>
 
-    @ApiOperation("查询Agent状态")
+    @Operation(summary = "查询Agent状态")
     @GET
     @Path("/status")
     fun getAgentStatus(
-        @ApiParam("项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_PROJECT_ID)
         projectId: String,
-        @ApiParam("Agent ID", required = true)
+        @Parameter(description = "Agent ID", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_AGENT_ID)
         agentId: String,
-        @ApiParam("秘钥", required = true)
+        @Parameter(description = "秘钥", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_AGENT_SECRET_KEY)
         secretKey: String
     ): Result<AgentStatus>
 
-    @ApiOperation("上报Agent心跳")
+    @Operation(summary = "上报Agent心跳")
     @POST
     @Path("/agents/heartbeat")
     fun agentHeartbeat(
-        @ApiParam("项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_PROJECT_ID)
         projectId: String,
-        @ApiParam("Agent ID", required = true)
+        @Parameter(description = "Agent ID", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_AGENT_ID)
         agentId: String,
-        @ApiParam("秘钥", required = true)
+        @Parameter(description = "秘钥", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_AGENT_SECRET_KEY)
         secretKey: String,
-        @ApiParam("内容", required = false)
+        @Parameter(description = "内容", required = false)
         heartbeatInfo: ThirdPartyAgentHeartbeatInfo?
     ): Result<AgentStatus>
 
-    @ApiOperation("上报Agent心跳")
+    @Operation(summary = "上报Agent心跳")
     @POST
     @Path("/agents/newHeartbeat")
     fun newHeartbeat(
-        @ApiParam("项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_PROJECT_ID)
         projectId: String,
-        @ApiParam("Agent ID", required = true)
+        @Parameter(description = "Agent ID", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_AGENT_ID)
         agentId: String,
-        @ApiParam("秘钥", required = true)
+        @Parameter(description = "秘钥", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_AGENT_SECRET_KEY)
         secretKey: String,
-        @ApiParam("内容", required = false)
+        @Parameter(description = "内容", required = false)
         heartbeatInfo: NewHeartbeatInfo
     ): Result<HeartbeatResponse>
 
-    @ApiOperation("查询Agent的管道")
+    @Operation(summary = "查询Agent的管道")
     @GET
     @Path("agents/pipelines")
     fun getPipelines(
-        @ApiParam("项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_PROJECT_ID)
         projectId: String,
-        @ApiParam("Agent ID", required = true)
+        @Parameter(description = "Agent ID", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_AGENT_ID)
         agentId: String,
-        @ApiParam("秘钥", required = true)
+        @Parameter(description = "秘钥", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_AGENT_SECRET_KEY)
         secretKey: String
     ): Result<ThirdPartyAgentPipeline?>
 
-    @ApiOperation("更改Agent的管道状态")
+    @Operation(summary = "更改Agent的管道状态")
     @PUT
     @Path("agents/pipelines")
     fun updatePipelineStatus(
-        @ApiParam("项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_PROJECT_ID)
         projectId: String,
-        @ApiParam("Agent ID", required = true)
+        @Parameter(description = "Agent ID", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_AGENT_ID)
         agentId: String,
-        @ApiParam("秘钥", required = true)
+        @Parameter(description = "秘钥", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_AGENT_SECRET_KEY)
         secretKey: String,
-        @ApiParam("管道状态信息", required = true)
+        @Parameter(description = "管道状态信息", required = true)
         response: PipelineResponse
     ): Result<Boolean>
 
-    @ApiOperation("接受telegraf监控数据")
+    @Operation(summary = "接受telegraf监控数据")
     @POST
     @Path("/agents/metrics")
     fun reportAgentMetrics(
-        @ApiParam("项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_PROJECT_ID)
         projectId: String,
-        @ApiParam("Agent ID", required = true)
+        @Parameter(description = "Agent ID", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_AGENT_ID)
         agentId: String,
-        @ApiParam("秘钥", required = true)
+        @Parameter(description = "秘钥", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_AGENT_SECRET_KEY)
         secretKey: String,
-        @ApiParam("数据", required = true)
+        @Parameter(description = "数据", required = true)
         data: String
     ): Result<Boolean>
 }

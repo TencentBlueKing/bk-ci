@@ -32,8 +32,11 @@ import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.openapi.api.apigw.v4.ApigwTurboResourceV4
+import com.tencent.devops.turbo.api.IServiceResourceStatController
 import com.tencent.devops.turbo.api.IServiceTurboController
+import com.tencent.devops.turbo.pojo.TurboPlanModel
 import com.tencent.devops.turbo.pojo.TurboRecordModel
+import com.tencent.devops.turbo.vo.ProjectResourceUsageVO
 import com.tencent.devops.turbo.vo.TurboPlanDetailVO
 import com.tencent.devops.turbo.vo.TurboPlanStatRowVO
 import com.tencent.devops.turbo.vo.TurboRecordHistoryVO
@@ -109,5 +112,26 @@ class ApigwTurboResourceV4Impl @Autowired constructor(
             projectId = projectId,
             userId = userId
         )
+    }
+
+    override fun addNewTurboPlan(
+        projectId: String,
+        userId: String,
+        turboPlanModel: TurboPlanModel
+    ): Response<String?> {
+        logger.info("OPENAPI_TURBO_V4|addNewTurboPlan: userId[$userId] projectId[$projectId]")
+        return client.getSpringMvc(IServiceTurboController::class)
+            .addNewTurboPlan(turboPlanModel = turboPlanModel, projectId = projectId, userId = userId)
+    }
+
+    override fun getServerResourcesSummary(
+        startDate: String?,
+        endDate: String?,
+        pageNum: Int?,
+        pageSize: Int?
+    ): Response<Page<ProjectResourceUsageVO>> {
+        logger.info("OPENAPI_TURBO_V4|getServerResourcesSummary: $startDate|$endDate|$pageSize|$pageNum")
+        return client.getSpringMvc(IServiceResourceStatController::class)
+            .getSummary(startDate, endDate, pageNum, pageSize)
     }
 }

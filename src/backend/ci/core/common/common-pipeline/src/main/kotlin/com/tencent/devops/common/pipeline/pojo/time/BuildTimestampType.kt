@@ -28,9 +28,9 @@ package com.tencent.devops.common.pipeline.pojo.time
 
 import com.tencent.devops.common.api.annotation.BkFieldI18n
 import com.tencent.devops.common.api.enums.I18nTranslateTypeEnum
-import io.swagger.annotations.ApiModel
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("构建详情记录-时间戳类型（勿随意删除）")
+@Schema(title = "构建详情记录-时间戳类型（勿随意删除）")
 enum class BuildTimestampType(
     @BkFieldI18n(
         translateType = I18nTranslateTypeEnum.VALUE,

@@ -36,9 +36,9 @@ import com.tencent.devops.store.pojo.common.StoreApproveRequest
 import com.tencent.devops.store.pojo.common.enums.ApproveStatusEnum
 import com.tencent.devops.store.pojo.common.enums.ApproveTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
-import io.swagger.annotations.Api
-import io.swagger.annotations.ApiOperation
-import io.swagger.annotations.ApiParam
+import io.swagger.v3.oas.annotations.tags.Tag
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.Parameter
 import javax.ws.rs.Consumes
 import javax.ws.rs.GET
 import javax.ws.rs.HeaderParam
@@ -49,89 +49,89 @@ import javax.ws.rs.Produces
 import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
-@Api(tags = ["USER_MARKET_APPROVAL"], description = "store组件审批")
+@Tag(name = "USER_MARKET_APPROVAL", description = "store组件审批")
 @Path("/user/market/approval/")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 @Suppress("ALL")
 interface UserStoreApproveResource {
 
-    @ApiOperation("工作台-审批组件")
+    @Operation(summary = "工作台-审批组件")
     @PUT
     @Path("/types/{storeType}/codes/{storeCode}/ids/{approveId}/approve")
     fun approveStoreInfo(
-        @ApiParam("userId", required = true)
+        @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("组件类型", required = true)
+        @Parameter(description = "组件类型", required = true)
         @PathParam("storeType")
         storeType: StoreTypeEnum,
-        @ApiParam("组件标识", required = true)
+        @Parameter(description = "组件标识", required = true)
         @PathParam("storeCode")
         storeCode: String,
-        @ApiParam("审批ID", required = true)
+        @Parameter(description = "审批ID", required = true)
         @PathParam("approveId")
         approveId: String,
-        @ApiParam("store审批信息请求报文体", required = true)
+        @Parameter(description = "store审批信息请求报文体", required = true)
         storeApproveRequest: StoreApproveRequest
     ): Result<Boolean>
 
-    @ApiOperation("工作台-获取组件审批信息列表")
+    @Operation(summary = "工作台-获取组件审批信息列表")
     @GET
     @Path("/types/{storeType}/codes/{storeCode}/list")
     fun getStoreApproveInfos(
-        @ApiParam("userId", required = true)
+        @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("组件类型", required = true)
+        @Parameter(description = "组件类型", required = true)
         @PathParam("storeType")
         storeType: StoreTypeEnum,
-        @ApiParam("组件标识", required = true)
+        @Parameter(description = "组件标识", required = true)
         @PathParam("storeCode")
         storeCode: String,
-        @ApiParam("申请人", required = false)
+        @Parameter(description = "申请人", required = false)
         @QueryParam("applicant")
         applicant: String?,
-        @ApiParam("审批类型", required = false)
+        @Parameter(description = "审批类型", required = false)
         @QueryParam("approveType")
         approveType: ApproveTypeEnum?,
-        @ApiParam("审批状态", required = false)
+        @Parameter(description = "审批状态", required = false)
         @QueryParam("approveStatus")
         approveStatus: ApproveStatusEnum?,
-        @ApiParam("页码", required = true)
+        @Parameter(description = "页码", required = true)
         @QueryParam("page")
         page: Int,
-        @ApiParam("每页数量", required = true)
+        @Parameter(description = "每页数量", required = true)
         @QueryParam("pageSize")
         pageSize: Int
     ): Result<Page<StoreApproveInfo>?>
 
-    @ApiOperation("获取组件审批信息详情")
+    @Operation(summary = "获取组件审批信息详情")
     @GET
     @Path("/ids/{approveId}")
     fun getStoreApproveDetail(
-        @ApiParam("userId", required = true)
+        @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("审批ID", required = true)
+        @Parameter(description = "审批ID", required = true)
         @PathParam("approveId")
         approveId: String
     ): Result<StoreApproveDetail?>
 
-    @ApiOperation("获取用户关于组件的审批信息")
+    @Operation(summary = "获取用户关于组件的审批信息")
     @GET
     @Path("/types/{storeType}/codes/{storeCode}/user")
     fun getUserStoreApproveInfo(
-        @ApiParam("userId", required = true)
+        @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("组件类型", required = true)
+        @Parameter(description = "组件类型", required = true)
         @PathParam("storeType")
         storeType: StoreTypeEnum,
-        @ApiParam("组件标识", required = true)
+        @Parameter(description = "组件标识", required = true)
         @PathParam("storeCode")
         storeCode: String,
-        @ApiParam("审批类型", required = true)
+        @Parameter(description = "审批类型", required = true)
         @QueryParam("approveType")
         approveType: ApproveTypeEnum
     ): Result<StoreApproveInfo?>

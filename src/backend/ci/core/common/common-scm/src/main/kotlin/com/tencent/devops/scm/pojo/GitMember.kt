@@ -28,8 +28,7 @@
 package com.tencent.devops.scm.pojo
 
 import com.fasterxml.jackson.annotation.JsonProperty
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
 /*
 * {
@@ -53,15 +52,15 @@ OWNER = 50
 *
 * */
 
-@ApiModel("git成员模型")
+@Schema(title = "git成员模型")
 data class GitMember(
-    @ApiModelProperty("成员id")
+    @get:Schema(title = "成员id")
     val id: Int,
-    @ApiModelProperty("用户名")
+    @get:Schema(title = "用户名")
     val username: String,
-    @ApiModelProperty("状态")
+    @get:Schema(title = "状态")
     val state: String,
-    @ApiModelProperty("权限级别", name = "access_level")
+    @get:Schema(title = "权限级别", description = "access_level")
     @JsonProperty("access_level")
     val accessLevel: Int
 )

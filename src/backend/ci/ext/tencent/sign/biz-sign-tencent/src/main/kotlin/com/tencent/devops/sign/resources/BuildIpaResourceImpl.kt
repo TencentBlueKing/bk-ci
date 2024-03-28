@@ -42,76 +42,81 @@ import org.springframework.beans.factory.annotation.Autowired
 import java.io.InputStream
 
 @RestResource
-class BuildIpaResourceImpl @Autowired constructor(
-    private val signService: SignService,
-    private val syncSignService: AsyncSignService,
-    private val downloadService: DownloadService,
-    private val signInfoService: SignInfoService,
-    private val objectMapper: ObjectMapper
-) : BuildIpaResource {
-    companion object {
-        private val logger = LoggerFactory.getLogger(BuildIpaResourceImpl::class.java)
-    }
+class BuildIpaResourceImpl
+    @Autowired
+    constructor(
+        private val signService: SignService,
+        private val syncSignService: AsyncSignService,
+        private val downloadService: DownloadService,
+        private val signInfoService: SignInfoService,
+        private val objectMapper: ObjectMapper
+    ) : BuildIpaResource {
+        companion object {
+            private val logger = LoggerFactory.getLogger(BuildIpaResourceImpl::class.java)
+        }
 
-    override fun ipaSign(
-        projectId: String,
-        pipelineId: String,
-        buildId: String,
-        ipaSignInfoHeader: String,
-        ipaInputStream: InputStream
-    ): Result<String> {
-        val resignId = "s-${UUIDUtil.generate()}"
-        val ipaSignInfo = signInfoService.check(signInfoService.decodeIpaSignInfo(ipaSignInfoHeader, objectMapper))
-        var taskExecuteCount = 1
-        try {
-            val (ipaFile, taskExecuteCount2) = signService.uploadIpaAndDecodeInfo(
-                resignId = resignId,
-                ipaSignInfo = ipaSignInfo,
-                ipaSignInfoHeader = ipaSignInfoHeader,
-                ipaInputStream = ipaInputStream
+        override fun ipaSign(
+            projectId: String,
+            pipelineId: String,
+            buildId: String,
+            ipaSignInfoHeader: String,
+            ipaInputStream: InputStream
+        ): Result<String> {
+            val resignId = "s-${UUIDUtil.generate()}"
+            val ipaSignInfo = signInfoService.check(signInfoService.decodeIpaSignInfo(ipaSignInfoHeader, objectMapper))
+            var taskExecuteCount = 1
+            try {
+                val (ipaFile, taskExecuteCount2) =
+                    signService.uploadIpaAndDecodeInfo(
+                        resignId = resignId,
+                        ipaSignInfo = ipaSignInfo,
+                        ipaSignInfoHeader = ipaSignInfoHeader,
+                        ipaInputStream = ipaInputStream
+                    )
+                taskExecuteCount = taskExecuteCount2
+                syncSignService.asyncSign(resignId, ipaSignInfo, ipaFile, taskExecuteCount)
+                return Result(resignId)
+            } catch (ignored: Exception) {
+                signInfoService.failResign(
+                    resignId = resignId,
+                    info = ipaSignInfo,
+                    executeCount = taskExecuteCount,
+                    message = ignored.message ?: "Start sign task with exception"
+                )
+                throw ignored
+            }
+        }
+
+        override fun getSignStatus(
+            projectId: String,
+            pipelineId: String,
+            buildId: String,
+            resignId: String
+        ): Result<String> {
+            return Result(signService.getSignStatus(resignId).getValue())
+        }
+
+        override fun getSignDetail(
+            projectId: String,
+            pipelineId: String,
+            buildId: String,
+            resignId: String
+        ): Result<SignDetail> {
+            return Result(signService.getSignDetail(resignId))
+        }
+
+        override fun downloadUrl(
+            projectId: String,
+            pipelineId: String,
+            buildId: String,
+            resignId: String
+        ): Result<String> {
+            return Result(
+                downloadService.getDownloadUrl(
+                    userId = "",
+                    resignId = resignId,
+                    downloadType = "build"
+                )
             )
-            taskExecuteCount = taskExecuteCount2
-            syncSignService.asyncSign(resignId, ipaSignInfo, ipaFile, taskExecuteCount)
-            return Result(resignId)
-        } catch (ignored: Exception) {
-            signInfoService.failResign(
-                resignId = resignId,
-                info = ipaSignInfo,
-                executeCount = taskExecuteCount,
-                message = ignored.message ?: "Start sign task with exception"
-            )
-            throw ignored
         }
     }
-
-    override fun getSignStatus(
-        projectId: String,
-        pipelineId: String,
-        buildId: String,
-        resignId: String
-    ): Result<String> {
-        return Result(signService.getSignStatus(resignId).getValue())
-    }
-
-    override fun getSignDetail(
-        projectId: String,
-        pipelineId: String,
-        buildId: String,
-        resignId: String
-    ): Result<SignDetail> {
-        return Result(signService.getSignDetail(resignId))
-    }
-
-    override fun downloadUrl(
-        projectId: String,
-        pipelineId: String,
-        buildId: String,
-        resignId: String
-    ): Result<String> {
-        return Result(downloadService.getDownloadUrl(
-            userId = "",
-            resignId = resignId,
-            downloadType = "build")
-        )
-    }
-}

@@ -33,9 +33,9 @@ import com.tencent.devops.remotedev.pojo.ShareWorkspace
 import com.tencent.devops.remotedev.pojo.WorkspaceShared
 import com.tencent.devops.remotedev.pojo.WorkspaceSharedOpUse
 import com.tencent.devops.remotedev.pojo.WorkspaceStatus
-import io.swagger.annotations.Api
-import io.swagger.annotations.ApiOperation
-import io.swagger.annotations.ApiParam
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.Parameter
+import io.swagger.v3.oas.annotations.tags.Tag
 import javax.ws.rs.Consumes
 import javax.ws.rs.DELETE
 import javax.ws.rs.GET
@@ -46,73 +46,73 @@ import javax.ws.rs.Produces
 import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
-@Api(tags = ["OP_WORKSPACE"], description = "OP_WORKSPACE")
+@Tag(name = "OP_WORKSPACE", description = "OP_WORKSPACE")
 @Path("/op/workspace")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface OpWorkspaceResource {
 
-    @ApiOperation("分享工作空间")
+    @Operation(summary = "分享工作空间")
     @POST
     @Path("/share/add")
     fun shareWorkspace(
-        @ApiParam(value = "用户ID", required = true)
+        @Parameter(description = "用户ID", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam(value = "工作空间共享", required = true)
+        @Parameter(description = "工作空间共享", required = true)
         workspaceShared: WorkspaceSharedOpUse
     ): Result<Boolean>
 
-    @ApiOperation("分享或删除工作空间")
+    @Operation(summary = "分享或删除工作空间")
     @POST
     @Path("/share/update")
     fun shareWorkspace4OP(
-        @ApiParam(value = "用户ID", required = true)
+        @Parameter(description = "用户ID", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam(value = "工作空间共享信息", required = true)
+        @Parameter(description = "工作空间共享信息", required = true)
         shareWorkspace: ShareWorkspace
     ): Result<Boolean>
 
-    @ApiOperation("获取分享工作空间列表")
+    @Operation(summary = "获取分享工作空间列表")
     @GET
     @Path("/share/list")
     fun getShareWorkspace(
-        @ApiParam(value = "用户ID", required = true)
+        @Parameter(description = "用户ID", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
         @QueryParam("workspaceName")
         workspaceName: String?
     ): Result<List<WorkspaceShared>>
 
-    @ApiOperation("删除分享工作空间")
+    @Operation(summary = "删除分享工作空间")
     @DELETE
     @Path("/share/delete")
     fun deleteShareWorkspace(
-        @ApiParam(value = "用户ID", required = true)
+        @Parameter(description = "用户ID", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam(value = "id", required = true)
+        @Parameter(description = "id", required = true)
         @QueryParam("id")
         id: Long
     ): Result<Boolean>
 
-    @ApiOperation("转移工作空间detail数据到db")
+    @Operation(summary = "转移工作空间detail数据到db")
     @GET
     @Path("/detail/move")
     fun moveWorkspaceDetail(
-        @ApiParam(value = "用户ID", required = true)
+        @Parameter(description = "用户ID", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
         @QueryParam("workspaceName")
         workspaceName: String
     ): Result<Boolean>
 
-    @ApiOperation("变更工作空间状态")
+    @Operation(summary = "变更工作空间状态")
     @GET
     @Path("/status_change")
     fun updateStatus(
-        @ApiParam(value = "用户ID", required = true)
+        @Parameter(description = "用户ID", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
         @QueryParam("workspaceName")
@@ -121,30 +121,42 @@ interface OpWorkspaceResource {
         workspaceStatus: WorkspaceStatus
     ): Result<Boolean>
 
-    @ApiOperation("通过已有cgsIp实例创建workspace记录")
+    @Operation(summary = "通过已有cgsIp实例创建workspace记录")
     @POST
     @Path("/create_win_workspace_by_vm")
     fun createWinWorkspaceByVm(
-        @ApiParam(value = "用户ID", required = true)
+        @Parameter(description = "用户ID", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam(value = "老workspace记录，可以为空，如果填写将会做清理", required = true)
+        @Parameter(description = "老workspace记录，可以为空，如果填写将会做清理", required = true)
         @QueryParam("oldWorkspaceName")
         oldWorkspaceName: String?,
-        @ApiParam(value = "项目ID，可以为空，如果填写就是团队空间，否则个人空间", required = true)
+        @Parameter(description = "项目ID，可以为空，如果填写就是团队空间，否则个人空间", required = true)
         @QueryParam("projectId")
         projectId: String?,
-        @ApiParam(value = "机器uid", required = true)
+        @Parameter(description = "机器uid", required = true)
         @QueryParam("uid")
         uid: String
     ): Result<Boolean>
 
-    @ApiOperation("删过期工作空间，用与定时外手动清理")
+    @Operation(summary = "删过期工作空间，用与定时外手动清理")
     @GET
     @Path("/deleteInactivityWorkspace")
     fun deleteInactivityWorkspace(
-        @ApiParam(value = "用户ID", required = true)
+        @Parameter(description = "用户ID", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String
+    ): Result<Boolean>
+
+    @Operation(summary = "手动执行云桌面清理job")
+    @GET
+    @Path("/autoCleanJob4Windows")
+    fun autoCleanJob4Windows(
+        @Parameter(description = "用户ID", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "为true时，只执行自动作业中的销毁作业", required = false)
+        @QueryParam("type")
+        type: String?
     ): Result<Boolean>
 }

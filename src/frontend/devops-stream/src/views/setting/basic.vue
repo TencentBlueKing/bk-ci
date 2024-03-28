@@ -48,12 +48,59 @@
                 <bk-button theme="primary" :loading="isSavingTrigginSetting" @click="saveTriggerSetting">{{ $t('save') }}</bk-button>
             </section>
         </section>
+        <h3 class="setting-basic-head">{{$t('setting.organization')}}</h3>
+        <section class="basic-main">
+            <section class="form-item">
+                <p>{{$t('setting.projectOrg')}}</p>
+                <div class="project-org-select-area">
+                    <bk-cascade
+                        v-if="orgs.length > 0"
+                        is-remote
+                        v-model="projectOrg.dept"
+                        :scroll-width="240"
+                        :remote-method="loadDepartMents"
+                        :list="orgs"
+                        @change="loadCenters"
+                    >
+                    </bk-cascade>
+                    <bk-select
+                        v-model="projectOrg.centerId"
+                    >
+                        <bk-option
+                            v-for="item in centers"
+                            :key="item.id"
+                            :id="item.id"
+                            :value="item.id"
+                            :name="item.name"
+                        />
+                    </bk-select>
+                </div>
+            </section>
+            <section class="form-item">
+                <p>{{$t('setting.projectProduct')}}</p>
+                <bk-select
+                    searchable
+                    v-model="projectOrg.productId"
+                    enable-virtual-scroll
+                    :list="products"
+                >
+                </bk-select>
+            </section>
+            <section class="main-checkbox">
+                <bk-button
+                    theme="primary"
+                    :loading="isSavingProjectOrg"
+                    @click="saveProjectOrg">
+                    {{ $t('save') }}
+                </bk-button>
+            </section>
+        </section>
     </article>
 </template>
 
 <script>
     import { setting } from '@/http'
-    import { mapState, mapActions } from 'vuex'
+    import { mapActions, mapState } from 'vuex'
 
     export default {
         data () {
@@ -67,10 +114,20 @@
                     memberNoNeedApproving: true,
                     whitelistStr: ''
                 },
+                projectOrg: {
+                    dept: [],
+                    centerId: '',
+                    productId: ''
+                },
+                deptMap: {},
+                orgs: [],
+                centers: [],
+                products: [],
                 isSaving: false,
                 isLoading: false,
                 isToggleEnable: false,
                 isSavingTrigginSetting: false,
+                isSavingProjectOrg: false,
                 isReseting: false
             }
         },
@@ -85,20 +142,59 @@
 
         methods: {
             ...mapActions(['setProjectSetting']),
-            getSetting () {
-                this.isLoading = true
-                setting.getSetting(this.projectId).then((res = {}) => {
+            async getSetting () {
+                try {
+                    this.isLoading = true
+                    const [res, projectInfo, products] = await Promise.all([
+                        setting.getSetting(this.projectId),
+                        setting.getProjectInfo(this.projectId),
+                        setting.getProducts()
+                    ])
+                    const dept = ['bgId', 'businessLineId', 'deptId'].map(key => projectInfo[key]).filter(item => item)
+                    this.initOrgs(dept)
+                    
+                    this.projectOrg = {
+                        dept,
+                        centerId: projectInfo.centerId,
+                        productId: projectInfo.productId
+                    }
+                    console.log(dept, this.projectOrg)
+                    this.products = products.map(item => ({
+                        id: item.ProductId,
+                        name: item.ProductName
+                    }))
                     Object.assign(this.form, res)
                     this.triggerSetting = {
                         memberNoNeedApproving: res.triggerReviewSetting?.memberNoNeedApproving !== undefined ? res.triggerReviewSetting?.memberNoNeedApproving : true,
                         whitelistStr: (res.triggerReviewSetting?.whitelist || []).join(',') || ''
                     }
                     this.setProjectSetting(res)
-                }).catch((err) => {
+                } catch (err) {
                     this.$bkMessage({ theme: 'error', message: err.message || err })
-                }).finally(() => {
+                } finally {
                     this.isLoading = false
-                })
+                }
+            },
+
+            async initOrgs (dept) {
+                const depts = await Promise.all(['0', ...dept].map((id, index) => {
+                    const type = index === dept.length ? 'center' : 'dept'
+                    return setting.getDepartmentList(type, id)
+                }))
+                // 去掉最后的center
+                this.centers = depts.pop()
+                this.deptMap = depts.flat().reduce((prev, cur) => {
+                    prev[cur.id] = cur
+                    if (cur.type === 'dept') {
+                        prev[cur.id].isLoading = false
+                    }
+                    if (cur.parentId && prev[cur.parentId]) {
+                        prev[cur.parentId].children = prev[cur.parentId].children || []
+                        prev[cur.parentId].children.push(cur)
+                    }
+                    return prev
+                }, {})
+                this.orgs = Object.values(this.deptMap).filter(item => item.parentId === '0')
             },
 
             saveSetting () {
@@ -146,6 +242,78 @@
                 }).finally(() => {
                     this.isReseting = false
                 })
+            },
+            async loadDepartMents (item, resolve) {
+                try {
+                    if (item.type === 'dept' || item.isLoading === false) {
+                        resolve(item)
+                        return
+                    }
+                    const res = await setting.getDepartmentList('dept', item.id)
+                    item.children = res.map(item => {
+                        if (item.type === 'dept') {
+                            item.isLoading = false
+                        }
+                        if (!this.deptMap[item.id]) {
+                            this.deptMap[item.id] = item
+                        }
+                        return item
+                    })
+                    resolve(item)
+                } catch (err) {
+                    this.$bkMessage({ theme: 'error', message: err.message || err })
+                }
+            },
+            async loadCenters (dept) {
+                try {
+                    this.projectOrg.centerId = ''
+                    
+                    const last = dept[dept.length - 1]
+                    const res = await setting.getDepartmentList('center', last)
+                    this.centers = res
+                } catch (err) {
+                    this.$bkMessage({ theme: 'error', message: err.message || err })
+                }
+            },
+            async saveProjectOrg () {
+                this.isSavingProjectOrg = true
+                try {
+                    const { dept, productId, centerId } = this.projectOrg
+                    
+                    await setting.saveProjectInfo(this.projectId, {
+                        ...this.generateProjectOrgParam(dept),
+                        centerId,
+                        centerName: this.centers.find(item => item.id === this.projectOrg.centerId)?.name ?? ''
+                    }, {
+                        productId,
+                        productName: this.products.find(item => item.id === this.projectOrg.productId)?.name ?? ''
+                    })
+                    this.$bkMessage({ theme: 'success', message: 'Saved successfully' })
+                } catch (err) {
+                    this.$bkMessage({ theme: 'error', message: err.message || err })
+                } finally {
+                    this.isSavingProjectOrg = false
+                }
+            },
+            generateProjectOrgParam () {
+                try {
+                    const { dept } = this.projectOrg
+                    const deptParam = dept.reduce((acc, id) => {
+                        const item = this.deptMap[id]
+                        Object.assign(acc, {
+                            [`${item.type}Name`]: item.name,
+                            [`${item.type}Id`]: id
+                        })
+                        return acc
+                    }, {
+                        businessLineId: '',
+                        businessLineName: ''
+                    })
+                    return deptParam
+                } catch (error) {
+                    console.error(error)
+                    return {}
+                }
             }
         }
     }
@@ -190,6 +358,12 @@
             }
             .desc-padding {
                 padding-left: 22px;
+            }
+            .project-org-select-area {
+                display: grid;
+                grid-gap: 12px;
+                grid-auto-flow: column;
+                grid-auto-columns: 1fr 240px;
             }
         }
         .basic-item {

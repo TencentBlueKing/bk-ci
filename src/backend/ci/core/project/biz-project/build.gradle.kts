@@ -33,6 +33,7 @@ dependencies {
     api(project(":core:common:common-client"))
     api(project(":core:common:common-redis"))
     api(project(":core:common:common-auth:common-auth-api"))
+    api(project(":core:common:common-audit"))
     api(project(":core:project:model-project"))
     api(project(":core:project:api-project"))
     api(project(":core:auth:api-auth"))

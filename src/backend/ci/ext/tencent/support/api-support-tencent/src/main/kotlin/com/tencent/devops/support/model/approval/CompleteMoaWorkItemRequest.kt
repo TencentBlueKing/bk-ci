@@ -26,40 +26,39 @@
  */
 package com.tencent.devops.support.model.approval
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 import com.fasterxml.jackson.annotation.JsonProperty
 
-@ApiModel("审批单关闭请求报文体")
+@Schema(title = "审批单关闭请求报文体")
 data class CompleteMoaWorkItemRequest(
-    @ApiModelProperty("app标识", required = false, name = "app_code")
+    @get:Schema(title = "app标识", required = false, description = "app_code")
     @JsonProperty("app_code")
     var appCode: String? = null,
-    @ApiModelProperty("app私密key", required = false, name = "app_secret")
+    @get:Schema(title = "app私密key", required = false, description = "app_secret")
     @JsonProperty("app_secret")
     var appSecret: String? = null,
-    @ApiModelProperty("用户access_token", required = false, name = "access_token")
+    @get:Schema(title = "用户access_token", required = false, description = "access_token")
     @JsonProperty("access_token")
     var accessToken: String? = null,
-    @ApiModelProperty("内部版用户登录态", required = false, name = "bk_ticket")
+    @get:Schema(title = "内部版用户登录态", required = false, description = "bk_ticket")
     @JsonProperty("bk_ticket")
     var bkTicket: String? = null,
-    @ApiModelProperty("操作者RTX英文名", required = false, name = "operator")
+    @get:Schema(title = "操作者RTX英文名", required = false, description = "operator")
     @JsonProperty("operator")
     var operator: String? = null,
     @JsonProperty("activity")
-    @ApiModelProperty("审批流程对应的审批节点", required = false)
+    @get:Schema(title = "审批流程对应的审批节点", required = false)
     val activity: String?, // GM审批
     @JsonProperty("category")
-    @ApiModelProperty("单据类别", required = true)
+    @get:Schema(title = "单据类别", required = true)
     val category: String = MoaWorkitemCreateCategoryType.IT.id, // C23D7091B98844659D128773209BBF85
     @JsonProperty("handler")
-    @ApiModelProperty("单据审批人", required = false)
+    @get:Schema(title = "单据审批人", required = false)
     val handler: String?, // erkehe
     @JsonProperty("process_inst_id")
-    @ApiModelProperty("流程实例标识", required = true)
+    @get:Schema(title = "流程实例标识", required = true)
     val processInstId: String, // Cost/ExpenseProcess/p20210080912
     @JsonProperty("process_name")
-    @ApiModelProperty("流程名称", required = true)
+    @get:Schema(title = "流程名称", required = true)
     val processName: String // Cost/ExpenseProcess
 )

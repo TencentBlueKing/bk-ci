@@ -29,32 +29,31 @@ package com.tencent.devops.store.pojo.common
 
 import com.tencent.devops.common.web.annotation.BkField
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 import java.time.LocalDateTime
 
-@ApiModel("组件荣誉管理信息")
+@Schema(title = "组件荣誉管理信息")
 data class StoreHonorManageInfo(
-    @ApiModelProperty("storeName", required = true)
+    @get:Schema(title = "storeName", required = true)
     val storeName: String,
-    @ApiModelProperty("storeCode", required = true)
+    @get:Schema(title = "storeCode", required = true)
     val storeCode: String,
-    @ApiModelProperty("ID", required = true)
+    @get:Schema(title = "ID", required = true)
     val honorId: String,
-    @ApiModelProperty("荣誉头衔", required = true)
+    @get:Schema(title = "荣誉头衔", required = true)
     @BkField(maxLength = 4)
     val honorTitle: String,
-    @ApiModelProperty("荣誉名称", required = true)
+    @get:Schema(title = "荣誉名称", required = true)
     @BkField(maxLength = 40)
     val honorName: String,
-    @ApiModelProperty("组件范畴", required = true)
+    @get:Schema(title = "组件范畴", required = true)
     val storeType: StoreTypeEnum,
-    @ApiModelProperty("创建者", required = true)
+    @get:Schema(title = "创建者", required = true)
     val creator: String,
-    @ApiModelProperty("修改者", required = true)
+    @get:Schema(title = "修改者", required = true)
     val modifier: String,
-    @ApiModelProperty("更新时间", required = true)
+    @get:Schema(title = "更新时间", required = true)
     val updateTime: LocalDateTime,
-    @ApiModelProperty("创建时间", required = true)
+    @get:Schema(title = "创建时间", required = true)
     val createTime: LocalDateTime
 )

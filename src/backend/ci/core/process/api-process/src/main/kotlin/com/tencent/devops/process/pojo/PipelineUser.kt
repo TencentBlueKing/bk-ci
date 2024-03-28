@@ -27,22 +27,21 @@
 
 package com.tencent.devops.process.pojo
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("流水线-用户信息")
+@Schema(title = "流水线-用户信息")
 data class PipelineUser(
-    @ApiModelProperty("主键ID", required = true)
+    @get:Schema(title = "主键ID", required = true)
     val id: Long,
-    @ApiModelProperty("流水线ID", required = true)
+    @get:Schema(title = "流水线ID", required = true)
     val pipelineId: String,
-    @ApiModelProperty("创建时间", required = true)
+    @get:Schema(title = "创建时间", required = true)
     val createTime: Long,
-    @ApiModelProperty("更新时间", required = true)
+    @get:Schema(title = "更新时间", required = true)
     val updateTime: Long,
-    @ApiModelProperty("创建人", required = true)
+    @get:Schema(title = "创建人", required = true)
     val creator: String,
-    @ApiModelProperty("修改人", required = true)
+    @get:Schema(title = "修改人", required = true)
     val modifier: String
 
 )

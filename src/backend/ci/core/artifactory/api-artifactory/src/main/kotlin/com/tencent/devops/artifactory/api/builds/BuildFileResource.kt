@@ -33,9 +33,9 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_BUILD_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_PIPELINE_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_PROJECT_ID
 import com.tencent.devops.common.api.pojo.Result
-import io.swagger.annotations.Api
-import io.swagger.annotations.ApiOperation
-import io.swagger.annotations.ApiParam
+import io.swagger.v3.oas.annotations.tags.Tag
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.Parameter
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition
 import org.glassfish.jersey.media.multipart.FormDataParam
 import java.io.InputStream
@@ -51,96 +51,96 @@ import javax.ws.rs.QueryParam
 import javax.ws.rs.core.Context
 import javax.ws.rs.core.MediaType
 
-@Api(tags = ["BUILD_ARTIFACTORY"], description = "仓库-文件管理")
+@Tag(name = "BUILD_ARTIFACTORY", description = "仓库-文件管理")
 @Path("/build/artifactories/")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)@Suppress("ALL")
 interface BuildFileResource {
 
-    @ApiOperation("下载文件")
+    @Operation(summary = "下载文件")
     @GET
     @Path("/file/download")
     fun downloadFile(
-        @ApiParam("projectCode", required = false)
+        @Parameter(description = "projectCode", required = false)
         @HeaderParam(AUTH_HEADER_DEVOPS_PROJECT_ID)
         projectCode: String,
-        @ApiParam("pipelineId", required = false)
+        @Parameter(description = "pipelineId", required = false)
         @HeaderParam(AUTH_HEADER_DEVOPS_PIPELINE_ID)
         pipelineId: String,
-        @ApiParam("文件路径", required = true)
+        @Parameter(description = "文件路径", required = true)
         @QueryParam("filePath")
         filePath: String,
         @Context
         response: HttpServletResponse
     )
 
-    @ApiOperation("归档文件")
+    @Operation(summary = "归档文件")
     @POST
     @Path("/file/archive")
     @Consumes(MediaType.MULTIPART_FORM_DATA)
     fun archiveFile(
-        @ApiParam("projectCode", required = false)
+        @Parameter(description = "projectCode", required = false)
         @HeaderParam(AUTH_HEADER_DEVOPS_PROJECT_ID)
         projectCode: String,
-        @ApiParam("pipelineId", required = false)
+        @Parameter(description = "pipelineId", required = false)
         @HeaderParam(AUTH_HEADER_DEVOPS_PIPELINE_ID)
         pipelineId: String,
-        @ApiParam("buildId", required = false)
+        @Parameter(description = "buildId", required = false)
         @HeaderParam(AUTH_HEADER_DEVOPS_BUILD_ID)
         buildId: String,
-        @ApiParam("文件类型", required = true)
+        @Parameter(description = "文件类型", required = true)
         @QueryParam("fileType")
         fileType: FileTypeEnum,
-        @ApiParam("自定义文件路径", required = false)
+        @Parameter(description = "自定义文件路径", required = false)
         @QueryParam("customFilePath")
         customFilePath: String?,
-        @ApiParam("文件", required = true)
+        @Parameter(description = "文件", required = true)
         @FormDataParam("file")
         inputStream: InputStream,
         @FormDataParam("file")
         disposition: FormDataContentDisposition
     ): Result<String?>
 
-    @ApiOperation("下载归档文件")
+    @Operation(summary = "下载归档文件")
     @GET
     @Path("/file/archive/download")
     fun downloadArchiveFile(
-        @ApiParam("projectCode", required = true)
+        @Parameter(description = "projectCode", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_PROJECT_ID)
         projectCode: String,
-        @ApiParam("pipelineId", required = true)
+        @Parameter(description = "pipelineId", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_PIPELINE_ID)
         pipelineId: String,
-        @ApiParam("buildId", required = true)
+        @Parameter(description = "buildId", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_BUILD_ID)
         buildId: String,
-        @ApiParam("文件类型", required = true)
+        @Parameter(description = "文件类型", required = true)
         @QueryParam("fileType")
         fileType: FileTypeEnum,
-        @ApiParam("自定义文件路径", required = true)
+        @Parameter(description = "自定义文件路径", required = true)
         @QueryParam("customFilePath")
         customFilePath: String,
         @Context
         response: HttpServletResponse
     )
 
-    @ApiOperation("获取文件下载url列表")
+    @Operation(summary = "获取文件下载url列表")
     @GET
     @Path("/pipeline/{pipelineId}/build/{buildId}/file/download/urls/get")
     fun getFileDownloadUrls(
-        @ApiParam("projectCode", required = true)
+        @Parameter(description = "projectCode", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_PROJECT_ID)
         projectCode: String,
-        @ApiParam("流水线ID", required = true)
+        @Parameter(description = "流水线ID", required = true)
         @PathParam("pipelineId")
         pipelineId: String,
-        @ApiParam("构建ID", required = true)
+        @Parameter(description = "构建ID", required = true)
         @PathParam("buildId")
         buildId: String,
-        @ApiParam("文件类型", required = true)
+        @Parameter(description = "文件类型", required = true)
         @QueryParam("fileType")
         fileType: FileTypeEnum,
-        @ApiParam("自定义文件路径", required = false)
+        @Parameter(description = "自定义文件路径", required = false)
         @QueryParam("customFilePath")
         customFilePath: String?
     ): Result<GetFileDownloadUrlsResponse?>

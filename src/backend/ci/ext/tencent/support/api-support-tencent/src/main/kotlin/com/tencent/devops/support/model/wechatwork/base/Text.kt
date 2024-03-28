@@ -27,11 +27,10 @@
 
 package com.tencent.devops.support.model.wechatwork.base
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("文本")
+@Schema(title = "文本")
 data class Text(
-    @ApiModelProperty("文本内容")
+    @get:Schema(title = "文本内容")
     val content: String
 )

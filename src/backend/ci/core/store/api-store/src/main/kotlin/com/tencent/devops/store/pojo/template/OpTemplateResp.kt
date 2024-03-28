@@ -27,17 +27,16 @@
 
 package com.tencent.devops.store.pojo.template
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("OP-模版列表")
+@Schema(title = "OP-模版列表")
 data class OpTemplateResp(
-    @ApiModelProperty("总记录数")
+    @get:Schema(title = "总记录数")
     val count: Int,
-    @ApiModelProperty("当前页码值")
+    @get:Schema(title = "当前页码值")
     val page: Int?,
-    @ApiModelProperty("每页记录大小")
+    @get:Schema(title = "每页记录大小")
     val pageSize: Int?,
-    @ApiModelProperty("数据集合")
+    @get:Schema(title = "数据集合")
     val records: List<OpTemplateItem?>
 )

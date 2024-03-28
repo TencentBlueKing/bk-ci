@@ -28,31 +28,30 @@
 package com.tencent.devops.process.pojo.classify
 
 import com.tencent.devops.process.pojo.classify.enums.Logic
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("流水线视图")
+@Schema(title = "流水线视图")
 data class PipelineNewView(
-    @ApiModelProperty("流水线id", required = false)
+    @get:Schema(title = "流水线id", required = false)
     val id: String,
-    @ApiModelProperty("项目id", required = false)
+    @get:Schema(title = "项目id", required = false)
     val projectId: String,
-    @ApiModelProperty("名称", required = false)
+    @get:Schema(title = "名称", required = false)
     val name: String,
-    @ApiModelProperty("是否项目", required = false)
+    @get:Schema(title = "是否项目", required = false)
     val projected: Boolean,
-    @ApiModelProperty("创建时间", required = false)
+    @get:Schema(title = "创建时间", required = false)
     val createTime: Long,
-    @ApiModelProperty("更新时间", required = false)
+    @get:Schema(title = "更新时间", required = false)
     val updateTime: Long,
-    @ApiModelProperty("创建者", required = false)
+    @get:Schema(title = "创建者", required = false)
     val creator: String,
-    @ApiModelProperty("逻辑符", required = false)
+    @get:Schema(title = "逻辑符", required = false)
     val logic: Logic,
-    @ApiModelProperty("流水线视图过滤器列表", required = false)
+    @get:Schema(title = "流水线视图过滤器列表", required = false)
     val filters: List<PipelineViewFilter>,
-    @ApiModelProperty("视图类型", required = true)
+    @get:Schema(title = "视图类型", required = true)
     val viewType: Int,
-    @ApiModelProperty("流水线ID列表", required = true)
+    @get:Schema(title = "流水线ID列表", required = true)
     val pipelineIds: List<String>
 )

@@ -27,13 +27,12 @@
 
 package com.tencent.devops.dispatch.docker.pojo
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("docker构建路由模型")
+@Schema(title = "docker构建路由模型")
 data class DockerRoutingVO(
-    @ApiModelProperty("项目id")
+    @get:Schema(title = "项目id")
     val projectId: String,
-    @ApiModelProperty("路由类型")
+    @get:Schema(title = "路由类型")
     val dockerRoutingType: String
 )

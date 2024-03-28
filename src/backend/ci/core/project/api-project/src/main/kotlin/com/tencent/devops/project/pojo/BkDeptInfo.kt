@@ -27,13 +27,13 @@
 
 package com.tencent.devops.project.pojo
 
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
 data class BkDeptInfo(
-    @ApiModelProperty(name = "类型")
+    @get:Schema(title = "类型")
     val type: String,
-    @ApiModelProperty(name = "名称")
+    @get:Schema(title = "名称")
     val name: String,
-    @ApiModelProperty(name = "部门ID")
+    @get:Schema(title = "部门ID")
     val id: String
 )

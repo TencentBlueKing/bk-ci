@@ -27,13 +27,12 @@
 
 package com.tencent.devops.process.pojo
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("快速接入-代码库")
+@Schema(title = "快速接入-代码库")
 data class AccessRepository(
-    @ApiModelProperty("项目ID", required = true)
+    @get:Schema(title = "项目ID", required = true)
     val projectId: String,
-    @ApiModelProperty("项目名称", required = true)
+    @get:Schema(title = "项目名称", required = true)
     val projectName: String
 )

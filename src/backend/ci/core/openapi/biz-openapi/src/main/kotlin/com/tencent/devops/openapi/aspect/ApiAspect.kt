@@ -43,7 +43,7 @@ import com.tencent.devops.openapi.es.IESService
 import com.tencent.devops.openapi.service.OpenapiPermissionService
 import com.tencent.devops.openapi.service.op.AppCodeService
 import com.tencent.devops.openapi.utils.ApiGatewayUtil
-import io.swagger.annotations.ApiOperation
+import io.swagger.v3.oas.annotations.Operation
 import javax.ws.rs.core.Response
 import kotlin.reflect.jvm.kotlinFunction
 import org.aspectj.lang.JoinPoint
@@ -268,7 +268,7 @@ class ApiAspect(
                 ?.getDeclaredMethod(
                     method.name, *method.parameterTypes
                 )
-                ?.getAnnotation(ApiOperation::class.java)
+                ?.getAnnotation(Operation::class.java)
                 ?.tags
                 ?.first()
                 ?.replace(Regex("app|user"), apiType) ?: methodName

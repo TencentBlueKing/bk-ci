@@ -36,9 +36,9 @@ import com.tencent.devops.stream.pojo.ManualTriggerReq
 import com.tencent.devops.stream.pojo.StreamGitYamlString
 import com.tencent.devops.stream.pojo.TriggerBuildResult
 import com.tencent.devops.stream.pojo.V2BuildYaml
-import io.swagger.annotations.Api
-import io.swagger.annotations.ApiOperation
-import io.swagger.annotations.ApiParam
+import io.swagger.v3.oas.annotations.tags.Tag
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.Parameter
 import javax.ws.rs.Consumes
 import javax.ws.rs.GET
 import javax.ws.rs.HeaderParam
@@ -49,112 +49,112 @@ import javax.ws.rs.Produces
 import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
-@Api(tags = ["USER_STREAM_TRIGGER"], description = "user-TriggerBuild页面")
+@Tag(name = "USER_STREAM_TRIGGER", description = "user-TriggerBuild页面")
 @Path("/user/trigger/build")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface UserStreamTriggerResource {
 
-    @ApiOperation("人工TriggerBuild启动构建")
+    @Operation(summary = "人工TriggerBuild启动构建")
     @POST
     @Path("/{pipelineId}/startup")
     fun triggerStartup(
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam(value = "流水线ID", required = true)
+        @Parameter(description = "流水线ID", required = true)
         @PathParam("pipelineId")
         pipelineId: String,
-        @ApiParam("TriggerBuild请求", required = true)
+        @Parameter(description = "TriggerBuild请求", required = true)
         triggerBuildReq: ManualTriggerReq
     ): Result<TriggerBuildResult>
 
-    @ApiOperation("人工TriggerBuild拿启动信息")
+    @Operation(summary = "人工TriggerBuild拿启动信息")
     @GET
     @Path("/{projectId}/{pipelineId}/manual")
     fun getManualTriggerInfo(
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam(value = "蓝盾项目ID", required = true)
+        @Parameter(description = "蓝盾项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @ApiParam("流水线ID", required = true)
+        @Parameter(description = "流水线ID", required = true)
         @PathParam("pipelineId")
         pipelineId: String,
-        @ApiParam("分支名称", required = false)
+        @Parameter(description = "分支名称", required = false)
         @QueryParam("branchName")
         branchName: String,
-        @ApiParam("COMMIT_ID", required = false)
+        @Parameter(description = "COMMIT_ID", required = false)
         @QueryParam("commitId")
         commitId: String?
     ): Result<ManualTriggerInfo>
 
-    @ApiOperation("子流水线插件TriggerBuild拿启动信息")
+    @Operation(summary = "子流水线插件TriggerBuild拿启动信息")
     @GET
     @Path("/{projectId}/{pipelineId}/manualStartupInfo")
     fun getManualStartupInfo(
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam(value = "蓝盾项目ID", required = true)
+        @Parameter(description = "蓝盾项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @ApiParam("流水线ID", required = true)
+        @Parameter(description = "流水线ID", required = true)
         @PathParam("pipelineId")
         pipelineId: String,
-        @ApiParam("分支名称", required = false)
+        @Parameter(description = "分支名称", required = false)
         @QueryParam("branchName")
         branchName: String,
-        @ApiParam("COMMIT_ID", required = false)
+        @Parameter(description = "COMMIT_ID", required = false)
         @QueryParam("commitId")
         commitId: String?
     ): Result<List<DynamicParameterInfo>>
 
-    @ApiOperation("校验yaml格式")
+    @Operation(summary = "校验yaml格式")
     @POST
     @Path("/checkYaml")
     fun checkYaml(
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("yaml内容", required = true)
+        @Parameter(description = "yaml内容", required = true)
         yaml: StreamGitYamlString
     ): Result<String>
 
-    @ApiOperation("根据BuildId查询yaml内容")
+    @Operation(summary = "根据BuildId查询yaml内容")
     @GET
     @Path("/getYaml/{projectId}/{buildId}")
     fun getYamlByBuildId(
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam(value = "蓝盾项目ID", required = true)
+        @Parameter(description = "蓝盾项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @ApiParam(value = "构建ID", required = true)
+        @Parameter(description = "构建ID", required = true)
         @PathParam("buildId")
         buildId: String
     ): Result<V2BuildYaml?>
 
     @Deprecated("手动触发换新的接口拿取，后续看网关没有调用直接删除")
-    @ApiOperation("根据PipelinId和分支查询Yaml内容")
+    @Operation(summary = "根据PipelinId和分支查询Yaml内容")
     @GET
     @Path("/{projectId}/{pipelineId}/yaml")
     fun getYamlByPipeline(
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam(value = "蓝盾项目ID", required = true)
+        @Parameter(description = "蓝盾项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @ApiParam("流水线ID", required = true)
+        @Parameter(description = "流水线ID", required = true)
         @PathParam("pipelineId")
         pipelineId: String,
-        @ApiParam("分支名称", required = false)
+        @Parameter(description = "分支名称", required = false)
         @QueryParam("branchName")
         branchName: String,
-        @ApiParam("COMMIT_ID", required = false)
+        @Parameter(description = "COMMIT_ID", required = false)
         @QueryParam("commitId")
         commitId: String?
     ): Result<String?>

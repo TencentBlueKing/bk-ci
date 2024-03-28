@@ -27,11 +27,10 @@
 
 package com.tencent.devops.repository.pojo.github
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("白名单请求包体")
+@Schema(title = "白名单请求包体")
 data class GithubWhitelistRequest(
-    @ApiModelProperty("Github代码库链接")
+    @get:Schema(title = "Github代码库链接")
     val url: String = ""
 )

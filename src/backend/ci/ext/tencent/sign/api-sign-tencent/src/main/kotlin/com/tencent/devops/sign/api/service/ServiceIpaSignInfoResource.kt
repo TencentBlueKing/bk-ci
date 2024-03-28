@@ -29,9 +29,9 @@ package com.tencent.devops.sign.api.service
 
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.sign.api.pojo.IpaSignInfo
-import io.swagger.annotations.Api
-import io.swagger.annotations.ApiOperation
-import io.swagger.annotations.ApiParam
+import io.swagger.v3.oas.annotations.tags.Tag
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.Parameter
 import javax.ws.rs.Consumes
 import javax.ws.rs.POST
 import javax.ws.rs.GET
@@ -39,25 +39,25 @@ import javax.ws.rs.Path
 import javax.ws.rs.Produces
 import javax.ws.rs.core.MediaType
 
-@Api(tags = ["SERVICE_IPA_SIGN_INFO"], description = "服务接口-IPA签名信息")
+@Tag(name = "SERVICE_IPA_SIGN_INFO", description = "服务接口-IPA签名信息")
 @Path("/service/ipaSignInfo")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface ServiceIpaSignInfoResource {
 
-    @ApiOperation("编码BASE64的IPA签名信息")
+    @Operation(summary = "编码BASE64的IPA签名信息")
     @POST
     @Path("/base64Encode")
     fun base64Encode(
-        @ApiParam("源IPA签名信息", required = true)
+        @Parameter(description = "源IPA签名信息", required = true)
         ipaSignInfo: IpaSignInfo
     ): Result<String?>
 
-    @ApiOperation("解码BASE64的IPA签名信息")
+    @Operation(summary = "解码BASE64的IPA签名信息")
     @GET
     @Path("/base64Decode")
     fun base64Decode(
-        @ApiParam("源IPA签名信息", required = true)
+        @Parameter(description = "源IPA签名信息", required = true)
         ipaSignInfoEncode: String
     ): Result<IpaSignInfo?>
 }

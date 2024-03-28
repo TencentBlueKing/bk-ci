@@ -27,13 +27,12 @@
 
 package com.tencent.devops.process.pojo
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("流水线模型-修改NAME")
+@Schema(title = "流水线模型-修改NAME")
 data class PipelineName(
-    @ApiModelProperty("流水线修改后的名称", required = true)
+    @get:Schema(title = "流水线修改后的名称", required = true)
     val name: String,
-    @ApiModelProperty("流水线修改前的名称", required = false)
+    @get:Schema(title = "流水线修改前的名称", required = false)
     val oldName: String = ""
 )

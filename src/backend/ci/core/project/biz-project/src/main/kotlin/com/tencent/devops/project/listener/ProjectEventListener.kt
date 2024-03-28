@@ -44,9 +44,6 @@ interface ProjectEventListener : Listener<ProjectBroadCastEvent> {
      */
     override fun execute(event: ProjectBroadCastEvent) {
         when (event) {
-/*            is ProjectCreateBroadCastEvent -> {
-                onReceiveProjectCreate(event)
-            }*/
             is ProjectUpdateBroadCastEvent -> {
                 onReceiveProjectUpdate(event)
             }

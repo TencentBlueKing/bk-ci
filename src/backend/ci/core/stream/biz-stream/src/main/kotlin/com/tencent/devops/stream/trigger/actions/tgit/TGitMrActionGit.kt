@@ -225,7 +225,6 @@ class TGitMrActionGit(
                     mrId = event.object_attributes.id.toString(),
                     retry = ApiRequestRetryInfo(true)
                 )?.baseInfo
-                data.context.mrTargetBranch = event.object_attributes.target_branch
                 data.context.gitMrReviewInfo = apiService.getMrReview(
                     cred = getGitCred(),
                     gitProjectId = event.object_attributes.target_project_id.toString(),
@@ -236,6 +235,7 @@ class TGitMrActionGit(
                 logger.warn("TGit MR action cache mrInfo/mrReviewInfo error", e)
             }
         }
+        data.context.mrTargetBranch = event.object_attributes.target_branch
     }
 
     override fun tryGetMrInfoFromCache(): TGitMrInfo? {

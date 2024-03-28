@@ -33,9 +33,9 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.monitoring.pojo.SlaCodeccResponseData
-import io.swagger.annotations.Api
-import io.swagger.annotations.ApiOperation
-import io.swagger.annotations.ApiParam
+import io.swagger.v3.oas.annotations.tags.Tag
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.Parameter
 import javax.ws.rs.Consumes
 import javax.ws.rs.GET
 import javax.ws.rs.HeaderParam
@@ -45,32 +45,32 @@ import javax.ws.rs.Produces
 import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
-@Api(tags = ["OPEN_API_V2_SLA"], description = "OPEN-API-V2-SLA统计")
+@Tag(name = "OPEN_API_V2_SLA", description = "OPEN-API-V2-SLA统计")
 @Path("/{apigwType:apigw-user|apigw-app|apigw}/v2/sla")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface ApigwSlaResourceV2 {
 
-    @ApiOperation("CodeCC的SLA统计详情，含执行次数,耗时,成功率以及错误码分布", tags = ["v2_app_sla"])
+    @Operation(summary = "CodeCC的SLA统计详情，含执行次数,耗时,成功率以及错误码分布", tags = ["v2_app_sla"])
     @GET
     @Path("/codecc/queryByBG")
     fun codeccQueryByBG(
-        @ApiParam(value = "appCode", required = true, defaultValue = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
+        @Parameter(description = "appCode", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
         appCode: String?,
-        @ApiParam(value = "apigw Type", required = true)
+        @Parameter(description = "apigw Type", required = true)
         @PathParam("apigwType")
         apigwType: String?,
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String,
-        @ApiParam(value = "事业群ID", required = true)
+        @Parameter(description = "事业群ID", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_ORGANIZATION_ID)
         bgId: String,
-        @ApiParam(value = "开始时间(时间戳形式)", required = true)
+        @Parameter(description = "开始时间(时间戳形式)", required = true)
         @QueryParam(value = "startTime")
         startTime: Long,
-        @ApiParam(value = "结束时间(时间戳形式)", required = true)
+        @Parameter(description = "结束时间(时间戳形式)", required = true)
         @QueryParam(value = "endTime")
         endTime: Long
     ): Result<SlaCodeccResponseData>

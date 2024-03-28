@@ -33,9 +33,9 @@ import com.tencent.devops.ticket.pojo.Cert
 import com.tencent.devops.ticket.pojo.CertAndroidWithCredential
 import com.tencent.devops.ticket.pojo.CertEnterprise
 import com.tencent.devops.ticket.pojo.CertTls
-import io.swagger.annotations.Api
-import io.swagger.annotations.ApiOperation
-import io.swagger.annotations.ApiParam
+import io.swagger.v3.oas.annotations.tags.Tag
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.Parameter
 import javax.ws.rs.Consumes
 import javax.ws.rs.GET
 import javax.ws.rs.Path
@@ -44,70 +44,70 @@ import javax.ws.rs.Produces
 import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
-@Api(tags = ["SERVICE_CERT"], description = "服务-证书资源")
+@Tag(name = "SERVICE_CERT", description = "服务-证书资源")
 @Path("/service/certs")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface ServiceCertResource {
-    @ApiOperation("获取可用安卓证书列表")
+    @Operation(summary = "获取可用安卓证书列表")
     @Path("/{projectId}/android/hasUsePermissionList")
     @GET
     fun hasUsePermissionAndroidList(
-        @ApiParam("项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @ApiParam("用户ID", required = true)
+        @Parameter(description = "用户ID", required = true)
         @QueryParam("userId")
         userId: String,
-        @ApiParam("第几页", required = false, defaultValue = "1")
+        @Parameter(description = "第几页", required = false, example = "1")
         @QueryParam("page")
         page: Int?,
-        @ApiParam("每页多少条", required = false, defaultValue = "20")
+        @Parameter(description = "每页多少条", required = false, example = "20")
         @QueryParam("pageSize")
         pageSize: Int?
     ): Result<Page<Cert>>
 
-    @ApiOperation("获取安卓证书")
+    @Operation(summary = "获取安卓证书")
     @Path("/{projectId}/android/{certId}")
     @GET
     fun getAndroid(
-        @ApiParam("项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @ApiParam("证书ID", required = true)
+        @Parameter(description = "证书ID", required = true)
         @PathParam("certId")
         certId: String,
-        @ApiParam("Base64编码的加密公钥", required = true)
+        @Parameter(description = "Base64编码的加密公钥", required = true)
         @QueryParam("publicKey")
         publicKey: String
     ): Result<CertAndroidWithCredential>
 
-    @ApiOperation("获取IOS企业签名证书")
+    @Operation(summary = "获取IOS企业签名证书")
     @Path("/{projectId}/enterprise/{certId}")
     @GET
     fun getEnterprise(
-        @ApiParam("项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @ApiParam("证书ID", required = true)
+        @Parameter(description = "证书ID", required = true)
         @PathParam("certId")
         certId: String,
-        @ApiParam("Base64编码的加密公钥", required = true)
+        @Parameter(description = "Base64编码的加密公钥", required = true)
         @QueryParam("publicKey")
         publicKey: String
     ): Result<CertEnterprise>
 
-    @ApiOperation("获取tls证书")
+    @Operation(summary = "获取tls证书")
     @Path("/{projectId}/tls/{certId}")
     @GET
     fun getTls(
-        @ApiParam("项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @ApiParam("证书ID", required = true)
+        @Parameter(description = "证书ID", required = true)
         @PathParam("certId")
         certId: String,
-        @ApiParam("Base64编码的加密公钥", required = true)
+        @Parameter(description = "Base64编码的加密公钥", required = true)
         @QueryParam("publicKey")
         publicKey: String
     ): Result<CertTls>

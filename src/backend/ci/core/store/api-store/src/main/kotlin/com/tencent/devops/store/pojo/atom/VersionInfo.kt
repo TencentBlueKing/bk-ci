@@ -29,18 +29,17 @@ package com.tencent.devops.store.pojo.atom
 
 import com.tencent.devops.common.web.annotation.BkField
 import com.tencent.devops.store.pojo.common.enums.ReleaseTypeEnum
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("版本信息")
+@Schema(title = "版本信息")
 data class VersionInfo(
-    @ApiModelProperty("发布者", required = true)
+    @get:Schema(title = "发布者", required = true)
     var publisher: String,
-    @ApiModelProperty("发布类型", required = true)
+    @get:Schema(title = "发布类型", required = true)
     var releaseType: ReleaseTypeEnum,
-    @ApiModelProperty("插件版本", required = true)
+    @get:Schema(title = "插件版本", required = true)
     var version: String,
-    @ApiModelProperty("版本日志内容", required = true)
+    @get:Schema(title = "版本日志内容", required = true)
     @field:BkField(maxLength = 65535)
     val versionContent: String
 )

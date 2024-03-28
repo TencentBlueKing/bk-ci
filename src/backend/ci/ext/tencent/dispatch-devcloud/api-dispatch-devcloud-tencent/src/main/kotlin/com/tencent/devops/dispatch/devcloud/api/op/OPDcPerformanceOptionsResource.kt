@@ -4,9 +4,9 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.dispatch.devcloud.pojo.performance.PerformanceOptionsVO
-import io.swagger.annotations.Api
-import io.swagger.annotations.ApiOperation
-import io.swagger.annotations.ApiParam
+import io.swagger.v3.oas.annotations.tags.Tag
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.Parameter
 import javax.ws.rs.Consumes
 import javax.ws.rs.DELETE
 import javax.ws.rs.GET
@@ -18,7 +18,7 @@ import javax.ws.rs.PathParam
 import javax.ws.rs.Produces
 import javax.ws.rs.core.MediaType
 
-@Api(tags = ["OP_DISPATCH_DEVCLOUD"], description = "OP-DEVCLOUD构建机性能配置接口")
+@Tag(name = "OP_DISPATCH_DEVCLOUD", description = "OP-DEVCLOUD构建机性能配置接口")
 @Path("/op/dispatchDevcloud")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
@@ -26,46 +26,46 @@ interface OPDcPerformanceOptionsResource {
 
     @GET
     @Path("/performanceOptions/list")
-    @ApiOperation("获取devcloud性能基础配置列表")
+    @Operation(summary = "获取devcloud性能基础配置列表")
     fun listDcPerformanceOptions(
-        @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String
     ): Result<List<PerformanceOptionsVO>>
 
     @POST
     @Path("/performanceOptions/add")
-    @ApiOperation("新增性能基础配置")
+    @Operation(summary = "新增性能基础配置")
     fun createDcPerformanceOptions(
-        @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String,
-        @ApiParam("性能配置", required = true)
+        @Parameter(description = "性能配置", required = true)
         performanceOptionsVO: PerformanceOptionsVO
     ): Result<Boolean>
 
     @PUT
     @Path("/performanceOptions/{id}/update")
-    @ApiOperation("更新性能基础配置")
+    @Operation(summary = "更新性能基础配置")
     fun updateDcPerformanceOptions(
-        @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String,
-        @ApiParam("配置ID", required = true)
+        @Parameter(description = "配置ID", required = true)
         @PathParam("id")
         id: Long,
-        @ApiParam("性能配置", required = true)
+        @Parameter(description = "性能配置", required = true)
         performanceOptionsVO: PerformanceOptionsVO
     ): Result<Boolean>
 
     @DELETE
     @Path("/performanceOptions/delete/{id}")
-    @ApiOperation("删除Devcloud性能基础配置")
+    @Operation(summary = "删除Devcloud性能基础配置")
     fun deleteDcPerformanceOptions(
-        @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String,
-        @ApiParam("ID", required = true)
+        @Parameter(description = "ID", required = true)
         @PathParam("id")
         projectId: Long
     ): Result<Boolean>

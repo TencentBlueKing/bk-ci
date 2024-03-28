@@ -46,6 +46,7 @@ class WorkspaceXlsxExportService @Autowired constructor(
 ) {
 
     fun exportProjectWorkspaceListOp(
+        userId: String,
         data: ProjectWorkspaceFetchData
     ): Response {
         val pageNotNull = data.page ?: 1
@@ -72,7 +73,12 @@ class WorkspaceXlsxExportService @Autowired constructor(
             search = search
         )
 
-        val records = workspaceService.parseWorkspaceList(result, true, data.expertSupId)
+        val records = workspaceService.parseWorkspaceList(
+            userId = userId,
+            result = result,
+            enableExportSup = true,
+            expertSupId = data.expertSupId
+        )
         // 创建表
         val workbook = SXSSFWorkbook()
         val sheet = workbook.createSheet("实例管理")
@@ -133,7 +139,12 @@ class WorkspaceXlsxExportService @Autowired constructor(
             search = search
         )
 
-        val records = workspaceService.parseWorkspaceList(result, false, null)
+        val records = workspaceService.parseWorkspaceList(
+            userId = userId,
+            result = result,
+            enableExportSup = false,
+            expertSupId = null
+        )
 
         val workbook = SXSSFWorkbook()
         val sheet = workbook.createSheet("实例管理")

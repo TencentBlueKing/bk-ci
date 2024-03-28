@@ -1,5 +1,5 @@
 import api from './ajax'
-import { ENVIRNMENT_PERFIX, TICKET_PERFIX, EXP_PERFIX, STREAM_PERFIX, DISPATCH_STREAM_PERFIX } from './perfix'
+import { DISPATCH_STREAM_PERFIX, ENVIRNMENT_PERFIX, EXP_PERFIX, PROJECT_PERFIX, STREAM_PERFIX, TICKET_PERFIX } from './perfix'
 
 export default {
     getThirdAgentZoneList (projectId, os) {
@@ -230,5 +230,19 @@ export default {
 
     deleteShare (projectId, envHashId, sharedProjectId) {
         return api.delete(`${ENVIRNMENT_PERFIX}/user/environment/${projectId}/${envHashId}/${sharedProjectId}/sharedProject`)
+    },
+    getDepartmentList (type, id) {
+        return api.get(`${PROJECT_PERFIX}/user/organizations/types/${type}/ids/${id}`)
+    },
+    getProducts () {
+        return api.get(`${PROJECT_PERFIX}/user/projects/product/getOperationalProducts`)
+    },
+    getProjectInfo (projectId) {
+        return api.get(`${STREAM_PERFIX}/user/projects/${projectId}`)
+    },
+    saveProjectInfo (projectId, body, query) {
+        return api.put(`${STREAM_PERFIX}/user/projects/${projectId}/organization`, body, {
+            params: query
+        })
     }
 }

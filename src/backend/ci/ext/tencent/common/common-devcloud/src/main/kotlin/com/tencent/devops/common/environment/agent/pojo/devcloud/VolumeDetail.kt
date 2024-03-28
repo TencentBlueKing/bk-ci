@@ -1,11 +1,11 @@
 package com.tencent.devops.common.environment.agent.pojo.devcloud
 
 import com.fasterxml.jackson.annotation.JsonProperty
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
 data class VolumeDetail(
     @JsonProperty("Id")
-    @ApiModelProperty(name = "Id")
+    @get:Schema(title = "Id")
     val id: Int,
     val name: String,
     val volume: Int,

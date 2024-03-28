@@ -32,9 +32,9 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.common.pipeline.pojo.time.BuildRecordTimeCost
-import io.swagger.annotations.ApiModel
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("流水线模型-多态基类")
+@Schema(title = "流水线模型-多态基类")
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY, property = "@type")
 @JsonSubTypes(
     JsonSubTypes.Type(value = TriggerContainer::class, name = TriggerContainer.classType),
@@ -61,6 +61,7 @@ interface Container {
     var containPostTaskFlag: Boolean? // 是否包含post任务
     val matrixGroupFlag: Boolean? // 是否为构建矩阵组
     var timeCost: BuildRecordTimeCost? // 耗时结果
+    var startVMTaskSeq: Int? // 开机任务序号
 
     /**
      * 重置所有状态数据
@@ -103,4 +104,6 @@ interface Container {
     fun fetchGroupContainers(): List<Container>?
 
     fun fetchMatrixContext(): Map<String, String>?
+
+    fun isContainerEnable(): Boolean
 }

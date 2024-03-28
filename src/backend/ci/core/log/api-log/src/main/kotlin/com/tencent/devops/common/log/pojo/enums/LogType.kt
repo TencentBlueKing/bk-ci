@@ -27,17 +27,16 @@
 
 package com.tencent.devops.common.log.pojo.enums
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("日志类型")
+@Schema(title = "日志类型")
 enum class LogType {
-    @ApiModelProperty("提醒日志")
+    @Schema(title = "提醒日志")
     WARN,
-    @ApiModelProperty("错误日志")
+    @Schema(title = "错误日志")
     ERROR,
-    @ApiModelProperty("调试日志")
+    @Schema(title = "调试日志")
     DEBUG,
-    @ApiModelProperty("普通的日志")
+    @Schema(title = "普通的日志")
     LOG
 }

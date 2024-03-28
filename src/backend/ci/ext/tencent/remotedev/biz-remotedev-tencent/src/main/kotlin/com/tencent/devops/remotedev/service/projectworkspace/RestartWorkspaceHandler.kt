@@ -69,6 +69,7 @@ import org.slf4j.LoggerFactory
 import org.slf4j.MDC
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
+import java.util.concurrent.Executors
 
 @Service
 class RestartWorkspaceHandler @Autowired constructor(
@@ -83,6 +84,7 @@ class RestartWorkspaceHandler @Autowired constructor(
     private val workspaceOpHistoryDao: WorkspaceOpHistoryDao,
     private val notifyControl: NotifyControl
 ) {
+    private val executor = Executors.newCachedThreadPool()
 
     companion object {
         private val logger = LoggerFactory.getLogger(RestartWorkspaceHandler::class.java)
@@ -231,10 +233,9 @@ class RestartWorkspaceHandler @Autowired constructor(
                 )
                 notifyControl.notify4User(
                     userIds = permissionService.getWorkspaceOwner(workspace.workspaceName).toMutableSet(),
-                    workspaceName = workspace.workspaceName,
                     notifyTemplateCode = WINDOWS_GPU_RESTART_NOTIFY,
                     notifyType = mutableSetOf(RemoteDevNotifyType.EMAIL, RemoteDevNotifyType.CLIENT_PUSH),
-                    bodyParams = mapOf(
+                    bodyParams = mutableMapOf(
                         "workspaceName" to workspace.workspaceName,
                         "projectId" to workspace.projectId,
                         "cgsId" to (workspace.hostName ?: workspace.workspaceName),
@@ -242,6 +243,13 @@ class RestartWorkspaceHandler @Autowired constructor(
                         "time" to DateTimeUtil.formatDate(Date())
                     )
                 )
+            }
+            // 重装成功后做异步设置(L盘挂载)
+            val ip = event.environmentIp?.substringAfter(".")
+            ip?.let { it ->
+                executor.execute {
+                    workspaceCommon.makeDiskMount(it, event.userId)
+                }
             }
         } else {
             // 启动失败,记录为EXCEPTION

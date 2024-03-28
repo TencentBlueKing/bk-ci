@@ -27,33 +27,32 @@
 
 package com.tencent.devops.process.pojo.third.wetest
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("wetest 回调模型")
+@Schema(title = "wetest 回调模型")
 data class WetestCallback(
-    @ApiModelProperty(value = "相当于projectId", required = true)
+    @get:Schema(title = "相当于projectId", required = true)
     val productID: String,
-    @ApiModelProperty(value = "wetest的jobID", required = true)
+    @get:Schema(title = "wetest的jobID", required = true)
     val jobID: String,
-    @ApiModelProperty(value = "buildID", required = true)
+    @get:Schema(title = "buildID", required = true)
     val buildID: String,
-    @ApiModelProperty(value = "wetest的taskID", required = true)
+    @get:Schema(title = "wetest的taskID", required = true)
     val taskID: String,
-    @ApiModelProperty(value = "wetest的sodaID，相当于pipelineId,", required = true)
+    @get:Schema(title = "wetest的sodaID，相当于pipelineId,", required = true)
     val sodaId: String,
-    @ApiModelProperty(value = "result_quality", required = false)
+    @get:Schema(title = "result_quality", required = false)
     val resultQuality: String,
-    @ApiModelProperty(value = "result_devnum", required = false)
+    @get:Schema(title = "result_devnum", required = false)
     val resultDevNum: String,
-    @ApiModelProperty(value = "result_Rate", required = false)
+    @get:Schema(title = "result_Rate", required = false)
     val resultRate: String,
-    @ApiModelProperty(value = "result_Problems", required = false)
+    @get:Schema(title = "result_Problems", required = false)
     val resultProblems: String,
-    @ApiModelProperty(value = "result_Serious", required = false)
+    @get:Schema(title = "result_Serious", required = false)
     val resultSerious: String,
-    @ApiModelProperty(value = "starttime", required = false)
+    @get:Schema(title = "starttime", required = false)
     val startTime: String,
-    @ApiModelProperty(value = "endtime", required = false)
+    @get:Schema(title = "endtime", required = false)
     val endTime: String
 )

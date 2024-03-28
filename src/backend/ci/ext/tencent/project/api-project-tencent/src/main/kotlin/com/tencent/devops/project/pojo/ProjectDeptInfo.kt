@@ -33,5 +33,7 @@ data class ProjectDeptInfo(
     val deptId: String? = "0",
     val deptName: String? = "",
     val centerId: String? = "0",
-    val centerName: String? = ""
+    val centerName: String? = "",
+    val businessLineId: String? = "0",
+    val businessLineName: String? = ""
 )

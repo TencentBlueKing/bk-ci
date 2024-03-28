@@ -28,11 +28,11 @@
 package com.tencent.devops.auth.api
 
 import com.tencent.devops.auth.pojo.dto.RoleMemberDTO
-import io.swagger.annotations.Api
+import io.swagger.v3.oas.annotations.tags.Tag
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.pojo.Result
-import io.swagger.annotations.ApiOperation
-import io.swagger.annotations.ApiParam
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.Parameter
 import javax.ws.rs.HeaderParam
 import javax.ws.rs.POST
 import javax.ws.rs.Path
@@ -42,30 +42,30 @@ import javax.ws.rs.Consumes
 import javax.ws.rs.Produces
 import javax.ws.rs.core.MediaType
 
-@Api(tags = ["SERVICE_PROJECT_MEMBER"], description = "用户组—用户")
+@Tag(name = "SERVICE_PROJECT_MEMBER", description = "用户组—用户")
 @Path("/service/project/members")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface ServiceRoleMemberResource {
     @POST
     @Path("/projectIds/{projectId}/roleIds/{roleId}")
-    @ApiOperation("项目下添加指定组组员")
+    @Operation(summary = "项目下添加指定组组员")
     fun createRoleMember(
-        @ApiParam(name = "用户名", required = true)
+        @Parameter(name = "用户名", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam(name = "项目标识", required = true)
+        @Parameter(name = "项目标识", required = true)
         @PathParam("projectId")
         projectId: Int,
-        @ApiParam(name = "角色Id", required = true)
+        @Parameter(name = "角色Id", required = true)
         @PathParam("roleId")
         roleId: Int,
-        @ApiParam(name = "是否为管理员分组", required = true)
+        @Parameter(name = "是否为管理员分组", required = true)
         @QueryParam("managerGroup")
         managerGroup: Boolean,
-        @ApiParam("添加用户集合", required = true)
+        @Parameter(description = "添加用户集合", required = true)
         members: List<RoleMemberDTO>,
-        @ApiParam("是否需要分级管理员校验")
+        @Parameter(description = "是否需要分级管理员校验")
         @QueryParam("managerGroup")
         checkGradeManager: Boolean? = false
     ): Result<Boolean>

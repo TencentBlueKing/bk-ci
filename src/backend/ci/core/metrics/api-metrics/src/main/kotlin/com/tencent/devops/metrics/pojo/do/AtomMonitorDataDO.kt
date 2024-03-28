@@ -26,15 +26,14 @@
  */
 package com.tencent.devops.metrics.pojo.`do`
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("插件监控数据")
+@Schema(title = "插件监控数据")
 data class AtomMonitorDataDO(
-    @ApiModelProperty("插件标识", required = true)
+    @get:Schema(title = "插件标识", required = true)
     val atomCode: String,
-    @ApiModelProperty("错误类型", required = false)
+    @get:Schema(title = "错误类型", required = false)
     val errorType: Int? = null,
-    @ApiModelProperty("执行总次数", required = true)
+    @get:Schema(title = "执行总次数", required = true)
     val totalExecuteCount: Int = 0
 )

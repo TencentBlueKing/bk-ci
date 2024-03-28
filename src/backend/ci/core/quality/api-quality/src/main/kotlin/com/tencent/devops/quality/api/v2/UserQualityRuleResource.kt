@@ -44,9 +44,9 @@ import com.tencent.devops.quality.api.v2.pojo.response.QualityRuleMatchTask
 import com.tencent.devops.quality.api.v2.pojo.response.QualityRuleSummaryWithPermission
 import com.tencent.devops.quality.api.v2.pojo.response.UserQualityRule
 import com.tencent.devops.quality.pojo.RuleInterceptHistory
-import io.swagger.annotations.Api
-import io.swagger.annotations.ApiOperation
-import io.swagger.annotations.ApiParam
+import io.swagger.v3.oas.annotations.tags.Tag
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.Parameter
 import javax.ws.rs.Consumes
 import javax.ws.rs.DELETE
 import javax.ws.rs.GET
@@ -59,253 +59,253 @@ import javax.ws.rs.Produces
 import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
-@Api(tags = ["USER_RULE_V2"], description = "质量红线-拦截规则v2")
+@Tag(name = "USER_RULE_V2", description = "质量红线-拦截规则v2")
 @Path("/user/rules/v2")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface UserQualityRuleResource {
-    @ApiOperation("是否有创建拦截规则权限")
+    @Operation(summary = "是否有创建拦截规则权限")
     @Path("/{projectId}/hasCreatePermission")
     @GET
     fun hasCreatePermission(
-        @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String
     ): Result<Boolean>
 
-    @ApiOperation("创建拦截规则")
+    @Operation(summary = "创建拦截规则")
     @Path("/{projectId}/")
     @POST
     fun create(
-        @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @ApiParam("规则内容", required = true)
+        @Parameter(description = "规则内容", required = true)
         rule: RuleCreateRequest
     ): Result<String>
 
-    @ApiOperation("更新拦截规则列表")
+    @Operation(summary = "更新拦截规则列表")
     @Path("/{projectId}/{ruleHashId}")
     @PUT
     fun update(
-        @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @ApiParam("规则ID", required = true)
+        @Parameter(description = "规则ID", required = true)
         @PathParam("ruleHashId")
         ruleHashId: String,
-        @ApiParam("规则内容", required = true)
+        @Parameter(description = "规则内容", required = true)
         rule: RuleUpdateRequest
     ): Result<Boolean>
 
-    @ApiOperation("开启拦截规则")
+    @Operation(summary = "开启拦截规则")
     @Path("/{projectId}/{ruleHashId}/enable")
     @PUT
     fun enable(
-        @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @ApiParam("规则ID", required = true)
+        @Parameter(description = "规则ID", required = true)
         @PathParam("ruleHashId")
         ruleHashId: String
     ): Result<Boolean>
 
-    @ApiOperation("停用拦截规则")
+    @Operation(summary = "停用拦截规则")
     @Path("/{projectId}/{ruleHashId}/disable")
     @PUT
     fun disable(
-        @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @ApiParam("规则ID", required = true)
+        @Parameter(description = "规则ID", required = true)
         @PathParam("ruleHashId")
         ruleHashId: String
     ): Result<Boolean>
 
-    @ApiOperation("删除拦截规则列表")
+    @Operation(summary = "删除拦截规则列表")
     @Path("/{projectId}/{ruleHashId}")
     @DELETE
     fun delete(
-        @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @ApiParam("规则ID", required = true)
+        @Parameter(description = "规则ID", required = true)
         @PathParam("ruleHashId")
         ruleHashId: String
     ): Result<Boolean>
 
-    @ApiOperation("获取拦截规则")
+    @Operation(summary = "获取拦截规则")
     @Path("/{projectId}/{ruleHashId}")
     @GET
     fun get(
-        @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @ApiParam("规则ID", required = true)
+        @Parameter(description = "规则ID", required = true)
         @PathParam("ruleHashId")
         ruleHashId: String
     ): Result<UserQualityRule>
 
-    @ApiOperation("获取拦截历史列表")
+    @Operation(summary = "获取拦截历史列表")
     @Path("/{projectId}/{ruleHashId}/interceptHistory")
     @GET
     fun getInterceptHistory(
-        @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @ApiParam("规则ID", required = true)
+        @Parameter(description = "规则ID", required = true)
         @PathParam("ruleHashId")
         ruleHashId: String,
-        @ApiParam("页目", required = false)
+        @Parameter(description = "页目", required = false)
         @QueryParam("page")
         page: Int?,
-        @ApiParam("每页数目(不传默认全部返回)", required = false)
+        @Parameter(description = "每页数目(不传默认全部返回)", required = false)
         @QueryParam("pageSize")
         pageSize: Int?
     ): Result<Page<RuleInterceptHistory>>
 
-    @ApiOperation("获取拦截规则列表")
+    @Operation(summary = "获取拦截规则列表")
     @Path("/{projectId}/list")
     @GET
     fun list(
-        @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @ApiParam("页目", required = false, defaultValue = "1")
+        @Parameter(description = "页目", required = false, example = "1")
         @QueryParam("page")
         page: Int?,
-        @ApiParam("每页数目", required = false, defaultValue = "20")
+        @Parameter(description = "每页数目", required = false, example = "20")
         @QueryParam("pageSize")
         pageSize: Int?
     ): Result<Page<QualityRuleSummaryWithPermission>>
 
-    @ApiOperation("匹配拦截规则")
+    @Operation(summary = "匹配拦截规则")
     @Path("/{projectId}/matchRuleList")
     @GET
     fun matchRuleList(
-        @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @ApiParam("流水线ID", required = false, defaultValue = "1")
+        @Parameter(description = "流水线ID", required = false, example = "1")
         @QueryParam("pipelineId")
         pipelineId: String
     ): Result<List<QualityRuleMatchTask>>
 
-    @ApiOperation("匹配模板拦截规则")
+    @Operation(summary = "匹配模板拦截规则")
     @Path("/{projectId}/matchTemplateRuleList")
     @GET
     fun matchTemplateRuleList(
-        @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @ApiParam("流水线模板ID", required = false, defaultValue = "1")
+        @Parameter(description = "流水线模板ID", required = false, example = "1")
         @QueryParam("templateId")
         templateId: String?
     ): Result<List<QualityRuleMatchTask>>
 
-    @ApiOperation("获取规则模板")
+    @Operation(summary = "获取规则模板")
     @Path("/listTemplates")
     @GET
     fun listTemplates(
-        @ApiParam("项目ID", required = false)
+        @Parameter(description = "项目ID", required = false)
         @HeaderParam(AUTH_HEADER_DEVOPS_PROJECT_ID)
         projectId: String
     ): Result<List<RuleTemplate>>
 
-    @ApiOperation("获取规则模板")
+    @Operation(summary = "获取规则模板")
     @Path("/project/{projectId}/listTemplates")
     @GET
     fun listProjectTemplates(
-        @ApiParam("项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String
     ): Result<List<RuleTemplate>>
 
-    @ApiOperation("查询生效范围数据")
+    @Operation(summary = "查询生效范围数据")
     @Path("/listPipelineRangeDetail")
     @POST
     fun listPipelineRangeDetail(
         request: PipelineRangeDetailRequest
     ): Result<List<RulePipelineRange>>
 
-    @ApiOperation("查询模板生效范围数据")
+    @Operation(summary = "查询模板生效范围数据")
     @Path("/listTemplateRangeDetail")
     @POST
     fun listTemplateRangeDetail(
         request: TemplateRangeDetailRequest
     ): Result<List<RuleTemplateRange>>
 
-    @ApiOperation("获取拦截规则列表")
+    @Operation(summary = "获取拦截规则列表")
     @Path("/project/{projectId}/pipeline/{pipelineId}/listAtomRule")
     @GET
     fun listAtomRule(
-        @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @ApiParam("项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("pipelineId")
         pipelineId: String,
-        @ApiParam("插件code", required = false, defaultValue = "1")
+        @Parameter(description = "插件code", required = false, example = "1")
         @QueryParam("atomCode")
         atomCode: String,
-        @ApiParam("插件版本", required = false, defaultValue = "1")
+        @Parameter(description = "插件版本", required = false, example = "1")
         @QueryParam("atomVersion")
         atomVersion: String
     ): Result<AtomRuleResponse>
 
-    @ApiOperation("获取拦截规则列表")
+    @Operation(summary = "获取拦截规则列表")
     @Path("/project/{projectId}/template/{templateId}/listTemplateAtomRule")
     @GET
     fun listTemplateAtomRule(
-        @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @ApiParam("模板ID", required = true)
+        @Parameter(description = "模板ID", required = true)
         @PathParam("templateId")
         templateId: String,
-        @ApiParam("插件code", required = false, defaultValue = "1")
+        @Parameter(description = "插件code", required = false, example = "1")
         @QueryParam("atomCode")
         atomCode: String,
-        @ApiParam("插件版本", required = false, defaultValue = "1")
+        @Parameter(description = "插件版本", required = false, example = "1")
         @QueryParam("atomVersion")
         atomVersion: String
     ): Result<AtomRuleResponse>

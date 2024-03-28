@@ -27,9 +27,9 @@
 
 package com.tencent.devops.stream.api.external
 
-import io.swagger.annotations.Api
-import io.swagger.annotations.ApiOperation
-import io.swagger.annotations.ApiParam
+import io.swagger.v3.oas.annotations.tags.Tag
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.Parameter
 import javax.ws.rs.Consumes
 import javax.ws.rs.GET
 import javax.ws.rs.Path
@@ -38,27 +38,27 @@ import javax.ws.rs.Produces
 import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
-@Api(tags = ["EXTERNAL_STREAM"], description = "外部-STREAM资源获取")
+@Tag(name = "EXTERNAL_STREAM", description = "外部-STREAM资源获取")
 @Path("/external/stream")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface ExternalStreamResource {
 
-    @ApiOperation("获取流水线徽章")
+    @Operation(summary = "获取流水线徽章")
     @Produces("image/svg+xml")
     @GET
     @Path("/projects/{gitProjectId}/pipelines/badge")
     fun getPipelineBadge(
-        @ApiParam("Git仓库ID", required = true)
+        @Parameter(description = "Git仓库ID", required = true)
         @PathParam("gitProjectId")
         gitProjectId: Long,
-        @ApiParam("流水线文件名称", required = true)
+        @Parameter(description = "流水线文件名称", required = true)
         @QueryParam("file_path")
         filePath: String,
-        @ApiParam("分支名称", required = false)
+        @Parameter(description = "分支名称", required = false)
         @QueryParam("branch")
         branch: String?,
-        @ApiParam("触发方式", required = false)
+        @Parameter(description = "触发方式", required = false)
         @QueryParam("object_kind")
         objectKind: String?
     ): String

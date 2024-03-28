@@ -48,6 +48,8 @@ const logoFiles = computed(() => {
 });
 const englishNameReg = /^[a-z][a-z0-9-]{1,32}$/;
 const inited = ref(false);
+const authProvider = ref(window.top.BK_CI_AUTH_PROVIDER || '');
+const isRbac = computed(() => authProvider.value === 'rbac');
 const projectForm = ref<any>(null);
 const iframeRef = ref(null);
 const operationalList = ref([]);
@@ -55,7 +57,7 @@ const vm = getCurrentInstance();
 const rules = {
   englishName: [
     {
-      validator: value => englishNameReg.test(value),
+      validator: value => props.type !== 'apply' || englishNameReg.test(value),
       message: t('项目ID必须由小写字母+数字+中划线组成，以小写字母开头，长度限制32字符！'),
       trigger: 'blur',
     },
@@ -537,7 +539,12 @@ onBeforeUnmount(() => {
       >
       </bk-select>
     </bk-form-item>
-    <bk-form-item :label="t('项目性质')" property="authSecrecy" :required="true">
+    <bk-form-item
+      v-if="isRbac"
+      :label="t('项目性质')"
+      property="authSecrecy"
+      :required="true"
+    >
       <bk-radio-group
         v-model="projectData.authSecrecy"
         @change="handleChangeForm"
@@ -555,6 +562,7 @@ onBeforeUnmount(() => {
       </bk-radio-group>
     </bk-form-item>
     <bk-form-item
+      v-if="isRbac"
       :label="t('项目最大可授权人员范围')"
       :description="t('该设置表示可以加入项目的成员的最大范围，范围内的用户才可以成功加入项目下的任意用户组')"
       property="subjectScopes"
@@ -563,7 +571,7 @@ onBeforeUnmount(() => {
         v-for="(subjectScope, index) in projectData.subjectScopes"
         :key="index"
       >
-        {{ subjectScope.name }}
+        {{ subjectScope.id === '*' ? t('全员') : subjectScope.name }}
       </bk-tag>
       <EditLine
         class="edit-line ml5"

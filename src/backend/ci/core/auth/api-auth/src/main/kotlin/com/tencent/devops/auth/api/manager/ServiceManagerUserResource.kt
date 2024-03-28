@@ -29,9 +29,9 @@ package com.tencent.devops.auth.api.manager
 
 import com.tencent.devops.auth.pojo.UserPermissionInfo
 import com.tencent.devops.common.api.pojo.Result
-import io.swagger.annotations.Api
-import io.swagger.annotations.ApiOperation
-import io.swagger.annotations.ApiParam
+import io.swagger.v3.oas.annotations.tags.Tag
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.Parameter
 import javax.ws.rs.Consumes
 import javax.ws.rs.GET
 import javax.ws.rs.Path
@@ -39,7 +39,7 @@ import javax.ws.rs.PathParam
 import javax.ws.rs.Produces
 import javax.ws.rs.core.MediaType
 
-@Api(tags = ["AUTH_SERVICE_MANAGER_USER"], description = "权限-管理员")
+@Tag(name = "AUTH_SERVICE_MANAGER_USER", description = "权限-管理员")
 @Path("/service/auth/manager/users")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
@@ -47,9 +47,9 @@ interface ServiceManagerUserResource {
 
     @GET
     @Path("/{userId}")
-    @ApiOperation("用户管理员信息")
+    @Operation(summary = "用户管理员信息")
     fun getManagerInfo(
-        @ApiParam(name = "用户Id", required = true)
+        @Parameter(description = "用户Id", required = true)
         @PathParam("userId")
         userId: String
     ): Result<Map<String/*organizationId*/, UserPermissionInfo>?>

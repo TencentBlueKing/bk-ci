@@ -72,4 +72,8 @@ class OpWindowsConfigResourceImpl @Autowired constructor(
     ): Result<Page<WindowsSpecResInfo>> {
         return Result(windowsResourceConfigService.fetchSpec(projectId, machineType, page, pageSize))
     }
+
+    override fun addProjectTotalQuota(userId: String, projectId: String, quota: Int): Result<Boolean> {
+        return Result(windowsResourceConfigService.addProjectTotalQuota(userId, projectId, quota))
+    }
 }

@@ -32,9 +32,9 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.process.pojo.pipeline.TransferDispatchType
 import com.tencent.devops.process.pojo.pipeline.TransferTemplateDispatchType
-import io.swagger.annotations.Api
-import io.swagger.annotations.ApiOperation
-import io.swagger.annotations.ApiParam
+import io.swagger.v3.oas.annotations.tags.Tag
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.Parameter
 import javax.ws.rs.Consumes
 import javax.ws.rs.DELETE
 import javax.ws.rs.HeaderParam
@@ -43,53 +43,53 @@ import javax.ws.rs.Path
 import javax.ws.rs.Produces
 import javax.ws.rs.core.MediaType
 
-@Api(tags = ["OP_PIPELINE"], description = "OP-流水线-迁移")
+@Tag(name = "OP_PIPELINE", description = "OP-流水线-迁移")
 @Path("/op/pipelines")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface OpTransferPipelineResource {
 
-    @ApiOperation("迁移指定项目中的Job的构建资源")
+    @Operation(summary = "迁移指定项目中的Job的构建资源")
     @POST
     @Path("/transfer_dispatch_type")
     fun transferDispatchType(
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("要迁移的内容", required = false)
+        @Parameter(description = "要迁移的内容", required = false)
         transferDispatchType: TransferDispatchType
     ): Result<Boolean>
 
-    @ApiOperation("回滚迁移指定项目中的Job的构建资源")
+    @Operation(summary = "回滚迁移指定项目中的Job的构建资源")
     @DELETE
     @Path("/transfer_dispatch_type")
     fun rollBackTransferDispatchType(
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("要还原的流水线", required = false)
+        @Parameter(description = "要还原的流水线", required = false)
         transferDispatchType: TransferDispatchType
     ): Result<Boolean>
 
-    @ApiOperation("迁移指定项目中的模板Job的构建资源")
+    @Operation(summary = "迁移指定项目中的模板Job的构建资源")
     @POST
     @Path("/templates/transfer_dispatch_type")
     fun transferTemplateDispatchType(
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("要迁移的内容", required = false)
+        @Parameter(description = "要迁移的内容", required = false)
         transferDispatchType: TransferTemplateDispatchType
     ): Result<Boolean>
 
-    @ApiOperation("回滚迁移指定项目中的模板Job的构建资源")
+    @Operation(summary = "回滚迁移指定项目中的模板Job的构建资源")
     @DELETE
     @Path("/templates/transfer_dispatch_type")
     fun rollBackTransferTemplateDispatchType(
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("要还原的模板", required = false)
+        @Parameter(description = "要还原的模板", required = false)
         transferDispatchType: TransferTemplateDispatchType
     ): Result<Boolean>
 }

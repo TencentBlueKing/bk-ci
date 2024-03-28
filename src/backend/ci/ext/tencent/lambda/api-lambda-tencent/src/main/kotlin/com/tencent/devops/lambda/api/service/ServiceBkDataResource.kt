@@ -29,26 +29,26 @@ package com.tencent.devops.lambda.api.service
 import com.tencent.devops.lambda.pojo.bkdata.BkDataQueryData
 import com.tencent.devops.lambda.pojo.bkdata.BkDataQueryParam
 import com.tencent.devops.lambda.pojo.bkdata.BkDataResult
-import io.swagger.annotations.Api
-import io.swagger.annotations.ApiOperation
-import io.swagger.annotations.ApiParam
+import io.swagger.v3.oas.annotations.tags.Tag
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.Parameter
 import javax.ws.rs.Consumes
 import javax.ws.rs.POST
 import javax.ws.rs.Path
 import javax.ws.rs.Produces
 import javax.ws.rs.core.MediaType
 
-@Api(tags = ["SERVICE_LAMBDA_BKDATA"], description = "服务-lambda-数据平台")
+@Tag(name = "SERVICE_LAMBDA_BKDATA", description = "服务-lambda-数据平台")
 @Path("/service/lambda/bkdata")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface ServiceBkDataResource {
 
-    @ApiOperation("查询数据平台数据")
+    @Operation(summary = "查询数据平台数据")
     @POST
     @Path("/data/query")
     fun queryData(
-        @ApiParam("数据平台查询接口参数", required = true)
+        @Parameter(description = "数据平台查询接口参数", required = true)
         bkDataQueryParam: BkDataQueryParam
     ): BkDataResult<BkDataQueryData>
 }

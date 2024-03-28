@@ -28,9 +28,9 @@
 package com.tencent.devops.stream.api.external
 
 import com.tencent.devops.common.api.pojo.Result
-import io.swagger.annotations.Api
-import io.swagger.annotations.ApiOperation
-import io.swagger.annotations.ApiParam
+import io.swagger.v3.oas.annotations.tags.Tag
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.Parameter
 import javax.ws.rs.Consumes
 import javax.ws.rs.HeaderParam
 import javax.ws.rs.POST
@@ -38,19 +38,19 @@ import javax.ws.rs.Path
 import javax.ws.rs.Produces
 import javax.ws.rs.core.MediaType
 
-@Api(tags = ["EXTERNAL_GIT_HOOKS"], description = "GIT WebHooks触发")
+@Tag(name = "EXTERNAL_GIT_HOOKS", description = "GIT WebHooks触发")
 @Path("/service/scm")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface ExternalScmResource {
 
-    @ApiOperation("Code平台Git仓库提交")
+    @Operation(summary = "Code平台Git仓库提交")
     @POST
     @Path("/codegit/commit")
     fun webHookCodeGitCommit(
         @HeaderParam("X-Token")
         token: String,
-        @ApiParam("X-Event")
+        @Parameter(description = "X-Event")
         @HeaderParam("X-Event")
         eventType: String,
         event: String

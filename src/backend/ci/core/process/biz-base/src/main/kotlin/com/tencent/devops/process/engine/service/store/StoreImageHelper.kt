@@ -29,7 +29,7 @@ package com.tencent.devops.process.engine.service.store
 
 import com.tencent.devops.common.api.exception.InvalidParamException
 import com.tencent.devops.common.client.Client
-import com.tencent.devops.store.api.image.service.ServiceStoreImageResource
+import com.tencent.devops.store.api.image.ServiceStoreImageResource
 import com.tencent.devops.store.constant.StoreMessageCode.USER_IMAGE_NOT_INSTALLED
 import com.tencent.devops.store.pojo.image.exception.ImageNotInstalledException
 import com.tencent.devops.store.pojo.image.response.ImageRepoInfo

@@ -35,4 +35,16 @@ class BkConfig {
     // apigwRemotedev 配置
     @Value("\${apigw.remoteDevUrl:}")
     val remoteDevUrl: String = ""
+
+    // itsm配置
+    @Value("\${bkitsm.host:}")
+    val itsmHost: String = ""
+    @Value("\${bkitsm.tgitLinkServiceId:#{null}}")
+    val tgitLinkServiceId: Int? = null
+
+    // bkvision配置
+    @Value("\${bkvision.url:}")
+    val bkvisionUrl: String = ""
+    @Value("\${bkvision.shareId:}")
+    val bkvisionShareId: String = ""
 }

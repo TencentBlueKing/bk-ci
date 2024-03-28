@@ -27,14 +27,13 @@
 
 package com.tencent.devops.metrics.pojo.vo
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 import java.time.LocalDateTime
 
-@ApiModel("查询区间VO")
+@Schema(title = "查询区间VO")
 data class QueryIntervalVO(
-    @ApiModelProperty("开始时间", required = true)
+    @get:Schema(title = "开始时间", required = true)
     val startDateTime: LocalDateTime,
-    @ApiModelProperty("结束时间", required = true)
+    @get:Schema(title = "结束时间", required = true)
     val endDateTime: LocalDateTime
 )

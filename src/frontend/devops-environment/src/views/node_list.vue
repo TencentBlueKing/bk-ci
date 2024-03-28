@@ -1437,6 +1437,10 @@
             border-color: $failColor;
         }
 
+        .normal-stutus-icon {
+            border-color: #979ba5;
+        }
+
         .delete-node-text {
             position: relative;
             padding-right: 9px;

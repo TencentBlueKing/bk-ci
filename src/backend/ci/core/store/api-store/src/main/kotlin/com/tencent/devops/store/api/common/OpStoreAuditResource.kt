@@ -34,9 +34,9 @@ import com.tencent.devops.store.pojo.common.StoreApproveRequest
 import com.tencent.devops.store.pojo.common.VisibleAuditInfo
 import com.tencent.devops.store.pojo.common.enums.DeptStatusEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
-import io.swagger.annotations.Api
-import io.swagger.annotations.ApiOperation
-import io.swagger.annotations.ApiParam
+import io.swagger.v3.oas.annotations.tags.Tag
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.Parameter
 import javax.ws.rs.Consumes
 import javax.ws.rs.DELETE
 import javax.ws.rs.GET
@@ -48,58 +48,58 @@ import javax.ws.rs.Produces
 import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
-@Api(tags = ["OP_AUDIT"], description = "OP页面插件/模板审核范围管理")
+@Tag(name = "OP_AUDIT", description = "OP页面插件/模板审核范围管理")
 @Path("/op/store/audit")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface OpStoreAuditResource {
 
-    @ApiOperation("获取所有审核记录")
+    @Operation(summary = "获取所有审核记录")
     @GET
     @Path("/conf")
     fun getAllAuditConf(
-        @ApiParam("userId", required = true)
+        @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("商城组件名称")
+        @Parameter(description = "商城组件名称")
         @QueryParam("storeName")
         storeName: String?,
-        @ApiParam("商城组件类型")
+        @Parameter(description = "商城组件类型")
         @QueryParam("storeType")
         storeType: StoreTypeEnum?,
-        @ApiParam("审核状态")
+        @Parameter(description = "审核状态")
         @QueryParam("status")
         status: DeptStatusEnum?,
-        @ApiParam("分页总页数")
+        @Parameter(description = "分页总页数")
         @QueryParam("page")
         page: Int?,
-        @ApiParam("每页记录数量")
+        @Parameter(description = "每页记录数量")
         @QueryParam("pageSize")
         pageSize: Int?
     ): Result<Page<VisibleAuditInfo>>
 
-    @ApiOperation("审核商城组件可见范围")
+    @Operation(summary = "审核商城组件可见范围")
     @POST
     @Path("/ids/{id}/approve")
     fun approveVisibleDept(
-        @ApiParam("userId", required = true)
+        @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("审核记录ID")
+        @Parameter(description = "审核记录ID")
         @PathParam("id")
         id: String,
-        @ApiParam("审批信息")
+        @Parameter(description = "审批信息")
         storeApproveRequest: StoreApproveRequest
     ): Result<Boolean>
 
-    @ApiOperation("删除一条审核记录")
+    @Operation(summary = "删除一条审核记录")
     @DELETE
     @Path("/ids/{id}/delete")
     fun deleteAuditConf(
-        @ApiParam("userId", required = true)
+        @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("审核记录ID")
+        @Parameter(description = "审核记录ID")
         @PathParam("id")
         id: String
     ): Result<Boolean>

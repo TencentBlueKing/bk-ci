@@ -31,9 +31,9 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_SIGN_INFO
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.sign.api.pojo.SignDetail
-import io.swagger.annotations.Api
-import io.swagger.annotations.ApiOperation
-import io.swagger.annotations.ApiParam
+import io.swagger.v3.oas.annotations.tags.Tag
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.Parameter
 import java.io.InputStream
 import javax.ws.rs.Consumes
 import javax.ws.rs.GET
@@ -44,61 +44,61 @@ import javax.ws.rs.PathParam
 import javax.ws.rs.Produces
 import javax.ws.rs.core.MediaType
 
-@Api(tags = ["USER_IPA"], description = "用户接口-IPA包")
+@Tag(name = "USER_IPA", description = "用户接口-IPA包")
 @Path("/user/ipa/")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface UserIpaResource {
 
-    @ApiOperation("IPA包签名")
+    @Operation(summary = "IPA包签名")
     @POST
     @Path("/sign")
     @Consumes(MediaType.APPLICATION_OCTET_STREAM)
     fun ipaSign(
-        @ApiParam("userId", required = true)
+        @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("ipaSignInfoHeader", required = false)
+        @Parameter(description = "ipaSignInfoHeader", required = false)
         @HeaderParam(AUTH_HEADER_DEVOPS_SIGN_INFO)
         ipaSignInfoHeader: String,
-        @ApiParam("IPA包文件", required = true)
+        @Parameter(description = "IPA包文件", required = true)
         ipaInputStream: InputStream
     ): Result<String?>
 
-    @ApiOperation("IPA包签名状态")
+    @Operation(summary = "IPA包签名状态")
     @GET
     @Path("/sign/{resignId}/status")
     @Consumes(MediaType.APPLICATION_OCTET_STREAM)
     fun getSignStatus(
-        @ApiParam("userId", required = true)
+        @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("签名任务ID", required = true)
+        @Parameter(description = "签名任务ID", required = true)
         @PathParam("resignId")
         resignId: String
     ): Result<String>
 
-    @ApiOperation("IPA包签名详情")
+    @Operation(summary = "IPA包签名详情")
     @GET
     @Path("/sign/{resignId}/detail")
     @Consumes(MediaType.APPLICATION_OCTET_STREAM)
     fun getSignDetail(
-        @ApiParam("userId", required = true)
+        @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("签名任务ID", required = true)
+        @Parameter(description = "签名任务ID", required = true)
         @PathParam("resignId")
         resignId: String
     ): Result<SignDetail>
 
-    @ApiOperation("获取签名后IPA的下载地址")
+    @Operation(summary = "获取签名后IPA的下载地址")
     @GET
     @Path("/sign/{resignId}/downloadUrl")
     fun downloadUrl(
-        @ApiParam("userId", required = true)
+        @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("签名任务ID", required = true)
+        @Parameter(description = "签名任务ID", required = true)
         @PathParam("resignId")
         resignId: String
     ): Result<String>

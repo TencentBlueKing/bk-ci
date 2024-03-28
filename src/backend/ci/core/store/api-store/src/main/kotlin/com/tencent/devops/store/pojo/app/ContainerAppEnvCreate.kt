@@ -27,17 +27,16 @@
 
 package com.tencent.devops.store.pojo.app
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("容器软件编译环境变量-创建")
+@Schema(title = "容器软件编译环境变量-创建")
 data class ContainerAppEnvCreate(
-    @ApiModelProperty("编译环境ID", required = true)
+    @get:Schema(title = "编译环境ID", required = true)
     val appId: Int,
-    @ApiModelProperty("路径", required = true)
+    @get:Schema(title = "路径", required = true)
     val path: String,
-    @ApiModelProperty("环境变量名称", required = true)
+    @get:Schema(title = "环境变量名称", required = true)
     val name: String,
-    @ApiModelProperty("描述", required = true)
+    @get:Schema(title = "描述", required = true)
     val description: String
 )

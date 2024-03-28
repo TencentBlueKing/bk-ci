@@ -29,45 +29,44 @@ package com.tencent.devops.experience.pojo
 
 import com.tencent.devops.common.api.enums.PlatformEnum
 import com.tencent.devops.experience.pojo.enums.Source
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("版本体验-版本信息")
+@Schema(title = "版本体验-版本信息")
 data class AppExperience(
-    @ApiModelProperty("版本体验ID", required = true)
+    @get:Schema(title = "版本体验ID", required = true)
     val experienceHashId: String,
-    @ApiModelProperty("平台", required = true)
+    @get:Schema(title = "平台", required = true)
     val platform: PlatformEnum,
-    @ApiModelProperty("来源", required = true)
+    @get:Schema(title = "来源", required = true)
     val source: Source,
-    @ApiModelProperty("logo链接", required = true)
+    @get:Schema(title = "logo链接", required = true)
     val logoUrl: String,
-    @ApiModelProperty("版本名称", required = true)
+    @get:Schema(title = "版本名称", required = true)
     val name: String,
-    @ApiModelProperty("版本体验版本号", required = true)
+    @get:Schema(title = "版本体验版本号", required = true)
     val version: String,
-    @ApiModelProperty("版本体验BundleIdentifier", required = true)
+    @get:Schema(title = "版本体验BundleIdentifier", required = true)
     val bundleIdentifier: String,
-    @ApiModelProperty("体验名称", required = true)
+    @get:Schema(title = "体验名称", required = true)
     val experienceName: String,
-    @ApiModelProperty("版本标题", required = true)
+    @get:Schema(title = "版本标题", required = true)
     val versionTitle: String,
-    @ApiModelProperty("产品类别", required = true)
+    @get:Schema(title = "产品类别", required = true)
     val categoryId: Int,
-    @ApiModelProperty("产品负责人", required = true)
+    @get:Schema(title = "产品负责人", required = true)
     val productOwner: List<String>,
-    @ApiModelProperty("文件大小(byte)", required = true)
+    @get:Schema(title = "文件大小(byte)", required = true)
     val size: Long,
-    @ApiModelProperty("创建时间", required = true)
+    @get:Schema(title = "创建时间", required = true)
     val createDate: Long,
-    @ApiModelProperty("应用Scheme", required = false)
+    @get:Schema(title = "应用Scheme", required = false)
     val appScheme: String,
-    @ApiModelProperty("是否过期", required = true)
+    @get:Schema(title = "是否过期", required = true)
     val expired: Boolean,
-    @ApiModelProperty("上次下载的体验ID", required = true)
+    @get:Schema(title = "上次下载的体验ID", required = true)
     val lastDownloadHashId: String,
-    @ApiModelProperty("是否订阅", required = true)
+    @get:Schema(title = "是否订阅", required = true)
     val subscribe: Boolean,
-    @ApiModelProperty("是否展示红点", required = false)
+    @get:Schema(title = "是否展示红点", required = false)
     val redPointEnabled: Boolean = false
 )

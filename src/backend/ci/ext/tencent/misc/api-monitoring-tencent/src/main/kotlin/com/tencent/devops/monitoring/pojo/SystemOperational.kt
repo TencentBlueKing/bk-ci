@@ -26,15 +26,14 @@
  */
 package com.tencent.devops.monitoring.pojo
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("系统可用性")
+@Schema(title = "系统可用性")
 data class SystemOperational(
-    @ApiModelProperty("模块可用性", required = true)
+    @get:Schema(title = "模块可用性", required = true)
     val currentStatus: ModelGroup,
-//    @ApiModelProperty("指标", required = false)
+//    @get:Schema(title = "指标", required = false)
 //    val metrics: String,
-    @ApiModelProperty("历史故障", required = false)
+    @get:Schema(title = "历史故障", required = false)
     val pastIncidents: List<Incident>
 )

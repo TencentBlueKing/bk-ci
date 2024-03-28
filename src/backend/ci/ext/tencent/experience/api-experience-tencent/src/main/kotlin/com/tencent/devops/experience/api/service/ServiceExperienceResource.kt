@@ -37,9 +37,9 @@ import com.tencent.devops.experience.pojo.ExperienceInfoForBuild
 import com.tencent.devops.experience.pojo.ExperienceJumpInfo
 import com.tencent.devops.experience.pojo.ExperienceServiceCreate
 import com.tencent.devops.experience.pojo.ExperienceUpdate
-import io.swagger.annotations.Api
-import io.swagger.annotations.ApiOperation
-import io.swagger.annotations.ApiParam
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.Parameter
+import io.swagger.v3.oas.annotations.tags.Tag
 import javax.ws.rs.Consumes
 import javax.ws.rs.GET
 import javax.ws.rs.HeaderParam
@@ -51,142 +51,142 @@ import javax.ws.rs.Produces
 import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
-@Api(tags = ["SERVICE_EXPERIENCE"], description = "版本体验-发布体验")
+@Tag(name = "SERVICE_EXPERIENCE", description = "版本体验-发布体验")
 @Path("/service/experiences")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface ServiceExperienceResource {
-    @ApiOperation("创建体验")
+    @Operation(summary = "创建体验")
     @Path("/{projectId}/")
     @POST
     fun create(
-        @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @ApiParam("发布详情", required = true)
+        @Parameter(description = "发布详情", required = true)
         experience: ExperienceServiceCreate
     ): Result<String>
 
-    @ApiOperation("获取体验列表数量")
+    @Operation(summary = "获取体验列表数量")
     @Path("/list/count")
     @POST
     fun count(
-        @ApiParam("项目ID集合", required = false)
+        @Parameter(description = "项目ID集合", required = false)
         projectIds: Set<String>? = setOf(),
-        @ApiParam("", required = false)
+        @Parameter(description = "", required = false)
         @QueryParam("expired")
         expired: Boolean? = false
     ): Result<Map<String, Int>>
 
-    @ApiOperation("获取体验详情")
+    @Operation(summary = "获取体验详情")
     @Path("/projects/{projectId}/experienceIds/{experienceHashId}")
     @GET
     fun get(
-        @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String,
-        @ApiParam("项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @ApiParam("体验HashId", required = false)
+        @Parameter(description = "体验HashId", required = false)
         @PathParam("experienceHashId")
         experienceHashId: String
     ): Result<Experience>
 
-    @ApiOperation("是否有体验权限")
+    @Operation(summary = "是否有体验权限")
     @Path("/experienceIds/{experienceHashId}/check")
     @GET
     fun check(
-        @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String,
-        @ApiParam("体验HashId", required = false)
+        @Parameter(description = "体验HashId", required = false)
         @PathParam("experienceHashId")
         experienceHashId: String,
-        @ApiParam("组织", required = false)
+        @Parameter(description = "组织", required = false)
         @QueryParam("organization")
         organization: String?
     ): Result<Boolean>
 
-    @ApiOperation("通过bundleId获取公开体验跳转信息")
+    @Operation(summary = "通过bundleId获取公开体验跳转信息")
     @Path("/jumpInfo")
     @GET
     fun jumpInfo(
-        @ApiParam("项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @QueryParam("projectId")
         projectId: String,
-        @ApiParam("bundleId", required = true)
+        @Parameter(description = "bundleId", required = true)
         @QueryParam("bundleIdentifier")
         bundleIdentifier: String,
-        @ApiParam("平台", required = true)
+        @Parameter(description = "平台", required = true)
         @QueryParam("platform")
         platform: String
     ): Result<ExperienceJumpInfo>
 
-    @ApiOperation("获取构建中的体验的信息")
+    @Operation(summary = "获取构建中的体验的信息")
     @Path("/projects/{projectId}/pipelines/{pipelineId}/builds/{buildId}")
     @GET
     fun listForBuild(
-        @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String?,
-        @ApiParam("项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @ApiParam("流水线ID", required = true)
+        @Parameter(description = "流水线ID", required = true)
         @PathParam("pipelineId")
         pipelineId: String,
-        @ApiParam("构建ID", required = true)
+        @Parameter(description = "构建ID", required = true)
         @PathParam("buildId")
         buildId: String
     ): Result<List<ExperienceInfoForBuild>>
 
-    @ApiOperation("编辑体验")
+    @Operation(summary = "编辑体验")
     @Path("/{projectId}/{experienceHashId}")
     @PUT
     fun edit(
-        @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @ApiParam("发布HashId", required = false)
+        @Parameter(description = "发布HashId", required = false)
         @PathParam("experienceHashId")
         experienceHashId: String,
-        @ApiParam("发布详情", required = true)
+        @Parameter(description = "发布详情", required = true)
         experience: ExperienceUpdate
     ): Result<Boolean>
 
-    @ApiOperation("下架体验")
+    @Operation(summary = "下架体验")
     @Path("/{projectId}/{experienceHashId}/offline")
     @PUT
     fun offline(
-        @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String?,
-        @ApiParam("项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @ApiParam("发布HashId", required = false)
+        @Parameter(description = "发布HashId", required = false)
         @PathParam("experienceHashId")
         experienceHashId: String
     ): Result<Boolean>
 
-    @ApiOperation("上架体验")
+    @Operation(summary = "上架体验")
     @Path("/{projectId}/{experienceHashId}/online")
     @PUT
     fun online(
-        @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String?,
-        @ApiParam("项目ID", required = true)
+        @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @ApiParam("发布HashId", required = false)
+        @Parameter(description = "发布HashId", required = false)
         @PathParam("experienceHashId")
         experienceHashId: String
     ): Result<Boolean>

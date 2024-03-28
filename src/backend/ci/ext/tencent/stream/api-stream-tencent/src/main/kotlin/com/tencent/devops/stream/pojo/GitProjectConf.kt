@@ -27,21 +27,20 @@
 
 package com.tencent.devops.stream.pojo
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("工蜂项目配置")
+@Schema(title = "工蜂项目配置")
 data class GitProjectConf(
-    @ApiModelProperty("工蜂项目ID")
+    @get:Schema(title = "工蜂项目ID")
     val gitProjectId: Long,
-    @ApiModelProperty("工蜂项目名")
+    @get:Schema(title = "工蜂项目名")
     val name: String,
-    @ApiModelProperty("工蜂项目url")
+    @get:Schema(title = "工蜂项目url")
     val url: String,
-    @ApiModelProperty("是否可以启用CI")
+    @get:Schema(title = "是否可以启用CI")
     val enable: Boolean,
-    @ApiModelProperty("创建时间")
+    @get:Schema(title = "创建时间")
     val createTime: Long?,
-    @ApiModelProperty("修改时间")
+    @get:Schema(title = "修改时间")
     val updateTime: Long?
 )

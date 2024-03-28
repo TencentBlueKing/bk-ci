@@ -27,26 +27,25 @@
 
 package com.tencent.devops.project.pojo.service
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
 /**
  *   Date on 2018-12-05.
  */
-@ApiModel("服务类型-显示模型")
+@Schema(title = "服务类型-显示模型")
 data class ServiceType(
-    @ApiModelProperty("主键ID")
+    @get:Schema(title = "主键ID")
     val id: Long,
-    @ApiModelProperty("服务类型名称")
+    @get:Schema(title = "服务类型名称")
     val title: String,
-    @ApiModelProperty("权重")
+    @get:Schema(title = "权重")
     val weight: Int,
-    @ApiModelProperty("创建人")
+    @get:Schema(title = "创建人")
     val createUser: String?,
-    @ApiModelProperty("创建时间")
+    @get:Schema(title = "创建时间")
     val createTime: String?,
-    @ApiModelProperty("修改人")
+    @get:Schema(title = "修改人")
     val updateUser: String?,
-    @ApiModelProperty("修改时间")
+    @get:Schema(title = "修改时间")
     val updateTime: String?
 )

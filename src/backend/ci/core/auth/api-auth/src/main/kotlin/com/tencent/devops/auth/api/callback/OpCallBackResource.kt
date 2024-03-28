@@ -30,8 +30,8 @@ package com.tencent.devops.auth.api.callback
 import com.tencent.devops.auth.pojo.IamCallBackInfo
 import com.tencent.devops.auth.pojo.IamCallBackInterfaceDTO
 import com.tencent.devops.common.api.pojo.Result
-import io.swagger.annotations.Api
-import io.swagger.annotations.ApiParam
+import io.swagger.v3.oas.annotations.tags.Tag
+import io.swagger.v3.oas.annotations.Parameter
 import javax.ws.rs.Consumes
 import javax.ws.rs.GET
 import javax.ws.rs.POST
@@ -41,7 +41,7 @@ import javax.ws.rs.PathParam
 import javax.ws.rs.Produces
 import javax.ws.rs.core.MediaType
 
-@Api(tags = ["OP_CALLBACK_RESOURCE"], description = "权限-op-iam回调注册")
+@Tag(name = "OP_CALLBACK_RESOURCE", description = "权限-op-iam回调注册")
 @Path("/op/auth/iam/callback")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
@@ -56,7 +56,7 @@ interface OpCallBackResource {
     @GET
     @Path("/resource/{resourceId}")
     fun get(
-        @ApiParam("资源类型")
+        @Parameter(description = "资源类型")
         @PathParam("resourceId")
         resourceId: String
     ): Result<IamCallBackInfo?>
@@ -68,7 +68,7 @@ interface OpCallBackResource {
     @PUT
     @Path("/refresh_gateway")
     fun refreshGateway(
-        @ApiParam("新旧网关映射")
+        @Parameter(description = "新旧网关映射")
         oldToNewMap: Map<String, String>
     ): Result<Boolean>
 }

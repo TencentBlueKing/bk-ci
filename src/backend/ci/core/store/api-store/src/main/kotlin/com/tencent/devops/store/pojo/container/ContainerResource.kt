@@ -27,11 +27,10 @@
 
 package com.tencent.devops.store.pojo.container
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("流水线-构建容器资源")
+@Schema(title = "流水线-构建容器资源")
 data class ContainerResource(
-    @ApiModelProperty("列表", required = true)
+    @get:Schema(title = "列表", required = true)
     val resources: List<Any>?
 )

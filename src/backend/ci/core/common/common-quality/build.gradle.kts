@@ -26,5 +26,5 @@
  */
 
 dependencies {
-    implementation("io.swagger:swagger-jersey2-jaxrs")
+    implementation("io.swagger.core.v3:swagger-jaxrs2")
 }
