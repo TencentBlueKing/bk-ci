@@ -579,11 +579,7 @@ class WorkspaceDao {
         }
 
         if (!ips.isNullOrEmpty()) {
-            val ipsCond = t2.HOST_IP.like("%.${ips.first()}")
-            ips.drop(1).forEach { ip ->
-                ipsCond.or(t2.HOST_IP.like("%.$ip"))
-            }
-            conditions.add(ipsCond)
+            conditions.add(t2.HOST_IP.likeRegex(ips.joinToString("|")))
         }
 
         return dslContext.selectDistinct(
