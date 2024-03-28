@@ -283,7 +283,7 @@
                     })
 
                     this.nodeList.splice(0, this.nodeList.length)
-                    res.records.forEach(item => {
+                    res.forEach(item => {
                         this.nodeList.push({
                             ...item,
                             nodeStatusIcon: this.getNodeStatusIcon(item.nodeStatus)
@@ -374,7 +374,7 @@
 
                     this.importNodeList.splice(0, this.importNodeList.length)
 
-                    res.records.forEach(item => {
+                    res.forEach(item => {
                         item.isChecked = false
                         item.isDisplay = true
                         this.importNodeList.push(item)

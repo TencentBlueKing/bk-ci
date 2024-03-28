@@ -79,11 +79,11 @@ export default {
     },
 
     getSystemNodeList (projectId) {
-        return api.get(`${ENVIRNMENT_PERFIX}/user/envnode/${projectId}?page=-1`)
+        return api.get(`${ENVIRNMENT_PERFIX}/user/envnode/${projectId}`)
     },
 
     getNodeList (projectId, poolHash) {
-        return api.get(`${ENVIRNMENT_PERFIX}/user/environment/${projectId}/${poolHash}/listNodes?page=-1`)
+        return api.get(`${ENVIRNMENT_PERFIX}/user/environment/${projectId}/${poolHash}/listNodes`)
     },
 
     deleteEnvNode (projectId, envHashId, params) {
@@ -131,7 +131,7 @@ export default {
     },
 
     requestNodeList (projectId) {
-        return api.get(`${ENVIRNMENT_PERFIX}/user/envnode/${projectId}?page=-1`)
+        return api.get(`${ENVIRNMENT_PERFIX}/user/envnode/${projectId}`)
     },
 
     importEnvNode (projectId, envHashId, params) {
