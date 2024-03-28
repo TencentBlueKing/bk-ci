@@ -25,18 +25,32 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.artifactory.pojo
+package com.tencent.devops.artifactory.store.service
 
-import io.swagger.v3.oas.annotations.media.Schema
+import com.tencent.devops.artifactory.pojo.ArchiveStorePkgRequest
+import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
+import org.glassfish.jersey.media.multipart.FormDataContentDisposition
+import java.io.InputStream
 
-@Schema(title = "重新归档组件包请求报文体")
-data class PackageFileInfo(
-    @get:Schema(title = "包文件名", required = true)
-    val packageFileName: String,
-    @get:Schema(title = "包文件路径", required = true)
-    val packageFilePath: String,
-    @get:Schema(title = "包文件大小", required = true)
-    val packageFileSize: Long,
-    @get:Schema(title = "sha摘要值", required = true)
-    val shaContent: String
-)
+interface ArchiveStorePkgService {
+
+    /**
+     * 归档组件包
+     */
+    fun archiveStorePkg(
+        userId: String,
+        inputStream: InputStream,
+        disposition: FormDataContentDisposition,
+        archiveStorePkgRequest: ArchiveStorePkgRequest
+    ): Boolean
+
+    /**
+     * 获取组件相关文件内容
+     */
+    fun getStoreFileContent(filePath: String): String
+
+    /**
+     * 删除组件包
+     */
+    fun deleteStorePkg(userId: String, storeCode: String, storeType: StoreTypeEnum)
+}

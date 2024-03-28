@@ -32,6 +32,7 @@ import com.tencent.devops.store.pojo.common.publication.StoreProcessInfo
 import com.tencent.devops.store.pojo.common.version.StoreShowVersionInfo
 import com.tencent.devops.store.pojo.common.enums.ReleaseTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
+import com.tencent.devops.store.pojo.common.version.VersionModel
 import org.jooq.DSLContext
 
 /**
@@ -129,4 +130,14 @@ interface StoreCommonService {
         releaseType: ReleaseTypeEnum?,
         version: String?
     ): StoreShowVersionInfo
+
+    /**
+     * 校验组件版本号
+     */
+    fun validateStoreVersion(
+        storeCode: String,
+        storeType: StoreTypeEnum,
+        versionInfo: VersionModel,
+        name: String
+    )
 }

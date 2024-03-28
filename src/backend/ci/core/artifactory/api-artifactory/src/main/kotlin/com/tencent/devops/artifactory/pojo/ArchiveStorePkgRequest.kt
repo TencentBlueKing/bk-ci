@@ -27,16 +27,20 @@
 
 package com.tencent.devops.artifactory.pojo
 
+import com.tencent.devops.store.pojo.common.enums.ReleaseTypeEnum
+import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(title = "重新归档组件包请求报文体")
-data class PackageFileInfo(
-    @get:Schema(title = "包文件名", required = true)
-    val packageFileName: String,
-    @get:Schema(title = "包文件路径", required = true)
-    val packageFilePath: String,
-    @get:Schema(title = "包文件大小", required = true)
-    val packageFileSize: Long,
-    @get:Schema(title = "sha摘要值", required = true)
-    val shaContent: String
+@Schema(title = "研发商店-归档组件包请求报文体")
+data class ArchiveStorePkgRequest(
+    @get:Schema(title = "组件ID", required = true)
+    val storeId: String,
+    @get:Schema(title = "组件标识", required = true)
+    val storeCode: String,
+    @get:Schema(title = "组件类型", required = true)
+    val storeType: StoreTypeEnum,
+    @get:Schema(title = "版本号", required = true)
+    val version: String,
+    @get:Schema(title = "发布类型", required = false)
+    val releaseType: ReleaseTypeEnum? = null
 )
