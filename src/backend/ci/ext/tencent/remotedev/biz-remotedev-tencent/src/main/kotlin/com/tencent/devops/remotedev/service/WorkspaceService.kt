@@ -597,7 +597,7 @@ class WorkspaceService @Autowired constructor(
                 null
             }
             val currUser = if (hasCurrentUser == true && ip != null) {
-                startWorkspaceService.loginUsers(setOf(ip)).values.flatten().toSet()
+                startWorkspaceService.loginUsers(setOf(detail?.hostIP ?: ip)).values.flatten().toSet()
             } else {
                 null
             }
