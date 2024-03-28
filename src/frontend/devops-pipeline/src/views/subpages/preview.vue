@@ -455,7 +455,7 @@
             },
 
             editTrigger () {
-                const url = `${WEB_URL_PREFIX}/pipeline/${this.projectId}/${this.pipelineId}/edit#manualTrigger`
+                const url = `${WEB_URL_PREFIX}/pipeline/${this.projectId}/${this.pipelineId}/edit/${this.$route.params.version}/trigger#manualTrigger`
                 window.open(url, '_blank')
             }
         }
