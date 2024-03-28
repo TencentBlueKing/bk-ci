@@ -51,11 +51,11 @@ import com.tencent.devops.common.pipeline.type.agent.AgentType
 import com.tencent.devops.common.pipeline.type.agent.ThirdPartyAgentIDDispatchType
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.environment.api.ServiceNodeResource
-import com.tencent.devops.environment.api.thirdPartyAgent.ServicePreBuildAgentResource
-import com.tencent.devops.environment.api.thirdPartyAgent.ServiceThirdPartyAgentResource
+import com.tencent.devops.environment.api.thirdpartyagent.ServicePreBuildAgentResource
+import com.tencent.devops.environment.api.thirdpartyagent.ServiceThirdPartyAgentResource
 import com.tencent.devops.environment.pojo.enums.NodeType
-import com.tencent.devops.environment.pojo.thirdPartyAgent.ThirdPartyAgentInfo
-import com.tencent.devops.environment.pojo.thirdPartyAgent.ThirdPartyAgentStaticInfo
+import com.tencent.devops.environment.pojo.thirdpartyagent.ThirdPartyAgentInfo
+import com.tencent.devops.environment.pojo.thirdpartyagent.ThirdPartyAgentStaticInfo
 import com.tencent.devops.prebuild.PreBuildMessageCode.BK_BUILD_ENVIRONMENT_LINUX
 import com.tencent.devops.prebuild.dao.WebIDEOpenDirDao
 import com.tencent.devops.prebuild.dao.WebIDEStatusDao
