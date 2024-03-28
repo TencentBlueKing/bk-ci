@@ -12,6 +12,6 @@ interface PacGitTreeFileInfo {
     val type: String
 }
 
-enum class StreamGitTreeFileInfoType(val value: String) {
+enum class PacGitTreeFileInfoType(val value: String) {
     BLOB("blob")
 }

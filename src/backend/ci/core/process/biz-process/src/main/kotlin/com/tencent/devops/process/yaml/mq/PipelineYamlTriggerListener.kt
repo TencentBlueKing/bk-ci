@@ -123,7 +123,10 @@ class PipelineYamlTriggerListener @Autowired constructor(
         }
         exceptionHandler.handle(action = action) {
             val yamlFile = action.data.context.yamlFile!!
-            logger.info("receive pipeline yaml trigger|$projectId|${event.actionSetting.repoHashId}|$yamlFile")
+            val commitId = action.data.eventCommon.commit.commitId
+            logger.info(
+                "receive pipeline yaml trigger|$projectId|${event.actionSetting.repoHashId}|$yamlFile|$commitId"
+            )
             when (yamlFile.checkType) {
                 CheckType.NEED_CHECK -> {
                     pipelineYamlRepositoryService.deployYamlPipeline(projectId = projectId, action = action)

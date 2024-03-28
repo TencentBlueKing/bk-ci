@@ -4,7 +4,7 @@ import com.tencent.devops.process.yaml.common.Constansts
 import com.tencent.devops.process.yaml.git.pojo.ApiRequestRetryInfo
 import com.tencent.devops.process.yaml.git.pojo.PacGitCred
 import com.tencent.devops.process.yaml.git.pojo.PacGitTreeFileInfo
-import com.tencent.devops.process.yaml.git.pojo.StreamGitTreeFileInfoType
+import com.tencent.devops.process.yaml.git.pojo.PacGitTreeFileInfoType
 import org.joda.time.DateTime
 import org.slf4j.LoggerFactory
 import java.io.File
@@ -68,7 +68,7 @@ object GitActionCommon {
         } else false
 
     private fun getBlobId(f: PacGitTreeFileInfo?): String? {
-        return if (f != null && f.type == StreamGitTreeFileInfoType.BLOB.value && !f.id.isNullOrBlank()) {
+        return if (f != null && f.type == PacGitTreeFileInfoType.BLOB.value && !f.id.isNullOrBlank()) {
             f.id
         } else {
             null

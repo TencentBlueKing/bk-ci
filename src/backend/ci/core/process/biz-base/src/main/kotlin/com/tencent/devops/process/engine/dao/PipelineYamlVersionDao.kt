@@ -135,6 +135,7 @@ class PipelineYamlVersionDao {
                 .where(PROJECT_ID.eq(projectId))
                 .and(PIPELINE_ID.eq(pipelineId))
                 .and(VERSION.eq(version))
+                .orderBy(CREATE_TIME.desc())
                 .fetchAny()
             return record?.let { convert(it) }
         }

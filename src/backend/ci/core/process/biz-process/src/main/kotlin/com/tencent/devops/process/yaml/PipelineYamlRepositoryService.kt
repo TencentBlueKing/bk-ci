@@ -78,7 +78,8 @@ class PipelineYamlRepositoryService @Autowired constructor(
         val triggerPipeline = action.data.context.pipeline
         val yamlFile = action.data.context.yamlFile!!
         val filePath = yamlFile.yamlPath
-        logger.info("syncYamlPipeline|$projectId|pipeline:$triggerPipeline|yamlFile:$yamlFile")
+        val commitId = action.data.eventCommon.commit.commitId
+        logger.info("deployYamlPipeline|$projectId|pipeline:$triggerPipeline|yamlFile:$yamlFile|commitId:$commitId")
         try {
             PipelineYamlTriggerLock(
                 redisOperation = redisOperation,
