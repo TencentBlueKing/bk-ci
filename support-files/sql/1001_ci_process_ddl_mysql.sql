@@ -1214,11 +1214,11 @@ CREATE TABLE IF NOT EXISTS `T_PIPELINE_YAML_VERSION`
     `REF`   varchar(512)  NULL DEFAULT '' COMMENT '来源分支/tag',
     `PIPELINE_ID`   varchar(64)  NOT NULL DEFAULT '' COMMENT '流水线ID',
     `VERSION`       int(11) COMMENT '流水线版本',
+    `COMMIT_TIME`   timestamp             default CURRENT_TIMESTAMP not null comment '提交时间',
     `CREATOR`       varchar(64)  NOT NULL COMMENT '创建人',
-    `MODIFIER`      varchar(64)  NOT NULL COMMENT '修改人',
     `CREATE_TIME`   timestamp             default CURRENT_TIMESTAMP not null comment '创建时间',
-    `UPDATE_TIME`   timestamp             default CURRENT_TIMESTAMP not null comment '修改时间',
-    PRIMARY KEY (`PROJECT_ID`, `REPO_HASH_ID`, `FILE_PATH`, `BLOB_ID`)
+    INDEX `IDX_PROJECT_PIPELINE_VERSION`(`PROJECT_ID`, `PIPELINE_ID`, `VERSION`),
+    INDEX `IDX_PROJECT_REPO_FILE`(`PROJECT_ID`, `REPO_HASH_ID`, `FILE_PATH`)
 ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COMMENT = '流水线yaml版本';
 
 CREATE TABLE IF NOT EXISTS `T_PIPELINE_YAML_SYNC`

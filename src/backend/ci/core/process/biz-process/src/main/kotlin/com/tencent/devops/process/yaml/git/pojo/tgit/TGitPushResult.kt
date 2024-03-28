@@ -40,7 +40,9 @@ data class TGitPushResult(
     @get:Schema(title = "文件blob_id")
     override val blobId: String,
     @get:Schema(title = "分支最后提交id")
-    override val lastCommitId: String,
+    override val commitId: String,
+    @get:Schema(title = "分支最后提交时间")
+    override val commitTime: String,
     @get:Schema(title = "mr url")
     override val mrUrl: String?
 ) : PacGitPushResult

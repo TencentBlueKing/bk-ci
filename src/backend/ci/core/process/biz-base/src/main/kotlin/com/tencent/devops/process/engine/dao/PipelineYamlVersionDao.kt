@@ -51,6 +51,7 @@ class PipelineYamlVersionDao {
         ref: String?,
         pipelineId: String,
         version: Int,
+        commitTime: LocalDateTime,
         userId: String
     ) {
         val now = LocalDateTime.now()
@@ -60,71 +61,53 @@ class PipelineYamlVersionDao {
                 PROJECT_ID,
                 REPO_HASH_ID,
                 FILE_PATH,
-                BLOB_ID,
-                COMMIT_ID,
                 REF,
+                COMMIT_ID,
+                COMMIT_TIME,
+                BLOB_ID,
                 PIPELINE_ID,
                 VERSION,
                 CREATOR,
-                MODIFIER,
-                CREATE_TIME,
-                UPDATE_TIME
+                CREATE_TIME
             ).values(
                 projectId,
                 repoHashId,
                 filePath,
-                blobId,
-                commitId,
                 ref,
+                commitId,
+                commitTime,
+                blobId,
                 pipelineId,
                 version,
                 userId,
-                userId,
-                now,
                 now
             ).execute()
         }
     }
 
-    fun getByBlobId(
+    fun getLatestVersion(
         dslContext: DSLContext,
         projectId: String,
         repoHashId: String,
         filePath: String,
-        blobId: String
+        ref: String? = null,
+        blobId: String? = null
     ): PipelineYamlVersion? {
         with(TPipelineYamlVersion.T_PIPELINE_YAML_VERSION) {
             val record = dslContext.selectFrom(this)
                 .where(PROJECT_ID.eq(projectId))
                 .and(REPO_HASH_ID.eq(repoHashId))
                 .and(FILE_PATH.eq(filePath))
-                .and(BLOB_ID.eq(blobId))
-                .orderBy(VERSION.desc())
-                .fetchAny()
+                .let { if (ref != null) it.and(REF.eq(ref)) else it }
+                .let { if (blobId != null) it.and(BLOB_ID.eq(blobId)) else it }
+                .orderBy(COMMIT_TIME.desc())
+                .limit(1)
+                .fetchOne()
             return record?.let { convert(it) }
         }
     }
 
-    fun getByCommitId(
-        dslContext: DSLContext,
-        projectId: String,
-        repoHashId: String,
-        filePath: String,
-        commitId: String
-    ): PipelineYamlVersion? {
-        with(TPipelineYamlVersion.T_PIPELINE_YAML_VERSION) {
-            val record = dslContext.selectFrom(this)
-                .where(PROJECT_ID.eq(projectId))
-                .and(REPO_HASH_ID.eq(repoHashId))
-                .and(FILE_PATH.eq(filePath))
-                .and(COMMIT_ID.eq(commitId))
-                .orderBy(VERSION.desc())
-                .fetchAny()
-            return record?.let { convert(it) }
-        }
-    }
-
-    fun getByPipelineId(
+    fun getLatestVersion(
         dslContext: DSLContext,
         projectId: String,
         pipelineId: String,
@@ -136,7 +119,8 @@ class PipelineYamlVersionDao {
                 .and(PIPELINE_ID.eq(pipelineId))
                 .and(VERSION.eq(version))
                 .orderBy(CREATE_TIME.desc())
-                .fetchAny()
+                .limit(1)
+                .fetchOne()
             return record?.let { convert(it) }
         }
     }
@@ -152,23 +136,6 @@ class PipelineYamlVersionDao {
                 .where(PROJECT_ID.eq(projectId))
                 .and(REPO_HASH_ID.eq(repoHashId))
                 .and(FILE_PATH.eq(filePath))
-                .execute()
-        }
-    }
-
-    fun deleteByBlobId(
-        dslContext: DSLContext,
-        projectId: String,
-        repoHashId: String,
-        filePath: String,
-        blobId: String
-    ) {
-        with(TPipelineYamlVersion.T_PIPELINE_YAML_VERSION) {
-            dslContext.deleteFrom(this)
-                .where(PROJECT_ID.eq(projectId))
-                .and(REPO_HASH_ID.eq(repoHashId))
-                .and(FILE_PATH.eq(filePath))
-                .and(BLOB_ID.eq(blobId))
                 .execute()
         }
     }

@@ -83,6 +83,14 @@ object GitActionCommon {
         }
     }
 
+    fun getRef(namespace: String?, branch: String): String {
+        return if (namespace.isNullOrBlank()) {
+            branch
+        } else {
+            "$namespace:$branch"
+        }
+    }
+
     fun getCommitTimeStamp(commitTimeStamp: String?): String {
         return if (commitTimeStamp.isNullOrBlank()) {
             val formatter = SimpleDateFormat("yyyy-MM-dd HH:mm:ss")

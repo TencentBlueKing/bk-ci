@@ -78,6 +78,7 @@ class PipelineYamlService(
         userId: String,
         blobId: String,
         commitId: String,
+        commitTime: LocalDateTime,
         ref: String,
         version: Int,
         webhooks: List<PipelineWebhookVersion>
@@ -99,9 +100,10 @@ class PipelineYamlService(
                 projectId = projectId,
                 repoHashId = repoHashId,
                 filePath = filePath,
-                blobId = blobId,
-                commitId = commitId,
                 ref = ref,
+                commitId = commitId,
+                commitTime = commitTime,
+                blobId = blobId,
                 pipelineId = pipelineId,
                 version = version,
                 userId = userId
@@ -128,6 +130,7 @@ class PipelineYamlService(
         userId: String,
         blobId: String,
         commitId: String,
+        commitTime: LocalDateTime,
         ref: String,
         defaultBranch: String?,
         version: Int,
@@ -147,9 +150,10 @@ class PipelineYamlService(
                 projectId = projectId,
                 repoHashId = repoHashId,
                 filePath = filePath,
-                blobId = blobId,
-                commitId = commitId,
                 ref = ref,
+                commitId = commitId,
+                commitTime = commitTime,
+                blobId = blobId,
                 pipelineId = pipelineId,
                 version = version,
                 userId = userId
@@ -272,38 +276,20 @@ class PipelineYamlService(
     }
 
     /**
-     * 通过commitId获取最新的流水线版本
+     * 获取当前分支或blob_id对应的最新的版本
      */
-    fun getPipelineYamlVersionByCommitId(
+    fun getLatestVersionByRef(
         projectId: String,
         repoHashId: String,
         filePath: String,
-        commitId: String
+        ref: String
     ): PipelineYamlVersion? {
-        return pipelineYamlVersionDao.getByCommitId(
+        return pipelineYamlVersionDao.getLatestVersion(
             dslContext = dslContext,
             projectId = projectId,
             repoHashId = repoHashId,
             filePath = filePath,
-            commitId = commitId
-        )
-    }
-
-    /**
-     * 通过blobId获取最新的流水线版本
-     */
-    fun getPipelineYamlVersionByBlobId(
-        projectId: String,
-        repoHashId: String,
-        filePath: String,
-        blobId: String
-    ): PipelineYamlVersion? {
-        return pipelineYamlVersionDao.getByBlobId(
-            dslContext = dslContext,
-            projectId = projectId,
-            repoHashId = repoHashId,
-            filePath = filePath,
-            blobId = blobId
+            ref = ref
         )
     }
 
@@ -317,7 +303,7 @@ class PipelineYamlService(
                 logger.info("pipeline yaml not found|$projectId|$pipelineId")
                 return null
             }
-        val pipelineYamlVersion = pipelineYamlVersionDao.getByPipelineId(
+        val pipelineYamlVersion = pipelineYamlVersionDao.getLatestVersion(
             dslContext = dslContext,
             projectId = projectId,
             pipelineId = pipelineId,
@@ -364,19 +350,6 @@ class PipelineYamlService(
                 status = pipelineYamlInfo.status
             )
         }
-    }
-
-    fun getPipelineYamlVersionByCommitId(
-        projectId: String,
-        pipelineId: String,
-        version: Int
-    ): PipelineYamlVersion? {
-        return pipelineYamlVersionDao.getByPipelineId(
-            dslContext = dslContext,
-            projectId = projectId,
-            pipelineId = pipelineId,
-            version = version
-        )
     }
 
     fun countPipelineYaml(

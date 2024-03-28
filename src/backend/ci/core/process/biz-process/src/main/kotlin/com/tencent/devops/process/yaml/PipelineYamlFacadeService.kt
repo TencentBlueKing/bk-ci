@@ -45,7 +45,6 @@ import com.tencent.devops.common.webhook.pojo.code.git.GitEvent
 import com.tencent.devops.common.webhook.pojo.code.git.GitReviewEvent
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.engine.dao.PipelineYamlInfoDao
-import com.tencent.devops.process.pojo.pipeline.PipelineYamlVersion
 import com.tencent.devops.process.pojo.pipeline.PipelineYamlVo
 import com.tencent.devops.process.pojo.pipeline.PushPipelineResult
 import com.tencent.devops.process.pojo.trigger.PipelineTriggerEvent
@@ -277,18 +276,6 @@ class PipelineYamlFacadeService @Autowired constructor(
         version: Int
     ): PipelineYamlVo? {
         return pipelineYamlService.getPipelineYamlVo(
-            projectId = projectId,
-            pipelineId = pipelineId,
-            version = version
-        )
-    }
-
-    fun getPipelineYamlVersion(
-        projectId: String,
-        pipelineId: String,
-        version: Int
-    ): PipelineYamlVersion? {
-        return pipelineYamlService.getPipelineYamlVersionByCommitId(
             projectId = projectId,
             pipelineId = pipelineId,
             version = version
