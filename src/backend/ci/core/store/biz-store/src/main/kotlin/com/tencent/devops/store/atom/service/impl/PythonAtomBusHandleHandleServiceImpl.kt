@@ -40,6 +40,10 @@ class PythonAtomBusHandleHandleServiceImpl : AtomBusHandleService {
         }
     }
 
+    override fun handleTarget(reqTarget: String?, target: String): String {
+        return target
+    }
+
     override fun handleOsArch(osName: String, osArch: String): String {
         // python插件目前没有用到osArch，无需转换
         return osArch
