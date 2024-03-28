@@ -262,30 +262,41 @@
              * 获取环境节点列表
              */
             async requestList () {
-                this.tableLoading = true
-                const res = await this.$store.dispatch('environment/requestEnvNodeList', {
-                    projectId: this.projectId,
-                    envHashId: this.envHashId,
-                    page: this.pagination.current,
-                    pageSize: this.pagination.limit
-                })
-
-                this.tableLoading = false
-                this.nodeList = res.records
-                this.pagination.count = res.count
-
-                if (this.importNodeList.length) {
-                    this.nodeList.forEach(vv => {
-                        this.importNodeList.forEach(kk => {
-                            if (vv.nodeHashId === kk.nodeHashId) {
-                                kk.isChecked = true
-                                kk.isEixtEnvNode = true
-                            }
-                        })
+                try {
+                    this.tableLoading = true
+                    const res = await this.$store.dispatch('environment/requestEnvNodeList', {
+                        projectId: this.projectId,
+                        envHashId: this.envHashId,
+                        page: this.pagination.current,
+                        pageSize: this.pagination.limit
                     })
-                }
-                if (this.nodeList.length) {
-                    this.loopCheck()
+
+                    this.tableLoading = false
+                    this.nodeList = res.records
+                    this.pagination.count = res.count
+
+                    if (this.importNodeList.length) {
+                        this.nodeList.forEach(vv => {
+                            this.importNodeList.forEach(kk => {
+                                if (vv.nodeHashId === kk.nodeHashId) {
+                                    kk.isChecked = true
+                                    kk.isEixtEnvNode = true
+                                }
+                            })
+                        })
+                    }
+
+                    if (this.nodeList.length) {
+                        this.loopCheck()
+                    }
+                } catch (err) {
+                    const message = err.message ? err.message : err
+                    const theme = 'error'
+
+                    this.$bkMessage({
+                        message,
+                        theme
+                    })
                 }
             },
             async init () {
