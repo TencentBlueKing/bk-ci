@@ -62,23 +62,36 @@ import com.tencent.devops.quality.api.v2.pojo.QualityControlPoint
 import com.tencent.devops.quality.api.v2.pojo.enums.IndicatorType
 import com.tencent.devops.quality.api.v2.pojo.op.IndicatorUpdate
 import com.tencent.devops.quality.api.v2.pojo.op.QualityMetaData
-import com.tencent.devops.store.constant.StoreMessageCode
-import com.tencent.devops.store.constant.StoreMessageCode.GET_INFO_NO_PERMISSION
-import com.tencent.devops.store.constant.StoreMessageCode.NO_COMPONENT_ADMIN_PERMISSION
-import com.tencent.devops.store.constant.StoreMessageCode.USER_REPOSITORY_ERROR_JSON_FIELD_IS_INVALID
-import com.tencent.devops.store.constant.StoreMessageCode.USER_UPLOAD_PACKAGE_INVALID
-import com.tencent.devops.store.constant.StoreMessageCode.VERSION_PUBLISHED
 import com.tencent.devops.store.atom.dao.AtomDao
 import com.tencent.devops.store.atom.dao.AtomLabelRelDao
 import com.tencent.devops.store.atom.dao.MarketAtomDao
 import com.tencent.devops.store.atom.dao.MarketAtomEnvInfoDao
 import com.tencent.devops.store.atom.dao.MarketAtomFeatureDao
 import com.tencent.devops.store.atom.dao.MarketAtomVersionLogDao
+import com.tencent.devops.store.atom.factory.AtomBusHandleFactory
+import com.tencent.devops.store.atom.service.AtomIndexTriggerCalService
+import com.tencent.devops.store.atom.service.AtomNotifyService
+import com.tencent.devops.store.atom.service.AtomQualityService
+import com.tencent.devops.store.atom.service.AtomReleaseService
+import com.tencent.devops.store.atom.service.MarketAtomArchiveService
+import com.tencent.devops.store.atom.service.MarketAtomCommonService
 import com.tencent.devops.store.common.dao.StoreErrorCodeInfoDao
 import com.tencent.devops.store.common.dao.StoreMemberDao
 import com.tencent.devops.store.common.dao.StoreProjectRelDao
 import com.tencent.devops.store.common.dao.StoreReleaseDao
 import com.tencent.devops.store.common.dao.StoreStatisticTotalDao
+import com.tencent.devops.store.common.service.StoreCommonService
+import com.tencent.devops.store.common.service.StoreFileService
+import com.tencent.devops.store.common.service.StoreI18nMessageService
+import com.tencent.devops.store.common.service.StoreWebsocketService
+import com.tencent.devops.store.common.utils.StoreUtils
+import com.tencent.devops.store.common.utils.VersionUtils
+import com.tencent.devops.store.constant.StoreMessageCode
+import com.tencent.devops.store.constant.StoreMessageCode.GET_INFO_NO_PERMISSION
+import com.tencent.devops.store.constant.StoreMessageCode.NO_COMPONENT_ADMIN_PERMISSION
+import com.tencent.devops.store.constant.StoreMessageCode.USER_REPOSITORY_ERROR_JSON_FIELD_IS_INVALID
+import com.tencent.devops.store.constant.StoreMessageCode.USER_UPLOAD_PACKAGE_INVALID
+import com.tencent.devops.store.constant.StoreMessageCode.VERSION_PUBLISHED
 import com.tencent.devops.store.pojo.atom.AtomEnvRequest
 import com.tencent.devops.store.pojo.atom.AtomFeatureRequest
 import com.tencent.devops.store.pojo.atom.AtomOfflineReq
@@ -118,25 +131,13 @@ import com.tencent.devops.store.pojo.common.enums.ReleaseTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreMemberTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreProjectTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
-import com.tencent.devops.store.atom.service.AtomIndexTriggerCalService
-import com.tencent.devops.store.atom.service.AtomNotifyService
-import com.tencent.devops.store.atom.service.AtomQualityService
-import com.tencent.devops.store.atom.service.AtomReleaseService
-import com.tencent.devops.store.atom.service.MarketAtomArchiveService
-import com.tencent.devops.store.atom.service.MarketAtomCommonService
-import com.tencent.devops.store.common.service.StoreCommonService
-import com.tencent.devops.store.common.service.StoreFileService
-import com.tencent.devops.store.common.service.StoreI18nMessageService
-import com.tencent.devops.store.common.service.StoreWebsocketService
-import com.tencent.devops.store.common.utils.StoreUtils
-import com.tencent.devops.store.common.utils.VersionUtils
+import java.time.LocalDateTime
+import java.util.Locale
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
-import java.util.Locale
-import java.time.LocalDateTime
 
 @Suppress("ALL")
 abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseService {
@@ -1090,6 +1091,19 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
                         pubTime = pubTime
                     )
                 )
+                marketAtomEnvInfoDao.getMarketAtomEnvInfosByAtomId(context, atomId)?.let {
+                    val language = it[0].language
+                    val atomBusHandleService = AtomBusHandleFactory.createAtomBusHandleService(language)
+                    it.forEach { record ->
+                        val preCmd = atomBusHandleService.handleAtomReleasePreCmd(record.preCmd)
+                        marketAtomEnvInfoDao.updateMarketAtomEnvPreCmd(
+                            dslContext = context,
+                            userId = userId,
+                            atomEnvId = record.id,
+                            preCmd = preCmd
+                        )
+                    }
+                }
                 // 处理插件缓存
                 marketAtomCommonService.handleAtomCache(
                     atomId = atomId,

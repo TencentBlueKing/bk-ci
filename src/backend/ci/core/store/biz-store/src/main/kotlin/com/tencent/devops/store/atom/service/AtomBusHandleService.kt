@@ -43,4 +43,9 @@ interface AtomBusHandleService {
      * @return 处理后的操作系统cpu架构
      */
     fun handleOsArch(osName: String, osArch: String): String
+
+    /**
+     * 更新插件正式发布时preCmd前置命令
+     */
+    fun handleAtomReleasePreCmd(preCmd: String): String
 }

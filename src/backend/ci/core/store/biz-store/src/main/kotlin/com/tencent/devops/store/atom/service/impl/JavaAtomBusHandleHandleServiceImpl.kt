@@ -44,4 +44,8 @@ class JavaAtomBusHandleHandleServiceImpl : AtomBusHandleService {
         // worker就是通过java取的osArch，故无需转换
         return osArch
     }
+
+    override fun handleAtomReleasePreCmd(preCmd: String): String {
+        return preCmd
+    }
 }

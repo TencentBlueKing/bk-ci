@@ -31,8 +31,8 @@ import com.tencent.devops.common.api.enums.OSType
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.service.utils.CommonUtils
 import com.tencent.devops.worker.common.service.AtomRunConditionHandleService
-import org.slf4j.LoggerFactory
 import java.io.File
+import org.slf4j.LoggerFactory
 
 class PythonAtomRunConditionHandleServiceImpl : AtomRunConditionHandleService {
 
@@ -72,7 +72,7 @@ class PythonAtomRunConditionHandleServiceImpl : AtomRunConditionHandleService {
         } else {
             "pip"
         }
-        preCmds.add(0, "$pipType --default-timeout=600 install $pkgName --upgrade")
+        preCmds.add(0, "$pipType --default-timeout=600 install $pkgName")
         logger.info("handleAtomPreCmd convertPreCmd:$preCmds")
         return JsonUtil.toJson(preCmds, false)
     }

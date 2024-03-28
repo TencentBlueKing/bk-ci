@@ -38,4 +38,8 @@ class CommonAtomBusHandleHandleServiceImpl : AtomBusHandleService {
     override fun handleOsArch(osName: String, osArch: String): String {
         return osArch
     }
+
+    override fun handleAtomReleasePreCmd(preCmd: String): String {
+        return preCmd
+    }
 }
