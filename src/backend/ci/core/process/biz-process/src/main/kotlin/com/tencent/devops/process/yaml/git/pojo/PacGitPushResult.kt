@@ -42,7 +42,10 @@ interface PacGitPushResult {
     val blobId: String
 
     // commitId
-    val lastCommitId: String
+    val commitId: String
+
+    // 提交时间
+    val commitTime: String
 
     // mr url
     val mrUrl: String?

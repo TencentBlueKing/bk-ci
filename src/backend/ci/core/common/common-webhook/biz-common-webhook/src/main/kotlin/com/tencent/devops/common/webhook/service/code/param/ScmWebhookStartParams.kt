@@ -120,7 +120,7 @@ interface ScmWebhookStartParams<T : WebHookTriggerElement> {
         startParams[PIPELINE_WEBHOOK_BLOCK] = params.block
         startParams.putAll(matcher.getEnv())
         startParams.putAll(variables)
-        if (matcher.getCodeType() in setOf(CodeType.GIT, CodeType.GITLAB, CodeType.GITHUB)) {
+        if (matcher.getCodeType() in setOf(CodeType.GIT, CodeType.TGIT, CodeType.GITLAB, CodeType.GITHUB)) {
             startParams[PIPELINE_GIT_REPO_ID] = matcher.getExternalId()
         }
         if (!matcher.getBranchName().isNullOrBlank()) {

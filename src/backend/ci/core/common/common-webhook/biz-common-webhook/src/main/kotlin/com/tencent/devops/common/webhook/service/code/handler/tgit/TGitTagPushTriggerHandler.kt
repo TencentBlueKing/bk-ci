@@ -29,6 +29,7 @@ package com.tencent.devops.common.webhook.service.code.handler.tgit
 
 import com.tencent.devops.common.api.pojo.I18Variable
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeEventType
+import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_ACTION
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_BEFORE_SHA
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_BEFORE_SHA_SHORT
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_COMMIT_AUTHOR
@@ -157,6 +158,7 @@ class TGitTagPushTriggerHandler : CodeWebhookTriggerHandler<GitTagPushEvent> {
         startParams[PIPELINE_GIT_EVENT_URL] = "${event.repository.homepage}/-/tags/${getBranchName(event)}"
         startParams[PIPELINE_GIT_TAG_MESSAGE] = event.message ?: ""
         startParams[BK_REPO_GIT_WEBHOOK_BRANCH] = getBranchName(event)
+        startParams[PIPELINE_GIT_ACTION] = event.operation_kind ?: ""
         return startParams
     }
 

@@ -145,7 +145,9 @@ object TriggerBuildParamUtils {
             CI_PIPELINE_MODIFIER,
             CI_PIPELINE_VERSION,
             CI_BUILD_START_TYPE
-        ).map {
+        ).sortedBy {
+            it
+        }.map {
             BuildEnvParameters(
                 name = it,
                 desc = I18nUtil.getCodeLanMessage(it)
@@ -156,7 +158,7 @@ object TriggerBuildParamUtils {
     fun getTriggerParamNameMap(atomCode: String): List<BuildParameterGroup> {
         val paramNameMap = TRIGGER_BUILD_PARAM_NAME_MAP[atomCode] ?: emptyMap()
         return paramNameMap.map { (eventType, paramNames) ->
-            val params = paramNames.map { paramName ->
+            val params = paramNames.sortedBy { it }.map { paramName ->
                 BuildEnvParameters(
                     name = paramName,
                     desc = I18nUtil.getCodeLanMessage(

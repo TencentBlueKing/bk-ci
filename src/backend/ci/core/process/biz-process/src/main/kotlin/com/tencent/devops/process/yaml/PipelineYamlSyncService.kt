@@ -56,8 +56,13 @@ class PipelineYamlSyncService @Autowired constructor(
         repoHashId: String,
         yamlPathList: List<YamlPathListEntry>
     ) {
-        val syncFileInfoList =
-            yamlPathList.map { PipelineYamlSyncInfo(filePath = it.yamlPath, syncStatus = RepoYamlSyncStatusEnum.SYNC) }
+        val syncFileInfoList = yamlPathList.map {
+            PipelineYamlSyncInfo(
+                filePath = it.yamlPath,
+                fileUrl = it.yamlUrl,
+                syncStatus = RepoYamlSyncStatusEnum.SYNC
+            )
+        }
         dslContext.transaction { configuration ->
             val transactionContext = DSL.using(configuration)
             pipelineYamlSyncDao.delete(
@@ -129,6 +134,7 @@ class PipelineYamlSyncService @Autowired constructor(
         ).map {
             PipelineYamlSyncInfo(
                 filePath = it.filePath,
+                fileUrl = it.fileUrl,
                 syncStatus = RepoYamlSyncStatusEnum.valueOf(it.syncStatus),
                 reason = it.reason,
                 reasonDetail = it.reasonDetail?.let { detail ->

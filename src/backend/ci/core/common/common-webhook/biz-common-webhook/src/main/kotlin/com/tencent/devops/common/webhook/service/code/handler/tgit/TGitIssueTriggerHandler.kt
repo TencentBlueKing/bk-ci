@@ -29,6 +29,7 @@ package com.tencent.devops.common.webhook.service.code.handler.tgit
 
 import com.tencent.devops.common.api.pojo.I18Variable
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeEventType
+import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_ACTION
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_COMMIT_AUTHOR
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_EVENT
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_EVENT_URL
@@ -203,6 +204,7 @@ class TGitIssueTriggerHandler(
             startParams[PIPELINE_GIT_SHA_SHORT] = commitInfo?.short_id ?: ""
         }
         startParams[PIPELINE_GIT_EVENT_URL] = event.objectAttributes.url ?: ""
+        startParams[PIPELINE_GIT_ACTION] = event.objectAttributes.action ?: ""
         return startParams
     }
 

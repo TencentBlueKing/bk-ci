@@ -47,7 +47,8 @@ data class EventCommonData(
     val userId: String,
     val projectName: String?,
     val eventType: String? = null,
-    val sourceGitProjectId: String? = null
+    val sourceGitProjectId: String? = null,
+    val sourceGitNamespace: String? = null
 )
 
 /**

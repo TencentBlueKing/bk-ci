@@ -31,7 +31,9 @@ data class YamlPathListEntry(
     val yamlPath: String,
     val checkType: CheckType,
     val ref: String?,
-    val blobId: String?
+    val blobId: String?,
+    // yaml文件url
+    val yamlUrl: String? = null
 )
 
 enum class CheckType {

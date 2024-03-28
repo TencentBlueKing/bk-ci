@@ -29,6 +29,7 @@
 package com.tencent.devops.process.yaml
 
 import com.tencent.devops.common.api.pojo.PipelineAsCodeSettings
+import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.pipeline.container.TriggerContainer
@@ -54,6 +55,7 @@ import com.tencent.devops.process.yaml.transfer.aspect.PipelineTransferAspectLoa
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
+import java.time.LocalDateTime
 
 @Service
 class PipelineYamlRepositoryService @Autowired constructor(
@@ -78,7 +80,8 @@ class PipelineYamlRepositoryService @Autowired constructor(
         val triggerPipeline = action.data.context.pipeline
         val yamlFile = action.data.context.yamlFile!!
         val filePath = yamlFile.yamlPath
-        logger.info("syncYamlPipeline|$projectId|pipeline:$triggerPipeline|yamlFile:$yamlFile")
+        val commitId = action.data.eventCommon.commit.commitId
+        logger.info("deployYamlPipeline|$projectId|pipeline:$triggerPipeline|yamlFile:$yamlFile|commitId:$commitId")
         try {
             PipelineYamlTriggerLock(
                 redisOperation = redisOperation,
@@ -146,34 +149,21 @@ class PipelineYamlRepositoryService @Autowired constructor(
         action: BaseAction,
         yamlFile: YamlPathListEntry
     ) {
-        val pipelineYamlVersion = pipelineYamlService.getPipelineYamlVersion(
+        val branch = action.data.eventCommon.branch
+        val pipelineYamlVersion = pipelineYamlService.getLatestVersionByRef(
             projectId = projectId,
             repoHashId = action.data.setting.repoHashId,
             filePath = yamlFile.yamlPath,
-            blobId = yamlFile.blobId!!
+            ref = branch
         )
-        val defaultBranch = action.data.context.defaultBranch
-        val branch = action.data.eventCommon.branch
-        // yaml版本不存在
-        if (pipelineYamlVersion == null) {
+        // yaml版本不存在或者当前分支最新版本与要更新的不一样,说明需要创建新的版本
+        if (pipelineYamlVersion == null || pipelineYamlVersion.blobId != yamlFile.blobId) {
             updateYamlPipeline(
                 projectId = projectId,
                 pipelineId = pipelineId,
                 action = action,
-                yamlFile = yamlFile,
-                needDeleteVersion = false
+                yamlFile = yamlFile
             )
-        } else {
-            // 默认分支推送，并且版本的创建分支不是从默认分支,说明分支合入主干,需要将分支版本转换成稳定版本
-            if (branch == defaultBranch && pipelineYamlVersion.ref != defaultBranch) {
-                updateYamlPipeline(
-                    projectId = projectId,
-                    pipelineId = pipelineId,
-                    action = action,
-                    yamlFile = yamlFile,
-                    needDeleteVersion = true
-                )
-            }
         }
     }
 
@@ -189,12 +179,18 @@ class PipelineYamlRepositoryService @Autowired constructor(
         val repoHashId = action.data.setting.repoHashId
         val directory = GitActionCommon.getCiDirectory(yamlFile.yamlPath)
         val isDefaultBranch = branch == action.data.context.defaultBranch
+        val commitId = action.data.eventCommon.commit.commitId
+        val commitTime = action.data.eventCommon.commit.commitTimeStamp?.let {
+            DateTimeUtil.stringToLocalDateTime(it)
+        } ?: LocalDateTime.now()
+        // 如果是fork仓库,ref应该加上fork库的namespace
+        val ref = GitActionCommon.getRef(action.data.eventCommon.sourceGitNamespace, branch)
         val deployPipelineResult = pipelineInfoFacadeService.createYamlPipeline(
             userId = action.data.setting.enableUser,
             projectId = projectId,
             yaml = yamlContent.content,
             yamlFileName = yamlFile.yamlPath.removePrefix(".ci/"),
-            branchName = branch,
+            branchName = ref,
             isDefaultBranch = isDefaultBranch,
             description = action.data.eventCommon.commit.commitMsg,
             aspects = PipelineTransferAspectLoader.initByDefaultTriggerOn(defaultRepo = {
@@ -212,8 +208,9 @@ class PipelineYamlRepositoryService @Autowired constructor(
             filePath = yamlFile.yamlPath,
             directory = directory,
             blobId = yamlFile.blobId!!,
-            commitId = action.data.eventCommon.commit.commitId,
-            ref = branch,
+            ref = ref,
+            commitId = commitId,
+            commitTime = commitTime,
             pipelineId = pipelineId,
             status = if (isDefaultBranch) {
                 PipelineYamlStatus.OK.name
@@ -233,27 +230,30 @@ class PipelineYamlRepositoryService @Autowired constructor(
         )
     }
 
-    /**
-     * @param needDeleteVersion 是否需要删除旧的version
-     */
     private fun updateYamlPipeline(
         projectId: String,
         pipelineId: String,
         action: BaseAction,
-        yamlFile: YamlPathListEntry,
-        needDeleteVersion: Boolean
+        yamlFile: YamlPathListEntry
     ) {
         logger.info("update yaml pipeline|$projectId|$yamlFile")
         val yamlContent = action.getYamlContent(yamlFile.yamlPath)
         val branch = action.data.eventCommon.branch
         val defaultBranch = action.data.context.defaultBranch
+        val commitId = action.data.eventCommon.commit.commitId
+        val commitTime = action.data.eventCommon.commit.commitTimeStamp?.let {
+            DateTimeUtil.stringToLocalDateTime(it)
+        } ?: LocalDateTime.now()
+        // 如果是fork仓库,ref应该加上fork库的namespace
+        val ref = GitActionCommon.getRef(action.data.eventCommon.sourceGitNamespace, branch)
+
         val deployPipelineResult = pipelineInfoFacadeService.updateYamlPipeline(
             userId = action.data.setting.enableUser,
             projectId = projectId,
             pipelineId = pipelineId,
             yaml = yamlContent.content,
             yamlFileName = yamlFile.yamlPath.removePrefix(".ci/"),
-            branchName = branch,
+            branchName = ref,
             isDefaultBranch = branch == defaultBranch,
             description = action.data.eventCommon.commit.commitMsg,
             aspects = PipelineTransferAspectLoader.initByDefaultTriggerOn(defaultRepo = {
@@ -270,14 +270,14 @@ class PipelineYamlRepositoryService @Autowired constructor(
             repoHashId = repoHashId,
             filePath = yamlFile.yamlPath,
             blobId = yamlFile.blobId!!,
-            commitId = action.data.eventCommon.commit.commitId,
-            ref = branch,
+            commitId = commitId,
+            commitTime = commitTime,
+            ref = ref,
             defaultBranch = defaultBranch,
             pipelineId = deployPipelineResult.pipelineId,
             version = deployPipelineResult.version,
             userId = action.data.getUserId(),
-            webhooks = webhooks,
-            needDeleteVersion = needDeleteVersion
+            webhooks = webhooks
         )
     }
 
@@ -415,7 +415,8 @@ class PipelineYamlRepositoryService @Autowired constructor(
     ) {
         val blobId = gitPushResult.blobId
         val branch = gitPushResult.branch
-        val commitId = gitPushResult.lastCommitId
+        val commitId = gitPushResult.commitId
+        val commitTime = DateTimeUtil.stringToLocalDateTime(gitPushResult.commitTime)
         val pipelineYamlInfo = pipelineYamlService.getPipelineYamlInfo(
             projectId = projectId,
             repoHashId = repoHashId,
@@ -437,9 +438,10 @@ class PipelineYamlRepositoryService @Autowired constructor(
                     PipelineYamlStatus.UN_MERGED.name
                 },
                 userId = userId,
-                blobId = blobId,
-                commitId = commitId,
                 ref = branch,
+                commitId = commitId,
+                commitTime = commitTime,
+                blobId = blobId,
                 version = version,
                 webhooks = webhooks
             )
@@ -449,27 +451,28 @@ class PipelineYamlRepositoryService @Autowired constructor(
                 userId = userId
             )
         } else {
-            val pipelineYamlVersion = pipelineYamlService.getPipelineYamlVersion(
+            val pipelineYamlVersion = pipelineYamlService.getLatestVersionByRef(
                 projectId = projectId,
                 repoHashId = repoHashId,
                 filePath = filePath,
-                blobId = blobId
+                ref = branch
             )
-            if (pipelineYamlVersion == null) {
+            // yaml版本不存在或者当前分支最新版本与要更新的不一样,说明需要创建新的版本
+            if (pipelineYamlVersion == null || pipelineYamlVersion.blobId != blobId) {
                 logger.info("push yaml pipeline|update yaml|$projectId|$pipelineId|$version")
                 pipelineYamlService.update(
                     projectId = projectId,
                     repoHashId = repoHashId,
                     filePath = filePath,
-                    blobId = blobId,
-                    commitId = commitId,
                     ref = branch,
+                    commitId = commitId,
+                    commitTime = commitTime,
+                    blobId = blobId,
                     defaultBranch = defaultBranch,
                     pipelineId = pipelineId,
                     version = version,
                     userId = userId,
-                    webhooks = webhooks,
-                    needDeleteVersion = false
+                    webhooks = webhooks
                 )
             }
         }

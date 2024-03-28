@@ -78,6 +78,7 @@ class PipelineYamlService(
         userId: String,
         blobId: String,
         commitId: String,
+        commitTime: LocalDateTime,
         ref: String,
         version: Int,
         webhooks: List<PipelineWebhookVersion>
@@ -99,9 +100,10 @@ class PipelineYamlService(
                 projectId = projectId,
                 repoHashId = repoHashId,
                 filePath = filePath,
-                blobId = blobId,
-                commitId = commitId,
                 ref = ref,
+                commitId = commitId,
+                commitTime = commitTime,
+                blobId = blobId,
                 pipelineId = pipelineId,
                 version = version,
                 userId = userId
@@ -128,11 +130,11 @@ class PipelineYamlService(
         userId: String,
         blobId: String,
         commitId: String,
+        commitTime: LocalDateTime,
         ref: String,
         defaultBranch: String?,
         version: Int,
-        webhooks: List<PipelineWebhookVersion>,
-        needDeleteVersion: Boolean
+        webhooks: List<PipelineWebhookVersion>
     ) {
         dslContext.transaction { configuration ->
             val transactionContext = DSL.using(configuration)
@@ -143,23 +145,15 @@ class PipelineYamlService(
                 filePath = filePath,
                 userId = userId
             )
-            if (needDeleteVersion) {
-                pipelineYamlVersionDao.deleteByBlobId(
-                    dslContext = transactionContext,
-                    projectId = projectId,
-                    repoHashId = repoHashId,
-                    filePath = filePath,
-                    blobId = blobId
-                )
-            }
             pipelineYamlVersionDao.save(
                 dslContext = transactionContext,
                 projectId = projectId,
                 repoHashId = repoHashId,
                 filePath = filePath,
-                blobId = blobId,
-                commitId = commitId,
                 ref = ref,
+                commitId = commitId,
+                commitTime = commitTime,
+                blobId = blobId,
                 pipelineId = pipelineId,
                 version = version,
                 userId = userId
@@ -186,6 +180,9 @@ class PipelineYamlService(
         }
     }
 
+    /**
+     * 当非默认分支文件删除或者merge时,刷新yaml流水线状态
+     */
     fun refreshPipelineYamlStatus(
         projectId: String,
         repoHashId: String,
@@ -205,8 +202,11 @@ class PipelineYamlService(
             filePath = filePath
         ) ?: return
         val status = when {
+            // 没有任何分支与当前yaml关联,说明yaml文件已经全部删除
             branchList.isEmpty() -> PipelineYamlStatus.DELETED.name
+            // 有且仅在主干对yaml文件做过变更,其他分支没有对yaml文件有变更过
             branchList.size == 1 && branchList.contains(defaultBranch) -> PipelineYamlStatus.OK.name
+            // 除了主干,还存在其他文件对文件有过变更
             branchList.isNotEmpty() && branchList.contains(defaultBranch) -> PipelineYamlStatus.UN_MERGED.name
             else -> null
         }
@@ -275,18 +275,21 @@ class PipelineYamlService(
         )
     }
 
-    fun getPipelineYamlVersion(
+    /**
+     * 获取当前分支或blob_id对应的最新的版本
+     */
+    fun getLatestVersionByRef(
         projectId: String,
         repoHashId: String,
         filePath: String,
-        blobId: String
+        ref: String
     ): PipelineYamlVersion? {
-        return pipelineYamlVersionDao.get(
+        return pipelineYamlVersionDao.getLatestVersion(
             dslContext = dslContext,
             projectId = projectId,
             repoHashId = repoHashId,
             filePath = filePath,
-            blobId = blobId
+            ref = ref
         )
     }
 
@@ -300,7 +303,7 @@ class PipelineYamlService(
                 logger.info("pipeline yaml not found|$projectId|$pipelineId")
                 return null
             }
-        val pipelineYamlVersion = pipelineYamlVersionDao.getByPipelineId(
+        val pipelineYamlVersion = pipelineYamlVersionDao.getLatestVersion(
             dslContext = dslContext,
             projectId = projectId,
             pipelineId = pipelineId,
@@ -347,19 +350,6 @@ class PipelineYamlService(
                 status = pipelineYamlInfo.status
             )
         }
-    }
-
-    fun getPipelineYamlVersion(
-        projectId: String,
-        pipelineId: String,
-        version: Int
-    ): PipelineYamlVersion? {
-        return pipelineYamlVersionDao.getByPipelineId(
-            dslContext = dslContext,
-            projectId = projectId,
-            pipelineId = pipelineId,
-            version = version
-        )
     }
 
     fun countPipelineYaml(
