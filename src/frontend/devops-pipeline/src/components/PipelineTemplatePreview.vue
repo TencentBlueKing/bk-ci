@@ -41,12 +41,12 @@
 </template>
 
 <script>
-    import { mapGetters, mapActions } from 'vuex'
     import ModeSwitch from '@/components/ModeSwitch'
-    import YamlEditor from '@/components/YamlEditor'
     import Pipeline from '@/components/Pipeline'
-    import { UI_MODE } from '@/utils/pipelineConst'
     import { BaseSettingTab, NotifyTab, TriggerTab } from '@/components/PipelineEditTabs/'
+    import YamlEditor from '@/components/YamlEditor'
+    import { UI_MODE } from '@/utils/pipelineConst'
+    import { mapActions, mapGetters } from 'vuex'
     export default {
         components: {
             ModeSwitch,
@@ -145,7 +145,10 @@
             value (val) {
                 if (val) {
                     if (this.previewSettingType) {
-                        this.activePanel = 'baseConfig'
+                        const tabMap = {
+                            useSubscriptionSettings: 'notification'
+                        }
+                        this.activePanel = tabMap[this.previewSettingType] ?? 'baseConfig'
                     }
                     this.init()
                 } else {
