@@ -176,9 +176,24 @@ interface UserEnvironmentResource {
     ): Result<Boolean>
 
     @Operation(summary = "获取环境的节点列表")
-    @GET
+    @POST
     @Path("/{projectId}/{envHashId}/listNodes")
     fun listNodes(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @Parameter(description = "环境 hashId", required = true)
+        @PathParam("envHashId")
+        envHashId: String
+    ): Result<List<NodeBaseInfo>>
+
+    @Operation(summary = "获取环境的节点列表")
+    @GET
+    @Path("/{projectId}/{envHashId}/listNodesNew")
+    fun listNodesNew(
         @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
