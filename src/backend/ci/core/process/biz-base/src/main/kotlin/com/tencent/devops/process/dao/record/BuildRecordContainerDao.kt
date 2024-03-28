@@ -66,7 +66,9 @@ class BuildRecordContainerDao {
                 MATRIX_GROUP_FLAG,
                 MATRIX_GROUP_ID,
                 STATUS,
-                TIMESTAMPS
+                TIMESTAMPS,
+                START_TIME,
+                END_TIME
             ).also { insert ->
                 records.forEach { record ->
                     insert.values(
@@ -82,7 +84,9 @@ class BuildRecordContainerDao {
                         record.matrixGroupFlag,
                         record.matrixGroupId,
                         record.status,
-                        JsonUtil.toJson(record.timestamps, false)
+                        JsonUtil.toJson(record.timestamps, false),
+                        record.startTime,
+                        record.endTime
                     )
                 }
             }.onDuplicateKeyUpdate()
