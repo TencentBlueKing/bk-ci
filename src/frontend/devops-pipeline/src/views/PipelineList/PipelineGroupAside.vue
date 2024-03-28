@@ -6,7 +6,7 @@
                     'pipeline-group-item': true,
                     active: $route.params.viewId === sumView.id
                 }" @click="switchViewId(sumView.id)">
-                    <logo class="pipeline-group-item-icon" size="12" :name="sumView.icon" />
+                    <logo class="pipeline-group-item-icon" size="14" :name="sumView.icon" />
                     <span class="pipeline-group-item-name">
                         {{$t(sumView.name)}}
                     </span>
@@ -59,7 +59,7 @@
                             @click="switchViewId(item.id)"
                         >
                             <i v-if="item.pac" class="pipeline-group-item-icon devops-icon icon-pac" />
-                            <logo v-else-if="item.icon" size="12" class="pipeline-group-item-icon" :name="item.icon" />
+                            <logo v-else-if="item.icon" size="14" class="pipeline-group-item-icon" :name="item.icon" />
                             <bk-input
                                 v-if="item.id === editingGroupId"
                                 v-bk-focus="1"
