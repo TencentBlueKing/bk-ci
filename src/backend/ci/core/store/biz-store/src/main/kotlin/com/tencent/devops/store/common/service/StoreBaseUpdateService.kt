@@ -49,11 +49,9 @@ interface StoreBaseUpdateService {
 
     /**
      * 持久化更新组件数据
-     * @param userId 用户ID
      * @param storeUpdateRequest 更新组件请求报文
      */
     fun doStoreUpdateDataPersistent(
-        userId: String,
         storeUpdateRequest: StoreUpdateRequest
     )
 }

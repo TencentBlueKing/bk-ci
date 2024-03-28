@@ -78,4 +78,12 @@ class StoreBaseExtManageDao {
                 .execute()
         }
     }
+
+    fun deleteStoreBaseExtInfo(dslContext: DSLContext, storeId: String) {
+        with(TStoreBaseExt.T_STORE_BASE_EXT) {
+            dslContext.deleteFrom(this)
+                .where(STORE_ID.eq(storeId))
+                .execute()
+        }
+    }
 }
