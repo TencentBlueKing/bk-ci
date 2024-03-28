@@ -68,5 +68,4 @@ data class DeptInfo(
     @get:Schema(title = "ID")
     @JsonProperty("ID")
     val id: String
-
 )
