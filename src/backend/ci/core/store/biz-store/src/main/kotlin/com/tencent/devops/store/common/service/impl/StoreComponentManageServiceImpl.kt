@@ -31,8 +31,12 @@ import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.pipeline.enums.ChannelCode
+import com.tencent.devops.common.web.utils.I18nUtil
+import com.tencent.devops.store.common.dao.ClassifyDao
 import com.tencent.devops.store.common.dao.StoreBaseFeatureManageDao
 import com.tencent.devops.store.common.dao.StoreBaseQueryDao
+import com.tencent.devops.store.common.dao.StoreLabelDao
+import com.tencent.devops.store.common.dao.StoreMemberDao
 import com.tencent.devops.store.common.service.StoreComponentManageService
 import com.tencent.devops.store.common.service.StoreProjectService
 import com.tencent.devops.store.constant.StoreMessageCode
@@ -40,19 +44,27 @@ import com.tencent.devops.store.pojo.common.InstallStoreReq
 import com.tencent.devops.store.pojo.common.StoreBaseInfo
 import com.tencent.devops.store.pojo.common.StoreBaseInfoUpdateRequest
 import com.tencent.devops.store.pojo.common.UnInstallReq
+import com.tencent.devops.store.pojo.common.enums.StoreStatusEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
+import kotlin.reflect.full.memberProperties
+import org.eclipse.jgit.lib.ObjectChecker.type
 import org.jooq.DSLContext
+import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 
 abstract class StoreComponentManageServiceImpl(
     private val dslContext: DSLContext,
     private val storeBaseQueryDao: StoreBaseQueryDao,
     private val storeBaseFeatureManageDao: StoreBaseFeatureManageDao,
-    private val storeProjectService: StoreProjectService
+    private val storeProjectService: StoreProjectService,
+    private val classifyDao: ClassifyDao,
+    private val storeLabelDao: StoreLabelDao,
+    private val storeMemberDao: StoreMemberDao
 ) : StoreComponentManageService {
 
     companion object {
         private val logger = LoggerFactory.getLogger(StoreComponentManageServiceImpl::class.java)
+
     }
 
     override fun updateComponentBaseInfo(
@@ -61,7 +73,90 @@ abstract class StoreComponentManageServiceImpl(
         storeCode: String,
         storeBaseInfoUpdateRequest: StoreBaseInfoUpdateRequest
     ): Result<Boolean> {
-        TODO("Not yet implemented")
+        logger.info("updateComponentBaseInfo params:[$userId|$storeCode|$storeType|$storeBaseInfoUpdateRequest]")
+        // 校验空请求
+        val properties = StoreBaseInfoUpdateRequest::class.memberProperties
+        if (!properties.any { it.get(storeBaseInfoUpdateRequest) != null}) {
+            return Result(true)
+        }
+        // 判断当前用户是否拥有更新组件基本信息权限
+        if (!validateUserUpdateActionPermission()) {
+            return I18nUtil.generateResponseDataObject(
+                messageCode = StoreMessageCode.GET_INFO_NO_PERMISSION,
+                language = I18nUtil.getLanguage(userId),
+                params = arrayOf(storeCode)
+            )
+        }
+        // 查询组件的最新记录
+        val componentBaseInfoRecord = storeBaseQueryDao.getNewestComponentByCode(
+            dslContext = dslContext,
+            storeCode = storeCode,
+            storeType = StoreTypeEnum.valueOf(storeType)
+        ) ?: throw ErrorCodeException(
+            errorCode = CommonMessageCode.PARAMETER_IS_INVALID,
+            params = arrayOf(storeCode)
+        )
+        val editFlag = checkEditCondition(componentBaseInfoRecord.status)
+        if (!editFlag) {
+            throw ErrorCodeException(
+                errorCode = StoreMessageCode.STORE_VERSION_IS_NOT_FINISH,
+                params = arrayOf(componentBaseInfoRecord.name, componentBaseInfoRecord.version)
+            )
+        }
+        val storeIds =  mutableListOf(componentBaseInfoRecord.id)
+        val latestComponent = storeBaseQueryDao.getLatestAtomByCode(dslContext, storeCode)
+        if (latestComponent != null && componentBaseInfoRecord.id != latestComponent.id) {
+            storeIds.add(latestComponent.id)
+        }
+        dslContext.transaction { t ->
+            val context = DSL.using(t)
+            val classifyId = storeBaseInfoUpdateRequest.classifyCode?.let {
+                classifyDao.getClassifyByCode(
+                    dslContext = context,
+                    classifyCode = it,
+                    type = StoreTypeEnum.valueOf(storeType)
+                )?.id
+            }
+            storeBaseQueryDao.updateComponentBaseInfo(
+                dslContext = context,
+                userId = userId,
+                storeIds = storeIds,
+                classifyId = classifyId,
+                storeBaseInfoUpdateRequest = storeBaseInfoUpdateRequest
+            )
+            storeBaseInfoUpdateRequest.labelIdList?.let {
+                storeIds.forEach { storeId ->
+                    storeLabelDao.deleteByStoreId(context, storeId)
+                    storeLabelDao.batchAdd(
+                        dslContext = context,
+                        userId = userId,
+                        storeId = storeId,
+                        labelIdList = it
+                    )
+                }
+            }
+            // 组件基本信息更新逻辑扩展
+            updateComponentExtBaseInfo(context, storeIds, storeBaseInfoUpdateRequest)
+        }
+        return Result(true)
+    }
+
+    abstract fun updateComponentExtBaseInfo(
+        context: DSLContext,
+        storeIds: List<String>,
+        storeBaseInfoUpdateRequest: StoreBaseInfoUpdateRequest
+    )
+
+    private fun checkEditCondition(status: String): Boolean {
+        val componentFinalStatusList = listOf(
+            StoreStatusEnum.AUDIT_REJECT.name,
+            StoreStatusEnum.RELEASED.name,
+            StoreStatusEnum.GROUNDING_SUSPENSION.name,
+            StoreStatusEnum.UNDERCARRIAGED.name,
+            StoreStatusEnum.INIT.name
+        )
+        // 判断最近一个插件版本的状态，只有处于审核驳回、已发布、上架中止和已下架的状态才允许修改基本信息
+        return componentFinalStatusList.contains(status)
     }
 
     override fun installComponent(
@@ -146,6 +241,8 @@ abstract class StoreComponentManageServiceImpl(
         storeBaseInfo: StoreBaseInfo
     ): Result<Boolean>
 
+    abstract fun validateUserUpdateActionPermission(): Boolean
+
     override fun uninstallComponent(
         userId: String,
         projectCode: String,
@@ -153,10 +250,21 @@ abstract class StoreComponentManageServiceImpl(
         storeCode: String,
         unInstallReq: UnInstallReq
     ): Result<Boolean> {
-        TODO("Not yet implemented")
+
     }
 
     override fun deleteComponent(userId: String, storeType: String, storeCode: String): Result<Boolean> {
-        TODO("Not yet implemented")
+        logger.info("delete component ,params:[$userId, $storeCode, $storeType]")
+        val type = StoreTypeEnum.valueOf(storeType)
+        val isOwner = storeMemberDao.isStoreAdmin(dslContext, userId, storeCode, type.type.toByte())
+        if (!isOwner) {
+            return I18nUtil.generateResponseDataObject(
+                messageCode = StoreMessageCode.NO_COMPONENT_ADMIN_PERMISSION,
+                params = arrayOf(storeCode),
+                language = I18nUtil.getLanguage(userId)
+            )
+        }
+
+
     }
 }

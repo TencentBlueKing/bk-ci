@@ -31,7 +31,9 @@ import com.tencent.devops.common.db.utils.JooqUtils
 import com.tencent.devops.model.store.tables.TStoreBase
 import com.tencent.devops.model.store.tables.records.TStoreBaseRecord
 import com.tencent.devops.store.common.utils.VersionUtils
+import com.tencent.devops.store.pojo.common.StoreBaseInfoUpdateRequest
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
+import java.time.LocalDateTime
 import org.jooq.Condition
 import org.jooq.DSLContext
 import org.springframework.stereotype.Repository
@@ -87,6 +89,15 @@ class StoreBaseQueryDao {
         }
     }
 
+    fun getLatestAtomByCode(dslContext: DSLContext, storeCode: String): TStoreBaseRecord? {
+        return with(TStoreBase.T_STORE_BASE) {
+            dslContext.selectFrom(this)
+                .where(STORE_CODE.eq(storeCode))
+                .and(LATEST_FLAG.eq(true))
+                .fetchOne()
+        }
+    }
+
     fun getComponentById(
         dslContext: DSLContext,
         storeId: String
@@ -133,6 +144,46 @@ class StoreBaseQueryDao {
                 conditions.add(STORE_CODE.eq(storeCode))
             }
             return dslContext.selectCount().from(this).where(conditions).fetchOne(0, Int::class.java)!!
+        }
+    }
+
+    fun updateComponentBaseInfo(
+        dslContext: DSLContext,
+        userId: String,
+        storeIds: List<String>,
+        classifyId: String?,
+        storeBaseInfoUpdateRequest: StoreBaseInfoUpdateRequest
+    ) {
+        with(TStoreBase.T_STORE_BASE) {
+            val baseStep = dslContext.update(this)
+                .set(MODIFIER, userId)
+                .set(UPDATE_TIME, LocalDateTime.now())
+            classifyId?.let {
+                baseStep.set(CLASSIFY_ID, it)
+            }
+            storeBaseInfoUpdateRequest.summary?.let {
+                baseStep.set(SUMMARY, it)
+            }
+            storeBaseInfoUpdateRequest.description?.let {
+                baseStep.set(DESCRIPTION, it)
+            }
+            storeBaseInfoUpdateRequest.logoUrl?.let {
+                baseStep.set(LOGO_URL, it)
+            }
+            storeBaseInfoUpdateRequest.publisher?.let {
+                baseStep.set(PUBLISHER, it)
+            }
+            if (!storeBaseInfoUpdateRequest.name.isNullOrBlank()) {
+                baseStep.set(NAME, storeBaseInfoUpdateRequest.name)
+            }
+            baseStep.where(ID.`in`(storeIds)).execute()
+        }
+    }
+
+    fun countReleaseStoreByCode(dslContext: DSLContext, storeCode: String, version: String? = null): Int {
+        with(TStoreBase.T_STORE_BASE) {
+            val conditions = mutableListOf<Condition>()
+
         }
     }
 }
