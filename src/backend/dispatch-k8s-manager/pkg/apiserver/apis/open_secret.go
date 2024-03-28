@@ -9,7 +9,7 @@ import (
 )
 
 const (
-	secretPrefix = "/secret"
+	secretPrefix = "/secrets"
 )
 
 func initSecretApis(r *gin.RouterGroup) {

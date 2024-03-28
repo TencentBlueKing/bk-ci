@@ -9,7 +9,7 @@ import (
 )
 
 const (
-	servicePrefix = "/service"
+	servicePrefix = "/services"
 )
 
 func initServiceApis(r *gin.RouterGroup) {

@@ -9,7 +9,7 @@ import (
 )
 
 const (
-	deploymentPrefix = "/deployment"
+	deploymentPrefix = "/deployments"
 )
 
 func initDeploymentApis(r *gin.RouterGroup) {
