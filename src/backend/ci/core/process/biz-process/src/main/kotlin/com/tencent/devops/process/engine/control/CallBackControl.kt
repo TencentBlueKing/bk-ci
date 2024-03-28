@@ -314,9 +314,10 @@ class CallBackControl @Autowired constructor(
             val realUrl = projectPipelineCallBackUrlGenerator.decodeCallbackUrl(
                 request.url.toString()
             ).substringBefore("?")
-            Counter.builder("pipeline-callback-count")
+            Counter.builder(PIPELINE_CALLBACK_COUNT)
                 .tags(Tags.of("status", status.name).and("host", URL(realUrl).host))
                 .register(meterRegistry)
+                .increment()
             saveHistory(
                 callBack = callBack,
                 requestHeaders = listOf(CallBackHeader(name = "X-DEVOPS-WEBHOOK-UNIQUE-ID", value = uniqueId)),
@@ -496,6 +497,7 @@ class CallBackControl @Autowired constructor(
         const val MAX_RETRY_COUNT = 3
         // 默认连续失败12小时,则禁用回调地址
         private const val DEFAULT_FAILURE_DISABLE_TIME_PERIOD = 12 * 60 * 60 * 1000L
+        private const val PIPELINE_CALLBACK_COUNT = "pipeline_callback_count"
 
         private const val connectTimeout = 3L
         private const val readTimeout = 3L
