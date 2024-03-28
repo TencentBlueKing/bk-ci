@@ -38,17 +38,29 @@ data class PipelineDetailInfo(
     @get:Schema(title = "是否收藏")
     val hasCollect: Boolean,
     @get:Schema(title = "canManualStartup")
-    val canManualStartup: Int,
+    val canManualStartup: Boolean,
     @get:Schema(title = "是否关联模板")
     val instanceFromTemplate: Boolean,
     @get:Schema(title = "流水线版本")
-    val pipelineVersion: String,
-    @get:Schema(title = "部署时间")
-    val deploymentTime: String,
+    val pipelineVersion: Int,
+    @get:Schema(title = "发布时间-时间戳")
+    val deploymentTime: Long,
     @get:Schema(title = "是否有编辑权限")
     val hasPermission: Boolean,
     @get:Schema(title = "关联模板ID", required = false)
     var templateId: String? = null,
     @get:Schema(title = "关联模板版本", required = false)
-    var templateVersion: Long? = null
+    var templateVersion: Long? = null,
+    @get:Schema(title = "流水线描述")
+    val pipelineDesc: String,
+    @get:Schema(title = "创建者")
+    val creator: String,
+    @get:Schema(title = "创建时间")
+    val createTime: Long = 0,
+    @get:Schema(title = "更新时间")
+    val updateTime: Long = 0,
+    @get:Schema(title = "仅存在草稿", required = false)
+    var onlyDraft: Boolean? = false,
+    @get:Schema(title = "流水线组名称列表", required = false)
+    var viewNames: List<String>?
 )

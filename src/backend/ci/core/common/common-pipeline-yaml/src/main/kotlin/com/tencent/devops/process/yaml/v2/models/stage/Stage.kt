@@ -30,7 +30,7 @@ package com.tencent.devops.process.yaml.v2.models.stage
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.tencent.devops.process.yaml.v2.models.job.Job
-import com.tencent.devops.process.yaml.v2.stageCheck.StageCheck
+import com.tencent.devops.process.yaml.v2.check.StageCheck
 import io.swagger.v3.oas.annotations.media.Schema
 
 /**

@@ -111,6 +111,8 @@ data class Pipeline(
     var lastBuildTotalCount: Int? = null,
     @get:Schema(title = "最后一次构建已完成的任务个数", required = false)
     var lastBuildFinishCount: Int? = null,
+    @get:Schema(title = "启动类型(新)", required = false)
+    var startType: String? = null,
     @get:Schema(title = "触发方式", required = false)
     var trigger: String? = null,
     @get:Schema(title = "webhook仓库别名", required = false)
@@ -123,6 +125,10 @@ data class Pipeline(
     var webhookType: String? = null,
     @get:Schema(title = "是否已删除", required = false)
     var delete: Boolean? = false,
+    @get:Schema(title = "仅存在草稿", required = false)
+    var onlyDraft: Boolean? = false,
     @get:Schema(title = "流水线权限", required = false)
-    val permissions: PipelinePermissions? = null
+    val permissions: PipelinePermissions? = null,
+    @get:Schema(title = "流水线是否开启PAC", required = false)
+    var pac: Boolean? = false
 )

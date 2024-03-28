@@ -34,5 +34,8 @@ data class PipelineTimer(
     val pipelineId: String,
     val startUser: String,
     val crontabExpressions: List<String>,
-    val channelCode: ChannelCode
+    val channelCode: ChannelCode,
+    val repoHashId: String?,
+    val branchs: List<String>?,
+    val noScm: Boolean?
 )

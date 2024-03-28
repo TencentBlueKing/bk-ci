@@ -162,13 +162,21 @@ class PipelineWebhookDao {
     fun getByProjectNameAndType(
         dslContext: DSLContext,
         projectName: String,
-        repositoryType: String
+        repositoryType: String,
+        yamlPipelineIds: List<String>?
     ): List<WebhookTriggerPipeline>? {
         with(T_PIPELINE_WEBHOOK) {
             return dslContext.select(PROJECT_ID, PIPELINE_ID).from(this)
                 .where(PROJECT_NAME.eq(projectName))
                 .and(REPOSITORY_TYPE.eq(repositoryType))
                 .and(DELETE.eq(false))
+                .let {
+                    if (yamlPipelineIds.isNullOrEmpty()) {
+                        it
+                    } else {
+                        it.and(PIPELINE_ID.notIn(yamlPipelineIds))
+                    }
+                }
                 .groupBy(PROJECT_ID, PIPELINE_ID)
                 .fetch().map {
                     WebhookTriggerPipeline(

@@ -41,6 +41,7 @@ import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_MR_AUTHOR
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_MR_DESCRIPTION
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_MR_ID
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_MR_MILESTONE
+import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_MR_MILESTONE_ID
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_MR_NUMBER
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_MR_TITLE
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_MR_URL
@@ -66,7 +67,8 @@ class GithubIssueCommentTriggerHandler : GithubCommentTriggerHandler<GithubIssue
                 startParams[BK_REPO_GIT_WEBHOOK_MR_ID] = id
                 startParams[BK_REPO_GIT_WEBHOOK_MR_NUMBER] = number
                 startParams[BK_REPO_GIT_WEBHOOK_MR_DESCRIPTION] = body ?: ""
-                startParams[BK_REPO_GIT_WEBHOOK_MR_MILESTONE] = milestone?.id ?: ""
+                startParams[BK_REPO_GIT_WEBHOOK_MR_MILESTONE] = milestone?.title ?: ""
+                startParams[BK_REPO_GIT_WEBHOOK_MR_MILESTONE_ID] = milestone?.id ?: ""
                 startParams[BK_REPO_GIT_WEBHOOK_MR_AUTHOR] = user.login
                 // 同步Code_Git,基于MR直接评论，noteable_type=Review
                 assignees?.run {

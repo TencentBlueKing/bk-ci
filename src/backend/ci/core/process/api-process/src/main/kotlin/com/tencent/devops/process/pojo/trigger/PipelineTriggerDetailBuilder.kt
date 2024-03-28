@@ -30,6 +30,7 @@ package com.tencent.devops.process.pojo.trigger
 
 class PipelineTriggerDetailBuilder {
     private lateinit var projectId: String
+    private var detailId: Long? = null
     private var eventId: Long? = null
     private var eventSource: String? = null
     private var status: String = ""
@@ -38,10 +39,14 @@ class PipelineTriggerDetailBuilder {
     private var buildId: String? = null
     private var buildNum: String? = null
     private var reason: String? = null
-    private var reasonDetailList: MutableList<String>? = null
+    private var reasonDetail: PipelineTriggerReasonDetail? = null
 
     fun projectId(projectId: String) = apply {
         this.projectId = projectId
+    }
+
+    fun detailId(detailId: Long) = apply {
+        this.detailId = detailId
     }
 
     fun eventId(eventId: Long) = apply {
@@ -74,12 +79,8 @@ class PipelineTriggerDetailBuilder {
         this.reason = reason
     }
 
-    fun reasonDetail(reasonDetail: String) = apply {
-        if (reasonDetailList == null) {
-            reasonDetailList = mutableListOf(reasonDetail)
-        } else {
-            reasonDetailList!!.add(reasonDetail)
-        }
+    fun reasonDetail(reasonDetail: PipelineTriggerReasonDetail) = apply {
+        this.reasonDetail = reasonDetail
     }
 
     fun buildNum(buildNum: String) = apply {
@@ -89,6 +90,7 @@ class PipelineTriggerDetailBuilder {
     fun build(): PipelineTriggerDetail {
         return PipelineTriggerDetail(
             projectId = projectId,
+            detailId = detailId,
             eventId = eventId!!,
             status = status,
             pipelineId = pipelineId,
@@ -96,10 +98,10 @@ class PipelineTriggerDetailBuilder {
             buildId = buildId,
             buildNum = buildNum,
             reason = reason,
-            reasonDetailList = if (status == PipelineTriggerStatus.SUCCEED.name) {
+            reasonDetail = if (status == PipelineTriggerStatus.SUCCEED.name) {
                 null
             } else {
-                reasonDetailList
+                reasonDetail
             }
         )
     }

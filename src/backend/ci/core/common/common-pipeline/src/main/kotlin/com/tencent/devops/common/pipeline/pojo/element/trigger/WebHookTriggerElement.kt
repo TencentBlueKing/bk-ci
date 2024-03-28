@@ -37,4 +37,14 @@ abstract class WebHookTriggerElement(
 ) : Element(name, id, status) {
 
     open fun triggerCondition(): List<ElementProp> = emptyList()
+
+//    open fun getTriggerParameter(): Map<String, List<BuildEnvParameters>> = mapOf()
+}
+
+fun WebHookTriggerElement.joinToString(list: List<String>?): String {
+    return if (list.isNullOrEmpty()) {
+        ""
+    } else {
+        list.joinToString(",")
+    }
 }

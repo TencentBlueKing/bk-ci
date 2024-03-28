@@ -51,7 +51,11 @@ data class CodeGitlabRepository(
     @get:Schema(title = "仓库认证类型", required = false)
     val authType: RepoAuthType? = RepoAuthType.HTTP,
     @get:Schema(title = "Gitlab仓库ID", required = false)
-    val gitProjectId: Long?
+    val gitProjectId: Long?,
+    @get:Schema(title = "仓库是否开启pac", required = false)
+    override val enablePac: Boolean? = false,
+    @get:Schema(title = "yaml同步状态", required = false)
+    override val yamlSyncStatus: String? = null
 ) : Repository {
     companion object {
         const val classType = "codeGitLab"

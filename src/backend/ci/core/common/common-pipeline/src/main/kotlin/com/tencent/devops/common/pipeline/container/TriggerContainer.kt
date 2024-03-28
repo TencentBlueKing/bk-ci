@@ -57,7 +57,7 @@ data class TriggerContainer(
     @get:Schema(title = "模板参数构建", required = false)
     val templateParams: List<BuildFormProperty>? = null,
     @get:Schema(title = "构建版本号", required = false)
-    val buildNo: BuildNo? = null,
+    var buildNo: BuildNo? = null,
     @get:Schema(title =
         "是否可重试-仅限于构建详情展示重试，目前未作为编排的选项，暂设置为null不存储",
         required = false,
@@ -81,7 +81,10 @@ data class TriggerContainer(
     @get:Schema(title = "各项耗时", required = true)
     override var timeCost: BuildRecordTimeCost? = null,
     @get:Schema(title = "开机任务序号", required = false, readOnly = true)
-    override var startVMTaskSeq: Int? = null
+    override var startVMTaskSeq: Int? = null,
+    override var template: String? = null,
+    override var ref: String? = null,
+    override var variables: Map<String, String>? = null
 ) : Container {
     companion object {
         const val classType = "trigger"

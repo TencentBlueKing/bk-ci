@@ -27,6 +27,7 @@
 
 package com.tencent.devops.store.pojo.app
 
+import com.tencent.devops.common.pipeline.pojo.BuildEnvParameters
 import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "容器环境变量列表及版本列表")

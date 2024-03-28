@@ -27,7 +27,7 @@
 
 package com.tencent.devops.process.yaml.utils
 
-import com.tencent.devops.process.yaml.modelCreate.inner.ModelCreateEvent
+import com.tencent.devops.process.yaml.creator.inner.ModelCreateEvent
 import org.slf4j.LoggerFactory
 import java.util.regex.Pattern
 

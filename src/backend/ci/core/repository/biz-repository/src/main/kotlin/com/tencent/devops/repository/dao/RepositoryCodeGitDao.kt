@@ -177,4 +177,15 @@ class RepositoryCodeGitDao {
                 .execute()
         }
     }
+
+    fun listByGitProjectId(
+        dslContext: DSLContext,
+        gitProjectId: Long
+    ): List<TRepositoryCodeGitRecord> {
+        return with(TRepositoryCodeGit.T_REPOSITORY_CODE_GIT) {
+            dslContext.selectFrom(this)
+                .where(GIT_PROJECT_ID.eq(gitProjectId))
+                .fetch()
+        }
+    }
 }

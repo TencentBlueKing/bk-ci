@@ -43,12 +43,13 @@ import com.tencent.devops.repository.pojo.CodeSvnRepository
 import com.tencent.devops.repository.pojo.CodeSvnRepository.Companion.SVN_TYPE_HTTP
 import com.tencent.devops.repository.pojo.CodeSvnRepository.Companion.SVN_TYPE_SSH
 import com.tencent.devops.repository.pojo.Repository
-import com.tencent.devops.repository.pojo.auth.RepoAuthInfo
+import com.tencent.devops.repository.pojo.RepositoryDetailInfo
 import com.tencent.devops.repository.pojo.credential.RepoCredentialInfo
 import com.tencent.devops.repository.pojo.enums.RepoAuthType
 import com.tencent.devops.repository.service.CredentialService
 import com.tencent.devops.repository.service.scm.IScmService
 import com.tencent.devops.scm.enums.CodeSvnRegion
+import com.tencent.devops.scm.pojo.GitFileInfo
 import com.tencent.devops.scm.pojo.TokenCheckResult
 import com.tencent.devops.scm.utils.code.svn.SvnUtils
 import com.tencent.devops.ticket.pojo.enums.CredentialType
@@ -82,7 +83,8 @@ class CodeSvnRepositoryService @Autowired constructor(
                 userId = userId,
                 aliasName = repository.aliasName,
                 url = repository.getFormatURL(),
-                type = ScmType.CODE_SVN
+                type = ScmType.CODE_SVN,
+                enablePac = repository.enablePac
             )
             // 如果repository为null，则默认为TC
             repositoryCodeSvnDao.create(
@@ -157,7 +159,9 @@ class CodeSvnRepositoryService @Autowired constructor(
             userName = record.userName,
             projectId = repository.projectId,
             repoHashId = HashUtil.encodeOtherLongId(repository.repositoryId),
-            svnType = record.svnType
+            svnType = record.svnType,
+            enablePac = repository.enablePac,
+            yamlSyncStatus = repository.yamlSyncStatus
         )
     }
 
@@ -236,12 +240,12 @@ class CodeSvnRepositoryService @Autowired constructor(
         return repoCredentialInfo
     }
 
-    override fun getAuthInfo(repositoryIds: List<Long>): Map<Long, RepoAuthInfo> {
+    override fun getRepoDetailMap(repositoryIds: List<Long>): Map<Long, RepositoryDetailInfo> {
         return repositoryCodeSvnDao.list(
             dslContext = dslContext,
             repositoryIds = repositoryIds.toSet()
         ).associateBy({ it.repositoryId }, {
-            RepoAuthInfo(
+            RepositoryDetailInfo(
                 authType = it.svnType?.toUpperCase() ?: RepoAuthType.SSH.name,
                 credentialId = it.credentialId,
                 svnType = it.svnType
@@ -278,6 +282,23 @@ class CodeSvnRepositoryService @Autowired constructor(
         )
         return sourceProjectName != targetProjectName || targetSubPath != sourceSubPath
     }
+
+    override fun getPacProjectId(userId: String, repoUrl: String): String? = null
+
+    override fun pacCheckEnabled(
+        projectId: String,
+        userId: String,
+        record: TRepositoryRecord,
+        retry: Boolean
+    ) = Unit
+
+    override fun getGitFileTree(
+        projectId: String,
+        userId: String,
+        record: TRepositoryRecord
+    ) = emptyList<GitFileInfo>()
+
+    override fun getPacRepository(externalId: String): TRepositoryRecord? = null
 
     companion object {
         private val logger = LoggerFactory.getLogger(CodeSvnRepositoryService::class.java)

@@ -29,6 +29,7 @@ package com.tencent.devops.stream.trigger.pojo
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.annotation.JsonInclude
+import com.fasterxml.jackson.annotation.JsonProperty
 import com.tencent.devops.process.yaml.v2.models.Concurrency
 import com.tencent.devops.process.yaml.v2.models.Extends
 import com.tencent.devops.process.yaml.v2.models.GitNotices
@@ -51,6 +52,7 @@ class ManualPreScriptBuildYaml(
     override var version: String?,
     override var name: String?,
     override var label: List<String>? = null,
+    @JsonProperty("on")
     override var triggerOn: PreTriggerOn?,
     var inputs: Map<String, String>?,
     override var variables: Map<String, Variable>? = null,

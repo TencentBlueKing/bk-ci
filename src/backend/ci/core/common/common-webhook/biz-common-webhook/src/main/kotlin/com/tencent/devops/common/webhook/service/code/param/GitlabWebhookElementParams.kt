@@ -47,10 +47,10 @@ class GitlabWebhookElementParams : ScmWebhookElementParams<CodeGitlabWebHookTrig
         variables: Map<String, String>
     ): WebHookParams? {
         val params = WebHookParams(
-            repositoryConfig = RepositoryConfigUtils.replaceCodeProp(
-                repositoryConfig = RepositoryConfigUtils.buildConfig(element),
+            repositoryConfig = RepositoryConfigUtils.buildWebhookConfig(
+                element = element,
                 variables = variables
-            )
+            ).third
         )
         params.includeUsers = if (element.includeUsers == null || element.includeUsers!!.isEmpty()) {
             ""

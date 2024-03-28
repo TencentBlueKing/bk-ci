@@ -498,6 +498,56 @@ let branchs = branch.split("/")"""
         Assertions.assertEquals(result, EnvReplacementParser.parse(command1, data, true))
     }
 
+    @Test
+    fun parseExpressionTestData2() {
+        val command1 = """
+# 通过./xxx.sh的方式执行脚本. 即若脚本中未指定解释器，则使用系统默认的shell
+
+# 旧的${'$'}{}引用变量的方式已升级为${'$'}{{}}，和bash原生引用变量的方式区分开
+
+# 通过::set-variable命令字设置/修改全局变量
+# echo "::set-variable name=<var_name>::<value>"
+# 在后续的插件表单中使用表达式${'$'}{{variables.<var_name>}}引用这个变量
+# 注意：旧的通过setEnv设置变量的方式仍然保留，但存在一些历史问题，已停止迭代，不再推荐使用
+
+# 通过::set-output命令字设置当前步骤的输出(变量隔离，不会被覆盖)
+# echo "::set-output name=<output_name>::<value>"
+# 在后续的插件表单中使用表达式${'$'}{{jobs.<job_id>.steps.<step_id>.outputs.<output_name>}}引用这个输出，其中job_id和step_id在对应的Job和Task上配置
+
+# 在质量红线中创建自定义指标后，通过setGateValue函数设置指标值
+# setGateValue "CodeCoverage" ${'$'}myValue
+# 然后在质量红线选择相应指标和阈值。若不满足，流水线在执行时将会被卡住
+
+# cd ${'$'}WORKSPACE 可进入当前工作空间目录
+echo ${'$'}{{variables.is_lint}}"""
+        val result = """
+# 通过./xxx.sh的方式执行脚本. 即若脚本中未指定解释器，则使用系统默认的shell
+
+# 旧的${'$'}{}引用变量的方式已升级为${'$'}{{}}，和bash原生引用变量的方式区分开
+
+# 通过::set-variable命令字设置/修改全局变量
+# echo "::set-variable name=<var_name>::<value>"
+# 在后续的插件表单中使用表达式${'$'}{{variables.<var_name>}}引用这个变量
+# 注意：旧的通过setEnv设置变量的方式仍然保留，但存在一些历史问题，已停止迭代，不再推荐使用
+
+# 通过::set-output命令字设置当前步骤的输出(变量隔离，不会被覆盖)
+# echo "::set-output name=<output_name>::<value>"
+# 在后续的插件表单中使用表达式${'$'}{{jobs.<job_id>.steps.<step_id>.outputs.<output_name>}}引用这个输出，其中job_id和step_id在对应的Job和Task上配置
+
+# 在质量红线中创建自定义指标后，通过setGateValue函数设置指标值
+# setGateValue "CodeCoverage" ${'$'}myValue
+# 然后在质量红线选择相应指标和阈值。若不满足，流水线在执行时将会被卡住
+
+# cd ${'$'}WORKSPACE 可进入当前工作空间目录
+echo true"""
+        val data = mapOf(
+            "variables.is_lint" to "true",
+            "variables.is_build" to "false",
+            "ci.branch" to "master"
+        )
+        Assertions.assertEquals(result, EnvReplacementParser.parse(command1, data, true))
+    }
+
     private fun parseAndEquals(
         data: Map<String, String>,
         template: String,

@@ -83,6 +83,21 @@ interface ServiceEnvironmentResource {
         environment: EnvCreateInfo
     ): Result<EnvironmentId>
 
+    @Operation(summary = "获取环境信息")
+    @GET
+    @Path("/projects/{projectId}/envs/{envHashId}")
+    fun get(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @Parameter(description = "环境 hashId", required = true)
+        @PathParam("envHashId")
+        envHashId: String
+    ): Result<EnvWithPermission>
+
     @Operation(summary = "删除环境")
     @DELETE
     @Path("/projects/{projectId}/envs/{envHashId}")

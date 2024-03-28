@@ -35,6 +35,7 @@ import com.tencent.devops.common.pipeline.event.CallBackEvent
 import com.tencent.devops.common.pipeline.event.PipelineCallbackEvent
 import com.tencent.devops.common.pipeline.event.ProjectPipelineCallBack
 import com.tencent.devops.common.pipeline.pojo.time.BuildRecordTimeCost
+import com.tencent.devops.common.pipeline.pojo.transfer.Resources
 import io.swagger.v3.oas.annotations.media.Schema
 
 @Suppress("ALL")
@@ -47,6 +48,7 @@ data class Model(
     @get:Schema(title = "阶段集合", required = true)
     val stages: List<Stage>,
     @get:Schema(title = "标签", required = false)
+    @Deprecated("以PipelineGroupService和流水线设置版本中为准")
     var labels: List<String> = emptyList(),
     @get:Schema(title = "是否从模板中实例化出来的", required = false)
     val instanceFromTemplate: Boolean? = null,
@@ -63,8 +65,16 @@ data class Model(
     @get:Schema(title = "静态流水线组", required = false)
     var staticViews: List<String> = emptyList(),
     @get:Schema(title = "各项耗时", required = true)
-    var timeCost: BuildRecordTimeCost? = null
-) {
+    var timeCost: BuildRecordTimeCost? = null,
+    @get:Schema(title = "模板地址", required = true)
+    override var template: String? = null,
+    @get:Schema(title = "模板版本", required = true)
+    override var ref: String? = null,
+    @get:Schema(title = "模板入参", required = true)
+    override var variables: Map<String, String>? = null,
+    @get:Schema(title = "模板资源", required = true)
+    val resources: Resources? = null
+) : IModelTemplate {
     @get:Schema(title = "提交时流水线最新版本号", required = false)
     var latestVersion: Int = 0
 

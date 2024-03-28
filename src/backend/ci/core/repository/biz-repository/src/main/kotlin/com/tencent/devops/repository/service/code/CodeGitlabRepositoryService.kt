@@ -39,11 +39,12 @@ import com.tencent.devops.repository.constant.RepositoryMessageCode.USER_SECRET_
 import com.tencent.devops.repository.dao.RepositoryCodeGitLabDao
 import com.tencent.devops.repository.dao.RepositoryDao
 import com.tencent.devops.repository.pojo.CodeGitlabRepository
-import com.tencent.devops.repository.pojo.auth.RepoAuthInfo
+import com.tencent.devops.repository.pojo.RepositoryDetailInfo
 import com.tencent.devops.repository.pojo.credential.RepoCredentialInfo
 import com.tencent.devops.repository.pojo.enums.RepoAuthType
 import com.tencent.devops.repository.service.CredentialService
 import com.tencent.devops.repository.service.scm.IScmService
+import com.tencent.devops.scm.pojo.GitFileInfo
 import com.tencent.devops.scm.pojo.TokenCheckResult
 import com.tencent.devops.scm.utils.code.git.GitUtils
 import org.jooq.DSLContext
@@ -75,7 +76,8 @@ class CodeGitlabRepositoryService @Autowired constructor(
                 userId = userId,
                 aliasName = repository.aliasName,
                 url = repository.getFormatURL(),
-                type = ScmType.CODE_GITLAB
+                type = ScmType.CODE_GITLAB,
+                enablePac = repository.enablePac
             )
             // Git项目ID
             val gitProjectId: Long = getGitProjectId(
@@ -174,7 +176,9 @@ class CodeGitlabRepositoryService @Autowired constructor(
                 RepoAuthType.HTTP
             } else {
                 RepoAuthType.valueOf(record.authType)
-            }
+            },
+            enablePac = repository.enablePac,
+            yamlSyncStatus = repository.yamlSyncStatus
         )
     }
 
@@ -255,17 +259,34 @@ class CodeGitlabRepositoryService @Autowired constructor(
         return repoCredentialInfo
     }
 
-    override fun getAuthInfo(repositoryIds: List<Long>): Map<Long, RepoAuthInfo> {
+    override fun getRepoDetailMap(repositoryIds: List<Long>): Map<Long, RepositoryDetailInfo> {
         return repositoryCodeGitLabDao.list(
             dslContext = dslContext,
             repositoryIds = repositoryIds.toSet()
-        )?.associateBy({ it -> it.repositoryId }, {
-            RepoAuthInfo(
+        )?.associateBy({ it.repositoryId }, {
+            RepositoryDetailInfo(
                 authType = it.authType ?: RepoAuthType.HTTP.name,
                 credentialId = it.credentialId
             )
         }) ?: mapOf()
     }
+
+    override fun getPacProjectId(userId: String, repoUrl: String): String? = null
+
+    override fun pacCheckEnabled(
+        projectId: String,
+        userId: String,
+        record: TRepositoryRecord,
+        retry: Boolean
+    ) = Unit
+
+    override fun getGitFileTree(
+        projectId: String,
+        userId: String,
+        record: TRepositoryRecord
+    ) = emptyList<GitFileInfo>()
+
+    override fun getPacRepository(externalId: String): TRepositoryRecord? = null
 
     /**
      * 获取凭证信息

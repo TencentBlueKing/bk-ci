@@ -1,75 +1,53 @@
----
-version: "v2.0"
-name: "log_download代码质量扫描"
+version: v2.0
+name: log_download代码质量扫描
 label: []
-triggerOn:
+on:
   push:
     branches:
-    - "master"
+    - master
   mr:
     target-branches:
-    - "master"
+    - master
 stages:
-- name: "腾讯代码质量扫描"
+- name: 腾讯代码质量扫描
   label: []
-  if: null
   fast-kill: false
   jobs:
-  - id: "job_tcoder_codecc_new"
-    name: "腾讯代码质量扫描"
-    mutex: null
+  - id: job_tcoder_codecc_new
+    name: 腾讯代码质量扫描
     runs-on:
       self-hosted: false
-      pool-name: "docker"
+      pool-name: docker
       container:
-        image: "mirrors.tencent.com/ci/tlinux3_ci:latest"
-        credentials: null
-        options: null
-        image-pull-policy: null
-      agent-selector: null
-      workspace: null
-      xcode: null
-      queue-timeout-minutes: null
-      needs: null
+        image: mirrors.tencent.com/ci/tlinux3_ci:latest
     services: []
-    if: null
     steps:
-    - name: "代码拉取"
-      id: "step-1"
-      if: null
-      if-modify: null
-      uses: null
+    - name: 代码拉取
+      id: step-1
       with:
-        strategy: "FRESH_CHECKOUT"
+        strategy: FRESH_CHECKOUT
         enableVirtualMergeBranch: true
         enableSubmodule: true
         enableSubmoduleRecursive: true
-      timeout-minutes: null
-      continue-on-error: null
-      retry-times: null
-      env: null
-      run: null
-      runAdditionalOptions:
-        shell: null
-      checkout: "self"
-    - name: "腾讯代码分析(官方-代码分析工作组)"
-      id: "check"
-      if: "false == true"
-      if-modify: null
-      uses: "CodeccCheckAtomDebug@4.*"
+      runAdditionalOptions: {}
+      checkout: self
+    - name: 腾讯代码分析(官方-代码分析工作组)
+      id: check
+      if: false == true
+      uses: CodeccCheckAtomDebug@4.*
       with:
         beAutoLang: false
-        checkerSetType: "normal"
+        checkerSetType: normal
         toolScanType: "1"
         languages:
-        - "C_CPP"
+        - C_CPP
         tools: "${{ parameters.tools }}"
         languageRuleSetMap:
           C_CPP_RULE:
-          - "standard_cpp"
-          - "codecc_fast_cpp"
-          - "pecker_cpp"
-          - "codecc_default_coverity_cpp"
+          - standard_cpp
+          - codecc_fast_cpp
+          - pecker_cpp
+          - codecc_default_coverity_cpp
           JAVA_RULE: []
           C_SHARP_RULE: []
           JS_RULE: []
@@ -85,52 +63,33 @@ stages:
           LUA_RULE: []
           DART_RULE: []
           SOLIDITY_RULE: []
-        pyVersion: "py3"
+        pyVersion: py3
         goPath: ""
-        scriptType: "SHELL"
-        script: "cd src\nmkdir build\ncd build\ncmake -DLIB_LEGO_DIR=${{ ci.workspace }}/tmp/liblego ..\nmake -j`nproc`\necho \"213123123 ${{ ci.actor }}\"\necho '123123123 ${{ ci.actor }}'"
-        newDefectJudgeFromDate: "2021-11-01"
+        scriptType: SHELL
+        script: |-
+          cd src
+          mkdir build
+          cd build
+          cmake -DLIB_LEGO_DIR=${{ ci.workspace }}/tmp/liblego ..
+          make -j`nproc`
+          echo "213123123 ${{ ci.actor }}"
+          echo '123123123 ${{ ci.actor }}'
+        newDefectJudgeFromDate: 2021-11-01
         rtxReceiverType: 4
         rtxReceiverList: []
         instantReportStatus: 1
         emailReceiverType: 4
         emailReceiverList: []
         emailCCReceiverList: []
-      timeout-minutes: null
-      continue-on-error: null
-      retry-times: null
-      env: null
-      run: null
-      runAdditionalOptions:
-        shell: null
-      checkout: null
-    - name: null
-      id: "123123123"
+      runAdditionalOptions: {}
+    - id: 123123123
       if: "[JAVA, JS] == [PYTHON]"
-      if-modify: null
-      uses: null
-      with: null
-      timeout-minutes: null
-      continue-on-error: null
-      retry-times: null
-      env: null
-      run: "echo 123\n"
-      runAdditionalOptions:
-        shell: null
-      checkout: null
-    if-modify: null
-    timeout-minutes: null
-    env: null
-    continue-on-error: null
-    strategy: null
-    depend-on: null
-  if-modify: null
-  check-in: null
-  check-out: null
+      run: |
+        echo 123
+      runAdditionalOptions: {}
 resource:
   repositories:
-  - repository: "sissicchen/log_download"
-    name: "tcoder"
-    ref: "refs/heads/master"
-    credentials: null
+  - repository: sissicchen/log_download
+    name: tcoder
+    ref: refs/heads/master
 finally: []

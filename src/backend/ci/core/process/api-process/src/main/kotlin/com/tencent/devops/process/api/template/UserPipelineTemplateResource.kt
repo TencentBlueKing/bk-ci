@@ -50,6 +50,7 @@ import javax.ws.rs.core.MediaType
 @Path("/user/template/pipelines")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
+@Suppress("LongParameterList")
 interface UserPipelineTemplateResource {
 
     @Operation(summary = "质量红线-获取模版列表")

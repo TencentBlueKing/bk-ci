@@ -28,6 +28,8 @@
 package com.tencent.devops.common.pipeline.pojo.element.market
 
 import com.tencent.devops.common.pipeline.pojo.element.Element
+import com.tencent.devops.common.pipeline.pojo.transfer.PreStep
+import com.tencent.devops.common.pipeline.utils.TransferUtil
 import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "流水线模型-插件市场第三方无构建环境类插件", description = MarketBuildLessAtomElement.classType)
@@ -54,6 +56,18 @@ data class MarketBuildLessAtomElement(
 
     override fun getAtomCode(): String {
         return atomCode
+    }
+
+    override fun transferYaml(defaultValue: Map<String, String>?): PreStep {
+        val input = data["input"] as Map<String, Any>? ?: emptyMap()
+        return PreStep(
+            name = name,
+            id = stepId,
+            // 插件上的
+            ifFiled = TransferUtil.parseStepIfFiled(this),
+            uses = "${getAtomCode()}@$version",
+            with = TransferUtil.simplifyParams(defaultValue, input).ifEmpty { null }
+        )
     }
 
     override fun getClassType() = classType

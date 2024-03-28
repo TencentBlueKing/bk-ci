@@ -53,6 +53,7 @@ import javax.ws.rs.core.MediaType
 @Path("/user/pipelineInfos")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
+@Suppress("LongParameterList", "TooManyFunctions")
 interface UserPipelineInfoResource {
     @Operation(summary = "列出所有流水线")
     @GET

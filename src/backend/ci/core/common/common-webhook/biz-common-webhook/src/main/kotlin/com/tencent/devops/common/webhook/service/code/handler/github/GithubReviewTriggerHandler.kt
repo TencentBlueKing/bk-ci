@@ -30,12 +30,15 @@ package com.tencent.devops.common.webhook.service.code.handler.github
 import com.tencent.devops.common.api.pojo.I18Variable
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeEventType
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_EVENT_URL
+import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_REPO_URL
 import com.tencent.devops.common.webhook.annotation.CodeWebhookHandler
 import com.tencent.devops.common.webhook.enums.WebhookI18nConstants
+import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_BRANCH
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_REVIEW_APPROVING_REVIEWERS
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_REVIEW_ID
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_REVIEW_IID
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_REVIEW_OWNER
+import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_REVIEW_REVIEWABLE_TYPE
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_REVIEW_SOURCE_BRANCH
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_REVIEW_SOURCE_PROJECT_ID
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_REVIEW_STATE
@@ -191,6 +194,10 @@ class GithubReviewTriggerHandler @Autowired constructor(
                     it.login
                 }
             }
+            // 评审类型，跟CODE_GIT保持一致，CODE_GIT中为merge_request、comparison，此处写死pull_request
+            startParams[BK_REPO_GIT_WEBHOOK_REVIEW_REVIEWABLE_TYPE] = "pull_request"
+            startParams[PIPELINE_GIT_REPO_URL] = event.repository.getRepoUrl()
+            startParams[BK_REPO_GIT_WEBHOOK_BRANCH] = event.pullRequest.head.ref
         }
         return startParams
     }

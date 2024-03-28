@@ -38,7 +38,7 @@ import com.tencent.devops.websocket.event.ClearUserSessionTransferEvent
 import com.tencent.devops.websocket.event.LoginOutTransferEvent
 import com.tencent.devops.websocket.keys.WebsocketKeys
 import com.tencent.devops.websocket.pojo.ChangePageDTO
-import com.tencent.devops.websocket.utils.PageUtils
+import com.tencent.devops.websocket.utils.WebsocketPageUtils
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
@@ -85,7 +85,7 @@ class WebsocketService @Autowired constructor(
                 return
             }
 
-            val normalPage = PageUtils.buildNormalPage(changePage.page)
+            val normalPage = WebsocketPageUtils.buildNormalPage(changePage.page)
             WsRedisUtils.writeSessionIdByRedis(redisOperation, changePage.userId, changePage.sessionId)
 
             val oldPage = WsRedisUtils.getPageFromSessionPageBySession(redisOperation, changePage.sessionId)
@@ -125,7 +125,7 @@ class WebsocketService @Autowired constructor(
             val redisPage = WsRedisUtils.getPageFromSessionPageBySession(redisOperation, sessionId)
             var clearPage = oldPage
             if (!oldPage.isNullOrEmpty() && redisPage != oldPage) {
-                clearPage = PageUtils.buildNormalPage(oldPage)
+                clearPage = WebsocketPageUtils.buildNormalPage(oldPage)
             }
 
             WsRedisUtils.cleanSessionPageBySessionId(redisOperation, sessionId)

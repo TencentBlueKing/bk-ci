@@ -36,5 +36,11 @@ data class DeployPipelineResult(
     @get:Schema(title = "流水线名称", required = true)
     val pipelineName: String,
     @get:Schema(title = "流水线版本号", required = true)
-    val version: Int
+    val version: Int,
+    @get:Schema(title = "发布版本号", required = false)
+    val versionNum: Int?,
+    @get:Schema(title = "生成版本名称", required = false)
+    val versionName: String?,
+    @get:Schema(title = "目标链接", required = false)
+    val targetUrl: String? = null
 )
