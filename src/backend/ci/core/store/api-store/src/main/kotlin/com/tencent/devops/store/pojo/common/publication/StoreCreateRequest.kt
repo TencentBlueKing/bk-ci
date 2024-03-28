@@ -38,7 +38,11 @@ data class StoreCreateRequest(
     @get:Schema(title = "基础信息", required = true)
     @Valid
     val baseInfo: StoreBaseCreateRequest,
-    override val requestId: String
+    @get:Schema(title = "请求ID", required = true)
+    override val requestId: String,
+    @get:Schema(title = "商店上下文", required = true)
+    override val bkStoreContext: MutableMap<String, Any>
 ) : HandlerRequest(
-    requestId = requestId
+    requestId = requestId,
+    bkStoreContext = bkStoreContext
 )

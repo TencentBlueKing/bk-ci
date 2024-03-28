@@ -28,6 +28,7 @@
 package com.tencent.devops.store.common.dao
 
 import com.tencent.devops.model.store.tables.TStoreBaseFeatureExt
+import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.pojo.common.publication.StoreBaseFeatureExtDataPO
 import org.jooq.DSLContext
 import org.jooq.util.mysql.MySQLDSL
@@ -75,6 +76,14 @@ class StoreBaseFeatureExtManageDao {
                 .set(FIELD_VALUE, MySQLDSL.values(FIELD_VALUE))
                 .set(MODIFIER, MySQLDSL.values(MODIFIER))
                 .set(UPDATE_TIME, LocalDateTime.now())
+                .execute()
+        }
+    }
+
+    fun deleteStoreBaseFeatureExtInfo(dslContext: DSLContext, storeCode: String, storeType: StoreTypeEnum) {
+        with(TStoreBaseFeatureExt.T_STORE_BASE_FEATURE_EXT) {
+            dslContext.deleteFrom(this)
+                .where(STORE_CODE.eq(storeCode).and(STORE_TYPE.eq(storeType.type.toByte())))
                 .execute()
         }
     }

@@ -27,6 +27,7 @@
 
 package com.tencent.devops.store.pojo.common.publication
 
+import com.tencent.devops.common.web.annotation.BkField
 import com.tencent.devops.store.pojo.common.enums.StoreStatusEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import io.swagger.v3.oas.annotations.media.Schema
@@ -50,14 +51,18 @@ data class StoreBaseDataPO(
     val statusMsg: String? = null,
     @get:Schema(title = "logo地址")
     val logoUrl: String? = null,
+    @get:Schema(title = "简介", required = true)
+    val summary: String = "",
+    @get:Schema(title = "描述", required = false)
+    val description: String? = null,
     @get:Schema(title = "是否为最新版本")
     val latestFlag: Boolean = false,
     @get:Schema(title = "发布者")
-    val publisher: String,
+    val publisher: String? = null,
     @get:Schema(title = "发布时间")
-    val pubTime: LocalDateTime = LocalDateTime.now(),
+    val pubTime: LocalDateTime? = null,
     @get:Schema(title = "分类ID")
-    val classifyId: String,
+    val classifyId: String = "",
     @get:Schema(title = "创建人")
     val creator: String,
     @get:Schema(title = "修改人")

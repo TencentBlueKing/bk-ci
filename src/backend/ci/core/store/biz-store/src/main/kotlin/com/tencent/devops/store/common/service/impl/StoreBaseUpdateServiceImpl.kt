@@ -27,11 +27,11 @@
 
 package com.tencent.devops.store.common.service.impl
 
+import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
+import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.constant.INIT_VERSION
 import com.tencent.devops.common.api.exception.ErrorCodeException
-import com.tencent.devops.common.api.util.JsonUtil
-import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.model.store.tables.records.TStoreBaseRecord
 import com.tencent.devops.store.common.dao.ClassifyDao
@@ -42,10 +42,13 @@ import com.tencent.devops.store.common.dao.StoreBaseFeatureExtManageDao
 import com.tencent.devops.store.common.dao.StoreBaseFeatureManageDao
 import com.tencent.devops.store.common.dao.StoreBaseManageDao
 import com.tencent.devops.store.common.dao.StoreBaseQueryDao
+import com.tencent.devops.store.common.dao.StoreCategoryRelDao
+import com.tencent.devops.store.common.dao.StoreLabelRelDao
 import com.tencent.devops.store.common.dao.StoreVersionLogDao
 import com.tencent.devops.store.common.service.StoreBaseUpdateService
 import com.tencent.devops.store.common.service.StoreCommonService
 import com.tencent.devops.store.common.service.StoreSpecBusService
+import com.tencent.devops.store.common.utils.StoreReleaseUtils
 import com.tencent.devops.store.common.utils.StoreUtils
 import com.tencent.devops.store.common.utils.VersionUtils
 import com.tencent.devops.store.constant.StoreMessageCode
@@ -55,11 +58,6 @@ import com.tencent.devops.store.pojo.common.enums.ReleaseTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreStatusEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.pojo.common.publication.StoreBaseDataPO
-import com.tencent.devops.store.pojo.common.publication.StoreBaseEnvDataPO
-import com.tencent.devops.store.pojo.common.publication.StoreBaseEnvExtDataPO
-import com.tencent.devops.store.pojo.common.publication.StoreBaseExtDataPO
-import com.tencent.devops.store.pojo.common.publication.StoreBaseFeatureDataPO
-import com.tencent.devops.store.pojo.common.publication.StoreBaseFeatureExtDataPO
 import com.tencent.devops.store.pojo.common.publication.StoreUpdateRequest
 import com.tencent.devops.store.pojo.common.version.VersionModel
 import org.apache.commons.codec.digest.DigestUtils
@@ -68,6 +66,7 @@ import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
+import java.time.LocalDateTime
 
 @Service
 @Suppress("LongParameterList")
@@ -81,6 +80,8 @@ class StoreBaseUpdateServiceImpl @Autowired constructor(
     private val storeBaseFeatureExtManageDao: StoreBaseFeatureExtManageDao,
     private val storeBaseEnvManageDao: StoreBaseEnvManageDao,
     private val storeBaseEnvExtManageDao: StoreBaseEnvExtManageDao,
+    private val storeLabelRelDao: StoreLabelRelDao,
+    private val storeCategoryRelDao: StoreCategoryRelDao,
     private val storeVersionLogDao: StoreVersionLogDao,
     private val storeCommonService: StoreCommonService
 ) : StoreBaseUpdateService {
@@ -117,7 +118,7 @@ class StoreBaseUpdateServiceImpl @Autowired constructor(
         getStoreSpecBusService(storeType).doCheckStoreUpdateParamSpecBus(storeUpdateRequest)
     }
 
-    override fun doStoreUpdateDataPersistent(userId: String, storeUpdateRequest: StoreUpdateRequest) {
+    override fun doStoreUpdateDataPersistent(storeUpdateRequest: StoreUpdateRequest) {
         val storeBaseUpdateRequest = storeUpdateRequest.baseInfo
         val storeType = storeBaseUpdateRequest.storeType
         val storeCode = storeBaseUpdateRequest.storeCode
@@ -150,6 +151,7 @@ class StoreBaseUpdateServiceImpl @Autowired constructor(
             baseRecord.latestFlag
         }
         val bkStoreContext = storeUpdateRequest.bkStoreContext
+        val userId = bkStoreContext[AUTH_HEADER_USER_ID]?.toString() ?: AUTH_HEADER_USER_ID_DEFAULT_VALUE
         bkStoreContext[KEY_STORE_ID] = storeId
         val status = getStoreSpecBusService(storeType).getStoreUpdateStatus()
         val extBaseInfo = storeBaseUpdateRequest.extBaseInfo
@@ -161,116 +163,76 @@ class StoreBaseUpdateServiceImpl @Autowired constructor(
             version = version,
             status = status,
             logoUrl = storeBaseUpdateRequest.logoUrl,
+            summary = storeBaseUpdateRequest.summary,
+            description = storeBaseUpdateRequest.description,
             latestFlag = latestFlag,
             publisher = versionInfo.publisher,
+            pubTime = LocalDateTime.now(),
             classifyId = bkStoreContext[KEY_CLASSIFY_ID].toString(),
             creator = userId,
             modifier = userId
         )
-        extBaseInfo?.remove(storeBaseUpdateRequest.classifyCode)
-        var storeBaseExtDataPOs: MutableList<StoreBaseExtDataPO>? = null
-        extBaseInfo?.forEach { (key, value) ->
-            if (storeBaseExtDataPOs == null) {
-                storeBaseExtDataPOs = mutableListOf()
-            }
-            storeBaseExtDataPOs?.add(
-                StoreBaseExtDataPO(
-                    id = UUIDUtil.generate(),
-                    storeId = storeId,
-                    storeCode = storeCode,
-                    storeType = storeType,
-                    fieldName = key,
-                    fieldValue = JsonUtil.toJson(value, false),
-                    creator = userId,
-                    modifier = userId
-                )
-            )
-        }
+        val storeBaseExtDataPOs = StoreReleaseUtils.generateStoreBaseExtDataPO(
+            extBaseInfo = extBaseInfo,
+            storeId = storeId,
+            storeCode = storeCode,
+            storeType = storeType,
+            userId = userId
+        )
         val baseFeatureInfo = storeBaseUpdateRequest.baseFeatureInfo
-        var storeBaseFeatureDataPO: StoreBaseFeatureDataPO? = null
-        var storeBaseFeatureExtDataPOs: MutableList<StoreBaseFeatureExtDataPO>? = null
-        baseFeatureInfo?.let {
-            val featureId = UUIDUtil.generate()
-            storeBaseFeatureDataPO = StoreBaseFeatureDataPO(
-                id = featureId,
-                storeCode = storeCode,
-                storeType = storeType,
-                type = baseFeatureInfo.type,
-                rdType = baseFeatureInfo.rdType?.name,
-                creator = userId,
-                modifier = userId
-            )
-            val extBaseFeatureInfo = baseFeatureInfo.extBaseFeatureInfo
-            extBaseFeatureInfo?.forEach { (key, value) ->
-                if (storeBaseFeatureExtDataPOs == null) {
-                    storeBaseFeatureExtDataPOs = mutableListOf()
-                }
-                storeBaseFeatureExtDataPOs?.add(
-                    StoreBaseFeatureExtDataPO(
-                        id = UUIDUtil.generate(),
-                        featureId = featureId,
-                        storeCode = storeCode,
-                        storeType = storeType,
-                        fieldName = key,
-                        fieldValue = JsonUtil.toJson(value, false),
-                        creator = userId,
-                        modifier = userId
-                    )
-                )
-            }
-        }
-
+        val (storeBaseFeatureDataPO, storeBaseFeatureExtDataPOs) = StoreReleaseUtils.generateStoreBaseFeaturePO(
+            baseFeatureInfo = baseFeatureInfo,
+            storeCode = storeCode,
+            storeType = storeType,
+            userId = userId
+        )
         val baseEnvInfos = storeBaseUpdateRequest.baseEnvInfos
-        var storeBaseEnvDataPOs: MutableList<StoreBaseEnvDataPO>? = null
-        var storeBaseEnvExtDataPOs: MutableList<StoreBaseEnvExtDataPO>? = null
-        baseEnvInfos?.forEach { baseEnvInfo ->
-            val envId = UUIDUtil.generate()
-            val storeBaseEnvDataPO = StoreBaseEnvDataPO(
-                id = envId,
-                storeId = storeId,
-                language = baseEnvInfo.language,
-                creator = userId,
-                modifier = userId
-            )
-            if (storeBaseEnvDataPOs == null) {
-                storeBaseEnvDataPOs = mutableListOf()
-            }
-            storeBaseEnvDataPOs?.add(storeBaseEnvDataPO)
-            val extBaseFeatureInfo = baseEnvInfo.extBaseFeatureInfo
-            extBaseFeatureInfo?.forEach { (key, value) ->
-                if (storeBaseEnvExtDataPOs == null) {
-                    storeBaseEnvExtDataPOs = mutableListOf()
-                }
-                storeBaseEnvExtDataPOs?.add(
-                    StoreBaseEnvExtDataPO(
-                        id = UUIDUtil.generate(),
-                        envId = envId,
-                        storeId = storeId,
-                        fieldName = key,
-                        fieldValue = JsonUtil.toJson(value, false),
-                        creator = userId,
-                        modifier = userId
-                    )
-                )
-            }
-        }
+        val (storeBaseEnvDataPOs, storeBaseEnvExtDataPOs) = StoreReleaseUtils.generateStoreBaseEnvPO(
+            baseEnvInfos = baseEnvInfos,
+            storeId = storeId,
+            userId = userId
+        )
         dslContext.transaction { t ->
             val context = DSL.using(t)
             storeBaseManageDao.saveStoreBaseData(context, storeBaseDataPO)
             if (!storeBaseExtDataPOs.isNullOrEmpty()) {
-                storeBaseExtManageDao.batchSave(context, storeBaseExtDataPOs!!)
+                storeBaseExtManageDao.deleteStoreBaseExtInfo(context, storeId)
+                storeBaseExtManageDao.batchSave(context, storeBaseExtDataPOs)
             }
             storeBaseFeatureDataPO?.let {
                 storeBaseFeatureManageDao.saveStoreBaseFeatureData(context, it)
             }
             if (!storeBaseFeatureExtDataPOs.isNullOrEmpty()) {
-                storeBaseFeatureExtManageDao.batchSave(context, storeBaseFeatureExtDataPOs!!)
+                storeBaseFeatureExtManageDao.deleteStoreBaseFeatureExtInfo(context, storeCode, storeType)
+                storeBaseFeatureExtManageDao.batchSave(context, storeBaseFeatureExtDataPOs)
             }
             if (!storeBaseEnvDataPOs.isNullOrEmpty()) {
-                storeBaseEnvManageDao.batchSave(context, storeBaseEnvDataPOs!!)
+                storeBaseEnvManageDao.deleteStoreEnvInfo(context, storeId)
+                storeBaseEnvManageDao.batchSave(context, storeBaseEnvDataPOs)
             }
             if (!storeBaseEnvExtDataPOs.isNullOrEmpty()) {
-                storeBaseEnvExtManageDao.batchSave(context, storeBaseEnvExtDataPOs!!)
+                storeBaseEnvExtManageDao.deleteStoreEnvExtInfo(context, storeId)
+                storeBaseEnvExtManageDao.batchSave(context, storeBaseEnvExtDataPOs)
+            }
+            storeLabelRelDao.deleteByStoreId(context, storeId)
+            val labelIdList = storeBaseUpdateRequest.labelIdList?.filter { it.isNotBlank() }
+            if (!labelIdList.isNullOrEmpty()) {
+                storeLabelRelDao.batchAdd(
+                    dslContext = context,
+                    userId = userId,
+                    storeId = storeId,
+                    labelIdList = labelIdList
+                )
+            }
+            storeCategoryRelDao.deleteByStoreId(context, storeId)
+            val categoryIdList = storeBaseUpdateRequest.categoryIdList?.filter { it.isNotBlank() }
+            if (!categoryIdList.isNullOrEmpty()) {
+                storeCategoryRelDao.batchAdd(
+                    dslContext = context,
+                    userId = userId,
+                    storeId = storeId,
+                    categoryIdList = categoryIdList
+                )
             }
             storeVersionLogDao.saveStoreVersion(
                 dslContext = context,
@@ -330,6 +292,7 @@ class StoreBaseUpdateServiceImpl @Autowired constructor(
                 )
             }
         if (!requireVersionList.contains(version)) {
+            logger.warn("$storeType[$storeCode]| invalid version: $version|requireVersionList:$requireVersionList")
             throw ErrorCodeException(
                 errorCode = StoreMessageCode.USER_IMAGE_VERSION_IS_INVALID,
                 params = arrayOf(version, requireVersionList.toString())

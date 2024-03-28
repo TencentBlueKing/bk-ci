@@ -28,6 +28,7 @@
 package com.tencent.devops.store.common.service
 
 import com.tencent.devops.store.pojo.common.publication.StoreCreateRequest
+import com.tencent.devops.store.pojo.common.publication.StoreCreateResponse
 import com.tencent.devops.store.pojo.common.publication.StoreUpdateRequest
 import com.tencent.devops.store.pojo.common.publication.StoreUpdateResponse
 
@@ -42,7 +43,7 @@ interface StoreReleaseService {
     fun createComponent(
         userId: String,
         storeCreateRequest: StoreCreateRequest
-    ): StoreUpdateResponse?
+    ): StoreCreateResponse?
 
     /**
      * 更新组件

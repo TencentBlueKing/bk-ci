@@ -27,9 +27,6 @@
 
 package com.tencent.devops.store.common.handler
 
-import com.tencent.devops.common.api.constant.CommonMessageCode
-import com.tencent.devops.common.api.exception.ErrorCodeException
-import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.store.common.service.StoreBaseUpdateService
 import com.tencent.devops.store.pojo.common.handler.Handler
 import com.tencent.devops.store.pojo.common.publication.StoreUpdateRequest
@@ -46,8 +43,6 @@ class StoreUpdateDataPersistHandler(
 
     override fun execute(handlerRequest: StoreUpdateRequest) {
         // 持久化更新组件数据
-        val userId = I18nUtil.getRequestUserId()
-            ?: throw ErrorCodeException(errorCode = CommonMessageCode.ERROR_CLIENT_REST_ERROR)
-        storeBaseUpdateService.doStoreUpdateDataPersistent(userId, handlerRequest)
+        storeBaseUpdateService.doStoreUpdateDataPersistent(handlerRequest)
     }
 }

@@ -25,31 +25,25 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.store.pojo.common.publication
+package com.tencent.devops.store.common.service
 
-import com.tencent.devops.common.web.annotation.BkField
-import com.tencent.devops.common.web.constant.BkStyleEnum
-import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
-import io.swagger.v3.oas.annotations.media.Schema
-import javax.validation.Valid
+import com.tencent.devops.store.pojo.common.publication.StoreCreateRequest
 
-@Schema(title = "工作台-组件基础信息请求报文体")
-data class StoreBaseCreateRequest(
-    @get:Schema(title = "store组件代码", required = true)
-    @field:BkField(patternStyle = BkStyleEnum.CODE_STYLE)
-    val storeCode: String,
-    @get:Schema(title = "store组件类型", required = true)
-    @field:BkField(patternStyle = BkStyleEnum.CODE_STYLE)
-    val storeType: StoreTypeEnum,
-    @get:Schema(title = "store组件名称", required = true)
-    @field:BkField(patternStyle = BkStyleEnum.NAME_STYLE)
-    val name: String,
-    @get:Schema(title = "基础扩展信息", required = false)
-    val extBaseInfo: Map<String, Any>? = null,
-    @get:Schema(title = "特性信息", required = false)
-    @Valid
-    val baseFeatureInfo: StoreBaseFeatureRequest? = null,
-    @get:Schema(title = "环境信息列表", required = false)
-    @Valid
-    val baseEnvInfos: List<StoreBaseEnvRequest>? = null
-)
+interface StoreBaseCreateService {
+
+    /**
+     * 检查新增组件请求参数合法性
+     * @param storeCreateRequest 新增组件请求报文
+     */
+    fun checkStoreCreateParam(
+        storeCreateRequest: StoreCreateRequest
+    )
+
+    /**
+     * 持久化新增组件数据
+     * @param storeCreateRequest 新增组件请求报文
+     */
+    fun doStoreCreateDataPersistent(
+        storeCreateRequest: StoreCreateRequest
+    )
+}

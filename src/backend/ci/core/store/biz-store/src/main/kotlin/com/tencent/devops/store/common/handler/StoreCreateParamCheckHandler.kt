@@ -27,38 +27,22 @@
 
 package com.tencent.devops.store.common.handler
 
-import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
-import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
-import com.tencent.devops.common.api.constant.KEY_VALID_OS_ARCH_FLAG
-import com.tencent.devops.common.api.constant.KEY_VALID_OS_NAME_FLAG
-import com.tencent.devops.store.common.service.StorePipelineService
-import com.tencent.devops.store.pojo.common.KEY_STORE_ID
-import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
+import com.tencent.devops.store.common.service.StoreBaseCreateService
 import com.tencent.devops.store.pojo.common.handler.Handler
-import com.tencent.devops.store.pojo.common.publication.StoreRunPipelineParam
-import com.tencent.devops.store.pojo.common.publication.StoreUpdateRequest
+import com.tencent.devops.store.pojo.common.publication.StoreCreateRequest
 import org.springframework.stereotype.Service
 
 @Service
-class StoreUpdateRunPipelineHandler(
-    private val storePipelineService: StorePipelineService
-) : Handler<StoreUpdateRequest> {
+class StoreCreateParamCheckHandler(
+    private val storeBaseCreateService: StoreBaseCreateService
+) : Handler<StoreCreateRequest> {
 
-    override fun canExecute(handlerRequest: StoreUpdateRequest): Boolean {
-        return handlerRequest.baseInfo.storeType != StoreTypeEnum.TEMPLATE
+    override fun canExecute(handlerRequest: StoreCreateRequest): Boolean {
+        return true
     }
 
-    override fun execute(handlerRequest: StoreUpdateRequest) {
-        // 运行组件内置流水线
-        val bkStoreContext = handlerRequest.bkStoreContext
-        val userId = bkStoreContext[AUTH_HEADER_USER_ID]?.toString() ?: AUTH_HEADER_USER_ID_DEFAULT_VALUE
-        // 生成运行流水线参数
-        val storeRunPipelineParam = StoreRunPipelineParam(
-            userId = userId,
-            storeId = bkStoreContext[KEY_STORE_ID].toString(),
-            validOsNameFlag = bkStoreContext[KEY_VALID_OS_NAME_FLAG] as? Boolean,
-            validOsArchFlag = bkStoreContext[KEY_VALID_OS_ARCH_FLAG] as? Boolean
-        )
-        storePipelineService.runPipeline(storeRunPipelineParam)
+    override fun execute(handlerRequest: StoreCreateRequest) {
+        // 检查请求参数的合法性
+        storeBaseCreateService.checkStoreCreateParam(handlerRequest)
     }
 }

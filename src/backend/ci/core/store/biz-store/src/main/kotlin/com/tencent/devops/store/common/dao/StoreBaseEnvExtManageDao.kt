@@ -77,7 +77,7 @@ class StoreBaseEnvExtManageDao {
         }
     }
 
-    fun deleteStoreEnvInfo(dslContext: DSLContext, storeId: String) {
+    fun deleteStoreEnvExtInfo(dslContext: DSLContext, storeId: String) {
         with(TStoreBaseEnvExt.T_STORE_BASE_ENV_EXT) {
             dslContext.deleteFrom(this)
                 .where(STORE_ID.eq(storeId))
