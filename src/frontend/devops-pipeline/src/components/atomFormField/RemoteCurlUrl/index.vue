@@ -7,10 +7,10 @@
 </template>
 
 <script>
-    import atomFieldMixin from '../atomFieldMixin'
-    import { mapActions } from 'vuex'
-    import { PROCESS_API_URL_PREFIX } from '@/store/constants'
     import RouteTips from '@/components/atomFormField/RouteTips'
+    import { PROCESS_API_URL_PREFIX } from '@/store/constants'
+    import { mapActions } from 'vuex'
+    import atomFieldMixin from '../atomFieldMixin'
     export default {
         name: 'remote-curl-url',
         components: {
@@ -38,18 +38,6 @@
             },
             projectId () {
                 return this.$route.params.projectId
-            }
-        },
-        watch: {
-            value (newVal, oldVal) {
-                const { params } = this.$route
-                if (newVal !== oldVal) {
-                    this.getRemoteTriggerToken({
-                        ...params,
-                        preToken: newVal,
-                        element: this.element
-                    })
-                }
             }
         },
         mounted () {

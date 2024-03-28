@@ -1,5 +1,6 @@
 package com.tencent.devops.process.util
 
+import com.tencent.devops.common.api.exception.InvalidParamException
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.pipeline.pojo.MatrixPipelineInfo
 import com.tencent.devops.common.pipeline.utils.MatrixContextUtils
@@ -50,10 +51,11 @@ internal class MatrixYamlCheckUtilsTest {
             """,
             strategy = "\${{fromJSONasd(asd)}}"
         )
-        val result = MatrixYamlCheckUtils.checkYaml(yamlstr)
-        Assertions.assertTrue(result.include == null)
-        Assertions.assertTrue(result.exclude == null)
-        Assertions.assertTrue(result.strategy != null)
+        Assertions.assertThrowsExactly(
+            InvalidParamException::class.java
+        ) {
+            MatrixYamlCheckUtils.checkYaml(yamlstr)
+        }
     }
 
     @Test
@@ -77,10 +79,11 @@ internal class MatrixYamlCheckUtilsTest {
                     var2: [1,2,3]
                 """
         )
-        val result = MatrixYamlCheckUtils.checkYaml(yamlstr)
-        Assertions.assertTrue(result.include == null)
-        Assertions.assertTrue(result.exclude == null)
-        Assertions.assertTrue(result.strategy != null)
+        Assertions.assertThrowsExactly(
+            InvalidParamException::class.java
+        ) {
+            MatrixYamlCheckUtils.checkYaml(yamlstr)
+        }
     }
 
     @Test
@@ -104,10 +107,11 @@ internal class MatrixYamlCheckUtilsTest {
                     var2: [1,2,3]
                 """
         )
-        val result = MatrixYamlCheckUtils.checkYaml(yamlstr)
-        Assertions.assertTrue(result.include == null)
-        Assertions.assertTrue(result.exclude == null)
-        Assertions.assertTrue(result.strategy != null)
+        Assertions.assertThrowsExactly(
+            InvalidParamException::class.java
+        ) {
+            MatrixYamlCheckUtils.checkYaml(yamlstr)
+        }
     }
 
     @Test

@@ -3,6 +3,7 @@ package kubeclient
 import (
 	"context"
 	"disaptch-k8s-manager/pkg/config"
+
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -16,12 +17,13 @@ func CreateDeployment(dep *Deployment) error {
 	var containers []corev1.Container
 	for _, con := range dep.Pod.Containers {
 		containers = append(containers, corev1.Container{
-			Name:         dep.Name,
-			Image:        con.Image,
-			Resources:    con.Resources,
-			Env:          con.Env,
-			Command:      con.Command,
-			VolumeMounts: con.VolumeMounts,
+			Name:          dep.Name,
+			Image:         con.Image,
+			Resources:     con.Resources,
+			Env:           con.Env,
+			Command:       con.Command,
+			VolumeMounts:  con.VolumeMounts,
+			LivenessProbe: con.LivenessProbe,
 		})
 	}
 

@@ -99,7 +99,7 @@
         created () {
             if (this.pool.nodeCount > 0) {
                 setting.getNodeList(this.projectId, this.pool.envHashId).then((res) => {
-                    this.nodeList = res
+                    this.nodeList = res.records
                 })
             }
         },

@@ -26,13 +26,11 @@
  */
 package com.tencent.devops.auth.refresh.listener
 
-import com.tencent.devops.auth.refresh.event.IamCacheRefreshEvent
 import com.tencent.devops.auth.refresh.event.ManagerOrganizationChangeEvent
 import com.tencent.devops.auth.refresh.event.ManagerUserChangeEvent
 import com.tencent.devops.auth.refresh.event.RefreshBroadCastEvent
 import com.tencent.devops.auth.refresh.event.StrategyUpdateEvent
 import com.tencent.devops.auth.service.UserPermissionService
-import com.tencent.devops.auth.service.iam.IamCacheService
 import com.tencent.devops.common.event.listener.Listener
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -44,8 +42,7 @@ import org.springframework.stereotype.Component
 
 @Component
 class AuthRefreshEventListener @Autowired constructor(
-    val userPermissionService: UserPermissionService,
-    val iamCacheService: IamCacheService
+    val userPermissionService: UserPermissionService
 ) : Listener<RefreshBroadCastEvent> {
 
     /**
@@ -63,9 +60,6 @@ class AuthRefreshEventListener @Autowired constructor(
                 }
                 is StrategyUpdateEvent -> {
                     onStrategyUpdate(event)
-                }
-                is IamCacheRefreshEvent -> {
-                    onIamCacheRefresh(event)
                 }
             }
         } catch (e: Exception) {
@@ -98,11 +92,6 @@ class AuthRefreshEventListener @Autowired constructor(
     fun onMangerUserChange(event: ManagerUserChangeEvent) {
         logger.info("onMangerUserChange: ${event.refreshType} | ${event.managerId}| ${event.userId}")
         userPermissionService.refreshWhenUserChanger(event.userId, event.managerId, event.userChangeType)
-    }
-
-    fun onIamCacheRefresh(event: IamCacheRefreshEvent) {
-        logger.info("onIamCacheRefresh: ${event.refreshType} | ${event.userId}| ${event.resourceType}")
-        iamCacheService.refreshUserExpression(event.userId, event.resourceType)
     }
 
     companion object {

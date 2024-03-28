@@ -25,8 +25,9 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.auth.api
+package com.tencent.devops.common.auth.mock.code
 
+<<<<<<<< HEAD:src/backend/ci/ext/tencent/common/common-auth/common-auth-tencent/src/main/kotlin/com/tencent/devops/common/auth/api/BkAuthServiceCode.kt
 enum class BkAuthServiceCode(val value: String) {
     COMMON("bk_ci_auth"),
     BCS("bcs"),
@@ -43,6 +44,26 @@ enum class BkAuthServiceCode(val value: String) {
     companion object {
         fun get(value: String): BkAuthServiceCode {
             BkAuthServiceCode.values().forEach {
+========
+import com.tencent.devops.common.auth.code.BK_DEVOPS_SCOPE
+
+enum class MockAuthServiceCode(val value: String) {
+    BCS("bk_bcs"),
+    REPO("bk_repo"),
+    ARTIFACTORY(BK_DEVOPS_SCOPE),
+    CODE(BK_DEVOPS_SCOPE),
+    PIPELINE(BK_DEVOPS_SCOPE),
+    PIPELINE_GROUP(BK_DEVOPS_SCOPE),
+    TICKET(BK_DEVOPS_SCOPE),
+    ENVIRONMENT(BK_DEVOPS_SCOPE),
+    PROJECT(BK_DEVOPS_SCOPE),
+    QUALITY(BK_DEVOPS_SCOPE),
+    EXPERIENCE(BK_DEVOPS_SCOPE);
+
+    companion object {
+        fun get(value: String): MockAuthServiceCode {
+            values().forEach {
+>>>>>>>> github/master:src/backend/ci/core/common/common-auth/common-auth-provider/src/main/kotlin/com/tencent/devops/common/auth/mock/code/MockAuthServiceCode.kt
                 if (value == it.value) return it
             }
             throw IllegalArgumentException("No enum for constant $value")

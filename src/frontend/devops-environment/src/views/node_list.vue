@@ -463,7 +463,7 @@
 
                     this.nodeList.splice(0, this.nodeList.length)
 
-                    res.forEach(item => {
+                    res.records.forEach(item => {
                         item.isEnableEdit = item.nodeHashId === this.curEditNodeItem
                         this.nodeList.push(item)
                     })
