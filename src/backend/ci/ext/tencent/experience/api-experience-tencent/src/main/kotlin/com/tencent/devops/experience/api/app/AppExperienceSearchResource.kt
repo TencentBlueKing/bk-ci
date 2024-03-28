@@ -50,6 +50,7 @@ import javax.ws.rs.core.MediaType
 @Path("/app/experiences/search")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
+@SuppressWarnings("LongParameterList")
 interface AppExperienceSearchResource {
 
     @Operation(summary = "搜索")
@@ -85,6 +86,9 @@ interface AppExperienceSearchResource {
         userId: String,
         @Parameter(description = "平台", required = true)
         @HeaderParam(AUTH_HEADER_PLATFORM)
-        platform: Int?
+        platform: Int?,
+        @Parameter(description = "组织", required = false)
+        @HeaderParam(AUTH_HEADER_DEVOPS_ORGANIZATION_NAME)
+        organization: String? = null,
     ): Result<List<SearchRecommendVO>>
 }
