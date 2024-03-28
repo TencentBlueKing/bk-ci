@@ -7,6 +7,7 @@ import com.tencent.devops.scm.pojo.GitCommit
 import com.tencent.devops.scm.pojo.GitCommitReviewInfo
 import com.tencent.devops.scm.pojo.GitMrInfo
 import com.tencent.devops.scm.pojo.GitMrReviewInfo
+import com.tencent.devops.scm.pojo.WebhookCommit
 
 /**
  * 事件触发仓库级缓存
@@ -22,5 +23,6 @@ data class EventRepositoryCache(
     var p4ChangeFiles: P4ChangeList? = null,
     var p4ShelveChangeFiles: P4ChangeList? = null,
     var serverInfo: P4ServerInfo? = null,
-    var githubPrInfo: PullRequestResponse? = null
+    var githubPrInfo: PullRequestResponse? = null,
+    var webhookCommitList: List<WebhookCommit>? = null
 )
