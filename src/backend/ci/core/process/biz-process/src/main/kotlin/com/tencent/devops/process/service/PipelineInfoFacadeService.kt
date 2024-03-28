@@ -576,7 +576,7 @@ class PipelineInfoFacadeService @Autowired constructor(
             pipelineName = pipelineName,
             pipelineAsCodeSettings = PipelineAsCodeSettings(enable = true)
         )
-        return  createPipeline(
+        return createPipeline(
             userId = userId,
             projectId = projectId,
             model = newResource.model.copy(name = pipelineName),
