@@ -25,7 +25,7 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.environment.resources.thirdPartyAgent
+package com.tencent.devops.environment.resources.thirdpartyagent
 
 import com.google.common.cache.Cache
 import com.google.common.cache.CacheBuilder
@@ -39,16 +39,16 @@ import com.tencent.devops.common.auth.api.ActionId
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.environment.api.thirdPartyAgent.BuildAgentThirdPartyAgentResource
-import com.tencent.devops.environment.pojo.thirdPartyAgent.HeartbeatResponse
-import com.tencent.devops.environment.pojo.thirdPartyAgent.ThirdPartyAgentHeartbeatInfo
-import com.tencent.devops.environment.pojo.thirdPartyAgent.ThirdPartyAgentPipeline
-import com.tencent.devops.environment.pojo.thirdPartyAgent.ThirdPartyAgentStartInfo
-import com.tencent.devops.environment.pojo.thirdPartyAgent.pipeline.PipelineResponse
-import com.tencent.devops.environment.service.thirdPartyAgent.AgentMetricService
-import com.tencent.devops.environment.service.thirdPartyAgent.ImportService
-import com.tencent.devops.environment.service.thirdPartyAgent.ThirdPartyAgentMgrService
-import com.tencent.devops.environment.service.thirdPartyAgent.ThirdPartyAgentPipelineService
+import com.tencent.devops.environment.api.thirdpartyagent.BuildAgentThirdPartyAgentResource
+import com.tencent.devops.environment.pojo.thirdpartyagent.HeartbeatResponse
+import com.tencent.devops.environment.pojo.thirdpartyagent.ThirdPartyAgentHeartbeatInfo
+import com.tencent.devops.environment.pojo.thirdpartyagent.ThirdPartyAgentPipeline
+import com.tencent.devops.environment.pojo.thirdpartyagent.ThirdPartyAgentStartInfo
+import com.tencent.devops.environment.pojo.thirdpartyagent.pipeline.PipelineResponse
+import com.tencent.devops.environment.service.thirdpartyagent.AgentMetricService
+import com.tencent.devops.environment.service.thirdpartyagent.ImportService
+import com.tencent.devops.environment.service.thirdpartyagent.ThirdPartyAgentMgrService
+import com.tencent.devops.environment.service.thirdpartyagent.ThirdPartyAgentPipelineService
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import java.util.concurrent.TimeUnit
@@ -74,8 +74,10 @@ class BuildAgentThirdPartyAgentResourceImpl @Autowired constructor(
         val status = thirdPartyAgentService.agentStartup(projectId, agentId, secretKey, startInfo)
         // #4868 构建机安装完毕启动之后，不需要在web再次点击导入就自动生成节点导入
         if (AgentStatus.UN_IMPORT_OK == status) {
-            thirdPartyAgentService.getAgent(projectId, agentId).data?.createUser?.let { userId ->
-                importService.importAgent(userId = userId, projectId = projectId, agentId = agentId)
+            thirdPartyAgentService.getAgent(projectId, agentId).data?.let {
+                importService.importAgent(
+                    userId = it.createUser, projectId = projectId, agentId = agentId, masterVersion = it.masterVersion
+                )
             }
         }
         return Result(status)

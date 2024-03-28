@@ -284,19 +284,9 @@
                                 }
                             })
                         })
-                    }
 
                     if (this.nodeList.length) {
                         this.loopCheck()
-                    }
-                } catch (err) {
-                    const message = err.message ? err.message : err
-                    const theme = 'error'
-
-                    this.$bkMessage({
-                        message,
-                        theme
-                    })
                 }
             },
             async init () {
