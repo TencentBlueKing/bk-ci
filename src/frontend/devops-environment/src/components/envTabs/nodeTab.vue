@@ -55,7 +55,7 @@
                                 <div class="rotate rotate7"></div>
                                 <div class="rotate rotate8"></div>
                             </div>
-                            <span class="node-status">{{ $t('environment.nodeStatusMap')[props.row.nodeStatus] }}</span>
+                            <span class="node-status">{{ $t('environment.nodeStatusMap')[props.row.nodeStatus] || props.row.nodeStatus }}</span>
                         </div>
                     </template>
                 </bk-table-column>
