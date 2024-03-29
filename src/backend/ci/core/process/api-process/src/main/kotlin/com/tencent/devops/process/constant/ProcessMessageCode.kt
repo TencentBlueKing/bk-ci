@@ -292,7 +292,6 @@ object ProcessMessageCode {
     const val GROUP_IS_EXIST = "2101186" // 分组({0})已存在/group ({0}) is already exist
     const val GROUP_LABEL_IS_EXIST = "2101187" // 分组标签({0})已存在/group label ({0}) is already exist
     const val ERROR_NO_PERMISSION_OPERATION_TEMPLATE = "2101189" // 用户没有操作模板的权限
-    const val ERROR_TASK_NOT_ALLOWED_TO_BE_SKIPPED = "2101220" // task不允许被跳过
 
     const val ERROR_TRIGGER_DETAIL_NOT_FOUND = "2101181" // 触发详情{0}不存在
     const val ERROR_TRIGGER_EVENT_NOT_FOUND = "2101182" // 触发事件{0}不存在
@@ -300,6 +299,7 @@ object ProcessMessageCode {
     const val ERROR_TRIGGER_REPLAY_PIPELINE_NOT_EMPTY = "2101184" // 重放流水线ID不能为空
     const val ERROR_WEBHOOK_REQUEST_NOT_FOUND = "2101185" // webhook {0} 不存在
     const val ERROR_REPOSITORY_NOT_OAUTH = "2101218" // 当前代码库关联人({0})未进行OAUTH授权，请尝试切换代码库凭证类型
+    const val ERROR_TASK_NOT_ALLOWED_TO_BE_SKIPPED = "2101221" // task不允许被跳过
 
     const val BK_SUCCESSFULLY_DISTRIBUTED = "bkSuccessfullyDistributed" // 跨项目构件分发成功，共分发了{0}个文件
     const val BK_SUCCESSFULLY_FAILED = "bkSuccessfullyFailed" // 跨项目构件分发失败，
