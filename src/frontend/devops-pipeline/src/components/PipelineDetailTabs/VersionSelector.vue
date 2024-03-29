@@ -195,7 +195,7 @@
 
             async loadMore (page) {
                 try {
-                    if (!this.hasNext) return
+                    if (page > 1 && !this.hasNext) return
                     const { projectId, pipelineId, pagination } = this
                     if (page === 1) {
                         this.isLoading = true
