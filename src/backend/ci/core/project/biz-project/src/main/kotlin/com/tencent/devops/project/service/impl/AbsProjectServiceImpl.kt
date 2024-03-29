@@ -113,16 +113,16 @@ import com.tencent.devops.project.service.ProjectService
 import com.tencent.devops.project.service.ShardingRoutingRuleAssignService
 import com.tencent.devops.project.util.ProjectUtils
 import com.tencent.devops.project.util.exception.ProjectNotExistException
-import java.io.File
-import java.io.InputStream
-import java.util.regex.Pattern
-import javax.ws.rs.NotFoundException
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.dao.DuplicateKeyException
+import java.io.File
+import java.io.InputStream
+import java.util.regex.Pattern
+import javax.ws.rs.NotFoundException
 
 @Suppress("ALL")
 abstract class AbsProjectServiceImpl @Autowired constructor(
@@ -224,12 +224,15 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
             validate(ProjectValidateType.project_name, projectCreateInfo.projectName)
             validate(ProjectValidateType.english_name, projectCreateInfo.englishName)
         }
-        if (projectChannel == ProjectChannelCode.BS && projectCreateInfo.productId == null) {
-            throw ErrorCodeException(
-                errorCode = ERROR_PROJECT_NOT_RELATED_PRODUCT,
-                defaultMessage = "Product ID cannot be empty!"
+        validateProjectRelateProduct(
+            ProjectProductValidateDTO(
+                englishName = projectCreateInfo.englishName,
+                userId = userId,
+                projectOperation = ProjectOperation.CREATE,
+                channelCode = projectChannel,
+                productId = projectCreateInfo.productId
             )
-        }
+        )
         val userDeptDetail = getDeptInfo(userId)
         var projectId = defaultProjectId
         val subjectScopes = projectCreateInfo.subjectScopes!!.ifEmpty {
@@ -482,12 +485,14 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
             name = projectUpdateInfo.projectName,
             projectId = projectUpdateInfo.englishName
         )
-        if (projectUpdateInfo.productId == null) {
-            throw ErrorCodeException(
-                errorCode = ERROR_PROJECT_NOT_RELATED_PRODUCT,
-                defaultMessage = "Product ID cannot be empty!"
+        validateProjectRelateProduct(
+            ProjectProductValidateDTO(
+                englishName = englishName,
+                userId = userId,
+                projectOperation = ProjectOperation.UPDATE,
+                productId = projectUpdateInfo.productId
             )
-        }
+        )
         val startEpoch = System.currentTimeMillis()
         var success = false
         val subjectScopes = projectUpdateInfo.subjectScopes!!.ifEmpty {
