@@ -206,9 +206,10 @@ class DeleteControl @Autowired constructor(
             )
         val res = deleteWorkspace4System(userId, workspaceName)
         if (res) {
-            var userIds = permissionService.getWorkspaceOwner(workspace.workspaceName)
-            if (userIds.isEmpty()) {
-                userIds = listOf(workspace.createUserId)
+
+            // 修复待分配的机器销毁时，拥有者为空发送通知没有相关人
+            val userIds = permissionService.getWorkspaceOwner(workspace.workspaceName).ifEmpty {
+                listOf(workspace.createUserId)
             }
             notifyControl.notify4UserAndCCRemoteDevManagerAndCCOwnerShareUser(
                 userIds = userIds.toMutableSet(),
@@ -250,9 +251,9 @@ class DeleteControl @Autowired constructor(
                 logger.error("batchDeleteWorkspace4OP $workspaceName not find in records $workspaces")
                 return@forEach
             }
-            var userIds = permissionService.getWorkspaceOwner(workspaceName)
-            if (userIds.isEmpty()) {
-                userIds = listOf(workspace.createUserId)
+            // 待分配实例没有拥有者，通知给创建人
+            val userIds = permissionService.getWorkspaceOwner(workspaceName).ifEmpty {
+                listOf(workspace.createUserId)
             }
             userIds.forEach { userId ->
                 if (data[userId] == null) {
