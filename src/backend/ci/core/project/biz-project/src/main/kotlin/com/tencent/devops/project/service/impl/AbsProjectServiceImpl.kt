@@ -71,7 +71,6 @@ import com.tencent.devops.project.constant.ProjectConstant.PROJECT_ID_MAX_LENGTH
 import com.tencent.devops.project.constant.ProjectConstant.PROJECT_NAME_MAX_LENGTH
 import com.tencent.devops.project.constant.ProjectMessageCode
 import com.tencent.devops.project.constant.ProjectMessageCode.BOUND_IAM_GRADIENT_ADMIN
-import com.tencent.devops.project.constant.ProjectMessageCode.ERROR_PROJECT_NOT_RELATED_PRODUCT
 import com.tencent.devops.project.constant.ProjectMessageCode.PROJECT_NOT_EXIST
 import com.tencent.devops.project.constant.ProjectMessageCode.UNDER_APPROVAL_PROJECT
 import com.tencent.devops.project.dao.ProjectDao
@@ -1157,7 +1156,7 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
                     I18nUtil.getCodeLanMessage(ProjectMessageCode.PEM_CHECK_FAIL)
                 )
             }
-            if (enabled){
+            if (enabled) {
                 validateProjectRelateProduct(
                     ProjectProductValidateDTO(
                         englishName = englishName,
