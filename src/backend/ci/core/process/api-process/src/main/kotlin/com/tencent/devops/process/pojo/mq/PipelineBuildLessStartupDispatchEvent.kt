@@ -52,6 +52,7 @@ data class PipelineBuildLessStartupDispatchEvent(
     val atoms: Map<String, String> = mapOf(), // 用插件框架开发的插件信息 key为插件code，value为下载路径
     val executeCount: Int?,
     val customBuildEnv: Map<String, String>?,
+    val queueTimeoutMinutes: Int? = null,
     override var actionType: ActionType = ActionType.REFRESH,
     override var delayMills: Int = 0
 ) : IPipelineEvent(actionType, source, projectId, pipelineId, userId, delayMills)

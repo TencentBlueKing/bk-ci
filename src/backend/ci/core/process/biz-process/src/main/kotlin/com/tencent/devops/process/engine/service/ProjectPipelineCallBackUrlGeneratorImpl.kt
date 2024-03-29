@@ -40,4 +40,8 @@ class ProjectPipelineCallBackUrlGeneratorImpl : ProjectPipelineCallBackUrlGenera
     override fun encodeCallbackUrl(url: String): String {
         return url
     }
+
+    override fun decodeCallbackUrl(url: String): String {
+        return url
+    }
 }

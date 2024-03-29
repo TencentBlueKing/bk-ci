@@ -38,7 +38,6 @@ class ProjectMiscService @Autowired constructor(
     private val dslContext: DSLContext,
     private val projectMiscDao: ProjectMiscDao
 ) {
-
     fun getMinId(
         projectIdList: List<String>? = null
     ): Long? {
