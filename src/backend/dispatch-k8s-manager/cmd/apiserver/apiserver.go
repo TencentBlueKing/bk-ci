@@ -2,6 +2,7 @@ package main
 
 import (
 	"disaptch-k8s-manager/pkg/apiserver"
+	"disaptch-k8s-manager/pkg/buildless"
 	"disaptch-k8s-manager/pkg/config"
 	"disaptch-k8s-manager/pkg/cron"
 	"disaptch-k8s-manager/pkg/db/mysql"
@@ -54,6 +55,8 @@ func main() {
 	}
 
 	task.InitTask()
+
+	buildless.InitBuildLess()
 
 	if err := cron.InitCronJob(); err != nil {
 		fmt.Printf("init corn job error %v\n", err)

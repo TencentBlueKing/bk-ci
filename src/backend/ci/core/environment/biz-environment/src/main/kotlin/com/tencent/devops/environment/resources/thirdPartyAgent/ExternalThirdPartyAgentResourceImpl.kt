@@ -25,13 +25,13 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.environment.resources.thirdPartyAgent
+package com.tencent.devops.environment.resources.thirdpartyagent
 
 import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.environment.api.thirdPartyAgent.ExternalThirdPartyAgentResource
+import com.tencent.devops.environment.api.thirdpartyagent.ExternalThirdPartyAgentResource
 import com.tencent.devops.common.api.pojo.agent.AgentArchType
-import com.tencent.devops.environment.service.thirdPartyAgent.DownloadAgentInstallService
-import com.tencent.devops.environment.service.thirdPartyAgent.ImportService
+import com.tencent.devops.environment.service.thirdpartyagent.DownloadAgentInstallService
+import com.tencent.devops.environment.service.thirdpartyagent.ImportService
 import org.springframework.beans.factory.annotation.Autowired
 import javax.ws.rs.core.Response
 

@@ -637,7 +637,9 @@ class RbacPermissionService constructor(
         } else {
             emptyList()
         }
-        logger.debug("resource create by user within one minute:$resourceCreateByUserWithinOneMinute")
+        if (logger.isDebugEnabled) {
+            logger.debug("resource create by user within one minute:$resourceCreateByUserWithinOneMinute")
+        }
         return result.toMutableList().apply { addAll(resourceCreateByUserWithinOneMinute) }.distinct()
     }
 }

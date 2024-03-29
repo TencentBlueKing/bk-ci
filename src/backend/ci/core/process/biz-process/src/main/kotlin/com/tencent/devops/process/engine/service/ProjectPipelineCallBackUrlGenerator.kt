@@ -34,4 +34,6 @@ interface ProjectPipelineCallBackUrlGenerator {
     fun generateCallBackUrl(region: CallBackNetWorkRegionType?, url: String): String
 
     fun encodeCallbackUrl(url: String): String
+
+    fun decodeCallbackUrl(url: String): String
 }
