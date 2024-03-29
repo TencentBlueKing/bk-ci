@@ -125,6 +125,7 @@
                 this.init(page)
             },
             handlePageLimitChange (limit) {
+                this.pagination.current = 1
                 this.pagination.limit = limit
                 this.init(this.pagination.current, limit)
             }
