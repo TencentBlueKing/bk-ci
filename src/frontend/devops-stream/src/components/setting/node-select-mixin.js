@@ -65,7 +65,7 @@ const nodeSelectMixin = {
             setting.requestNodeList(this.projectId).then((res) => {
                 this.importNodeList.splice(0, this.importNodeList.length)
 
-                res.records.map(item => {
+                res.map(item => {
                     item.isChecked = false
                     item.isDisplay = true
                     this.importNodeList.push(item)
@@ -139,8 +139,8 @@ const nodeSelectMixin = {
                 this.nodeDialogLoading.isLoading = false
                 this.$emit('refresh')
                 setting.getNodeList(this.projectId, this.envHashId).then((res) => {
-                    this.nodeList = res.records
-                    this.agentList = res.records
+                    this.nodeList = res
+                    this.agentList = res
                 })
             })
         },
