@@ -49,7 +49,7 @@ data class StoreDetailInfo(
     @get:Schema(title = "组件名称", required = true)
     @BkFieldI18n(source = I18nSourceEnum.DB)
     val name: String,
-    @get:Schema(title = "插件版本", required = true)
+    @get:Schema(title = "组件版本", required = true)
     var version: String = "",
     @get:Schema(title = "组件状态", required = true)
     val status: String,
@@ -69,9 +69,9 @@ data class StoreDetailInfo(
     @get:Schema(title = "描述", required = false)
     @BkFieldI18n(source = I18nSourceEnum.DB)
     val description: String?,
-    @get:Schema(title = "插件的调试项目", required = false)
+    @get:Schema(title = "组件的调试项目", required = false)
     val testProjectCode: String?,
-    @get:Schema(title = "插件的初始化项目", required = false)
+    @get:Schema(title = "组件的初始化项目", required = false)
     val initProjectCode: String?,
     @get:Schema(title = "范畴列表", required = false)
     val categoryList: List<Category>?,

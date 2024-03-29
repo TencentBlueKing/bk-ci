@@ -28,11 +28,12 @@
 package com.tencent.devops.store.common.dao
 
 import com.tencent.devops.model.store.tables.TStoreBase
+import com.tencent.devops.store.pojo.common.StoreBaseInfoUpdateRequest
 import com.tencent.devops.store.pojo.common.enums.StoreStatusEnum
 import com.tencent.devops.store.pojo.common.publication.StoreBaseDataPO
+import java.time.LocalDateTime
 import org.jooq.DSLContext
 import org.springframework.stereotype.Repository
-import java.time.LocalDateTime
 
 @Repository
 class StoreBaseManageDao {
@@ -111,6 +112,39 @@ class StoreBaseManageDao {
                 .set(UPDATE_TIME, LocalDateTime.now())
                 .where(ID.eq(storeId))
                 .execute()
+        }
+    }
+
+    fun updateComponentBaseInfo(
+        dslContext: DSLContext,
+        userId: String,
+        storeIds: List<String>,
+        classifyId: String?,
+        storeBaseInfoUpdateRequest: StoreBaseInfoUpdateRequest
+    ) {
+        with(TStoreBase.T_STORE_BASE) {
+            val baseStep = dslContext.update(this)
+                .set(MODIFIER, userId)
+                .set(UPDATE_TIME, LocalDateTime.now())
+            classifyId?.let {
+                baseStep.set(CLASSIFY_ID, it)
+            }
+            storeBaseInfoUpdateRequest.summary?.let {
+                baseStep.set(SUMMARY, it)
+            }
+            storeBaseInfoUpdateRequest.description?.let {
+                baseStep.set(DESCRIPTION, it)
+            }
+            storeBaseInfoUpdateRequest.logoUrl?.let {
+                baseStep.set(LOGO_URL, it)
+            }
+            storeBaseInfoUpdateRequest.publisher?.let {
+                baseStep.set(PUBLISHER, it)
+            }
+            if (!storeBaseInfoUpdateRequest.name.isNullOrBlank()) {
+                baseStep.set(NAME, storeBaseInfoUpdateRequest.name)
+            }
+            baseStep.where(ID.`in`(storeIds)).execute()
         }
     }
 }

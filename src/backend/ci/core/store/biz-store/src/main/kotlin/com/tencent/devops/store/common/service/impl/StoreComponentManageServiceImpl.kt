@@ -34,10 +34,10 @@ import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.store.common.dao.ClassifyDao
 import com.tencent.devops.store.common.dao.StoreBaseFeatureManageDao
+import com.tencent.devops.store.common.dao.StoreBaseManageDao
 import com.tencent.devops.store.common.dao.StoreBaseQueryDao
 import com.tencent.devops.store.common.dao.StoreLabelDao
 import com.tencent.devops.store.common.dao.StoreMemberDao
-import com.tencent.devops.store.common.service.StoreComponentManageService
 import com.tencent.devops.store.common.service.StoreProjectService
 import com.tencent.devops.store.constant.StoreMessageCode
 import com.tencent.devops.store.pojo.common.InstallStoreReq
@@ -47,7 +47,6 @@ import com.tencent.devops.store.pojo.common.UnInstallReq
 import com.tencent.devops.store.pojo.common.enums.StoreStatusEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import kotlin.reflect.full.memberProperties
-import org.eclipse.jgit.lib.ObjectChecker.type
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
@@ -55,19 +54,20 @@ import org.slf4j.LoggerFactory
 abstract class StoreComponentManageServiceImpl(
     private val dslContext: DSLContext,
     private val storeBaseQueryDao: StoreBaseQueryDao,
+    private val storeBaseManageDao: StoreBaseManageDao,
     private val storeBaseFeatureManageDao: StoreBaseFeatureManageDao,
     private val storeProjectService: StoreProjectService,
     private val classifyDao: ClassifyDao,
     private val storeLabelDao: StoreLabelDao,
     private val storeMemberDao: StoreMemberDao
-) : StoreComponentManageService {
+) {
 
     companion object {
         private val logger = LoggerFactory.getLogger(StoreComponentManageServiceImpl::class.java)
 
     }
 
-    override fun updateComponentBaseInfo(
+    fun updateComponentBaseInfo(
         userId: String,
         storeType: String,
         storeCode: String,
@@ -117,7 +117,7 @@ abstract class StoreComponentManageServiceImpl(
                     type = StoreTypeEnum.valueOf(storeType)
                 )?.id
             }
-            storeBaseQueryDao.updateComponentBaseInfo(
+            storeBaseManageDao.updateComponentBaseInfo(
                 dslContext = context,
                 userId = userId,
                 storeIds = storeIds,
@@ -159,7 +159,7 @@ abstract class StoreComponentManageServiceImpl(
         return componentFinalStatusList.contains(status)
     }
 
-    override fun installComponent(
+    fun installComponent(
         userId: String,
         channelCode: ChannelCode,
         installStoreReq: InstallStoreReq
@@ -243,17 +243,16 @@ abstract class StoreComponentManageServiceImpl(
 
     abstract fun validateUserUpdateActionPermission(): Boolean
 
-    override fun uninstallComponent(
+    fun uninstallComponent(
         userId: String,
         projectCode: String,
         storeType: String,
         storeCode: String,
         unInstallReq: UnInstallReq
     ): Result<Boolean> {
-
     }
 
-    override fun deleteComponent(userId: String, storeType: String, storeCode: String): Result<Boolean> {
+    fun deleteComponent(userId: String, storeType: String, storeCode: String): Result<Boolean> {
         logger.info("delete component ,params:[$userId, $storeCode, $storeType]")
         val type = StoreTypeEnum.valueOf(storeType)
         val isOwner = storeMemberDao.isStoreAdmin(dslContext, userId, storeCode, type.type.toByte())
@@ -264,7 +263,20 @@ abstract class StoreComponentManageServiceImpl(
                 language = I18nUtil.getLanguage(userId)
             )
         }
-
-
+        val releasedCount = storeBaseQueryDao.countReleaseStoreByCode(
+            dslContext = dslContext,
+            storeCode = storeCode,
+            storeTepe = StoreTypeEnum.valueOf(storeType)
+        )
+        if (releasedCount > 0) {
+            return I18nUtil.generateResponseDataObject(
+                messageCode = StoreMessageCode.USER_ATOM_RELEASED_IS_NOT_ALLOW_DELETE,
+                params = arrayOf(storeCode),
+                language = I18nUtil.getLanguage(userId)
+            )
+        }
+        return handleDeleteComponent(userId, storeType, storeCode)
     }
+
+    abstract fun handleDeleteComponent(userId: String, storeType: String, storeCode: String): Result<Boolean>
 }
