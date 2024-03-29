@@ -175,13 +175,15 @@
                 })
             },
             generatePipelineList (list, curPipeline) {
-                return [
-                    {
-                        pipelineId: curPipeline.pipelineId,
-                        pipelineName: curPipeline.pipelineName
-                    },
-                    ...list.filter(item => item.pipelineId !== curPipeline.pipelineId)
-                ]
+                return curPipeline
+                    ? [
+                        {
+                            pipelineId: curPipeline.pipelineId,
+                            pipelineName: curPipeline.pipelineName
+                        },
+                        ...list.filter(item => item.pipelineId !== curPipeline.pipelineId)
+                    ]
+                    : list
             }
         }
     }

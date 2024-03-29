@@ -19,6 +19,8 @@
                 :max-height="$refs?.tableBox?.offsetHeight"
                 :data="operateLogs"
                 :pagination="pagination"
+                @page-change="handlePageChange"
+                @page-limit-change="handlePageLimitChange"
             >
                 <bk-table-column v-for="column in columns" :key="column.key" v-bind="column" />
             </bk-table>
@@ -117,6 +119,14 @@
                         message: error.message ?? error
                     })
                 }
+            },
+            handlePageChange (page) {
+                this.pagination.current = page
+                this.init(page)
+            },
+            handlePageLimitChange (limit) {
+                this.pagination.limit = limit
+                this.init(this.pagination.current, limit)
             }
         }
     }
