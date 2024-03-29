@@ -15,11 +15,7 @@
         },
         computed: {
             ...mapState('atom', [
-                'editfromImport',
-                'pipeline',
-                'pipelineWithoutTrigger',
-                'pipelineSetting',
-                'pipelineYaml'
+                'editfromImport'
             ])
         },
         created (to, from, next) {
