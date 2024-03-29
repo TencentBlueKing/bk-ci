@@ -34,7 +34,7 @@ import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.auth.api.AuthProjectApi
-import com.tencent.devops.common.auth.code.BSPipelineAuthServiceCode
+import com.tencent.devops.common.auth.code.PipelineAuthServiceCode
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.service.utils.HomeHostUtil
 import com.tencent.devops.common.web.utils.I18nUtil
@@ -105,7 +105,7 @@ class WechatWorkCallbackService @Autowired constructor(
     private val wechatWorkMessageDAO: WechatWorkMessageDAO,
     private val bsAuthProjectApi: AuthProjectApi,
     private val wechatWorkService: WechatWorkService,
-    private val pipelineAuthServiceCode: BSPipelineAuthServiceCode,
+    private val pipelineAuthServiceCode: PipelineAuthServiceCode,
     private val client: Client
 ) {
     private val logger = LoggerFactory.getLogger(WechatWorkCallbackService::class.java)

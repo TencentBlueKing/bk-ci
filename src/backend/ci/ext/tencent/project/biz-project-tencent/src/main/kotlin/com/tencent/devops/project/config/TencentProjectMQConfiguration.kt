@@ -27,8 +27,7 @@
 
 package com.tencent.devops.project.config
 
-import com.tencent.devops.common.auth.api.BSAuthTokenApi
-import com.tencent.devops.common.auth.code.BSPipelineAuthServiceCode
+import com.tencent.devops.common.auth.service.BkAccessTokenApi
 import com.tencent.devops.project.listener.ProjectEventListener
 import com.tencent.devops.project.listener.TencentProjectEventListener
 import com.tencent.devops.project.service.ProjectPaasCCService
@@ -49,13 +48,11 @@ class TencentProjectMQConfiguration {
     @Bean
     fun projectEventListener(
         @Autowired projectPaasCCService: ProjectPaasCCService,
-        @Autowired bsAuthTokenApi: BSAuthTokenApi,
-        @Autowired bsPipelineAuthServiceCode: BSPipelineAuthServiceCode,
+        @Autowired bkAccessTokenApi: BkAccessTokenApi,
         @Autowired(required = false) iamV3Service: IamV3Service?
     ): ProjectEventListener = TencentProjectEventListener(
         projectPaasCCService = projectPaasCCService,
-        bsAuthTokenApi = bsAuthTokenApi,
-        bsPipelineAuthServiceCode = bsPipelineAuthServiceCode,
+        bkAccessTokenApi = bkAccessTokenApi,
         iamV3Service = iamV3Service
     )
 }

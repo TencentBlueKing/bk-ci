@@ -29,6 +29,7 @@ package com.tencent.devops.environment.service
 
 import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.environment.dao.NodeDao
+import com.tencent.devops.environment.dao.job.CmdbNodeDao
 import com.tencent.devops.environment.pojo.NodeDevCloudInfo
 import com.tencent.devops.environment.utils.NodeStringIdUtils
 import org.jooq.DSLContext
@@ -39,7 +40,8 @@ import org.springframework.stereotype.Service
 @Service
 class OpNodeService @Autowired constructor(
     private val dslContext: DSLContext,
-    private val nodeDao: NodeDao
+    private val nodeDao: NodeDao,
+    private val cmdbNodeDao: CmdbNodeDao
 ) {
     companion object {
         private val logger = LoggerFactory.getLogger(OpNodeService::class.java)
@@ -47,7 +49,7 @@ class OpNodeService @Autowired constructor(
 
     fun flushDisplayName(): Int {
         logger.info("Start to flush the node display name")
-        val nodes = nodeDao.listAllNodes(dslContext)
+        val nodes = cmdbNodeDao.listAllNodes(dslContext)
         var updateCnt = 0
         nodes.forEach {
             if (it.displayName.isNullOrBlank()) {
@@ -73,7 +75,7 @@ class OpNodeService @Autowired constructor(
     }
 
     fun listPage(page: Int, pageSize: Int, nodeName: String?): List<NodeDevCloudInfo> {
-        return nodeDao.listPage(dslContext, page, pageSize, nodeName).map {
+        return cmdbNodeDao.listPage(dslContext, page, pageSize, nodeName).map {
             NodeDevCloudInfo(
                 nodeHashId = HashUtil.encodeLongId(it.nodeId),
                 nodeId = it.nodeId.toString(),
@@ -90,7 +92,7 @@ class OpNodeService @Autowired constructor(
     }
 
     fun countPage(nodeName: String?): Int {
-        return nodeDao.count(dslContext, nodeName)
+        return cmdbNodeDao.count(dslContext, nodeName)
     }
 
     /**

@@ -262,20 +262,33 @@ interface BuildListener {
         logger.info("Retry the event($event) in $sleepTimeInMS ms")
         if (event.retryTime > retryTimes) {
             logger.warn("Fail to dispatch the agent start event with $retryTimes times - ($event)")
-            onFailure(errorType = ErrorType.SYSTEM,
+            onFailure(
+                errorType = ErrorType.SYSTEM,
                 errorCode = DispatchSdkErrorCode.RETRY_STARTUP_FAIL,
                 formatErrorMessage = errorMessage ?: "Fail to start up the job after $retryTimes times",
-                message = errorMessage ?: "Fail to start up the job after $retryTimes times")
+                message = errorMessage ?: "Fail to start up the job after $retryTimes times"
+            )
         }
-        val sleepTime = if (sleepTimeInMS <= 5000) {
+
+        // 重试PipelineAgentStartupEvent消息时将上一次的构建配额记录移除
+        if (event is PipelineAgentStartupEvent) {
+            getJobQuotaService().removeRunningJob(
+                projectId = event.projectId,
+                pipelineId = event.pipelineId,
+                buildId = event.buildId,
+                vmSeqId = event.vmSeqId,
+                executeCount = event.executeCount
+            )
+        }
+
+        event.retryTime += 1
+        event.delayMills = if (sleepTimeInMS <= 5000) {
             // 重试不能低于5秒
             logger.warn("The retry time is less than 5 seconds, use 5 as default")
             5000
         } else {
             sleepTimeInMS
         }
-        event.retryTime += 1
-        event.delayMills = sleepTime
         getDispatchService().redispatch(event)
         return true
     }

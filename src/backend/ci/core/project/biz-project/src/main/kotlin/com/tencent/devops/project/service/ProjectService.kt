@@ -269,4 +269,8 @@ interface ProjectService {
     fun getProjectListByProductId(
         productId: Int
     ): List<ProjectBaseInfo>
+
+    fun getExistedEnglishName(
+        englishNameList: List<String>
+    ): List<String>?
 }

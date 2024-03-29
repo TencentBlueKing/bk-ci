@@ -1428,6 +1428,10 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
         }
     }
 
+    override fun getExistedEnglishName(englishNameList: List<String>): List<String>? {
+        return projectDao.getExistedEnglishName(dslContext, englishNameList)
+    }
+
     abstract fun validatePermission(projectCode: String, userId: String, permission: AuthPermission): Boolean
 
     abstract fun getDeptInfo(userId: String): UserDeptDetail

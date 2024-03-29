@@ -71,14 +71,18 @@ class ServiceRemoteDevResourceImpl(
 
     override fun getProjectWorkspace(
         projectId: String?,
-        ip: String?
+        ip: String?,
+        businessLineName: String?,
+        ownerName: String?
     ): Result<List<WeSecProjectWorkspace>> {
         return Result(
             workspaceService.getProjectWorkspaceList4WeSec(
                 projectId = projectId,
                 ip = ip,
+                businessLineName = businessLineName,
+                ownerName = ownerName,
                 hasDepartmentsInfo = null,
-                hasCurrentUser = null
+                hasCurrentUser = true
             )
         )
     }

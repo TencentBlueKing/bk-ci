@@ -30,6 +30,7 @@ package com.tencent.devops.environment.resources.old
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.OS
+import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.environment.api.old.OldServiceEnvironmentResource
@@ -68,6 +69,19 @@ class OldServiceEnvironmentResourceImpl @Autowired constructor(
             throw ErrorCodeException(errorCode = CommonMessageCode.ERROR_NEED_PARAM_, params = arrayOf("envHashIds"))
         }
         return Result(envService.listAllEnvNodes(userId, projectId, envHashIds))
+    }
+
+    override fun listNodesByEnvIdsNew(
+        userId: String,
+        projectId: String,
+        page: Int?,
+        pageSize: Int?,
+        envHashIds: List<String>
+    ): Result<Page<NodeBaseInfo>> {
+        if (envHashIds.isEmpty()) {
+            throw ErrorCodeException(errorCode = CommonMessageCode.ERROR_NEED_PARAM_, params = arrayOf("envHashIds"))
+        }
+        return Result(envService.listAllEnvNodesNew(userId, projectId, page, pageSize, envHashIds))
     }
 
     override fun listRawByEnvNames(

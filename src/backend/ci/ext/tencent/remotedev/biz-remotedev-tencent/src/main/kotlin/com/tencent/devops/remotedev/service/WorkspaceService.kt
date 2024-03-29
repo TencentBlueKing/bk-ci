@@ -111,6 +111,10 @@ import com.tencent.devops.remotedev.service.workspace.NotifyControl.Companion.NO
 import com.tencent.devops.remotedev.service.workspace.NotifyControl.Companion.SLEEP_3_DAY_NOTIFY
 import com.tencent.devops.remotedev.service.workspace.WorkspaceCommon
 import com.tencent.devops.scm.utils.code.git.GitUtils
+import java.time.Duration
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
+import java.util.concurrent.TimeUnit
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
@@ -118,10 +122,6 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import org.springframework.web.context.request.RequestContextHolder
 import org.springframework.web.context.request.ServletRequestAttributes
-import java.time.Duration
-import java.time.LocalDateTime
-import java.time.format.DateTimeFormatter
-import java.util.concurrent.TimeUnit
 
 @Service
 @Suppress("ALL")
@@ -523,7 +523,9 @@ class WorkspaceService @Autowired constructor(
         projectId: String?,
         ip: String?,
         hasDepartmentsInfo: Boolean?,
-        hasCurrentUser: Boolean?
+        hasCurrentUser: Boolean?,
+        businessLineName: String? = null,
+        ownerName: String? = null
     ): List<WeSecProjectWorkspace> {
         val startTime = System.currentTimeMillis()
 
@@ -531,7 +533,9 @@ class WorkspaceService @Autowired constructor(
             dslContext = dslContext,
             mountType = WorkspaceMountType.START,
             projectIds = projectId?.let { setOf(projectId) },
-            ip = ip
+            ip = ip,
+            businessLineName = businessLineName,
+            ownerName = ownerName
         ) ?: emptyList()
 
         val fetchWorkspaceWithOwnerEndTime = System.currentTimeMillis()
@@ -593,7 +597,7 @@ class WorkspaceService @Autowired constructor(
                 null
             }
             val currUser = if (hasCurrentUser == true && ip != null) {
-                startWorkspaceService.loginUsers(setOf(ip)).values.flatten().toSet()
+                startWorkspaceService.loginUsers(setOf(detail?.hostIP ?: "")).values.flatten().toSet()
             } else {
                 null
             }
@@ -610,7 +614,8 @@ class WorkspaceService @Autowired constructor(
                 displayName = res["DISPLAY_NAME"] as String,
                 ownerDepartments = depInfo,
                 currentLoginUsers = currUser,
-                machineType = workspaceWindows?.get(workspaceName)?.let { win -> allConfig[win["WIN_CONFIG_ID"].toString()]?.size }
+                machineType = workspaceWindows?.get(workspaceName)
+                    ?.let { win -> allConfig[win["WIN_CONFIG_ID"].toString()]?.size }
             )
         }
 
@@ -1365,6 +1370,53 @@ class WorkspaceService @Autowired constructor(
                     cc = mutableSetOf(workspace.createUserId),
                     projectId = workspace.projectId,
                     notifyTemplateCode = NotifyControl.NOT_4_STAR_ACTIVE_AUTO_DELETE_NOTIFY,
+                    notifyType = mutableSetOf(RemoteDevNotifyType.EMAIL, RemoteDevNotifyType.RTX),
+                    bodyParams = mutableMapOf(
+                        "cgsIp" to (workspace.hostName ?: ""),
+                        "projectId" to (workspace.projectId),
+                        "userId" to userIds.joinToString()
+                    )
+                )
+            }
+        }
+    }
+
+    // 云桌面连续14天活跃度不足，总活跃时长小于10小时
+    fun notifyWhenNotActiveIn14Days() {
+        val limitDay = holidayHelper.getLastWorkingDays(14).last()
+        logger.info("autoDeleteWhenNotActiveIn14Days|$limitDay")
+        val actives = bkBaseService.fetchActiveTimes(limitDay)
+        workspaceJoinDao.limitFetchProjectWorkspace(
+            dslContext = dslContext,
+            limit = null,
+            queryType = QueryType.WEB,
+            search = WorkspaceSearch(
+                workspaceSystemType = listOf(WorkspaceSystemType.WINDOWS_GPU),
+                onFuzzyMatch = false
+            )
+        )?.parallelStream()?.forEach { workspace ->
+            if (workspace.createTime > limitDay) {
+                logger.info(
+                    "skip check| workspace create time less than limit day|" +
+                        "${workspace.workspaceName}|${workspace.createTime}|$limitDay"
+                )
+                return@forEach
+            }
+            if (actives[workspace.hostName] == null || actives[workspace.hostName]!! < 10 * 60) {
+                workspaceOpHistoryDao.createWorkspaceHistory(
+                    dslContext = dslContext,
+                    workspaceName = workspace.workspaceName,
+                    operator = ADMIN_NAME,
+                    action = WorkspaceAction.NOTIFY,
+                    actionMessage = workspaceCommon.getOpHistory(OpHistoryCopyWriting.TIMEOUT_STOP)
+                )
+                val userIds = permissionService.getWorkspaceOwner(workspace.workspaceName)
+                notifyControl.notify4UserAndCCRemoteDevManagerAndCCOwnerShareUser(
+                    userIds = userIds.toMutableSet(),
+                    workspaceName = workspace.workspaceName,
+                    cc = mutableSetOf(workspace.createUserId),
+                    projectId = workspace.projectId,
+                    notifyTemplateCode = NotifyControl.NOT_ACTIVE_IN_14_DAYS_NOTIFY,
                     notifyType = mutableSetOf(RemoteDevNotifyType.EMAIL, RemoteDevNotifyType.RTX),
                     bodyParams = mutableMapOf(
                         "cgsIp" to (workspace.hostName ?: ""),
