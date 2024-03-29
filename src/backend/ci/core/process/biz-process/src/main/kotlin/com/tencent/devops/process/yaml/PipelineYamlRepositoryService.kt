@@ -149,12 +149,11 @@ class PipelineYamlRepositoryService @Autowired constructor(
         action: BaseAction,
         yamlFile: YamlPathListEntry
     ) {
-        val branch = action.data.eventCommon.branch
         val pipelineYamlVersion = pipelineYamlService.getLatestVersionByRef(
             projectId = projectId,
             repoHashId = action.data.setting.repoHashId,
             filePath = yamlFile.yamlPath,
-            ref = branch
+            ref = GitActionCommon.getRealRef(action = action)
         )
         // yaml版本不存在或者当前分支最新版本与要更新的不一样,说明需要创建新的版本
         if (pipelineYamlVersion == null || pipelineYamlVersion.blobId != yamlFile.blobId) {
@@ -185,8 +184,7 @@ class PipelineYamlRepositoryService @Autowired constructor(
         val commitTime = action.data.eventCommon.commit.commitTimeStamp?.let {
             DateTimeUtil.stringToLocalDateTime(it)
         } ?: LocalDateTime.now()
-        // 如果是fork仓库,ref应该加上fork库的namespace
-        val ref = GitActionCommon.getRef(fork, action.data.eventCommon.sourceGitNamespace, branch)
+        val ref = GitActionCommon.getRealRef(action = action)
         val deployPipelineResult = pipelineInfoFacadeService.createYamlPipeline(
             userId = action.data.setting.enableUser,
             projectId = projectId,
@@ -250,7 +248,7 @@ class PipelineYamlRepositoryService @Autowired constructor(
             DateTimeUtil.stringToLocalDateTime(it)
         } ?: LocalDateTime.now()
         // 如果是fork仓库,ref应该加上fork库的namespace
-        val ref = GitActionCommon.getRef(fork, action.data.eventCommon.sourceGitNamespace, branch)
+        val ref = GitActionCommon.getRealRef(action = action)
 
         val deployPipelineResult = pipelineInfoFacadeService.updateYamlPipeline(
             userId = action.data.setting.enableUser,
