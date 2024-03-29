@@ -633,16 +633,15 @@ class PipelineRepositoryService constructor(
         branchName: String?,
         description: String?
     ): DeployPipelineResult {
-        // #8161 如果只有一个分支版本的创建操作，流水线状态也为仅有草稿
-        val onlyDraft = versionStatus == VersionStatus.COMMITTING ||
-            versionStatus == VersionStatus.BRANCH
+        // #8161 如果只有一个草稿版本的创建操作，流水线状态也为仅有草稿
+        val onlyDraft = versionStatus == VersionStatus.COMMITTING
         val modelVersion = 1
         var versionNum = 1
         var pipelineVersion = 1
         var triggerVersion = 1
         val settingVersion = 1
         // 如果是仅有草稿的状态，resource表的版本号先设为0作为基准
-        if (onlyDraft) {
+        if (onlyDraft || versionStatus == VersionStatus.BRANCH) {
             versionNum = 0
             pipelineVersion = 0
             triggerVersion = 0
@@ -765,6 +764,15 @@ class PipelineRepositoryService constructor(
                             desc = model.desc ?: ""
                         )?.let { newSetting = it }
                     }
+                } else {
+                    pipelineSettingDao.saveSetting(transactionContext, newSetting)
+                    pipelineSettingVersionDao.saveSetting(
+                        dslContext = transactionContext,
+                        setting = newSetting,
+                        version = 1,
+                        id = client.get(ServiceAllocIdResource::class)
+                            .generateSegmentId(PIPELINE_SETTING_VERSION_BIZ_TAG_NAME).data
+                    )
                 }
                 // 如果不是草稿保存，最新版本永远是新增逻辑
                 versionName = if (versionStatus == VersionStatus.BRANCH) {
@@ -1040,8 +1048,9 @@ class PipelineRepositoryService constructor(
                             projectId = projectId,
                             pipelineId = pipelineId
                         )
+                        // 流水线版本兼容历史数据，至少取发布版本的版本号
                         pipelineVersion = PipelineVersionUtils.getPipelineVersion(
-                            currVersion = releaseResource.pipelineVersion ?: 1,
+                            currVersion = maxOf(releaseResource.version, releaseResource.pipelineVersion ?: 1),
                             originModel = releaseResource.model,
                             newModel = model
                         ).coerceAtLeast(1)
