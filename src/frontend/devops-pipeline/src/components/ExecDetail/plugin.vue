@@ -73,7 +73,7 @@
                 tabList: [
                     { name: 'log', show: true },
                     { name: 'artifactory', show: false, completeLoading: false },
-                    { name: 'report', show: true, completeLoading: false },
+                    { name: 'report', show: false, completeLoading: false },
                     { name: 'setting', show: true }
                 ]
             }
