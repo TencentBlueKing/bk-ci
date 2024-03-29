@@ -12,10 +12,10 @@
             <div class="node-list-header">
                 <div class="title">{{$t('setting.nodeInfo.selectNodeTip')}}
                     <span class="selected-node-prompt">
-                        {{$t('total')}}<span class="node-count"> {{ selectHandlerConf.curTotalCount }} </span> {{$t('setting.agent.agents')}}
+                        {{$t('total')}}<span class="node-count"> {{ selectHandlercConf.curTotalCount }} </span> {{$t('setting.agent.agents')}}
                     </span>
                     <span class="selected-node-prompt">
-                        <span class="node-count"> {{ selectHandlerConf.selectedNodeCount }} </span>{{$t('setting.agent.hasSelected')}}
+                        <span class="node-count"> {{ selectHandlercConf.selectedNodeCount }} </span>{{$t('setting.agent.hasSelected')}}
                     </span>
                 </div>
                 <div class="search-input-row">
@@ -49,12 +49,12 @@
                 </div>
             </div>
             <div class="node-table">
-                <div class="node-table-message" v-if="!selectHandlerConf.searchEmpty && rowList.length">
+                <div class="node-table-message" v-if="!selectHandlercConf.searchEmpty && rowList.length">
                     <div class="table-node-head">
                         <bk-checkbox
                             :true-value="true"
                             :false-value="false"
-                            v-model="selectHandlerConf.allNodeSelected"
+                            v-model="selectHandlercConf.allNodeSelected"
                             @change="toggleAllSelect"
                         ></bk-checkbox>
                         <div class="table-node-item node-item-ip">{{$t('displayName')}}</div>
@@ -78,7 +78,7 @@
                                 <div class="table-node-item node-item-ip">
                                     <span class="node-ip">{{ col.displayName }}</span>
                                 </div>
-                                <div class="table-node-item node-item-name" :class="{ 'over-content': selectHandlerConf.curDisplayCount > 6 }">
+                                <div class="table-node-item node-item-name" :class="{ 'over-content': selectHandlercConf.curDisplayCount > 6 }">
                                     <span class="node-name">{{ col.name }}</span>
                                 </div>
                                 <div class="table-node-item node-item-ip">
@@ -97,7 +97,7 @@
                         </template>
                     </div>
                 </div>
-                <div class="no-data-row" v-if="selectHandlerConf.searchEmpty || !rowList.length">
+                <div class="no-data-row" v-if="selectHandlercConf.searchEmpty || !rowList.length">
                     <span>{{$t('setting.agent.noAgent')}}</span>
                 </div>
             </div>
@@ -116,7 +116,7 @@
         props: {
             nodeSelectConf: Object,
             loading: Object,
-            selectHandlerConf: Object,
+            selectHandlercConf: Object,
             rowList: Array,
             confirmFn: Function,
             toggleAllSelect: Function,
