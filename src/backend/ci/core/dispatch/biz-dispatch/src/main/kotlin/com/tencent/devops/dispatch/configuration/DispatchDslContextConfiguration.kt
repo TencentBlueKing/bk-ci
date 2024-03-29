@@ -55,10 +55,10 @@ import javax.sql.DataSource
 @Configuration
 @Import(DispatchDataSourceConfig::class, DBBaseConfiguration::class)
 @ConditionalOnMissingClass("com.tencent.devops.multijar.MultijarDslContextConfiguration")
-class DispatchJooqConfiguration {
+class DispatchDslContextConfiguration {
 
     companion object {
-        private val LOG = LoggerFactory.getLogger(DispatchJooqConfiguration::class.java)
+        private val LOG = LoggerFactory.getLogger(DispatchDslContextConfiguration::class.java)
     }
 
     @Bean
