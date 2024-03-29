@@ -206,7 +206,8 @@
                         projectId,
                         pipelineId,
                         page: page ?? pagination.page + 1,
-                        pageSize: pagination.limit
+                        pageSize: pagination.limit,
+                        versionName: this.searchKeyword
                     })
                     this.pagination.page = res.page
                     this.hasNext = res.count > res.page * pagination.limit
@@ -259,7 +260,8 @@
             searchVersion (keyword) {
                 this.searchKeyword = keyword
                 this.$nextTick(() => {
-                    this.handlePipelineVersionList()
+                    this.hasNext = true
+                    this.loadMore(1)
                 })
             },
             focusSearchInput () {
