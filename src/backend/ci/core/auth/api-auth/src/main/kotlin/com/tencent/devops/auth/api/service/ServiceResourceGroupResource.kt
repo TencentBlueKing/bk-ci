@@ -17,7 +17,7 @@ import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
 @Tag(name = "AUTH_SERVICE_RESOURCE_GROUP", description = "权限--用户组相关")
-@Path("/open/service/auth/resource/group")
+@Path("/service/auth/resource/group")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface ServiceResourceGroupResource {
