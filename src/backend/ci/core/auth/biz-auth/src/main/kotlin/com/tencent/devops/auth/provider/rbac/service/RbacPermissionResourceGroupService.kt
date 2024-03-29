@@ -310,7 +310,7 @@ class RbacPermissionResourceGroupService @Autowired constructor(
             resourceType = AuthResourceType.PROJECT.value,
             resourceCode = projectId
         )
-        if (resourceType == AuthResourceType.PROJECT.value){
+        if (resourceType == AuthResourceType.PROJECT.value) {
             permissionGradeManagerService.createProjectGroupByGroupCode(
                 projectCode = projectId,
                 groupCode = groupCode
