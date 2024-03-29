@@ -206,7 +206,10 @@ class DeleteControl @Autowired constructor(
             )
         val res = deleteWorkspace4System(userId, workspaceName)
         if (res) {
-            val userIds = permissionService.getWorkspaceOwner(workspace.workspaceName)
+            var userIds = permissionService.getWorkspaceOwner(workspace.workspaceName)
+            if (userIds.isEmpty()) {
+                userIds = listOf(workspace.createUserId)
+            }
             notifyControl.notify4UserAndCCRemoteDevManagerAndCCOwnerShareUser(
                 userIds = userIds.toMutableSet(),
                 workspaceName = workspace.workspaceName,
@@ -247,7 +250,10 @@ class DeleteControl @Autowired constructor(
                 logger.error("batchDeleteWorkspace4OP $workspaceName not find in records $workspaces")
                 return@forEach
             }
-            val userIds = permissionService.getWorkspaceOwner(workspaceName)
+            var userIds = permissionService.getWorkspaceOwner(workspaceName)
+            if (userIds.isEmpty()) {
+                userIds = listOf(workspace.createUserId)
+            }
             userIds.forEach { userId ->
                 if (data[userId] == null) {
                     data[userId] = mutableSetOf(workspace)
@@ -579,7 +585,9 @@ class DeleteControl @Autowired constructor(
                 workspaceName = workspace.workspaceName,
                 workspaceOwnerType = workspace.ownerType
             )
-        ) return false
+        ) {
+            return false
+        }
         RedisCallLimit(
             redisOperation,
             "$REDIS_CALL_LIMIT_KEY_PREFIX:workspace:${workspace.workspaceName}",
@@ -797,7 +805,9 @@ class DeleteControl @Autowired constructor(
         }.onFailure {
             if (it is ErrorCodeException && it.errorCode == ErrorCodeEnum.WORKSPACE_ERROR.errorCode) {
                 deleteImmediately = true
-            } else throw it
+            } else {
+                throw it
+            }
         }
 
         return deleteImmediately
