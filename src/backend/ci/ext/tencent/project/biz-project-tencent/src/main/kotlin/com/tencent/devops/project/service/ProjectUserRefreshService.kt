@@ -121,7 +121,7 @@ class ProjectUserRefreshService @Autowired constructor(
                             dbUserRecord = it
                         )
                     ) {
-                        logger.info("The user organization changes|${it.userId}|${tofDeptInfo}|$it")
+                        logger.info("The user organization changes|${it.userId}|$tofDeptInfo|$it")
                         userDao.update(dslContext, tofDeptInfo)
                     }
                 } catch (oe: OperationException) {
