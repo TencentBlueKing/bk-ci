@@ -301,7 +301,7 @@ class RbacPermissionResourceGroupService @Autowired constructor(
         userId: String,
         projectId: String,
         resourceType: String,
-        groupCode: String,
+        groupCode: String
     ): Boolean {
         logger.info("create group|$userId|$projectId|$groupCode|$resourceType")
         permissionResourceService.hasManagerPermission(
