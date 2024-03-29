@@ -25,41 +25,40 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.environment.resources.thirdPartyAgent
+package com.tencent.devops.environment.resources.thirdpartyagent
 
+import com.tencent.bk.audit.annotations.AuditEntry
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.AgentResult
 import com.tencent.devops.common.api.pojo.OS
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.pojo.agent.NewHeartbeatInfo
-import com.tencent.devops.common.api.util.HashUtil
-import com.tencent.devops.common.auth.api.AuthPermission
+import com.tencent.devops.common.auth.api.ActionId
 import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.environment.api.thirdPartyAgent.ServiceThirdPartyAgentResource
+import com.tencent.devops.environment.api.thirdpartyagent.ServiceThirdPartyAgentResource
 import com.tencent.devops.environment.constant.EnvironmentMessageCode
-import com.tencent.devops.environment.constant.EnvironmentMessageCode.ERROR_NODE_NO_VIEW_PERMISSSION
 import com.tencent.devops.environment.permission.EnvironmentPermissionService
 import com.tencent.devops.environment.pojo.AgentPipelineRefRequest
 import com.tencent.devops.environment.pojo.enums.NodeType
 import com.tencent.devops.environment.pojo.slave.SlaveGateway
-import com.tencent.devops.environment.pojo.thirdPartyAgent.AgentBuildDetail
-import com.tencent.devops.environment.pojo.thirdPartyAgent.AgentPipelineRef
-import com.tencent.devops.environment.pojo.thirdPartyAgent.AskHeartbeatResponse
-import com.tencent.devops.environment.pojo.thirdPartyAgent.ThirdPartyAgent
-import com.tencent.devops.environment.pojo.thirdPartyAgent.ThirdPartyAgentDetail
-import com.tencent.devops.environment.pojo.thirdPartyAgent.ThirdPartyAgentInfo
-import com.tencent.devops.environment.pojo.thirdPartyAgent.ThirdPartyAgentPipeline
-import com.tencent.devops.environment.pojo.thirdPartyAgent.ThirdPartyAgentUpgradeByVersionInfo
-import com.tencent.devops.environment.pojo.thirdPartyAgent.pipeline.PipelineCreate
-import com.tencent.devops.environment.pojo.thirdPartyAgent.pipeline.PipelineResponse
-import com.tencent.devops.environment.pojo.thirdPartyAgent.pipeline.PipelineSeqId
+import com.tencent.devops.environment.pojo.thirdpartyagent.AgentBuildDetail
+import com.tencent.devops.environment.pojo.thirdpartyagent.AgentPipelineRef
+import com.tencent.devops.environment.pojo.thirdpartyagent.AskHeartbeatResponse
+import com.tencent.devops.environment.pojo.thirdpartyagent.ThirdPartyAgent
+import com.tencent.devops.environment.pojo.thirdpartyagent.ThirdPartyAgentDetail
+import com.tencent.devops.environment.pojo.thirdpartyagent.ThirdPartyAgentInfo
+import com.tencent.devops.environment.pojo.thirdpartyagent.ThirdPartyAgentPipeline
+import com.tencent.devops.environment.pojo.thirdpartyagent.ThirdPartyAgentUpgradeByVersionInfo
+import com.tencent.devops.environment.pojo.thirdpartyagent.pipeline.PipelineCreate
+import com.tencent.devops.environment.pojo.thirdpartyagent.pipeline.PipelineResponse
+import com.tencent.devops.environment.pojo.thirdpartyagent.pipeline.PipelineSeqId
 import com.tencent.devops.environment.service.NodeService
 import com.tencent.devops.environment.service.slave.SlaveGatewayService
-import com.tencent.devops.environment.service.thirdPartyAgent.AgentPipelineService
-import com.tencent.devops.environment.service.thirdPartyAgent.ThirdPartyAgentMgrService
-import com.tencent.devops.environment.service.thirdPartyAgent.ThirdPartyAgentPipelineService
-import com.tencent.devops.environment.service.thirdPartyAgent.UpgradeService
+import com.tencent.devops.environment.service.thirdpartyagent.AgentPipelineService
+import com.tencent.devops.environment.service.thirdpartyagent.ThirdPartyAgentMgrService
+import com.tencent.devops.environment.service.thirdpartyagent.ThirdPartyAgentPipelineService
+import com.tencent.devops.environment.service.thirdpartyagent.UpgradeService
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
@@ -193,6 +192,7 @@ class ServiceThirdPartyAgentResourceImpl @Autowired constructor(
         return Result(slaveGatewayService.getGateway())
     }
 
+    @AuditEntry(actionId = ActionId.ENV_NODE_VIEW)
     override fun getNodeDetail(
         userId: String,
         projectId: String,
@@ -210,17 +210,6 @@ class ServiceThirdPartyAgentResourceImpl @Autowired constructor(
 
             else -> null
         } ?: throw ErrorCodeException(errorCode = EnvironmentMessageCode.ERROR_NODE_NAME_OR_ID_INVALID)
-        if (!permissionService.checkNodePermission(
-                userId = userId,
-                projectId = projectId,
-                nodeId = HashUtil.decodeIdToLong(hashId),
-                permission = AuthPermission.VIEW
-            )
-        ) {
-            throw ErrorCodeException(
-                errorCode = ERROR_NODE_NO_VIEW_PERMISSSION
-            )
-        }
         return Result(thirdPartyAgentService.getAgentDetail(userId, projectId, hashId))
     }
 

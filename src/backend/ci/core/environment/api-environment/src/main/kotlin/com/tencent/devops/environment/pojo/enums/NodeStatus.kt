@@ -42,7 +42,8 @@ enum class NodeStatus(
     val statusName: String
 ) {
     NORMAL("normal"), // 正常
-    ABNORMAL("abnormal"), // 异常
+    ABNORMAL("abnormal"), // 异常（节点类型：构建 - 蓝盾agent异常，部署 - GSE agent异常）
+    NOT_INSTALLED("notInstall"), // 未安装agent
     DELETED("deleted"), // 已删除
     LOST("lost"), // 失联
     CREATING("creating"), // 正在创建中
@@ -55,6 +56,8 @@ enum class NodeStatus(
     BUILDING_IMAGE("buildingImage"), // 正在制作镜像中
     BUILD_IMAGE_SUCCESS("buildImageSuccess"), // 制作镜像成功
     BUILD_IMAGE_FAILED("buildImageFailed"), // 制作镜像失败
+    NOT_IN_CC("notInCC"), // CC中不存在（仅部署类型节点）
+    NOT_IN_CMDB("notInCmdb"), // CMDB中不存在（仅部署类型节点）
     UNKNOWN("unknown"); // 未知
 
     companion object {
@@ -64,7 +67,7 @@ enum class NodeStatus(
                     return I18nUtil.getCodeLanMessage("envNodeStatus.${it.name}")
                 }
             }
-            return return I18nUtil.getCodeLanMessage("envNodeStatus.${UNKNOWN.name}")
+            return I18nUtil.getCodeLanMessage("envNodeStatus.${UNKNOWN.name}")
 //            return when (status) {
 //                NORMAL.name -> NORMAL.statusName
 //                ABNORMAL.name -> ABNORMAL.statusName

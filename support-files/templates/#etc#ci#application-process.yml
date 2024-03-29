@@ -108,3 +108,6 @@ api:
   project:
     permission:
       switch: true
+
+callback:
+  failureDisableTimePeriod: __BK_CI_PROCESS_CALLBACK_FAILURE_DISABLE_TIME_PERIOD__

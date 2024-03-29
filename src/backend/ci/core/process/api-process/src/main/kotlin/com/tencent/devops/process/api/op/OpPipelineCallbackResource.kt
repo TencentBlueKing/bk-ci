@@ -1,9 +1,9 @@
 package com.tencent.devops.process.api.op
 
 import com.tencent.devops.common.api.pojo.Result
-import io.swagger.v3.oas.annotations.tags.Tag
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
+import io.swagger.v3.oas.annotations.tags.Tag
 import javax.ws.rs.Consumes
 import javax.ws.rs.PUT
 import javax.ws.rs.Path
@@ -32,13 +32,25 @@ interface OpPipelineCallbackResource {
 
     @Operation(summary = "根据Url恢复回调接口")
     @PUT
-    @Path("/{projectId}/enableCallback/byUrl")
+    @Path("enableCallback/byUrl")
     fun enableCallbackByUrl(
         @Parameter(description = "蓝盾项目Id(项目英文名)", required = true)
         @QueryParam("projectId")
-        projectId: String,
+        projectId: String?,
         @Parameter(description = "回调url", required = true)
         @QueryParam("url")
         url: String
+    ): Result<Boolean>
+
+    @Operation(summary = "根据ID恢复回调接口")
+    @PUT
+    @Path("/{projectId}/disable/byId")
+    fun disableCallbackByIds(
+        @Parameter(description = "蓝盾项目Id(项目英文名)", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @Parameter(description = "回调信息ID", required = true)
+        @QueryParam("callbackIds")
+        callbackIds: String
     ): Result<Boolean>
 }
