@@ -98,7 +98,7 @@ class SamplePermissionResourceGroupService : PermissionResourceGroupService {
         userId: String,
         projectId: String,
         resourceType: String,
-        groupCode: String,
+        groupCode: String
     ): Boolean {
         return true
     }

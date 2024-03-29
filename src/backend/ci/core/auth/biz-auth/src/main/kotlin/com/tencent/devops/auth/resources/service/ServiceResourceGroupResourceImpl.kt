@@ -16,7 +16,7 @@ class ServiceResourceGroupResourceImpl constructor(
         userId: String,
         projectCode: String,
         resourceType: String,
-        groupCode: BkAuthGroup,
+        groupCode: BkAuthGroup
     ): Result<Boolean> {
         return Result(
             permissionResourceGroupService.createGroupByGroupCode(
