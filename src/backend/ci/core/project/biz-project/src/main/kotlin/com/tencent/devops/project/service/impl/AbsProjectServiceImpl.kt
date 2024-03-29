@@ -1157,7 +1157,7 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
                     I18nUtil.getCodeLanMessage(ProjectMessageCode.PEM_CHECK_FAIL)
                 )
             }
-            if (enabled){
+            if (enabled) {
                 validateProjectRelateProduct(
                     ProjectProductValidateDTO(
                         englishName = englishName,
