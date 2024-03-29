@@ -1048,8 +1048,9 @@ class PipelineRepositoryService constructor(
                             projectId = projectId,
                             pipelineId = pipelineId
                         )
+                        // 流水线版本兼容历史数据，至少取发布版本的版本号
                         pipelineVersion = PipelineVersionUtils.getPipelineVersion(
-                            currVersion = releaseResource.pipelineVersion ?: 1,
+                            currVersion = maxOf(releaseResource.version, releaseResource.pipelineVersion ?: 1),
                             originModel = releaseResource.model,
                             newModel = model
                         ).coerceAtLeast(1)
