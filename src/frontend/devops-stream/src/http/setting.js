@@ -83,7 +83,7 @@ export default {
     },
 
     getNodeList (projectId, poolHash) {
-        return api.get(`${ENVIRNMENT_PERFIX}/user/environment/${projectId}/${poolHash}/listNodes`)
+        return api.post(`${ENVIRNMENT_PERFIX}/user/environment/${projectId}/${poolHash}/listNodes`)
     },
 
     deleteEnvNode (projectId, envHashId, params) {
