@@ -292,7 +292,7 @@ class PipelineRetryFacadeService @Autowired constructor(
                 permission = AuthPermission.API_OPERATE
             )
         } catch (ignore: Exception) {
-            logger.warn("refresh task And check api operate permission failed:$userId|$projectId|$ignore")
+            logger.info("the project has not registered api operation permission:$userId|$projectId|$ignore")
             false
         }
     }
