@@ -81,7 +81,7 @@ interface OldServiceEnvironmentResource {
 
     @Operation(summary = "获取环境（多个）的节点列表")
     @POST
-    @Path("/{projectId}/listNodesByEnvIds")
+    @Path("/{projectId}/listNodesByEnvIdsNew")
     fun listNodesByEnvIdsNew(
         @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
