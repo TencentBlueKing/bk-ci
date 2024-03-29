@@ -56,7 +56,7 @@
                         >
                         </span>
 
-                        <span class="node-status">{{ $t('environment.nodeStatusMap')[props.row.nodeStatus] || '--' }}</span>
+                        <span class="node-status">{{ $t('environment.nodeStatusMap')[props.row.nodeStatus] || props.row.nodeStatus || '--' }}</span>
                     </template>
                 </bk-table-column>
                 <bk-table-column :width="80" :label="$t('environment.operation')">
