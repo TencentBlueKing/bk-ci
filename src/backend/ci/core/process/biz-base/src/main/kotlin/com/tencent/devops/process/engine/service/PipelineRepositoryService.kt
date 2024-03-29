@@ -764,6 +764,15 @@ class PipelineRepositoryService constructor(
                             desc = model.desc ?: ""
                         )?.let { newSetting = it }
                     }
+                } else {
+                    pipelineSettingDao.saveSetting(transactionContext, newSetting)
+                    pipelineSettingVersionDao.saveSetting(
+                        dslContext = transactionContext,
+                        setting = newSetting,
+                        version = 1,
+                        id = client.get(ServiceAllocIdResource::class)
+                            .generateSegmentId(PIPELINE_SETTING_VERSION_BIZ_TAG_NAME).data,
+                    )
                 }
                 // 如果不是草稿保存，最新版本永远是新增逻辑
                 versionName = if (versionStatus == VersionStatus.BRANCH) {
