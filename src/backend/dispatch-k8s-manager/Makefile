@@ -1,5 +1,5 @@
 LOCAL_REGISTRY=bkci
-LOCAL_IMAGE=bkci-kubernetes-manager:0.0.31
+LOCAL_IMAGE=bkci-kubernetes-manager:0.0.32
 
 CONFIG_DIR=/data/workspace/kubernetes-manager/config
 OUT_DIR=/data/workspace/kubernetes-manager/out

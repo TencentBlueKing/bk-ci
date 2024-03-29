@@ -1018,6 +1018,15 @@ class ProjectDao {
         }
     }
 
+    fun getExistedEnglishName(dslContext: DSLContext, englishNameList: List<String>): List<String>? {
+        with(TProject.T_PROJECT) {
+            return dslContext.select(ENGLISH_NAME)
+                .from(this)
+                .where(ENGLISH_NAME.`in`(englishNameList))
+                .fetch(ENGLISH_NAME, String::class.java)
+        }
+    }
+
     companion object {
         private val UNSUCCESSFUL_CREATE_STATUS = listOf(
             ProjectApproveStatus.CREATE_PENDING.status,

@@ -26,13 +26,9 @@
  */
 
 dependencies {
-    implementation(project(":core:common:common-auth:common-auth-mock"))
-    implementation(project(":core:common:common-auth:common-auth-blueking"))
-    implementation(project(":core:common:common-auth:common-auth-v3"))
     implementation(project(":core:common:common-archive"))
-
+    api(project(":core:common:common-auth:common-auth-provider"))
     implementation(project(":core:artifactory:biz-artifactory"))
-    implementation(project(":core:auth:biz-auth-blueking"))
     implementation(project(":core:dispatch:biz-dispatch"))
     implementation(project(":core:environment:biz-environment"))
     implementation(project(":core:misc:biz-image"))

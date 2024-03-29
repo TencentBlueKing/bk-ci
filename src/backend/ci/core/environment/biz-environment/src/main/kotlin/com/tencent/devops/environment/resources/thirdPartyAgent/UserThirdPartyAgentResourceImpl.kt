@@ -25,7 +25,7 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.environment.resources.thirdPartyAgent
+package com.tencent.devops.environment.resources.thirdpartyagent
 
 import com.tencent.bk.audit.annotations.AuditEntry
 import com.tencent.devops.common.api.constant.CommonMessageCode
@@ -35,19 +35,19 @@ import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.auth.api.ActionId
 import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.environment.api.thirdPartyAgent.UserThirdPartyAgentResource
+import com.tencent.devops.environment.api.thirdpartyagent.UserThirdPartyAgentResource
 import com.tencent.devops.environment.pojo.EnvVar
 import com.tencent.devops.environment.pojo.slave.SlaveGateway
-import com.tencent.devops.environment.pojo.thirdPartyAgent.AgentBuildDetail
-import com.tencent.devops.environment.pojo.thirdPartyAgent.ThirdPartyAgentAction
-import com.tencent.devops.environment.pojo.thirdPartyAgent.ThirdPartyAgentDetail
-import com.tencent.devops.environment.pojo.thirdPartyAgent.ThirdPartyAgentInfo
-import com.tencent.devops.environment.pojo.thirdPartyAgent.ThirdPartyAgentLink
-import com.tencent.devops.environment.pojo.thirdPartyAgent.ThirdPartyAgentStatusWithInfo
+import com.tencent.devops.environment.pojo.thirdpartyagent.AgentBuildDetail
+import com.tencent.devops.environment.pojo.thirdpartyagent.ThirdPartyAgentAction
+import com.tencent.devops.environment.pojo.thirdpartyagent.ThirdPartyAgentDetail
+import com.tencent.devops.environment.pojo.thirdpartyagent.ThirdPartyAgentInfo
+import com.tencent.devops.environment.pojo.thirdpartyagent.ThirdPartyAgentLink
+import com.tencent.devops.environment.pojo.thirdpartyagent.ThirdPartyAgentStatusWithInfo
 import com.tencent.devops.environment.service.slave.SlaveGatewayService
-import com.tencent.devops.environment.service.thirdPartyAgent.AgentMetricService
-import com.tencent.devops.environment.service.thirdPartyAgent.ImportService
-import com.tencent.devops.environment.service.thirdPartyAgent.ThirdPartyAgentMgrService
+import com.tencent.devops.environment.service.thirdpartyagent.AgentMetricService
+import com.tencent.devops.environment.service.thirdpartyagent.ImportService
+import com.tencent.devops.environment.service.thirdpartyagent.ThirdPartyAgentMgrService
 import org.springframework.beans.factory.annotation.Autowired
 
 @Suppress("TooManyFunctions")
@@ -116,7 +116,7 @@ class UserThirdPartyAgentResourceImpl @Autowired constructor(
 
     @AuditEntry(actionId = ActionId.ENV_NODE_CREATE)
     override fun importAgent(userId: String, projectId: String, agentId: String): Result<Boolean> {
-        importService.importAgent(userId, projectId, agentId)
+        importService.importAgent(userId, projectId, agentId, masterVersion = null)
         return Result(true)
     }
 

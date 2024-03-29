@@ -146,7 +146,7 @@
     "事件类型": "Event Type",
     "触发人": "Trigger",
     "流水线名称": "Pipeline Name",
-    "触发器类型/事件类型/触发人/流水线名称": "Trigger Type / Event Type / Trigger / Pipeline Name",
+    "事件ID/触发器类型/事件类型/触发人/流水线名称": "Event ID / Trigger Type / Event Type / Trigger / Pipeline Name",
     "加载更多": "Load More",
     "到底啦": "End",
     "一键重新触发": "Replay Event",
