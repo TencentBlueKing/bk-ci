@@ -80,7 +80,7 @@ import java.util.concurrent.Executors
 import javax.ws.rs.core.Response
 
 @Service
-@SuppressWarnings("LongParameterList", "MagicNumber", "TooGenericExceptionThrown")
+@SuppressWarnings("LongParameterList", "MagicNumber", "TooGenericExceptionThrown", "ComplexCondition")
 class ExperienceAppService(
     private val dslContext: DSLContext,
     private val objectMapper: ObjectMapper,
@@ -145,7 +145,11 @@ class ExperienceAppService(
         // 移除红点
         removeRedPoint(userId, experienceId)
         // 当APP前端传递的experienceId和公开体验的app被覆盖后T_EXPERIENCE_PUBLIC表中的RecordId不一致时，则将experienceId置为更新后的RecordId
-        if (forceNew && newestPublic != null && newestPublic.recordId != experienceId) {
+        if (organization != ORGANIZATION_OUTER &&
+            forceNew &&
+            newestPublic != null &&
+            newestPublic.recordId != experienceId
+        ) {
             experienceId = newestPublic.recordId
             experience = experienceDao.get(dslContext, experienceId)
         }
@@ -223,8 +227,8 @@ class ExperienceAppService(
             experienceCondition = experienceCondition.id,
             appScheme = experience.scheme,
             lastDownloadHashId = lastDownloadMap[experience.projectId +
-                experience.bundleIdentifier +
-                experience.platform]
+                    experience.bundleIdentifier +
+                    experience.platform]
                 ?.let { l -> HashUtil.encodeLongId(l) } ?: ""
         )
     }

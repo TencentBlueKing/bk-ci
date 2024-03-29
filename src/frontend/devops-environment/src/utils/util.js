@@ -421,3 +421,20 @@ export const copyText = (text) => {
     }
     return false
 }
+
+// 获取 cookie object
+export function getCookies (strCookie = document.cookie) {
+    if (!strCookie) {
+        return {}
+    }
+    const arrCookie = strCookie.split('; ')// 分割
+    const cookiesObj = {}
+    arrCookie.forEach((cookieStr) => {
+        const arr = cookieStr.split('=')
+        const [key, value] = arr
+        if (key) {
+            cookiesObj[key] = value
+        }
+    })
+    return cookiesObj
+}
