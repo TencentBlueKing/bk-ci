@@ -424,7 +424,7 @@
                     ])
 
                     this.releaseParams.scmType = this.pacSupportScmTypeList[0]?.id
-                    const newReleaseVersion = results[enablePac ? 2 : 1]
+                    const newReleaseVersion = results[enablePac ? 1 : 0]
                     this.newReleaseVersionName = newReleaseVersion?.newVersionName || '--'
                     if (enablePac) {
                         this.$nextTick(() => {
