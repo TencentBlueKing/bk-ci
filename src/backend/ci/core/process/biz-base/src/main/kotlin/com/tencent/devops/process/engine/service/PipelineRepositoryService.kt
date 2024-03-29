@@ -675,12 +675,37 @@ class PipelineRepositoryService constructor(
                     pipelineId = pipelineId,
                     pipelineName = model.name,
                     desc = model.desc ?: ""
-                ) ?: PipelineSetting(
-                    pipelineId = pipelineId,
-                    pipelineName = model.name,
-                    desc = model.desc ?: "",
-                    pipelineAsCodeSettings = PipelineAsCodeSettings()
-                )
+                ) ?: run {
+                    val maxPipelineResNum = if (
+                        channelCode.name in versionConfigure.specChannels.split(",")
+                    ) {
+                        versionConfigure.specChannelMaxKeepNum
+                    } else {
+                        versionConfigure.maxKeepNum
+                    }
+                    val notifyTypes = if (channelCode == ChannelCode.BS) {
+                        pipelineInfoExtService.failNotifyChannel()
+                    } else {
+                        ""
+                    }
+                    val failType = notifyTypes.split(",").filter { i -> i.isNotBlank() }
+                        .map { type -> PipelineSubscriptionType.valueOf(type) }.toSet()
+                    val failSubscription = Subscription(
+                        types = failType,
+                        groups = emptySet(),
+                        users = "\${$PIPELINE_START_USER_NAME}",
+                        content = NotifyTemplateUtils.getCommonShutdownFailureContent()
+                    )
+                    PipelineSetting(
+                        pipelineId = pipelineId,
+                        pipelineName = model.name,
+                        desc = model.desc ?: "",
+                        maxPipelineResNum = maxPipelineResNum,
+                        failSubscription = failSubscription,
+                        failSubscriptionList = listOf(failSubscription),
+                        pipelineAsCodeSettings = PipelineAsCodeSettings()
+                    )
+                }
 
                 if (model.instanceFromTemplate != true) {
                     if (null == pipelineSettingDao.getSetting(transactionContext, projectId, pipelineId)) {
@@ -715,45 +740,24 @@ class PipelineRepositoryService constructor(
                             if (useLabelSettings != true) {
                                 setting.labels = listOf()
                             }
-                            setting.pipelineAsCodeSettings = null
+                            setting.pipelineAsCodeSettings = PipelineAsCodeSettings()
                             pipelineSettingDao.saveSetting(dslContext, setting)
                             newSetting = setting
                         } else {
                             // #3311
                             // 蓝盾正常的BS渠道的默认没设置setting的，将发通知改成失败才发通知
                             // 而其他渠道的默认没设置则什么通知都设置为不发
-                            val notifyTypes = if (channelCode == ChannelCode.BS) {
-                                pipelineInfoExtService.failNotifyChannel()
-                            } else {
-                                ""
-                            }
-
-                            // 特定渠道保留特定版本
-                            val filterList = versionConfigure.specChannels.split(",")
-                            val maxPipelineResNum = if (channelCode.name in filterList) {
-                                versionConfigure.specChannelMaxKeepNum
-                            } else {
-                                versionConfigure.maxKeepNum
-                            }
-                            pipelineSettingDao.insertNewSetting(
+                            pipelineSettingDao.saveSetting(
                                 dslContext = transactionContext,
-                                projectId = projectId,
-                                pipelineId = pipelineId,
-                                pipelineName = model.name,
-                                failNotifyTypes = notifyTypes,
-                                maxPipelineResNum = maxPipelineResNum,
-                                pipelineAsCodeSettings = customSetting?.pipelineAsCodeSettings,
-                                settingVersion = settingVersion
-                            )?.let { setting ->
-                                pipelineSettingVersionDao.saveSetting(
-                                    dslContext = transactionContext,
-                                    setting = setting,
-                                    id = client.get(ServiceAllocIdResource::class)
-                                        .generateSegmentId(PIPELINE_SETTING_VERSION_BIZ_TAG_NAME).data,
-                                    version = settingVersion
-                                )
-                                newSetting = setting
-                            }
+                                setting = newSetting
+                            )
+                            pipelineSettingVersionDao.saveSetting(
+                                dslContext = transactionContext,
+                                setting = newSetting,
+                                id = client.get(ServiceAllocIdResource::class)
+                                    .generateSegmentId(PIPELINE_SETTING_VERSION_BIZ_TAG_NAME).data,
+                                version = settingVersion
+                            )
                         }
                     } else {
                         pipelineSettingDao.updateSetting(
@@ -762,17 +766,17 @@ class PipelineRepositoryService constructor(
                             pipelineId = pipelineId,
                             name = model.name,
                             desc = model.desc ?: ""
-                        )?.let { newSetting = it }
+                        )?.let { setting ->
+                            pipelineSettingVersionDao.saveSetting(
+                                dslContext = transactionContext,
+                                setting = setting,
+                                id = client.get(ServiceAllocIdResource::class)
+                                    .generateSegmentId(PIPELINE_SETTING_VERSION_BIZ_TAG_NAME).data,
+                                version = settingVersion
+                            )
+                            newSetting = setting
+                        }
                     }
-                } else {
-                    pipelineSettingDao.saveSetting(transactionContext, newSetting)
-                    pipelineSettingVersionDao.saveSetting(
-                        dslContext = transactionContext,
-                        setting = newSetting,
-                        version = 1,
-                        id = client.get(ServiceAllocIdResource::class)
-                            .generateSegmentId(PIPELINE_SETTING_VERSION_BIZ_TAG_NAME).data
-                    )
                 }
                 // 如果不是草稿保存，最新版本永远是新增逻辑
                 versionName = if (versionStatus == VersionStatus.BRANCH) {
