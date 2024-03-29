@@ -56,7 +56,7 @@
         background: #E1ECFF;
         border-radius: 12px;
         width: 60px;
-        height: 24px;
+        height: 22px;
         line-height: 1;
         display: grid;
         align-items: center;

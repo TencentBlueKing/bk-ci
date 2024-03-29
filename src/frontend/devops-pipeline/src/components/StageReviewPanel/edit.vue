@@ -3,7 +3,7 @@
         <form-field :label="$t('stageReview.stageInConditions')" class="stage-rule">
             <bk-radio-group class="stage-review-radio-group" v-model="manualTrigger">
                 <bk-radio :disabled="disabled" :value="false">{{ $t('disableStageReviewRadioLabel') }}</bk-radio>
-                <bk-radio :disabled="disabled" :value="true" style="marginLeft:82px">{{ $t('enableStageReviewRadioLabel') }}</bk-radio>
+                <bk-radio :disabled="disabled" :value="true" style="margin-left:82px">{{ $t('enableStageReviewRadioLabel') }}</bk-radio>
             </bk-radio-group>
         </form-field>
         <template v-if="manualTrigger">
@@ -26,11 +26,11 @@
             </form-field>
 
             <form-field v-show="showNotifyGroup" :disabled="disabled" required :label="$t('weChatGroupID')" class="mt14" :is-error="!validWeChatGroupID" :error-msg="$t('stageWeChatGroupIDError')">
-                <vuex-input name="notifyGroup" :placeholder="$t('notifyGroupDesc')" required :handle-change="handleUpdateNotifyGroup" :value="notifyGroup"></vuex-input>
+                <vuex-input name="notifyGroup" :disabled="disabled" :placeholder="$t('notifyGroupDesc')" required :handle-change="handleUpdateNotifyGroup" :value="notifyGroup"></vuex-input>
             </form-field>
 
             <form-field :disabled="disabled" class="mt14">
-                <atom-checkbox name="markdownContent" :text="$t('markdownContentLabel')" :handle-change="handleUpdateStageControl" :value="markdownContent"></atom-checkbox>
+                <atom-checkbox :disabled="disabled" name="markdownContent" :text="$t('markdownContentLabel')" :handle-change="handleUpdateStageControl" :value="markdownContent"></atom-checkbox>
             </form-field>
 
             <form-field :required="true" :disabled="disabled" :label="$t('stageTimeoutLabel')" class="mt14" :is-error="!validTimeout" :desc="$t('stageTimeoutDesc')" :error-msg="$t('stageTimeoutError')">
