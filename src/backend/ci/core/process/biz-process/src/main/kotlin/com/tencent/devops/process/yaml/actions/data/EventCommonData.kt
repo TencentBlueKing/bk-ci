@@ -38,6 +38,8 @@ import com.tencent.devops.common.api.enums.ScmType
  * @param projectName Git平台项目全称: namespace/name
  * @param eventType 当前事件类型 仅在github需要
  * @param sourceGitProjectId mr触发时的源Git库
+ * @param sourceGitNamespace mr触发时的源git库namespace
+ * @param fork 是否是fork库
  */
 data class EventCommonData(
     val gitProjectId: String,
@@ -48,7 +50,8 @@ data class EventCommonData(
     val projectName: String?,
     val eventType: String? = null,
     val sourceGitProjectId: String? = null,
-    val sourceGitNamespace: String? = null
+    val sourceGitNamespace: String? = null,
+    val fork: Boolean = false
 )
 
 /**

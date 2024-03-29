@@ -83,11 +83,17 @@ object GitActionCommon {
         }
     }
 
-    fun getRef(namespace: String?, branch: String): String {
-        return if (namespace.isNullOrBlank()) {
-            branch
+    /**
+     * 如果是fork库,则分支使用fork namespace:branch
+     */
+    fun getRealRef(action: BaseAction): String {
+        val fork = action.data.eventCommon.fork
+        val branch = action.data.eventCommon.branch
+        val sourceGitNamespace = action.data.eventCommon.sourceGitNamespace
+        return if (fork) {
+            "$sourceGitNamespace:$branch"
         } else {
-            "$namespace:$branch"
+            branch
         }
     }
 
