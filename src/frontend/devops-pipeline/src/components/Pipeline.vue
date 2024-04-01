@@ -98,13 +98,13 @@
 
 <script>
     import BkPipeline, { loadI18nMessages } from 'bkui-pipeline'
-import { mapActions, mapGetters, mapState } from 'vuex'
-import { areDeeplyEqual, isObject } from '../utils/util'
-import AtomPropertyPanel from './AtomPropertyPanel'
-import AtomSelector from './AtomSelector'
-import ContainerPropertyPanel from './ContainerPropertyPanel'
-import StagePropertyPanel from './StagePropertyPanel'
-import StageReviewPanel from './StageReviewPanel'
+    import { mapActions, mapGetters, mapState } from 'vuex'
+    import { areDeeplyEqual, isObject } from '../utils/util'
+    import AtomPropertyPanel from './AtomPropertyPanel'
+    import AtomSelector from './AtomSelector'
+    import ContainerPropertyPanel from './ContainerPropertyPanel'
+    import StagePropertyPanel from './StagePropertyPanel'
+    import StageReviewPanel from './StageReviewPanel'
     export default {
         components: {
             StagePropertyPanel,
