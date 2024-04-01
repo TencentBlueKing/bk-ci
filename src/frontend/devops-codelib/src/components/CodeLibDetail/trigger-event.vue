@@ -4,7 +4,7 @@
             <bk-date-picker
                 class="date-picker mr15"
                 :value="daterange"
-                type="daterange"
+                type="datetimerange"
                 :placeholder="$t('codelib.选择日期范围')"
                 :options="{
                     disabledDate: time => time.getTime() > Date.now()
