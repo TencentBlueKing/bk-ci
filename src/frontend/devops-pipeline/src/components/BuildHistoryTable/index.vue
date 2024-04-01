@@ -250,7 +250,7 @@
                     </template>
                     <template v-else-if="col.id === 'pipelineVersion'" v-slot="props">
                         <div>
-                            <span>{{ props.row[col.id] }}</span>
+                            <span>{{ props.row.pipelineVersionName ?? '--' }}</span>
                             <logo
                                 v-if="isNotLatest(props)"
                                 v-bk-tooltips="$t('details.pipelineVersionDiffTips')"

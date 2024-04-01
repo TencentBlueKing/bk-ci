@@ -66,8 +66,9 @@
                             </section>
                         </div>
                     </bk-popover>
-
-                    {{execDetail.curVersionName }}
+                    <span v-bk-overflow-tips class="pipeline-cur-version-span">
+                        {{execDetail.curVersionName}}
+                    </span>
                 </div>
             </div>
             <div class="exec-remark-block">
@@ -266,6 +267,7 @@
     > div {
       display: flex;
       flex-direction: column;
+      overflow: hidden;
       &:first-child {
         margin-left: -16px;
       }
@@ -335,6 +337,11 @@
       display: flex;
       align-items: center;
       line-height: 48px;
+      .pipeline-cur-version-span {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
 
       .exec-remark {
         width: 100%;

@@ -17,7 +17,7 @@
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-import { buildEnvMap, jobConst, semverVersionKeySet } from '@/utils/pipelineConst'
+import { buildEnvMap, jobConst, semverVersionKeySet, VERSION_STATUS_ENUM } from '@/utils/pipelineConst'
 import Vue from 'vue'
 import { getAtomModalKey, isCodePullAtom, isNewAtomTemplate, isNormalContainer, isTriggerContainer, isVmContainer } from './atomUtil'
 import { buildNoRules, defaultBuildNo, platformList } from './constants'
@@ -37,13 +37,13 @@ export default {
         return getters.hasDraftPipeline ? state.pipelineInfo?.baseVersionName : '--'
     },
     isBranchVersion: state => {
-        return state.activePipelineVersion?.status === 'BRANCH'
+        return state.activePipelineVersion?.status === VERSION_STATUS_ENUM.BRANCH
     },
     isReleasePipeline: state => {
-        return !state.pipelineInfo?.onlyDraft
+        return state.pipelineInfo?.latestVersionStatus === VERSION_STATUS_ENUM.RELEASED
     },
     isReleaseVersion: state => {
-        return state.activePipelineVersion?.version === state.pipelineInfo?.releaseVersion && state.activePipelineVersion?.status === 'RELEASED'
+        return state.activePipelineVersion?.version === state.pipelineInfo?.releaseVersion && state.activePipelineVersion?.status === VERSION_STATUS_ENUM.RELEASED
     },
     isOutdatedVersion: state => {
         return state.activePipelineVersion?.version < state.pipelineInfo?.releaseVersion

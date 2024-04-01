@@ -73,7 +73,8 @@
                         size="12"
                         v-bk-tooltips.right="$t('pipelineConstraintModeTips')"
                     />
-                    <bk-tag v-if="props.row.onlyDraft" theme="success" class="draft-tag">{{ $t('draft') }}</bk-tag>
+                    <bk-tag v-if="props.row.onlyDraftVersion" theme="success" class="draft-tag">{{ $t('draft') }}</bk-tag>
+                    <bk-tag v-else-if="props.row.onlyBranchVersion" theme="warning" class="draft-tag">{{ $t('branch') }}</bk-tag>
                 </div>
             </template>
         </bk-table-column>
@@ -244,7 +245,7 @@
                 <template
                     v-else-if="props.row.hasPermission && !props.row.delete"
                 >
-                    <span v-if="props.row.onlyDraft">
+                    <span v-if="!props.row.released">
                         <bk-button
                             text
                             class="exec-pipeline-btn"
