@@ -141,12 +141,13 @@ class ApigwRemoteDevResourceImpl @Autowired constructor(private val client: Clie
     override fun listWorkspacesWithProjectId(
         appCode: String?,
         apigwType: String?,
-        projectId: String
+        projectId: String,
+        ip: String?
     ): Result<List<WeSecProjectWorkspace>> {
-        logger.info("List  projects workspace ,projectId:$projectId")
+        logger.info("listWorkspacesWithProjectId|appcode=$appCode|projectId=$projectId|ip=$ip")
         return client.get(ServiceRemoteDevResource::class).getProjectWorkspace(
             projectId = projectId,
-            ip = null,
+            ip = ip,
             businessLineName = null,
             ownerName = null
         )
