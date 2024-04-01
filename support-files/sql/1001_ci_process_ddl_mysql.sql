@@ -1195,7 +1195,7 @@ CREATE TABLE IF NOT EXISTS `T_PIPELINE_YAML_INFO`
     `FILE_PATH`    varchar(512)                           NOT NULL DEFAULT '' COMMENT '文件路径',
     `DIRECTORY`    varchar(512) default '.ci'             not null comment 'yaml文件目录',
     `PIPELINE_ID`  varchar(64)                            NOT NULL DEFAULT '' COMMENT '流水线ID',
-    `DELETE`       bit(1)       DEFAULT b'0' COMMENT '是否删除',
+    `DEFAULT_FILE_EXISTS`       bit(1)       DEFAULT b'1' COMMENT 'yaml文件是否在默认分支存在',
     `STATUS`       varchar(10)  DEFAULT 'OK' COMMENT '状态',
     `CREATOR`      varchar(64)                            NOT NULL COMMENT '创建人',
     `MODIFIER`     varchar(64)                            NOT NULL COMMENT '修改人',

@@ -218,6 +218,7 @@ class PipelineYamlRepositoryService @Autowired constructor(
             } else {
                 PipelineYamlStatus.UN_MERGED.name
             },
+            defaultFileExists = isDefaultBranch,
             version = version,
             userId = userId,
             webhooks = webhooks
@@ -278,6 +279,7 @@ class PipelineYamlRepositoryService @Autowired constructor(
             commitTime = commitTime,
             ref = ref,
             defaultBranch = defaultBranch,
+            isDefaultBranch = isDefaultBranch,
             pipelineId = deployPipelineResult.pipelineId,
             version = deployPipelineResult.version,
             userId = action.data.getUserId(),
@@ -427,6 +429,7 @@ class PipelineYamlRepositoryService @Autowired constructor(
             filePath = filePath
         )
         val defaultBranch = action.data.context.defaultBranch
+        val isDefaultBranch = gitPushResult.branch == defaultBranch
         if (pipelineYamlInfo == null) {
             logger.info("push yaml pipeline|create yaml|$projectId|$pipelineId|$version")
             val directory = GitActionCommon.getCiDirectory(filePath)
@@ -436,11 +439,12 @@ class PipelineYamlRepositoryService @Autowired constructor(
                 filePath = filePath,
                 directory = directory,
                 pipelineId = pipelineId,
-                status = if (gitPushResult.branch == defaultBranch) {
+                status = if (isDefaultBranch) {
                     PipelineYamlStatus.OK.name
                 } else {
                     PipelineYamlStatus.UN_MERGED.name
                 },
+                defaultFileExists = isDefaultBranch,
                 userId = userId,
                 ref = branch,
                 commitId = commitId,
@@ -473,6 +477,7 @@ class PipelineYamlRepositoryService @Autowired constructor(
                     commitTime = commitTime,
                     blobId = blobId,
                     defaultBranch = defaultBranch,
+                    isDefaultBranch = isDefaultBranch,
                     pipelineId = pipelineId,
                     version = version,
                     userId = userId,

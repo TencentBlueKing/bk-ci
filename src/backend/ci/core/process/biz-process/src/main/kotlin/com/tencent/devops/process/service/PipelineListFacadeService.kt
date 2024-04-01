@@ -53,6 +53,7 @@ import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.PipelineInstanceTypeEnum
 import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeEventType
+import com.tencent.devops.common.pipeline.pojo.setting.PipelineRunLockType
 import com.tencent.devops.common.service.utils.LogUtils
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.model.process.tables.TPipelineSetting
@@ -69,6 +70,7 @@ import com.tencent.devops.process.engine.dao.PipelineBuildSummaryDao
 import com.tencent.devops.process.engine.dao.PipelineBuildTaskDao
 import com.tencent.devops.process.engine.dao.PipelineInfoDao
 import com.tencent.devops.process.engine.dao.template.TemplatePipelineDao
+import com.tencent.devops.process.engine.pojo.BuildInfo
 import com.tencent.devops.process.engine.pojo.PipelineFilterByLabelInfo
 import com.tencent.devops.process.engine.pojo.PipelineFilterParam
 import com.tencent.devops.process.engine.pojo.PipelineInfo
@@ -93,9 +95,8 @@ import com.tencent.devops.process.pojo.classify.PipelineViewFilterByName
 import com.tencent.devops.process.pojo.classify.PipelineViewPipelinePage
 import com.tencent.devops.process.pojo.classify.enums.Logic
 import com.tencent.devops.process.pojo.pipeline.PipelineCount
+import com.tencent.devops.process.pojo.pipeline.PipelineYamlInfo
 import com.tencent.devops.process.pojo.pipeline.SimplePipeline
-import com.tencent.devops.common.pipeline.pojo.setting.PipelineRunLockType
-import com.tencent.devops.process.engine.pojo.BuildInfo
 import com.tencent.devops.process.pojo.template.TemplatePipelineInfo
 import com.tencent.devops.process.service.label.PipelineGroupService
 import com.tencent.devops.process.service.pipeline.PipelineStatusService
@@ -1384,9 +1385,9 @@ class PipelineListFacadeService @Autowired constructor(
         val pipelineViewNameMap = pipelineViewGroupService.getViewNameMap(projectId, pipelineIds)
 
         // yaml流水线信息
-        val pipelineYamlInfoList = pipelineYamlService.listEnablePacPipelineMap(
+        val pipelineYamlInfoMap = pipelineYamlService.listEnablePacPipelineMap(
             projectId = projectId, pipelineIds = pipelineIds.toList()
-        ).map { it.pipelineId }
+        ).associateBy { it.pipelineId }
 
         // 完善数据
         finalPipelines(
@@ -1400,7 +1401,7 @@ class PipelineListFacadeService @Autowired constructor(
             pipelineBuildMap = pipelineBuildMap,
             buildTaskTotalCountMap = buildTaskTotalCountMap,
             buildTaskFinishCountMap = buildTaskFinishCountMap,
-            pipelineYamlInfoList = pipelineYamlInfoList
+            pipelineYamlInfoMap = pipelineYamlInfoMap
         )
 
         return pipelines
@@ -1417,7 +1418,7 @@ class PipelineListFacadeService @Autowired constructor(
         pipelineBuildMap: Map<String, BuildInfo>,
         buildTaskTotalCountMap: Map<String, Int>,
         buildTaskFinishCountMap: Map<String, Int>,
-        pipelineYamlInfoList: List<String>
+        pipelineYamlInfoMap: Map<String, PipelineYamlInfo>
     ) {
         pipelines.forEach {
             val pipelineId = it.pipelineId
@@ -1492,7 +1493,7 @@ class PipelineListFacadeService @Autowired constructor(
                 it.lock = PipelineRunLockType.checkLock(pipelineSettingRecord.get(tSetting.RUN_LOCK_TYPE))
                 it.buildNumRule = pipelineSettingRecord.get(tSetting.BUILD_NUM_RULE)
             }
-            it.pac = pipelineYamlInfoList.contains(pipelineId)
+            it.yamlDeleted = pipelineYamlInfoMap[pipelineId]?.defaultFileExists ?: false
         }
     }
 

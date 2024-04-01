@@ -28,10 +28,8 @@
 
 package com.tencent.devops.process.yaml
 
-import com.tencent.devops.common.api.constant.coerceAtMaxLength
 import com.tencent.devops.common.api.enums.RepositoryType
 import com.tencent.devops.common.api.model.SQLPage
-import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.model.process.tables.records.TPipelineYamlBranchFileRecord
 import com.tencent.devops.process.engine.dao.PipelineInfoDao
@@ -65,7 +63,6 @@ class PipelineYamlService(
 
     companion object {
         private val logger = LoggerFactory.getLogger(PipelineYamlService::class.java)
-        private const val MAX_FILE_PATH_LENGTH = 512
     }
 
     fun save(
@@ -75,6 +72,7 @@ class PipelineYamlService(
         directory: String,
         pipelineId: String,
         status: String,
+        defaultFileExists: Boolean,
         userId: String,
         blobId: String,
         commitId: String,
@@ -93,6 +91,7 @@ class PipelineYamlService(
                 directory = directory,
                 pipelineId = pipelineId,
                 status = status,
+                defaultFileExists = defaultFileExists,
                 userId = userId
             )
             pipelineYamlVersionDao.save(
@@ -133,6 +132,7 @@ class PipelineYamlService(
         commitTime: LocalDateTime,
         ref: String,
         defaultBranch: String?,
+        isDefaultBranch: Boolean,
         version: Int,
         webhooks: List<PipelineWebhookVersion>
     ) {
@@ -143,6 +143,7 @@ class PipelineYamlService(
                 projectId = projectId,
                 repoHashId = repoHashId,
                 filePath = filePath,
+                isDefaultBranch = isDefaultBranch,
                 userId = userId
             )
             pipelineYamlVersionDao.save(
@@ -414,17 +415,13 @@ class PipelineYamlService(
         repoHashId: String,
         filePath: String
     ) {
-        val deleteTime = DateTimeUtil.toDateTime(LocalDateTime.now(), "yyMMddHHmmSS")
-        val deleteFilePath = "$filePath[$deleteTime]"
         dslContext.transaction { configuration ->
             val transactionContext = DSL.using(configuration)
             pipelineYamlInfoDao.delete(
                 dslContext = transactionContext,
-                userId = userId,
                 projectId = projectId,
                 repoHashId = repoHashId,
-                filePath = filePath,
-                deleteFilePath = deleteFilePath.coerceAtMaxLength(MAX_FILE_PATH_LENGTH)
+                filePath = filePath
             )
             pipelineYamlVersionDao.deleteAll(
                 dslContext = transactionContext,
