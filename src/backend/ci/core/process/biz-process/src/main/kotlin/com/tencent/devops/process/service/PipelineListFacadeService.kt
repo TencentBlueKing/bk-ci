@@ -1541,7 +1541,7 @@ class PipelineListFacadeService @Autowired constructor(
                     updater = it.lastModifyUser,
                     creator = it.creator,
                     delete = it.delete,
-                    onlyDraft = it.onlyDraft == true
+                    latestVersionStatus = it.latestVersionStatus
                 )
             )
         }
@@ -1865,7 +1865,7 @@ class PipelineListFacadeService @Autowired constructor(
             createTime = pipelineInfo.createTime,
             updateTime = pipelineInfo.updateTime,
             viewNames = pipelineViewNames,
-            onlyDraft = pipelineInfo.onlyDraft == true
+            latestVersionStatus = pipelineInfo.latestVersionStatus
         )
     }
 
