@@ -49,7 +49,7 @@
                 v-for="(pipeline, index) in removedPipelines"
                 :key="pipeline.pipelineId"
                 :class="{
-                    'no-permission-pipeline': isDeleteType && (!pipeline.hasPermission || pipeline.pac)
+                    'no-permission-pipeline': isDeleteType && (!pipeline.hasPermission || pipeline.yamlDeleted)
                 }"
             >
                 <span v-bk-overflow-tips class="remove-pipeline-name">{{ pipeline.name }}</span>
@@ -79,9 +79,9 @@
                     </bk-tag>
                 </div>
                 <span
-                    v-if="!pipeline.hasPermission || pipeline.pac"
+                    v-if="!pipeline.hasPermission || pipeline.yamlDeleted"
                     v-bk-tooltips="pipeline.tooltips"
-                    :class="`remove-pieline-type-icon devops-icon icon-${pipeline.pac ? 'yaml' : 'lock'}`"
+                    :class="`remove-pieline-type-icon devops-icon icon-${pipeline.yamlDeleted ? 'yaml' : 'lock'}`"
                 />
             </li>
         </ul>
@@ -156,7 +156,7 @@
                 return this.pipelineList.filter(pipeline => pipeline.permissions.canDelete)
             },
             pacPipelines () {
-                return this.pipelineList.filter(pipeline => pipeline.pac)
+                return this.pipelineList.filter(pipeline => pipeline.yamlDeleted)
             },
             canNotDeletePipelineLength () {
                 return this.noPermissionPipelineLength + this.pacPipelines.length
@@ -165,7 +165,7 @@
                 return this.pipelineList.length - this.hasPermissionPipelines.length
             },
             removedPipelines () {
-                const list = this.pipelineList.filter(pipeline => !this.hideCanNotDeletePipelines || (pipeline.hasPermission && !pipeline.pac))
+                const list = this.pipelineList.filter(pipeline => !this.hideCanNotDeletePipelines || (pipeline.hasPermission && !pipeline.yamlDeleted))
                 return list.map((pipeline, index) => {
                     const viewNames = pipeline.viewNames ?? []
                     const visibleTagCount = this.visibleTagCountList[index] ?? viewNames.length
@@ -178,11 +178,11 @@
                         groups: viewNames.slice(0, visibleTagCount),
                         hiddenGroups: viewNames.slice(visibleTagCount).join(';'),
                         overflowCount,
-                        pac: pipeline.pac,
+                        yamlDeleted: pipeline.yamlDeleted,
                         showMoreTag: this.visibleTagCountList[index] === undefined || (overflowCount > 0),
-                        tooltips: (!pipeline.permissions.canDelete || pipeline.pac)
+                        tooltips: (!pipeline.permissions.canDelete || pipeline.yamlDeleted)
                             ? {
-                                content: this.$t(pipeline.pac ? 'pacModePipelineDeleteTips' : 'noPermissionToDelete'),
+                                content: this.$t(pipeline.yamlDeleted ? 'pacModePipelineDeleteTips' : 'noPermissionToDelete'),
                                 placement: 'top',
                                 delay: [300, 0],
                                 allowHTML: false
