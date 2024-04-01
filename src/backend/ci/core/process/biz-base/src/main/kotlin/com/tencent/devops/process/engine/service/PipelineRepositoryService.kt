@@ -695,15 +695,15 @@ class PipelineRepositoryService constructor(
                         groups = emptySet(),
                         users = "\${$PIPELINE_START_USER_NAME}",
                         content = NotifyTemplateUtils.getCommonShutdownFailureContent()
-                    )
+                    ).takeIf { failType.isNotEmpty() }
                     PipelineSetting(
                         projectId = projectId,
                         pipelineId = pipelineId,
                         pipelineName = model.name,
                         desc = model.desc ?: "",
                         maxPipelineResNum = maxPipelineResNum,
-                        failSubscription = failSubscription,
-                        failSubscriptionList = listOf(failSubscription),
+                        failSubscription = failSubscription ?: Subscription(),
+                        failSubscriptionList = failSubscription?.let { listOf(it) },
                         pipelineAsCodeSettings = PipelineAsCodeSettings()
                     )
                 }
@@ -724,7 +724,7 @@ class PipelineRepositoryService constructor(
                                     users = "\${$PIPELINE_START_USER_NAME}",
                                     content = NotifyTemplateUtils.getCommonShutdownSuccessContent()
                                 )
-                                setting.successSubscriptionList = listOf(setting.successSubscription)
+                                setting.successSubscriptionList = null
                                 setting.failSubscription = Subscription(
                                     types = setOf(PipelineSubscriptionType.EMAIL, PipelineSubscriptionType.RTX),
                                     groups = emptySet(),

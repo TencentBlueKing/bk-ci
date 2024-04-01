@@ -136,8 +136,8 @@ class PipelineSettingDao {
     ): Int {
         with(TPipelineSetting.T_PIPELINE_SETTING) {
             // #6090 先查询存在情况再做刷新或插入
-            val successSubscriptionList = setting.successSubscriptionList ?: listOf(setting.successSubscription)
-            val failSubscriptionList = setting.failSubscriptionList ?: listOf(setting.failSubscription)
+            val successSubscriptionList = setting.successSubscriptionList ?: emptyList()
+            val failSubscriptionList = setting.failSubscriptionList ?: emptyList()
             val insert = dslContext.insertInto(
                 this,
                 PROJECT_ID,
