@@ -1498,5 +1498,7 @@
   "versionRule": "Version Rule",
   "versionRuleP": "P: Pipeline arrangement version, including Stage, Job, Step, and variables",
   "versionRuleT": "T: Pipeline trigger version",                  
-  "versionRuleA": "Additional bits: Modified version of other information of the pipeline, such as name, description, running settings, etc."
+  "versionRuleA": "Additional bits: Modified version of other information of the pipeline, such as name, description, running settings, etc.",
+  "willRelease": "To be released",
+  "clickToAddStage": "Click to add the first pipeline stage"
 }

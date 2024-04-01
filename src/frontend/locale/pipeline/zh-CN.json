@@ -1499,7 +1499,9 @@
   "versionRule": "版本号规则",
   "versionRuleP": "P：流水线编排版本，包括Stage、Job、Step、变量",
   "versionRuleT": "T：流水线触发器版本",                  
-  "versionRuleA": "附加位：流水线其他信息修改版本，如名称、描述、运行设置等"                 
+  "versionRuleA": "附加位：流水线其他信息修改版本，如名称、描述、运行设置等",
+  "willRelease": "待发布",
+  "clickToAddStage": "点击添加第一个流水线Stage"
 }
 
 
