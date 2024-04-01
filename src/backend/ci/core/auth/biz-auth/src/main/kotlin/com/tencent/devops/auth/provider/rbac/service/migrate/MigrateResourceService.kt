@@ -50,6 +50,7 @@ import com.tencent.devops.auth.service.iam.MigrateCreatorFixService
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.api.AuthTokenApi
+import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
 import com.tencent.devops.common.auth.code.ProjectAuthServiceCode
 import com.tencent.devops.common.service.trace.TraceTag
 import org.jooq.DSLContext
@@ -320,13 +321,24 @@ class MigrateResourceService @Autowired constructor(
             createMode = false
         )
         defaultGroupConfigs.forEach { groupConfig ->
-            val resourceGroupInfo = authResourceGroupDao.get(
-                dslContext = dslContext,
-                projectCode = projectCode,
-                resourceType = AuthResourceType.PROJECT.value,
-                resourceCode = projectCode,
-                groupCode = groupConfig.groupCode
-            ) ?: return@forEach
+            val resourceGroupInfo = if (groupConfig.groupName == BkAuthGroup.CI_MANAGER.groupName) {
+                authResourceGroupDao.getByGroupName(
+                    dslContext = dslContext,
+                    projectCode = projectCode,
+                    resourceType = AuthResourceType.PROJECT.value,
+                    resourceCode = projectCode,
+                    groupName = groupConfig.groupName
+                )
+            } else {
+                authResourceGroupDao.get(
+                    dslContext = dslContext,
+                    projectCode = projectCode,
+                    resourceType = AuthResourceType.PROJECT.value,
+                    resourceCode = projectCode,
+                    groupCode = groupConfig.groupCode
+                )
+            } ?: return@forEach
+
             // 项目下用户组注册监控权限资源
             permissionGroupPoliciesService.grantGroupPermission(
                 authorizationScopesStr = groupConfig.authorizationScopes,

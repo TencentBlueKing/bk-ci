@@ -165,35 +165,33 @@ class RbacAuthConfiguration {
     fun permissionResourceGroupService(
         iamV2ManagerService: V2ManagerService,
         authResourceService: AuthResourceService,
-        permissionGradeManagerService: PermissionGradeManagerService,
         permissionSubsetManagerService: PermissionSubsetManagerService,
         permissionResourceService: PermissionResourceService,
         permissionGroupPoliciesService: PermissionGroupPoliciesService,
         authResourceGroupDao: AuthResourceGroupDao,
-        dslContext: DSLContext
+        dslContext: DSLContext,
+        permissionGradeManagerService: PermissionGradeManagerService
     ) = RbacPermissionResourceGroupService(
         iamV2ManagerService = iamV2ManagerService,
         authResourceService = authResourceService,
-        permissionGradeManagerService = permissionGradeManagerService,
         permissionSubsetManagerService = permissionSubsetManagerService,
         permissionResourceService = permissionResourceService,
         permissionGroupPoliciesService = permissionGroupPoliciesService,
         authResourceGroupDao = authResourceGroupDao,
-        dslContext = dslContext
+        dslContext = dslContext,
+        permissionGradeManagerService = permissionGradeManagerService
     )
 
     @Bean
     fun permissionResourceMemberService(
         authResourceService: AuthResourceService,
         iamV2ManagerService: V2ManagerService,
-        permissionGradeManagerService: PermissionGradeManagerService,
         authResourceGroupDao: AuthResourceGroupDao,
         dslContext: DSLContext,
         deptService: DeptService
     ) = RbacPermissionResourceMemberService(
         authResourceService = authResourceService,
         iamV2ManagerService = iamV2ManagerService,
-        permissionGradeManagerService = permissionGradeManagerService,
         authResourceGroupDao = authResourceGroupDao,
         dslContext = dslContext,
         deptService = deptService
