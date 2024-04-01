@@ -116,7 +116,7 @@ class PipelineViewGroupServiceTest : BkCiAbstractTest() {
         1, //    setId(id);
         "test", //    setPipelineNamePinyin(pipelineNamePinyin);
         now, //    setLatestStartTime(latestStartTime);
-        false //    setOnlyDraft(false);
+        "RELEASED" //    setLatestVersionStatus("RELEASED");
     )
 
     private val pipelineViewForm = PipelineViewForm(

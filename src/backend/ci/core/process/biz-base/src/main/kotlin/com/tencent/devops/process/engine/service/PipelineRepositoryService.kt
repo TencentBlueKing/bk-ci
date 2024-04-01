@@ -697,6 +697,7 @@ class PipelineRepositoryService constructor(
                         content = NotifyTemplateUtils.getCommonShutdownFailureContent()
                     )
                     PipelineSetting(
+                        projectId = projectId,
                         pipelineId = pipelineId,
                         pipelineName = model.name,
                         desc = model.desc ?: "",
