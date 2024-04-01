@@ -640,8 +640,7 @@ class PipelineRepositoryService constructor(
         var triggerVersion = 1
         val settingVersion = 1
         // 如果是仅有草稿的状态，resource表的版本号先设为0作为基准
-        if (versionStatus == VersionStatus.COMMITTING ||
-            versionStatus == VersionStatus.BRANCH) {
+        if (versionStatus == VersionStatus.COMMITTING || versionStatus == VersionStatus.BRANCH) {
             versionNum = 0
             pipelineVersion = 0
             triggerVersion = 0
@@ -742,24 +741,17 @@ class PipelineRepositoryService constructor(
                                 setting.labels = listOf()
                             }
                             setting.pipelineAsCodeSettings = PipelineAsCodeSettings()
-                            pipelineSettingDao.saveSetting(dslContext, setting)
                             newSetting = setting
-                        } else {
-                            // #3311
-                            // 蓝盾正常的BS渠道的默认没设置setting的，将发通知改成失败才发通知
-                            // 而其他渠道的默认没设置则什么通知都设置为不发
-                            pipelineSettingDao.saveSetting(
-                                dslContext = transactionContext,
-                                setting = newSetting
-                            )
-                            pipelineSettingVersionDao.saveSetting(
-                                dslContext = transactionContext,
-                                setting = newSetting,
-                                id = client.get(ServiceAllocIdResource::class)
-                                    .generateSegmentId(PIPELINE_SETTING_VERSION_BIZ_TAG_NAME).data,
-                                version = settingVersion
-                            )
                         }
+                        // 如果不需要覆盖模板内容，则直接保存传值或默认值
+                        pipelineSettingDao.saveSetting(transactionContext, newSetting)
+                        pipelineSettingVersionDao.saveSetting(
+                            dslContext = transactionContext,
+                            setting = newSetting,
+                            id = client.get(ServiceAllocIdResource::class)
+                                .generateSegmentId(PIPELINE_SETTING_VERSION_BIZ_TAG_NAME).data,
+                            version = settingVersion
+                        )
                     } else {
                         pipelineSettingDao.updateSetting(
                             dslContext = transactionContext,
