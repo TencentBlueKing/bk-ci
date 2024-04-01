@@ -28,7 +28,7 @@
                         v-bk-tooltips="$t('pipelineConstraintModeTips')"
                     />
                     <bk-tag v-if="pipeline.onlyDraftVersion" theme="success" class="draft-tag">{{ $t('draft') }}</bk-tag>
-                    <bk-tag v-else-if="pipeline.onlyBranchVersion" theme="warning" class="draft-tag">{{ $t('branch') }}</bk-tag>
+                    <bk-tag v-else-if="pipeline.onlyBranchVersion" theme="warning" class="draft-tag">{{ $t('history.branch') }}</bk-tag>
                 </h3>
                 <p class="bk-pipeline-card-summary">
                     <span>

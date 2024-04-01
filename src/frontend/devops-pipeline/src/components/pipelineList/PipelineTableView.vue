@@ -74,7 +74,7 @@
                         v-bk-tooltips.right="$t('pipelineConstraintModeTips')"
                     />
                     <bk-tag v-if="props.row.onlyDraftVersion" theme="success" class="draft-tag">{{ $t('draft') }}</bk-tag>
-                    <bk-tag v-else-if="props.row.onlyBranchVersion" theme="warning" class="draft-tag">{{ $t('branch') }}</bk-tag>
+                    <bk-tag v-else-if="props.row.onlyBranchVersion" theme="warning" class="draft-tag">{{ $t('history.branch') }}</bk-tag>
                 </div>
             </template>
         </bk-table-column>
