@@ -55,8 +55,8 @@ class PipelineSettingVersionDao {
         isTemplate: Boolean = false,
         id: Long? = null
     ): Int {
-        val successSubscriptionList = setting.successSubscriptionList ?: listOf(setting.successSubscription)
-        val failSubscriptionList = setting.failSubscriptionList ?: listOf(setting.failSubscription)
+        val successSubscriptionList = setting.successSubscriptionList ?: emptyList()
+        val failSubscriptionList = setting.failSubscriptionList ?: emptyList()
         with(TPipelineSettingVersion.T_PIPELINE_SETTING_VERSION) {
             return dslContext.insertInto(
                 this,
