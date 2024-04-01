@@ -37,6 +37,7 @@ import {
 } from '@/utils/permission'
 
 import { ORDER_ENUM, PIPELINE_SORT_FILED, pipelineTabIdMap } from '@/utils/pipelineConst'
+import { VERSION_STATUS_ENUM } from '../utils/pipelineConst'
 
 export default {
     data () {
@@ -103,6 +104,9 @@ export default {
                         pipelineActions: this.getPipelineActions(item, index),
                         disabled: this.isDisabledPipeline(item),
                         tooltips: this.disabledTips(item),
+                        released: item.latestVersionStatus === VERSION_STATUS_ENUM.RELEASED,
+                        onlyBranchVersion: item.latestVersionStatus === VERSION_STATUS_ENUM.BRANCH,
+                        onlyDraftVersion: item.latestVersionStatus === VERSION_STATUS_ENUM.COMMITTING,
                         historyRoute: {
                             name: 'pipelinesHistory',
                             params: {

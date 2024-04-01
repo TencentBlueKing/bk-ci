@@ -82,6 +82,7 @@
 <script>
     import Logo from '@/components/Logo'
     import { bus, SHOW_VERSION_HISTORY_SIDESLIDER } from '@/utils/bus'
+    import { VERSION_STATUS_ENUM } from '@/utils/pipelineConst'
     import { convertTime } from '@/utils/util'
     import { mapActions, mapState } from 'vuex'
     export default {
@@ -213,8 +214,8 @@
                     this.hasNext = res.count > res.page * pagination.limit
                     if (res.records.length > 0) {
                         const versions = res.records.map(item => {
-                            const isDraft = item.status === 'COMMITTING'
-                            const isBranchVersion = item.status === 'BRANCH'
+                            const isDraft = item.status === VERSION_STATUS_ENUM.COMMITTING
+                            const isBranchVersion = item.status === VERSION_STATUS_ENUM.BRANCH
 
                             return {
                                 ...item,
@@ -222,7 +223,7 @@
                                 description: isDraft ? this.$t('baseOn', [item.baseVersionName]) : (item.description || '--'),
                                 isBranchVersion,
                                 isDraft,
-                                isRelease: item.status === 'RELEASED'
+                                isRelease: item.status === VERSION_STATUS_ENUM.RELEASED
 
                             }
                         })
@@ -255,7 +256,7 @@
                 }
             },
             isCurrentVersion (version) {
-                return version?.version === this.pipelineInfo?.releaseVersion && version?.status === 'RELEASED'
+                return version?.version === this.pipelineInfo?.releaseVersion && version?.status === VERSION_STATUS_ENUM.RELEASED
             },
             searchVersion (keyword) {
                 this.searchKeyword = keyword

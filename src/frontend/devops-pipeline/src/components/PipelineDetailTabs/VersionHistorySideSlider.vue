@@ -47,7 +47,7 @@
                                 'active-version-name': row.version === releaseVersion
                             }]">
                                 <span>
-                                    <i class="devops-icon icon-edit-line" v-if="row.status === 'COMMITTING'" />
+                                    <i class="devops-icon icon-edit-line" v-if="row.isDraft" />
                                     <logo v-else-if="row.isBranchVersion" name="branch" size="16" />
                                     <i v-else class="devops-icon icon-check-circle" />
                                 </span>
@@ -94,6 +94,7 @@
 <script>
     import Logo from '@/components/Logo'
     import EmptyException from '@/components/common/exception'
+    import { VERSION_STATUS_ENUM } from '@/utils/pipelineConst'
     import { convertTime, navConfirm } from '@/utils/util'
     import SearchSelect from '@blueking/search-select'
     import '@blueking/search-select/dist/styles/index.css'
@@ -227,12 +228,12 @@
                     count: res.count
                 })
                 this.pipelineVersionList = res.records.map(item => {
-                    const isDraft = item.status === 'COMMITTING'
+                    const isDraft = item.status === VERSION_STATUS_ENUM.COMMITTING
                     return {
                         ...item,
                         isDraft,
                         canRollback: !isDraft,
-                        isBranchVersion: item.status === 'BRANCH',
+                        isBranchVersion: item.status === VERSION_STATUS_ENUM.BRANCH,
                         versionName: item.versionName || this.$t('editPage.draftVersion', [item.baseVersionName])
                     }
                 })

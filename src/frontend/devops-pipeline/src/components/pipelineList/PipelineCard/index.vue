@@ -27,7 +27,8 @@
                         size="12"
                         v-bk-tooltips="$t('pipelineConstraintModeTips')"
                     />
-                    <bk-tag v-if="pipeline.onlyDraft" theme="success" class="draft-tag">{{ $t('draft') }}</bk-tag>
+                    <bk-tag v-if="pipeline.onlyDraftVersion" theme="success" class="draft-tag">{{ $t('draft') }}</bk-tag>
+                    <bk-tag v-else-if="pipeline.onlyBranchVersion" theme="warning" class="draft-tag">{{ $t('branch') }}</bk-tag>
                 </h3>
                 <p class="bk-pipeline-card-summary">
                     <span>
@@ -44,7 +45,7 @@
             </aside>
             <aside class="bk-pipeline-card-header-right-aside">
                 <span
-                    v-if="pipeline.onlyDraft"
+                    v-if="!pipeline.released"
                     class="bk-pipeline-card-trigger-btn"
                     @click="goPipeline({
                         name: 'pipelinesEdit',
@@ -170,14 +171,14 @@
 
 <script>
     import Logo from '@/components/Logo'
-    import { statusColorMap } from '@/utils/pipelineStatus'
-    import PipelineStatusIcon from '@/components/PipelineStatusIcon'
     import ExtMenu from '@/components/pipelineList/extMenu'
+    import PipelineStatusIcon from '@/components/PipelineStatusIcon'
+    import { RECENT_USED_VIEW_ID } from '@/store/constants'
     import {
         handlePipelineNoPermission,
         RESOURCE_ACTION
     } from '@/utils/permission'
-    import { RECENT_USED_VIEW_ID } from '@/store/constants'
+    import { statusColorMap } from '@/utils/pipelineStatus'
 
     export default {
         components: {
@@ -230,7 +231,7 @@
         },
         methods: {
             exec () {
-                if (this.pipeline?.disabled || this.pipeine?.onlyDraft) return
+                if (this.pipeline?.disabled || !this.pipeine?.released) return
                 this.execPipeline(this.pipeline)
             },
             applyPermission (pipeline) {

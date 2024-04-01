@@ -277,3 +277,9 @@ export const pipelineTabIdMap = {
     notice: 'notice',
     setting: 'setting'
 }
+
+export const VERSION_STATUS_ENUM = {
+    COMMITTING: 'COMMITTING',
+    BRANCH: 'BRANCH',
+    RELEASED: 'RELEASED'
+}

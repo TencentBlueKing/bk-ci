@@ -52,6 +52,7 @@
         TriggerEvent
     } from '@/components/PipelineDetailTabs'
     import { AuthorityTab, ShowVariable } from '@/components/PipelineEditTabs/'
+    import { VERSION_STATUS_ENUM } from '@/utils/pipelineConst'
     import { mapActions, mapGetters, mapState } from 'vuex'
 
     export default {
@@ -187,8 +188,8 @@
                 try {
                     if (!this.$route.params.version) return
                     const { data } = await this.getPipelineVersionInfo(this.$route.params)
-                    const isDraft = data.status === 'COMMITTING'
-                    const isBranchVersion = data.status === 'BRANCH'
+                    const isDraft = data.status === VERSION_STATUS_ENUM.COMMITTING
+                    const isBranchVersion = data.status === VERSION_STATUS_ENUM.BRANCH
 
                     this.selectPipelineVersion({
                         ...data,
@@ -196,7 +197,7 @@
                         description: isDraft ? this.$t('baseOn', [data.baseVersionName]) : (data.description || '--'),
                         isBranchVersion,
                         isDraft,
-                        isRelease: data.status === 'RELEASED'
+                        isRelease: data.status === VERSION_STATUS_ENUM.RELEASED
                     })
                 } catch (error) {
                     console.log(error)
