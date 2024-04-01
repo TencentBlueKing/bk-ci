@@ -46,6 +46,8 @@ enum class VersionStatus(val statusName: String) {
     }
 
     fun isReleasing(): Boolean = this == RELEASED || this == BRANCH_RELEASE || this == DRAFT_RELEASE
+
+    fun isNotReleased(): Boolean = this == COMMITTING || this == BRANCH
 }
 
 enum class BranchVersionAction(val statusName: String) {

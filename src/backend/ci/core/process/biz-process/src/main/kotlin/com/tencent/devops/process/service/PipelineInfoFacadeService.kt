@@ -670,7 +670,9 @@ class PipelineInfoFacadeService @Autowired constructor(
                 val pipelineInfo = pipelineRepositoryService.getPipelineInfo(
                     projectId = projectId, pipelineId = pipelineId, queryDslContext = transactionContext
                 )
-                if (pipelineInfo?.onlyDraft != true) return@transaction
+                if (pipelineInfo?.latestVersionStatus?.isNotReleased() != true) {
+                    return@transaction
+                }
                 val branchCount = pipelineRepositoryService.getActiveBranchVersionCount(
                     projectId = projectId, pipelineId = pipelineId, queryDslContext = transactionContext
                 )

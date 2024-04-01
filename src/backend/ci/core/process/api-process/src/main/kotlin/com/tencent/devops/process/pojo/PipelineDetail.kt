@@ -81,8 +81,8 @@ data class PipelineDetail(
     val permissions: PipelinePermissions?,
     @get:Schema(title = "Lock 类型", required = false)
     val runLockType: PipelineRunLockType? = null,
-    @get:Schema(title = "仅存在草稿", required = false)
-    var onlyDraft: Boolean? = false,
+    @get:Schema(title = "最新流水线版本状态（如有任何发布版本则为发布版本）", required = false)
+    var latestVersionStatus: VersionStatus? = VersionStatus.RELEASED,
     @get:Schema(title = "PAC配置", required = false)
     val pipelineAsCodeSettings: PipelineAsCodeSettings?,
     @get:Schema(title = "流水线YAML信息", required = false)

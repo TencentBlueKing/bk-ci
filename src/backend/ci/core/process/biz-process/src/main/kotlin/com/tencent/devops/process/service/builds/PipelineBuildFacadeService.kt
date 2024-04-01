@@ -422,9 +422,11 @@ class PipelineBuildFacadeService(
                         errorCode = ProcessMessageCode.ERROR_PIPELINE_NOT_EXISTS,
                         params = arrayOf(buildId)
                     )
-            if (readyToBuildPipelineInfo.onlyDraft == true) throw ErrorCodeException(
-                errorCode = ProcessMessageCode.ERROR_NO_RELEASE_PIPELINE_VERSION
-            )
+            if (readyToBuildPipelineInfo.latestVersionStatus?.isNotReleased() == true) {
+                throw ErrorCodeException(
+                    errorCode = ProcessMessageCode.ERROR_NO_RELEASE_PIPELINE_VERSION
+                )
+            }
             if (!readyToBuildPipelineInfo.canManualStartup && checkManualStartup == false) {
                 throw ErrorCodeException(
                     errorCode = ProcessMessageCode.DENY_START_BY_MANUAL
@@ -738,7 +740,7 @@ class PipelineBuildFacadeService(
             )
         }
         val pipeline = pipelineRepositoryService.getPipelineInfo(projectId, pipelineId = pipelineId) ?: return null
-        if (pipeline.onlyDraft == true) throw ErrorCodeException(
+        if (pipeline.latestVersionStatus?.isNotReleased() == true) throw ErrorCodeException(
             errorCode = ProcessMessageCode.ERROR_NO_RELEASE_PIPELINE_VERSION
         )
         val startEpoch = System.currentTimeMillis()
@@ -804,7 +806,7 @@ class PipelineBuildFacadeService(
         }
         val readyToBuildPipelineInfo = pipelineRepositoryService.getPipelineInfo(projectId, pipelineId)
             ?: return null
-        if (readyToBuildPipelineInfo.onlyDraft == true) throw ErrorCodeException(
+        if (readyToBuildPipelineInfo.latestVersionStatus?.isNotReleased() == true) throw ErrorCodeException(
             errorCode = ProcessMessageCode.ERROR_NO_RELEASE_PIPELINE_VERSION
         )
         val startEpoch = System.currentTimeMillis()

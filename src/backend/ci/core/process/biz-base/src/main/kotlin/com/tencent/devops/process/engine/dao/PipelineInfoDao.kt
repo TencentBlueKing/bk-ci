@@ -29,6 +29,7 @@ package com.tencent.devops.process.engine.dao
 
 import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.pipeline.enums.ChannelCode
+import com.tencent.devops.common.pipeline.enums.VersionStatus
 import com.tencent.devops.model.process.Tables.T_PIPELINE_INFO
 import com.tencent.devops.model.process.tables.records.TPipelineInfoRecord
 import com.tencent.devops.process.engine.pojo.PipelineInfo
@@ -64,7 +65,7 @@ class PipelineInfoDao {
         canElementSkip: Boolean,
         taskCount: Int,
         id: Long? = null,
-        onlyDraft: Boolean? = false
+        latestVersionStatus: VersionStatus? = VersionStatus.RELEASED
     ): Int {
         val count = with(T_PIPELINE_INFO) {
             dslContext.insertInto(
@@ -83,7 +84,7 @@ class PipelineInfoDao {
                 ELEMENT_SKIP,
                 TASK_COUNT,
                 ID,
-                ONLY_DRAFT
+                LATEST_VERSION_STATUS
             )
                 .values(
                     pipelineId,
@@ -98,7 +99,7 @@ class PipelineInfoDao {
                     if (canElementSkip) 1 else 0,
                     taskCount,
                     id,
-                    onlyDraft
+                    latestVersionStatus?.name
                 )
                 .execute()
         }
@@ -120,7 +121,7 @@ class PipelineInfoDao {
         taskCount: Int = 0,
         latestVersion: Int = 0,
         updateLastModifyUser: Boolean? = true,
-        onlyDraft: Boolean? = null
+        latestVersionStatus: VersionStatus? = null
     ): Boolean {
         return with(T_PIPELINE_INFO) {
             val update = dslContext.update(this)
@@ -152,8 +153,8 @@ class PipelineInfoDao {
             if (userId != null && updateLastModifyUser == true) {
                 update.set(LAST_MODIFY_USER, userId)
             }
-            onlyDraft?.let {
-                update.set(ONLY_DRAFT, onlyDraft)
+            latestVersionStatus?.let {
+                update.set(LATEST_VERSION_STATUS, latestVersionStatus.name)
             }
             update.set(UPDATE_TIME, LocalDateTime.now())
                 .where(conditions)
@@ -619,7 +620,9 @@ class PipelineInfoDao {
                     canElementSkip = elementSkip == 1,
                     taskCount = taskCount,
                     id = id,
-                    onlyDraft = onlyDraft
+                    latestVersionStatus = latestVersionStatus?.let {
+                        VersionStatus.valueOf(it)
+                    } ?: VersionStatus.RELEASED
                 )
             }
         } else {

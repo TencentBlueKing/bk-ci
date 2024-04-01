@@ -440,7 +440,7 @@ class PipelineSettingDao {
                     wechatGroupMarkdownFlag = t.successWechatGroupMarkdownFlag,
                     detailFlag = t.successDetailFlag,
                     content = t.successContent ?: ""
-                )
+                ).takeIf { successType.isNotEmpty() }
                 val oldFailSubscription = Subscription(
                     types = failType,
                     groups = t.failGroup?.split(",")?.toSet() ?: emptySet(),
@@ -450,21 +450,21 @@ class PipelineSettingDao {
                     wechatGroupMarkdownFlag = t.failWechatGroupMarkdownFlag ?: false,
                     detailFlag = t.failDetailFlag,
                     content = t.failContent ?: ""
-                )
+                ).takeIf { failType.isNotEmpty() }
                 val successSubscriptionList = t.successSubscription?.let {
                     JsonUtil.to(it, object : TypeReference<List<Subscription>>() {})
-                } ?: listOf(oldSuccessSubscription)
+                } ?: oldSuccessSubscription?.let { listOf(it) }
                 val failSubscriptionList = t.failureSubscription?.let {
                     JsonUtil.to(it, object : TypeReference<List<Subscription>>() {})
-                } ?: listOf(oldFailSubscription)
+                } ?: oldFailSubscription?.let { listOf(it) }
                 PipelineSetting(
                     projectId = t.projectId,
                     pipelineId = t.pipelineId,
                     pipelineName = t.name,
                     desc = t.desc,
                     runLockType = PipelineRunLockType.valueOf(t.runLockType),
-                    successSubscription = oldSuccessSubscription,
-                    failSubscription = oldFailSubscription,
+                    successSubscription = oldSuccessSubscription ?: Subscription(),
+                    failSubscription = oldFailSubscription ?: Subscription(),
                     successSubscriptionList = successSubscriptionList,
                     failSubscriptionList = failSubscriptionList,
                     labels = emptyList(), // 标签不在本表保存，在写入和查询时需要通过 PipelineGroupService.kt
