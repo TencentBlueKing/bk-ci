@@ -470,6 +470,7 @@ class PipelineRuntimeService @Autowired constructor(
                 ),
                 buildNum = buildNum,
                 pipelineVersion = version,
+                pipelineVersionName = versionName,
                 startTime = startTime ?: 0L,
                 endTime = endTime,
                 status = status.name,
