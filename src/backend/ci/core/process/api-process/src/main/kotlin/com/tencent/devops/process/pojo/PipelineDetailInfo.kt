@@ -60,7 +60,7 @@ data class PipelineDetailInfo(
     val createTime: Long = 0,
     @get:Schema(title = "更新时间")
     val updateTime: Long = 0,
-    @get:Schema(title = "仅存在草稿", required = false)
+    @get:Schema(title = "最新流水线版本状态（如有任何发布版本则为发布版本）", required = false)
     var latestVersionStatus: VersionStatus? = VersionStatus.RELEASED,
     @get:Schema(title = "流水线组名称列表", required = false)
     var viewNames: List<String>?
