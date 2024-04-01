@@ -634,14 +634,14 @@ class PipelineRepositoryService constructor(
         description: String?
     ): DeployPipelineResult {
         // #8161 如果只有一个草稿版本的创建操作，流水线状态也为仅有草稿
-        val onlyDraft = versionStatus == VersionStatus.COMMITTING
         val modelVersion = 1
         var versionNum = 1
         var pipelineVersion = 1
         var triggerVersion = 1
         val settingVersion = 1
         // 如果是仅有草稿的状态，resource表的版本号先设为0作为基准
-        if (onlyDraft || versionStatus == VersionStatus.BRANCH) {
+        if (versionStatus == VersionStatus.COMMITTING ||
+            versionStatus == VersionStatus.BRANCH) {
             versionNum = 0
             pipelineVersion = 0
             triggerVersion = 0
@@ -667,7 +667,7 @@ class PipelineRepositoryService constructor(
                     canElementSkip = canElementSkip,
                     taskCount = taskCount,
                     id = id,
-                    onlyDraft = onlyDraft
+                    latestVersionStatus = versionStatus
                 )
                 model.latestVersion = modelVersion
                 var newSetting = customSetting?.copy(
@@ -1107,8 +1107,8 @@ class PipelineRepositoryService constructor(
                             canElementSkip = canElementSkip,
                             taskCount = taskCount,
                             latestVersion = model.latestVersion,
-                            // 进行过至少一次发布版本后，才取消仅有草稿的状态
-                            onlyDraft = false
+                            // 进行过至少一次发布版本后，取消仅有草稿/分支的状态
+                            latestVersionStatus = VersionStatus.RELEASED
                         )
                         pipelineResourceDao.deleteEarlyVersion(
                             dslContext = transactionContext,
@@ -1691,7 +1691,7 @@ class PipelineRepositoryService constructor(
                 pipelineDesc = setting.desc,
                 updateLastModifyUser = updateLastModifyUser,
                 // 单独修改流水线配置不影响版本状态
-                onlyDraft = null
+                latestVersionStatus = null
             )
             if (version > 0) { // #671 兼容无版本要求的修改入口，比如改名，或者只读流水线的修改操作, version=0
                 if (old?.maxPipelineResNum != null) {

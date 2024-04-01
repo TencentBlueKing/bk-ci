@@ -126,7 +126,7 @@ data class Pipeline(
     @get:Schema(title = "是否已删除", required = false)
     var delete: Boolean? = false,
     @get:Schema(title = "仅存在草稿", required = false)
-    var onlyDraft: Boolean? = false,
+    var latestVersionStatus: VersionStatus? = false,
     @get:Schema(title = "流水线权限", required = false)
     val permissions: PipelinePermissions? = null,
     @get:Schema(title = "流水线是否开启PAC", required = false)
