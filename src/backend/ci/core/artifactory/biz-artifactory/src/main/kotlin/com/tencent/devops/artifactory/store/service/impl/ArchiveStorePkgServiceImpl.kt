@@ -27,21 +27,24 @@
 
 package com.tencent.devops.artifactory.store.service.impl
 
-import com.tencent.devops.artifactory.constant.BK_CI_SERVICE_DIR
+import com.tencent.devops.artifactory.constant.BK_CI_PLUGIN_FE_DIR
 import com.tencent.devops.artifactory.dao.FileDao
 import com.tencent.devops.artifactory.pojo.ArchiveStorePkgRequest
+import com.tencent.devops.artifactory.pojo.PackageFileInfo
+import com.tencent.devops.artifactory.pojo.enums.BkRepoEnum
 import com.tencent.devops.artifactory.store.service.ArchiveStorePkgService
+import com.tencent.devops.common.api.constant.CommonMessageCode
+import com.tencent.devops.common.api.constant.STATIC
 import com.tencent.devops.common.api.exception.ErrorCodeException
-import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.ShaUtils
 import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.service.utils.ZipUtil
-import com.tencent.devops.store.api.ServiceExtServiceResource
-import com.tencent.devops.store.pojo.common.EXTENSION_JSON_NAME
-import com.tencent.devops.store.pojo.common.KEY_PACKAGE_PATH
+import com.tencent.devops.store.api.common.ServiceStoreArchiveResource
 import com.tencent.devops.store.pojo.common.enums.ReleaseTypeEnum
-import com.tencent.devops.store.pojo.dto.UpdateExtServiceEnvInfoDTO
+import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
+import com.tencent.devops.store.pojo.common.publication.StorePkgEnvRequest
+import com.tencent.devops.store.pojo.common.publication.StorePkgInfoUpdateRequest
 import org.apache.commons.codec.digest.DigestUtils
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition
 import org.jooq.DSLContext
@@ -79,110 +82,206 @@ abstract class ArchiveStorePkgServiceImpl : ArchiveStorePkgService {
         val version = archiveStorePkgRequest.version
         val releaseType = archiveStorePkgRequest.releaseType
         // 校验上传的包是否合法
-        val verifyServicePackageResult = client.get(ServiceExtServiceResource::class)
-            .verifyExtServicePackageByUserId(
+        val verifyPackageResult = client.get(ServiceStoreArchiveResource::class)
+            .verifyComponentPackage(
                 userId = userId,
-                serviceCode = serviceCode,
+                storeType = storeType,
+                storeCode = storeCode,
                 version = version,
                 releaseType = releaseType
             )
-        if (verifyServicePackageResult.isNotOk()) {
+        if (verifyPackageResult.isNotOk()) {
             throw ErrorCodeException(
-                errorCode = verifyServicePackageResult.status.toString(),
-                defaultMessage = verifyServicePackageResult.message
+                errorCode = verifyPackageResult.status.toString(),
+                defaultMessage = verifyPackageResult.message
             )
         }
+        val storePkgEnvRequests: List<StorePkgEnvRequest>?
+        var packageFileInfos: MutableList<PackageFileInfo>? = null
         try {
-            handleArchiveFile(disposition, inputStream, storeCode, version)
-            val finalStoreId = if (releaseType == ReleaseTypeEnum.NEW ||
-                releaseType == ReleaseTypeEnum.CANCEL_RE_RELEASE) {
-                archiveStorePkgRequest.storeId
-            } else {
-                // 普通发布类型会重新生成一条版本记录
-                DigestUtils.md5Hex("$storeType-$storeCode-$version")
-            }
-            val serviceArchivePath = buildServiceArchivePath(serviceCode, version)
-            val extensionJsonFileStr = File(serviceArchivePath, EXTENSION_JSON_NAME)
-            val extensionJsonMap = JsonUtil.toMap(extensionJsonFileStr)
-            val pkgLocalPath = extensionJsonMap[KEY_PACKAGE_PATH] as? String ?: ""
-            val file = File(serviceArchivePath, pkgLocalPath)
-            val shaContent = file.inputStream().use { ShaUtils.sha1InputStream(it) }
-            val updateServiceInfoResult = client.get(ServiceExtServiceResource::class)
-                .updateExtServiceEnv(
-                    serviceCode = serviceCode,
-                    version = version,
-                    updateExtServiceEnvInfo = UpdateExtServiceEnvInfoDTO(
-                        userId = userId,
-                        pkgPath = "$serviceCode/$version/$pkgLocalPath",
-                        pkgShaContent = shaContent
-                    )
+            handleArchiveFile(
+                disposition = disposition,
+                inputStream = inputStream,
+                storeType = storeType,
+                storeCode = storeCode,
+                version = version
+            )
+            val storeArchivePath = buildStoreArchivePath(storeType, storeCode, version)
+            storePkgEnvRequests = client.get(ServiceStoreArchiveResource::class).getComponentPkgEnvInfo(
+                userId = userId,
+                storeType = storeType,
+                storeCode = storeCode,
+                version = version
+            ).data
+            storePkgEnvRequests?.forEach { storePkgEnvRequest ->
+                var pkgLocalPath = storePkgEnvRequest.pkgLocalPath
+                if (storePkgEnvRequest.target.isNullOrBlank() && pkgLocalPath.isNullOrBlank()) {
+                    // 上传的是内置组件的包，无需处理执行包相关逻辑
+                    return@forEach
+                }
+                if (packageFileInfos == null) {
+                    packageFileInfos = mutableListOf()
+                }
+                if (pkgLocalPath.isNullOrBlank()) {
+                    pkgLocalPath = disposition.fileName
+                }
+                val packageFile = File("$storeArchivePath/$pkgLocalPath")
+                val packageFileInfo = PackageFileInfo(
+                    packageFileName = packageFile.name,
+                    packageFilePath = "${getPkgFileTypeDir(storeType)}/$pkgLocalPath",
+                    packageFileSize = packageFile.length(),
+                    shaContent = packageFile.inputStream().use { ShaUtils.sha1InputStream(it) }
                 )
-            if (updateServiceInfoResult.isNotOk()) {
+                storePkgEnvRequest.shaContent = packageFileInfo.shaContent
+                storePkgEnvRequest.pkgName = packageFileInfo.packageFileName
+                packageFileInfos!!.add(packageFileInfo)
+            }
+        } finally {
+            // 清理服务器的解压的临时文件
+            clearServerTmpFile(storeType, storeCode, version)
+        }
+        val finalStoreId = if (releaseType == ReleaseTypeEnum.NEW ||
+            releaseType == ReleaseTypeEnum.CANCEL_RE_RELEASE
+        ) {
+            archiveStorePkgRequest.storeId
+        } else {
+            // 普通发布类型会重新生成一条版本记录
+            DigestUtils.md5Hex("$storeType-$storeCode-$version")
+        }
+        storePkgEnvRequests?.let {
+            val storePkgInfoUpdateRequest = StorePkgInfoUpdateRequest(
+                storeType = storeType,
+                storeCode = storeCode,
+                version = version,
+                storePkgEnvRequests = storePkgEnvRequests
+            )
+            val updateComponentPkgInfoResult = client.get(ServiceStoreArchiveResource::class).updateComponentPkgInfo(
+                userId = userId,
+                storeId = finalStoreId,
+                storePkgInfoUpdateRequest = storePkgInfoUpdateRequest
+            )
+            if (updateComponentPkgInfoResult.isNotOk()) {
                 throw ErrorCodeException(
-                    errorCode = updateServiceInfoResult.status.toString(),
-                    defaultMessage = updateServiceInfoResult.message
+                    errorCode = updateComponentPkgInfoResult.status.toString(),
+                    defaultMessage = updateComponentPkgInfoResult.message
                 )
             }
-            dslContext.transaction { t ->
-                val context = DSL.using(t)
+        }
+        dslContext.transaction { t ->
+            val context = DSL.using(t)
+            packageFileInfos?.forEach { packageFileInfo ->
                 val fileId = UUIDUtil.generate()
                 fileDao.addFileInfo(
                     dslContext = context,
                     userId = userId,
                     fileId = fileId,
                     projectId = "",
-                    fileType = BK_CI_SERVICE_DIR,
-                    filePath = file.absolutePath,
-                    fileName = file.name,
-                    fileSize = file.length()
+                    fileType = getPkgFileTypeDir(storeType),
+                    filePath = packageFileInfo.packageFilePath,
+                    fileName = packageFileInfo.packageFileName,
+                    fileSize = packageFileInfo.packageFileSize
                 )
                 fileDao.batchAddFileProps(
                     dslContext = context,
                     userId = userId,
                     fileId = fileId,
-                    props = mapOf("shaContent" to shaContent)
+                    props = mapOf(PackageFileInfo::shaContent.name to packageFileInfo.shaContent)
                 )
             }
-        } finally {
-            // 清理服务器的解压的临时文件
-            clearServerTmpFile(serviceCode, version)
         }
         return true
     }
 
-    protected fun unzipFile(
+    protected fun handlePkgFile(
         disposition: FormDataContentDisposition,
         inputStream: InputStream,
-        serviceCode: String,
+        storeType: StoreTypeEnum,
+        storeCode: String,
         version: String
     ) {
         val fileName = disposition.fileName
-        val serviceArchivePath = buildServiceArchivePath(serviceCode, version)
-        val file = File(serviceArchivePath, fileName)
+        val storeArchivePath = buildStoreArchivePath(storeType, storeCode, version)
+        val file = File(storeArchivePath, fileName)
         if (file.exists()) {
             file.delete()
         }
         file.outputStream().use {
             inputStream.copyTo(it)
         }
-        // 解压到指定目录
-        ZipUtil.unZipFile(file, serviceArchivePath, false)
+        if (storeType != StoreTypeEnum.DEVX) {
+            // 解压到指定目录
+            ZipUtil.unZipFile(file, storeArchivePath, false)
+        }
     }
 
-    protected fun buildServiceArchivePath(serviceCode: String, version: String) =
-        "${getServiceArchiveBasePath()}/$BK_CI_SERVICE_DIR/$serviceCode/$version"
+    protected fun buildStoreFrontendPath(
+        storeType: StoreTypeEnum,
+        storeCode: String,
+        version: String
+    ): String? {
+        return if (storeType == StoreTypeEnum.ATOM) {
+            "${getStoreArchiveBasePath()}/$STATIC/$BK_CI_PLUGIN_FE_DIR/$storeCode/$version"
+        } else {
+            null
+        }
+    }
+
+    protected fun buildStoreArchivePath(
+        storeType: StoreTypeEnum, 
+        storeCode: String, 
+        version: String
+    ): String {
+        val storeTypeDir = getPkgFileTypeDir(storeType)
+        return "${getStoreArchiveBasePath()}/$storeTypeDir/$storeCode/$version"
+    }
+
+    protected fun getStaticFileTypeDir(storeType: StoreTypeEnum): String {
+        val baseDir = when (storeType) {
+            StoreTypeEnum.ATOM -> {
+                BK_CI_PLUGIN_FE_DIR
+            }
+
+            else -> {
+                throw ErrorCodeException(errorCode = CommonMessageCode.ERROR_CLIENT_REST_ERROR)
+            }
+        }
+        return baseDir
+    }
+
+    protected fun getPkgFileTypeDir(storeType: StoreTypeEnum): String {
+        val baseDir = when (storeType) {
+            StoreTypeEnum.ATOM -> {
+                BkRepoEnum.PLUGIN.repoName
+            }
+
+            StoreTypeEnum.SERVICE -> {
+                BkRepoEnum.SERVICE.repoName
+            }
+
+            StoreTypeEnum.DEVX -> {
+                BkRepoEnum.DEVX.repoName
+            }
+
+            else -> {
+                throw ErrorCodeException(errorCode = CommonMessageCode.ERROR_CLIENT_REST_ERROR)
+            }
+        }
+        return baseDir
+    }
 
     abstract fun clearServerTmpFile(
-        serviceCode: String,
+        storeType: StoreTypeEnum,
+        storeCode: String,
         version: String
     )
 
-    abstract fun getServiceArchiveBasePath(): String
+    abstract fun getStoreArchiveBasePath(): String
 
     abstract fun handleArchiveFile(
         disposition: FormDataContentDisposition,
         inputStream: InputStream,
-        serviceCode: String,
+        storeType: StoreTypeEnum,
+        storeCode: String,
         version: String
     )
 }

@@ -25,32 +25,19 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.artifactory.store.service
+package com.tencent.devops.store.pojo.common.publication
 
-import com.tencent.devops.artifactory.pojo.ArchiveStorePkgRequest
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
-import org.glassfish.jersey.media.multipart.FormDataContentDisposition
-import java.io.InputStream
+import io.swagger.v3.oas.annotations.media.Schema
 
-interface ArchiveStorePkgService {
-
-    /**
-     * 归档组件包
-     */
-    fun archiveStorePkg(
-        userId: String,
-        inputStream: InputStream,
-        disposition: FormDataContentDisposition,
-        archiveStorePkgRequest: ArchiveStorePkgRequest
-    ): Boolean
-
-    /**
-     * 获取组件相关文件内容
-     */
-    fun getStoreFileContent(filePath: String, storeType: StoreTypeEnum): String
-
-    /**
-     * 删除组件包
-     */
-    fun deleteStorePkg(userId: String, storeCode: String, storeType: StoreTypeEnum)
-}
+@Schema(title = "组件包相关信息修改请求报文体")
+data class StorePkgInfoUpdateRequest(
+    @get:Schema(title = "组件类型", required = true)
+    val storeType: StoreTypeEnum,
+    @get:Schema(title = "组件代码", required = true)
+    val storeCode: String,
+    @get:Schema(title = "组件版本号", required = true)
+    val version: String,
+    @get:Schema(title = "组件包环境信息", required = true)
+    val storePkgEnvRequests: List<StorePkgEnvRequest>
+)

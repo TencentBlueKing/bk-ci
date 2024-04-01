@@ -25,32 +25,41 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.artifactory.store.service
+package com.tencent.devops.store.common.service
 
-import com.tencent.devops.artifactory.pojo.ArchiveStorePkgRequest
+import com.tencent.devops.store.pojo.common.enums.ReleaseTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
-import org.glassfish.jersey.media.multipart.FormDataContentDisposition
-import java.io.InputStream
+import com.tencent.devops.store.pojo.common.publication.StorePkgInfoUpdateRequest
 
-interface ArchiveStorePkgService {
+interface StoreArchiveService {
 
     /**
-     * 归档组件包
+     * 校验组件包
+     * @param userId 用户ID
+     * @param storeCode 组件标识
+     * @param storeType 组件类型
+     * @param version 版本号
+     * @param releaseType 发布类型
+     * @return 布尔值
      */
-    fun archiveStorePkg(
+    fun verifyComponentPackage(
         userId: String,
-        inputStream: InputStream,
-        disposition: FormDataContentDisposition,
-        archiveStorePkgRequest: ArchiveStorePkgRequest
+        storeCode: String,
+        storeType: StoreTypeEnum,
+        version: String,
+        releaseType: ReleaseTypeEnum? = null
     ): Boolean
 
     /**
-     * 获取组件相关文件内容
+     * 更新组件包信息
+     * @param userId 流水线ID
+     * @param storeId 组件ID
+     * @param storePkgInfoUpdateRequest 组件包更新信息请求
+     * @return 布尔值
      */
-    fun getStoreFileContent(filePath: String, storeType: StoreTypeEnum): String
-
-    /**
-     * 删除组件包
-     */
-    fun deleteStorePkg(userId: String, storeCode: String, storeType: StoreTypeEnum)
+    fun updateComponentPkgInfo(
+        userId: String,
+        storeId: String,
+        storePkgInfoUpdateRequest: StorePkgInfoUpdateRequest
+    ): Boolean
 }

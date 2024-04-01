@@ -29,13 +29,22 @@ package com.tencent.devops.store.common.service.impl
 
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.exception.ErrorCodeException
+import com.tencent.devops.common.api.util.UUIDUtil
+import com.tencent.devops.store.common.dao.StoreBaseEnvExtManageDao
+import com.tencent.devops.store.common.dao.StoreBaseEnvManageDao
 import com.tencent.devops.store.common.dao.StoreBaseQueryDao
 import com.tencent.devops.store.common.dao.StoreMemberDao
+import com.tencent.devops.store.common.service.StoreArchiveService
 import com.tencent.devops.store.common.service.StoreCommonService
+import com.tencent.devops.store.common.utils.StoreReleaseUtils
 import com.tencent.devops.store.pojo.common.enums.ReleaseTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
+import com.tencent.devops.store.pojo.common.publication.StoreBaseEnvDataPO
+import com.tencent.devops.store.pojo.common.publication.StoreBaseEnvExtDataPO
+import com.tencent.devops.store.pojo.common.publication.StorePkgInfoUpdateRequest
 import com.tencent.devops.store.pojo.common.version.VersionModel
 import org.jooq.DSLContext
+import org.jooq.impl.DSL
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
@@ -44,15 +53,17 @@ class StoreArchiveServiceImpl @Autowired constructor(
     private val dslContext: DSLContext,
     private val storeMemberDao: StoreMemberDao,
     private val storeBaseQueryDao: StoreBaseQueryDao,
+    private val storeBaseEnvManageDao: StoreBaseEnvManageDao,
+    private val storeBaseEnvExtManageDao: StoreBaseEnvExtManageDao,
     private val storeCommonService: StoreCommonService
-) {
+): StoreArchiveService {
 
-    fun verifyStorePackageByUserId(
+    override fun verifyComponentPackage(
         userId: String,
         storeCode: String,
         storeType: StoreTypeEnum,
         version: String,
-        releaseType: ReleaseTypeEnum? = null
+        releaseType: ReleaseTypeEnum?
     ): Boolean {
         // 校验用户是否是该组件的开发成员
         val flag = storeMemberDao.isStoreMember(
@@ -83,6 +94,54 @@ class StoreArchiveServiceImpl @Autowired constructor(
                 ),
                 name = storeRecord.name
             )
+        }
+        return true
+    }
+
+    override fun updateComponentPkgInfo(
+        userId: String,
+        storeId: String,
+        storePkgInfoUpdateRequest: StorePkgInfoUpdateRequest
+    ): Boolean {
+        val storePkgEnvRequests = storePkgInfoUpdateRequest.storePkgEnvRequests
+        val storeBaseEnvDataPOs: MutableList<StoreBaseEnvDataPO> = mutableListOf()
+        var storeBaseEnvExtDataPOs: MutableList<StoreBaseEnvExtDataPO>? = null
+        storePkgEnvRequests.forEach { storePkgEnvRequest ->
+            val envId = UUIDUtil.generate()
+            // 生成环境基本信息
+            val storeBaseEnvDataPO = StoreBaseEnvDataPO(
+                id = envId,
+                storeId = storeId,
+                language = storePkgEnvRequest.language,
+                pkgName = storePkgEnvRequest.pkgName,
+                pkgPath = storePkgEnvRequest.pkgRepoPath,
+                target = storePkgEnvRequest.target,
+                shaContent = storePkgEnvRequest.shaContent,
+                preCmd = storePkgEnvRequest.preCmd,
+                osName = storePkgEnvRequest.osName,
+                osArch = storePkgEnvRequest.osArch,
+                runtimeVersion = storePkgEnvRequest.runtimeVersion,
+                defaultFlag = storePkgEnvRequest.defaultFlag,
+                creator = userId,
+                modifier = userId
+            )
+            storeBaseEnvDataPOs.add(storeBaseEnvDataPO)
+            // 生成环境扩展信息
+            storeBaseEnvExtDataPOs = StoreReleaseUtils.generateStoreBaseEnvExtPO(
+                envId = envId,
+                storeId = storeId,
+                userId = userId,
+                extBaseEnvInfo = storePkgEnvRequest.extEnvInfo
+            )
+        }
+        dslContext.transaction { t ->
+            val context = DSL.using(t)
+            storeBaseEnvManageDao.deleteStoreEnvInfo(context, storeId)
+            storeBaseEnvManageDao.batchSave(context, storeBaseEnvDataPOs)
+            if (!storeBaseEnvExtDataPOs.isNullOrEmpty()) {
+                storeBaseEnvExtManageDao.deleteStoreEnvExtInfo(context, storeId)
+                storeBaseEnvExtManageDao.batchSave(context, storeBaseEnvExtDataPOs!!)
+            }
         }
         return true
     }

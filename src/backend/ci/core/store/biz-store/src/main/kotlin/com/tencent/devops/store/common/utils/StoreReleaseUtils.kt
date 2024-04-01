@@ -61,24 +61,40 @@ object StoreReleaseUtils {
             }
             storeBaseEnvDataPOs?.add(storeBaseEnvDataPO)
             val extBaseEnvInfo = baseEnvInfo.extBaseEnvInfo
-            extBaseEnvInfo?.forEach { (key, value) ->
-                if (storeBaseEnvExtDataPOs == null) {
-                    storeBaseEnvExtDataPOs = mutableListOf()
-                }
-                storeBaseEnvExtDataPOs?.add(
-                    StoreBaseEnvExtDataPO(
-                        id = UUIDUtil.generate(),
-                        envId = envId,
-                        storeId = storeId,
-                        fieldName = key,
-                        fieldValue = JsonUtil.toJson(value, false),
-                        creator = userId,
-                        modifier = userId
-                    )
-                )
-            }
+            storeBaseEnvExtDataPOs = generateStoreBaseEnvExtPO(
+                envId = envId,
+                storeId = storeId,
+                userId = userId,
+                extBaseEnvInfo = extBaseEnvInfo
+            )
         }
         return Pair(storeBaseEnvDataPOs, storeBaseEnvExtDataPOs)
+    }
+
+    fun generateStoreBaseEnvExtPO(
+        envId: String,
+        storeId: String,
+        userId: String,
+        extBaseEnvInfo: Map<String, Any>?
+    ): MutableList<StoreBaseEnvExtDataPO>? {
+        var storeBaseEnvExtDataPOs: MutableList<StoreBaseEnvExtDataPO>? = null
+        extBaseEnvInfo?.forEach { (key, value) ->
+            if (storeBaseEnvExtDataPOs == null) {
+                storeBaseEnvExtDataPOs = mutableListOf()
+            }
+            storeBaseEnvExtDataPOs?.add(
+                StoreBaseEnvExtDataPO(
+                    id = UUIDUtil.generate(),
+                    envId = envId,
+                    storeId = storeId,
+                    fieldName = key,
+                    fieldValue = JsonUtil.toJson(value, false),
+                    creator = userId,
+                    modifier = userId
+                )
+            )
+        }
+        return storeBaseEnvExtDataPOs
     }
 
     fun generateStoreBaseFeaturePO(
