@@ -35,7 +35,7 @@
                     {{ $t('latest') }}
                 </i>
                 <i v-else-if="isActiveDraft && showDraftTag" class="pipeline-draft-version-tag">
-                    {{ $t('待发布') }}
+                    {{ $t('willRelease') }}
                 </i>
             </p>
             <i v-if="isLoading" class="devops-icon icon-circle-2-1 spin-icon" />
@@ -81,10 +81,10 @@
 </template>
 <script>
     import Logo from '@/components/Logo'
-    import { bus, SHOW_VERSION_HISTORY_SIDESLIDER } from '@/utils/bus'
-    import { VERSION_STATUS_ENUM } from '@/utils/pipelineConst'
-    import { convertTime } from '@/utils/util'
-    import { mapActions, mapState } from 'vuex'
+import { bus, SHOW_VERSION_HISTORY_SIDESLIDER } from '@/utils/bus'
+import { VERSION_STATUS_ENUM } from '@/utils/pipelineConst'
+import { convertTime } from '@/utils/util'
+import { mapActions, mapState } from 'vuex'
     export default {
         name: 'VersionSelector',
         emit: ['input', 'change', 'showAllVersion'],

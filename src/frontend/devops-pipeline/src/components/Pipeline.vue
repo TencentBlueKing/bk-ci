@@ -30,7 +30,7 @@
             'empty-pipeline-stage-disabled': !pipelineEditable
         }]" @click="handleAddStage({ stageIndex: 0, isParallel: false, isFinally: false })">
             <i class="bk-icon left-icon icon-devops-icon icon-plus"></i>
-            <span>{{$t('点击添加第一个流水线Stage')}}</span>
+            <span>{{$t('clickToAddStage')}}</span>
         </div>
 
         <bk-exception v-else type="empty" scene="part">
@@ -97,14 +97,14 @@
 </template>
 
 <script>
-    import { mapState, mapActions, mapGetters } from 'vuex'
-    import AtomPropertyPanel from './AtomPropertyPanel'
-    import ContainerPropertyPanel from './ContainerPropertyPanel'
-    import StagePropertyPanel from './StagePropertyPanel'
-    import StageReviewPanel from './StageReviewPanel'
-    import AtomSelector from './AtomSelector'
-    import { isObject, areDeeplyEqual } from '../utils/util'
     import BkPipeline, { loadI18nMessages } from 'bkui-pipeline'
+import { mapActions, mapGetters, mapState } from 'vuex'
+import { areDeeplyEqual, isObject } from '../utils/util'
+import AtomPropertyPanel from './AtomPropertyPanel'
+import AtomSelector from './AtomSelector'
+import ContainerPropertyPanel from './ContainerPropertyPanel'
+import StagePropertyPanel from './StagePropertyPanel'
+import StageReviewPanel from './StageReviewPanel'
     export default {
         components: {
             StagePropertyPanel,
