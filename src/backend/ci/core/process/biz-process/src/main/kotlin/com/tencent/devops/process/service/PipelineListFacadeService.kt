@@ -52,6 +52,7 @@ import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.PipelineInstanceTypeEnum
 import com.tencent.devops.common.pipeline.enums.StartType
+import com.tencent.devops.common.pipeline.enums.VersionStatus
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeEventType
 import com.tencent.devops.common.service.utils.LogUtils
 import com.tencent.devops.common.web.utils.I18nUtil
@@ -1541,7 +1542,9 @@ class PipelineListFacadeService @Autowired constructor(
                     updater = it.lastModifyUser,
                     creator = it.creator,
                     delete = it.delete,
-                    latestVersionStatus = it.latestVersionStatus
+                    latestVersionStatus = it.latestVersionStatus?.let {
+                        VersionStatus.valueOf(it)
+                    } ?: VersionStatus.RELEASED
                 )
             )
         }
