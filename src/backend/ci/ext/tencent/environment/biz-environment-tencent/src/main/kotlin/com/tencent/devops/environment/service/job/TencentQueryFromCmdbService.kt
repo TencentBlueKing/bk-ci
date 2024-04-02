@@ -75,20 +75,30 @@ class TencentQueryFromCmdbService {
         )
         val cmdbIpToCmdbDataMap = getNodeIpToCmdbDataMap(responseBody)
 
-        val invalidIpList = nodeIpList.filter {
-            val isOperator = userId == cmdbIpToCmdbDataMap[it]?.SvrOperator ||
-                nodeIpToNodeMap[it]?.get(T_NODE_CREATED_USER) as? String == cmdbIpToCmdbDataMap[it]?.SvrOperator
-            val isBakOpertor = cmdbIpToCmdbDataMap[it]?.SvrBakOperator?.split(";")?.contains(userId)!! ||
-                cmdbIpToCmdbDataMap[it]?.SvrBakOperator?.split(";")
-                    ?.contains(nodeIpToNodeMap[it]?.get(T_NODE_CREATED_USER) as? String)!!
-            !isOperator && !isBakOpertor
+        val ipNotInCmdb = mutableListOf<String>()
+        val unauthorisedIpList = nodeIpList.filter {
+            if (null != cmdbIpToCmdbDataMap[it]) {
+                val isOperator = userId == cmdbIpToCmdbDataMap[it]?.SvrOperator ||
+                    nodeIpToNodeMap[it]?.get(T_NODE_CREATED_USER) as? String == cmdbIpToCmdbDataMap[it]?.SvrOperator
+                val isBakOpertor = cmdbIpToCmdbDataMap[it]?.SvrBakOperator?.split(";")?.contains(userId) ?: false ||
+                    cmdbIpToCmdbDataMap[it]?.SvrBakOperator?.split(";")
+                        ?.contains(nodeIpToNodeMap[it]?.get(T_NODE_CREATED_USER) as? String) ?: false
+                !isOperator && !isBakOpertor
+            } else { // 机器不在CMDB中
+                ipNotInCmdb.add(it)
+                false
+            }
         }
-        if (invalidIpList.isNotEmpty()) {
-            logger.warn("[isOperatorOrBakOperator] invalidIpList: ${invalidIpList.joinToString()}")
+        if (unauthorisedIpList.isNotEmpty() || ipNotInCmdb.isNotEmpty()) {
+            logger.warn(
+                "[isOperatorOrBakOperator] unauthorisedIpList: ${unauthorisedIpList.joinToString()}, " +
+                    "notInCmdbIpList: ${ipNotInCmdb.joinToString()}"
+            )
             throw ErrorCodeException(
                 errorCode = EnvironmentMessageCode.ERROR_NODE_IP_ILLEGAL,
                 params = arrayOf(
-                    invalidIpList.joinToString(","),
+                    ipNotInCmdb.joinToString(","),
+                    unauthorisedIpList.joinToString(","),
                     userId,
                     nodeIpToNodeMap.entries.joinToString(separator = ", ") { (key, value) -> "$key - $value" }
                 )
