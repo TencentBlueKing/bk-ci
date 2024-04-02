@@ -45,7 +45,6 @@ import com.tencent.devops.common.webhook.pojo.code.git.GitEvent
 import com.tencent.devops.common.webhook.pojo.code.git.GitReviewEvent
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.engine.dao.PipelineYamlInfoDao
-import com.tencent.devops.process.pojo.pipeline.PipelineYamlInfo
 import com.tencent.devops.process.pojo.pipeline.PipelineYamlVo
 import com.tencent.devops.process.pojo.pipeline.PushPipelineResult
 import com.tencent.devops.process.pojo.trigger.PipelineTriggerEvent
@@ -283,14 +282,14 @@ class PipelineYamlFacadeService @Autowired constructor(
         )
     }
 
-    fun getPipelineYamlInfo(
+    fun yamlExistInDefaultBranch(
         projectId: String,
         pipelineId: String
-    ): PipelineYamlInfo? {
-        return pipelineYamlService.getPipelineYamlInfo(
+    ): Boolean {
+        return pipelineYamlService.yamlExistInDefaultBranch(
             projectId = projectId,
-            pipelineId = pipelineId
-        )
+            pipelineIds = listOf(pipelineId)
+        )[pipelineId] ?: false
     }
 
     fun pushYamlFile(
@@ -416,21 +415,6 @@ class PipelineYamlFacadeService @Autowired constructor(
                     params = arrayOf(it.pipelineId)
                 )
             }
-        }
-    }
-
-    fun deleteYamlPipelineCheck(
-        userId: String,
-        projectId: String,
-        pipelineId: String
-    ) {
-        val pipelineYamlInfo =
-            pipelineYamlService.getPipelineYamlInfo(projectId = projectId, pipelineId = pipelineId) ?: return
-        // 默认分支存在yaml,不能删除流水线
-        if (pipelineYamlInfo.defaultFileExists) {
-            throw ErrorCodeException(
-                errorCode = ProcessMessageCode.ERROR_DELETE_YAML_PIPELINE_IN_DEFAULT_BRANCH
-            )
         }
     }
 

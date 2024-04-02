@@ -70,9 +70,9 @@ class PipelineYamlService(
         repoHashId: String,
         filePath: String,
         directory: String,
+        defaultBranch: String?,
         pipelineId: String,
         status: String,
-        defaultFileExists: Boolean,
         userId: String,
         blobId: String,
         commitId: String,
@@ -89,9 +89,9 @@ class PipelineYamlService(
                 repoHashId = repoHashId,
                 filePath = filePath,
                 directory = directory,
+                defaultBranch = defaultBranch,
                 pipelineId = pipelineId,
                 status = status,
-                defaultFileExists = defaultFileExists,
                 userId = userId
             )
             pipelineYamlVersionDao.save(
@@ -132,7 +132,6 @@ class PipelineYamlService(
         commitTime: LocalDateTime,
         ref: String,
         defaultBranch: String?,
-        isDefaultBranch: Boolean,
         version: Int,
         webhooks: List<PipelineWebhookVersion>
     ) {
@@ -143,7 +142,7 @@ class PipelineYamlService(
                 projectId = projectId,
                 repoHashId = repoHashId,
                 filePath = filePath,
-                isDefaultBranch = isDefaultBranch,
+                defaultBranch = defaultBranch,
                 userId = userId
             )
             pipelineYamlVersionDao.save(
@@ -263,6 +262,35 @@ class PipelineYamlService(
             projectId = projectId,
             pipelineId = pipelineId
         )
+    }
+
+    /**
+     * yaml文件是否在默认分支存在
+     */
+    fun yamlExistInDefaultBranch(
+        projectId: String,
+        pipelineIds: List<String>
+    ): Map<String, Boolean> {
+        val yamlInfoMap = pipelineYamlInfoDao.listByPipelineIds(
+            dslContext = dslContext,
+            projectId = projectId,
+            pipelineIds = pipelineIds
+        ).associateBy { it.pipelineId }
+        return pipelineIds.associateWith { pipelineId ->
+            val yamlInfo = yamlInfoMap[pipelineId]
+            // 如果流水线没有绑定PAC,则表示yaml不存在
+            if (yamlInfo == null || yamlInfo.defaultBranch.isNullOrBlank()) {
+                false
+            } else {
+                pipelineYamlBranchFileDao.get(
+                    dslContext = dslContext,
+                    projectId = projectId,
+                    repoHashId = yamlInfo.repoHashId,
+                    branch = yamlInfo.defaultBranch!!,
+                    filePath = yamlInfo.filePath
+                ) != null
+            }
+        }
     }
 
     fun listEnablePacPipelineMap(

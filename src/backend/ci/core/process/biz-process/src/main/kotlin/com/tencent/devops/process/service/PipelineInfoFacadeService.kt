@@ -1342,7 +1342,14 @@ class PipelineInfoFacadeService @Autowired constructor(
             val setting = pipelineSettingFacadeService.userGetSetting(userId, projectId, pipelineId)
             if (setting.pipelineAsCodeSettings?.enable == true) {
                 // 检查yaml是否已经在默认分支删除
-                yamlFacadeService.deleteYamlPipelineCheck(userId, projectId, pipelineId)
+                val yamlExist = yamlFacadeService.yamlExistInDefaultBranch(
+                    projectId = projectId, pipelineId = pipelineId
+                )
+                if (yamlExist) {
+                    throw ErrorCodeException(
+                        errorCode = ProcessMessageCode.ERROR_DELETE_YAML_PIPELINE_IN_DEFAULT_BRANCH
+                    )
+                }
                 pipelineSettingFacadeService.saveSetting(
                     userId, projectId, pipelineId,
                     setting.copy(

@@ -155,7 +155,7 @@ class PipelineVersionFacadeService @Autowired constructor(
         val version = draftVersion?.version ?: releaseVersion.version
         val versionName = draftVersion?.versionName ?: releaseVersion.versionName
         val permissions = pipelineListFacadeService.getPipelinePermissions(userId, projectId, pipelineId)
-        val pipelineYamlInfo = pipelineYamlFacadeService.getPipelineYamlInfo(
+        val yamlExist = pipelineYamlFacadeService.yamlExistInDefaultBranch(
             projectId = projectId,
             pipelineId = pipelineId
         )
@@ -187,7 +187,7 @@ class PipelineVersionFacadeService @Autowired constructor(
             baseVersionName = baseVersionName,
             pipelineAsCodeSettings = PipelineAsCodeSettings(enable = yamlInfo != null),
             yamlInfo = yamlInfo,
-            yamlDeleted = pipelineYamlInfo?.defaultFileExists ?: false
+            yamlExist = yamlExist
         )
     }
 

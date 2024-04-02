@@ -87,6 +87,6 @@ data class PipelineDetail(
     val pipelineAsCodeSettings: PipelineAsCodeSettings?,
     @get:Schema(title = "流水线YAML信息", required = false)
     val yamlInfo: PipelineYamlVo?,
-    @get:Schema(title = "流水线YAML是否是删除状态", required = false)
-    var yamlDeleted: Boolean? = false
+    @get:Schema(title = "yaml文件在默认分支是否存在", required = false)
+    var yamlExist: Boolean? = false
 )

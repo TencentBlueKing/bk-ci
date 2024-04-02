@@ -44,6 +44,6 @@ data class PipelineYamlInfo(
     val status: String,
     @get:Schema(title = "流水线创建者")
     val creator: String,
-    @get:Schema(title = "默认分支是否存在yaml文件")
-    val defaultFileExists: Boolean
+    @get:Schema(title = "默认分支")
+    val defaultBranch: String?
 )

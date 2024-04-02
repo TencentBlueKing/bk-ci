@@ -179,8 +179,9 @@ class PipelineYamlRepositoryService @Autowired constructor(
         val userId = action.data.getUserId()
         val repoHashId = action.data.setting.repoHashId
         val directory = GitActionCommon.getCiDirectory(yamlFile.yamlPath)
+        val defaultBranch = action.data.context.defaultBranch
         // 不是fork仓库，并且分支等于默认分支
-        val isDefaultBranch = !fork && branch == action.data.context.defaultBranch
+        val isDefaultBranch = !fork && branch == defaultBranch
         val commitId = action.data.eventCommon.commit.commitId
         val commitTime = action.data.eventCommon.commit.commitTimeStamp?.let {
             DateTimeUtil.stringToLocalDateTime(it)
@@ -208,6 +209,7 @@ class PipelineYamlRepositoryService @Autowired constructor(
             repoHashId = repoHashId,
             filePath = yamlFile.yamlPath,
             directory = directory,
+            defaultBranch = defaultBranch,
             blobId = yamlFile.blobId!!,
             ref = ref,
             commitId = commitId,
@@ -218,7 +220,6 @@ class PipelineYamlRepositoryService @Autowired constructor(
             } else {
                 PipelineYamlStatus.UN_MERGED.name
             },
-            defaultFileExists = isDefaultBranch,
             version = version,
             userId = userId,
             webhooks = webhooks
@@ -244,7 +245,7 @@ class PipelineYamlRepositoryService @Autowired constructor(
         val branch = action.data.eventCommon.branch
         val defaultBranch = action.data.context.defaultBranch
         // 不是fork仓库，并且分支等于默认分支
-        val isDefaultBranch = !fork && branch == action.data.context.defaultBranch
+        val isDefaultBranch = !fork && branch == defaultBranch
         val commitId = action.data.eventCommon.commit.commitId
         val commitTime = action.data.eventCommon.commit.commitTimeStamp?.let {
             DateTimeUtil.stringToLocalDateTime(it)
@@ -279,7 +280,6 @@ class PipelineYamlRepositoryService @Autowired constructor(
             commitTime = commitTime,
             ref = ref,
             defaultBranch = defaultBranch,
-            isDefaultBranch = isDefaultBranch,
             pipelineId = deployPipelineResult.pipelineId,
             version = deployPipelineResult.version,
             userId = action.data.getUserId(),
@@ -438,13 +438,13 @@ class PipelineYamlRepositoryService @Autowired constructor(
                 repoHashId = repoHashId,
                 filePath = filePath,
                 directory = directory,
+                defaultBranch = defaultBranch,
                 pipelineId = pipelineId,
                 status = if (isDefaultBranch) {
                     PipelineYamlStatus.OK.name
                 } else {
                     PipelineYamlStatus.UN_MERGED.name
                 },
-                defaultFileExists = isDefaultBranch,
                 userId = userId,
                 ref = branch,
                 commitId = commitId,
@@ -477,7 +477,6 @@ class PipelineYamlRepositoryService @Autowired constructor(
                     commitTime = commitTime,
                     blobId = blobId,
                     defaultBranch = defaultBranch,
-                    isDefaultBranch = isDefaultBranch,
                     pipelineId = pipelineId,
                     version = version,
                     userId = userId,

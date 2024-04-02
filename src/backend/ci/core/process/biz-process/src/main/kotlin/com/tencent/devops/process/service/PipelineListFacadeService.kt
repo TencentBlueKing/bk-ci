@@ -95,7 +95,6 @@ import com.tencent.devops.process.pojo.classify.PipelineViewFilterByName
 import com.tencent.devops.process.pojo.classify.PipelineViewPipelinePage
 import com.tencent.devops.process.pojo.classify.enums.Logic
 import com.tencent.devops.process.pojo.pipeline.PipelineCount
-import com.tencent.devops.process.pojo.pipeline.PipelineYamlInfo
 import com.tencent.devops.process.pojo.pipeline.SimplePipeline
 import com.tencent.devops.process.pojo.template.TemplatePipelineInfo
 import com.tencent.devops.process.service.label.PipelineGroupService
@@ -1385,9 +1384,9 @@ class PipelineListFacadeService @Autowired constructor(
         val pipelineViewNameMap = pipelineViewGroupService.getViewNameMap(projectId, pipelineIds)
 
         // yaml流水线信息
-        val pipelineYamlInfoMap = pipelineYamlService.listEnablePacPipelineMap(
+        val pipelineYamlExistMap = pipelineYamlService.yamlExistInDefaultBranch(
             projectId = projectId, pipelineIds = pipelineIds.toList()
-        ).associateBy { it.pipelineId }
+        )
 
         // 完善数据
         finalPipelines(
@@ -1401,7 +1400,7 @@ class PipelineListFacadeService @Autowired constructor(
             pipelineBuildMap = pipelineBuildMap,
             buildTaskTotalCountMap = buildTaskTotalCountMap,
             buildTaskFinishCountMap = buildTaskFinishCountMap,
-            pipelineYamlInfoMap = pipelineYamlInfoMap
+            pipelineYamlExistMap = pipelineYamlExistMap
         )
 
         return pipelines
@@ -1418,7 +1417,7 @@ class PipelineListFacadeService @Autowired constructor(
         pipelineBuildMap: Map<String, BuildInfo>,
         buildTaskTotalCountMap: Map<String, Int>,
         buildTaskFinishCountMap: Map<String, Int>,
-        pipelineYamlInfoMap: Map<String, PipelineYamlInfo>
+        pipelineYamlExistMap: Map<String, Boolean>
     ) {
         pipelines.forEach {
             val pipelineId = it.pipelineId
@@ -1493,7 +1492,7 @@ class PipelineListFacadeService @Autowired constructor(
                 it.lock = PipelineRunLockType.checkLock(pipelineSettingRecord.get(tSetting.RUN_LOCK_TYPE))
                 it.buildNumRule = pipelineSettingRecord.get(tSetting.BUILD_NUM_RULE)
             }
-            it.yamlDeleted = pipelineYamlInfoMap[pipelineId]?.defaultFileExists ?: false
+            it.yamlExist = pipelineYamlExistMap[pipelineId] ?: false
         }
     }
 

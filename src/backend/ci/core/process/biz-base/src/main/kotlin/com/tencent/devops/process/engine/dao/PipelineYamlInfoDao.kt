@@ -31,7 +31,6 @@ package com.tencent.devops.process.engine.dao
 import com.tencent.devops.model.process.tables.TPipelineYamlInfo
 import com.tencent.devops.model.process.tables.records.TPipelineYamlInfoRecord
 import com.tencent.devops.process.pojo.pipeline.PipelineYamlInfo
-import com.tencent.devops.process.pojo.pipeline.enums.PipelineYamlStatus
 import org.jooq.DSLContext
 import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
@@ -50,7 +49,7 @@ class PipelineYamlInfoDao {
         directory: String,
         pipelineId: String,
         status: String,
-        defaultFileExists: Boolean,
+        defaultBranch: String?,
         userId: String
     ) {
         val now = LocalDateTime.now()
@@ -63,7 +62,7 @@ class PipelineYamlInfoDao {
                 DIRECTORY,
                 PIPELINE_ID,
                 STATUS,
-                DEFAULT_FILE_EXISTS,
+                DEFAULT_BRANCH,
                 CREATOR,
                 MODIFIER,
                 CREATE_TIME,
@@ -75,7 +74,7 @@ class PipelineYamlInfoDao {
                 directory,
                 pipelineId,
                 status,
-                defaultFileExists,
+                defaultBranch,
                 userId,
                 userId,
                 now,
@@ -90,18 +89,16 @@ class PipelineYamlInfoDao {
         projectId: String,
         repoHashId: String,
         filePath: String,
-        isDefaultBranch: Boolean,
+        defaultBranch: String?,
         userId: String
     ) {
         val now = LocalDateTime.now()
         with(TPipelineYamlInfo.T_PIPELINE_YAML_INFO) {
-            val update = dslContext.update(this)
+            dslContext.update(this)
                 .set(MODIFIER, userId)
                 .set(UPDATE_TIME, now)
-            if (isDefaultBranch) {
-                update.set(DEFAULT_FILE_EXISTS, true)
-            }
-            update.where(PROJECT_ID.eq(projectId))
+                .set(DEFAULT_BRANCH, defaultBranch)
+                .where(PROJECT_ID.eq(projectId))
                 .and(REPO_HASH_ID.eq(repoHashId))
                 .and(FILE_PATH.eq(filePath))
                 .execute()
@@ -116,12 +113,9 @@ class PipelineYamlInfoDao {
         status: String
     ) {
         with(TPipelineYamlInfo.T_PIPELINE_YAML_INFO) {
-            val update = dslContext.update(this)
+            dslContext.update(this)
                 .set(STATUS, status)
-            if (status == PipelineYamlStatus.DELETED.name) {
-                update.set(DEFAULT_FILE_EXISTS, false)
-            }
-            update.where(PROJECT_ID.eq(projectId))
+                .where(PROJECT_ID.eq(projectId))
                 .and(REPO_HASH_ID.eq(repoHashId))
                 .and(FILE_PATH.eq(filePath))
                 .execute()
@@ -270,7 +264,7 @@ class PipelineYamlInfoDao {
                 pipelineId = pipelineId,
                 status = status,
                 creator = creator,
-                defaultFileExists = defaultFileExists
+                defaultBranch = defaultBranch
             )
         }
     }

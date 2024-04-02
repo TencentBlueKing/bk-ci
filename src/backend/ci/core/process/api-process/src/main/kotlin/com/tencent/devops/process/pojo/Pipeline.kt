@@ -129,6 +129,6 @@ data class Pipeline(
     var onlyDraft: Boolean? = false,
     @get:Schema(title = "流水线权限", required = false)
     val permissions: PipelinePermissions? = null,
-    @get:Schema(title = "流水线YAML是否是删除状态", required = false)
-    var yamlDeleted: Boolean? = false
+    @get:Schema(title = "yaml在默认分支是否存在", required = false)
+    var yamlExist: Boolean? = false
 )
