@@ -605,6 +605,29 @@ class WorkspaceJoinDao {
         }
     }
 
+    fun fetchProjectMachineType(
+        dslContext: DSLContext,
+        projectId: String
+    ): Set<String> {
+        return dslContext.selectDistinct(TWindowsResourceType.T_WINDOWS_RESOURCE_TYPE.SIZE)
+            .from(
+                TWorkspace.T_WORKSPACE,
+                TWorkspaceWindows.T_WORKSPACE_WINDOWS,
+                TWindowsResourceType.T_WINDOWS_RESOURCE_TYPE
+            ).where(TWorkspace.T_WORKSPACE.PROJECT_ID.eq(projectId)).and(
+                TWorkspace.T_WORKSPACE.STATUS.notIn(
+                    WorkspaceStatus.PREPARING.ordinal,
+                    WorkspaceStatus.DELETED.ordinal,
+                    WorkspaceStatus.DELIVERING_FAILED.ordinal
+                )
+            ).and(TWorkspace.T_WORKSPACE.NAME.eq(TWorkspaceWindows.T_WORKSPACE_WINDOWS.WORKSPACE_NAME))
+            .and(
+                TWorkspaceWindows.T_WORKSPACE_WINDOWS.WIN_CONFIG_ID.eq(
+                    TWindowsResourceType.T_WINDOWS_RESOURCE_TYPE.ID.cast(Int::class.java)
+                )
+            ).fetch().map { it["SIZE"].toString() }.toSet()
+    }
+
     companion object {
         val workspaceFieldMapper = TWorkspaceFieldJooqMapper()
         val workspaceWithDetailMapper = TWorkspaceRecordWithDetailJooqMapper()

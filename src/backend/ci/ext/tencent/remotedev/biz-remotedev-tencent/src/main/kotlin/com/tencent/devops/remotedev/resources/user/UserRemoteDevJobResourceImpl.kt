@@ -26,6 +26,10 @@ class UserRemoteDevJobResourceImpl @Autowired constructor(
         return Result(remoteDevSchemaService.getJobIdAndNames(type))
     }
 
+    override fun fetchMachineTypeList(userId: String, projectId: String): Result<Set<String>> {
+        return Result(remoteDevJobService.getMachineTypes(projectId))
+    }
+
     override fun getJobSchema(userId: String, schemaId: String): Result<JobSchema?> {
         return Result(remoteDevSchemaService.getSchema(schemaId, false))
     }

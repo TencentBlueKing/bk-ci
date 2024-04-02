@@ -16,6 +16,7 @@ import com.tencent.devops.remotedev.common.exception.ErrorCodeEnum
 import com.tencent.devops.remotedev.dao.RemoteDevCronJobDao
 import com.tencent.devops.remotedev.dao.RemoteDevJobExecRecordDao
 import com.tencent.devops.remotedev.dao.RemoteDevJobSchemaDao
+import com.tencent.devops.remotedev.dao.WorkspaceJoinDao
 import com.tencent.devops.remotedev.pojo.job.CronJob
 import com.tencent.devops.remotedev.pojo.job.CronJobSearchParam
 import com.tencent.devops.remotedev.pojo.job.CronPowerOnParam
@@ -46,8 +47,12 @@ class RemoteDevJobService @Autowired constructor(
     private val remoteDevJobSchemaDao: RemoteDevJobSchemaDao,
     private val remoteDevJobExecRecordDao: RemoteDevJobExecRecordDao,
     private val remoteDevCronJobDao: RemoteDevCronJobDao,
-    private val remoteDevActionService: RemoteDevJobActionService
+    private val remoteDevActionService: RemoteDevJobActionService,
+    private val workspaceJoinDao: WorkspaceJoinDao
 ) {
+    fun getMachineTypes(projectId: String): Set<String> {
+        return workspaceJoinDao.fetchProjectMachineType(dslContext, projectId)
+    }
 
     fun createJob(
         userId: String,
