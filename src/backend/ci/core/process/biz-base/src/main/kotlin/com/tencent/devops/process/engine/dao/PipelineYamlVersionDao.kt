@@ -28,6 +28,7 @@
 
 package com.tencent.devops.process.engine.dao
 
+import com.tencent.devops.common.pipeline.enums.BranchVersionAction
 import com.tencent.devops.model.process.tables.TPipelineYamlVersion
 import com.tencent.devops.model.process.tables.records.TPipelineYamlVersionRecord
 import com.tencent.devops.process.pojo.pipeline.PipelineYamlVersion
@@ -67,6 +68,7 @@ class PipelineYamlVersionDao {
                 BLOB_ID,
                 PIPELINE_ID,
                 VERSION,
+                BRANCH_ACTION,
                 CREATOR,
                 CREATE_TIME
             ).values(
@@ -79,6 +81,7 @@ class PipelineYamlVersionDao {
                 blobId,
                 pipelineId,
                 version,
+                BranchVersionAction.ACTIVE.name,
                 userId,
                 now
             ).execute()
@@ -91,7 +94,8 @@ class PipelineYamlVersionDao {
         repoHashId: String,
         filePath: String,
         ref: String? = null,
-        blobId: String? = null
+        blobId: String? = null,
+        branchAction: String? = null
     ): PipelineYamlVersion? {
         with(TPipelineYamlVersion.T_PIPELINE_YAML_VERSION) {
             val record = dslContext.selectFrom(this)
@@ -100,6 +104,7 @@ class PipelineYamlVersionDao {
                 .and(FILE_PATH.eq(filePath))
                 .let { if (ref != null) it.and(REF.eq(ref)) else it }
                 .let { if (blobId != null) it.and(BLOB_ID.eq(blobId)) else it }
+                .let { if (branchAction != null) it.and(BRANCH_ACTION.eq(branchAction)) else it }
                 .orderBy(COMMIT_TIME.desc())
                 .limit(1)
                 .fetchOne()
@@ -122,6 +127,25 @@ class PipelineYamlVersionDao {
                 .limit(1)
                 .fetchOne()
             return record?.let { convert(it) }
+        }
+    }
+
+    fun updateBranchAction(
+        dslContext: DSLContext,
+        projectId: String,
+        repoHashId: String,
+        filePath: String,
+        ref: String,
+        branchAction: String
+    ) {
+        with(TPipelineYamlVersion.T_PIPELINE_YAML_VERSION) {
+            dslContext.update(this)
+                .set(BRANCH_ACTION, branchAction)
+                .where(PROJECT_ID.eq(projectId))
+                .and(REPO_HASH_ID.eq(repoHashId))
+                .and(FILE_PATH.eq(filePath))
+                .and(REF.eq(ref))
+                .execute()
         }
     }
 
