@@ -60,9 +60,10 @@ class PipelineYamlBuildService @Autowired constructor(
         try {
             val yamlFile = action.data.context.yamlFile!!
             val repoHashId = action.data.setting.repoHashId
+            val branch = action.data.eventCommon.branch
             val filePath = yamlFile.yamlPath
             val blobId = yamlFile.blobId!!
-            val ref = GitActionCommon.getRealRef(action = action)
+            val ref = GitActionCommon.getRealRef(action = action, branch = branch)
 
             val matcher = webhookEventFactory.createScmWebHookMatcher(scmType = scmType, event = action.data.event)
             val preMatch = matcher.preMatch()

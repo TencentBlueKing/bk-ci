@@ -49,6 +49,7 @@ class PipelineYamlInfoDao {
         directory: String,
         pipelineId: String,
         status: String,
+        defaultBranch: String?,
         userId: String
     ) {
         val now = LocalDateTime.now()
@@ -61,6 +62,7 @@ class PipelineYamlInfoDao {
                 DIRECTORY,
                 PIPELINE_ID,
                 STATUS,
+                DEFAULT_BRANCH,
                 CREATOR,
                 MODIFIER,
                 CREATE_TIME,
@@ -72,6 +74,7 @@ class PipelineYamlInfoDao {
                 directory,
                 pipelineId,
                 status,
+                defaultBranch,
                 userId,
                 userId,
                 now,
@@ -86,6 +89,7 @@ class PipelineYamlInfoDao {
         projectId: String,
         repoHashId: String,
         filePath: String,
+        defaultBranch: String?,
         userId: String
     ) {
         val now = LocalDateTime.now()
@@ -93,6 +97,7 @@ class PipelineYamlInfoDao {
             dslContext.update(this)
                 .set(MODIFIER, userId)
                 .set(UPDATE_TIME, now)
+                .set(DEFAULT_BRANCH, defaultBranch)
                 .where(PROJECT_ID.eq(projectId))
                 .and(REPO_HASH_ID.eq(repoHashId))
                 .and(FILE_PATH.eq(filePath))
@@ -128,7 +133,6 @@ class PipelineYamlInfoDao {
                 .where(PROJECT_ID.eq(projectId))
                 .and(REPO_HASH_ID.eq(repoHashId))
                 .and(FILE_PATH.eq(filePath))
-                .and(DELETE.eq(false))
                 .fetchOne()
             return record?.let { convert(it) }
         }
@@ -143,7 +147,6 @@ class PipelineYamlInfoDao {
             val record = dslContext.selectFrom(this)
                 .where(PROJECT_ID.eq(projectId))
                 .and(PIPELINE_ID.eq(pipelineId))
-                .and(DELETE.eq(false))
                 .fetchOne()
             return record?.let { convert(it) }
         }
@@ -158,7 +161,6 @@ class PipelineYamlInfoDao {
             return dslContext.selectFrom(this)
                 .where(PROJECT_ID.eq(projectId))
                 .and(PIPELINE_ID.`in`(pipelineIds))
-                .and(DELETE.eq(false))
                 .fetch().map { convert(it) }
         }
     }
@@ -174,7 +176,6 @@ class PipelineYamlInfoDao {
                 .where(PROJECT_ID.eq(projectId))
                 .and(REPO_HASH_ID.eq(repoHashId))
                 .let { if (directory == null) it else it.and(DIRECTORY.eq(directory)) }
-                .and(DELETE.eq(false))
                 .fetch().map { it.value1() }
         }
     }
@@ -188,7 +189,6 @@ class PipelineYamlInfoDao {
             return dslContext.selectFrom(this)
                 .where(PROJECT_ID.eq(projectId))
                 .and(REPO_HASH_ID.eq(repoHashId))
-                .and(DELETE.eq(false))
                 .fetch {
                     convert(it)
                 }
@@ -197,18 +197,12 @@ class PipelineYamlInfoDao {
 
     fun delete(
         dslContext: DSLContext,
-        userId: String,
         projectId: String,
         repoHashId: String,
-        filePath: String,
-        deleteFilePath: String
+        filePath: String
     ) {
         with(TPipelineYamlInfo.T_PIPELINE_YAML_INFO) {
-            dslContext.update(this)
-                .set(DELETE, true)
-                .set(FILE_PATH, deleteFilePath)
-                .set(UPDATE_TIME, LocalDateTime.now())
-                .set(MODIFIER, userId)
+            dslContext.deleteFrom(this)
                 .where(PROJECT_ID.eq(projectId))
                 .and(REPO_HASH_ID.eq(repoHashId))
                 .and(FILE_PATH.eq(filePath))
@@ -238,7 +232,6 @@ class PipelineYamlInfoDao {
             dslContext.selectCount().from(this)
                 .where(PROJECT_ID.eq(projectId))
                 .and(REPO_HASH_ID.eq(repoHashId))
-                .and(DELETE.eq(false))
                 .fetchOne(0, Long::class.java) ?: 0L
         }
     }
@@ -254,7 +247,6 @@ class PipelineYamlInfoDao {
             dslContext.selectFrom(this)
                 .where(PROJECT_ID.eq(projectId))
                 .and(REPO_HASH_ID.eq(repoHashId))
-                .and(DELETE.eq(false))
                 .limit(limit)
                 .offset(offset)
                 .fetch {
@@ -271,7 +263,8 @@ class PipelineYamlInfoDao {
                 filePath = filePath,
                 pipelineId = pipelineId,
                 status = status,
-                creator = creator
+                creator = creator,
+                defaultBranch = defaultBranch
             )
         }
     }

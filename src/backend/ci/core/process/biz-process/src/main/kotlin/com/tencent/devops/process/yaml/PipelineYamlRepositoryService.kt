@@ -149,11 +149,12 @@ class PipelineYamlRepositoryService @Autowired constructor(
         action: BaseAction,
         yamlFile: YamlPathListEntry
     ) {
+        val branch = action.data.eventCommon.branch
         val pipelineYamlVersion = pipelineYamlService.getLatestVersionByRef(
             projectId = projectId,
             repoHashId = action.data.setting.repoHashId,
             filePath = yamlFile.yamlPath,
-            ref = GitActionCommon.getRealRef(action = action)
+            ref = GitActionCommon.getRealRef(action = action, branch = branch)
         )
         // yaml版本不存在或者当前分支最新版本与要更新的不一样,说明需要创建新的版本
         if (pipelineYamlVersion == null || pipelineYamlVersion.blobId != yamlFile.blobId) {
@@ -178,13 +179,14 @@ class PipelineYamlRepositoryService @Autowired constructor(
         val userId = action.data.getUserId()
         val repoHashId = action.data.setting.repoHashId
         val directory = GitActionCommon.getCiDirectory(yamlFile.yamlPath)
+        val defaultBranch = action.data.context.defaultBranch
         // 不是fork仓库，并且分支等于默认分支
-        val isDefaultBranch = !fork && branch == action.data.context.defaultBranch
+        val isDefaultBranch = !fork && branch == defaultBranch
         val commitId = action.data.eventCommon.commit.commitId
         val commitTime = action.data.eventCommon.commit.commitTimeStamp?.let {
             DateTimeUtil.stringToLocalDateTime(it)
         } ?: LocalDateTime.now()
-        val ref = GitActionCommon.getRealRef(action = action)
+        val ref = GitActionCommon.getRealRef(action = action, branch = branch)
         val deployPipelineResult = pipelineInfoFacadeService.createYamlPipeline(
             userId = action.data.setting.enableUser,
             projectId = projectId,
@@ -207,6 +209,7 @@ class PipelineYamlRepositoryService @Autowired constructor(
             repoHashId = repoHashId,
             filePath = yamlFile.yamlPath,
             directory = directory,
+            defaultBranch = defaultBranch,
             blobId = yamlFile.blobId!!,
             ref = ref,
             commitId = commitId,
@@ -242,13 +245,13 @@ class PipelineYamlRepositoryService @Autowired constructor(
         val branch = action.data.eventCommon.branch
         val defaultBranch = action.data.context.defaultBranch
         // 不是fork仓库，并且分支等于默认分支
-        val isDefaultBranch = !fork && branch == action.data.context.defaultBranch
+        val isDefaultBranch = !fork && branch == defaultBranch
         val commitId = action.data.eventCommon.commit.commitId
         val commitTime = action.data.eventCommon.commit.commitTimeStamp?.let {
             DateTimeUtil.stringToLocalDateTime(it)
         } ?: LocalDateTime.now()
         // 如果是fork仓库,ref应该加上fork库的namespace
-        val ref = GitActionCommon.getRealRef(action = action)
+        val ref = GitActionCommon.getRealRef(action = action, branch = branch)
 
         val deployPipelineResult = pipelineInfoFacadeService.updateYamlPipeline(
             userId = action.data.setting.enableUser,
@@ -426,6 +429,7 @@ class PipelineYamlRepositoryService @Autowired constructor(
             filePath = filePath
         )
         val defaultBranch = action.data.context.defaultBranch
+        val isDefaultBranch = gitPushResult.branch == defaultBranch
         if (pipelineYamlInfo == null) {
             logger.info("push yaml pipeline|create yaml|$projectId|$pipelineId|$version")
             val directory = GitActionCommon.getCiDirectory(filePath)
@@ -434,8 +438,9 @@ class PipelineYamlRepositoryService @Autowired constructor(
                 repoHashId = repoHashId,
                 filePath = filePath,
                 directory = directory,
+                defaultBranch = defaultBranch,
                 pipelineId = pipelineId,
-                status = if (gitPushResult.branch == defaultBranch) {
+                status = if (isDefaultBranch) {
                     PipelineYamlStatus.OK.name
                 } else {
                     PipelineYamlStatus.UN_MERGED.name

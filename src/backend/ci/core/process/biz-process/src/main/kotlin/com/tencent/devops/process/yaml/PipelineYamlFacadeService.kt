@@ -282,6 +282,16 @@ class PipelineYamlFacadeService @Autowired constructor(
         )
     }
 
+    fun yamlExistInDefaultBranch(
+        projectId: String,
+        pipelineId: String
+    ): Boolean {
+        return pipelineYamlService.yamlExistInDefaultBranch(
+            projectId = projectId,
+            pipelineIds = listOf(pipelineId)
+        )[pipelineId] ?: false
+    }
+
     fun pushYamlFile(
         userId: String,
         projectId: String,
@@ -403,43 +413,6 @@ class PipelineYamlFacadeService @Autowired constructor(
                 throw ErrorCodeException(
                     errorCode = ProcessMessageCode.ERROR_PIPELINE_BOUND_YAML,
                     params = arrayOf(it.pipelineId)
-                )
-            }
-        }
-    }
-
-    fun deleteYamlPipelineCheck(
-        userId: String,
-        projectId: String,
-        pipelineId: String
-    ) {
-        val pipelineYamlInfo =
-            pipelineYamlService.getPipelineYamlInfo(projectId = projectId, pipelineId = pipelineId) ?: return
-        with(pipelineYamlInfo) {
-            val repository = client.get(ServiceRepositoryResource::class).get(
-                projectId = projectId,
-                repositoryId = repoHashId,
-                repositoryType = RepositoryType.ID
-            ).data ?: throw ErrorCodeException(
-                errorCode = ProcessMessageCode.GIT_NOT_FOUND,
-                params = arrayOf(repoHashId)
-            )
-            val setting = PacRepoSetting(repository = repository)
-            val event = PipelineYamlManualEvent(
-                userId = userId,
-                projectId = projectId,
-                repoHashId = repoHashId,
-                scmType = repository.getScmType()
-            )
-            val action = eventActionFactory.loadManualEvent(setting = setting, event = event)
-            pipelineYamlService.getBranchFilePath(
-                projectId = projectId,
-                repoHashId = pipelineYamlInfo.repoHashId,
-                branch = action.data.context.defaultBranch!!,
-                filePath = pipelineYamlInfo.filePath
-            )?.let {
-                throw ErrorCodeException(
-                    errorCode = ProcessMessageCode.ERROR_DELETE_YAML_PIPELINE_IN_DEFAULT_BRANCH
                 )
             }
         }

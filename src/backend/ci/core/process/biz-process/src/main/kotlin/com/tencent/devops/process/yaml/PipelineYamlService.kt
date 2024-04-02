@@ -28,10 +28,8 @@
 
 package com.tencent.devops.process.yaml
 
-import com.tencent.devops.common.api.constant.coerceAtMaxLength
 import com.tencent.devops.common.api.enums.RepositoryType
 import com.tencent.devops.common.api.model.SQLPage
-import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.model.process.tables.records.TPipelineYamlBranchFileRecord
 import com.tencent.devops.process.engine.dao.PipelineInfoDao
@@ -65,7 +63,6 @@ class PipelineYamlService(
 
     companion object {
         private val logger = LoggerFactory.getLogger(PipelineYamlService::class.java)
-        private const val MAX_FILE_PATH_LENGTH = 512
     }
 
     fun save(
@@ -73,6 +70,7 @@ class PipelineYamlService(
         repoHashId: String,
         filePath: String,
         directory: String,
+        defaultBranch: String?,
         pipelineId: String,
         status: String,
         userId: String,
@@ -91,6 +89,7 @@ class PipelineYamlService(
                 repoHashId = repoHashId,
                 filePath = filePath,
                 directory = directory,
+                defaultBranch = defaultBranch,
                 pipelineId = pipelineId,
                 status = status,
                 userId = userId
@@ -143,6 +142,7 @@ class PipelineYamlService(
                 projectId = projectId,
                 repoHashId = repoHashId,
                 filePath = filePath,
+                defaultBranch = defaultBranch,
                 userId = userId
             )
             pipelineYamlVersionDao.save(
@@ -262,6 +262,35 @@ class PipelineYamlService(
             projectId = projectId,
             pipelineId = pipelineId
         )
+    }
+
+    /**
+     * yaml文件是否在默认分支存在
+     */
+    fun yamlExistInDefaultBranch(
+        projectId: String,
+        pipelineIds: List<String>
+    ): Map<String, Boolean> {
+        val yamlInfoMap = pipelineYamlInfoDao.listByPipelineIds(
+            dslContext = dslContext,
+            projectId = projectId,
+            pipelineIds = pipelineIds
+        ).associateBy { it.pipelineId }
+        return pipelineIds.associateWith { pipelineId ->
+            val yamlInfo = yamlInfoMap[pipelineId]
+            // 如果流水线没有绑定PAC,则表示yaml不存在
+            if (yamlInfo == null || yamlInfo.defaultBranch.isNullOrBlank()) {
+                false
+            } else {
+                pipelineYamlBranchFileDao.get(
+                    dslContext = dslContext,
+                    projectId = projectId,
+                    repoHashId = yamlInfo.repoHashId,
+                    branch = yamlInfo.defaultBranch!!,
+                    filePath = yamlInfo.filePath
+                ) != null
+            }
+        }
     }
 
     fun listEnablePacPipelineMap(
@@ -414,17 +443,13 @@ class PipelineYamlService(
         repoHashId: String,
         filePath: String
     ) {
-        val deleteTime = DateTimeUtil.toDateTime(LocalDateTime.now(), "yyMMddHHmmSS")
-        val deleteFilePath = "$filePath[$deleteTime]"
         dslContext.transaction { configuration ->
             val transactionContext = DSL.using(configuration)
             pipelineYamlInfoDao.delete(
                 dslContext = transactionContext,
-                userId = userId,
                 projectId = projectId,
                 repoHashId = repoHashId,
-                filePath = filePath,
-                deleteFilePath = deleteFilePath.coerceAtMaxLength(MAX_FILE_PATH_LENGTH)
+                filePath = filePath
             )
             pipelineYamlVersionDao.deleteAll(
                 dslContext = transactionContext,
