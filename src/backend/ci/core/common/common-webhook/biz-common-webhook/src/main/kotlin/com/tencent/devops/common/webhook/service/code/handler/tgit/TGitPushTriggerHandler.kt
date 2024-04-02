@@ -42,6 +42,7 @@ import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_REPO_URL
 import com.tencent.devops.common.webhook.annotation.CodeWebhookHandler
 import com.tencent.devops.common.webhook.enums.WebhookI18nConstants
 import com.tencent.devops.common.webhook.enums.WebhookI18nConstants.TGIT_PUSH_EVENT_DESC
+import com.tencent.devops.common.webhook.enums.code.tgit.TGitPushActionKind
 import com.tencent.devops.common.webhook.enums.code.tgit.TGitPushActionType
 import com.tencent.devops.common.webhook.enums.code.tgit.TGitPushOperationKind
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_BRANCH
@@ -60,8 +61,8 @@ import com.tencent.devops.common.webhook.pojo.code.git.isDeleteBranch
 import com.tencent.devops.common.webhook.service.code.EventCacheService
 import com.tencent.devops.common.webhook.service.code.GitScmService
 import com.tencent.devops.common.webhook.service.code.filter.BranchFilter
+import com.tencent.devops.common.webhook.service.code.filter.ContainsFilter
 import com.tencent.devops.common.webhook.service.code.filter.PathFilterFactory
-import com.tencent.devops.common.webhook.service.code.filter.PushKindFilter
 import com.tencent.devops.common.webhook.service.code.filter.SkipCiFilter
 import com.tencent.devops.common.webhook.service.code.filter.ThirdFilter
 import com.tencent.devops.common.webhook.service.code.filter.UserFilter
@@ -247,10 +248,17 @@ class TGitPushTriggerHandler(
                     ).doFilter(response)
                 }
             }
-            val pushKindFilter = PushKindFilter(
+            val actionFilter = ContainsFilter(
                 pipelineId = pipelineId,
-                checkCreateAndUpdate = event.create_and_update,
-                actionList = convert(webHookParams.includePushAction)
+                included = convert(includePushAction),
+                triggerOn = getAction(event)?.let {
+                    TGitPushActionKind.convertActionType(it).value
+                } ?: TGitPushActionType.PUSH_FILE.value,
+                filterName = "pushActionFilter",
+                failedReason = I18Variable(
+                    code = WebhookI18nConstants.PUSH_ACTION_NOT_MATCH,
+                    params = listOf(getAction(event) ?: "")
+                ).toJsonStr()
             )
             val thirdFilter = ThirdFilter(
                 projectId = projectId,
@@ -265,7 +273,7 @@ class TGitPushTriggerHandler(
             )
             return listOf(
                 userFilter, branchFilter, skipCiFilter,
-                pathFilter, commitMessageFilter, pushKindFilter, thirdFilter
+                pathFilter, commitMessageFilter, actionFilter, thirdFilter
             )
         }
     }

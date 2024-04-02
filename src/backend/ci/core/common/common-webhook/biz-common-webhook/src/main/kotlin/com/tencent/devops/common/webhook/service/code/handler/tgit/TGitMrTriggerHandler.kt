@@ -256,7 +256,11 @@ class TGitMrTriggerHandler(
                 pipelineId = pipelineId,
                 filterName = "mrAction",
                 triggerOn = TGitMrEventAction.getActionValue(event) ?: "",
-                included = convert(includeMrAction)
+                included = convert(includeMrAction),
+                failedReason = I18Variable(
+                    code = WebhookI18nConstants.MR_ACTION_NOT_MATCH,
+                    params = listOf(getAction(event) ?: "")
+                ).toJsonStr()
             )
 
             var mrChangeFiles: Set<String>? = null
@@ -453,30 +457,30 @@ class TGitMrTriggerHandler(
         )
     }
 
-    private fun getI18Code(event: GitMergeRequestEvent) = with(getAction(event)) {
+    private fun getI18Code(event: GitMergeRequestEvent) = with(event) {
         when {
-            this == GitMergeRequestEvent.ACTION_CLOSED -> {
+            // 关闭
+            isClosed() -> {
                 WebhookI18nConstants.TGIT_MR_CLOSED_EVENT_DESC
             }
-
-            this == GitMergeRequestEvent.ACTION_CREATED -> {
+            // 创建
+            isCreated() -> {
                 WebhookI18nConstants.TGIT_MR_CREATED_EVENT_DESC
             }
             // MR源分支提交更新
-            (this == GitMergeRequestEvent.ACTION_UPDATED &&
-                event.object_attributes.extension_action == "push-update") -> {
+            isUpdate() -> {
                 WebhookI18nConstants.TGIT_MR_PUSH_UPDATED_EVENT_DESC
             }
-            // MR更新
-            this == GitMergeRequestEvent.ACTION_UPDATED -> {
+            // MR基础信息更新
+            isUpdateInfo() -> {
                 WebhookI18nConstants.TGIT_MR_UPDATED_EVENT_DESC
             }
-
-            this == GitMergeRequestEvent.ACTION_REOPENED -> {
+            // 重新打开
+            isReopen() -> {
                 WebhookI18nConstants.TGIT_MR_REOPENED_EVENT_DESC
             }
-
-            this == GitMergeRequestEvent.ACTION_MERGED -> {
+            // 合并MR
+            isMerged() -> {
                 WebhookI18nConstants.TGIT_MR_MERGED_EVENT_DESC
             }
 
