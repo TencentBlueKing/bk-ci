@@ -86,5 +86,7 @@ data class PipelineDetail(
     @get:Schema(title = "PAC配置", required = false)
     val pipelineAsCodeSettings: PipelineAsCodeSettings?,
     @get:Schema(title = "流水线YAML信息", required = false)
-    val yamlInfo: PipelineYamlVo?
+    val yamlInfo: PipelineYamlVo?,
+    @get:Schema(title = "yaml文件在默认分支是否存在", required = false)
+    var yamlExist: Boolean? = false
 )

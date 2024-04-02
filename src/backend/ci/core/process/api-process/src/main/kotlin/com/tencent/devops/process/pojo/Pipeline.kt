@@ -130,6 +130,6 @@ data class Pipeline(
     var latestVersionStatus: VersionStatus? = VersionStatus.RELEASED,
     @get:Schema(title = "流水线权限", required = false)
     val permissions: PipelinePermissions? = null,
-    @get:Schema(title = "流水线是否开启PAC", required = false)
-    var pac: Boolean? = false
+    @get:Schema(title = "yaml在默认分支是否存在", required = false)
+    var yamlExist: Boolean? = false
 )
