@@ -1352,11 +1352,12 @@ class PipelineRepositoryService constructor(
         projectId: String,
         pipelineId: String,
         version: Int,
-        ignoreBase: Boolean? = false
+        ignoreBase: Boolean? = false,
+        transactionContext: DSLContext? = null
     ): PipelineResourceVersion {
         var resultVersion: PipelineResourceVersion? = null
         dslContext.transaction { configuration ->
-            val context = DSL.using(configuration)
+            val context = transactionContext ?: DSL.using(configuration)
 
             // 获取发布的版本用于比较差异
             val releaseResource = pipelineResourceDao.getReleaseVersionResource(

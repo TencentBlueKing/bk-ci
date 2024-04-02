@@ -682,7 +682,8 @@ class PipelineInfoFacadeService @Autowired constructor(
                         projectId = projectId,
                         pipelineId = pipelineId,
                         version = branchVersion.version,
-                        ignoreBase = true
+                        ignoreBase = true,
+                        transactionContext = transactionContext
                     )
                 }
             }
