@@ -55,6 +55,18 @@ interface UserRemoteDevJobResource {
         projectId: String
     ): Result<Set<String>>
 
+    @Operation(summary = "获取所有正在运行的拥有者")
+    @GET
+    @Path("/owners")
+    fun fetchOwners(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "项目ID", required = true)
+        @QueryParam("projectId")
+        projectId: String
+    ): Result<Set<String>>
+
     @Operation(summary = "获取job schema")
     @GET
     @Path("/schema")

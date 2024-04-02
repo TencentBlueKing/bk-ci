@@ -16,7 +16,9 @@ import com.tencent.devops.remotedev.common.exception.ErrorCodeEnum
 import com.tencent.devops.remotedev.dao.RemoteDevCronJobDao
 import com.tencent.devops.remotedev.dao.RemoteDevJobExecRecordDao
 import com.tencent.devops.remotedev.dao.RemoteDevJobSchemaDao
+import com.tencent.devops.remotedev.dao.WorkspaceDao
 import com.tencent.devops.remotedev.dao.WorkspaceJoinDao
+import com.tencent.devops.remotedev.pojo.WorkspaceMountType
 import com.tencent.devops.remotedev.pojo.job.CronJob
 import com.tencent.devops.remotedev.pojo.job.CronJobSearchParam
 import com.tencent.devops.remotedev.pojo.job.CronPowerOnParam
@@ -48,10 +50,19 @@ class RemoteDevJobService @Autowired constructor(
     private val remoteDevJobExecRecordDao: RemoteDevJobExecRecordDao,
     private val remoteDevCronJobDao: RemoteDevCronJobDao,
     private val remoteDevActionService: RemoteDevJobActionService,
+    private val workspaceDao: WorkspaceDao,
     private val workspaceJoinDao: WorkspaceJoinDao
 ) {
     fun getMachineTypes(projectId: String): Set<String> {
         return workspaceJoinDao.fetchProjectMachineType(dslContext, projectId)
+    }
+
+    fun getOwners(projectId: String): Set<String> {
+        return workspaceDao.fetchWorkspaceWithOwner(
+            dslContext = dslContext,
+            mountType = WorkspaceMountType.START,
+            projectIds = setOf(projectId)
+        )?.map { it["SHARED_USER"] as? String ?: "" }?.filter { it.isNotBlank() }?.toSet() ?: return emptySet()
     }
 
     fun createJob(
