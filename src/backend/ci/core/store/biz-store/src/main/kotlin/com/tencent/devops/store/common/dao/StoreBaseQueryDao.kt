@@ -27,13 +27,29 @@
 
 package com.tencent.devops.store.common.dao
 
+import com.tencent.devops.common.api.constant.KEY_VERSION
 import com.tencent.devops.common.db.utils.JooqUtils
+import com.tencent.devops.model.store.tables.TClassify
 import com.tencent.devops.model.store.tables.TStoreBase
+import com.tencent.devops.model.store.tables.TStoreVersionLog
 import com.tencent.devops.model.store.tables.records.TStoreBaseRecord
 import com.tencent.devops.store.common.utils.VersionUtils
+import com.tencent.devops.store.pojo.common.KEY_CLASSIFY_CODE
+import com.tencent.devops.store.pojo.common.KEY_CLASSIFY_CREATE_TIME
+import com.tencent.devops.store.pojo.common.KEY_CLASSIFY_NAME
+import com.tencent.devops.store.pojo.common.KEY_CLASSIFY_TYPE
+import com.tencent.devops.store.pojo.common.KEY_CLASSIFY_UPDATE_TIME
+import com.tencent.devops.store.pojo.common.KEY_CLASSIFY_WEIGHT
+import com.tencent.devops.store.pojo.common.KEY_ID
+import com.tencent.devops.store.pojo.common.KEY_PUBLISHER
+import com.tencent.devops.store.pojo.common.KEY_RELEASE_TYPE
+import com.tencent.devops.store.pojo.common.KEY_STORE_CODE
+import com.tencent.devops.store.pojo.common.KEY_STORE_TYPE
+import com.tencent.devops.store.pojo.common.KEY_VERSION_LOG_CONTENT
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import org.jooq.Condition
 import org.jooq.DSLContext
+import org.jooq.Record
 import org.springframework.stereotype.Repository
 
 @Repository
@@ -87,7 +103,7 @@ class StoreBaseQueryDao {
         }
     }
 
-    fun getLatestAtomByCode(dslContext: DSLContext, storeCode: String): TStoreBaseRecord? {
+    fun getLatestComponentByCode(dslContext: DSLContext, storeCode: String): TStoreBaseRecord? {
         return with(TStoreBase.T_STORE_BASE) {
             dslContext.selectFrom(this)
                 .where(STORE_CODE.eq(storeCode))
@@ -161,6 +177,34 @@ class StoreBaseQueryDao {
             return dslContext.selectCount().from(this)
                 .where(conditions)
                 .fetchOne(0, Int::class.java)!!
+        }
+    }
+
+    fun getComponentRelClassifyAndVersionInfoById(dslContext: DSLContext, storeId: String): Record? {
+        val tClassify = TClassify.T_CLASSIFY
+        val tStoreVersionLog = TStoreVersionLog.T_STORE_VERSION_LOG
+        with(TStoreBase.T_STORE_BASE) {
+            return dslContext.select(
+                this.ID.`as`(KEY_ID),
+                this.STORE_CODE.`as`(KEY_STORE_CODE),
+                this.STORE_TYPE.`as`(KEY_STORE_TYPE),
+                tClassify.CLASSIFY_CODE.`as`(KEY_CLASSIFY_CODE),
+                tClassify.CLASSIFY_NAME.`as`(KEY_CLASSIFY_NAME),
+                tClassify.TYPE.`as`(KEY_CLASSIFY_TYPE),
+                tClassify.WEIGHT.`as`(KEY_CLASSIFY_WEIGHT),
+                tClassify.CREATE_TIME.`as`(KEY_CLASSIFY_CREATE_TIME),
+                tClassify.UPDATE_TIME.`as`(KEY_CLASSIFY_UPDATE_TIME),
+                this.PUBLISHER.`as`(KEY_PUBLISHER),
+                tStoreVersionLog.RELEASE_TYPE.`as`(KEY_RELEASE_TYPE),
+                this.VERSION.`as`(KEY_VERSION),
+                tStoreVersionLog.CONTENT.`as`(KEY_VERSION_LOG_CONTENT)
+            )
+                .from(this)
+                .leftJoin(tClassify).on(tClassify.ID.eq(this.CLASSIFY_ID))
+                .leftJoin(tStoreVersionLog).on(tStoreVersionLog.STORE_ID.eq(this.ID))
+                .where(this.ID.eq(storeId))
+                .limit(1)
+                .fetchOne()
         }
     }
 }

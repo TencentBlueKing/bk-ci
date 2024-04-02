@@ -34,6 +34,7 @@ import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.store.common.dao.ClassifyDao
 import com.tencent.devops.store.common.dao.StoreBaseFeatureManageDao
+import com.tencent.devops.store.common.dao.StoreBaseFeatureQueryDao
 import com.tencent.devops.store.common.dao.StoreBaseManageDao
 import com.tencent.devops.store.common.dao.StoreBaseQueryDao
 import com.tencent.devops.store.common.dao.StoreLabelDao
@@ -56,6 +57,7 @@ abstract class StoreComponentManageServiceImpl(
     private val storeBaseQueryDao: StoreBaseQueryDao,
     private val storeBaseManageDao: StoreBaseManageDao,
     private val storeBaseFeatureManageDao: StoreBaseFeatureManageDao,
+    private val storeBaseFeatureQueryDao: StoreBaseFeatureQueryDao,
     private val storeProjectService: StoreProjectService,
     private val classifyDao: ClassifyDao,
     private val storeLabelDao: StoreLabelDao,
@@ -104,7 +106,7 @@ abstract class StoreComponentManageServiceImpl(
             )
         }
         val storeIds =  mutableListOf(componentBaseInfoRecord.id)
-        val latestComponent = storeBaseQueryDao.getLatestAtomByCode(dslContext, storeCode)
+        val latestComponent = storeBaseQueryDao.getLatestComponentByCode(dslContext, storeCode)
         if (latestComponent != null && componentBaseInfoRecord.id != latestComponent.id) {
             storeIds.add(latestComponent.id)
         }
@@ -173,7 +175,7 @@ abstract class StoreComponentManageServiceImpl(
             errorCode = CommonMessageCode.PARAMETER_IS_INVALID,
             params = arrayOf(installStoreReq.storeCode)
         )
-        val publicFlag = storeBaseFeatureManageDao.isPublic(
+        val publicFlag = storeBaseFeatureQueryDao.isPublic(
             dslContext = dslContext,
             storeCode = installStoreReq.storeCode,
             storeType = installStoreReq.storeType
