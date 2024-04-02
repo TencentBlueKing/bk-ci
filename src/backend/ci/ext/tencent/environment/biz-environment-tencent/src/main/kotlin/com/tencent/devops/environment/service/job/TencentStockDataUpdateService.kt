@@ -75,7 +75,7 @@ class TencentStockDataUpdateService @Autowired constructor(
         private const val SCHEDULED_UPDATE_GSE_AGENT_TIMEOUT_LOCK_KEY = "scheduled_update_gse_agent_timeout_lock"
 
         private const val DEFAULT_PAGE_SIZE = 100
-        private const val EXPIRATION_TIME_OF_THE_LOCK = 200L
+        private const val EXPIRATION_TIME_OF_THE_LOCK = 600L
 
         const val AGENT_ABNORMAL_NODE_STATUS = 0
         const val AGENT_NORMAL_NODE_STATUS = 1
@@ -389,6 +389,7 @@ class TencentStockDataUpdateService @Autowired constructor(
             logger.error("[taskWithRedisLock]exception: ", e)
         } finally {
             redisLock.unlock()
+            logger.info("[taskWithRedisLock]Unlocked.")
         }
     }
 }
