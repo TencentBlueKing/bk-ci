@@ -45,6 +45,7 @@ import com.tencent.devops.common.webhook.pojo.code.git.GitEvent
 import com.tencent.devops.common.webhook.pojo.code.git.GitReviewEvent
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.engine.dao.PipelineYamlInfoDao
+import com.tencent.devops.process.pojo.pipeline.PipelineYamlInfo
 import com.tencent.devops.process.pojo.pipeline.PipelineYamlVo
 import com.tencent.devops.process.pojo.pipeline.PushPipelineResult
 import com.tencent.devops.process.pojo.trigger.PipelineTriggerEvent
@@ -282,6 +283,16 @@ class PipelineYamlFacadeService @Autowired constructor(
         )
     }
 
+    fun getPipelineYamlInfo(
+        projectId: String,
+        pipelineId: String
+    ): PipelineYamlInfo? {
+        return pipelineYamlService.getPipelineYamlInfo(
+            projectId = projectId,
+            pipelineId = pipelineId
+        )
+    }
+
     fun pushYamlFile(
         userId: String,
         projectId: String,
@@ -415,33 +426,11 @@ class PipelineYamlFacadeService @Autowired constructor(
     ) {
         val pipelineYamlInfo =
             pipelineYamlService.getPipelineYamlInfo(projectId = projectId, pipelineId = pipelineId) ?: return
-        with(pipelineYamlInfo) {
-            val repository = client.get(ServiceRepositoryResource::class).get(
-                projectId = projectId,
-                repositoryId = repoHashId,
-                repositoryType = RepositoryType.ID
-            ).data ?: throw ErrorCodeException(
-                errorCode = ProcessMessageCode.GIT_NOT_FOUND,
-                params = arrayOf(repoHashId)
+        // 默认分支存在yaml,不能删除流水线
+        if (pipelineYamlInfo.defaultFileExists) {
+            throw ErrorCodeException(
+                errorCode = ProcessMessageCode.ERROR_DELETE_YAML_PIPELINE_IN_DEFAULT_BRANCH
             )
-            val setting = PacRepoSetting(repository = repository)
-            val event = PipelineYamlManualEvent(
-                userId = userId,
-                projectId = projectId,
-                repoHashId = repoHashId,
-                scmType = repository.getScmType()
-            )
-            val action = eventActionFactory.loadManualEvent(setting = setting, event = event)
-            pipelineYamlService.getBranchFilePath(
-                projectId = projectId,
-                repoHashId = pipelineYamlInfo.repoHashId,
-                branch = action.data.context.defaultBranch!!,
-                filePath = pipelineYamlInfo.filePath
-            )?.let {
-                throw ErrorCodeException(
-                    errorCode = ProcessMessageCode.ERROR_DELETE_YAML_PIPELINE_IN_DEFAULT_BRANCH
-                )
-            }
         }
     }
 
