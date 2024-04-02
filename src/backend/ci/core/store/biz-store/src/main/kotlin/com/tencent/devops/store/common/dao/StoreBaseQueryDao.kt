@@ -31,9 +31,11 @@ import com.tencent.devops.common.db.utils.JooqUtils
 import com.tencent.devops.model.store.tables.TStoreBase
 import com.tencent.devops.model.store.tables.records.TStoreBaseRecord
 import com.tencent.devops.store.common.utils.VersionUtils
+import com.tencent.devops.store.pojo.common.enums.StoreStatusEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import org.jooq.Condition
 import org.jooq.DSLContext
+import org.jooq.Result
 import org.springframework.stereotype.Repository
 
 @Repository
@@ -87,6 +89,23 @@ class StoreBaseQueryDao {
         }
     }
 
+    fun getReleaseComponentsByCode(
+        dslContext: DSLContext,
+        storeCode: String,
+        storeType: StoreTypeEnum,
+        num: Int? = null
+    ): Result<TStoreBaseRecord>? {
+        return with(TStoreBase.T_STORE_BASE) {
+            val baseStep = dslContext.selectFrom(this)
+                .where(STORE_CODE.eq(storeCode).and(STORE_TYPE.eq(storeType.type.toByte())))
+                .orderBy(CREATE_TIME.desc())
+            if (null != num) {
+                baseStep.limit(num)
+            }
+            baseStep.fetch()
+        }
+    }
+
     fun getComponentById(
         dslContext: DSLContext,
         storeId: String
@@ -121,7 +140,8 @@ class StoreBaseQueryDao {
         dslContext: DSLContext,
         storeType: StoreTypeEnum,
         name: String? = null,
-        storeCode: String? = null
+        storeCode: String? = null,
+        status: StoreStatusEnum? = null
     ): Int {
         with(TStoreBase.T_STORE_BASE) {
             val conditions = mutableListOf<Condition>()
@@ -131,6 +151,9 @@ class StoreBaseQueryDao {
             }
             if (storeCode.isNullOrBlank()) {
                 conditions.add(STORE_CODE.eq(storeCode))
+            }
+            if (status != null) {
+                conditions.add(STATUS.eq(status.name))
             }
             return dslContext.selectCount().from(this).where(conditions).fetchOne(0, Int::class.java)!!
         }

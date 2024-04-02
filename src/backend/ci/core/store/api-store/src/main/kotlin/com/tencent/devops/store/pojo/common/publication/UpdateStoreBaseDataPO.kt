@@ -28,46 +28,35 @@
 package com.tencent.devops.store.pojo.common.publication
 
 import com.tencent.devops.store.pojo.common.enums.StoreStatusEnum
-import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import io.swagger.v3.oas.annotations.media.Schema
 import java.time.LocalDateTime
 
-@Schema(title = "组件基本数据PO")
-data class StoreBaseDataPO(
+@Schema(title = "更新组件基本数据PO")
+data class UpdateStoreBaseDataPO(
     @get:Schema(title = "主键ID")
     val id: String,
-    @get:Schema(title = "组件标识")
-    val storeCode: String,
-    @get:Schema(title = "组件类型")
-    val storeType: StoreTypeEnum,
     @get:Schema(title = "组件名称")
-    val name: String,
-    @get:Schema(title = "版本号")
-    val version: String,
+    val name: String? = null,
     @get:Schema(title = "状态")
-    val status: StoreStatusEnum,
+    val status: StoreStatusEnum? = null,
     @get:Schema(title = "状态描述")
     val statusMsg: String? = null,
     @get:Schema(title = "logo地址")
     val logoUrl: String? = null,
     @get:Schema(title = "简介", required = true)
-    val summary: String = "",
+    val summary: String? = null,
     @get:Schema(title = "描述", required = false)
     val description: String? = null,
     @get:Schema(title = "是否为最新版本")
-    val latestFlag: Boolean = false,
+    val latestFlag: Boolean? = null,
     @get:Schema(title = "发布者")
     val publisher: String? = null,
     @get:Schema(title = "发布时间")
     val pubTime: LocalDateTime? = null,
     @get:Schema(title = "分类ID")
-    val classifyId: String = "",
-    @get:Schema(title = "创建人")
-    val creator: String,
+    val classifyId: String? = null,
     @get:Schema(title = "修改人")
     val modifier: String,
-    @get:Schema(title = "创建时间")
-    val createTime: LocalDateTime = LocalDateTime.now(),
     @get:Schema(title = "更新时间")
     val updateTime: LocalDateTime = LocalDateTime.now()
 )

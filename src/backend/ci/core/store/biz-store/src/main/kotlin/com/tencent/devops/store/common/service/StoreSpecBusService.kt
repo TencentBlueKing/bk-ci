@@ -29,6 +29,7 @@ package com.tencent.devops.store.common.service
 
 import com.tencent.devops.store.pojo.common.enums.StoreStatusEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
+import com.tencent.devops.store.pojo.common.publication.ReleaseProcessItem
 import com.tencent.devops.store.pojo.common.publication.StorePkgEnvRequest
 import com.tencent.devops.store.pojo.common.publication.StoreRunPipelineParam
 import com.tencent.devops.store.pojo.common.publication.StoreUpdateRequest
@@ -85,4 +86,17 @@ interface StoreSpecBusService {
         storeCode: String,
         version: String
     ): List<StorePkgEnvRequest>
+
+    /**
+     * 获取组件发布过程信息列表
+     * @param userId 流水线ID
+     * @param isNormalUpgrade 是否为普通升级
+     * @param status 组件状态
+     * @return 发布过程信息列表
+     */
+    fun getReleaseProcessItems(
+        userId: String,
+        isNormalUpgrade: Boolean,
+        status: StoreStatusEnum
+    ): List<ReleaseProcessItem>
 }

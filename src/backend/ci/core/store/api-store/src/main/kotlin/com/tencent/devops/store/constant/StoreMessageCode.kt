@@ -154,6 +154,7 @@ object StoreMessageCode {
     const val GET_BRANCH_COMMIT_INFO_ERROR = "2120927" // 获取分支提交信息异常
     const val STORE_BRANCH_NO_NEW_COMMIT = "2120928" // 代码未变更，分支测试版本生成失败
     const val STORE_VERSION_IS_NOT_FINISH = "2120929" // 研发商店：组件{0}的{1}版本发布未结束，请稍后再试
+    const val STORE_RELEASE_STEPS_ERROR = "2120930" // 研发商店：组件发布流程中状态变更顺序不正确
 
     const val BK_OTHER = "bkOther" // 其他
     const val BK_PIPELINED_JOB = "bkPipelinedJob" // 流水线Job

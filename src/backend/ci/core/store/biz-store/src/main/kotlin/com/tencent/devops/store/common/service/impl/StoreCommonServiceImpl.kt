@@ -64,6 +64,7 @@ import com.tencent.devops.store.pojo.common.enums.ReleaseTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.common.service.StoreCommonService
 import com.tencent.devops.store.common.utils.VersionUtils
+import com.tencent.devops.store.pojo.atom.enums.AtomStatusEnum
 import com.tencent.devops.store.pojo.common.enums.StoreStatusEnum
 import com.tencent.devops.store.pojo.common.version.VersionModel
 import org.jooq.DSLContext
@@ -452,5 +453,16 @@ abstract class StoreCommonServiceImpl @Autowired constructor() : StoreCommonServ
                 )
             }
         }
+    }
+
+    override fun getNormalUpgradeFlag(storeCode: String, storeType: StoreTypeEnum, status: StoreStatusEnum): Boolean {
+        val releaseTotalNum = storeBaseQueryDao.countByCondition(
+            dslContext = dslContext,
+            storeType = storeType,
+            storeCode = storeCode,
+            status = status
+        )
+        val currentNum = if (status == StoreStatusEnum.RELEASED) 1 else 0
+        return releaseTotalNum > currentNum
     }
 }

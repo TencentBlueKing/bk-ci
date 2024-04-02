@@ -29,7 +29,9 @@ package com.tencent.devops.store.common.dao
 
 import com.tencent.devops.model.store.tables.TStoreBase
 import com.tencent.devops.store.pojo.common.enums.StoreStatusEnum
+import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.pojo.common.publication.StoreBaseDataPO
+import com.tencent.devops.store.pojo.common.publication.UpdateStoreBaseDataPO
 import org.jooq.DSLContext
 import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
@@ -94,22 +96,68 @@ class StoreBaseManageDao {
         }
     }
 
-    fun updateStoreStatusById(
+    fun updateStoreBaseInfo(
         dslContext: DSLContext,
-        userId: String,
-        storeId: String,
-        status: StoreStatusEnum,
-        msg: String? = null
+        updateStoreBaseDataPO: UpdateStoreBaseDataPO
     ) {
         with(TStoreBase.T_STORE_BASE) {
             val baseStep = dslContext.update(this)
-                .set(STATUS, status.name)
-            if (!msg.isNullOrEmpty()) {
-                baseStep.set(STATUS_MSG, msg)
+            val name = updateStoreBaseDataPO.name
+            if (!name.isNullOrBlank()) {
+                baseStep.set(NAME, name)
             }
-            baseStep.set(MODIFIER, userId)
-                .set(UPDATE_TIME, LocalDateTime.now())
-                .where(ID.eq(storeId))
+            val status = updateStoreBaseDataPO.status
+            if (status != null) {
+                baseStep.set(STATUS, status.name)
+            }
+            val statusMsg = updateStoreBaseDataPO.statusMsg
+            if (!statusMsg.isNullOrBlank()) {
+                baseStep.set(STATUS_MSG, statusMsg)
+            }
+            val logoUrl = updateStoreBaseDataPO.logoUrl
+            if (!logoUrl.isNullOrBlank()) {
+                baseStep.set(LOGO_URL, logoUrl)
+            }
+            val summary = updateStoreBaseDataPO.summary
+            if (!summary.isNullOrBlank()) {
+                baseStep.set(SUMMARY, summary)
+            }
+            val description = updateStoreBaseDataPO.description
+            if (!description.isNullOrBlank()) {
+                baseStep.set(DESCRIPTION, description)
+            }
+            val latestFlag = updateStoreBaseDataPO.latestFlag
+            if (latestFlag != null) {
+                baseStep.set(LATEST_FLAG, latestFlag)
+            }
+            val publisher = updateStoreBaseDataPO.publisher
+            if (!publisher.isNullOrBlank()) {
+                baseStep.set(PUBLISHER, publisher)
+            }
+            val pubTime = updateStoreBaseDataPO.pubTime
+            if (pubTime != null) {
+                baseStep.set(PUB_TIME, pubTime)
+            }
+            val classifyId = updateStoreBaseDataPO.classifyId
+            if (!classifyId.isNullOrBlank()) {
+                baseStep.set(CLASSIFY_ID, classifyId)
+            }
+            baseStep.set(MODIFIER, updateStoreBaseDataPO.modifier)
+                .set(UPDATE_TIME, updateStoreBaseDataPO.updateTime)
+                .where(ID.eq(updateStoreBaseDataPO.id))
+                .execute()
+        }
+    }
+
+    fun cleanLatestFlag(
+        dslContext: DSLContext,
+        storeCode: String,
+        storeType: StoreTypeEnum
+    ) {
+        with(TStoreBase.T_STORE_BASE) {
+            dslContext.update(this)
+                .set(LATEST_FLAG, false)
+                .where(STORE_CODE.eq(storeCode).and(STORE_TYPE.eq(storeType.type.toByte())))
                 .execute()
         }
     }
