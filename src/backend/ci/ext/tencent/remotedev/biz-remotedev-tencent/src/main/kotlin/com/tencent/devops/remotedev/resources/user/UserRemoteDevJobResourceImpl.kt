@@ -1,5 +1,6 @@
 package com.tencent.devops.remotedev.resources.user
 
+import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
@@ -11,6 +12,7 @@ import com.tencent.devops.remotedev.pojo.job.JobRecord
 import com.tencent.devops.remotedev.pojo.job.JobRecordSearchParam
 import com.tencent.devops.remotedev.pojo.job.JobSchema
 import com.tencent.devops.remotedev.pojo.job.JobSchemaShort
+import com.tencent.devops.remotedev.pojo.job.JobScope
 import com.tencent.devops.remotedev.pojo.job.JobType
 import com.tencent.devops.remotedev.service.job.RemoteDevJobService
 import com.tencent.devops.remotedev.service.job.RemoteDevSchemaService
@@ -35,6 +37,26 @@ class UserRemoteDevJobResourceImpl @Autowired constructor(
     }
 
     override fun createJob(userId: String, data: JobCreateData): Result<Boolean> {
+        // 参数校验
+        when (data.jobScope) {
+            JobScope.ALL -> {
+                if (data.machineType.isNullOrBlank() || data.owners.isNullOrEmpty()) {
+                    throw ParamBlankException("Invalid All scope machineType or owners is null")
+                }
+            }
+
+            JobScope.MACHINE_TYPE -> {
+                if (data.machineType.isNullOrBlank()) {
+                    throw ParamBlankException("Invalid machineType")
+                }
+            }
+
+            JobScope.OWNER -> {
+                if (data.owners.isNullOrEmpty()) {
+                    throw ParamBlankException("Invalid owners")
+                }
+            }
+        }
         remoteDevJobService.createJob(userId, data)
         return Result(true)
     }
