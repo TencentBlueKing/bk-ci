@@ -52,6 +52,7 @@ import com.tencent.devops.store.common.handler.StoreUpdateParamCheckHandler
 import com.tencent.devops.store.common.handler.StoreUpdateParamI18nConvertHandler
 import com.tencent.devops.store.common.handler.StoreUpdateRunPipelineHandler
 import com.tencent.devops.store.common.service.StoreCommonService
+import com.tencent.devops.store.common.service.StoreNotifyService
 import com.tencent.devops.store.common.service.StoreReleaseService
 import com.tencent.devops.store.common.service.StoreSpecBusService
 import com.tencent.devops.store.common.utils.StoreUtils
@@ -59,11 +60,13 @@ import com.tencent.devops.store.constant.StoreMessageCode
 import com.tencent.devops.store.pojo.common.CLOSE
 import com.tencent.devops.store.pojo.common.KEY_STORE_ID
 import com.tencent.devops.store.pojo.common.OPEN
+import com.tencent.devops.store.pojo.common.enums.AuditTypeEnum
 import com.tencent.devops.store.pojo.common.enums.ReleaseTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreStatusEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.pojo.common.publication.StoreCreateRequest
 import com.tencent.devops.store.pojo.common.publication.StoreCreateResponse
+import com.tencent.devops.store.pojo.common.publication.StoreOfflineRequest
 import com.tencent.devops.store.pojo.common.publication.StoreProcessInfo
 import com.tencent.devops.store.pojo.common.publication.StoreReleaseCreateRequest
 import com.tencent.devops.store.pojo.common.publication.StoreReleaseRequest
@@ -92,6 +95,7 @@ class StoreReleaseServiceImpl @Autowired constructor(
     private val storeVersionLogDao: StoreVersionLogDao,
     private val storeReleaseDao: StoreReleaseDao,
     private val storeCommonService: StoreCommonService,
+    private val storeNotifyService: StoreNotifyService,
     private val storeCreateParamCheckHandler: StoreCreateParamCheckHandler,
     private val storeCreateDataPersistHandler: StoreCreateDataPersistHandler,
     private val storeUpdateParamI18nConvertHandler: StoreUpdateParamI18nConvertHandler,
@@ -312,6 +316,8 @@ class StoreReleaseServiceImpl @Autowired constructor(
                         modifier = userId
                     )
                 )
+                // 发送版本发布邮件
+                storeNotifyService.sendStoreReleaseAuditNotifyMessage(storeId, AuditTypeEnum.AUDIT_SUCCESS)
             }
         } else {
             storeBaseManageDao.updateStoreBaseInfo(
@@ -324,6 +330,139 @@ class StoreReleaseServiceImpl @Autowired constructor(
             )
         }
         return true
+    }
+
+    override fun offlineComponent(
+        userId: String,
+        storeOfflineRequest: StoreOfflineRequest,
+        checkPermissionFlag: Boolean
+    ): Boolean {
+        val storeCode = storeOfflineRequest.storeCode
+        val storeType = storeOfflineRequest.storeType
+        // 判断用户是否有权限下线
+        if (checkPermissionFlag && !storeMemberDao.isStoreAdmin(
+                dslContext = dslContext,
+                userId = userId,
+                storeCode = storeCode,
+                storeType = storeType.type.toByte()
+            )
+        ) {
+            throw ErrorCodeException(
+                errorCode = StoreMessageCode.NO_COMPONENT_ADMIN_PERMISSION,
+                params = arrayOf(storeCode)
+            )
+        }
+        val version = storeOfflineRequest.version
+        val reason = storeOfflineRequest.reason
+        if (!version.isNullOrEmpty()) {
+            // 按版本下架组件
+            offlineComponentByVersion(
+                storeType = storeType,
+                storeCode = storeCode,
+                version = version,
+                userId = userId,
+                reason = reason
+            )
+        } else {
+            // 设置组件状态为下架
+            dslContext.transaction { t ->
+                val context = DSL.using(t)
+                storeBaseManageDao.offlineComponent(
+                    dslContext = context,
+                    storeCode = storeCode,
+                    storeType = storeType,
+                    userId = userId,
+                    msg = reason,
+                    latestFlag = false
+                )
+                val newestUndercarriagedRecord = storeBaseQueryDao.getNewestComponentByCode(
+                    dslContext = context,
+                    storeCode = storeCode,
+                    storeType = storeType,
+                    status = StoreStatusEnum.UNDERCARRIAGED
+                )
+                if (null != newestUndercarriagedRecord) {
+                    // 把发布时间最晚的下架版本latestFlag置为true
+                    storeBaseManageDao.updateStoreBaseInfo(
+                        dslContext = dslContext,
+                        updateStoreBaseDataPO = UpdateStoreBaseDataPO(
+                            id = newestUndercarriagedRecord.id,
+                            latestFlag = true,
+                            modifier = userId
+                        )
+                    )
+                }
+            }
+        }
+        return true
+    }
+
+    private fun offlineComponentByVersion(
+        storeType: StoreTypeEnum,
+        storeCode: String,
+        version: String,
+        userId: String,
+        reason: String?
+    ) {
+        val baseRecord = storeBaseQueryDao.getComponent(
+            dslContext = dslContext,
+            storeCode = storeCode,
+            version = version,
+            storeType = storeType
+        ) ?: throw ErrorCodeException(
+            errorCode = CommonMessageCode.PARAMETER_IS_INVALID,
+            params = arrayOf("$storeCode:$version")
+        )
+        if (StoreStatusEnum.RELEASED.name != baseRecord.status) {
+            throw ErrorCodeException(errorCode = CommonMessageCode.ERROR_CLIENT_REST_ERROR)
+        }
+        val storeId = baseRecord.id
+        dslContext.transaction { t ->
+            val context = DSL.using(t)
+            // 查找插件最近二个已经发布的版本
+            val releaseRecords = storeBaseQueryDao.getReleaseComponentsByCode(context, storeCode, storeType, 2)
+            if (releaseRecords.isNullOrEmpty()) {
+                return@transaction
+            }
+            storeBaseManageDao.updateStoreBaseInfo(
+                dslContext = dslContext,
+                updateStoreBaseDataPO = UpdateStoreBaseDataPO(
+                    id = storeId,
+                    status = StoreStatusEnum.UNDERCARRIAGED,
+                    statusMsg = reason,
+                    latestFlag = false,
+                    modifier = userId
+                )
+            )
+            if (releaseRecords[0].id == storeId) {
+                var tmpStoreId: String? = null
+                if (releaseRecords.size == 1) {
+                    val newestUndercarriagedRecord = storeBaseQueryDao.getNewestComponentByCode(
+                        dslContext = context,
+                        storeCode = storeCode,
+                        storeType = storeType,
+                        status = StoreStatusEnum.UNDERCARRIAGED
+                    )
+                    if (null != newestUndercarriagedRecord) {
+                        tmpStoreId = newestUndercarriagedRecord.id
+                    }
+                } else {
+                    // 把前一个发布的版本的latestFlag置为true
+                    val tmpStoreRecord = releaseRecords[1]
+                    tmpStoreId = tmpStoreRecord.id
+                }
+                tmpStoreId?.let {
+                    storeBaseManageDao.updateStoreBaseInfo(
+                        dslContext = dslContext,
+                        updateStoreBaseDataPO = UpdateStoreBaseDataPO(
+                            id = tmpStoreId,
+                            latestFlag = true,
+                            modifier = userId
+                        )
+                    )
+                }
+            }
+        }
     }
 
     fun checkStoreVersionOptRight(

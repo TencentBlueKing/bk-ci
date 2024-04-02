@@ -32,6 +32,7 @@ import com.tencent.devops.store.pojo.common.enums.StoreStatusEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.pojo.common.publication.StoreBaseDataPO
 import com.tencent.devops.store.pojo.common.publication.UpdateStoreBaseDataPO
+import org.jooq.Condition
 import org.jooq.DSLContext
 import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
@@ -158,6 +159,34 @@ class StoreBaseManageDao {
             dslContext.update(this)
                 .set(LATEST_FLAG, false)
                 .where(STORE_CODE.eq(storeCode).and(STORE_TYPE.eq(storeType.type.toByte())))
+                .execute()
+        }
+    }
+
+    fun offlineComponent(
+        dslContext: DSLContext,
+        storeCode: String,
+        storeType: StoreTypeEnum,
+        userId: String,
+        msg: String? = null,
+        latestFlag: Boolean? = null
+    ) {
+        with(TStoreBase.T_STORE_BASE) {
+            val conditions = mutableListOf<Condition>()
+            conditions.add(STORE_TYPE.eq(storeType.type.toByte()))
+            conditions.add(STORE_CODE.eq(storeCode))
+            conditions.add(STATUS.eq(StoreStatusEnum.RELEASED.name))
+            val baseStep = dslContext.update(this)
+                .set(STATUS, StoreStatusEnum.UNDERCARRIAGED.name)
+            if (!msg.isNullOrEmpty()) {
+                baseStep.set(STATUS_MSG, msg)
+            }
+            if (null != latestFlag) {
+                baseStep.set(LATEST_FLAG, latestFlag)
+            }
+            baseStep.set(MODIFIER, userId)
+                .set(UPDATE_TIME, LocalDateTime.now())
+                .where(conditions)
                 .execute()
         }
     }

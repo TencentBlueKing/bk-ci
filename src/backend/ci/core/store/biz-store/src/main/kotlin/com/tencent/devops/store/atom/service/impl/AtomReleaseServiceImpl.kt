@@ -1207,10 +1207,7 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
                 params = arrayOf("$atomCode:$version")
             )
         if (AtomStatusEnum.RELEASED.status.toByte() != atomRecord.atomStatus) {
-            throw ErrorCodeException(
-                errorCode = VERSION_PUBLISHED,
-                params = arrayOf(atomCode, version)
-            )
+            throw ErrorCodeException(errorCode = CommonMessageCode.ERROR_CLIENT_REST_ERROR)
         }
         dslContext.transaction { t ->
             val context = DSL.using(t)
