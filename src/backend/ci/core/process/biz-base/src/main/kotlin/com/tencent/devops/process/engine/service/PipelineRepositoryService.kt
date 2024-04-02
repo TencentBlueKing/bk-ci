@@ -33,6 +33,7 @@ import com.tencent.devops.common.api.exception.DependNotFoundException
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.InvalidParamException
 import com.tencent.devops.common.api.pojo.PipelineAsCodeSettings
+import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.api.util.Watcher
@@ -108,8 +109,10 @@ import com.tencent.devops.process.service.pipeline.PipelineTransferYamlService
 import com.tencent.devops.process.util.NotifyTemplateUtils
 import com.tencent.devops.process.utils.PIPELINE_MATRIX_CON_RUNNING_SIZE_MAX
 import com.tencent.devops.process.utils.PIPELINE_SETTING_MAX_CON_QUEUE_SIZE_MAX
+import com.tencent.devops.process.utils.PIPELINE_SETTING_MAX_QUEUE_SIZE_DEFAULT
 import com.tencent.devops.process.utils.PIPELINE_SETTING_MAX_QUEUE_SIZE_MAX
 import com.tencent.devops.process.utils.PIPELINE_SETTING_MAX_QUEUE_SIZE_MIN
+import com.tencent.devops.process.utils.PIPELINE_SETTING_WAIT_QUEUE_TIME_MINUTE_DEFAULT
 import com.tencent.devops.process.utils.PIPELINE_SETTING_WAIT_QUEUE_TIME_MINUTE_MAX
 import com.tencent.devops.process.utils.PIPELINE_SETTING_WAIT_QUEUE_TIME_MINUTE_MIN
 import com.tencent.devops.process.utils.PIPELINE_START_USER_NAME
@@ -699,8 +702,14 @@ class PipelineRepositoryService constructor(
                         projectId = projectId,
                         pipelineId = pipelineId,
                         pipelineName = model.name,
+                        version = 1,
                         desc = model.desc ?: "",
                         maxPipelineResNum = maxPipelineResNum,
+                        waitQueueTimeMinute = DateTimeUtil.minuteToSecond(
+                            PIPELINE_SETTING_WAIT_QUEUE_TIME_MINUTE_DEFAULT
+                        ),
+                        maxQueueSize = PIPELINE_SETTING_MAX_QUEUE_SIZE_DEFAULT,
+                        runLockType = PipelineRunLockType.MULTIPLE,
                         failSubscription = failSubscription ?: Subscription(),
                         failSubscriptionList = failSubscription?.let { listOf(it) },
                         pipelineAsCodeSettings = PipelineAsCodeSettings()
