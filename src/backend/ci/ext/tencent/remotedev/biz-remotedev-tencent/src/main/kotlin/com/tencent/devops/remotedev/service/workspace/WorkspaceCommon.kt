@@ -416,14 +416,15 @@ class WorkspaceCommon @Autowired constructor(
         ownerType: WorkspaceOwnerType
     ) {
         when {
-            type == WorkspaceMountType.START && ownerType == WorkspaceOwnerType.PERSONAL -> {
-                val timeLeft = remoteDevSettingService.userWinTimeLeft(userId)
-                if (timeLeft <= 0) {
-                    throw ErrorCodeException(
-                        errorCode = ErrorCodeEnum.WORKSPACE_UNAVAILABLE_WIN_GPU.errorCode
-                    )
-                }
-            }
+//            --story=116722016 【个人云桌面续期优化】去掉个人云桌面体验时长的限制
+//            type == WorkspaceMountType.START && ownerType == WorkspaceOwnerType.PERSONAL -> {
+//                val timeLeft = remoteDevSettingService.userWinTimeLeft(userId)
+//                if (timeLeft <= 0) {
+//                    throw ErrorCodeException(
+//                        errorCode = ErrorCodeEnum.WORKSPACE_UNAVAILABLE_WIN_GPU.errorCode
+//                    )
+//                }
+//            }
 
             else -> {}
         }
