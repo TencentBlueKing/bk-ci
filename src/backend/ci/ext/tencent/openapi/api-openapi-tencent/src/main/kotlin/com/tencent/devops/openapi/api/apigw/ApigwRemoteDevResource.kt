@@ -171,7 +171,10 @@ interface ApigwRemoteDevResource {
         apigwType: String?,
         @Parameter(description = "项目ID(项目英文名)", required = true)
         @PathParam("projectId")
-        projectId: String
+        projectId: String,
+        @Parameter(description = "云桌面IP", required = false)
+        @QueryParam("ip")
+        ip: String?
     ): Result<List<WeSecProjectWorkspace>>
 
     @Operation(summary = "用来通知蓝盾客户端消息", tags = ["v4_app_workspace_notify"])
