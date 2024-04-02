@@ -213,9 +213,11 @@ class SubPipelineStartUpService @Autowired constructor(
                 params = arrayOf(pipelineId),
                 errorCode = ProcessMessageCode.ERROR_PIPELINE_NOT_EXISTS
             )
-        if (readyToBuildPipelineInfo.onlyDraft == true) throw ErrorCodeException(
-            errorCode = ProcessMessageCode.ERROR_NO_RELEASE_PIPELINE_VERSION
-        )
+        if (readyToBuildPipelineInfo.latestVersionStatus?.isNotReleased() == true) {
+            throw ErrorCodeException(
+                errorCode = ProcessMessageCode.ERROR_NO_RELEASE_PIPELINE_VERSION
+            )
+        }
         val parentPipelineInfo = pipelineRepositoryService.getPipelineInfo(
             projectId = parentProjectId,
             pipelineId = parentPipelineId

@@ -33,6 +33,7 @@ import com.tencent.devops.common.api.exception.DependNotFoundException
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.InvalidParamException
 import com.tencent.devops.common.api.pojo.PipelineAsCodeSettings
+import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.api.util.Watcher
@@ -108,8 +109,10 @@ import com.tencent.devops.process.service.pipeline.PipelineTransferYamlService
 import com.tencent.devops.process.util.NotifyTemplateUtils
 import com.tencent.devops.process.utils.PIPELINE_MATRIX_CON_RUNNING_SIZE_MAX
 import com.tencent.devops.process.utils.PIPELINE_SETTING_MAX_CON_QUEUE_SIZE_MAX
+import com.tencent.devops.process.utils.PIPELINE_SETTING_MAX_QUEUE_SIZE_DEFAULT
 import com.tencent.devops.process.utils.PIPELINE_SETTING_MAX_QUEUE_SIZE_MAX
 import com.tencent.devops.process.utils.PIPELINE_SETTING_MAX_QUEUE_SIZE_MIN
+import com.tencent.devops.process.utils.PIPELINE_SETTING_WAIT_QUEUE_TIME_MINUTE_DEFAULT
 import com.tencent.devops.process.utils.PIPELINE_SETTING_WAIT_QUEUE_TIME_MINUTE_MAX
 import com.tencent.devops.process.utils.PIPELINE_SETTING_WAIT_QUEUE_TIME_MINUTE_MIN
 import com.tencent.devops.process.utils.PIPELINE_START_USER_NAME
@@ -634,14 +637,13 @@ class PipelineRepositoryService constructor(
         description: String?
     ): DeployPipelineResult {
         // #8161 如果只有一个草稿版本的创建操作，流水线状态也为仅有草稿
-        val onlyDraft = versionStatus == VersionStatus.COMMITTING
         val modelVersion = 1
         var versionNum = 1
         var pipelineVersion = 1
         var triggerVersion = 1
         val settingVersion = 1
         // 如果是仅有草稿的状态，resource表的版本号先设为0作为基准
-        if (onlyDraft || versionStatus == VersionStatus.BRANCH) {
+        if (versionStatus == VersionStatus.COMMITTING || versionStatus == VersionStatus.BRANCH) {
             versionNum = 0
             pipelineVersion = 0
             triggerVersion = 0
@@ -667,7 +669,7 @@ class PipelineRepositoryService constructor(
                     canElementSkip = canElementSkip,
                     taskCount = taskCount,
                     id = id,
-                    onlyDraft = onlyDraft
+                    latestVersionStatus = versionStatus
                 )
                 model.latestVersion = modelVersion
                 var newSetting = customSetting?.copy(
@@ -675,12 +677,44 @@ class PipelineRepositoryService constructor(
                     pipelineId = pipelineId,
                     pipelineName = model.name,
                     desc = model.desc ?: ""
-                ) ?: PipelineSetting(
-                    pipelineId = pipelineId,
-                    pipelineName = model.name,
-                    desc = model.desc ?: "",
-                    pipelineAsCodeSettings = PipelineAsCodeSettings()
-                )
+                ) ?: run {
+                    val maxPipelineResNum = if (
+                        channelCode.name in versionConfigure.specChannels.split(",")
+                    ) {
+                        versionConfigure.specChannelMaxKeepNum
+                    } else {
+                        versionConfigure.maxKeepNum
+                    }
+                    val notifyTypes = if (channelCode == ChannelCode.BS) {
+                        pipelineInfoExtService.failNotifyChannel()
+                    } else {
+                        ""
+                    }
+                    val failType = notifyTypes.split(",").filter { i -> i.isNotBlank() }
+                        .map { type -> PipelineSubscriptionType.valueOf(type) }.toSet()
+                    val failSubscription = Subscription(
+                        types = failType,
+                        groups = emptySet(),
+                        users = "\${$PIPELINE_START_USER_NAME}",
+                        content = NotifyTemplateUtils.getCommonShutdownFailureContent()
+                    ).takeIf { failType.isNotEmpty() }
+                    PipelineSetting(
+                        projectId = projectId,
+                        pipelineId = pipelineId,
+                        pipelineName = model.name,
+                        version = 1,
+                        desc = model.desc ?: "",
+                        maxPipelineResNum = maxPipelineResNum,
+                        waitQueueTimeMinute = DateTimeUtil.minuteToSecond(
+                            PIPELINE_SETTING_WAIT_QUEUE_TIME_MINUTE_DEFAULT
+                        ),
+                        maxQueueSize = PIPELINE_SETTING_MAX_QUEUE_SIZE_DEFAULT,
+                        runLockType = PipelineRunLockType.MULTIPLE,
+                        failSubscription = failSubscription ?: Subscription(),
+                        failSubscriptionList = failSubscription?.let { listOf(it) },
+                        pipelineAsCodeSettings = PipelineAsCodeSettings()
+                    )
+                }
 
                 if (model.instanceFromTemplate != true) {
                     if (null == pipelineSettingDao.getSetting(transactionContext, projectId, pipelineId)) {
@@ -698,7 +732,7 @@ class PipelineRepositoryService constructor(
                                     users = "\${$PIPELINE_START_USER_NAME}",
                                     content = NotifyTemplateUtils.getCommonShutdownSuccessContent()
                                 )
-                                setting.successSubscriptionList = listOf(setting.successSubscription)
+                                setting.successSubscriptionList = null
                                 setting.failSubscription = Subscription(
                                     types = setOf(PipelineSubscriptionType.EMAIL, PipelineSubscriptionType.RTX),
                                     groups = emptySet(),
@@ -715,46 +749,18 @@ class PipelineRepositoryService constructor(
                             if (useLabelSettings != true) {
                                 setting.labels = listOf()
                             }
-                            setting.pipelineAsCodeSettings = null
-                            pipelineSettingDao.saveSetting(dslContext, setting)
+                            setting.pipelineAsCodeSettings = PipelineAsCodeSettings()
                             newSetting = setting
-                        } else {
-                            // #3311
-                            // 蓝盾正常的BS渠道的默认没设置setting的，将发通知改成失败才发通知
-                            // 而其他渠道的默认没设置则什么通知都设置为不发
-                            val notifyTypes = if (channelCode == ChannelCode.BS) {
-                                pipelineInfoExtService.failNotifyChannel()
-                            } else {
-                                ""
-                            }
-
-                            // 特定渠道保留特定版本
-                            val filterList = versionConfigure.specChannels.split(",")
-                            val maxPipelineResNum = if (channelCode.name in filterList) {
-                                versionConfigure.specChannelMaxKeepNum
-                            } else {
-                                versionConfigure.maxKeepNum
-                            }
-                            pipelineSettingDao.insertNewSetting(
-                                dslContext = transactionContext,
-                                projectId = projectId,
-                                pipelineId = pipelineId,
-                                pipelineName = model.name,
-                                failNotifyTypes = notifyTypes,
-                                maxPipelineResNum = maxPipelineResNum,
-                                pipelineAsCodeSettings = customSetting?.pipelineAsCodeSettings,
-                                settingVersion = settingVersion
-                            )?.let { setting ->
-                                pipelineSettingVersionDao.saveSetting(
-                                    dslContext = transactionContext,
-                                    setting = setting,
-                                    id = client.get(ServiceAllocIdResource::class)
-                                        .generateSegmentId(PIPELINE_SETTING_VERSION_BIZ_TAG_NAME).data,
-                                    version = settingVersion
-                                )
-                                newSetting = setting
-                            }
                         }
+                        // 如果不需要覆盖模板内容，则直接保存传值或默认值
+                        pipelineSettingDao.saveSetting(transactionContext, newSetting)
+                        pipelineSettingVersionDao.saveSetting(
+                            dslContext = transactionContext,
+                            setting = newSetting,
+                            id = client.get(ServiceAllocIdResource::class)
+                                .generateSegmentId(PIPELINE_SETTING_VERSION_BIZ_TAG_NAME).data,
+                            version = settingVersion
+                        )
                     } else {
                         pipelineSettingDao.updateSetting(
                             dslContext = transactionContext,
@@ -762,17 +768,17 @@ class PipelineRepositoryService constructor(
                             pipelineId = pipelineId,
                             name = model.name,
                             desc = model.desc ?: ""
-                        )?.let { newSetting = it }
+                        )?.let { setting ->
+                            pipelineSettingVersionDao.saveSetting(
+                                dslContext = transactionContext,
+                                setting = setting,
+                                id = client.get(ServiceAllocIdResource::class)
+                                    .generateSegmentId(PIPELINE_SETTING_VERSION_BIZ_TAG_NAME).data,
+                                version = settingVersion
+                            )
+                            newSetting = setting
+                        }
                     }
-                } else {
-                    pipelineSettingDao.saveSetting(transactionContext, newSetting)
-                    pipelineSettingVersionDao.saveSetting(
-                        dslContext = transactionContext,
-                        setting = newSetting,
-                        version = 1,
-                        id = client.get(ServiceAllocIdResource::class)
-                            .generateSegmentId(PIPELINE_SETTING_VERSION_BIZ_TAG_NAME).data
-                    )
                 }
                 // 如果不是草稿保存，最新版本永远是新增逻辑
                 versionName = if (versionStatus == VersionStatus.BRANCH) {
@@ -1103,8 +1109,8 @@ class PipelineRepositoryService constructor(
                             canElementSkip = canElementSkip,
                             taskCount = taskCount,
                             latestVersion = model.latestVersion,
-                            // 进行过至少一次发布版本后，才取消仅有草稿的状态
-                            onlyDraft = false
+                            // 进行过至少一次发布版本后，取消仅有草稿/分支的状态
+                            latestVersionStatus = VersionStatus.RELEASED
                         )
                         pipelineResourceDao.deleteEarlyVersion(
                             dslContext = transactionContext,
@@ -1687,7 +1693,7 @@ class PipelineRepositoryService constructor(
                 pipelineDesc = setting.desc,
                 updateLastModifyUser = updateLastModifyUser,
                 // 单独修改流水线配置不影响版本状态
-                onlyDraft = null
+                latestVersionStatus = null
             )
             if (version > 0) { // #671 兼容无版本要求的修改入口，比如改名，或者只读流水线的修改操作, version=0
                 if (old?.maxPipelineResNum != null) {
