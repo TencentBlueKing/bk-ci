@@ -27,10 +27,12 @@
 
 package com.tencent.devops.store.common.service.impl
 
+import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.constant.INIT_VERSION
 import com.tencent.devops.common.api.constant.SUCCESS
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.service.utils.SpringContextUtil
+import com.tencent.devops.model.store.tables.records.TStoreBaseRecord
 import com.tencent.devops.store.common.configuration.StoreDetailUrlConfig
 import com.tencent.devops.store.constant.StoreMessageCode
 import com.tencent.devops.store.common.dao.AbstractStoreCommonDao
@@ -38,6 +40,7 @@ import com.tencent.devops.store.common.dao.OperationLogDao
 import com.tencent.devops.store.common.dao.ReasonRelDao
 import com.tencent.devops.store.common.dao.SensitiveConfDao
 import com.tencent.devops.store.common.dao.StoreApproveDao
+import com.tencent.devops.store.common.dao.StoreBaseQueryDao
 import com.tencent.devops.store.common.dao.StoreCommentDao
 import com.tencent.devops.store.common.dao.StoreCommentPraiseDao
 import com.tencent.devops.store.common.dao.StoreCommentReplyDao
@@ -60,6 +63,10 @@ import com.tencent.devops.store.pojo.common.version.StoreShowVersionItem
 import com.tencent.devops.store.pojo.common.enums.ReleaseTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.common.service.StoreCommonService
+import com.tencent.devops.store.common.utils.VersionUtils
+import com.tencent.devops.store.pojo.atom.enums.AtomStatusEnum
+import com.tencent.devops.store.pojo.common.enums.StoreStatusEnum
+import com.tencent.devops.store.pojo.common.version.VersionModel
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -129,6 +136,9 @@ abstract class StoreCommonServiceImpl @Autowired constructor() : StoreCommonServ
 
     @Autowired
     lateinit var storeStatisticDailyDao: StoreStatisticDailyDao
+
+    @Autowired
+    lateinit var storeBaseQueryDao: StoreBaseQueryDao
 
     @Autowired
     lateinit var storeDetailUrlConfig: StoreDetailUrlConfig
@@ -351,5 +361,108 @@ abstract class StoreCommonServiceImpl @Autowired constructor() : StoreCommonServ
             }
         }
         return StoreShowVersionInfo(showVersionList)
+    }
+
+    override fun validateStoreVersion(
+        storeCode: String,
+        storeType: StoreTypeEnum,
+        versionInfo: VersionModel,
+        name: String
+    ) {
+        val releaseType = versionInfo.releaseType
+        val opBaseRecord = generateOpBaseRecord(storeCode, storeType, releaseType)
+        val version = versionInfo.version
+        val dbVersion = opBaseRecord.version
+        val dbStatus = opBaseRecord.status
+        // 判断首个版本对应的请求是否合法
+        if (releaseType == ReleaseTypeEnum.NEW && dbVersion == INIT_VERSION &&
+            dbStatus != StoreStatusEnum.INIT.name
+        ) {
+            throw ErrorCodeException(errorCode = CommonMessageCode.ERROR_REST_EXCEPTION_COMMON_TIP)
+        }
+        // 最近的版本处于上架中止状态，重新升级版本号不变
+        val cancelFlag = dbStatus == StoreStatusEnum.GROUNDING_SUSPENSION.name
+        val requireVersionList =
+            if (cancelFlag && releaseType == ReleaseTypeEnum.CANCEL_RE_RELEASE) {
+                listOf(dbVersion)
+            } else {
+                // 历史大版本下的小版本更新模式需获取要更新大版本下的最新版本
+                val reqVersion = if (releaseType == ReleaseTypeEnum.HIS_VERSION_UPGRADE) {
+                    storeBaseQueryDao.getComponent(
+                        dslContext = dslContext,
+                        storeCode = storeCode,
+                        version = VersionUtils.convertLatestVersion(version),
+                        storeType = storeType
+                    )?.version
+                } else {
+                    null
+                }
+                getRequireVersion(
+                    reqVersion = reqVersion,
+                    dbVersion = dbVersion,
+                    releaseType = releaseType
+                )
+            }
+        if (!requireVersionList.contains(version)) {
+            logger.warn("$storeType[$storeCode]| invalid version: $version|requireVersionList:$requireVersionList")
+            throw ErrorCodeException(
+                errorCode = StoreMessageCode.USER_IMAGE_VERSION_IS_INVALID,
+                params = arrayOf(version, requireVersionList.toString())
+            )
+        }
+        // 判断最近一个版本的状态，如果不是首次发布，则只有处于终态的组件状态才允许添加新的版本
+        checkAddVersionCondition(dbVersion = dbVersion, releaseType = releaseType, dbStatus = dbStatus, name = name)
+    }
+
+    private fun generateOpBaseRecord(
+        storeCode: String,
+        storeType: StoreTypeEnum,
+        releaseType: ReleaseTypeEnum
+    ): TStoreBaseRecord {
+        val maxVersionBaseRecord = storeBaseQueryDao.getMaxVersionComponentByCode(dslContext, storeCode, storeType)
+            ?: throw ErrorCodeException(
+                errorCode = CommonMessageCode.PARAMETER_IS_INVALID,
+                params = arrayOf(storeCode)
+            )
+        val newestBaseRecord = storeBaseQueryDao.getNewestComponentByCode(dslContext, storeCode, storeType)!!
+        val opBaseRecord = if (releaseType == ReleaseTypeEnum.CANCEL_RE_RELEASE) {
+            newestBaseRecord
+        } else {
+            maxVersionBaseRecord
+        }
+        return opBaseRecord
+    }
+
+    private fun checkAddVersionCondition(
+        dbVersion: String,
+        releaseType: ReleaseTypeEnum,
+        dbStatus: String,
+        name: String
+    ) {
+        if (dbVersion.isNotBlank() && releaseType != ReleaseTypeEnum.NEW) {
+            val storeFinalStatusList = mutableListOf(
+                StoreStatusEnum.AUDIT_REJECT.name,
+                StoreStatusEnum.RELEASED.name,
+                StoreStatusEnum.GROUNDING_SUSPENSION.name,
+                StoreStatusEnum.UNDERCARRIAGED.name
+            )
+            if (!storeFinalStatusList.contains(dbStatus)) {
+                throw ErrorCodeException(
+                    errorCode = StoreMessageCode.USER_IMAGE_VERSION_IS_NOT_FINISH,
+                    params = arrayOf(name, dbVersion)
+                )
+            }
+        }
+    }
+
+    override fun getNormalUpgradeFlag(storeCode: String, storeType: StoreTypeEnum, status: StoreStatusEnum): Boolean {
+        val releaseTotalNum = storeBaseQueryDao.countByCondition(
+            dslContext = dslContext,
+            storeType = storeType,
+            storeCode = storeCode,
+            status = status
+        )
+        val currentNum = if (status == StoreStatusEnum.RELEASED) 1 else 0
+        return releaseTotalNum > currentNum
     }
 }

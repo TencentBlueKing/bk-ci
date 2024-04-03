@@ -25,38 +25,38 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.store.common.service
+package com.tencent.devops.store.pojo.common.publication
 
-import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.store.pojo.common.enums.AuditTypeEnum
+import com.tencent.devops.store.pojo.common.enums.StoreStatusEnum
+import io.swagger.v3.oas.annotations.media.Schema
+import java.time.LocalDateTime
 
-interface StoreNotifyService {
-
-    /**
-     * 根据消息模板发送通知消息
-     * @param templateCode 通知模板代码
-     * @param sender 发送者
-     * @param receivers 通知接收者
-     * @param titleParams 标题动态参数
-     * @param bodyParams 内容动态参数
-     * @param cc 邮件抄送接收者
-     * @param bcc 邮件密送接收者
-     */
-    @Suppress("ALL")
-    fun sendNotifyMessage(
-        templateCode: String,
-        sender: String,
-        receivers: MutableSet<String> = mutableSetOf(),
-        titleParams: Map<String, String>? = null,
-        bodyParams: Map<String, String>? = null,
-        cc: MutableSet<String>? = null,
-        bcc: MutableSet<String>? = null
-    ): Result<Boolean>
-
-    /**
-     * 发送组件发布审核结果通知消息
-     * @param storeId 组件ID
-     * @param auditType 审核类型
-     */
-    fun sendStoreReleaseAuditNotifyMessage(storeId: String, auditType: AuditTypeEnum)
-}
+@Schema(title = "更新组件基本数据PO")
+data class UpdateStoreBaseDataPO(
+    @get:Schema(title = "主键ID")
+    val id: String,
+    @get:Schema(title = "组件名称")
+    val name: String? = null,
+    @get:Schema(title = "状态")
+    val status: StoreStatusEnum? = null,
+    @get:Schema(title = "状态描述")
+    val statusMsg: String? = null,
+    @get:Schema(title = "logo地址")
+    val logoUrl: String? = null,
+    @get:Schema(title = "简介", required = true)
+    val summary: String? = null,
+    @get:Schema(title = "描述", required = false)
+    val description: String? = null,
+    @get:Schema(title = "是否为最新版本")
+    val latestFlag: Boolean? = null,
+    @get:Schema(title = "发布者")
+    val publisher: String? = null,
+    @get:Schema(title = "发布时间")
+    val pubTime: LocalDateTime? = null,
+    @get:Schema(title = "分类ID")
+    val classifyId: String? = null,
+    @get:Schema(title = "修改人")
+    val modifier: String,
+    @get:Schema(title = "更新时间")
+    val updateTime: LocalDateTime = LocalDateTime.now()
+)

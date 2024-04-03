@@ -29,6 +29,9 @@ package com.tencent.devops.store.common.service
 
 import com.tencent.devops.store.pojo.common.publication.StoreCreateRequest
 import com.tencent.devops.store.pojo.common.publication.StoreCreateResponse
+import com.tencent.devops.store.pojo.common.publication.StoreOfflineRequest
+import com.tencent.devops.store.pojo.common.publication.StoreProcessInfo
+import com.tencent.devops.store.pojo.common.publication.StoreReleaseRequest
 import com.tencent.devops.store.pojo.common.publication.StoreUpdateRequest
 import com.tencent.devops.store.pojo.common.publication.StoreUpdateResponse
 
@@ -55,4 +58,52 @@ interface StoreReleaseService {
         userId: String,
         storeUpdateRequest: StoreUpdateRequest
     ): StoreUpdateResponse?
+
+    /**
+     * 根据组件ID获取版本发布进度信息
+     * @param userId userId
+     * @param storeId 组件ID
+     * @return 版本发布进度信息
+     */
+    fun getProcessInfo(userId: String, storeId: String): StoreProcessInfo
+
+    /**
+     * 取消发布
+     * @param userId userId
+     * @param storeId 组件ID
+     * @return 布尔值
+     */
+    fun cancelRelease(userId: String, storeId: String): Boolean
+
+    /**
+     * 通过测试
+     * @param userId userId
+     * @param storeId 组件ID
+     * @return 布尔值
+     */
+    fun passTest(userId: String, storeId: String): Boolean
+
+    /**
+     * 处理发布
+     * @param userId userId
+     * @param storeReleaseRequest 发布请求报文
+     * @return 布尔值
+     */
+    fun handleStoreRelease(
+        userId: String,
+        storeReleaseRequest: StoreReleaseRequest
+    ): Boolean
+
+    /**
+     * 下线组件
+     * @param userId userId
+     * @param storeOfflineRequest 下线组件请求报文
+     * @param checkPermissionFlag 是否检查权限
+     * @return 布尔值
+     */
+    fun offlineComponent(
+        userId: String,
+        storeOfflineRequest: StoreOfflineRequest,
+        checkPermissionFlag: Boolean = true
+    ): Boolean
 }

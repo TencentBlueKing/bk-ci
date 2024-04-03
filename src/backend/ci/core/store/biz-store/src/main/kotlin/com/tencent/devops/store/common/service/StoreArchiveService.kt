@@ -27,36 +27,39 @@
 
 package com.tencent.devops.store.common.service
 
-import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.store.pojo.common.enums.AuditTypeEnum
+import com.tencent.devops.store.pojo.common.enums.ReleaseTypeEnum
+import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
+import com.tencent.devops.store.pojo.common.publication.StorePkgInfoUpdateRequest
 
-interface StoreNotifyService {
+interface StoreArchiveService {
 
     /**
-     * 根据消息模板发送通知消息
-     * @param templateCode 通知模板代码
-     * @param sender 发送者
-     * @param receivers 通知接收者
-     * @param titleParams 标题动态参数
-     * @param bodyParams 内容动态参数
-     * @param cc 邮件抄送接收者
-     * @param bcc 邮件密送接收者
+     * 校验组件包
+     * @param userId 用户ID
+     * @param storeCode 组件标识
+     * @param storeType 组件类型
+     * @param version 版本号
+     * @param releaseType 发布类型
+     * @return 布尔值
      */
-    @Suppress("ALL")
-    fun sendNotifyMessage(
-        templateCode: String,
-        sender: String,
-        receivers: MutableSet<String> = mutableSetOf(),
-        titleParams: Map<String, String>? = null,
-        bodyParams: Map<String, String>? = null,
-        cc: MutableSet<String>? = null,
-        bcc: MutableSet<String>? = null
-    ): Result<Boolean>
+    fun verifyComponentPackage(
+        userId: String,
+        storeCode: String,
+        storeType: StoreTypeEnum,
+        version: String,
+        releaseType: ReleaseTypeEnum? = null
+    ): Boolean
 
     /**
-     * 发送组件发布审核结果通知消息
+     * 更新组件包信息
+     * @param userId 流水线ID
      * @param storeId 组件ID
-     * @param auditType 审核类型
+     * @param storePkgInfoUpdateRequest 组件包更新信息请求
+     * @return 布尔值
      */
-    fun sendStoreReleaseAuditNotifyMessage(storeId: String, auditType: AuditTypeEnum)
+    fun updateComponentPkgInfo(
+        userId: String,
+        storeId: String,
+        storePkgInfoUpdateRequest: StorePkgInfoUpdateRequest
+    ): Boolean
 }

@@ -76,6 +76,7 @@ import com.tencent.devops.store.pojo.common.enums.ScopeTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreOperationTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.pojo.common.publication.StoreRunPipelineParam
+import com.tencent.devops.store.pojo.common.publication.UpdateStoreBaseDataPO
 import org.apache.commons.lang3.StringEscapeUtils
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
@@ -258,12 +259,14 @@ class StorePipelineServiceImpl @Autowired constructor(
                 }
                 val storeStatus = storeSpecBusService.getStoreRunPipelineStatus(buildId)
                 storeStatus?.let {
-                  storeBaseManageDao.updateStoreStatusById(
-                      dslContext = dslContext,
-                      userId = userId,
-                      storeId = storeId,
-                      status = storeStatus
-                  )
+                    storeBaseManageDao.updateStoreBaseInfo(
+                        dslContext = dslContext,
+                        updateStoreBaseDataPO = UpdateStoreBaseDataPO(
+                            id = storeId,
+                            status = storeStatus,
+                            modifier = userId
+                        )
+                    )
                 }
             }
         } else {

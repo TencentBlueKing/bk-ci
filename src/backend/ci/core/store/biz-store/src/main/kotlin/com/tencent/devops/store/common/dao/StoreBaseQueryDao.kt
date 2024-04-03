@@ -34,6 +34,7 @@ import com.tencent.devops.model.store.tables.TStoreBase
 import com.tencent.devops.model.store.tables.TStoreVersionLog
 import com.tencent.devops.model.store.tables.records.TStoreBaseRecord
 import com.tencent.devops.store.common.utils.VersionUtils
+import com.tencent.devops.store.pojo.common.enums.StoreStatusEnum
 import com.tencent.devops.store.pojo.common.KEY_CLASSIFY_CODE
 import com.tencent.devops.store.pojo.common.KEY_CLASSIFY_CREATE_TIME
 import com.tencent.devops.store.pojo.common.KEY_CLASSIFY_NAME
@@ -49,6 +50,7 @@ import com.tencent.devops.store.pojo.common.KEY_VERSION_LOG_CONTENT
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import org.jooq.Condition
 import org.jooq.DSLContext
+import org.jooq.Result
 import org.jooq.Record
 import org.springframework.stereotype.Repository
 
@@ -92,11 +94,18 @@ class StoreBaseQueryDao {
     fun getNewestComponentByCode(
         dslContext: DSLContext,
         storeCode: String,
-        storeType: StoreTypeEnum
+        storeType: StoreTypeEnum,
+        status: StoreStatusEnum? = null
     ): TStoreBaseRecord? {
         return with(TStoreBase.T_STORE_BASE) {
+            val conditions = mutableListOf<Condition>()
+            conditions.add(STORE_TYPE.eq(storeType.type.toByte()))
+            conditions.add(STORE_CODE.eq(storeCode))
+            if (status != null) {
+                conditions.add(STATUS.eq(status.name))
+            }
             dslContext.selectFrom(this)
-                .where(STORE_CODE.eq(storeCode).and(STORE_TYPE.eq(storeType.type.toByte())))
+                .where(conditions)
                 .orderBy(CREATE_TIME.desc())
                 .limit(1)
                 .fetchOne()
@@ -109,6 +118,23 @@ class StoreBaseQueryDao {
                 .where(STORE_CODE.eq(storeCode))
                 .and(LATEST_FLAG.eq(true))
                 .fetchOne()
+        }
+    }
+
+    fun getReleaseComponentsByCode(
+        dslContext: DSLContext,
+        storeCode: String,
+        storeType: StoreTypeEnum,
+        num: Int? = null
+    ): Result<TStoreBaseRecord>? {
+        return with(TStoreBase.T_STORE_BASE) {
+            val baseStep = dslContext.selectFrom(this)
+                .where(STORE_CODE.eq(storeCode).and(STORE_TYPE.eq(storeType.type.toByte())))
+                .orderBy(CREATE_TIME.desc())
+            if (null != num) {
+                baseStep.limit(num)
+            }
+            baseStep.fetch()
         }
     }
 
@@ -146,7 +172,8 @@ class StoreBaseQueryDao {
         dslContext: DSLContext,
         storeType: StoreTypeEnum,
         name: String? = null,
-        storeCode: String? = null
+        storeCode: String? = null,
+        status: StoreStatusEnum? = null
     ): Int {
         with(TStoreBase.T_STORE_BASE) {
             val conditions = mutableListOf<Condition>()
@@ -156,6 +183,9 @@ class StoreBaseQueryDao {
             }
             if (storeCode.isNullOrBlank()) {
                 conditions.add(STORE_CODE.eq(storeCode))
+            }
+            if (status != null) {
+                conditions.add(STATUS.eq(status.name))
             }
             return dslContext.selectCount().from(this).where(conditions).fetchOne(0, Int::class.java)!!
         }

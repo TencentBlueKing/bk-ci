@@ -113,7 +113,12 @@ class StoreBaseUpdateServiceImpl @Autowired constructor(
         // 判断名称是否重复（升级允许名称一样）
         validateStoreName(storeType = storeType, storeCode = storeCode, name = name)
         // 校验前端传的版本号是否正确
-        validateStoreVersion(storeCode = storeCode, storeType = storeType, versionInfo = versionInfo, name = name)
+        storeCommonService.validateStoreVersion(
+            storeCode = storeCode,
+            storeType = storeType,
+            versionInfo = versionInfo,
+            name = name
+        )
         // 处理检查组件升级参数个性化逻辑
         getStoreSpecBusService(storeType).doCheckStoreUpdateParamSpecBus(storeUpdateRequest)
     }
@@ -249,98 +254,6 @@ class StoreBaseUpdateServiceImpl @Autowired constructor(
             StoreSpecBusService::class.java,
             StoreUtils.getSpecBusServiceBeanName(storeType)
         )
-    }
-
-    private fun validateStoreVersion(
-        storeCode: String,
-        storeType: StoreTypeEnum,
-        versionInfo: VersionModel,
-        name: String
-    ) {
-        val releaseType = versionInfo.releaseType
-        val opBaseRecord = generateOpBaseRecord(storeCode, storeType, releaseType)
-        val version = versionInfo.version
-        val dbVersion = opBaseRecord.version
-        val dbStatus = opBaseRecord.status
-        // 判断首个版本对应的请求是否合法
-        if (releaseType == ReleaseTypeEnum.NEW && dbVersion == INIT_VERSION &&
-            dbStatus != StoreStatusEnum.INIT.name
-        ) {
-            throw ErrorCodeException(errorCode = CommonMessageCode.ERROR_REST_EXCEPTION_COMMON_TIP)
-        }
-        // 最近的版本处于上架中止状态，重新升级版本号不变
-        val cancelFlag = dbStatus == StoreStatusEnum.GROUNDING_SUSPENSION.name
-        val requireVersionList =
-            if (cancelFlag && releaseType == ReleaseTypeEnum.CANCEL_RE_RELEASE) {
-                listOf(dbVersion)
-            } else {
-                // 历史大版本下的小版本更新模式需获取要更新大版本下的最新版本
-                val reqVersion = if (releaseType == ReleaseTypeEnum.HIS_VERSION_UPGRADE) {
-                    storeBaseQueryDao.getComponent(
-                        dslContext = dslContext,
-                        storeCode = storeCode,
-                        version = VersionUtils.convertLatestVersion(version),
-                        storeType = storeType
-                    )?.version
-                } else {
-                    null
-                }
-                storeCommonService.getRequireVersion(
-                    reqVersion = reqVersion,
-                    dbVersion = dbVersion,
-                    releaseType = releaseType
-                )
-            }
-        if (!requireVersionList.contains(version)) {
-            logger.warn("$storeType[$storeCode]| invalid version: $version|requireVersionList:$requireVersionList")
-            throw ErrorCodeException(
-                errorCode = StoreMessageCode.USER_IMAGE_VERSION_IS_INVALID,
-                params = arrayOf(version, requireVersionList.toString())
-            )
-        }
-        // 判断最近一个版本的状态，如果不是首次发布，则只有处于终态的组件状态才允许添加新的版本
-        checkAddVersionCondition(dbVersion = dbVersion, releaseType = releaseType, dbStatus = dbStatus, name = name)
-    }
-
-    private fun generateOpBaseRecord(
-        storeCode: String,
-        storeType: StoreTypeEnum,
-        releaseType: ReleaseTypeEnum
-    ): TStoreBaseRecord {
-        val maxVersionBaseRecord = storeBaseQueryDao.getMaxVersionComponentByCode(dslContext, storeCode, storeType)
-            ?: throw ErrorCodeException(
-                errorCode = CommonMessageCode.PARAMETER_IS_INVALID,
-                params = arrayOf(storeCode)
-            )
-        val newestBaseRecord = storeBaseQueryDao.getNewestComponentByCode(dslContext, storeCode, storeType)!!
-        val opBaseRecord = if (releaseType == ReleaseTypeEnum.CANCEL_RE_RELEASE) {
-            newestBaseRecord
-        } else {
-            maxVersionBaseRecord
-        }
-        return opBaseRecord
-    }
-
-    private fun checkAddVersionCondition(
-        dbVersion: String,
-        releaseType: ReleaseTypeEnum,
-        dbStatus: String,
-        name: String
-    ) {
-        if (dbVersion.isNotBlank() && releaseType != ReleaseTypeEnum.NEW) {
-            val storeFinalStatusList = mutableListOf(
-                StoreStatusEnum.AUDIT_REJECT.name,
-                StoreStatusEnum.RELEASED.name,
-                StoreStatusEnum.GROUNDING_SUSPENSION.name,
-                StoreStatusEnum.UNDERCARRIAGED.name
-            )
-            if (!storeFinalStatusList.contains(dbStatus)) {
-                throw ErrorCodeException(
-                    errorCode = StoreMessageCode.USER_IMAGE_VERSION_IS_NOT_FINISH,
-                    params = arrayOf(name, dbVersion)
-                )
-            }
-        }
     }
 
     private fun validateStoreName(

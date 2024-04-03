@@ -25,38 +25,33 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.store.common.service
+package com.tencent.devops.store.common.dao
 
-import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.store.pojo.common.enums.AuditTypeEnum
+import com.tencent.devops.model.store.tables.TStoreBaseFeatureExt
+import com.tencent.devops.model.store.tables.records.TStoreBaseFeatureExtRecord
+import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
+import org.jooq.Condition
+import org.jooq.DSLContext
+import org.springframework.stereotype.Repository
 
-interface StoreNotifyService {
+@Repository
+class StoreBaseFeatureExtQueryDao {
 
-    /**
-     * 根据消息模板发送通知消息
-     * @param templateCode 通知模板代码
-     * @param sender 发送者
-     * @param receivers 通知接收者
-     * @param titleParams 标题动态参数
-     * @param bodyParams 内容动态参数
-     * @param cc 邮件抄送接收者
-     * @param bcc 邮件密送接收者
-     */
-    @Suppress("ALL")
-    fun sendNotifyMessage(
-        templateCode: String,
-        sender: String,
-        receivers: MutableSet<String> = mutableSetOf(),
-        titleParams: Map<String, String>? = null,
-        bodyParams: Map<String, String>? = null,
-        cc: MutableSet<String>? = null,
-        bcc: MutableSet<String>? = null
-    ): Result<Boolean>
-
-    /**
-     * 发送组件发布审核结果通知消息
-     * @param storeId 组件ID
-     * @param auditType 审核类型
-     */
-    fun sendStoreReleaseAuditNotifyMessage(storeId: String, auditType: AuditTypeEnum)
+    fun getStoreBaseFeatureExt(
+        dslContext: DSLContext,
+        storeCode: String,
+        storeType: StoreTypeEnum,
+        fieldName: String
+    ): TStoreBaseFeatureExtRecord? {
+        return with(TStoreBaseFeatureExt.T_STORE_BASE_FEATURE_EXT) {
+            val conditions = mutableListOf<Condition>()
+            conditions.add(STORE_TYPE.eq(storeType.type.toByte()))
+            conditions.add(STORE_CODE.eq(storeCode))
+            conditions.add(FIELD_NAME.eq(fieldName))
+            dslContext.selectFrom(this)
+                .where(conditions)
+                .limit(1)
+                .fetchOne()
+        }
+    }
 }

@@ -25,18 +25,36 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.artifactory.pojo
+package com.tencent.devops.store.pojo.common.publication
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(title = "重新归档组件包请求报文体")
-data class PackageFileInfo(
-    @get:Schema(title = "包文件名", required = true)
-    val packageFileName: String,
-    @get:Schema(title = "包文件路径", required = true)
-    val packageFilePath: String,
-    @get:Schema(title = "包文件大小", required = true)
-    val packageFileSize: Long,
-    @get:Schema(title = "sha摘要值", required = true)
-    val shaContent: String
+@Schema(title = "组件包环境信息请求报文体")
+data class StorePkgEnvRequest(
+    @get:Schema(title = "包名", required = false)
+    var pkgName: String? = "",
+    @get:Schema(title = "安装包位于本地的路径", required = false)
+    var pkgLocalPath: String? = "",
+    @get:Schema(title = "安装包位于仓库的路径", required = true)
+    var pkgRepoPath: String = "",
+    @get:Schema(title = "开发语言", required = false)
+    val language: String? = null,
+    @get:Schema(title = "支持开发语言的最低版本", required = false)
+    val minVersion: String? = null,
+    @get:Schema(title = "执行入口", required = false)
+    val target: String? = "",
+    @get:Schema(title = "SHA签名串", required = false)
+    var shaContent: String? = null,
+    @get:Schema(title = "执行前置命令", required = false)
+    var preCmd: String? = null,
+    @get:Schema(title = "支持的操作系统名称", required = false)
+    var osName: String? = null,
+    @get:Schema(title = "支持的操作系统架构", required = false)
+    var osArch: String? = null,
+    @get:Schema(title = "运行时版本", required = false)
+    val runtimeVersion: String? = null,
+    @get:Schema(title = "是否为默认环境信息", required = false)
+    val defaultFlag: Boolean? = null,
+    @get:Schema(title = "环境扩展信息", required = false)
+    val extEnvInfo: Map<String, Any>? = null
 )

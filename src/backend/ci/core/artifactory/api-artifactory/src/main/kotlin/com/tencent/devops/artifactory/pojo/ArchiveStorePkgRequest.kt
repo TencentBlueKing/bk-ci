@@ -25,38 +25,22 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.store.common.service
+package com.tencent.devops.artifactory.pojo
 
-import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.store.pojo.common.enums.AuditTypeEnum
+import com.tencent.devops.store.pojo.common.enums.ReleaseTypeEnum
+import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
+import io.swagger.v3.oas.annotations.media.Schema
 
-interface StoreNotifyService {
-
-    /**
-     * 根据消息模板发送通知消息
-     * @param templateCode 通知模板代码
-     * @param sender 发送者
-     * @param receivers 通知接收者
-     * @param titleParams 标题动态参数
-     * @param bodyParams 内容动态参数
-     * @param cc 邮件抄送接收者
-     * @param bcc 邮件密送接收者
-     */
-    @Suppress("ALL")
-    fun sendNotifyMessage(
-        templateCode: String,
-        sender: String,
-        receivers: MutableSet<String> = mutableSetOf(),
-        titleParams: Map<String, String>? = null,
-        bodyParams: Map<String, String>? = null,
-        cc: MutableSet<String>? = null,
-        bcc: MutableSet<String>? = null
-    ): Result<Boolean>
-
-    /**
-     * 发送组件发布审核结果通知消息
-     * @param storeId 组件ID
-     * @param auditType 审核类型
-     */
-    fun sendStoreReleaseAuditNotifyMessage(storeId: String, auditType: AuditTypeEnum)
-}
+@Schema(title = "研发商店-归档组件包请求报文体")
+data class ArchiveStorePkgRequest(
+    @get:Schema(title = "组件ID", required = true)
+    val storeId: String,
+    @get:Schema(title = "组件标识", required = true)
+    val storeCode: String,
+    @get:Schema(title = "组件类型", required = true)
+    val storeType: StoreTypeEnum,
+    @get:Schema(title = "版本号", required = true)
+    val version: String,
+    @get:Schema(title = "发布类型", required = false)
+    val releaseType: ReleaseTypeEnum? = null
+)

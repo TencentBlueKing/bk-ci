@@ -25,29 +25,47 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.store.common.service.impl
+package com.tencent.devops.artifactory.store.resources
 
+import com.tencent.devops.artifactory.api.UserArchiveComponentPkgResource
+import com.tencent.devops.artifactory.pojo.ArchiveStorePkgRequest
+import com.tencent.devops.artifactory.store.service.ArchiveStorePkgService
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.store.common.service.StoreNotifyService
-import com.tencent.devops.store.pojo.common.enums.AuditTypeEnum
+import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.store.pojo.common.enums.ReleaseTypeEnum
+import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
+import org.glassfish.jersey.media.multipart.FormDataContentDisposition
 import org.springframework.beans.factory.annotation.Autowired
+import java.io.InputStream
 
-class SampleStoreNotifyServiceImpl @Autowired constructor() : StoreNotifyService {
+@RestResource
+class UserArchiveComponentPkgResourceImpl @Autowired constructor(
+    private val archiveStorePkgService: ArchiveStorePkgService
+) : UserArchiveComponentPkgResource {
 
-    override fun sendNotifyMessage(
-        templateCode: String,
-        sender: String,
-        receivers: MutableSet<String>,
-        titleParams: Map<String, String>?,
-        bodyParams: Map<String, String>?,
-        cc: MutableSet<String>?,
-        bcc: MutableSet<String>?
+    override fun archiveComponentPkg(
+        userId: String,
+        storeType: StoreTypeEnum,
+        storeId: String,
+        storeCode: String,
+        version: String,
+        releaseType: ReleaseTypeEnum,
+        inputStream: InputStream,
+        disposition: FormDataContentDisposition
     ): Result<Boolean> {
-        // 开源版暂不支持消息服务
-        return Result(true)
-    }
-
-    override fun sendStoreReleaseAuditNotifyMessage(storeId: String, auditType: AuditTypeEnum) {
-        // 开源版暂不支持消息服务
+        return Result(
+            archiveStorePkgService.archiveStorePkg(
+                userId = userId,
+                inputStream = inputStream,
+                disposition = disposition,
+                archiveStorePkgRequest = ArchiveStorePkgRequest(
+                    storeId = storeId,
+                    storeCode = storeCode,
+                    storeType = storeType,
+                    version = version,
+                    releaseType = releaseType
+                )
+            )
+        )
     }
 }
