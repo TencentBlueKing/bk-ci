@@ -49,7 +49,7 @@ import com.tencent.devops.experience.dao.ExperienceDownloadDao
 import com.tencent.devops.experience.dao.ExperienceDownloadDetailDao
 import com.tencent.devops.experience.dao.ExperienceLastDownloadDao
 import com.tencent.devops.experience.dao.ExperiencePublicDao
-import com.tencent.devops.experience.dao.TokenDao
+import com.tencent.devops.experience.dao.ExperienceTokenDao
 import com.tencent.devops.experience.pojo.DownloadUrl
 import com.tencent.devops.experience.pojo.ExperienceCount
 import com.tencent.devops.experience.pojo.ExperienceJumpInfo
@@ -70,7 +70,7 @@ import java.time.LocalDateTime
 @Service
 class ExperienceDownloadService @Autowired constructor(
     private val dslContext: DSLContext,
-    private val tokenDao: TokenDao,
+    private val experienceTokenDao: ExperienceTokenDao,
     private val experienceDao: ExperienceDao,
     private val experienceDownloadDao: ExperienceDownloadDao,
     private val experienceDownloadDetailDao: ExperienceDownloadDetailDao,
@@ -123,7 +123,7 @@ class ExperienceDownloadService @Autowired constructor(
     }
 
     fun getGatewayDownloadUrl(token: String): DownloadUrl {
-        val tokenRecord = tokenDao.getOrNull(dslContext, token)
+        val tokenRecord = experienceTokenDao.getOrNull(dslContext, token)
             ?: throw ErrorCodeException(
                 statusCode = 404,
                 errorCode = ExperienceMessageCode.TOKEN_NOT_EXISTS

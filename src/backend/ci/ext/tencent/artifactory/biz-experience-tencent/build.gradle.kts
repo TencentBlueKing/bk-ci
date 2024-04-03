@@ -26,5 +26,24 @@
  */
 
 dependencies {
-    api(project(":ext:tencent:experience:biz-experience-tencent"))
+    api(project(":ext:tencent:common:common-digest-tencent"))
+    api(project(":core:common:common-service"))
+    api(project(":core:common:common-web"))
+    api(project(":core:common:common-client"))
+    api(project(":core:common:common-archive"))
+    api(project(":core:common:common-db-base"))
+    api(project(":core:common:common-event"))
+    api(project(":core:common:common-wechatwork"))
+    api(project(":ext:tencent:common:common-auth:common-auth-tencent"))
+    api("net.coobird:thumbnailator")
+    api("com.github.xingePush:xinge")
+    api(project(":ext:tencent:artifactory:api-artifactory-tencent"))
+    api(project(":ext:tencent:common:common-auth:common-auth-tencent"))
+    api(project(":ext:tencent:common:common-archive-tencent"))
+    api(project(":ext:tencent:process:api-process-tencent"))
+    api(project(":ext:tencent:artifactory:api-experience-tencent"))
+    api(project(":core:notify:api-notify"))
+    api(project(":ext:tencent:project:api-project-tencent"))
+    api(project(":ext:tencent:artifactory:model-experience-tencent"))
+    api(fileTree(mapOf("dir" to "lib", "includes" to listOf("*.jar"))))
 }

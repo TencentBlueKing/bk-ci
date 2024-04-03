@@ -274,7 +274,10 @@ include(":ext:tencent:environment:boot-environment-tencent")
 
 include(":ext:tencent:artifactory")
 include(":ext:tencent:artifactory:api-artifactory-tencent")
+include(":ext:tencent:artifactory:api-experience-tencent")
 include(":ext:tencent:artifactory:biz-artifactory-tencent")
+include(":ext:tencent:artifactory:biz-experience-tencent")
+include(":ext:tencent:artifactory:model-experience-tencent")
 include(":ext:tencent:artifactory:boot-artifactory-tencent")
 
 include(":ext:tencent:dockerhost")
@@ -326,12 +329,6 @@ include(":ext:tencent:worker")
 include(":ext:tencent:worker:worker-agent")
 include(":ext:tencent:worker:worker-api-tencent")
 include(":ext:tencent:worker:worker-plugin-tencent")
-
-include(":ext:tencent:experience")
-include(":ext:tencent:experience:api-experience-tencent")
-include(":ext:tencent:experience:biz-experience-tencent")
-include(":ext:tencent:experience:boot-experience-tencent")
-include(":ext:tencent:experience:model-experience-tencent")
 
 include(":ext:tencent:stream")
 include(":ext:tencent:stream:api-stream-tencent")
