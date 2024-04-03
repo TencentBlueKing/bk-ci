@@ -42,7 +42,7 @@
                         slot="title"
                         class="can-not-delete-tips"
                     >
-                        <span>
+                        <span class="can-not-delete-tips-content">
                             {{ $t('hasNoPermissionPipelineTips', [noPermissionPipelineLength, pacPipelines.length]) }}
                         </span>
                         <span
@@ -386,13 +386,15 @@
             display: flex;
             align-items: center;
             position: relative;
-
+            grid-gap: 16px;
+            .can-not-delete-tips-content {
+                flex: 1;
+            }
             >.text-link {
                 color: $primaryColor;
                 cursor: pointer;
-                position: absolute;
-                right: 0;
-                bottom: 0;
+                align-self: flex-end;
+                flex-shrink: 0;
             }
         }
     }
