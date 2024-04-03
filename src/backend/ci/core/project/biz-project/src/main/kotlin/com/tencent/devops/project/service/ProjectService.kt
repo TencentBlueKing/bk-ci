@@ -50,10 +50,9 @@ import com.tencent.devops.project.pojo.ProjectVO
 import com.tencent.devops.project.pojo.ProjectWithPermission
 import com.tencent.devops.project.pojo.Result
 import com.tencent.devops.project.pojo.enums.ProjectChannelCode
-import com.tencent.devops.project.pojo.enums.ProjectProductDictType
 import com.tencent.devops.project.pojo.enums.ProjectValidateType
-import java.io.InputStream
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition
+import java.io.InputStream
 
 @Suppress("ALL")
 interface ProjectService {

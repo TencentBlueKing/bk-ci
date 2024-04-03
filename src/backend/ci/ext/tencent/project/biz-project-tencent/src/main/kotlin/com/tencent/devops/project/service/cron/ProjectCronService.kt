@@ -47,7 +47,6 @@ class ProjectCronService constructor(
         }
     }
 
-
     /**
      * 每周一3点开启任务
      * 监控如下场景：项目管理员所属组织架构和管理员所属组织架构是否匹配

@@ -38,14 +38,10 @@ class ProjectCostAllocationService constructor(
     val client: Client,
     val projectService: ProjectService,
     val redisOperation: RedisOperation,
-    val tokenService: ClientTokenService,
     val projectNotifyService: ProjectNotifyService,
     val projectUserService: ProjectUserService,
     val dslContext: DSLContext,
-    val projectOperationalProductDao: ProjectOperationalProductDao,
-    val config: CommonConfig,
-
-    ) {
+) {
     companion object {
         private val DATE_FORMATTER: DateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd")
         private val projectCostAllocationThreadPool = Executors.newFixedThreadPool(2)
@@ -62,10 +58,6 @@ class ProjectCostAllocationService constructor(
         .expireAfterWrite(12L, TimeUnit.HOURS)
         .build<String/*manager*/, MutableList<ProjectVO>/*projectList*/>()
     private val disabledProjectList = mutableListOf<String>()
-
-    private val bgName2ProductList = mutableMapOf<String, MutableList<OperationalProductVO>>()
-
-    private val productInfoList = mutableListOf<OperationalProductVO>()
 
     @Value("\${obs.url:#{null}}")
     private var obsUrl: String = ""
