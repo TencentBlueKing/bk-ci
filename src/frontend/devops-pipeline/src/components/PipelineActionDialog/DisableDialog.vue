@@ -32,8 +32,8 @@
 </template>
 
 <script>
-    import { mapActions } from 'vuex'
     import CopyIcon from '@/components/copyIcon'
+    import { mapActions } from 'vuex'
 
     export default {
         components: {

@@ -373,13 +373,14 @@ export default {
                 }
             })
         },
-        execPipeline ({ projectId, pipelineId, disabled }) {
-            if (disabled) return
+        execPipeline ({ projectId, pipelineId, disabled, released, pipelineVersion }) {
+            if (disabled || !released) return
             this.$router.push({
                 name: 'executePreview',
                 params: {
                     projectId,
-                    pipelineId
+                    pipelineId,
+                    version: pipelineVersion
                 }
             })
         },
