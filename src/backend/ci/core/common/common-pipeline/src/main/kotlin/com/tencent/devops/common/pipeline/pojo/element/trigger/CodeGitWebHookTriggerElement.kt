@@ -94,9 +94,20 @@ data class CodeGitWebHookTriggerElement(
     @get:Schema(title = "issue事件action")
     val includeIssueAction: List<String>? = null,
     @get:Schema(title = "mr事件action")
-    val includeMrAction: List<String>? = null,
+    val includeMrAction: List<String>? = if (eventType == CodeEventType.MERGE_REQUEST_ACCEPT) {
+        listOf(MERGE_ACTION_MERGE)
+    } else {
+        listOf(
+            MERGE_ACTION_OPEN,
+            MERGE_ACTION_REOPEN,
+            MERGE_ACTION_PUSH_UPDATE
+        )
+    },
     @get:Schema(title = "push事件action")
-    val includePushAction: List<String>? = null,
+    val includePushAction: List<String>? = listOf(
+        PUSH_ACTION_CREATE_BRANCH,
+        PUSH_ACTION_PUSH_FILE
+    ),
     @get:Schema(title = "是否启用第三方过滤")
     val enableThirdFilter: Boolean? = false,
     @get:Schema(title = "第三方应用地址")
@@ -106,6 +117,13 @@ data class CodeGitWebHookTriggerElement(
 ) : WebHookTriggerElement(name, id, status) {
     companion object {
         const val classType = "codeGitWebHookTrigger"
+        const val MERGE_ACTION_OPEN = "open"
+        const val MERGE_ACTION_CLOSE = "close"
+        const val MERGE_ACTION_REOPEN = "reopen"
+        const val MERGE_ACTION_PUSH_UPDATE = "push-update"
+        const val MERGE_ACTION_MERGE = "merge"
+        const val PUSH_ACTION_CREATE_BRANCH = "new-branch"
+        const val PUSH_ACTION_PUSH_FILE = "push-file"
     }
 
     override fun getClassType() = classType
@@ -192,4 +210,6 @@ data class CodeGitWebHookTriggerElement(
         }
         return props.filterNotNull()
     }
+
+    private fun convertMrAction() = listOf("")
 }
