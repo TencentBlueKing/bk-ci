@@ -208,8 +208,17 @@
                 return this.$t(this.isDebug ? 'debugParamsTips' : 'restoreDetaulParamsTips')
             }
         },
+        watch: {
+            'pipelineInfo.releaseVersion' (val) {
+                if (!this.$route.params.version && val) {
+                    this.init()
+                }
+            }
+        },
         mounted () {
-            this.init()
+            if (this.$route.params.version || this.pipelineInfo?.releaseVersion) {
+                this.init()
+            }
             bus.$off('start-execute')
             bus.$on('start-execute', this.executePipeline)
         },

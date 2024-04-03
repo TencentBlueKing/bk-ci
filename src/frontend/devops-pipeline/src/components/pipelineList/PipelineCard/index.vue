@@ -231,7 +231,7 @@
         },
         methods: {
             exec () {
-                if (this.pipeline?.disabled || !this.pipeine?.released) return
+                if (this.pipeline?.disabled || !this.pipeline?.released) return
                 this.execPipeline(this.pipeline)
             },
             applyPermission (pipeline) {
