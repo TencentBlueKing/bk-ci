@@ -5,7 +5,7 @@
                 'params-collapse-expand': activeName.has(1)
             }]" @click="toggleCollapse(1)">
                 <i class="devops-icon icon-angle-right" />
-                {{ $t('preview.buildMsg') }}
+                {{ $t('buildMsg') }}
             </header>
             <div v-if="activeName.has(1)" class="params-collapse-content">
                 <pipeline-params-form
@@ -508,11 +508,14 @@
                 margin: 0 10px;
                 color: #DCDEE5;
             }
-            .text-link .icon-question-circle {
-                display: inline-block;
-                color: #979BA5;
-                margin-left: 4px;
+            .text-link {
+                font-size: 14px;;
                 font-weight: normal;
+                .icon-question-circle {
+                    display: inline-block;
+                    color: #979BA5;
+                    margin-left: 4px;
+                }
             }
         }
         .params-collapse-content {
