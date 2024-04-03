@@ -150,20 +150,64 @@ class PipelineYamlRepositoryService @Autowired constructor(
         yamlFile: YamlPathListEntry
     ) {
         val branch = action.data.eventCommon.branch
-        val pipelineYamlVersion = pipelineYamlService.getLatestVersionByRef(
+        val defaultBranch = action.data.context.defaultBranch
+        val needCreateVersion = needCreateVersion(
             projectId = projectId,
             repoHashId = action.data.setting.repoHashId,
             filePath = yamlFile.yamlPath,
-            ref = GitActionCommon.getRealRef(action = action, branch = branch)
+            ref = GitActionCommon.getRealRef(action = action, branch = branch),
+            blobId = yamlFile.blobId!!,
+            defaultBranch = defaultBranch!!
         )
-        // yaml版本不存在或者当前分支最新版本与要更新的不一样,说明需要创建新的版本
-        if (pipelineYamlVersion == null || pipelineYamlVersion.blobId != yamlFile.blobId) {
+        if (needCreateVersion) {
             updateYamlPipeline(
                 projectId = projectId,
                 pipelineId = pipelineId,
                 action = action,
                 yamlFile = yamlFile
             )
+        }
+    }
+
+    /**
+     * 判断是否需要创建流水线新版本
+     *
+     * 1. 当前分支没有分支版本
+     *  - 文件blobId在默认分支存在版本,说明分支合并了默认分支,则不创建分支版本
+     *  - 文件blobId在默认分支不存在版本,说明是在新分支更新的文件,则创建分支版本
+     * 2. 当前分支有分支版本
+     *  - 分支版本最新blobId与文件的blobId不一样,则需要创建分支版本
+     */
+    private fun needCreateVersion(
+        projectId: String,
+        repoHashId: String,
+        filePath: String,
+        ref: String,
+        blobId: String,
+        defaultBranch: String
+    ): Boolean {
+        val pipelineYamlVersion = pipelineYamlService.getLatestVersionByRef(
+            projectId = projectId,
+            repoHashId = repoHashId,
+            filePath = filePath,
+            ref = ref,
+            branchAction = BranchVersionAction.ACTIVE.name
+        )
+        return if (pipelineYamlVersion == null) {
+            if (defaultBranch != ref) {
+                pipelineYamlService.getLatestVersionByRef(
+                    projectId = projectId,
+                    repoHashId = repoHashId,
+                    filePath = filePath,
+                    ref = defaultBranch,
+                    blobId = blobId,
+                    branchAction = BranchVersionAction.ACTIVE.name
+                ) == null
+            } else {
+                true
+            }
+        } else {
+            pipelineYamlVersion.blobId != blobId
         }
     }
 
@@ -307,15 +351,16 @@ class PipelineYamlRepositoryService @Autowired constructor(
         val repoHashId = action.data.setting.repoHashId
         val userId = action.data.getUserId()
         val defaultBranch = action.data.context.defaultBranch
+        val ref = yamlFile.ref
         logger.info("deleteYamlPipeline|$userId|$projectId|$repoHashId|yamlFile:$yamlFile")
         try {
-            if (yamlFile.ref.isNullOrBlank()) {
+            if (ref.isNullOrBlank()) {
                 return
             }
             pipelineYamlService.deleteBranchFile(
                 projectId = projectId,
                 repoHashId = repoHashId,
-                branch = yamlFile.ref,
+                branch = ref,
                 filePath = filePath
             )
             val pipelineYamlInfo = pipelineYamlService.getPipelineYamlInfo(
@@ -324,7 +369,14 @@ class PipelineYamlRepositoryService @Autowired constructor(
                 filePath = filePath
             ) ?: return
             // 非默认分支删除yaml,需要将分支版本置为无效
-            if (yamlFile.ref != defaultBranch) {
+            if (ref != defaultBranch) {
+                pipelineYamlService.updateBranchAction(
+                    projectId = projectId,
+                    repoHashId = repoHashId,
+                    filePath = yamlFile.yamlPath,
+                    ref = ref,
+                    branchAction = BranchVersionAction.INACTIVE.name
+                )
                 pipelineInfoFacadeService.updateBranchVersion(
                     userId = userId,
                     projectId = projectId,
@@ -459,14 +511,15 @@ class PipelineYamlRepositoryService @Autowired constructor(
                 userId = userId
             )
         } else {
-            val pipelineYamlVersion = pipelineYamlService.getLatestVersionByRef(
+            val needCreateVersion = needCreateVersion(
                 projectId = projectId,
-                repoHashId = repoHashId,
+                repoHashId = action.data.setting.repoHashId,
                 filePath = filePath,
-                ref = branch
+                ref = branch,
+                blobId = blobId,
+                defaultBranch = defaultBranch!!
             )
-            // yaml版本不存在或者当前分支最新版本与要更新的不一样,说明需要创建新的版本
-            if (pipelineYamlVersion == null || pipelineYamlVersion.blobId != blobId) {
+            if (needCreateVersion) {
                 logger.info("push yaml pipeline|update yaml|$projectId|$pipelineId|$version")
                 pipelineYamlService.update(
                     projectId = projectId,
