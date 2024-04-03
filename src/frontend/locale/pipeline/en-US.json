@@ -1247,7 +1247,7 @@
   "pipelineGroupRepeatTips": "{0} already exists, please change the name",
   "dynamicGroupRemoveDisableTips": "Dynamic groups cannot be manually moved out of the pipeline",
   "hasNoPermissionPipelineTips": "There are {0} pipelines without permission to delete, and {1} PAC pipelines default branch cannot be deleted in YAML",
-  "removeNoPermissionPipeline": "Remove unprivileged pipeline",
+  "removeNoPermissionPipeline": "Remove Undeletable",
   "clearSelection": "Clear",
   "selectedCount": "Selected <b>{0}</b> items, ",
   "staticGroupTips": "Manually add pipeline to group",
