@@ -124,216 +124,216 @@
 </template>
 
 <script>
-import piplineActionMixin from '@/mixins/pipeline-action-mixin';
-import {
-  RESOURCE_ACTION,
-  handlePipelineNoPermission,
-} from '@/utils/permission';
-import { mapActions, mapGetters } from 'vuex';
-export default {
-  mixins: [piplineActionMixin],
-  props: {
-    isShow: Boolean,
-    type: {
-      type: String,
-      default: 'remove',
-    },
-    isPacEnable: Boolean,
-    groupName: {
-      type: String,
-      required: true,
-    },
-    groupId: {
-      type: String,
-      required: true,
-    },
-    pipelineList: {
-      type: Array,
-      default: () => [],
-    },
-  },
-  data() {
-    return {
-      hideCanNotDeletePipelines: false,
-      visibleTagCountList: [],
-      isBusy: false,
-      width: 600,
-      padding: 40,
-    };
-  },
-  computed: {
-    ...mapGetters('pipelines', [
-      'groupMap',
-    ]),
-    isRemoveType() {
-      return this.type === 'remove';
-    },
-    isDeleteType() {
-      return this.type === 'delete';
-    },
-    title() {
-      return this.isRemoveType ? this.$t('removeFrom') : '';
-    },
-    confirmTxt() {
-      return this.$t(this.isRemoveType ? 'removeFrom' : 'delete');
-    },
-    hasPermissionPipelines() {
-      return this.pipelineList.filter(pipeline => pipeline.permissions.canDelete);
-    },
-    pacPipelines() {
-      return this.pipelineList.filter(pipeline => pipeline.yamlExist);
-    },
-    canNotDeletePipelineLength() {
-      return this.noPermissionPipelineLength + this.pacPipelines.length;
-    },
-    noPermissionPipelineLength() {
-      return this.pipelineList.length - this.hasPermissionPipelines.length;
-    },
-    removedPipelines() {
-      const list = this.pipelineList
-        .filter(pipeline => !this.hideCanNotDeletePipelines
-                    || (pipeline.hasPermission && !pipeline.yamlExist));
-
-      return list.map((pipeline, index) => {
-        const viewNames = pipeline.viewNames ?? [];
-        const visibleTagCount = this.visibleTagCountList[index] ?? viewNames.length;
-        const overflowCount = viewNames.length - visibleTagCount;
-
-        return {
-          id: pipeline.pipelineId,
-          name: pipeline.pipelineName,
-          hasPermission: pipeline.permissions.canDelete,
-          groups: viewNames.slice(0, visibleTagCount),
-          hiddenGroups: viewNames.slice(visibleTagCount).join(';'),
-          overflowCount,
-          yamlExist: pipeline.yamlExist,
-          showMoreTag: this.visibleTagCountList[index] === undefined || (overflowCount > 0),
-          tooltips: (!pipeline.permissions.canDelete || pipeline.yamlExist)
-            ? {
-              content: this.$t(pipeline.yamlExist ? 'pacModePipelineDeleteTips' : 'noPermissionToDelete'),
-              placement: 'top',
-              delay: [300, 0],
-              allowHTML: false,
+    import piplineActionMixin from '@/mixins/pipeline-action-mixin'
+    import {
+        RESOURCE_ACTION,
+        handlePipelineNoPermission
+    } from '@/utils/permission'
+    import { mapActions, mapGetters } from 'vuex'
+    export default {
+        mixins: [piplineActionMixin],
+        props: {
+            isShow: Boolean,
+            type: {
+                type: String,
+                default: 'remove'
+            },
+            isPacEnable: Boolean,
+            groupName: {
+                type: String,
+                required: true
+            },
+            groupId: {
+                type: String,
+                required: true
+            },
+            pipelineList: {
+                type: Array,
+                default: () => []
             }
-            : null,
-        };
-      });
-    },
-    disDeletable() {
-      return this.isDeleteType && (
-        (!this.hideCanNotDeletePipelines && this.canNotDeletePipelineLength > 0)
+        },
+        data () {
+            return {
+                hideCanNotDeletePipelines: false,
+                visibleTagCountList: [],
+                isBusy: false,
+                width: 600,
+                padding: 40
+            }
+        },
+        computed: {
+            ...mapGetters('pipelines', [
+                'groupMap'
+            ]),
+            isRemoveType () {
+                return this.type === 'remove'
+            },
+            isDeleteType () {
+                return this.type === 'delete'
+            },
+            title () {
+                return this.isRemoveType ? this.$t('removeFrom') : ''
+            },
+            confirmTxt () {
+                return this.$t(this.isRemoveType ? 'removeFrom' : 'delete')
+            },
+            hasPermissionPipelines () {
+                return this.pipelineList.filter(pipeline => pipeline.permissions.canDelete)
+            },
+            pacPipelines () {
+                return this.pipelineList.filter(pipeline => pipeline.yamlExist)
+            },
+            canNotDeletePipelineLength () {
+                return this.noPermissionPipelineLength + this.pacPipelines.length
+            },
+            noPermissionPipelineLength () {
+                return this.pipelineList.length - this.hasPermissionPipelines.length
+            },
+            removedPipelines () {
+                const list = this.pipelineList
+                    .filter(pipeline => !this.hideCanNotDeletePipelines
+                        || (pipeline.hasPermission && !pipeline.yamlExist))
+
+                return list.map((pipeline, index) => {
+                    const viewNames = pipeline.viewNames ?? []
+                    const visibleTagCount = this.visibleTagCountList[index] ?? viewNames.length
+                    const overflowCount = viewNames.length - visibleTagCount
+
+                    return {
+                        id: pipeline.pipelineId,
+                        name: pipeline.pipelineName,
+                        hasPermission: pipeline.permissions.canDelete,
+                        groups: viewNames.slice(0, visibleTagCount),
+                        hiddenGroups: viewNames.slice(visibleTagCount).join(';'),
+                        overflowCount,
+                        yamlExist: pipeline.yamlExist,
+                        showMoreTag: this.visibleTagCountList[index] === undefined || (overflowCount > 0),
+                        tooltips: (!pipeline.permissions.canDelete || pipeline.yamlExist)
+                            ? {
+                                content: this.$t(pipeline.yamlExist ? 'pacModePipelineDeleteTips' : 'noPermissionToDelete'),
+                                placement: 'top',
+                                delay: [300, 0],
+                                allowHTML: false
+                            }
+                            : null
+                    }
+                })
+            },
+            disDeletable () {
+                return this.isDeleteType && (
+                    (!this.hideCanNotDeletePipelines && this.canNotDeletePipelineLength > 0)
                     || this.hasPermissionPipelines.length === 0 || this.removedPipelines.length === 0
-      );
-    },
-  },
-  watch: {
-    isShow(val) {
-      if (!val) {
-        this.visibleTagCountList = [];
-      } else {
-        setTimeout(() => {
-          if (this.visibleTagCountList.length === 0 && this.pipelineList.length > 0) {
-            this.calcOverPos();
-          }
-        }, 200);
-      }
-    },
-  },
-  methods: {
-    ...mapActions('pipelines', [
-      'removePipelineFromGroup',
-      'patchDeletePipelines',
-      'requestGetGroupLists',
-    ]),
-    removeNoPermissionPipeline() {
-      this.hideCanNotDeletePipelines = true;
-    },
-    async handleSubmit() {
-      if (this.isBusy) return;
+                )
+            }
+        },
+        watch: {
+            isShow (val) {
+                if (!val) {
+                    this.visibleTagCountList = []
+                } else {
+                    setTimeout(() => {
+                        if (this.visibleTagCountList.length === 0 && this.pipelineList.length > 0) {
+                            this.calcOverPos()
+                        }
+                    }, 200)
+                }
+            }
+        },
+        methods: {
+            ...mapActions('pipelines', [
+                'removePipelineFromGroup',
+                'patchDeletePipelines',
+                'requestGetGroupLists'
+            ]),
+            removeNoPermissionPipeline () {
+                this.hideCanNotDeletePipelines = true
+            },
+            async handleSubmit () {
+                if (this.isBusy) return
 
-      try {
-        this.isBusy = true;
-        const pipelineIds = this.removedPipelines.map(pipeline => pipeline.id);
-        const showNoPermissionDialog = false;
-        if (pipelineIds.length === 0) {
-          throw Error(this.$t('noDeletePipelines'));
-        }
-        const params = {
-          projectId: this.$route.params.projectId,
-          pipelineIds,
-        };
+                try {
+                    this.isBusy = true
+                    const pipelineIds = this.removedPipelines.map(pipeline => pipeline.id)
+                    const showNoPermissionDialog = false
+                    if (pipelineIds.length === 0) {
+                        throw Error(this.$t('noDeletePipelines'))
+                    }
+                    const params = {
+                        projectId: this.$route.params.projectId,
+                        pipelineIds
+                    }
 
-        if (this.isRemoveType) {
-          const { data } = await this.removePipelineFromGroup({
-            ...params,
-            viewId: this.groupId,
-          });
-          if (!data) {
-            throw Error(this.$t('removedPipelineError'));
-          }
-        } else {
-          const { data } = await this.patchDeletePipelines(params);
-          const hasErr = pipelineIds.some(id => !data[id]);
-          if (hasErr) {
-            throw Error(this.$t('deleteFail'));
-          }
-        }
-        this.requestGetGroupLists(this.$route.params);
-        if (showNoPermissionDialog) {
-          handlePipelineNoPermission({
-            projectId: this.$route.params.projectId,
-            resourceCode: pipelineIds[0],
-            action: RESOURCE_ACTION.DELETE,
-          });
-        } else {
-          this.$showTips({
-            message: this.$t(this.isRemoveType ? 'removeSuc' : 'deleteSuc'),
-            theme: 'success',
-          });
-        }
-        this.handleClose();
-        this.$emit('done');
-      } catch (e) {
-        this.$showTips({
-          message: e.message ?? e,
-          theme: 'error',
-        });
-      } finally {
-        this.isBusy = false;
-      }
-    },
-    handleClose() {
-      this.$emit('close');
-      this.hideCanNotDeletePipelines = false;
-    },
-    calcOverPos() {
-      const tagMargin = 6;
-      if (this.$refs.belongsGroupBox?.length > 0) {
-        const { width = 266 } = getComputedStyle(this.$refs.belongsGroupBox[0]);
-        const groupNameBoxWidth = parseInt(width);
-        this.visibleTagCountList = this.$refs.belongsGroupBox?.map((_, index) => {
-          const groupNameLength = this.$refs[`groupName_${index}`]?.length ?? 0;
-          const moreTag = this.$refs.groupNameMore?.[index]?.$el;
-          const moreTagWidth = (moreTag?.clientWidth ?? 0) + tagMargin;
-          const viewPortWidth = groupNameBoxWidth - (groupNameLength > 1 ? moreTagWidth : 0);
-          let sumTagWidth = 0;
-          let tagVisbleCount = 0;
+                    if (this.isRemoveType) {
+                        const { data } = await this.removePipelineFromGroup({
+                            ...params,
+                            viewId: this.groupId
+                        })
+                        if (!data) {
+                            throw Error(this.$t('removedPipelineError'))
+                        }
+                    } else {
+                        const { data } = await this.patchDeletePipelines(params)
+                        const hasErr = pipelineIds.some(id => !data[id])
+                        if (hasErr) {
+                            throw Error(this.$t('deleteFail'))
+                        }
+                    }
+                    this.requestGetGroupLists(this.$route.params)
+                    if (showNoPermissionDialog) {
+                        handlePipelineNoPermission({
+                            projectId: this.$route.params.projectId,
+                            resourceCode: pipelineIds[0],
+                            action: RESOURCE_ACTION.DELETE
+                        })
+                    } else {
+                        this.$showTips({
+                            message: this.$t(this.isRemoveType ? 'removeSuc' : 'deleteSuc'),
+                            theme: 'success'
+                        })
+                    }
+                    this.handleClose()
+                    this.$emit('done')
+                } catch (e) {
+                    this.$showTips({
+                        message: e.message ?? e,
+                        theme: 'error'
+                    })
+                } finally {
+                    this.isBusy = false
+                }
+            },
+            handleClose () {
+                this.$emit('close')
+                this.hideCanNotDeletePipelines = false
+            },
+            calcOverPos () {
+                const tagMargin = 6
+                if (this.$refs.belongsGroupBox?.length > 0) {
+                    const { width = 266 } = getComputedStyle(this.$refs.belongsGroupBox[0])
+                    const groupNameBoxWidth = parseInt(width)
+                    this.visibleTagCountList = this.$refs.belongsGroupBox?.map((_, index) => {
+          const groupNameLength = this.$refs[`groupName_${index}`]?.length ?? 0
+          const moreTag = this.$refs.groupNameMore?.[index]?.$el
+          const moreTagWidth = (moreTag?.clientWidth ?? 0) + tagMargin
+          const viewPortWidth = groupNameBoxWidth - (groupNameLength > 1 ? moreTagWidth : 0)
+          let sumTagWidth = 0
+          let tagVisbleCount = 0
 
           this.$refs[`groupName_${index}`]?.every((groupName) => {
-            sumTagWidth += groupName.$el.offsetWidth + tagMargin;
-            console.log(index, sumTagWidth, groupName.$el.offsetWidth);
-            const isOverSize = sumTagWidth > viewPortWidth;
+            sumTagWidth += groupName.$el.offsetWidth + tagMargin
+            console.log(index, sumTagWidth, groupName.$el.offsetWidth)
+            const isOverSize = sumTagWidth > viewPortWidth
             if (!isOverSize) {
-              tagVisbleCount += 1;
+              tagVisbleCount += 1
             }
-            return !isOverSize;
-          });
-          return tagVisbleCount;
-        });
-      }
-    },
-  },
-};
+            return !isOverSize
+          })
+          return tagVisbleCount
+        })
+                }
+            }
+        }
+    }
 </script>
 
 <style lang="scss">

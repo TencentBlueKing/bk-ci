@@ -32,7 +32,7 @@
             </ul>
             <div v-for="i in [1,2,3,4]" :key="i" ref="disableToolTips" class="disable-nav-child-item-tooltips">
                 {{$t('switchToReleaseVersion')}}
-                <span @click="switchToReleaseVersion" class="text-link">{{ $t('newlist.view') }}</span>
+                <span v-if="isReleasePipeline" @click="switchToReleaseVersion" class="text-link">{{ $t('newlist.view') }}</span>
             </div>
         </aside>
 
@@ -67,7 +67,7 @@
         },
         computed: {
             ...mapState('atom', ['pipelineInfo', 'pipeline', 'activePipelineVersion', 'switchingVersion']),
-            ...mapGetters('atom', ['isActiveDraftVersion', 'isReleaseVersion']),
+            ...mapGetters('atom', ['isActiveDraftVersion', 'isReleaseVersion', 'isReleasePipeline']),
             activeMenuItem () {
                 return this.$route.params.type || 'history'
             },
