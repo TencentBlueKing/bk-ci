@@ -1500,5 +1500,7 @@
   "versionRuleT": "T: Pipeline trigger version",                  
   "versionRuleA": "Additional bits: Modified version of other information of the pipeline, such as name, description, running settings, etc.",
   "willRelease": "To be released",
-  "clickToAddStage": "Click to add the first pipeline stage"
+  "clickToAddStage": "Click to add the first pipeline stage",
+  "buildMsg": "Build Message",
+  "executeStepPreview": "Preview of steps to be executed"
 }

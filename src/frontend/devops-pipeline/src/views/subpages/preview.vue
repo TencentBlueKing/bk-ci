@@ -5,7 +5,7 @@
                 'params-collapse-expand': activeName.has(1)
             }]" @click="toggleCollapse(1)">
                 <i class="devops-icon icon-angle-right" />
-                {{ $t('preview.build') }}
+                {{ $t('preview.buildMsg') }}
             </header>
             <div v-if="activeName.has(1)" class="params-collapse-content">
                 <pipeline-params-form
@@ -39,7 +39,7 @@
                 'params-collapse-expand': activeName.has(3)
             }]" @click="toggleCollapse(3)">
                 <i class="devops-icon icon-angle-right" />
-                {{ $t('template.pipelineVar') }}
+                {{ $t('buildParams') }}
                 <template v-if="paramList.length > 0">
                     <span class="collapse-trigger-divider">|</span>
                     <span v-if="useLastParams" class="text-link" @click.stop="updateParams()">
@@ -111,23 +111,24 @@
             @click="toggleCollapse(6)"
         >
             <i class="devops-icon icon-angle-right" />
-            {{ $t('preview.atomToExec') }}
-            <span>
-                ({{ $t('preview.skipTipsPrefix') }}
-                <span @click.stop="editTrigger" class="text-link item-title-tips-link">
-                    {{ $t('preview.manualTrigger') }}
+            {{ $t(startupInfo?.canElementSkip ? 'preview.atomToExec' : 'executeStepPreview') }}
+            <template v-if="startupInfo?.canElementSkip">
+                <span>
+                    ({{ $t('preview.skipTipsPrefix') }}
+                    <span @click.stop="editTrigger" class="text-link item-title-tips-link">
+                        {{ $t('preview.manualTrigger') }}
+                    </span>
+                    {{ $t('preview.skipTipsSuffix') }})
                 </span>
-                {{ $t('preview.skipTipsSuffix') }})
-            </span>
-            <span @click.stop>
-                <bk-checkbox
-                    v-if="startupInfo?.canElementSkip"
-                    v-model="checkTotal"
-                    @change="handleCheckTotalChange"
-                >
-                    {{ $t('preview.selectAll') }}/{{ $t('preview.selectNone') }}
-                </bk-checkbox>
-            </span>
+                <span @click.stop>
+                    <bk-checkbox
+                        @change="handleCheckTotalChange"
+                        v-model="checkTotal"
+                    >
+                        {{ $t('preview.selectAll') }}/{{ $t('preview.selectNone') }}
+                    </bk-checkbox>
+                </span>
+            </template>
         </header>
         <div v-if="activeName.has(6)" class="params-collapse-content pipeline-optional-model">
             <pipeline
@@ -511,6 +512,7 @@
                 display: inline-block;
                 color: #979BA5;
                 margin-left: 4px;
+                font-weight: normal;
             }
         }
         .params-collapse-content {

@@ -1501,7 +1501,9 @@
   "versionRuleT": "T：流水线触发器版本",                  
   "versionRuleA": "附加位：流水线其他信息修改版本，如名称、描述、运行设置等",
   "willRelease": "待发布",
-  "clickToAddStage": "点击添加第一个流水线Stage"
+  "clickToAddStage": "点击添加第一个流水线Stage",
+  "buildMsg": "构建信息",
+  "executeStepPreview": "预览待执行的步骤"
 }
 
 
