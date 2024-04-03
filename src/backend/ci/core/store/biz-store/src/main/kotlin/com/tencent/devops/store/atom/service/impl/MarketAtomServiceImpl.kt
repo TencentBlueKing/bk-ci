@@ -1064,7 +1064,7 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
         logger.info("releasedCount: $releasedCount")
         if (releasedCount > 0) {
             return I18nUtil.generateResponseDataObject(
-                messageCode = StoreMessageCode.USER_ATOM_RELEASED_IS_NOT_ALLOW_DELETE,
+                messageCode = StoreMessageCode.USER_COMPONENT_RELEASED_IS_NOT_ALLOW_DELETE,
                 params = arrayOf(atomCode),
                 language = I18nUtil.getLanguage(userId)
             )

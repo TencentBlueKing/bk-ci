@@ -34,7 +34,6 @@ import com.tencent.devops.model.store.tables.TStoreBase
 import com.tencent.devops.model.store.tables.TStoreVersionLog
 import com.tencent.devops.model.store.tables.records.TStoreBaseRecord
 import com.tencent.devops.store.common.utils.VersionUtils
-import com.tencent.devops.store.pojo.common.enums.StoreStatusEnum
 import com.tencent.devops.store.pojo.common.KEY_CLASSIFY_CODE
 import com.tencent.devops.store.pojo.common.KEY_CLASSIFY_CREATE_TIME
 import com.tencent.devops.store.pojo.common.KEY_CLASSIFY_NAME
@@ -47,11 +46,12 @@ import com.tencent.devops.store.pojo.common.KEY_RELEASE_TYPE
 import com.tencent.devops.store.pojo.common.KEY_STORE_CODE
 import com.tencent.devops.store.pojo.common.KEY_STORE_TYPE
 import com.tencent.devops.store.pojo.common.KEY_VERSION_LOG_CONTENT
+import com.tencent.devops.store.pojo.common.enums.StoreStatusEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import org.jooq.Condition
 import org.jooq.DSLContext
-import org.jooq.Result
 import org.jooq.Record
+import org.jooq.Result
 import org.springframework.stereotype.Repository
 
 @Repository
@@ -218,15 +218,15 @@ class StoreBaseQueryDao {
                 this.ID.`as`(KEY_ID),
                 this.STORE_CODE.`as`(KEY_STORE_CODE),
                 this.STORE_TYPE.`as`(KEY_STORE_TYPE),
+                this.PUBLISHER.`as`(KEY_PUBLISHER),
+                this.VERSION.`as`(KEY_VERSION),
                 tClassify.CLASSIFY_CODE.`as`(KEY_CLASSIFY_CODE),
                 tClassify.CLASSIFY_NAME.`as`(KEY_CLASSIFY_NAME),
                 tClassify.TYPE.`as`(KEY_CLASSIFY_TYPE),
                 tClassify.WEIGHT.`as`(KEY_CLASSIFY_WEIGHT),
                 tClassify.CREATE_TIME.`as`(KEY_CLASSIFY_CREATE_TIME),
                 tClassify.UPDATE_TIME.`as`(KEY_CLASSIFY_UPDATE_TIME),
-                this.PUBLISHER.`as`(KEY_PUBLISHER),
                 tStoreVersionLog.RELEASE_TYPE.`as`(KEY_RELEASE_TYPE),
-                this.VERSION.`as`(KEY_VERSION),
                 tStoreVersionLog.CONTENT.`as`(KEY_VERSION_LOG_CONTENT)
             )
                 .from(this)
@@ -235,6 +235,15 @@ class StoreBaseQueryDao {
                 .where(this.ID.eq(storeId))
                 .limit(1)
                 .fetchOne()
+        }
+    }
+
+    fun getComponentIds(dslContext: DSLContext, storeCode: String, storeType: StoreTypeEnum): MutableList<String> {
+        with(TStoreBase.T_STORE_BASE) {
+            return dslContext.select(ID)
+                .from(this)
+                .where(STORE_CODE.eq(storeCode).and(STORE_TYPE.eq(storeType.type.toByte())))
+                .fetchInto(String::class.java)
         }
     }
 }

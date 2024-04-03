@@ -29,15 +29,11 @@ package com.tencent.devops.store.common.service
 
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.exception.ErrorCodeException
-import com.tencent.devops.common.api.pojo.ErrorCode
 import com.tencent.devops.common.api.pojo.Page
-import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.store.common.dao.ClassifyDao
 import com.tencent.devops.store.common.dao.StoreBaseEnvQueryDao
 import com.tencent.devops.store.common.dao.StoreBaseFeatureQueryDao
 import com.tencent.devops.store.common.dao.StoreBaseQueryDao
-import com.tencent.devops.store.common.step.QueryStep
-import com.tencent.devops.store.common.step.StoreBaseQueryStep
 import com.tencent.devops.store.pojo.common.MarketItem
 import com.tencent.devops.store.pojo.common.MarketMainItem
 import com.tencent.devops.store.pojo.common.MyStoreComponent
@@ -149,7 +145,6 @@ abstract class AbstractStoreComponentQueryService @@Autowired constructor(
         val labels = storeLabelService.getLabelsByStoreId(storeBaseRecord.id)
         val userCommentInfo = storeCommentService.getStoreUserCommentInfo(userId, storeCode, storeType)
         val componentRelRecord = storeBaseQueryDao.getComponentRelClassifyAndVersionInfoById(dslContext, storeId)
-        val mutableMapOf = mutableMapOf<String, Class<QueryStep<StoreDetailInfo>>>()
         StoreDetailInfo(
 
         )

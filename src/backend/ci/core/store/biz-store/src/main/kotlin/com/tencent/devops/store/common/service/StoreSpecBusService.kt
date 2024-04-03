@@ -27,6 +27,7 @@
 
 package com.tencent.devops.store.common.service
 
+import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.store.pojo.common.enums.StoreStatusEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.pojo.common.publication.ReleaseProcessItem
@@ -99,4 +100,11 @@ interface StoreSpecBusService {
         isNormalUpgrade: Boolean,
         status: StoreStatusEnum
     ): List<ReleaseProcessItem>
+
+    /**
+     * 检查组件是否可以删除
+     */
+    fun doComponentDeleteCheck(): Result<Boolean>
+
+    fun deleteComponentRepoFile(userId: String, storeCode: String, storeType: StoreTypeEnum): Result<Boolean>
 }

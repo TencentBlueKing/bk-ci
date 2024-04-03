@@ -25,34 +25,49 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.store.common.service.impl
+package com.tencent.devops.store.common.service
 
+import com.tencent.devops.artifactory.api.service.StoreArchiveComponentPkgResource
+import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
+import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.enums.ChannelCode
+import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.store.common.dao.ClassifyDao
+import com.tencent.devops.store.common.dao.StoreBaseEnvExtManageDao
+import com.tencent.devops.store.common.dao.StoreBaseEnvManageDao
+import com.tencent.devops.store.common.dao.StoreBaseExtManageDao
+import com.tencent.devops.store.common.dao.StoreBaseFeatureExtManageDao
 import com.tencent.devops.store.common.dao.StoreBaseFeatureManageDao
 import com.tencent.devops.store.common.dao.StoreBaseFeatureQueryDao
 import com.tencent.devops.store.common.dao.StoreBaseManageDao
 import com.tencent.devops.store.common.dao.StoreBaseQueryDao
 import com.tencent.devops.store.common.dao.StoreLabelDao
 import com.tencent.devops.store.common.dao.StoreMemberDao
-import com.tencent.devops.store.common.service.StoreProjectService
+import com.tencent.devops.store.common.dao.StoreProjectRelDao
+import com.tencent.devops.store.common.dao.StoreVersionLogDao
+import com.tencent.devops.store.common.utils.StoreReleaseUtils
+import com.tencent.devops.store.common.utils.StoreUtils
 import com.tencent.devops.store.constant.StoreMessageCode
+import com.tencent.devops.store.constant.StoreMessageCode.STORE_COMPONENT_REPO_FILE_DELETE_FAIL
 import com.tencent.devops.store.pojo.common.InstallStoreReq
 import com.tencent.devops.store.pojo.common.StoreBaseInfo
 import com.tencent.devops.store.pojo.common.StoreBaseInfoUpdateRequest
 import com.tencent.devops.store.pojo.common.UnInstallReq
 import com.tencent.devops.store.pojo.common.enums.StoreStatusEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
-import kotlin.reflect.full.memberProperties
+import com.tencent.devops.store.pojo.common.publication.StoreDeleteRequest
+import org.checkerframework.checker.units.qual.s
+import org.eclipse.jgit.lib.ObjectChecker.type
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 
-abstract class StoreComponentManageServiceImpl(
+abstract class StoreComponentManageService(
     private val dslContext: DSLContext,
     private val storeBaseQueryDao: StoreBaseQueryDao,
     private val storeBaseManageDao: StoreBaseManageDao,
@@ -61,11 +76,17 @@ abstract class StoreComponentManageServiceImpl(
     private val storeProjectService: StoreProjectService,
     private val classifyDao: ClassifyDao,
     private val storeLabelDao: StoreLabelDao,
-    private val storeMemberDao: StoreMemberDao
+    private val storeMemberDao: StoreMemberDao,
+    private val storeBaseExtManageDao: StoreBaseExtManageDao,
+    private val storeCommonService: StoreCommonService,
+    private val storeBaseEnvExtManageDao: StoreBaseEnvExtManageDao,
+    private val storeBaseEnvManageDao: StoreBaseEnvManageDao,
+    private val storeBaseFeatureExtManageDao: StoreBaseFeatureExtManageDao,
+    private val storeVersionLogDao: StoreVersionLogDao
 ) {
 
     companion object {
-        private val logger = LoggerFactory.getLogger(StoreComponentManageServiceImpl::class.java)
+        private val logger = LoggerFactory.getLogger(StoreComponentManageService::class.java)
 
     }
 
@@ -76,11 +97,6 @@ abstract class StoreComponentManageServiceImpl(
         storeBaseInfoUpdateRequest: StoreBaseInfoUpdateRequest
     ): Result<Boolean> {
         logger.info("updateComponentBaseInfo params:[$userId|$storeCode|$storeType|$storeBaseInfoUpdateRequest]")
-        // 校验空请求
-        val properties = StoreBaseInfoUpdateRequest::class.memberProperties
-        if (!properties.any { it.get(storeBaseInfoUpdateRequest) != null}) {
-            return Result(true)
-        }
         // 判断当前用户是否拥有更新组件基本信息权限
         if (!validateUserUpdateActionPermission()) {
             return I18nUtil.generateResponseDataObject(
@@ -110,6 +126,13 @@ abstract class StoreComponentManageServiceImpl(
         if (latestComponent != null && componentBaseInfoRecord.id != latestComponent.id) {
             storeIds.add(latestComponent.id)
         }
+        val storeBaseExtDataPOs = StoreReleaseUtils.generateStoreBaseExtDataPO(
+            extBaseInfo = storeBaseInfoUpdateRequest.extBaseInfo,
+            storeId = componentBaseInfoRecord.id,
+            storeCode = storeCode,
+            storeType = StoreTypeEnum.valueOf(storeType),
+            userId = userId
+        )
         dslContext.transaction { t ->
             val context = DSL.using(t)
             val classifyId = storeBaseInfoUpdateRequest.classifyCode?.let {
@@ -137,8 +160,9 @@ abstract class StoreComponentManageServiceImpl(
                     )
                 }
             }
-            // 组件基本信息更新逻辑扩展
-            updateComponentExtBaseInfo(context, storeIds, storeBaseInfoUpdateRequest)
+            if (!storeBaseExtDataPOs.isNullOrEmpty()) {
+                storeBaseExtManageDao.batchSave(context, storeBaseExtDataPOs)
+            }
         }
         return Result(true)
     }
@@ -194,12 +218,6 @@ abstract class StoreComponentManageServiceImpl(
                 classifyId = it.classifyId
             )
         }
-        // 校验组件安装权限
-        validateInstall(
-            userId = userId,
-            storeBaseInfo = storeBaseInfo,
-            projectCodeList = installStoreReq.projectCodes
-        )
         // 安装操作逻辑扩展
         val installComponentExtResult = installComponentExt(
             userId = userId,
@@ -224,16 +242,6 @@ abstract class StoreComponentManageServiceImpl(
 
     }
 
-
-    /**
-     * 组件安装校验
-     */
-    abstract fun validateInstall(
-        userId: String,
-        storeBaseInfo: StoreBaseInfo,
-        projectCodeList: ArrayList<String>
-    ): Result<Boolean>
-
     /**
      * 组件安装校逻辑扩展
      */
@@ -255,30 +263,74 @@ abstract class StoreComponentManageServiceImpl(
     }
 
     fun deleteComponent(userId: String, storeType: String, storeCode: String): Result<Boolean> {
+
+        return handleDeleteComponent(userId, storeType, storeCode)
+    }
+
+    fun deleteComponentCheck(handlerRequest: StoreDeleteRequest) {
+        val bkStoreContext = handlerRequest.bkStoreContext
+        val storeCode = handlerRequest.storeCode
+        val storeType = StoreTypeEnum.valueOf(handlerRequest.storeType)
+        val userId = bkStoreContext[AUTH_HEADER_USER_ID]?.toString() ?: AUTH_HEADER_USER_ID_DEFAULT_VALUE
         logger.info("delete component ,params:[$userId, $storeCode, $storeType]")
-        val type = StoreTypeEnum.valueOf(storeType)
-        val isOwner = storeMemberDao.isStoreAdmin(dslContext, userId, storeCode, type.type.toByte())
+        val isOwner = storeMemberDao.isStoreAdmin(dslContext, userId, storeCode, storeType.type.toByte())
         if (!isOwner) {
-            return I18nUtil.generateResponseDataObject(
-                messageCode = StoreMessageCode.NO_COMPONENT_ADMIN_PERMISSION,
-                params = arrayOf(storeCode),
-                language = I18nUtil.getLanguage(userId)
+            throw ErrorCodeException(
+                errorCode = StoreMessageCode.NO_COMPONENT_ADMIN_PERMISSION,
+                params = arrayOf(storeCode)
             )
         }
         val releasedCount = storeBaseQueryDao.countReleaseStoreByCode(
             dslContext = dslContext,
             storeCode = storeCode,
-            storeTepe = StoreTypeEnum.valueOf(storeType)
+            storeTepe = storeType
         )
         if (releasedCount > 0) {
-            return I18nUtil.generateResponseDataObject(
-                messageCode = StoreMessageCode.USER_ATOM_RELEASED_IS_NOT_ALLOW_DELETE,
-                params = arrayOf(storeCode),
-                language = I18nUtil.getLanguage(userId)
+            throw ErrorCodeException(
+                errorCode = StoreMessageCode.USER_COMPONENT_RELEASED_IS_NOT_ALLOW_DELETE,
+                params = arrayOf(storeCode)
             )
         }
-        return handleDeleteComponent(userId, storeType, storeCode)
+        getStoreSpecBusService(storeType).doComponentDeleteCheck()
     }
 
-    abstract fun handleDeleteComponent(userId: String, storeType: String, storeCode: String): Result<Boolean>
+    fun deleteComponentRepoFile(handlerRequest: StoreDeleteRequest) {
+        val bkStoreContext = handlerRequest.bkStoreContext
+        val storeCode = handlerRequest.storeCode
+        val storeType = StoreTypeEnum.valueOf(handlerRequest.storeType)
+        val userId = bkStoreContext[AUTH_HEADER_USER_ID]?.toString() ?: AUTH_HEADER_USER_ID_DEFAULT_VALUE
+        val deleteStorePkgResult = getStoreSpecBusService(storeType).deleteComponentRepoFile(
+            userId = userId,
+            storeCode = storeCode,
+            storeType = storeType
+        )
+        if (deleteStorePkgResult.isNotOk()) {
+            throw ErrorCodeException(errorCode = STORE_COMPONENT_REPO_FILE_DELETE_FAIL)
+        }
+    }
+
+    fun doStoreDeleteDataPersistent(handlerRequest: StoreDeleteRequest) {
+        val storeCode = handlerRequest.storeCode
+        val storeType = StoreTypeEnum.valueOf(handlerRequest.storeType)
+        dslContext.transaction { t ->
+            val context = DSL.using(t)
+            val storeIds = storeBaseQueryDao.getComponentIds(context, storeCode, storeType)
+            storeCommonService.deleteStoreInfo(context, storeCode, storeType.type.toByte())
+            storeBaseEnvExtManageDao.batchDeleteStoreEnvExtInfo(context, storeIds)
+            storeBaseEnvManageDao.batchDeleteStoreEnvInfo(context, storeIds)
+            storeBaseFeatureManageDao.deleteStoreBaseFeature(context, storeCode, storeType.type.toByte())
+            storeBaseFeatureExtManageDao.deleteStoreBaseFeatureExtInfo(context, storeCode, storeType)
+            storeLabelDao.batchDeleteByStoreId(context, storeIds)
+            storeVersionLogDao.deleteByStoreCode(context, storeCode, storeType)
+            storeBaseExtManageDao.batchDeleteStoreBaseExtInfo(context, storeIds)
+            storeBaseManageDao.deleteByComponentCode(context, storeCode, storeType)
+        }
+    }
+
+    private fun getStoreSpecBusService(storeType: StoreTypeEnum): StoreSpecBusService {
+        return SpringContextUtil.getBean(
+            StoreSpecBusService::class.java,
+            StoreUtils.getSpecBusServiceBeanName(storeType)
+        )
+    }
 }

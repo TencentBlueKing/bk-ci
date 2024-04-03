@@ -71,7 +71,7 @@ object StoreMessageCode {
     const val USER_REPOSITORY_PULL_QUALITY_JSON_FILE_FAIL = "2120019" // 研发商店：从[{0}]分支拉取插件配置文件[quality.json失败,请确认是否OAUTH授权、文件是否正确上传代码库等
     const val USER_ATOM_USED = "2120020" // 研发商店：插件{0}已被项目{1}下的流水线使用，不可以卸载
     const val USER_ATOM_UNINSTALL_REASON_USED = "2120021" // 研发商店：插件卸载原因{0}已被使用，不能删除。建议禁用
-    const val USER_ATOM_RELEASED_IS_NOT_ALLOW_DELETE = "2120022" // 研发商店：插件{0}已发布到商店，请先下架再删除
+    const val USER_COMPONENT_RELEASED_IS_NOT_ALLOW_DELETE = "2120022" // 研发商店：组件{0}已发布到商店，请先下架再删除
     const val USER_ATOM_USED_IS_NOT_ALLOW_DELETE = "2120023" // 研发商店：插件{0}已安装到其他项目下使用，请勿移除
     const val USER_REPOSITORY_BK_FRONTEND_DIR_IS_NULL = "2120024" // 研发商店：插件代码库文件夹[{0}]未创建
     const val USER_ATOM_IS_NOT_ALLOW_USE_IN_PROJECT = "2120025" // 你的项目[{0}]不允许使用插件[{1}]，请检查插件是否被正确安装
@@ -154,8 +154,9 @@ object StoreMessageCode {
     const val GET_BRANCH_COMMIT_INFO_ERROR = "2120927" // 获取分支提交信息异常
     const val STORE_BRANCH_NO_NEW_COMMIT = "2120928" // 代码未变更，分支测试版本生成失败
     const val STORE_INSTALL_VALIDATE_FAIL = "2120929" // 研发商店: 组件{0}安装校验失败,失败原因:{1}
-    const val STORE_VERSION_IS_NOT_FINISH = "2120929" // 研发商店：组件{0}的{1}版本发布未结束，请稍后再试
-    const val STORE_RELEASE_STEPS_ERROR = "2120930" // 研发商店：组件发布流程中状态变更顺序不正确
+    const val STORE_VERSION_IS_NOT_FINISH = "2120930" // 研发商店：组件{0}的{1}版本发布未结束，请稍后再试
+    const val STORE_RELEASE_STEPS_ERROR = "2120931" // 研发商店：组件发布流程中状态变更顺序不正确
+    const val STORE_COMPONENT_REPO_FILE_DELETE_FAIL = "2120932" // 研发商店：组件仓库文件删除失败
 
     const val BK_OTHER = "bkOther" // 其他
     const val BK_PIPELINED_JOB = "bkPipelinedJob" // 流水线Job

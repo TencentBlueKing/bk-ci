@@ -97,4 +97,13 @@ class StoreBaseFeatureManageDao {
                 .execute()
         }
     }
+
+    fun deleteStoreBaseFeature(dslContext: DSLContext, storeCode: String, storeType: Byte) {
+        with(TStoreBaseFeature.T_STORE_BASE_FEATURE) {
+            dslContext.deleteFrom(this)
+                .where(STORE_CODE.eq(storeCode))
+                .and(STORE_TYPE.eq(storeType))
+                .execute()
+        }
+    }
 }

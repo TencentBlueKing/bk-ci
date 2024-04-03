@@ -25,52 +25,29 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.store.common.dao
+package com.tencent.devops.store.common.handler
 
-import com.tencent.devops.common.api.util.UUIDUtil
-import com.tencent.devops.model.store.tables.TStoreLabelRel
-import org.jooq.DSLContext
-import org.springframework.stereotype.Repository
+import com.tencent.devops.store.common.service.StoreComponentManageService
+import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
+import com.tencent.devops.store.pojo.common.handler.Handler
+import com.tencent.devops.store.pojo.common.publication.StoreDeleteRequest
+import org.springframework.stereotype.Service
 
-@Repository
-class StoreLabelDao {
+@Service
+class StoreDeleteDataPersistHandler(
+    private val storeComponentManageService: StoreComponentManageService
+) : Handler<StoreDeleteRequest> {
 
-    fun deleteByStoreId(dslContext: DSLContext, storeId: String) {
-        with(TStoreLabelRel.T_STORE_LABEL_REL) {
-            dslContext.deleteFrom(this)
-                .where(STORE_ID.eq(storeId))
-                .execute()
+    override fun canExecute(handlerRequest: StoreDeleteRequest): Boolean {
+
+        return when (handlerRequest.storeType) {
+            StoreTypeEnum.ATOM.name -> true
+            else -> false
         }
     }
 
-    fun batchDeleteByStoreId(dslContext: DSLContext, storeIds: List<String>) {
-        with(TStoreLabelRel.T_STORE_LABEL_REL) {
-            dslContext.deleteFrom(this)
-                .where(STORE_ID.`in`(storeIds))
-                .execute()
-        }
-    }
-
-    fun batchAdd(dslContext: DSLContext, userId: String, storeId: String, labelIdList: List<String>) {
-        with(TStoreLabelRel.T_STORE_LABEL_REL) {
-            val addStep = labelIdList.map {
-                dslContext.insertInto(
-                    this,
-                    ID,
-                    STORE_ID,
-                    LABEL_ID,
-                    CREATOR,
-                    MODIFIER
-                )
-                    .values(
-                        UUIDUtil.generate(),
-                        storeId,
-                        it,
-                        userId,
-                        userId
-                    )
-            }
-            dslContext.batch(addStep).execute()
-        }
+    override fun execute(handlerRequest: StoreDeleteRequest) {
+        // 清理仓库组件关联文件
+        storeComponentManageService.deleteComponentRepoFile(handlerRequest)
     }
 }

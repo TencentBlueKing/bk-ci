@@ -33,10 +33,10 @@ import com.tencent.devops.store.pojo.common.enums.StoreStatusEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.pojo.common.publication.StoreBaseDataPO
 import com.tencent.devops.store.pojo.common.publication.UpdateStoreBaseDataPO
+import java.time.LocalDateTime
 import org.jooq.Condition
 import org.jooq.DSLContext
 import org.springframework.stereotype.Repository
-import java.time.LocalDateTime
 
 @Repository
 class StoreBaseManageDao {
@@ -222,6 +222,14 @@ class StoreBaseManageDao {
                 baseStep.set(NAME, storeBaseInfoUpdateRequest.name)
             }
             baseStep.where(ID.`in`(storeIds)).execute()
+        }
+    }
+
+    fun deleteByComponentCode(dslContext: DSLContext, storeCode: String, storeType: StoreTypeEnum) {
+        with(TStoreBase.T_STORE_BASE) {
+            dslContext.deleteFrom(this)
+                .where(STORE_CODE.eq(storeCode).and(STORE_TYPE.eq(storeType.type.toByte())))
+                .execute()
         }
     }
 }
