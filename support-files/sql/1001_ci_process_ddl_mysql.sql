@@ -1216,6 +1216,7 @@ CREATE TABLE IF NOT EXISTS `T_PIPELINE_YAML_VERSION`
     `BLOB_ID`       varchar(64)  NOT NULL DEFAULT '' COMMENT '文件blob_id',
     `PIPELINE_ID`   varchar(64)  NOT NULL DEFAULT '' COMMENT '流水线ID',
     `VERSION`       int(11) COMMENT '流水线版本',
+    `BRANCH_ACTION`  varchar(32)   NOT NULL DEFAULT 'ACTIVE' COMMENT '分支状态',
     `CREATOR`       varchar(64)  NOT NULL COMMENT '创建人',
     `CREATE_TIME`   timestamp             default CURRENT_TIMESTAMP not null comment '创建时间',
     INDEX `IDX_PROJECT_PIPELINE_VERSION`(`PROJECT_ID`, `PIPELINE_ID`, `VERSION`),

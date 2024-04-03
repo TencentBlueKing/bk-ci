@@ -311,14 +311,35 @@ class PipelineYamlService(
         projectId: String,
         repoHashId: String,
         filePath: String,
-        ref: String
+        ref: String,
+        blobId: String? = null,
+        branchAction: String? = null
     ): PipelineYamlVersion? {
         return pipelineYamlVersionDao.getLatestVersion(
             dslContext = dslContext,
             projectId = projectId,
             repoHashId = repoHashId,
             filePath = filePath,
-            ref = ref
+            ref = ref,
+            blobId = blobId,
+            branchAction = branchAction
+        )
+    }
+
+    fun updateBranchAction(
+        projectId: String,
+        repoHashId: String,
+        filePath: String,
+        ref: String,
+        branchAction: String
+    ) {
+        pipelineYamlVersionDao.updateBranchAction(
+            dslContext = dslContext,
+            projectId = projectId,
+            repoHashId = repoHashId,
+            filePath = filePath,
+            ref = ref,
+            branchAction = branchAction
         )
     }
 
