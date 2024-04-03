@@ -113,14 +113,14 @@
             <i class="devops-icon icon-angle-right" />
             {{ $t(startupInfo?.canElementSkip ? 'preview.atomToExec' : 'executeStepPreview') }}
             <template v-if="startupInfo?.canElementSkip">
-                <span>
+                <span class="no-bold-font">
                     ({{ $t('preview.skipTipsPrefix') }}
                     <span @click.stop="editTrigger" class="text-link item-title-tips-link">
                         {{ $t('preview.manualTrigger') }}
                     </span>
                     {{ $t('preview.skipTipsSuffix') }})
                 </span>
-                <span @click.stop>
+                <span @click.stop class="no-bold-font">
                     <bk-checkbox
                         @change="handleCheckTotalChange"
                         v-model="checkTotal"
@@ -494,6 +494,9 @@
             grid-gap: 10px;
             background-color: white;
             z-index: 6;
+            .no-bold-font {
+                font-weight: normal;
+            }
             &.params-collapse-expand {
                 .icon-angle-right {
                     transform: rotate(90deg);
