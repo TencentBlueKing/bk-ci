@@ -123,9 +123,7 @@ class DeskTopApiAspect {
         }
     }
 
-
     companion object {
         private val logger = LoggerFactory.getLogger(DeskTopApiAspect::class.java)
     }
-
 }
