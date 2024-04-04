@@ -112,14 +112,6 @@ class WorkspaceJoinDao {
     ): SelectConditionStep<*> {
         val conditions = mutableListOf<Condition>()
         with(TWorkspace.T_WORKSPACE) {
-//            projectId?.let {
-//                if (queryType == QueryType.OP) {
-//                    conditions.add(PROJECT_ID.like("%$it%"))
-//                } else {
-//                    conditions.add(PROJECT_ID.eq(it))
-//                }
-//            }
-
             search.projectId?.ifEmpty { null }?.let { projects ->
                 /*仅op支持项目通过模糊查询*/
                 if (search.onFuzzyMatch && queryType == QueryType.OP) {
@@ -129,13 +121,6 @@ class WorkspaceJoinDao {
                 }
             }
 
-//            workspaceName?.let {
-//                if (queryType == QueryType.OP) {
-//                    conditions.add(NAME.like("%$it%"))
-//                } else {
-//                    conditions.add(NAME.eq(it))
-//                }
-//            }
             search.workspaceName?.ifEmpty { null }?.let { names ->
                 if (search.onFuzzyMatch) {
                     conditions.add(NAME.likeRegex(names.joinToString("|")))
@@ -152,20 +137,12 @@ class WorkspaceJoinDao {
                 }
             }
 
-//            if (status != null) {
-//                conditions.add(STATUS.eq(status.ordinal))
-//            } else {
-//                conditions.add(STATUS.notEqual(WorkspaceStatus.DELETED.ordinal))
-//            }
             search.status?.ifEmpty { null }?.let { status ->
                 conditions.add(STATUS.`in`(status.map { it.ordinal }))
             } ?: kotlin.run {
                 conditions.add(STATUS.notEqual(WorkspaceStatus.DELETED.ordinal))
             }
 
-//            if (systemType != null) {
-//                conditions.add(SYSTEM_TYPE.eq(systemType.name))
-//            }
             search.workspaceSystemType?.ifEmpty { null }?.let { types ->
                 if (search.onFuzzyMatch) {
                     conditions.add(SYSTEM_TYPE.likeRegex(types.joinToString("|") { it.name }))
@@ -177,10 +154,6 @@ class WorkspaceJoinDao {
             queryType.ownerType()?.let {
                 conditions.add(OWNER_TYPE.eq(it.name))
             }
-
-//            if (queryType == QueryType.WEB) {
-//                conditions.add(OWNER_TYPE.eq(WorkspaceOwnerType.PROJECT.name))
-//            }
         }
 
         // 没有连表查询的条件
@@ -188,10 +161,6 @@ class WorkspaceJoinDao {
             return dslContext.selectFrom(TWorkspace.T_WORKSPACE).where(conditions)
         }
 
-//        // 没有连表查询的条件
-//        if (ips.isNullOrEmpty() && owner == null && zoneId == null && machineType == null && expertSupId == null) {
-//            return dslContext.selectFrom(TWorkspace.T_WORKSPACE).where(conditions)
-//        }
         if (!search.ips.isNullOrEmpty()) {
             val j = JooqUtils.jsonExtract(
                 t1 = TWorkspaceDetail.T_WORKSPACE_DETAIL.DETAIL,
@@ -218,82 +187,13 @@ class WorkspaceJoinDao {
             conditions.add(condition)
         }
 
-//        // ip 和 zoneId 的查询
-//        if (!ips.isNullOrEmpty() || zoneId != null) {
-//            // 先查询他俩都存在的情况，都存在可以直接拼接查询
-//            if (!ips.isNullOrEmpty() && zoneId != null) {
-//                val comIps = mutableSetOf<String>()
-//                ips.forEach { ip ->
-//                    comIps.add("$zoneId.$ip")
-//                }
-//                var comIpsCond = JooqUtils.jsonExtract(
-//                    t1 = TWorkspaceDetail.T_WORKSPACE_DETAIL.DETAIL,
-//                    t2 = "\$.hostIP",
-//                    lower = false,
-//                    removeDoubleQuotes = true
-//                ).eq(comIps.first())
-//                comIps.drop(1).forEach { comIp ->
-//                    comIpsCond = comIpsCond.or(
-//                        JooqUtils.jsonExtract(
-//                            t1 = TWorkspaceDetail.T_WORKSPACE_DETAIL.DETAIL,
-//                            t2 = "\$.hostIP",
-//                            lower = false,
-//                            removeDoubleQuotes = true
-//                        ).eq(comIp)
-//                    )
-//                }
-//                conditions.add(comIpsCond)
-//            } else if (!ips.isNullOrEmpty() && zoneId == null) {
-//                // 存在 ips 但不存在 zoneId
-//                var ipsCond = JooqUtils.jsonExtract(
-//                    t1 = TWorkspaceDetail.T_WORKSPACE_DETAIL.DETAIL,
-//                    t2 = "\$.hostIP",
-//                    lower = false,
-//                    removeDoubleQuotes = true
-//                ).like("%${ips.first()}") as Condition
-//                ips.drop(1).forEach { ip ->
-//                    ipsCond = ipsCond.or(
-//                        JooqUtils.jsonExtract(
-//                            t1 = TWorkspaceDetail.T_WORKSPACE_DETAIL.DETAIL,
-//                            t2 = "\$.hostIP",
-//                            lower = false,
-//                            removeDoubleQuotes = true
-//                        ).like("%$ip")
-//                    )
-//                }
-//                conditions.add(ipsCond)
-//            } else {
-//                // 只存在 zoneId
-//                val zoneCond = JooqUtils.jsonExtract(
-//                    t1 = TWorkspaceDetail.T_WORKSPACE_DETAIL.DETAIL,
-//                    t2 = "\$.hostIP",
-//                    lower = false,
-//                    removeDoubleQuotes = true
-//                ).like("$zoneId%")
-//                conditions.add(zoneCond)
-//            }
-//        }
-
-//        // owner 条件查询
-//        if (owner != null) {
-//            val sql = (
-//                    TWorkspace.T_WORKSPACE.OWNER_TYPE.eq(WorkspaceOwnerType.PERSONAL.name)
-//                        .and(TWorkspace.T_WORKSPACE.CREATOR.like("%$owner%"))
-//                    )
-//                .or(
-//                    TWorkspaceShared.T_WORKSPACE_SHARED.ASSIGN_TYPE.eq(WorkspaceShared.AssignType.OWNER.name)
-//                        .and(TWorkspaceShared.T_WORKSPACE_SHARED.SHARED_USER.like("%$owner%"))
-//                )
-//            conditions.add(sql)
-//        }
-
         // owner 条件查询
         search.owner?.ifEmpty { null }?.let { owners ->
             val sql = if (search.onFuzzyMatch) {
                 (
-                        TWorkspace.T_WORKSPACE.OWNER_TYPE.eq(WorkspaceOwnerType.PERSONAL.name)
-                            .and(TWorkspace.T_WORKSPACE.CREATOR.likeRegex(owners.joinToString("|")))
-                        )
+                    TWorkspace.T_WORKSPACE.OWNER_TYPE.eq(WorkspaceOwnerType.PERSONAL.name)
+                        .and(TWorkspace.T_WORKSPACE.CREATOR.likeRegex(owners.joinToString("|")))
+                    )
                     .or(
                         TWorkspaceShared.T_WORKSPACE_SHARED.ASSIGN_TYPE.eq(
                             WorkspaceShared.AssignType.OWNER.name
@@ -305,12 +205,12 @@ class WorkspaceJoinDao {
                     )
             } else {
                 (
-                        TWorkspace.T_WORKSPACE.OWNER_TYPE.eq(WorkspaceOwnerType.PERSONAL.name)
-                            .and(TWorkspace.T_WORKSPACE.CREATOR.`in`(owners))
-                        ).or(
-                        TWorkspaceShared.T_WORKSPACE_SHARED.ASSIGN_TYPE.eq(WorkspaceShared.AssignType.OWNER.name)
-                            .and(TWorkspaceShared.T_WORKSPACE_SHARED.SHARED_USER.`in`(owners))
-                    )
+                    TWorkspace.T_WORKSPACE.OWNER_TYPE.eq(WorkspaceOwnerType.PERSONAL.name)
+                        .and(TWorkspace.T_WORKSPACE.CREATOR.`in`(owners))
+                    ).or(
+                    TWorkspaceShared.T_WORKSPACE_SHARED.ASSIGN_TYPE.eq(WorkspaceShared.AssignType.OWNER.name)
+                        .and(TWorkspaceShared.T_WORKSPACE_SHARED.SHARED_USER.`in`(owners))
+                )
             }
             conditions.add(sql)
         }
@@ -319,34 +219,29 @@ class WorkspaceJoinDao {
         search.viewers?.ifEmpty { null }?.let { viewers ->
             val sql = if (search.onFuzzyMatch) {
                 (
-                        TWorkspace.T_WORKSPACE.OWNER_TYPE.eq(WorkspaceOwnerType.PERSONAL.name)
-                            .and(TWorkspace.T_WORKSPACE.CREATOR.likeRegex(viewers.joinToString("|")))
-                        ).or(
-                        TWorkspaceShared.T_WORKSPACE_SHARED.ASSIGN_TYPE.likeRegex("VIEWER|OWNER")
-                            .and(
-                                TWorkspaceShared.T_WORKSPACE_SHARED.SHARED_USER
-                                    .likeRegex(viewers.joinToString("|"))
-                            )
-                    )
+                    TWorkspace.T_WORKSPACE.OWNER_TYPE.eq(WorkspaceOwnerType.PERSONAL.name)
+                        .and(TWorkspace.T_WORKSPACE.CREATOR.likeRegex(viewers.joinToString("|")))
+                    ).or(
+                    TWorkspaceShared.T_WORKSPACE_SHARED.ASSIGN_TYPE.likeRegex("VIEWER|OWNER")
+                        .and(
+                            TWorkspaceShared.T_WORKSPACE_SHARED.SHARED_USER
+                                .likeRegex(viewers.joinToString("|"))
+                        )
+                )
             } else {
                 (
-                        TWorkspace.T_WORKSPACE.OWNER_TYPE.eq(WorkspaceOwnerType.PERSONAL.name)
-                            .and(TWorkspace.T_WORKSPACE.CREATOR.`in`(viewers))
-                        ).or(
-                        TWorkspaceShared.T_WORKSPACE_SHARED.ASSIGN_TYPE.eq(WorkspaceShared.AssignType.VIEWER.name)
-                            .and(TWorkspaceShared.T_WORKSPACE_SHARED.SHARED_USER.`in`(viewers))
+                    TWorkspace.T_WORKSPACE.OWNER_TYPE.eq(WorkspaceOwnerType.PERSONAL.name)
+                        .and(TWorkspace.T_WORKSPACE.CREATOR.`in`(viewers))
                     ).or(
-                        TWorkspaceShared.T_WORKSPACE_SHARED.ASSIGN_TYPE.eq(WorkspaceShared.AssignType.OWNER.name)
-                            .and(TWorkspaceShared.T_WORKSPACE_SHARED.SHARED_USER.`in`(viewers))
-                    )
+                    TWorkspaceShared.T_WORKSPACE_SHARED.ASSIGN_TYPE.eq(WorkspaceShared.AssignType.VIEWER.name)
+                        .and(TWorkspaceShared.T_WORKSPACE_SHARED.SHARED_USER.`in`(viewers))
+                ).or(
+                    TWorkspaceShared.T_WORKSPACE_SHARED.ASSIGN_TYPE.eq(WorkspaceShared.AssignType.OWNER.name)
+                        .and(TWorkspaceShared.T_WORKSPACE_SHARED.SHARED_USER.`in`(viewers))
+                )
             }
             conditions.add(sql)
         }
-
-        // machineType 条件查询
-//        if (machineType != null) {
-//            conditions.add(TWindowsResourceType.T_WINDOWS_RESOURCE_TYPE.SIZE.eq(machineType))
-//        }
 
         // machineType 条件查询
         search.size?.ifEmpty { null }?.let { type ->
@@ -363,11 +258,6 @@ class WorkspaceJoinDao {
         }
 
         // expertSup
-//        if (expertSupId != null) {
-//            conditions.add(TRemotedevExpertSupport.T_REMOTEDEV_EXPERT_SUPPORT.ID.eq(expertSupId))
-//        }
-
-        // expertSup
         search.expertSupId?.ifEmpty { null }?.let { ids ->
             val sql = if (search.onFuzzyMatch) {
                 TRemotedevExpertSupport.T_REMOTEDEV_EXPERT_SUPPORT.ID.likeRegex(ids.joinToString("|"))
@@ -377,16 +267,7 @@ class WorkspaceJoinDao {
             conditions.add(sql)
         }
 
-        // 添加连表查询条件以及获得连表
-//        val tables = joinTablesAndItems(
-//            conditions = conditions,
-//            search = search
-//        )
-
         val fields = TWorkspace.T_WORKSPACE.fields().toMutableList()
-//        if (!ips.isNullOrEmpty() || zoneId != null) {
-//            fields.add(TWorkspaceDetail.T_WORKSPACE_DETAIL.DETAIL)
-//        }
 
         if (!search.ips.isNullOrEmpty() || !search.zoneShortName.isNullOrEmpty()) {
             fields.add(TWorkspaceDetail.T_WORKSPACE_DETAIL.DETAIL)
@@ -435,40 +316,11 @@ class WorkspaceJoinDao {
         var offset = 0
         val result = mutableListOf<TableImpl<*>>()
         result.add(TWorkspace.T_WORKSPACE)
-//        if (!ips.isNullOrEmpty() || zoneId != null) {
-//            result.add(TWorkspaceDetail.T_WORKSPACE_DETAIL)
-//            conditions.add(offset, TWorkspace.T_WORKSPACE.NAME.eq(TWorkspaceDetail.T_WORKSPACE_DETAIL.WORKSPACE_NAME))
-//            offset++
-//        }
         if (!search.ips.isNullOrEmpty() || !search.zoneShortName.isNullOrEmpty()) {
             result.add(TWorkspaceDetail.T_WORKSPACE_DETAIL)
             conditions.add(offset, TWorkspace.T_WORKSPACE.NAME.eq(TWorkspaceDetail.T_WORKSPACE_DETAIL.WORKSPACE_NAME))
             offset++
         }
-//        if (owner != null) {
-//            result.add(TWorkspaceShared.T_WORKSPACE_SHARED)
-//            conditions.add(offset, TWorkspace.T_WORKSPACE.NAME.eq(TWorkspaceShared.T_WORKSPACE_SHARED.WORKSPACE_NAME))
-//            offset++
-//        }
-//        if (!search.owner.isNullOrEmpty() || !search.viewers.isNullOrEmpty()) {
-//            result.add(TWorkspaceShared.T_WORKSPACE_SHARED)
-//            conditions.add(offset, TWorkspace.T_WORKSPACE.NAME.eq(TWorkspaceShared.T_WORKSPACE_SHARED.WORKSPACE_NAME))
-//            offset++
-//        }
-
-//        if (machineType != null) {
-//            result.add(TWorkspaceWindows.T_WORKSPACE_WINDOWS)
-//            result.add(TWindowsResourceType.T_WINDOWS_RESOURCE_TYPE)
-//            conditions.add(offset, TWorkspace.T_WORKSPACE.NAME.eq(TWorkspaceWindows.T_WORKSPACE_WINDOWS.WORKSPACE_NAME))
-//            offset++
-//            conditions.add(
-//                offset,
-//                TWorkspaceWindows.T_WORKSPACE_WINDOWS.WIN_CONFIG_ID.eq(
-//                    TWindowsResourceType.T_WINDOWS_RESOURCE_TYPE.ID.cast(Int::class.java)
-//                )
-//            )
-//            offset++
-//        }
         if (!search.size.isNullOrEmpty()) {
             result.add(TWorkspaceWindows.T_WORKSPACE_WINDOWS)
             result.add(TWindowsResourceType.T_WINDOWS_RESOURCE_TYPE)
@@ -482,13 +334,6 @@ class WorkspaceJoinDao {
             )
             offset++
         }
-//        if (expertSupId != null) {
-//            result.add(TRemotedevExpertSupport.T_REMOTEDEV_EXPERT_SUPPORT)
-//            conditions.add(
-//                offset,
-//                TWorkspace.T_WORKSPACE.NAME.eq(TRemotedevExpertSupport.T_REMOTEDEV_EXPERT_SUPPORT.WORKSPACE_NAME)
-//            )
-//        }
         if (!search.expertSupId.isNullOrEmpty()) {
             result.add(TRemotedevExpertSupport.T_REMOTEDEV_EXPERT_SUPPORT)
             conditions.add(
