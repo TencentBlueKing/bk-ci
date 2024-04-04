@@ -5,5 +5,6 @@ data class SetContextVarData(
     val pipelineId: String,
     val buildId: String,
     val contextName: String,
-    val contextVal: String
+    val contextVal: String,
+    val readOnly: Boolean?
 )
