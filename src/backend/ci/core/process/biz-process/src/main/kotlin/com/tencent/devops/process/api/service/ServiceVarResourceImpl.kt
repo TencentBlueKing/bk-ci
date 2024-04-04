@@ -87,7 +87,8 @@ class ServiceVarResourceImpl @Autowired constructor(
             pipelineId = data.pipelineId,
             buildId = data.buildId,
             varName = data.contextName,
-            varValue = data.contextVal
+            varValue = data.contextVal,
+            readOnly = data.readOnly
         )
     }
 }
