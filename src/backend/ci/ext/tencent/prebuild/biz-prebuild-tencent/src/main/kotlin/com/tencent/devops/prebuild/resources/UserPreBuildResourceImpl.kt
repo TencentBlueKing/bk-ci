@@ -37,7 +37,7 @@ import com.tencent.devops.common.ci.yaml.CIBuildYaml
 import com.tencent.devops.common.log.pojo.QueryLogs
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.common.web.utils.I18nUtil
-import com.tencent.devops.environment.pojo.thirdPartyAgent.ThirdPartyAgentStaticInfo
+import com.tencent.devops.environment.pojo.thirdpartyagent.ThirdPartyAgentStaticInfo
 import com.tencent.devops.prebuild.PreBuildMessageCode.BK_AGENT_NOT_INSTALLED
 import com.tencent.devops.prebuild.PreBuildMessageCode.BK_ILLEGAL_YAML
 import com.tencent.devops.prebuild.api.UserPreBuildResource

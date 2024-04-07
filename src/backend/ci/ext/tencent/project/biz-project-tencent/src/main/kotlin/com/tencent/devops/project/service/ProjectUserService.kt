@@ -29,8 +29,6 @@ package com.tencent.devops.project.service
 
 import com.github.benmanes.caffeine.cache.Caffeine
 import com.tencent.devops.common.api.util.JsonUtil
-import com.tencent.devops.common.auth.api.AuthProjectApi
-import com.tencent.devops.common.auth.code.BSProjectServiceCodec
 import com.tencent.devops.model.project.tables.records.TUserRecord
 import com.tencent.devops.project.dao.ProjectDao
 import com.tencent.devops.project.dao.ProjectSeniorUserDao
@@ -50,10 +48,8 @@ class ProjectUserService @Autowired constructor(
     val dslContext: DSLContext,
     val userDao: UserDao,
     val projectUserDao: ProjectUserDao,
-    val authProjectApi: AuthProjectApi,
     val seniorUserDao: ProjectSeniorUserDao,
-    val projectDao: ProjectDao,
-    val projectServiceCode: BSProjectServiceCodec
+    val projectDao: ProjectDao
 ) {
     private val seniorUserCache = Caffeine.newBuilder()
         .maximumSize(1000)

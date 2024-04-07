@@ -152,17 +152,18 @@ class CodeSvnScmImpl constructor(
     }
 
     override fun addWebHook(hookUrl: String) {
+        val relProjectName = getRelProjectName()
         logger.info(
             "[$hookUrl|${svnConfig.apiUrl}|${svnConfig.webhookApiUrl}|${svnConfig.svnHookUrl}] " +
-                    "|AddWebHookSVN|repo=$projectName"
+                    "|AddWebHookSVN|repo=$relProjectName"
         )
         try {
-            addWebhookByToken(hookUrl, projectName)
+            addWebhookByToken(hookUrl, relProjectName)
         } catch (ignored: ScmException) {
             // 工蜂迁移svn项目后，svn项目名与原有git项目名相同，导致项目名冲突，为此在工蜂在svn组名后添加[_svn]后缀，但在复制svn路径时可能
             // 缺少[_svn]，如实际路径为[bk_ci_svn/ci],但复制路径为[bk_ci/ci]，所以当报项目不存在时，组名处增加[_svn]后缀后重试
             tryAddSuffixToGroupName(
-                projectName = projectName,
+                projectName = relProjectName,
                 hookUrl = hookUrl,
                 ignored = ignored
             )
@@ -286,7 +287,7 @@ class CodeSvnScmImpl constructor(
         }
     }
 
-    private fun getSubDirPath() = url.substringAfter(projectName, "/")
+    private fun getSubDirPath(projectName: String) = url.substringAfter(projectName, "/")
         .removeSuffix("/").ifBlank { "/" }
 
     /**
@@ -298,7 +299,7 @@ class CodeSvnScmImpl constructor(
             projectName = projectName,
             token = token!!
         )
-        val subDirPath = getSubDirPath()
+        val subDirPath = getSubDirPath(projectName)
         val existHook = if (hooks.isEmpty()) {
             null
         } else {
@@ -365,6 +366,19 @@ class CodeSvnScmImpl constructor(
                 ),
                 scmType = ScmType.CODE_SVN.name
             )
+        }
+    }
+
+    /**
+     * 存量代码库数据中projectName为三层路径，工蜂API中projectName为两层路径，在此处
+     * 对存量代码库projectName进行提取
+     */
+    private fun getRelProjectName(): String {
+        val projectNameArr = projectName.split("/")
+        return if (projectNameArr.size > 2) {
+            "${projectNameArr[0]}/${projectNameArr[1]}"
+        } else {
+            projectName
         }
     }
 

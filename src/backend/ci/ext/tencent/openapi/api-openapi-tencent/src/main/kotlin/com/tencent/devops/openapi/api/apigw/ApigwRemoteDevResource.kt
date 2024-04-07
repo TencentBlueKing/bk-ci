@@ -29,6 +29,7 @@ import javax.ws.rs.core.MediaType
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface ApigwRemoteDevResource {
+
     @Operation(summary = "提供给START云桌面校验用户登录是否有效", tags = ["v4_app_ticket_validate"])
     @GET
     @Path("/ticket/validate")
@@ -67,21 +68,6 @@ interface ApigwRemoteDevResource {
         @QueryParam("ip")
         ip: String?
     ): Result<List<WeSecProjectWorkspace>>
-
-    @Operation(summary = "云研发SDK根据X-BK-NGGW-CLIENT-ADDRESS获取云桌面信息", tags = ["v4_app_remotedev_workspace_detail"])
-    @GET
-    @Path("/project/workspace/detail")
-    fun getProjectWorkspace(
-        @Parameter(description = "appCode", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
-        @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
-        appCode: String?,
-        @Parameter(description = "apigw Type", required = true)
-        @PathParam("apigwType")
-        apigwType: String?,
-        @Parameter(description = "IP", required = false)
-        @HeaderParam("X-BK-NGGW-CLIENT-ADDRESS")
-        ip: String?
-    ): Result<WeSecProjectWorkspace?>
 
     @Operation(summary = "提供给wesec获取云桌面信息", tags = ["v4_app_remotedev_project_list"])
     @GET
@@ -163,7 +149,10 @@ interface ApigwRemoteDevResource {
         apigwType: String?,
         @Parameter(description = "项目ID(项目英文名)", required = true)
         @PathParam("projectId")
-        projectId: String
+        projectId: String,
+        @Parameter(description = "云桌面IP", required = false)
+        @QueryParam("ip")
+        ip: String?
     ): Result<List<WeSecProjectWorkspace>>
 
     @Operation(summary = "用来通知蓝盾客户端消息", tags = ["v4_app_workspace_notify"])
@@ -212,4 +201,22 @@ interface ApigwRemoteDevResource {
         @PathParam("apigwType")
         apigwType: String?
     ): Result<List<WindowsResourceTypeConfig>>
+
+    @Operation(summary = "提供获取云桌面信息", tags = ["v4_user_sg_project_workspace"])
+    @GET
+    @Path("/project/workspace_sg")
+    fun querySGProjectWorkspace(
+        @Parameter(description = "appCode", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
+        appCode: String?,
+        @Parameter(description = "apigw Type", required = true)
+        @PathParam("apigwType")
+        apigwType: String?,
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
+        userId: String,
+        @Parameter(description = "ip", required = true)
+        @QueryParam("taiUser")
+        taiUser: String
+    ): Result<List<WeSecProjectWorkspace>>
 }

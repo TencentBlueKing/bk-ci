@@ -52,6 +52,10 @@ class BKItsmService @Autowired constructor(
                 mapOf(
                     "key" to "tgit_ids",
                     "value" to tData.map { "${it.key};${it.value.first}" }.toSet().joinToString("\n")
+                ),
+                mapOf(
+                    "key" to "tgit_ids_no_url",
+                    "value" to tData.map { it.key.toString() }.toSet().joinToString(";")
                 )
             )
         )

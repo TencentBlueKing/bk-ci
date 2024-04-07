@@ -4,6 +4,7 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.openapi.api.apigw.ApigwRemoteDevResource
+import com.tencent.devops.project.api.service.ServiceUserResource
 import com.tencent.devops.remotedev.api.service.ServiceRemoteDevResource
 import com.tencent.devops.remotedev.pojo.WindowsResourceTypeConfig
 import com.tencent.devops.remotedev.pojo.op.OpProjectWorkspaceAssignData
@@ -46,20 +47,10 @@ class ApigwRemoteDevResourceImpl @Autowired constructor(private val client: Clie
         logger.info("Get  projects workspace ,projectId:$projectId")
         return client.get(ServiceRemoteDevResource::class).getProjectWorkspace(
             projectId = projectId,
-            ip = ip
+            ip = ip,
+            businessLineName = null,
+            ownerName = null
         )
-    }
-
-    override fun getProjectWorkspace(
-        appCode: String?,
-        apigwType: String?,
-        ip: String?
-    ): Result<WeSecProjectWorkspace?> {
-        if (ip.isNullOrBlank()) {
-            return Result(null)
-        }
-        logger.info("Get projects workspace ip $ip")
-        return client.get(ServiceRemoteDevResource::class).getProjectWorkspaceIp(ip = ip)
     }
 
     override fun queryWorkspaceProjects(
@@ -108,12 +99,15 @@ class ApigwRemoteDevResourceImpl @Autowired constructor(private val client: Clie
     override fun listWorkspacesWithProjectId(
         appCode: String?,
         apigwType: String?,
-        projectId: String
+        projectId: String,
+        ip: String?
     ): Result<List<WeSecProjectWorkspace>> {
-        logger.info("List  projects workspace ,projectId:$projectId")
+        logger.info("listWorkspacesWithProjectId|appcode=$appCode|projectId=$projectId|ip=$ip")
         return client.get(ServiceRemoteDevResource::class).getProjectWorkspace(
             projectId = projectId,
-            ip = null
+            ip = ip,
+            businessLineName = null,
+            ownerName = null
         )
     }
 
@@ -145,5 +139,25 @@ class ApigwRemoteDevResourceImpl @Autowired constructor(private val client: Clie
 
     override fun getWindowsResourceList(appCode: String?, apigwType: String?): Result<List<WindowsResourceTypeConfig>> {
         return client.get(ServiceRemoteDevResource::class).getWindowsResourceList()
+    }
+
+    override fun querySGProjectWorkspace(
+        appCode: String?,
+        apigwType: String?,
+        userId: String,
+        taiUser: String
+    ): Result<List<WeSecProjectWorkspace>> {
+        logger.info("Get projects workspace from user $userId ,taiUser:$taiUser")
+        val userInfo = client.get(ServiceUserResource::class).getDetailFromCache(userId).data
+        if (userInfo?.businessLineName.isNullOrBlank()) {
+            logger.info("Get projects workspace from user $userId ,businessLineName is null")
+            return Result(emptyList())
+        }
+        return client.get(ServiceRemoteDevResource::class).getProjectWorkspace(
+            businessLineName = userInfo?.businessLineName,
+            ownerName = taiUser,
+            ip = null,
+            projectId = null
+        )
     }
 }

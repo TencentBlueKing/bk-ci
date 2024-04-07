@@ -27,7 +27,6 @@
 
 package com.tencent.devops.experience.permission
 
-import com.tencent.devops.common.auth.api.AuthResourceApiStr
 import com.tencent.devops.common.auth.api.BSAuthPermissionApi
 import com.tencent.devops.common.auth.api.BSAuthResourceApi
 import com.tencent.devops.common.auth.code.BSExperienceAuthServiceCode
@@ -58,19 +57,6 @@ class ExperienceConfiguration {
     )
 
     @Bean
-    @ConditionalOnProperty(prefix = "auth", name = ["idProvider"], havingValue = "new_v3")
-    fun txV3ExperiencePermissionServiceImpl(
-        client: Client,
-        dslContext: DSLContext,
-        experienceDao: ExperienceDao,
-        groupDao: GroupDao,
-        tokenService: ClientTokenService,
-        authResourceApiStr: AuthResourceApiStr
-    ) = TxV3ExperiencePermissionServiceImpl(
-        client, dslContext, experienceDao, groupDao, tokenService, authResourceApiStr
-    )
-
-    @Bean
     @ConditionalOnProperty(prefix = "auth", name = ["idProvider"], havingValue = "git")
     fun streamExperiencePermissionServiceImpl(
         client: Client,
@@ -91,5 +77,17 @@ class ExperienceConfiguration {
         tokenService: ClientTokenService
     ) = RbacExperiencePermissionServiceImpl(
         client, dslContext, experienceDao, tokenService
+    )
+
+    @Bean
+    @ConditionalOnProperty(prefix = "auth", name = ["idProvider"], havingValue = "sample")
+    fun mockExperiencePermissionServiceImpl(
+        dslContext: DSLContext,
+        experienceDao: ExperienceDao,
+        groupDao: GroupDao
+    ) = MockExperiencePermissionService(
+        dslContext = dslContext,
+        groupDao = groupDao,
+        experienceDao = experienceDao
     )
 }
