@@ -42,7 +42,9 @@ object PipelineVersionUtils {
         newModel: Model
     ): String {
         val pipelineVersion = getPipelineVersion(currPipelineVersion, originModel, newModel)
+            .coerceAtLeast(1)
         val triggerVersion = getTriggerVersion(currTriggerVersion, originModel, newModel)
+            .coerceAtLeast(1)
         return "V$versionNum(P$pipelineVersion.T$triggerVersion.$settingVersion)"
     }
 
