@@ -99,12 +99,10 @@ import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
-import org.springframework.stereotype.Service
 import java.time.LocalDateTime
 import java.util.Base64
 
 @Suppress("ALL")
-@Service
 abstract class ImageReleaseService {
 
     private final val CATEGORY_PIPELINE_JOB = "PIPELINE_JOB"

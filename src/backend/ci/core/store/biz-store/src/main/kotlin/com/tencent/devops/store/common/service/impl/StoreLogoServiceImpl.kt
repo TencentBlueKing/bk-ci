@@ -44,7 +44,6 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.cloud.context.config.annotation.RefreshScope
-import org.springframework.stereotype.Service
 import java.io.File
 import java.io.InputStream
 import java.nio.file.Files
@@ -56,7 +55,6 @@ import javax.imageio.ImageIO
  * since: 2019-02-15
  */
 @Suppress("ALL")
-@Service
 @RefreshScope
 abstract class StoreLogoServiceImpl @Autowired constructor() : StoreLogoService {
 

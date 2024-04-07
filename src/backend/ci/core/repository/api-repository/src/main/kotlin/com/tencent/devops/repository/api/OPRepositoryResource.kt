@@ -31,6 +31,7 @@ import com.tencent.devops.common.api.pojo.Result
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
 import javax.ws.rs.Consumes
+import javax.ws.rs.DELETE
 import javax.ws.rs.POST
 import javax.ws.rs.PUT
 import javax.ws.rs.Path
@@ -101,5 +102,17 @@ interface OPRepositoryResource {
         @Parameter(description = "代码库ID", required = true)
         @PathParam("repositoryId")
         repositoryId: Long
+    ): Result<Boolean>
+
+    @Operation(summary = "批量移除代码库与流水线关联关系")
+    @DELETE
+    @Path("/{projectId}/{repoHashId}/removeRepositoryPipelineRef")
+    fun removeRepositoryPipelineRef(
+        @Parameter(description = "项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @Parameter(description = "代码库ID", required = true)
+        @PathParam("repoHashId")
+        repoHashId: String
     ): Result<Boolean>
 }

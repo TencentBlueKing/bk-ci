@@ -270,4 +270,10 @@ class ServiceProjectResourceImpl @Autowired constructor(
             )
         )
     }
+
+    override fun getExistedEnglishName(englishName: List<String>): Result<List<String>?> {
+        return Result(
+            projectService.getExistedEnglishName(englishName)
+        )
+    }
 }

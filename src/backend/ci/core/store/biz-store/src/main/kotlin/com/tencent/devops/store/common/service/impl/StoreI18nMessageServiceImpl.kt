@@ -39,12 +39,12 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.service.config.CommonConfig
 import com.tencent.devops.common.web.service.ServiceI18nMessageResource
 import com.tencent.devops.common.web.utils.I18nUtil
-import com.tencent.devops.store.pojo.common.StoreI18nConfig
-import com.tencent.devops.store.pojo.common.TextReferenceFileDownloadRequest
 import com.tencent.devops.store.common.service.StoreFileService
 import com.tencent.devops.store.common.service.StoreFileService.Companion.BK_CI_PATH_REGEX
 import com.tencent.devops.store.common.service.StoreI18nMessageService
 import com.tencent.devops.store.common.utils.TextReferenceFileAnalysisUtil.isDirectoryNotEmpty
+import com.tencent.devops.store.pojo.common.StoreI18nConfig
+import com.tencent.devops.store.pojo.common.TextReferenceFileDownloadRequest
 import java.io.File
 import java.util.Properties
 import java.util.concurrent.Executors
@@ -52,9 +52,7 @@ import org.apache.commons.collections4.ListUtils
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.stereotype.Service
 
-@Service
 @Suppress("LongParameterList")
 abstract class StoreI18nMessageServiceImpl : StoreI18nMessageService {
 

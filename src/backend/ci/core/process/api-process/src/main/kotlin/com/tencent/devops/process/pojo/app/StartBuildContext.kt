@@ -134,7 +134,7 @@ data class StartBuildContext(
      * 检查Stage是否属于失败重试[stageRetry]时，当前[stage]是否需要跳过
      */
     fun needSkipWhenStageFailRetry(stage: Stage): Boolean {
-        return if (needRerun(stage)) { // finally stage 不会跳过, 当前stage是要失败重试的不会跳过
+        return if (needRerunStage(stage)) { // finally stage 不会跳过, 当前stage是要失败重试的不会跳过
             false
         } else if (!stageRetry) { // 不是stage失败重试的动作也不会跳过
             false
@@ -145,7 +145,7 @@ data class StartBuildContext(
 
     fun needSkipContainerWhenFailRetry(stage: Stage, container: Container): Boolean {
         val containerStatus = BuildStatus.parse(container.status)
-        return if (needRerun(stage)) { // finally stage 不会跳过, 当前stage是要失败重试的不会跳过，不会跳过
+        return if (needRerunStage(stage)) { // finally stage 不会跳过, 当前stage是要失败重试的不会跳过，不会跳过
             false
         } else if (!containerStatus.isFailure() && !containerStatus.isCancel()) { // 跳过失败和被取消的其他job
             false
@@ -209,12 +209,12 @@ data class StartBuildContext(
         return DependOnUtils.enableDependOn(container) && BuildStatus.parse(container.status) == BuildStatus.SKIP
     }
 
-    private fun needRerun(stage: Stage): Boolean {
+    fun needRerunStage(stage: Stage): Boolean {
         return stage.finally || retryStartTaskId == null || stage.id!! == retryStartTaskId
     }
 
     fun needRerunTask(stage: Stage, container: Container): Boolean {
-        return needRerun(stage) || isRetryDependOnContainer(container)
+        return needRerunStage(stage) || isRetryDependOnContainer(container)
     }
 
     companion object {

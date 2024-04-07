@@ -69,14 +69,12 @@ import com.tencent.devops.store.pojo.common.version.VersionModel
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.stereotype.Service
 
 /**
  * store公共
  * since: 2019-07-23
  */
 @Suppress("ALL")
-@Service
 abstract class StoreCommonServiceImpl @Autowired constructor() : StoreCommonService {
 
     @Autowired
