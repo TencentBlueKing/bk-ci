@@ -27,13 +27,11 @@
 
 package com.tencent.devops.common.pipeline.pojo.element.trigger
 
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize
 import com.tencent.devops.common.api.enums.RepositoryType
 import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.common.pipeline.pojo.element.ElementProp
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeEventType
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.PathFilterType
-import com.tencent.devops.common.pipeline.utils.CodeGitTriggerEventTypeSerializer
 import com.tencent.devops.common.pipeline.utils.TriggerElementPropUtils.selector
 import com.tencent.devops.common.pipeline.utils.TriggerElementPropUtils.staffInput
 import com.tencent.devops.common.pipeline.utils.TriggerElementPropUtils.vuexInput
@@ -64,8 +62,7 @@ data class CodeGitWebHookTriggerElement(
     @get:Schema(title = "用于排除的user id", required = false)
     val excludeUsers: List<String>?,
     @get:Schema(title = "事件类型", required = false)
-    @JsonDeserialize(using = CodeGitTriggerEventTypeSerializer::class)
-    val eventType: CodeEventType?,
+    var eventType: CodeEventType?,
     @get:Schema(title = "是否为block", required = false)
     val block: Boolean?,
     @get:Schema(title = "新版的git原子的类型")
@@ -97,7 +94,7 @@ data class CodeGitWebHookTriggerElement(
     @get:Schema(title = "issue事件action")
     val includeIssueAction: List<String>? = null,
     @get:Schema(title = "mr事件action")
-    val includeMrAction: List<String>? = if (eventType == CodeEventType.MERGE_REQUEST_ACCEPT) {
+    var includeMrAction: List<String>? = if (eventType == CodeEventType.MERGE_REQUEST_ACCEPT) {
         listOf(MERGE_ACTION_MERGE)
     } else {
         listOf(
@@ -214,5 +211,20 @@ data class CodeGitWebHookTriggerElement(
         return props.filterNotNull()
     }
 
-    private fun convertMrAction() = listOf("")
+    override fun transformCompatibility() {
+        when {
+            eventType == CodeEventType.MERGE_REQUEST_ACCEPT -> {
+                eventType = CodeEventType.MERGE_REQUEST
+                includeMrAction = listOf(MERGE_ACTION_MERGE)
+            }
+
+            eventType == CodeEventType.MERGE_REQUEST && includeMrAction == null -> {
+                includeMrAction = listOf(
+                    MERGE_ACTION_OPEN,
+                    MERGE_ACTION_REOPEN,
+                    MERGE_ACTION_PUSH_UPDATE
+                )
+            }
+        }
+    }
 }
