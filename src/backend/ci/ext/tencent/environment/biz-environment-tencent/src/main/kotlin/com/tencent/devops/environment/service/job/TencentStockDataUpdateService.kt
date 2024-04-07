@@ -85,6 +85,8 @@ class TencentStockDataUpdateService @Autowired constructor(
         const val FIELD_BK_HOST_ID = "bk_host_id"
         const val FIELD_BK_CLOUD_ID = "bk_cloud_id"
         const val FIELD_BK_HOST_INNERIP = "bk_host_innerip"
+
+        const val FIRST_IP_INDEX = 0
     }
 
     /**
@@ -192,13 +194,13 @@ class TencentStockDataUpdateService @Autowired constructor(
         var ipToCCInfoMap: Map<String?, CCInfo> = mapOf()
         if (!nodeCCInfoList.isNullOrEmpty()) {
             // ip - cc记录 映射
-            ipToCCInfoMap = nodeCCInfoList.associateBy { it.bkHostInnerip }
+            ipToCCInfoMap = nodeCCInfoList.associateBy { it.bkHostInnerip?.split(",")?.get(FIRST_IP_INDEX) }
             // 2.1 在CC - 查询节点agent状态并更新
-            val inCCIpList = nodeCCInfoList.mapNotNull { it.bkHostInnerip }
+            val inCCIpList = nodeCCInfoList.mapNotNull { it.bkHostInnerip?.split(",")?.get(FIRST_IP_INDEX) }
             if (inCCIpList.isNotEmpty()) {
                 val ipToAgentVersionInfoMap = queryAgentStatusService.getAgentVersions(
                     nodeCCInfoList.map {
-                        AgentVersion(ip = it.bkHostInnerip, bkHostId = it.bkHostId)
+                        AgentVersion(ip = it.bkHostInnerip?.split(",")?.get(FIRST_IP_INDEX), bkHostId = it.bkHostId)
                     }
                 )?.associateBy { it.ip }
                 val ipToNodeStatus = mutableMapOf<String, String>()
