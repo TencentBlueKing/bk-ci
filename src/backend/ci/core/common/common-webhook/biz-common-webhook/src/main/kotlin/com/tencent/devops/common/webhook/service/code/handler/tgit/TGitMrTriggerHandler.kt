@@ -84,7 +84,6 @@ import com.tencent.devops.common.webhook.service.code.filter.UserFilter
 import com.tencent.devops.common.webhook.service.code.filter.WebhookFilter
 import com.tencent.devops.common.webhook.service.code.filter.WebhookFilterResponse
 import com.tencent.devops.common.webhook.service.code.handler.GitHookTriggerHandler
-import com.tencent.devops.common.webhook.service.code.pojo.WebhookMatchResult
 import com.tencent.devops.common.webhook.util.WebhookUtils
 import com.tencent.devops.common.webhook.util.WebhookUtils.convert
 import com.tencent.devops.common.webhook.util.WebhookUtils.getBranch
@@ -180,19 +179,6 @@ class TGitMrTriggerHandler(
             GIT_MR_NUMBER to event.object_attributes.iid,
             BK_REPO_GIT_MANUAL_UNLOCK to (event.manual_unlock ?: false)
         )
-    }
-
-    override fun preMatch(event: GitMergeRequestEvent): WebhookMatchResult {
-        if (event.object_attributes.action == "close" ||
-            (
-                event.object_attributes.action == "update" &&
-                    event.object_attributes.extension_action != "push-update"
-                )
-        ) {
-            logger.info("Git web hook is ${event.object_attributes.action} merge request")
-            return WebhookMatchResult(false)
-        }
-        return WebhookMatchResult(true)
     }
 
     override fun getEventFilters(

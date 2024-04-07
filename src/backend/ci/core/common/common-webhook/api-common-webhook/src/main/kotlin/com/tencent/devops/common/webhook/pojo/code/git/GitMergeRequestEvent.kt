@@ -30,7 +30,6 @@ package com.tencent.devops.common.webhook.pojo.code.git
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.tencent.devops.common.webhook.enums.code.tgit.TGitMergeActionKind
-import com.tencent.devops.common.webhook.enums.code.tgit.TGitMrEventAction
 
 @Suppress("ALL")
 data class GitMergeRequestEvent(
