@@ -27,11 +27,13 @@
 
 package com.tencent.devops.common.pipeline.pojo.element.trigger
 
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize
 import com.tencent.devops.common.api.enums.RepositoryType
 import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.common.pipeline.pojo.element.ElementProp
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeEventType
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.PathFilterType
+import com.tencent.devops.common.pipeline.utils.CodeGitTriggerEventTypeSerializer
 import com.tencent.devops.common.pipeline.utils.TriggerElementPropUtils.selector
 import com.tencent.devops.common.pipeline.utils.TriggerElementPropUtils.staffInput
 import com.tencent.devops.common.pipeline.utils.TriggerElementPropUtils.vuexInput
@@ -62,6 +64,7 @@ data class CodeGitWebHookTriggerElement(
     @get:Schema(title = "用于排除的user id", required = false)
     val excludeUsers: List<String>?,
     @get:Schema(title = "事件类型", required = false)
+    @JsonDeserialize(using = CodeGitTriggerEventTypeSerializer::class)
     val eventType: CodeEventType?,
     @get:Schema(title = "是否为block", required = false)
     val block: Boolean?,
