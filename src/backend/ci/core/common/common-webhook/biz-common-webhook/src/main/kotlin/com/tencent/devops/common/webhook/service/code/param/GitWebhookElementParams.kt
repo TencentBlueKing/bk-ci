@@ -65,7 +65,11 @@ class GitWebhookElementParams : ScmWebhookElementParams<CodeGitWebHookTriggerEle
         }
         params.block = isBlock(element)
         params.branchName = EnvUtils.parseEnv(element.branchName ?: "", variables)
-        params.eventType = element.eventType
+        params.eventType = if (element.eventType == CodeEventType.MERGE_REQUEST_ACCEPT) {
+            CodeEventType.MERGE_REQUEST
+        } else {
+            element.eventType
+        }
         params.excludeBranchName = EnvUtils.parseEnv(element.excludeBranchName ?: "", variables)
         params.pathFilterType = element.pathFilterType
         params.includePaths = EnvUtils.parseEnv(element.includePaths ?: "", variables)
