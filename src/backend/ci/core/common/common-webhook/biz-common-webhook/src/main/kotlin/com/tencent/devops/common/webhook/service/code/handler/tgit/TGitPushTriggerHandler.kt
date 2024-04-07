@@ -131,6 +131,10 @@ class TGitPushTriggerHandler(
         }
     }
 
+    override fun getAction(event: GitPushEvent): String? {
+        return event.action_kind
+    }
+
     override fun getEventDesc(event: GitPushEvent): String {
         return I18Variable(
             code = TGIT_PUSH_EVENT_DESC,
