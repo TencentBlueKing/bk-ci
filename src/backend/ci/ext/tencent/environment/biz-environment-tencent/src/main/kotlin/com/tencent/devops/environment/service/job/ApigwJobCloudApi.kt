@@ -61,7 +61,7 @@ class ApigwJobCloudApi {
 
     companion object {
         private const val LOG_OUTPUT_MAX_LENGTH = 4000
-        private const val INTERNAL_SERVER_ERROR_CODE = 1244001
+        private const val INTERNAL_SERVER_ERROR_CODE = 1240002
 
         private val postPathMap = mapOf(
             "executeScript" to "/api/v3/fast_execute_script",
