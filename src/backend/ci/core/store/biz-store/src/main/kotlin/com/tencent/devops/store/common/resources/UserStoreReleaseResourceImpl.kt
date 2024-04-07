@@ -25,97 +25,56 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.store.common.service
+package com.tencent.devops.store.common.resources
 
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.store.api.common.UserStoreReleaseResource
+import com.tencent.devops.store.common.service.StoreReleaseService
 import com.tencent.devops.store.pojo.common.publication.StoreCreateRequest
 import com.tencent.devops.store.pojo.common.publication.StoreCreateResponse
 import com.tencent.devops.store.pojo.common.publication.StoreOfflineRequest
 import com.tencent.devops.store.pojo.common.publication.StoreProcessInfo
-import com.tencent.devops.store.pojo.common.publication.StoreReleaseRequest
 import com.tencent.devops.store.pojo.common.publication.StoreUpdateRequest
 import com.tencent.devops.store.pojo.common.publication.StoreUpdateResponse
+import org.springframework.beans.factory.annotation.Autowired
 
-interface StoreReleaseService {
+@RestResource
+class UserStoreReleaseResourceImpl @Autowired constructor(
+    private val storeReleaseService: StoreReleaseService
+) : UserStoreReleaseResource {
 
-    /**
-     * 新增组件
-     * @param userId userId
-     * @param storeCreateRequest 新增组件请求报文
-     * @return 新增组件返回报文
-     */
-    fun createComponent(
+    override fun createComponent(
         userId: String,
         storeCreateRequest: StoreCreateRequest
-    ): StoreCreateResponse?
+    ): Result<StoreCreateResponse?> {
+        return Result(storeReleaseService.createComponent(userId, storeCreateRequest))
+    }
 
-    /**
-     * 更新组件
-     * @param userId userId
-     * @param storeUpdateRequest 更新组件请求报文
-     * @return 更新组件返回报文
-     */
-    fun updateComponent(
+    override fun updateComponent(
         userId: String,
         storeUpdateRequest: StoreUpdateRequest
-    ): StoreUpdateResponse?
+    ): Result<StoreUpdateResponse?> {
+        return Result(storeReleaseService.updateComponent(userId, storeUpdateRequest))
+    }
 
-    /**
-     * 根据组件ID获取版本发布进度信息
-     * @param userId userId
-     * @param storeId 组件ID
-     * @return 版本发布进度信息
-     */
-    fun getProcessInfo(userId: String, storeId: String): StoreProcessInfo
+    override fun getProcessInfo(userId: String, storeId: String): Result<StoreProcessInfo> {
+        return Result(storeReleaseService.getProcessInfo(userId, storeId))
+    }
 
-    /**
-     * 取消发布
-     * @param userId userId
-     * @param storeId 组件ID
-     * @return 布尔值
-     */
-    fun cancelRelease(userId: String, storeId: String): Boolean
+    override fun cancelRelease(userId: String, storeId: String): Result<Boolean> {
+        return Result(storeReleaseService.cancelRelease(userId, storeId))
+    }
 
-    /**
-     * 通过测试
-     * @param userId userId
-     * @param storeId 组件ID
-     * @return 布尔值
-     */
-    fun passTest(userId: String, storeId: String): Boolean
+    override fun passTest(userId: String, storeId: String): Result<Boolean> {
+        return Result(storeReleaseService.passTest(userId, storeId))
+    }
 
-    /**
-     * 处理发布
-     * @param userId userId
-     * @param storeReleaseRequest 发布请求报文
-     * @return 布尔值
-     */
-    fun handleStoreRelease(
-        userId: String,
-        storeReleaseRequest: StoreReleaseRequest
-    ): Boolean
+    override fun offlineComponent(userId: String, storeOfflineRequest: StoreOfflineRequest): Result<Boolean> {
+        return Result(storeReleaseService.offlineComponent(userId, storeOfflineRequest))
+    }
 
-    /**
-     * 下线组件
-     * @param userId userId
-     * @param storeOfflineRequest 下线组件请求报文
-     * @param checkPermissionFlag 是否检查权限
-     * @return 布尔值
-     */
-    fun offlineComponent(
-        userId: String,
-        storeOfflineRequest: StoreOfflineRequest,
-        checkPermissionFlag: Boolean = true
-    ): Boolean
-
-
-    /**
-     * 重新构建
-     * @param userId userId
-     * @param storeId 组件ID
-     * @return 布尔值
-     */
-    fun rebuild(
-        userId: String,
-        storeId: String
-    ): Boolean
+    override fun rebuild(userId: String, storeId: String): Result<Boolean> {
+        return Result(storeReleaseService.rebuild(userId, storeId))
+    }
 }

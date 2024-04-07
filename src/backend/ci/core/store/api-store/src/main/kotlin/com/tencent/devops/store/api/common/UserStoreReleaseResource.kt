@@ -126,4 +126,16 @@ interface UserStoreReleaseResource {
         @Valid
         storeOfflineRequest: StoreOfflineRequest
     ): Result<Boolean>
+
+    @Operation(summary = "重新构建")
+    @PUT
+    @Path("/components/{storeId}/rebuild")
+    fun rebuild(
+        @Parameter(description = "userId", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "组件Id", required = true)
+        @PathParam("storeId")
+        storeId: String
+    ): Result<Boolean>
 }
