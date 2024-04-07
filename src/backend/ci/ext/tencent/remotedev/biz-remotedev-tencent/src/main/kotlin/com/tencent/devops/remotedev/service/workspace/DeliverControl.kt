@@ -173,6 +173,15 @@ class DeliverControl @Autowired constructor(
                     assigns = listOf(assign2Owner),
                     mountType = WorkspaceMountType.START
                 )
+                workspaceCommon.updateHostMonitor(
+                    workspaceName = workspaceName,
+                    props = workspaceCommon.genWorkspaceCCInfo(
+                        projectId,
+                        workspace.displayName.ifBlank { workspaceName },
+                        assign2Owner.userId
+                    ),
+                    type = workspace.workspaceSystemType
+                )
                 if (workspace.status.checkDistributing()) {
                     workspaceDao.updateWorkspaceStatus(
                         dslContext = dslContext,
@@ -203,6 +212,15 @@ class DeliverControl @Autowired constructor(
                             )
                         ),
                         mountType = WorkspaceMountType.START
+                    )
+                    workspaceCommon.updateHostMonitor(
+                        workspaceName = workspaceName,
+                        props = workspaceCommon.genWorkspaceCCInfo(
+                            projectId,
+                            workspace.displayName.ifBlank { workspaceName },
+                            assign2Owner.userId
+                        ),
+                        type = workspace.workspaceSystemType
                     )
                 }
             }
@@ -242,7 +260,7 @@ class DeliverControl @Autowired constructor(
     ) {
         logger.info(
             "softwareInstallationCompleteCallback|type|$type|workspaceName|$workspaceName" +
-                    "|projectId|$projectId|userId|$userId|softwareList|$softwareList"
+                "|projectId|$projectId|userId|$userId|softwareList|$softwareList"
         )
         // 添加软件安装历史
         softwareManageService.updateSoftwareInstalledRecords(

@@ -20,31 +20,14 @@ import org.springframework.stereotype.Service
 @Service
 class BKCCService @Autowired constructor(
     private val objectMapper: ObjectMapper,
-    private val workspaceCommon: WorkspaceCommon,
     private val bkConfig: BkConfig
 ) {
     fun updateHostMonitor(
-        regionId: Int?,
-        workspaceName: String?,
-        ips: Set<String>,
+        regionId: Int,
+        ip: String,
         props: Map<String, Any>
     ) {
-        if (regionId == null && workspaceName.isNullOrBlank()) {
-            logger.warn("updateHostMonitor regionId and workspaceName is null")
-            return
-        }
-
-        // 先拿云区域 id
-        var regId = regionId
-        if (regId == null) {
-            regId = workspaceCommon.getWorkspaceDetail(workspaceName!!)?.regionId
-            if (regId == null) {
-                logger.warn("update $workspaceName but regionid is null")
-                return
-            }
-        }
-
-        val (page, filter) = genHostIdFilter(regId, ips)
+        val (page, filter) = genHostIdFilter(regionId, setOf(ip))
 
         val hostIds = listBizHosts(
             fields = listOf(element = "bk_host_id"),
@@ -52,7 +35,7 @@ class BKCCService @Autowired constructor(
             hostPropertyFilter = filter
         )?.info?.map { it["bk_host_id"].toString() }?.toSet()
         if (hostIds.isNullOrEmpty()) {
-            logger.warn("updateHostMonitor|$regId|$workspaceName|$ips hostids is empty")
+            logger.warn("updateHostMonitor|$regionId|$ip hostids is empty")
             return
         }
 
@@ -96,34 +79,6 @@ class BKCCService @Autowired constructor(
         )
 
         return Pair(page, filter)
-    }
-
-    fun updateHostName(
-        displayName: String,
-        workspaceName: String
-    ) {
-        val detail = workspaceCommon.getWorkspaceDetail(workspaceName)
-        if (detail?.regionId == null) {
-            logger.warn("updateHostName get workspace $workspaceName detail is null")
-            return
-        }
-
-        val hostIdSub = detail.environmentIP.split(".")
-        val ip = hostIdSub.subList(1, hostIdSub.size).joinToString(separator = ".")
-
-        val (page, filter) = genHostIdFilter(detail.regionId, setOf(ip))
-
-        val hostIds = listBizHosts(
-            fields = listOf(element = "bk_host_id"),
-            page = page,
-            hostPropertyFilter = filter
-        )?.info?.map { it["bk_host_id"].toString() }?.toSet()
-        if (hostIds.isNullOrEmpty()) {
-            logger.warn("updateHostName|${detail.regionId}|$workspaceName|${detail.environmentIP} hostids is empty")
-            return
-        }
-
-        updateHost(hostIds, mapOf("bk_host_name" to displayName))
     }
 
     fun updateHost(

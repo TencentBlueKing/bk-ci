@@ -843,21 +843,17 @@ class WorkspaceDao {
         }
     }
 
-    fun fetchWorkspaceIpByNames(
-        dslContext: DSLContext,
-        workspaceNames: Set<String>
+    fun fetchAllUsedWindows(
+        dslContext: DSLContext
     ): List<String> {
-        return with(TWorkspaceDetail.T_WORKSPACE_DETAIL) {
-            dslContext.select(
-                JooqUtils.jsonExtract(
-                    t1 = TWorkspaceDetail.T_WORKSPACE_DETAIL.DETAIL,
-                    t2 = "\$.hostIP",
-                    lower = false,
-                    removeDoubleQuotes = true
-                ).`as`("IP")
-            ).from(TWorkspaceDetail.T_WORKSPACE_DETAIL)
-                .where(WORKSPACE_NAME.`in`(workspaceNames))
-                .fetch { it["IP"] as String? }
+        with(TWorkspace.T_WORKSPACE) {
+            return dslContext.select(NAME).from(this)
+                .where(SYSTEM_TYPE.eq(WorkspaceSystemType.WINDOWS_GPU.name))
+                .and(STATUS.notEqual(WorkspaceStatus.DELETED.ordinal))
+                .and(STATUS.notEqual(WorkspaceStatus.DELIVERING_FAILED.ordinal))
+                .and(STATUS.notEqual(WorkspaceStatus.DELIVERING.ordinal))
+                .and(STATUS.notEqual(WorkspaceStatus.PREPARING.ordinal))
+                .fetch(NAME)
         }
     }
 

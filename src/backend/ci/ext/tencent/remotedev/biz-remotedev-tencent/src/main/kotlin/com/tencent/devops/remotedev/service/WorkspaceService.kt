@@ -188,12 +188,21 @@ class WorkspaceService @Autowired constructor(
                 displayName = displayName
             )
         }
-
+        val owner = workspaceSharedDao.fetchWorkspaceSharedInfo(
+            dslContext = dslContext,
+            workspaceName = workspaceName,
+            assignType = WorkspaceShared.AssignType.OWNER
+        ).firstOrNull()?.sharedUser
         // 同步修改 cc 主机名称
-        if (ws.workspaceSystemType.checkWindows()) {
-            bkccService.updateHostName(displayName, workspaceName)
-        }
-
+        workspaceCommon.updateHostMonitor(
+            workspaceName = workspaceName,
+            props = workspaceCommon.genWorkspaceCCInfo(
+                projectId = ws.projectId,
+                workspaceName = displayName.ifBlank { workspaceName },
+                owner = owner
+            ).plus(mapOf("bk_host_name" to displayName)),
+            type = ws.workspaceSystemType
+        )
         return true
     }
 
