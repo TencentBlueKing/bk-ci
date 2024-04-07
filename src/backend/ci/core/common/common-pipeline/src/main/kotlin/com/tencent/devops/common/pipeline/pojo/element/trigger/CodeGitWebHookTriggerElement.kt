@@ -212,6 +212,7 @@ data class CodeGitWebHookTriggerElement(
     }
 
     override fun transformCompatibility() {
+        super.transformCompatibility()
         when {
             eventType == CodeEventType.MERGE_REQUEST_ACCEPT -> {
                 eventType = CodeEventType.MERGE_REQUEST
