@@ -80,7 +80,7 @@ enum class TGitPushActionKind(val value: String) {
          */
         fun convertActionType(value: String): TGitPushActionType {
             // webhook动作类型
-            val pushActionKind = TGitPushActionKind.valueOf(value)
+            val pushActionKind = TGitPushActionKind.values().firstOrNull { it.value == value }
             return when (pushActionKind) {
                 CREATE_BRANCH -> TGitPushActionType.NEW_BRANCH
                 else -> TGitPushActionType.PUSH_FILE
