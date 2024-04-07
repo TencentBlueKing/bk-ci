@@ -41,10 +41,21 @@ data class CmdbNode(
     val ip: String,
     @get:Schema(title = "显示IP", required = true)
     val displayIp: String,
-    @get:Schema(title = "Agent状态", required = true)
-    val agentStatus: Boolean,
     @get:Schema(title = "操作系统", required = true)
     val osName: String,
     @get:Schema(title = "所属业务")
-    val bizId: Long = -1
-)
+    val bizId: Long = -1,
+    @get:Schema(title = "节点状态")
+    var nodeStatus: String?,
+    @get:Schema(title = "是否已导入")
+    var importStatus: Boolean? = false
+) {
+    constructor(
+        name: String,
+        operator: String,
+        bakOperator: String,
+        ip: String,
+        displayIp: String,
+        osName: String
+    ) : this(name, operator, bakOperator, ip, displayIp, osName, -1L, null, null)
+}

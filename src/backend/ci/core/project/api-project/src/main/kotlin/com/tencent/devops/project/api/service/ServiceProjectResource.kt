@@ -369,4 +369,13 @@ interface ServiceProjectResource {
         @QueryParam("productId")
         productId: Int
     ): Result<List<ProjectBaseInfo>>
+
+    @GET
+    @Path("/getExistedEnglishName")
+    @Operation(summary = "传入项目ID列表，返回其中存在的项目ID列表接口")
+    fun getExistedEnglishName(
+        @Parameter(description = "项目ID", required = true)
+        @QueryParam("englishName")
+        englishName: List<String>
+    ): Result<List<String>?>
 }
