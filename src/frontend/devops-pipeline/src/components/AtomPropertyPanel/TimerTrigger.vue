@@ -12,30 +12,6 @@
             </div>
         </accordion>
 
-        <form-field class="cron-build-tab" :required="false" :label="$t('editPage.codelib')">
-            <request-selector
-                v-bind="codelibOption"
-                :popover-min-width="250"
-                :disabled="disabled"
-                :url="getCodeUrl"
-                name="repoHashId"
-                :value="element['repoHashId']"
-                :handle-change="handleUpdateElement"
-            >
-            </request-selector>
-        </form-field>
-
-        <form-field class="cron-build-tab" :label="$t('editPage.branches')">
-            <BranchParameterArray
-                name="branches"
-                :disabled="disabled"
-                :repo-hash-id="element['repoHashId']"
-                :value="element['branches']"
-                :handle-change="handleUpdateElement"
-            >
-            </BranchParameterArray>
-        </form-field>
-
         <accordion show-checkbox :show-content="advance" :after-toggle="toggleAdvance">
             <header class="var-header" slot="header">
                 <span>{{ $t('editPage.crontabTitle') }}</span>
@@ -47,12 +23,42 @@
                 </form-field>
             </div>
         </accordion>
-
         <p class="empty-trigger-tips" v-if="!isShowBasicRule && !advance">{{ $t('editPage.triggerEmptyTips') }}</p>
+        <accordion show-checkbox :show-content="isShowCodelibConfig" :after-toggle="toggleCodelibConfig">
+            <header class="var-header" slot="header">
+                <span>{{ $t('editPage.codelibConfigs') }}</span>
+                <input class="accordion-checkbox" type="checkbox" :checked="isShowCodelibConfig" style="margin-left: auto;" />
+            </header>
+            <div slot="content" class="cron-build-tab">
+                <form-field class="cron-build-tab" :required="false" :label="$t('editPage.codelib')">
+                    <request-selector
+                        v-bind="codelibOption"
+                        :popover-min-width="250"
+                        :disabled="disabled"
+                        :url="getCodeUrl"
+                        name="repoHashId"
+                        :value="element['repoHashId']"
+                        :handle-change="handleUpdateElement"
+                    >
+                    </request-selector>
+                </form-field>
+    
+                <form-field class="cron-build-tab" :label="$t('editPage.branches')">
+                    <BranchParameterArray
+                        name="branches"
+                        :disabled="disabled"
+                        :repo-hash-id="element['repoHashId']"
+                        :value="element['branches']"
+                        :handle-change="handleUpdateElement"
+                    >
+                    </BranchParameterArray>
+                </form-field>
+                <form-field class="bk-form-checkbox">
+                    <atom-checkbox :disabled="disabled" :text="$t('editPage.noScm')" :name="'noScm'" :value="element['noScm']" :handle-change="handleUpdateElement" />
+                </form-field>
+            </div>
+        </accordion>
 
-        <form-field class="bk-form-checkbox">
-            <atom-checkbox :disabled="disabled" :text="$t('editPage.noScm')" :name="'noScm'" :value="element['noScm']" :handle-change="handleUpdateElement" />
-        </form-field>
     </div>
 </template>
 
@@ -72,6 +78,7 @@
             return {
                 isShowBasicRule: this.notEmptyArray('newExpression'),
                 advance: this.notEmptyArray('advanceExpression'),
+                isShowCodelibConfig: this.element.repoHashId || this.element.noScm,
                 advanceValue: (this.element.advanceExpression && this.element.advanceExpression.join('\n')) || ''
             }
         },
@@ -135,6 +142,14 @@
                 if (!show) {
                     this.advanceValue = ''
                     this.handleUpdateElement('advanceExpression', this.advanceValue)
+                }
+            },
+            toggleCodelibConfig (element, show) {
+                this.isShowCodelibConfig = show
+                if (!show) {
+                    this.handleUpdateElement('repoHashId', this.isShowCodelibConfig)
+                    this.handleUpdateElement('branches', [])
+                    this.handleUpdateElement('noScm', false)
                 }
             },
             handleUpdateElement (name, value) {

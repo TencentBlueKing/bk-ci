@@ -1014,7 +1014,8 @@
     "every": "Remind every",
     "remindTime": "hours",
     "codelib": "Code Repositories",
-    "branchs": "Branch"
+    "branchs": "Branch",
+    "codelibConfigs": "Code Repositories Config"
   },
   "storeMap": {
     "textarea": "Textarea",
