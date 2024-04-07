@@ -2,6 +2,7 @@ package com.tencent.devops.dispatch.kubernetes.pojo.remotedev
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.annotation.JsonProperty
+import java.time.LocalDateTime
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class EnvironmentResourceData(
@@ -25,7 +26,8 @@ data class EnvironmentResourceData(
     val node: String?,
     val image: String?,
     val cpu: String?,
-    val mem: String?
+    val mem: String?,
+    val registerCgsTime: LocalDateTime?
 )
 
 @JsonIgnoreProperties(ignoreUnknown = true)

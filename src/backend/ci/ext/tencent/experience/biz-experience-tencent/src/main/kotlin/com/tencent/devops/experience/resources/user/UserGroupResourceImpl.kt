@@ -27,9 +27,11 @@
 
 package com.tencent.devops.experience.resources.user
 
+import com.tencent.bk.audit.annotations.AuditEntry
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.auth.api.ActionId
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.experience.api.user.UserGroupResource
 import com.tencent.devops.experience.pojo.ProjectGroupAndUsers
@@ -77,9 +79,18 @@ class UserGroupResourceImpl @Autowired constructor(private val groupService: Gro
         )
     }
 
+    @AuditEntry(
+        actionId = ActionId.EXPERIENCE_GROUP_CREATE,
+        subActionIds = [ActionId.EXPERIENCE_GROUP_EDIT]
+    )
     override fun commit(userId: String, projectId: String, groupCommit: GroupCommit): Result<Boolean> {
         checkParam(userId, projectId)
-        return Result(groupService.commit(userId, projectId, groupCommit))
+        if (groupCommit.groupHashId == null) { // 新建用户组
+            groupService.createForCommit(groupCommit, userId, projectId)
+        } else { // 更新用户组
+            groupService.updateForCommit(groupCommit, userId, projectId)
+        }
+        return Result(true)
     }
 
     override fun getProjectUsers(userId: String, projectId: String, projectGroup: ProjectGroup?): Result<List<String>> {
@@ -92,12 +103,14 @@ class UserGroupResourceImpl @Autowired constructor(private val groupService: Gro
         return Result(groupService.getProjectGroupAndUsers(userId = userId, projectId = projectId))
     }
 
+    @AuditEntry(actionId = ActionId.EXPERIENCE_GROUP_CREATE)
     override fun create(userId: String, projectId: String, group: GroupCreate): Result<Boolean> {
         checkParam(userId, projectId)
         groupService.create(projectId = projectId, userId = userId, group = group)
         return Result(true)
     }
 
+    @AuditEntry(actionId = ActionId.EXPERIENCE_GROUP_VIEW)
     override fun get(userId: String, projectId: String, groupHashId: String): Result<Group> {
         checkParam(userId, projectId, groupHashId)
         return Result(groupService.get(userId, projectId, groupHashId))
@@ -108,12 +121,14 @@ class UserGroupResourceImpl @Autowired constructor(private val groupService: Gro
         return Result(groupService.getUsers(userId = userId, projectId = projectId, groupHashId = groupHashId))
     }
 
+    @AuditEntry(actionId = ActionId.EXPERIENCE_GROUP_EDIT)
     override fun edit(userId: String, projectId: String, groupHashId: String, group: GroupUpdate): Result<Boolean> {
         checkParam(userId, projectId, groupHashId)
         groupService.edit(userId = userId, projectId = projectId, groupHashId = groupHashId, group = group)
         return Result(true)
     }
 
+    @AuditEntry(actionId = ActionId.EXPERIENCE_GROUP_VIEW)
     override fun getV2(
         userId: String,
         projectId: String,
@@ -133,6 +148,7 @@ class UserGroupResourceImpl @Autowired constructor(private val groupService: Gro
         return Result(groupService.batchDeptFullName(groupBatchName))
     }
 
+    @AuditEntry(actionId = ActionId.EXPERIENCE_GROUP_DELETE)
     override fun delete(userId: String, projectId: String, groupHashId: String): Result<Boolean> {
         checkParam(userId, projectId, groupHashId)
         groupService.delete(userId = userId, projectId = projectId, groupHashId = groupHashId)

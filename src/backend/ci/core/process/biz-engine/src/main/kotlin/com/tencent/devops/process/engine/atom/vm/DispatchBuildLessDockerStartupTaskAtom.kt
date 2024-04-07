@@ -209,7 +209,8 @@ class DispatchBuildLessDockerStartupTaskAtom @Autowired constructor(
                 zone = getBuildZone(container),
                 atoms = atoms,
                 executeCount = task.executeCount,
-                customBuildEnv = param.matrixContext
+                customBuildEnv = param.matrixContext,
+                queueTimeoutMinutes = param.jobControlOption?.prepareTimeout
             )
         )
     }

@@ -30,6 +30,7 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_ACCESS_TOKEN
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_APP_CODE
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID
+import com.tencent.devops.project.pojo.ProjectBaseInfo
 import com.tencent.devops.project.pojo.ProjectCreateInfo
 import com.tencent.devops.project.pojo.ProjectCreateUserInfo
 import com.tencent.devops.project.pojo.ProjectUpdateInfo
@@ -209,4 +210,25 @@ interface ApigwProjectResourceV4 {
         @QueryParam("productId")
         productId: Int? = null
     ): Result<Boolean>
+
+    @GET
+    @Path("/get_projects_by_product_id")
+    @Operation(
+        summary = "根据运营产品ID获取项目列表接口",
+        tags = ["v4_app_get_projects_by_product_id", "v4_user_get_projects_by_product_id"]
+    )
+    fun getProjectListByProductId(
+        @Parameter(description = "appCode", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
+        appCode: String?,
+        @Parameter(description = "apigw Type", required = true)
+        @PathParam("apigwType")
+        apigwType: String?,
+        @Parameter(description = "userId")
+        @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
+        userId: String?,
+        @Parameter(description = "产品ID", required = true)
+        @QueryParam("productId")
+        productId: Int
+    ): Result<List<ProjectBaseInfo>>
 }

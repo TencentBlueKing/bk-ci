@@ -27,11 +27,13 @@
 
 package com.tencent.devops.experience.resources.user
 
+import com.tencent.bk.audit.annotations.AuditEntry
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.HashUtil
+import com.tencent.devops.common.auth.api.ActionId
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.common.web.utils.I18nUtil
@@ -81,6 +83,7 @@ class UserExperienceResourceImpl @Autowired constructor(
         return Result(experienceService.list(userId, projectId, expired))
     }
 
+    @AuditEntry(actionId = ActionId.EXPERIENCE_TASK_VIEW)
     override fun get(userId: String, projectId: String, experienceHashId: String): Result<Experience> {
         checkParam(userId, projectId, experienceHashId)
         experiencePermissionService.validateTaskPermission(
@@ -93,6 +96,7 @@ class UserExperienceResourceImpl @Autowired constructor(
         return Result(experienceService.get(userId, experienceHashId))
     }
 
+    @AuditEntry(actionId = ActionId.EXPERIENCE_TASK_CREATE)
     override fun create(userId: String, projectId: String, experience: ExperienceCreate): Result<Boolean> {
         checkParam(userId, projectId)
         if (!experiencePermissionService.validateCreateTaskPermission(userId, projectId)) {
@@ -105,6 +109,7 @@ class UserExperienceResourceImpl @Autowired constructor(
         return Result(true)
     }
 
+    @AuditEntry(actionId = ActionId.EXPERIENCE_TASK_EDIT)
     override fun edit(
         userId: String,
         projectId: String,
@@ -116,6 +121,7 @@ class UserExperienceResourceImpl @Autowired constructor(
         return Result(true)
     }
 
+    @AuditEntry(actionId = ActionId.EXPERIENCE_TASK_DELETE)
     override fun offline(userId: String, projectId: String, experienceHashId: String): Result<Boolean> {
         checkParam(userId, projectId, experienceHashId)
         experienceService.updateOnline(userId, projectId, experienceHashId, false)

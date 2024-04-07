@@ -29,6 +29,10 @@ package com.tencent.devops.experience.service
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
+import com.tencent.bk.audit.annotations.ActionAuditRecord
+import com.tencent.bk.audit.annotations.AuditAttribute
+import com.tencent.bk.audit.annotations.AuditInstanceRecord
+import com.tencent.bk.audit.context.ActionAuditContext
 import com.tencent.devops.artifactory.api.service.ServiceArtifactoryDownLoadResource
 import com.tencent.devops.artifactory.api.service.ServiceArtifactoryResource
 import com.tencent.devops.artifactory.api.service.ServicePipelineArtifactoryResource
@@ -54,8 +58,11 @@ import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_BUILD_ID
 import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_BUILD_NO
 import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_PIPELINE_ID
 import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_PROJECT_ID
+import com.tencent.devops.common.audit.ActionAuditContent
+import com.tencent.devops.common.auth.api.ActionId
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthResourceType
+import com.tencent.devops.common.auth.api.ResourceTypeId
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.client.consul.ConsulConstants
 import com.tencent.devops.common.redis.RedisOperation
@@ -222,6 +229,13 @@ class ExperienceService @Autowired constructor(
         }
     }
 
+    @ActionAuditRecord(
+        actionId = ActionId.EXPERIENCE_TASK_VIEW,
+        instance = AuditInstanceRecord(
+            resourceType = ResourceTypeId.EXPERIENCE_TASK
+        ),
+        content = ActionAuditContent.EXPERIENCE_TASK_VIEW_CONTENT
+    )
     fun get(userId: String, experienceHashId: String, checkPermission: Boolean = true): Experience {
 
         val experienceRecord = experienceDao.get(dslContext, HashUtil.decodeIdToLong(experienceHashId))
@@ -263,7 +277,12 @@ class ExperienceService @Autowired constructor(
                 )
             )
         }
-
+        // audit
+        ActionAuditContext.current()
+            .setInstanceId(experienceId.toString())
+            .setInstanceName(experienceRecord.experienceName)
+            .setScopeId(experienceRecord.projectId)
+            .addAttribute(ActionAuditContent.PROJECT_CODE_TEMPLATE, experienceRecord.projectId)
         return Experience(
             name = experienceRecord.name,
             path = experienceRecord.artifactoryPath,
@@ -291,6 +310,15 @@ class ExperienceService @Autowired constructor(
         )
     }
 
+    @ActionAuditRecord(
+        actionId = ActionId.EXPERIENCE_TASK_CREATE,
+        instance = AuditInstanceRecord(
+            resourceType = ResourceTypeId.EXPERIENCE_TASK
+        ),
+        attributes = [AuditAttribute(name = ActionAuditContent.PROJECT_CODE_TEMPLATE, value = "#projectId")],
+        scopeId = "#projectId",
+        content = ActionAuditContent.EXPERIENCE_TASK_CREATE_CONTENT
+    )
     fun create(userId: String, projectId: String, experience: ExperienceCreate) {
         val isPublic = isPublicGroupAndCheck(experience.experienceGroups) // 是否有公开体验组
 
@@ -301,7 +329,7 @@ class ExperienceService @Autowired constructor(
 
         val propertyMap = getArtifactoryPropertiesMap(userId, projectId, artifactoryType, experience.path)
 
-        createExperience(
+        val experienceId = createExperience(
             projectId,
             experience,
             propertyMap,
@@ -310,6 +338,10 @@ class ExperienceService @Autowired constructor(
             isPublic,
             artifactoryType
         )
+        ActionAuditContext.current()
+            .setInstanceId(experienceId.toString())
+            .setInstanceName(experience.experienceName)
+            .setInstance(experience)
     }
 
     private fun isPublicGroupAndCheck(experienceGroups: Set<String>): Boolean {
@@ -394,7 +426,7 @@ class ExperienceService @Autowired constructor(
         if (null == fileDetail) {
             logger.warn(
                 "null file detail , projectId:$projectId , " +
-                        "artifactoryType:$artifactoryType , path:${experience.path}"
+                    "artifactoryType:$artifactoryType , path:${experience.path}"
             )
             return -1L
         }
@@ -485,7 +517,6 @@ class ExperienceService @Autowired constructor(
             buildId = propertyMap[ARCHIVE_PROPS_BUILD_ID] ?: "",
             pipelineId = propertyMap[ARCHIVE_PROPS_PIPELINE_ID] ?: ""
         )
-
         // IAM权限
         experiencePermissionService.createTaskResource(
             userId,
@@ -564,6 +595,15 @@ class ExperienceService @Autowired constructor(
         )
     }
 
+    @ActionAuditRecord(
+        actionId = ActionId.EXPERIENCE_TASK_EDIT,
+        instance = AuditInstanceRecord(
+            resourceType = ResourceTypeId.EXPERIENCE_TASK
+        ),
+        attributes = [AuditAttribute(name = ActionAuditContent.PROJECT_CODE_TEMPLATE, value = "#projectId")],
+        scopeId = "#projectId",
+        content = ActionAuditContent.EXPERIENCE_TASK_EDIT_CONTENT
+    )
     fun edit(userId: String, projectId: String, experienceHashId: String, experience: ExperienceUpdate) {
         experience.experienceName?.let {
             experience.experienceName = it.substring(0, it.length.coerceAtMost(90))
@@ -579,6 +619,11 @@ class ExperienceService @Autowired constructor(
             experienceRecord.endDate
         }
 
+        ActionAuditContext.current()
+            .setInstanceId(experienceRecord.id.toString())
+            .setInstanceName(experienceRecord.experienceName)
+            .setOriginInstance(get(userId, experienceHashId, false))
+            .setInstance(experience)
         experienceDao.update(
             dslContext = dslContext,
             id = experienceRecord.id,
@@ -653,6 +698,15 @@ class ExperienceService @Autowired constructor(
         return experienceDao.get(dslContext, HashUtil.decodeIdToLong(experienceHashId)).creator
     }
 
+    @ActionAuditRecord(
+        actionId = ActionId.EXPERIENCE_TASK_DELETE,
+        instance = AuditInstanceRecord(
+            resourceType = ResourceTypeId.EXPERIENCE_TASK
+        ),
+        attributes = [AuditAttribute(name = ActionAuditContent.PROJECT_CODE_TEMPLATE, value = "#projectId")],
+        scopeId = "#projectId",
+        content = ActionAuditContent.EXPERIENCE_TASK_DELETE_CONTENT
+    )
     fun updateOnline(userId: String, projectId: String, experienceHashId: String, online: Boolean) {
         val experienceId = HashUtil.decodeIdToLong(experienceHashId)
         experiencePermissionService.validateDeleteExperience(
@@ -664,12 +718,15 @@ class ExperienceService @Autowired constructor(
                 params = arrayOf(projectId, experienceHashId)
             )
         )
-        experienceDao.getOrNull(dslContext, experienceId)
+        val experienceInfo = (experienceDao.getOrNull(dslContext, experienceId)
             ?: throw ErrorCodeException(
                 statusCode = Response.Status.NOT_FOUND.statusCode,
                 errorCode = ExperienceMessageCode.EXP_NOT_EXISTS,
                 params = arrayOf(experienceHashId)
-            )
+            ))
+        ActionAuditContext.current()
+            .setInstanceId(experienceId.toString())
+            .setInstanceName(experienceInfo.experienceName)
         experienceDao.updateOnline(dslContext, experienceId, online)
 
         if (!online) {
@@ -729,6 +786,15 @@ class ExperienceService @Autowired constructor(
         return experienceId
     }
 
+    @ActionAuditRecord(
+        actionId = ActionId.EXPERIENCE_TASK_CREATE,
+        instance = AuditInstanceRecord(
+            resourceType = ResourceTypeId.EXPERIENCE_TASK
+        ),
+        attributes = [AuditAttribute(name = ActionAuditContent.PROJECT_CODE_TEMPLATE, value = "#projectId")],
+        scopeId = "#projectId",
+        content = ActionAuditContent.EXPERIENCE_TASK_CREATE_CONTENT
+    )
     fun serviceCreate(
         userId: String,
         projectId: String,
@@ -804,6 +870,11 @@ class ExperienceService @Autowired constructor(
             isPublic,
             artifactoryType
         )
+
+        ActionAuditContext.current()
+            .setInstanceId(experienceId.toString())
+            .setInstanceName(experience.experienceName)
+            .setInstance(experience)
 
         return ExperienceCreateResp(
             url = getShortExternalUrl(experienceId),
@@ -1016,7 +1087,7 @@ class ExperienceService @Autowired constructor(
 
             logger.info(
                 "innerReceivers: $innerReceivers , outerReceivers: $outerReceivers , " +
-                        "subscribeUsers: $subscribeUsers , deptUsers : $deptUsers"
+                    "subscribeUsers: $subscribeUsers , deptUsers : $deptUsers"
             )
             if (innerReceivers.isEmpty() && outerReceivers.isEmpty() && subscribeUsers.isEmpty() &&
                 deptUsers.isEmpty()
@@ -1195,14 +1266,14 @@ class ExperienceService @Autowired constructor(
     fun getPcUrl(projectId: String, experienceId: Long): String {
         val experienceHashId = HashUtil.encodeLongId(experienceId)
         return HomeHostUtil.innerServerHost() +
-                "/console/experience/$projectId/experienceDetail/$experienceHashId/detail"
+            "/console/experience/$projectId/experienceDetail/$experienceHashId/detail"
     }
 
     fun getShortExternalUrl(experienceId: Long): String {
         val experienceHashId = HashUtil.encodeLongId(experienceId)
         val url =
             HomeHostUtil.outerServerHost() +
-                    "/app/download/devops_app_forward.html?flag=experienceDetail&experienceId=$experienceHashId"
+                "/app/download/devops_app_forward.html?flag=experienceDetail&experienceId=$experienceHashId"
         return client.get(ServiceShortUrlResource::class)
             .createShortUrl(CreateShortUrlRequest(url, 24 * 3600 * 30)).data!!
     }

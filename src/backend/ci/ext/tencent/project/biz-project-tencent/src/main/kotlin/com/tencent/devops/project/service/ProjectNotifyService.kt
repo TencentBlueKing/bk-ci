@@ -13,6 +13,7 @@ import com.tencent.devops.common.service.config.CommonConfig
 import com.tencent.devops.common.service.trace.TraceTag
 import com.tencent.devops.notify.api.service.ServiceNotifyMessageTemplateResource
 import com.tencent.devops.notify.pojo.SendNotifyMessageTemplateRequest
+import com.tencent.devops.project.api.pojo.enums.ProjectRelateOBSProductStatusEnum
 import com.tencent.devops.project.dao.ProjectUpdateHistoryDao
 import com.tencent.devops.project.pojo.ProjectVO
 import com.tencent.devops.project.pojo.ProjectWithPermission
@@ -48,11 +49,12 @@ class ProjectNotifyService constructor(
         private const val NOTIFY_USER_TO_PROJECT_INFO_CHANGE =
             "NOTIFY_USER_TO_PROJECT_INFO_CHANGE"
 
-        private const val PROJECT_INFO_CHANGE_TABLE_HEADER = """<tr><th style="border: 1px solid  black; text-align: center">%s</th><th style="border: 1px solid black; text-align: center">%s</th><th style="border: 1px solid black; text-align: center">%s</th><th style="border: 1px solid black; text-align: center">%s</th><th style="border: 1px solid black; text-align: center">%s</th><th style="border: 1px solid black; text-align: center">%s</th></tr>"""
-        private const val PROJECT_INFO_CHANGE_TABLE_CONTENT_TEMPLATE = """<tr><td style="border: 1px solid black; text-align: center">%s</td><td style="border: 1px solid black; text-align: center">%s</td><td style="border: 1px solid black; text-align: center">%s</td><td style="border: 1px solid black;text-align: center">%s</td><td style="border: 1px solid black; text-align: center">%s</td><td style="border: 1px solid black; text-align: center">%s</td></tr>"""
-        private const val PROJECT_ORGANIZATION_VERIFY_TEMPLATE = """<tr><th style="border: 1px solid black;text - align: center; max-width:300px;word-wrap: break-word; white-space: normal; ">%s</th><th style="border: 1px solid black;text - align: center; max-width:300px;word-wrap: break-word; white-space: normal; ">%s</th><th style="border: 1px solid black;text - align: center; max-width:300px;word-wrap: break-word; white-space: normal; ">%s</th><th style="border: 1px solid black;text - align: center; max-width:300px;word-wrap: break-word; white-space: normal; ">%s</th><th style="border: 1px solid black;text - align: center ; max-width:300px;word-wrap: break-word; white-space: normal;">%s</th></tr>"""
+        private const val PROJECT_INFO_CHANGE_TABLE_HEADER = """<tr><td style="border: 1px solid black; text-align: center">%s</td><td style="border: 1px solid black; text-align: center">%s</td><td style="border: 1px solid black; text-align: center">%s</td><td style="border: 1px solid black; text-align: center">%s</td><td style="border: 1px solid black; text-align: center">%s</td><td style="border: 1px solid black; text-align: center">%s</td></tr>"""
+        private const val PROJECT_INFO_CHANGE_TABLE_CONTENT_TEMPLATE = """<tr><td style="border: 1px solid black; text-align: center">%s</td><td style="border: 1px solid black; text-align: center">%s</td><td style="border: 1px solid black; text-align: center">%s</td><td style="border: 1px solid black; text-align: center">%s</td><td style="border: 1px solid black; text-align: center">%s</td><td style="border: 1px solid black; text-align: center">%s</td></tr>"""
+        private const val PROJECT_ORGANIZATION_VERIFY_TEMPLATE = """<tr><td style="border: 1px solid black; text-align: center; max-widtd:300px;word-wrap: break-word; white-space: normal; ">%s</td><td style="border: 1px solid black;text-align: center; max-widtd:300px;word-wrap: break-word; white-space: normal; ">%s</td><td style="border: 1px solid black;text-align: center; max-widtd:300px;word-wrap: break-word; white-space: normal; ">%s</td><td style="border: 1px solid black;text-align: center; max-widtd:300px;word-wrap: break-word; white-space: normal; ">%s</td><td style="border: 1px solid black;text-align: center ; max-widtd:300px;word-wrap: break-word; white-space: normal;">%s</td></tr>"""
         private const val VERIFY_PROJECT_MANAGER_ORGANIZATION_BG = "verify_project_manager_organization_bg"
-        private const val Project_Notify_USER = "project_notify_user"
+        private const val PROJECT_NOTIFY_USER = "project_notify_user"
+        private const val IS_SEND_EMAIL_FLAG = "is_send_email_flag"
     }
 
     private val projectInfoShowUri = "${config.devopsHostGateway}/console/manage/%s/show"
@@ -60,8 +62,12 @@ class ProjectNotifyService constructor(
 
     private val projectId2ManagerWithDeptDetail = Caffeine.newBuilder()
         .maximumSize(30000)
-        .expireAfterWrite(4L, TimeUnit.HOURS)
+        .expireAfterWrite(12L, TimeUnit.HOURS)
         .build<String/*projectId*/, MutableList<UserDeptDetail>/*managerWithDeptDetail*/>()
+    private val project2Manager = Caffeine.newBuilder()
+        .maximumSize(30000)
+        .expireAfterWrite(12L, TimeUnit.HOURS)
+        .build<String/*projectId*/, List<String>/*managers*/>()
 
     fun sendEmailForRelatedObsByProjectIds(projectIds: List<String>): Boolean {
         logger.info("send email for related obs by projectIds:$projectIds")
@@ -119,16 +125,7 @@ class ProjectNotifyService constructor(
         projectName: String,
         projectId: String
     ) {
-        val managers = try {
-            client.get(ServiceProjectAuthResource::class).getProjectUsers(
-                token = tokenService.getSystemToken(),
-                projectCode = projectId,
-                group = BkAuthGroup.MANAGER
-            ).data ?: return
-        } catch (e: Exception) {
-            logger.warn("get project($projectId) managers fail ${e.message}")
-            return
-        }
+        val managers = getProjectManager(projectId) ?: return
         val receives = managers.filterNot { projectUserService.isSeniorUser(it) }
         val bodyParams = mapOf(
             "projectName" to projectName,
@@ -140,6 +137,21 @@ class ProjectNotifyService constructor(
             receives = receives.toSet(),
             templateCode = NOTIFY_USER_TO_RELATED_OBS_PRODUCT_TEMPLATE_CODE
         )
+    }
+
+    fun getProjectManager(projectId: String): List<String>? {
+        return try {
+            project2Manager.get(projectId) {
+                client.get(ServiceProjectAuthResource::class).getProjectUsers(
+                    token = tokenService.getSystemToken(),
+                    projectCode = projectId,
+                    group = BkAuthGroup.MANAGER
+                ).data
+            }
+        } catch (e: Exception) {
+            logger.warn("get project($projectId) managers fail ${e.message}")
+            null
+        }
     }
 
     fun getProjectsForRelatedObsByCondition(
@@ -180,6 +192,9 @@ class ProjectNotifyService constructor(
         receives: Set<String>,
         templateCode: String
     ) {
+        // 开关，默认打开
+        val isSendEmail = redisOperation.get(IS_SEND_EMAIL_FLAG)?.toBoolean() ?: true
+        if (!isSendEmail) return
         if (receives.isEmpty()) return
         // 发邮件
         val request = SendNotifyMessageTemplateRequest(
@@ -380,16 +395,7 @@ class ProjectNotifyService constructor(
             return managerWithDeptDetail
 
         val managerDeptInfos = mutableListOf<UserDeptDetail>()
-        val managers = try {
-            client.get(ServiceProjectAuthResource::class).getProjectUsers(
-                token = tokenService.getSystemToken(),
-                projectCode = projectId,
-                group = BkAuthGroup.MANAGER
-            ).data ?: return null
-        } catch (ex: Exception) {
-            logger.info("get managers fail!$projectId ${ex.message}")
-            return null
-        }
+        val managers = getProjectManager(projectId) ?: return null
 
         managers.forEach { manager ->
             val userDeptDetail = try {
@@ -517,8 +523,53 @@ class ProjectNotifyService constructor(
         }
     }
 
+    fun sendEmailsForCheckInactiveProjects(
+        manager2projectList: Map<String, List<ProjectVO>>,
+        project2Status: Map<String, ProjectRelateOBSProductStatusEnum>
+    ) {
+        if (project2Status.isEmpty())
+            return
+        manager2projectList.forEach foreach@{ (manager, projectList) ->
+            if (projectList.isEmpty()) {
+                return@foreach
+            }
+            var table = String.format(
+                PROJECT_ORGANIZATION_VERIFY_TEMPLATE,
+                "项目名称", "项目ID", "项目管理员", "项目状态", "操作"
+            )
+            projectList.forEach forEach@{ projectInfo ->
+                with(projectInfo) {
+                    val projectStatus = project2Status[englishName] ?: return@forEach
+                    table = table.plus(
+                        String.format(
+                            PROJECT_ORGANIZATION_VERIFY_TEMPLATE,
+                            projectInfo.projectName,
+                            englishName,
+                            getProjectManager(englishName)?.joinToString(",") ?: "",
+                            projectStatus.value,
+                            String.format(
+                                projectStatus.action,
+                                config.devopsHostGateway, englishName,
+                                config.devopsHostGateway, englishName
+                            )
+                        )
+                    )
+                }
+            }
+            val bodyParams = mapOf(
+                "count" to projectList.size.toString(),
+                "table" to table
+            )
+            sendEmail(
+                bodyParams = bodyParams,
+                receives = mutableSetOf(manager),
+                templateCode = NOTIFY_USER_TO_RELATED_OBS_PRODUCT_TEMPLATE_CODE
+            )
+        }
+    }
+
     fun getProjectNotifyManager(): Set<String> {
-        val projectNotifyUser = redisOperation.get(key = Project_Notify_USER)
+        val projectNotifyUser = redisOperation.get(key = PROJECT_NOTIFY_USER)
         if (projectNotifyUser.isNullOrBlank()) {
             throw NotFoundException("projectNotifyUser is null")
         }

@@ -40,15 +40,14 @@ import com.tencent.devops.common.api.pojo.PipelineAsCodeSettings
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
-import com.tencent.devops.common.archive.client.BkRepoClient
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthPermissionApi
 import com.tencent.devops.common.auth.api.AuthProjectApi
 import com.tencent.devops.common.auth.api.AuthResourceType
-import com.tencent.devops.common.auth.api.BSAuthTokenApi
-import com.tencent.devops.common.auth.code.BSPipelineAuthServiceCode
+import com.tencent.devops.common.auth.code.PipelineAuthServiceCode
 import com.tencent.devops.common.auth.code.ProjectAuthServiceCode
 import com.tencent.devops.common.auth.enums.AuthSystemType
+import com.tencent.devops.common.auth.service.BkAccessTokenApi
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.client.ClientTokenService
 import com.tencent.devops.common.redis.RedisOperation
@@ -69,6 +68,7 @@ import com.tencent.devops.project.pojo.OperationalProductVO
 import com.tencent.devops.project.pojo.ProjectCreateInfo
 import com.tencent.devops.project.pojo.ProjectCreateUserInfo
 import com.tencent.devops.project.pojo.ProjectOrganizationInfo
+import com.tencent.devops.project.pojo.ProjectProductValidateDTO
 import com.tencent.devops.project.pojo.ProjectProperties
 import com.tencent.devops.project.pojo.ProjectTagUpdateDTO
 import com.tencent.devops.project.pojo.ProjectUpdateInfo
@@ -77,12 +77,12 @@ import com.tencent.devops.project.pojo.ResourceUpdateInfo
 import com.tencent.devops.project.pojo.Result
 import com.tencent.devops.project.pojo.enums.ProjectApproveStatus
 import com.tencent.devops.project.pojo.enums.ProjectChannelCode
+import com.tencent.devops.project.pojo.enums.ProjectOperation
 import com.tencent.devops.project.pojo.user.UserDeptDetail
 import com.tencent.devops.project.service.ProjectApprovalService
 import com.tencent.devops.project.service.ProjectExtOrganizationService
 import com.tencent.devops.project.service.ProjectExtPermissionService
 import com.tencent.devops.project.service.ProjectExtService
-import com.tencent.devops.project.service.ProjectPaasCCService
 import com.tencent.devops.project.service.ProjectPermissionService
 import com.tencent.devops.project.service.ProjectTagService
 import com.tencent.devops.project.service.ShardingRoutingRuleAssignService
@@ -101,15 +101,13 @@ import java.io.File
 @Service
 class TxProjectServiceImpl @Autowired constructor(
     private val tofService: TOFService,
-    private val bkRepoClient: BkRepoClient,
-    private val projectPaasCCService: ProjectPaasCCService,
     private val authProjectApi: AuthProjectApi,
-    private val bsPipelineAuthServiceCode: BSPipelineAuthServiceCode,
+    private val pipelineAuthServiceCode: PipelineAuthServiceCode,
     private val config: CommonConfig,
     private val projectDispatcher: ProjectDispatcher,
     private val managerService: ManagerService,
     private val tokenService: ClientTokenService,
-    private val bsAuthTokenApi: BSAuthTokenApi,
+    private val bkAccessTokenApi: BkAccessTokenApi,
     private val projectExtPermissionService: ProjectExtPermissionService,
     private val projectTagService: ProjectTagService,
     private val bkTag: BkTag,
@@ -323,7 +321,7 @@ class TxProjectServiceImpl @Autowired constructor(
     override fun validatePermission(projectCode: String, userId: String, permission: AuthPermission): Boolean {
         return authProjectApi.validateUserProjectPermission(
             user = userId,
-            serviceCode = bsPipelineAuthServiceCode,
+            serviceCode = pipelineAuthServiceCode,
             permission = permission,
             projectCode = projectCode
         )
@@ -435,7 +433,7 @@ class TxProjectServiceImpl @Autowired constructor(
 
     private fun getV0UserProject(userId: String?, accessToken: String?): List<String> {
         val token = if (accessToken.isNullOrEmpty()) {
-            bsAuthTokenApi.getAccessToken(bsPipelineAuthServiceCode)
+            bkAccessTokenApi.getPipelineAccessToken()
         } else {
             accessToken
         }
@@ -581,12 +579,28 @@ class TxProjectServiceImpl @Autowired constructor(
     }
 
     override fun validateProjectRelateProduct(
-        userId: String,
-        enabled: Boolean,
-        productId: Int?
+        projectProductValidateDTO: ProjectProductValidateDTO
     ) {
-        // 启用项目时，若未关联OBS产品，需要抛异常
-        if (enabled && productId == null) {
+        with(projectProductValidateDTO) {
+            when (projectOperation) {
+                ProjectOperation.ENABLE -> validateProductIdNotNull()
+                ProjectOperation.CREATE -> {
+                    if (channelCode == ProjectChannelCode.BS) {
+                        validateProductIdNotNull()
+                        validateProductExists()
+                    }
+                }
+                ProjectOperation.UPDATE -> {
+                    validateProductIdNotNull()
+                    validateProductExists()
+                }
+                else -> {}
+            }
+        }
+    }
+
+    private fun ProjectProductValidateDTO.validateProductIdNotNull() {
+        if (productId == null) {
             throw ErrorCodeException(
                 errorCode = ProjectMessageCode.ERROR_PROJECT_NOT_RELATED_PRODUCT,
                 defaultMessage = MessageUtil.getMessageByLocale(
@@ -595,6 +609,17 @@ class TxProjectServiceImpl @Autowired constructor(
                 )
             )
         }
+    }
+
+    private fun ProjectProductValidateDTO.validateProductExists() {
+        val products = getOperationalProducts()
+        products.firstOrNull { it.productId == productId } ?: throw ErrorCodeException(
+            errorCode = ProjectMessageCode.ERROR_PRODUCT_NOT_EXIST,
+            defaultMessage = MessageUtil.getMessageByLocale(
+                messageCode = ProjectMessageCode.ERROR_PRODUCT_NOT_EXIST,
+                language = I18nUtil.getLanguage(userId)
+            )
+        )
     }
 
     companion object {

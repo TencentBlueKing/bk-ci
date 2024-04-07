@@ -32,7 +32,6 @@ import com.tencent.devops.common.api.constant.SUCCESS
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.store.common.configuration.StoreDetailUrlConfig
-import com.tencent.devops.store.constant.StoreMessageCode
 import com.tencent.devops.store.common.dao.AbstractStoreCommonDao
 import com.tencent.devops.store.common.dao.OperationLogDao
 import com.tencent.devops.store.common.dao.ReasonRelDao
@@ -52,6 +51,8 @@ import com.tencent.devops.store.common.dao.StoreReleaseDao
 import com.tencent.devops.store.common.dao.StoreStatisticDailyDao
 import com.tencent.devops.store.common.dao.StoreStatisticDao
 import com.tencent.devops.store.common.dao.StoreStatisticTotalDao
+import com.tencent.devops.store.common.service.StoreCommonService
+import com.tencent.devops.store.constant.StoreMessageCode
 import com.tencent.devops.store.pojo.common.ReleaseProcessItem
 import com.tencent.devops.store.pojo.common.StoreBuildInfo
 import com.tencent.devops.store.pojo.common.StoreProcessInfo
@@ -59,18 +60,15 @@ import com.tencent.devops.store.pojo.common.StoreShowVersionInfo
 import com.tencent.devops.store.pojo.common.StoreShowVersionItem
 import com.tencent.devops.store.pojo.common.enums.ReleaseTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
-import com.tencent.devops.store.common.service.StoreCommonService
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.stereotype.Service
 
 /**
  * store公共
  * since: 2019-07-23
  */
 @Suppress("ALL")
-@Service
 abstract class StoreCommonServiceImpl @Autowired constructor() : StoreCommonService {
 
     @Autowired

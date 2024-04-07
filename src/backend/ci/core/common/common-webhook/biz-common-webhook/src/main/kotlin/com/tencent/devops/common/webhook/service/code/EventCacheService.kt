@@ -2,6 +2,7 @@ package com.tencent.devops.common.webhook.service.code
 
 import com.tencent.devops.common.api.enums.RepositoryType
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.webhook.service.code.matcher.ScmWebhookMatcher
 import com.tencent.devops.common.webhook.util.EventCacheUtil
 import com.tencent.devops.repository.api.ServiceP4Resource
 import com.tencent.devops.repository.pojo.Repository
@@ -12,6 +13,8 @@ import com.tencent.devops.scm.pojo.GitCommit
 import com.tencent.devops.scm.pojo.GitCommitReviewInfo
 import com.tencent.devops.scm.pojo.GitMrInfo
 import com.tencent.devops.scm.pojo.GitMrReviewInfo
+import com.tencent.devops.scm.pojo.WebhookCommit
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
@@ -203,5 +206,37 @@ class EventCacheService @Autowired constructor(
             eventCache?.githubPrInfo = prInfo
             prInfo
         }
+    }
+
+    @SuppressWarnings("NestedBlockDepth")
+    fun getWebhookCommitList(
+        repo: Repository,
+        matcher: ScmWebhookMatcher,
+        projectId: String,
+        pipelineId: String
+    ): List<WebhookCommit> {
+        val eventCache = EventCacheUtil.getOrInitRepoCache(projectId = projectId, repo = repo)
+        // 缓存第一页的数据
+        return eventCache?.webhookCommitList ?: run {
+            try {
+                val webhookCommitList = matcher.getWebhookCommitList(
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    repository = repo,
+                    page = 1,
+                    size = WEBHOOK_COMMIT_PAGE_SIZE
+                )
+                eventCache?.webhookCommitList = webhookCommitList
+                webhookCommitList
+            } catch (ignored: Throwable) {
+                logger.info("fail to get webhook commit list | err is $ignored")
+                emptyList()
+            }
+        }
+    }
+
+    companion object {
+        private val logger = LoggerFactory.getLogger(EventCacheService::class.java)
+        private const val WEBHOOK_COMMIT_PAGE_SIZE = 500
     }
 }

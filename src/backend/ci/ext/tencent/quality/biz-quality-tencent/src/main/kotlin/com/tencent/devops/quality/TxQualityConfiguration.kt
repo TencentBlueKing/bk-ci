@@ -30,7 +30,6 @@ package com.tencent.devops.quality
 import com.tencent.devops.auth.service.ManagerService
 import com.tencent.devops.common.auth.api.AuthPermissionApi
 import com.tencent.devops.common.auth.api.AuthResourceApi
-import com.tencent.devops.common.auth.api.AuthResourceApiStr
 import com.tencent.devops.common.auth.code.QualityAuthServiceCode
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.client.ClientTokenService
@@ -40,7 +39,6 @@ import com.tencent.devops.quality.dao.v2.QualityRuleDao
 import com.tencent.devops.quality.service.QualityPermissionService
 import com.tencent.devops.quality.service.StreamQualityPermissionServiceImpl
 import com.tencent.devops.quality.service.TxQualityPermissionService
-import com.tencent.devops.quality.service.TxV3QualityPermissionService
 import org.jooq.DSLContext
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.autoconfigure.AutoConfigureOrder
@@ -69,19 +67,6 @@ class TxQualityConfiguration {
         dslContext: DSLContext
     ) = TxQualityPermissionService(
         bkAuthPermissionApi, bkAuthResourceApi, serviceCode, managerService, qualityRuleDao, qualityGroupDao, dslContext
-    )
-
-    @Bean
-    @ConditionalOnProperty(prefix = "auth", name = ["idProvider"], havingValue = "new_v3")
-    fun txV3QualityPermissionService(
-        client: Client,
-        dslContext: DSLContext,
-        ruleDao: QualityRuleDao,
-        groupDao: QualityNotifyGroupDao,
-        tokenService: ClientTokenService,
-        authResourceApiStr: AuthResourceApiStr
-    ) = TxV3QualityPermissionService(
-        client, dslContext, ruleDao, groupDao, tokenService, authResourceApiStr
     )
 
     @Bean

@@ -34,9 +34,11 @@ import com.tencent.devops.repository.api.ServiceGitRepositoryResource
 import java.net.URLEncoder
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
+import org.springframework.context.annotation.Primary
 import org.springframework.stereotype.Service
 
 @Service
+@Primary
 class TxStoreI18nMessageServiceImpl : StoreI18nMessageServiceImpl() {
 
     @Value("\${store.bkrepo.projectId:bk-store}")
