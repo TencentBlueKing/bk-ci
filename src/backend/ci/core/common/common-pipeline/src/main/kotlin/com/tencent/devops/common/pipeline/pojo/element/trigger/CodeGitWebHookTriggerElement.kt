@@ -94,20 +94,9 @@ data class CodeGitWebHookTriggerElement(
     @get:Schema(title = "issue事件action")
     val includeIssueAction: List<String>? = null,
     @get:Schema(title = "mr事件action")
-    var includeMrAction: List<String>? = if (eventType == CodeEventType.MERGE_REQUEST_ACCEPT) {
-        listOf(MERGE_ACTION_MERGE)
-    } else {
-        listOf(
-            MERGE_ACTION_OPEN,
-            MERGE_ACTION_REOPEN,
-            MERGE_ACTION_PUSH_UPDATE
-        )
-    },
+    var includeMrAction: List<String>? = null,
     @get:Schema(title = "push事件action")
-    val includePushAction: List<String>? = listOf(
-        PUSH_ACTION_CREATE_BRANCH,
-        PUSH_ACTION_PUSH_FILE
-    ),
+    var includePushAction: List<String>? = null,
     @get:Schema(title = "是否启用第三方过滤")
     val enableThirdFilter: Boolean? = false,
     @get:Schema(title = "第三方应用地址")
@@ -213,6 +202,7 @@ data class CodeGitWebHookTriggerElement(
 
     override fun transformCompatibility() {
         super.transformCompatibility()
+        // 触发器action判断上线后，在此处对存量触发器配置进行适配
         when {
             eventType == CodeEventType.MERGE_REQUEST_ACCEPT -> {
                 eventType = CodeEventType.MERGE_REQUEST
@@ -224,6 +214,13 @@ data class CodeGitWebHookTriggerElement(
                     MERGE_ACTION_OPEN,
                     MERGE_ACTION_REOPEN,
                     MERGE_ACTION_PUSH_UPDATE
+                )
+            }
+
+            eventType == CodeEventType.PUSH && includePushAction == null -> {
+                includePushAction = listOf(
+                    PUSH_ACTION_CREATE_BRANCH,
+                    PUSH_ACTION_PUSH_FILE
                 )
             }
         }

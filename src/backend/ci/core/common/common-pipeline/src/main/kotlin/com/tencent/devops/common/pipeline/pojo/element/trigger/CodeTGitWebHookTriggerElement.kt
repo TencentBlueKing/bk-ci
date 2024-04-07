@@ -149,6 +149,34 @@ data class CodeTGitWebHookTriggerElement(
             return props.filterNotNull()
         }
     }
+
+    override fun transformCompatibility() {
+        super.transformCompatibility()
+        // 触发器action判断上线后，在此处对存量触发器配置进行适配
+        with(data.input){
+            when {
+                eventType == CodeEventType.MERGE_REQUEST_ACCEPT -> {
+                    eventType = CodeEventType.MERGE_REQUEST
+                    includeMrAction = listOf(CodeGitWebHookTriggerElement.MERGE_ACTION_MERGE)
+                }
+
+                eventType == CodeEventType.MERGE_REQUEST && includeMrAction == null -> {
+                    includeMrAction = listOf(
+                        CodeGitWebHookTriggerElement.MERGE_ACTION_OPEN,
+                        CodeGitWebHookTriggerElement.MERGE_ACTION_REOPEN,
+                        CodeGitWebHookTriggerElement.MERGE_ACTION_PUSH_UPDATE
+                    )
+                }
+
+                eventType == CodeEventType.PUSH && includePushAction == null -> {
+                    includePushAction = listOf(
+                        CodeGitWebHookTriggerElement.PUSH_ACTION_CREATE_BRANCH,
+                        CodeGitWebHookTriggerElement.PUSH_ACTION_PUSH_FILE
+                    )
+                }
+            }
+        }
+    }
 }
 
 data class CodeTGitWebHookTriggerData(
@@ -175,7 +203,7 @@ data class CodeTGitWebHookTriggerInput(
     @get:Schema(title = "用于排除的user id", required = false)
     val excludeUsers: List<String>?,
     @get:Schema(title = "事件类型", required = false)
-    val eventType: CodeEventType?,
+    var eventType: CodeEventType?,
     @get:Schema(title = "是否为block", required = false)
     val block: Boolean?,
     @get:Schema(title = "新版的git原子的类型")
@@ -203,9 +231,9 @@ data class CodeTGitWebHookTriggerInput(
     @get:Schema(title = "是否启用回写")
     val enableCheck: Boolean? = true,
     @get:Schema(title = "mr事件action")
-    val includeMrAction: List<String>? = null,
+    var includeMrAction: List<String>? = null,
     @get:Schema(title = "push事件action")
-    val includePushAction: List<String>? = null,
+    var includePushAction: List<String>? = null,
     @get:Schema(title = "webhook队列", required = false)
     val webhookQueue: Boolean? = false
 )

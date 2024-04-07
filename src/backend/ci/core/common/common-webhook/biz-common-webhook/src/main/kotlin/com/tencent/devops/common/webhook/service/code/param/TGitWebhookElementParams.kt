@@ -69,7 +69,12 @@ class TGitWebhookElementParams : ScmWebhookElementParams<CodeTGitWebHookTriggerE
             }
             params.block = isBlock(element)
             params.branchName = EnvUtils.parseEnv(branchName!!, variables)
-            params.eventType = eventType
+            // 兼容存量merge_request_accept事件
+            params.eventType = if (eventType == CodeEventType.MERGE_REQUEST_ACCEPT) {
+                CodeEventType.MERGE_REQUEST
+            } else {
+                eventType
+            }
             params.excludeBranchName = EnvUtils.parseEnv(excludeBranchName ?: "", variables)
             params.pathFilterType = pathFilterType
             params.includePaths = EnvUtils.parseEnv(includePaths ?: "", variables)

@@ -49,6 +49,7 @@ object WebhookI18nConstants {
     const val TGIT_REVIEW_CHANGE_REQUIRED_EVENT_DESC = "bkTgitReviewChangeRequiredEventDesc"
     const val TGIT_REVIEW_CREATED_EVENT_DESC = "bkTgitReviewCreatedEventDesc"
     const val TGIT_TAG_PUSH_EVENT_DESC = "bkTgitTagPushEventDesc"
+    const val TGIT_TAG_DELETE_EVENT_DESC = "bkTgitTagDeleteEventDesc"
 
     // Github事件描述
     const val GITHUB_PUSH_EVENT_DESC = "bkGithubPushEventDesc"
