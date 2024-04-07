@@ -25,26 +25,24 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.pipeline.pojo
+package com.tencent.devops.store.common.handler
 
-import io.swagger.v3.oas.annotations.media.Schema
+import com.tencent.devops.store.common.service.StoreBaseCreateService
+import com.tencent.devops.store.pojo.common.handler.Handler
+import com.tencent.devops.store.pojo.common.publication.StoreCreateRequest
+import org.springframework.stereotype.Service
 
-@Schema(title = "检查镜像合法性初始化流水线请求报文体")
-data class CheckImageInitPipelineReq(
-    @get:Schema(title = "流水线模型", required = true)
-    val pipelineModel: String,
-    @get:Schema(title = "镜像代码", required = true)
-    val imageCode: String,
-    @get:Schema(title = "镜像名称", required = true)
-    val imageName: String,
-    @get:Schema(title = "镜像版本号", required = true)
-    val version: String,
-    @get:Schema(title = "镜像类型", required = false)
-    val imageType: String? = null,
-    @get:Schema(title = "镜像仓库", required = false)
-    val registryHost: String? = null,
-    @get:Schema(title = "仓库用户名", required = false)
-    val registryUser: String? = null,
-    @get:Schema(title = "仓库密码", required = false)
-    val registryPwd: String? = null
-)
+@Service
+class StoreCreateParamCheckHandler(
+    private val storeBaseCreateService: StoreBaseCreateService
+) : Handler<StoreCreateRequest> {
+
+    override fun canExecute(handlerRequest: StoreCreateRequest): Boolean {
+        return true
+    }
+
+    override fun execute(handlerRequest: StoreCreateRequest) {
+        // 检查请求参数的合法性
+        storeBaseCreateService.checkStoreCreateParam(handlerRequest)
+    }
+}

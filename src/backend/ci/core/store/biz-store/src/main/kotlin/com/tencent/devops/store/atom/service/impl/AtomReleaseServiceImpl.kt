@@ -987,7 +987,7 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
      */
     @BkTimed(extraTags = ["publish", "passTest"], value = "store_publish_pipeline_atom")
     override fun passTest(userId: String, atomId: String): Result<Boolean> {
-        val info = logger.info("passTest, userId=$userId, atomId=$atomId")
+        logger.info("passTest, userId=$userId, atomId=$atomId")
         val atomRecord = marketAtomDao.getAtomRecordById(dslContext, atomId)
             ?: return I18nUtil.generateResponseDataObject(
                 messageCode = CommonMessageCode.PARAMETER_IS_INVALID,
@@ -1207,10 +1207,7 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
                 params = arrayOf("$atomCode:$version")
             )
         if (AtomStatusEnum.RELEASED.status.toByte() != atomRecord.atomStatus) {
-            throw ErrorCodeException(
-                errorCode = VERSION_PUBLISHED,
-                params = arrayOf(atomCode, version)
-            )
+            throw ErrorCodeException(errorCode = CommonMessageCode.ERROR_CLIENT_REST_ERROR)
         }
         dslContext.transaction { t ->
             val context = DSL.using(t)

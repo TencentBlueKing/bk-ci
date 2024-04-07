@@ -25,17 +25,14 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.pojo
+package com.tencent.devops.common.pipeline.pojo
 
-import com.tencent.devops.store.pojo.image.enums.ImageStatusEnum
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(title = "检查镜像合法性初始化流水线报文响应体")
-data class CheckImageInitPipelineResp(
+@Schema(title = "研发商店初始化流水线报文响应体")
+data class StoreInitPipelineResp(
     @get:Schema(title = "流水线ID", required = true)
     val pipelineId: String,
     @get:Schema(title = "构建ID", required = false)
-    val buildId: String?,
-    @get:Schema(title = "验证状态", required = true)
-    val imageCheckStatus: ImageStatusEnum
+    val buildId: String? = null
 )

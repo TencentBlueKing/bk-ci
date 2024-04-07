@@ -29,6 +29,7 @@ package com.tencent.devops.store.pojo.common.publication
 
 import com.tencent.devops.common.web.annotation.BkField
 import com.tencent.devops.common.web.constant.BkStyleEnum
+import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.pojo.common.version.VersionModel
 import io.swagger.v3.oas.annotations.media.Schema
 import javax.validation.Valid
@@ -40,12 +41,14 @@ data class StoreBaseUpdateRequest(
     val storeCode: String,
     @get:Schema(title = "store组件类型", required = true)
     @field:BkField(patternStyle = BkStyleEnum.CODE_STYLE)
-    val storeType: String,
+    val storeType: StoreTypeEnum,
     @get:Schema(title = "store组件名称", required = true)
     @field:BkField(patternStyle = BkStyleEnum.NAME_STYLE)
     val name: String,
     @get:Schema(title = "logo地址", required = false)
     val logoUrl: String? = null,
+    @get:Schema(title = "所属分类代码", required = true)
+    val classifyCode: String,
     @get:Schema(title = "简介", required = true)
     @field:BkField(maxLength = 256)
     val summary: String,
@@ -53,14 +56,16 @@ data class StoreBaseUpdateRequest(
     val description: String? = null,
     @get:Schema(title = "版本信息", required = true)
     val versionInfo: VersionModel,
-    @get:Schema(title = "插件标签列表", required = false)
+    @get:Schema(title = "标签列表", required = false)
     val labelIdList: ArrayList<String>? = null,
+    @get:Schema(title = "应用范畴列表", required = false)
+    val categoryIdList: ArrayList<String>? = null,
     @get:Schema(title = "基础扩展信息", required = false)
-    val extBaseInfo: Map<String, Any>? = null,
+    val extBaseInfo: MutableMap<String, Any>? = null,
     @get:Schema(title = "特性信息", required = false)
     @Valid
     val baseFeatureInfo: StoreBaseFeatureRequest? = null,
-    @get:Schema(title = "环境信息", required = false)
+    @get:Schema(title = "环境信息列表", required = false)
     @Valid
-    val baseEnvInfo: StoreBaseEnvRequest? = null
+    val baseEnvInfos: List<StoreBaseEnvRequest>? = null
 )

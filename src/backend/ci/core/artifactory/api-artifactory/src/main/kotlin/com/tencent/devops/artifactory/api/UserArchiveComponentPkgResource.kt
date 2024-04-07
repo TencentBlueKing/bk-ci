@@ -32,6 +32,7 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.annotation.BkField
 import com.tencent.devops.common.web.constant.BkStyleEnum
 import com.tencent.devops.store.pojo.common.enums.ReleaseTypeEnum
+import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.tags.Tag
@@ -65,7 +66,7 @@ interface UserArchiveComponentPkgResource {
         @Parameter(description = "组件类型", required = true)
         @PathParam("storeType")
         @BkField(patternStyle = BkStyleEnum.CODE_STYLE)
-        storeType: String,
+        storeType: StoreTypeEnum,
         @Parameter(description = "组件ID", required = true)
         @PathParam("storeId")
         @BkField(patternStyle = BkStyleEnum.ID_STYLE)
@@ -80,36 +81,6 @@ interface UserArchiveComponentPkgResource {
         @Parameter(description = "发布类型", required = true)
         @QueryParam("releaseType")
         releaseType: ReleaseTypeEnum,
-        @Parameter(description = "文件", required = true)
-        @FormDataParam("file")
-        inputStream: InputStream,
-        @FormDataParam("file")
-        disposition: FormDataContentDisposition
-    ): Result<Boolean>
-
-    @Operation(summary = "重新归档组件包文件")
-    @POST
-    @Path("/types/{storeType}/ids/{storeId}/codes/{storeCode}/pkg/re/archive")
-    @Consumes(MediaType.MULTIPART_FORM_DATA)
-    fun reArchiveComponentPkg(
-        @Parameter(description = "userId", required = true)
-        @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String,
-        @Parameter(description = "组件类型", required = true)
-        @PathParam("storeType")
-        @BkField(patternStyle = BkStyleEnum.CODE_STYLE)
-        storeType: String,
-        @Parameter(description = "组件ID", required = true)
-        @PathParam("storeId")
-        @BkField(patternStyle = BkStyleEnum.ID_STYLE)
-        storeId: String,
-        @Parameter(description = "组件标识", required = true)
-        @PathParam("storeCode")
-        @BkField(patternStyle = BkStyleEnum.CODE_STYLE)
-        storeCode: String,
-        @Parameter(description = "组件版本号", required = true)
-        @QueryParam("version")
-        version: String,
         @Parameter(description = "文件", required = true)
         @FormDataParam("file")
         inputStream: InputStream,

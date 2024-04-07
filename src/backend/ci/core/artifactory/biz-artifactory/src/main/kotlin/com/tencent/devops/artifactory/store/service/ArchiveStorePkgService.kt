@@ -25,17 +25,32 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.pojo
+package com.tencent.devops.artifactory.store.service
 
-import com.tencent.devops.store.pojo.atom.enums.AtomStatusEnum
-import io.swagger.v3.oas.annotations.media.Schema
+import com.tencent.devops.artifactory.pojo.ArchiveStorePkgRequest
+import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
+import org.glassfish.jersey.media.multipart.FormDataContentDisposition
+import java.io.InputStream
 
-@Schema(title = "插件市场初始化流水线报文响应体")
-data class AtomMarketInitPipelineResp(
-    @get:Schema(title = "流水线ID", required = true)
-    val pipelineId: String,
-    @get:Schema(title = "构建ID", required = false)
-    val buildId: String?,
-    @get:Schema(title = "构建状态", required = true)
-    val atomBuildStatus: AtomStatusEnum
-)
+interface ArchiveStorePkgService {
+
+    /**
+     * 归档组件包
+     */
+    fun archiveStorePkg(
+        userId: String,
+        inputStream: InputStream,
+        disposition: FormDataContentDisposition,
+        archiveStorePkgRequest: ArchiveStorePkgRequest
+    ): Boolean
+
+    /**
+     * 获取组件相关文件内容
+     */
+    fun getStoreFileContent(filePath: String, storeType: StoreTypeEnum): String
+
+    /**
+     * 删除组件包
+     */
+    fun deleteStorePkg(userId: String, storeCode: String, storeType: StoreTypeEnum)
+}

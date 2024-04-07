@@ -145,4 +145,8 @@ object StoreUtils {
             "i18n"
         }
     }
+
+    fun getSpecBusServiceBeanName(storeType: StoreTypeEnum): String {
+        return "${storeType}_SPEC_BUS_SERVICE"
+    }
 }

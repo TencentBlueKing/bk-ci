@@ -29,6 +29,7 @@ package com.tencent.devops.store.pojo.common.publication
 
 import com.tencent.devops.common.web.annotation.BkField
 import com.tencent.devops.common.web.constant.BkStyleEnum
+import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import io.swagger.v3.oas.annotations.media.Schema
 import javax.validation.Valid
 
@@ -39,7 +40,7 @@ data class StoreBaseCreateRequest(
     val storeCode: String,
     @get:Schema(title = "store组件类型", required = true)
     @field:BkField(patternStyle = BkStyleEnum.CODE_STYLE)
-    val storeType: String,
+    val storeType: StoreTypeEnum,
     @get:Schema(title = "store组件名称", required = true)
     @field:BkField(patternStyle = BkStyleEnum.NAME_STYLE)
     val name: String,
@@ -48,7 +49,7 @@ data class StoreBaseCreateRequest(
     @get:Schema(title = "特性信息", required = false)
     @Valid
     val baseFeatureInfo: StoreBaseFeatureRequest? = null,
-    @get:Schema(title = "环境信息", required = false)
+    @get:Schema(title = "环境信息列表", required = false)
     @Valid
-    val baseEnvInfo: StoreBaseEnvRequest? = null
+    val baseEnvInfos: List<StoreBaseEnvRequest>? = null
 )

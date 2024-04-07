@@ -49,7 +49,7 @@ import javax.ws.rs.PathParam
 import javax.ws.rs.Produces
 import javax.ws.rs.core.MediaType
 
-@Tag(name = "USER_STORE_RELEASE", description = "研发商店-发布")
+@Tag(name = "USER_STORE_RELEASE", description = "研发商店-发布管理")
 @Path("/user/store/releases")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
@@ -125,5 +125,17 @@ interface UserStoreReleaseResource {
         @Parameter(description = "工作台-下线组件请求报文体", required = true)
         @Valid
         storeOfflineRequest: StoreOfflineRequest
+    ): Result<Boolean>
+
+    @Operation(summary = "重新构建")
+    @PUT
+    @Path("/components/{storeId}/rebuild")
+    fun rebuild(
+        @Parameter(description = "userId", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "组件Id", required = true)
+        @PathParam("storeId")
+        storeId: String
     ): Result<Boolean>
 }

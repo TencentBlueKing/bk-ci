@@ -27,6 +27,7 @@
 
 package com.tencent.devops.store.pojo.common.publication
 
+import com.tencent.devops.store.pojo.common.handler.HandlerRequest
 import io.swagger.v3.oas.annotations.media.Schema
 import javax.validation.Valid
 
@@ -36,5 +37,12 @@ data class StoreUpdateRequest(
     val projectCode: String,
     @get:Schema(title = "基础信息", required = true)
     @Valid
-    val baseInfo: StoreBaseCreateRequest
+    val baseInfo: StoreBaseUpdateRequest,
+    @get:Schema(title = "请求ID", required = true)
+    override val requestId: String,
+    @get:Schema(title = "商店上下文", required = true)
+    override val bkStoreContext: MutableMap<String, Any>
+) : HandlerRequest(
+    requestId = requestId,
+    bkStoreContext = bkStoreContext
 )

@@ -29,6 +29,7 @@ package com.tencent.devops.store.pojo.common.publication
 
 import com.tencent.devops.common.web.annotation.BkField
 import com.tencent.devops.common.web.constant.BkStyleEnum
+import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "工作台-组件下线请求报文体")
@@ -38,7 +39,7 @@ data class StoreOfflineRequest(
     val storeCode: String,
     @get:Schema(title = "store组件类型", required = true)
     @field:BkField(patternStyle = BkStyleEnum.CODE_STYLE)
-    val storeType: String,
+    val storeType: StoreTypeEnum,
     @get:Schema(title = "下架原因")
     val reason: String? = null,
     @get:Schema(title = "版本号")
