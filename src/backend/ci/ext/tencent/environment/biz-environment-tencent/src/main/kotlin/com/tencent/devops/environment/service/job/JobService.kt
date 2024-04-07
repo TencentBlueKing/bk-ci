@@ -141,6 +141,7 @@ class JobService @Autowired constructor(
                     )
                 }
             ),
+            taskName = scriptExecuteReq.taskName,
             bkUsername = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE
         )
         ApigwJobCloudApi.setJobOperationName(::executeScript.name)
@@ -219,6 +220,7 @@ class JobService @Autowired constructor(
             accountAlias = fileDistributeReq.accountAlias,
             accountId = fileDistributeReq.accountId,
             timeout = fileDistributeReq.timeout,
+            taskName = fileDistributeReq.taskName,
             bkUsername = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE
         )
         ApigwJobCloudApi.setJobOperationName(::distributeFile.name)
