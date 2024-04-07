@@ -1257,7 +1257,7 @@
   "pipelineGroupRepeatTips": "【{0}】已存在，请更换名称",
   "dynamicGroupRemoveDisableTips": "动态流水线组不可以手动移出",
   "hasNoPermissionPipelineTips": "有 {0} 条流水线无权限删除，有 {1} 条PAC流水线默认分支仍在YAML中无法删除",
-  "removeNoPermissionPipeline": "去除无权限流水线",
+  "removeNoPermissionPipeline": "去除无法删除的流水线",
   "clearSelection": "清除选择",
   "selectedCount": "已选择 <b>{0}</b> 条，",
   "staticGroupTips": "手动指定组内所包含的流水线",
@@ -1509,5 +1509,15 @@
   "dropDraft": "放弃草稿",
   "tableColSettings": "表格设置",
   "draftRecordEntryTitle": "查看调试记录",
-  "checkDiff": "查看差异"
+  "checkDiff": "查看差异",
+  "versionRule": "版本号规则",
+  "versionRuleP": "P：流水线编排版本，包括Stage、Job、Step、变量",
+  "versionRuleT": "T：流水线触发器版本",                  
+  "versionRuleA": "附加位：流水线其他信息修改版本，如名称、描述、运行设置等",
+  "willRelease": "待发布",
+  "clickToAddStage": "点击添加第一个流水线Stage",
+  "buildMsg": "构建信息",
+  "executeStepPreview": "预览待执行的步骤"
 }
+
+

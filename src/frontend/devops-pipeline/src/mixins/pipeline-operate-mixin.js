@@ -23,8 +23,6 @@ import { PROCESS_API_URL_PREFIX } from '../store/constants'
 export default {
     computed: {
         ...mapGetters({
-            allPipelineList: 'pipelines/getAllPipelineList',
-            pipelineList: 'pipelines/getPipelineList',
             tagGroupList: 'pipelines/getTagGroupList',
             isEditing: 'atom/isEditing'
         }),

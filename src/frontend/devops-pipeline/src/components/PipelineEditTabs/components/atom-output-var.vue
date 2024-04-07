@@ -68,6 +68,7 @@
                         </bk-popconfirm>
                     </span>
                 </div>
+                <span v-else class="flex-item item-num">{{group.params.length}}</span>
             </div>
             <section slot="content">
                 <template v-for="env in group.params">
@@ -258,7 +259,7 @@
                 overflow: hidden;
                 text-overflow: ellipsis;
                 white-space: nowrap;
-                max-width: 460px;
+                max-width: 350px;
             }
             .group-title.title-overflow {
                 max-width: 208px;

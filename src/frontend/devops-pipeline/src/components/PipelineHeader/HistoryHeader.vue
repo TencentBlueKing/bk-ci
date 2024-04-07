@@ -3,13 +3,20 @@
         <div class="pipeline-history-left-aside">
             <pipeline-bread-crumb :is-loading="switchingVersion" />
             <pac-tag class="pipeline-pac-indicator" v-if="pacEnabled" :info="yamlInfo" />
-            <VersionSelector
-                :value="currentVersion"
-                ref="versionSelectorInstance"
-                @change="handleVersionChange"
-                @showAllVersion="showVersionSideSlider"
-                refresh-list-on-expand
-            />
+            <bk-popover :delay="[666, 0]">
+                <VersionSelector
+                    :value="currentVersion"
+                    ref="versionSelectorInstance"
+                    @change="handleVersionChange"
+                    @showAllVersion="showVersionSideSlider"
+                    refresh-list-on-expand
+                />
+                <div slot="content">
+                    <p>{{ $t('versionRuleP') }}</p>
+                    <p>{{ $t('versionRuleT') }}</p>
+                    <p>{{ $t('versionRuleA') }}</p>
+                </div>
+            </bk-popover>
             <bk-button
                 v-if="!isReleaseVersion && isReleasePipeline"
                 text
@@ -227,7 +234,7 @@
             goEdit () {
                 this.$router.push({
                     name: 'pipelinesEdit',
-                    params: {
+                    query: {
                         tab: pipelineTabIdMap[this.$route.params.type] ?? 'pipeline'
                     }
                 })
@@ -280,10 +287,12 @@
                 console.log('handleVersionChange', versionId, version)
                 let routeType = 'history'
 
-                if (version && this.releaseVersion) {
+                if (version) {
                     this.selectPipelineVersion(version)
-                    const noRecordVersion = ['history', 'triggerEvent'].includes(this.$route.params.type) && !(versionId === this.releaseVersion || version.isDraft)
-                    routeType = noRecordVersion ? pipelineTabIdMap.pipeline : this.$route.params.type
+                    if (this.releaseVersion) {
+                        const noRecordVersion = ['history', 'triggerEvent'].includes(this.$route.params.type) && !(versionId === this.releaseVersion || version.isDraft)
+                        routeType = noRecordVersion ? pipelineTabIdMap.pipeline : this.$route.params.type
+                    }
                 }
                 this.$router.push({
                     params: {

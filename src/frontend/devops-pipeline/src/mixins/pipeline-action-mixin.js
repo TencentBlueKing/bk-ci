@@ -38,6 +38,7 @@ import {
 } from '@/store/constants'
 
 import { ORDER_ENUM, PIPELINE_SORT_FILED, pipelineTabIdMap } from '@/utils/pipelineConst'
+import { VERSION_STATUS_ENUM } from '../utils/pipelineConst'
 
 export default {
     data () {
@@ -104,6 +105,9 @@ export default {
                         pipelineActions: this.getPipelineActions(item, index),
                         disabled: this.isDisabledPipeline(item),
                         tooltips: this.disabledTips(item),
+                        released: item.latestVersionStatus === VERSION_STATUS_ENUM.RELEASED,
+                        onlyBranchVersion: item.latestVersionStatus === VERSION_STATUS_ENUM.BRANCH,
+                        onlyDraftVersion: item.latestVersionStatus === VERSION_STATUS_ENUM.COMMITTING,
                         historyRoute: {
                             name: 'pipelinesHistory',
                             params: {
@@ -370,13 +374,14 @@ export default {
                 }
             })
         },
-        execPipeline ({ projectId, pipelineId, disabled }) {
-            if (disabled) return
+        execPipeline ({ projectId, pipelineId, disabled, released, pipelineVersion }) {
+            if (disabled || !released) return
             this.$router.push({
                 name: 'executePreview',
                 params: {
                     projectId,
-                    pipelineId
+                    pipelineId,
+                    version: pipelineVersion
                 }
             })
         },

@@ -32,7 +32,7 @@
             </ul>
             <div v-for="i in [1,2,3,4]" :key="i" ref="disableToolTips" class="disable-nav-child-item-tooltips">
                 {{$t('switchToReleaseVersion')}}
-                <span @click="switchToReleaseVersion" class="text-link">{{ $t('newlist.view') }}</span>
+                <span v-if="isReleasePipeline" @click="switchToReleaseVersion" class="text-link">{{ $t('newlist.view') }}</span>
             </div>
         </aside>
 
@@ -52,6 +52,7 @@
         TriggerEvent
     } from '@/components/PipelineDetailTabs'
     import { AuthorityTab, ShowVariable } from '@/components/PipelineEditTabs/'
+    import { VERSION_STATUS_ENUM } from '@/utils/pipelineConst'
     import { mapActions, mapGetters, mapState } from 'vuex'
 
     export default {
@@ -66,7 +67,7 @@
         },
         computed: {
             ...mapState('atom', ['pipelineInfo', 'pipeline', 'activePipelineVersion', 'switchingVersion']),
-            ...mapGetters('atom', ['isActiveDraftVersion', 'isReleaseVersion']),
+            ...mapGetters('atom', ['isActiveDraftVersion', 'isReleaseVersion', 'isReleasePipeline']),
             activeMenuItem () {
                 return this.$route.params.type || 'history'
             },
@@ -187,8 +188,8 @@
                 try {
                     if (!this.$route.params.version) return
                     const { data } = await this.getPipelineVersionInfo(this.$route.params)
-                    const isDraft = data.status === 'COMMITTING'
-                    const isBranchVersion = data.status === 'BRANCH'
+                    const isDraft = data.status === VERSION_STATUS_ENUM.COMMITTING
+                    const isBranchVersion = data.status === VERSION_STATUS_ENUM.BRANCH
 
                     this.selectPipelineVersion({
                         ...data,
@@ -196,7 +197,7 @@
                         description: isDraft ? this.$t('baseOn', [data.baseVersionName]) : (data.description || '--'),
                         isBranchVersion,
                         isDraft,
-                        isRelease: data.status === 'RELEASED'
+                        isRelease: data.status === VERSION_STATUS_ENUM.RELEASED
                     })
                 } catch (error) {
                     console.log(error)

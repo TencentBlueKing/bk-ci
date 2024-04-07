@@ -2,13 +2,27 @@
     <bk-sideslider
         quick-close
         :width="950"
-        :title="$t('template.versionList')"
         :is-show="showVersionSideslider"
         :before-close="handleClose"
         @shown="handleShown"
         ext-cls="pipeline-version-sideslider"
         :transfer="false"
     >
+        <header slot="header">
+            {{$t('template.versionList')}}
+            <bk-popover class="pipeline-version-rule-tips">
+                <span class="pipeline-version-rule-tips-trigger">
+                    <i class="devops-icon icon-question-circle" />
+                    {{ $t('versionRule') }}
+                </span>
+                <div slot="content">
+                    <p>{{ $t('versionRule') }}</p>
+                    <p>{{ $t('versionRuleP') }}</p>
+                    <p>{{ $t('versionRuleT') }}</p>
+                    <p>{{ $t('versionRuleA') }}</p>
+                </div>
+            </bk-popover>
+        </header>
         <main slot="content" class="pipeline-version-history" v-bkloading="{ isLoading }">
             <header class="pipeline-version-history-header">
                 <search-select
@@ -33,7 +47,7 @@
                                 'active-version-name': row.version === releaseVersion
                             }]">
                                 <span>
-                                    <i class="devops-icon icon-edit-line" v-if="row.status === 'COMMITTING'" />
+                                    <i class="devops-icon icon-edit-line" v-if="row.isDraft" />
                                     <logo v-else-if="row.isBranchVersion" name="branch" size="16" />
                                     <i v-else class="devops-icon icon-check-circle" />
                                 </span>
@@ -78,14 +92,15 @@
 </template>
 
 <script>
-    import SearchSelect from '@blueking/search-select'
-    import { mapActions, mapState, mapGetters } from 'vuex'
-    import { convertTime, navConfirm } from '@/utils/util'
-    import VersionDiffEntry from './VersionDiffEntry'
-    import RollbackEntry from './RollbackEntry'
-    import EmptyException from '@/components/common/exception'
     import Logo from '@/components/Logo'
+    import EmptyException from '@/components/common/exception'
+    import { VERSION_STATUS_ENUM } from '@/utils/pipelineConst'
+    import { convertTime, navConfirm } from '@/utils/util'
+    import SearchSelect from '@blueking/search-select'
     import '@blueking/search-select/dist/styles/index.css'
+    import { mapActions, mapGetters, mapState } from 'vuex'
+    import RollbackEntry from './RollbackEntry'
+    import VersionDiffEntry from './VersionDiffEntry'
     export default {
         components: {
             SearchSelect,
@@ -213,12 +228,12 @@
                     count: res.count
                 })
                 this.pipelineVersionList = res.records.map(item => {
-                    const isDraft = item.status === 'COMMITTING'
+                    const isDraft = item.status === VERSION_STATUS_ENUM.COMMITTING
                     return {
                         ...item,
                         isDraft,
                         canRollback: !isDraft,
-                        isBranchVersion: item.status === 'BRANCH',
+                        isBranchVersion: item.status === VERSION_STATUS_ENUM.BRANCH,
                         versionName: item.versionName || this.$t('editPage.draftVersion', [item.baseVersionName])
                     }
                 })
@@ -267,6 +282,7 @@
 </script>
 
 <style lang="scss">
+    @import "@/scss/conf";
     @import "@/scss/select-dark-theme.scss";
     .pipeline-version-history {
         padding: 24px;
@@ -311,5 +327,18 @@
         display: flex;
         grid-gap: 16px;
         align-items: center;
+    }
+    .pipeline-version-rule-tips {
+        margin-left: 24px;
+        color: $primaryColor;
+        .pipeline-version-rule-tips-trigger {
+            display: flex;
+            align-items: center;
+            grid-gap: 4px;
+            font-size: 12px;
+            > i {
+                font-size: 14px;
+            }
+        }
     }
 </style>

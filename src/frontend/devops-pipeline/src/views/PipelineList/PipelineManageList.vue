@@ -158,24 +158,24 @@
             v-model="pipelineActionState.isDisableDialogShow"
             v-bind="pipelineActionState.activePipeline"
             @close="closeDisableDialog"
-            :pac-enabled="pacEnabled"
+            :pac-enabled="pipelineActionState.activePipeline?.yamlExist"
             @done="refresh"
         />
     </main>
 </template>
 <script>
     import CopyPipelineDialog from '@/components/PipelineActionDialog/CopyPipelineDialog'
+    import DisableDialog from '@/components/PipelineActionDialog/DisableDialog'
     import SaveAsTemplateDialog from '@/components/PipelineActionDialog/SaveAsTemplateDialog'
-    import PipelineSearcher from './PipelineSearcher'
+    import ImportPipelinePopup from '@/components/pipelineList/ImportPipelinePopup'
     import PipelineTableView from '@/components/pipelineList/PipelineTableView'
     import PipelinesCardView from '@/components/pipelineList/PipelinesCardView'
-    import ImportPipelinePopup from '@/components/pipelineList/ImportPipelinePopup'
     import webSocketMessage from '@/utils/webSocketMessage'
     import AddToGroupDialog from '@/views/PipelineList/AddToGroupDialog'
     import PipelineGroupEditDialog from '@/views/PipelineList/PipelineGroupEditDialog'
     import RemoveConfirmDialog from '@/views/PipelineList/RemoveConfirmDialog'
-    import DisableDialog from '@/components/PipelineActionDialog/DisableDialog'
-    import { mapActions, mapGetters, mapState } from 'vuex'
+    import { mapActions, mapState } from 'vuex'
+    import PipelineSearcher from './PipelineSearcher'
 
     import Logo from '@/components/Logo'
     import piplineActionMixin from '@/mixins/pipeline-action-mixin'
@@ -238,9 +238,6 @@
                 'pipelineActionState',
                 'isManage'
             ]),
-            ...mapGetters({
-                pacEnabled: 'atom/pacEnabled'
-            }),
             projectId () {
                 return this.$route.params.projectId
             },

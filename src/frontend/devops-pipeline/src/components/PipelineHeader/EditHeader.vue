@@ -1,7 +1,10 @@
 <template>
     <div class="pipeline-edit-header">
         <pipeline-bread-crumb :pipeline-name="pipelineSetting?.pipelineName">
-            <bk-tag>{{ currentVersionName }}</bk-tag>
+            <span class="pipeline-edit-header-tag">
+                <PacTag v-if="pacEnabled" :info="pipelineInfo?.yamlInfo" />
+                <bk-tag>{{ currentVersionName }}</bk-tag>
+            </span>
         </pipeline-bread-crumb>
         <mode-switch :save="saveDraft" />
         <aside class="pipeline-edit-right-aside">
@@ -63,6 +66,7 @@
 
 <script>
     import ModeSwitch from '@/components/ModeSwitch'
+    import PacTag from '@/components/PacTag.vue'
     import { PROCESS_API_URL_PREFIX } from '@/store/constants'
     import { UPDATE_PIPELINE_INFO } from '@/store/modules/atom/constants'
     import {
@@ -76,7 +80,8 @@
         components: {
             PipelineBreadCrumb,
             ReleaseButton,
-            ModeSwitch
+            ModeSwitch,
+            PacTag
         },
         data () {
             return {
@@ -100,7 +105,8 @@
                 isCurPipelineLocked: 'atom/isCurPipelineLocked',
                 isEditing: 'atom/isEditing',
                 checkPipelineInvalid: 'atom/checkPipelineInvalid',
-                draftBaseVersionName: 'atom/getDraftBaseVersionName'
+                draftBaseVersionName: 'atom/getDraftBaseVersionName',
+                pacEnabled: 'atom/pacEnabled'
             }),
             projectId () {
                 return this.$route.params.projectId
@@ -276,6 +282,15 @@
   justify-content: space-between;
   padding: 0 0 0 14px;
   align-self: stretch;
+  .pipeline-edit-header-tag {
+    display: flex;
+    align-items: center;
+    grid-gap: 8px;
+    line-height: 1;
+    .bk-tag {
+        margin: 0;
+    }
+  }
   .debug-pipeline-draft-btn {
     display: flex;
     align-items: center;

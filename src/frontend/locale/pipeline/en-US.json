@@ -579,7 +579,7 @@
     "loadingErr": " An error occurred when loading",
     "filterTips": "Filter by keywords",
     "reset": "Reset",
-    "branch": "Branchs",
+    "branch": "Branch",
     "date": "Date",
     "tableMap": {
       "queueTime": "Queued Time",
@@ -1258,7 +1258,7 @@
   "pipelineGroupRepeatTips": "{0} already exists, please change the name",
   "dynamicGroupRemoveDisableTips": "Dynamic groups cannot be manually moved out of the pipeline",
   "hasNoPermissionPipelineTips": "There are {0} pipelines without permission to delete, and {1} PAC pipelines default branch cannot be deleted in YAML",
-  "removeNoPermissionPipeline": "Remove unprivileged pipeline",
+  "removeNoPermissionPipeline": "Remove Undeletable",
   "clearSelection": "Clear",
   "selectedCount": "Selected <b>{0}</b> items, ",
   "staticGroupTips": "Manually add pipeline to group",
@@ -1510,5 +1510,13 @@
   "dropDraft": "Abandon",
   "tableColSettings": "Table Settings",
   "draftRecordEntryTitle": "Debug Records",
-  "checkDiff": "Diff"
+  "checkDiff": "Diff",
+  "versionRule": "Version Rule",
+  "versionRuleP": "P: Pipeline arrangement version, including Stage, Job, Step, and variables",
+  "versionRuleT": "T: Pipeline trigger version",                  
+  "versionRuleA": "Additional bits: Modified version of other information of the pipeline, such as name, description, running settings, etc.",
+  "willRelease": "To be released",
+  "clickToAddStage": "Click to add the first pipeline stage",
+  "buildMsg": "Build Message",
+  "executeStepPreview": "Preview of steps to be executed"
 }

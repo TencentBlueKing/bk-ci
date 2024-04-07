@@ -5,12 +5,6 @@
                 {{ title }}
             </span>
         </pipeline-bread-crumb>
-        <bk-steps
-            class="pipeline-execute-step"
-            :cur-step="executeStep"
-            @update:value="setExecuteStep"
-            :steps="executeSteps"
-        />
         <aside class="pipeline-preview-right-aside">
             <bk-button
                 :disabled="executeStatus"
@@ -28,38 +22,25 @@
             >
                 {{ $t("cancel") }}
             </bk-button>
+
             <bk-button
                 theme="primary"
-                v-if="executeStep === 1"
-                @click="switchExecStep(executeSteps[1])"
+                :disabled="executeStatus"
+                :loading="executeStatus"
+                v-perm="{
+                    hasPermission: canExecute,
+                    disablePermissionApi: true,
+                    permissionData: {
+                        projectId: projectId,
+                        resourceType: 'pipeline',
+                        resourceCode: pipelineId,
+                        action: RESOURCE_ACTION.EXECUTE
+                    }
+                }"
+                @click="handleClick"
             >
-                {{ $t("next") }}
+                {{ $t(isDebugPipeline ? "debug" : "exec") }}
             </bk-button>
-            <template v-if="executeStep === 2">
-                <bk-button
-                    @click="switchExecStep(executeSteps[0])"
-                >
-                    {{ $t("prev") }}
-                </bk-button>
-                <bk-button
-                    theme="primary"
-                    :disabled="executeStatus"
-                    :loading="executeStatus"
-                    v-perm="{
-                        hasPermission: canExecute,
-                        disablePermissionApi: true,
-                        permissionData: {
-                            projectId,
-                            resourceType: 'pipeline',
-                            resourceCode: pipelineId,
-                            action: RESOURCE_ACTION.EXECUTE
-                        }
-                    }"
-                    @click="handleClick"
-                >
-                    {{ $t(isDebugPipeline ? "debug" : "exec") }}
-                </bk-button>
-            </template>
         </aside>
     </div>
     <i v-else class="devops-icon icon-circle-2-1 spin-icon" style="margin-left: 20px;" />
@@ -70,7 +51,7 @@
     import {
         RESOURCE_ACTION
     } from '@/utils/permission'
-    import { mapActions, mapGetters, mapState } from 'vuex'
+    import { mapGetters, mapState } from 'vuex'
     import PipelineBreadCrumb from './PipelineBreadCrumb'
     export default {
         components: {
@@ -84,7 +65,7 @@
             }
         },
         computed: {
-            ...mapState('pipelines', ['executeStep', 'executeStatus']),
+            ...mapState('pipelines', ['executeStatus']),
             ...mapGetters({
                 isEditing: 'atom/isEditing',
                 canManualStartup: 'pipelines/canManualStartup'
@@ -109,20 +90,6 @@
             },
             canExecute () {
                 return this.pipelineInfo?.permissions.canExecute ?? true
-            },
-            executeSteps () {
-                return [
-                    {
-                        title: this.$t('paramFill'),
-                        id: 'params',
-                        icon: 1
-                    },
-                    {
-                        title: this.$t('stepPreview'),
-                        id: 'optional',
-                        icon: 2
-                    }
-                ]
             }
         },
         watch: {
@@ -144,7 +111,6 @@
             bus.$off(UPDATE_PREVIEW_PIPELINE_NAME, this.updatePipelineName)
         },
         methods: {
-            ...mapActions('pipelines', ['setExecuteStep']),
             updatePipelineName (name) {
                 this.pipelineName = name
             },
@@ -152,23 +118,7 @@
                 bus.$emit('start-execute')
             },
             goBack () {
-                this.$router.go(-1)
-            },
-            beforeSwitchStep () {
-                return new Promise((resolve, reject) => {
-                    if (this.executeStep === 1) {
-                        bus.$emit('validate-execute-param-form', resolve)
-                    } else {
-                        resolve(true)
-                    }
-                })
-            },
-            async switchExecStep (step) {
-                const result = await this.beforeSwitchStep(step)
-                this.paramsValid = result
-
-                if (!result) return
-                this.setExecuteStep(step.icon)
+                this.$router.back()
             }
         }
     }
