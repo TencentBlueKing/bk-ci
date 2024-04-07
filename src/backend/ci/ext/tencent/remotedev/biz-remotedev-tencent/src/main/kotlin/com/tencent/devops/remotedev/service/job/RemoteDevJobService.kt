@@ -181,7 +181,7 @@ class RemoteDevJobService @Autowired constructor(
                     jobSchemaId = record.jobId,
                     jobSchemaParam = param
                 )
-                remoteDevActionService.startPipeline(id, param)
+                remoteDevActionService.startPipeline(data.projectId, id, param)
             }
         }
     }
@@ -275,7 +275,7 @@ class RemoteDevJobService @Autowired constructor(
 
             is PipelineParam -> {
                 remoteDevJobExecRecordDao.updateStatus(dslContext, id, JobRecordStatus.RUNNING, null, null, true)
-                remoteDevActionService.startPipeline(id, param)
+                remoteDevActionService.startPipeline(record.projectId, id, param)
             }
         }
     }
