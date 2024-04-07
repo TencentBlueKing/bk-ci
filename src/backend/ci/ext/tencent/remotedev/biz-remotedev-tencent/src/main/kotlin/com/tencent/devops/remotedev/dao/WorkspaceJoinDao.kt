@@ -26,7 +26,6 @@ import org.jooq.Record
 import org.jooq.RecordMapper
 import org.jooq.SelectConditionStep
 import org.jooq.SelectJoinStep
-import org.jooq.impl.TableImpl
 import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
 
@@ -309,42 +308,6 @@ class WorkspaceJoinDao {
         return this
     }
 
-    private fun joinTablesAndItems(
-        conditions: MutableList<Condition>,
-        search: WorkspaceSearch
-    ): List<TableImpl<*>> {
-        var offset = 0
-        val result = mutableListOf<TableImpl<*>>()
-        result.add(TWorkspace.T_WORKSPACE)
-        if (!search.ips.isNullOrEmpty() || !search.zoneShortName.isNullOrEmpty()) {
-            result.add(TWorkspaceDetail.T_WORKSPACE_DETAIL)
-            conditions.add(offset, TWorkspace.T_WORKSPACE.NAME.eq(TWorkspaceDetail.T_WORKSPACE_DETAIL.WORKSPACE_NAME))
-            offset++
-        }
-        if (!search.size.isNullOrEmpty()) {
-            result.add(TWorkspaceWindows.T_WORKSPACE_WINDOWS)
-            result.add(TWindowsResourceType.T_WINDOWS_RESOURCE_TYPE)
-            conditions.add(offset, TWorkspace.T_WORKSPACE.NAME.eq(TWorkspaceWindows.T_WORKSPACE_WINDOWS.WORKSPACE_NAME))
-            offset++
-            conditions.add(
-                offset,
-                TWorkspaceWindows.T_WORKSPACE_WINDOWS.WIN_CONFIG_ID.eq(
-                    TWindowsResourceType.T_WINDOWS_RESOURCE_TYPE.ID.cast(Int::class.java)
-                )
-            )
-            offset++
-        }
-        if (!search.expertSupId.isNullOrEmpty()) {
-            result.add(TRemotedevExpertSupport.T_REMOTEDEV_EXPERT_SUPPORT)
-            conditions.add(
-                offset,
-                TWorkspace.T_WORKSPACE.NAME.eq(TRemotedevExpertSupport.T_REMOTEDEV_EXPERT_SUPPORT.WORKSPACE_NAME)
-            )
-        }
-
-        return result
-    }
-
     fun fetchProjectFromUser(
         dslContext: DSLContext,
         userId: String
@@ -471,6 +434,46 @@ class WorkspaceJoinDao {
                     TWindowsResourceType.T_WINDOWS_RESOURCE_TYPE.ID.cast(Int::class.java)
                 )
             ).fetch().map { it["SIZE"].toString() }.toSet()
+    }
+
+    fun fetchIp(
+        dslContext: DSLContext,
+        projectId: String,
+        size: String?,
+        owners: Set<String>?
+    ): Set<String> {
+        val tables = mutableListOf(TWorkspace.T_WORKSPACE, TWorkspaceWindows.T_WORKSPACE_WINDOWS)
+        if (size.isNullOrEmpty()) {
+            tables.add(TWindowsResourceType.T_WINDOWS_RESOURCE_TYPE)
+        }
+        if (!owners.isNullOrEmpty()) {
+            tables.add(TWorkspaceShared.T_WORKSPACE_SHARED)
+        }
+        val dsl = dslContext.select(TWorkspaceWindows.T_WORKSPACE_WINDOWS.HOST_IP).from(tables)
+            .where(TWorkspace.T_WORKSPACE.PROJECT_ID.eq(projectId)).and(
+                TWorkspace.T_WORKSPACE.STATUS.notIn(
+                    WorkspaceStatus.PREPARING.ordinal,
+                    WorkspaceStatus.DELETED.ordinal,
+                    WorkspaceStatus.DELIVERING_FAILED.ordinal
+                )
+            ).and(TWorkspace.T_WORKSPACE.NAME.eq(TWorkspaceWindows.T_WORKSPACE_WINDOWS.WORKSPACE_NAME))
+        if (!size.isNullOrBlank()) {
+            dsl.and(
+                TWorkspaceWindows.T_WORKSPACE_WINDOWS.WIN_CONFIG_ID.eq(
+                    TWindowsResourceType.T_WINDOWS_RESOURCE_TYPE.ID.cast(Int::class.java)
+                ).and(TWindowsResourceType.T_WINDOWS_RESOURCE_TYPE.SIZE.eq(size))
+            )
+        }
+        if (!owners.isNullOrEmpty()) {
+            dsl.and(
+                TWorkspace.T_WORKSPACE.OWNER_TYPE.eq(WorkspaceOwnerType.PERSONAL.name)
+                    .and(TWorkspace.T_WORKSPACE.CREATOR.`in`(owners))
+            ).or(
+                TWorkspaceShared.T_WORKSPACE_SHARED.ASSIGN_TYPE.eq(WorkspaceShared.AssignType.OWNER.name)
+                    .and(TWorkspaceShared.T_WORKSPACE_SHARED.SHARED_USER.`in`(owners))
+            )
+        }
+        return dsl.fetch().map { it["HOST_IP"] as String }.toSet()
     }
 
     companion object {
