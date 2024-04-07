@@ -30,7 +30,6 @@ package com.tencent.devops.environment.service.job
 import com.tencent.devops.environment.constant.T_NODE_NODE_IP
 import com.tencent.devops.environment.dao.job.CmdbNodeDao
 import com.tencent.devops.environment.dao.job.JobDao
-import com.tencent.devops.environment.permission.EnvironmentPermissionService
 import com.tencent.devops.environment.pojo.job.jobreq.Host
 import org.jooq.DSLContext
 import org.jooq.Record5
@@ -43,7 +42,6 @@ class PermissionManageService @Autowired constructor(
     private val dslContext: DSLContext,
     private val jobDao: JobDao,
     private val cmdbNodeDao: CmdbNodeDao,
-    private val environmentPermissionService: EnvironmentPermissionService,
     private val tencentQueryFromCmdbService: TencentQueryFromCmdbService
 ) {
     companion object {
