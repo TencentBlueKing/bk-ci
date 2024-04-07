@@ -15,8 +15,7 @@ Popover,
 } from 'bkui-vue';
 import {
 ref,
-watch,
-computed,
+watch
 } from 'vue';
 import { useI18n } from 'vue-i18n';
 import {
@@ -43,10 +42,7 @@ const exceptionObj = ref({
 });
 const showFailedEnableDialog = ref(false);
 const showDisableProjectDialog = ref(false);
-const isRbac = computed(() => {
-  return authProvider.value === 'rbac'
-})
-const authProvider = ref(window.top.BK_CI_AUTH_PROVIDER || '');
+
 const projectList: any[] = [];
 const fetchProjectData = async () => {
   isLoading.value = true;
@@ -455,7 +451,7 @@ onMounted(async () => {
                     <div>{{ projectData.afterAuthSecrecy ? t('保密项目') : t('私有项目') }}</div>
                   </div>
                 </bk-form-item>
-                <bk-form-item v-if="isRbac" :label="t('项目最大可授权人员范围')" property="subjectScopes">
+                <bk-form-item :label="t('项目最大可授权人员范围')" property="subjectScopes">
                   <span class="item-value">
                     <bk-tag
                       v-for="(subjectScope, index) in projectData.subjectScopes"

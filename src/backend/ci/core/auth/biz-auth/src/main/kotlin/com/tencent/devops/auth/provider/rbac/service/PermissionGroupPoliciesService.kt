@@ -101,7 +101,7 @@ class PermissionGroupPoliciesService(
             params = arrayOf(groupId.toString()),
             defaultMessage = "group $groupId not exist"
         )
-        val groupConfigInfo = authResourceGroupConfigDao.get(
+        val groupConfigInfo = authResourceGroupConfigDao.getByGroupCode(
             dslContext = dslContext,
             resourceType = resourceType,
             groupCode = groupInfo.groupCode
