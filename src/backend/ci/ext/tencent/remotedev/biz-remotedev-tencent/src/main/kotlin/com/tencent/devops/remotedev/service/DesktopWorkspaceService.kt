@@ -65,13 +65,15 @@ class DesktopWorkspaceService @Autowired constructor(
                         assignType = WorkspaceShared.AssignType.OWNER
                     ).firstOrNull()?.sharedUser
                     kotlin.runCatching {
+                        val props = workspaceCommon.genWorkspaceCCInfo(
+                            projectId = ws.projectId,
+                            workspaceName = ws.displayName.ifBlank { workspaceName },
+                            owner = owner
+                        )
+                        logger.info("start update $workspaceName|$props")
                         workspaceCommon.updateHostMonitor(
                             workspaceName = workspaceName,
-                            props = workspaceCommon.genWorkspaceCCInfo(
-                                projectId = ws.projectId,
-                                workspaceName = ws.displayName.ifBlank { workspaceName },
-                                owner = owner
-                            ),
+                            props = props,
                             type = ws.workspaceSystemType
                         )
                     }.onFailure {
