@@ -115,9 +115,9 @@ class TGitTagPushTriggerHandler : CodeWebhookTriggerHandler<GitTagPushEvent> {
         }
         return I18Variable(
             code = if (event.isDeleteTag()) {
-                WebhookI18nConstants.TGIT_TAG_PUSH_EVENT_DESC
-            } else {
                 WebhookI18nConstants.TGIT_TAG_DELETE_EVENT_DESC
+            } else {
+                WebhookI18nConstants.TGIT_TAG_PUSH_EVENT_DESC
             },
             params = listOf(
                 "$createFrom",
