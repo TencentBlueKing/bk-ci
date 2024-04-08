@@ -98,11 +98,11 @@ class ThirdPartyDispatchService @Autowired constructor(
                     return
                 }
                 // 只要是复用就先拿一下上下文，可能存在同stage但又先后的情况
-                val agentId = client.get(ServiceVarResource::class).getContextVar(
+                val agentId = client.get(ServiceVarResource::class).getBuildVar(
                     projectId = dispatchMessage.event.projectId,
                     pipelineId = dispatchMessage.event.pipelineId,
                     buildId = dispatchMessage.event.buildId,
-                    contextName = AgentReuseMutex.genAgentContextKey(dispatchType.displayName)
+                    varName = AgentReuseMutex.genAgentContextKey(dispatchType.displayName)
                 ).data?.get(AgentReuseMutex.genAgentContextKey(dispatchType.displayName))
 
                 // 是复用，但是和被复用对象在同一stage且先后顺序未知
@@ -133,11 +133,11 @@ class ThirdPartyDispatchService @Autowired constructor(
                     return
                 }
                 // 只要是复用就先拿一下上下文，可能存在同stage但又先后的情况
-                val agentId = client.get(ServiceVarResource::class).getContextVar(
+                val agentId = client.get(ServiceVarResource::class).getBuildVar(
                     projectId = dispatchMessage.event.projectId,
                     pipelineId = dispatchMessage.event.pipelineId,
                     buildId = dispatchMessage.event.buildId,
-                    contextName = AgentReuseMutex.genAgentContextKey(dispatchType.envName)
+                    varName = AgentReuseMutex.genAgentContextKey(dispatchType.envName)
                 ).data?.get(AgentReuseMutex.genAgentContextKey(dispatchType.envName))
 
                 // 是复用，但是和被复用对象在同一stage且先后顺序未知
