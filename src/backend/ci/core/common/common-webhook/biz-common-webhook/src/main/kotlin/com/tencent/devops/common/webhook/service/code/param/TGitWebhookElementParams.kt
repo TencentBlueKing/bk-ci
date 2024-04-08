@@ -28,6 +28,7 @@
 package com.tencent.devops.common.webhook.service.code.param
 
 import com.tencent.devops.common.api.util.EnvUtils
+import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGitWebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeTGitWebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeEventType
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeType
@@ -69,6 +70,36 @@ class TGitWebhookElementParams : ScmWebhookElementParams<CodeTGitWebHookTriggerE
             }
             params.block = isBlock(element)
             params.branchName = EnvUtils.parseEnv(branchName!!, variables)
+            when {
+                // action上线后【流水线配置层面】兼容存量merge_request_accept和push事件
+                eventType == CodeEventType.MERGE_REQUEST_ACCEPT && includeMrAction == null -> {
+                    params.includeMrAction = CodeGitWebHookTriggerElement.MERGE_ACTION_MERGE
+                }
+
+                eventType == CodeEventType.MERGE_REQUEST && includeMrAction == null -> {
+                    params.includeMrAction = joinToString(
+                        listOf(
+                            CodeGitWebHookTriggerElement.MERGE_ACTION_OPEN,
+                            CodeGitWebHookTriggerElement.MERGE_ACTION_REOPEN,
+                            CodeGitWebHookTriggerElement.MERGE_ACTION_PUSH_UPDATE
+                        )
+                    )
+                }
+
+                eventType == CodeEventType.PUSH && includePushAction == null -> {
+                    params.includePushAction = joinToString(
+                        listOf(
+                            CodeGitWebHookTriggerElement.PUSH_ACTION_CREATE_BRANCH,
+                            CodeGitWebHookTriggerElement.PUSH_ACTION_PUSH_FILE
+                        )
+                    )
+                }
+
+                else -> {
+                    params.includeMrAction = joinToString(includeMrAction)
+                    params.includePushAction = joinToString(includePushAction)
+                }
+            }
             // 兼容存量merge_request_accept事件
             params.eventType = if (eventType == CodeEventType.MERGE_REQUEST_ACCEPT) {
                 CodeEventType.MERGE_REQUEST
