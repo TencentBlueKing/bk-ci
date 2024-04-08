@@ -909,7 +909,7 @@ class PipelineRepositoryService constructor(
                 val transactionContext = DSL.using(configuration)
                 var pipelineVersion: Int? = null
                 var triggerVersion: Int? = null
-                val settingVersion = setting?.version ?: 1
+                val settingVersion = (setting?.version ?: 1).coerceAtLeast(1)
                 val releaseResource = pipelineResourceDao.getReleaseVersionResource(
                     transactionContext, projectId, pipelineId
                 ) ?: throw ErrorCodeException(
@@ -1056,12 +1056,12 @@ class PipelineRepositoryService constructor(
                         )
                         // 流水线版本兼容历史数据，至少取发布版本的版本号
                         pipelineVersion = PipelineVersionUtils.getPipelineVersion(
-                            currVersion = maxOf(releaseResource.version, releaseResource.pipelineVersion ?: 1),
+                            currVersion = releaseResource.pipelineVersion ?: releaseResource.version,
                             originModel = releaseResource.model,
                             newModel = model
                         ).coerceAtLeast(1)
                         triggerVersion = PipelineVersionUtils.getTriggerVersion(
-                            currVersion = releaseResource.triggerVersion ?: 1,
+                            currVersion = releaseResource.triggerVersion ?: 0,
                             originModel = releaseResource.model,
                             newModel = model
                         ).coerceAtLeast(1)
