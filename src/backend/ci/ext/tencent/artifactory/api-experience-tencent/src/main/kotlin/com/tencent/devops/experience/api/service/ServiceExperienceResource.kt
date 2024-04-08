@@ -27,6 +27,7 @@
 
 package com.tencent.devops.experience.api.service
 
+import com.tencent.devops.common.api.annotation.ServiceInterface
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
@@ -55,6 +56,7 @@ import javax.ws.rs.core.MediaType
 @Path("/service/experiences")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
+@ServiceInterface("artifactory")
 interface ServiceExperienceResource {
     @Operation(summary = "创建体验")
     @Path("/{projectId}/")

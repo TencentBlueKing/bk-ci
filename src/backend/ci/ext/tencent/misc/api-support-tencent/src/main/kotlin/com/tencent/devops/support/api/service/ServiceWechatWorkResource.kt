@@ -27,6 +27,7 @@
 
 package com.tencent.devops.support.api.service
 
+import com.tencent.devops.common.api.annotation.ServiceInterface
 import io.swagger.v3.oas.annotations.tags.Tag
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
@@ -53,6 +54,7 @@ import javax.ws.rs.QueryParam
 @Path("/service/wechat-work")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
+@ServiceInterface("misc")
 interface ServiceWechatWorkResource {
     @Operation(summary = "发送企业微信会话的文本信息")
     @POST

@@ -27,6 +27,7 @@
 
 package com.tencent.devops.support.api.service
 
+import com.tencent.devops.common.api.annotation.ServiceInterface
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.support.model.approval.CompleteMoaWorkItemRequest
@@ -47,6 +48,7 @@ import javax.ws.rs.core.MediaType
 @Path("/service/message/approve")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
+@ServiceInterface("misc")
 interface ServiceMessageApproveResource {
 
     @Operation(summary = "创建MOA审批单")

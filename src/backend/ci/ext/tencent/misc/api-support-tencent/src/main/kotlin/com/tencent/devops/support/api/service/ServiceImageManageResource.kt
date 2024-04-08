@@ -27,6 +27,7 @@
 
 package com.tencent.devops.support.api.service
 
+import com.tencent.devops.common.api.annotation.ServiceInterface
 import com.tencent.devops.common.api.pojo.Result
 import io.swagger.v3.oas.annotations.tags.Tag
 import io.swagger.v3.oas.annotations.Operation
@@ -42,6 +43,7 @@ import javax.ws.rs.core.MediaType
 @Path("/service/image/manage")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
+@ServiceInterface("misc")
 interface ServiceImageManageResource {
 
     @Operation(summary = "压缩图片")

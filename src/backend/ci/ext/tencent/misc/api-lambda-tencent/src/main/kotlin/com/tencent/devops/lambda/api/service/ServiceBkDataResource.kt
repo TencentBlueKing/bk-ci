@@ -26,6 +26,7 @@
  */
 package com.tencent.devops.lambda.api.service
 
+import com.tencent.devops.common.api.annotation.ServiceInterface
 import com.tencent.devops.lambda.pojo.bkdata.BkDataQueryData
 import com.tencent.devops.lambda.pojo.bkdata.BkDataQueryParam
 import com.tencent.devops.lambda.pojo.bkdata.BkDataResult
@@ -42,6 +43,7 @@ import javax.ws.rs.core.MediaType
 @Path("/service/lambda/bkdata")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
+@ServiceInterface("misc")
 interface ServiceBkDataResource {
 
     @Operation(summary = "查询数据平台数据")

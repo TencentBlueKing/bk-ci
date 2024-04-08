@@ -2,6 +2,7 @@ package com.tencent.devops.experience.api.service
 
 import com.tencent.bk.sdk.iam.dto.callback.request.CallbackRequestDTO
 import com.tencent.bk.sdk.iam.dto.callback.response.CallbackBaseResponseDTO
+import com.tencent.devops.common.api.annotation.ServiceInterface
 import com.tencent.devops.common.api.auth.AUTH_HEADER_IAM_TOKEN
 import io.swagger.v3.oas.annotations.tags.Tag
 import io.swagger.v3.oas.annotations.Operation
@@ -17,6 +18,7 @@ import javax.ws.rs.core.MediaType
 @Path("/open/experience/callback")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
+@ServiceInterface("artifactory")
 interface ServiceExperienceAuthResource {
     @POST
     @Path("/task")
