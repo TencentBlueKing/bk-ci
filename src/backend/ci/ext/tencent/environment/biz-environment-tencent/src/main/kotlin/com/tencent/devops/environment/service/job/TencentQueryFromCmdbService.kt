@@ -100,8 +100,8 @@ class TencentQueryFromCmdbService {
                     ipNotInCmdb.joinToString(","),
                     unauthorisedIpList.joinToString(","),
                     userId,
-                    nodeIpToNodeMap.entries.joinToString(separator = ", ") { (key, value) ->
-                        "$key - ${value.get(T_NODE_CREATED_USER) as? String}"
+                    unauthorisedIpList.joinToString(", ") {
+                        it + " - " + nodeIpToNodeMap[it]?.get(T_NODE_CREATED_USER) as? String
                     }
                 )
             )
