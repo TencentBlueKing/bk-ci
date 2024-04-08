@@ -280,19 +280,21 @@ data class AgentReuseMutexTree(
         }
 
         fullModel.stages.forEachIndexed nextStage@{ index, stage ->
-            stage.containers.forEach container@{ container ->
-                if (!treeMap.containsKey(container.jobId) || treeMap[container.jobId]?.second != true) {
-                    return@container
-                }
-                val tm = treeMap[container.jobId]!!.first
-                if (tm.type != AgentReuseMutexType.AGENT_DEP_VAR) {
+            stage.containers.filter { it is VMBuildContainer && it.dispatchType is ThirdPartyAgentDispatch }
+                .forEach container@{ container ->
+                    if (!treeMap.containsKey(container.jobId) || treeMap[container.jobId]?.second != true) {
+                        return@container
+                    }
+                    val tm = treeMap[container.jobId]!!.first
+                    if (tm.type == AgentReuseMutexType.AGENT_DEP_VAR) {
+                        return@container
+                    }
                     ((container as VMBuildContainer).dispatchType as ThirdPartyAgentDispatch).reusedInfo =
                         ReusedInfo(
                             tm.agentOrEnvId ?: return@container,
                             tm.type.toAgentType() ?: return@container
                         )
                 }
-            }
             if (index == maxStageIndex) {
                 return
             }

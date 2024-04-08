@@ -303,7 +303,7 @@ object ProcessMessageCode {
 
     const val ERROR_AGENT_REUSE_MUTEX_JOB_NULL = "2101232" // {0}使用流水线构建机复用互斥组需要声明具体的JobId，不能为空
     const val ERROR_AGENT_REUSE_MUTEX_DEP_NULL_NODE = "2101233" // 流水线构建机复用互斥组节点 {0} 复用的 {1} 不存在
-    // 在同一Stage {0} 下，构建机复用互斥组节点 {1} 与被复用的 {2} 节点调度类型不同，AgentId和AgentEnv不能互相复用
+    // 在 {0} 下，构建机复用互斥组节点 {1} 与被复用的 {2} 节点调度类型不同，AgentId和AgentEnv不能互相复用
     const val ERROR_AGENT_REUSE_MUTEX_DEP_ERROR = "2101234"
 
     const val BK_SUCCESSFULLY_DISTRIBUTED = "bkSuccessfullyDistributed" // 跨项目构件分发成功，共分发了{0}个文件

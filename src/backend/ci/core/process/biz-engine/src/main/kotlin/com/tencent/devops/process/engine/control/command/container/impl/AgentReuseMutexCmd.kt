@@ -59,7 +59,7 @@ class AgentReuseMutexCmd @Autowired constructor(
      * 这种先拿取复用的JobId看有没有，没有就按root节点的逻辑走
      */
     private fun doExecute(commandContext: ContainerContext) {
-        val mutex = commandContext.container.controlOption.agentReuseMutex!!
+        var mutex = commandContext.container.controlOption.agentReuseMutex!!
         if (!mutex.type.needEngineLock()) {
             commandContext.cmdFlowState = CmdFlowState.CONTINUE
             return
@@ -76,7 +76,7 @@ class AgentReuseMutexCmd @Autowired constructor(
             return agentIdNullError(commandContext, mutex, null)
         }
         // 对存在变量的Agent做替换
-        decorateMutex(mutex, commandContext.variables)
+        mutex = decorateMutex(mutex, commandContext.variables)
         when (mutex.type) {
             AgentReuseMutexType.AGENT_ID -> {
                 acquireMutex(commandContext, mutex)
@@ -357,7 +357,8 @@ class AgentReuseMutexCmd @Autowired constructor(
                 }
                 ContainerMutexStatus.WAITING
             }
-        } else { // todo此处存在并发问题，假设capacity只有1个, 两个并发都会同时满足queueSize = 0,导入入队，但问题不大，暂不解决
+        } else {
+            // 此处存在并发问题，假设capacity只有1个, 两个并发都会同时满足queueSize = 0,导入入队，但问题不大，暂不解决
             // 排队队列为0的时候，不做排队
             // 还没有在队列中，则判断队列的数量,如果超过了则排队失败,没有则进入队列.
             if (mutex.queue == 0 || queueSize >= mutex.queue) {
