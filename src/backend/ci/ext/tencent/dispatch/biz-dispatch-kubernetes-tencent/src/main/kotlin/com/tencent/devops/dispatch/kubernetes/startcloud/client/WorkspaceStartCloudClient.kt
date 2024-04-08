@@ -10,8 +10,6 @@ import com.tencent.devops.dispatch.kubernetes.dao.DispatchWorkspaceOpHisDao
 import com.tencent.devops.dispatch.kubernetes.pojo.EnvironmentAction
 import com.tencent.devops.dispatch.kubernetes.pojo.EnvironmentStatus
 import com.tencent.devops.dispatch.kubernetes.pojo.EnvironmentStatusRsp
-import com.tencent.devops.remotedev.pojo.image.ListVmImagesResp
-import com.tencent.devops.remotedev.pojo.image.StandardVmImage
 import com.tencent.devops.dispatch.kubernetes.pojo.remotedev.EnvironmentResourceData
 import com.tencent.devops.dispatch.kubernetes.pojo.remotedev.ResourceVmReq
 import com.tencent.devops.dispatch.kubernetes.pojo.remotedev.ResourceVmResp
@@ -32,7 +30,10 @@ import com.tencent.devops.dispatch.kubernetes.startcloud.pojo.EnvironmentUnShare
 import com.tencent.devops.dispatch.kubernetes.startcloud.pojo.EnvironmentUserCreate
 import com.tencent.devops.dispatch.kubernetes.startcloud.pojo.ListCgsResp
 import com.tencent.devops.dispatch.kubernetes.startcloud.pojo.ListCgsRespData
-import com.tencent.devops.dispatch.kubernetes.startcloud.pojo.Page
+import com.tencent.devops.remotedev.pojo.image.ListVmImagesResp
+import com.tencent.devops.remotedev.pojo.image.StandardVmImage
+import java.net.SocketTimeoutException
+import java.util.UUID
 import okhttp3.Headers.Companion.toHeaders
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.Request
@@ -43,8 +44,6 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Component
-import java.net.SocketTimeoutException
-import java.util.UUID
 
 @Suppress("ALL")
 @Component
@@ -117,7 +116,7 @@ class WorkspaceStartCloudClient @Autowired constructor(
                         ErrorCodeEnum.CREATE_ENVIRONMENT_INTERFACE_FAIL.errorCode,
                         ErrorCodeEnum.CREATE_ENVIRONMENT_INTERFACE_FAIL.formatErrorMessage,
                         " ${environment.basicBody.zoneId}地区${environment.basicBody.machineType}" +
-                                "型云桌面资源不足(${environmentRsp.code})"
+                            "型云桌面资源不足(${environmentRsp.code})"
                     )
 
                     else -> throw BuildFailureException(
@@ -169,7 +168,7 @@ class WorkspaceStartCloudClient @Autowired constructor(
                         ErrorCodeEnum.ENVIRONMENT_STATUS_INTERFACE_ERROR.errorCode,
                         ErrorCodeEnum.ENVIRONMENT_STATUS_INTERFACE_ERROR.formatErrorMessage,
                         " 获取locked vm接口返回异常:" +
-                                "${environmentRsp.code}-${environmentRsp.message}"
+                            "${environmentRsp.code}-${environmentRsp.message}"
                     )
                 }
             }
@@ -220,7 +219,7 @@ class WorkspaceStartCloudClient @Autowired constructor(
                         ErrorCodeEnum.CREATE_ENVIRONMENT_INTERFACE_FAIL.errorCode,
                         ErrorCodeEnum.CREATE_ENVIRONMENT_INTERFACE_FAIL.formatErrorMessage,
                         " 创建user接口返回失败:" +
-                                "${environmentRsp.code}-${environmentRsp.message}"
+                            "${environmentRsp.code}-${environmentRsp.message}"
                     )
 
                     else -> throw BuildFailureException(
@@ -228,7 +227,7 @@ class WorkspaceStartCloudClient @Autowired constructor(
                         ErrorCodeEnum.CREATE_ENVIRONMENT_INTERFACE_ERROR.errorCode,
                         ErrorCodeEnum.CREATE_ENVIRONMENT_INTERFACE_ERROR.formatErrorMessage,
                         " 创建user接口返回异常:" +
-                                "${environmentRsp.code}-${environmentRsp.message}"
+                            "${environmentRsp.code}-${environmentRsp.message}"
                     )
                 }
             }
@@ -279,7 +278,7 @@ class WorkspaceStartCloudClient @Autowired constructor(
                         ErrorCodeEnum.CREATE_ENVIRONMENT_INTERFACE_ERROR.errorCode,
                         ErrorCodeEnum.CREATE_ENVIRONMENT_INTERFACE_ERROR.formatErrorMessage,
                         " 分享云桌面接口返回异常:" +
-                                "${environmentRsp.code}-${environmentRsp.message}"
+                            "${environmentRsp.code}-${environmentRsp.message}"
                     )
                 }
             }
@@ -329,7 +328,7 @@ class WorkspaceStartCloudClient @Autowired constructor(
                         ErrorCodeEnum.CREATE_ENVIRONMENT_INTERFACE_ERROR.errorCode,
                         ErrorCodeEnum.CREATE_ENVIRONMENT_INTERFACE_ERROR.formatErrorMessage,
                         " 取消分享云桌面接口返回异常:" +
-                                "${environmentRsp.code}-${environmentRsp.message}"
+                            "${environmentRsp.code}-${environmentRsp.message}"
                     )
                 }
             }
@@ -648,6 +647,7 @@ class WorkspaceStartCloudClient @Autowired constructor(
                         }
                         return resp.data
                     }
+
                     else -> throw BuildFailureException(
                         ErrorCodeEnum.LIST_CGS_ERROR.errorType,
                         ErrorCodeEnum.LIST_CGS_ERROR.errorCode,

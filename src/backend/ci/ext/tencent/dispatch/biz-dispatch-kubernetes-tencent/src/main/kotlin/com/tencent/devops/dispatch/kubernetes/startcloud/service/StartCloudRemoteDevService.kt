@@ -96,8 +96,6 @@ class StartCloudRemoteDevService @Autowired constructor(
             return CreateWorkspaceRes(event.devFile.environmentUid!!, event.devFile.uid!!, 0, "")
         }
 
-
-
         kotlin.runCatching {
             workspaceClient.createUser(
                 userId,
