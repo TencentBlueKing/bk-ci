@@ -29,8 +29,8 @@ package com.tencent.devops.store.pojo.common.publication
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(title = "组件包环境信息请求报文体")
-data class StorePkgEnvRequest(
+@Schema(title = "组件包环境信息")
+data class StorePkgEnvInfo(
     @get:Schema(title = "包名", required = false)
     var pkgName: String? = "",
     @get:Schema(title = "安装包位于本地的路径", required = false)
