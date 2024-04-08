@@ -11,6 +11,7 @@
                 }"
                 :shortcuts="shortcuts"
                 :key="repoId"
+                @clear="handleClearDaterange"
                 @change="handleChangeDaterange"
                 @pick-success="handlePickSuccess"
             >
@@ -354,11 +355,16 @@
                 this.getListData()
             },
 
+            handleClearDaterange () {
+                this.daterange = ['', '']
+            },
+            
             handleChangeDaterange (date, type) {
                 const startTime = new Date(date[0]).getTime() || ''
                 const endTime = new Date(date[1]).getTime() || ''
                 this.daterangeCache = [startTime, endTime]
             },
+            
             handlePickSuccess () {
                 this.daterange = this.daterangeCache
             },
