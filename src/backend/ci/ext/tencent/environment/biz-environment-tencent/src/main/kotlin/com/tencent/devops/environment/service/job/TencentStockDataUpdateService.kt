@@ -125,17 +125,20 @@ class TencentStockDataUpdateService @Autowired constructor(
     }
 
     private fun checkDeployNodesIsInCmdb() {
+        val startTime = LocalDateTime.now()
         val countNodeInCmdb = cmdbNodeDao.countDeployNodes(dslContext)
         logger.info("Node(s) count in cmdb: $countNodeInCmdb")
         countNodeInCmdb.takeIf { it > 0 }.run {
             val totalPages = PageUtil.calTotalPage(DEFAULT_PAGE_SIZE, countNodeInCmdb.toLong())
-            val startTime = LocalDateTime.now()
+            val time1 = LocalDateTime.now()
             for (page in 1..totalPages) {
                 checkDeployNodesIsInCmdbByPage(page)
             }
             logger.info(
                 "[checkDeployNodesIsInCmdb]total time: " +
-                    "${ComputeTimeUtils.calculateDuration(startTime, LocalDateTime.now())}s"
+                    "${ComputeTimeUtils.calculateDuration(startTime, LocalDateTime.now())}s, " +
+                    "check deploy nodes are in cmdb time: " +
+                    "${ComputeTimeUtils.calculateDuration(time1, LocalDateTime.now())}s"
             )
         }
         // 2.2 节点在cmdb中，查询CC: 在CC-改为NORMAL，不在CC-改为NOT_IN_CC
@@ -163,17 +166,20 @@ class TencentStockDataUpdateService @Autowired constructor(
      * cron：每小时执行一次。
      */
     private fun checkDeployNodesIsInCC() {
+        val startTime = LocalDateTime.now()
         val countHostIdNotNullRecord = cmdbNodeDao.countDeployNodesInCmdb(dslContext)
         logger.info("Check deploy node(s) is in CC, node(s) count:$countHostIdNotNullRecord.")
         countHostIdNotNullRecord.takeIf { it > 0 }.run {
             val totalPagesHostIdNotNull = PageUtil.calTotalPage(DEFAULT_PAGE_SIZE, countHostIdNotNullRecord.toLong())
-            val startTime = LocalDateTime.now()
+            val time1 = LocalDateTime.now()
             for (pageHostIdNotNull in 1..totalPagesHostIdNotNull) {
                 checkDeployNodesIsInCCByPage(pageHostIdNotNull)
             }
             logger.info(
                 "[checkDeployNodesIsInCC]total time: " +
-                    "${ComputeTimeUtils.calculateDuration(startTime, LocalDateTime.now())}s"
+                    "${ComputeTimeUtils.calculateDuration(startTime, LocalDateTime.now())}s, " +
+                    "check deploy nodes are in cc time: " +
+                    "${ComputeTimeUtils.calculateDuration(time1, LocalDateTime.now())}s"
             )
         }
     }
