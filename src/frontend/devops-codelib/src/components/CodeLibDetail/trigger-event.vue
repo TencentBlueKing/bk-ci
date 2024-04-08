@@ -58,6 +58,7 @@
         </section>
         <EmptyTableStatus
             v-else
+            v-bkloading="{ isLoading: pageLoading }"
             :type="isSearch ? 'search-empty' : 'empty'"
             @clear="resetFilter"
         />
@@ -370,6 +371,7 @@
             },
 
             async handleRefresh () {
+                this.page = 1
                 this.pageLoading = true
                 this.hasLoadEnd = false
                 await this.getListData()
