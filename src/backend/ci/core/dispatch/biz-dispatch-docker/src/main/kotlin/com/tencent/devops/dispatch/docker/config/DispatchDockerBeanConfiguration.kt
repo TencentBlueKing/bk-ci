@@ -47,7 +47,7 @@ import org.springframework.core.Ordered
 @Suppress("ALL")
 @Configuration
 @ConditionalOnWebApplication
-@DependsOn(value = ["DispatchDslContextConfiguration"])
+@DependsOn(value = ["dispatchDslContextConfiguration"])
 @AutoConfigureOrder(Ordered.LOWEST_PRECEDENCE)
 class DispatchDockerBeanConfiguration @Autowired constructor(
     private val dslContext: DSLContext
