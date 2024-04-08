@@ -381,7 +381,7 @@
                 })
                 this.channelList.push({
                     id: 'others',
-                    name: this.$t('environment.其他')
+                    name: this.$t('environment.IDC直连区域')
                 })
             },
 
