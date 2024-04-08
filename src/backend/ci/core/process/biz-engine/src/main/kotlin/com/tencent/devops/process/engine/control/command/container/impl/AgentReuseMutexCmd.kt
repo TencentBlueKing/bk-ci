@@ -409,7 +409,7 @@ class AgentReuseMutexCmd @Autowired constructor(
         runtimeAgentOrEnvId: String
     ) {
         val queueKey = AgentReuseMutex.genAgentReuseMutexQueueKey(projectId, runtimeAgentOrEnvId)
-        redisOperation.hset(queueKey, runtimeAgentOrEnvId, LocalDateTime.now().timestamp().toString())
+        redisOperation.hset(queueKey, buildId, LocalDateTime.now().timestamp().toString())
         containerBuildRecordService.updateContainerRecord(
             projectId = projectId, pipelineId = pipelineId, buildId = buildId,
             containerId = containerId, executeCount = executeCount,

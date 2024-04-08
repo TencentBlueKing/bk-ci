@@ -414,7 +414,7 @@ class ThirdPartyDispatchService @Autowired constructor(
                 agentHashId = agentId
             ).data
             if (detail == null) {
-                logger.error("inQueue|setContextVar|getAgentDetail $agentId is null")
+                logger.warn("inQueue|setContextVar|getAgentDetail $agentId is null")
                 return
             }
             client.get(ServiceVarResource::class).setContextVar(
@@ -423,7 +423,7 @@ class ThirdPartyDispatchService @Autowired constructor(
                     pipelineId = dispatchMessage.event.pipelineId,
                     buildId = dispatchMessage.event.buildId,
                     contextName = "jobs.${dispatchMessage.event.jobId}.container.node_alias",
-                    contextVal = detail.agentId,
+                    contextVal = detail.displayName,
                     readOnly = true
                 )
             )
@@ -434,7 +434,7 @@ class ThirdPartyDispatchService @Autowired constructor(
                     pipelineId = dispatchMessage.event.pipelineId,
                     buildId = dispatchMessage.event.buildId,
                     contextName = AgentReuseMutex.genAgentContextKey(dispatchMessage.event.jobId!!),
-                    contextVal = detail.displayName,
+                    contextVal = detail.agentId,
                     readOnly = true
                 )
             )
