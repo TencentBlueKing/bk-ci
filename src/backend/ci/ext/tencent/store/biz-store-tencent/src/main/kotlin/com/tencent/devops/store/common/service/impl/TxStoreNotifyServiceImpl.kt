@@ -27,24 +27,50 @@
 
 package com.tencent.devops.store.common.service.impl
 
+import com.tencent.devops.common.api.constant.DEVOPS
+import com.tencent.devops.common.api.constant.NAME
+import com.tencent.devops.common.api.constant.VERSION
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.notify.api.service.ServiceNotifyMessageTemplateResource
 import com.tencent.devops.notify.pojo.SendNotifyMessageTemplateRequest
+import com.tencent.devops.store.common.dao.StoreBaseQueryDao
+import com.tencent.devops.store.common.dao.StoreMemberDao
+import com.tencent.devops.store.common.dao.StoreVersionLogDao
 import com.tencent.devops.store.common.service.StoreNotifyService
+import com.tencent.devops.store.pojo.common.KEY_PUBLISHER
+import com.tencent.devops.store.pojo.common.enums.AuditTypeEnum
+import com.tencent.devops.store.pojo.common.enums.ReleaseTypeEnum
+import com.tencent.devops.store.pojo.common.enums.StoreMemberTypeEnum
+import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
+import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.annotation.Primary
 import org.springframework.stereotype.Service
 
 @Primary
 @Service
-class TxStoreNotifyServiceImpl @Autowired constructor() : StoreNotifyService {
+class TxStoreNotifyServiceImpl @Autowired constructor(
+    private val client: Client,
+    private val dslContext: DSLContext,
+    private val storeBaseQueryDao: StoreBaseQueryDao,
+    private val storeVersionLogDao: StoreVersionLogDao,
+    private val storeMemberDao: StoreMemberDao
+) : StoreNotifyService {
 
-    private val logger = LoggerFactory.getLogger(TxStoreNotifyServiceImpl::class.java)
+    @Value("\${store.storeDetailBaseUrl:#{null}}")
+    private var storeDetailBaseUrl: String = ""
 
-    @Autowired
-    lateinit var client: Client
+    companion object {
+        private val logger = LoggerFactory.getLogger(TxStoreNotifyServiceImpl::class.java)
+        // 组件发布审核通过消息通知模板
+        private const val STORE_RELEASE_AUDIT_PASS_TEMPLATE = "STORE_RELEASE_AUDIT_PASS_TEMPLATE"
+        // 组件发布审核被拒消息通知模板
+        private const val STORE_RELEASE_AUDIT_REFUSE_TEMPLATE = "STORE_RELEASE_AUDIT_REFUSE_TEMPLATE"
+    }
 
     override fun sendNotifyMessage(
         templateCode: String,
@@ -68,5 +94,77 @@ class TxStoreNotifyServiceImpl @Autowired constructor() : StoreNotifyService {
             .sendNotifyMessageByTemplate(sendNotifyMessageTemplateRequest)
         logger.info("sendNotifyResult is:$sendNotifyResult")
         return Result(true)
+    }
+
+    override fun sendStoreReleaseAuditNotifyMessage(storeId: String, auditType: AuditTypeEnum) {
+        val baseRecord = storeBaseQueryDao.getComponentById(dslContext, storeId) ?: return
+        val storeVersionLog = storeVersionLogDao.getStoreVersion(dslContext, storeId) ?: return
+        val storeCode = baseRecord.storeCode
+        val storeType = baseRecord.storeType
+        val name = baseRecord.name
+        val version = baseRecord.version
+        val titleParams = mapOf(
+            NAME to name,
+            VERSION to version
+        )
+        val releaseType = storeVersionLog.releaseType
+        val storeDetailDir = if (storeType == StoreTypeEnum.IDE_ATOM.type.toByte()) {
+            "ide"
+        } else {
+            StoreTypeEnum.getStoreType(storeType.toInt()).lowercase()
+        }
+        val bodyParams = mapOf(
+            NAME to name,
+            VERSION to version,
+            KEY_PUBLISHER to baseRecord.publisher,
+            "releaseType" to if (releaseType != null) I18nUtil.getCodeLanMessage(
+                messageCode = "RELEASE_TYPE_" + ReleaseTypeEnum.getReleaseType(releaseType.toInt())
+            ) else "",
+            "versionDesc" to (storeVersionLog.content ?: ""),
+            "nameInBody" to name,
+            "statusMsg" to baseRecord.statusMsg,
+            "url" to "$storeDetailBaseUrl/$storeDetailDir/$storeCode"
+        )
+        val creator = baseRecord.creator
+        val receiver: String = creator
+        val ccs = mutableSetOf(creator)
+        if (auditType == AuditTypeEnum.AUDIT_SUCCESS) {
+            val storeAdminRecords = storeMemberDao.list(
+                dslContext = dslContext,
+                storeCode = storeCode,
+                type = StoreMemberTypeEnum.ADMIN.type.toByte(),
+                storeType = storeType
+            )
+            storeAdminRecords?.map {
+                ccs.add(it.username)
+            }
+        }
+        val receivers = mutableSetOf(receiver)
+        val templateCode = getNotifyTemplateCode(auditType)
+        sendNotifyMessage(
+            templateCode = templateCode,
+            sender = DEVOPS,
+            receivers = receivers,
+            titleParams = titleParams,
+            bodyParams = bodyParams,
+            cc = ccs
+        )
+    }
+
+    private fun getNotifyTemplateCode(auditType: AuditTypeEnum): String {
+        val templateCode = when (auditType) {
+            AuditTypeEnum.AUDIT_SUCCESS -> {
+                STORE_RELEASE_AUDIT_PASS_TEMPLATE
+            }
+
+            AuditTypeEnum.AUDIT_REJECT -> {
+                STORE_RELEASE_AUDIT_REFUSE_TEMPLATE
+            }
+
+            else -> {
+                STORE_RELEASE_AUDIT_REFUSE_TEMPLATE
+            }
+        }
+        return templateCode
     }
 }

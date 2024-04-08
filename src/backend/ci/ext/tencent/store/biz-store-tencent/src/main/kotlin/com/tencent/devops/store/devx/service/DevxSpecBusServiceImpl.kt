@@ -48,6 +48,8 @@ import com.tencent.devops.common.api.constant.UNDO
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.ReflectUtil
 import com.tencent.devops.common.web.utils.I18nUtil
+import com.tencent.devops.store.common.dao.StoreBaseEnvExtQueryDao
+import com.tencent.devops.store.common.dao.StoreBaseEnvQueryDao
 import com.tencent.devops.store.common.dao.StoreBaseQueryDao
 import com.tencent.devops.store.common.service.StoreCommonService
 import com.tencent.devops.store.common.service.StoreSpecBusService
@@ -56,7 +58,7 @@ import com.tencent.devops.store.pojo.common.KEY_STORE_TYPE
 import com.tencent.devops.store.pojo.common.enums.StoreStatusEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.pojo.common.publication.ReleaseProcessItem
-import com.tencent.devops.store.pojo.common.publication.StorePkgEnvRequest
+import com.tencent.devops.store.pojo.common.publication.StorePkgEnvInfo
 import com.tencent.devops.store.pojo.common.publication.StoreRunPipelineParam
 import com.tencent.devops.store.pojo.common.publication.StoreUpdateRequest
 import com.tencent.devops.store.pojo.devx.constants.KEY_MAX_PEAK_BAND_WIDTH
@@ -73,6 +75,8 @@ import org.springframework.stereotype.Service
 class DevxSpecBusServiceImpl @Autowired constructor(
     private val dslContext: DSLContext,
     private val storeBaseQueryDao: StoreBaseQueryDao,
+    private val storeBaseEnvQueryDao: StoreBaseEnvQueryDao,
+    private val storeBaseEnvExtQueryDao: StoreBaseEnvExtQueryDao,
     private val storeCommonService: StoreCommonService
 ) : StoreSpecBusService {
 
@@ -145,8 +149,49 @@ class DevxSpecBusServiceImpl @Autowired constructor(
         storeType: StoreTypeEnum,
         storeCode: String,
         version: String
-    ): List<StorePkgEnvRequest> {
-        TODO("Not yet implemented")
+    ): List<StorePkgEnvInfo> {
+        val baseRecord = storeBaseQueryDao.getComponent(
+            dslContext = dslContext,
+            storeCode = storeCode,
+            version = version,
+            storeType = storeType
+        ) ?: throw ErrorCodeException(
+            errorCode = CommonMessageCode.PARAMETER_IS_INVALID,
+            params = arrayOf("$storeCode:$version")
+        )
+        val storeId = baseRecord.id
+        val storePkgEnvInfos = mutableListOf<StorePkgEnvInfo>()
+        val baseEnvRecords = storeBaseEnvQueryDao.getBaseEnvsByStoreId(dslContext, storeId)
+        if (!baseEnvRecords.isNullOrEmpty()) {
+            baseEnvRecords.forEach { baseEnvRecord ->
+                val baseEnvExtRecords = storeBaseEnvExtQueryDao.getBaseExtEnvsByEnvId(dslContext, baseEnvRecord.id)
+                val extEnvInfo: MutableMap<String, Any>? = if (baseEnvExtRecords.isNullOrEmpty()) {
+                    null
+                } else {
+                    mutableMapOf()
+                }
+                baseEnvExtRecords?.forEach { baseEnvExtRecord ->
+                    extEnvInfo?.set(baseEnvExtRecord.fieldName, baseEnvExtRecord.fieldValue)
+                }
+                val storePkgEnvInfo = StorePkgEnvInfo(
+                    pkgName = baseEnvRecord.pkgName,
+                    pkgRepoPath = baseEnvRecord.pkgPath,
+                    language = baseEnvRecord.language,
+                    minVersion = baseEnvRecord.minVersion,
+                    target = baseEnvRecord.target,
+                    preCmd = baseEnvRecord.preCmd,
+                    osName = baseEnvRecord.osName,
+                    osArch = baseEnvRecord.osArch,
+                    runtimeVersion = baseEnvRecord.runtimeVersion,
+                    defaultFlag = baseEnvRecord.defaultFlag,
+                    extEnvInfo = extEnvInfo
+                )
+                storePkgEnvInfos.add(storePkgEnvInfo)
+            }
+        } else {
+            storePkgEnvInfos.add(StorePkgEnvInfo(defaultFlag = true))
+        }
+        return storePkgEnvInfos
     }
 
     override fun getReleaseProcessItems(
@@ -172,21 +217,27 @@ class DevxSpecBusServiceImpl @Autowired constructor(
             StoreStatusEnum.INIT, StoreStatusEnum.COMMITTING -> {
                 storeCommonService.setProcessInfo(processInfo, totalStep, NUM_TWO, DOING)
             }
+
             StoreStatusEnum.BUILDING -> {
                 storeCommonService.setProcessInfo(processInfo, totalStep, NUM_THREE, DOING)
             }
+
             StoreStatusEnum.BUILD_FAIL -> {
                 storeCommonService.setProcessInfo(processInfo, totalStep, NUM_THREE, FAIL)
             }
+
             StoreStatusEnum.TESTING -> {
                 storeCommonService.setProcessInfo(processInfo, totalStep, NUM_FOUR, DOING)
             }
+
             StoreStatusEnum.AUDITING -> {
                 storeCommonService.setProcessInfo(processInfo, totalStep, NUM_FIVE, DOING)
             }
+
             StoreStatusEnum.AUDIT_REJECT -> {
                 storeCommonService.setProcessInfo(processInfo, totalStep, NUM_FIVE, FAIL)
             }
+
             StoreStatusEnum.RELEASED -> {
                 val currStep = if (isNormalUpgrade) NUM_FIVE else NUM_SIX
                 storeCommonService.setProcessInfo(processInfo, totalStep, currStep, SUCCESS)
