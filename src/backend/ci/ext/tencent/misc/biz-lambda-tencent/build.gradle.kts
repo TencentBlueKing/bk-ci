@@ -25,16 +25,24 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-subprojects {
-    group = "com.tencent.bk.devops.ci.lambda"
-
-    // 解决依赖冲突：process要求lucene-8.6.0，es-5.6.14要求lucene-6.6.1
-    dependencyManagement {
-        dependencies {
-            dependency("org.elasticsearch:elasticsearch:5.6.14")
-            dependency("org.elasticsearch.client:transport:5.6.14")
-            dependency("org.elasticsearch.plugin:transport-netty4-client:5.6.14")
-            dependency("org.apache.lucene:lucene-core:6.6.1")
-        }
-    }
+dependencies {
+    api(project(":core:common:common-service"))
+    api(project(":core:common:common-web"))
+    api(project(":ext:tencent:common:common-digest-tencent"))
+    api(project(":ext:tencent:common:common-kafka-tencent"))
+    api(project(":core:common:common-event"))
+    api(project(":core:common:common-client"))
+    api(project(":core:common:common-db-sharding"))
+    api(project(":core:process:api-process"))
+    api(project(":ext:tencent:misc:model-lambda"))
+    api(project(":core:project:api-project"))
+    api(project(":ext:tencent:misc:api-lambda-tencent"))
+    testImplementation(project(":core:common:common-test"))
+    api("com.fasterxml.jackson.dataformat:jackson-dataformat-xml")
+    api("com.floragunn:search-guard-ssl")
+    api("org.json:json")
+    api("org.springframework.boot:spring-boot-starter-jooq")
+    api("com.zaxxer:HikariCP")
+    api("org.jooq:jooq")
+    api("mysql:mysql-connector-java")
 }
