@@ -79,8 +79,8 @@ class DesktopWorkspaceService @Autowired constructor(
                     }.onFailure {
                         logger.warn("updateCCHost fail ${it.message}", it)
                     }
-                    return true
                 }
+                return true
             }
 
             OpOpUpdateCCHostDataAction.DELETE -> {
