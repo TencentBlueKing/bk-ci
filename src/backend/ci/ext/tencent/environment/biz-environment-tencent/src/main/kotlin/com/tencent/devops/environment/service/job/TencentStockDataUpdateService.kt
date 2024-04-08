@@ -125,6 +125,7 @@ class TencentStockDataUpdateService @Autowired constructor(
     }
 
     private fun checkDeployNodesIsInCmdb() {
+        logger.info("Check deploy nodes are in cmdb task starts...")
         val startTime = LocalDateTime.now()
         val countNodeInCmdb = cmdbNodeDao.countDeployNodes(dslContext)
         logger.info("Node(s) count in cmdb: $countNodeInCmdb")
@@ -166,6 +167,7 @@ class TencentStockDataUpdateService @Autowired constructor(
      * cron：每小时执行一次。
      */
     private fun checkDeployNodesIsInCC() {
+        logger.info("Check deploy nodes are in cc task starts...")
         val startTime = LocalDateTime.now()
         val countHostIdNotNullRecord = cmdbNodeDao.countDeployNodesInCmdb(dslContext)
         logger.info("Check deploy node(s) is in CC, node(s) count:$countHostIdNotNullRecord.")
