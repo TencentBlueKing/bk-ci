@@ -44,4 +44,13 @@ class StoreBaseEnvExtQueryDao {
             dslContext.selectFrom(this).where(STORE_ID.eq(storeId)).fetch()
         }
     }
+
+    fun getBaseExtEnvsByEnvId(
+        dslContext: DSLContext,
+        envId: String
+    ): Result<TStoreBaseEnvExtRecord>? {
+        return with(TStoreBaseEnvExt.T_STORE_BASE_ENV_EXT) {
+            dslContext.selectFrom(this).where(ENV_ID.eq(envId)).fetch()
+        }
+    }
 }
