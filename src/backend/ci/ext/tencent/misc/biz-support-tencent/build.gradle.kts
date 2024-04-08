@@ -26,5 +26,21 @@
  */
 
 dependencies {
-    api(project(":ext:tencent:support:biz-support-tencent"))
+    api(project(":ext:tencent:common:common-digest-tencent"))
+    api(project(":core:common:common-service"))
+    api(project(":core:common:common-web"))
+    api(project(":core:common:common-client"))
+    api(project(":ext:tencent:common:common-auth:common-auth-tencent"))
+    api(project(":core:common:common-wechatwork"))
+    api(project(":ext:tencent:misc:model-support-tencent"))
+    api(project(":core:ticket:api-ticket"))
+    api(project(":ext:tencent:process:api-process-tencent"))
+    api(project(":ext:tencent:project:api-project-tencent"))
+    api(project(":ext:tencent:misc:api-support-tencent"))
+    api(project(":ext:tencent:common:common-kafka-tencent"))
+    api("org.dom4j:dom4j")
+    api("commons-codec:commons-codec")
+    api("net.coobird:thumbnailator")
+    api("com.github.ben-manes.caffeine:caffeine")
+    api(project(":core:auth:api-auth"))
 }

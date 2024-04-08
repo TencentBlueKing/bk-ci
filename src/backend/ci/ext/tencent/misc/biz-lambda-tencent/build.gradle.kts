@@ -34,7 +34,7 @@ dependencies {
     api(project(":core:common:common-client"))
     api(project(":core:common:common-db-sharding"))
     api(project(":core:process:api-process"))
-    api(project(":ext:tencent:misc:model-lambda"))
+    api(project(":ext:tencent:misc:model-lambda-tencent"))
     api(project(":core:project:api-project"))
     api(project(":ext:tencent:misc:api-lambda-tencent"))
     testImplementation(project(":core:common:common-test"))

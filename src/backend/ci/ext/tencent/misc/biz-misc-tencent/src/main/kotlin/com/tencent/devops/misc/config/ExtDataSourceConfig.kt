@@ -242,6 +242,38 @@ class ExtDataSourceConfig {
         return defaultConfiguration(lambdaDataSource, executeListenerProviders)
     }
 
+    @Bean
+    fun supportDataSource(
+        @Value("\${spring.datasource.support.url}")
+        datasourceUrl: String,
+        @Value("\${spring.datasource.support.username}")
+        datasourceUsername: String,
+        @Value("\${spring.datasource.support.password}")
+        datasourcePassword: String,
+        @Value("\${spring.datasource.support.initSql:#{null}}")
+        datasourceInitSql: String? = null,
+        @Value("\${spring.datasource.support.leakDetectionThreshold:#{0}}")
+        datasourceLeakDetectionThreshold: Long = 0
+    ): DataSource {
+        return hikariDataSource(
+            datasourcePoolName = "DBPool-support",
+            datasourceUrl = datasourceUrl,
+            datasourceUsername = datasourceUsername,
+            datasourcePassword = datasourcePassword,
+            datasourceInitSql = datasourceInitSql,
+            datasourceLeakDetectionThreshold = datasourceLeakDetectionThreshold
+        )
+    }
+
+    @Bean
+    fun supportJooqConfiguration(
+        @Qualifier("supportDataSource")
+        supportDataSource: DataSource,
+        executeListenerProviders: ObjectProvider<ExecuteListenerProvider>
+    ): DefaultConfiguration {
+        return defaultConfiguration(supportDataSource, executeListenerProviders)
+    }
+
     @SuppressWarnings("LongParameterList", "MagicNumber")
     private fun hikariDataSource(
         datasourcePoolName: String,
