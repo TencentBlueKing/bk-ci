@@ -103,7 +103,7 @@ class StoreArchiveServiceImpl @Autowired constructor(
         storeId: String,
         storePkgInfoUpdateRequest: StorePkgInfoUpdateRequest
     ): Boolean {
-        val storePkgEnvRequests = storePkgInfoUpdateRequest.storePkgEnvRequests
+        val storePkgEnvRequests = storePkgInfoUpdateRequest.storePkgEnvInfos
         val storeBaseEnvDataPOs: MutableList<StoreBaseEnvDataPO> = mutableListOf()
         var storeBaseEnvExtDataPOs: MutableList<StoreBaseEnvExtDataPO>? = null
         storePkgEnvRequests.forEach { storePkgEnvRequest ->

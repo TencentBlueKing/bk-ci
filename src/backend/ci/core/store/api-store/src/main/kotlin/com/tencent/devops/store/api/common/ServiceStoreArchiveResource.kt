@@ -32,7 +32,7 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.store.pojo.common.enums.ReleaseTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
-import com.tencent.devops.store.pojo.common.publication.StorePkgEnvRequest
+import com.tencent.devops.store.pojo.common.publication.StorePkgEnvInfo
 import com.tencent.devops.store.pojo.common.publication.StorePkgInfoUpdateRequest
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
@@ -90,7 +90,7 @@ interface ServiceStoreArchiveResource {
         @Parameter(description = "版本号", required = true)
         @PathParam("version")
         version: String
-    ): Result<List<StorePkgEnvRequest>>
+    ): Result<List<StorePkgEnvInfo>>
 
     @Operation(summary = "更新组件执行包相关信息")
     @PUT

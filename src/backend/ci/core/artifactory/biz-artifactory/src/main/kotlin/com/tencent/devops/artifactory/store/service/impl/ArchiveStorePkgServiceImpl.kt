@@ -43,7 +43,7 @@ import com.tencent.devops.common.service.utils.ZipUtil
 import com.tencent.devops.store.api.common.ServiceStoreArchiveResource
 import com.tencent.devops.store.pojo.common.enums.ReleaseTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
-import com.tencent.devops.store.pojo.common.publication.StorePkgEnvRequest
+import com.tencent.devops.store.pojo.common.publication.StorePkgEnvInfo
 import com.tencent.devops.store.pojo.common.publication.StorePkgInfoUpdateRequest
 import org.apache.commons.codec.digest.DigestUtils
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition
@@ -96,7 +96,7 @@ abstract class ArchiveStorePkgServiceImpl : ArchiveStorePkgService {
                 defaultMessage = verifyPackageResult.message
             )
         }
-        val storePkgEnvRequests: List<StorePkgEnvRequest>?
+        val storePkgEnvInfos: List<StorePkgEnvInfo>?
         var packageFileInfos: MutableList<PackageFileInfo>? = null
         try {
             handleArchiveFile(
@@ -107,13 +107,13 @@ abstract class ArchiveStorePkgServiceImpl : ArchiveStorePkgService {
                 version = version
             )
             val storeArchivePath = buildStoreArchivePath(storeType, storeCode, version)
-            storePkgEnvRequests = client.get(ServiceStoreArchiveResource::class).getComponentPkgEnvInfo(
+            storePkgEnvInfos = client.get(ServiceStoreArchiveResource::class).getComponentPkgEnvInfo(
                 userId = userId,
                 storeType = storeType,
                 storeCode = storeCode,
                 version = version
             ).data
-            storePkgEnvRequests?.forEach { storePkgEnvRequest ->
+            storePkgEnvInfos?.forEach { storePkgEnvRequest ->
                 var pkgLocalPath = storePkgEnvRequest.pkgLocalPath
                 if (storePkgEnvRequest.target.isNullOrBlank() && pkgLocalPath.isNullOrBlank()) {
                     // 上传的是内置组件的包，无需处理执行包相关逻辑
@@ -148,12 +148,12 @@ abstract class ArchiveStorePkgServiceImpl : ArchiveStorePkgService {
             // 普通发布类型会重新生成一条版本记录
             DigestUtils.md5Hex("$storeType-$storeCode-$version")
         }
-        storePkgEnvRequests?.let {
+        storePkgEnvInfos?.let {
             val storePkgInfoUpdateRequest = StorePkgInfoUpdateRequest(
                 storeType = storeType,
                 storeCode = storeCode,
                 version = version,
-                storePkgEnvRequests = storePkgEnvRequests
+                storePkgEnvInfos = storePkgEnvInfos
             )
             val updateComponentPkgInfoResult = client.get(ServiceStoreArchiveResource::class).updateComponentPkgInfo(
                 userId = userId,
