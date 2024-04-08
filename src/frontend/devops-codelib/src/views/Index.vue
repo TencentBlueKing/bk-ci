@@ -347,7 +347,7 @@
                 this.refreshCodelibList()
                 localStorage.setItem('codelibSortType', sortType)
                 localStorage.setItem('codelibSortBy', sortBy)
-                const queryKeys = Object.keys(this.$route?.query)
+                const queryKeys = Object.keys(this.$route?.query || {})
                 if (!queryKeys.length) return
                 this.$router.push({
                     query: {
