@@ -43,12 +43,6 @@ class UserRemoteDevJobResourceImpl @Autowired constructor(
     override fun createJob(userId: String, data: JobCreateData): Result<Boolean> {
         // 参数校验
         when (data.jobScope) {
-            JobScope.ALL -> {
-                if (data.machineType.isNullOrBlank() || data.owners.isNullOrEmpty()) {
-                    throw ParamBlankException("Invalid All scope machineType or owners is null")
-                }
-            }
-
             JobScope.MACHINE_TYPE -> {
                 if (data.machineType.isNullOrBlank()) {
                     throw ParamBlankException("Invalid machineType")
@@ -60,6 +54,8 @@ class UserRemoteDevJobResourceImpl @Autowired constructor(
                     throw ParamBlankException("Invalid owners")
                 }
             }
+
+            else -> {}
         }
         remoteDevJobService.createJob(userId, data)
         return Result(true)
