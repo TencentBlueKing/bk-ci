@@ -37,7 +37,7 @@ data class AgentReuseMutexTree(
             jobId = container.jobId,
             dispatchType = dispatchType,
             existDep = (container.jobControlOption?.dependOnId?.contains(reuseId) == true) ||
-                (container.jobControlOption?.dependOnName == reuseId),
+                    (container.jobControlOption?.dependOnName == reuseId),
             stageIndex = stageIndex,
             containerId = container.id,
             isEnv = dispatchType is ThirdPartyAgentEnvDispatchType
@@ -289,15 +289,14 @@ data class AgentReuseMutexTree(
                         return@container
                     }
                     val tm = treeMap[container.jobId]!!.first
-                    if (tm.type == AgentReuseMutexType.AGENT_DEP_VAR) {
-                        return@container
-                    }
                     // 修改container
                     val dispatch = (container as VMBuildContainer).dispatchType as ThirdPartyAgentDispatch
-                    dispatch.reusedInfo = ReusedInfo(
-                        tm.agentOrEnvId ?: return@container,
-                        tm.type.toAgentType() ?: return@container
-                    )
+                    if (tm.type != AgentReuseMutexType.AGENT_DEP_VAR) {
+                        dispatch.reusedInfo = ReusedInfo(
+                            tm.agentOrEnvId ?: return@container,
+                            tm.type.toAgentType() ?: return@container
+                        )
+                    }
                     dispatch.value = tm.reUseJobId ?: return@container
                     when (dispatch) {
                         is ThirdPartyAgentEnvDispatchType -> {
