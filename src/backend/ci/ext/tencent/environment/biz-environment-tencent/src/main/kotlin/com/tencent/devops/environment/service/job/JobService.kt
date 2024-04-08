@@ -174,7 +174,10 @@ class JobService @Autowired constructor(
         )
         val allFileSourceHostList: MutableList<Host> = mutableListOf()
         fileDistributeReq.fileSourceList.map { fileSource ->
-            allFileSourceHostList.plus(parseHashListService.getAllHostList(projectId, fileSource.sourceFileServer))
+            val fileSourceHostList = parseHashListService.getAllHostList(projectId, fileSource.sourceFileServer)
+            for (fileSourceHost in fileSourceHostList) {
+                allFileSourceHostList.add(fileSourceHost)
+            }
         }
         if (allExecuteTargetHostList.isEmpty()) {
             throw CustomException(
