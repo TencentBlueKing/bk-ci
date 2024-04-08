@@ -293,11 +293,21 @@ data class AgentReuseMutexTree(
                         return@container
                     }
                     // 修改container
-                    ((container as VMBuildContainer).dispatchType as ThirdPartyAgentDispatch).reusedInfo =
-                        ReusedInfo(
-                            tm.agentOrEnvId ?: return@container,
-                            tm.type.toAgentType() ?: return@container
-                        )
+                    val dispatch = (container as VMBuildContainer).dispatchType as ThirdPartyAgentDispatch
+                    dispatch.reusedInfo = ReusedInfo(
+                        tm.agentOrEnvId ?: return@container,
+                        tm.type.toAgentType() ?: return@container
+                    )
+                    dispatch.value = tm.reUseJobId ?: return@container
+                    when (dispatch) {
+                        is ThirdPartyAgentEnvDispatchType -> {
+                            dispatch.envName = tm.reUseJobId ?: return@container
+                        }
+
+                        is ThirdPartyAgentIDDispatchType -> {
+                            dispatch.displayName = tm.reUseJobId ?: return@container
+                        }
+                    }
 
                     // 修改启动插件
                     buildTaskList.firstOrNull {
