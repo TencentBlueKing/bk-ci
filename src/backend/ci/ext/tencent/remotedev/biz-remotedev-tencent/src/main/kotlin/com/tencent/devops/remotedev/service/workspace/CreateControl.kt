@@ -62,10 +62,10 @@ import com.tencent.devops.remotedev.dao.WorkspaceHistoryDao
 import com.tencent.devops.remotedev.dao.WorkspaceOpHistoryDao
 import com.tencent.devops.remotedev.dao.WorkspaceWindowsDao
 import com.tencent.devops.remotedev.pojo.OpHistoryCopyWriting
-import com.tencent.devops.remotedev.pojo.ProjectWorkspaceCreate
 import com.tencent.devops.remotedev.pojo.WebSocketActionType
 import com.tencent.devops.remotedev.pojo.WindowsResourceTypeConfig
 import com.tencent.devops.remotedev.pojo.WindowsResourceZoneConfig
+import com.tencent.devops.remotedev.pojo.WindowsWorkspaceCreate
 import com.tencent.devops.remotedev.pojo.Workspace
 import com.tencent.devops.remotedev.pojo.WorkspaceAction
 import com.tencent.devops.remotedev.pojo.WorkspaceCreate
@@ -88,7 +88,6 @@ import com.tencent.devops.remotedev.service.redis.RedisKeys
 import com.tencent.devops.remotedev.service.redis.RedisKeys.REDIS_OFFICIAL_DEVFILE_KEY
 import com.tencent.devops.remotedev.service.tcloud.TCloudCfsService
 import com.tencent.devops.remotedev.service.transfer.RemoteDevGitTransfer
-import com.tencent.devops.remotedev.utils.CommonUtil
 import com.tencent.devops.remotedev.utils.DevfileUtil
 import com.tencent.devops.scm.utils.code.git.GitUtils
 import java.util.concurrent.Executors
@@ -156,12 +155,12 @@ class CreateControl @Autowired constructor(
         scopeId = "#projectId",
         content = ActionAuditContent.CGS_CREATE_CONTENT
     )
-    fun asyncCreateWorkspace(
+    fun projectCreateWorkspace(
         pmUserId: String,
         projectId: String,
         cgsId: String?,
         autoAssign: Boolean?,
-        workspaceCreate: ProjectWorkspaceCreate
+        workspaceCreate: WindowsWorkspaceCreate
     ) {
         logger.info("start async create workspace |$pmUserId|$projectId|$cgsId|$autoAssign|$workspaceCreate")
         val windowsConfig = windowsResourceConfigService.getTypeConfig(workspaceCreate.windowsType)
@@ -242,11 +241,11 @@ class CreateControl @Autowired constructor(
         var newNum = 0
         if (workspaceCreate.imageCosFile.isBlank()) {
             val resourceCount = startCloudResourceCountCheck(workspaceCreate.windowsType, workspaceCreate.windowsZone)
-            if (cgsId != null || resourceCount > workspaceCreate.count) {
+            if (cgsId != null || resourceCount >= workspaceCreate.count) {
                 doCreateWorkspace(
                     workspaceCreate = workspaceCreate,
                     projectId = projectId,
-                    pmUserId = pmUserId,
+                    creator = pmUserId,
                     windowsConfig = windowsConfig,
                     projectInfo = projectInfo,
                     windowsZone = windowsZone,
@@ -295,7 +294,7 @@ class CreateControl @Autowired constructor(
         doCreateWorkspace(
             workspaceCreate = workspaceCreate,
             projectId = projectId,
-            pmUserId = pmUserId,
+            creator = pmUserId,
             windowsConfig = windowsConfig,
             projectInfo = projectInfo,
             windowsZone = windowsZone,
@@ -305,9 +304,9 @@ class CreateControl @Autowired constructor(
     }
 
     private fun doCreateWorkspace(
-        workspaceCreate: ProjectWorkspaceCreate,
+        workspaceCreate: WindowsWorkspaceCreate,
         projectId: String,
-        pmUserId: String,
+        creator: String,
         windowsConfig: WindowsResourceTypeConfig,
         projectInfo: ProjectVO,
         windowsZone: WindowsResourceZoneConfig,
@@ -318,28 +317,16 @@ class CreateControl @Autowired constructor(
         val systemType = WorkspaceSystemType.WINDOWS_GPU
         for (i in 0 until workspaceCreate.count) {
             logger.info("createWorkspace|mountType|$mountType")
-            val workspaceName = if (CommonUtil.ifProjectPersonal(projectId)) {
-                generateWorkspaceName(projectId.removePrefix("_"))
-            } else {
-                generateWorkspaceName(projectId)
-            }
+            val workspaceName = generateWorkspaceName(projectId)
             val ws = Workspace(
                 workspaceId = null,
                 workspaceName = workspaceName,
                 projectId = projectId,
-                createUserId = if (CommonUtil.ifProjectPersonal(projectId)) {
-                    projectId.removePrefix("_")
-                } else {
-                    pmUserId
-                },
+                createUserId = creator,
                 hostName = "",
                 workspaceMountType = mountType,
                 workspaceSystemType = systemType,
-                ownerType = if (CommonUtil.ifProjectPersonal(projectId)) {
-                    WorkspaceOwnerType.PERSONAL
-                } else {
-                    WorkspaceOwnerType.PROJECT
-                },
+                ownerType = WorkspaceOwnerType.PROJECT,
                 gpu = windowsConfig.gpu,
                 cpu = windowsConfig.cpu,
                 memory = windowsConfig.memory,
@@ -372,11 +359,7 @@ class CreateControl @Autowired constructor(
             // 发送给k8s
             dispatcher.dispatch(
                 WorkspaceCreateEvent(
-                    userId = if (CommonUtil.ifProjectPersonal(projectId)) {
-                        projectId.removePrefix("_")
-                    } else {
-                        pmUserId
-                    },
+                    userId = creator,
                     traceId = bizId,
                     workspaceName = ws.workspaceName,
                     devFilePath = ws.devFilePath,
@@ -395,6 +378,16 @@ class CreateControl @Autowired constructor(
                 )
             )
         }
+    }
+
+    fun devcloudCreateWorkspace(
+        userId: String,
+        workspaceCreate: WindowsWorkspaceCreate
+    ): String {
+        logger.info(" create workspace from devcloud |$userId|$workspaceCreate")
+        return loadWorkspaceWithPersonalWindows(
+            userId, "_$userId", workspaceCreate
+        ).workspaceName
     }
 
     // 处理创建工作空间逻辑，用于客户端上创建
@@ -425,7 +418,14 @@ class CreateControl @Autowired constructor(
         }
 
         val workspace = if (workspaceCreate.windowsType != null) {
-            loadWorkspaceWithUI(userId, bkTicket, projectId, workspaceCreate)
+            loadWorkspaceWithPersonalWindows(
+                userId = userId, projectId = projectId, workspaceCreate = WindowsWorkspaceCreate(
+                    windowsType = checkNotNull(workspaceCreate.windowsType),
+                    windowsZone = checkNotNull(workspaceCreate.windowsZone),
+                    baseImageId = 0,
+                    count = 1
+                )
+            )
         } else loadWorkspaceWithCode(userId, bkTicket, projectId, workspaceCreate)
 
         // 审计
@@ -831,7 +831,12 @@ class CreateControl @Autowired constructor(
         }
 
         if (devfile.checkWorkspaceSystemType() == WorkspaceSystemType.WINDOWS_GPU) {
-            windowsGpuCheck(workspaceCreate, userId)
+//            windowsGpuCheck(workspaceCreate, userId)
+            // 取消对windows的支持
+            throw ErrorCodeException(
+                errorCode = ErrorCodeEnum.DEVFILE_ERROR.errorCode,
+                params = arrayOf("not support WINDOWS_GPU")
+            )
         }
 
         val mountType = checkMountType(userId, devfile.checkWorkspaceMountType())
@@ -897,11 +902,10 @@ class CreateControl @Autowired constructor(
         return workspace
     }
 
-    private fun loadWorkspaceWithUI(
+    private fun loadWorkspaceWithPersonalWindows(
         userId: String,
-        bkTicket: String,
         projectId: String,
-        workspaceCreate: WorkspaceCreate
+        workspaceCreate: WindowsWorkspaceCreate
     ): Workspace {
         val mountType = WorkspaceMountType.START
         val systemType = WorkspaceSystemType.WINDOWS_GPU
@@ -930,7 +934,7 @@ class CreateControl @Autowired constructor(
             )
         }
 
-        windowsGpuCheck(workspaceCreate, userId)
+        windowsGpuCheck(userId)
         workspaceCommon.checkWorkspaceAvailability(userId, mountType, WorkspaceOwnerType.PERSONAL)
         val resourceCount = startCloudResourceCountCheck(workspaceCreate.windowsType!!, workspaceCreate.windowsZone!!)
         if (resourceCount < 1) {
@@ -955,7 +959,8 @@ class CreateControl @Autowired constructor(
             cpu = windowsConfig.cpu,
             memory = windowsConfig.memory,
             disk = windowsConfig.workspaceDisk(),
-            winConfigId = windowsConfig.id?.toInt()
+            winConfigId = windowsConfig.id?.toInt(),
+            imageId = workspaceCreate.imageId
         )
 
         doPreparing(workspace)
@@ -967,30 +972,23 @@ class CreateControl @Autowired constructor(
                 userId = userId,
                 traceId = bizId,
                 workspaceName = workspace.workspaceName,
-                repositoryUrl = "",
-                branch = "",
                 devFilePath = workspace.devFilePath,
                 devFile = Devfile(
-                    version = "",
                     zoneId = windowsZone.zoneShortName,
-                    machineType = windowsConfig.size
+                    machineType = windowsConfig.size,
+                    imageCosFile = workspaceCreate.imageCosFile
                 ),
-                settingEnvs = remoteDevSettingDao.fetchOneSetting(dslContext, userId).envsForVariable,
-                bkTicket = bkTicket,
+                settingEnvs = emptyMap(),
                 projectId = projectId,
-                mountType = mountType
+                mountType = mountType,
+                ownerType = WorkspaceOwnerType.PERSONAL
             )
         )
 
         return workspace
     }
 
-    private fun windowsGpuCheck(workspaceCreate: WorkspaceCreate, userId: String) {
-        whiteListService.checkRunsOnOs(
-            key = RedisKeys.REDIS_RUNS_ON_OS_KEY,
-            runsOnKey = WorkspaceSystemType.WINDOWS_GPU.name,
-            currentOs = workspaceCreate.currentOS
-        )
+    private fun windowsGpuCheck(userId: String) {
 
         whiteListService.windowsNumberLimit(
             userId = userId,

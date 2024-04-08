@@ -13,8 +13,8 @@ import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.project.api.service.service.ServiceTxProjectResource
 import com.tencent.devops.remotedev.api.service.ServiceRemoteDevResource
 import com.tencent.devops.remotedev.common.Constansts
-import com.tencent.devops.remotedev.pojo.ProjectWorkspaceCreate
 import com.tencent.devops.remotedev.pojo.WindowsResourceTypeConfig
+import com.tencent.devops.remotedev.pojo.WindowsWorkspaceCreate
 import com.tencent.devops.remotedev.pojo.op.OpProjectWorkspaceAssignData
 import com.tencent.devops.remotedev.pojo.op.RemotedevCvmData
 import com.tencent.devops.remotedev.pojo.op.WorkspaceNotifyData
@@ -28,11 +28,12 @@ import com.tencent.devops.remotedev.service.WindowsResourceConfigService
 import com.tencent.devops.remotedev.service.WorkspaceLoginService
 import com.tencent.devops.remotedev.service.WorkspaceService
 import com.tencent.devops.remotedev.service.workspace.CreateControl
+import com.tencent.devops.remotedev.service.workspace.DeleteControl
 import com.tencent.devops.remotedev.service.workspace.NotifyControl
 import com.tencent.devops.remotedev.service.workspace.WorkspaceCommon
-import org.slf4j.LoggerFactory
 import java.net.URLDecoder
 import java.util.concurrent.Executors
+import org.slf4j.LoggerFactory
 
 @RestResource
 @Suppress("ALL")
@@ -41,6 +42,7 @@ class ServiceRemoteDevResourceImpl(
     private val workspaceService: WorkspaceService,
     private val desktopWorkspaceService: DesktopWorkspaceService,
     private val createControl: CreateControl,
+    private val deleteControl: DeleteControl,
     private val workspaceCommon: WorkspaceCommon,
     private val windowsResourceConfigService: WindowsResourceConfigService,
     private val notifyControl: NotifyControl,
@@ -159,12 +161,12 @@ class ServiceRemoteDevResourceImpl(
                 machineType = cgs.machineType
             ) ?: return Result(false)
             // 调用CreateControl.asyncCreateWorkspace发起创建
-            createControl.asyncCreateWorkspace(
+            createControl.projectCreateWorkspace(
                 pmUserId = owner ?: operator,
                 projectId = data.projectId,
                 cgsId = cgs.cgsId,
                 autoAssign = !owner.isNullOrEmpty(),
-                workspaceCreate = ProjectWorkspaceCreate(
+                workspaceCreate = WindowsWorkspaceCreate(
                     windowsType = windowsResourceConfigId.size,
                     windowsZone = cgs.zoneId.replace(Regex("\\d+"), ""),
                     baseImageId = 0,
@@ -225,5 +227,20 @@ class ServiceRemoteDevResourceImpl(
 
     override fun getWindowsResourceList(): Result<List<WindowsResourceTypeConfig>> {
         return Result(windowsResourceConfigService.getAllType(true, null))
+    }
+
+    override fun createPersonalWorkspace(userId: String, data: WindowsWorkspaceCreate): Result<String> {
+        return Result(createControl.devcloudCreateWorkspace(userId, data))
+    }
+
+    override fun deletePersonalWorkspace(userId: String, workspaceName: String): Result<Boolean> {
+        return Result(
+            deleteControl.deleteWorkspace(
+                userId = userId,
+                workspaceName = workspaceName,
+                needPermission = true,
+                checkDeleteImmediately = true
+            )
+        )
     }
 }

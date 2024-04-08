@@ -3,6 +3,7 @@ package com.tencent.devops.remotedev.api.service
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.remotedev.pojo.WindowsResourceTypeConfig
+import com.tencent.devops.remotedev.pojo.WindowsWorkspaceCreate
 import com.tencent.devops.remotedev.pojo.op.OpProjectWorkspaceAssignData
 import com.tencent.devops.remotedev.pojo.op.RemotedevCvmData
 import com.tencent.devops.remotedev.pojo.op.WorkspaceNotifyData
@@ -12,6 +13,7 @@ import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.tags.Tag
 import javax.ws.rs.Consumes
+import javax.ws.rs.DELETE
 import javax.ws.rs.GET
 import javax.ws.rs.HeaderParam
 import javax.ws.rs.POST
@@ -156,4 +158,27 @@ interface ServiceRemoteDevResource {
     @GET
     @Path("/resourceType/list")
     fun getWindowsResourceList(): Result<List<WindowsResourceTypeConfig>>
+
+    @Operation(summary = "创建windows工作空间")
+    @POST
+    @Path("/personal_win_workspace")
+    fun createPersonalWorkspace(
+        @Parameter(description = "用户", required = true)
+        @QueryParam("userId")
+        userId: String,
+        @Parameter(description = "创建内容", required = true)
+        data: WindowsWorkspaceCreate
+    ): Result<String>
+
+    @Operation(summary = "删除windows工作空间")
+    @DELETE
+    @Path("/personal_win_workspace")
+    fun deletePersonalWorkspace(
+        @Parameter(description = "用户", required = true)
+        @QueryParam("userId")
+        userId: String,
+        @Parameter(description = "工作空间名", required = true)
+        @QueryParam("workspaceName")
+        workspaceName: String
+    ): Result<Boolean>
 }

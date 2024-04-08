@@ -37,7 +37,6 @@ import com.tencent.devops.common.audit.ActionAuditContent.CGS_ASSIGN_USER_CONTEN
 import com.tencent.devops.common.audit.ActionAuditContent.PROJECT_CODE_TEMPLATE
 import com.tencent.devops.common.auth.api.ActionId
 import com.tencent.devops.common.auth.api.ResourceTypeId
-import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.remotedev.common.exception.ErrorCodeEnum
 import com.tencent.devops.remotedev.dao.WorkspaceDao
@@ -54,6 +53,8 @@ import com.tencent.devops.remotedev.pojo.WorkspaceStatus
 import com.tencent.devops.remotedev.pojo.common.RemoteDevNotifyType
 import com.tencent.devops.remotedev.pojo.software.SoftwareCallbackRes
 import com.tencent.devops.remotedev.pojo.software.TaskStatusEnum
+import com.tencent.devops.remotedev.pojo.windows.WindowsDevCouldCallback
+import com.tencent.devops.remotedev.service.HttpCallBackService
 import com.tencent.devops.remotedev.service.redis.RedisCallLimit
 import com.tencent.devops.remotedev.service.redis.RedisKeys.REDIS_CALL_LIMIT_KEY_PREFIX
 import com.tencent.devops.remotedev.service.software.SoftwareManageService
@@ -67,7 +68,6 @@ import org.springframework.stereotype.Service
 @Service
 @Suppress("LongMethod")
 class DeliverControl @Autowired constructor(
-    private val client: Client,
     private val dslContext: DSLContext,
     private val redisOperation: RedisOperation,
     private val workspaceDao: WorkspaceDao,
@@ -75,7 +75,8 @@ class DeliverControl @Autowired constructor(
     private val sharedDao: WorkspaceSharedDao,
     private val workspaceCommon: WorkspaceCommon,
     private val softwareManageService: SoftwareManageService,
-    private val notifyControl: NotifyControl
+    private val notifyControl: NotifyControl,
+    private val httpCallBackService: HttpCallBackService
 ) {
 
     companion object {
@@ -333,6 +334,13 @@ class DeliverControl @Autowired constructor(
                             workspaceCommon.getOpHistory(OpHistoryCopyWriting.ACTION_CHANGE),
                             workspace.status.name,
                             WorkspaceStatus.RUNNING.name
+                        )
+                    )
+                    httpCallBackService.asyncTask(
+                        WindowsDevCouldCallback(
+                            workspaceName,
+                            WorkspaceStatus.RUNNING,
+                            WorkspaceAction.CREATE
                         )
                     )
                     notifyControl.dispatchWebsocketPushEvent(

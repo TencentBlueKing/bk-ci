@@ -21,7 +21,7 @@ import com.tencent.devops.project.api.service.service.ServiceTxProjectResource
 import com.tencent.devops.remotedev.api.op.OpProjectWorkspaceResource
 import com.tencent.devops.remotedev.common.Constansts
 import com.tencent.devops.remotedev.pojo.ProjectWorkspace
-import com.tencent.devops.remotedev.pojo.ProjectWorkspaceCreate
+import com.tencent.devops.remotedev.pojo.WindowsWorkspaceCreate
 import com.tencent.devops.remotedev.pojo.ProjectWorkspaceFetchData
 import com.tencent.devops.remotedev.pojo.op.OpProjectWorkspaceAssignData
 import com.tencent.devops.remotedev.pojo.op.OpUpdateCCHostData
@@ -122,12 +122,12 @@ class OpProjectWorkspaceResourceImpl @Autowired constructor(
                 machineType = cgs.machineType
             ) ?: return Result(false)
             // 调用CreateControl.asyncCreateWorkspace发起创建
-            createControl.asyncCreateWorkspace(
+            createControl.projectCreateWorkspace(
                 pmUserId = userId,
                 projectId = data.projectId,
                 cgsId = cgs.cgsId,
                 autoAssign = false,
-                workspaceCreate = ProjectWorkspaceCreate(
+                workspaceCreate = WindowsWorkspaceCreate(
                     windowsType = windowsResourceConfigId.size,
                     windowsZone = cgs.zoneId.replace(Regex("\\d+"), ""),
                     baseImageId = 0,
