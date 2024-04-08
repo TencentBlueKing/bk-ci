@@ -38,6 +38,7 @@ import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.pipeline.container.AgentReuseMutex
 import com.tencent.devops.common.pipeline.enums.VMBaseOS
 import com.tencent.devops.common.pipeline.type.agent.AgentType
+import com.tencent.devops.common.pipeline.type.agent.ThirdPartyAgentDispatch
 import com.tencent.devops.common.pipeline.type.agent.ThirdPartyAgentDockerInfo
 import com.tencent.devops.common.pipeline.type.agent.ThirdPartyAgentDockerInfoDispatch
 import com.tencent.devops.common.pipeline.type.agent.ThirdPartyAgentEnvDispatchType
@@ -427,17 +428,21 @@ class ThirdPartyDispatchService @Autowired constructor(
                     readOnly = true
                 )
             )
-            // # 10082 设置复用需要的关键字 jobs.<job_id>.container.agent_id
-            client.get(ServiceVarResource::class).setContextVar(
-                SetContextVarData(
-                    projectId = dispatchMessage.event.projectId,
-                    pipelineId = dispatchMessage.event.pipelineId,
-                    buildId = dispatchMessage.event.buildId,
-                    contextName = AgentReuseMutex.genAgentContextKey(dispatchMessage.event.jobId!!),
-                    contextVal = detail.agentId,
-                    readOnly = true
+            // # 10082 设置复用需要的关键字 jobs.<job_id>.container.agent_id，复用节点不设置，复用节点会使用根节点
+            if (dispatchMessage.event.dispatchType is ThirdPartyAgentDispatch &&
+                !(dispatchMessage.event.dispatchType as ThirdPartyAgentDispatch).agentType.isReuse()
+            ) {
+                client.get(ServiceVarResource::class).setContextVar(
+                    SetContextVarData(
+                        projectId = dispatchMessage.event.projectId,
+                        pipelineId = dispatchMessage.event.pipelineId,
+                        buildId = dispatchMessage.event.buildId,
+                        contextName = AgentReuseMutex.genAgentContextKey(dispatchMessage.event.jobId!!),
+                        contextVal = detail.agentId,
+                        readOnly = true
+                    )
                 )
-            )
+            }
         } catch (e: Exception) {
             logger.error("inQueue|setContextVar|error", e)
         }
