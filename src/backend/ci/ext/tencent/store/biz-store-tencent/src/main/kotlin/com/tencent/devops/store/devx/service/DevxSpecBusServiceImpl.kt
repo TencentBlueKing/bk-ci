@@ -1,0 +1,199 @@
+/*
+ * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
+ *
+ * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ *
+ * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
+ *
+ * A copy of the MIT License is included in this file.
+ *
+ *
+ * Terms of the MIT License:
+ * ---------------------------------------------------
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
+ * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
+ * NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
+ * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
+ * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ */
+
+package com.tencent.devops.store.devx.service
+
+import com.tencent.devops.common.api.constant.APPROVE
+import com.tencent.devops.common.api.constant.BEGIN
+import com.tencent.devops.common.api.constant.BUILD
+import com.tencent.devops.common.api.constant.COMMIT
+import com.tencent.devops.common.api.constant.CommonMessageCode
+import com.tencent.devops.common.api.constant.DOING
+import com.tencent.devops.common.api.constant.END
+import com.tencent.devops.common.api.constant.FAIL
+import com.tencent.devops.common.api.constant.KEY_VERSION
+import com.tencent.devops.common.api.constant.NUM_FIVE
+import com.tencent.devops.common.api.constant.NUM_FOUR
+import com.tencent.devops.common.api.constant.NUM_ONE
+import com.tencent.devops.common.api.constant.NUM_SIX
+import com.tencent.devops.common.api.constant.NUM_THREE
+import com.tencent.devops.common.api.constant.NUM_TWO
+import com.tencent.devops.common.api.constant.SUCCESS
+import com.tencent.devops.common.api.constant.TEST
+import com.tencent.devops.common.api.constant.UNDO
+import com.tencent.devops.common.api.exception.ErrorCodeException
+import com.tencent.devops.common.api.util.ReflectUtil
+import com.tencent.devops.common.web.utils.I18nUtil
+import com.tencent.devops.store.common.dao.StoreBaseQueryDao
+import com.tencent.devops.store.common.service.StoreCommonService
+import com.tencent.devops.store.common.service.StoreSpecBusService
+import com.tencent.devops.store.pojo.common.KEY_STORE_CODE
+import com.tencent.devops.store.pojo.common.KEY_STORE_TYPE
+import com.tencent.devops.store.pojo.common.enums.StoreStatusEnum
+import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
+import com.tencent.devops.store.pojo.common.publication.ReleaseProcessItem
+import com.tencent.devops.store.pojo.common.publication.StorePkgEnvRequest
+import com.tencent.devops.store.pojo.common.publication.StoreRunPipelineParam
+import com.tencent.devops.store.pojo.common.publication.StoreUpdateRequest
+import com.tencent.devops.store.pojo.devx.constants.KEY_MAX_PEAK_BAND_WIDTH
+import com.tencent.devops.store.pojo.devx.constants.KEY_MIN_PEAK_BAND_WIDTH
+import com.tencent.devops.store.pojo.devx.constants.KEY_NEED_VISITED_SITE_INFOS
+import com.tencent.devops.store.pojo.devx.constants.KEY_NET_POLICY_INFO
+import org.jooq.DSLContext
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.context.annotation.Primary
+import org.springframework.stereotype.Service
+
+@Primary
+@Service
+class DevxSpecBusServiceImpl @Autowired constructor(
+    private val dslContext: DSLContext,
+    private val storeBaseQueryDao: StoreBaseQueryDao,
+    private val storeCommonService: StoreCommonService
+) : StoreSpecBusService {
+
+    override fun doStoreI18nConversionSpecBus(storeUpdateRequest: StoreUpdateRequest) {
+        // 云开发暂无需做国际化转换
+    }
+
+    override fun doCheckStoreUpdateParamSpecBus(storeUpdateRequest: StoreUpdateRequest) {
+        val storeBaseUpdateRequest = storeUpdateRequest.baseInfo
+        val extBaseInfo = storeBaseUpdateRequest.extBaseInfo
+        val netPolicyInfo = extBaseInfo?.get(KEY_NET_POLICY_INFO) as? Map<String, Any>
+            ?: throw ErrorCodeException(
+                errorCode = CommonMessageCode.PARAMETER_IS_NULL,
+                params = arrayOf(KEY_NET_POLICY_INFO)
+            )
+        val maxPeakBandwidth = netPolicyInfo[KEY_MAX_PEAK_BAND_WIDTH] ?: throw ErrorCodeException(
+            errorCode = CommonMessageCode.PARAMETER_IS_NULL,
+            params = arrayOf(KEY_MAX_PEAK_BAND_WIDTH)
+        )
+        val minPeakBandwidth = netPolicyInfo[KEY_MIN_PEAK_BAND_WIDTH] ?: throw ErrorCodeException(
+            errorCode = CommonMessageCode.PARAMETER_IS_NULL,
+            params = arrayOf(KEY_MIN_PEAK_BAND_WIDTH)
+        )
+        if (!ReflectUtil.isNativeType(maxPeakBandwidth)) {
+            throw ErrorCodeException(
+                errorCode = CommonMessageCode.PARAMETER_IS_INVALID,
+                params = arrayOf(KEY_MAX_PEAK_BAND_WIDTH)
+            )
+        }
+        if (!ReflectUtil.isNativeType(minPeakBandwidth)) {
+            throw ErrorCodeException(
+                errorCode = CommonMessageCode.PARAMETER_IS_INVALID,
+                params = arrayOf(KEY_MIN_PEAK_BAND_WIDTH)
+            )
+        }
+        if (maxPeakBandwidth.toString().toDouble() - minPeakBandwidth.toString().toDouble() < 0) {
+            throw ErrorCodeException(errorCode = CommonMessageCode.ERROR_CLIENT_REST_ERROR)
+        }
+        netPolicyInfo[KEY_NEED_VISITED_SITE_INFOS] ?: throw ErrorCodeException(
+            errorCode = CommonMessageCode.PARAMETER_IS_NULL,
+            params = arrayOf(KEY_NEED_VISITED_SITE_INFOS)
+        )
+    }
+
+    override fun getStoreUpdateStatus(): StoreStatusEnum {
+        return StoreStatusEnum.TESTING
+    }
+
+    override fun getStoreRunPipelineStartParams(
+        storeRunPipelineParam: StoreRunPipelineParam
+    ): MutableMap<String, String> {
+        val storeId = storeRunPipelineParam.storeId
+        val baseRecord = storeBaseQueryDao.getComponentById(dslContext, storeId) ?: throw ErrorCodeException(
+            errorCode = CommonMessageCode.PARAMETER_IS_INVALID,
+            params = arrayOf(storeId)
+        )
+        return mutableMapOf(
+            KEY_STORE_CODE to baseRecord.storeCode,
+            KEY_STORE_TYPE to StoreTypeEnum.getStoreType(baseRecord.storeType.toInt()),
+            KEY_VERSION to baseRecord.version
+        )
+    }
+
+    override fun getStoreRunPipelineStatus(buildId: String?): StoreStatusEnum? {
+        return StoreStatusEnum.BUILDING
+    }
+
+    override fun getComponentPkgEnvInfo(
+        userId: String,
+        storeType: StoreTypeEnum,
+        storeCode: String,
+        version: String
+    ): List<StorePkgEnvRequest> {
+        TODO("Not yet implemented")
+    }
+
+    override fun getReleaseProcessItems(
+        userId: String,
+        isNormalUpgrade: Boolean,
+        status: StoreStatusEnum
+    ): List<ReleaseProcessItem> {
+        val processInfo = mutableListOf<ReleaseProcessItem>()
+        processInfo.add(ReleaseProcessItem(I18nUtil.getCodeLanMessage(messageCode = BEGIN), BEGIN, NUM_ONE, SUCCESS))
+        processInfo.add(ReleaseProcessItem(I18nUtil.getCodeLanMessage(messageCode = COMMIT), COMMIT, NUM_TWO, UNDO))
+        processInfo.add(ReleaseProcessItem(I18nUtil.getCodeLanMessage(messageCode = BUILD), BUILD, NUM_THREE, UNDO))
+        processInfo.add(ReleaseProcessItem(I18nUtil.getCodeLanMessage(messageCode = TEST), TEST, NUM_FOUR, UNDO))
+        if (isNormalUpgrade) {
+            processInfo.add(ReleaseProcessItem(I18nUtil.getCodeLanMessage(messageCode = END), END, NUM_FIVE, UNDO))
+        } else {
+            processInfo.add(
+                ReleaseProcessItem(I18nUtil.getCodeLanMessage(messageCode = APPROVE), APPROVE, NUM_FIVE, UNDO)
+            )
+            processInfo.add(ReleaseProcessItem(I18nUtil.getCodeLanMessage(messageCode = END), END, NUM_SIX, UNDO))
+        }
+        val totalStep = if (isNormalUpgrade) NUM_FIVE else NUM_SIX
+        when (status) {
+            StoreStatusEnum.INIT, StoreStatusEnum.COMMITTING -> {
+                storeCommonService.setProcessInfo(processInfo, totalStep, NUM_TWO, DOING)
+            }
+            StoreStatusEnum.BUILDING -> {
+                storeCommonService.setProcessInfo(processInfo, totalStep, NUM_THREE, DOING)
+            }
+            StoreStatusEnum.BUILD_FAIL -> {
+                storeCommonService.setProcessInfo(processInfo, totalStep, NUM_THREE, FAIL)
+            }
+            StoreStatusEnum.TESTING -> {
+                storeCommonService.setProcessInfo(processInfo, totalStep, NUM_FOUR, DOING)
+            }
+            StoreStatusEnum.AUDITING -> {
+                storeCommonService.setProcessInfo(processInfo, totalStep, NUM_FIVE, DOING)
+            }
+            StoreStatusEnum.AUDIT_REJECT -> {
+                storeCommonService.setProcessInfo(processInfo, totalStep, NUM_FIVE, FAIL)
+            }
+            StoreStatusEnum.RELEASED -> {
+                val currStep = if (isNormalUpgrade) NUM_FIVE else NUM_SIX
+                storeCommonService.setProcessInfo(processInfo, totalStep, currStep, SUCCESS)
+            }
+
+            else -> {}
+        }
+        return processInfo
+    }
+}
