@@ -1,9 +1,10 @@
 <template>
     <section>
-        <section v-if="!connectError" style="height: 100%" v-bkloading="{
-            isLoading,
-            title: loadingTitle
-        }">
+        <section
+            v-if="!connectError" style="height: 100%" v-bkloading="{
+                isLoading,
+                title: loadingTitle
+            }">
             <div class="console-header">
                 <bk-button class="debug-btn" theme="danger" @click="stopDebug">{{ $t('editPage.docker.exitDebug') }}</bk-button>
                 <p class="debug-tips" v-show="isRunning">{{ $t('editPage.docker.fromRunningTips') }}</p>
@@ -23,14 +24,14 @@
 </template>
 
 <script>
-    import Console from '@/components/atomFormField/Xterm/Console'
+    import MyTerminal from '@/components/atomFormField/Xterm/Console'
     import emptyTips from '@/components/pipelineList/imgEmptyTips'
     import { navConfirm } from '@/utils/util'
 
     export default {
         name: 'WebSSH',
         components: {
-            'my-terminal': Console,
+            MyTerminal,
             emptyTips
         },
         data () {

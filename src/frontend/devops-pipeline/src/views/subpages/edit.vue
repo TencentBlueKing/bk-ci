@@ -239,6 +239,9 @@
             this.setPipelineEditing(false)
             this.setSaveStatus(false)
             this.setEditFrom(false)
+            this.togglePropertyPanel({
+                isShow: false
+            })
             this.errors.clear()
         },
         beforeRouteUpdate (to, from, next) {

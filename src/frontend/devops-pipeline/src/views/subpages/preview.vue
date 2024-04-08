@@ -1,9 +1,10 @@
 <template>
     <div class="pipeline-execute-preview" v-bkloading="{ isLoading }">
         <template v-if="!isDebugPipeline && buildList.length">
-            <header :class="['params-collapse-trigger', {
-                'params-collapse-expand': activeName.has(1)
-            }]" @click="toggleCollapse(1)">
+            <header
+                :class="['params-collapse-trigger', {
+                    'params-collapse-expand': activeName.has(1)
+                }]" @click="toggleCollapse(1)">
                 <i class="devops-icon icon-angle-right" />
                 {{ $t('buildMsg') }}
             </header>
@@ -17,9 +18,10 @@
             </div>
         </template>
         <template v-if="isVisibleVersion">
-            <header :class="['params-collapse-trigger', {
-                'params-collapse-expand': activeName.has(2)
-            }]" @click="toggleCollapse(2)">
+            <header
+                :class="['params-collapse-trigger', {
+                    'params-collapse-expand': activeName.has(2)
+                }]" @click="toggleCollapse(2)">
                 <i class="devops-icon icon-angle-right" />
                 {{ $t('preview.introVersion') }}
             </header>
@@ -34,47 +36,48 @@
                 ></pipeline-versions-form>
             </div>
         </template>
-        <template>
-            <header :class="['params-collapse-trigger', {
+        <header
+            :class="['params-collapse-trigger', {
                 'params-collapse-expand': activeName.has(3)
             }]" @click="toggleCollapse(3)">
-                <i class="devops-icon icon-angle-right" />
-                {{ $t('buildParams') }}
-                <template v-if="paramList.length > 0">
-                    <span class="collapse-trigger-divider">|</span>
-                    <span v-if="useLastParams" class="text-link" @click.stop="updateParams()">
-                        {{ $t('resetDefault') }}
-                        <i class="devops-icon icon-question-circle" v-bk-tooltips="resetDefaultParamsTips" />
-                    </span>
-                    <span v-else class="text-link" @click.stop="updateParams('value')">
-                        {{ $t('useLastParams') }}
-                    </span>
-                </template>
-            </header>
-            <div v-if="activeName.has(3)" class="params-collapse-content">
-                <bk-alert
-                    v-if="showChangedParamsAlert && changedParams.length"
-                    type="warning"
-                    :title="$t('paramChangeTips', [changedParams.length])"
-                >
-                </bk-alert>
-                <pipeline-params-form
-                    v-if="paramList.length > 0"
-                    ref="paramsForm"
-                    :param-values="paramsValues"
-                    :highlight-changed-param="showChangedParamsAlert"
-                    :handle-param-change="handleParamChange"
-                    :params="paramList"
-                />
-                <bk-exception v-else type="empty" scene="part">
-                    {{$t('noParams')}}
-                </bk-exception>
-            </div>
-        </template>
+            <i class="devops-icon icon-angle-right" />
+            {{ $t('buildParams') }}
+            <template v-if="paramList.length > 0">
+                <span class="collapse-trigger-divider">|</span>
+                <span v-if="useLastParams" class="text-link" @click.stop="updateParams()">
+                    {{ $t('resetDefault') }}
+                    <i class="devops-icon icon-question-circle" v-bk-tooltips="resetDefaultParamsTips" />
+                </span>
+                <span v-else class="text-link" @click.stop="updateParams('value')">
+                    {{ $t('useLastParams') }}
+                </span>
+            </template>
+        </header>
+        <div v-if="activeName.has(3)" class="params-collapse-content">
+            <bk-alert
+                v-if="showChangedParamsAlert && changedParams.length"
+                type="warning"
+                :title="$t('paramChangeTips', [changedParams.length])"
+            >
+            </bk-alert>
+            <pipeline-params-form
+                v-if="paramList.length > 0"
+                ref="paramsForm"
+                :param-values="paramsValues"
+                :highlight-changed-param="showChangedParamsAlert"
+                :handle-param-change="handleParamChange"
+                :params="paramList"
+            />
+            <bk-exception v-else type="empty" scene="part">
+                {{$t('noParams')}}
+            </bk-exception>
+        </div>
+
         <template v-if="constantParams.length > 0">
-            <header :class="['params-collapse-trigger', {
-                'params-collapse-expand': activeName.has(4)
-            }]" @click="toggleCollapse(4)">
+            <header
+                :class="['params-collapse-trigger', {
+                    'params-collapse-expand': activeName.has(4)
+                }]" @click="toggleCollapse(4)">
                 <i class="devops-icon icon-angle-right" />
                 {{ $t('newui.const') }}
             </header>
@@ -88,9 +91,10 @@
             </div>
         </template>
         <template v-if="otherParams.length > 0">
-            <header :class="['params-collapse-trigger', {
-                'params-collapse-expand': activeName.has(5)
-            }]" @click="toggleCollapse(5)">
+            <header
+                :class="['params-collapse-trigger', {
+                    'params-collapse-expand': activeName.has(5)
+                }]" @click="toggleCollapse(5)">
                 <i class="devops-icon icon-angle-right" />
                 {{ $t('newui.pipelineParam.otherVar') }}
             </header>
@@ -199,13 +203,13 @@
                 return this.$route.params.pipelineId
             },
             useLastParams () {
-                return this.isDebug || this.startupInfo?.useLatestParameters
+                return this.isDebugPipeline || this.startupInfo?.useLatestParameters
             },
             changedParams () {
                 return this.paramList.filter(p => p.isChanged)
             },
             resetDefaultParamsTips () {
-                return this.$t(this.isDebug ? 'debugParamsTips' : 'restoreDetaulParamsTips')
+                return this.$t(this.isDebugPipeline ? 'debugParamsTips' : 'restoreDetaulParamsTips')
             }
         },
         watch: {
