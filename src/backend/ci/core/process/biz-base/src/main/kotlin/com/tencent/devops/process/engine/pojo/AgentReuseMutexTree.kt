@@ -6,12 +6,14 @@ import com.tencent.devops.common.pipeline.container.AgentReuseMutex
 import com.tencent.devops.common.pipeline.container.AgentReuseMutexType
 import com.tencent.devops.common.pipeline.container.Container
 import com.tencent.devops.common.pipeline.container.VMBuildContainer
+import com.tencent.devops.common.pipeline.enums.EnvControlTaskType
 import com.tencent.devops.common.pipeline.type.agent.AgentType
 import com.tencent.devops.common.pipeline.type.agent.ReusedInfo
 import com.tencent.devops.common.pipeline.type.agent.ThirdPartyAgentDispatch
 import com.tencent.devops.common.pipeline.type.agent.ThirdPartyAgentEnvDispatchType
 import com.tencent.devops.common.pipeline.type.agent.ThirdPartyAgentIDDispatchType
 import com.tencent.devops.process.constant.ProcessMessageCode
+import com.tencent.devops.process.engine.control.VmOperateTaskGenerator.Companion.START_VM_TASK_ATOM
 
 /**
  * AgentReuseMutexTree 组装流水线时通过生成树可以更好地拿到复用互斥关系
@@ -269,7 +271,8 @@ data class AgentReuseMutexTree(
 
     fun rewriteModel(
         buildContainersWithDetail: MutableList<Pair<PipelineBuildContainer, Container>>,
-        fullModel: Model
+        fullModel: Model,
+        buildTaskList: MutableList<PipelineBuildTask>
     ) {
         val treeMap = tranMap().ifEmpty { return }
 
@@ -289,11 +292,19 @@ data class AgentReuseMutexTree(
                     if (tm.type == AgentReuseMutexType.AGENT_DEP_VAR) {
                         return@container
                     }
+                    // 修改container
                     ((container as VMBuildContainer).dispatchType as ThirdPartyAgentDispatch).reusedInfo =
                         ReusedInfo(
                             tm.agentOrEnvId ?: return@container,
                             tm.type.toAgentType() ?: return@container
                         )
+
+                    // 修改启动插件
+                    buildTaskList.firstOrNull {
+                        it.containerId == container.id &&
+                                it.taskType == EnvControlTaskType.VM.name &&
+                                it.taskAtom == START_VM_TASK_ATOM
+                    }?.taskParams = container.genTaskParams()
                 }
             if (index == maxStageIndex) {
                 return

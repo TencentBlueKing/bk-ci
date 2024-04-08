@@ -297,6 +297,10 @@ class AgentReuseMutexCmd @Autowired constructor(
     private fun checkMutexQueue(container: PipelineBuildContainer, mutex: AgentReuseMutex): ContainerMutexStatus {
         val lockKey = AgentReuseMutex.genAgentReuseMutexLockKey(container.projectId, mutex.runtimeAgentOrEnvId!!)
         val lockedBuildId = redisOperation.get(lockKey)
+        // 多判断一次防止因为锁并发竞争失败导致需要排队的情况
+        if (lockedBuildId == container.buildId) {
+            return ContainerMutexStatus.READY
+        }
         // 当没有启用互斥组排队
         if (!mutex.queueEnable) {
             logAgentMutex(

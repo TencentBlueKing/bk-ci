@@ -106,13 +106,13 @@ class ThirdPartyDispatchService @Autowired constructor(
                 ).data?.get(AgentReuseMutex.genAgentContextKey(dispatchType.displayName))
 
                 // 是复用，但是和被复用对象在同一stage且先后顺序未知
-                if (dispatchType.reusedInfo != null && agentId == null) {
+                if (dispatchType.reusedInfo != null && agentId.isNullOrBlank()) {
                     dispatchType.displayName = dispatchType.reusedInfo!!.value
                     buildByAgentId(dispatchMessage, dispatchType)
                     return
                 }
 
-                if (agentId == null) {
+                if (agentId.isNullOrBlank()) {
                     throw BuildFailureException(
                         errorType = ErrorCodeEnum.AGENT_REUSE_MUTEX_AGENT_NOT_FOUND.errorType,
                         errorCode = ErrorCodeEnum.AGENT_REUSE_MUTEX_AGENT_NOT_FOUND.errorCode,
@@ -141,13 +141,13 @@ class ThirdPartyDispatchService @Autowired constructor(
                 ).data?.get(AgentReuseMutex.genAgentContextKey(dispatchType.envName))
 
                 // 是复用，但是和被复用对象在同一stage且先后顺序未知
-                if (dispatchType.reusedInfo != null && agentId == null) {
+                if (dispatchType.reusedInfo != null && agentId.isNullOrBlank()) {
                     dispatchType.envName = dispatchType.reusedInfo!!.value
                     buildByEnvId(dispatchMessage, dispatchType)
                     return
                 }
 
-                if (agentId == null) {
+                if (agentId.isNullOrBlank()) {
                     throw BuildFailureException(
                         errorType = ErrorCodeEnum.AGENT_REUSE_MUTEX_AGENT_NOT_FOUND.errorType,
                         errorCode = ErrorCodeEnum.AGENT_REUSE_MUTEX_AGENT_NOT_FOUND.errorCode,
