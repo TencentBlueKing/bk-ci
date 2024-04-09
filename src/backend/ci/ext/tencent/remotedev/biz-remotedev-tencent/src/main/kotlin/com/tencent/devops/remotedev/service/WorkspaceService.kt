@@ -289,7 +289,7 @@ class WorkspaceService @Autowired constructor(
             .scopeId = workspace.projectId
 
         if (needPermission) {
-            permissionService.checkOwnerPermission(userId, workspaceName, workspace.projectId)
+            permissionService.checkOwnerPermission(userId, workspaceName, workspace.projectId, workspace.ownerType)
         }
 
         RedisCallLimit(
