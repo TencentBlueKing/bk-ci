@@ -42,7 +42,18 @@
                     class="env-alias-area-item"
                     :label="isAgentEnv ? $t('editPage.environment') : ''"
                 >
+                    <selector
+                        v-if="agentType === 'REUSE_JOB_ID'"
+                        name="value"
+                        :disabled="disabled"
+                        :handle-change="handleSelect"
+                        :list="reuseJobList"
+                        :value="value"
+                        :toggle-visible="toggleAgentList"
+                    >
+                    </selector>
                     <devops-select
+                        v-else
                         name="value"
                         :disabled="disabled"
                         :is-loading="isLoading"
@@ -52,6 +63,7 @@
                         @blur="handleBlur"
                         :value="value"
                     />
+                    
                 </form-field>
                 <form-field
                     v-if="isAgentEnv"
@@ -140,7 +152,21 @@
             hasError: {
                 type: Boolean
             },
-            required: Boolean
+            required: Boolean,
+            pipeline: {
+                type: Object,
+                default: () => () => {}
+            },
+            stageIndex: {
+                type: Number
+            },
+            containerIndex: {
+                type: Number
+            },
+            stage: {
+                type: Object,
+                default: () => () => {}
+            }
         },
         data () {
             return {
@@ -178,12 +204,32 @@
                 return this.isAgentId
                     ? [
                         { label: this.$t('editPage.selectSlave'), value: 'ID' },
-                        { label: this.$t('editPage.inputSlave'), value: 'NAME' }
+                        { label: this.$t('editPage.inputSlave'), value: 'NAME' },
+                        { label: this.$t('editPage.locksSlave'), value: 'REUSE_JOB_ID' }
                     ]
                     : [
                         { label: this.$t('editPage.selectEnv'), value: 'ID' },
                         { label: this.$t('editPage.inputEnv'), value: 'NAME' }
                     ]
+            },
+            reuseJobList () {
+                const list = []
+                const curJobId = this.stage.containers[this.containerIndex]?.jobId || ''
+                this.pipeline.stages && this.pipeline.stages.forEach((stage, index) => {
+                    if (index !== 0 && index <= this.stageIndex) {
+                        stage && stage.containers.forEach((container, containerIndex) => {
+                            list.push(
+                                {
+                                    id: container.jobId || Math.random(),
+                                    name: `Job${index + 1}-${containerIndex + 1}${!container.jobId ? ' (该job未设置Job ID)' : ' (Job ID: ' + container.jobId + ')'} `,
+                                    disabled: !container.jobId
+                                }
+                            )
+                        })
+                    }
+                })
+
+                return list.filter(i => i.id !== curJobId)
             }
         },
         watch: {
