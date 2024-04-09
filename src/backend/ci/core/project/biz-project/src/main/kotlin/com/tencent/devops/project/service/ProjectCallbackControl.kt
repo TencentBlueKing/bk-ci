@@ -87,6 +87,10 @@ class ProjectCallbackControl @Autowired constructor(
                 secretParam = secretParam,
                 projectCallbackData = callbackData
             )
+            logger.info(
+                "start send project callback|eventType[${it.event}]|url[${it.callbackUrl}]|" +
+                        "secretType[${it.secretType}]"
+            )
             send(
                 secretRequestParam = secretRequestParam,
                 requestBody = requestBody,

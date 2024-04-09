@@ -35,11 +35,45 @@ import org.springframework.stereotype.Repository
 
 @Repository
 class ProjectCallbackDao {
-    fun getProjectCallback(dslContext: DSLContext, event: String): Result<TProjectCallbackRecord> {
+    fun getProjectCallback(dslContext: DSLContext, event: String) = with(TProjectCallback.T_PROJECT_CALLBACK) {
+        dslContext.selectFrom(this)
+            .where(EVENT.eq(event))
+            .fetch()
+    }
+
+    fun create(
+        dslContext: DSLContext,
+        event: String,
+        url: String,
+        secretType: String,
+        secretParam: String
+    ) {
+        with(TProjectCallback.T_PROJECT_CALLBACK) {
+            dslContext.insertInto(
+                this,
+                EVENT,
+                CALLBACK_URL,
+                SECRET_TYPE,
+                SECRET_PARAM
+            ).values(
+                event,
+                url,
+                secretType,
+                secretParam
+            ).execute()
+        }
+    }
+
+    fun delete(
+        dslContext: DSLContext,
+        event: String,
+        url: String
+    ) :Int{
         return with(TProjectCallback.T_PROJECT_CALLBACK) {
-            return dslContext.selectFrom(this)
-                .where(EVENT.eq(event))
-                .fetch()
+            dslContext.deleteFrom(this).where(
+                EVENT.eq(event)
+                    .and(CALLBACK_URL.eq(url))
+            ).execute()
         }
     }
 }
