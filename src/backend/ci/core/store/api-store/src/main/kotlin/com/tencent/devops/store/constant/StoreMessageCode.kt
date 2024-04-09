@@ -155,9 +155,7 @@ object StoreMessageCode {
     const val STORE_BRANCH_NO_NEW_COMMIT = "2120928" // 代码未变更，分支测试版本生成失败
     const val STORE_VERSION_IS_NOT_FINISH = "2120929" // 研发商店：组件[{0}]的[{1}]版本发布未结束，请稍后再试
     const val STORE_RELEASE_STEPS_ERROR = "2120930" // 研发商店：组件发布流程中状态变更顺序不正确
-    const val STORE_INSTALL_VALIDATE_FAIL = "2120929" // 研发商店: 组件{0}安装校验失败,失败原因:{1}
-    const val STORE_VERSION_IS_NOT_FINISH = "2120930" // 研发商店：组件{0}的{1}版本发布未结束，请稍后再试
-    const val STORE_RELEASE_STEPS_ERROR = "2120931" // 研发商店：组件发布流程中状态变更顺序不正确
+    const val STORE_INSTALL_VALIDATE_FAIL = "2120931" // 研发商店: 组件{0}安装校验失败,失败原因:{1}
     const val STORE_COMPONENT_REPO_FILE_DELETE_FAIL = "2120932" // 研发商店：组件仓库文件删除失败
 
     const val BK_OTHER = "bkOther" // 其他
