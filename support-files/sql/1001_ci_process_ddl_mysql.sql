@@ -1017,30 +1017,6 @@ CREATE TABLE IF NOT EXISTS `T_PIPELINE_WEBHOOK_REVISION` (
 ) ENGINE=InnoDB AUTO_INCREMENT=0 DEFAULT CHARSET=utf8mb4;
 
 -- ----------------------------
--- Table structure for T_PIPELINE_BUILD_COMMITS
--- ----------------------------
-CREATE TABLE IF NOT EXISTS `T_PIPELINE_BUILD_COMMITS` (
-  `ID` bigint(20) NOT NULL AUTO_INCREMENT,
-  `PROJECT_ID` varchar(32) NOT NULL,
-  `PIPELINE_ID` varchar(34) NOT NULL,
-  `BUILD_ID` varchar(34) NOT NULL,
-  `COMMIT_ID` varchar(64) NOT NULL,
-  `MESSAGE` longtext NOT NULL,
-  `AUTHOR_NAME` varchar(64) NOT NULL,
-  `MERGE_REQUEST_ID` varchar(256) DEFAULT NULL,
-  `REPOSITORY_TYPE` varchar(20) NOT NULL,
-  `COMMIT_TIME` datetime NOT NULL,
-  `CREATE_TIME` datetime NOT NULL,
-  `URL` varchar(255) COLLATE utf8mb4_bin NOT NULL DEFAULT '' COMMENT '仓库url',
-  `EVENT_TYPE` varchar(32) COLLATE utf8mb4_bin NOT NULL DEFAULT '' COMMENT '触发事件类型',
-  `CHANNEL` varchar(32) DEFAULT NULL,
-  `ACTION` varchar(64) DEFAULT NULL,
-  PRIMARY KEY (`ID`),
-  KEY `IDX_PROJECT_ID_BUILD_ID` (`PROJECT_ID`,`BUILD_ID`)
-) ENGINE=InnoDB AUTO_INCREMENT=0 DEFAULT CHARSET=utf8mb4;
-
-
--- ----------------------------
 -- Table structure for T_PIPELINE_WEBHOOK_BUILD_PARAMETER
 -- ----------------------------
 CREATE TABLE IF NOT EXISTS `T_PIPELINE_WEBHOOK_BUILD_PARAMETER` (

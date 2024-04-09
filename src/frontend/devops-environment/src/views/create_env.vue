@@ -576,7 +576,7 @@
 
                     this.nodeList.splice(0, this.nodeList.length)
 
-                    res.records.forEach(item => {
+                    res.forEach(item => {
                         item.isChecked = false
 
                         if (this.createEnvForm.envType === 'BUILD') {

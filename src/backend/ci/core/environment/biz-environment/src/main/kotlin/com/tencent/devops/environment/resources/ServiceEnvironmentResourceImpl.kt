@@ -142,6 +142,18 @@ class ServiceEnvironmentResourceImpl @Autowired constructor(
     override fun listNodesByEnvIds(
         userId: String,
         projectId: String,
+        envHashIds: List<String>
+    ): Result<List<NodeBaseInfo>> {
+        if (envHashIds.isEmpty()) {
+            throw ErrorCodeException(errorCode = CommonMessageCode.ERROR_NEED_PARAM_, params = arrayOf("envHashIds"))
+        }
+        return Result(envService.listAllEnvNodes(userId, projectId, envHashIds))
+    }
+
+    @BkTimed(extraTags = ["operate", "getNode"])
+    override fun listNodesByEnvIdsNew(
+        userId: String,
+        projectId: String,
         page: Int?,
         pageSize: Int?,
         envHashIds: List<String>
@@ -149,7 +161,7 @@ class ServiceEnvironmentResourceImpl @Autowired constructor(
         if (envHashIds.isEmpty()) {
             throw ErrorCodeException(errorCode = CommonMessageCode.ERROR_NEED_PARAM_, params = arrayOf("envHashIds"))
         }
-        return Result(envService.listAllEnvNodes(userId, projectId, page, pageSize, envHashIds))
+        return Result(envService.listAllEnvNodesNew(userId, projectId, page, pageSize, envHashIds))
     }
 
     @BkTimed(extraTags = ["operate", "getEnv"])

@@ -161,7 +161,16 @@ class NodeService @Autowired constructor(
         return environmentPermissionService.checkNodePermission(userId, projectId, AuthPermission.CREATE)
     }
 
-    fun list(
+    fun list(userId: String, projectId: String): List<NodeWithPermission> {
+        val nodeRecordList = nodeDao.listNodes(dslContext, projectId)
+        if (nodeRecordList.isEmpty()) {
+            return emptyList()
+        }
+
+        return formatNodeWithPermissions(userId, projectId, nodeRecordList)
+    }
+
+    fun listNew(
         userId: String,
         projectId: String,
         page: Int?,

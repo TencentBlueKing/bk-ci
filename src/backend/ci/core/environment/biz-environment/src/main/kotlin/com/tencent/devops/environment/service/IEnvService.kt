@@ -56,7 +56,9 @@ interface IEnvService {
         projectId: String,
         envHashIds: List<String>
     ): Map<String, List<NodeBaseInfo>>
-    fun listAllEnvNodes(
+
+    fun listAllEnvNodes(userId: String, projectId: String, envHashIds: List<String>): List<NodeBaseInfo>
+    fun listAllEnvNodesNew(
         userId: String,
         projectId: String,
         page: Int?,

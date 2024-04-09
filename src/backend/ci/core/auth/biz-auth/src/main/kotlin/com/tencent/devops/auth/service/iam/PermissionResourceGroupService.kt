@@ -92,6 +92,13 @@ interface PermissionResourceGroupService {
         groupId: Int
     ): Boolean
 
+    fun createGroupByGroupCode(
+        userId: String,
+        projectId: String,
+        resourceType: String,
+        groupCode: String
+    ): Boolean
+
     fun rename(
         userId: String,
         projectId: String,
