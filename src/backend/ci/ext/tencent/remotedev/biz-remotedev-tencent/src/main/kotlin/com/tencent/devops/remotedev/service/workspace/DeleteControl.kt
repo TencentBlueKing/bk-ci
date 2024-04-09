@@ -205,7 +205,7 @@ class DeleteControl @Autowired constructor(
                 params = arrayOf(workspaceName)
             )
         val res = deleteWorkspace4System(userId, workspaceName)
-        if (res) {
+        if (res && workspace.status != WorkspaceStatus.DELIVERING_FAILED) {
 
             // 修复待分配的机器销毁时，拥有者为空发送通知没有相关人
             val userIds = permissionService.getWorkspaceOwner(workspace.workspaceName).ifEmpty {
@@ -247,7 +247,7 @@ class DeleteControl @Autowired constructor(
         val data = mutableMapOf<String, MutableSet<WorkspaceRecord>>()
         deletedWorkspaces.forEach { workspaceName ->
             val workspace = workspaces[workspaceName]
-            if (workspace == null) {
+            if (workspace == null || workspace.status == WorkspaceStatus.DELIVERING_FAILED) {
                 logger.error("batchDeleteWorkspace4OP $workspaceName not find in records $workspaces")
                 return@forEach
             }
