@@ -333,6 +333,9 @@ object ProcessMessageCode {
     const val ERROR_VERSION_IS_NOT_UPDATED = "2101219" // 当前代码库关联人({0})未进行OAUTH授权，请尝试切换代码库凭证类型
     const val ERROR_INCORRECT_NOTIFICATION_TYPE = "2101230" // 通知类型配置不正确，请检查
     const val ERROR_INCORRECT_NOTIFICATION_MESSAGE_CONTENT = "2101231" // 通知内容配配置不正确置，请检查
+    const val ERROR_YAML_PUSH_CREATE_BRANCH = "2101232" // 创建分支失败: {0}
+    const val ERROR_YAML_PUSH_CREATE_FILE = "2101233" // 创建文件失败: {0}
+    const val ERROR_YAML_PUSH_CREATE_MERGE_REQUEST = "2101234" // 创建mr失败: {0}
 
     const val BK_SUCCESSFULLY_DISTRIBUTED = "bkSuccessfullyDistributed" // 跨项目构件分发成功，共分发了{0}个文件
     const val BK_SUCCESSFULLY_FAILED = "bkSuccessfullyFailed" // 跨项目构件分发失败，

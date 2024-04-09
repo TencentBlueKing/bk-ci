@@ -29,6 +29,7 @@ package com.tencent.devops.process.yaml.git.service
 
 import com.tencent.devops.common.api.exception.CustomException
 import com.tencent.devops.common.api.exception.ErrorCodeException
+import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.client.Client
@@ -355,40 +356,51 @@ class TGitApiService @Autowired constructor(
         content: String,
         commitMessage: String
     ): Boolean {
-        val fileExists = try {
-            client.get(ServiceGitResource::class).getGitFileInfo(
-                gitProjectId = gitProjectId,
+        try {
+            val fileExists = try {
+                client.get(ServiceGitResource::class).getGitFileInfo(
+                    gitProjectId = gitProjectId,
+                    filePath = filePath,
+                    token = token,
+                    ref = branchName,
+                    tokenType = cred.toTokenType()
+                ).data
+                true
+            } catch (ignored: RemoteServiceException) {
+                if (ignored.httpStatus == 404) {
+                    false
+                } else {
+                    throw ignored
+                }
+            }
+            val gitOperationFile = GitOperationFile(
                 filePath = filePath,
-                token = token,
-                ref = branchName,
-                tokenType = cred.toTokenType()
-            ).data
-            true
-        } catch (ignored: Exception) {
-            false
-        }
-        val gitOperationFile = GitOperationFile(
-            filePath = filePath,
-            branch = branchName,
-            content = content,
-            commitMessage = commitMessage
-        )
-        if (fileExists) {
-            client.get(ServiceGitResource::class).gitUpdateFile(
-                gitProjectId = gitProjectId,
-                token = token,
-                gitOperationFile = gitOperationFile,
-                tokenType = cred.toTokenType()
+                branch = branchName,
+                content = content,
+                commitMessage = commitMessage
             )
-        } else {
-            client.get(ServiceGitResource::class).gitCreateFile(
-                gitProjectId = gitProjectId,
-                token = token,
-                gitOperationFile = gitOperationFile,
-                tokenType = cred.toTokenType()
+            if (fileExists) {
+                client.get(ServiceGitResource::class).gitUpdateFile(
+                    gitProjectId = gitProjectId,
+                    token = token,
+                    gitOperationFile = gitOperationFile,
+                    tokenType = cred.toTokenType()
+                )
+            } else {
+                client.get(ServiceGitResource::class).gitCreateFile(
+                    gitProjectId = gitProjectId,
+                    token = token,
+                    gitOperationFile = gitOperationFile,
+                    tokenType = cred.toTokenType()
+                )
+            }
+            return fileExists
+        } catch (exception: Exception) {
+            throw ErrorCodeException(
+                errorCode = ProcessMessageCode.ERROR_YAML_PUSH_CREATE_FILE,
+                params = arrayOf(exception.message ?: "")
             )
         }
-        return fileExists
     }
 
     private fun createBranch(
@@ -398,42 +410,49 @@ class TGitApiService @Autowired constructor(
         branchName: String,
         cred: PacGitCred
     ) {
-        // 默认分支是否存在,如果仓库没有初始化,则没有默认分支
-        val defaultBranchExists = client.get(ServiceGitResource::class).getBranch(
-            accessToken = token,
-            userId = "",
-            repository = gitProjectId,
-            page = PageUtil.DEFAULT_PAGE,
-            pageSize = PageUtil.DEFAULT_PAGE_SIZE,
-            search = defaultBranch
-        ).data?.any { it.name == defaultBranch } ?: false
-        if (!defaultBranchExists) {
-            throw ErrorCodeException(
-                errorCode = ProcessMessageCode.ERROR_REPO_NO_INIT
-            )
-        }
-        if (branchName != defaultBranch) {
-            // 判断分支是否存在
-            val branchExists = client.get(ServiceGitResource::class).getBranch(
+        try {
+            // 默认分支是否存在,如果仓库没有初始化,则没有默认分支
+            val defaultBranchExists = client.get(ServiceGitResource::class).getBranch(
                 accessToken = token,
                 userId = "",
                 repository = gitProjectId,
                 page = PageUtil.DEFAULT_PAGE,
                 pageSize = PageUtil.DEFAULT_PAGE_SIZE,
-                search = branchName
-            ).data?.any { it.name == branchName } ?: false
-            // 分支不存在,则需要创建
-            if (!branchExists) {
-                client.get(ServiceGitResource::class).createBranch(
-                    token = token,
-                    tokenType = cred.toTokenType(),
-                    gitProjectId = gitProjectId,
-                    gitCreateBranch = GitCreateBranch(
-                        branchName = branchName,
-                        ref = defaultBranch
-                    )
-                ).data
+                search = defaultBranch
+            ).data?.any { it.name == defaultBranch } ?: false
+            if (!defaultBranchExists) {
+                throw ErrorCodeException(
+                    errorCode = ProcessMessageCode.ERROR_REPO_NO_INIT
+                )
             }
+            if (branchName != defaultBranch) {
+                // 判断分支是否存在
+                val branchExists = client.get(ServiceGitResource::class).getBranch(
+                    accessToken = token,
+                    userId = "",
+                    repository = gitProjectId,
+                    page = PageUtil.DEFAULT_PAGE,
+                    pageSize = PageUtil.DEFAULT_PAGE_SIZE,
+                    search = branchName
+                ).data?.any { it.name == branchName } ?: false
+                // 分支不存在,则需要创建
+                if (!branchExists) {
+                    client.get(ServiceGitResource::class).createBranch(
+                        token = token,
+                        tokenType = cred.toTokenType(),
+                        gitProjectId = gitProjectId,
+                        gitCreateBranch = GitCreateBranch(
+                            branchName = branchName,
+                            ref = defaultBranch
+                        )
+                    ).data
+                }
+            }
+        } catch (exception: Exception) {
+            throw ErrorCodeException(
+                errorCode = ProcessMessageCode.ERROR_YAML_PUSH_CREATE_BRANCH,
+                params = arrayOf(exception.message ?: "")
+            )
         }
     }
 
@@ -446,52 +465,59 @@ class TGitApiService @Autowired constructor(
         branchName: String,
         defaultBranch: String
     ): String? {
-        val dateStr = DateTimeUtil.toDateTime(LocalDateTime.now())
-        val title = if (fileExists) {
-            I18nUtil.getCodeLanMessage(
-                messageCode = ProcessMessageCode.BK_MERGE_YAML_UPDATE_FILE_TITLE,
-                params = arrayOf(dateStr, pipelineName),
-                language = I18nUtil.getDefaultLocaleLanguage()
-            )
-        } else {
-            I18nUtil.getCodeLanMessage(
-                messageCode = ProcessMessageCode.BK_MERGE_YAML_CREATE_FILE_TITLE,
-                params = arrayOf(dateStr, pipelineName),
-                language = I18nUtil.getDefaultLocaleLanguage()
-            )
-        }
-        val mrList = client.get(ServiceGitResource::class).listMergeRequest(
-            token = token,
-            tokenType = cred.toTokenType(),
-            gitProjectId = gitProjectId,
-            gitListMergeRequest = GitListMergeRequest(
-                sourceBranch = branchName,
-                targetBranch = defaultBranch,
-                state = MergeRequestState.OPENED.value
-            )
-        ).data ?: emptyList()
-        // 如果源分支->目标分支的mr已存在,则不需要再发起mr
-        val mrNumber = if (mrList.isNotEmpty()) {
-            mrList[0].mrNumber
-        } else {
-            val mrInfo = client.get(ServiceGitResource::class).createMergeRequest(
+        try {
+            val dateStr = DateTimeUtil.toDateTime(LocalDateTime.now())
+            val title = if (fileExists) {
+                I18nUtil.getCodeLanMessage(
+                    messageCode = ProcessMessageCode.BK_MERGE_YAML_UPDATE_FILE_TITLE,
+                    params = arrayOf(dateStr, pipelineName),
+                    language = I18nUtil.getDefaultLocaleLanguage()
+                )
+            } else {
+                I18nUtil.getCodeLanMessage(
+                    messageCode = ProcessMessageCode.BK_MERGE_YAML_CREATE_FILE_TITLE,
+                    params = arrayOf(dateStr, pipelineName),
+                    language = I18nUtil.getDefaultLocaleLanguage()
+                )
+            }
+            val mrList = client.get(ServiceGitResource::class).listMergeRequest(
                 token = token,
                 tokenType = cred.toTokenType(),
                 gitProjectId = gitProjectId,
-                gitCreateMergeRequest = GitCreateMergeRequest(
+                gitListMergeRequest = GitListMergeRequest(
                     sourceBranch = branchName,
                     targetBranch = defaultBranch,
-                    title = title
+                    state = MergeRequestState.OPENED.value
                 )
-            ).data
-            mrInfo?.mrNumber
-        } ?: return null
-        val projectInfo = getGitProjectInfo(
-            cred = cred,
-            gitProjectId = gitProjectId,
-            retry = ApiRequestRetryInfo(true)
-        ) ?: return null
-        return "${projectInfo.homepage}/merge_requests/$mrNumber"
+            ).data ?: emptyList()
+            // 如果源分支->目标分支的mr已存在,则不需要再发起mr
+            val mrNumber = if (mrList.isNotEmpty()) {
+                mrList[0].mrNumber
+            } else {
+                val mrInfo = client.get(ServiceGitResource::class).createMergeRequest(
+                    token = token,
+                    tokenType = cred.toTokenType(),
+                    gitProjectId = gitProjectId,
+                    gitCreateMergeRequest = GitCreateMergeRequest(
+                        sourceBranch = branchName,
+                        targetBranch = defaultBranch,
+                        title = title
+                    )
+                ).data
+                mrInfo?.mrNumber
+            } ?: return null
+            val projectInfo = getGitProjectInfo(
+                cred = cred,
+                gitProjectId = gitProjectId,
+                retry = ApiRequestRetryInfo(true)
+            ) ?: return null
+            return "${projectInfo.homepage}/merge_requests/$mrNumber"
+        } catch (exception: Exception) {
+            throw ErrorCodeException(
+                errorCode = ProcessMessageCode.ERROR_YAML_PUSH_CREATE_MERGE_REQUEST,
+                params = arrayOf(exception.message ?: "")
+            )
+        }
     }
 
     private fun PacGitCred.toToken(): String {

@@ -326,9 +326,13 @@ class CodeGitRepositoryService @Autowired constructor(
         }
         val credentialInfo = getCredentialInfo(projectId = projectId, repository = repository)
         // 获取工蜂ID
-        val gitProjectInfo = getGitProjectInfo(
-            repo = repository, token = credentialInfo.token
-        ) ?: throw ErrorCodeException(
+        val gitProjectInfo = try {
+            getGitProjectInfo(
+                repo = repository, token = credentialInfo.token
+            )
+        } catch (ignore: Exception) {
+            null
+        } ?: throw ErrorCodeException(
             errorCode = ERROR_GET_GIT_PROJECT_ID, params = arrayOf(repository.url)
         )
         if (gitProjectInfo.defaultBranch == null) {
