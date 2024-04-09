@@ -26,6 +26,7 @@ import io.swagger.v3.oas.annotations.media.Schema
  */
 @Schema(title = "构建机复用互斥模型")
 data class AgentReuseMutex(
+    val jobId: String,
     val reUseJobId: String?,
     val agentOrEnvId: String?,
     val type: AgentReuseMutexType,

@@ -24,6 +24,7 @@ import com.tencent.devops.process.engine.control.command.container.ContainerCmd
 import com.tencent.devops.process.engine.control.command.container.ContainerContext
 import com.tencent.devops.process.engine.pojo.PipelineBuildContainer
 import com.tencent.devops.process.engine.service.record.ContainerBuildRecordService
+import com.tencent.devops.process.service.BuildVariableService
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
@@ -37,6 +38,7 @@ class AgentReuseMutexCmd @Autowired constructor(
     private val buildLogPrinter: BuildLogPrinter,
     private val containerBuildRecordService: ContainerBuildRecordService,
     private val pipelineUrlBean: PipelineUrlBean,
+    private val buildVariableService: BuildVariableService
 ) : ContainerCmd {
     override fun canExecute(commandContext: ContainerContext): Boolean {
         return commandContext.cmdFlowState == CmdFlowState.CONTINUE &&
@@ -266,6 +268,17 @@ class AgentReuseMutexCmd @Autowired constructor(
                     messageCode = ProcessMessageCode.BK_GET_LOCKED,
                     language = I18nUtil.getDefaultLocaleLanguage()
                 ) + " ${expireSec}s"
+            )
+
+            // 对于AgentId这种获取到锁就需要写入上下文，防止最后没有被执行导致兜底无法解锁
+            // 同时写入的应该是根节点
+            buildVariableService.setVariable(
+                projectId = container.projectId,
+                pipelineId = container.pipelineId,
+                buildId = container.buildId,
+                varName = AgentReuseMutex.genAgentContextKey(mutex.reUseJobId ?: mutex.jobId),
+                varValue = container.buildId,
+                readOnly = true
             )
         }
 

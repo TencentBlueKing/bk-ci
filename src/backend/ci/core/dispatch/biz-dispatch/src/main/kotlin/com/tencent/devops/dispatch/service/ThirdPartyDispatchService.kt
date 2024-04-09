@@ -38,7 +38,6 @@ import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.pipeline.container.AgentReuseMutex
 import com.tencent.devops.common.pipeline.enums.VMBaseOS
 import com.tencent.devops.common.pipeline.type.agent.AgentType
-import com.tencent.devops.common.pipeline.type.agent.ThirdPartyAgentDispatch
 import com.tencent.devops.common.pipeline.type.agent.ThirdPartyAgentDockerInfo
 import com.tencent.devops.common.pipeline.type.agent.ThirdPartyAgentDockerInfoDispatch
 import com.tencent.devops.common.pipeline.type.agent.ThirdPartyAgentEnvDispatchType
@@ -160,7 +159,8 @@ class ThirdPartyDispatchService @Autowired constructor(
                 }
 
                 buildByAgentId(
-                    dispatchMessage, ThirdPartyAgentIDDispatchType(
+                    dispatchMessage,
+                    ThirdPartyAgentIDDispatchType(
                         displayName = agentId,
                         workspace = dispatchType.workspace,
                         agentType = AgentType.ID,
@@ -241,7 +241,7 @@ class ThirdPartyDispatchService @Autowired constructor(
                 dockerInfo = dispatchType.dockerInfo,
                 envId = null,
                 ignoreEnvAgentIds = null,
-                hasReuseMutex = dispatchType.agentType.isReuse()
+                hasReuseMutex = dispatchType.hasReuseMutex()
             )
         ) {
             logDebug(
@@ -290,7 +290,7 @@ class ThirdPartyDispatchService @Autowired constructor(
                     return false
                 }
 
-                // #10082 对于复用的机器需要加锁校验看看这台机器能不能使用
+                // #10082 对于复用的机器和被复用的，需要加锁校验看看这台机器能不能使用
                 if (hasReuseMutex) {
                     val lockKey = AgentReuseMutex.genAgentReuseMutexLockKey(event.projectId, agent.agentId)
                     val lock = RedisLockByValue(
@@ -428,16 +428,18 @@ class ThirdPartyDispatchService @Autowired constructor(
                     readOnly = true
                 )
             )
-            // # 10082 设置复用需要的关键字 jobs.<job_id>.container.agent_id，复用节点不设置，复用节点会使用根节点
-            if (dispatchMessage.event.dispatchType is ThirdPartyAgentDispatch &&
-                !(dispatchMessage.event.dispatchType as ThirdPartyAgentDispatch).agentType.isReuse()
-            ) {
+            // # 10082 设置复用需要的关键字 jobs.<job_id>.container.agent_id，jobId需要为根节点id
+            // 复用节点不设置，复用节点会使用根节点，只用给env设置，因为id类型的在引擎 AgentReuseMutexCmd 直接写入了
+            val dispatch = dispatchMessage.event.dispatchType
+            if ((dispatch is ThirdPartyAgentEnvDispatchType) && dispatch.reusedInfo != null) {
                 client.get(ServiceVarResource::class).setContextVar(
                     SetContextVarData(
                         projectId = dispatchMessage.event.projectId,
                         pipelineId = dispatchMessage.event.pipelineId,
                         buildId = dispatchMessage.event.buildId,
-                        contextName = AgentReuseMutex.genAgentContextKey(dispatchMessage.event.jobId!!),
+                        contextName = AgentReuseMutex.genAgentContextKey(
+                            dispatch.reusedInfo!!.jobId ?: dispatchMessage.event.jobId!!
+                        ),
                         contextVal = detail.agentId,
                         readOnly = true
                     )
@@ -466,13 +468,15 @@ class ThirdPartyDispatchService @Autowired constructor(
                     .getAgentsByEnvId(
                         projectId = dispatchMessage.event.projectId,
                         envId = dispatchType.envProjectId.takeIf { !it.isNullOrBlank() }
-                            ?.let { "$it@${dispatchType.envName}" } ?: dispatchType.envName)
+                            ?.let { "$it@${dispatchType.envName}" } ?: dispatchType.envName
+                    )
             } else {
                 client.get(ServiceThirdPartyAgentResource::class)
                     .getAgentsByEnvNameWithId(
                         projectId = dispatchMessage.event.projectId,
                         envName = dispatchType.envProjectId.takeIf { !it.isNullOrBlank() }
-                            ?.let { "$it@${dispatchType.envName}" } ?: dispatchType.envName)
+                            ?.let { "$it@${dispatchType.envName}" } ?: dispatchType.envName
+                    )
             }
         } catch (e: Exception) {
             throw BuildFailureException(
@@ -862,7 +866,7 @@ class ThirdPartyDispatchService @Autowired constructor(
             dockerInfo = dispatchType.dockerInfo,
             envId = envId,
             ignoreEnvAgentIds = dispatchMessage.event.ignoreEnvAgentIds,
-            hasReuseMutex = dispatchType.agentType.isReuse()
+            hasReuseMutex = dispatchType.hasReuseMutex()
         )
     }
 

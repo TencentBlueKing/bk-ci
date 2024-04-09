@@ -13,14 +13,19 @@ abstract class ThirdPartyAgentDispatch(
     open var reusedInfo: ReusedInfo?
 ) : DispatchType(value) {
     fun idType(): Boolean = (agentType == AgentType.ID) || (reusedInfo?.agentType == AgentType.ID)
+
+    // 是否在复用锁定链上
+    fun hasReuseMutex(): Boolean = this.agentType.isReuse() || this.reusedInfo != null
 }
 
 /**
  * 被复用对象的信息
  * @param value 被复用Job的值
  * @param agentType 被复用Job的类型
+ * @param jobId 非根节点且被复用节点所复用的jobId
  */
 data class ReusedInfo(
     val value: String,
-    val agentType: AgentType
+    val agentType: AgentType,
+    val jobId: String?
 )
