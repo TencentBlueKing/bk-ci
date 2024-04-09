@@ -2,7 +2,6 @@ package com.tencent.devops.openapi.api.apigw
 
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_APP_CODE
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE
-import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_ORIGINAL_HOST
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.auth.DEVX_HEADER_GW_TOKEN
@@ -71,27 +70,6 @@ interface ApigwRemoteDevResource {
         @QueryParam("ip")
         ip: String?
     ): Result<List<WeSecProjectWorkspace>>
-
-    @Operation(summary = "云研发SDK根据X-BK-NGGW-CLIENT-ADDRESS获取云桌面信息", tags = ["v4_app_remotedev_workspace_detail"])
-    @GET
-    @Path("/project/workspace/detail")
-    fun getProjectWorkspace(
-        @Parameter(description = "appCode", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
-        @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
-        appCode: String?,
-        @Parameter(description = "apigw Type", required = true)
-        @PathParam("apigwType")
-        apigwType: String?,
-        @Parameter(description = "IP", required = false)
-        @HeaderParam(DEVX_HEADER_NGGW_CLIENT_ADDRESS)
-        ip: String?,
-        @Parameter(description = "original host", required = false)
-        @HeaderParam(AUTH_HEADER_DEVOPS_ORIGINAL_HOST)
-        originalHost: String?,
-        @Parameter(description = "devx token", required = false)
-        @HeaderParam(DEVX_HEADER_GW_TOKEN)
-        devxToken: String?
-    ): Result<WeSecProjectWorkspace?>
 
     @Operation(summary = "提供给wesec获取云桌面信息", tags = ["v4_app_remotedev_project_list"])
     @GET
@@ -173,7 +151,10 @@ interface ApigwRemoteDevResource {
         apigwType: String?,
         @Parameter(description = "项目ID(项目英文名)", required = true)
         @PathParam("projectId")
-        projectId: String
+        projectId: String,
+        @Parameter(description = "云桌面IP", required = false)
+        @QueryParam("ip")
+        ip: String?
     ): Result<List<WeSecProjectWorkspace>>
 
     @Operation(summary = "用来通知蓝盾客户端消息", tags = ["v4_app_workspace_notify"])

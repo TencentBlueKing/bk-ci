@@ -22,7 +22,7 @@
             <bk-table
                 v-bkloading="{ isLoading: tableLoading }"
                 ref="shareDiaglogTable"
-                :data="nodeList"
+                :data="curNodeList"
                 :pagination="pagination"
                 @page-change="handlePageChange"
                 @page-limit-change="handlePageLimitChange"
@@ -55,7 +55,7 @@
                                 <div class="rotate rotate7"></div>
                                 <div class="rotate rotate8"></div>
                             </div>
-                            <span class="node-status">{{ $t('environment.nodeStatusMap')[props.row.nodeStatus] }}</span>
+                            <span class="node-status">{{ $t('environment.nodeStatusMap')[props.row.nodeStatus] || props.row.nodeStatus }}</span>
                         </div>
                     </template>
                 </bk-table-column>
@@ -172,6 +172,10 @@
         computed: {
             curUserInfo () {
                 return window.userInfo
+            },
+            curNodeList () {
+                const { limit, current } = this.pagination
+                return this.nodeList.slice(limit * (current - 1), limit * current)
             }
         },
         watch: {
@@ -267,8 +271,9 @@
                     const res = await this.$store.dispatch('environment/requestEnvNodeList', {
                         projectId: this.projectId,
                         envHashId: this.envHashId,
-                        page: this.pagination.current,
-                        pageSize: this.pagination.limit
+                        params: {
+                            page: -1
+                        }
                     })
 
                     this.tableLoading = false
@@ -618,12 +623,10 @@
             },
             handlePageChange (page) {
                 this.pagination.current = page
-                this.requestList()
             },
             handlePageLimitChange (limit) {
                 this.pagination.current = 1
                 this.pagination.limit = limit
-                this.requestList()
             }
         }
     }

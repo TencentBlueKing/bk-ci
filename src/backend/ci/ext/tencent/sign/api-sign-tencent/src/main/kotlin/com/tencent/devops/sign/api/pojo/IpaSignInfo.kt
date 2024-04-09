@@ -71,6 +71,8 @@ data class IpaSignInfo(
     var appexSignInfo: List<AppexSignInfo>? = null,
     @get:Schema(title = "待替换的plist信息", required = false)
     var replaceKeyList: Map<String, String>? = null,
+    @get:Schema(title = "待移除的plist key信息", required = false)
+    var removeKeyList: List<String>? = null,
     @get:Schema(title = "指定xcode签名工具版本", required = false)
     var codeSignVersion: String? = null,
     @get:Schema(title = "codesign插件额外参数", required = false)

@@ -161,7 +161,16 @@ class NodeService @Autowired constructor(
         return environmentPermissionService.checkNodePermission(userId, projectId, AuthPermission.CREATE)
     }
 
-    fun list(
+    fun list(userId: String, projectId: String): List<NodeWithPermission> {
+        val nodeRecordList = nodeDao.listNodes(dslContext, projectId)
+        if (nodeRecordList.isEmpty()) {
+            return emptyList()
+        }
+
+        return formatNodeWithPermissions(userId, projectId, nodeRecordList)
+    }
+
+    fun listNew(
         userId: String,
         projectId: String,
         page: Int?,
@@ -240,7 +249,7 @@ class NodeService @Autowired constructor(
             val nodeStringId = NodeStringIdUtils.getNodeStringId(it)
             NodeWithPermission(
                 nodeHashId = HashUtil.encodeLongId(it.nodeId),
-                nodeId = it.nodeId,
+                nodeId = it.nodeId.toString(),
                 name = it.nodeName,
                 ip = it.nodeIp,
                 nodeStatus = it.nodeStatus,
@@ -336,7 +345,7 @@ class NodeService @Autowired constructor(
             val nodeStringId = NodeStringIdUtils.getNodeStringId(it)
             NodeWithPermission(
                 nodeHashId = HashUtil.encodeLongId(it.nodeId),
-                nodeId = it.nodeId,
+                nodeId = it.nodeId.toString(),
                 name = it.nodeName,
                 ip = it.nodeIp,
                 nodeStatus = NodeStatus.getStatusName(it.nodeStatus),
@@ -393,7 +402,7 @@ class NodeService @Autowired constructor(
             val nodeStringId = NodeStringIdUtils.getNodeStringId(it)
             NodeWithPermission(
                 nodeHashId = HashUtil.encodeLongId(it.nodeId),
-                nodeId = it.nodeId,
+                nodeId = it.nodeId.toString(),
                 name = it.nodeName,
                 ip = it.nodeIp,
                 nodeStatus = NodeStatus.getStatusName(it.nodeStatus),
@@ -581,7 +590,7 @@ class NodeService @Autowired constructor(
             NodeStringIdUtils.getRefineDisplayName(nodeStringId, it.displayName)
             NodeWithPermission(
                 nodeHashId = HashUtil.encodeLongId(it.nodeId),
-                nodeId = it.nodeId,
+                nodeId = it.nodeId.toString(),
                 name = it.nodeName,
                 ip = it.nodeIp,
                 nodeStatus = it.nodeStatus,

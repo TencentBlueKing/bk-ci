@@ -63,6 +63,17 @@ class OldServiceEnvironmentResourceImpl @Autowired constructor(
     override fun listNodesByEnvIds(
         userId: String,
         projectId: String,
+        envHashIds: List<String>
+    ): Result<List<NodeBaseInfo>> {
+        if (envHashIds.isEmpty()) {
+            throw ErrorCodeException(errorCode = CommonMessageCode.ERROR_NEED_PARAM_, params = arrayOf("envHashIds"))
+        }
+        return Result(envService.listAllEnvNodes(userId, projectId, envHashIds))
+    }
+
+    override fun listNodesByEnvIdsNew(
+        userId: String,
+        projectId: String,
         page: Int?,
         pageSize: Int?,
         envHashIds: List<String>
@@ -70,7 +81,7 @@ class OldServiceEnvironmentResourceImpl @Autowired constructor(
         if (envHashIds.isEmpty()) {
             throw ErrorCodeException(errorCode = CommonMessageCode.ERROR_NEED_PARAM_, params = arrayOf("envHashIds"))
         }
-        return Result(envService.listAllEnvNodes(userId, projectId, page, pageSize, envHashIds))
+        return Result(envService.listAllEnvNodesNew(userId, projectId, page, pageSize, envHashIds))
     }
 
     override fun listRawByEnvNames(

@@ -107,7 +107,7 @@
             :cur-user-info="curUserInfo"
             :change-created-user="changeCreatedUser"
             :row-list="nodeList"
-            :select-handlerc-conf="selectHandlercConf"
+            :select-handler-conf="selectHandlercConf"
             :toggle-all-select="toggleAllSelect"
             :loading="nodeDialogLoading"
             :confirm-fn="confirmFn"

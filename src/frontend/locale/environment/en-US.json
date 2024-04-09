@@ -407,7 +407,7 @@
     "确认授权节点X在流水线中进行远程脚本执行或构件分发吗": "Confirm to authorize node [{0}] to execute remote scripts or distribute artifacts in the pipeline?",
     "你不是主机负责人，请联系主机负责人重新导入使用": "You are not the host owner, please contact the host owner to re-import for use",
     "自动选择": "Auto Select",
-    "其他": "Others",
+    "IDC直连区域": "IDC DirectConnectArea",
     "关闭": "Close",
     "确认重新导入节点吗？": "Confirm to re-import the [{0}] node?",
     "只读模式不支持编辑": "You are in readonly mode, edit is not able.",

@@ -147,7 +147,10 @@ class RbacCacheService constructor(
     fun getGroupConfigAction(resourceType: String): List<AuthGroupConfigAction> {
         if (groupConfigActionsCache.getIfPresent(resourceType) == null) {
             val groupConfigActions =
-                authResourceGroupConfigDao.get(dslContext = dslContext, resourceType = resourceType).map {
+                authResourceGroupConfigDao.get(
+                    dslContext = dslContext,
+                    resourceType = resourceType
+                ).map {
                     with(it) {
                         AuthGroupConfigAction(
                             id = id,
