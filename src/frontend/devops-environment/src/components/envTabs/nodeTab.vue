@@ -22,7 +22,7 @@
             <bk-table
                 v-bkloading="{ isLoading: tableLoading }"
                 ref="shareDiaglogTable"
-                :data="nodeList"
+                :data="curNodeList"
                 :pagination="pagination"
                 @page-change="handlePageChange"
                 @page-limit-change="handlePageLimitChange"
@@ -55,20 +55,8 @@
                                 <div class="rotate rotate7"></div>
                                 <div class="rotate rotate8"></div>
                             </div>
-                            <span class="node-status">{{ $t('environment.nodeStatusMap')[props.row.nodeStatus] }}</span>
+                            <span class="node-status">{{ $t('environment.nodeStatusMap')[props.row.nodeStatus] || props.row.nodeStatus }}</span>
                         </div>
-                        <span
-                            v-if="props.row.nodeStatusIcon === 'normal'"
-                            class="node-status-icon normal-stutus-icon"
-                        >
-                        </span>
-                        <span
-                            v-if="props.row.nodeStatusIcon === 'unnormal'"
-                            class="node-status-icon abnormal-stutus-icon"
-                        >
-                        </span>
-
-                        <span class="node-status">{{ $t('environment.nodeStatusMap')[props.row.nodeStatus] || props.row.nodeStatus || '--' }}</span>
                     </template>
                 </bk-table-column>
                 <bk-table-column :width="180" :label="$t('environment.operation')">
@@ -184,6 +172,10 @@
         computed: {
             curUserInfo () {
                 return window.userInfo
+            },
+            curNodeList () {
+                const { limit, current } = this.pagination
+                return this.nodeList.slice(limit * (current - 1), limit * current)
             }
         },
         watch: {
@@ -279,17 +271,14 @@
                     const res = await this.$store.dispatch('environment/requestEnvNodeList', {
                         projectId: this.projectId,
                         envHashId: this.envHashId,
-                        page: this.pagination.current,
-                        pageSize: this.pagination.limit
+                        params: {
+                            page: -1
+                        }
                     })
 
-                    this.nodeList.splice(0, this.nodeList.length)
-                    res.forEach(item => {
-                        this.nodeList.push({
-                            ...item,
-                            nodeStatusIcon: this.getNodeStatusIcon(item.nodeStatus)
-                        })
-                    })
+                    this.tableLoading = false
+                    this.nodeList = res.records
+                    this.pagination.count = res.count
 
                     if (this.importNodeList.length) {
                         this.nodeList.forEach(vv => {
@@ -377,7 +366,7 @@
 
                     this.importNodeList.splice(0, this.importNodeList.length)
 
-                    res.forEach(item => {
+                    res.records.forEach(item => {
                         item.isChecked = false
                         item.isDisplay = true
                         this.importNodeList.push(item)
@@ -634,12 +623,10 @@
             },
             handlePageChange (page) {
                 this.pagination.current = page
-                this.requestList()
             },
             handlePageLimitChange (limit) {
                 this.pagination.current = 1
                 this.pagination.limit = limit
-                this.requestList()
             }
         }
     }

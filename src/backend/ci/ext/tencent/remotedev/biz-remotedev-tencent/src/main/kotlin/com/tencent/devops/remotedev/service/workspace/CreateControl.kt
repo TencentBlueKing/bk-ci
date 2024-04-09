@@ -242,7 +242,7 @@ class CreateControl @Autowired constructor(
         var newNum = 0
         if (workspaceCreate.imageCosFile.isBlank()) {
             val resourceCount = startCloudResourceCountCheck(workspaceCreate.windowsType, workspaceCreate.windowsZone)
-            if (cgsId != null || resourceCount > workspaceCreate.count) {
+            if (cgsId != null || resourceCount >= workspaceCreate.count) {
                 doCreateWorkspace(
                     workspaceCreate = workspaceCreate,
                     projectId = projectId,

@@ -31,7 +31,7 @@ import com.fasterxml.jackson.databind.DeserializationFeature
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE
-import com.tencent.devops.common.api.exception.RemoteServiceException
+import com.tencent.devops.common.api.exception.CustomException
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.environment.pojo.job.jobcloudres.JobCloudResult
 import com.tencent.devops.environment.pojo.job.jobcloudreq.JobCloudAuthenticationReq
@@ -61,6 +61,7 @@ class ApigwJobCloudApi {
 
     companion object {
         private const val LOG_OUTPUT_MAX_LENGTH = 4000
+        private const val INTERNAL_SERVER_ERROR_CODE = 1240002
 
         private val postPathMap = mapOf(
             "executeScript" to "/api/v3/fast_execute_script",
@@ -139,16 +140,14 @@ class ApigwJobCloudApi {
             logger.info("[$operationName] response body(origin): ${logWithLengthLimit(responseBody.toString())}")
             val jobCloudResp = mapper.readValue<JobCloudResp<T>>(responseBody!!)
             if (!jobCloudResp.result) {
-                logger.error(
-                    "[$operationName] Execute failed! Req ID: ${jobCloudResp.jobRequestId}, " +
-                        "Error code: ${jobCloudResp.code}, " +
-                        "Error msg: ${jobCloudResp.message}"
-                )
-                throw RemoteServiceException(
-                    "Execute failed! Req ID: ${jobCloudResp.jobRequestId}, " +
-                        "Error code: ${jobCloudResp.code}, " +
-                        "Error msg: ${jobCloudResp.message}"
-                )
+                val errorMsg = "Execute failed! Req ID: ${jobCloudResp.jobRequestId}, " +
+                    "Error code: ${jobCloudResp.code}, " +
+                    "Error msg: ${jobCloudResp.message}"
+                logger.error("[$operationName] $errorMsg")
+                if (INTERNAL_SERVER_ERROR_CODE == jobCloudResp.code) {
+                    throw CustomException(javax.ws.rs.core.Response.Status.INTERNAL_SERVER_ERROR, errorMsg)
+                }
+                throw CustomException(javax.ws.rs.core.Response.Status.BAD_REQUEST, errorMsg)
             } else {
                 var jsonData = ""
                 val operationResult: T? =

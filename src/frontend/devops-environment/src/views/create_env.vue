@@ -107,7 +107,7 @@
             :cur-user-info="curUserInfo"
             :change-created-user="changeCreatedUser"
             :row-list="nodeList"
-            :select-handlerc-conf="selectHandlercConf"
+            :select-handler-conf="selectHandlercConf"
             :toggle-all-select="toggleAllSelect"
             :loading="nodeDialogLoading"
             :confirm-fn="confirmFn"
@@ -567,7 +567,7 @@
 
                     this.nodeList.splice(0, this.nodeList.length)
 
-                    res.forEach(item => {
+                    res.records.forEach(item => {
                         item.isChecked = false
 
                         if (this.createEnvForm.envType === 'BUILD') {
