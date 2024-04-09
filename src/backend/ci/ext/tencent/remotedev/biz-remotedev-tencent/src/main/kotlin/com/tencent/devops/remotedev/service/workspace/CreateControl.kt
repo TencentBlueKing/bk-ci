@@ -902,10 +902,11 @@ class CreateControl @Autowired constructor(
         return workspace
     }
 
-    private fun loadWorkspaceWithPersonalWindows(
+    fun loadWorkspaceWithPersonalWindows(
         userId: String,
         projectId: String,
-        workspaceCreate: WindowsWorkspaceCreate
+        workspaceCreate: WindowsWorkspaceCreate,
+        cgsId: String? = null
     ): Workspace {
         val mountType = WorkspaceMountType.START
         val systemType = WorkspaceSystemType.WINDOWS_GPU
@@ -976,7 +977,8 @@ class CreateControl @Autowired constructor(
                 devFile = Devfile(
                     zoneId = windowsZone.zoneShortName,
                     machineType = windowsConfig.size,
-                    imageCosFile = workspaceCreate.imageCosFile
+                    imageCosFile = workspaceCreate.imageCosFile,
+                    cgsId = cgsId
                 ),
                 settingEnvs = emptyMap(),
                 projectId = projectId,

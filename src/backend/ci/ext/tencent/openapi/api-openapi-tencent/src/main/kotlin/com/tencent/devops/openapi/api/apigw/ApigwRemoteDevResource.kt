@@ -244,4 +244,16 @@ interface ApigwRemoteDevResource {
         @QueryParam("workspaceName")
         workspaceName: String
     ): Result<Boolean>
+
+    @Operation(summary = "获取windows工作空间", tags = ["v4_app_remotedev_win_detail"])
+    @GET
+    @Path("/personal_win_workspace")
+    fun getPersonalWorkspace(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
+        userId: String,
+        @Parameter(description = "工作空间名", required = true)
+        @QueryParam("workspaceName")
+        workspaceName: String
+    ): Result<WeSecProjectWorkspace?>
 }

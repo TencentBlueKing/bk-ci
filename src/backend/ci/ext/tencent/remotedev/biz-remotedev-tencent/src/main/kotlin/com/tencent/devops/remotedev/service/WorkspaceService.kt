@@ -528,13 +528,14 @@ class WorkspaceService @Autowired constructor(
         return records
     }
 
-    fun getProjectWorkspaceList4WeSec(
-        projectId: String?,
-        ip: String?,
-        hasDepartmentsInfo: Boolean?,
-        hasCurrentUser: Boolean?,
+    fun getWorkspaceList4WeSec(
+        projectId: String? = null,
+        ip: String? = null,
+        hasDepartmentsInfo: Boolean? = null,
+        hasCurrentUser: Boolean? = null,
         businessLineName: String? = null,
-        ownerName: String? = null
+        ownerName: String? = null,
+        workspaceName: String? = null
     ): List<WeSecProjectWorkspace> {
         val startTime = System.currentTimeMillis()
 
@@ -544,7 +545,8 @@ class WorkspaceService @Autowired constructor(
             projectIds = projectId?.let { setOf(projectId) },
             ip = ip,
             businessLineName = businessLineName,
-            ownerName = ownerName
+            ownerName = ownerName,
+            workspaceName = workspaceName
         ) ?: emptyList()
 
         val fetchWorkspaceWithOwnerEndTime = System.currentTimeMillis()

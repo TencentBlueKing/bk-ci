@@ -181,4 +181,16 @@ interface ServiceRemoteDevResource {
         @QueryParam("workspaceName")
         workspaceName: String
     ): Result<Boolean>
+
+    @Operation(summary = "获取windows工作空间")
+    @GET
+    @Path("/personal_win_workspace")
+    fun getPersonalWorkspace(
+        @Parameter(description = "用户", required = true)
+        @QueryParam("userId")
+        userId: String,
+        @Parameter(description = "工作空间名", required = true)
+        @QueryParam("workspaceName")
+        workspaceName: String
+    ): Result<WeSecProjectWorkspace?>
 }

@@ -78,7 +78,7 @@ class ServiceRemoteDevResourceImpl(
         ownerName: String?
     ): Result<List<WeSecProjectWorkspace>> {
         return Result(
-            workspaceService.getProjectWorkspaceList4WeSec(
+            workspaceService.getWorkspaceList4WeSec(
                 projectId = projectId,
                 ip = ip,
                 businessLineName = businessLineName,
@@ -91,7 +91,7 @@ class ServiceRemoteDevResourceImpl(
 
     override fun getProjectWorkspaceIp(ip: String): Result<WeSecProjectWorkspace?> {
         return Result(
-            workspaceService.getProjectWorkspaceList4WeSec(
+            workspaceService.getWorkspaceList4WeSec(
                 projectId = null,
                 ip = ip,
                 hasDepartmentsInfo = true,
@@ -131,13 +131,14 @@ class ServiceRemoteDevResourceImpl(
         owner: String?,
         data: OpProjectWorkspaceAssignData
     ): Result<Boolean> {
+        val projectId = checkNotNull(data.projectId)
         workspaceCommon.syncStartCloudResourceList()
         val cgsData = workspaceCommon.getCgsData(data.cgsIds, data.ips) ?: return Result(false)
         // 增加可以分配的配额
         if (!data.ips.isNullOrEmpty() || !data.cgsIds.isNullOrEmpty()) {
             client.get(ServiceTxProjectResource::class).updateRemotedev(
                 userId = operator,
-                projectCode = data.projectId,
+                projectCode = projectId,
                 addcloudDesktopNum = (data.ips?.size ?: 0) + (data.cgsIds?.size ?: 0),
                 enable = null
             )
@@ -163,7 +164,7 @@ class ServiceRemoteDevResourceImpl(
             // 调用CreateControl.asyncCreateWorkspace发起创建
             createControl.projectCreateWorkspace(
                 pmUserId = owner ?: operator,
-                projectId = data.projectId,
+                projectId = projectId,
                 cgsId = cgs.cgsId,
                 autoAssign = !owner.isNullOrEmpty(),
                 workspaceCreate = WindowsWorkspaceCreate(
@@ -241,6 +242,14 @@ class ServiceRemoteDevResourceImpl(
                 needPermission = true,
                 checkDeleteImmediately = true
             )
+        )
+    }
+
+    override fun getPersonalWorkspace(userId: String, workspaceName: String): Result<WeSecProjectWorkspace?> {
+        return Result(
+            workspaceService.getWorkspaceList4WeSec(
+                workspaceName = workspaceName
+            ).first()
         )
     }
 }

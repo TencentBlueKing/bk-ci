@@ -171,4 +171,9 @@ class ApigwRemoteDevResourceImpl @Autowired constructor(private val client: Clie
         logger.info("deletePersonalWorkspace $userId|$workspaceName")
         return client.get(ServiceRemoteDevResource::class).deletePersonalWorkspace(userId, workspaceName)
     }
+
+    override fun getPersonalWorkspace(userId: String, workspaceName: String): Result<WeSecProjectWorkspace?> {
+        logger.info("getPersonalWorkspace $userId|$workspaceName")
+        return client.get(ServiceRemoteDevResource::class).getPersonalWorkspace(userId, workspaceName)
+    }
 }
