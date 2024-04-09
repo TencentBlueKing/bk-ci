@@ -1148,7 +1148,7 @@
     "searchSysVar": "Variable Name/Variable Description",
     "atomVarTips": "Can be referenced through the expression ${{ steps.<StepID>.outputs.<var_name> }}",
     "searchAtomVar": "Variable Name/Variable Description/Step Name",
-    "stepUseWarn": "The current plugin cannot use variables output by downstream steps",
+    "stepUseWarn": "Cannot use variables outputed by current step or downstream steps",
     "noStepidTips": "StepID not set,",
     "setNow": "Set Now",
     "addNotice": "Add Notification",

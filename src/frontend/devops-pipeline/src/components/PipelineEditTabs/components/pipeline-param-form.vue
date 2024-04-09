@@ -193,7 +193,7 @@
 
 <style lang="scss" scoped>
     .icon-question-circle-shape {
-        margin-left: 16px;
+        margin-left: 12px;
     }
     .param-checkbox-row {
         margin-top: 24px;

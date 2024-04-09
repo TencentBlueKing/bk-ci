@@ -1147,7 +1147,7 @@
     "searchSysVar": "变量名/变量描述",
     "atomVarTips": "可通过表达式 ${{ steps.<StepID>.outputs.<var_name> }} 引用",
     "searchAtomVar": "变量名/变量描述/step名称",
-    "stepUseWarn": "当前插件无法使用下游步骤输出的变量",
+    "stepUseWarn": "不能引用当前步骤或下游步骤输出的变量",
     "noStepidTips": "步骤未设置 StepID,",
     "setNow": "立即设置",
     "addNotice": "新增通知",

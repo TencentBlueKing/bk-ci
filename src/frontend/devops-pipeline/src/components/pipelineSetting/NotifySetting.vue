@@ -31,7 +31,7 @@
                 />
             </bk-form-item>
 
-            <bk-form-item>
+            <bk-form-item class="checkbox-item">
                 <atom-checkbox style="width: auto"
                     :handle-change="updateSubscription"
                     name="detailFlag"
@@ -41,7 +41,10 @@
                 </atom-checkbox>
             </bk-form-item>
             
-            <bk-form-item v-if="subscription.types.includes('WEWORK')">
+            <bk-form-item
+                v-if="subscription.types.includes('WEWORK') || subscription.types.includes('RTX')"
+                class="checkbox-item"
+            >
                 <atom-checkbox
                     style="width: auto"
                     name="wechatGroupFlag"
@@ -51,7 +54,7 @@
                     :value="subscription.wechatGroupFlag">
                 </atom-checkbox>
             </bk-form-item>
-            <template v-if="subscription.types.includes('WEWORK') && subscription.wechatGroupFlag">
+            <template v-if="(subscription.types.includes('WEWORK') || subscription.types.includes('RTX')) && subscription.wechatGroupFlag">
                 <bk-form-item :label="$t('settings.groupIdLabel')">
                     <group-id-selector
                         class="item-groupid"
@@ -63,7 +66,7 @@
                         desc-direction="top">
                     </group-id-selector>
                 </bk-form-item>
-                <bk-form-item>
+                <bk-form-item class="checkbox-item">
                     <atom-checkbox
                         style="width: auto;"
                         name="wechatGroupMarkdownFlag"
@@ -135,6 +138,10 @@
     .notify-setting-comp {
         .bk-form .bk-form-content {
             min-height: 24px;
+        }
+        .bk-form-item.checkbox-item .bk-form-content {
+            min-height: 18px;
+            line-height: 18px;
         }
         .bk-form-checkbox {
             display: inline-block;
