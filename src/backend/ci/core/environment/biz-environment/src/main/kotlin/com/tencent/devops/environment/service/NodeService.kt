@@ -249,7 +249,7 @@ class NodeService @Autowired constructor(
             val nodeStringId = NodeStringIdUtils.getNodeStringId(it)
             NodeWithPermission(
                 nodeHashId = HashUtil.encodeLongId(it.nodeId),
-                nodeId = it.nodeId,
+                nodeId = it.nodeId.toString(),
                 name = it.nodeName,
                 ip = it.nodeIp,
                 nodeStatus = it.nodeStatus,
@@ -345,7 +345,7 @@ class NodeService @Autowired constructor(
             val nodeStringId = NodeStringIdUtils.getNodeStringId(it)
             NodeWithPermission(
                 nodeHashId = HashUtil.encodeLongId(it.nodeId),
-                nodeId = it.nodeId,
+                nodeId = it.nodeId.toString(),
                 name = it.nodeName,
                 ip = it.nodeIp,
                 nodeStatus = NodeStatus.getStatusName(it.nodeStatus),
@@ -402,7 +402,7 @@ class NodeService @Autowired constructor(
             val nodeStringId = NodeStringIdUtils.getNodeStringId(it)
             NodeWithPermission(
                 nodeHashId = HashUtil.encodeLongId(it.nodeId),
-                nodeId = it.nodeId,
+                nodeId = it.nodeId.toString(),
                 name = it.nodeName,
                 ip = it.nodeIp,
                 nodeStatus = NodeStatus.getStatusName(it.nodeStatus),
@@ -590,7 +590,7 @@ class NodeService @Autowired constructor(
             NodeStringIdUtils.getRefineDisplayName(nodeStringId, it.displayName)
             NodeWithPermission(
                 nodeHashId = HashUtil.encodeLongId(it.nodeId),
-                nodeId = it.nodeId,
+                nodeId = it.nodeId.toString(),
                 name = it.nodeName,
                 ip = it.nodeIp,
                 nodeStatus = it.nodeStatus,
