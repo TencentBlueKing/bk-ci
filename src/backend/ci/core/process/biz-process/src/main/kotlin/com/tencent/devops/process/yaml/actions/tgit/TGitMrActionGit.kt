@@ -110,11 +110,17 @@ class TGitMrActionGit(
     override fun initCacheData() {
         val event = event()
         try {
-            val defaultBranch = apiService.getGitProjectInfo(
+            val gitProjectId = event.object_attributes.target_project_id.toString()
+
+            val gitProjectInfo = apiService.getGitProjectInfo(
                 cred = this.getGitCred(),
-                gitProjectId = event.object_attributes.target_project_id.toString(),
+                gitProjectId = gitProjectId,
                 retry = ApiRequestRetryInfo(true)
-            )!!.defaultBranch!!
+            ) ?: throw ErrorCodeException(
+                errorCode = ProcessMessageCode.ERROR_GIT_PROJECT_NOT_FOUND_OR_NOT_PERMISSION,
+                params = arrayOf(gitProjectId)
+            )
+            val defaultBranch = gitProjectInfo.defaultBranch!!
             data.context.defaultBranch = defaultBranch
             data.context.gitMrInfo = apiService.getMrInfo(
                 cred = getGitCred(),

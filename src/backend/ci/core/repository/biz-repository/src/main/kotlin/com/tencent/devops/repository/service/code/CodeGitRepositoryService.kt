@@ -38,7 +38,7 @@ import com.tencent.devops.repository.constant.RepositoryConstants
 import com.tencent.devops.repository.constant.RepositoryMessageCode
 import com.tencent.devops.repository.constant.RepositoryMessageCode.ERROR_AUTH_TYPE_ENABLED_PAC
 import com.tencent.devops.repository.constant.RepositoryMessageCode.ERROR_DEFAULT_BRANCH_IS_EMPTY
-import com.tencent.devops.repository.constant.RepositoryMessageCode.ERROR_GET_GIT_PROJECT_ID
+import com.tencent.devops.repository.constant.RepositoryMessageCode.ERROR_GIT_PROJECT_NOT_FOUND_OR_NOT_PERMISSION
 import com.tencent.devops.repository.constant.RepositoryMessageCode.GIT_INVALID
 import com.tencent.devops.repository.constant.RepositoryMessageCode.NOT_AUTHORIZED_BY_OAUTH
 import com.tencent.devops.repository.constant.RepositoryMessageCode.REPO_TYPE_NO_NEED_CERTIFICATION
@@ -91,7 +91,7 @@ class CodeGitRepositoryService @Autowired constructor(
             repo = repository,
             token = credentialInfo.token
         )?.id ?: throw ErrorCodeException(
-            errorCode = ERROR_GET_GIT_PROJECT_ID, params = arrayOf(repository.url)
+            errorCode = ERROR_GIT_PROJECT_NOT_FOUND_OR_NOT_PERMISSION, params = arrayOf(repository.url)
         )
         if (repository.enablePac == true) {
             pacCheckEnabled(projectId = projectId, userId = userId, repository = repository, retry = false)
@@ -176,7 +176,7 @@ class CodeGitRepositoryService @Autowired constructor(
                 repo = repository,
                 token = credentialInfo.token
             )?.id ?: throw ErrorCodeException(
-                errorCode = ERROR_GET_GIT_PROJECT_ID, params = arrayOf(repository.url)
+                errorCode = ERROR_GIT_PROJECT_NOT_FOUND_OR_NOT_PERMISSION, params = arrayOf(repository.url)
             )
         }
         dslContext.transaction { configuration ->
@@ -333,7 +333,7 @@ class CodeGitRepositoryService @Autowired constructor(
         } catch (ignore: Exception) {
             null
         } ?: throw ErrorCodeException(
-            errorCode = ERROR_GET_GIT_PROJECT_ID, params = arrayOf(repository.url)
+            errorCode = ERROR_GIT_PROJECT_NOT_FOUND_OR_NOT_PERMISSION, params = arrayOf(repository.url)
         )
         if (gitProjectInfo.defaultBranch == null) {
             throw ErrorCodeException(
@@ -485,7 +485,7 @@ class CodeGitRepositoryService @Autowired constructor(
             type = ScmType.CODE_GIT,
             token = token
         ) ?: throw ErrorCodeException(
-            errorCode = ERROR_GET_GIT_PROJECT_ID,
+            errorCode = ERROR_GIT_PROJECT_NOT_FOUND_OR_NOT_PERMISSION,
             params = arrayOf(repoUrl)
         )
     }

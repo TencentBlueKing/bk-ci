@@ -28,8 +28,10 @@
 package com.tencent.devops.process.yaml.actions.tgit
 
 import com.tencent.devops.common.api.enums.ScmType
+import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.webhook.pojo.code.git.GitIssueEvent
+import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.yaml.actions.BaseAction
 import com.tencent.devops.process.yaml.actions.GitActionCommon
 import com.tencent.devops.process.yaml.actions.GitBaseAction
@@ -80,21 +82,25 @@ class TGitIssueActionGit(
 
     private fun initCommonData(): GitBaseAction {
         val event = event()
-        val gitProjectId = event.objectAttributes.projectId
+        val gitProjectId = event.objectAttributes.projectId.toString()
 
-        val defaultBranch = apiService.getGitProjectInfo(
+        val gitProjectInfo = apiService.getGitProjectInfo(
             cred = this.getGitCred(),
-            gitProjectId = gitProjectId.toString(),
+            gitProjectId = gitProjectId,
             retry = ApiRequestRetryInfo(true)
-        )!!.defaultBranch!!
+        ) ?: throw ErrorCodeException(
+            errorCode = ProcessMessageCode.ERROR_GIT_PROJECT_NOT_FOUND_OR_NOT_PERMISSION,
+            params = arrayOf(gitProjectId)
+        )
+        val defaultBranch = gitProjectInfo.defaultBranch!!
         val latestCommit = apiService.getGitCommitInfo(
             cred = this.getGitCred(),
-            gitProjectId = gitProjectId.toString(),
+            gitProjectId = gitProjectId,
             sha = defaultBranch,
             retry = ApiRequestRetryInfo(retry = true)
         )
         this.data.eventCommon = EventCommonData(
-            gitProjectId = event.objectAttributes.projectId.toString(),
+            gitProjectId = gitProjectId,
             scmType = ScmType.CODE_GIT,
             branch = defaultBranch,
             commit = EventCommonDataCommit(

@@ -337,6 +337,7 @@ object ProcessMessageCode {
     const val ERROR_YAML_PUSH_CREATE_BRANCH = "2101235" // 创建分支失败: {0}
     const val ERROR_YAML_PUSH_CREATE_FILE = "2101236" // 创建文件失败: {0}
     const val ERROR_YAML_PUSH_CREATE_MERGE_REQUEST = "2101237" // 创建mr失败: {0}
+    const val ERROR_GIT_PROJECT_NOT_FOUND_OR_NOT_PERMISSION = "2101238" // 工蜂项目({0})不存在或没有权限访问
 
     const val BK_SUCCESSFULLY_DISTRIBUTED = "bkSuccessfullyDistributed" // 跨项目构件分发成功，共分发了{0}个文件
     const val BK_SUCCESSFULLY_FAILED = "bkSuccessfullyFailed" // 跨项目构件分发失败，
