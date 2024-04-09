@@ -40,10 +40,10 @@
                     :is-error="hasError"
                     :required="required"
                     class="env-alias-area-item"
-                    :label="isAgentEnv ? $t('editPage.environment') : ''"
+                    :label="(isAgentEnv && !isReuseJob) ? $t('editPage.environment') : ''"
                 >
                     <selector
-                        v-if="agentType === 'REUSE_JOB_ID'"
+                        v-if="isReuseJob"
                         name="value"
                         :disabled="disabled"
                         :handle-change="handleSelect"
@@ -66,7 +66,7 @@
                     
                 </form-field>
                 <form-field
-                    v-if="isAgentEnv"
+                    v-if="isAgentEnv && !isReuseJob"
                     :required="false"
                     class="env-alias-area-item"
                     :label="$t('editPage.envProjectId')"
@@ -197,6 +197,9 @@
             showAgentById () {
                 return this.showAgentType && this.agentType === 'ID'
             },
+            isReuseJob () {
+                return this.agentType === 'REUSE_JOB_ID'
+            },
             isAgentEnv () {
                 return this.buildResourceType === 'THIRD_PARTY_AGENT_ENV'
             },
@@ -209,7 +212,8 @@
                     ]
                     : [
                         { label: this.$t('editPage.selectEnv'), value: 'ID' },
-                        { label: this.$t('editPage.inputEnv'), value: 'NAME' }
+                        { label: this.$t('editPage.inputEnv'), value: 'NAME' },
+                        { label: this.$t('editPage.locksSlave'), value: 'REUSE_JOB_ID' }
                     ]
             },
             reuseJobList () {

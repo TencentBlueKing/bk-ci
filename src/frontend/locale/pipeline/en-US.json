@@ -817,6 +817,7 @@
     "abnormal": "Abnormal",
     "noPermToView": "No permission to view",
     "selectSlave": "Select a agent",
+    "locksSlave": "Building Resource Locks",
     "inputSlave": "Input Agent Alias Name",
     "selectEnv": "Select a pool",
     "inputEnv": "Input Pool Alias Name",

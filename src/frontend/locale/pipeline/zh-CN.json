@@ -818,6 +818,7 @@
     "abnormal": "异常",
     "noPermToView": "无权限查看",
     "selectSlave": "按节点选择",
+    "locksSlave": "构建资源锁定",
     "inputSlave": "按节点别名输入",
     "selectEnv": "按环境选择",
     "inputEnv": "按环境别名输入",
