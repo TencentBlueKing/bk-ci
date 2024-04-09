@@ -733,14 +733,14 @@ object TransferMapper {
         preStep: PreStep
     ) = when (type) {
         ElementInsertBody.ElementInsertType.INSERT -> {
-            steps.add(positionResponse.stepIndex!! + 1, preStep)
+            steps.add(positionResponse.stepIndex!! + 1, to(toYaml(preStep)))
             NodeIndex(
                 index = positionResponse.stepIndex!! + 1
             )
         }
 
         else -> {
-            steps[positionResponse.stepIndex!!] = preStep
+            steps[positionResponse.stepIndex!!] = to(toYaml(preStep))
             NodeIndex(
                 index = positionResponse.stepIndex!!
             )
@@ -873,7 +873,7 @@ object TransferMapper {
         }
 
         if (preYaml.steps != null) {
-            preYaml.steps!!.add(JsonUtil.toMap(preStep))
+            preYaml.steps!!.add(to(toYaml(preStep)))
             return NodeIndex(
                 index = preYaml.steps!!.size - 1
             )
