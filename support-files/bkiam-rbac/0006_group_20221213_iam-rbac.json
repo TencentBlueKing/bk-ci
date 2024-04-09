@@ -28,6 +28,9 @@
             },
             {
               "id": "project_manage-archived-pipeline"
+            },
+            {
+              "id": "project_api-operate"
             }
           ]
         },

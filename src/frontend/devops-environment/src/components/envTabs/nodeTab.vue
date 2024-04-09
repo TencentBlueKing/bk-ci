@@ -42,7 +42,7 @@
                             <StatusIcon v-if="successStatus.includes(props.row.nodeStatus)" status="success" />
                             <StatusIcon v-else-if="failStatus.includes(props.row.nodeStatus)" status="error" />
                             <StatusIcon v-else-if="['NOT_INSTALLED'].includes(props.row.nodeStatus)" status="normal" />
-                                
+
                             <div v-else-if="runningStatus.includes(props.row.nodeStatus)"
                                 class="bk-spin-loading bk-spin-loading-mini bk-spin-loading-primary loading-icon"
                             >
@@ -57,6 +57,18 @@
                             </div>
                             <span class="node-status">{{ $t('environment.nodeStatusMap')[props.row.nodeStatus] }}</span>
                         </div>
+                        <span
+                            v-if="props.row.nodeStatusIcon === 'normal'"
+                            class="node-status-icon normal-stutus-icon"
+                        >
+                        </span>
+                        <span
+                            v-if="props.row.nodeStatusIcon === 'unnormal'"
+                            class="node-status-icon abnormal-stutus-icon"
+                        >
+                        </span>
+
+                        <span class="node-status">{{ $t('environment.nodeStatusMap')[props.row.nodeStatus] || props.row.nodeStatus || '--' }}</span>
                     </template>
                 </bk-table-column>
                 <bk-table-column :width="180" :label="$t('environment.operation')">
@@ -271,9 +283,13 @@
                         pageSize: this.pagination.limit
                     })
 
-                    this.tableLoading = false
-                    this.nodeList = res.records
-                    this.pagination.count = res.count
+                    this.nodeList.splice(0, this.nodeList.length)
+                    res.forEach(item => {
+                        this.nodeList.push({
+                            ...item,
+                            nodeStatusIcon: this.getNodeStatusIcon(item.nodeStatus)
+                        })
+                    })
 
                     if (this.importNodeList.length) {
                         this.nodeList.forEach(vv => {
@@ -361,7 +377,7 @@
 
                     this.importNodeList.splice(0, this.importNodeList.length)
 
-                    res.records.forEach(item => {
+                    res.forEach(item => {
                         item.isChecked = false
                         item.isDisplay = true
                         this.importNodeList.push(item)

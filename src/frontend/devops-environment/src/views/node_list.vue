@@ -766,7 +766,7 @@
                     this.nodeList.splice(0, this.nodeList.length)
                     this.pagination.count = res.count
 
-                    res.records.forEach(item => {
+                    res.forEach(item => {
                         item.isEnableEdit = item.nodeHashId === this.curEditNodeItem
                         this.nodeList.push(item)
                     })

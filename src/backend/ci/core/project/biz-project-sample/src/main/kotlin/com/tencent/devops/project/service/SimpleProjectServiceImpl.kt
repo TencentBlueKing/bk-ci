@@ -51,6 +51,7 @@ import com.tencent.devops.project.pojo.OperationalProductVO
 import com.tencent.devops.project.pojo.ProjectCreateInfo
 import com.tencent.devops.project.pojo.ProjectCreateUserInfo
 import com.tencent.devops.project.pojo.ProjectOrganizationInfo
+import com.tencent.devops.project.pojo.ProjectProductValidateDTO
 import com.tencent.devops.project.pojo.ProjectUpdateInfo
 import com.tencent.devops.project.pojo.ResourceUpdateInfo
 import com.tencent.devops.project.pojo.user.UserDeptDetail
@@ -236,9 +237,7 @@ class SimpleProjectServiceImpl @Autowired constructor(
     override fun updateProjectRouterTag(englishName: String) = Unit
 
     override fun validateProjectRelateProduct(
-        userId: String,
-        enabled: Boolean,
-        productId: Int?
+        projectProductValidateDTO: ProjectProductValidateDTO
     ) = Unit
 
     companion object {
