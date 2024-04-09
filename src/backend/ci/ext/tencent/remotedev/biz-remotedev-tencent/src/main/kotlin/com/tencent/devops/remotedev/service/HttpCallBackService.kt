@@ -73,5 +73,4 @@ class HttpCallBackService @Autowired constructor() {
             }
         }
     }
-
 }
