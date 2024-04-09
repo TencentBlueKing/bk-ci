@@ -39,5 +39,5 @@ data class StorePkgInfoUpdateRequest(
     @get:Schema(title = "组件版本号", required = true)
     val version: String,
     @get:Schema(title = "组件包环境信息", required = true)
-    val storePkgEnvRequests: List<StorePkgEnvRequest>
+    val storePkgEnvInfos: List<StorePkgEnvInfo>
 )

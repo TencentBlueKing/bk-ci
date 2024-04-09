@@ -32,23 +32,22 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.web.utils.I18nUtil
-import com.tencent.devops.store.constant.StoreMessageCode
 import com.tencent.devops.store.common.dao.StoreLogoDao
+import com.tencent.devops.store.common.service.StoreLogoService
+import com.tencent.devops.store.constant.StoreMessageCode
 import com.tencent.devops.store.pojo.common.logo.Logo
 import com.tencent.devops.store.pojo.common.logo.StoreLogoInfo
 import com.tencent.devops.store.pojo.common.logo.StoreLogoReq
-import com.tencent.devops.store.common.service.StoreLogoService
-import java.io.File
-import java.io.InputStream
-import java.nio.file.Files
-import javax.imageio.ImageIO
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.cloud.context.config.annotation.RefreshScope
-import org.springframework.stereotype.Service
+import java.io.File
+import java.io.InputStream
+import java.nio.file.Files
+import javax.imageio.ImageIO
 
 /**
  * store商店logo逻辑类
@@ -56,7 +55,6 @@ import org.springframework.stereotype.Service
  * since: 2019-02-15
  */
 @Suppress("ALL")
-@Service
 @RefreshScope
 abstract class StoreLogoServiceImpl @Autowired constructor() : StoreLogoService {
 

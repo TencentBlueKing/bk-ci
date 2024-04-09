@@ -36,7 +36,7 @@ import com.tencent.devops.store.common.service.StoreSpecBusService
 import com.tencent.devops.store.common.utils.StoreUtils
 import com.tencent.devops.store.pojo.common.enums.ReleaseTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
-import com.tencent.devops.store.pojo.common.publication.StorePkgEnvRequest
+import com.tencent.devops.store.pojo.common.publication.StorePkgEnvInfo
 import com.tencent.devops.store.pojo.common.publication.StorePkgInfoUpdateRequest
 import org.springframework.beans.factory.annotation.Autowired
 
@@ -78,7 +78,7 @@ class ServiceStoreArchiveResourceImpl @Autowired constructor(
         storeType: StoreTypeEnum,
         storeCode: String,
         version: String
-    ): Result<List<StorePkgEnvRequest>> {
+    ): Result<List<StorePkgEnvInfo>> {
         val storeSpecBusService = SpringContextUtil.getBean(
             StoreSpecBusService::class.java,
             StoreUtils.getSpecBusServiceBeanName(storeType)

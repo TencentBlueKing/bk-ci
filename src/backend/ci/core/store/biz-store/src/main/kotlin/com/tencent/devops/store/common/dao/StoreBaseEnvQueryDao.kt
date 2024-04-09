@@ -36,6 +36,15 @@ import org.springframework.stereotype.Repository
 @Repository
 class StoreBaseEnvQueryDao {
 
+    fun getBaseEnvsByStoreId(
+        dslContext: DSLContext,
+        storeId: String
+    ): Result<TStoreBaseEnvRecord>? {
+        return with(TStoreBaseEnv.T_STORE_BASE_ENV) {
+            dslContext.selectFrom(this).where(STORE_ID.eq(storeId)).fetch()
+        }
+    }
+
     fun getStoreEnvInfo(dslContext: DSLContext, storeId: String): TStoreBaseEnvRecord? {
         with(TStoreBaseEnv.T_STORE_BASE_ENV) {
             return dslContext.selectFrom(this)

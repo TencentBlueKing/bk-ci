@@ -106,4 +106,16 @@ interface StoreReleaseService {
         storeOfflineRequest: StoreOfflineRequest,
         checkPermissionFlag: Boolean = true
     ): Boolean
+
+
+    /**
+     * 重新构建
+     * @param userId userId
+     * @param storeId 组件ID
+     * @return 布尔值
+     */
+    fun rebuild(
+        userId: String,
+        storeId: String
+    ): Boolean
 }

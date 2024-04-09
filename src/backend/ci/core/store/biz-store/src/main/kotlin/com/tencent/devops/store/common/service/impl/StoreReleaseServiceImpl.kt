@@ -53,13 +53,13 @@ import com.tencent.devops.store.common.handler.StoreUpdateParamI18nConvertHandle
 import com.tencent.devops.store.common.handler.StoreUpdateRunPipelineHandler
 import com.tencent.devops.store.common.service.StoreCommonService
 import com.tencent.devops.store.common.service.StoreNotifyService
+import com.tencent.devops.store.common.service.StorePipelineService
 import com.tencent.devops.store.common.service.StoreReleaseService
 import com.tencent.devops.store.common.service.StoreSpecBusService
 import com.tencent.devops.store.common.utils.StoreUtils
 import com.tencent.devops.store.constant.StoreMessageCode
 import com.tencent.devops.store.pojo.common.CLOSE
 import com.tencent.devops.store.pojo.common.KEY_STORE_ID
-import com.tencent.devops.store.pojo.common.OPEN
 import com.tencent.devops.store.pojo.common.enums.AuditTypeEnum
 import com.tencent.devops.store.pojo.common.enums.ReleaseTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreStatusEnum
@@ -70,6 +70,7 @@ import com.tencent.devops.store.pojo.common.publication.StoreOfflineRequest
 import com.tencent.devops.store.pojo.common.publication.StoreProcessInfo
 import com.tencent.devops.store.pojo.common.publication.StoreReleaseCreateRequest
 import com.tencent.devops.store.pojo.common.publication.StoreReleaseRequest
+import com.tencent.devops.store.pojo.common.publication.StoreRunPipelineParam
 import com.tencent.devops.store.pojo.common.publication.StoreUpdateRequest
 import com.tencent.devops.store.pojo.common.publication.StoreUpdateResponse
 import com.tencent.devops.store.pojo.common.publication.UpdateStoreBaseDataPO
@@ -96,6 +97,7 @@ class StoreReleaseServiceImpl @Autowired constructor(
     private val storeReleaseDao: StoreReleaseDao,
     private val storeCommonService: StoreCommonService,
     private val storeNotifyService: StoreNotifyService,
+    private val storePipelineService: StorePipelineService,
     private val storeCreateParamCheckHandler: StoreCreateParamCheckHandler,
     private val storeCreateDataPersistHandler: StoreCreateDataPersistHandler,
     private val storeUpdateParamI18nConvertHandler: StoreUpdateParamI18nConvertHandler,
@@ -231,7 +233,7 @@ class StoreReleaseServiceImpl @Autowired constructor(
             storeType = storeType,
             status = recordStatus
         )
-        val status = if (storeApproveSwitch == OPEN || isNormalUpgrade) {
+        val status = if (storeApproveSwitch == CLOSE || isNormalUpgrade) {
             StoreStatusEnum.RELEASED
         } else {
             StoreStatusEnum.AUDITING
@@ -394,6 +396,17 @@ class StoreReleaseServiceImpl @Autowired constructor(
                 }
             }
         }
+        return true
+    }
+
+    override fun rebuild(userId: String, storeId: String): Boolean {
+        val status = StoreStatusEnum.BUILDING
+        checkStoreVersionOptRight(userId, storeId, status)
+        val storeRunPipelineParam = StoreRunPipelineParam(
+            userId = userId,
+            storeId = storeId
+        )
+        storePipelineService.runPipeline(storeRunPipelineParam)
         return true
     }
 

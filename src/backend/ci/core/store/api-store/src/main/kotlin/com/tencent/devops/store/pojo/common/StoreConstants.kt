@@ -179,4 +179,3 @@ const val BK_CODE_QUALITY = "bkCodeQuality" // codecc代码质量
 const val BK_TRUSTWORTHY = "bkTrustworthy" // 可信插件
 const val BK_TRIGGER = "bkTrigger" // 触发器
 const val BK_NORMAL = "bkNormal" // 无编译环境
-const val BK_STORE_CONTEXT = "bkStoreContext" // 商店上下文

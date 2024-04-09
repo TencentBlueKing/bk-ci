@@ -33,7 +33,7 @@ import com.tencent.devops.store.pojo.common.UnInstallReq
 import com.tencent.devops.store.pojo.common.enums.StoreStatusEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.pojo.common.publication.ReleaseProcessItem
-import com.tencent.devops.store.pojo.common.publication.StorePkgEnvRequest
+import com.tencent.devops.store.pojo.common.publication.StorePkgEnvInfo
 import com.tencent.devops.store.pojo.common.publication.StoreRunPipelineParam
 import com.tencent.devops.store.pojo.common.publication.StoreUpdateRequest
 
@@ -88,7 +88,7 @@ interface StoreSpecBusService {
         storeType: StoreTypeEnum,
         storeCode: String,
         version: String
-    ): List<StorePkgEnvRequest>
+    ): List<StorePkgEnvInfo>
 
     /**
      * 获取组件发布过程信息列表
