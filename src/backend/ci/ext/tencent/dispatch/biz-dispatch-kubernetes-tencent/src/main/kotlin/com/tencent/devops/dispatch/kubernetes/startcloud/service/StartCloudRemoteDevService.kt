@@ -106,7 +106,36 @@ class StartCloudRemoteDevService @Autowired constructor(
 
         // 生产创建start资源的订单号
         val orderId = appName + "_" + event.projectId + "_${UUIDUtil.generate().takeLast(16)}"
+        val zoneId = if (event.devFile.cgsId.isNullOrBlank()) {
+            checkZoneId(event)
+        } else {
+            event.devFile.zoneId
+        }
 
+
+        val res = workspaceClient.createWorkspace(
+            userId,
+            EnvironmentCreate(
+                basicBody = EnvironmentCreateBasicBody(
+                    userId = userId,
+                    appName = appName,
+                    pipelineId = orderId,
+                    zoneId = zoneId,
+                    machineType = event.devFile.machineType,
+                    cgsId = event.devFile.cgsId,
+                    projectId = event.projectId,
+                    image = event.devFile.imageCosFile
+                )
+            )
+        )
+
+        // 创建成功后保存pipelineId
+        startCloudRedisUtils.setStartCloudOrder(userId, event.workspaceName, orderId)
+
+        return CreateWorkspaceRes(res.environmentUid, res.taskUid, 0, "")
+    }
+
+    private fun checkZoneId(event: WorkspaceCreateEvent): String {
         // 先检查基础镜像在池子中是否有配额，再看有没有可以新生产的显卡
         var zoneId = ""
         var createFlag = false
@@ -132,7 +161,7 @@ class StartCloudRemoteDevService @Autowired constructor(
                 )
             )?.filter {
                 (it.zoneId.replace(Regex("\\d+"), "") == event.devFile.zoneId) &&
-                        (it.machineResources?.any { ma -> ma.machineType == event.devFile.machineType } == true)
+                    (it.machineResources?.any { ma -> ma.machineType == event.devFile.machineType } == true)
             }?.randomOrNull() ?: throw BuildFailureException(
                 ErrorCodeEnum.CREATE_ENVIRONMENT_INTERFACE_FAIL.errorType,
                 ErrorCodeEnum.CREATE_ENVIRONMENT_INTERFACE_FAIL.errorCode,
@@ -142,27 +171,7 @@ class StartCloudRemoteDevService @Autowired constructor(
             logger.info("get random resource to running|$random")
             zoneId = random.zoneId
         }
-
-        val res = workspaceClient.createWorkspace(
-            userId,
-            EnvironmentCreate(
-                basicBody = EnvironmentCreateBasicBody(
-                    userId = userId,
-                    appName = appName,
-                    pipelineId = orderId,
-                    zoneId = zoneId,
-                    machineType = event.devFile.machineType,
-                    cgsId = event.devFile.cgsId,
-                    projectId = event.projectId,
-                    image = event.devFile.imageCosFile
-                )
-            )
-        )
-
-        // 创建成功后保存pipelineId
-        startCloudRedisUtils.setStartCloudOrder(userId, event.workspaceName, orderId)
-
-        return CreateWorkspaceRes(res.environmentUid, res.taskUid, 0, "")
+        return zoneId
     }
 
     override fun startWorkspace(userId: String, workspaceName: String): String {
