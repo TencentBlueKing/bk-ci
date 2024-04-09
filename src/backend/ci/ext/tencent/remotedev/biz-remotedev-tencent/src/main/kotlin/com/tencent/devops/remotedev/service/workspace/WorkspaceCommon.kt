@@ -296,6 +296,10 @@ class WorkspaceCommon @Autowired constructor(
                 return WorkspaceStatus.DELETED
             }
 
+            workspaceInfo.status == EnvStatusEnum.restarting -> {
+                return WorkspaceStatus.RESTARTING
+            }
+
             workspaceInfo.status == EnvStatusEnum.running && workspaceInfo.started != false -> {
                 startControl.doStartWS(true, userId, workspaceName, workspaceInfo.environmentHost)
                 return WorkspaceStatus.RUNNING
