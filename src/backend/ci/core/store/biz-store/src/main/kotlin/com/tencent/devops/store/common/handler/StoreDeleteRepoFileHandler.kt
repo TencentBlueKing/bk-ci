@@ -30,7 +30,6 @@ package com.tencent.devops.store.common.handler
 import com.tencent.devops.artifactory.api.service.StoreArchiveComponentPkgResource
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.client.Client
-import com.tencent.devops.store.common.service.impl.StoreComponentManageServiceImpl
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.pojo.common.handler.Handler
 import com.tencent.devops.store.pojo.common.publication.StoreDeleteRequest
@@ -38,8 +37,7 @@ import org.springframework.stereotype.Service
 
 @Service
 class StoreDeleteRepoFileHandler(
-    private val client: Client,
-    private val storeComponentManageService: StoreComponentManageServiceImpl
+    private val client: Client
 ) : Handler<StoreDeleteRequest> {
 
     override fun canExecute(handlerRequest: StoreDeleteRequest): Boolean {
