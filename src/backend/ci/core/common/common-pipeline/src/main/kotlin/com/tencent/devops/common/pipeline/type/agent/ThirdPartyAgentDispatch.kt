@@ -22,7 +22,7 @@ abstract class ThirdPartyAgentDispatch(
  * 被复用对象的信息
  * @param value 被复用Job的值
  * @param agentType 被复用Job的类型
- * @param jobId 非根节点且被复用节点所复用的jobId
+ * @param jobId 非根节点且被复用节点所复用的根jobId
  */
 data class ReusedInfo(
     val value: String,

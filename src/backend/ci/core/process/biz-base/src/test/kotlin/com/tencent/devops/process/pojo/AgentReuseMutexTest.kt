@@ -4,6 +4,7 @@ import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.pipeline.container.AgentReuseMutex
 import com.tencent.devops.common.pipeline.container.AgentReuseMutexType
 import com.tencent.devops.common.pipeline.type.agent.AgentType
+import com.tencent.devops.common.pipeline.type.agent.ReusedInfo
 import com.tencent.devops.common.pipeline.type.agent.ThirdPartyAgentDispatch
 import com.tencent.devops.common.pipeline.type.agent.ThirdPartyAgentEnvDispatchType
 import com.tencent.devops.common.pipeline.type.agent.ThirdPartyAgentIDDispatchType
@@ -32,7 +33,7 @@ class AgentReuseMutexTest {
             mapOf(
                 "job_id_dep_2" to initReuseId("job_id_dep_1"),
                 "job_id_dep_3" to initReuseId("job_env_dep_1"),
-                "job_id_dep_4" to initReuseId("job_id_dep_2"),
+                "job_id_dep_4" to initReuseId("job_id_dep_2")
             )
         )
         stages.add(
@@ -43,7 +44,7 @@ class AgentReuseMutexTest {
         stages.add(
             mapOf(
                 "job_id_dep_6" to initReuseId("job_env_1"),
-                "job_id_dep_7" to initReuseEnv("job_env_1"),
+                "job_id_dep_7" to initReuseEnv("job_env_1")
             )
         )
         val tree = AgentReuseMutexTree(mutableListOf())
@@ -60,38 +61,125 @@ class AgentReuseMutexTest {
             }
         }
         val expectRes = mapOf(
-            "job_1" to Pair(AgentReuseMutex("job_1", null, "agent_1", AgentReuseMutexType.AGENT_ID, false), false),
-            "job_id_dep_1" to Pair(AgentReuseMutex("job_id_dep_1", "job_1", "agent_1", AgentReuseMutexType.AGENT_ID, false), true),
-            "job_env_dep_1" to Pair(
+            "job_1" to Triple(
+                AgentReuseMutex("job_1", null, "agent_1", AgentReuseMutexType.AGENT_ID, false),
+                false,
+                ThirdPartyAgentIDDispatchType(
+                    "agent_1", null, AgentType.ID, null, ReusedInfo(
+                        "agent_1",
+                        AgentType.ID,
+                        null
+                    )
+                )
+            ),
+            "job_id_dep_1" to Triple(
+                AgentReuseMutex(
+                    "job_id_dep_1",
+                    "job_1",
+                    "agent_1",
+                    AgentReuseMutexType.AGENT_ID,
+                    false
+                ),
+                true,
+                ThirdPartyAgentIDDispatchType(
+                    "job_1", null, AgentType.REUSE_JOB_ID, null, ReusedInfo(
+                        "agent_1",
+                        AgentType.ID,
+                        "job_1"
+                    )
+                )
+            ),
+            "job_env_dep_1" to Triple(
                 AgentReuseMutex("job_env_dep_1", "job_env_1", "job_1", AgentReuseMutexType.AGENT_ENV_NAME, false),
-                true
+                true,
+                ThirdPartyAgentEnvDispatchType(
+                    envName = "job_env_1",
+                    null, null, AgentType.REUSE_JOB_ID, null, ReusedInfo(
+                        "job_1",
+                        AgentType.NAME,
+                        "job_env_1"
+                    )
+                )
             ),
-            "job_env_1" to Pair(AgentReuseMutex("job_env_1", null, "job_1", AgentReuseMutexType.AGENT_ENV_NAME, false), false),
-            "job_env_dep_2" to Pair(
+            "job_env_1" to Triple(
+                AgentReuseMutex("job_env_1", null, "job_1", AgentReuseMutexType.AGENT_ENV_NAME, false),
+                false,
+                ThirdPartyAgentEnvDispatchType(
+                    envName = "job_1",
+                    null, null, AgentType.NAME, null, ReusedInfo(
+                        "job_1",
+                        AgentType.NAME,
+                        null
+                    )
+                )
+            ),
+            "job_env_dep_2" to Triple(
                 AgentReuseMutex("job_env_dep_2", "job_env_1", "job_1", AgentReuseMutexType.AGENT_ENV_NAME, false),
-                true
+                true,
+                ThirdPartyAgentEnvDispatchType(
+                    envName = "job_env_dep_1",
+                    null, null, AgentType.REUSE_JOB_ID, null, ReusedInfo(
+                        "job_1",
+                        AgentType.NAME,
+                        "job_env_1"
+                    )
+                )
             ),
-            "job_id_dep_8" to Pair(AgentReuseMutex("job_id_dep_8", "job_1", "agent_1", AgentReuseMutexType.AGENT_DEP_VAR, false), true),
-            "job_id_dep_2" to Pair(AgentReuseMutex("job_id_dep_2", "job_1", "agent_1", AgentReuseMutexType.AGENT_DEP_VAR, true), true),
-            "job_id_dep_3" to Pair(
+            "job_id_dep_8" to Triple(
+                AgentReuseMutex(
+                    "job_id_dep_8",
+                    "job_1",
+                    "agent_1",
+                    AgentReuseMutexType.AGENT_DEP_VAR,
+                    false
+                ), true, initReuseEnv("job_1")
+            ),
+            "job_id_dep_2" to Triple(
+                AgentReuseMutex(
+                    "job_id_dep_2",
+                    "job_1",
+                    "agent_1",
+                    AgentReuseMutexType.AGENT_DEP_VAR,
+                    true
+                ), true, initReuseId("job_id_dep_1")
+            ),
+            "job_id_dep_3" to Triple(
                 AgentReuseMutex("job_id_dep_3", "job_env_1", "job_1", AgentReuseMutexType.AGENT_DEP_VAR, false),
-                true
+                true, initReuseId("job_env_dep_1")
             ),
-            "job_id_dep_4" to Pair(AgentReuseMutex("job_id_dep_4", "job_1", "agent_1", AgentReuseMutexType.AGENT_DEP_VAR, true), true),
-            "job_id_dep_5" to Pair(
+            "job_id_dep_4" to Triple(
+                AgentReuseMutex(
+                    "job_id_dep_4",
+                    "job_1",
+                    "agent_1",
+                    AgentReuseMutexType.AGENT_DEP_VAR,
+                    true
+                ), true, initReuseId("job_id_dep_2")
+            ),
+            "job_id_dep_5" to Triple(
                 AgentReuseMutex("job_id_dep_5", "job_env_1", "job_1", AgentReuseMutexType.AGENT_DEP_VAR, false),
-                true
+                true, initReuseId("job_env_dep_2")
             ),
-            "job_id_dep_6" to Pair(
+            "job_id_dep_6" to Triple(
                 AgentReuseMutex("job_id_dep_6", "job_env_1", "job_1", AgentReuseMutexType.AGENT_DEP_VAR, true),
-                true
+                true, initReuseId("job_env_1")
             ),
-            "job_id_dep_7" to Pair(
+            "job_id_dep_7" to Triple(
                 AgentReuseMutex("job_id_dep_7", "job_env_1", "job_1", AgentReuseMutexType.AGENT_DEP_VAR, true),
-                true
+                true, initReuseEnv("job_env_1")
             )
         )
-        Assertions.assertEquals(expectRes.toSortedMap(), tree.tranMap().toSortedMap())
+        val treeMap = tree.tranMap()
+        Assertions.assertEquals(
+            expectRes.toSortedMap().map { it.key to Pair(it.value.first, it.value.second) }.toMap().toSortedMap(),
+            treeMap.toSortedMap()
+        )
+        stages.forEach { stage ->
+            stage.forEach { (jobId, dis) ->
+                tree.rewriteDispatch(treeMap[jobId]!!.first, dis, false)
+                Assertions.assertEquals(expectRes[jobId]!!.third, dis)
+            }
+        }
     }
 
     @Test
