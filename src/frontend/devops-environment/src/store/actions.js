@@ -83,7 +83,7 @@ const actions = {
      * 节点列表
      */
     requestNodeList ({ commit }, { projectId }) {
-        return vue.$ajax.get(`${prefix}/user/envnode/${projectId}?page=-1`).then(response => {
+        return vue.$ajax.get(`${prefix}/user/envnode/${projectId}`).then(response => {
             return response
         })
     },
@@ -91,7 +91,7 @@ const actions = {
      * 环境的节点列表
      */
     requestEnvNodeList ({ commit }, { projectId, envHashId }) {
-        return vue.$ajax.get(`${prefix}/user/environment/${projectId}/${envHashId}/listNodes?page=-1`).then(response => {
+        return vue.$ajax.post(`${prefix}/user/environment/${projectId}/${envHashId}/listNodes`).then(response => {
             return response
         })
     },

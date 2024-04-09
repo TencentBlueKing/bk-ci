@@ -337,8 +337,7 @@ class RbacPermissionApplyService @Autowired constructor(
         } catch (e: Exception) {
             throw ErrorCodeException(
                 errorCode = AuthMessageCode.APPLY_TO_JOIN_GROUP_FAIL,
-                params = arrayOf(applyJoinGroupInfo.groupIds.toString()),
-                defaultMessage = "Failed to apply to join group(${e.message}})"
+                params = arrayOf(e.message ?: "")
             )
         }
         return true

@@ -274,11 +274,6 @@ class PipelineRepositoryService constructor(
         return if (!create) {
             val pipelineSetting = setting
                 ?: pipelineSettingDao.getSetting(dslContext, projectId, pipelineId)
-            // 只在更新操作时检查stage数量不为1
-            if (model.stages.size <= 1) throw ErrorCodeException(
-                errorCode = ProcessMessageCode.ERROR_PIPELINE_WITH_EMPTY_STAGE,
-                params = arrayOf()
-            )
             val result = update(
                 projectId = projectId,
                 pipelineId = pipelineId,
@@ -909,7 +904,7 @@ class PipelineRepositoryService constructor(
                 val transactionContext = DSL.using(configuration)
                 var pipelineVersion: Int? = null
                 var triggerVersion: Int? = null
-                val settingVersion = setting?.version ?: 1
+                val settingVersion = (setting?.version ?: 1).coerceAtLeast(1)
                 val releaseResource = pipelineResourceDao.getReleaseVersionResource(
                     transactionContext, projectId, pipelineId
                 ) ?: throw ErrorCodeException(
@@ -1056,12 +1051,12 @@ class PipelineRepositoryService constructor(
                         )
                         // 流水线版本兼容历史数据，至少取发布版本的版本号
                         pipelineVersion = PipelineVersionUtils.getPipelineVersion(
-                            currVersion = maxOf(releaseResource.version, releaseResource.pipelineVersion ?: 1),
+                            currVersion = releaseResource.pipelineVersion ?: releaseResource.version,
                             originModel = releaseResource.model,
                             newModel = model
                         ).coerceAtLeast(1)
                         triggerVersion = PipelineVersionUtils.getTriggerVersion(
-                            currVersion = releaseResource.triggerVersion ?: 1,
+                            currVersion = releaseResource.triggerVersion ?: 0,
                             originModel = releaseResource.model,
                             newModel = model
                         ).coerceAtLeast(1)
@@ -1352,11 +1347,12 @@ class PipelineRepositoryService constructor(
         projectId: String,
         pipelineId: String,
         version: Int,
-        ignoreBase: Boolean? = false
+        ignoreBase: Boolean? = false,
+        transactionContext: DSLContext? = null
     ): PipelineResourceVersion {
         var resultVersion: PipelineResourceVersion? = null
         dslContext.transaction { configuration ->
-            val context = DSL.using(configuration)
+            val context = transactionContext ?: DSL.using(configuration)
 
             // 获取发布的版本用于比较差异
             val releaseResource = pipelineResourceDao.getReleaseVersionResource(

@@ -120,6 +120,8 @@ class PipelineVersionFacadeService @Autowired constructor(
             projectId = projectId,
             pipelineId = pipelineId
         )
+        // 有草稿且不是空白的编排才可以发布
+        val canRelease = draftVersion != null && draftVersion.model.stages.size > 1
         // 存在草稿版本就可以调试
         val canDebug = draftVersion != null
         val releaseVersion = pipelineRepositoryService.getPipelineResourceVersion(
@@ -130,7 +132,6 @@ class PipelineVersionFacadeService @Autowired constructor(
             params = arrayOf(pipelineId)
         )
         val yamlInfo = pipelineYamlFacadeService.getPipelineYamlInfo(projectId, pipelineId, releaseVersion.version)
-        val canRelease = draftVersion != null
         var baseVersion: Int? = null
         var baseVersionName: String? = null
         var baseVersionStatus = VersionStatus.RELEASED
@@ -278,6 +279,7 @@ class PipelineVersionFacadeService @Autowired constructor(
             projectId = projectId,
             pipelineId = pipelineId
         )
+
         val originYaml = pipelineYamlFacadeService.getPipelineYamlInfo(projectId, pipelineId, version)
         // 如果不匹配已有状态则报错，需要用户重新刷新页面
         if (originYaml != null && !request.enablePac) throw ErrorCodeException(
