@@ -350,11 +350,9 @@ class StoreProjectRelDao {
             .on(a.STORE_CODE.eq(b.STORE_CODE).and(a.STORE_TYPE.eq(b.STORE_TYPE)))
             .where(a.USERNAME.eq(userId))
             .and(b.STORE_CODE.eq(storeCode))
-            .and(b.TYPE.`in`(listOf(StoreProjectTypeEnum.TEST.type.toByte(), StoreProjectTypeEnum.INIT.type.toByte())))
+            .and(b.TYPE.eq(StoreProjectTypeEnum.TEST.type.toByte()))
             .and(b.CREATOR.eq(userId))
             .and(a.STORE_TYPE.eq(storeType.type.toByte()))
-            .orderBy(b.TYPE.asc())
-            .limit(1)
         return finalStep.fetchOne(0, String::class.java)
     }
 

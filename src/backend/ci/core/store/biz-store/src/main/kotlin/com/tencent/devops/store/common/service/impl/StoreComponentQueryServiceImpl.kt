@@ -177,7 +177,7 @@ class StoreComponentQueryServiceImpl @Autowired constructor(
                 dslContext = dslContext,
                 userId = userId,
                 storeCode = storeCode,
-                storeType = StoreTypeEnum.ATOM
+                storeType = StoreTypeEnum.valueOf(storeType)
             )
             if (null != testProjectCode) {
                 projectCodeList.add(testProjectCode)
@@ -197,8 +197,8 @@ class StoreComponentQueryServiceImpl @Autowired constructor(
         records?.forEach {
             val storeCode = it[tStoreBase.STORE_CODE] as String
             var releaseFlag = false // 是否有处于上架状态的组件版本
-            val releaseAtomNum = storeBaseQueryDao.countReleaseComponentByCode(dslContext, storeCode)
-            if (releaseAtomNum > 0) {
+            val releaseStoreNum = storeBaseQueryDao.countReleaseComponentByCode(dslContext, storeCode)
+            if (releaseStoreNum > 0) {
                 releaseFlag = true
             }
             val logoUrl = it[tStoreBase.LOGO_URL]
@@ -477,7 +477,7 @@ class StoreComponentQueryServiceImpl @Autowired constructor(
             val classifyCode = it.classifyCode
             if (classifyCode != "trigger") {
                 val classifyLanName = I18nUtil.getCodeLanMessage(
-                    messageCode = "${StoreTypeEnum.ATOM.name}.classify.$classifyCode",
+                    messageCode = "$storeType.classify.$classifyCode",
                     defaultMessage = it.classifyName,
                     language = I18nUtil.getLanguage(userId)
                 )
