@@ -277,7 +277,7 @@ class AgentReuseMutexCmd @Autowired constructor(
                 pipelineId = container.pipelineId,
                 buildId = container.buildId,
                 varName = AgentReuseMutex.genAgentContextKey(mutex.reUseJobId ?: mutex.jobId),
-                varValue = container.buildId,
+                varValue = mutex.runtimeAgentOrEnvId!!,
                 readOnly = true
             )
         }
