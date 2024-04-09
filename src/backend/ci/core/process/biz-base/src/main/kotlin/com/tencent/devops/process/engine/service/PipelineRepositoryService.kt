@@ -274,11 +274,6 @@ class PipelineRepositoryService constructor(
         return if (!create) {
             val pipelineSetting = setting
                 ?: pipelineSettingDao.getSetting(dslContext, projectId, pipelineId)
-            // 只在更新操作时检查stage数量不为1
-            if (model.stages.size <= 1) throw ErrorCodeException(
-                errorCode = ProcessMessageCode.ERROR_PIPELINE_WITH_EMPTY_STAGE,
-                params = arrayOf()
-            )
             val result = update(
                 projectId = projectId,
                 pipelineId = pipelineId,

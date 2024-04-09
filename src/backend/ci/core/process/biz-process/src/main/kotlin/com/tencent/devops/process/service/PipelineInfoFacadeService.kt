@@ -1039,6 +1039,11 @@ class PipelineInfoFacadeService @Autowired constructor(
                 statusCode = Response.Status.NOT_FOUND.statusCode,
                 errorCode = ProcessMessageCode.ERROR_PIPELINE_MODEL_NOT_EXISTS
             )
+            // 只在更新操作时检查stage数量不为1
+            if (model.stages.size <= 1) throw ErrorCodeException(
+                errorCode = ProcessMessageCode.ERROR_PIPELINE_WITH_EMPTY_STAGE,
+                params = arrayOf()
+            )
             if (versionStatus?.isReleasing() == true) {
                 // 对已经存在的模型做处理
                 val param = BeforeDeleteParam(
