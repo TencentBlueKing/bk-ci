@@ -245,7 +245,7 @@ class StoreBaseQueryDao {
             .from(tStoreBase)
             .join(tStoreMember)
             .on(tStoreBase.STORE_CODE.eq(tStoreMember.STORE_CODE))
-            .leftJoin(tStoreBase)
+            .leftJoin(tStoreBaseEnv)
             .on(tStoreBase.ID.eq(tStoreBaseEnv.STORE_ID))
             .where(conditions)
             .groupBy(tStoreBase.ID)
