@@ -25,38 +25,27 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.store.common.handler
+package com.tencent.devops.store.common.service
 
-import com.tencent.devops.artifactory.api.service.StoreArchiveComponentPkgResource
-import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
-import com.tencent.devops.common.client.Client
-import com.tencent.devops.store.common.service.impl.StoreComponentManageServiceImpl
-import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
-import com.tencent.devops.store.pojo.common.handler.Handler
 import com.tencent.devops.store.pojo.common.publication.StoreDeleteRequest
-import org.springframework.stereotype.Service
 
-@Service
-class StoreDeleteRepoFileHandler(
-    private val client: Client,
-    private val storeComponentManageService: StoreComponentManageServiceImpl
-) : Handler<StoreDeleteRequest> {
+interface StoreBaseDeleteService {
 
-    override fun canExecute(handlerRequest: StoreDeleteRequest): Boolean {
+    /**
+     * 检查删除组件请求参数合法性
+     * @param handlerRequest 删除组件请求报文体
+     */
+    fun deleteComponentCheck(handlerRequest: StoreDeleteRequest)
 
-        return when (handlerRequest.storeType) {
-            StoreTypeEnum.ATOM.name -> true
-            else -> false
-        }
-    }
+    /**
+     * 删除组件关联仓库文件
+     * @param handlerRequest 删除组件请求报文体
+     */
+    fun deleteComponentRepoFile(handlerRequest: StoreDeleteRequest)
 
-    override fun execute(handlerRequest: StoreDeleteRequest) {
-        // 清理仓库组件关联文件
-        val bkStoreContext = handlerRequest.bkStoreContext
-        client.get(StoreArchiveComponentPkgResource::class).deleteStorePkg(
-            userId = bkStoreContext[AUTH_HEADER_USER_ID] as String,
-            storeCode = handlerRequest.storeCode,
-            storeType = StoreTypeEnum.valueOf(handlerRequest.storeType)
-        )
-    }
+    /**
+     * 持久化删除组件数据
+     * @param handlerRequest 删除组件请求报文体
+     */
+    fun doStoreDeleteDataPersistent(handlerRequest: StoreDeleteRequest)
 }

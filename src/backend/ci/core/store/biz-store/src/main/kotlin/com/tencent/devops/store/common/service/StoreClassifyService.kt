@@ -24,39 +24,12 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
+package com.tencent.devops.store.common.service
 
-package com.tencent.devops.store.common.handler
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.store.pojo.common.classify.Classify
 
-import com.tencent.devops.artifactory.api.service.StoreArchiveComponentPkgResource
-import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
-import com.tencent.devops.common.client.Client
-import com.tencent.devops.store.common.service.impl.StoreComponentManageServiceImpl
-import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
-import com.tencent.devops.store.pojo.common.handler.Handler
-import com.tencent.devops.store.pojo.common.publication.StoreDeleteRequest
-import org.springframework.stereotype.Service
+interface StoreClassifyService {
 
-@Service
-class StoreDeleteRepoFileHandler(
-    private val client: Client,
-    private val storeComponentManageService: StoreComponentManageServiceImpl
-) : Handler<StoreDeleteRequest> {
-
-    override fun canExecute(handlerRequest: StoreDeleteRequest): Boolean {
-
-        return when (handlerRequest.storeType) {
-            StoreTypeEnum.ATOM.name -> true
-            else -> false
-        }
-    }
-
-    override fun execute(handlerRequest: StoreDeleteRequest) {
-        // 清理仓库组件关联文件
-        val bkStoreContext = handlerRequest.bkStoreContext
-        client.get(StoreArchiveComponentPkgResource::class).deleteStorePkg(
-            userId = bkStoreContext[AUTH_HEADER_USER_ID] as String,
-            storeCode = handlerRequest.storeCode,
-            storeType = StoreTypeEnum.valueOf(handlerRequest.storeType)
-        )
-    }
+    fun getStoreClassifyList(storeType: String): Result<List<Classify>>
 }

@@ -27,25 +27,13 @@
 
 package com.tencent.devops.store.common.dao
 
-import com.tencent.devops.common.api.constant.KEY_VERSION
 import com.tencent.devops.common.db.utils.JooqUtils
-import com.tencent.devops.model.store.tables.TClassify
 import com.tencent.devops.model.store.tables.TStoreBase
-import com.tencent.devops.model.store.tables.TStoreVersionLog
+import com.tencent.devops.model.store.tables.TStoreBaseEnv
+import com.tencent.devops.model.store.tables.TStoreMember
 import com.tencent.devops.model.store.tables.records.TStoreBaseRecord
 import com.tencent.devops.store.common.utils.VersionUtils
-import com.tencent.devops.store.pojo.common.KEY_CLASSIFY_CODE
-import com.tencent.devops.store.pojo.common.KEY_CLASSIFY_CREATE_TIME
-import com.tencent.devops.store.pojo.common.KEY_CLASSIFY_NAME
-import com.tencent.devops.store.pojo.common.KEY_CLASSIFY_TYPE
-import com.tencent.devops.store.pojo.common.KEY_CLASSIFY_UPDATE_TIME
-import com.tencent.devops.store.pojo.common.KEY_CLASSIFY_WEIGHT
-import com.tencent.devops.store.pojo.common.KEY_ID
-import com.tencent.devops.store.pojo.common.KEY_PUBLISHER
-import com.tencent.devops.store.pojo.common.KEY_RELEASE_TYPE
-import com.tencent.devops.store.pojo.common.KEY_STORE_CODE
-import com.tencent.devops.store.pojo.common.KEY_STORE_TYPE
-import com.tencent.devops.store.pojo.common.KEY_VERSION_LOG_CONTENT
+import com.tencent.devops.store.pojo.common.KEY_LANGUAGE
 import com.tencent.devops.store.pojo.common.enums.StoreStatusEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import org.jooq.Condition
@@ -112,10 +100,14 @@ class StoreBaseQueryDao {
         }
     }
 
-    fun getLatestComponentByCode(dslContext: DSLContext, storeCode: String): TStoreBaseRecord? {
+    fun getLatestComponentByCode(
+        dslContext: DSLContext,
+        storeCode: String,
+        storeType: StoreTypeEnum
+    ): TStoreBaseRecord? {
         return with(TStoreBase.T_STORE_BASE) {
             dslContext.selectFrom(this)
-                .where(STORE_CODE.eq(storeCode))
+                .where(STORE_CODE.eq(storeCode).and(STORE_TYPE.eq(storeType.type.toByte())))
                 .and(LATEST_FLAG.eq(true))
                 .fetchOne()
         }
@@ -210,40 +202,142 @@ class StoreBaseQueryDao {
         }
     }
 
-    fun getComponentRelClassifyAndVersionInfoById(dslContext: DSLContext, storeId: String): Record? {
-        val tClassify = TClassify.T_CLASSIFY
-        val tStoreVersionLog = TStoreVersionLog.T_STORE_VERSION_LOG
-        with(TStoreBase.T_STORE_BASE) {
-            return dslContext.select(
-                this.ID.`as`(KEY_ID),
-                this.STORE_CODE.`as`(KEY_STORE_CODE),
-                this.STORE_TYPE.`as`(KEY_STORE_TYPE),
-                this.PUBLISHER.`as`(KEY_PUBLISHER),
-                this.VERSION.`as`(KEY_VERSION),
-                tClassify.CLASSIFY_CODE.`as`(KEY_CLASSIFY_CODE),
-                tClassify.CLASSIFY_NAME.`as`(KEY_CLASSIFY_NAME),
-                tClassify.TYPE.`as`(KEY_CLASSIFY_TYPE),
-                tClassify.WEIGHT.`as`(KEY_CLASSIFY_WEIGHT),
-                tClassify.CREATE_TIME.`as`(KEY_CLASSIFY_CREATE_TIME),
-                tClassify.UPDATE_TIME.`as`(KEY_CLASSIFY_UPDATE_TIME),
-                tStoreVersionLog.RELEASE_TYPE.`as`(KEY_RELEASE_TYPE),
-                tStoreVersionLog.CONTENT.`as`(KEY_VERSION_LOG_CONTENT)
-            )
-                .from(this)
-                .leftJoin(tClassify).on(tClassify.ID.eq(this.CLASSIFY_ID))
-                .leftJoin(tStoreVersionLog).on(tStoreVersionLog.STORE_ID.eq(this.ID))
-                .where(this.ID.eq(storeId))
-                .limit(1)
-                .fetchOne()
-        }
-    }
-
     fun getComponentIds(dslContext: DSLContext, storeCode: String, storeType: StoreTypeEnum): MutableList<String> {
         with(TStoreBase.T_STORE_BASE) {
             return dslContext.select(ID)
                 .from(this)
                 .where(STORE_CODE.eq(storeCode).and(STORE_TYPE.eq(storeType.type.toByte())))
                 .fetchInto(String::class.java)
+        }
+    }
+
+    fun getMyComponents(
+        dslContext: DSLContext,
+        userId: String,
+        storeType: StoreTypeEnum,
+        name: String?,
+        page: Int,
+        pageSize: Int
+    ): Result<out Record>? {
+        val tStoreBase = TStoreBase.T_STORE_BASE
+        val tStoreMember = TStoreMember.T_STORE_MEMBER
+        val tStoreBaseEnv = TStoreBaseEnv.T_STORE_BASE_ENV
+        val conditions = generateGetMyComponentConditions(
+            tStoreBase = tStoreBase,
+            userId = userId,
+            tStoreMember = tStoreMember,
+            storeName = name,
+            storeType = storeType
+        )
+        val baseStep = dslContext.select(
+            tStoreBase.ID,
+            tStoreBase.STORE_CODE,
+            tStoreBase.NAME,
+            tStoreBaseEnv.LANGUAGE.`as`(KEY_LANGUAGE),
+            tStoreBase.LOGO_URL,
+            tStoreBase.VERSION,
+            tStoreBase.STATUS,
+            tStoreBase.CREATOR,
+            tStoreBase.CREATE_TIME,
+            tStoreBase.MODIFIER,
+            tStoreBase.UPDATE_TIME
+        )
+            .from(tStoreBase)
+            .join(tStoreMember)
+            .on(tStoreBase.STORE_CODE.eq(tStoreMember.STORE_CODE))
+            .leftJoin(tStoreBase)
+            .on(tStoreBase.ID.eq(tStoreBaseEnv.STORE_ID))
+            .where(conditions)
+            .groupBy(tStoreBase.ID)
+            .orderBy(tStoreBase.UPDATE_TIME.desc())
+        return if (null != page && null != pageSize) {
+            baseStep.limit((page - 1) * pageSize, pageSize).fetch()
+        } else {
+            baseStep.fetch()
+        }
+    }
+
+    fun countMyComponents(
+        dslContext: DSLContext,
+        userId: String,
+        storeType: StoreTypeEnum,
+        name: String?
+    ): Int {
+        val tStoreBase = TStoreBase.T_STORE_BASE
+        val tStoreMember = TStoreMember.T_STORE_MEMBER
+        val conditions = generateGetMyComponentConditions(
+            tStoreBase = tStoreBase,
+            userId = userId,
+            tStoreMember = tStoreMember,
+            storeName = name,
+            storeType = storeType
+        )
+        return dslContext.selectCount()
+            .from(tStoreBase)
+            .join(tStoreMember)
+            .on(tStoreBase.STORE_CODE.eq(tStoreMember.STORE_CODE))
+            .where(conditions)
+            .groupBy(tStoreBase.ID)
+            .orderBy(tStoreBase.UPDATE_TIME.desc())
+            .fetchOne(0, Int::class.java)!!
+    }
+
+    private fun generateGetMyComponentConditions(
+        userId: String,
+        tStoreBase: TStoreBase,
+        tStoreMember: TStoreMember,
+        storeType: StoreTypeEnum,
+        storeName: String?
+    ): MutableList<Condition> {
+        val conditions = mutableListOf<Condition>()
+        conditions.add(tStoreBase.LATEST_FLAG.eq(true))
+        conditions.add(tStoreMember.USERNAME.eq(userId))
+        conditions.add(tStoreMember.STORE_TYPE.eq(storeType.type.toByte()))
+        if (null != storeName) {
+            conditions.add(tStoreBase.NAME.contains(storeName))
+        }
+        return conditions
+    }
+
+    fun countReleaseComponentByCode(dslContext: DSLContext, storeCode: String, version: String? = null): Int {
+        with(TStoreBase.T_STORE_BASE) {
+            val conditions = mutableListOf<Condition>()
+            conditions.add(STORE_CODE.eq(storeCode))
+            conditions.add(STATUS.eq(StoreStatusEnum.RELEASED.name))
+            if (version != null) {
+                conditions.add(VERSION.like(VersionUtils.generateQueryVersion(version)))
+            }
+            return dslContext.selectCount().from(this)
+                .where(conditions)
+                .fetchOne(0, Int::class.java)!!
+        }
+    }
+
+    fun countByCode(dslContext: DSLContext, storeCode: String, storeType: StoreTypeEnum): Int {
+        with(TStoreBase.T_STORE_BASE) {
+            return dslContext.selectCount().from(this)
+                .where(STORE_CODE.eq(storeCode).and(STORE_TYPE.eq(storeType.type.toByte())))
+                .fetchOne(0, Int::class.java)!!
+        }
+    }
+
+    fun getComponentsByCode(
+        dslContext: DSLContext,
+        storeCode: String,
+        storeType: StoreTypeEnum,
+        page: Int? = null,
+        pageSize: Int? = null
+    ): Result<TStoreBaseRecord> {
+        return with(TStoreBase.T_STORE_BASE) {
+            val baseStep = dslContext.selectFrom(this)
+                .where(STORE_CODE.eq(storeCode))
+                .and(STORE_TYPE.eq(storeType.type.toByte()))
+                .orderBy(CREATE_TIME.desc())
+            if (null != page && null != pageSize) {
+                baseStep.limit((page - 1) * pageSize, pageSize).fetch()
+            } else {
+                baseStep.fetch()
+            }
         }
     }
 }

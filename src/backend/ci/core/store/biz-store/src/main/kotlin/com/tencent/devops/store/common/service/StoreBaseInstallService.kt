@@ -25,38 +25,33 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.store.common.handler
+package com.tencent.devops.store.common.service
 
-import com.tencent.devops.artifactory.api.service.StoreArchiveComponentPkgResource
-import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
-import com.tencent.devops.common.client.Client
-import com.tencent.devops.store.common.service.impl.StoreComponentManageServiceImpl
-import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
-import com.tencent.devops.store.pojo.common.handler.Handler
-import com.tencent.devops.store.pojo.common.publication.StoreDeleteRequest
-import org.springframework.stereotype.Service
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.pipeline.enums.ChannelCode
+import com.tencent.devops.store.pojo.common.InstallStoreReq
+import com.tencent.devops.store.pojo.common.StoreBaseInfo
 
-@Service
-class StoreDeleteRepoFileHandler(
-    private val client: Client,
-    private val storeComponentManageService: StoreComponentManageServiceImpl
-) : Handler<StoreDeleteRequest> {
+interface StoreBaseInstallService {
 
-    override fun canExecute(handlerRequest: StoreDeleteRequest): Boolean {
+    /**
+     * 检查安装组件请求参数合法性
+     * @param installStoreReq 安装组件到项目请求报文
+     */
+    fun installComponentParamCheck(
+        userId: String,
+        channelCode: ChannelCode,
+        installStoreReq: InstallStoreReq
+    ): Result<StoreBaseInfo>
 
-        return when (handlerRequest.storeType) {
-            StoreTypeEnum.ATOM.name -> true
-            else -> false
-        }
-    }
-
-    override fun execute(handlerRequest: StoreDeleteRequest) {
-        // 清理仓库组件关联文件
-        val bkStoreContext = handlerRequest.bkStoreContext
-        client.get(StoreArchiveComponentPkgResource::class).deleteStorePkg(
-            userId = bkStoreContext[AUTH_HEADER_USER_ID] as String,
-            storeCode = handlerRequest.storeCode,
-            storeType = StoreTypeEnum.valueOf(handlerRequest.storeType)
-        )
-    }
+    /**
+     * 安装前准备
+     * @param storeBaseInfo 组件信息
+     */
+    fun installComponentPrepare(
+        userId: String,
+        channelCode: ChannelCode,
+        projectCodes: ArrayList<String>,
+        storeBaseInfo: StoreBaseInfo
+    ): Result<Boolean>
 }

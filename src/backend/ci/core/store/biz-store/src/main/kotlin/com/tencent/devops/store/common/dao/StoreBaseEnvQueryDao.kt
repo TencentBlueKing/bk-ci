@@ -30,6 +30,7 @@ package com.tencent.devops.store.common.dao
 import com.tencent.devops.model.store.tables.TStoreBaseEnv
 import com.tencent.devops.model.store.tables.records.TStoreBaseEnvRecord
 import org.jooq.DSLContext
+import org.jooq.Result
 import org.springframework.stereotype.Repository
 
 @Repository
@@ -40,6 +41,14 @@ class StoreBaseEnvQueryDao {
             return dslContext.selectFrom(this)
                 .where(STORE_ID.eq(storeId))
                 .fetchOne()
+        }
+    }
+
+    fun batchQueryStoreEnvInfo(dslContext: DSLContext, storeIds: List<String>): Result<TStoreBaseEnvRecord> {
+        with(TStoreBaseEnv.T_STORE_BASE_ENV) {
+            return dslContext.selectFrom(this)
+                .where(STORE_ID.`in`(storeIds))
+                .fetch()
         }
     }
 }

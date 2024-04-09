@@ -27,16 +27,14 @@
 
 package com.tencent.devops.store.common.handler
 
-import com.tencent.devops.store.common.service.StoreBaseUpdateService
-import com.tencent.devops.store.common.service.StoreComponentManageService
+import com.tencent.devops.store.common.service.StoreBaseDeleteService
 import com.tencent.devops.store.pojo.common.handler.Handler
 import com.tencent.devops.store.pojo.common.publication.StoreDeleteRequest
-import com.tencent.devops.store.pojo.common.publication.StoreUpdateRequest
 import org.springframework.stereotype.Service
 
 @Service
 class StoreDeleteCheckHandler(
-    private val storeComponentManageService: StoreComponentManageService
+    private val storeBaseDeleteService: StoreBaseDeleteService
 ) : Handler<StoreDeleteRequest> {
 
     override fun canExecute(handlerRequest: StoreDeleteRequest): Boolean {
@@ -45,6 +43,6 @@ class StoreDeleteCheckHandler(
 
     override fun execute(handlerRequest: StoreDeleteRequest) {
         // 检查请求参数的合法性
-        storeComponentManageService.deleteComponentCheck(handlerRequest)
+        storeBaseDeleteService.deleteComponentCheck(handlerRequest)
     }
 }

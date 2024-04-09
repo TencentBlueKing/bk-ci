@@ -32,6 +32,7 @@ import com.tencent.devops.model.store.tables.records.TStoreBaseFeatureExtRecord
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import org.jooq.Condition
 import org.jooq.DSLContext
+import org.jooq.Result
 import org.springframework.stereotype.Repository
 
 @Repository
@@ -52,6 +53,21 @@ class StoreBaseFeatureExtQueryDao {
                 .where(conditions)
                 .limit(1)
                 .fetchOne()
+        }
+    }
+
+    fun queryStoreBaseFeatureExt(
+        dslContext: DSLContext,
+        storeCode: String,
+        storeType: StoreTypeEnum,
+    ): Result<TStoreBaseFeatureExtRecord> {
+        with(TStoreBaseFeatureExt.T_STORE_BASE_FEATURE_EXT) {
+            val conditions = mutableListOf<Condition>()
+            conditions.add(STORE_TYPE.eq(storeType.type.toByte()))
+            conditions.add(STORE_CODE.eq(storeCode))
+            return dslContext.selectFrom(this)
+                .where(conditions)
+                .fetch()
         }
     }
 }

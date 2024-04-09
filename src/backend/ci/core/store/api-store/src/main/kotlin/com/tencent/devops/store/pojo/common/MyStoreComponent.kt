@@ -27,6 +27,7 @@
 
 package com.tencent.devops.store.pojo.common
 
+import com.tencent.devops.common.pipeline.pojo.AtomBaseInfo
 import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "研发商店-我的组件信息")
@@ -60,5 +61,5 @@ data class MyStoreComponent(
     @get:Schema(title = "创建时间", required = true)
     val updateTime: String,
     @get:Schema(title = "处于流程中的组件版本信息", required = false)
-    val processingVersionInfos: List<StoreBaseInfo>? = null
+    val processingVersionInfos: List<AtomBaseInfo>? = null
 )

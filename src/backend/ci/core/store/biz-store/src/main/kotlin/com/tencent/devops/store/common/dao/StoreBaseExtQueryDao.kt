@@ -25,38 +25,25 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.store.common.handler
+package com.tencent.devops.store.common.dao
 
-import com.tencent.devops.artifactory.api.service.StoreArchiveComponentPkgResource
-import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
-import com.tencent.devops.common.client.Client
-import com.tencent.devops.store.common.service.impl.StoreComponentManageServiceImpl
-import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
-import com.tencent.devops.store.pojo.common.handler.Handler
-import com.tencent.devops.store.pojo.common.publication.StoreDeleteRequest
-import org.springframework.stereotype.Service
+import com.tencent.devops.model.store.tables.TStoreBaseExt
+import com.tencent.devops.model.store.tables.records.TStoreBaseExtRecord
+import com.tencent.devops.store.pojo.common.publication.StoreBaseExtDataPO
+import java.time.LocalDateTime
+import org.jooq.DSLContext
+import org.jooq.Result
+import org.jooq.util.mysql.MySQLDSL
+import org.springframework.stereotype.Repository
 
-@Service
-class StoreDeleteRepoFileHandler(
-    private val client: Client,
-    private val storeComponentManageService: StoreComponentManageServiceImpl
-) : Handler<StoreDeleteRequest> {
+@Repository
+class StoreBaseExtQueryDao {
 
-    override fun canExecute(handlerRequest: StoreDeleteRequest): Boolean {
-
-        return when (handlerRequest.storeType) {
-            StoreTypeEnum.ATOM.name -> true
-            else -> false
+    fun getBaseExtByIds(dslContext: DSLContext, storeIds: List<String>): Result<TStoreBaseExtRecord> {
+        with(TStoreBaseExt.T_STORE_BASE_EXT) {
+            return dslContext.selectFrom(this)
+                .where(STORE_ID.`in`(storeIds))
+                .fetch()
         }
-    }
-
-    override fun execute(handlerRequest: StoreDeleteRequest) {
-        // 清理仓库组件关联文件
-        val bkStoreContext = handlerRequest.bkStoreContext
-        client.get(StoreArchiveComponentPkgResource::class).deleteStorePkg(
-            userId = bkStoreContext[AUTH_HEADER_USER_ID] as String,
-            storeCode = handlerRequest.storeCode,
-            storeType = StoreTypeEnum.valueOf(handlerRequest.storeType)
-        )
     }
 }

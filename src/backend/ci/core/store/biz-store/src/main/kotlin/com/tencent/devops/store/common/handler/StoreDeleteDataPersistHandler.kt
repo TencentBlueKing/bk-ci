@@ -27,7 +27,7 @@
 
 package com.tencent.devops.store.common.handler
 
-import com.tencent.devops.store.common.service.StoreComponentManageService
+import com.tencent.devops.store.common.service.StoreBaseDeleteService
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.pojo.common.handler.Handler
 import com.tencent.devops.store.pojo.common.publication.StoreDeleteRequest
@@ -35,7 +35,7 @@ import org.springframework.stereotype.Service
 
 @Service
 class StoreDeleteDataPersistHandler(
-    private val storeComponentManageService: StoreComponentManageService
+    private val storeBaseDeleteService: StoreBaseDeleteService
 ) : Handler<StoreDeleteRequest> {
 
     override fun canExecute(handlerRequest: StoreDeleteRequest): Boolean {
@@ -48,6 +48,6 @@ class StoreDeleteDataPersistHandler(
 
     override fun execute(handlerRequest: StoreDeleteRequest) {
         // 清理仓库组件关联文件
-        storeComponentManageService.deleteComponentRepoFile(handlerRequest)
+        storeBaseDeleteService.deleteComponentRepoFile(handlerRequest)
     }
 }

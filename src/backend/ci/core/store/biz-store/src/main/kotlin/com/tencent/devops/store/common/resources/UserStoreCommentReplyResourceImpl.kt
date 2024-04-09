@@ -25,38 +25,30 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.store.common.handler
+package com.tencent.devops.store.common.resources
 
-import com.tencent.devops.artifactory.api.service.StoreArchiveComponentPkgResource
-import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
-import com.tencent.devops.common.client.Client
-import com.tencent.devops.store.common.service.impl.StoreComponentManageServiceImpl
-import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
-import com.tencent.devops.store.pojo.common.handler.Handler
-import com.tencent.devops.store.pojo.common.publication.StoreDeleteRequest
-import org.springframework.stereotype.Service
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.store.api.common.UserStoreCommentReplyResource
+import com.tencent.devops.store.common.service.StoreCommentReplyService
+import com.tencent.devops.store.pojo.common.comment.StoreCommentReplyInfo
+import com.tencent.devops.store.pojo.common.comment.StoreCommentReplyRequest
+import org.springframework.beans.factory.annotation.Autowired
 
-@Service
-class StoreDeleteRepoFileHandler(
-    private val client: Client,
-    private val storeComponentManageService: StoreComponentManageServiceImpl
-) : Handler<StoreDeleteRequest> {
+@RestResource
+class UserStoreCommentReplyResourceImpl @Autowired constructor(
+    private val storeCommentReplyService: StoreCommentReplyService
+) : UserStoreCommentReplyResource {
 
-    override fun canExecute(handlerRequest: StoreDeleteRequest): Boolean {
-
-        return when (handlerRequest.storeType) {
-            StoreTypeEnum.ATOM.name -> true
-            else -> false
-        }
+    override fun getStoreCommentReplyListByCommentId(commentId: String): Result<List<StoreCommentReplyInfo>?> {
+        return storeCommentReplyService.getStoreCommentReplysByCommentId(commentId)
     }
 
-    override fun execute(handlerRequest: StoreDeleteRequest) {
-        // 清理仓库组件关联文件
-        val bkStoreContext = handlerRequest.bkStoreContext
-        client.get(StoreArchiveComponentPkgResource::class).deleteStorePkg(
-            userId = bkStoreContext[AUTH_HEADER_USER_ID] as String,
-            storeCode = handlerRequest.storeCode,
-            storeType = StoreTypeEnum.valueOf(handlerRequest.storeType)
-        )
+    override fun addStoreCommentReply(
+        userId: String,
+        commentId: String,
+        storeCommentReplyRequest: StoreCommentReplyRequest
+    ): Result<StoreCommentReplyInfo?> {
+        return storeCommentReplyService.addStoreCommentReply(userId, commentId, storeCommentReplyRequest)
     }
 }

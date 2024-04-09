@@ -28,11 +28,14 @@
 package com.tencent.devops.store.common.service
 
 import com.tencent.devops.common.api.pojo.Page
+import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.store.pojo.common.MarketItem
 import com.tencent.devops.store.pojo.common.MarketMainItem
 import com.tencent.devops.store.pojo.common.MyStoreComponent
 import com.tencent.devops.store.pojo.common.StoreDetailInfo
+import com.tencent.devops.store.pojo.common.enums.RdTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreSortTypeEnum
+import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.pojo.common.version.StoreDeskVersionItem
 import com.tencent.devops.store.pojo.common.version.StoreShowVersionInfo
 
@@ -65,7 +68,7 @@ interface StoreComponentQueryService {
      */
     fun getComponentDetailInfoById(
         userId: String,
-        storeType: String,
+        storeType: StoreTypeEnum,
         storeId: String
     ): StoreDetailInfo?
 
@@ -84,10 +87,10 @@ interface StoreComponentQueryService {
     fun getMainPageComponents(
         userId: String,
         storeType: String,
-        name: String?,
         page: Int,
-        pageSize: Int
-    ): List<MarketMainItem>
+        pageSize: Int,
+        urlProtocolTrim: Boolean = false
+    ): Result<List<MarketMainItem>>
 
     /**
      * 根据条件查询组件列表
@@ -99,12 +102,15 @@ interface StoreComponentQueryService {
         keyword: String?,
         classifyId: String?,
         labelId: String?,
+        categoryId: String?,
         score: Int?,
         recommendFlag: Boolean?,
+        rdType: RdTypeEnum?,
         queryProjectComponentFlag: Boolean,
         sortType: StoreSortTypeEnum?,
         page: Int,
-        pageSize: Int
+        pageSize: Int,
+        urlProtocolTrim: Boolean = false
     ): Page<MarketItem>
 
     /**
