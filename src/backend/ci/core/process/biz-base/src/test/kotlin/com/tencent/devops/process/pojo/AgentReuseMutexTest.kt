@@ -117,7 +117,7 @@ class AgentReuseMutexTest {
                 AgentReuseMutex("job_env_dep_2", "job_env_1", "job_1", AgentReuseMutexType.AGENT_ENV_NAME, false),
                 true,
                 ThirdPartyAgentEnvDispatchType(
-                    envName = "job_env_dep_1",
+                    envName = "job_env_1",
                     null, null, AgentType.REUSE_JOB_ID, null, ReusedInfo(
                         "job_1",
                         AgentType.NAME,
