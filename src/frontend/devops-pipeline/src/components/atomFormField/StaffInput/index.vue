@@ -1,16 +1,21 @@
 <template>
     <bk-tag-input
-        v-model="tagValue"
         allow-create
-        clearable
+        :value="value"
+        :disabled="disabled || isLoading"
         :placeholder="placeholder"
-        :search-key="['id', 'name']"
-        separator=","
-        :disabled="disabled"
-        :create-tag-validator="checkVariable"
+        :save-key="'english_name'"
+        :display-key="'chinese_name'"
+        :search-key="'english_name'"
+        :list="list"
+        :tag-tpl="renderMemberTag"
+        :tpl="renderMerberList"
+        :create-tag-validator="detect"
         :paste-fn="paste"
-        :list="list">
+        @change="handleSelect"
+    >
     </bk-tag-input>
+    
 </template>
 
 <script>
@@ -25,54 +30,136 @@
                 required: true,
                 default: () => []
             },
-            placeholder: {
-                type: String,
-                default: ''
-            },
-            listUrl: {
-                type: String,
-                default: ''
-            },
             disabled: {
                 type: Boolean,
                 default: false
+            },
+            placeholder: {
+                type: String,
+                default: ''
             }
         },
         data () {
             return {
-                list: []
+                isLoading: false,
+                curInsertVal: '',
+                list: [],
+                initData: []
             }
         },
         computed: {
-            tagValue: {
-                get () {
-                    return this.value
-                },
-                set (value) {
-                    this.handleChange(this.name, value)
-                }
+            projectId () {
+                return this.$route.params.projectId
             }
         },
         created () {
-            this.getList()
+            this.init()
         },
         methods: {
-            getList () {
-                // 默认是拥有流水线权限的人员
-                const url = this.listUrl || `/project/api/user/users/projectUser/${this.$route.params.projectId}/${this.$route.params.pipelineId}/map`
-                this.$ajax.get(`${url}`).then(res => {
-                    this.list = res.data
-                })
+            async init () {
+                if (this.isLoading) return
+                try {
+                    this.isLoading = true
+                    const prefix = `${location.host.indexOf('o.ied.com') > -1 ? OIED_URL : OPEN_URL}/component/compapi/tof3`
+                    const { data } = await this.$ajax.jsonp(`${prefix}/get_all_staff_info`, {
+                        query_type: 'simple_data',
+                        app_code: 'workbench'
+                    }, {
+                        cache: true,
+                        cacheKey: '__BK_TOF3_STAFFS__'
+                    })
+                    this.list = data
+                } catch (error) {
+                    console.error(error)
+                } finally {
+                    this.isLoading = false
+                }
             },
-            // 检验变量
-            checkVariable (val) {
-                return /^\$\{(.*)\}$/.test(val)
+            renderMemberTag (node) {
+                return (
+                    <div class="selected-staff-tag">
+                        <img src={this.localCoverAvatar(node.english_name)} />
+                        <span>{node.english_name}</span>
+                    </div>
+                )
+            },
+            renderMerberList (node, ctx, highlightKeyword) {
+                const innerHtml = `${highlightKeyword(node.english_name)} (${node.chinese_name})`
+                return (
+                    <div class='bk-selector-node bk-selector-member'>
+                        <img class='avatar' src={this.localCoverAvatar(node.english_name)} />
+                        <span class='text' domPropsInnerHTML={innerHtml}></span>
+                    </div>
+                )
+            },
+            
+            localCoverAvatar (data) {
+                const member = data.isBkVar() ? 'un_know' : data
+                return `${USER_IMG_URL}/avatars/${member}/avatar.jpg`
+            },
+            detect (val) {
+                if (val.startsWith('$')) {
+                    return val.isBkVar()
+                }
+                return true
+            },
+            async handleSelect (value) {
+                try {
+                    const currentValueMap = this.value.reduce((acc, item) => {
+                        acc[item] = true
+                        return acc
+                    }, {})
+                    
+                    const res = await Promise.all(value.map(item => {
+                        if (currentValueMap[item] || item.isBkVar()) {
+                            return true
+                        }
+                        return this.detectIsInProject(item)
+                    }))
+
+                    const invalidUser = value.filter((_, index) => !res[index]).join(',')
+                    if (invalidUser) {
+                        this.$bkMessage({
+                            theme: 'error',
+                            message: this.$t('unAccessUser', [invalidUser])
+                        })
+                    }
+                    this.handleChange(this.name, value.filter((_, index) => res[index]))
+                } catch (error) {
+                    console.error(error)
+                    this.handleChange(this.name, this.value)
+                }
+            },
+            async detectIsInProject (val) {
+                try {
+                    const res = await this.$ajax(`/project/api/user/projects/${this.projectId}/users/${val}/verify`)
+                    return res.data
+                } catch (error) {
+                    return false
+                }
             },
             paste (val) {
-                const newArr = val.split(',').filter(v => !this.tagValue.find(w => w === v))
-                this.tagValue = [...this.tagValue, ...newArr]
-                return []
+                this.handleSelect([
+                    ...this.value,
+                    ...val.split(',').filter(v => !this.value.includes(v))
+                ])
             }
         }
     }
 </script>
+
+<style lang="scss">
+    .selected-staff-tag {
+        display: flex;
+        align-items: center;
+        grid-gap: 6px;
+        height: 22px;
+        font-size: 12px;
+        padding: 0 4px;
+        > img {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+        }
+    }
+</style>

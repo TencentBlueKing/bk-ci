@@ -45,7 +45,7 @@
                         <span class="title-item">
                             <span v-if="buildDetail.objectKind === 'schedule'">{{$t('pipeline.system')}}</span>
                             <template v-else>
-                                <i class="stream-icon stream-user"></i>
+                                <img :src="`https://dayu.woa.com/avatars/${buildDetail.userId}/profile.jpg`">
                                 <template v-if="buildDetail.objectKind === 'openApi'">
                                     {{$t('pipeline.openapi')}}（{{ buildDetail.userId }}）
                                 </template>
@@ -407,11 +407,9 @@
                     &:last-child {
                         margin-left: 15px;
                     }
-                    .stream-user {
+                    img {
                         width: 20px;
                         height: 20px;
-                        line-height: 20px;
-                        font-size: 14px;
                         border-radius: 100%;
                         margin-right: 8px;
                     }

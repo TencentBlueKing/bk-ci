@@ -29,7 +29,87 @@
     <link rel="shortcut icon" href="<%= PUBLIC_PATH_PREFIX %>/console/static/images/favicon.ico" type="image/x-icon" />
     <meta charset="utf-8" />
     <title>流水线</title>
+    <script>
+        this.globalThis || (this.globalThis = this);
+        var X_DEVOPS_PROJECT_ID = "X-DEVOPS-PROJECT-ID";
+    </script>
+    <script>
+        function getSubDomain() {
+            try {
+                return location.hostname.split('.').reduce((acc, _, index, list) => {
+                    var last = list.length - 1
+                    var item = list[last - index]
+                    if (index > 0) {
+                        acc.push([item, acc[index - 1]].join('.'))
+                    } else {
+                        acc.push(item)
+                    }
+                    return acc
+                }, []).slice(1)
+            } catch (error) {
+                return []
+            }
+        }
+        function getCookie(cname) {
+            try {
+                var name = cname + '='
+                var decodedCookie = decodeURIComponent(document.cookie)
+                var ca = decodedCookie.split(';')
+                for (var i = 0; i < ca.length; i++) {
+                    var c = ca[i]
+                    while (c.charAt(0) == ' ') {
+                        c = c.substring(1)
+                    }
+                    if (c.indexOf(name) == 0) {
+                        return c.substring(name.length, c.length)
+                    }
+                }
+                return ''
+            } catch (e) {
+                console.error('get cookie error', e.message)
+                return ''
+            }
+        }
 
+        function setCookie(cname, cvalue, domain) {
+            document.cookie =
+                cname +
+                '=' +
+                cvalue +
+                '; ' +
+                'domain=' +
+                domain +
+                '; path=/;expires=Fri, 31 Dec 2030 23:59:59 GMT"'
+        }
+
+        function removeCookie(cname, domain) {
+            document.cookie =
+                cname +
+                '=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;' +
+                'domain=' +
+                domain +
+                ';'
+        }
+
+        function setProjectIdCookie() {
+            try {
+                var pathProjectId = location.pathname.match(/^\/pipeline\/(zhiyan|ftp)\/([\w\-]+)?/)?.[2]
+                var cookiePid = getCookie(X_DEVOPS_PROJECT_ID)
+                if (pathProjectId && cookiePid !== pathProjectId) {
+                    var subDomains = getSubDomain()
+                    subDomains.forEach(domain => {
+                        removeCookie(X_DEVOPS_PROJECT_ID, domain)
+                    })
+                    removeCookie(X_DEVOPS_PROJECT_ID, '')
+                    setCookie(X_DEVOPS_PROJECT_ID, pathProjectId, location.hostname)
+                    location.reload()
+                }
+            } catch (error) {
+                console.log('set projectid error', error)
+            }
+        }
+        setProjectIdCookie()
+    </script>
 </head>
 
 <body>
@@ -47,7 +127,9 @@
         var PUBLIC_URL_PREFIX = "<%= PUBLIC_PATH_PREFIX %>";
         var API_URL_PREFIX = "/ms";
         var WEB_URL_PREFIX = "/console";
+        var PERM_URL_PREFIX = "__BK_PAAS_PUBLIC_URL__/o/bk_iam_app"; // EE PERM URL PREFIX
         var DOCS_URL_PREFIX = "__BK_CI_DOCS_URL__";
+        var IWIKI_DOCS_URL = "__IWIKI_DOCS_URL__";
         var BADGE_URL_PREFIX = "__BK_CI_BADGE_URL__";
         var BK_IAM_URL_PREFIX = '__BK_CI_IAM_URL_PREFIX__'
         var LOCALE_DOMAIN = '__BK_DOMAIN__'

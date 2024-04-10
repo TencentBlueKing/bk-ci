@@ -85,8 +85,11 @@
                 class="service-title"
                 @click="goHome"
             >
+                <img v-if="isAbsoluteUrl(serviceLogo)" :src="serviceLogo" class="service-logo" />
                 <logo
+                    v-else
                     :name="serviceLogo"
+                    class="service-logo"
                     size="20"
                 />
                 {{ title }}
@@ -117,6 +120,7 @@
                     </li>
                 </template>
             </bk-popover>
+            <qrcode class="feed-back-icon" />
             <bk-popover
                 theme="light navigation-message"
                 placement="bottom"
@@ -153,7 +157,7 @@
     import { Component } from 'vue-property-decorator'
     import { Action, Getter, State } from 'vuex-class'
     import eventBus from '../../utils/eventBus'
-    import { urlJoin } from '../../utils/util'
+    import { isAbsoluteUrl, urlJoin } from '../../utils/util'
     import ApplyProjectDialog from '../ApplyProjectDialog/index.vue'
     import LocaleSwitcher from '../LocaleSwitcher/index.vue'
     import Logo from '../Logo/index.vue'
@@ -161,11 +165,13 @@
     import DevopsSelect from '../Select/index.vue'
     import User from '../User/index.vue'
     import NavMenu from './NavMenu.vue'
+    import Qrcode from './Qrcode.vue'
 
     @Component({
         components: {
             User,
             NavMenu,
+            Qrcode,
             ProjectDialog,
             ApplyProjectDialog,
             Logo,
@@ -187,6 +193,8 @@
 
         isDropdownMenuVisible: boolean = false
         isShowTooltip: boolean = true
+        isAbsoluteUrl = isAbsoluteUrl
+
         langs: Array<any> = [
             {
                 icon: 'english',
@@ -321,6 +329,8 @@
             const oldProject = this.selectProjectList.find(project => project.projectCode === projectId)
             const project = this.selectProjectList.find(project => project.projectCode === id)
             
+            window.setProjectIdCookie(id)
+
             if (projectId && !oldProject) { // 当前无权限时返回首页
                 this.goHomeById(id)
             } else {
@@ -330,9 +340,8 @@
                     }
                 })
             }
-            window.setProjectIdCookie(id)
-
-            if ((!oldProject && project.gray) || (oldProject && oldProject.gray !== project.gray)) {
+            
+            if (project.routerTag !== oldProject.routerTag) {
                 this.goHomeById(id, true)
             }
         }
@@ -424,7 +433,7 @@
             $dropdownBorder: #2a2a42;
             .bkdevops-project-selector {
                 width: 233px;
-                color: $fontLigtherColor;
+                color: $fontLighterColor;
                 border-color: $dropdownBorder;
                 background-color: $headerBgColor;
                 
@@ -447,7 +456,7 @@
                     outline: none;
                 }
                 ::v-deep .bk-select-dropdown .bk-select-name {
-                    color: $fontLigtherColor;
+                    color: $fontLighterColor;
                     height: 36px;
                     line-height: 36px;
                     font-size: 14px;
@@ -460,7 +469,7 @@
                 height: 100%;
                 padding: 0 18px;
                 margin-left: 10px;
-                color: $fontLigtherColor;
+                color: $fontLighterColor;
                 font-size: 14px;
                 cursor: pointer;
 
@@ -468,7 +477,9 @@
                     color: white;
                     background-color: black;
                 }
-                > svg {
+                .service-logo {
+                    width: 20px;
+                    height: 20px;
                     margin-right: 5px;
                 }
             }
@@ -493,14 +504,14 @@
             > .seperate-line {
                 padding: 0 5px;
                 font-size: 20px;
-                // color: $fontLigtherColor;
+                // color: $fontLighterColor;
                 line-height: $headerHeight;
             }
 
             > .devops-icon {
                 padding: 0 10px;
                 font-size: 20px;
-                color: $fontLigtherColor;
+                color: $fontLighterColor;
                 line-height: $headerHeight;
                 cursor: pointer;
             }

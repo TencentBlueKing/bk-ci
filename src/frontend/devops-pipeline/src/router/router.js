@@ -17,6 +17,10 @@
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
+import zyPipelineRoute from './zhiyan'
+import ftpPipelineRoute from './ftp'
+import tapdPipelineRoute from './tapd'
+
 const pipelines = () => import(/* webpackChunkName: "pipelines" */'../views')
 
 const pipelinesNewList = () => import(/* webpackChunkName: "pipelinesNewList" */'../views/PipelineList/list')
@@ -53,14 +57,17 @@ const DetailHeader = () => import(/* webpackChunkName: "pipelinesDetail" */'../c
 
 const EditHeader = () => import(/* webpackChunkName: "pipelinesEdit" */'../components/PipelineHeader/EditHeader.vue')
 const pipelinesEdit = () => import(/* webpackChunkName: "pipelinesEdit" */'../views/subpages/edit.vue')
-// 客户端流水线执行预览 - edit
+// 客户端流水线执行预览 - preview
 const pipelinesPreview = () => import(/* webpackChunkName: "pipelinesPreview" */'../views/subpages/preview.vue')
 const PreviewHeader = () => import(/* webpackChunkName: "pipelinesPreview" */'../components/PipelineHeader/PreviewHeader.vue')
 // 插件前端task.json在线调试
 // docker console
 const pipelinesDocker = () => import(/* webpackChunkName: "pipelinesDocker" */'../views/subpages/docker_console.vue')
+// 插件前端task.json在线调试
 const atomDebug = () => import(/* webpackChunkName: "atomDebug" */'../views/atomDebug.vue')
 const ImportPipelineEdit = () => import(/* webpackChunkName: "atomDebug" */'../views/list/ImportPipelineEdit.vue')
+
+// const moocPipelinePage = () => import(/* webpackChunkName: "moocPipelinePage" */'../views/list/mooc.vue')
 
 const routes = [
     {
@@ -219,6 +226,19 @@ const routes = [
                             header: 'pipeline',
                             icon: 'pipeline',
                             to: 'PipelineManageList'
+                        },
+                        beforeEnter: (to, from, next) => {
+                            if (['partView', 'output'].includes(to.params.type)) { // 重定向到outputs
+                                next({
+                                    ...to,
+                                    params: {
+                                        ...to.params,
+                                        type: 'outputs'
+                                    }
+                                })
+                            } else {
+                                next()
+                            }
                         }
                     },
                     {
@@ -275,6 +295,21 @@ const routes = [
                 ]
             }
         ]
+    },
+    {
+        path: '/pipeline/zhiyan/:projectId',
+        component: pipelines,
+        children: zyPipelineRoute
+    },
+    {
+        path: '/pipeline/ftp/:projectId',
+        component: pipelines,
+        children: ftpPipelineRoute
+    },
+    {
+        path: '/pipeline/tapd/:projectId',
+        component: pipelines,
+        children: tapdPipelineRoute
     }
 ]
 

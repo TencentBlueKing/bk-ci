@@ -69,8 +69,9 @@
 <script lang="ts">
     import Vue from 'vue'
     import { Component, Prop } from 'vue-property-decorator'
-    import { urlJoin, getServiceAliasByPath, isAbsoluteUrl } from '../../utils/util'
+    import { getProjectId } from '../../router'
     import eventBus from '../../utils/eventBus'
+    import { getServiceAliasByPath, isAbsoluteUrl, urlJoin } from '../../utils/util'
 
     @Component
     export default class NavBox extends Vue {
@@ -90,7 +91,7 @@
 
         @Prop({ default: true })
         withHover: boolean
-
+        
         isAbsoluteUrl = isAbsoluteUrl
         
        gotoPage ({ link_new: linkNew, newWindow = false, newWindowUrl = '' }) {
@@ -102,7 +103,12 @@
                eventBus.$emit('goHome')
                return
            }
-           (newWindow && newWindowUrl) ? window.open(newWindowUrl, '_blank') : this.$router.push(destUrl)
+           if (nAlias === 'bcs' && newWindowUrl.indexOf('ieg.') > -1) {
+             window.open(`${newWindowUrl}/bcs/${getProjectId(this.$route.params)}`, '_blank')
+             return
+           }
+
+           newWindow ? window.open(newWindowUrl, '_blank') : this.$router.push(destUrl)
        }
 
        addConsole (link: string): string {
@@ -222,12 +228,12 @@
 
                     &[disabled] {
                         pointer-events: none;
-                        color: $fontLigtherColor;
+                        color: $fontLighterColor;
                         cursor: default;
 
                         > a,
                         .devops-icon.service-icon {
-                            color: $fontLigtherColor;
+                            color: $fontLighterColor;
                         }
                     }
 

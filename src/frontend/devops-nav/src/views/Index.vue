@@ -67,32 +67,46 @@
             </main>
         </template>
 
+        <extension-aside-panel />
+        <extension-dialog />
         <apply-project-dialog ref="applyProjectDialog" :project-code="curProjectCode" />
     </div>
 </template>
 
 <script lang="ts">
     import Vue from 'vue'
-    import Header from '../components/Header/index.vue'
-    import ApplyProjectDialog from '../components/ApplyProjectDialog/index.vue'
     import { Component, Watch } from 'vue-property-decorator'
-    import { State, Getter } from 'vuex-class'
+    import { Action, Getter, State } from 'vuex-class'
+    import ApplyProjectDialog from '../components/ApplyProjectDialog/index.vue'
+    import ExtensionAsidePanel from '../components/ExtensionAsidePanel/index.vue'
+    import ExtensionDialog from '../components/ExtensionDialog/index.vue'
+    import Header from '../components/Header/index.vue'
     import eventBus from '../utils/eventBus'
+
+    Component.registerHooks([
+        'beforeRouteEnter',
+        'beforeRouteLeave',
+        'beforeRouteUpdate'
+    ])
 
     @Component({
         components: {
             Header,
+            ExtensionAsidePanel,
+            ExtensionDialog,
             ApplyProjectDialog
         }
     })
     export default class Index extends Vue {
         @State currentNotice
+        @State currentPage
         @State projectList
         @State headerConfig
         @Getter showAnnounce
         @Getter enableProjectList
         @Getter disableProjectList
         @Getter approvalingProjectList
+        @Action fetchServiceHooks
 
         get loadingOption (): object {
             return {
@@ -172,6 +186,16 @@
                     }
                 })
             })
+
+            eventBus.$on('change-extension-route', options => {
+              this.$router.push(options.url)
+            })
+
+            if (this.currentPage) {
+                this.fetchServiceHooks({
+                    serviceId: this.currentPage.id
+                })
+            }
         }
     }
 </script>

@@ -330,9 +330,6 @@
             },
             showLog: {
                 type: Function
-            },
-            loadingMore: {
-                type: Boolean
             }
         },
         data () {
@@ -414,8 +411,8 @@
                         endTime: item.endTime ? convertMiniTime(item.endTime) : '--',
                         queueTime: item.queueTime ? convertMiniTime(item.queueTime) : '--',
                         executeTime: item.executeTime
-                            ? `${convertMStoString(item.executeTime)} (${item.executeCount}/${
-                                item.executeCount
+                            ? `${convertMStoString(item.executeTime)} (${item.executeCount ?? 1}/${
+                                item.executeCount ?? 1
                             })`
                             : '--',
                         material:
@@ -637,17 +634,18 @@
             async downloadFile ({ artifactoryType, path, name }, key = 'download') {
                 try {
                     const { projectId } = this.$route.params
+                    const isDevnet = await this.$store.dispatch('common/requestDevnetGateway')
                     const res = await this.$store.dispatch('common/requestDownloadUrl', {
                         projectId,
                         artifactoryType,
                         path
                     })
-
+                    const url = isDevnet ? res.url : res.url2
                     this.$showTips({
                         message: `${this.$t('history.downloading')}${name}`,
                         theme: 'success'
                     })
-                    window.open(res.url, '_self')
+                    window.open(url, '_self')
                 } catch (err) {
                     const { projectId, pipelineId } = this.$route.params
                     this.handleError(err, {

@@ -48,11 +48,11 @@
 </template>
 
 <script>
-    import Logo from '@/components/Logo'
-    import VuexTextarea from '@/components/atomFormField/VuexTextarea/index.vue'
     import VuexInput from '@/components/atomFormField/VuexInput/index.vue'
-    import { mapGetters } from 'vuex'
+    import VuexTextarea from '@/components/atomFormField/VuexTextarea/index.vue'
+    import Logo from '@/components/Logo'
     import Clipboard from 'clipboard'
+    import { mapGetters } from 'vuex'
 
     export default {
         name: 'bkdevops-base-info-setting-tab',

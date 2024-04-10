@@ -226,11 +226,11 @@
 </template>
 
 <script>
-    import { mapActions } from 'vuex'
-    import { toolbars } from '@/utils/editor-options'
-    import selectLogo from '@/components/common/selectLogo'
-    import codeSection from '@/components/common/detailTab/codeSection'
     import breadCrumbs from '@/components/bread-crumbs.vue'
+    import codeSection from '@/components/common/detailTab/codeSection'
+    import selectLogo from '@/components/common/selectLogo'
+    import { toolbars } from '@/utils/editor-options'
+    import { mapActions } from 'vuex'
 
     export default {
         components: {

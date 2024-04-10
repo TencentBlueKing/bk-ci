@@ -34,7 +34,7 @@
                 },
                 sideMenuNav: {
                     icon: 'artifactory',
-                    title: '制品库'
+                    title: VERSION_TYPE === 'tencent' ? '版本仓库' : '制品库'
                 },
                 baseObj: {
                     icon: 'icon-folder',
@@ -85,9 +85,15 @@
                 if (val) {
                     this.initTreeData()
                 }
+            },
+            isExtendTx () {
+                return VERSION_TYPE === 'tencent'
             }
         },
         created () {
+            if (VERSION_TYPE === 'tencent') {
+                this.$store.dispatch('artifactory/requestProjectList')
+            }
             bus.$off('get-item')
             bus.$on('get-item', (data) => {
                 this.getItems(data.roadMap, data.list, data.noLoading)
@@ -206,14 +212,16 @@
                         })
                     })
                 } catch (err) {
-                    if (err.code === 403) { // 没有权限下载
-                        const params = {
-                            noPermissionList: [
-                                { resource: '版本仓库', option: '查看' }
-                            ],
+                    if (err.code === 403) { // 没有查看权限
+                        this.$showAskPermissionDialog({
+                            noPermissionList: [{
+                                actionId: this.$permissionActionMap.view,
+                                resourceId: this.$permissionResourceMap.artifactory,
+                                instanceId: [],
+                                projectId: this.projectId
+                            }],
                             applyPermissionUrl: `/backend/api/perm/apply/subsystem/?client_id=artifactory&project_code=${this.projectId}&service_code=artifactory&role_manager=artifactory`
-                        }
-                        this.$showAskPermissionDialog(params)
+                        })
                     }
                     // this.$bkMessage({
                     //     message: err ? err.message : err,

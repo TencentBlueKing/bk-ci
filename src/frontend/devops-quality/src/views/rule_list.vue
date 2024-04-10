@@ -113,7 +113,7 @@
                                         text
                                         @click="switchRule(props.row)"
                                     >
-                                        {{ $t(`quality.${props.row.enable ? '停用' : '启用'}`) }}
+                                        {{ props.row.enable ? $t('quality.停用') : $t('quality.启用') }}
                                     </bk-button>
                                     <bk-button
                                         v-perm="{
@@ -150,6 +150,12 @@
                 :quick-close="sideSliderConfig.quickClose"
                 :width="sideSliderConfig.width"
                 @hidden="closrSlider">
+                <template slot="header">
+                    <div class="rule-side-header">
+                        <p>{{ ruleDetail.name }}</p>
+                        <a style="font-weight: normal;" @click="handleGoEditRule">编辑</a>
+                    </div>
+                </template>
                 <template slot="content">
                     <div class="rule-slider-info"
                         v-if="sideSliderConfig.show && ruleDetail"
@@ -335,7 +341,6 @@
                                 resourceCode: projectId,
                                 action: RULE_RESOURCE_ACTION.CREATE
                             }
-
                         }
                     ]
                 },
@@ -395,12 +400,16 @@
                     current: 1,
                     count: 0,
                     limit: 10
-                }
+                },
+                ruleHashId: null
             }
         },
         computed: {
             projectId () {
                 return this.$route.params.projectId
+            },
+            isExtendTx () {
+                return VERSION_TYPE === 'tencent'
             }
         },
         watch: {
@@ -690,6 +699,15 @@
                     }
                 })
             },
+            handleGoEditRule () {
+                this.$router.push({
+                    name: 'editRule',
+                    params: {
+                        projectId: this.projectId,
+                        ruleId: this.ruleHashId
+                    }
+                })
+            },
             editRule (row) {
                 if (row.permissions.canEdit) {
                     this.$router.push({
@@ -722,6 +740,7 @@
                 }
             },
             async toShowSlider (ruleHashId, type) {
+                this.ruleHashId = ruleHashId
                 this.curActiveTab = type === 'detail' ? 'detailInfo' : 'recordDate'
                 this.lastClickRule = ruleHashId
                 this.sideSliderConfig.isLoading = true
@@ -863,6 +882,15 @@
         .bk-sideslider-content {
             height: calc(100% - 60px);
             overflow: hidden;
+        }
+        .rule-side-header {
+            display: flex;
+            justify-content: space-between;
+            padding-right: 48px;
+            a {
+                cursor: pointer;
+                color: #3a84ff;
+            }
         }
         .rule-slider-info {
             height: 100%;

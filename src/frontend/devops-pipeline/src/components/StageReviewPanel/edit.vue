@@ -51,7 +51,6 @@
         </template>
     </div>
 </template>
-
 <script>
     import Vue from 'vue'
     import { mapActions } from 'vuex'
@@ -229,7 +228,6 @@
         }
     }
 </script>
-
 <style lang="scss" scoped>
     .stage-review-radio-group {
         .bk-form-radio {

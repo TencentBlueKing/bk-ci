@@ -52,6 +52,8 @@
   "httpRule": "请输入以http://或svn://开头的正确的地址",
   "httpsRule": "请输入以https://开头，以.git结尾的地址",
   "httpOrHttpsRule": "请输入以 http://或 https://开头，以.git结尾的地址",
+  "httpsGitlabRule": "仅支持蓝鲸Gitlab代码库（gitlab-paas.open.oa.com）",
+  "gitlabSshFormatError": "格式有误，请输入git@ 开头，.git 结尾的代码库地址",
   "paramBeString": "参数必须为字符串",
   "gitCodeInternalRule": "请输入以git@开头，以.git结尾的地址",
   "tgitHttpRule": "请输入以https://开头，以.git结尾的地址",

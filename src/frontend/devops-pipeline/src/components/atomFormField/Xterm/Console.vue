@@ -5,8 +5,8 @@
 <script>
     import { Base64 } from 'js-base64'
     import { Terminal } from 'xterm'
-    import { FitAddon } from 'xterm-addon-fit'
     import { AttachAddon } from 'xterm-addon-attach'
+    import { FitAddon } from 'xterm-addon-fit'
     import 'xterm/css/xterm.css'
     export default {
         name: 'Console',
@@ -39,7 +39,6 @@
         },
         mounted () {
             window.addEventListener('resize', this.triggerTermResize)
-
             this.term = new Terminal()
             this.fitAddon = new FitAddon()
             const terminalContainer = document.getElementById('terminal')

@@ -1,0 +1,500 @@
+/*
+ * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
+ *
+ * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ *
+ * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
+ *
+ * A copy of the MIT License is included in this file.
+ *
+ *
+ * Terms of the MIT License:
+ * ---------------------------------------------------
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
+ * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
+ * NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
+ * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
+ * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ */
+
+package com.tencent.devops.scm.api
+
+import com.tencent.devops.common.api.enums.ScmType
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.scm.code.git.api.GitHook
+import com.tencent.devops.scm.enums.CodeSvnRegion
+import com.tencent.devops.scm.pojo.CommitCheckRequest
+import com.tencent.devops.scm.pojo.GitCommit
+import com.tencent.devops.scm.pojo.GitCommitReviewInfo
+import com.tencent.devops.scm.pojo.GitMrChangeInfo
+import com.tencent.devops.scm.pojo.GitMrInfo
+import com.tencent.devops.scm.pojo.GitMrReviewInfo
+import com.tencent.devops.scm.pojo.GitProjectInfo
+import com.tencent.devops.scm.pojo.LoginSession
+import com.tencent.devops.scm.pojo.RepoSessionRequest
+import com.tencent.devops.scm.pojo.RevisionInfo
+import com.tencent.devops.scm.pojo.TokenCheckResult
+import io.swagger.v3.oas.annotations.tags.Tag
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.Parameter
+import javax.ws.rs.Consumes
+import javax.ws.rs.GET
+import javax.ws.rs.POST
+import javax.ws.rs.PUT
+import javax.ws.rs.Path
+import javax.ws.rs.PathParam
+import javax.ws.rs.Produces
+import javax.ws.rs.QueryParam
+import javax.ws.rs.core.MediaType
+
+@Tag(name = "SERVICE_SCM_CODE", description = "仓库分支、tag、hook相关")
+@Path("/service/scm/")
+@Produces(MediaType.APPLICATION_JSON)
+@Consumes(MediaType.APPLICATION_JSON)
+interface ServiceScmResource {
+
+    @Operation(summary = "Get the repo latest revision")
+    @GET
+    @Path("/latestRevision")
+    fun getLatestRevision(
+        @Parameter(description = "项目名称", required = true)
+        @QueryParam("projectName")
+        projectName: String,
+        @Parameter(description = "仓库地址", required = true)
+        @QueryParam("url")
+        url: String,
+        @Parameter(description = "仓库类型", required = true)
+        @QueryParam("type")
+        type: ScmType,
+        @Parameter(description = "branch name", required = false)
+        @QueryParam("branchName")
+        branchName: String? = null,
+        @Parameter(description = "SVN additional path", required = false)
+        @QueryParam("additionalPath")
+        additionalPath: String? = null,
+        @Parameter(description = "privateKey", required = false)
+        @QueryParam("privateKey")
+        privateKey: String?,
+        @Parameter(description = "passPhrase", required = false)
+        @QueryParam("passPhrase")
+        passPhrase: String?,
+        @Parameter(description = "token", required = false)
+        @QueryParam("token")
+        token: String?,
+        @Parameter(description = "仓库区域前缀（只有svn用到）", required = false)
+        @QueryParam("region")
+        region: CodeSvnRegion?,
+        @Parameter(description = "仓库对应的用户名", required = false)
+        @QueryParam("userName")
+        userName: String?
+    ): Result<RevisionInfo>
+
+    @Operation(summary = "List all the branches of repo")
+    @GET
+    @Path("/branches")
+    fun listBranches(
+        @Parameter(description = "项目名称", required = true)
+        @QueryParam("projectName")
+        projectName: String,
+        @Parameter(description = "仓库地址", required = true)
+        @QueryParam("url")
+        url: String,
+        @Parameter(description = "仓库类型", required = true)
+        @QueryParam("type")
+        type: ScmType,
+        @Parameter(description = "privateKey", required = true)
+        @QueryParam("privateKey")
+        privateKey: String?,
+        @Parameter(description = "passPhrase", required = false)
+        @QueryParam("passPhrase")
+        passPhrase: String?,
+        @Parameter(description = "token", required = false)
+        @QueryParam("token")
+        token: String?,
+        @Parameter(description = "仓库区域前缀（只有svn用到）", required = false)
+        @QueryParam("region")
+        region: CodeSvnRegion?,
+        @Parameter(description = "仓库对应的用户名", required = false)
+        @QueryParam("userName")
+        userName: String?,
+        @Parameter(description = "搜索条件", required = false)
+        @QueryParam("search")
+        search: String? = null,
+        @Parameter(description = "page", required = true)
+        @QueryParam("page")
+        page: Int = 1,
+        @Parameter(description = "pageSize", required = true)
+        @QueryParam("pageSize")
+        pageSize: Int = 20
+    ): Result<List<String>>
+
+    @Operation(summary = "List all the branches of repo")
+    @GET
+    @Path("/tags")
+    fun listTags(
+        @Parameter(description = "项目名称", required = true)
+        @QueryParam("projectName")
+        projectName: String,
+        @Parameter(description = "仓库地址", required = true)
+        @QueryParam("url")
+        url: String,
+        @Parameter(description = "仓库类型", required = true)
+        @QueryParam("type")
+        type: ScmType,
+        @Parameter(description = "token", required = true)
+        @QueryParam("token")
+        token: String,
+        @Parameter(description = "仓库对应的用户名", required = true)
+        @QueryParam("userName")
+        userName: String,
+        @Parameter(description = "搜索条件", required = false)
+        @QueryParam("search")
+        search: String? = null
+    ): Result<List<String>>
+
+    @Operation(summary = "Check if the svn private key and passphrase legal")
+    @GET
+    @Path("tokenCheck")
+    fun checkPrivateKeyAndToken(
+        @Parameter(description = "项目名称", required = true)
+        @QueryParam("projectName")
+        projectName: String,
+        @Parameter(description = "仓库地址", required = true)
+        @QueryParam("url")
+        url: String,
+        @Parameter(description = "仓库类型", required = true)
+        @QueryParam("type")
+        type: ScmType,
+        @Parameter(description = "privateKey", required = true)
+        @QueryParam("privateKey")
+        privateKey: String?,
+        @Parameter(description = "passPhrase", required = false)
+        @QueryParam("passPhrase")
+        passPhrase: String?,
+        @Parameter(description = "token", required = false)
+        @QueryParam("token")
+        token: String?,
+        @Parameter(description = "仓库区域前缀（只有svn用到）", required = false)
+        @QueryParam("region")
+        region: CodeSvnRegion?,
+        @Parameter(description = "仓库对应的用户名", required = false)
+        @QueryParam("userName")
+        userName: String
+    ): Result<TokenCheckResult>
+
+    @Operation(summary = "Check if the svn private key and passphrase legal")
+    @GET
+    @Path("usernameAndPasswordCheck")
+    fun checkUsernameAndPassword(
+        @Parameter(description = "项目名称", required = true)
+        @QueryParam("projectName")
+        projectName: String,
+        @Parameter(description = "仓库地址", required = true)
+        @QueryParam("url")
+        url: String,
+        @Parameter(description = "仓库类型", required = true)
+        @QueryParam("type")
+        type: ScmType,
+        @Parameter(description = "username", required = true)
+        @QueryParam("username")
+        username: String,
+        @Parameter(description = "password", required = false)
+        @QueryParam("password")
+        password: String,
+        @Parameter(description = "token", required = false)
+        @QueryParam("token")
+        token: String,
+        @Parameter(description = "仓库区域前缀（只有svn用到）", required = false)
+        @QueryParam("region")
+        region: CodeSvnRegion?,
+        @Parameter(description = "仓库对应的用户名", required = false)
+        @QueryParam("repoUsername")
+        repoUsername: String
+    ): Result<TokenCheckResult>
+
+    @Operation(summary = "添加Git或者Gitlab WEB hook")
+    @POST
+    @Path("addWebHook")
+    fun addWebHook(
+        @Parameter(description = "项目名称", required = true)
+        @QueryParam("projectName")
+        projectName: String,
+        @Parameter(description = "仓库地址", required = true)
+        @QueryParam("url")
+        url: String,
+        @Parameter(description = "仓库类型", required = true)
+        @QueryParam("type")
+        type: ScmType,
+        @Parameter(description = "privateKey", required = true)
+        @QueryParam("privateKey")
+        privateKey: String?,
+        @Parameter(description = "passPhrase", required = false)
+        @QueryParam("passPhrase")
+        passPhrase: String?,
+        @Parameter(description = "token", required = true)
+        @QueryParam("token")
+        token: String?,
+        @Parameter(description = "仓库区域前缀（只有svn用到）", required = false)
+        @QueryParam("region")
+        region: CodeSvnRegion?,
+        @Parameter(description = "仓库对应的用户名", required = true)
+        @QueryParam("userName")
+        userName: String,
+        @Parameter(description = "事件类型", required = false)
+        @QueryParam("event")
+        event: String?,
+        @Parameter(description = "回调url", required = false)
+        @QueryParam("hookUrl")
+        hookUrl: String? = null
+    ): Result<Boolean>
+
+    @Operation(summary = "获取webhook地址")
+    @GET
+    @Path("getWebHooks")
+    fun getWebHooks(
+        @Parameter(description = "项目名称", required = true)
+        @QueryParam("projectName")
+        projectName: String,
+        @Parameter(description = "仓库地址", required = true)
+        @QueryParam("url")
+        url: String,
+        @Parameter(description = "仓库类型", required = true)
+        @QueryParam("type")
+        type: ScmType,
+        @Parameter(description = "token", required = false)
+        @QueryParam("token")
+        token: String?
+    ): Result<List<GitHook>>
+
+    @Operation(summary = "添加Git或者Gitlab WEB hook")
+    @PUT
+    @Path("{hookId}/updateWebHook")
+    fun updateWebHook(
+        @Parameter(description = "回调地址", required = true)
+        @PathParam("hookId")
+        hookId: Long,
+        @Parameter(description = "项目名称", required = true)
+        @QueryParam("projectName")
+        projectName: String,
+        @Parameter(description = "仓库地址", required = true)
+        @QueryParam("url")
+        url: String,
+        @Parameter(description = "仓库类型", required = true)
+        @QueryParam("type")
+        type: ScmType,
+        @Parameter(description = "privateKey", required = true)
+        @QueryParam("privateKey")
+        privateKey: String?,
+        @Parameter(description = "passPhrase", required = false)
+        @QueryParam("passPhrase")
+        passPhrase: String?,
+        @Parameter(description = "token", required = false)
+        @QueryParam("token")
+        token: String?,
+        @Parameter(description = "仓库区域前缀（只有svn用到）", required = false)
+        @QueryParam("region")
+        region: CodeSvnRegion?,
+        @Parameter(description = "仓库对应的用户名", required = true)
+        @QueryParam("userName")
+        userName: String,
+        @Parameter(description = "事件类型", required = false)
+        @QueryParam("event")
+        event: String?,
+        @Parameter(description = "回调地址", required = true)
+        @QueryParam("hookUrl")
+        hookUrl: String?
+    ): Result<Boolean>
+
+    @Operation(summary = "添加Git Commit Check")
+    @POST
+    @Path("addCommitCheck")
+    fun addCommitCheck(
+        request: CommitCheckRequest
+    ): Result<Boolean>
+
+    @Operation(summary = "lock svn")
+    @POST
+    @Path("lock")
+    fun lock(
+        @Parameter(description = "项目ID", required = true)
+        @QueryParam("projectId")
+        projectName: String,
+        @Parameter(description = "仓库地址", required = true)
+        @QueryParam("url")
+        url: String,
+        @Parameter(description = "仓库类型", required = true)
+        @QueryParam("type")
+        type: ScmType,
+        @Parameter(description = "仓库区域前缀（只有svn用到）", required = false)
+        @QueryParam("region")
+        region: CodeSvnRegion?,
+        @Parameter(description = "仓库对应的用户名", required = true)
+        @QueryParam("userName")
+        userName: String
+    ): Result<Boolean>
+
+    @Operation(summary = "lock svn")
+    @POST
+    @Path("unlock")
+    fun unlock(
+        @Parameter(description = "项目名称", required = true)
+        @QueryParam("projectName")
+        projectName: String,
+        @Parameter(description = "仓库地址", required = true)
+        @QueryParam("url")
+        url: String,
+        @Parameter(description = "仓库类型", required = true)
+        @QueryParam("type")
+        type: ScmType,
+        @Parameter(description = "仓库区域前缀（只有svn用到）", required = false)
+        @QueryParam("region")
+        region: CodeSvnRegion?,
+        @Parameter(description = "仓库对应的用户名", required = true)
+        @QueryParam("userName")
+        userName: String
+    ): Result<Boolean>
+
+    @Operation(summary = "查询合并请求的代码变更")
+    @GET
+    @Path("getMergeRequestChangeInfo")
+    fun getMergeRequestChangeInfo(
+        @Parameter(description = "项目名称", required = true)
+        @QueryParam("projectName")
+        projectName: String,
+        @Parameter(description = "仓库地址", required = true)
+        @QueryParam("url")
+        url: String,
+        @Parameter(description = "仓库类型", required = true)
+        @QueryParam("type")
+        type: ScmType,
+        @Parameter(description = "token", required = true)
+        @QueryParam("token")
+        token: String?,
+        @Parameter(description = "mrId", required = true)
+        @QueryParam("mrId")
+        mrId: Long
+    ): Result<GitMrChangeInfo?>
+
+    @Operation(summary = "查询合并请求的代码变更")
+    @GET
+    @Path("getMrInfo")
+    fun getMrInfo(
+        @Parameter(description = "项目名称", required = true)
+        @QueryParam("projectName")
+        projectName: String,
+        @Parameter(description = "仓库地址", required = true)
+        @QueryParam("url")
+        url: String,
+        @Parameter(description = "仓库类型", required = true)
+        @QueryParam("type")
+        type: ScmType,
+        @Parameter(description = "token", required = true)
+        @QueryParam("token")
+        token: String?,
+        @Parameter(description = "mrId", required = true)
+        @QueryParam("mrId")
+        mrId: Long
+    ): Result<GitMrInfo?>
+
+    @Operation(summary = "查询合并请求的代码变更")
+    @GET
+    @Path("getMrReviewInfo")
+    fun getMrReviewInfo(
+        @Parameter(description = "项目名称", required = true)
+        @QueryParam("projectName")
+        projectName: String,
+        @Parameter(description = "仓库地址", required = true)
+        @QueryParam("url")
+        url: String,
+        @Parameter(description = "仓库类型", required = true)
+        @QueryParam("type")
+        type: ScmType,
+        @Parameter(description = "token", required = true)
+        @QueryParam("token")
+        token: String?,
+        @Parameter(description = "mrId", required = true)
+        @QueryParam("mrId")
+        mrId: Long
+    ): Result<GitMrReviewInfo?>
+
+    @Operation(summary = "查询合并请求的提交记录")
+    @GET
+    @Path("getMrCommitList")
+    fun getMrCommitList(
+        @Parameter(description = "项目名称", required = true)
+        @QueryParam("projectName")
+        projectName: String,
+        @Parameter(description = "仓库地址", required = true)
+        @QueryParam("url")
+        url: String,
+        @Parameter(description = "仓库类型", required = true)
+        @QueryParam("type")
+        type: ScmType,
+        @Parameter(description = "token", required = true)
+        @QueryParam("token")
+        token: String?,
+        @Parameter(description = "mrId", required = true)
+        @QueryParam("mrId")
+        mrId: Long,
+        @Parameter(description = "page", required = true)
+        @QueryParam("page")
+        page: Int,
+        @Parameter(description = "size", required = true)
+        @QueryParam("size")
+        size: Int
+    ): Result<List<GitCommit>>
+
+    @Operation(summary = "获取项目详情")
+    @GET
+    @Path("getProjectInfo")
+    fun getProjectInfo(
+        @Parameter(description = "项目名称", required = true)
+        @QueryParam("projectName")
+        projectName: String,
+        @Parameter(description = "仓库地址", required = true)
+        @QueryParam("url")
+        url: String,
+        @Parameter(description = "仓库类型", required = true)
+        @QueryParam("type")
+        type: ScmType,
+        @Parameter(description = "token", required = true)
+        @QueryParam("token")
+        token: String?
+    ): Result<GitProjectInfo?>
+
+    @Operation(summary = "查询合并请求的代码变更")
+    @GET
+    @Path("getCrReviewInfo")
+    fun getCrReviewInfo(
+        @Parameter(description = "项目名称", required = true)
+        @QueryParam("projectName")
+        projectName: String,
+        @Parameter(description = "仓库地址", required = true)
+        @QueryParam("url")
+        url: String,
+        @Parameter(description = "仓库类型", required = true)
+        @QueryParam("type")
+        type: ScmType,
+        @Parameter(description = "token", required = true)
+        @QueryParam("token")
+        token: String?,
+        @Parameter(description = "crId", required = true)
+        @QueryParam("crId")
+        crId: Long
+    ): Result<GitCommitReviewInfo?>
+
+    @Operation(summary = "获取会话信息")
+    @POST
+    @Path("getLoginSession")
+    fun getLoginSession(
+        reposSessionRequest: RepoSessionRequest
+    ): Result<LoginSession?>
+}

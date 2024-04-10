@@ -243,6 +243,7 @@
             changeProject () {
                 this.$toggleProjectMenu(true)
             },
+
             async toApplyPermission () {
                 try {
                     handlePipelineNoPermission({
@@ -277,13 +278,12 @@
                 const newSearchKey = []
                 const queryArr = Object.keys(pathQuery)
                 const searchKeyArr = queryArr.filter(item => !this.queryStrMap.includes(item))
-
                 if (queryArr.includes('trigger')) await this.handleRemoteMethod()
                 if (queryArr.length) {
                     const newQuery = {}
                     queryArr.forEach(item => {
                         if (['status', 'materialAlias'].includes(item)) {
-                            newQuery[item] = pathQuery[item].split(',')
+                            newQuery[item] = typeof pathQuery[item] === 'string' ? pathQuery[item].split(',') : pathQuery[item]
                         } else if (pathQuery.startTimeStartTime && pathQuery.endTimeEndTime) {
                             newQuery.startTimeStartTime = pathQuery.startTimeStartTime
                             newQuery.endTimeEndTime = pathQuery.endTimeEndTime

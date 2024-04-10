@@ -230,7 +230,7 @@
                     this.$bkInfo({
                         theme: 'warning',
                         type: 'warning',
-                        title: `${this.$t('ticket.cert.deleteCertTips', [cert.certId])}?`,
+                        subTitle: this.$t('ticket.cert.deleteCertTips', [cert.certId]),
                         confirmFn: async () => {
                             let message, theme
                             try {
@@ -240,15 +240,15 @@
                                 })
                                 message = this.$t('ticket.cert.successfullyDeletedCert')
                                 theme = 'success'
+                                this.requestList()
                             } catch (err) {
                                 message = err.data ? err.data.message : err
                                 theme = 'error'
                             } finally {
-                                this.$bkMessage({
+                                message && this.$bkMessage({
                                     message,
                                     theme
                                 })
-                                this.requestList()
                             }
                         }
                     })

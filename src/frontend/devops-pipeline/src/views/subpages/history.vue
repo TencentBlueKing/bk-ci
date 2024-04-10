@@ -21,12 +21,16 @@
     import BuildHistoryTab from '@/components/BuildHistoryTab'
     import { mapGetters } from 'vuex'
     import showTooltip from '@/components/common/showTooltip'
+    import customExtMixin from '@/mixins/custom-extension-mixin'
+    import { HistoryTabsHooks } from '@/components/Hooks/'
 
     export default {
         components: {
             BuildHistoryTab,
+            HistoryTabsHooks,
             showTooltip
         },
+        mixins: [customExtMixin],
 
         props: {
             execHandler: Function
@@ -38,29 +42,47 @@
                 showFilterBar: false
             }
         },
-
         computed: {
             ...mapGetters('pipelines', {
                 statusMap: 'getStatusMap',
                 hisPageStatus: 'getHisPageStatus'
             }),
+            hooks () {
+                return this.extensionTabsHooks
+            },
             projectId () {
                 return this.$route.params.projectId
             },
             pipelineId () {
                 return this.$route.params.pipelineId
             },
+            extensionTabs () {
+                return this.extensions.map(ext => ({
+                    name: ext.serviceName,
+                    label: ext.serviceName,
+                    component: HistoryTabsHooks,
+                    bindData: {
+                        tabData: {
+                            projectId: this.projectId,
+                            pipelineId: this.pipelineId,
+                            ...ext.props.data
+                        },
+                        hookIframeUrl: this.getResUrl(ext.props.entryResUrl || 'index.html', ext.baseUrl)
+                    }
+                }))
+            },
             panels () {
                 return [{
-                    name: 'history',
-                    label: this.$t('pipelinesHistory'),
-                    component: 'BuildHistoryTab',
-                    bindData: {
-                        isColumnsSelectPopupVisible: this.isColumnsSelectPopupVisible,
-                        showFilterBar: this.showFilterBar,
-                        toggleFilterBar: this.toggleFilterBar
-                    }
-                }
+                            name: 'history',
+                            label: this.$t('pipelinesHistory'),
+                            component: 'BuildHistoryTab',
+                            bindData: {
+                                isColumnsSelectPopupVisible: this.isColumnsSelectPopupVisible,
+                                showFilterBar: this.showFilterBar,
+                                toggleFilterBar: this.toggleFilterBar
+                            }
+                        },
+                        ...this.extensionTabs
                 ]
             },
             currentTab () {

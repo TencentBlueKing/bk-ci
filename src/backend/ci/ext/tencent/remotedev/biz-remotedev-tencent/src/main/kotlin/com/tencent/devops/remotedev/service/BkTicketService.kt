@@ -1,0 +1,188 @@
+/*
+ * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
+ *
+ * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ *
+ * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
+ *
+ * A copy of the MIT License is included in this file.
+ *
+ *
+ * Terms of the MIT License:
+ * ---------------------------------------------------
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
+ * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
+ * NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
+ * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
+ * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ */
+
+package com.tencent.devops.remotedev.service
+
+import com.tencent.devops.common.api.exception.ErrorCodeException
+import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.api.util.OkhttpUtils
+import com.tencent.devops.common.service.trace.TraceTag
+import com.tencent.devops.remotedev.common.exception.ErrorCodeEnum
+import com.tencent.devops.remotedev.dao.WorkspaceDao
+import com.tencent.devops.remotedev.pojo.WorkspaceMountType
+import com.tencent.devops.remotedev.pojo.WorkspaceStatus
+import com.tencent.devops.remotedev.pojo.WorkspaceSystemType
+import okhttp3.Headers.Companion.toHeaders
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
+import okhttp3.Request
+import okhttp3.RequestBody
+import org.jooq.DSLContext
+import org.slf4j.LoggerFactory
+import org.slf4j.MDC
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Value
+import org.springframework.stereotype.Service
+import java.net.SocketTimeoutException
+import javax.ws.rs.core.Response
+
+@Service
+@Suppress("LongMethod")
+class BkTicketService @Autowired constructor(
+    private val commonService: CommonService,
+    private val workspaceDao: WorkspaceDao,
+    private val dslContext: DSLContext
+) {
+    @Value("\${remoteDev.bkTicketCheckUrl:}")
+    private val bkTicketCheckUrl: String = ""
+
+    @Value("\${remoteDev.bkTokenCheckUrl:}")
+    private val bkTokenCheckUrl: String = ""
+
+    companion object {
+        private val logger = LoggerFactory.getLogger(BkTicketService::class.java)
+    }
+
+    // 更新指定用户的所有运行中的容器的bkticket
+    fun updateAllBkTicket(userId: String, bkTicket: String): Boolean {
+        logger.info("updateAllBkTicket|userId|$userId|bkTicket|$bkTicket")
+        if (bkTicket.isBlank()) return false
+        // 获取user的所有运行中的容器
+        workspaceDao.fetchWorkspace(
+            dslContext, userId = userId, status = WorkspaceStatus.RUNNING, systemType = WorkspaceSystemType.LINUX
+        )?.parallelStream()?.forEach {
+            MDC.put(TraceTag.BIZID, TraceTag.buildBiz())
+            updateBkTicket(userId, bkTicket, it.hostName, it.workspaceMountType)
+        }
+        return true
+    }
+    // 更新指定容器内的bkticket
+    fun updateBkTicket(
+        userId: String,
+        bkTicket: String?,
+        hostName: String?,
+        mountType: WorkspaceMountType,
+        retryTime: Int = 3
+    ): Boolean {
+        logger.info("updateBkTicket|userId|$userId|bkTicket|$bkTicket|hostName|$hostName|mountType|$mountType")
+        if (bkTicket.isNullOrBlank() || hostName.isNullOrBlank()) {
+            return false
+        }
+        val url = "http://$hostName/_remoting/api/token/updateBkTicket"
+        val params = mutableMapOf<String, Any?>()
+        params["ticket"] = bkTicket
+        params["user"] = userId
+        val headers = mutableMapOf(
+            "Cookie" to "X-DEVOPS-BK-TICKET=$bkTicket;X-REMOTEDEV-GATEWAY-TAG=${mountType.toString().lowercase()}"
+        )
+        val request = Request.Builder()
+            .url(commonService.getProxyUrl(url))
+            .headers(headers.toHeaders())
+            .post(RequestBody.create("application/json; charset=utf-8".toMediaTypeOrNull(), JsonUtil.toJson(params)))
+            .build()
+
+        try {
+            OkhttpUtils.doHttp(request).use { response ->
+                val data = response.body!!.string()
+                logger.info("updateBkTicket|response code|${response.code}|content|$data")
+                if (!response.isSuccessful && retryTime > 0) {
+                    val retryTimeLocal = retryTime - 1
+                    return updateBkTicket(userId, bkTicket, hostName, mountType, retryTimeLocal)
+                }
+                if (!response.isSuccessful && retryTime <= 0) {
+                    throw ErrorCodeException(
+                        statusCode = Response.Status.INTERNAL_SERVER_ERROR.statusCode,
+                        errorCode = ErrorCodeEnum.UPDATE_BK_TICKET_FAIL.errorCode
+                    )
+                }
+
+                val dataMap = JsonUtil.toMap(data)
+                val status = dataMap["status"]
+                return (status == 0)
+            }
+        } catch (e: SocketTimeoutException) {
+            // 接口超时失败，重试三次
+            if (retryTime > 0) {
+                logger.info("User $userId updateBkTicket. retry: $retryTime")
+                return updateBkTicket(userId, bkTicket, hostName, mountType, retryTime - 1)
+            } else {
+                logger.error("User $userId updateBkTicket failed.", e)
+                throw ErrorCodeException(
+                    statusCode = Response.Status.INTERNAL_SERVER_ERROR.statusCode,
+                    errorCode = ErrorCodeEnum.UPDATE_BK_TICKET_FAIL.errorCode
+                )
+            }
+        }
+    }
+
+    // 调用蓝盾统一登录接口校验用户的登录信息是否合法
+    fun validateUserTicket(userId: String, isOffshore: Boolean, ticket: String, retryTime: Int = 3): Boolean {
+        logger.info("validateUserTicket|userId|$userId|isOffshore|$isOffshore|ticket|$ticket")
+        if (ticket.isBlank()) {
+            return false
+        }
+        val url = if (isOffshore) bkTokenCheckUrl.plus("?bk_token=$ticket")
+                    else bkTicketCheckUrl.plus("?bk_ticket=$ticket")
+        val request = Request.Builder()
+            .url(url)
+            .get()
+            .build()
+        try {
+            OkhttpUtils.doHttp(request).use { response ->
+                val content = response.body!!.string()
+                logger.info("validateUserTicket|response code|${response.code}|content|$content")
+                if (!response.isSuccessful && retryTime > 0) {
+                    val retryTimeLocal = retryTime - 1
+                    return validateUserTicket(userId, isOffshore, ticket, retryTimeLocal)
+                }
+                // 重试结束抛出异常
+                if (!response.isSuccessful && retryTime <= 0) {
+                    throw ErrorCodeException(
+                        statusCode = Response.Status.INTERNAL_SERVER_ERROR.statusCode,
+                        errorCode = ErrorCodeEnum.CHECK_USER_TICKET_FAIL.errorCode
+                    )
+                }
+                val contentMap = JsonUtil.toMap(content)
+                val dataMap = contentMap["data"] as Map<*, *>
+                logger.info("validateUserTicket|contentMap|$contentMap|dataMap|$dataMap")
+                val result = if (isOffshore) (contentMap["result"] is Boolean) else (contentMap["ret"] == 0)
+                return result && (dataMap["username"].toString() == userId)
+            }
+        } catch (e: SocketTimeoutException) {
+            // 接口超时失败，重试三次
+            if (retryTime > 0) {
+                logger.info("check user $userId ticket. retry: $retryTime")
+                return validateUserTicket(userId, isOffshore, ticket, retryTime - 1)
+            } else {
+                logger.error("check user $userId ticket failed.", e)
+                throw ErrorCodeException(
+                    statusCode = Response.Status.INTERNAL_SERVER_ERROR.statusCode,
+                    errorCode = ErrorCodeEnum.CHECK_USER_TICKET_FAIL.errorCode
+                )
+            }
+        }
+    }
+}

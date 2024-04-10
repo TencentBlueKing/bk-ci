@@ -1,7 +1,7 @@
 <template>
     <bk-dialog
         :value="isShow"
-        :width="480"
+        :width="836"
         :auto-close="false"
         :show-footer="false"
         :title="$t('newlist.chooseExport')"
@@ -60,6 +60,23 @@
                         name: `${this.pipelineName}.json`,
                         tips: this.$t('newlist.exportJsonTip'),
                         exportUrl: `${API_URL_PREFIX}/${PROCESS_API_URL_PREFIX}/user/pipelines/${this.pipelineId}/projects/${this.projectId}/export`
+                    },
+                    {
+                        title: 'PreCI',
+                        icon: 'export-prebuild',
+                        name: `${this.pipelineName}.yml`,
+                        tips: this.$t('newlist.exportYamlTip'),
+                        exportUrl: `${API_URL_PREFIX}/${PROCESS_API_URL_PREFIX}/user/pipelines/${this.pipelineId}/projects/${this.projectId}/yaml/prebuild`,
+                        tipsLink: `${IWIKI_DOCS_URL}/x/ruhACw`
+
+                    },
+                    {
+                        title: 'Stream YAML',
+                        icon: 'export-ci',
+                        name: `${this.pipelineName}.yml`,
+                        tips: this.$t('newlist.exportGitciTip'),
+                        exportUrl: `${API_URL_PREFIX}/${PROCESS_API_URL_PREFIX}/user/pipelines/${this.pipelineId}/projects/${this.projectId}/yaml/gitci`,
+                        tipsLink: `${IWIKI_DOCS_URL}/x/pZMdK`
                     }
                 ]
             }

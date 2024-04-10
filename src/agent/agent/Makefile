@@ -7,8 +7,8 @@ AGENT_VERSION=v0.0.0-beta.0
 BUILD_FLAGS := -ldflags="-w -s -X github.com/TencentBlueKing/bk-ci/agent/src/pkg/config.BuildTime=$(BuildTime) \
 -X github.com/TencentBlueKing/bk-ci/agent/src/pkg/config.GitCommit=$(GitCommit) -X github.com/TencentBlueKing/bk-ci/agent/src/pkg/config.AgentVersion=$(AGENT_VERSION)"
 
-# 编译外部出包版本时需要设置当前变量为out
-BUILD_OUT_TAG=out
+# 编译内部出包版本时需要设置当前变量不为out
+BUILD_OUT_TAG=inner
 
 format: 
 	find ./ -name "*.go" | xargs gofmt -w

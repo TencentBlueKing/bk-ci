@@ -38,15 +38,16 @@
             }
         },
         computed: {
-            ...mapState('atom', [
-                'globalEnvs',
-                'isPropertyPanelVisible'
-            ]),
             ...mapGetters('atom', [
+                'getDefaultVersion',
                 'getElement',
                 'getContainer',
                 'getContainers',
                 'getStage'
+            ]),
+            ...mapState('atom', [
+                'globalEnvs',
+                'isPropertyPanelVisible'
             ]),
             visible: {
                 get () {

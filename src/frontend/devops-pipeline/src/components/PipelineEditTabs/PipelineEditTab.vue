@@ -35,7 +35,11 @@
                     if (newVal && newVal.stages) {
                         let { hash } = this.$route
                         const linkAtomIndex = this.getLinkAtomIndex(newVal.stages, hash)
-                        hash = hash.substr(1)
+                        if (hash === '#codecc') {
+                            hash = 'linuxPaasCodeCCScript'
+                        } else {
+                            hash = hash.substr(1)
+                        }
                         if (!this.showAtomYet) {
                             const atomIndex = this.getAtomIndex(newVal.stages, hash)
                             atomIndex && this.togglePropertyPanel({

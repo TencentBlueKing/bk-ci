@@ -1,7 +1,7 @@
 <template>
     <div v-if="visible" class="route-tips" :style="!pathTips ? 'height:48px' : ''">
         <div class="tips-icon">
-            <i class="bk-icon icon-info-circle-shape" :style="!pathTips ? 'margin: 15px 13px;' : ''"></i>
+            <i class="devops-icon icon-info-circle-shape" :style="!pathTips ? 'margin: 15px 13px;' : ''"></i>
         </div>
         <div class="tips-content">
             <p v-if="srcTips" class="tips-row" :style="!pathTips ? 'margin-top: 15px' : ''">

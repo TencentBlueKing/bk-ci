@@ -42,4 +42,5 @@ dependencies {
         isTransitive = false
     }
     api(project(":core:dispatch:api-dispatch-docker"))
+    api(project(":core:environment:api-environment"))
 }

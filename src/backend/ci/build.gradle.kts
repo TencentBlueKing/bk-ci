@@ -30,7 +30,6 @@ allprojects {
         dependencies {
             dependency("org.json:json:${Versions.orgJson}")
             dependency("javax.ws.rs:javax.ws.rs-api:${Versions.Jaxrs}")
-            dependency("org.bouncycastle:bcpkix-jdk15on:${Versions.BouncyCastle}")
             dependency("org.bouncycastle:bcprov-jdk15on:${Versions.BouncyCastle}")
             dependency("com.github.fge:json-schema-validator:${Versions.JsonSchema}")
             dependency("com.networknt:json-schema-validator:${Versions.YamlSchema}")
@@ -129,7 +128,10 @@ allprojects {
             dependency("com.tencent.bk.sdk:iam-java-sdk:${Versions.iam}")
             dependency("com.tencent.bk.sdk:spring-boot-bk-audit-starter:${Versions.audit}")
             dependency("com.jakewharton:disklrucache:${Versions.disklrucache}")
+            dependency("org.apache.poi:poi:${Versions.apachepoi}")
+            dependency("org.apache.poi:poi-ooxml:${Versions.apachepoi}")
             dependency("com.mysql:mysql-connector-j:${Versions.MysqlDriver}")
+            dependency("com.tencentcloudapi:tencentcloud-sdk-java-cfs:${Versions.tencentcloudsdkcfs}")
             // TODO 升级swagger,等升级到spring boot 3.1+后可以去掉
             dependencySet("io.swagger.core.v3:${Versions.swagger}") {
                 entry("swagger-annotations")
@@ -154,6 +156,7 @@ allprojects {
         it.exclude("com.tencent.devops", "devops-boot-starter-plugin")
         it.exclude("org.bouncycastle", "bcutil-jdk15on")
         it.exclude("io.swagger") // TODO 升级swagger,等升级到spring boot 3.1+后可以去掉
+        it.exclude("org.bouncycastle", "bcpkix-jdk15on")
     }
     dependencies {
         // 兼容dom4j 的 bug : https://github.com/gradle/gradle/issues/13656

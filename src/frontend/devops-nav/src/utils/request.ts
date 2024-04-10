@@ -1,4 +1,5 @@
 import axios from 'axios'
+import cookie from 'js-cookie'
 import Vue from 'vue'
 
 const request = axios.create({
@@ -10,7 +11,7 @@ const request = axios.create({
         return status >= 200 && status <= 503
     },
     withCredentials: true,
-    xsrfCookieName: 'backend_csrftoken', // 注入csrfToken
+    xsrfCookieName: 'paas_perm_csrftoken', // 注入csrfToken
     xsrfHeaderName: 'X-CSRFToken' // 注入csrfToken
 })
 
@@ -18,6 +19,25 @@ function errorHandler (error: object) {
     console.log('error catch', error)
     return Promise.reject(Error('网络出现问题，请检查你的网络是否正常'))
 }
+
+request.interceptors.request.use(config => {
+    if (/(\/?ms\/backend|\/?backend)/.test(config.url)) {
+        return config
+    }
+
+    const routePid = getCurrentPid()
+    return {
+        ...config,
+        headers: routePid
+            ? {
+                'X-DEVOPS-PROJECT-ID': routePid,
+                ...(config.headers || {})
+            }
+            : config.headers
+    }
+}, function (error) {
+    return Promise.reject(error)
+})
 
 request.interceptors.response.use(response => {
     const { data: { code, data, message, status }, status: httpStatus } = response
@@ -33,6 +53,12 @@ request.interceptors.response.use(response => {
     } else if (httpStatus === 403) {
         const errorMsg = { httpStatus, code: httpStatus, message }
         return Promise.reject(errorMsg)
+    } else if (httpStatus >= 400) {
+        const err = {
+            message: message || `unknow Error httpStatus: ${httpStatus}`,
+            httpStatus
+        }
+        return Promise.reject(err)
     } else if ((typeof code !== 'undefined' && code !== 0) || (typeof status !== 'undefined' && status !== 0)) {
         let msg = message
         if (Object.prototype.toString.call(message) === '[object Object]') {
@@ -46,6 +72,16 @@ request.interceptors.response.use(response => {
 
     return data
 }, errorHandler)
+
+const getCurrentPid = () => {
+    try {
+        // @ts-ignore
+        const cookiePid = cookie.get(X_DEVOPS_PROJECT_ID)
+        return window.GLOBAL_PID || cookiePid
+    } catch (e) {
+        return undefined
+    }
+}
 
 Vue.prototype.$ajax = request
 

@@ -15,7 +15,30 @@
                 theme="primary" class="create-env-btn" @click="toCreateNode">{{ $t('environment.newPool') }}</bk-button>
         </div>
         <div class="create-node-row" v-else>
+            <template v-if="isExtendTx">
+                <bk-button
+                    v-perm="{
+                        permissionData: {
+                            projectId: projectId,
+                            resourceType: NODE_RESOURCE_TYPE,
+                            resourceCode: projectId,
+                            action: NODE_RESOURCE_ACTION.CREATE
+                        }
+                    }"
+                    theme="primary" @click="toImportNode('cmdb')">{{ $t('environment.nodeInfo.idcTestMachine') }}</bk-button>
+                <bk-button
+                    v-perm="{
+                        permissionData: {
+                            projectId: projectId,
+                            resourceType: NODE_RESOURCE_TYPE,
+                            resourceCode: projectId,
+                            action: NODE_RESOURCE_ACTION.CREATE
+                        }
+                    }"
+                    theme="primary" @click="toImportNode('construct')">{{ $t('environment.thirdPartyBuildMachine') }}</bk-button>
+            </template>
             <bk-button
+                v-else
                 v-perm="{
                     permissionData: {
                         projectId: projectId,
@@ -24,7 +47,10 @@
                         action: NODE_RESOURCE_ACTION.CREATE
                     }
                 }"
-                theme="primary" class="import-node-btn" @click="toImportNode('construct')">{{ $t('environment.nodeInfo.importNode') }}</bk-button>
+                theme="primary"
+                class="import-node-btn"
+                @click="toImportNode('construct')"
+            >{{ $t('environment.nodeInfo.importNode') }}</bk-button>
         </div>
     </div>
 </template>
@@ -48,7 +74,6 @@
         },
         data () {
             return {
-                isDropdownShow: false,
                 NODE_RESOURCE_ACTION,
                 NODE_RESOURCE_TYPE,
                 ENV_RESOURCE_ACTION,
@@ -58,14 +83,6 @@
         computed: {
             projectId () {
                 return this.$route.params.projectId
-            }
-        },
-        methods: {
-            dropdownShow () {
-                this.isDropdownShow = true
-            },
-            dropdownHide () {
-                this.isDropdownShow = false
             }
         }
     }
@@ -90,11 +107,9 @@
 
         .create-node-row {
             margin-top: 28px;
-
-            .create-node-btn {
-                margin-right: 4px;
-            }
-
+            display: flex;
+            align-items: center;
+            justify-content: center;
             .create-env-btn {
                 margin-left: 4px;
             }

@@ -31,7 +31,7 @@ import '@icon-cool/bk-icon-devops'
 import '@icon-cool/bk-icon-devops/src/index'
 import mavonEditor from 'mavon-editor'
 import 'mavon-editor/dist/css/index.css'
-import PortalVue from "portal-vue"; // eslint-disable-line
+import PortalVue from 'portal-vue'; // eslint-disable-line
 import VeeValidate from 'vee-validate'
 import validationENMessages from 'vee-validate/dist/locale/en'
 import validationCNMessages from 'vee-validate/dist/locale/zh_CN'
@@ -39,20 +39,17 @@ import createLocale from '../../locale'
 import ExtendsCustomRules from './utils/customRules'
 import validDictionary from './utils/validDictionary'
 
-import {
-    handlePipelineNoPermission,
-    RESOURCE_ACTION
-} from '@/utils/permission'
-import bkMagic from 'bk-magic-vue'
+import { handlePipelineNoPermission, RESOURCE_ACTION } from '@/utils/permission'
+import bkMagic from '@tencent/bk-magic-vue'
 import BkPipeline from 'bkui-pipeline'
-import { pipelineDocs } from '../../common-lib/docs'
 // 权限指令
 import VueCompositionAPI from '@vue/composition-api'
 import { BkPermission, PermissionDirective } from 'bk-permission'
 import 'bk-permission/dist/main.css'
+import { pipelineDocs } from '../../common-lib/docs'
 
 // 全量引入 bk-magic-vue 样式
-require('bk-magic-vue/dist/bk-magic-vue.min.css')
+require('@tencent/bk-magic-vue/dist/bk-magic-vue.min.css')
 
 const { i18n, setLocale } = createLocale(
     require.context('@locale/pipeline/', false, /\.json$/)
@@ -85,6 +82,7 @@ Vue.use(BkPipeline, {
 })
 
 Vue.prototype.$setLocale = setLocale
+Vue.prototype.isExtendTx = VERSION_TYPE === 'tencent'
 Vue.prototype.$permissionResourceAction = RESOURCE_ACTION
 Vue.prototype.$pipelineDocs = pipelineDocs
 Vue.prototype.$bkMessage = function (config) {
@@ -99,7 +97,21 @@ String.prototype.isBkVar = function () {
 /* eslint-disable */
 
 Vue.mixin({
+    computed: {
+        roleMap () {
+            return {
+                executor: 'role_executor',
+                manager: 'role_manager',
+                viewer: 'role_viewer',
+                creator: 'role_creator'
+            }
+        },
+    },
     methods: {
+        tencentPermission (url) {
+            const permUrl = this.isExtendTx ? url : PERM_URL_PREFIX
+            window.open(permUrl, '_blank')
+        },
         handleError (e, data) {
             if (e.code === 403) { // 没有权限编辑
                 handlePipelineNoPermission(data)

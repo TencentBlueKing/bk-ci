@@ -53,8 +53,22 @@
                                     </bk-checkbox-group>
                                 </div>
                             </div>
+                            <div class="bk-form-item item-notice">
+                                <label class="bk-label">{{ $t('settings.noticeGroup') }}：</label>
+                                <div class="bk-form-content notice-group">
+                                    <bk-checkbox-group :value="pipelineSubscription.groups" @change="handleSwitch">
+                                        <bk-checkbox v-for="item in projectGroupAndUsers" :key="item.value" :value="item.groupId" class="atom-checkbox-list-item">
+                                            {{ item.groupName }}
+                                            <bk-popover placement="top">
+                                                <span class="info-notice-length">({{item.users.length}})</span>
+                                                <div class="notice-user-content" slot="content">{{item.users.length ? item.users.join(';') : $t('settings.emptyNoticeGroup')}}</div>
+                                            </bk-popover>
+                                        </bk-checkbox>
+                                    </bk-checkbox-group>
+                                </div>
+                            </div>
                             <form-field :label="$t('settings.additionUser')">
-                                <user-input :handle-change="handleAdditionUserChange" name="users" :value="pipelineSettingUser"></user-input>
+                                <staff-input :handle-change="handleAdditionUserChange" name="users" :value="pipelineSettingUser"></staff-input>
                             </form-field>
 
                             <form-field :label="$t('settings.noticeContent')" :is-error="errors.has('content')" :error-msg="errors.first('content')">
@@ -126,7 +140,8 @@
 <script>
     import FormField from '@/components/AtomPropertyPanel/FormField.vue'
     import AtomCheckbox from '@/components/atomFormField/AtomCheckbox'
-    import UserInput from '@/components/atomFormField/UserInput/index.vue'
+    import StaffInput from '@/components/atomFormField/StaffInput/index.vue'
+    
     import GroupIdSelector from '@/components/atomFormField/groupIdSelector'
     import RunningLock from '@/components/pipelineSetting/RunningLock'
     import { mapActions, mapGetters, mapState } from 'vuex'
@@ -136,7 +151,7 @@
     export default {
         components: {
             FormField,
-            UserInput,
+            StaffInput,
             GroupIdSelector,
             AtomCheckbox,
             RunningLock
@@ -155,13 +170,13 @@
                 isLoading: true,
                 resetFlag: false,
                 subscriptionList: [
-                    { label: this.$t('settings.buildFail'), name: 'fail' },
-                    { label: this.$t('settings.buildSuc'), name: 'success' }
+                    { label: this.$t('settings.whenSuc'), name: 'success' },
+                    { label: this.$t('settings.whenFail'), name: 'fail' }
                 ],
-                curNavTab: { label: this.$t('settings.buildFail'), name: 'fail' },
+                curNavTab: { label: this.$t('settings.buildSuc'), name: 'success' },
                 noticeList: [
                     { id: 4, name: this.$t('settings.emailNotice'), value: 'EMAIL' },
-                    { id: 1, name: this.$t('settings.rtxNotice'), value: 'WEWORK' },
+                    { id: 1, name: this.$t('settings.rtxNotice'), value: 'RTX' },
                     { id: 5, name: this.$t('settings.voice'), value: 'VOICE' }
                     // { id: 2, name: this.$t('settings.wechatNotice'), value: 'WECHAT' },
                     // { id: 3, name: this.$t('settings.smsNotice'), value: 'SMS' }
@@ -178,7 +193,8 @@
         },
         computed: {
             ...mapState('pipelines', [
-                'pipelineSetting'
+                'pipelineSetting',
+                'projectGroupAndUsers'
             ]),
             ...mapGetters({
                 tagGroupList: 'pipelines/getTagGroupList'
@@ -282,6 +298,7 @@
         },
         created () {
             this.requestTemplateSetting(this.$route.params)
+            this.requestProjectGroupAndUsers(this.$route.params)
             this.requestGrouptLists()
         },
         mounted () {
@@ -294,7 +311,8 @@
         methods: {
             ...mapActions('pipelines', [
                 'requestTemplateSetting',
-                'updatePipelineSetting'
+                'updatePipelineSetting',
+                'requestProjectGroupAndUsers'
             ]),
             handleLabelSelect (index, arg) {
                 let labels = []

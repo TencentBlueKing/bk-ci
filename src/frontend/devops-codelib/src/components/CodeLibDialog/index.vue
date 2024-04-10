@@ -33,24 +33,24 @@
 </template>
 
 <script>
-    import P4 from './P4'
-    import SVN from './SVN'
-    import Git from './Git'
-    import TGit from './TGit'
-    import Github from './Github'
-    import Gitlab from './Gitlab'
+    import { mapActions, mapState } from 'vuex'
     import {
+        CODE_REPOSITORY_CACHE,
+        getCodelibConfig,
+        isGit,
+        isGitLab,
+        isGithub,
         isP4,
         isSvn,
-        isGit,
-        isTGit,
-        isGithub,
-        isGitLab,
-        getCodelibConfig,
-        CODE_REPOSITORY_CACHE
+        isTGit
     } from '../../config/'
-    import { mapActions, mapState } from 'vuex'
     import { parsePathRegion } from '../../utils'
+    import Git from './Git'
+    import Github from './Github'
+    import Gitlab from './Gitlab'
+    import P4 from './P4'
+    import SVN from './SVN'
+    import TGit from './TGit'
     export default {
         name: 'codelib-dialog',
         components: {
@@ -380,6 +380,12 @@
     .example-tips {
         color: #c4c6cd;
         font-size: 12px;
+    }
+</style>
+
+<style lang="scss" scoped>
+    .bk-form-control {
+        display: list-item !important;
     }
 </style>
 

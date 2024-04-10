@@ -1,4 +1,5 @@
 {
+    "serviceManage": "扩展管理",
     "okLabel": "确定",
     "cancelLabel": "取消",
     "logout": "退出登录",
@@ -136,8 +137,8 @@
     "selectProjectTypePlaceholder": "选择项目类型",
     "questionTips": "如有疑问请联系",
     "hotline": "客服电话：",
-    "contactUs": "联系蓝盾人工客服",
-    "feedback": "问题反馈",
+    "contactUs": "技术支持",
+    "feedback": "意见反馈",
     "mobileGame": "手游",
     "pcGame": "端游",
     "webGame": "页游",
@@ -149,7 +150,7 @@
     "permissionRefreshtitle": "权限申请单已提交",
     "permissionRefreshSubtitle": "请在权限中心填写权限申请单，提交完成后再刷新该页面",
     "permissionRefreshOkText": "刷新页面",
-    "documentTitle": "持续集成平台-蓝盾 | 腾讯蓝鲸智云",
+    "documentTitle": "蓝盾 | 蓝鲸智云",
     "technicalSupport": "技术支持",
     "communityForum": "社区论坛",
     "ProductOfficialWebsite": "产品官网",
@@ -193,6 +194,10 @@
     "node": "节点",
     "quality": "质量规则",
     "rules": "规则集",
+    "experience": "版本体验",
+    "experience_group": "体验组",
+    "notify_group": "通知组",
+    "artifactory": "版本仓库",
     "actions": {
         "create": "创建",
         "deploy": "部署",
@@ -213,5 +218,10 @@
     "websocketNotice": "websocket连接",
     "websocketInterupt": "检测到 websocket 连接中断，不能自动获取当前流水线运行状态。 是否重连？",
     "reconnect": "重新连接",
-    "启用中": "启用中"
+    "启用中": "启用中",
+    "启用项目失败": "启用项目失败",
+    "项目尚未关联运营产品，启用失败，请先关联所属运营产品再启用项目。": "项目尚未关联运营产品，启用失败，请先关联所属运营产品再启用项目。",
+    "确定停用项目吗？": "确定停用项目吗？",
+    "停用项目后，系统将定期清理已停用项目下流水线产生的构建日志、制品、报告。请备份需要的数据后再停用！": "停用项目后，系统将定期清理已停用项目下{0}请{1}数据后再停用！",
+    "去关联运营产品": "去关联运营产品"
 }

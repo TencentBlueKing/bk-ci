@@ -12,7 +12,8 @@
         <template v-slot="{ data: group }">
           <div
             :class="{ 'group-item': true, 'group-active': activeTab === group.groupId }"
-            @click="handleChangeTab(group)">
+            @click="handleChangeTab(group)"
+          >
             <bk-input
               ref="renameInput"
               v-show="group.groupId === activeGroupId && isRename"

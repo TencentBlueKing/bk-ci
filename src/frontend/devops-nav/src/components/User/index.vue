@@ -11,7 +11,8 @@
             class="user-entry"
         >
             {{ username }}
-            <i class="devops-icon icon-down-shape ml5" />
+            <span v-if="!isHideHint" class="user-header-hint" />
+            <i v-if="!disabled" class="devops-icon icon-down-shape" />
         </div>
         <template slot="content">
             <li
@@ -32,16 +33,19 @@
                     class="user-menu-item"
                     @click.stop="item.cb"
                 >{{ item.label }}</span>
+                <span v-if="!isHideHint && item.isShowHint" class="user-hint" />
             </li>
         </template>
     </bk-popover>
 </template>
-
 <script lang="ts">
     import Vue from 'vue'
     import { Component, Prop } from 'vue-property-decorator'
     import { Action } from 'vuex-class'
     import { clickoutside } from '../../directives/index'
+    import bkLogout from '../../utils/bklogout.js'
+
+    const IS_HIDE_HINT = 'IS_HIDE_HINT'
 
     @Component({
         directives: {
@@ -60,12 +64,19 @@
 
         @Prop()
         bkpaasUserId: string
+        
+        @Prop()
+        disabled: boolean
 
         @Action togglePopupShow
 
         hideUserInfo (item): void {
             if (item) {
                 if (item.to === this.$route.fullPath) return
+                if (item.to === '/console/preci/') {
+                    localStorage.setItem(IS_HIDE_HINT, '1')
+                    this.isHideHint = Number(localStorage.getItem(IS_HIDE_HINT)) || 1
+                }
                 this.$router.push(item.to)
             }
         }
@@ -76,6 +87,10 @@
 
         handleHide () {
             this.togglePopupShow(false)
+        }
+
+        created () {
+            this.isHideHint = Number(localStorage.getItem(IS_HIDE_HINT)) || 0
         }
 
         get menu (): object[] {
@@ -90,6 +105,11 @@
                         label: this.$t('accessCenter')
                     },
                     {
+                        to: '/console/preci/',
+                        label: this.$t('PreCI'),
+                        isShowHint: true
+                    },
+                    {
                         cb: this.logout,
                         label: this.$t('logout')
                     }
@@ -100,15 +120,11 @@
             }
         }
 
-        logout (): void {
-            try {
-                const url = new URL(window.getLoginUrl())
-                url.searchParams.append('is_from_logout', '1')
-                console.log(url.href)
-                window.location.href = url.href
-            } catch (error) {
-                console.error(error)
-            }
+        async logout (): Promise<void> {
+          await bkLogout.logout()
+          const url = new URL(location.protocol + window.getLoginUrl())
+          url.searchParams.delete('is_signin')
+          window.location.href = url.href
         }
     }
 </script>

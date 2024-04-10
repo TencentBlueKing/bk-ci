@@ -61,7 +61,7 @@
         </div>
         <div slot="footer">
             <div class="footer-handler">
-                <bk-button theme="primary" :disabled="loading.isLoading" @click="confirmFn">{{ $t('environment.comfirm') }}</bk-button>
+                <bk-button theme="primary" :disabled="loading.isLoading" @click="confirmFn">{{ $t('environment.confirm') }}</bk-button>
                 <bk-button theme="default" :disabled="loading.isLoading" @click="cancelFn">{{ $t('environment.cancel') }}</bk-button>
             </div>
         </div>

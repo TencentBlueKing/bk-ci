@@ -17,9 +17,9 @@
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 import {
+    DEVCLOUD_API_URL_PREFIX,
     FETCH_ERROR,
     LOG_API_URL_PREFIX,
-    MACOS_API_URL_PREFIX,
     PROCESS_API_URL_PREFIX,
     STORE_API_URL_PREFIX
 } from '@/store/constants'
@@ -45,6 +45,7 @@ import {
     SET_ATOM_MODAL_FETCHING,
     SET_ATOM_PAGE_OVER,
     SET_ATOM_VERSION_LIST,
+    SET_AUTH_EDITING,
     SET_COMMEND_ATOM_COUNT,
     SET_COMMEND_ATOM_PAGE_OVER,
     SET_COMMON_SETTING,
@@ -95,6 +96,9 @@ function getMapByKey (list, key) {
 }
 
 export default {
+    setAuthEditing ({ commit }, editing) {
+        commit(SET_AUTH_EDITING, editing)
+    },
     triggerStage ({ commit }, { projectId, pipelineId, buildNo, stageId, cancel, reviewParams, id, suggest }) {
         return request.post(`/${PROCESS_API_URL_PREFIX}/user/builds/projects/${projectId}/pipelines/${pipelineId}/builds/${buildNo}/stages/${stageId}/manualStart?cancel=${cancel}`, { reviewParams, id, suggest })
     },
@@ -625,15 +629,15 @@ export default {
     },
 
     getMacSysVersion () {
-        return request.get(`${MACOS_API_URL_PREFIX}/user/systemVersions/v2`)
+        return request.get(`${DEVCLOUD_API_URL_PREFIX}/user/macos/systemVersions/v2`)
     },
 
     getMacXcodeVersion (_, systemVersion = '') {
-        return request.get(`${MACOS_API_URL_PREFIX}/user/xcodeVersions/v2?systemVersion=${systemVersion}`)
+        return request.get(`${DEVCLOUD_API_URL_PREFIX}/user/macos/xcodeVersions/v2?systemVersion=${systemVersion}`)
     },
 
     getWinVersion () {
-        return request.get('/dispatch-windows/api/user/systemVersions').then((res) => {
+        return request.get(`${DEVCLOUD_API_URL_PREFIX}/user/windows/systemVersions`).then((res) => {
             return res.data
         })
     },
@@ -663,8 +667,8 @@ export default {
             document.body.removeChild(a)
         })
     },
-    reviewExcuteAtom: async ({ commit }, { projectId, pipelineId, buildId, elementId, action }) => {
-        return request.post(`/${PROCESS_API_URL_PREFIX}/user/quality/builds/${projectId}/${pipelineId}/${buildId}/${elementId}/qualityGateReview/${action}`).then(response => {
+    reviewExcuteAtom: async ({ commit }, { projectId, pipelineId, buildId, elementId, action, ruleIds }) => {
+        return request.post(`/${PROCESS_API_URL_PREFIX}/user/quality/builds/${projectId}/${pipelineId}/${buildId}/${elementId}/qualityGateReview/${action}`, { ruleIds }).then(response => {
             return response.data
         })
     }

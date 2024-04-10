@@ -803,24 +803,10 @@ class PipelineRuntimeService @Autowired constructor(
                     return@nextContainer
                 }
 
+                // --- 第3层循环：Element遍历处理 ---
                 /*
                     #4518 整合组装Task和刷新已有Container的逻辑
-                    构建矩阵特殊处理，即使重试也要重新计算执行策略
                 */
-                if (container.matrixGroupFlag == true) {
-                    container.retryFreshMatrixOption()
-                    pipelineContainerService.cleanContainersInMatrixGroup(
-                        transactionContext = dslContext,
-                        projectId = context.projectId,
-                        pipelineId = context.pipelineId,
-                        buildId = context.buildId,
-                        matrixGroupId = container.id!!
-                    )
-                    // 去掉要重试的矩阵内部数据
-                    updateExistsTask.removeIf { it.containerId == container.id }
-                    updateExistsContainerWithDetail.removeIf { it.first.matrixGroupId == container.id }
-                }
-                // --- 第3层循环：Element遍历处理 ---
                 pipelineContainerService.prepareBuildContainerTasks(
                     container = container,
                     context = context,
@@ -971,15 +957,27 @@ class PipelineRuntimeService @Autowired constructor(
             context.pipelineParamMap[PIPELINE_BUILD_NUM] = BuildParameters(
                 key = PIPELINE_BUILD_NUM, value = context.buildNum.toString(), readOnly = true
             )
-
-            context.watcher.start("startBuildBatchSaveWithoutThreadSafety")
-            buildVariableService.startBuildBatchSaveWithoutThreadSafety(
-                dslContext = transactionContext,
-                projectId = context.projectId,
-                pipelineId = context.pipelineId,
-                buildId = context.buildId,
-                variables = context.pipelineParamMap
-            )
+            if (buildHistoryRecord != null) {
+                // 重试构建需要增加锁保护更新VAR表
+                context.watcher.start("startBuildBatchSetVariable")
+                buildVariableService.batchSetVariable(
+                    dslContext = transactionContext,
+                    projectId = context.projectId,
+                    pipelineId = context.pipelineId,
+                    buildId = context.buildId,
+                    variables = context.pipelineParamMap
+                )
+            } else {
+                // 全新构建不需要锁保护更新VAR表
+                context.watcher.start("startBuildBatchSaveWithoutThreadSafety")
+                buildVariableService.startBuildBatchSaveWithoutThreadSafety(
+                    dslContext = transactionContext,
+                    projectId = context.projectId,
+                    pipelineId = context.pipelineId,
+                    buildId = context.buildId,
+                    variables = context.pipelineParamMap
+                )
+            }
             context.watcher.start("saveBuildRuntimeRecord")
             saveBuildRuntimeRecord(
                 transactionContext = transactionContext,
@@ -1152,12 +1150,13 @@ class PipelineRuntimeService @Autowired constructor(
             }
             containerBuildRecords.add(
                 BuildRecordContainer(
-                    projectId = build.projectId, pipelineId = build.pipelineId, resourceVersion = resourceVersion,
-                    buildId = build.buildId, stageId = build.stageId, containerId = build.containerId,
+                    projectId = build.projectId, pipelineId = build.pipelineId,
+                    resourceVersion = resourceVersion, buildId = build.buildId,
+                    stageId = build.stageId, containerId = build.containerId,
                     containerType = build.containerType, executeCount = build.executeCount,
                     matrixGroupFlag = build.matrixGroupFlag, matrixGroupId = build.matrixGroupId,
-                    status = null, startTime = null, endTime = null, timestamps = mapOf(),
-                    containerVar = containerVar
+                    status = null, startTime = build.startTime,
+                    endTime = build.endTime, timestamps = mapOf(), containerVar = containerVar
                 )
             )
         }
@@ -1168,12 +1167,14 @@ class PipelineRuntimeService @Autowired constructor(
         stageBuildRecords: MutableList<BuildRecordStage>,
         resourceVersion: Int
     ) {
-        updateStageExistsRecord.forEach {
+        updateStageExistsRecord.forEach { build ->
             stageBuildRecords.add(
                 BuildRecordStage(
-                    projectId = it.projectId, pipelineId = it.pipelineId, resourceVersion = resourceVersion,
-                    buildId = it.buildId, stageId = it.stageId, stageSeq = it.seq,
-                    executeCount = it.executeCount, stageVar = mutableMapOf(), timestamps = mapOf()
+                    projectId = build.projectId, pipelineId = build.pipelineId,
+                    resourceVersion = resourceVersion, buildId = build.buildId,
+                    stageId = build.stageId, stageSeq = build.seq,
+                    executeCount = build.executeCount, stageVar = mutableMapOf(),
+                    timestamps = mapOf(), startTime = build.startTime, endTime = build.endTime
                 )
             )
         }

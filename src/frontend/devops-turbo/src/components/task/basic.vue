@@ -55,10 +55,10 @@
 </template>
 
 <script>
-    import { mapActions } from 'vuex'
     import { getEngineList, modifyTaskBasic } from '@/api'
-    import logo from '@/components/logo'
     import { copyText } from '@/assets/js/util'
+    import logo from '@/components/logo'
+    import { mapActions } from 'vuex'
 
     export default {
         components: {

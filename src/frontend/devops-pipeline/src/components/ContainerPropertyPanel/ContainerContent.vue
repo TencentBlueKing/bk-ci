@@ -34,7 +34,7 @@
         </form-field>
         <form
             v-if="isVmContainer(container)"
-            v-bkloading="{ isLoading: !apps || !containerModalId }"
+            v-bkloading="{ isLoading: !apps || !containerModalId || isLoadingImage }"
         >
             <form-field :label="$t('editPage.resourceType')">
                 <selector
@@ -259,7 +259,7 @@
                 ></select-input>
             </form-field>
 
-            <section v-if="buildResourceType === 'DOCKER'">
+            <section v-if="['DOCKER', 'PUBLIC_DEVCLOUD'].includes(buildResourceType)">
                 <form-field :label="$t('editPage.performance')" v-show="isShowPerformance">
                     <devcloud-option
                         :disabled="!editable"
@@ -272,7 +272,7 @@
                 </form-field>
             </section>
 
-            <form-field :label="$t('editPage.workspace')" v-if="isThirdParty">
+            <form-field :label="$t('editPage.workspace')" v-if="isThirdParty && !isPCGBuildType">
                 <vuex-input
                     :disabled="!editable"
                     name="workspace"
@@ -280,6 +280,19 @@
                     :handle-change="changeBuildResource"
                     :placeholder="$t('editPage.workspaceTips')"
                 />
+            </form-field>
+
+            <form-field v-if="isPCGBuildType">
+                <atom-checkbox
+                    class="show-build-resource"
+                    :value="!!container.dispatchType.useRoot"
+                    :text="$t('editPage.useRootText')"
+                    :desc="$t('editPage.useRootDesc')"
+                    name="useRoot"
+                    :handle-change="changeBuildResource"
+                    :disabled="!editable"
+                >
+                </atom-checkbox>
             </form-field>
             <form-field class="container-app-field" v-if="isShowNFSDependencies">
                 <atom-checkbox
@@ -479,6 +492,7 @@
                 isLoadingMac: false,
                 xcodeVersionList: [],
                 systemVersionList: [],
+                isLoadingImage: false,
                 isLoadingWin: false,
                 windowsVersionList: [],
                 isShowPerformance: false
@@ -504,11 +518,7 @@
             imageTypeList () {
                 return [
                     { label: this.$t('editPage.fromList'), value: 'BKSTORE' },
-                    {
-                        label: this.$t('editPage.fromHand'),
-                        value: 'THIRD',
-                        hidden: this.buildResourceType === 'PUBLIC_DEVCLOUD'
-                    }
+                    { label: this.$t('editPage.fromHand'), value: 'THIRD' }
                 ]
             },
             appEnvs () {
@@ -546,6 +556,9 @@
             },
             isThirdParty () {
                 return this.isThirdPartyContainer(this.container)
+            },
+            isPCGBuildType () {
+                return this.buildResourceType === 'THIRD_PARTY_PCG'
             },
             isDocker () {
                 return this.isDockerBuildResource(this.container)
@@ -713,6 +726,25 @@
                     })
                 )
             }
+            if (['DOCKER', 'IDC', 'PUBLIC_DEVCLOUD'].includes(this.buildResourceType) && !this.buildImageCode && this.buildImageType !== 'THIRD') {
+                if (/\$\{/.test(this.buildResource)) {
+                    this.handleContainerChange('dispatchType', Object.assign({
+                        ...this.container.dispatchType,
+                        imageType: 'THIRD'
+                    }))
+                } else {
+                    this.isLoadingImage = true
+                    this.requestImageHistory({ agentType: this.buildResourceType, value: this.buildResource }).then((res) => {
+                        const data = res.data || {}
+                        this.handleContainerChange('dispatchType', Object.assign({
+                            ...this.container.dispatchType,
+                            imageType: 'BKSTORE'
+                        }))
+                        data.historyVersion = data.version
+                        if (data.code) this.choose(data)
+                    }).catch((err) => this.$showTips({ theme: 'error', message: err.message || err })).finally(() => (this.isLoadingImage = false))
+                }
+            }
             if (this.container.dispatchType && this.container.dispatchType.imageCode) {
                 this.getVersionList(this.container.dispatchType.imageCode)
             }
@@ -726,32 +758,34 @@
                 'getMacXcodeVersion',
                 'getWinVersion'
             ]),
-            ...mapActions('pipelines', ['requestImageVersionlist']),
+            ...mapActions('pipelines', [
+                'requestImageVersionlist',
+                'requestImageHistory'
+            ]),
 
             changeResourceType (name, val) {
                 const currentType
                     = this.buildResourceTypeList.find((buildType) => buildType.type === val) || {}
                 const defaultBuildResource = currentType.defaultBuildResource || {}
-                const defaultAgentType
-                    = name === 'buildType'
-                        && ['THIRD_PARTY_AGENT_ID', 'THIRD_PARTY_AGENT_ENV'].includes(val)
-                        && !this.agentType
-                        ? { agentType: 'ID' }
-                        : {}
-                this.handleContainerChange(
-                    'dispatchType',
-                    Object.assign({
-                        ...this.container.dispatchType,
-                        ...defaultAgentType,
-                        imageVersion: defaultBuildResource.version || '',
-                        value: defaultBuildResource.value || '',
-                        imageCode: defaultBuildResource.code || '',
-                        imageName: defaultBuildResource.name || '',
-                        imageType: defaultBuildResource.imageType || '',
-                        recommendFlag: defaultBuildResource.recommendFlag,
-                        [name]: val
-                    })
-                )
+                const defaultAgentType = (
+                    name === 'buildType'
+                    && ['THIRD_PARTY_AGENT_ID', 'THIRD_PARTY_AGENT_ENV'].includes(val)
+                    && !this.agentType)
+                    ? { agentType: 'ID' }
+                    : {}
+
+                this.handleContainerChange('dispatchType', Object.assign({
+                    ...this.container.dispatchType,
+                    ...defaultAgentType,
+                    imageVersion: defaultBuildResource.version || '',
+                    value: defaultBuildResource.value || '',
+                    imageCode: defaultBuildResource.code || '',
+                    imageName: defaultBuildResource.name || '',
+                    imageType: defaultBuildResource.imageType || '',
+                    recommendFlag: defaultBuildResource.recommendFlag,
+                    useRoot: val === 'THIRD_PARTY_PCG' ? false : undefined,
+                    [name]: val
+                }))
                 if (val === 'MACOS') this.getMacOsData()
                 if (val === 'WINDOWS') this.getWinData()
                 if (this.container.dispatchType && this.container.dispatchType.imageCode) {

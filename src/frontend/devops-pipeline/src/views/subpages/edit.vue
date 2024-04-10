@@ -80,6 +80,9 @@
             }
         },
         computed: {
+            ...mapState('pipelines', [
+                'projectGroupAndUsers'
+            ]),
             ...mapState([
                 'fetchError'
             ]),
@@ -91,6 +94,9 @@
             },
             pipelineId () {
                 return this.$route.params.pipelineId
+            },
+            longProjectId () {
+                return this.curProject && this.curProject.projectId ? this.curProject.projectId : ''
             },
             currentTab () {
                 return this.$route.params.tab || 'pipeline'
@@ -116,6 +122,7 @@
                             bindData: {
                                 failSubscription: this.pipelineSetting ? this.pipelineSetting.failSubscription : null,
                                 successSubscription: this.pipelineSetting ? this.pipelineSetting.successSubscription : null,
+                                projectGroupAndUsers: this.projectGroupAndUsers,
                                 updateSubscription: (container, name, value) => {
                                     this.setPipelineEditing(true)
                                     this.updatePipelineSetting({
@@ -152,6 +159,9 @@
             '$route.params.pipelineId': function (pipelineId, oldId) {
                 this.init()
             },
+            // longProjectId () {
+            //     this.getRoleList()
+            // },
             pipeline (val) {
                 this.isLoading = false
                 this.requestInterceptAtom()
@@ -166,10 +176,14 @@
             }
         },
         mounted () {
-            if (!this.editfromImport) {
+            if (this.editfromImport) {
+                // this.getRoleList()
+                this.requestProjectGroupAndUsers(this.$route.params)
+            } else {
                 this.init()
-                this.requestQualityAtom()
             }
+            this.requestQualityAtom()
+            this.setEditFrom(false)
             this.addLeaveListenr()
         },
         beforeDestroy () {
@@ -178,6 +192,7 @@
             this.removeLeaveListenr()
             this.setPipelineEditing(false)
             this.setSaveStatus(false)
+            this.setAuthEditing(false)
             this.setEditFrom(false)
             this.errors.clear()
         },
@@ -203,6 +218,9 @@
             ...mapActions('pipelines', [
                 'requestPipelineSetting',
                 'updatePipelineSetting',
+                'updatePipelineAuthority',
+                'fetchRoleList',
+                'requestProjectGroupAndUsers',
                 'resetPipelineSetting'
             ]),
             ...mapActions('common', [
@@ -214,8 +232,10 @@
                     this.isLoading = true
                     await this.requestPipeline(this.$route.params)
                     await this.requestPipelineSetting(this.$route.params)
+                    // await this.getRoleList()
                     this.isLoading = false
                 }
+                this.requestProjectGroupAndUsers(this.$route.params)
             },
             switchTab (tab) {
                 this.$router.push({
@@ -252,6 +272,15 @@
                 e.returnValue = this.confirmMsg
                 return this.confirmMsg
             },
+
+            // getRoleList () {
+            //     if (this.longProjectId && this.pipelineId) {
+            //         this.fetchRoleList({
+            //             projectId: this.longProjectId,
+            //             pipelineId: this.pipelineId
+            //         })
+            //     }
+            // },
             requestQualityAtom () {
                 this.$store.dispatch('common/requestQualityAtom', {
                     projectId: this.projectId

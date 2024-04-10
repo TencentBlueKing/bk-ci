@@ -1,0 +1,98 @@
+#wsproxy Deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Release.Name }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/component: {{ .Release.Name }}
+    app.kubernetes.io/name: {{ .Release.Name }}
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/instance: {{ .Release.Name }}
+      app.kubernetes.io/component: {{ .Release.Name }}
+      app.kubernetes.io/name: {{ .Release.Name }}
+  replicas: {{ .Values.wsproxy.replicas }}
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/instance: {{ .Release.Name }}
+        app.kubernetes.io/component: {{ .Release.Name }}
+        app.kubernetes.io/name: {{ .Release.Name }}
+    spec:
+      containers:
+        - name: {{ .Release.Name }}
+          image: {{ .Values.wsproxy.image }}
+          imagePullPolicy: {{ .Values.backendImage.pullPolicy }}
+          {{- if .Values.wsproxy.resources }}
+          resources: {{- toYaml .Values.wsproxy.resources | nindent 12 }}
+          {{- end }}
+          ports:
+            - name: ssh
+              containerPort: 2200
+            - name: httpproxy
+              containerPort: 8081
+            - name: httpsproxy
+              containerPort: 9090    
+          workingDir: /data/workspace/wsproxy
+          volumeMounts:
+            - name: {{ .Release.Name }}-config
+              mountPath: /data/workspace/wsproxy/config
+              readOnly: true
+            - name: {{ .Release.Name }}-tls-certs
+              mountPath: /data/workspace/wsproxy/tls
+              readOnly: true
+            {{- if .Values.wsproxy.logConfig.enablePathLog }}
+            - name: {{ .Release.Name }}-logs
+              mountPath: /data/workspace/wsproxy/logs
+              readOnly: false
+            {{- end }}   
+        {{- if .Values.wsproxy.logConfig.sidecar.enable }}
+        - name: {{ .Release.Name }}-log-agent
+          image: {{ .Values.wsproxy.logConfig.sidecar.image }}
+          imagePullPolicy: {{ .Values.backendImage.pullPolicy }}
+          {{- if .Values.wsproxy.logConfig.sidecar.resources }}
+          resources: {{- toYaml .Values.wsproxy.logConfig.sidecar.resources | nindent 12 }}
+          {{- end }}
+          workingDir: {{ .Values.wsproxy.logConfig.sidecar.workingDir }}
+          volumeMounts:
+            - name: {{ .Release.Name }}-logs
+              mountPath: /data/workspace/wsproxy/logs
+              readOnly: false
+          {{- if .Values.wsproxy.logConfig.sidecar.env }}
+          env: {{- toYaml .Values.wsproxy.logConfig.sidecar.env | nindent 12 }}
+          {{- end }}    
+        {{- end }}
+      volumes:
+        - name: {{ .Release.Name }}-config
+          configMap:
+            name: {{ .Release.Name }}-config
+            items:
+              - key: run.json
+                path: run.json
+              {{- if .Values.kubeConfig.useKubeConfig}}
+              - key: kubeConfig.yaml
+                path: kubeConfig.yaml
+              {{- end}}
+              - key: sshkey
+                path: host_keys/sshkey
+        - name: {{ .Release.Name }}-tls-certs
+          configMap:
+            name: {{ .Release.Name }}-tls-certs
+            items:
+              - key: https.pem
+                path: https.pem
+              - key: https.key
+                path: https.key   
+        {{- if .Values.wsproxy.logConfig.enablePathLog }}                
+        - name: {{ .Release.Name }}-logs
+          emptyDir: {}     
+        {{- end }}  
+      {{- if .Values.wsproxy.affinity }}
+      affinity: {{- toYaml .Values.wsproxy.affinity | nindent 8 }}
+      {{- end }}          
+      {{- if .Values.wsproxy.tolerations }}
+      tolerations: {{- toYaml .Values.wsproxy.tolerations | nindent 8 }}
+      {{- end }}

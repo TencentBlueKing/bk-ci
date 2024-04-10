@@ -1,0 +1,25 @@
+{{- if .Values.turbo.enabled -}}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "bkci.names.fullname" . }}-turbo-new
+  labels: {{- include "bkci.labels.standard" . | nindent 4 }}
+    app.kubernetes.io/name: turbo-new
+    app.kubernetes.io/component: microservice-turbo-new
+    {{- if .Values.commonLabels }}
+      {{- include "common.tplvalues.render" (dict "value" .Values.commonLabels "context" $) | nindent 4 }}
+    {{- end }}
+  {{- if .Values.commonAnnotations }}
+  annotations: {{- include "common.tplvalues.render" (dict "value" .Values.commonAnnotations "context" $) | nindent 4 }}
+  {{- end }}
+spec:
+  type: ClusterIP
+  ports:
+    - name: http
+      port: 80
+      targetPort: http
+      protocol: TCP
+  selector: {{- include "bkci.labels.matchLabels" . | nindent 4 }}
+    app.kubernetes.io/name: turbo-new
+    app.kubernetes.io/component: microservice-turbo-new
+{{- end }}

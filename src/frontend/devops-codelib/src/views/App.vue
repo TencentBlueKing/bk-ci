@@ -2,10 +2,12 @@
     <div class="devops-codelib">
         <header class="devops-codelib-header">
             <logo size="32" :name="logo" />
-            <span>{{title}}</span>
+            <span>
+                {{title}}
+            </span>
         </header>
         <main>
-            <router-view></router-view>
+            <router-view />
         </main>
     </div>
 </template>
@@ -13,13 +15,12 @@
 <script>
     export default {
         name: 'app',
-
         computed: {
             logo () {
                 return this.$route.meta.logo
             },
             title () {
-                return this.$t(`codelib.${this.$route.meta.title}`)
+                return this.$t('codelib.codelib')
             }
         }
     }

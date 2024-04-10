@@ -14,19 +14,19 @@
             :empty-text="$t('setting.userGroup.emptyTips')"
             class="group-table"
         >
-            <bk-table-column label="Id" prop="groupHashId"></bk-table-column>
-            <bk-table-column :label="$t('name')" prop="name"></bk-table-column>
-            <bk-table-column :label="$t('setting.userGroup.innerUsers')" prop="innerUsers">
+            <bk-table-column label="Id" prop="groupHashId" show-overflow-tooltip></bk-table-column>
+            <bk-table-column :label="$t('name')" prop="name" show-overflow-tooltip></bk-table-column>
+            <bk-table-column :label="$t('setting.userGroup.innerUsers')" prop="innerUsers" show-overflow-tooltip>
                 <template slot-scope="props">
                     <span>{{props.row.innerUsers.join(';')}}</span>
                 </template>
             </bk-table-column>
-            <bk-table-column :label="$t('setting.userGroup.outerUsers')" prop="outerUsers">
+            <bk-table-column :label="$t('setting.userGroup.outerUsers')" prop="outerUsers" show-overflow-tooltip>
                 <template slot-scope="props">
                     <span>{{props.row.outerUsers.join(';')}}</span>
                 </template>
             </bk-table-column>
-            <bk-table-column :label="$t('description')" prop="remark"></bk-table-column>
+            <bk-table-column :label="$t('description')" prop="remark" show-overflow-tooltip></bk-table-column>
             <bk-table-column :label="$t('operation')" width="200" class-name="handler-btn">
                 <template slot-scope="props">
                     <span :class="{ 'update-btn': true, disabled: !props.row.permissions.canEdit }" @click="editGroup(props.row)">{{$t('edit')}}</span>
@@ -142,6 +142,7 @@
             },
 
             addGroup () {
+                window.changeFlag = false
                 this.show = true
             },
 

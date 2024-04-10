@@ -64,6 +64,9 @@
                         <li @click.stop="handlerDownload()">
                             <i class="devops-icon icon-download"></i>下载
                         </li>
+                        <li @click.stop="handlerDownload($event, 'MoF')" v-if="isExtendTx && isWindows && isApkOrIpa() && isMof">
+                            <i class="devops-icon icon-download"></i>魔方有线安装
+                        </li>
                         <li @click.stop="refresh()">
                             <i class="devops-icon icon-refresh"></i>刷新
                         </li>
@@ -89,12 +92,14 @@
                             <div class="detail-info">
                                 <div class="detail-info-label"><span>Info</span></div>
                                 <ul>
-                                    <li v-for="(item, key) of sideSliderConfig.detailData.info"
-                                        v-if="!(lastClickItem.folder && item.key === 'size')"
-                                        :key="`detail${key}`">
-                                        <span class="bk-lable">{{ item.name }}：</span>
-                                        <span>{{ item.key === 'name' ? (sideSliderConfig.data[item.key] || lastClickItem.name) : convertInfoItem(item.key, sideSliderConfig.data[item.key]) }}</span>
-                                    </li>
+                                    <template v-for="(item, key) of sideSliderConfig.detailData.info">    
+                                        <li
+                                            v-if="!(lastClickItem.folder && item.key === 'size')"
+                                            :key="`detail${key}`">
+                                            <span class="bk-lable">{{ item.name }}：</span>
+                                            <span>{{ item.key === 'name' ? (sideSliderConfig.data[item.key] || lastClickItem.name) : convertInfoItem(item.key, sideSliderConfig.data[item.key]) }}</span>
+                                        </li>
+                                    </template>
                                 </ul>
                             </div>
                             <div class="detail-info" v-if="!lastClickItem.folder">
@@ -219,6 +224,18 @@
             },
             searchKeysLen () {
                 return Object.keys(this.searchKeys).length || 0
+            },
+            isWindows () {
+                return /WINDOWS/.test(window.navigator.userAgent.toUpperCase())
+            },
+            isMof () {
+                const projectId = this.$route.params.projectId
+                return this.projectList.find(item => {
+                    return (item.deptName === '魔方工作室群' && item.projectCode === projectId)
+                })
+            },
+            isExtendTx () {
+                return VERSION_TYPE === 'tencent'
             }
         },
         watch: {
@@ -455,8 +472,12 @@
                             path: lastClickItem.fullPath
                         })
                         const pipelineId = res.pipelineId
-                        const resource = res.pipelineName ? `流水线:${res.pipelineName}` : '流水线'
-                        this.setPermissionConfig(resource, '分享构件', pipelineId)
+                        const instance = [{
+                            id: pipelineId,
+                            name: res.pipelineName || pipelineId
+                        }]
+                        // 分享构件
+                        this.setPermissionConfig(instance, pipelineId)
                     } else {
                         theme = 'error'
                         message = err.message || err
@@ -471,15 +492,16 @@
             shareCancel () {
                 this.shareConfig.isShow = false
             },
-            setPermissionConfig (resource, option, pipelineId) {
-                const role = 'role_viewer'
-                const params = {
-                    noPermissionList: [
-                        { resource: resource, option: option }
-                    ],
-                    applyPermissionUrl: `/backend/api/perm/apply/subsystem/?client_id=pipeline&project_code=${this.projectId}&service_code=pipeline&${role}=pipeline:${pipelineId}`
-                }
-                this.$showAskPermissionDialog(params)
+            setPermissionConfig (instanceId, pipelineId) {
+                this.$showAskPermissionDialog({
+                    noPermissionList: [{
+                        actionId: this.$permissionActionMap.view,
+                        resourceId: this.$permissionResourceMap.pipeline,
+                        instanceId,
+                        projectId: this.projectId
+                    }],
+                    applyPermissionUrl: `/backend/api/perm/apply/subsystem/?client_id=pipeline&project_code=${this.projectId}&service_code=pipeline&role_viewer=pipeline:${pipelineId}`
+                })
             },
             cancelHandler () {
                 this.permissionConfig.isShow = false
@@ -535,8 +557,12 @@
                             path: item.fullPath
                         })
                         const pipelineId = res.pipelineId
-                        const resource = res.pipelineName ? `流水线:${res.pipelineName}` : '流水线'
-                        this.setPermissionConfig(resource, '下载构件', pipelineId)
+                        const instance = [{
+                            id: pipelineId,
+                            name: res.pipelineName || pipelineId
+                        }]
+                        // 下载构件
+                        this.setPermissionConfig(instance, pipelineId)
                     } else {
                         this.$bkMessage({
                             theme: 'error',
@@ -548,9 +574,13 @@
             /**
              * 下载
              */
-            async handlerDownload () {
+            async handlerDownload (event, type) {
                 const url = await this.getDownloadUrl(this.lastClickItem)
-                url && window.open(url, '_self')
+                url && window.open(type ? `${API_URL_PREFIX}/pc/download/devops_pc_forward.html?downloadUrl=${url}` : url, '_self')
+            },
+            isApkOrIpa () {
+                const type = this.lastClickItem.name.toUpperCase().substring(this.lastClickItem.name.lastIndexOf('.') + 1)
+                return type === 'APK' || type === 'IPA'
             }
         }
     }
@@ -603,7 +633,7 @@
             .artifactory-table-label {
                 height: 50px;
                 font-size: 14px;
-                color: $fontLigtherColor;
+                color: $fontLighterColor;
                 line-height: 50px;
                 padding-left: 20px;
             }

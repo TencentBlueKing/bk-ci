@@ -17,6 +17,7 @@
                                     }
                                 }"
                                 :create-codelib="createCodelib"
+                                :is-blue-king="isBlueKing"
                             >
                             </link-code-lib>
                             <bk-input :placeholder="$t('codelib.aliasNamePlaceholder')"
@@ -100,27 +101,27 @@
 </template>
 
 <script>
-    import layout from '../components/layout'
-    import LinkCodeLib from '../components/LinkCodeLib'
-    import CodeLibTable from '../components/CodeLibTable'
+    import { mapActions, mapState } from 'vuex'
     import CodeLibDetail from '../components/CodeLibDetail'
     import CodeLibDialog from '../components/CodeLibDialog'
-    import { mapState, mapActions } from 'vuex'
-    import { getOffset } from '../utils/'
-    import { RESOURCE_ACTION, RESOURCE_TYPE } from '../utils/permission'
+    import CodeLibTable from '../components/CodeLibTable'
+    import LinkCodeLib from '../components/LinkCodeLib'
+    import layout from '../components/layout'
     import {
+        CODE_REPOSITORY_CACHE,
+        CODE_REPOSITORY_SEARCH_VAL,
         codelibTypes,
         getCodelibConfig,
         isGit,
         isGitLab,
         isGithub,
-        isTGit,
         isP4,
-        CODE_REPOSITORY_CACHE,
-        CODE_REPOSITORY_SEARCH_VAL,
-        isSvn
+        isSvn,
+        isTGit
     } from '../config/'
-    
+    import { getOffset } from '../utils/'
+    import { RESOURCE_ACTION, RESOURCE_TYPE } from '../utils/permission'
+
     export default {
         name: 'codelib-list',
 
@@ -137,6 +138,7 @@
                 RESOURCE_ACTION,
                 RESOURCE_TYPE,
                 isLoading: !this.codelibs,
+                isSearch: false,
                 defaultPagesize: 10,
                 startPage: 1,
                 showCodelibDialog: false,
@@ -155,8 +157,25 @@
             projectId () {
                 return this.$route.params.projectId
             },
+            isExtendTx () {
+                return VERSION_TYPE === 'tencent'
+            },
             codelibTypes () {
-                return codelibTypes
+                let typeList = codelibTypes
+                if (!this.isExtendTx) {
+                    typeList = typeList.filter(type => !['Git', 'TGit'].includes(type))
+                }
+                return typeList
+            },
+            isBlueKing () {
+                const projectId = this.$route.params.projectId
+                const filterArr = this.projectList.find(item => {
+                    return (
+                        item.centerName === '蓝鲸产品中心'
+                        && item.projectCode === projectId
+                    )
+                })
+                return filterArr
             },
             hasCodelibs () {
                 const { codelibs } = this
@@ -281,13 +300,6 @@
                 sortType = this.sortType
             ) {
                 if (!this.userId) this.isLoading = true
-                this.$router.push({
-                    query: {
-                        ...this.$route.query,
-                        sortBy,
-                        sortType
-                    }
-                })
                 await this.requestList({
                     projectId,
                     aliasName,
@@ -352,13 +364,10 @@
                 this.sortBy = sortBy
                 this.sortType = sortType
                 this.refreshCodelibList()
-                if (sortBy && sortType) {
-                    localStorage.setItem('codelibSortType', sortType)
-                    localStorage.setItem('codelibSortBy', sortBy)
-                } else {
-                    localStorage.removeItem('codelibSortType')
-                    localStorage.removeItem('codelibSortBy')
-                }
+                localStorage.setItem('codelibSortType', sortType)
+                localStorage.setItem('codelibSortBy', sortBy)
+                const queryKeys = Object.keys(this.$route?.query || {})
+                if (!queryKeys.length) return
                 this.$router.push({
                     query: {
                         ...this.$route.query,

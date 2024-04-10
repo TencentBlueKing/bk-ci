@@ -12,7 +12,7 @@ import {
     isGitLab,
     getCodelibConfig
 } from '../../config/'
-import { parsePathAlias } from '../../utils'
+import { parsePathAlias, extendParsePathAlias } from '../../utils'
 const vue = new Vue()
 export default {
     data () {
@@ -113,6 +113,9 @@ export default {
         },
         projectId () {
             return this.$route.params.projectId
+        },
+        isExtendTx () {
+            return VERSION_TYPE === 'tencent'
         },
         repositoryHashId () {
             return this.codelib ? this.codelib.repositoryHashId : ''
@@ -236,12 +239,9 @@ export default {
         'codelib.url': function (newVal) {
             // this.handleCheckPacProject(newVal)
             const { codelib, codelibTypeName } = this
-            const { alias, msg } = parsePathAlias(
-                codelibTypeName,
-                newVal,
-                codelib.authType,
-                codelib.svnType
-            )
+            const { alias, msg } = this.isExtendTx
+                ? extendParsePathAlias(codelibTypeName, newVal, codelib.authType, codelib.svnType)
+                : parsePathAlias(codelibTypeName, newVal, codelib.authType, codelib.svnType)
             this.urlErrMsg = msg
             
             if (!newVal) {

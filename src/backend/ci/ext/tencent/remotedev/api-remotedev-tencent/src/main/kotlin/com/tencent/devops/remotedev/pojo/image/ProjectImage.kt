@@ -1,0 +1,62 @@
+/*
+ * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
+ *
+ * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ *
+ * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
+ *
+ * A copy of the MIT License is included in this file.
+ *
+ *
+ * Terms of the MIT License:
+ * ---------------------------------------------------
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
+ * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
+ * NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
+ * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
+ * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ */
+
+package com.tencent.devops.remotedev.pojo.image
+
+import io.swagger.v3.oas.annotations.media.Schema
+
+@Schema(title = "自定义镜像")
+data class ProjectImage(
+    @get:Schema(title = "ID")
+    val id: Long,
+    @get:Schema(title = "项目ID")
+    val projectId: String,
+    @get:Schema(title = "镜像ID")
+    val imageId: String,
+    @get:Schema(title = "镜像名称")
+    val imageName: String,
+    @get:Schema(title = "路径")
+    val imageCosFile: String,
+    @get:Schema(title = "size")
+    val size: String,
+    @get:Schema(title = "镜像关联cgsId")
+    val sourceCgsId: String,
+    @get:Schema(title = "镜像关联cgsType")
+    val sourceCgsType: String,
+    @get:Schema(title = "区域")
+    val sourceCgsZone: String,
+    @get:Schema(title = "展示区域")
+    val sourceCgsZoneName: String,
+    @get:Schema(title = "区域简写")
+    val sourceCgsZoneShortName: String,
+    @get:Schema(title = "状态")
+    val status: ImageStatus,
+    @get:Schema(title = "创建人")
+    val creator: String,
+    @get:Schema(title = "创建时间")
+    val createdTime: Long
+)

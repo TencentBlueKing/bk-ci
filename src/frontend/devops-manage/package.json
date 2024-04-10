@@ -23,12 +23,12 @@
   "license": "ISC",
   "dependencies": {
     "bk-permission": "^0.0.25",
-    "bkui-vue": "0.0.1-beta.456",
+    "bkui-vue": "0.0.2-beta.121",
     "dayjs": "^1.11.2",
     "pinia": "^2.0.23",
-    "vue": "^3.2.41",
-    "vue-i18n": "^9.1.10",
-    "vue-router": "^4.1.6"
+    "vue": "3.2.41",
+    "vue-i18n": "9.1.10",
+    "vue-router": "4.1.6"
   },
   "devDependencies": {
     "@blueking/babel-preset-bk": "^2.1.0-beta7",

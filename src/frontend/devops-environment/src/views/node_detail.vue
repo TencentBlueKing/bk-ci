@@ -34,6 +34,10 @@
                     <div class="info-value" :title="entry.value">{{ entry.value }}</div>
                 </li>
             </ul>
+            <div class="metric-monitor" v-if="isEnableDashboard">
+                <i class="devops-icon icon-tiaozhuan jump-icon"></i>
+                <a :href="jumpDashboardUrl" target="_blank">{{ $t('environment.查看更多指标监控') }}</a>
+            </div>
             <node-overview-chart></node-overview-chart>
             <node-detail-tab></node-detail-tab>
         </div>
@@ -67,7 +71,9 @@
                 loading: {
                     isLoading: false,
                     title: this.$t('environment.loadingTitle')
-                }
+                },
+                isEnableDashboard: false,
+                bizId: 0
             }
         },
         computed: {
@@ -82,6 +88,9 @@
             },
             agentLink () {
                 return this.nodeDetails.os === 'WINDOWS' ? this.nodeDetails.agentUrl : this.nodeDetails.agentScript
+            },
+            jumpDashboardUrl () {
+                return `https://bkm.woa.com/?bizId=${this.bizId}&var-server=${this.nodeDetails.ip}#/grafana/d/bT8qy3NVa`
             }
         },
         watch: {
@@ -96,6 +105,7 @@
         },
         async mounted () {
             this.requestNodeDetail()
+            this.getEnableDashboard()
         },
         methods: {
             toNodeList () {
@@ -171,6 +181,19 @@
                 bus.$emit('refreshBuild')
                 bus.$emit('refreshAction')
                 bus.$emit('refreshCharts')
+            },
+            async getEnableDashboard () {
+                try {
+                    const res = await this.$store.dispatch('environment/checkEnableDashboard', {
+                        projectId: this.projectId
+                    })
+                    if (res) {
+                        this.isEnableDashboard = res.result
+                        this.bizId = res.bizId
+                    }
+                } catch (e) {
+                    console.err(e)
+                }
             }
         }
     }
@@ -233,6 +256,21 @@
                     overflow: hidden;
                     text-overflow: ellipsis;
                 }
+            }
+        }
+        .metric-monitor {
+            margin-top: 20px;
+            font-size: 14px;
+            color: #3c96ff;
+            cursor: pointer;
+            a {
+                font-size: 14px;
+                color: #3c96ff;
+            }
+            .jump-icon {
+                font-size: 18px;
+                position: relative;
+                top: 2px;
             }
         }
     }

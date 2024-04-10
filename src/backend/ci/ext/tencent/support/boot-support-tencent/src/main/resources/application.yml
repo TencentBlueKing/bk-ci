@@ -1,0 +1,7 @@
+# 该配置只能定义应用名， 其他配置信息请再devops-config修改
+spring:
+  application:
+    name: support
+    desc: DevOps Support Service
+    version: 0.0.1
+    packageName: com.tencent.devops.support

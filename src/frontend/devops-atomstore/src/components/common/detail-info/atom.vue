@@ -95,6 +95,11 @@
             <button class="detail-install" @click="goToInstall" v-else> {{ $t('store.安装') }} </button>
 
             <section class="click-area">
+                <h5 :title="isPublicTitle" @click="goToCode" :class="{ 'not-public': !isPublic, 'click-button': true }" v-if="!isEnterprise">
+                    <icon class="detail-img mr4" name="gray-git-code" size="14" />
+                    <span class="approve-msg">{{ isPublic ? $t('store.源码') : $t('store.未开源') }}</span>
+                </h5>
+                <span class="gap"></span>
                 <template v-if="userInfo.type !== 'ADMIN' && detail.htmlTemplateVersion !== '1.0'">
                     <h5 :title="approveTip" :class="[{ 'not-public': approveMsg !== $t('store.协作') }, 'click-button']" @click="cooperation">
                         <icon class="detail-img mr4" name="cooperation" size="16" />
@@ -140,6 +145,7 @@
 <script>
     import api from '@/api'
     import formTips from '@/components/common/formTips/index'
+    import { DEFAULT_LOGO_URL } from '@/utils'
     import HonerImg from '../../honer-img.vue'
     import HonerTag from '../../honer-tag.vue'
     import commentRate from '../comment-rate'
@@ -171,6 +177,7 @@
 
         data () {
             return {
+                defaultUrl: DEFAULT_LOGO_URL,
                 showCooperDialog: false,
                 user: window.userInfo.username,
                 cooperData: {
@@ -198,6 +205,15 @@
                 }
             },
 
+            isPublic () {
+                return this.detail.visibilityLevel === 'LOGIN_PUBLIC'
+            },
+
+            isPublicTitle () {
+                if (this.isPublic) return this.$t('store.点击查看源码')
+                else return this.$t('store.未开源')
+            },
+
             approveMsg () {
                 const key = `${typeof this.userInfo.type}-${this.detail.approveStatus}`
                 const mapStatus = {
@@ -222,6 +238,10 @@
                 if (this.detail.defaultFlag) info.des = `${this.$t('store.通用流水线插件，所有项目默认可用，无需安装')}`
                 if (!this.detail.flag) info.des = `${this.$t('store.你没有该流水线插件的安装权限，请联系流水线插件发布者')}`
                 return info
+            },
+
+            isEnterprise () {
+                return VERSION_TYPE === 'ee'
             }
         },
 
@@ -303,6 +323,10 @@
                     }
                 })
                 return jobList
+            },
+
+            goToCode () {
+                if (this.isPublic) window.open(this.detail.codeSrc, '_blank')
             },
 
             goToInstall () {
@@ -390,6 +414,20 @@
             }
             &:hover {
                 color: #3c96ff;
+            }
+        }
+        .gap {
+            display: inline-block;
+            flex: 1;
+            position: relative;
+            height: 16px;
+            &:before {
+                content: '';
+                position: absolute;
+                background: #dcdee5;
+                height: 16px;
+                width: 1px;
+                right: 50%;
             }
         }
         .mr4 {

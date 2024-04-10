@@ -10,9 +10,9 @@
                 :disabled="executeStatus"
                 v-perm="{
                     permissionData: {
-                        projectId: $route.params.projectId,
+                        projectId,
                         resourceType: 'pipeline',
-                        resourceCode: $route.params.pipelineId,
+                        resourceCode: pipelineId,
                         action: RESOURCE_ACTION.EDIT
                     }
                 }"
@@ -24,15 +24,15 @@
                 theme="primary"
                 :disabled="executeStatus"
                 :loading="executeStatus"
+                @click="handleClick"
                 v-perm="{
                     permissionData: {
-                        projectId: $route.params.projectId,
+                        projectId: projectId,
                         resourceType: 'pipeline',
-                        resourceCode: $route.params.pipelineId,
+                        resourceCode: pipelineId,
                         action: RESOURCE_ACTION.EXECUTE
                     }
                 }"
-                @click="handleClick"
             >
                 {{ $t("exec") }}
             </bk-button>
@@ -51,10 +51,18 @@
         components: {
             PipelineBreadCrumb
         },
+        data () {
+            return {
+                RESOURCE_ACTION
+            }
+        },
         computed: {
             ...mapState('atom', ['executeStatus', 'execDetail']),
-            RESOURCE_ACTION () {
-                return RESOURCE_ACTION
+            projectId () {
+                return this.$route.params.projectId
+            },
+            pipelineId () {
+                return this.$route.params.pipelineId
             }
         },
         methods: {

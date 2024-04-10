@@ -1,0 +1,206 @@
+version: "v2.0"
+name: "Backend"
+on:
+  mr: [ integration,integration-stream ]
+
+stages:
+- name: "PreMR"
+  label:
+  - "Build"
+  jobs:
+    job_1:
+      name: "Build"
+      runs-on: docker
+      steps:
+      - checkout: self
+      - uses: mysqlservice@1.*
+        id: mysqlservice
+        name: Start MySQL
+        with:
+          imageName: mysql:5.7
+          port: 3306
+          mysqlPw: root
+          initCmd: select version();
+
+      - name: "init MySQL"
+        env:
+          MYSQL_IP: ${{steps.mysqlservice.outputs.MYSQL_IP}}
+          MYSQL_PORT: ${{steps.mysqlservice.outputs.MYSQL_PORT}}
+          MYSQL_PWD: root
+        run: |
+          cd support-files/sql
+          echo "import support-files/sql"
+          for i in *.sql; do
+            echo import $i start
+            mysql -h $MYSQL_IP -P $MYSQL_PORT -uroot < $i
+            echo import $i done..
+            echo 
+          done
+          
+          cd tencent
+          echo "import support-files/sql/tencent"
+          for i in *.sql; do
+            echo import $i start
+            mysql -h $MYSQL_IP -P $MYSQL_PORT -uroot < $i
+            echo import $i done..
+            echo
+          done
+
+          cd changeLog
+          echo "import support-files/sql/tencent/changeLog"
+          for i in *.sql; do
+            echo import $i start
+            mysql -h $MYSQL_IP -P $MYSQL_PORT -uroot < $i
+            echo import $i done..
+            echo
+          done
+
+          mysql -h $MYSQL_IP -P $MYSQL_PORT -uroot -e "show databases;"
+
+      - name: "Gradle Build"
+        env:
+          mysqlURL: "${{steps.mysqlservice.outputs.MYSQL_IP}}:${{steps.mysqlservice.outputs.MYSQL_PORT}}"
+          mysqlUser: root
+          mysqlPasswd: root
+        run: | 
+          cd src/backend/ci/ext/tencent
+          ../../gradlew -DmysqlURL=$mysqlURL \
+                        -DmysqlUser=$mysqlUser \
+                        -DmysqlPasswd=$mysqlPasswd  \
+                        -DenvironmentMysqlURL=$mysqlURL \
+                        -DenvironmentMysqlUser=$mysqlUser \
+                        -DenvironmentMysqlPasswd=$mysqlPasswd \
+                        -DprojectMysqlURL=$mysqlURL \
+                        -DprojectMysqlUser=$mysqlUser \
+                        -DprojectMysqlPasswd=$mysqlPasswd \
+                        -DmysqlPrefix=devops_ci_ \
+                        test classes
+    job_2:
+      name: "CodeCC"
+      runs-on: docker
+      steps:
+      - checkout: self
+      - name: "kotlin代码规范检查"
+        run: |
+          cd src/backend/ci
+          wget http://mirrors.tencent.com/repository/generic/public/ktlint -O ktlint
+          java -jar ktlint "**/src/**/*.kt" --reporter=plain,output=report/ktlint-report.txt
+
+      - uses: ReportArctifactoryNew@1.*
+        name: 归档报告
+        with:
+          fileDir: src/backend/ci/report
+          indexFile: ktlint-report.txt
+          indexFileCharset: UTF-8
+          reportName: ktlint-report
+          isParallel: false
+          isSendEmail: false
+
+      - name: "腾讯代码分析(最新)"
+        uses: "CodeccCheckAtomDebug@4.*"
+        with:
+          languages:
+          - "JAVA"
+          - "GOLANG"
+          - "KOTLIN"
+          checkerSetType: "normal"
+          tools:
+          - "CLOC"
+          - "SENSITIVE"
+          - "DUPC"
+          - "CCN"
+          - "GOML"
+          - "WOODPECKER_SENSITIVE"
+          - "CHECKSTYLE"
+          - "KTLINT"
+          - "DETEKT"
+          - "IP_CHECK"
+          asyncTask: false
+          asyncTaskId: ""
+          goPath: "src/agent/src"
+          pyVersion: "py3"
+          scriptType: "SHELL"
+          languageRuleSetMap:
+            JAVA_RULE:
+            - "bk_ci_java_sec"
+            KOTLIN_RULE:
+            - "bk_ci_kotlin"
+            JS_RULE: []
+            RUBY_RULE: []
+            GOLANG_RULE:
+            - "bk_ci_go_sec"
+            - "codecc_default_go"
+          C_CPP_RULE: []
+          rtxReceiverType: "4"
+          rtxReceiverList: []
+          botWebhookUrl: ""
+          botRemindRange: "1"
+          botRemindSeverity: "7"
+          botRemaindTools: []
+          emailReceiverType: "4"
+          emailReceiverList: []
+          emailCCReceiverList: []
+          instantReportStatus: "2"
+          reportDate: []
+          reportTime: ""
+          reportTools: []
+          toolScanType: "0"
+          mrCommentEnable: true
+          newDefectJudgeFromDate: "2021-03-01"
+          transferAuthorList: []
+          path:
+          - "src/backend/ci"
+          - "src/agent"
+          customPath:
+          - ".*/.*\\.svg"
+          scanTestSource: false
+          openScanPrj: false
+          JAVA_RULE:
+          - "bk_ci_java_sec"
+          JAVA_TOOL:
+          - toolList:
+            - "CHECKSTYLE"
+            - "WOODPECKER_SENSITIVE"
+          KOTLIN_RULE:
+          - "bk_ci_kotlin"
+          KOTLIN_TOOL:
+          - toolList:
+            - "KTLINT"
+            - "SENSITIVE"
+            - "DUPC"
+            - "DETEKT"
+            - "WOODPECKER_SENSITIVE"
+            - "IP_CHECK"
+          JS_RULE: []
+          JS_TOOL:
+          - toolList:
+            - "CLOC"
+            - "SENSITIVE"
+            - "DUPC"
+            - "CCN"
+          - toolList:
+            - "ESLINT"
+            - "DUPC"
+            - "WOODPECKER_SENSITIVE"
+            - "CCN"
+          RUBY_RULE: []
+          RUBY_TOOL:
+          - toolList:
+            - "SENSITIVE"
+            - "HORUSPY"
+            - "COVERITY"
+            - "CCN"
+          GOLANG_RULE:
+          - "bk_ci_go_sec"
+          - "codecc_default_go"
+          GOLANG_TOOL:
+          - toolList:
+            - "DUPC"
+            - "GOML"
+            - "WOODPECKER_SENSITIVE"
+            - "CCN"
+          - toolList:
+            - "CLOC"
+            - "SENSITIVE"
+            - "DUPC"
+            - "CCN"

@@ -25,7 +25,6 @@ import java.util.concurrent.TimeUnit
 class RbacPermissionResourceMemberService constructor(
     private val authResourceService: AuthResourceService,
     private val iamV2ManagerService: V2ManagerService,
-    private val permissionGradeManagerService: PermissionGradeManagerService,
     private val authResourceGroupDao: AuthResourceGroupDao,
     private val dslContext: DSLContext,
     private val deptService: DeptService
@@ -218,12 +217,15 @@ class RbacPermissionResourceMemberService constructor(
     ): List<V2ManagerRoleGroupInfo> {
         return if (resourceType == AuthResourceType.PROJECT.value) {
             val searchGroupDTO = SearchGroupDTO.builder().inherit(false).build()
-            permissionGradeManagerService.listGroup(
-                gradeManagerId = managerId,
-                searchGroupDTO = searchGroupDTO,
-                page = 1,
-                pageSize = 1000
+            val pageInfoDTO = V2PageInfoDTO()
+            pageInfoDTO.page = 1
+            pageInfoDTO.pageSize = 1000
+            val iamGroupInfoList = iamV2ManagerService.getGradeManagerRoleGroupV2(
+                managerId,
+                searchGroupDTO,
+                pageInfoDTO
             )
+            iamGroupInfoList.results
         } else {
             val v2PageInfoDTO = V2PageInfoDTO().apply {
                 pageSize = 1000

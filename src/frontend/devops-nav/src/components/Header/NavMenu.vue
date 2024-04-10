@@ -80,6 +80,7 @@
     import { Component } from 'vue-property-decorator'
     import { Action, Getter, State } from 'vuex-class'
     import { clickoutside } from '../../directives/index'
+    import { getProjectId } from '../../router'
     import eventBus from '../../utils/eventBus'
     import { getServiceAliasByPath, getServiceLogoByPath, isAbsoluteUrl, urlJoin } from '../../utils/util'
     import Logo from '../Logo/index.vue'
@@ -171,9 +172,12 @@
                 eventBus.$emit('goHome')
                 return
             }
-            
-            (newWindow && newWindowUrl) ? window.open(newWindowUrl, '_blank') : this.$router.push(destUrl)
-        }
+            if (nAlias === 'bcs' && newWindowUrl.indexOf('ieg.') > -1) {
+             window.open(`${newWindowUrl}/bcs/${getProjectId(this.$route.params)}`, '_blank')
+             return
+            }
+            newWindow ? window.open(newWindowUrl, '_blank') : this.$router.push(destUrl)
+       }
 
         created () {
             if (this.curNewServices.length && this.curNewServices.some(service => {
@@ -215,7 +219,7 @@
     align-items: center;
 
     .nav-entry {
-        color: $fontLigtherColor;
+        color: $fontLighterColor;
         padding: 0 20px;
         cursor: pointer;
         line-height: $headerHeight;

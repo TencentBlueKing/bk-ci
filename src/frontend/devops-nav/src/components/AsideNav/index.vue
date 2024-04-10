@@ -1,7 +1,7 @@
 <template>
     <bk-navigation
         class="bkdevops-aside-nav"
-        :theme-color="navTheme.themeColor"
+        v-bind="navTheme"
         :default-open="true"
         :header-title="headerTitle"
     >
@@ -65,8 +65,8 @@
                 itemHoverColor: '#3c96ff',
                 itemHoverIconColor: '#3c96ff',
                 itemActiveColor: '#3c96ff',
-                itemActiveIconColor: '#3c96ff',
-                itemDefaultColor: '#7b7d8a'
+                itemDefaultColor: '#7b7d8a',
+                itemActiveIconColor: '#3c96ff'
             }
         }
     }

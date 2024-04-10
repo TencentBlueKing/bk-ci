@@ -64,9 +64,7 @@
                         v-for="(item, index) in funcArray"
                         :key="index"
                         :style="{ left: item.left }"
-                    >
-                        {{ item.label }}
-                    </span>
+                    >{{ item.label }}</span>
                     <div class="bkdevops-button">
                         <a
                             :href="BKCI_DOCS.BKCI_DOC"
@@ -138,13 +136,9 @@
             </aside>
         </div>
         <section class="devops-home-footer">
-            <div class="item">
-                <a href="https://wpa1.qq.com/KziXGWJs?_type=wpa&qidian=true" target="_blank">{{ $t('technicalSupport') }}</a> |
-                <a href="https://bk.tencent.com/s-mart/community/" target="_blank">{{ $t('communityForum') }}</a> |
-                <a href="https://bk.tencent.com/index/" target="_blank">{{ $t('ProductOfficialWebsite') }}</a>
-            </div>
             <p class="bkci-copyright">Copyright © 2012-{{ getFullYear() }} Tencent BlueKing. All Rights Reserved {{ BK_CI_VERSION.trim() }}</p>
         </section>
+        <consult-tools />
     </div>
 </template>
 
@@ -154,6 +148,7 @@
     import { Component } from 'vue-property-decorator'
     import { Action, State } from 'vuex-class'
     import { Accordion, AccordionItem } from '../components/Accordion/index'
+    import ConsultTools from '../components/ConsultTools/index.vue'
     import Logo from '../components/Logo/index.vue'
     import NavBox from '../components/NavBox/index.vue'
 
@@ -162,7 +157,8 @@
             NavBox,
             Accordion,
             AccordionItem,
-            Logo
+            Logo,
+            ConsultTools
         }
     })
     export default class Home extends Vue {
@@ -174,7 +170,7 @@
         isAbsoluteUrl = isAbsoluteUrl
         BK_CI_VERSION: string = window.BK_CI_VERSION
 
-        get funcArray (): object[] {
+        get funcArray (): any[] {
             const funcArray = ['issueLabel', 'developLabel', 'testLabel', 'deployLabel', 'operationLabel']
             return funcArray.map((item, index) => ({
                 label: this.$t(item),
@@ -182,7 +178,7 @@
             }))
         }
 
-        get recentVisitService (): object[] {
+        get recentVisitService (): any[] {
             const recentVisitService = localStorage.getItem('recentVisitService')
             const recentVisitServiceList = recentVisitService ? JSON.parse(recentVisitService) : []
             return recentVisitServiceList.map(service => {

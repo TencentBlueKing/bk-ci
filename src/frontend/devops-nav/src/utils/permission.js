@@ -18,7 +18,7 @@
  */
 
 import { handleNoPermission } from 'bk-permission'
-import * as BKUI from 'bk-magic-vue'
+import * as BKUI from '@tencent/bk-magic-vue'
 
 // 处理流水线无权限的情况
 export const handleProjectNoPermission = (query, data) => {

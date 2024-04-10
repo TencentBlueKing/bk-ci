@@ -53,6 +53,10 @@
         props: {
             downloadIcon: Boolean,
             hasPermission: Boolean,
+            disabledTips: {
+                type: String,
+                default: ''
+            },
             artifactoryType: {
                 type: String
             },
@@ -98,26 +102,30 @@
             },
             async downLoadFile () {
                 try {
+                    if (this.btnDisabled) return
                     if (this.signingMap.get(this.path)) {
                         // this.apkSigningDialogVisible = true
                         this.setVisible(true)
                         return
                     }
-                    const { url2 } = await this.$store
-                        .dispatch('common/requestDownloadUrl', {
+                    
+                    const [isDevnet, res] = await Promise.all([
+                        this.$store.dispatch('common/requestDevnetGateway'),
+                        this.$store.dispatch('common/requestDownloadUrl', {
                             projectId: this.$route.params.projectId,
                             artifactoryType: this.artifactoryType,
                             path: this.path
                         })
-                    
-                    const result = await this.checkApkSigned(url2)
+                    ])
+                    const url = isDevnet ? res.url : res.url2
+                    const result = await this.checkApkSigned(url)
                     if (result) {
-                        window.location.href = url2
+                        window.location.href = url
                         return
                     } else {
                         this.signingMap.set(this.path, true)
                         this.setVisible(true)
-                        const result = await this.pollingCheckSignedApk(url2)
+                        const result = await this.pollingCheckSignedApk(url)
                         if (result) {
                             this.setVisible(false)
                             this.$bkMessage({
@@ -125,7 +133,7 @@
                                 message: this.$t('apkSignSuccess', [this.name])
                             })
                             
-                            window.location.href = url2
+                            window.location.href = url
                         }
                         this.signingMap.delete(this.path)
                     }

@@ -8,31 +8,31 @@
                 :disabled="saveBtnDisabled"
                 :loading="saveStatus"
                 theme="primary"
+                @click="save"
                 v-perm="{
                     permissionData: {
-                        projectId: $route.params.projectId,
+                        projectId: projectId,
                         resourceType: 'pipeline',
-                        resourceCode: $route.params.pipelineId,
+                        resourceCode: pipelineId,
                         action: RESOURCE_ACTION.EDIT
                     }
                 }"
-                @click="save"
             >
                 {{ $t("save") }}
             </bk-button>
             <bk-button
                 theme="primary"
-                :disabled="btnDisabled || !canManualStartup"
-                :loading="executeStatus"
-                :title="canManualStartup ? '' : $t('newlist.cannotManual')"
                 v-perm="{
                     permissionData: {
-                        projectId: $route.params.projectId,
+                        projectId: projectId,
                         resourceType: 'pipeline',
-                        resourceCode: $route.params.pipelineId,
+                        resourceCode: pipelineId,
                         action: RESOURCE_ACTION.EXECUTE
                     }
                 }"
+                :disabled="btnDisabled || !canManualStartup"
+                :loading="executeStatus"
+                :title="canManualStartup ? '' : $t('newlist.cannotManual')"
                 @click="saveAndExec"
             >
                 {{ isSaveAndRun ? $t("subpage.saveAndExec") : $t("exec") }}
@@ -46,7 +46,6 @@
     import VersionSideslider from '@/components/VersionSideslider'
     import { PROCESS_API_URL_PREFIX } from '@/store/constants'
     import {
-        handlePipelineNoPermission,
         RESOURCE_ACTION
     } from '@/utils/permission'
     import { HttpError } from '@/utils/util'
@@ -59,6 +58,11 @@
             VersionSideslider,
             MoreActions
         },
+        data () {
+            return {
+                RESOURCE_ACTION
+            }
+        },
         computed: {
             ...mapState('atom', ['pipeline', 'executeStatus', 'saveStatus']),
             ...mapState('pipelines', ['pipelineSetting']),
@@ -67,8 +71,11 @@
                 isEditing: 'atom/isEditing',
                 checkPipelineInvalid: 'atom/checkPipelineInvalid'
             }),
-            RESOURCE_ACTION () {
-                return RESOURCE_ACTION
+            projectId () {
+                return this.$route.params.projectId
+            },
+            pipelineId () {
+                return this.$route.params.pipelineId
             },
             btnDisabled () {
                 return this.saveStatus || this.executeStatus
@@ -98,6 +105,7 @@
                 'setPipelineEditing',
                 'setExecuteStatus',
                 'setSaveStatus',
+                'setAuthEditing',
                 'updateContainer'
             ]),
             ...mapMutations('pipelines', ['updateCurPipelineByKeyValue']),
@@ -208,8 +216,9 @@
                     const responses = await saveAction()
 
                     if (responses.code === 403) {
-                        throw new HttpError(403, responses.message)
+                        throw new HttpError(403)
                     }
+
                     this.setPipelineEditing(false)
                     this.$showTips({
                         message: this.$t('saveSuc'),
@@ -243,7 +252,7 @@
                         data: responses
                     }
                 } catch (e) {
-                    handlePipelineNoPermission({
+                    this.handleError(e, {
                         projectId,
                         resourceCode: pipelineId,
                         action: RESOURCE_ACTION.EDIT

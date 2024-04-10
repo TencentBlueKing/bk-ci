@@ -34,8 +34,8 @@ import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.pipeline.event.CallBackEvent
 import com.tencent.devops.common.pipeline.event.CallBackNetWorkRegionType
-import com.tencent.devops.process.pojo.CreateCallBackResult
 import com.tencent.devops.common.pipeline.event.ProjectPipelineCallBack
+import com.tencent.devops.process.pojo.CreateCallBackResult
 import com.tencent.devops.process.pojo.ProjectPipelineCallBackHistory
 import io.swagger.v3.oas.annotations.tags.Tag
 import io.swagger.v3.oas.annotations.Operation

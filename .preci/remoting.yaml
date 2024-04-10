@@ -1,0 +1,11 @@
+version: 1.0.0
+
+image: mirrors.tencent.com/ci/remote-dev-full-remoting:latest
+
+vscode:
+  extensions:
+    - golang.go-nightly
+    - eamodio.gitlens
+
+commands:
+  postCreateCommand: "cd src/backend/devopsRemoting;go mod tidy"

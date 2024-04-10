@@ -67,8 +67,8 @@
             computedReviewSteps () {
                 const getStatus = (item, index) => {
                     const statusMap = {
-                        'ABORT': 'error',
-                        'PROCESS': 'done'
+                        ABORT: 'error',
+                        PROCESS: 'done'
                     }
                     let status = statusMap[item.status]
 
@@ -146,6 +146,9 @@
         margin: 25px 0 32px;
         /deep/ .bk-step {
             max-width: 367.56px;
+            .stream-icon {
+                font-family: 'stream' !important;
+            }
         }
         /deep/ .bk-devops-icon {
             font-family: 'bk-devops' !important;

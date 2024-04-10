@@ -7,13 +7,13 @@
             <bk-button
                 v-perm="{
                     permissionData: {
-                        projectId: $route.params.projectId,
+                        projectId: projectId,
                         resourceType: 'pipeline',
-                        resourceCode: $route.params.pipelineId,
+                        resourceCode: pipelineId,
                         action: RESOURCE_ACTION.EDIT
                     }
                 }"
-                @click="goEdit"
+                @click="$router.push(editRouteName)"
             >
                 {{ $t("edit") }}
             </bk-button>
@@ -21,9 +21,9 @@
                 theme="primary"
                 v-perm="{
                     permissionData: {
-                        projectId: $route.params.projectId,
+                        projectId: projectId,
                         resourceType: 'pipeline',
-                        resourceCode: $route.params.pipelineId,
+                        resourceCode: pipelineId,
                         action: RESOURCE_ACTION.EXECUTE
                     }
                 }"
@@ -49,17 +49,26 @@
             PipelineBreadCrumb,
             MoreActions
         },
+        data () {
+            return {
+                RESOURCE_ACTION
+            }
+        },
         computed: {
-            RESOURCE_ACTION () {
-                return RESOURCE_ACTION
+            projectId () {
+                return this.$route.params.projectId
+            },
+            pipelineId () {
+                return this.$route.params.pipelineId
+            },
+            editRouteName () {
+                return {
+                    name: 'pipelinesEdit',
+                    params: this.$route.params
+                }
             }
         },
         methods: {
-            goEdit () {
-                this.$router.push({
-                    name: 'pipelinesEdit'
-                })
-            },
             goExecPreview () {
                 this.$router.push({
                     name: 'pipelinesPreview'
