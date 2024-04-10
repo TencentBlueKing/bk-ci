@@ -141,11 +141,11 @@ class AgentReuseMutexTest {
                     "agent_1",
                     AgentReuseMutexType.AGENT_DEP_VAR,
                     true
-                ), true, initReuseId("job_id_dep_1")
+                ), true, initReuseId("job_1")
             ),
             "job_id_dep_3" to Triple(
                 AgentReuseMutex("job_id_dep_3", "job_env_1", "job_1", AgentReuseMutexType.AGENT_DEP_VAR, false),
-                true, initReuseId("job_env_dep_1")
+                true, initReuseId("job_env_1")
             ),
             "job_id_dep_4" to Triple(
                 AgentReuseMutex(
@@ -154,11 +154,11 @@ class AgentReuseMutexTest {
                     "agent_1",
                     AgentReuseMutexType.AGENT_DEP_VAR,
                     true
-                ), true, initReuseId("job_id_dep_2")
+                ), true, initReuseId("job_1")
             ),
             "job_id_dep_5" to Triple(
                 AgentReuseMutex("job_id_dep_5", "job_env_1", "job_1", AgentReuseMutexType.AGENT_DEP_VAR, false),
-                true, initReuseId("job_env_dep_2")
+                true, initReuseId("job_env_1")
             ),
             "job_id_dep_6" to Triple(
                 AgentReuseMutex("job_id_dep_6", "job_env_1", "job_1", AgentReuseMutexType.AGENT_DEP_VAR, true),

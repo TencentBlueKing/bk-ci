@@ -326,7 +326,7 @@ data class AgentReuseMutexTree(
             return
         }
         // 只要不是根节点的依赖节点都需要修改依赖对象为根节点，这样才能拿到上下文
-        if (isRoot) {
+        if (!isRoot) {
             dispatch.value = treeMutex.reUseJobId ?: return
             when (dispatch) {
                 is ThirdPartyAgentEnvDispatchType -> {
