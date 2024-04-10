@@ -186,6 +186,18 @@ class AgentReuseMutexCmd @Autowired constructor(
         val res = tryAgentLockOrQueue(container, mutex)
         return if (res) {
             LOG.info("ENGINE|${container.buildId}|AGENT_REUSE_LOCK_SUCCESS|${mutex.type}")
+
+            // 对于AgentId这种获取到锁就需要写入上下文，防止最后没有被执行导致兜底无法解锁
+            // 只要不是依赖节点，根节点和同级依赖节点都要写入，防止出现被同级env节点获取到节点锁但没写入依赖id节点就无法获取到AgentId
+            buildVariableService.setVariable(
+                projectId = container.projectId,
+                pipelineId = container.pipelineId,
+                buildId = container.buildId,
+                varName = AgentReuseMutex.genAgentContextKey(mutex.reUseJobId ?: mutex.jobId),
+                varValue = mutex.runtimeAgentOrEnvId!!,
+                readOnly = true
+            )
+
             // 抢到锁则可以继续运行，并退出队列
             quitMutexQueue(
                 projectId = container.projectId,
@@ -268,17 +280,6 @@ class AgentReuseMutexCmd @Autowired constructor(
                     messageCode = ProcessMessageCode.BK_GET_LOCKED,
                     language = I18nUtil.getDefaultLocaleLanguage()
                 ) + " ${expireSec}s"
-            )
-
-            // 对于AgentId这种获取到锁就需要写入上下文，防止最后没有被执行导致兜底无法解锁
-            // 同时写入的应该是根节点
-            buildVariableService.setVariable(
-                projectId = container.projectId,
-                pipelineId = container.pipelineId,
-                buildId = container.buildId,
-                varName = AgentReuseMutex.genAgentContextKey(mutex.reUseJobId ?: mutex.jobId),
-                varValue = mutex.runtimeAgentOrEnvId!!,
-                readOnly = true
             )
         }
 
