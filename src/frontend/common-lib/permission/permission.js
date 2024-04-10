@@ -87,7 +87,7 @@ export const handleNoPermission = (ui, params, ajax, h, data = undefined) => {
                                                 {
                                                     on: {
                                                         click () {
-                                                            window.open(info.url, '_blank')
+                                                            window.open(encodeURI(info.url), '_blank')
                                                             handleClickLink()
                                                         }
                                                     }
@@ -126,7 +126,7 @@ export const handleNoPermission = (ui, params, ajax, h, data = undefined) => {
                             },
                             on: {
                                 click () {
-                                    window.open(data.groupInfoList[0].url, '_blank')
+                                    window.open(encodeURI(data.groupInfoList[0].url), '_blank')
                                     handleClickLink()
                                 }
                             }
