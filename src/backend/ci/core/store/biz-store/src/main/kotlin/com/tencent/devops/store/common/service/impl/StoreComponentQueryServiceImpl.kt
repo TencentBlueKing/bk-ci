@@ -240,12 +240,13 @@ class StoreComponentQueryServiceImpl @Autowired constructor(
         pageSize: Int
     ): Page<StoreDeskVersionItem> {
         logger.info("getComponentVersionsByCode:Input:($userId,$storeCode,$page,$pageSize)")
+        val storeTypeEnum = StoreTypeEnum.valueOf(storeType)
         // 判断当前用户是否是组件的成员
         if (!storeMemberDao.isStoreMember(
                 dslContext = dslContext,
                 userId = userId,
                 storeCode = storeCode,
-                storeType = StoreTypeEnum.IMAGE.type.toByte()
+                storeType = storeTypeEnum.type.toByte()
             )
         ) {
             throw ErrorCodeException(
@@ -256,12 +257,12 @@ class StoreComponentQueryServiceImpl @Autowired constructor(
         val count = storeBaseQueryDao.countByCode(
             dslContext = dslContext,
             storeCode = storeCode,
-            storeType = StoreTypeEnum.valueOf(storeType)
+            storeType = storeTypeEnum
         )
         val records = storeBaseQueryDao.getComponentsByCode(
             dslContext = dslContext,
             storeCode = storeCode,
-            storeType = StoreTypeEnum.valueOf(storeType),
+            storeType = storeTypeEnum,
             page = page,
             pageSize = pageSize
         )

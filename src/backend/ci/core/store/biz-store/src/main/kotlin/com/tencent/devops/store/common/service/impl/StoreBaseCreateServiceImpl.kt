@@ -111,7 +111,8 @@ class StoreBaseCreateServiceImpl @Autowired constructor(
             version = INIT_VERSION,
             status = StoreStatusEnum.INIT,
             creator = userId,
-            modifier = userId
+            modifier = userId,
+            latestFlag = true
         )
         val storeBaseExtDataPOs = StoreReleaseUtils.generateStoreBaseExtDataPO(
             extBaseInfo = storeBaseCreateRequest.extBaseInfo,

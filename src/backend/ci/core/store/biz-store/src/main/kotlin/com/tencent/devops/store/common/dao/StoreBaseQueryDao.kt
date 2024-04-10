@@ -279,7 +279,7 @@ class StoreBaseQueryDao {
             .where(conditions)
             .groupBy(tStoreBase.ID)
             .orderBy(tStoreBase.UPDATE_TIME.desc())
-            .fetchOne(0, Int::class.java)!!
+            .fetchOne(0, Int::class.java) ?: 0
     }
 
     private fun generateGetMyComponentConditions(
