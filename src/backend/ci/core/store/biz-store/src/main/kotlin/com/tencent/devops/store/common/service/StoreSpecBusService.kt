@@ -27,9 +27,6 @@
 
 package com.tencent.devops.store.common.service
 
-import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.pipeline.pojo.AtomBaseInfo
-import com.tencent.devops.store.pojo.common.UnInstallReq
 import com.tencent.devops.store.pojo.common.enums.StoreStatusEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.pojo.common.publication.ReleaseProcessItem
@@ -103,29 +100,4 @@ interface StoreSpecBusService {
         isNormalUpgrade: Boolean,
         status: StoreStatusEnum
     ): List<ReleaseProcessItem>
-
-    /**
-     * 检查组件是否可以删除
-     */
-    fun doComponentDeleteCheck(): Result<Boolean>
-
-    /**
-     * 删除组件仓库文件
-     */
-    fun deleteComponentRepoFile(userId: String, storeCode: String, storeType: StoreTypeEnum): Result<Boolean>
-
-    /**
-     * 检查卸载组件请求参数合法性
-     */
-    fun uninstallComponentParamCheck(
-        userId: String,
-        projectCode: String,
-        storeType: String,
-        storeCode: String
-    ): Result<Boolean>
-
-    fun getProcessingVersionInfo(
-        userId: String,
-        storeCodeList: List<String>
-    ): Map<String, List<AtomBaseInfo>>?
 }

@@ -29,6 +29,7 @@ package com.tencent.devops.store.common.service.impl
 
 import com.tencent.devops.common.api.auth.REFERER
 import com.tencent.devops.common.api.constant.CommonMessageCode
+import com.tencent.devops.common.api.constant.INIT_VERSION
 import com.tencent.devops.common.api.enums.FrontendTypeEnum
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.Page
@@ -38,7 +39,6 @@ import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.ThreadLocalUtil
 import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.client.Client
-import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.common.util.RegexUtils
 import com.tencent.devops.common.web.utils.BkApiUtil
 import com.tencent.devops.common.web.utils.I18nUtil
@@ -68,11 +68,9 @@ import com.tencent.devops.store.common.service.StoreIndexManageService
 import com.tencent.devops.store.common.service.StoreLabelService
 import com.tencent.devops.store.common.service.StoreMemberService
 import com.tencent.devops.store.common.service.StoreProjectService
-import com.tencent.devops.store.common.service.StoreSpecBusService
 import com.tencent.devops.store.common.service.StoreTotalStatisticService
 import com.tencent.devops.store.common.service.StoreUserService
 import com.tencent.devops.store.common.service.action.StoreDecorateFactory
-import com.tencent.devops.store.common.utils.StoreUtils
 import com.tencent.devops.store.constant.StoreMessageCode
 import com.tencent.devops.store.pojo.common.HOTTEST
 import com.tencent.devops.store.pojo.common.KEY_HTML_TEMPLATE_VERSION
@@ -82,6 +80,7 @@ import com.tencent.devops.store.pojo.common.MarketItem
 import com.tencent.devops.store.pojo.common.MarketMainItem
 import com.tencent.devops.store.pojo.common.MarketMainItemLabel
 import com.tencent.devops.store.pojo.common.MyStoreComponent
+import com.tencent.devops.store.pojo.common.StoreBaseInfo
 import com.tencent.devops.store.pojo.common.StoreDetailInfo
 import com.tencent.devops.store.pojo.common.category.Category
 import com.tencent.devops.store.pojo.common.classify.Classify
@@ -166,6 +165,7 @@ class StoreComponentQueryServiceImpl @Autowired constructor(
             name = name
         )
         // 获取项目ID对应的名称
+        val storeTypeEnum = StoreTypeEnum.valueOf(storeType)
         val projectCodeList = mutableListOf<String>()
         val storeCodes = mutableListOf<String>()
         val storeProjectMap = mutableMapOf<String, String>()
@@ -177,22 +177,50 @@ class StoreComponentQueryServiceImpl @Autowired constructor(
                 dslContext = dslContext,
                 userId = userId,
                 storeCode = storeCode,
-                storeType = StoreTypeEnum.valueOf(storeType)
+                storeType = storeTypeEnum
             )
             if (null != testProjectCode) {
                 projectCodeList.add(testProjectCode)
                 storeProjectMap[storeCode] = testProjectCode
             }
         }
-        val projectMap = client.get(ServiceProjectResource::class).getNameByCode(projectCodeList.joinToString(",")).data
-        val storeSpecBusService = SpringContextUtil.getBean(
-            StoreSpecBusService::class.java,
-            StoreUtils.getSpecBusServiceBeanName(StoreTypeEnum.valueOf(storeType))
+        val processingStoreRecords = storeBaseQueryDao.getStoreBaseInfoByConditions(
+            dslContext = dslContext,
+            storeType = storeTypeEnum,
+            storeCodeList = storeCodes,
+            storeStatusList = StoreStatusEnum.getProcessingStatusList()
         )
-        val processingVersionInfoMap = storeSpecBusService.getProcessingVersionInfo(
-            userId = userId,
-            storeCodeList = storeCodes
-        )
+        var processingVersionInfoMap: MutableMap<String, MutableList<StoreBaseInfo>>? = null
+        processingStoreRecords.forEach { processingAtomRecord ->
+            val version = processingAtomRecord[tStoreBase.VERSION] as String
+            if (version == INIT_VERSION || version.isBlank()) {
+                return@forEach
+            }
+            if (processingVersionInfoMap == null) {
+                processingVersionInfoMap = mutableMapOf()
+            }
+            val storeCode = processingAtomRecord[tStoreBase.STORE_CODE] as String
+            val storeBaseInfo = StoreBaseInfo(
+                storeId = processingAtomRecord[tStoreBase.ID] as String,
+                storeCode = storeCode,
+                storeName = processingAtomRecord[tStoreBase.NAME] as String,
+                storeType = StoreTypeEnum.valueOf(processingAtomRecord[tStoreBase.STORE_TYPE] as String),
+                version = version,
+                publicFlag = processingAtomRecord[TStoreBaseFeature.T_STORE_BASE_FEATURE.PUBLIC_FLAG] as Boolean,
+                status = processingAtomRecord[tStoreBase.STATUS] as String,
+                logoUrl = processingAtomRecord[tStoreBase.LOGO_URL] as? String,
+                publisher = processingAtomRecord[tStoreBase.PUBLISHER] as String,
+                classifyId = processingAtomRecord[tStoreBase.CLASSIFY_ID] as String,
+            )
+            if (processingVersionInfoMap!!.containsKey(storeCode)) {
+                val storeBaseInfoList = processingVersionInfoMap!![storeCode]
+                storeBaseInfoList?.add(storeBaseInfo)
+            } else {
+                processingVersionInfoMap!![storeCode] = mutableListOf(storeBaseInfo)
+            }
+        }
+        val projectMap =
+            client.get(ServiceProjectResource::class).getNameByCode(projectCodeList.joinToString(",")).data
         val myMyStoreComponent = mutableListOf<MyStoreComponent>()
         records?.forEach {
             val storeCode = it[tStoreBase.STORE_CODE] as String

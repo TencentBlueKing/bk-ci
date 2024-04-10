@@ -25,44 +25,31 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.store.pojo.common.enums
+package com.tencent.devops.store.common.service
 
-import com.tencent.devops.common.api.util.MessageUtil
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 
-enum class StoreStatusEnum {
-    INIT, // 初始化
-    COMMITTING, // 提交中
-    BUILDING, // 构建中
-    BUILD_FAIL, // 构建失败
-    CHECKING, // 验证中
-    CHECK_FAIL, // 验证失败
-    TESTING, // 测试中
-    AUDITING, // 审核中
-    AUDIT_REJECT, // 审核驳回
-    RELEASED, // 已发布
-    GROUNDING_SUSPENSION, // 上架中止
-    UNDERCARRIAGING, // 下架中
-    UNDERCARRIAGED, // 已下架
-    TESTED; // 测试结束(仅分支测试使用)
+interface StoreManagementExtraService {
 
-    fun getI18n(language: String): String {
-        return MessageUtil.getMessageByLocale(
-            messageCode = "STORE_BASE_STATUS_${this.name}",
-            language = language
-        )
-    }
 
-    companion object {
+    /**
+     * 检查组件是否可以删除
+     */
+    fun doComponentDeleteCheck(): Result<Boolean>
 
-        fun getProcessingStatusList(): List<String> {
-            return listOf(
-                INIT.name,
-                COMMITTING.name,
-                BUILDING.name,
-                BUILD_FAIL.name,
-                TESTING.name,
-                AUDITING.name
-            )
-        }
-    }
+    /**
+     * 删除组件仓库文件
+     */
+    fun deleteComponentRepoFile(userId: String, storeCode: String, storeType: StoreTypeEnum): Result<Boolean>
+
+    /**
+     * 检查卸载组件请求参数合法性
+     */
+    fun uninstallComponentParamCheck(
+        userId: String,
+        projectCode: String,
+        storeType: String,
+        storeCode: String
+    ): Result<Boolean>
 }

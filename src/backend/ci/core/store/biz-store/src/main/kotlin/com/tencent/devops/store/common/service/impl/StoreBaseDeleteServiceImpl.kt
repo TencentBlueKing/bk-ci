@@ -31,9 +31,19 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.service.utils.SpringContextUtil
-import com.tencent.devops.store.common.dao.*
-import com.tencent.devops.store.common.service.*
-import com.tencent.devops.store.common.utils.StoreUtils
+import com.tencent.devops.store.common.dao.StoreBaseEnvExtManageDao
+import com.tencent.devops.store.common.dao.StoreBaseEnvManageDao
+import com.tencent.devops.store.common.dao.StoreBaseExtManageDao
+import com.tencent.devops.store.common.dao.StoreBaseFeatureExtManageDao
+import com.tencent.devops.store.common.dao.StoreBaseFeatureManageDao
+import com.tencent.devops.store.common.dao.StoreBaseManageDao
+import com.tencent.devops.store.common.dao.StoreBaseQueryDao
+import com.tencent.devops.store.common.dao.StoreLabelDao
+import com.tencent.devops.store.common.dao.StoreMemberDao
+import com.tencent.devops.store.common.dao.StoreVersionLogDao
+import com.tencent.devops.store.common.service.StoreBaseDeleteService
+import com.tencent.devops.store.common.service.StoreCommonService
+import com.tencent.devops.store.common.service.StoreManagementExtraService
 import com.tencent.devops.store.constant.StoreMessageCode
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.pojo.common.publication.StoreDeleteRequest
@@ -63,10 +73,10 @@ class StoreBaseDeleteServiceImpl @Autowired constructor(
         private val logger = LoggerFactory.getLogger(StoreComponentManageServiceImpl::class.java)
     }
 
-    private fun getStoreSpecBusService(storeType: StoreTypeEnum): StoreSpecBusService {
+    private fun getStoreManagementExtraService(storeType: StoreTypeEnum): StoreManagementExtraService {
         return SpringContextUtil.getBean(
-            StoreSpecBusService::class.java,
-            StoreUtils.getSpecBusServiceBeanName(storeType)
+            StoreManagementExtraService::class.java,
+            "${storeType}MANAGEMENT_EXTRA_SERVICE"
         )
     }
 
@@ -94,7 +104,7 @@ class StoreBaseDeleteServiceImpl @Autowired constructor(
                 params = arrayOf(storeCode)
             )
         }
-        getStoreSpecBusService(storeType).doComponentDeleteCheck()
+        getStoreManagementExtraService(storeType).doComponentDeleteCheck()
     }
 
     override fun deleteComponentRepoFile(handlerRequest: StoreDeleteRequest) {
@@ -102,7 +112,7 @@ class StoreBaseDeleteServiceImpl @Autowired constructor(
         val storeCode = handlerRequest.storeCode
         val storeType = StoreTypeEnum.valueOf(handlerRequest.storeType)
         val userId = bkStoreContext[AUTH_HEADER_USER_ID]?.toString() ?: AUTH_HEADER_USER_ID_DEFAULT_VALUE
-        val deleteStorePkgResult = getStoreSpecBusService(storeType).deleteComponentRepoFile(
+        val deleteStorePkgResult = getStoreManagementExtraService(storeType).deleteComponentRepoFile(
             userId = userId,
             storeCode = storeCode,
             storeType = storeType

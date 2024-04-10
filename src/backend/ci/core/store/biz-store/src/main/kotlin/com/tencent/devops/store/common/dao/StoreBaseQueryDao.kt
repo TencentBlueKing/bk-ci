@@ -30,6 +30,7 @@ package com.tencent.devops.store.common.dao
 import com.tencent.devops.common.db.utils.JooqUtils
 import com.tencent.devops.model.store.tables.TStoreBase
 import com.tencent.devops.model.store.tables.TStoreBaseEnv
+import com.tencent.devops.model.store.tables.TStoreBaseFeature
 import com.tencent.devops.model.store.tables.TStoreMember
 import com.tencent.devops.model.store.tables.records.TStoreBaseRecord
 import com.tencent.devops.store.common.utils.VersionUtils
@@ -339,6 +340,42 @@ class StoreBaseQueryDao {
             } else {
                 baseStep.fetch()
             }
+        }
+    }
+
+    fun getStoreBaseInfoByConditions(
+        dslContext: DSLContext,
+        storeCodeList: List<String>,
+        storeType: StoreTypeEnum,
+        storeStatusList: List<String>? = null
+    ): Result<out Record> {
+        with(TStoreBase.T_STORE_BASE) {
+            val tStoreBaseFeature = TStoreBaseFeature.T_STORE_BASE_FEATURE
+            val conditions = mutableListOf<Condition>()
+            conditions.add(STORE_CODE.`in`(storeCodeList))
+            conditions.add(STORE_TYPE.eq(storeType.type.toByte()))
+            if (storeStatusList != null) {
+                conditions.add(STATUS.`in`(storeStatusList))
+            }
+            return dslContext.select(
+                this.ID,
+                this.STORE_CODE,
+                this.NAME,
+                this.STORE_TYPE,
+                this.VERSION,
+                tStoreBaseFeature.PUBLIC_FLAG,
+                this.STATUS,
+                this.LOGO_URL,
+                this.PUBLISHER,
+                this.CLASSIFY_ID,
+            )
+                .from(this)
+                .join(tStoreBaseFeature)
+                .on(
+                    this.STORE_CODE.eq(tStoreBaseFeature.STORE_CODE)
+                        .and(this.STORE_TYPE.eq(tStoreBaseFeature.STORE_TYPE))
+                )
+                .where(conditions).orderBy(CREATE_TIME.desc()).fetch()
         }
     }
 }
