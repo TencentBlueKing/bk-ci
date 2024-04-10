@@ -112,7 +112,6 @@ class StartCloudRemoteDevService @Autowired constructor(
             event.devFile.zoneId
         }
 
-
         val res = workspaceClient.createWorkspace(
             userId,
             EnvironmentCreate(
