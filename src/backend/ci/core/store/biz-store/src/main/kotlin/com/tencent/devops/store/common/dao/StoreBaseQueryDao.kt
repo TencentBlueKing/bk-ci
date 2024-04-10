@@ -279,6 +279,7 @@ class StoreBaseQueryDao {
             .where(conditions)
             .groupBy(tStoreBase.ID)
             .orderBy(tStoreBase.UPDATE_TIME.desc())
+            .limit(1)
             .fetchOne(0, Int::class.java) ?: 0
     }
 
