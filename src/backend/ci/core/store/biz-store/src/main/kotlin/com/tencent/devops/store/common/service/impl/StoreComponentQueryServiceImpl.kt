@@ -851,7 +851,7 @@ class StoreComponentQueryServiceImpl @Autowired constructor(
                     results.add(marketItem)
                 }
             } catch (e: Exception) {
-                e.printStackTrace()
+                logger.error("doList|error:${e.message}")
             }
             finally {
                 ThreadLocalUtil.remove(REFERER)
