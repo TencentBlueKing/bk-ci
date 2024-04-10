@@ -75,7 +75,7 @@ class TencentStockDataUpdateService @Autowired constructor(
         private const val SCHEDULED_UPDATE_GSE_AGENT_TIMEOUT_LOCK_KEY = "scheduled_update_gse_agent_timeout_lock"
 
         private const val DEFAULT_PAGE_SIZE = 100
-        private const val EXPIRATION_TIME_OF_THE_LOCK = 200L
+        private const val EXPIRATION_TIME_OF_THE_LOCK = 600L
 
         const val AGENT_ABNORMAL_NODE_STATUS = 0
         const val AGENT_NORMAL_NODE_STATUS = 1
@@ -85,6 +85,8 @@ class TencentStockDataUpdateService @Autowired constructor(
         const val FIELD_BK_HOST_ID = "bk_host_id"
         const val FIELD_BK_CLOUD_ID = "bk_cloud_id"
         const val FIELD_BK_HOST_INNERIP = "bk_host_innerip"
+
+        const val FIRST_IP_INDEX = 0
     }
 
     /**
@@ -123,17 +125,21 @@ class TencentStockDataUpdateService @Autowired constructor(
     }
 
     private fun checkDeployNodesIsInCmdb() {
+        logger.info("Check deploy nodes are in cmdb task starts...")
+        val startTime = LocalDateTime.now()
         val countNodeInCmdb = cmdbNodeDao.countDeployNodes(dslContext)
         logger.info("Node(s) count in cmdb: $countNodeInCmdb")
         countNodeInCmdb.takeIf { it > 0 }.run {
             val totalPages = PageUtil.calTotalPage(DEFAULT_PAGE_SIZE, countNodeInCmdb.toLong())
-            val startTime = LocalDateTime.now()
+            val time1 = LocalDateTime.now()
             for (page in 1..totalPages) {
                 checkDeployNodesIsInCmdbByPage(page)
             }
             logger.info(
                 "[checkDeployNodesIsInCmdb]total time: " +
-                    "${ComputeTimeUtils.calculateDuration(startTime, LocalDateTime.now())}s"
+                    "${ComputeTimeUtils.calculateDuration(startTime, LocalDateTime.now())}s, " +
+                    "check deploy nodes are in cmdb time: " +
+                    "${ComputeTimeUtils.calculateDuration(time1, LocalDateTime.now())}s"
             )
         }
         // 2.2 节点在cmdb中，查询CC: 在CC-改为NORMAL，不在CC-改为NOT_IN_CC
@@ -161,17 +167,21 @@ class TencentStockDataUpdateService @Autowired constructor(
      * cron：每小时执行一次。
      */
     private fun checkDeployNodesIsInCC() {
+        logger.info("Check deploy nodes are in cc task starts...")
+        val startTime = LocalDateTime.now()
         val countHostIdNotNullRecord = cmdbNodeDao.countDeployNodesInCmdb(dslContext)
         logger.info("Check deploy node(s) is in CC, node(s) count:$countHostIdNotNullRecord.")
         countHostIdNotNullRecord.takeIf { it > 0 }.run {
             val totalPagesHostIdNotNull = PageUtil.calTotalPage(DEFAULT_PAGE_SIZE, countHostIdNotNullRecord.toLong())
-            val startTime = LocalDateTime.now()
+            val time1 = LocalDateTime.now()
             for (pageHostIdNotNull in 1..totalPagesHostIdNotNull) {
                 checkDeployNodesIsInCCByPage(pageHostIdNotNull)
             }
             logger.info(
                 "[checkDeployNodesIsInCC]total time: " +
-                    "${ComputeTimeUtils.calculateDuration(startTime, LocalDateTime.now())}s"
+                    "${ComputeTimeUtils.calculateDuration(startTime, LocalDateTime.now())}s, " +
+                    "check deploy nodes are in cc time: " +
+                    "${ComputeTimeUtils.calculateDuration(time1, LocalDateTime.now())}s"
             )
         }
     }
@@ -192,13 +202,13 @@ class TencentStockDataUpdateService @Autowired constructor(
         var ipToCCInfoMap: Map<String?, CCInfo> = mapOf()
         if (!nodeCCInfoList.isNullOrEmpty()) {
             // ip - cc记录 映射
-            ipToCCInfoMap = nodeCCInfoList.associateBy { it.bkHostInnerip }
+            ipToCCInfoMap = nodeCCInfoList.associateBy { it.bkHostInnerip?.split(",")?.get(FIRST_IP_INDEX) }
             // 2.1 在CC - 查询节点agent状态并更新
-            val inCCIpList = nodeCCInfoList.mapNotNull { it.bkHostInnerip }
+            val inCCIpList = nodeCCInfoList.mapNotNull { it.bkHostInnerip?.split(",")?.get(FIRST_IP_INDEX) }
             if (inCCIpList.isNotEmpty()) {
                 val ipToAgentVersionInfoMap = queryAgentStatusService.getAgentVersions(
                     nodeCCInfoList.map {
-                        AgentVersion(ip = it.bkHostInnerip, bkHostId = it.bkHostId)
+                        AgentVersion(ip = it.bkHostInnerip?.split(",")?.get(FIRST_IP_INDEX), bkHostId = it.bkHostId)
                     }
                 )?.associateBy { it.ip }
                 val ipToNodeStatus = mutableMapOf<String, String>()
@@ -389,6 +399,7 @@ class TencentStockDataUpdateService @Autowired constructor(
             logger.error("[taskWithRedisLock]exception: ", e)
         } finally {
             redisLock.unlock()
+            logger.info("[taskWithRedisLock]Unlocked.")
         }
     }
 }

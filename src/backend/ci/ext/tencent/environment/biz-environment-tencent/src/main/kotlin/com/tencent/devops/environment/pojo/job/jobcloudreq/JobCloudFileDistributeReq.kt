@@ -32,6 +32,9 @@ data class JobCloudFileDistributeReq(
     @get:Schema(title = "文件分发超时时间", description = "单位：秒，默认7200秒，取值范围1-86400。")
     @JsonProperty("timeout")
     val timeout: Long,
+    @get:Schema(title = "自定义作业名称")
+    @JsonProperty("task_name")
+    val taskName: String?,
     @get:Schema(title = "当前用户用户名", required = true)
     @JsonProperty("bk_username")
     override var bkUsername: String

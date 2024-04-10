@@ -38,7 +38,6 @@ import com.tencent.devops.environment.pojo.enums.NodeStatus
 import com.tencent.devops.environment.pojo.job.AgentVersion
 import com.tencent.devops.environment.pojo.job.agentreq.AgentHostForInstallAgent
 import com.tencent.devops.environment.pojo.job.agentreq.AgentInstallAgentReq
-import com.tencent.devops.environment.pojo.job.agentres.AgentQueryAgentTaskLog
 import com.tencent.devops.environment.pojo.job.agentreq.AgentQueryAgentTaskStatusReq
 import com.tencent.devops.environment.pojo.job.agentreq.AgentRetryAgentInstallTaskReq
 import com.tencent.devops.environment.pojo.job.agentreq.AgentTerminateAgentInstallTaskReq
@@ -46,9 +45,10 @@ import com.tencent.devops.environment.pojo.job.agentreq.InstallAgentReq
 import com.tencent.devops.environment.pojo.job.agentreq.QueryAgentTaskStatusReq
 import com.tencent.devops.environment.pojo.job.agentreq.RetryAgentInstallTaskReq
 import com.tencent.devops.environment.pojo.job.agentreq.TerminateAgentInstallTaskReq
-import com.tencent.devops.environment.pojo.job.agentres.AgentOriginalResult
 import com.tencent.devops.environment.pojo.job.agentres.AgentInstallAgentChannel
 import com.tencent.devops.environment.pojo.job.agentres.AgentInstallAgentResult
+import com.tencent.devops.environment.pojo.job.agentres.AgentOriginalResult
+import com.tencent.devops.environment.pojo.job.agentres.AgentQueryAgentTaskLog
 import com.tencent.devops.environment.pojo.job.agentres.AgentQueryAgentTaskStatusResult
 import com.tencent.devops.environment.pojo.job.agentres.AgentResult
 import com.tencent.devops.environment.pojo.job.agentres.AgentRetryAgentInstallTaskResult
@@ -66,7 +66,6 @@ import com.tencent.devops.environment.pojo.job.agentres.RetryAgentInstallTaskRes
 import com.tencent.devops.environment.pojo.job.agentres.Statistics
 import com.tencent.devops.environment.pojo.job.agentres.TerminalAgentInstallTaskResult
 import com.tencent.devops.environment.service.prometheus.AgentStatusUpdateThreadMetrics
-import com.tencent.devops.environment.utils.ComputeTimeUtils
 import com.tencent.devops.environment.utils.FileUtils
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
@@ -75,7 +74,6 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Service
 import java.io.InputStream
-import java.time.LocalDateTime
 import java.util.concurrent.SynchronousQueue
 import java.util.concurrent.ThreadPoolExecutor
 import java.util.concurrent.TimeUnit
@@ -316,12 +314,7 @@ data class AgentService @Autowired constructor(
             }
         }
         try {
-            val startTime = LocalDateTime.now()
-            checkAgentStatusExecutor.submit(task).get()
-            logger.info(
-                "Agent install finish takes " +
-                    "${ComputeTimeUtils.calculateDuration(startTime, LocalDateTime.now())}s."
-            )
+            checkAgentStatusExecutor.submit(task)
         } catch (e: Exception) {
             logger.warn("Check agent status failed. Exception: $e")
         }
