@@ -49,7 +49,7 @@ class RemoteDevJobActionService @Autowired constructor(
         // 将ID加到启动参数中，方便流水线执行完后回写
         val mVars = param.variables.toMutableMap()
         mVars[PIPELINE_JOB_CALLBACK_ID] = id.toString()
-        mVars[PIPELINE_JOB_IPS] = ips.joinToString(";")
+        mVars[PIPELINE_JOB_IPS] = ips.joinToString(",")
 
         val res = try {
             client.get(ServiceBuildResource::class).manualStartupNew(
