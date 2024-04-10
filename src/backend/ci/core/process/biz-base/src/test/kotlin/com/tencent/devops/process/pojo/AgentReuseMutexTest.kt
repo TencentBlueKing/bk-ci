@@ -189,7 +189,7 @@ class AgentReuseMutexTest {
         stages.add(
             mapOf(
                 "job_env_dep_1" to initReuseId("job_env_1"),
-                "job_env_1" to ThirdPartyAgentEnvDispatchType("job_1", null, null, AgentType.NAME, null, null),
+                "job_env_1" to ThirdPartyAgentEnvDispatchType("job_1", null, null, AgentType.NAME, null, null)
             )
         )
         stages.add(
