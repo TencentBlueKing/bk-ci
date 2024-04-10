@@ -71,9 +71,10 @@ interface StoreSpecBusService {
     /**
      * 获取组件运行流水线组件状态
      * @param buildId 构建ID
+     * @param startFlag 启动标识
      * @return 组件状态
      */
-    fun getStoreRunPipelineStatus(buildId: String?): StoreStatusEnum?
+    fun getStoreRunPipelineStatus(buildId: String? = null, startFlag: Boolean = true): StoreStatusEnum?
 
     /**
      * 获取组件包环境信息

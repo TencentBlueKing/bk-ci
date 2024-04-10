@@ -170,10 +170,10 @@ class StoreBaseQueryDao {
         with(TStoreBase.T_STORE_BASE) {
             val conditions = mutableListOf<Condition>()
             conditions.add(STORE_TYPE.eq(storeType.type.toByte()))
-            if (name.isNullOrBlank()) {
+            if (!name.isNullOrBlank()) {
                 conditions.add(NAME.eq(name))
             }
-            if (storeCode.isNullOrBlank()) {
+            if (!storeCode.isNullOrBlank()) {
                 conditions.add(STORE_CODE.eq(storeCode))
             }
             if (status != null) {

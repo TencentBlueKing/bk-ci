@@ -40,6 +40,7 @@ import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.ChannelCode
+import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.common.pipeline.pojo.StoreInitPipelineReq
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.gray.Gray
@@ -53,6 +54,7 @@ import com.tencent.devops.process.pojo.setting.PipelineModelVersion
 import com.tencent.devops.process.pojo.setting.UpdatePipelineModelRequest
 import com.tencent.devops.process.utils.KEY_PIPELINE_ID
 import com.tencent.devops.process.utils.KEY_PIPELINE_NAME
+import com.tencent.devops.store.common.configuration.StoreInnerPipelineConfig
 import com.tencent.devops.store.common.dao.AbstractStoreCommonDao
 import com.tencent.devops.store.common.dao.BusinessConfigDao
 import com.tencent.devops.store.common.dao.OperationLogDao
@@ -66,6 +68,7 @@ import com.tencent.devops.store.common.service.StorePipelineService
 import com.tencent.devops.store.common.service.StoreSpecBusService
 import com.tencent.devops.store.common.utils.StoreUtils
 import com.tencent.devops.store.constant.StoreMessageCode
+import com.tencent.devops.store.pojo.atom.enums.AtomStatusEnum
 import com.tencent.devops.store.pojo.common.KEY_CREATOR
 import com.tencent.devops.store.pojo.common.KEY_LANGUAGE
 import com.tencent.devops.store.pojo.common.KEY_PROJECT_CODE
@@ -98,7 +101,8 @@ class StorePipelineServiceImpl @Autowired constructor(
     private val storeBuildInfoDao: StoreBuildInfoDao,
     private val operationLogDao: OperationLogDao,
     private val storeBaseQueryDao: StoreBaseQueryDao,
-    private val storeBaseManageDao: StoreBaseManageDao
+    private val storeBaseManageDao: StoreBaseManageDao,
+    private val storeInnerPipelineConfig: StoreInnerPipelineConfig
 ) : StorePipelineService {
 
     private final val pageSize = 50
@@ -209,12 +213,8 @@ class StorePipelineServiceImpl @Autowired constructor(
             StoreSpecBusService::class.java,
             StoreUtils.getSpecBusServiceBeanName(storeType)
         )
-        // 查找组件初始化项目
-        val initProjectCode = storeProjectRelDao.getInitProjectCodeByStoreCode(
-            dslContext = dslContext,
-            storeCode = storeCode,
-            storeType = storeType.type.toByte()
-        )!!
+        val innerPipelineProject = storeInnerPipelineConfig.innerPipelineProject
+        val innerPipelineUser = storeInnerPipelineConfig.innerPipelineUser
         // 生成流水线启动参数
         val startParams = storeSpecBusService.getStoreRunPipelineStartParams(storeRunPipelineParam)
         if (null == storePipelineRelRecord) {
@@ -226,10 +226,6 @@ class StorePipelineServiceImpl @Autowired constructor(
             )
             var pipelineModel = pipelineModelConfig!!.configValue
             val pipelineName = "am-$storeType-$storeCode-${UUIDUtil.generate()}"
-            val storeInitPipelineReq = StoreInitPipelineReq(
-                pipelineModel = pipelineModel,
-                startParams = startParams
-            )
             val paramMap = mapOf(
                 KEY_PIPELINE_NAME to pipelineName
             )
@@ -237,8 +233,12 @@ class StorePipelineServiceImpl @Autowired constructor(
             paramMap.forEach { (key, value) ->
                 pipelineModel = pipelineModel.replace("#{$key}", value)
             }
+            val storeInitPipelineReq = StoreInitPipelineReq(
+                pipelineModel = pipelineModel,
+                startParams = startParams
+            )
             val storeInitPipelineResp = client.get(ServicePipelineInitResource::class)
-                .initStorePipeline(userId, initProjectCode, storeInitPipelineReq).data
+                .initStorePipeline(innerPipelineUser, innerPipelineProject, storeInitPipelineReq).data
             logger.info("runStorePipeline storeInitPipelineResp is:$storeInitPipelineResp")
             if (null != storeInitPipelineResp) {
                 val pipelineId = storeInitPipelineResp.pipelineId
@@ -274,8 +274,8 @@ class StorePipelineServiceImpl @Autowired constructor(
             // 判断插件版本最近一次的构建是否完成
             val buildResult = if (buildInfoRecord != null) {
                 client.get(ServiceBuildResource::class).getBuildStatus(
-                    userId = userId,
-                    projectId = initProjectCode,
+                    userId = innerPipelineUser,
+                    projectId = innerPipelineProject,
                     pipelineId = buildInfoRecord.pipelineId,
                     buildId = buildInfoRecord.buildId,
                     channelCode = ChannelCode.AM
@@ -292,6 +292,37 @@ class StorePipelineServiceImpl @Autowired constructor(
                         params = arrayOf(storeBaseRecord.name, storeBaseRecord.version)
                     )
                 }
+            }
+            // 触发执行流水线
+            val pipelineId = storePipelineRelRecord.pipelineId
+            val buildIdObj = client.get(ServiceBuildResource::class).manualStartupNew(
+                userId = innerPipelineUser,
+                projectId = innerPipelineProject,
+                pipelineId = pipelineId,
+                values = startParams,
+                channelCode = ChannelCode.AM,
+                startType = StartType.SERVICE
+            ).data
+            var buildId: String? = null
+            if (null != buildIdObj) {
+                buildId = buildIdObj.id
+                storePipelineBuildRelDao.add(
+                    dslContext = dslContext,
+                    storeId = storeId,
+                    pipelineId = pipelineId,
+                    buildId = buildId
+                )
+            }
+            val storeStatus = storeSpecBusService.getStoreRunPipelineStatus(buildId)
+            storeStatus?.let {
+                storeBaseManageDao.updateStoreBaseInfo(
+                    dslContext = dslContext,
+                    updateStoreBaseDataPO = UpdateStoreBaseDataPO(
+                        id = storeId,
+                        status = storeStatus,
+                        modifier = userId
+                    )
+                )
             }
         }
         return true

@@ -457,7 +457,7 @@ abstract class StoreCommonServiceImpl @Autowired constructor() : StoreCommonServ
             dslContext = dslContext,
             storeType = storeType,
             storeCode = storeCode,
-            status = status
+            status = StoreStatusEnum.RELEASED
         )
         val currentNum = if (status == StoreStatusEnum.RELEASED) 1 else 0
         return releaseTotalNum > currentNum
