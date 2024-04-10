@@ -71,7 +71,7 @@ import org.springframework.context.annotation.Primary
 import org.springframework.stereotype.Service
 
 @Primary
-@Service
+@Service("DEVX_SPEC_BUS_SERVICE")
 class DevxSpecBusServiceImpl @Autowired constructor(
     private val dslContext: DSLContext,
     private val storeBaseQueryDao: StoreBaseQueryDao,
@@ -140,8 +140,12 @@ class DevxSpecBusServiceImpl @Autowired constructor(
         )
     }
 
-    override fun getStoreRunPipelineStatus(buildId: String?): StoreStatusEnum? {
-        return StoreStatusEnum.BUILDING
+    override fun getStoreRunPipelineStatus(buildId: String?, startFlag: Boolean): StoreStatusEnum? {
+        return if (!buildId.isNullOrBlank() || !startFlag) {
+            StoreStatusEnum.BUILDING
+        } else {
+            StoreStatusEnum.BUILD_FAIL
+        }
     }
 
     override fun getComponentPkgEnvInfo(
@@ -155,13 +159,13 @@ class DevxSpecBusServiceImpl @Autowired constructor(
             storeCode = storeCode,
             version = version,
             storeType = storeType
-        ) ?: throw ErrorCodeException(
-            errorCode = CommonMessageCode.PARAMETER_IS_INVALID,
-            params = arrayOf("$storeCode:$version")
         )
-        val storeId = baseRecord.id
         val storePkgEnvInfos = mutableListOf<StorePkgEnvInfo>()
-        val baseEnvRecords = storeBaseEnvQueryDao.getBaseEnvsByStoreId(dslContext, storeId)
+        val baseEnvRecords = if (baseRecord != null) {
+            storeBaseEnvQueryDao.getBaseEnvsByStoreId(dslContext, baseRecord.id)
+        } else {
+            null
+        }
         if (!baseEnvRecords.isNullOrEmpty()) {
             baseEnvRecords.forEach { baseEnvRecord ->
                 val baseEnvExtRecords = storeBaseEnvExtQueryDao.getBaseExtEnvsByEnvId(dslContext, baseEnvRecord.id)

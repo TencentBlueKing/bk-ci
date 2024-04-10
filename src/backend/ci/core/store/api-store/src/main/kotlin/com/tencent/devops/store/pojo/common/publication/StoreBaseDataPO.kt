@@ -57,7 +57,7 @@ data class StoreBaseDataPO(
     @get:Schema(title = "是否为最新版本")
     val latestFlag: Boolean = false,
     @get:Schema(title = "发布者")
-    val publisher: String? = null,
+    val publisher: String = "",
     @get:Schema(title = "发布时间")
     val pubTime: LocalDateTime? = null,
     @get:Schema(title = "分类ID")

@@ -30,10 +30,8 @@ package com.tencent.devops.store.common.service.impl
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.constant.CommonMessageCode
-import com.tencent.devops.common.api.constant.INIT_VERSION
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.service.utils.SpringContextUtil
-import com.tencent.devops.model.store.tables.records.TStoreBaseRecord
 import com.tencent.devops.store.common.dao.ClassifyDao
 import com.tencent.devops.store.common.dao.StoreBaseEnvExtManageDao
 import com.tencent.devops.store.common.dao.StoreBaseEnvManageDao
@@ -50,16 +48,12 @@ import com.tencent.devops.store.common.service.StoreCommonService
 import com.tencent.devops.store.common.service.StoreSpecBusService
 import com.tencent.devops.store.common.utils.StoreReleaseUtils
 import com.tencent.devops.store.common.utils.StoreUtils
-import com.tencent.devops.store.common.utils.VersionUtils
-import com.tencent.devops.store.constant.StoreMessageCode
 import com.tencent.devops.store.pojo.common.KEY_CLASSIFY_ID
 import com.tencent.devops.store.pojo.common.KEY_STORE_ID
 import com.tencent.devops.store.pojo.common.enums.ReleaseTypeEnum
-import com.tencent.devops.store.pojo.common.enums.StoreStatusEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.pojo.common.publication.StoreBaseDataPO
 import com.tencent.devops.store.pojo.common.publication.StoreUpdateRequest
-import com.tencent.devops.store.pojo.common.version.VersionModel
 import org.apache.commons.codec.digest.DigestUtils
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
@@ -144,17 +138,7 @@ class StoreBaseUpdateServiceImpl @Autowired constructor(
         } else {
             newestBaseRecord.id
         }
-        val baseRecord = storeBaseQueryDao.getComponent(
-            dslContext = dslContext,
-            storeCode = storeCode,
-            version = version,
-            storeType = storeType
-        )!!
-        val latestFlag = if (newVersionFlag) {
-            false
-        } else {
-            baseRecord.latestFlag
-        }
+        val latestFlag = releaseType == ReleaseTypeEnum.NEW
         val bkStoreContext = storeUpdateRequest.bkStoreContext
         val userId = bkStoreContext[AUTH_HEADER_USER_ID]?.toString() ?: AUTH_HEADER_USER_ID_DEFAULT_VALUE
         bkStoreContext[KEY_STORE_ID] = storeId

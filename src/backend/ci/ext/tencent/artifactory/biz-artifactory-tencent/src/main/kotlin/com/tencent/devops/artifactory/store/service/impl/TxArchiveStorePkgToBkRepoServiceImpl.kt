@@ -27,28 +27,33 @@
 
 package com.tencent.devops.artifactory.store.service.impl
 
-import com.tencent.devops.artifactory.constant.BKREPO_STORE_PROJECT_ID
 import com.tencent.devops.artifactory.constant.REALM_BK_REPO
-import com.tencent.devops.artifactory.constant.REPO_NAME_PLUGIN
 import com.tencent.devops.artifactory.pojo.enums.BkRepoEnum
+import com.tencent.devops.artifactory.store.config.BkRepoStoreConfig
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
+import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
+import org.springframework.context.annotation.Primary
 import org.springframework.stereotype.Service
 
+@Primary
 @Service
 @ConditionalOnProperty(prefix = "artifactory", name = ["realm"], havingValue = REALM_BK_REPO)
-class SampleArchiveStorePkgToBkRepoServiceImpl : ArchiveStorePkgToBkRepoServiceImpl() {
+class TxArchiveStorePkgToBkRepoServiceImpl : ArchiveStorePkgToBkRepoServiceImpl() {
+
+    @Autowired
+    private lateinit var bkRepoStoreConfig: BkRepoStoreConfig
 
     override fun getBkRepoProjectId(storeType: StoreTypeEnum): String {
-        return BKREPO_STORE_PROJECT_ID
+        return bkRepoStoreConfig.bkrepoStoreProjectName
     }
 
     override fun getBkRepoName(storeType: StoreTypeEnum): String {
         return when (storeType) {
             StoreTypeEnum.ATOM -> {
-                REPO_NAME_PLUGIN
+                BkRepoEnum.PLUGIN.repoName
             }
 
             StoreTypeEnum.SERVICE -> {
@@ -67,7 +72,7 @@ class SampleArchiveStorePkgToBkRepoServiceImpl : ArchiveStorePkgToBkRepoServiceI
 
     override fun deleteStorePkg(userId: String, storeCode: String, storeType: StoreTypeEnum) {
         bkRepoClient.delete(
-            userId = userId,
+            userId = bkRepoStoreConfig.bkrepoStoreUserName,
             projectId = getBkRepoProjectId(storeType),
             repoName = getBkRepoName(storeType),
             path = storeCode

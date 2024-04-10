@@ -400,8 +400,17 @@ class StoreReleaseServiceImpl @Autowired constructor(
     }
 
     override fun rebuild(userId: String, storeId: String): Boolean {
-        val status = StoreStatusEnum.BUILDING
-        checkStoreVersionOptRight(userId, storeId, status)
+        val record = storeBaseQueryDao.getComponentById(dslContext, storeId)
+            ?: throw ErrorCodeException(errorCode = CommonMessageCode.PARAMETER_IS_INVALID, params = arrayOf(storeId))
+        val storeType = StoreTypeEnum.getStoreTypeObj(record.storeType.toInt())
+        val storeSpecBusService = SpringContextUtil.getBean(
+            StoreSpecBusService::class.java,
+            StoreUtils.getSpecBusServiceBeanName(storeType)
+        )
+        val status = storeSpecBusService.getStoreRunPipelineStatus(startFlag = false)
+        status?.let {
+            checkStoreVersionOptRight(userId, storeId, status)
+        }
         val storeRunPipelineParam = StoreRunPipelineParam(
             userId = userId,
             storeId = storeId
@@ -521,6 +530,8 @@ class StoreReleaseServiceImpl @Autowired constructor(
         } else {
             listOf(StoreStatusEnum.TESTING, StoreStatusEnum.AUDITING)
         }
+        val cancelValidPreviousStatuses = StoreStatusEnum.values().toMutableList()
+        cancelValidPreviousStatuses.remove(StoreStatusEnum.RELEASED)
         val statusToValidPreviousStatuses = mapOf(
             StoreStatusEnum.COMMITTING to listOf(StoreStatusEnum.INIT),
             StoreStatusEnum.BUILDING to listOf(
@@ -544,8 +555,8 @@ class StoreReleaseServiceImpl @Autowired constructor(
             StoreStatusEnum.AUDITING to listOf(StoreStatusEnum.TESTING),
             StoreStatusEnum.AUDIT_REJECT to listOf(StoreStatusEnum.AUDITING),
             StoreStatusEnum.RELEASED to releasedValidPreviousStatuses,
-            StoreStatusEnum.GROUNDING_SUSPENSION to listOf(StoreStatusEnum.RELEASED),
-            StoreStatusEnum.UNDERCARRIAGING to listOf(StoreStatusEnum.RELEASED),
+            StoreStatusEnum.GROUNDING_SUSPENSION to cancelValidPreviousStatuses,
+            StoreStatusEnum.UNDERCARRIAGING to cancelValidPreviousStatuses,
             StoreStatusEnum.UNDERCARRIAGED to listOf(StoreStatusEnum.UNDERCARRIAGING, StoreStatusEnum.RELEASED)
         )
         // 检查状态扭转合法性

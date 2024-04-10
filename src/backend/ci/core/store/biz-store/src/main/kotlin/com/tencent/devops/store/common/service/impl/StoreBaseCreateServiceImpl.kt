@@ -45,6 +45,7 @@ import com.tencent.devops.store.common.dao.StoreProjectRelDao
 import com.tencent.devops.store.common.dao.StoreStatisticTotalDao
 import com.tencent.devops.store.common.service.StoreBaseCreateService
 import com.tencent.devops.store.common.utils.StoreReleaseUtils
+import com.tencent.devops.store.pojo.common.KEY_STORE_ID
 import com.tencent.devops.store.pojo.common.enums.StoreMemberTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreProjectTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreStatusEnum
@@ -103,6 +104,7 @@ class StoreBaseCreateServiceImpl @Autowired constructor(
         val name = storeBaseCreateRequest.name
         val bkStoreContext = storeCreateRequest.bkStoreContext
         val userId = bkStoreContext[AUTH_HEADER_USER_ID]?.toString() ?: AUTH_HEADER_USER_ID_DEFAULT_VALUE
+        bkStoreContext[KEY_STORE_ID] = storeId
         val storeBaseDataPO = StoreBaseDataPO(
             id = storeId,
             storeCode = storeCode,
@@ -111,7 +113,8 @@ class StoreBaseCreateServiceImpl @Autowired constructor(
             version = INIT_VERSION,
             status = StoreStatusEnum.INIT,
             creator = userId,
-            modifier = userId
+            modifier = userId,
+            latestFlag = true
         )
         val storeBaseExtDataPOs = StoreReleaseUtils.generateStoreBaseExtDataPO(
             extBaseInfo = storeBaseCreateRequest.extBaseInfo,
