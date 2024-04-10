@@ -372,7 +372,8 @@ class PreBuildService @Autowired constructor(
                     displayName = agentInfo.agentId,
                     workspace = startUpReq.workspace,
                     agentType = AgentType.ID,
-                    dockerInfo = null
+                    dockerInfo = null,
+                    reusedInfo = null
                 )
             }
 
