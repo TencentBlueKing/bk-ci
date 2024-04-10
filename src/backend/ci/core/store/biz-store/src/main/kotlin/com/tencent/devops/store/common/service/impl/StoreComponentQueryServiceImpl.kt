@@ -512,6 +512,9 @@ class StoreComponentQueryServiceImpl @Autowired constructor(
                 )
             }
         }
+        if (futureList.isEmpty()) {
+            return Result(result)
+        }
         for (index in futureList.indices) {
             val labelInfo = labelInfoList[index]
             result.add(
@@ -777,6 +780,7 @@ class StoreComponentQueryServiceImpl @Autowired constructor(
         pageSize: Int,
         urlProtocolTrim: Boolean = false
     ): Future<Page<MarketItem>> {
+        logger.info("doList|storeType:$storeType")
         val referer = BkApiUtil.getHttpServletRequest()?.getHeader(REFERER)
         return executor.submit(Callable<Page<MarketItem>> {
             referer?.let {
@@ -800,7 +804,7 @@ class StoreComponentQueryServiceImpl @Autowired constructor(
                 page = page,
                 pageSize = pageSize
             )
-
+            try {
             val storeCodeList = mutableListOf<String>()
             val storeIds = mutableListOf<String>()
             val storeTypeEnum = StoreTypeEnum.valueOf(storeType)
@@ -827,7 +831,6 @@ class StoreComponentQueryServiceImpl @Autowired constructor(
                 storeIndexManageService.getStoreIndexInfosByStoreCodes(storeTypeEnum, storeCodeList)
             val categoryInfoMap = categoryService.getByRelStoreIds(storeIds)
             val storeEnvInfos = storeBaseEnvQueryDao.batchQueryStoreEnvInfo(dslContext, storeIds)
-            try {
                 storeInfos.forEach { record ->
                     // 调用拆分出的processStoreInfo函数处理商品信息
                     val marketItem = processStoreInfo(
