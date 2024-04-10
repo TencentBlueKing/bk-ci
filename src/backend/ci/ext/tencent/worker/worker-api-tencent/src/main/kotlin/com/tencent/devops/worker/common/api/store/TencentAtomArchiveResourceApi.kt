@@ -31,6 +31,9 @@ import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.artifactory.pojo.enums.BkRepoEnum
 import com.tencent.devops.common.api.auth.AUTH_HEADER_PROJECT_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
+import com.tencent.devops.common.api.constant.HTTP_401
+import com.tencent.devops.common.api.constant.HTTP_403
+import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.exception.TaskExecuteException
 import com.tencent.devops.common.api.pojo.ErrorCode
 import com.tencent.devops.common.api.pojo.ErrorType
@@ -64,6 +67,7 @@ import com.tencent.devops.worker.common.logger.LoggerService
 import java.io.File
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.RequestBody
+import java.util.*
 
 @ApiPriority(priority = 9)
 class TencentAtomArchiveResourceApi : AbstractBuildResourceApi(),
@@ -71,6 +75,7 @@ class TencentAtomArchiveResourceApi : AbstractBuildResourceApi(),
 
     companion object {
         private const val AGENT_PROPERTIES_FILE_NAME = "/.agent.properties"
+        private const val AUTH_HEADER_BKREPO_MODE = "X-DEVOPS-BKREPO-MODE"
     }
 
     /**
@@ -281,13 +286,27 @@ class TencentAtomArchiveResourceApi : AbstractBuildResourceApi(),
         file: File,
         authFlag: Boolean
     ) {
-        val envType = AgentEnv.getEnv().name.toLowerCase()
+        val envType = AgentEnv.getEnv().name.lowercase()
         val bkrepoProjectNameKey = "bkrepo.store.project.name.$envType"
         val bkrepoProjectName = PropertyUtil.getPropertyValue(bkrepoProjectNameKey, AGENT_PROPERTIES_FILE_NAME)
         val bkrepoUrl = "${HomeHostUtil.getHost(AgentEnv.getGateway())}/repo/storge/build/atom/$bkrepoProjectName/" +
             "bk-plugin/$atomFilePath?authFlag=$authFlag"
-        val request = buildGet(bkrepoUrl, mapOf(AUTH_HEADER_PROJECT_ID to projectId))
-        download(request, file)
+        val headers = mutableMapOf(
+            AUTH_HEADER_PROJECT_ID to projectId,
+            AUTH_HEADER_BKREPO_MODE to "dl"
+        )
+        var request = buildGet(bkrepoUrl, headers)
+        try {
+            download(request = request, destPath = file)
+        } catch (ignored: RemoteServiceException) {
+            val httpStatus = ignored.httpStatus
+            if (httpStatus == HTTP_401 || httpStatus == HTTP_403) {
+                // 访问新域名请求的http状态码为401或403时，则降级访问原域名请求
+                headers.remove(AUTH_HEADER_BKREPO_MODE)
+                request = buildGet(bkrepoUrl, headers)
+                download(request = request, destPath = file)
+            }
+        }
     }
 
     override fun getStorePkgRunEnvInfo(
