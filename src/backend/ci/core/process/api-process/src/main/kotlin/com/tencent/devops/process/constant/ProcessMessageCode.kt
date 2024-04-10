@@ -56,6 +56,7 @@ object ProcessMessageCode {
     const val ALL_PIPELINES_LABEL = "CONST_PROCESS_VIEW_LABEL_ALL" // "全部流水线"
 
     const val BK_NON_TIMED_TRIGGER_SKIP = "bkNonTimedTriggerSkip" // 非定时触发，直接跳过
+    const val BK_RETRY_TIMED_TRIGGER_SKIP = "bkRetryTimedTriggerSkip" // 重试定时触发的构建，直接跳过
     const val BK_FIRST_STAGE_ENV_NOT_EMPTY = "bkFirstStageEnvNotEmpty" // 第一阶段的环境不能为空
     const val BK_QUALITY_CHECK_SUCCEED = "bkQualityCheckSucceed" // 质量红线({0})检测已通过
     const val BK_QUALITY_CHECK_INTERCEPTED = "bkQualityCheckIntercepted" // 质量红线({0})检测被拦截
@@ -297,6 +298,8 @@ object ProcessMessageCode {
     const val ERROR_TRIGGER_TYPE_REPLAY_NOT_SUPPORT = "2101183" // 触发类型{0}不支持重放
     const val ERROR_TRIGGER_REPLAY_PIPELINE_NOT_EMPTY = "2101184" // 重放流水线ID不能为空
     const val ERROR_WEBHOOK_REQUEST_NOT_FOUND = "2101185" // webhook {0} 不存在
+    const val ERROR_REPOSITORY_NOT_OAUTH = "2101218" // 当前代码库关联人({0})未进行OAUTH授权，请尝试切换代码库凭证类型
+    const val ERROR_TASK_NOT_ALLOWED_TO_BE_SKIPPED = "2101221" // task不允许被跳过
 
     const val ERROR_PIPELINE_JOB_ID_FORMAT = "2101190" // 流水线Job:{0}的jobId为空或长度超过{1}位
 

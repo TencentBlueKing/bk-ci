@@ -28,48 +28,47 @@
 package com.tencent.devops.metrics.pojo.`do`
 
 import com.fasterxml.jackson.annotation.JsonFormat
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 import java.time.LocalDateTime
 
-@ApiModel("插件失败详情信息")
+@Schema(title = "插件失败详情信息")
 data class AtomFailDetailInfoDO(
-    @ApiModelProperty("项目ID")
+    @get:Schema(title = "项目ID")
     val projectId: String,
-    @ApiModelProperty("流水线ID")
+    @get:Schema(title = "流水线ID")
     val pipelineId: String,
-    @ApiModelProperty("流水线名称")
+    @get:Schema(title = "流水线名称")
     val pipelineName: String,
-    @ApiModelProperty("渠道代码")
+    @get:Schema(title = "渠道代码")
     val channelCode: String,
-    @ApiModelProperty("域名")
+    @get:Schema(title = "域名")
     var domain: String? = null,
-    @ApiModelProperty("构建ID")
+    @get:Schema(title = "构建ID")
     val buildId: String,
-    @ApiModelProperty("构建序号")
+    @get:Schema(title = "构建序号")
     val buildNum: Int,
-    @ApiModelProperty("插件代码")
+    @get:Schema(title = "插件代码")
     val atomCode: String,
-    @ApiModelProperty("插件名称")
+    @get:Schema(title = "插件名称")
     val atomName: String,
-    @ApiModelProperty("插件在model中的位置")
+    @get:Schema(title = "插件在model中的位置")
     val atomPosition: String,
-    @ApiModelProperty("插件分类代码")
+    @get:Schema(title = "插件分类代码")
     val classifyCode: String,
-    @ApiModelProperty("启动用户")
+    @get:Schema(title = "启动用户")
     val startUser: String,
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
-    @ApiModelProperty("启动时间")
+    @get:Schema(title = "启动时间")
     val startTime: LocalDateTime?,
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
-    @ApiModelProperty("结束时间")
+    @get:Schema(title = "结束时间")
     val endTime: LocalDateTime?,
-    @ApiModelProperty("错误的类型标识")
+    @get:Schema(title = "错误的类型标识")
     val errorType: Int?,
-    @ApiModelProperty("错误的类型标识名称")
+    @get:Schema(title = "错误的类型标识名称")
     var errorTypeName: String? = null,
-    @ApiModelProperty("错误的标识码")
+    @get:Schema(title = "错误的标识码")
     val errorCode: Int?,
-    @ApiModelProperty("错误描述")
+    @get:Schema(title = "错误描述")
     val errorMsg: String?
 )

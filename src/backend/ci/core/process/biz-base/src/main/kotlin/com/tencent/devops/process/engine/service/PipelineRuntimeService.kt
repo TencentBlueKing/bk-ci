@@ -62,7 +62,7 @@ import com.tencent.devops.common.pipeline.pojo.element.quality.QualityGateInElem
 import com.tencent.devops.common.pipeline.pojo.element.quality.QualityGateOutElement
 import com.tencent.devops.common.pipeline.pojo.time.BuildRecordTimeCost
 import com.tencent.devops.common.pipeline.pojo.time.BuildTimestampType
-import com.tencent.devops.common.pipeline.utils.SkipElementUtils
+import com.tencent.devops.common.pipeline.utils.ElementUtils
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.utils.LogUtils
 import com.tencent.devops.common.web.utils.I18nUtil
@@ -732,6 +732,7 @@ class PipelineRuntimeService @Autowired constructor(
                     context.containerSeq++
                     containerBuildRecords.addRecords(
                         stageId = stage.id!!,
+                        stageEnableFlag = stage.isStageEnable(),
                         container = container,
                         context = context,
                         buildStatus = null,
@@ -745,6 +746,7 @@ class PipelineRuntimeService @Autowired constructor(
                         context.containerSeq++
                         containerBuildRecords.addRecords(
                             stageId = stage.id!!,
+                            stageEnableFlag = stage.isStageEnable(),
                             container = container,
                             context = context,
                             buildStatus = BuildStatus.SKIP,
@@ -757,6 +759,7 @@ class PipelineRuntimeService @Autowired constructor(
                         context.containerSeq++
                         containerBuildRecords.addRecords(
                             stageId = stage.id!!,
+                            stageEnableFlag = stage.isStageEnable(),
                             container = container,
                             context = context,
                             buildStatus = BuildStatus.SKIP,
@@ -800,24 +803,10 @@ class PipelineRuntimeService @Autowired constructor(
                     return@nextContainer
                 }
 
+                // --- 第3层循环：Element遍历处理 ---
                 /*
                     #4518 整合组装Task和刷新已有Container的逻辑
-                    构建矩阵特殊处理，即使重试也要重新计算执行策略
                 */
-                if (container.matrixGroupFlag == true) {
-                    container.retryFreshMatrixOption()
-                    pipelineContainerService.cleanContainersInMatrixGroup(
-                        transactionContext = dslContext,
-                        projectId = context.projectId,
-                        pipelineId = context.pipelineId,
-                        buildId = context.buildId,
-                        matrixGroupId = container.id!!
-                    )
-                    // 去掉要重试的矩阵内部数据
-                    updateExistsTask.removeIf { it.containerId == container.id }
-                    updateExistsContainerWithDetail.removeIf { it.first.matrixGroupId == container.id }
-                }
-                // --- 第3层循环：Element遍历处理 ---
                 pipelineContainerService.prepareBuildContainerTasks(
                     container = container,
                     context = context,
@@ -968,15 +957,27 @@ class PipelineRuntimeService @Autowired constructor(
             context.pipelineParamMap[PIPELINE_BUILD_NUM] = BuildParameters(
                 key = PIPELINE_BUILD_NUM, value = context.buildNum.toString(), readOnly = true
             )
-
-            context.watcher.start("startBuildBatchSaveWithoutThreadSafety")
-            buildVariableService.startBuildBatchSaveWithoutThreadSafety(
-                dslContext = transactionContext,
-                projectId = context.projectId,
-                pipelineId = context.pipelineId,
-                buildId = context.buildId,
-                variables = context.pipelineParamMap
-            )
+            if (buildHistoryRecord != null) {
+                // 重试构建需要增加锁保护更新VAR表
+                context.watcher.start("startBuildBatchSetVariable")
+                buildVariableService.batchSetVariable(
+                    dslContext = transactionContext,
+                    projectId = context.projectId,
+                    pipelineId = context.pipelineId,
+                    buildId = context.buildId,
+                    variables = context.pipelineParamMap
+                )
+            } else {
+                // 全新构建不需要锁保护更新VAR表
+                context.watcher.start("startBuildBatchSaveWithoutThreadSafety")
+                buildVariableService.startBuildBatchSaveWithoutThreadSafety(
+                    dslContext = transactionContext,
+                    projectId = context.projectId,
+                    pipelineId = context.pipelineId,
+                    buildId = context.buildId,
+                    variables = context.pipelineParamMap
+                )
+            }
             context.watcher.start("saveBuildRuntimeRecord")
             saveBuildRuntimeRecord(
                 transactionContext = transactionContext,
@@ -1126,6 +1127,7 @@ class PipelineRuntimeService @Autowired constructor(
         buildContainers.forEach { (build, detail) ->
             val containerVar = mutableMapOf<String, Any>()
             containerVar[Container::name.name] = detail.name
+            containerVar[Container::startVMTaskSeq.name] = detail.startVMTaskSeq ?: 1
             build.containerHashId?.let { hashId ->
                 containerVar[Container::containerHashId.name] = hashId
             }
@@ -1504,6 +1506,7 @@ class PipelineRuntimeService @Autowired constructor(
                     actionType = if (endBuild) ActionType.END else ActionType.REFRESH,
                     errorCode = completeTask.errorCode ?: 0,
                     errorTypeName = completeTask.errorType?.getI18n(I18nUtil.getDefaultLocaleLanguage()),
+                    executeCount = buildTask.executeCount,
                     reason = completeTask.errorMsg
                 )
             )
@@ -1660,7 +1663,7 @@ class PipelineRuntimeService @Autowired constructor(
                 emptyList()
             } else {
                 (JsonUtil.getObjectMapper().readValue(buildParameters) as List<BuildParameters>)
-                    .filter { !it.key.startsWith(SkipElementUtils.prefix) }
+                    .filter { !it.key.startsWith(ElementUtils.skipPrefix) }
             }
         } catch (ignore: Exception) {
             emptyList()

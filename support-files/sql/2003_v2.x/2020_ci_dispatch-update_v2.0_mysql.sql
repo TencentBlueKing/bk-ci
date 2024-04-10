@@ -51,6 +51,14 @@ BEGIN
                   FROM information_schema.COLUMNS
                   WHERE TABLE_SCHEMA = db
                     AND TABLE_NAME = 'T_DISPATCH_THIRDPARTY_AGENT_BUILD'
+                    AND COLUMN_NAME = 'IGNORE_ENV_AGENT_IDS') THEN
+    ALTER TABLE `T_DISPATCH_THIRDPARTY_AGENT_BUILD` ADD COLUMN `IGNORE_ENV_AGENT_IDS` json NULL COMMENT '这次调度被排除的agent节点';
+    END IF;
+
+    IF NOT EXISTS(SELECT 1
+                  FROM information_schema.COLUMNS
+                  WHERE TABLE_SCHEMA = db
+                    AND TABLE_NAME = 'T_DISPATCH_THIRDPARTY_AGENT_BUILD'
                     AND COLUMN_NAME = 'JOB_ID') THEN
     ALTER TABLE `T_DISPATCH_THIRDPARTY_AGENT_BUILD` ADD COLUMN `JOB_ID` VARCHAR(32) NULL COMMENT '当前构建所属jobid';
     END IF;

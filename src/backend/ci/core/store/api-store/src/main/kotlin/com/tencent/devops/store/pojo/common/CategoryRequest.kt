@@ -27,15 +27,14 @@
 
 package com.tencent.devops.store.pojo.common
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("范畴信息请求报文体")
+@Schema(title = "范畴信息请求报文体")
 data class CategoryRequest(
-    @ApiModelProperty("范畴代码", required = true)
+    @get:Schema(title = "范畴代码", required = true)
     val categoryCode: String,
-    @ApiModelProperty("范畴名称", required = true)
+    @get:Schema(title = "范畴名称", required = true)
     val categoryName: String,
-    @ApiModelProperty("icon地址", required = false)
+    @get:Schema(title = "icon地址", required = false)
     val iconUrl: String?
 )

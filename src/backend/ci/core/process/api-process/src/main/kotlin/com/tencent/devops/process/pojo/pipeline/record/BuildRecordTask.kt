@@ -27,52 +27,53 @@
 
 package com.tencent.devops.process.pojo.pipeline.record
 
+import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.pipeline.enums.BuildRecordTimeStamp
 import com.tencent.devops.common.pipeline.enums.EnvControlTaskType
+import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.common.pipeline.pojo.element.ElementPostInfo
 import com.tencent.devops.common.pipeline.pojo.time.BuildTimestampType
 import com.tencent.devops.process.engine.pojo.PipelineBuildTask
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 import java.time.LocalDateTime
 
-@ApiModel("构建详情记录-插件任务")
+@Schema(title = "构建详情记录-插件任务")
 data class BuildRecordTask(
-    @ApiModelProperty("构建ID", required = true)
+    @get:Schema(title = "构建ID", required = true)
     val buildId: String,
-    @ApiModelProperty("项目ID", required = true)
+    @get:Schema(title = "项目ID", required = true)
     val projectId: String,
-    @ApiModelProperty("流水线ID", required = true)
+    @get:Schema(title = "流水线ID", required = true)
     val pipelineId: String,
-    @ApiModelProperty("编排版本号", required = true)
+    @get:Schema(title = "编排版本号", required = true)
     val resourceVersion: Int,
-    @ApiModelProperty("步骤ID", required = true)
+    @get:Schema(title = "步骤ID", required = true)
     val stageId: String,
-    @ApiModelProperty("作业容器ID", required = true)
+    @get:Schema(title = "作业容器ID", required = true)
     val containerId: String,
-    @ApiModelProperty("任务ID", required = true)
+    @get:Schema(title = "任务ID", required = true)
     val taskId: String,
-    @ApiModelProperty("任务序号", required = true)
-    val taskSeq: Int,
-    @ApiModelProperty("执行次数", required = true)
+    @get:Schema(title = "任务序号", required = true)
+    var taskSeq: Int,
+    @get:Schema(title = "执行次数", required = true)
     val executeCount: Int,
-    @ApiModelProperty("执行变量", required = true)
+    @get:Schema(title = "执行变量", required = true)
     var taskVar: MutableMap<String, Any>,
-    @ApiModelProperty("插件post信息", required = false)
+    @get:Schema(title = "插件post信息", required = false)
     val elementPostInfo: ElementPostInfo? = null,
-    @ApiModelProperty("插件类型标识", required = true)
+    @get:Schema(title = "插件类型标识", required = true)
     val classType: String,
-    @ApiModelProperty("市场插件标识", required = true)
+    @get:Schema(title = "市场插件标识", required = true)
     val atomCode: String,
-    @ApiModelProperty("构建状态", required = false)
+    @get:Schema(title = "构建状态", required = false)
     var status: String? = null,
-    @ApiModelProperty("分裂前原类型标识", required = false)
+    @get:Schema(title = "分裂前原类型标识", required = false)
     var originClassType: String? = null, // 如果为空则不再矩阵内，一个字段多个用处
-    @ApiModelProperty("开始时间", required = true)
+    @get:Schema(title = "开始时间", required = true)
     var startTime: LocalDateTime? = null,
-    @ApiModelProperty("结束时间", required = true)
+    @get:Schema(title = "结束时间", required = true)
     var endTime: LocalDateTime? = null,
-    @ApiModelProperty("业务时间戳集合", required = true)
+    @get:Schema(title = "业务时间戳集合", required = true)
     var timestamps: Map<BuildTimestampType, BuildRecordTimeStamp>
 ) {
     companion object {
@@ -83,13 +84,14 @@ data class BuildRecordTask(
             buildTaskList.forEach {
                 // 自动填充的构建机控制插件，不需要存入Record
                 if (EnvControlTaskType.parse(it.taskType) != null) return@forEach
+                val element = JsonUtil.to(JsonUtil.toJson(it.taskParams, false), Element::class.java)
                 this.add(
                     BuildRecordTask(
                         projectId = it.projectId, pipelineId = it.pipelineId, buildId = it.buildId,
                         stageId = it.stageId, containerId = it.containerId, taskSeq = it.taskSeq,
                         taskId = it.taskId, classType = it.taskType, atomCode = it.atomCode ?: it.taskAtom,
                         executeCount = it.executeCount ?: 1, resourceVersion = resourceVersion,
-                        taskVar = mutableMapOf(), timestamps = mapOf(),
+                        taskVar = element.initTaskVar(), timestamps = mapOf(),
                         elementPostInfo = it.additionalOptions?.elementPostInfo?.takeIf { info ->
                             info.parentElementId != it.taskId
                         }

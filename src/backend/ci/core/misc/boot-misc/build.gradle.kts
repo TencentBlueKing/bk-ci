@@ -27,8 +27,8 @@
 
 dependencies {
     api(project(":core:misc:biz-misc-sample"))
-    api(project(":core:common:common-auth:common-auth-mock"))
-    api(project(":core:common:common-auth:common-auth-blueking"))
-    api(project(":core:common:common-auth:common-auth-v3"))
-    api(project(":core:common:common-auth:common-auth-rbac"))
+    api(project(":core:misc:biz-image"))
+    api(project(":core:misc:biz-monitoring"))
+    api(project(":core:misc:biz-plugin"))
+    api(project(":core:common:common-auth:common-auth-provider"))
 }

@@ -41,13 +41,17 @@ import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.Profile
 import com.tencent.devops.common.service.utils.CommonUtils
 import com.tencent.devops.common.web.utils.I18nUtil
+import com.tencent.devops.model.project.tables.records.TProjectRecord
 import com.tencent.devops.project.constant.ProjectMessageCode
 import com.tencent.devops.project.dao.ProjectDao
+import com.tencent.devops.project.dao.ProjectUpdateHistoryDao
 import com.tencent.devops.project.dispatch.ProjectDispatcher
 import com.tencent.devops.project.jmx.api.ProjectJmxApi
 import com.tencent.devops.project.pojo.OperationalProductVO
 import com.tencent.devops.project.pojo.ProjectCreateInfo
 import com.tencent.devops.project.pojo.ProjectCreateUserInfo
+import com.tencent.devops.project.pojo.ProjectOrganizationInfo
+import com.tencent.devops.project.pojo.ProjectProductValidateDTO
 import com.tencent.devops.project.pojo.ProjectUpdateInfo
 import com.tencent.devops.project.pojo.ResourceUpdateInfo
 import com.tencent.devops.project.pojo.user.UserDeptDetail
@@ -75,7 +79,8 @@ class SimpleProjectServiceImpl @Autowired constructor(
     projectExtService: ProjectExtService,
     projectApprovalService: ProjectApprovalService,
     clientTokenService: ClientTokenService,
-    profile: Profile
+    profile: Profile,
+    projectUpdateHistoryDao: ProjectUpdateHistoryDao
 ) : AbsProjectServiceImpl(
     projectPermissionService = projectPermissionService,
     dslContext = dslContext,
@@ -91,7 +96,8 @@ class SimpleProjectServiceImpl @Autowired constructor(
     projectExtService = projectExtService,
     projectApprovalService = projectApprovalService,
     clientTokenService = clientTokenService,
-    profile = profile
+    profile = profile,
+    projectUpdateHistoryDao = projectUpdateHistoryDao
 ) {
 
     override fun getDeptInfo(userId: String): UserDeptDetail {
@@ -211,9 +217,28 @@ class SimpleProjectServiceImpl @Autowired constructor(
         )
     }
 
+    override fun fixProjectOrganization(tProjectRecord: TProjectRecord): ProjectOrganizationInfo {
+        return with(tProjectRecord) {
+            ProjectOrganizationInfo(
+                bgId = bgId,
+                bgName = bgName,
+                businessLineId = businessLineId,
+                businessLineName = businessLineName,
+                centerId = centerId,
+                centerName = centerName,
+                deptId = deptId,
+                deptName = deptName
+            )
+        }
+    }
+
     override fun buildRouterTag(routerTag: String?): String? = null
 
     override fun updateProjectRouterTag(englishName: String) = Unit
+
+    override fun validateProjectRelateProduct(
+        projectProductValidateDTO: ProjectProductValidateDTO
+    ) = Unit
 
     companion object {
         private val logger = LoggerFactory.getLogger(SimpleProjectServiceImpl::class.java)

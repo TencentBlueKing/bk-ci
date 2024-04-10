@@ -173,9 +173,15 @@
         watch: {
             codelibs: function () {
                 this.isLoading = false
+                if (!this.codelibs.records.length) {
+                    this.isListFlod = false
+                    localStorage.removeItem(CODE_REPOSITORY_CACHE)
+                }
                 this.curRepo = (this.codelibs && this.codelibs.records.find(codelib => codelib.repositoryHashId === this.curRepoId)) || this.curRepo
             },
             projectId (projectId) {
+                this.aliasName = ''
+                localStorage.removeItem(CODE_REPOSITORY_SEARCH_VAL)
                 this.isListFlod = false
                 this.refreshCodelibList(projectId)
             },
@@ -190,9 +196,6 @@
             this.sortBy = sortBy ?? localStorage.getItem('codelibSortBy') ?? ''
             this.init()
             this.projectList = this.$store.state.projectList
-            if (this.userId) {
-                this.aliasName = JSON.parse(localStorage.getItem(CODE_REPOSITORY_SEARCH_VAL)) || ''
-            }
 
             this.refreshCodelibList()
             if (
@@ -228,16 +231,19 @@
                 const windowHeight = window.innerHeight
                 const tableHeadHeight = 42
                 const paginationHeight = 63
-                const windownOffsetBottom = 20
-                const listTotalHeight = windowHeight - top - tableHeadHeight - paginationHeight - windownOffsetBottom - 74
+                const windowOffsetBottom = 20
+                const listTotalHeight = windowHeight - top - tableHeadHeight - paginationHeight - windowOffsetBottom - 74
                 const tableRowHeight = 42
 
                 const isCacheProject = this.projectId === (cache && cache.projectId)
-                this.aliasName = query.searchName || ''
                 const id = isCacheProject ? query.id || (cache && cache.id) : ''
                 const scmType = isCacheProject ? query.scmType || (cache && cache.scmType) : ''
                 const page = isCacheProject ? (cache && cache.page) : 1
                 const limit = isCacheProject ? (cache && cache.limit) : Math.floor(listTotalHeight / tableRowHeight)
+                if (!isCacheProject) {
+                    localStorage.removeItem(CODE_REPOSITORY_SEARCH_VAL)
+                }
+                this.aliasName = query.searchName || JSON.parse(localStorage.getItem(CODE_REPOSITORY_SEARCH_VAL)) || ''
                 this.startPage = page
                 this.defaultPagesize = Number(limit)
                 if (id) {
@@ -275,13 +281,6 @@
                 sortType = this.sortType
             ) {
                 if (!this.userId) this.isLoading = true
-                this.$router.push({
-                    query: {
-                        ...this.$route.query,
-                        sortBy,
-                        sortType
-                    }
-                })
                 await this.requestList({
                     projectId,
                     aliasName,
@@ -346,13 +345,10 @@
                 this.sortBy = sortBy
                 this.sortType = sortType
                 this.refreshCodelibList()
-                if (sortBy && sortType) {
-                    localStorage.setItem('codelibSortType', sortType)
-                    localStorage.setItem('codelibSortBy', sortBy)
-                } else {
-                    localStorage.removeItem('codelibSortType')
-                    localStorage.removeItem('codelibSortBy')
-                }
+                localStorage.setItem('codelibSortType', sortType)
+                localStorage.setItem('codelibSortBy', sortBy)
+                const queryKeys = Object.keys(this.$route?.query || {})
+                if (!queryKeys.length) return
                 this.$router.push({
                     query: {
                         ...this.$route.query,

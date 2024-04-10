@@ -512,7 +512,7 @@ class RepoFileService @Autowired constructor(
             (credential.credentialType == CredentialType.USERNAME_PASSWORD)
         ) {
             // USERNAME_PASSWORD v1 = username, v2 = password
-            val session = client.get(ServiceScmResource::class).getSession(
+            val session = client.get(ServiceScmResource::class).getLoginSession(
                 RepoSessionRequest(
                     type = repository.getScmType(),
                     username = privateKey,

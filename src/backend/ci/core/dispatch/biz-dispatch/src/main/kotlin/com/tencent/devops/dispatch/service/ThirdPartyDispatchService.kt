@@ -46,6 +46,7 @@ import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.dispatch.constants.BK_AGENT_IS_BUSY
 import com.tencent.devops.dispatch.constants.BK_ENV_BUSY
+import com.tencent.devops.dispatch.constants.BK_ENV_WORKER_ERROR_IGNORE
 import com.tencent.devops.dispatch.constants.BK_MAX_BUILD_SEARCHING_AGENT
 import com.tencent.devops.dispatch.constants.BK_NO_AGENT_AVAILABLE
 import com.tencent.devops.dispatch.constants.BK_QUEUE_TIMEOUT_MINUTES
@@ -61,8 +62,8 @@ import com.tencent.devops.dispatch.utils.ThirdPartyAgentEnvLock
 import com.tencent.devops.dispatch.utils.ThirdPartyAgentLock
 import com.tencent.devops.dispatch.utils.redis.ThirdPartyAgentBuildRedisUtils
 import com.tencent.devops.dispatch.utils.redis.ThirdPartyRedisBuild
-import com.tencent.devops.environment.api.thirdPartyAgent.ServiceThirdPartyAgentResource
-import com.tencent.devops.environment.pojo.thirdPartyAgent.ThirdPartyAgent
+import com.tencent.devops.environment.api.thirdpartyagent.ServiceThirdPartyAgentResource
+import com.tencent.devops.environment.pojo.thirdpartyagent.ThirdPartyAgent
 import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.process.api.service.ServiceVarResource
 import com.tencent.devops.process.engine.common.VMUtils
@@ -168,6 +169,7 @@ class ThirdPartyDispatchService @Autowired constructor(
                 workspace = dispatchType.workspace,
                 dockerInfo = dispatchType.dockerInfo,
                 envId = null,
+                ignoreEnvAgentIds = null,
                 jobId = dispatchMessage.event.jobId
             )
         ) {
@@ -195,6 +197,7 @@ class ThirdPartyDispatchService @Autowired constructor(
         workspace: String?,
         dockerInfo: ThirdPartyAgentDockerInfo?,
         envId: Long?,
+        ignoreEnvAgentIds: Set<String>?,
         jobId: String?
     ): Boolean {
         val event = dispatchMessage.event
@@ -204,7 +207,8 @@ class ThirdPartyDispatchService @Autowired constructor(
                 if (thirdPartyAgentBuildRedisUtils.isThirdPartyAgentUpgrading(
                         projectId = event.projectId,
                         agentId = agent.agentId
-                )) {
+                    )
+                ) {
                     logger.warn("The agent(${agent.agentId}) of project(${event.projectId}) is upgrading")
                     log(
                         dispatchMessage.event,
@@ -231,14 +235,17 @@ class ThirdPartyDispatchService @Autowired constructor(
                         )
                     },
                     envId = envId,
+                    ignoreEnvAgentIds = ignoreEnvAgentIds,
                     jobId = jobId
                 )
 
                 // 保存构建详情
                 saveAgentInfoToBuildDetail(dispatchMessage = dispatchMessage, agent = agent)
 
-                logger.info("${event.buildId}|START_AGENT_BY_ID|j(${event.vmSeqId})|" +
-                        "agent=${agent.agentId}")
+                logger.info(
+                    "${event.buildId}|START_AGENT_BY_ID|j(${event.vmSeqId})|" +
+                            "agent=${agent.agentId}"
+                )
                 log(
                     dispatchMessage.event,
                     I18nUtil.getCodeLanMessage(
@@ -279,6 +286,7 @@ class ThirdPartyDispatchService @Autowired constructor(
         workspace: String?,
         dockerInfo: ThirdPartyAgentDockerInfoDispatch?,
         envId: Long?,
+        ignoreEnvAgentIds: Set<String>?,
         jobId: String?
     ) {
         thirdPartyAgentBuildService.queueBuild(
@@ -288,6 +296,7 @@ class ThirdPartyDispatchService @Autowired constructor(
             retryCount = 0,
             dockerInfo = dockerInfo,
             envId = envId,
+            ignoreEnvAgentIds = ignoreEnvAgentIds,
             jobId = jobId
         )
 
@@ -434,6 +443,7 @@ class ThirdPartyDispatchService @Autowired constructor(
                 HashUtil.decodeIdToLong(dispatchType.envName),
                 (agentsResult.data!! as List<ThirdPartyAgent>)
             )
+
             AgentType.NAME -> (agentsResult.data as Pair<Long?, List<ThirdPartyAgent>>)
         }
 
@@ -467,11 +477,39 @@ class ThirdPartyDispatchService @Autowired constructor(
                         (dispatchMessage.event.os == it.os || dispatchMessage.event.os == VMBaseOS.ALL.name)
                 }
 
+                var jobEnvActiveAgents = activeAgents
+                if (!dispatchMessage.event.ignoreEnvAgentIds.isNullOrEmpty()) {
+                    log(
+                        buildLogPrinter,
+                        dispatchMessage,
+                        message = I18nUtil.getCodeLanMessage(
+                            messageCode = BK_ENV_WORKER_ERROR_IGNORE,
+                            params = arrayOf(dispatchMessage.event.ignoreEnvAgentIds!!.joinToString(",")),
+                            language = I18nUtil.getDefaultLocaleLanguage()
+                        )
+                    )
+                    jobEnvActiveAgents =
+                        activeAgents.filter { it.agentId !in dispatchMessage.event.ignoreEnvAgentIds!! }
+                    if (jobEnvActiveAgents.isEmpty()) {
+                        throw BuildFailureException(
+                            ErrorCodeEnum.BK_ENV_WORKER_ERROR_IGNORE_ALL_ERROR.errorType,
+                            ErrorCodeEnum.BK_ENV_WORKER_ERROR_IGNORE_ALL_ERROR.errorCode,
+                            ErrorCodeEnum.BK_ENV_WORKER_ERROR_IGNORE_ALL_ERROR.formatErrorMessage,
+                            I18nUtil.getCodeLanMessage(
+                                messageCode = ErrorCodeEnum.BK_ENV_WORKER_ERROR_IGNORE_ALL_ERROR.errorCode.toString(),
+                                params = arrayOf(dispatchMessage.event.ignoreEnvAgentIds!!.joinToString(",")),
+                                language = I18nUtil.getDefaultLocaleLanguage()
+                            )
+                        )
+                    }
+                }
+
                 // 获取锁之后再检查一次，防止多个任务排队等锁导致超出集群并发限制
                 checkAllNodeConcurrency(envId, dispatchMessage)
 
                 // 判断是否有 jobEnv 的限制，筛选单节点的并发数
-                val jobEnvActiveAgents = checkSingleNodeConcurrency(dispatchMessage, envId, activeAgents)
+                jobEnvActiveAgents = checkSingleNodeConcurrency(dispatchMessage, envId, jobEnvActiveAgents)
+
 
                 // 没有可用构建机列表进入下一次重试, 修复获取最近构建构建机超过10次不构建会被驱逐出最近构建机列表的BUG
                 if (jobEnvActiveAgents.isNotEmpty() && pickupAgent(
@@ -676,8 +714,10 @@ class ThirdPartyDispatchService @Autowired constructor(
                     )
         )
         if (startEmptyAgents(dispatchMessage, dispatchType, pbAgents, hasTryAgents, envId)) {
-            logger.info("${dispatchMessage.event.buildId}|START_AGENT|j(${dispatchMessage.event.vmSeqId})|" +
-                    "dispatchType=$dispatchType|Get Lv.1")
+            logger.info(
+                "${dispatchMessage.event.buildId}|START_AGENT|j(${dispatchMessage.event.vmSeqId})|" +
+                        "dispatchType=$dispatchType|Get Lv.1"
+            )
             return true
         }
 
@@ -692,8 +732,10 @@ class ThirdPartyDispatchService @Autowired constructor(
          * 次高优先级的agent: 最近构建机中使用过这个构建机,并且当前有构建任务,选当前正在运行任务最少的构建机(没有达到当前构建机的最大并发数)
          */
         if (startAvailableAgents(dispatchMessage, dispatchType, pbAgents, hasTryAgents, envId)) {
-            logger.info("${dispatchMessage.event.buildId}|START_AGENT|j(${dispatchMessage.event.vmSeqId})|" +
-                    "dispatchType=$dispatchType|Get Lv.2")
+            logger.info(
+                "${dispatchMessage.event.buildId}|START_AGENT|j(${dispatchMessage.event.vmSeqId})|" +
+                        "dispatchType=$dispatchType|Get Lv.2"
+            )
             return true
         }
 
@@ -715,8 +757,10 @@ class ThirdPartyDispatchService @Autowired constructor(
          * 第三优先级的agent: 当前没有任何构建机任务
          */
         if (startEmptyAgents(dispatchMessage, dispatchType, allAgents, hasTryAgents, envId)) {
-            logger.info("${dispatchMessage.event.buildId}|START_AGENT|j(${dispatchMessage.event.vmSeqId})|" +
-                    "dispatchType=$dispatchType|pickup Lv.3")
+            logger.info(
+                "${dispatchMessage.event.buildId}|START_AGENT|j(${dispatchMessage.event.vmSeqId})|" +
+                        "dispatchType=$dispatchType|pickup Lv.3"
+            )
             return true
         }
 
@@ -732,8 +776,10 @@ class ThirdPartyDispatchService @Autowired constructor(
          */
         if (startAvailableAgents(dispatchMessage, dispatchType, allAgents, hasTryAgents, envId)
         ) {
-            logger.info("${dispatchMessage.event.buildId}|START_AGENT|j(${dispatchMessage.event.vmSeqId})|" +
-                    "dispatchType=$dispatchType|Get Lv.4")
+            logger.info(
+                "${dispatchMessage.event.buildId}|START_AGENT|j(${dispatchMessage.event.vmSeqId})|" +
+                        "dispatchType=$dispatchType|Get Lv.4"
+            )
             return true
         }
 
@@ -823,6 +869,7 @@ class ThirdPartyDispatchService @Autowired constructor(
             workspace = dispatchType.workspace,
             dockerInfo = dispatchType.dockerInfo,
             envId = envId,
+            ignoreEnvAgentIds = dispatchMessage.event.ignoreEnvAgentIds,
             jobId = dispatchMessage.event.jobId
         )
     }

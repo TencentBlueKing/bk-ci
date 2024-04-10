@@ -31,6 +31,7 @@ import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.project.api.op.OPProjectResource
 import com.tencent.devops.project.pojo.OpProjectGraySetRequest
 import com.tencent.devops.project.pojo.OpProjectUpdateInfoRequest
+import com.tencent.devops.project.pojo.OperationalProductVO
 import com.tencent.devops.project.pojo.ProjectProperties
 import com.tencent.devops.project.pojo.ProjectUpdateCreatorDTO
 import com.tencent.devops.project.pojo.ProjectVO
@@ -105,21 +106,23 @@ class OPProjectResourceImpl @Autowired constructor(
         productId: Int?,
         request: HttpServletRequest
     ): Result<Map<String, Any?>?> {
-        return projectTagService.getProjectListByFlag(
-            projectName = projectName,
-            englishName = englishName,
-            projectType = projectType,
-            isSecrecy = isSecrecy,
-            creator = creator,
-            approver = approver,
-            approvalStatus = approvalStatus,
-            offset = offset,
-            limit = limit,
-            grayFlag = grayFlag,
-            codeCCGrayFlag = codeCCGrayFlag,
-            repoGrayFlag = repoGrayFlag,
-            remoteDevFlag = remoteDevFlag,
-            productId = productId
+        return Result(
+            opProjectService.getProjectListByFlag(
+                projectName = projectName,
+                englishName = englishName,
+                projectType = projectType,
+                isSecrecy = isSecrecy,
+                creator = creator,
+                approver = approver,
+                approvalStatus = approvalStatus,
+                offset = offset,
+                limit = limit,
+                grayFlag = grayFlag,
+                codeCCGrayFlag = codeCCGrayFlag,
+                repoGrayFlag = repoGrayFlag,
+                remoteDevFlag = remoteDevFlag,
+                productId = productId
+            )
         )
     }
 
@@ -162,5 +165,11 @@ class OPProjectResourceImpl @Autowired constructor(
             productName = productName
         )
         return Result(true)
+    }
+
+    override fun getOperationalProducts(userId: String): Result<List<OperationalProductVO>> {
+        return Result(
+            projectService.getOperationalProducts()
+        )
     }
 }

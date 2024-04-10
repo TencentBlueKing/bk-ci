@@ -28,37 +28,36 @@
 package com.tencent.devops.common.pipeline.pojo.element.matrix
 
 import com.tencent.devops.common.pipeline.pojo.element.Element
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("流水线模型-矩阵纯运行状态插件", description = MatrixStatusElement.classType)
+@Schema(title = "流水线模型-矩阵纯运行状态插件", description = MatrixStatusElement.classType)
 data class MatrixStatusElement(
-    @ApiModelProperty("任务名称", required = true)
+    @get:Schema(title = "任务名称", required = true)
     override var name: String = "状态插件",
-    @ApiModelProperty("插件ID", required = false)
+    @get:Schema(title = "插件ID", required = false)
     override var id: String? = null,
-    @ApiModelProperty("执行状态", required = false)
+    @get:Schema(title = "执行状态", required = false)
     override var status: String? = null,
-    @ApiModelProperty("执行次数", required = false)
+    @get:Schema(title = "执行次数", required = false)
     override var executeCount: Int = 1,
-    @ApiModelProperty("执行时间", required = false)
+    @get:Schema(title = "执行时间", required = false)
     override var elapsed: Long? = null,
-    @ApiModelProperty("启动时间", required = false)
+    @get:Schema(title = "启动时间", required = false)
     override var startEpoch: Long? = null,
-    @ApiModelProperty("上下文标识", required = false)
+    @get:Schema(title = "上下文标识", required = false)
     override var stepId: String?,
-    @ApiModelProperty("原插件的类型标识")
+    @get:Schema(title = "原插件的类型标识")
     val originClassType: String,
-    @ApiModelProperty("原插件的市场标识")
+    @get:Schema(title = "原插件的市场标识")
     val originAtomCode: String?,
-    @ApiModelProperty("原插件的内置标识")
+    @get:Schema(title = "原插件的内置标识")
     val originTaskAtom: String?,
     // 当状态插件为质量红线插件是需要专门保存
-    @ApiModelProperty("审核人", required = true)
+    @get:Schema(title = "审核人", required = true)
     var reviewUsers: MutableList<String>? = null,
-    @ApiModelProperty("拦截原子", required = false)
+    @get:Schema(title = "拦截原子", required = false)
     var interceptTask: String? = null,
-    @ApiModelProperty("拦截原子名称", required = false)
+    @get:Schema(title = "拦截原子名称", required = false)
     var interceptTaskName: String? = null
 ) : Element(
     name = name,

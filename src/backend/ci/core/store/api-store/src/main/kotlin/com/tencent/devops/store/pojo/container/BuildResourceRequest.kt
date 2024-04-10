@@ -27,15 +27,14 @@
 
 package com.tencent.devops.store.pojo.container
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("流水线-构建资源信息请求体")
+@Schema(title = "流水线-构建资源信息请求体")
 data class BuildResourceRequest(
-    @ApiModelProperty("构建资源代码", required = true)
+    @get:Schema(title = "构建资源代码", required = true)
     val buildResourceCode: String,
-    @ApiModelProperty("构建资源名称", required = true)
+    @get:Schema(title = "构建资源名称", required = true)
     val buildResourceName: String,
-    @ApiModelProperty("是否为默认构建资源，TRUE：是 FALSE：否", required = true)
+    @get:Schema(title = "是否为默认构建资源，TRUE：是 FALSE：否", required = true)
     val defaultFlag: Boolean
 )

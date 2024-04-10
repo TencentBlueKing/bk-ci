@@ -79,7 +79,7 @@ enum class ErrorCodeEnum(
         ErrorType.SYSTEM,
         2103011,
         "第三方构建机Agent正在升级中或排队重试超时，请检查agent（{0}）并发任务数设置并稍后重试."
-        ),
+    ),
     THIRD_PARTY_BUILD_MACHINE_STATUS_ERROR(
         ErrorType.USER,
         2103012,
@@ -114,9 +114,14 @@ enum class ErrorCodeEnum(
         2103020,
         "获取登录调试容器链接失败 ({0})"
     ),
-    GET_BUILD_RESOURCE_ERROR(
+    BK_ENV_WORKER_ERROR_IGNORE_ALL_ERROR(
         ErrorType.USER,
         2103021,
+        "构建机环境中所有可用节点{0}启动构建进程失败，暂无可用节点"
+    ),
+    GET_BUILD_RESOURCE_ERROR(
+        ErrorType.USER,
+        2103022,
         "获取构建资源超时"
     );
 
