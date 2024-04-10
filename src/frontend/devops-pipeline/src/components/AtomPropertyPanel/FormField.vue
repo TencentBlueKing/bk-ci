@@ -38,13 +38,26 @@
             descLinkText: {
                 type: String,
                 default: ''
+            },
+            type: {
+                type: String
+            },
+            labelWidth: {
+                type: Number
+            }
+        },
+        computed: {
+            widthStyle () {
+                return {
+                    width: `${this.labelWidth}px`
+                }
             }
         },
         render (h) {
-            const { label, inline, required, $slots, isError, errorMsg, desc, docsLink, descLink, descLinkText } = this
+            const { label, inline, required, $slots, isError, errorMsg, desc, docsLink, descLink, descLinkText, type, widthStyle } = this
             return (
-                <div class={{ 'form-field': true, 'bk-form-item': !inline, 'bk-form-inline-item': inline, 'is-required': required, 'is-danger': isError }} >
-                    { label && <label title={label} class='bk-label atom-form-label'>{label}：
+                <div class={{ 'form-field': true, 'bk-form-item': !inline, 'form-field-group-item': type === 'groupItem', 'bk-form-inline-item': inline, 'is-required': required, 'is-danger': isError }} >
+                    { label && <label title={label} class='bk-label atom-form-label' style={widthStyle}>{label}：
                         { docsLink
                             && <a target="_blank" href={docsLink}><i class="bk-icon icon-question-circle"></i></a>
                         }
@@ -56,7 +69,6 @@
                         </bk-popover>
                     }
                     </label> }
-
                     <div class='bk-form-content'>
                         {$slots.default}
                         {isError ? $slots.errorTip || <p class='bk-form-help is-danger'>{errorMsg}</p> : null}
@@ -74,6 +86,19 @@
             font-size: 14px;
             vertical-align: middle;
             pointer-events: auto;
+        }
+    }
+    .form-field-group-item {
+        display: flex;
+        align-items: center;
+        line-height: 32px;
+        .atom-form-label {
+            text-align: right !important;
+            word-break: break-all;
+            align-self: self-start;
+        }
+        .bk-form-content {
+            flex: 1;
         }
     }
     .form-field.bk-form-item {
