@@ -1,4 +1,7 @@
 <!-- BEGIN MUNGE: GENERATED_TOC -->
+- [v2.1.0-rc.5](#v210-rc5)
+   - [Changelog since v2.1.0-rc.4](#changelog-since-v210-rc4)
+
 - [v2.1.0-rc.4](#v210-rc4)
    - [Changelog since v2.1.0-rc.3](#changelog-since-v210-rc3)
 
@@ -16,6 +19,36 @@
 
 
 <!-- NEW RELEASE NOTES ENTRY -->
+# v2.1.0-rc.5
+## Changelog since v2.1.0-rc.4
+#### 新增
+- [新增] 创建/编辑项目openapi增加运营产品必填检查 [链接](http://github.com/TencentBlueKing/bk-ci/issues/10088)
+- [新增] 支持通过接口自定义项目级别用户组 [链接](http://github.com/TencentBlueKing/bk-ci/issues/10025)
+- [新增] 支持回调被封禁通知 [链接](http://github.com/TencentBlueKing/bk-ci/issues/10018)
+- [新增] 无编译环境配额限制优化 [链接](http://github.com/TencentBlueKing/bk-ci/issues/10128)
+- [新增] sql doc 文档更新 [链接](http://github.com/TencentBlueKing/bk-ci/issues/9974)
+- [新增] 缩减auth微服务的子模块数量 [链接](http://github.com/TencentBlueKing/bk-ci/issues/9222)
+- [新增] 新增OP接口用于删除无效的[代码库引用信息] [链接](http://github.com/TencentBlueKing/bk-ci/issues/10124)
+- [新增] 容器化无编译构建环境改造 [链接](http://github.com/TencentBlueKing/bk-ci/issues/8534)
+- [新增] 蓝盾回调时序可能和时间buildNo号顺序不一致，希望回调报文可以返回buildNo [链接](http://github.com/TencentBlueKing/bk-ci/issues/10017)
+
+#### 优化
+- [优化] 环境管理部分代码优化 [链接](http://github.com/TencentBlueKing/bk-ci/issues/10157)
+- [优化] 研发商店插件UI分组逻辑优化 [链接](http://github.com/TencentBlueKing/bk-ci/issues/10086)
+
+#### 修复
+- [修复] 代码库-触发事件流水线名称改成流水线ID搜索 [链接](http://github.com/TencentBlueKing/bk-ci/issues/10114)
+- [修复] stream 流水线下，刷新页面加载了全量的列表 [链接](http://github.com/TencentBlueKing/bk-ci/issues/10152)
+- [修复] 调用svn api时需要兼容三层svn项目层级 [链接](http://github.com/TencentBlueKing/bk-ci/issues/10174)
+- [修复] 当流水线job中手动跳过的任务前有质量红线任务时会导致构建详情页渲染出错 [链接](http://github.com/TencentBlueKing/bk-ci/issues/10166)
+- [修复] 删除保存T_PIPELINE_BUILD_COMMITS表的代码 [链接](http://github.com/TencentBlueKing/bk-ci/issues/9305)
+- [修复] 运行finally stage时可以点击重试导致构建记录异常 [链接](http://github.com/TencentBlueKing/bk-ci/issues/9954)
+- [修复] 并发Job运行时进行重试和跳过出现异常 [链接](http://github.com/TencentBlueKing/bk-ci/issues/10103)
+- [修复] 模板编排页面拖拽逻辑不对 [链接](http://github.com/TencentBlueKing/bk-ci/issues/9821)
+- [修复] 详情页和历史页均展示总耗时为执行耗时加触发排队耗时 [链接](http://github.com/TencentBlueKing/bk-ci/issues/10090)
+- [修复] 流水线设置的变量重试一次就会叠加一次变量值 [链接](http://github.com/TencentBlueKing/bk-ci/issues/6058)
+- [修复] 修复代码库权限丢失问题 [链接](http://github.com/TencentBlueKing/bk-ci/issues/10131)
+- [修复] 全量交接权限存在Bug [链接](http://github.com/TencentBlueKing/bk-ci/issues/10117)
 # v2.1.0-rc.4
 ## Changelog since v2.1.0-rc.3
 #### 新增
