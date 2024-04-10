@@ -779,11 +779,11 @@ class StoreComponentQueryServiceImpl @Autowired constructor(
         urlProtocolTrim: Boolean = false
     ): Page<MarketItem> {
         logger.info("doList|storeType:$storeType")
-        val referer = BkApiUtil.getHttpServletRequest()?.getHeader(REFERER)
+//        val referer = BkApiUtil.getHttpServletRequest()?.getHeader(REFERER)
 //        return executor.submit(Callable<Page<MarketItem>> {
-            referer?.let {
-                ThreadLocalUtil.set(REFERER, referer)
-            }
+//            referer?.let {
+//                ThreadLocalUtil.set(REFERER, referer)
+//            }
             val results = mutableListOf<MarketItem>()
 
             // 调用拆分出的getStoreInfos函数获取商品信息
@@ -802,7 +802,7 @@ class StoreComponentQueryServiceImpl @Autowired constructor(
                 page = page,
                 pageSize = pageSize
             )
-            try {
+
             val storeCodeList = mutableListOf<String>()
             val storeIds = mutableListOf<String>()
             val storeTypeEnum = StoreTypeEnum.valueOf(storeType)
@@ -848,12 +848,7 @@ class StoreComponentQueryServiceImpl @Autowired constructor(
                     )
                     results.add(marketItem)
                 }
-            } catch (e: Exception) {
-                logger.error("doList|error:${e.message}")
-            }
-            finally {
-                ThreadLocalUtil.remove(REFERER)
-            }
+
 //            return@Callable Page(
             return Page(
                 page = page,
