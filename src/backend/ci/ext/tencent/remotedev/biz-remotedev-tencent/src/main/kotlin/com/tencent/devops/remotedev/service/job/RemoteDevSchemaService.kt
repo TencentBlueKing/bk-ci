@@ -8,10 +8,10 @@ import com.tencent.devops.remotedev.pojo.job.JobActionType
 import com.tencent.devops.remotedev.pojo.job.JobBackendActionExtraParam
 import com.tencent.devops.remotedev.pojo.job.JobPipelineActionExtraParam
 import com.tencent.devops.remotedev.pojo.job.JobSchema
-import com.tencent.devops.remotedev.pojo.job.JobSchemaCreateData
 import com.tencent.devops.remotedev.pojo.job.JobSchemaShort
 import com.tencent.devops.remotedev.pojo.job.JobSchemaWithExtra
 import com.tencent.devops.remotedev.pojo.job.JobType
+import com.tencent.devops.remotedev.pojo.job.OpJobSchemaCreateData
 import org.jooq.DSLContext
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
@@ -72,21 +72,24 @@ class RemoteDevSchemaService @Autowired constructor(
         )
     }
 
-    fun createOrUpdateSchema(
-        data: JobSchemaCreateData
+    fun opCreateOrUpdateSchema(
+        data: OpJobSchemaCreateData
     ) {
+        val schema = objectMapper.readValue<Map<String, Any>>(data.jobSchema)
+        val extraParam = when (data.jobActionType) {
+            JobActionType.NOTIFY_REMOTEDEV_DESKTOP, JobActionType.CRON_POWER_ON ->
+                objectMapper.readValue<JobBackendActionExtraParam>(data.jobActionParam)
+
+            JobActionType.PIPELINE -> objectMapper.readValue<JobPipelineActionExtraParam>(data.jobActionParam)
+        }
         remoteDevJobSchemaDao.createOrUpdateSchema(
             dslContext = dslContext,
             jobId = data.jobId,
             jobName = data.jobName,
-            jobSchema = data.jobSchema,
+            jobSchema = schema,
             jobType = data.jobType,
             jobActionType = data.jobActionType,
-            jobActionExtraParam = when (data.jobActionType) {
-                JobActionType.NOTIFY_REMOTEDEV_DESKTOP -> data.jobNotifyRemoteDevDesktopActionExtraParam!!
-                JobActionType.CRON_POWER_ON -> data.jobNotifyCronPowerOnActionExtraParam!!
-                JobActionType.PIPELINE -> data.jobPipelineActionExtraParam!!
-            }
+            jobActionExtraParam = extraParam
         )
     }
 }

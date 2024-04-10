@@ -4,7 +4,7 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.remotedev.pojo.job.JobSchema
 import com.tencent.devops.remotedev.pojo.job.JobSchemaConstValResp
-import com.tencent.devops.remotedev.pojo.job.JobSchemaCreateData
+import com.tencent.devops.remotedev.pojo.job.OpJobSchemaCreateData
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.tags.Tag
@@ -38,7 +38,7 @@ interface OpRemoteDevJobResource {
         @Parameter(description = "用户ID", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        data: JobSchemaCreateData
+        data: OpJobSchemaCreateData
     ): Result<Boolean>
 
     @Operation(summary = "获取schema列表")

@@ -24,14 +24,18 @@ data class JobSchemaWithExtra(
     val jobActionExtraParam: JobActionExtraParam?
 ) : JobSchema(jobSchemaId = jobSchemaId, jobSchemaName = jobSchemaName, schema = schema, jobType = jobType)
 
-data class JobSchemaCreateData(
+@Schema(title = "OP界面创建或更新Job")
+data class OpJobSchemaCreateData(
+    @get:Schema(title = "自定任务Id，用户选择用")
     val jobId: String,
+    @get:Schema(title = "自定任务Id，用户选择展示用")
     val jobName: String,
-    val jobSchema: Map<String, Any>,
+    @get:Schema(title = "具体JobSchema，生成前端界面用")
+    val jobSchema: String,
+    @get:Schema(title = "Job类型")
     val jobType: JobType,
+    @get:Schema(title = "Job执行类型")
     val jobActionType: JobActionType,
-    @get:Schema(title = "根据jobActionType选择的不同传递不同的参数")
-    val jobNotifyRemoteDevDesktopActionExtraParam: JobBackendActionExtraParam?,
-    val jobNotifyCronPowerOnActionExtraParam: JobBackendActionExtraParam?,
-    val jobPipelineActionExtraParam: JobPipelineActionExtraParam?
+    @get:Schema(title = "Job执行参数，根据执行类型不同变化")
+    val jobActionParam: String
 )
