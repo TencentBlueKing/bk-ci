@@ -47,6 +47,7 @@ import com.tencent.devops.common.redis.RedisLockByValue
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.dispatch.constants.AGENT_REUSE_MUTEX_REDISPATCH
+import com.tencent.devops.dispatch.constants.AGENT_REUSE_MUTEX_WAIT_REUSED_ENV
 import com.tencent.devops.dispatch.constants.BK_AGENT_IS_BUSY
 import com.tencent.devops.dispatch.constants.BK_ENV_BUSY
 import com.tencent.devops.dispatch.constants.BK_ENV_WORKER_ERROR_IGNORE
@@ -137,7 +138,7 @@ class ThirdPartyDispatchService @Autowired constructor(
                     logWarn(
                         dispatchMessage.event,
                         I18nUtil.getCodeLanMessage(
-                            messageCode = AGENT_REUSE_MUTEX_REDISPATCH,
+                            messageCode = AGENT_REUSE_MUTEX_WAIT_REUSED_ENV,
                             language = I18nUtil.getDefaultLocaleLanguage(),
                             params = arrayOf(dispatchType.envName)
                         )
@@ -403,7 +404,7 @@ class ThirdPartyDispatchService @Autowired constructor(
     }
 
     private fun logWarn(event: PipelineAgentStartupEvent, logMessage: String) {
-        buildLogPrinter.addWarnLine(
+        buildLogPrinter.addYellowLine(
             buildId = event.buildId,
             message = logMessage,
             tag = VMUtils.genStartVMTaskId(event.vmSeqId),
