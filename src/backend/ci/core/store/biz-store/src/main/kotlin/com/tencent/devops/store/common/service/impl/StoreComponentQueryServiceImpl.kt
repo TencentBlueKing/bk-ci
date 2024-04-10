@@ -297,7 +297,12 @@ class StoreComponentQueryServiceImpl @Autowired constructor(
         )
     }
 
-    override fun getComponentDetailInfoById(userId: String, storeType: StoreTypeEnum, storeId: String): StoreDetailInfo? {
+    override fun getComponentDetailInfoById(
+        userId: String,
+        storeType: StoreTypeEnum,
+        storeId: String
+    ): StoreDetailInfo? {
+        logger.info("getComponentDetailInfoById:Input:($userId,$storeType,$storeId)")
         val storeBaseRecord = storeBaseQueryDao.getComponentById(dslContext, storeId) ?: return null
         val storeCode = storeBaseRecord.storeCode
         val storeFeatureRecord = storeBaseFeatureQueryDao.getComponentFeatureDataByCode(
@@ -402,6 +407,7 @@ class StoreComponentQueryServiceImpl @Autowired constructor(
     }
 
     override fun getComponentDetailInfoByCode(userId: String, storeType: String, storeCode: String): StoreDetailInfo? {
+        logger.info("getComponentDetailInfoByCode:Input:($userId,$storeCode,$storeType)")
         return storeBaseQueryDao.getLatestComponentByCode(
             dslContext = dslContext,
             storeCode = storeCode,
@@ -418,6 +424,7 @@ class StoreComponentQueryServiceImpl @Autowired constructor(
         pageSize: Int,
         urlProtocolTrim: Boolean
     ): Result<List<MarketMainItem>> {
+        logger.info("getMainPageComponents:Input:($userId,$storeType,$page,$pageSize)")
         val result = mutableListOf<MarketMainItem>()
         // 获取用户组织架构
         val userDeptList = storeUserService.getUserDeptList(userId)
@@ -535,6 +542,7 @@ class StoreComponentQueryServiceImpl @Autowired constructor(
         pageSize: Int,
         urlProtocolTrim: Boolean
     ): Page<MarketItem> {
+        logger.info("queryComponents:Input:($userId,$storeType,$page,$pageSize)")
         // 获取用户组织架构
         val userDeptList = storeUserService.getUserDeptList(userId)
         return doList(
@@ -562,6 +570,7 @@ class StoreComponentQueryServiceImpl @Autowired constructor(
         storeType: String,
         storeCode: String
     ): StoreShowVersionInfo {
+        logger.info("getComponentShowVersionInfo:Input:($userId,$storeCode,$storeType)")
         val storeTypeEnum = StoreTypeEnum.valueOf(storeType)
         val record = storeBaseQueryDao.getNewestComponentByCode(
             dslContext = dslContext,
