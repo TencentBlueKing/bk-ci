@@ -76,7 +76,8 @@ object BatScriptUtil {
         print2Logger: Boolean = true,
         jobId: String? = null,
         stepId: String? = null,
-        charsetType: String? = null
+        charsetType: String? = null,
+        taskId: String? = null
     ): String {
         var fileLock: FileLock? = null
         try {
@@ -99,7 +100,8 @@ object BatScriptUtil {
                 buildId = buildId,
                 jobId = jobId,
                 stepId = stepId,
-                charsetType = charsetType
+                charsetType = charsetType,
+                taskId = taskId
             )
         } catch (ignore: Throwable) {
             val errorInfo = errorMessage ?: "Fail to execute bat script $script"

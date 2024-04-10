@@ -59,7 +59,8 @@ class CommandBatImpl : ICommand {
             errorMessage = errorMessage,
             jobId = jobId,
             stepId = stepId,
-            charsetType = charsetType
+            charsetType = charsetType,
+            taskId = taskId
         )
     }
 }

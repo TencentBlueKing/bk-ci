@@ -31,6 +31,7 @@ import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.pojo.ErrorInfo
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.MessageUtil
+import com.tencent.devops.common.pipeline.pojo.JobHeartbeatRequest
 import com.tencent.devops.engine.api.pojo.HeartBeatInfo
 import com.tencent.devops.process.pojo.BuildTask
 import com.tencent.devops.process.pojo.BuildTaskResult
@@ -137,9 +138,14 @@ open class EngineBuildResourceApi : AbstractBuildResourceApi(), EngineBuildSDKAp
         return objectMapper.readValue(responseContent)
     }
 
-    override fun heartbeat(executeCount: Int): Result<HeartBeatInfo> {
+    override fun heartbeat(executeCount: Int, jobHeartbeatRequest: JobHeartbeatRequest): Result<HeartBeatInfo> {
         val path = getRequestUrl(path = "api/build/worker/heartbeat/v1", executeCount = executeCount)
-        val request = buildPost(path)
+        val requestBody = RequestBody.create(
+            "application/json; charset=utf-8".toMediaTypeOrNull(),
+            objectMapper.writeValueAsString(jobHeartbeatRequest)
+        )
+
+        val request = buildPost(path, requestBody)
         val errorMessage = MessageUtil.getMessageByLocale(
             HEARTBEAT_FAIL, AgentEnv.getLocaleLanguage()
         )

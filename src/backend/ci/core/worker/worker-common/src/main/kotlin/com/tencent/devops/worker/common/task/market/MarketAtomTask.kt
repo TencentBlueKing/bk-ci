@@ -341,7 +341,8 @@ open class MarketAtomTask : ITask() {
                             workspace = workspace,
                             errorMessage = errorMessage,
                             jobId = buildVariables.jobId,
-                            stepId = buildTask.stepId
+                            stepId = buildTask.stepId,
+                            taskId = buildTask.taskId
                         )
                     }
                     OSType.LINUX, OSType.MAC_OS -> {
@@ -357,7 +358,8 @@ open class MarketAtomTask : ITask() {
                             runtimeVariables = runtimeVariables,
                             errorMessage = errorMessage,
                             jobId = buildVariables.jobId,
-                            stepId = buildTask.stepId
+                            stepId = buildTask.stepId,
+                            taskId = buildTask.taskId
                         )
                     }
                     else -> {
@@ -708,8 +710,10 @@ open class MarketAtomTask : ITask() {
             try {
                 isPlatformCodeRegistered = storeApi.isPlatformCodeRegistered(platformCode).data ?: false
             } catch (e: RemoteServiceException) {
-                logger.warn("Failed to verify the error code information of the atom " +
-                        "docking platformm $platformCode | ${e.errorMessage}")
+                logger.warn(
+                    "Failed to verify the error code information of the atom " +
+                        "docking platformm $platformCode | ${e.errorMessage}"
+                )
             }
             if (isPlatformCodeRegistered) {
                 addPlatformCode(platformCode)
@@ -719,8 +723,10 @@ open class MarketAtomTask : ITask() {
                     addPlatformErrorCode(platformErrorCode)
                 }
             } else {
-                logger.warn("PlatformCode:$platformCode has not been registered and failed to enter " +
-                        "the library. Please contact Devops-helper to register first")
+                logger.warn(
+                    "PlatformCode:$platformCode has not been registered and failed to enter " +
+                        "the library. Please contact Devops-helper to register first"
+                )
             }
         }
         val success: Boolean
