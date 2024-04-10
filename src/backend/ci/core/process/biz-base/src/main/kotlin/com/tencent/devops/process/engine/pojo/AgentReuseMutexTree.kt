@@ -6,16 +6,19 @@ import com.tencent.devops.common.pipeline.container.AgentReuseMutex
 import com.tencent.devops.common.pipeline.container.AgentReuseMutexType
 import com.tencent.devops.common.pipeline.container.Container
 import com.tencent.devops.common.pipeline.container.VMBuildContainer
+import com.tencent.devops.common.pipeline.enums.EnvControlTaskType
 import com.tencent.devops.common.pipeline.type.agent.AgentType
 import com.tencent.devops.common.pipeline.type.agent.ReusedInfo
 import com.tencent.devops.common.pipeline.type.agent.ThirdPartyAgentDispatch
 import com.tencent.devops.common.pipeline.type.agent.ThirdPartyAgentEnvDispatchType
 import com.tencent.devops.common.pipeline.type.agent.ThirdPartyAgentIDDispatchType
 import com.tencent.devops.process.constant.ProcessMessageCode
+import com.tencent.devops.process.engine.control.VmOperateTaskGenerator.Companion.START_VM_TASK_ATOM
 
 /**
  * AgentReuseMutexTree 组装流水线时通过生成树可以更好地拿到复用互斥关系
  */
+@Suppress("ComplexCondition")
 data class AgentReuseMutexTree(
     val rootNodes: MutableList<AgentReuseMutexRootNode>,
     var maxStageIndex: Int = 0
@@ -269,7 +272,8 @@ data class AgentReuseMutexTree(
 
     fun rewriteModel(
         buildContainersWithDetail: MutableList<Pair<PipelineBuildContainer, Container>>,
-        fullModel: Model
+        fullModel: Model,
+        buildTaskList: MutableList<PipelineBuildTask>
     ) {
         val treeMap = tranMap().ifEmpty { return }
 
@@ -280,21 +284,59 @@ data class AgentReuseMutexTree(
         }
 
         fullModel.stages.forEachIndexed nextStage@{ index, stage ->
-            stage.containers.forEach container@{ container ->
-                if (!treeMap.containsKey(container.jobId) || treeMap[container.jobId]?.second != true) {
-                    return@container
+            stage.containers.filter { it is VMBuildContainer && it.dispatchType is ThirdPartyAgentDispatch }
+                .forEach container@{ container ->
+                    if (!treeMap.containsKey(container.jobId)) {
+                        return@container
+                    }
+                    val tm = treeMap[container.jobId]!!.first
+                    // 修改container
+                    val dispatch = (container as VMBuildContainer).dispatchType as ThirdPartyAgentDispatch
+                    rewriteDispatch(tm, dispatch, treeMap[container.jobId]?.second != true)
+
+                    // 修改启动插件
+                    buildTaskList.firstOrNull {
+                        it.containerId == container.id &&
+                            it.taskType == EnvControlTaskType.VM.name &&
+                            it.taskAtom == START_VM_TASK_ATOM
+                    }?.taskParams = container.genTaskParams()
                 }
-                val tm = treeMap[container.jobId]!!.first
-                if (tm.type != AgentReuseMutexType.AGENT_DEP_VAR) {
-                    ((container as VMBuildContainer).dispatchType as ThirdPartyAgentDispatch).reusedInfo =
-                        ReusedInfo(
-                            tm.agentOrEnvId ?: return@container,
-                            tm.type.toAgentType() ?: return@container
-                        )
-                }
-            }
             if (index == maxStageIndex) {
                 return
+            }
+        }
+    }
+
+    // 单独抽出，方便测试
+    fun rewriteDispatch(
+        treeMutex: AgentReuseMutex,
+        dispatch: ThirdPartyAgentDispatch,
+        isRoot: Boolean
+    ) {
+        // 根节点和其同级依赖节点都需要设置被复用信息，方便Dispatch层面加锁
+        if (treeMutex.type != AgentReuseMutexType.AGENT_DEP_VAR) {
+            dispatch.reusedInfo = ReusedInfo(
+                value = treeMutex.agentOrEnvId ?: return,
+                agentType = treeMutex.type.toAgentType() ?: return,
+                jobId = if (isRoot) {
+                    null
+                } else {
+                    treeMutex.reUseJobId
+                }
+            )
+        }
+
+        // 复用节点都需要修改复用对象为根节点，这样才能拿到上下文
+        if (!isRoot) {
+            dispatch.value = treeMutex.reUseJobId ?: return
+            when (dispatch) {
+                is ThirdPartyAgentEnvDispatchType -> {
+                    dispatch.envName = treeMutex.reUseJobId ?: return
+                }
+
+                is ThirdPartyAgentIDDispatchType -> {
+                    dispatch.displayName = treeMutex.reUseJobId ?: return
+                }
             }
         }
     }
@@ -425,6 +467,7 @@ data class AgentReuseMutexRootNode(
     }
 
     override fun initMutex() = AgentReuseMutex(
+        jobId = jobId,
         reUseJobId = null,
         agentOrEnvId = agentId,
         type = type,
@@ -447,6 +490,7 @@ data class AgentReuseMutexTreeReuseNode(
     children = mutableListOf()
 ) {
     override fun initMutex() = AgentReuseMutex(
+        jobId = jobId,
         reUseJobId = getRoot().jobId,
         agentOrEnvId = getRoot().agentId,
         type = type,

@@ -24,6 +24,7 @@ import com.tencent.devops.process.engine.control.command.container.ContainerCmd
 import com.tencent.devops.process.engine.control.command.container.ContainerContext
 import com.tencent.devops.process.engine.pojo.PipelineBuildContainer
 import com.tencent.devops.process.engine.service.record.ContainerBuildRecordService
+import com.tencent.devops.process.service.BuildVariableService
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
@@ -37,6 +38,7 @@ class AgentReuseMutexCmd @Autowired constructor(
     private val buildLogPrinter: BuildLogPrinter,
     private val containerBuildRecordService: ContainerBuildRecordService,
     private val pipelineUrlBean: PipelineUrlBean,
+    private val buildVariableService: BuildVariableService
 ) : ContainerCmd {
     override fun canExecute(commandContext: ContainerContext): Boolean {
         return commandContext.cmdFlowState == CmdFlowState.CONTINUE &&
@@ -59,7 +61,7 @@ class AgentReuseMutexCmd @Autowired constructor(
      * 这种先拿取复用的JobId看有没有，没有就按root节点的逻辑走
      */
     private fun doExecute(commandContext: ContainerContext) {
-        val mutex = commandContext.container.controlOption.agentReuseMutex!!
+        var mutex = commandContext.container.controlOption.agentReuseMutex!!
         if (!mutex.type.needEngineLock()) {
             commandContext.cmdFlowState = CmdFlowState.CONTINUE
             return
@@ -76,7 +78,7 @@ class AgentReuseMutexCmd @Autowired constructor(
             return agentIdNullError(commandContext, mutex, null)
         }
         // 对存在变量的Agent做替换
-        decorateMutex(mutex, commandContext.variables)
+        mutex = decorateMutex(mutex, commandContext.variables)
         when (mutex.type) {
             AgentReuseMutexType.AGENT_ID -> {
                 acquireMutex(commandContext, mutex)
@@ -184,6 +186,18 @@ class AgentReuseMutexCmd @Autowired constructor(
         val res = tryAgentLockOrQueue(container, mutex)
         return if (res) {
             LOG.info("ENGINE|${container.buildId}|AGENT_REUSE_LOCK_SUCCESS|${mutex.type}")
+
+            // 对于AgentId这种获取到锁就需要写入上下文，防止最后没有被执行导致兜底无法解锁
+            // 只要不是依赖节点，根节点和同级依赖节点都要写入，防止出现被同级env节点获取到节点锁但没写入依赖id节点就无法获取到AgentId
+            buildVariableService.setVariable(
+                projectId = container.projectId,
+                pipelineId = container.pipelineId,
+                buildId = container.buildId,
+                varName = AgentReuseMutex.genAgentContextKey(mutex.reUseJobId ?: mutex.jobId),
+                varValue = mutex.runtimeAgentOrEnvId!!,
+                readOnly = true
+            )
+
             // 抢到锁则可以继续运行，并退出队列
             quitMutexQueue(
                 projectId = container.projectId,
@@ -297,6 +311,10 @@ class AgentReuseMutexCmd @Autowired constructor(
     private fun checkMutexQueue(container: PipelineBuildContainer, mutex: AgentReuseMutex): ContainerMutexStatus {
         val lockKey = AgentReuseMutex.genAgentReuseMutexLockKey(container.projectId, mutex.runtimeAgentOrEnvId!!)
         val lockedBuildId = redisOperation.get(lockKey)
+        // 多判断一次防止因为锁并发竞争失败导致需要排队的情况
+        if (lockedBuildId == container.buildId) {
+            return ContainerMutexStatus.READY
+        }
         // 当没有启用互斥组排队
         if (!mutex.queueEnable) {
             logAgentMutex(
@@ -357,7 +375,8 @@ class AgentReuseMutexCmd @Autowired constructor(
                 }
                 ContainerMutexStatus.WAITING
             }
-        } else { // todo此处存在并发问题，假设capacity只有1个, 两个并发都会同时满足queueSize = 0,导入入队，但问题不大，暂不解决
+        } else {
+            // 此处存在并发问题，假设capacity只有1个, 两个并发都会同时满足queueSize = 0,导入入队，但问题不大，暂不解决
             // 排队队列为0的时候，不做排队
             // 还没有在队列中，则判断队列的数量,如果超过了则排队失败,没有则进入队列.
             if (mutex.queue == 0 || queueSize >= mutex.queue) {
@@ -409,7 +428,7 @@ class AgentReuseMutexCmd @Autowired constructor(
         runtimeAgentOrEnvId: String
     ) {
         val queueKey = AgentReuseMutex.genAgentReuseMutexQueueKey(projectId, runtimeAgentOrEnvId)
-        redisOperation.hset(queueKey, runtimeAgentOrEnvId, LocalDateTime.now().timestamp().toString())
+        redisOperation.hset(queueKey, buildId, LocalDateTime.now().timestamp().toString())
         containerBuildRecordService.updateContainerRecord(
             projectId = projectId, pipelineId = pipelineId, buildId = buildId,
             containerId = containerId, executeCount = executeCount,

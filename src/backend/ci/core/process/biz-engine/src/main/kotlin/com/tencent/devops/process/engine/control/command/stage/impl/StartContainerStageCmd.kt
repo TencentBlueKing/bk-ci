@@ -144,19 +144,17 @@ class StartContainerStageCmd(
             val jobCount = container.controlOption.matrixControlOption?.totalCount ?: 1 // MatrixGroup存在裂变计算
             if (container.status.isCancel()) {
                 commandContext.cancelContainerNum++
-                commandContext.minAndUnlockAgentReuseMutes(container)
                 cancel = BuildStatusSwitcher.stageStatusMaker.cancel(container.status)
             } else if (ControlUtils.checkContainerFailure(container)) {
                 commandContext.failureContainerNum++
-                commandContext.minAndUnlockAgentReuseMutes(container)
                 fail = BuildStatusSwitcher.stageStatusMaker.forceFinish(container.status, commandContext.fastKill)
             } else if (container.status == BuildStatus.SKIP) {
                 commandContext.skipContainerNum++
-                commandContext.minAndUnlockAgentReuseMutes(container)
             } else if (container.status.isRunning() && !actionType.isEnd()) {
                 commandContext.concurrency += jobCount
                 // 已经在运行中的, 只接受终止
                 running = BuildStatus.RUNNING
+                return@forEach
             } else if (!container.status.isFinish()) {
                 running = BuildStatus.RUNNING
                 commandContext.concurrency += jobCount
@@ -166,7 +164,11 @@ class StartContainerStageCmd(
                     "ENGINE|${container.buildId}|STAGE_CONTAINER_SEND|s(${container.stageId})|" +
                         "j(${container.containerId})|status=${container.status}|newActonType=$actionType"
                 )
+                return@forEach
             }
+
+            // 只要不是正在运行都做reuse逻辑处理
+            commandContext.minAndUnlockAgentReuseMutes(container)
         }
 
         if (commandContext.concurrency > commandContext.maxConcurrency) { // #5109 增加日志埋点监控，以免影响Redis性能

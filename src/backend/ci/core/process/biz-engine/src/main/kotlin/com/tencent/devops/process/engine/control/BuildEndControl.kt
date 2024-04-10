@@ -201,7 +201,7 @@ class BuildEndControl @Autowired constructor(
 
         pipelineRuntimeService.updateBuildHistoryStageState(projectId, buildId, allStageStatus)
 
-        // #10082 兜底解锁Agent复用锁
+        // #10082 兜底解锁Agent复用锁和退出队列
         if (model.stages.any { stage ->
                 stage.containers.filterIsInstance<VMBuildContainer>().any { con ->
                     con.dispatchType is ThirdPartyAgentDispatch &&
@@ -219,6 +219,8 @@ class BuildEndControl @Autowired constructor(
                     lockValue = buildId,
                     expiredTimeInSeconds = AgentReuseMutex.AGENT_LOCK_TIMEOUT
                 ).unlock()
+                val queueKey = AgentReuseMutex.genAgentReuseMutexQueueKey(projectId, agentId)
+                redisOperation.hdelete(queueKey, buildId)
             }
         }
 
