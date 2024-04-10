@@ -84,7 +84,7 @@ export const handleNoPermissionV2 = (ui, params, h, data = undefined, ajaxPrefix
                     {
                       on: {
                         click() {
-                          window.open(info.url, '_blank');
+                          window.open(encodeURI(info.url), '_blank');
                           handleClickLink();
                         },
                       },
@@ -122,7 +122,7 @@ export const handleNoPermissionV2 = (ui, params, h, data = undefined, ajaxPrefix
             },
             on: {
               click() {
-                window.open(data.groupInfoList[0].url, '_blank');
+                window.open(encodeURI(data.groupInfoList[0].url), '_blank');
                 handleClickLink();
               },
             },
@@ -299,7 +299,7 @@ export const handleNoPermissionV3 = (ui, params, h, data, ajaxPrefix = '') => {
                   ui.Dropdown.DropdownItem,
                   {
                     onClick() {
-                      window.open(info.url, '_blank');
+                      window.open(encodeURI(info.url), '_blank');
                       handleClickLink();
                     },
                   },
@@ -335,7 +335,7 @@ export const handleNoPermissionV3 = (ui, params, h, data, ajaxPrefix = '') => {
             class: 'mr10',
             theme: 'primary',
             onClick() {
-              window.open(data.groupInfoList[0].url, '_blank');
+              window.open(encodeURI(data.groupInfoList[0].url), '_blank');
               handleClickLink();
             },
           },
