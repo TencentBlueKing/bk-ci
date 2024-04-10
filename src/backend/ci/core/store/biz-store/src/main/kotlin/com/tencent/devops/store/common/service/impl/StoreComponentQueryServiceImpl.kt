@@ -99,7 +99,9 @@ import com.tencent.devops.store.pojo.common.version.StoreShowVersionInfo
 import com.tencent.devops.store.pojo.common.version.VersionModel
 import java.time.LocalDateTime
 import java.util.Calendar
+import java.util.concurrent.Callable
 import java.util.concurrent.Executors
+import java.util.concurrent.Future
 import org.jooq.DSLContext
 import org.jooq.Record
 import org.slf4j.LoggerFactory
@@ -139,7 +141,7 @@ class StoreComponentQueryServiceImpl @Autowired constructor(
         private val logger = LoggerFactory.getLogger(StoreComponentQueryServiceImpl::class.java)
         private val executor = Executors.newFixedThreadPool(30)
     }
-    
+
     override fun getMyComponents(
         userId: String,
         storeType: String,
@@ -168,7 +170,7 @@ class StoreComponentQueryServiceImpl @Autowired constructor(
         val storeCodes = mutableListOf<String>()
         val storeProjectMap = mutableMapOf<String, String>()
         val tStoreBase = TStoreBase.T_STORE_BASE
-        records?.forEach { 
+        records?.forEach {
             val storeCode = it[tStoreBase.STORE_CODE] as String
             storeCodes.add(storeCode)
             val testProjectCode = storeProjectRelDao.getUserStoreTestProjectCode(
@@ -426,12 +428,12 @@ class StoreComponentQueryServiceImpl @Autowired constructor(
         val result = mutableListOf<MarketMainItem>()
         // 获取用户组织架构
         val userDeptList = storeUserService.getUserDeptList(userId)
-        val futureList = mutableListOf<MarketItem>()
+        val futureList = mutableListOf<Future<Page<MarketItem>>>()
         val labelInfoList = mutableListOf<MarketMainItemLabel>()
         labelInfoList.add(
             MarketMainItemLabel(LATEST, I18nUtil.getCodeLanMessage(LATEST))
         )
-        futureList.addAll(
+        futureList.add(
             doList(
                 userId = userId,
                 storeType = storeType,
@@ -449,7 +451,7 @@ class StoreComponentQueryServiceImpl @Autowired constructor(
                 page = page,
                 pageSize = pageSize,
                 urlProtocolTrim = urlProtocolTrim
-            ).records
+            )
         )
         labelInfoList.add(
             MarketMainItemLabel(
@@ -457,7 +459,7 @@ class StoreComponentQueryServiceImpl @Autowired constructor(
                 I18nUtil.getCodeLanMessage(HOTTEST)
             )
         )
-        futureList.addAll(
+        futureList.add(
             doList(
                 userId = userId,
                 storeType = storeType,
@@ -475,7 +477,7 @@ class StoreComponentQueryServiceImpl @Autowired constructor(
                 page = page,
                 pageSize = pageSize,
                 urlProtocolTrim = urlProtocolTrim
-            ).records
+            )
         )
 
         val classifyList = storeClassifyService.getStoreClassifyList(storeType).data
@@ -488,7 +490,7 @@ class StoreComponentQueryServiceImpl @Autowired constructor(
                     language = I18nUtil.getLanguage(userId)
                 )
                 labelInfoList.add(MarketMainItemLabel(classifyCode, classifyLanName))
-                futureList.addAll(
+                futureList.add(
                     doList(
                         userId = userId,
                         storeType = storeType,
@@ -506,7 +508,7 @@ class StoreComponentQueryServiceImpl @Autowired constructor(
                         page = page,
                         pageSize = pageSize,
                         urlProtocolTrim = urlProtocolTrim
-                    ).records
+                    )
                 )
             }
         }
@@ -519,7 +521,7 @@ class StoreComponentQueryServiceImpl @Autowired constructor(
                 MarketMainItem(
                     key = labelInfo.key,
                     label = labelInfo.label,
-                    records = futureList
+                    records = futureList[index].get().records
                 )
             )
         }
@@ -563,7 +565,7 @@ class StoreComponentQueryServiceImpl @Autowired constructor(
             page = page,
             pageSize = pageSize,
             urlProtocolTrim = urlProtocolTrim
-        )
+        ).get()
     }
 
     override fun getComponentShowVersionInfo(
@@ -777,13 +779,13 @@ class StoreComponentQueryServiceImpl @Autowired constructor(
         page: Int,
         pageSize: Int,
         urlProtocolTrim: Boolean = false
-    ): Page<MarketItem> {
+    ): Future<Page<MarketItem>> {
         logger.info("doList|storeType:$storeType")
-//        val referer = BkApiUtil.getHttpServletRequest()?.getHeader(REFERER)
-//        return executor.submit(Callable<Page<MarketItem>> {
-//            referer?.let {
-//                ThreadLocalUtil.set(REFERER, referer)
-//            }
+        val referer = BkApiUtil.getHttpServletRequest()?.getHeader(REFERER)
+        return executor.submit(Callable<Page<MarketItem>> {
+            referer?.let {
+                ThreadLocalUtil.set(REFERER, referer)
+            }
             val results = mutableListOf<MarketItem>()
 
             // 调用拆分出的getStoreInfos函数获取商品信息
@@ -802,33 +804,33 @@ class StoreComponentQueryServiceImpl @Autowired constructor(
                 page = page,
                 pageSize = pageSize
             )
-
-            val storeCodeList = mutableListOf<String>()
-            val storeIds = mutableListOf<String>()
-            val storeTypeEnum = StoreTypeEnum.valueOf(storeType)
-            storeInfos.forEach {
-                storeCodeList.add(it[TStoreBase.T_STORE_BASE.STORE_CODE] as String)
-                storeIds.add(it[TStoreBaseFeature.T_STORE_BASE_FEATURE.ID] as String)
-            }
-            val storeVisibleData =
-                storeCommonService.generateStoreVisibleData(storeCodeList, storeTypeEnum)
-            val storeStatisticData = storeTotalStatisticService.getStatisticByCodeList(
-                storeType = storeTypeEnum.type.toByte(),
-                storeCodeList = storeCodeList
-            )
-            // 获取用户
-            val memberData = storeMemberService.batchListMember(storeCodeList, storeTypeEnum).data
-            // 获取分类
-            val classifyList = classifyService.getAllClassify(storeTypeEnum.type.toByte()).data
-            val classifyMap = mutableMapOf<String, String>()
-            classifyList?.forEach {
-                classifyMap[it.id] = it.classifyCode
-            }
-            val storeHonorInfoMap = storeHonorService.getHonorInfosByStoreCodes(storeTypeEnum, storeCodeList)
-            val storeIndexInfosMap =
-                storeIndexManageService.getStoreIndexInfosByStoreCodes(storeTypeEnum, storeCodeList)
-            val categoryInfoMap = categoryService.getByRelStoreIds(storeIds)
-            val storeEnvInfos = storeBaseEnvQueryDao.batchQueryStoreEnvInfo(dslContext, storeIds)
+            try {
+                val storeCodeList = mutableListOf<String>()
+                val storeIds = mutableListOf<String>()
+                val storeTypeEnum = StoreTypeEnum.valueOf(storeType)
+                storeInfos.forEach {
+                    storeCodeList.add(it[TStoreBase.T_STORE_BASE.STORE_CODE] as String)
+                    storeIds.add(it[TStoreBaseFeature.T_STORE_BASE_FEATURE.ID] as String)
+                }
+                val storeVisibleData =
+                    storeCommonService.generateStoreVisibleData(storeCodeList, storeTypeEnum)
+                val storeStatisticData = storeTotalStatisticService.getStatisticByCodeList(
+                    storeType = storeTypeEnum.type.toByte(),
+                    storeCodeList = storeCodeList
+                )
+                // 获取用户
+                val memberData = storeMemberService.batchListMember(storeCodeList, storeTypeEnum).data
+                // 获取分类
+                val classifyList = classifyService.getAllClassify(storeTypeEnum.type.toByte()).data
+                val classifyMap = mutableMapOf<String, String>()
+                classifyList?.forEach {
+                    classifyMap[it.id] = it.classifyCode
+                }
+                val storeHonorInfoMap = storeHonorService.getHonorInfosByStoreCodes(storeTypeEnum, storeCodeList)
+                val storeIndexInfosMap =
+                    storeIndexManageService.getStoreIndexInfosByStoreCodes(storeTypeEnum, storeCodeList)
+                val categoryInfoMap = categoryService.getByRelStoreIds(storeIds)
+                val storeEnvInfos = storeBaseEnvQueryDao.batchQueryStoreEnvInfo(dslContext, storeIds)
                 storeInfos.forEach { record ->
                     // 调用拆分出的processStoreInfo函数处理商品信息
                     val marketItem = processStoreInfo(
@@ -848,15 +850,16 @@ class StoreComponentQueryServiceImpl @Autowired constructor(
                     )
                     results.add(marketItem)
                 }
-
-//            return@Callable Page(
-            return Page(
+            } finally {
+                ThreadLocalUtil.remove(REFERER)
+            }
+            return@Callable Page(
                 page = page,
                 pageSize = pageSize,
                 count = count,
                 records = results
             )
-//        })
+        })
     }
 
     private fun getRecentDailyStatisticList(
