@@ -850,7 +850,10 @@ class StoreComponentQueryServiceImpl @Autowired constructor(
                     )
                     results.add(marketItem)
                 }
-            } finally {
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+            finally {
                 ThreadLocalUtil.remove(REFERER)
             }
             return@Callable Page(
