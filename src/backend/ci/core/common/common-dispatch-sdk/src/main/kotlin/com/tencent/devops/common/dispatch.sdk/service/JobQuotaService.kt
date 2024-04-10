@@ -27,7 +27,10 @@
 
 package com.tencent.devops.common.dispatch.sdk.service
 
+import com.tencent.devops.common.api.constant.CommonMessageCode
+import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.dispatch.sdk.BuildFailureException
 import com.tencent.devops.common.dispatch.sdk.pojo.docker.DockerConstants.BK_JOB_REACHED_MAX_QUOTA_AND_ALREADY_DELAYED
 import com.tencent.devops.common.dispatch.sdk.pojo.docker.DockerConstants.BK_JOB_REACHED_MAX_QUOTA_AND_SOON_DELAYED
 import com.tencent.devops.common.dispatch.sdk.pojo.docker.DockerConstants.BK_JOB_REACHED_MAX_QUOTA_SOON_RETRY
@@ -177,6 +180,13 @@ class JobQuotaService constructor(
         } else {
             logger.info("$logPrefix DemoteQueue Job Maximum number of retries reached. " +
                     "RetryTime: ${startupEvent.retryTime}, MaxJobRetry: $maxJobRetry")
+            val errorMessage = I18nUtil.getCodeLanMessage(CommonMessageCode.JOB_BUILD_STOPS)
+            throw BuildFailureException(
+                errorType = ErrorType.USER,
+                errorCode = CommonMessageCode.JOB_BUILD_STOPS.toInt(),
+                formatErrorMessage = errorMessage,
+                errorMessage = errorMessage
+            )
         }
     }
 
