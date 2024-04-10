@@ -66,6 +66,11 @@ class SampleArchiveStorePkgToBkRepoServiceImpl : ArchiveStorePkgToBkRepoServiceI
     }
 
     override fun deleteStorePkg(userId: String, storeCode: String, storeType: StoreTypeEnum) {
-        bkRepoClient.delete(userId, BKREPO_STORE_PROJECT_ID, getBkRepoName(storeType), storeCode)
+        bkRepoClient.delete(
+            userId = userId,
+            projectId = getBkRepoProjectId(storeType),
+            repoName = getBkRepoName(storeType),
+            path = storeCode
+        )
     }
 }

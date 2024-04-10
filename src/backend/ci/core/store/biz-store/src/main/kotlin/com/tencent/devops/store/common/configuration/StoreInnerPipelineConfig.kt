@@ -25,17 +25,17 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.store.pojo.common.publication
+package com.tencent.devops.store.common.configuration
 
-import com.tencent.devops.store.pojo.common.handler.HandlerRequest
-import io.swagger.v3.oas.annotations.media.Schema
-import javax.validation.Valid
+import org.springframework.beans.factory.annotation.Value
+import org.springframework.stereotype.Component
 
-@Schema(title = "工作台-新增组件请求报文体")
-data class StoreCreateRequest(
-    @get:Schema(title = "项目代码", required = true)
-    val projectCode: String,
-    @get:Schema(title = "基础信息", required = true)
-    @Valid
-    val baseInfo: StoreBaseCreateRequest,
-) : HandlerRequest()
+@Component
+class StoreInnerPipelineConfig {
+
+    @Value("\${store.innerPipeline.project:}")
+    val innerPipelineProject: String = ""
+
+    @Value("\${store.innerPipeline.user:}")
+    val innerPipelineUser: String = ""
+}

@@ -113,9 +113,11 @@ abstract class ArchiveStorePkgServiceImpl : ArchiveStorePkgService {
                 storeCode = storeCode,
                 version = version
             ).data
-            storePkgEnvInfos?.forEach { storePkgEnvRequest ->
-                var pkgLocalPath = storePkgEnvRequest.pkgLocalPath
-                if (storePkgEnvRequest.target.isNullOrBlank() && pkgLocalPath.isNullOrBlank()) {
+            storePkgEnvInfos?.forEach { storePkgEnvInfo ->
+                var pkgLocalPath = storePkgEnvInfo.pkgLocalPath
+                if (storeType == StoreTypeEnum.ATOM && storePkgEnvInfo.target.isNullOrBlank() &&
+                    pkgLocalPath.isNullOrBlank()
+                ) {
                     // 上传的是内置组件的包，无需处理执行包相关逻辑
                     return@forEach
                 }
@@ -128,12 +130,13 @@ abstract class ArchiveStorePkgServiceImpl : ArchiveStorePkgService {
                 val packageFile = File("$storeArchivePath/$pkgLocalPath")
                 val packageFileInfo = PackageFileInfo(
                     packageFileName = packageFile.name,
-                    packageFilePath = "${getPkgFileTypeDir(storeType)}/$pkgLocalPath",
+                    packageFilePath = packageFile.absolutePath.removePrefix(getStoreArchiveBasePath()),
                     packageFileSize = packageFile.length(),
                     shaContent = packageFile.inputStream().use { ShaUtils.sha1InputStream(it) }
                 )
-                storePkgEnvRequest.shaContent = packageFileInfo.shaContent
-                storePkgEnvRequest.pkgName = packageFileInfo.packageFileName
+                storePkgEnvInfo.pkgRepoPath = "$storeCode/$version/$pkgLocalPath"
+                storePkgEnvInfo.shaContent = packageFileInfo.shaContent
+                storePkgEnvInfo.pkgName = packageFileInfo.packageFileName
                 packageFileInfos!!.add(packageFileInfo)
             }
         } finally {
@@ -202,8 +205,12 @@ abstract class ArchiveStorePkgServiceImpl : ArchiveStorePkgService {
         val fileName = disposition.fileName
         val storeArchivePath = buildStoreArchivePath(storeType, storeCode, version)
         val file = File(storeArchivePath, fileName)
-        if (file.exists()) {
-            file.delete()
+        val parentDir = file.parentFile
+        if (!parentDir.exists()) {
+            parentDir.mkdirs()
+        }
+        if (!file.exists()) {
+            file.createNewFile()
         }
         file.outputStream().use {
             inputStream.copyTo(it)
@@ -227,8 +234,8 @@ abstract class ArchiveStorePkgServiceImpl : ArchiveStorePkgService {
     }
 
     protected fun buildStoreArchivePath(
-        storeType: StoreTypeEnum, 
-        storeCode: String, 
+        storeType: StoreTypeEnum,
+        storeCode: String,
         version: String
     ): String {
         val storeTypeDir = getPkgFileTypeDir(storeType)
