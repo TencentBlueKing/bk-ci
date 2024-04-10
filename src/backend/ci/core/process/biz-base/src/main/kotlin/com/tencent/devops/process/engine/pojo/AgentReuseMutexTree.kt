@@ -18,6 +18,7 @@ import com.tencent.devops.process.engine.control.VmOperateTaskGenerator.Companio
 /**
  * AgentReuseMutexTree 组装流水线时通过生成树可以更好地拿到复用互斥关系
  */
+@Suppress("ComplexCondition")
 data class AgentReuseMutexTree(
     val rootNodes: MutableList<AgentReuseMutexRootNode>,
     var maxStageIndex: Int = 0
