@@ -35,12 +35,12 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.process.api.service.ServiceBuildResource
+import com.tencent.devops.store.common.configuration.StoreInnerPipelineConfig
 import com.tencent.devops.store.common.dao.StoreBaseFeatureExtQueryDao
 import com.tencent.devops.store.common.dao.StoreBaseManageDao
 import com.tencent.devops.store.common.dao.StoreBaseQueryDao
 import com.tencent.devops.store.common.dao.StoreMemberDao
 import com.tencent.devops.store.common.dao.StorePipelineBuildRelDao
-import com.tencent.devops.store.common.dao.StoreProjectRelDao
 import com.tencent.devops.store.common.dao.StoreReleaseDao
 import com.tencent.devops.store.common.dao.StoreVersionLogDao
 import com.tencent.devops.store.common.handler.StoreCreateDataPersistHandler
@@ -92,7 +92,6 @@ class StoreReleaseServiceImpl @Autowired constructor(
     private val storeBaseFeatureExtQueryDao: StoreBaseFeatureExtQueryDao,
     private val storeMemberDao: StoreMemberDao,
     private val storePipelineBuildRelDao: StorePipelineBuildRelDao,
-    private val storeProjectRelDao: StoreProjectRelDao,
     private val storeVersionLogDao: StoreVersionLogDao,
     private val storeReleaseDao: StoreReleaseDao,
     private val storeCommonService: StoreCommonService,
@@ -103,7 +102,8 @@ class StoreReleaseServiceImpl @Autowired constructor(
     private val storeUpdateParamI18nConvertHandler: StoreUpdateParamI18nConvertHandler,
     private val storeUpdateParamCheckHandler: StoreUpdateParamCheckHandler,
     private val storeUpdateDataPersistHandler: StoreUpdateDataPersistHandler,
-    private val storeUpdateRunPipelineHandler: StoreUpdateRunPipelineHandler
+    private val storeUpdateRunPipelineHandler: StoreUpdateRunPipelineHandler,
+    private val storeInnerPipelineConfig: StoreInnerPipelineConfig
 ) : StoreReleaseService {
 
     private val logger = LoggerFactory.getLogger(StoreReleaseServiceImpl::class.java)
@@ -204,17 +204,10 @@ class StoreReleaseServiceImpl @Autowired constructor(
         )
         val storeBuildInfoRecord = storePipelineBuildRelDao.getStorePipelineBuildRel(dslContext, storeId)
         storeBuildInfoRecord?.let {
-            val record = storeBaseQueryDao.getComponentById(dslContext, storeId)!!
-            // 获取组件的初始化项目
-            val initProjectCode = storeProjectRelDao.getInitProjectCodeByStoreCode(
-                dslContext = dslContext,
-                storeCode = record.storeCode,
-                storeType = record.storeType
-            )!!
             // 组件打包流水线取消构建
             client.get(ServiceBuildResource::class).serviceShutdown(
                 pipelineId = storeBuildInfoRecord.pipelineId,
-                projectId = initProjectCode,
+                projectId = storeInnerPipelineConfig.innerPipelineProject,
                 buildId = storeBuildInfoRecord.buildId,
                 channelCode = ChannelCode.AM
             )
