@@ -46,6 +46,7 @@ import com.tencent.devops.common.pipeline.type.agent.ThirdPartyDevCloudDispatchT
 import com.tencent.devops.common.redis.RedisLockByValue
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.web.utils.I18nUtil
+import com.tencent.devops.dispatch.constants.AGENT_REUSE_MUTEX_REDISPATCH
 import com.tencent.devops.dispatch.constants.BK_AGENT_IS_BUSY
 import com.tencent.devops.dispatch.constants.BK_ENV_BUSY
 import com.tencent.devops.dispatch.constants.BK_ENV_WORKER_ERROR_IGNORE
@@ -98,12 +99,7 @@ class ThirdPartyDispatchService @Autowired constructor(
                     return
                 }
                 // 只要是复用就先拿一下上下文，可能存在同stage但又先后的情况
-                val agentId = client.get(ServiceVarResource::class).getBuildVar(
-                    projectId = dispatchMessage.event.projectId,
-                    pipelineId = dispatchMessage.event.pipelineId,
-                    buildId = dispatchMessage.event.buildId,
-                    varName = AgentReuseMutex.genAgentContextKey(dispatchType.displayName)
-                ).data?.get(AgentReuseMutex.genAgentContextKey(dispatchType.displayName))
+                val agentId = dispatchMessage.getAgentReuseContextVar(dispatchType.displayName)
 
                 // 是复用，但是和被复用对象在同一stage且先后顺序未知
                 if (dispatchType.reusedInfo != null && agentId.isNullOrBlank()) {
@@ -133,18 +129,28 @@ class ThirdPartyDispatchService @Autowired constructor(
                     return
                 }
                 // 只要是复用就先拿一下上下文，可能存在同stage但又先后的情况
-                val agentId = client.get(ServiceVarResource::class).getBuildVar(
-                    projectId = dispatchMessage.event.projectId,
-                    pipelineId = dispatchMessage.event.pipelineId,
-                    buildId = dispatchMessage.event.buildId,
-                    varName = AgentReuseMutex.genAgentContextKey(dispatchType.envName)
-                ).data?.get(AgentReuseMutex.genAgentContextKey(dispatchType.envName))
+                val agentId = dispatchMessage.getAgentReuseContextVar(dispatchType.envName)
 
                 // 是复用，但是和被复用对象在同一stage且先后顺序未知
+                // AgentEnv 类型的需要等到被复用对象选出节点再执行
                 if (dispatchType.reusedInfo != null && agentId.isNullOrBlank()) {
-                    dispatchType.envName = dispatchType.reusedInfo!!.value
-                    buildByEnvId(dispatchMessage, dispatchType)
-                    return
+                    logWarn(
+                        dispatchMessage.event,
+                        I18nUtil.getCodeLanMessage(
+                            messageCode = AGENT_REUSE_MUTEX_REDISPATCH,
+                            language = I18nUtil.getDefaultLocaleLanguage(),
+                            params = arrayOf(dispatchType.envName)
+                        )
+                    )
+                    throw DispatchRetryMQException(
+                        errorCodeEnum = ErrorCodeEnum.BUILD_ENV_PREPARATION,
+                        errorMessage = "${dispatchMessage.event.buildId}|${dispatchMessage.event.vmSeqId} " +
+                                I18nUtil.getCodeLanMessage(
+                                    messageCode = BK_QUEUE_TIMEOUT_MINUTES,
+                                    language = I18nUtil.getDefaultLocaleLanguage(),
+                                    params = arrayOf("${dispatchMessage.event.queueTimeoutMinutes}")
+                                )
+                    )
                 }
 
                 if (agentId.isNullOrBlank()) {
@@ -281,7 +287,7 @@ class ThirdPartyDispatchService @Autowired constructor(
                     )
                 ) {
                     logger.warn("The agent(${agent.agentId}) of project(${event.projectId}) is upgrading")
-                    log(
+                    logWarn(
                         dispatchMessage.event,
                         ErrorCodeEnum.BUILD_MACHINE_UPGRADE_IN_PROGRESS.getErrorMessage(
                             language = I18nUtil.getDefaultLocaleLanguage()
@@ -301,14 +307,39 @@ class ThirdPartyDispatchService @Autowired constructor(
                     )
                     // 没有拿到锁说明现在这台机被复用互斥占用不能选
                     if (!lock.tryLock()) {
-                        log(
+                        logWarn(
                             dispatchMessage.event,
-                            ErrorCodeEnum.AGENT_REUSE_MUTEX_REDISPATCH.getErrorMessage(
+                            I18nUtil.getCodeLanMessage(
+                                messageCode = AGENT_REUSE_MUTEX_REDISPATCH,
                                 language = I18nUtil.getDefaultLocaleLanguage(),
-                                params = arrayOf("${agent.hostname}/${agent.ip}", redisOperation.get(lockKey) ?: "")
+                                params = arrayOf(
+                                    "${agent.agentId}|${agent.hostname}/${agent.ip}", redisOperation.get(lockKey) ?: ""
+                                )
                             )
                         )
                         return false
+                    }
+                    try {
+                        // # 10082 设置复用需要的关键字 jobs.<job_id>.container.agent_id，jobId需要为根节点id
+                        // 只用给env类型的根节点设置，因为id类型的在引擎 AgentReuseMutexCmd 直接写入了
+                        val dispatch = dispatchMessage.event.dispatchType
+                        if ((dispatch is ThirdPartyAgentEnvDispatchType) &&
+                            dispatch.reusedInfo != null &&
+                            dispatch.reusedInfo!!.jobId == null
+                        ) {
+                            client.get(ServiceVarResource::class).setContextVar(
+                                SetContextVarData(
+                                    projectId = dispatchMessage.event.projectId,
+                                    pipelineId = dispatchMessage.event.pipelineId,
+                                    buildId = dispatchMessage.event.buildId,
+                                    contextName = AgentReuseMutex.genAgentContextKey(dispatchMessage.event.jobId!!),
+                                    contextVal = agent.agentId,
+                                    readOnly = true
+                                )
+                            )
+                        }
+                    } catch (e: Exception) {
+                        logger.error("inQueue|doAgentInQueue|error", e)
                     }
                 }
 
@@ -348,7 +379,7 @@ class ThirdPartyDispatchService @Autowired constructor(
                 )
                 return true
             } else {
-                log(
+                logWarn(
                     dispatchMessage.event,
                     ErrorCodeEnum.BUILD_MACHINE_BUSY.getErrorMessage(
                         language = I18nUtil.getDefaultLocaleLanguage()
@@ -363,6 +394,16 @@ class ThirdPartyDispatchService @Autowired constructor(
 
     private fun log(event: PipelineAgentStartupEvent, logMessage: String) {
         buildLogPrinter.addLine(
+            buildId = event.buildId,
+            message = logMessage,
+            tag = VMUtils.genStartVMTaskId(event.vmSeqId),
+            jobId = event.containerHashId,
+            executeCount = event.executeCount ?: 1
+        )
+    }
+
+    private fun logWarn(event: PipelineAgentStartupEvent, logMessage: String) {
+        buildLogPrinter.addWarnLine(
             buildId = event.buildId,
             message = logMessage,
             tag = VMUtils.genStartVMTaskId(event.vmSeqId),
@@ -428,23 +469,6 @@ class ThirdPartyDispatchService @Autowired constructor(
                     readOnly = true
                 )
             )
-            // # 10082 设置复用需要的关键字 jobs.<job_id>.container.agent_id，jobId需要为根节点id
-            // 复用节点不设置，复用节点会使用根节点，只用给env设置，因为id类型的在引擎 AgentReuseMutexCmd 直接写入了
-            val dispatch = dispatchMessage.event.dispatchType
-            if ((dispatch is ThirdPartyAgentEnvDispatchType) && dispatch.reusedInfo != null) {
-                client.get(ServiceVarResource::class).setContextVar(
-                    SetContextVarData(
-                        projectId = dispatchMessage.event.projectId,
-                        pipelineId = dispatchMessage.event.pipelineId,
-                        buildId = dispatchMessage.event.buildId,
-                        contextName = AgentReuseMutex.genAgentContextKey(
-                            dispatch.reusedInfo!!.jobId ?: dispatchMessage.event.jobId!!
-                        ),
-                        contextVal = detail.agentId,
-                        readOnly = true
-                    )
-                )
-            }
         } catch (e: Exception) {
             logger.error("inQueue|setContextVar|error", e)
         }
@@ -703,11 +727,12 @@ class ThirdPartyDispatchService @Autowired constructor(
          * 最高优先级的agent: 根据哪些agent没有任何任务并且是在最近构建中使用到的Agent
          */
         logDebug(
-            buildLogPrinter, dispatchMessage, message = "retry: ${dispatchMessage.event.retryTime} | " +
-                    I18nUtil.getCodeLanMessage(
-                        messageCode = BK_SEARCHING_AGENT,
-                        language = I18nUtil.getDefaultLocaleLanguage()
-                    )
+            buildLogPrinter, dispatchMessage,
+            message = "retry: ${dispatchMessage.event.retryTime} | " +
+                I18nUtil.getCodeLanMessage(
+                    messageCode = BK_SEARCHING_AGENT,
+                    language = I18nUtil.getDefaultLocaleLanguage()
+                )
         )
         if (startEmptyAgents(dispatchMessage, dispatchType, pbAgents, hasTryAgents, envId)) {
             logger.info(
@@ -971,6 +996,15 @@ class ThirdPartyDispatchService @Autowired constructor(
             jobId = dispatchMessage.event.containerHashId,
             executeCount = dispatchMessage.event.executeCount ?: 1
         )
+    }
+
+    private fun DispatchMessage.getAgentReuseContextVar(jobId: String): String? {
+        return client.get(ServiceVarResource::class).getBuildVar(
+            projectId = event.projectId,
+            pipelineId = event.pipelineId,
+            buildId = event.buildId,
+            varName = AgentReuseMutex.genAgentContextKey(jobId)
+        ).data?.get(AgentReuseMutex.genAgentContextKey(jobId))
     }
 
     companion object {
