@@ -22,6 +22,7 @@ import com.tencent.devops.auth.pojo.ManagerRoleGroupInfo
 import com.tencent.devops.auth.pojo.RelatedResourceInfo
 import com.tencent.devops.auth.pojo.ResourceGroupInfo
 import com.tencent.devops.auth.pojo.SearchGroupInfo
+import com.tencent.devops.auth.pojo.enum.GroupLevel
 import com.tencent.devops.auth.pojo.vo.ActionInfoVo
 import com.tencent.devops.auth.pojo.vo.AuthApplyRedirectInfoVo
 import com.tencent.devops.auth.pojo.vo.AuthRedirectGroupInfoVo
@@ -116,9 +117,12 @@ class RbacPermissionApplyService @Autowired constructor(
 
         val iamResourceCode = searchGroupInfo.iamResourceCode
         val resourceType = searchGroupInfo.resourceType
-        // 如果没有访问权限，并且资源类型是项目或者不选择，则inherit为false,即只展示项目下用户组
-        if (!visitProjectPermission && (resourceType == null || resourceType == AuthResourceType.PROJECT.value)) {
-            searchGroupInfo.inherit = false
+        // 如果没有访问权限，不允许访问资源级别的组，只允许访问项目级别的组
+        if (!visitProjectPermission && searchGroupInfo.groupLevel == GroupLevel.OTHER) {
+            return ManagerRoleGroupVO(
+                count = 0,
+                results = emptyList()
+            )
         }
 
         val bkIamPath = buildBkIamPath(
@@ -216,7 +220,6 @@ class RbacPermissionApplyService @Autowired constructor(
     ): V2ManagerRoleGroupVO {
         val searchGroupDTO = SearchGroupDTO
             .builder()
-            .inherit(searchGroupInfo.inherit)
             .id(searchGroupInfo.groupId)
             .actionId(searchGroupInfo.actionId)
             .resourceTypeSystemId(systemId)
@@ -225,7 +228,14 @@ class RbacPermissionApplyService @Autowired constructor(
             .bkIamPath(bkIamPath)
             .name(searchGroupInfo.name)
             .description(searchGroupInfo.description)
-            .build()
+            .let {
+                if (searchGroupInfo.groupLevel == GroupLevel.PROJECT) {
+                    it.inherit(false)
+                } else {
+                    it.onlyInherit(true)
+                }
+            }.build()
+
         val v2PageInfoDTO = V2PageInfoDTO()
         v2PageInfoDTO.pageSize = searchGroupInfo.pageSize
         v2PageInfoDTO.page = searchGroupInfo.page
