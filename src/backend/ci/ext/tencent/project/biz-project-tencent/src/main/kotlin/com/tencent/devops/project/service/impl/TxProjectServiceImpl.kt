@@ -599,6 +599,30 @@ class TxProjectServiceImpl @Autowired constructor(
         }
     }
 
+    override fun validateProjectOrganization(
+        projectChannel: ProjectChannelCode?,
+        bgId: Long,
+        bgName: String,
+        deptId: Long?,
+        deptName: String?
+    ) {
+        // 创建项目时，仅对BS渠道进行校验
+        if (projectChannel != null && projectChannel != ProjectChannelCode.BS)
+            return
+        if (bgId == 0L || bgName.isBlank()) {
+            throw ErrorCodeException(
+                errorCode = ProjectMessageCode.ERROR_ORGANIZATION_CAN_NOT_TO_BE_EMPTY,
+                defaultMessage = "project bgId or bgName cannot be empty!"
+            )
+        }
+        if (deptId == null || deptId == 0L || deptName.isNullOrBlank()) {
+            throw ErrorCodeException(
+                errorCode = ProjectMessageCode.ERROR_ORGANIZATION_CAN_NOT_TO_BE_EMPTY,
+                defaultMessage = "project deptId or deptName cannot be empty!"
+            )
+        }
+    }
+
     private fun ProjectProductValidateDTO.validateProductIdNotNull() {
         if (productId == null) {
             throw ErrorCodeException(
