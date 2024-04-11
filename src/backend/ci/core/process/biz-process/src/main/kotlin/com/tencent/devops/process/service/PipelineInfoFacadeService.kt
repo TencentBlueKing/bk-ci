@@ -439,7 +439,7 @@ class PipelineInfoFacadeService @Autowired constructor(
                 // 先进行模板关联操作
                 if (templateId != null) {
                     watcher.start("addLabel")
-                    if (useLabelSettings == true) {
+                    if (useLabelSettings == true || versionStatus == VersionStatus.RELEASED) {
                         val groups = pipelineGroupService.getGroups(userId, projectId, templateId)
                         val labels = ArrayList<String>()
                         groups.forEach {
@@ -486,7 +486,7 @@ class PipelineInfoFacadeService @Autowired constructor(
                 }
 
                 // 添加标签
-                pipelineGroupService.addPipelineLabel(
+                if (versionStatus == VersionStatus.RELEASED) pipelineGroupService.addPipelineLabel(
                     userId = userId,
                     projectId = projectId,
                     pipelineId = pipelineId,
@@ -628,6 +628,7 @@ class PipelineInfoFacadeService @Autowired constructor(
             ),
             checkPermission = false,
             versionStatus = versionStatus,
+            updateLabels = versionStatus == VersionStatus.RELEASED,
             dispatchPipelineUpdateEvent = false
         )
         return editPipeline(
@@ -712,6 +713,7 @@ class PipelineInfoFacadeService @Autowired constructor(
             userId = userId,
             projectId = projectId,
             pipelineId = pipelineId,
+            updateLabels = false,
             setting = setting.copy(pipelineAsCodeSettings = pipelineAsCodeSettings)
         )
     }

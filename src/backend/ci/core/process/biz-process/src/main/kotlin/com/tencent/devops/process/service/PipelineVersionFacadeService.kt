@@ -236,7 +236,6 @@ class PipelineVersionFacadeService @Autowired constructor(
             versionNum = newVersionNum,
             originModel = releaseVersion.model,
             newModel = draftVersion.model
-
         )
         return PrefetchReleaseResult(
             pipelineId = pipelineId,
@@ -254,6 +253,11 @@ class PipelineVersionFacadeService @Autowired constructor(
         version: Int,
         request: PipelineVersionReleaseRequest
     ): DeployPipelineResult {
+        val pipeline = pipelineRepositoryService.getPipelineInfo(projectId, pipelineId)
+            ?: throw ErrorCodeException(
+                statusCode = Response.Status.NOT_FOUND.statusCode,
+                errorCode = ProcessMessageCode.ERROR_PIPELINE_NOT_EXISTS
+            )
         if (templateService.isTemplatePipeline(projectId, pipelineId)) {
             throw ErrorCodeException(
                 errorCode = ProcessMessageCode.ERROR_PIPELINE_TEMPLATE_CAN_NOT_EDIT
@@ -279,7 +283,15 @@ class PipelineVersionFacadeService @Autowired constructor(
             projectId = projectId,
             pipelineId = pipelineId
         )
-
+        // 提前初始化检查一次让编排报错，避免PAC代码库操作后报错
+        pipelineRepositoryService.initModel(
+            model = draftVersion.model, projectId = projectId,
+            pipelineId = pipelineId,
+            userId = userId,
+            create = false,
+            versionStatus = VersionStatus.RELEASED,
+            channelCode = pipeline.channelCode
+        )
         val originYaml = pipelineYamlFacadeService.getPipelineYamlInfo(projectId, pipelineId, version)
         // 如果不匹配已有状态则报错，需要用户重新刷新页面
         if (originYaml != null && !request.enablePac) throw ErrorCodeException(
@@ -373,7 +385,7 @@ class PipelineVersionFacadeService @Autowired constructor(
             projectId = projectId,
             signPipelineId = pipelineId,
             userId = draftVersion.creator,
-            channelCode = ChannelCode.BS,
+            channelCode = pipeline.channelCode,
             create = false,
             updateLastModifyUser = true,
             setting = savedSetting,
@@ -635,7 +647,8 @@ class PipelineVersionFacadeService @Autowired constructor(
                 checkPermission = false,
                 versionStatus = versionStatus,
                 updateVersion = draft == null,
-                dispatchPipelineUpdateEvent = false
+                dispatchPipelineUpdateEvent = false,
+                updateLabels = false
             )
 
             pipelineInfoFacadeService.editPipeline(
