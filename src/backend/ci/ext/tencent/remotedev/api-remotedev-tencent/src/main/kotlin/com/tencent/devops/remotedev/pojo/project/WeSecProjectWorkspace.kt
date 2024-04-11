@@ -71,8 +71,8 @@ data class WeSecProjectWorkspace(
 
 @Schema(title = "组织信息")
 data class DepartmentsInfo(
-    @get:Schema(title = "组织名称")
-    val deptName: String?,
     @get:Schema(title = "组织ID")
-    val deptId: String?
+    val deptId: String?,
+    @get:Schema(title = "组织名称")
+    val deptName: String?
 )

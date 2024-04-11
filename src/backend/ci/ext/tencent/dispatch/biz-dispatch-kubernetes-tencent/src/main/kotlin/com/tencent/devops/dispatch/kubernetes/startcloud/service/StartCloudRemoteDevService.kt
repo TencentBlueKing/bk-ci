@@ -110,7 +110,7 @@ class StartCloudRemoteDevService @Autowired constructor(
         val zoneId = if (event.devFile.cgsId.isNullOrBlank()) {
             checkZoneId(event)
         } else {
-            event.devFile.zoneId
+            checkNotNull(event.devFile.cgsId).substringBefore(".")
         }
 
         val res = workspaceClient.createWorkspace(

@@ -35,6 +35,9 @@ data class JobCloudScriptExecuteReq(
     @get:Schema(title = "执行目标主机列表")
     @JsonProperty("target_server")
     val targetServer: JobCloudExecuteTarget?,
+    @get:Schema(title = "自定义作业名称")
+    @JsonProperty("task_name")
+    val taskName: String?,
     @get:Schema(title = "当前用户用户名", required = true)
     @JsonProperty("bk_username")
     override var bkUsername: String

@@ -591,16 +591,16 @@ class WorkspaceService @Autowired constructor(
                 if (owner.contains("@tai")) {
                     tailUsers?.get(owner)?.map {
                         DepartmentsInfo(
-                            it.id.toString(),
-                            it.name
+                            deptId = it.id.toString(),
+                            deptName = it.name
                         )
                     }
                 } else {
                     val info = client.get(ServiceTxUserResource::class).get(owner).data
                     listOf(
                         DepartmentsInfo(
-                            info?.deptId,
-                            info?.deptName
+                            deptId = info?.deptId,
+                            deptName = info?.deptName
                         )
                     )
                 }
