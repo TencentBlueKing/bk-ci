@@ -208,12 +208,12 @@
                     ? [
                         { label: this.$t('editPage.selectSlave'), value: 'ID' },
                         { label: this.$t('editPage.inputSlave'), value: 'NAME' },
-                        { label: this.$t('editPage.locksSlave'), value: 'REUSE_JOB_ID' }
+                        { label: this.$t('editPage.locksSlave'), value: 'REUSE_JOB_ID', tips: this.$t('editPage.locksSlaveTips') }
                     ]
                     : [
                         { label: this.$t('editPage.selectEnv'), value: 'ID' },
                         { label: this.$t('editPage.inputEnv'), value: 'NAME' },
-                        { label: this.$t('editPage.locksSlave'), value: 'REUSE_JOB_ID' }
+                        { label: this.$t('editPage.locksSlave'), value: 'REUSE_JOB_ID', tips: this.$t('editPage.locksSlaveTips') }
                     ]
             },
             reuseJobList () {
