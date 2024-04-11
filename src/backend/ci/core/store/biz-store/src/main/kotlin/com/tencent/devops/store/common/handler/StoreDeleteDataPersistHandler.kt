@@ -40,10 +40,7 @@ class StoreDeleteDataPersistHandler(
 
     override fun canExecute(handlerRequest: StoreDeleteRequest): Boolean {
 
-        return when (handlerRequest.storeType) {
-            StoreTypeEnum.ATOM.name -> true
-            else -> false
-        }
+        return true
     }
 
     override fun execute(handlerRequest: StoreDeleteRequest) {
