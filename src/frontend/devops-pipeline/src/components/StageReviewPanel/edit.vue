@@ -124,7 +124,7 @@
                 return /\d+/.test(this.timeout) && parseInt(this.timeout) > 0 && parseInt(this.timeout) <= 1440
             },
             validWeChatGroupID () {
-                return this.notifyGroup.length > 0
+                return !this.showNotifyGroup || this.notifyGroup.length > 0
             },
             reviewDesc () {
                 return this.stageControl && this.stageControl.reviewDesc
@@ -136,13 +136,16 @@
                 return (this.stageControl && this.stageControl.notifyType) || []
             },
             notifyGroup () {
-                return (this.stageControl && this.stageControl.notifyGroup) || []
+                return this.stageControl?.notifyGroup ?? []
+            },
+            notifyGroupStr () {
+                return this.notifyGroup.join(',')
             },
             notifyGroupStr () {
                 return (this.stageControl?.notifyGroup ?? []).join(',')
             },
             markdownContent () {
-                return this.stageControl && this.stageControl.markdownContent
+                return this.stageControl?.markdownContent
             },
             notifyTypeList () {
                 return [
@@ -204,7 +207,6 @@
             },
 
             initStageReview () {
-                console.log(this.validateStageControl(), 'this.validateStageControl()')
                 this.handleStageChange(this.stageReviewType, {
                     manualTrigger: false,
                     reviewGroups: [],
