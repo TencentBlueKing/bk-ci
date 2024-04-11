@@ -77,7 +77,6 @@
 .bkdevops-radio {
   width: 100%;
   ::v-deep .bk-radio-text {
-    width: calc(100% - 21px);
     height: 20px;
     line-height: 20px;
   }
@@ -89,7 +88,6 @@
     display: inline-block;
   }
   .tip-style {
-    width: 85%;
     border-bottom: 1px dashed;
   }
 }
