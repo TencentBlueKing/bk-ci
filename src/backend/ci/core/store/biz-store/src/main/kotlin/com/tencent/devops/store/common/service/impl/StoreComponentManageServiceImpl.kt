@@ -90,7 +90,7 @@ class StoreComponentManageServiceImpl @Autowired constructor(
     private fun getStoreManagementExtraService(storeType: StoreTypeEnum): StoreManagementExtraService {
         return SpringContextUtil.getBean(
             StoreManagementExtraService::class.java,
-            "${storeType}MANAGEMENT_EXTRA_SERVICE"
+            "${storeType}_MANAGEMENT_EXTRA_SERVICE"
         )
     }
 
