@@ -48,6 +48,7 @@ import com.tencent.devops.store.common.handler.StoreDeleteHandlerChain
 import com.tencent.devops.store.common.handler.StoreDeleteRepoFileHandler
 import com.tencent.devops.store.common.service.StoreBaseInstallService
 import com.tencent.devops.store.common.service.StoreComponentManageService
+import com.tencent.devops.store.common.service.StoreManagementExtraService
 import com.tencent.devops.store.common.service.StoreProjectService
 import com.tencent.devops.store.common.service.StoreSpecBusService
 import com.tencent.devops.store.common.utils.StoreReleaseUtils
@@ -84,6 +85,13 @@ class StoreComponentManageServiceImpl @Autowired constructor(
 
     companion object {
         private val logger = LoggerFactory.getLogger(StoreComponentManageServiceImpl::class.java)
+    }
+
+    private fun getStoreManagementExtraService(storeType: StoreTypeEnum): StoreManagementExtraService {
+        return SpringContextUtil.getBean(
+            StoreManagementExtraService::class.java,
+            "${storeType}MANAGEMENT_EXTRA_SERVICE"
+        )
     }
 
     override fun updateComponentBaseInfo(
@@ -224,12 +232,9 @@ class StoreComponentManageServiceImpl @Autowired constructor(
         storeCode: String,
         unInstallReq: UnInstallReq
     ): Result<Boolean> {
+
         logger.info("uninstallComponent|userId:$userId|projectCode:$projectCode|storeCode:$storeCode")
-        val storeSpecBusService = SpringContextUtil.getBean(
-            StoreSpecBusService::class.java,
-            StoreUtils.getSpecBusServiceBeanName(StoreTypeEnum.valueOf(storeType))
-        )
-        storeSpecBusService.uninstallComponentParamCheck(
+        getStoreManagementExtraService(StoreTypeEnum.valueOf(storeType)).uninstallComponentParamCheck(
             userId = userId,
             projectCode = projectCode,
             storeType = storeType,
