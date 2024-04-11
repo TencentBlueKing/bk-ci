@@ -1,25 +1,15 @@
 <template>
     <div class="bk-button-group">
-        <bk-button
-            v-for="item in pipelineModes"
-            size="small"
-            :key="item.id"
-            :class="item.cls"
-            :disabled="isSwitching"
-            @click="updateMode(item.id)"
-        >
+        <bk-button v-for="item in pipelineModes" size="small" :key="item.id" :class="item.cls" :disabled="isSwitching"
+            @click="updateMode(item.id)">
             {{ item.label }}
         </bk-button>
-        <bk-dialog
-            render-directive="if"
-            v-model="leaveConfirmVisisble"
-            :title="$t('tips')"
-            header-position="left"
-            width="500"
-        >
-            {{$t('saveBeforeSwitch')}}
+        <bk-dialog render-directive="if" v-model="leaveConfirmVisisble" :title="$t('tips')" header-position="left"
+            width="500">
+            {{ $t('saveBeforeSwitch') }}
             <template slot="footer">
-                <bk-button theme="primary" :loading="isSaving" @click="handleConfirm(false)">{{ $t('saveDraft&Switch') }}</bk-button>
+                <bk-button theme="primary" :loading="isSaving" @click="handleConfirm(false)">{{ $t('saveDraft&Switch')
+                }}</bk-button>
                 <bk-button @click="handleConfirm(true)" :loading="isSaving">{{ $t('dropDraft') }}</bk-button>
                 <bk-button @click="handleClose" :loading="isSaving">{{ $t('cancel') }}</bk-button>
             </template>
@@ -28,9 +18,9 @@
 </template>
 
 <script>
-    import { mapState, mapActions, mapGetters } from 'vuex'
-    import { CODE_MODE } from '@/utils/pipelineConst'
     import { UPDATE_PIPELINE_INFO } from '@/store/modules/atom/constants'
+    import { CODE_MODE } from '@/utils/pipelineConst'
+    import { mapActions, mapGetters, mapState } from 'vuex'
     export default {
         emit: ['change'],
         props: {
@@ -45,7 +35,7 @@
             },
             save: {
                 type: Function,
-                default: () => {}
+                default: () => { }
             }
         },
         data () {
@@ -85,7 +75,7 @@
                 updatePipelineMode: 'updatePipelineMode',
                 canSwitchToYaml: 'atom/canSwitchToYaml'
             }),
-            async handleConfirm  (isDrop = false) {
+            async handleConfirm (isDrop = false) {
                 let result = true
                 if (!isDrop) {
                     this.isSaving = true
@@ -184,3 +174,10 @@
         }
     }
 </script>
+<style lang="scss" scoped>
+.bk-button-group {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+
+}
+</style>

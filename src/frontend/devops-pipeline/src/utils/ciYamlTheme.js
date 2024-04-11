@@ -8,11 +8,11 @@ export default {
         },
         {
             token: 'string',
-            foreground: '8F3AFF'
+            foreground: '6C9D0B'
         },
         {
             token: 'variable',
-            foreground: '8F3AFF'
+            foreground: '1AAFB0'
         },
         {
             token: 'type',
