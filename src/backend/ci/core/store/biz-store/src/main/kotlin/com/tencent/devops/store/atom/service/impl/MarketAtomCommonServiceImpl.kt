@@ -564,8 +564,14 @@ class MarketAtomCommonServiceImpl : MarketAtomCommonService {
                 params = arrayOf(message)
             )
         }
-        val defaultRetryPolicy = configMap[BK_DEFAULT_RETRY_POLICY] as? List<String>
-        if (!defaultRetryPolicy.isNullOrEmpty()) {
+        val defaultRetryPolicy = configMap[BK_DEFAULT_RETRY_POLICY]
+        if (defaultRetryPolicy != null) {
+            if (defaultRetryPolicy !is List<*>) {
+                throw ErrorCodeException(
+                    errorCode = StoreMessageCode.TASK_JSON_CONFIG_IS_INVALID,
+                    params = arrayOf("defaultRetryPolicy not is List")
+                )
+            }
             val invalidValues = defaultRetryPolicy.filter {
                 it !in setOf(AtomRetryPolicyEnum.AUTO_RETRY.name, AtomRetryPolicyEnum.MANUALLY_RETRY.name)
             }
