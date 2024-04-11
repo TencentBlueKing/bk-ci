@@ -652,7 +652,6 @@ class ThirdPartyDispatchService @Autowired constructor(
                 // 判断是否有 jobEnv 的限制，筛选单节点的并发数
                 jobEnvActiveAgents = checkSingleNodeConcurrency(dispatchMessage, envId, jobEnvActiveAgents)
 
-
                 // 没有可用构建机列表进入下一次重试, 修复获取最近构建构建机超过10次不构建会被驱逐出最近构建机列表的BUG
                 if (jobEnvActiveAgents.isNotEmpty() && pickupAgent(
                         activeAgents = jobEnvActiveAgents,
