@@ -8,6 +8,11 @@
             </div>
             <div class="var-operate" v-if="editable">
                 <i
+                    v-bk-tooltips="{
+                        content: disabledCopyTips,
+                        placement: 'top-start',
+                        disabled: !disabledCopyTips
+                    }"
                     class="bk-icon icon-copy"
                     :class="{ 'disabled-copy': disabledCopy }"
                     @click.stop="handleCopy(bkVarWrapper(copyPrefix + name))"
@@ -40,6 +45,10 @@
             disabledCopy: {
                 type: Boolean,
                 default: false
+            },
+            disabledCopyTips: {
+                type: String,
+                default: ''
             }
         },
         methods: {

@@ -18,11 +18,6 @@
                 class="atom-group-header"
                 slot="header"
                 :class="{ 'disabled-header': group.disableHeader }"
-                v-bk-tooltips="{
-                    content: $t('newui.stepUseWarn'),
-                    placement: 'top-start',
-                    disabled: !group.disableHeader
-                }"
             >
                 <div class="env-name flex-item">
                     <bk-icon class="toggle-icon" type="right-shape" />
@@ -49,6 +44,7 @@
                                 <form-field
                                     label="Step ID"
                                     style="margin-bottom: 16px;"
+                                    :hide-colon="true"
                                     :is-error="errors.has('step.editStepId')"
                                     :desc="$t('editPage.stepIdDesc')"
                                     :error-msg="errors.first('step.editStepId')"
@@ -79,6 +75,7 @@
                         :editable="editable"
                         :copy-prefix="group.envPrefix"
                         :disabled-copy="!group.stepId || group.disableHeader"
+                        :disabled-copy-tips="group.disableHeader ? $t('newui.stepUseWarn') : ''"
                     />
                 </template>
             </section>

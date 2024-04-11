@@ -141,9 +141,6 @@
             notifyGroupStr () {
                 return this.notifyGroup.join(',')
             },
-            notifyGroupStr () {
-                return (this.stageControl?.notifyGroup ?? []).join(',')
-            },
             markdownContent () {
                 return this.stageControl?.markdownContent
             },
