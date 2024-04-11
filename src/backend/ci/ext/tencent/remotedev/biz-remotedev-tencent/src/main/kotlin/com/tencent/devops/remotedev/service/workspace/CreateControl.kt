@@ -895,7 +895,8 @@ class CreateControl @Autowired constructor(
                 settingEnvs = remoteDevSettingDao.fetchOneSetting(dslContext, userId).envsForVariable,
                 bkTicket = bkTicket,
                 projectId = projectId,
-                mountType = mountType
+                mountType = mountType,
+                ownerType = workspace.ownerType
             )
         )
 
