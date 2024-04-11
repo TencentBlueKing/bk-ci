@@ -90,8 +90,8 @@ class ThirdPartyDispatchService @Autowired constructor(
 ) {
     fun canDispatch(event: PipelineAgentStartupEvent) =
         event.dispatchType is ThirdPartyAgentIDDispatchType ||
-                event.dispatchType is ThirdPartyAgentEnvDispatchType ||
-                event.dispatchType is ThirdPartyDevCloudDispatchType
+            event.dispatchType is ThirdPartyAgentEnvDispatchType ||
+            event.dispatchType is ThirdPartyDevCloudDispatchType
 
     fun startUp(dispatchMessage: DispatchMessage) {
         when (dispatchMessage.event.dispatchType) {
@@ -148,11 +148,11 @@ class ThirdPartyDispatchService @Autowired constructor(
                     throw DispatchRetryMQException(
                         errorCodeEnum = ErrorCodeEnum.BUILD_ENV_PREPARATION,
                         errorMessage = "${dispatchMessage.event.buildId}|${dispatchMessage.event.vmSeqId} " +
-                                I18nUtil.getCodeLanMessage(
-                                    messageCode = BK_QUEUE_TIMEOUT_MINUTES,
-                                    language = I18nUtil.getDefaultLocaleLanguage(),
-                                    params = arrayOf("${dispatchMessage.event.queueTimeoutMinutes}")
-                                )
+                            I18nUtil.getCodeLanMessage(
+                                messageCode = BK_QUEUE_TIMEOUT_MINUTES,
+                                language = I18nUtil.getDefaultLocaleLanguage(),
+                                params = arrayOf("${dispatchMessage.event.queueTimeoutMinutes}")
+                            )
                     )
                 }
 
@@ -219,7 +219,7 @@ class ThirdPartyDispatchService @Autowired constructor(
                 errorCode = ErrorCodeEnum.GET_BUILD_AGENT_ERROR.errorCode,
                 formatErrorMessage = ErrorCodeEnum.GET_BUILD_AGENT_ERROR.formatErrorMessage,
                 errorMessage = ErrorCodeEnum.GET_BUILD_AGENT_ERROR.getErrorMessage() +
-                        "(System Error) - ${agentResult.message}"
+                    "(System Error) - ${agentResult.message}"
             )
         }
 
@@ -229,7 +229,7 @@ class ThirdPartyDispatchService @Autowired constructor(
                 errorCode = ErrorCodeEnum.VM_STATUS_ERROR.errorCode,
                 formatErrorMessage = ErrorCodeEnum.VM_STATUS_ERROR.formatErrorMessage,
                 errorMessage = ErrorCodeEnum.VM_STATUS_ERROR.getErrorMessage() +
-                        "- ${dispatchType.displayName}| status: (${agentResult.agentStatus?.name})"
+                    "- ${dispatchType.displayName}| status: (${agentResult.agentStatus?.name})"
             )
         }
 
@@ -239,7 +239,7 @@ class ThirdPartyDispatchService @Autowired constructor(
                 errorCode = ErrorCodeEnum.FOUND_AGENT_ERROR.errorCode,
                 formatErrorMessage = ErrorCodeEnum.FOUND_AGENT_ERROR.formatErrorMessage,
                 errorMessage = ErrorCodeEnum.FOUND_AGENT_ERROR.getErrorMessage() +
-                        "(System Error) - $dispatchType agent is null"
+                    "(System Error) - $dispatchType agent is null"
             )
         }
 
@@ -255,9 +255,8 @@ class ThirdPartyDispatchService @Autowired constructor(
             )
         ) {
             logDebug(
-                buildLogPrinter = buildLogPrinter,
-                dispatchMessage = dispatchMessage,
-                message = I18nUtil.getCodeLanMessage(
+                dispatchMessage.event,
+                I18nUtil.getCodeLanMessage(
                     messageCode = BK_AGENT_IS_BUSY,
                     language = I18nUtil.getDefaultLocaleLanguage()
                 ) + " - retry: ${dispatchMessage.event.retryTime + 1}"
@@ -373,7 +372,7 @@ class ThirdPartyDispatchService @Autowired constructor(
 
                 logger.info(
                     "${event.buildId}|START_AGENT_BY_ID|j(${event.vmSeqId})|" +
-                            "agent=${agent.agentId}"
+                        "agent=${agent.agentId}"
                 )
                 log(
                     dispatchMessage.event,
@@ -396,26 +395,6 @@ class ThirdPartyDispatchService @Autowired constructor(
         } finally {
             redisLock.unlock()
         }
-    }
-
-    private fun log(event: PipelineAgentStartupEvent, logMessage: String) {
-        buildLogPrinter.addLine(
-            buildId = event.buildId,
-            message = logMessage,
-            tag = VMUtils.genStartVMTaskId(event.vmSeqId),
-            jobId = event.containerHashId,
-            executeCount = event.executeCount ?: 1
-        )
-    }
-
-    private fun logWarn(event: PipelineAgentStartupEvent, logMessage: String) {
-        buildLogPrinter.addYellowLine(
-            buildId = event.buildId,
-            message = logMessage,
-            tag = VMUtils.genStartVMTaskId(event.vmSeqId),
-            jobId = event.containerHashId,
-            executeCount = event.executeCount ?: 1
-        )
     }
 
     private fun inQueue(
@@ -526,7 +505,7 @@ class ThirdPartyDispatchService @Autowired constructor(
         if (agentsResult.status == Response.Status.FORBIDDEN.statusCode) {
             logger.warn(
                 "${dispatchMessage.event.buildId}|START_AGENT_FAILED_FORBIDDEN|" +
-                        "j(${dispatchMessage.event.vmSeqId})|dispatchType=$dispatchType|err=${agentsResult.message}"
+                    "j(${dispatchMessage.event.vmSeqId})|dispatchType=$dispatchType|err=${agentsResult.message}"
             )
 
             throw BuildFailureException(
@@ -540,13 +519,12 @@ class ThirdPartyDispatchService @Autowired constructor(
         if (agentsResult.isNotOk()) {
             logger.warn(
                 "${dispatchMessage.event.buildId}|START_AGENT_FAILED|" +
-                        "j(${dispatchMessage.event.vmSeqId})|dispatchType=$dispatchType|err=${agentsResult.message}"
+                    "j(${dispatchMessage.event.vmSeqId})|dispatchType=$dispatchType|err=${agentsResult.message}"
             )
 
             logDebug(
-                buildLogPrinter = buildLogPrinter,
-                dispatchMessage = dispatchMessage,
-                message = I18nUtil.getCodeLanMessage(
+                dispatchMessage.event,
+                I18nUtil.getCodeLanMessage(
                     messageCode = BK_AGENT_IS_BUSY,
                     language = I18nUtil.getDefaultLocaleLanguage()
                 ) + " - retry: ${dispatchMessage.event.retryTime + 1}"
@@ -555,19 +533,18 @@ class ThirdPartyDispatchService @Autowired constructor(
             throw DispatchRetryMQException(
                 errorCodeEnum = ErrorCodeEnum.FOUND_AGENT_ERROR,
                 errorMessage = ErrorCodeEnum.GET_BUILD_AGENT_ERROR.getErrorMessage() +
-                        "(System Error) - ${dispatchType.envName}: ${agentsResult.message}"
+                    "(System Error) - ${dispatchType.envName}: ${agentsResult.message}"
             )
         }
 
         if (agentsResult.data == null) {
             logger.warn(
                 "${dispatchMessage.event.buildId}|START_AGENT_FAILED|j(${dispatchMessage.event.vmSeqId})|" +
-                        "dispatchType=$dispatchType|err=null agents"
+                    "dispatchType=$dispatchType|err=null agents"
             )
             logDebug(
-                buildLogPrinter = buildLogPrinter,
-                dispatchMessage = dispatchMessage,
-                message = I18nUtil.getCodeLanMessage(
+                dispatchMessage.event,
+                I18nUtil.getCodeLanMessage(
                     messageCode = BK_AGENT_IS_BUSY,
                     language = I18nUtil.getDefaultLocaleLanguage()
                 ) + " - retry: ${dispatchMessage.event.retryTime + 1}"
@@ -576,7 +553,7 @@ class ThirdPartyDispatchService @Autowired constructor(
             throw DispatchRetryMQException(
                 errorCodeEnum = ErrorCodeEnum.FOUND_AGENT_ERROR,
                 errorMessage = ErrorCodeEnum.GET_BUILD_AGENT_ERROR.getErrorMessage() +
-                        "System Error) - ${dispatchType.envName}: agent is null"
+                    "System Error) - ${dispatchType.envName}: agent is null"
             )
         }
 
@@ -592,7 +569,7 @@ class ThirdPartyDispatchService @Autowired constructor(
         if (agentResData.isEmpty()) {
             logger.warn(
                 "${dispatchMessage.event.buildId}|START_AGENT_FAILED|j(${dispatchMessage.event.vmSeqId})|" +
-                        "dispatchType=$dispatchType|err=empty agents"
+                    "dispatchType=$dispatchType|err=empty agents"
             )
             throw DispatchRetryMQException(
                 errorCodeEnum = ErrorCodeEnum.VM_NODE_NULL,
@@ -621,10 +598,9 @@ class ThirdPartyDispatchService @Autowired constructor(
 
                 var jobEnvActiveAgents = activeAgents
                 if (!dispatchMessage.event.ignoreEnvAgentIds.isNullOrEmpty()) {
-                    log(
-                        buildLogPrinter,
-                        dispatchMessage,
-                        message = I18nUtil.getCodeLanMessage(
+                    logWarn(
+                        dispatchMessage.event,
+                        I18nUtil.getCodeLanMessage(
                             messageCode = BK_ENV_WORKER_ERROR_IGNORE,
                             params = arrayOf(dispatchMessage.event.ignoreEnvAgentIds!!.joinToString(",")),
                             language = I18nUtil.getDefaultLocaleLanguage()
@@ -664,9 +640,8 @@ class ThirdPartyDispatchService @Autowired constructor(
                 }
             } else {
                 log(
-                    buildLogPrinter,
-                    dispatchMessage,
-                    message = I18nUtil.getCodeLanMessage(
+                    dispatchMessage.event,
+                    I18nUtil.getCodeLanMessage(
                         messageCode = BK_ENV_BUSY,
                         language = I18nUtil.getDefaultLocaleLanguage()
                     )
@@ -675,13 +650,12 @@ class ThirdPartyDispatchService @Autowired constructor(
 
             logger.info(
                 "${dispatchMessage.event.buildId}|START_AGENT|j(${dispatchMessage.event.vmSeqId})|" +
-                        "dispatchType=$dispatchType|Not Found, Retry!"
+                    "dispatchType=$dispatchType|Not Found, Retry!"
             )
 
             logDebug(
-                buildLogPrinter = buildLogPrinter,
-                dispatchMessage = dispatchMessage,
-                message = I18nUtil.getCodeLanMessage(
+                dispatchMessage.event,
+                I18nUtil.getCodeLanMessage(
                     messageCode = BK_AGENT_IS_BUSY,
                     language = I18nUtil.getDefaultLocaleLanguage()
                 ) + " - retry: ${dispatchMessage.event.retryTime + 1}"
@@ -690,11 +664,11 @@ class ThirdPartyDispatchService @Autowired constructor(
             throw DispatchRetryMQException(
                 errorCodeEnum = ErrorCodeEnum.LOAD_BUILD_AGENT_FAIL,
                 errorMessage = "${dispatchMessage.event.buildId}|${dispatchMessage.event.vmSeqId} " +
-                        I18nUtil.getCodeLanMessage(
-                            messageCode = BK_QUEUE_TIMEOUT_MINUTES,
-                            language = I18nUtil.getDefaultLocaleLanguage(),
-                            params = arrayOf("${dispatchMessage.event.queueTimeoutMinutes}")
-                        )
+                    I18nUtil.getCodeLanMessage(
+                        messageCode = BK_QUEUE_TIMEOUT_MINUTES,
+                        language = I18nUtil.getDefaultLocaleLanguage(),
+                        params = arrayOf("${dispatchMessage.event.queueTimeoutMinutes}")
+                    )
             )
         }
     }
@@ -738,9 +712,8 @@ class ThirdPartyDispatchService @Autowired constructor(
         }
         // 没有一个节点满足则进入排队机制
         if (jobEnvActiveAgents.isEmpty()) {
-            logDebug(
-                buildLogPrinter,
-                dispatchMessage,
+            logWarn(
+                dispatchMessage.event,
                 I18nUtil.getCodeLanMessage(
                     messageCode = BK_THIRD_JOB_NODE_CURR,
                     language = I18nUtil.getDefaultLocaleLanguage(),
@@ -774,9 +747,8 @@ class ThirdPartyDispatchService @Autowired constructor(
                 projectId = dispatchMessage.event.projectId
             )
             if (c >= dispatchMessage.event.allNodeConcurrency!!) {
-                logDebug(
-                    buildLogPrinter,
-                    dispatchMessage,
+                logWarn(
+                    dispatchMessage.event,
                     I18nUtil.getCodeLanMessage(
                         messageCode = BK_THIRD_JOB_ENV_CURR,
                         language = I18nUtil.getDefaultLocaleLanguage(),
@@ -848,8 +820,8 @@ class ThirdPartyDispatchService @Autowired constructor(
          * 最高优先级的agent: 根据哪些agent没有任何任务并且是在最近构建中使用到的Agent
          */
         logDebug(
-            buildLogPrinter, dispatchMessage,
-            message = "retry: ${dispatchMessage.event.retryTime} | " +
+            dispatchMessage.event,
+            "retry: ${dispatchMessage.event.retryTime} | " +
                 I18nUtil.getCodeLanMessage(
                     messageCode = BK_SEARCHING_AGENT,
                     language = I18nUtil.getDefaultLocaleLanguage()
@@ -858,17 +830,18 @@ class ThirdPartyDispatchService @Autowired constructor(
         if (startEmptyAgents(dispatchMessage, dispatchType, pbAgents, hasTryAgents, envId)) {
             logger.info(
                 "${dispatchMessage.event.buildId}|START_AGENT|j(${dispatchMessage.event.vmSeqId})|" +
-                        "dispatchType=$dispatchType|Get Lv.1"
+                    "dispatchType=$dispatchType|Get Lv.1"
             )
             return true
         }
 
         logDebug(
-            buildLogPrinter, dispatchMessage, message = "retry: ${dispatchMessage.event.retryTime} | " +
-                    I18nUtil.getCodeLanMessage(
-                        messageCode = BK_MAX_BUILD_SEARCHING_AGENT,
-                        language = I18nUtil.getDefaultLocaleLanguage()
-                    )
+            dispatchMessage.event,
+            "retry: ${dispatchMessage.event.retryTime} | " +
+                I18nUtil.getCodeLanMessage(
+                    messageCode = BK_MAX_BUILD_SEARCHING_AGENT,
+                    language = I18nUtil.getDefaultLocaleLanguage()
+                )
         )
         /**
          * 次高优先级的agent: 最近构建机中使用过这个构建机,并且当前有构建任务,选当前正在运行任务最少的构建机(没有达到当前构建机的最大并发数)
@@ -876,17 +849,18 @@ class ThirdPartyDispatchService @Autowired constructor(
         if (startAvailableAgents(dispatchMessage, dispatchType, pbAgents, hasTryAgents, envId)) {
             logger.info(
                 "${dispatchMessage.event.buildId}|START_AGENT|j(${dispatchMessage.event.vmSeqId})|" +
-                        "dispatchType=$dispatchType|Get Lv.2"
+                    "dispatchType=$dispatchType|Get Lv.2"
             )
             return true
         }
 
         logDebug(
-            buildLogPrinter, dispatchMessage, message = "retry: ${dispatchMessage.event.retryTime} | " +
-                    I18nUtil.getCodeLanMessage(
-                        messageCode = BK_SEARCHING_AGENT_MOST_IDLE,
-                        language = I18nUtil.getDefaultLocaleLanguage()
-                    )
+            dispatchMessage.event,
+            "retry: ${dispatchMessage.event.retryTime} | " +
+                I18nUtil.getCodeLanMessage(
+                    messageCode = BK_SEARCHING_AGENT_MOST_IDLE,
+                    language = I18nUtil.getDefaultLocaleLanguage()
+                )
         )
         val allAgents = sortAgent(
             dispatchMessage = dispatchMessage,
@@ -901,17 +875,18 @@ class ThirdPartyDispatchService @Autowired constructor(
         if (startEmptyAgents(dispatchMessage, dispatchType, allAgents, hasTryAgents, envId)) {
             logger.info(
                 "${dispatchMessage.event.buildId}|START_AGENT|j(${dispatchMessage.event.vmSeqId})|" +
-                        "dispatchType=$dispatchType|pickup Lv.3"
+                    "dispatchType=$dispatchType|pickup Lv.3"
             )
             return true
         }
 
         logDebug(
-            buildLogPrinter, dispatchMessage, message = "retry: ${dispatchMessage.event.retryTime} | " +
-                    I18nUtil.getCodeLanMessage(
-                        messageCode = BK_SEARCHING_AGENT_PARALLEL_AVAILABLE,
-                        language = I18nUtil.getDefaultLocaleLanguage()
-                    )
+            dispatchMessage.event,
+            "retry: ${dispatchMessage.event.retryTime} | " +
+                I18nUtil.getCodeLanMessage(
+                    messageCode = BK_SEARCHING_AGENT_PARALLEL_AVAILABLE,
+                    language = I18nUtil.getDefaultLocaleLanguage()
+                )
         )
         /**
          * 第四优先级的agent: 当前有构建任务,选当前正在运行任务最少的构建机(没有达到当前构建机的最大并发数)
@@ -920,16 +895,15 @@ class ThirdPartyDispatchService @Autowired constructor(
         ) {
             logger.info(
                 "${dispatchMessage.event.buildId}|START_AGENT|j(${dispatchMessage.event.vmSeqId})|" +
-                        "dispatchType=$dispatchType|Get Lv.4"
+                    "dispatchType=$dispatchType|Get Lv.4"
             )
             return true
         }
 
         if (dispatchMessage.event.retryTime == 1) {
-            log(
-                buildLogPrinter = buildLogPrinter,
-                dispatchMessage = dispatchMessage,
-                message = I18nUtil.getCodeLanMessage(
+            logWarn(
+                dispatchMessage.event,
+                I18nUtil.getCodeLanMessage(
                     messageCode = BK_NO_AGENT_AVAILABLE,
                     language = I18nUtil.getDefaultLocaleLanguage()
                 )
@@ -984,7 +958,7 @@ class ThirdPartyDispatchService @Autowired constructor(
                     if (startEnvAgentBuild(dispatchMessage, agent, dispatchType, hasTryAgents, envId)) {
                         logger.info(
                             "[${dispatchMessage.event.projectId}|$[${dispatchMessage.event.pipelineId}|" +
-                                    "${dispatchMessage.event.buildId}|${agent.agentId}] Success to start the build"
+                                "${dispatchMessage.event.buildId}|${agent.agentId}] Success to start the build"
                         )
                         return true
                     }
@@ -1057,12 +1031,12 @@ class ThirdPartyDispatchService @Autowired constructor(
         ): Boolean {
             return if (dockerBuilder) {
                 agent.dockerParallelTaskCount != null &&
-                        agent.dockerParallelTaskCount!! > 0 &&
-                        agent.dockerParallelTaskCount!! > dockerRunningCnt
+                    agent.dockerParallelTaskCount!! > 0 &&
+                    agent.dockerParallelTaskCount!! > dockerRunningCnt
             } else {
                 agent.parallelTaskCount != null &&
-                        agent.parallelTaskCount!! > 0 &&
-                        agent.parallelTaskCount!! > runningCnt
+                    agent.parallelTaskCount!! > 0 &&
+                    agent.parallelTaskCount!! > runningCnt
             }
         }
     }
@@ -1084,39 +1058,41 @@ class ThirdPartyDispatchService @Autowired constructor(
             }
             sortQ.add(Triple(it, runningCnt, dockerRunningCnt))
             logDebug(
-                buildLogPrinter, dispatchMessage,
-                message = "[${it.agentId}]${it.hostname}/${it.ip}, Jobs:$runningCnt, DockerJobs:$dockerRunningCnt"
+                dispatchMessage.event,
+                "[${it.agentId}]${it.hostname}/${it.ip}, Jobs:$runningCnt, DockerJobs:$dockerRunningCnt"
             )
         }
         sortQ.sortBy { it.second + it.third }
         return sortQ
     }
 
-    fun log(
-        buildLogPrinter: BuildLogPrinter,
-        dispatchMessage: DispatchMessage,
-        message: String
-    ) {
+    private fun log(event: PipelineAgentStartupEvent, message: String) {
         buildLogPrinter.addLine(
-            buildId = dispatchMessage.event.buildId,
+            buildId = event.buildId,
             message = message,
-            tag = VMUtils.genStartVMTaskId(dispatchMessage.event.vmSeqId),
-            jobId = dispatchMessage.event.containerHashId,
-            executeCount = dispatchMessage.event.executeCount ?: 1
+            tag = VMUtils.genStartVMTaskId(event.vmSeqId),
+            jobId = event.containerHashId,
+            executeCount = event.executeCount ?: 1
         )
     }
 
-    fun logDebug(
-        buildLogPrinter: BuildLogPrinter,
-        dispatchMessage: DispatchMessage,
-        message: String
-    ) {
+    private fun logWarn(event: PipelineAgentStartupEvent, logMessage: String) {
+        buildLogPrinter.addYellowLine(
+            buildId = event.buildId,
+            message = logMessage,
+            tag = VMUtils.genStartVMTaskId(event.vmSeqId),
+            jobId = event.containerHashId,
+            executeCount = event.executeCount ?: 1
+        )
+    }
+
+    private fun logDebug(event: PipelineAgentStartupEvent, message: String) {
         buildLogPrinter.addDebugLine(
-            buildId = dispatchMessage.event.buildId,
+            buildId = event.buildId,
             message = message,
-            tag = VMUtils.genStartVMTaskId(dispatchMessage.event.vmSeqId),
-            jobId = dispatchMessage.event.containerHashId,
-            executeCount = dispatchMessage.event.executeCount ?: 1
+            tag = VMUtils.genStartVMTaskId(event.vmSeqId),
+            jobId = event.containerHashId,
+            executeCount = event.executeCount ?: 1
         )
     }
 
