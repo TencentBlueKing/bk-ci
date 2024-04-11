@@ -335,6 +335,7 @@ class PipelineResourceVersionDao {
         pipelineId: String,
         offset: Int,
         limit: Int,
+        includeDraft: Boolean?,
         excludeVersion: Int?,
         creator: String?,
         versionName: String?,
@@ -351,6 +352,9 @@ class PipelineResourceVersionDao {
                     BRANCH_ACTION.ne(BranchVersionAction.INACTIVE.name)
                         .or(BRANCH_ACTION.isNull)
                 )
+            if (includeDraft == false) {
+                query.and(STATUS.notEqual(VersionStatus.COMMITTING.name))
+            }
             excludeVersion?.let {
                 query.and(VERSION.notEqual(excludeVersion))
             }

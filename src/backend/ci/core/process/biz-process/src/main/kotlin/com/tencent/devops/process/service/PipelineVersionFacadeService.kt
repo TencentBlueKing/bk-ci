@@ -660,6 +660,7 @@ class PipelineVersionFacadeService @Autowired constructor(
         page: Int,
         pageSize: Int,
         fromVersion: Int?,
+        includeDraft: Boolean? = true,
         versionName: String? = null,
         creator: String? = null,
         description: String? = null
@@ -677,7 +678,8 @@ class PipelineVersionFacadeService @Autowired constructor(
                 pipelineInfo = pipelineInfo,
                 projectId = projectId,
                 pipelineId = pipelineId,
-                version = fromVersion
+                version = fromVersion,
+                includeDraft = includeDraft
             )
         } else null
         val (size, pipelines) = repositoryVersionService.listPipelineVersion(
@@ -687,6 +689,7 @@ class PipelineVersionFacadeService @Autowired constructor(
             creator = creator,
             description = description,
             versionName = versionName,
+            includeDraft = includeDraft,
             excludeVersion = fromVersion,
             offset = offset,
             limit = limit
