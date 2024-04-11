@@ -43,10 +43,18 @@ data class MatrixPipelineInfo(
     fun toMatrixConvert(): Any {
         return mapOf(
             "include" to if (!this.include.isNullOrBlank()) {
-                YamlUtil.to<Any>(this.include)
+                val pattern = Pattern.compile("^(\\\$\\{\\{[ ]*fromJSON\\()([^(^)]+)(\\)[ ]*\\}\\})\$")
+                val matcher = pattern.matcher(this.include)
+                if (!matcher.find()) {
+                    YamlUtil.to<Any>(this.include)
+                } else null
             } else null,
             "exclude" to if (!this.exclude.isNullOrBlank()) {
-                YamlUtil.to<Any>(this.exclude)
+                val pattern = Pattern.compile("^(\\\$\\{\\{[ ]*fromJSON\\()([^(^)]+)(\\)[ ]*\\}\\})\$")
+                val matcher = pattern.matcher(this.exclude)
+                if (!matcher.find()) {
+                    YamlUtil.to<Any>(this.exclude)
+                } else null
             } else null,
             "strategy" to if (!this.strategy.isNullOrBlank()) {
                 val pattern = Pattern.compile("^(\\\$\\{\\{[ ]*fromJSON\\()([^(^)]+)(\\)[ ]*\\}\\})\$")

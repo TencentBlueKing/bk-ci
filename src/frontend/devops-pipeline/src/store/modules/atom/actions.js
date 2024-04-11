@@ -139,13 +139,32 @@ export default {
     setPipelineContainer ({ commit }, { oldContainers, containers }) {
         commit(SET_PIPELINE_CONTAINER, { oldContainers, containers })
     },
-    requestTemplate: async ({ commit, dispatch }, { projectId, templateId, version }) => {
+    requestTemplate: async ({ commit, dispatch, getters }, { projectId, templateId, version }) => {
         try {
-            const url = version ? `/${PROCESS_API_URL_PREFIX}/user/templates/projects/${projectId}/templates/${templateId}?version=${version}` : `/${PROCESS_API_URL_PREFIX}/user/templates/projects/${projectId}/templates/${templateId}`
-            const response = await request.get(url)
-            dispatch('setPipeline', response.data.template)
+            const versionQuery = version
+                ? {
+                    version
+                }
+                : null
+            const [templateRes, atomPropRes] = await Promise.all([
+                request.get(`/${PROCESS_API_URL_PREFIX}/user/templates/projects/${projectId}/templates/${templateId}`, {
+                    params: versionQuery
+                }),
+                request.get(`/${PROCESS_API_URL_PREFIX}/user/template/atoms/projects/${projectId}/templates/${templateId}/atom/prop/list`, {
+                    params: versionQuery
+                })
+            ])
+            const template = templateRes.data.template
+            const atomProp = atomPropRes.data
+            const elements = getters.getAllElements(template.stages)
+            elements.forEach(element => { // 将os属性设置到model内
+                Object.assign(element, {
+                    ...atomProp[element.atomCode]
+                })
+            })
+            dispatch('setPipeline', template)
             commit(SET_TEMPLATE, {
-                template: response.data
+                template: templateRes.data
             })
         } catch (e) {
             if (e.code === 403) {

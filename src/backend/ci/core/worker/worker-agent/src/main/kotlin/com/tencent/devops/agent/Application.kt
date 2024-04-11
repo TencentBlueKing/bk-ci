@@ -29,11 +29,12 @@ package com.tencent.devops.agent
 
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
-import com.tencent.devops.worker.WorkRunner
+import com.tencent.devops.agent.service.BuildLessStarter
 import com.tencent.devops.common.api.enums.EnumLoader
 import com.tencent.devops.common.api.util.DHUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.pipeline.ElementSubTypeRegisterLoader
+import com.tencent.devops.worker.WorkRunner
 import com.tencent.devops.worker.common.BUILD_TYPE
 import com.tencent.devops.worker.common.Runner
 import com.tencent.devops.worker.common.WorkspaceInterface
@@ -59,10 +60,10 @@ fun main(args: Array<String>) {
         BuildType.DOCKER.name -> {
             val jobPoolType = DockerEnv.getJobPool()
             // 无编译构建，轮询等待任务
-            if (jobPoolType != null &&
-                jobPoolType == "BUILD_LESS"
-            ) {
+            if (jobPoolType != null && jobPoolType == "BUILD_LESS") {
                 waitBuildLessJobStart()
+            } else if (jobPoolType != null && jobPoolType == "K8S_BUILD_LESS") {
+                BuildLessStarter.waitK8sBuildLessJobStart()
             }
 
             Runner.run(object : WorkspaceInterface {
@@ -145,7 +146,7 @@ private fun doResponse(
     val responseBody = resp.body?.string() ?: ""
     println("${LocalDateTime.now()} Get buildLessTask response: $responseBody")
     return if (resp.isSuccessful && responseBody.isNotBlank()) {
-        val buildLessTask: Map<String, String> = jacksonObjectMapper().readValue(responseBody)
+        val buildLessTask: Map<String, String> = jacksonObjectMapper().readValue<Map<String, String>>(responseBody)
         buildLessTask.forEach { (t, u) ->
             when (t) {
                 "agentId" -> DockerEnv.setAgentId(u)
