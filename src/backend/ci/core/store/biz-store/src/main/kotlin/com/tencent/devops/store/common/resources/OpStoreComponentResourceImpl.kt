@@ -24,41 +24,25 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
+package com.tencent.devops.store.common.resources
 
-package com.tencent.devops.store.pojo.common.publication
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.store.api.common.OpStoreComponentResource
+import com.tencent.devops.store.common.service.OpStoreComponentService
+import com.tencent.devops.store.pojo.common.publication.StoreApproveReleaseRequest
+import org.springframework.beans.factory.annotation.Autowired
 
-import com.tencent.devops.common.api.util.UUIDUtil
-import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
-import io.swagger.v3.oas.annotations.media.Schema
-import java.time.LocalDateTime
-import java.util.UUID
+@RestResource
+class OpStoreComponentResourceImpl @Autowired constructor(
+    private val opStoreComponentService: OpStoreComponentService
+) : OpStoreComponentResource {
 
-@Schema(title = "组件基本特性数据PO")
-data class StoreBaseFeatureDataPO(
-    @get:Schema(title = "主键ID")
-    val id: String = UUIDUtil.generate(),
-    @get:Schema(title = "组件标识")
-    val storeCode: String,
-    @get:Schema(title = "组件类型")
-    val storeType: StoreTypeEnum,
-    @get:Schema(title = "是否为公共组件")
-    val publicFlag: Boolean? = null,
-    @get:Schema(title = "是否推荐")
-    val recommendFlag: Boolean? = null,
-    @get:Schema(title = "是否官方认证")
-    val certificationFlag: Boolean? = null,
-    @get:Schema(title = "基本类型")
-    val type: String? = null,
-    @get:Schema(title = "研发类型")
-    val rdType: String? = null,
-    @get:Schema(title = "权重")
-    val weight: Int? = null,
-    @get:Schema(title = "创建人")
-    val creator: String,
-    @get:Schema(title = "修改人")
-    val modifier: String,
-    @get:Schema(title = "创建时间")
-    val createTime: LocalDateTime = LocalDateTime.now(),
-    @get:Schema(title = "更新时间")
-    val updateTime: LocalDateTime = LocalDateTime.now()
-)
+    override fun approveComponentRelease(
+        userId: String,
+        storeId: String,
+        storeApproveReleaseRequest: StoreApproveReleaseRequest
+    ): Result<Boolean> {
+        return Result(opStoreComponentService.approveComponentRelease(userId, storeId, storeApproveReleaseRequest))
+    }
+}

@@ -24,41 +24,39 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
+package com.tencent.devops.store.api.common
 
-package com.tencent.devops.store.pojo.common.publication
+import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.store.pojo.common.publication.StoreApproveReleaseRequest
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.Parameter
+import io.swagger.v3.oas.annotations.tags.Tag
+import javax.ws.rs.Consumes
+import javax.ws.rs.HeaderParam
+import javax.ws.rs.PUT
+import javax.ws.rs.Path
+import javax.ws.rs.PathParam
+import javax.ws.rs.Produces
+import javax.ws.rs.core.MediaType
 
-import com.tencent.devops.common.api.util.UUIDUtil
-import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
-import io.swagger.v3.oas.annotations.media.Schema
-import java.time.LocalDateTime
-import java.util.UUID
+@Tag(name = "OP_STORE_COMPONENT", description = "研发商店-OP-组件管理")
+@Path("/op/store/components")
+@Produces(MediaType.APPLICATION_JSON)
+@Consumes(MediaType.APPLICATION_JSON)
+interface OpStoreComponentResource {
 
-@Schema(title = "组件基本特性数据PO")
-data class StoreBaseFeatureDataPO(
-    @get:Schema(title = "主键ID")
-    val id: String = UUIDUtil.generate(),
-    @get:Schema(title = "组件标识")
-    val storeCode: String,
-    @get:Schema(title = "组件类型")
-    val storeType: StoreTypeEnum,
-    @get:Schema(title = "是否为公共组件")
-    val publicFlag: Boolean? = null,
-    @get:Schema(title = "是否推荐")
-    val recommendFlag: Boolean? = null,
-    @get:Schema(title = "是否官方认证")
-    val certificationFlag: Boolean? = null,
-    @get:Schema(title = "基本类型")
-    val type: String? = null,
-    @get:Schema(title = "研发类型")
-    val rdType: String? = null,
-    @get:Schema(title = "权重")
-    val weight: Int? = null,
-    @get:Schema(title = "创建人")
-    val creator: String,
-    @get:Schema(title = "修改人")
-    val modifier: String,
-    @get:Schema(title = "创建时间")
-    val createTime: LocalDateTime = LocalDateTime.now(),
-    @get:Schema(title = "更新时间")
-    val updateTime: LocalDateTime = LocalDateTime.now()
-)
+    @Operation(summary = "审核组件发布")
+    @PUT
+    @Path("/components/{storeId}/release/approve")
+    fun approveComponentRelease(
+        @Parameter(description = "用户ID", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "组件ID", required = true)
+        @PathParam("storeId")
+        storeId: String,
+        @Parameter(description = "审核组件发布请求请求报文")
+        storeApproveReleaseRequest: StoreApproveReleaseRequest
+    ): Result<Boolean>
+}

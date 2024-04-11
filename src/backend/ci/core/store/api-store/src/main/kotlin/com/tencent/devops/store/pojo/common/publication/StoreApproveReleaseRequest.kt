@@ -27,38 +27,23 @@
 
 package com.tencent.devops.store.pojo.common.publication
 
-import com.tencent.devops.common.api.util.UUIDUtil
-import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
+import com.tencent.devops.store.pojo.common.PASS
+import com.tencent.devops.store.pojo.common.enums.RdTypeEnum
 import io.swagger.v3.oas.annotations.media.Schema
-import java.time.LocalDateTime
-import java.util.UUID
 
-@Schema(title = "组件基本特性数据PO")
-data class StoreBaseFeatureDataPO(
-    @get:Schema(title = "主键ID")
-    val id: String = UUIDUtil.generate(),
-    @get:Schema(title = "组件标识")
-    val storeCode: String,
-    @get:Schema(title = "组件类型")
-    val storeType: StoreTypeEnum,
-    @get:Schema(title = "是否为公共组件")
-    val publicFlag: Boolean? = null,
-    @get:Schema(title = "是否推荐")
-    val recommendFlag: Boolean? = null,
-    @get:Schema(title = "是否官方认证")
-    val certificationFlag: Boolean? = null,
-    @get:Schema(title = "基本类型")
-    val type: String? = null,
-    @get:Schema(title = "研发类型")
-    val rdType: String? = null,
-    @get:Schema(title = "权重")
+data class StoreApproveReleaseRequest(
+    @get:Schema(title = "是否为公共组件", required = true)
+    val publicFlag: Boolean = false,
+    @get:Schema(title = "是否推荐", required = true)
+    val recommendFlag: Boolean = true,
+    @get:Schema(title = "是否为官方认证", required = true)
+    val certificationFlag: Boolean = false,
+    @get:Schema(title = "研发来源 SELF_DEVELOPED：自研 THIRD_PARTY：第三方", required = false)
+    val rdType: RdTypeEnum? = null,
+    @get:Schema(title = "权重（数值越大代表权重越高）", required = false)
     val weight: Int? = null,
-    @get:Schema(title = "创建人")
-    val creator: String,
-    @get:Schema(title = "修改人")
-    val modifier: String,
-    @get:Schema(title = "创建时间")
-    val createTime: LocalDateTime = LocalDateTime.now(),
-    @get:Schema(title = "更新时间")
-    val updateTime: LocalDateTime = LocalDateTime.now()
+    @get:Schema(title = "审核结果：PASS：通过|REJECT：驳回", required = true)
+    val result: String = PASS,
+    @get:Schema(title = "审核结果说明", required = true)
+    val message: String = ""
 )
