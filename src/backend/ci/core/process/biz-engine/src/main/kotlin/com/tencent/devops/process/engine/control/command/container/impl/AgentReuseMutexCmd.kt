@@ -78,23 +78,9 @@ class AgentReuseMutexCmd @Autowired constructor(
             return agentIdNullError(commandContext, mutex, null)
         }
         // 对存在变量的Agent做替换
-        mutex = decorateMutex(mutex, commandContext.variables)
+        mutex = decorateMutex(commandContext, mutex, commandContext.variables) ?: return
         when (mutex.type) {
-            AgentReuseMutexType.AGENT_ID -> {
-                acquireMutex(commandContext, mutex)
-            }
-
-            AgentReuseMutexType.AGENT_NAME -> {
-                val agentId = try {
-                    client.get(ServiceThirdPartyAgentResource::class).getAgentByDisplayName(
-                        commandContext.event.projectId,
-                        mutex.runtimeAgentOrEnvId!!
-                    ).data?.agentId ?: return agentIdNullError(commandContext, mutex, null)
-                } catch (e: Exception) {
-                    agentIdNullError(commandContext, mutex, e)
-                    return
-                }
-                mutex.runtimeAgentOrEnvId = agentId
+            AgentReuseMutexType.AGENT_ID, AgentReuseMutexType.AGENT_NAME -> {
                 acquireMutex(commandContext, mutex)
             }
 
@@ -104,7 +90,11 @@ class AgentReuseMutexCmd @Autowired constructor(
         }
     }
 
-    private fun decorateMutex(mutex: AgentReuseMutex, variables: Map<String, String>): AgentReuseMutex {
+    private fun decorateMutex(
+        commandContext: ContainerContext,
+        mutex: AgentReuseMutex,
+        variables: Map<String, String>
+    ): AgentReuseMutex? {
         if (!mutex.runtimeAgentOrEnvId.isNullOrBlank()) {
             return mutex
         }
@@ -114,10 +104,26 @@ class AgentReuseMutexCmd @Autowired constructor(
         // 排队任务数量限制，0表示不排队
         val queue = mutex.queue.coerceAtLeast(0).coerceAtMost(MutexControl.MUTEX_MAX_QUEUE)
         // 替换环境变量
-        val runtimeAgentOrEnvId = if (!mutex.agentOrEnvId.isNullOrBlank()) {
+        var runtimeAgentOrEnvId = if (!mutex.agentOrEnvId.isNullOrBlank()) {
             EnvUtils.parseEnv(mutex.agentOrEnvId, variables)
         } else {
             mutex.agentOrEnvId
+        }
+
+        // 针对Name类型的请求agentId，放在初始化中统一处理，防止事件重放后使用id挑选name
+        if (mutex.type == AgentReuseMutexType.AGENT_NAME) {
+            runtimeAgentOrEnvId = try {
+                client.get(ServiceThirdPartyAgentResource::class).getAgentByDisplayName(
+                    commandContext.event.projectId,
+                    runtimeAgentOrEnvId!!
+                ).data?.agentId ?: run {
+                    agentIdNullError(commandContext, mutex, null)
+                    return null
+                }
+            } catch (e: Exception) {
+                agentIdNullError(commandContext, mutex, e)
+                return null
+            }
         }
 
         return if (
