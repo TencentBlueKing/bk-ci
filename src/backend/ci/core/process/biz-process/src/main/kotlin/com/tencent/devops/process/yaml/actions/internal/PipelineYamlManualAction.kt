@@ -29,7 +29,9 @@
 package com.tencent.devops.process.yaml.actions.internal
 
 import com.tencent.devops.common.api.enums.ScmType
+import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.pipeline.enums.CodeTargetAction
+import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.yaml.actions.BaseAction
 import com.tencent.devops.process.yaml.actions.GitActionCommon
 import com.tencent.devops.process.yaml.actions.data.ActionData
@@ -64,12 +66,15 @@ class PipelineYamlManualAction : BaseAction {
     private fun initCommonData(): PipelineYamlManualAction {
         val event = event()
         val gitProjectId = getGitProjectIdOrName()
-        val projectInfo = api.getGitProjectInfo(
+        val gitProjectInfo = api.getGitProjectInfo(
             cred = this.getGitCred(),
             gitProjectId = gitProjectId,
             retry = ApiRequestRetryInfo(true)
-        )!!
-        val defaultBranch = projectInfo.defaultBranch!!
+        ) ?: throw ErrorCodeException(
+            errorCode = ProcessMessageCode.ERROR_GIT_PROJECT_NOT_FOUND_OR_NOT_PERMISSION,
+            params = arrayOf(gitProjectId)
+        )
+        val defaultBranch = gitProjectInfo.defaultBranch!!
         val latestCommit = api.getGitCommitInfo(
             cred = this.getGitCred(),
             gitProjectId = gitProjectId,
@@ -90,7 +95,7 @@ class PipelineYamlManualAction : BaseAction {
             scmType = event.scmType
         )
         this.data.context.defaultBranch = defaultBranch
-        this.data.context.homePage = projectInfo.homepage
+        this.data.context.homePage = gitProjectInfo.homepage
         return this
     }
 

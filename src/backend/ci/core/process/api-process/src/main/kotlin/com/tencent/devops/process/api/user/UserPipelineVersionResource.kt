@@ -222,6 +222,9 @@ interface UserPipelineVersionResource {
         @Parameter(description = "搜索字段：版本名包含字符", required = false)
         @QueryParam("versionName")
         versionName: String? = null,
+        @Parameter(description = "是否包括草稿的全量版本", required = false)
+        @QueryParam("includeDraft")
+        includeDraft: Boolean? = true,
         @Parameter(description = "搜索字段：创建人", required = false)
         @QueryParam("creator")
         creator: String? = null,

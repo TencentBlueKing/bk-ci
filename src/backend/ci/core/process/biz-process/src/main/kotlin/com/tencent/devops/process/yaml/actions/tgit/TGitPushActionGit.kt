@@ -27,9 +27,11 @@
 
 package com.tencent.devops.process.yaml.actions.tgit
 import com.tencent.devops.common.api.enums.ScmType
+import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.webhook.pojo.code.git.GitCommit
 import com.tencent.devops.common.webhook.pojo.code.git.GitPushEvent
 import com.tencent.devops.common.webhook.pojo.code.git.isDeleteEvent
+import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.yaml.actions.BaseAction
 import com.tencent.devops.process.yaml.actions.GitActionCommon
 import com.tencent.devops.process.yaml.actions.GitBaseAction
@@ -101,12 +103,16 @@ class TGitPushActionGit(
     }
 
     override fun initCacheData() {
-        val defaultBranch = apiService.getGitProjectInfo(
+        val gitProjectId = event().project_id.toString()
+        val gitProjectInfo = apiService.getGitProjectInfo(
             cred = this.getGitCred(),
-            gitProjectId = event().project_id.toString(),
+            gitProjectId = gitProjectId,
             retry = ApiRequestRetryInfo(true)
-        )!!.defaultBranch!!
-        data.context.defaultBranch = defaultBranch
+        ) ?: throw ErrorCodeException(
+            errorCode = ProcessMessageCode.ERROR_GIT_PROJECT_NOT_FOUND_OR_NOT_PERMISSION,
+            params = arrayOf(gitProjectId)
+        )
+        data.context.defaultBranch = gitProjectInfo.defaultBranch!!
     }
 
     override fun getYamlPathList(): List<YamlPathListEntry> {

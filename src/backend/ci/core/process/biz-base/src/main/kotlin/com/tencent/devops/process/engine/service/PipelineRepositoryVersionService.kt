@@ -117,7 +117,8 @@ class PipelineRepositoryVersionService(
         pipelineInfo: PipelineInfo?,
         projectId: String,
         pipelineId: String,
-        version: Int
+        version: Int,
+        includeDraft: Boolean? = true
     ): PipelineVersionWithInfo? {
         if (pipelineInfo == null) {
             return null
@@ -127,7 +128,7 @@ class PipelineRepositoryVersionService(
             projectId = projectId,
             pipelineId = pipelineId,
             version = version,
-            includeDraft = true
+            includeDraft = includeDraft
         ) ?: return null
         return PipelineVersionWithInfo(
             createTime = pipelineInfo.createTime,
@@ -175,6 +176,7 @@ class PipelineRepositoryVersionService(
         pipelineId: String,
         offset: Int,
         limit: Int,
+        includeDraft: Boolean?,
         excludeVersion: Int?,
         versionName: String?,
         creator: String?,
@@ -201,6 +203,7 @@ class PipelineRepositoryVersionService(
                 creator = creator,
                 description = description,
                 versionName = versionName,
+                includeDraft = includeDraft,
                 excludeVersion = excludeVersion,
                 offset = offset,
                 limit = limit

@@ -33,7 +33,6 @@ import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.enums.RepositoryType
 import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.api.exception.ErrorCodeException
-import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.pipeline.enums.CodeTargetAction
@@ -355,11 +354,6 @@ class PipelineYamlFacadeService @Autowired constructor(
             )
         } catch (exception: Exception) {
             logger.error("Failed to push yaml file|$userId|$projectId|$pipelineId|$repoHashId")
-            if (exception is RemoteServiceException && exception.httpStatus == 403) {
-                throw ErrorCodeException(
-                    errorCode = ProcessMessageCode.ERROR_YAML_PUSH_NO_REPO_PERMISSION
-                )
-            }
             throw exception
         }
     }
@@ -406,13 +400,13 @@ class PipelineYamlFacadeService @Autowired constructor(
             if (it.repoHashId != repoHashId) {
                 throw ErrorCodeException(
                     errorCode = ProcessMessageCode.ERROR_PIPELINE_BOUND_REPO,
-                    params = arrayOf(it.pipelineId)
+                    params = arrayOf(it.repoHashId)
                 )
             }
             if (it.filePath != filePath) {
                 throw ErrorCodeException(
                     errorCode = ProcessMessageCode.ERROR_PIPELINE_BOUND_YAML,
-                    params = arrayOf(it.pipelineId)
+                    params = arrayOf(it.filePath)
                 )
             }
         }
