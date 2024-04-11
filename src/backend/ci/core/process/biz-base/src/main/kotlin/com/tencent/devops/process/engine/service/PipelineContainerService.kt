@@ -32,6 +32,7 @@ import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.db.utils.JooqUtils
 import com.tencent.devops.common.event.enums.ActionType
 import com.tencent.devops.common.log.utils.BuildLogPrinter
+import com.tencent.devops.common.pipeline.container.AgentReuseMutex
 import com.tencent.devops.common.pipeline.container.Container
 import com.tencent.devops.common.pipeline.container.MutexGroup
 import com.tencent.devops.common.pipeline.container.NormalContainer
@@ -292,7 +293,8 @@ class PipelineContainerService @Autowired constructor(
         matrixGroupId: String,
         jobControlOption: JobControlOption,
         postParentIdMap: Map<String, String>,
-        mutexGroup: MutexGroup?
+        mutexGroup: MutexGroup?,
+        agentReuseMutex: AgentReuseMutex
     ): PipelineBuildContainer {
         var startVMTaskSeq = -1 // 启动构建机位置，解决如果在执行人工审核插件时，无编译环境不需要提前无意义的启动
         var taskSeq = 0
@@ -390,7 +392,8 @@ class PipelineContainerService @Autowired constructor(
                 jobControlOption = jobControlOption,
                 inFinallyStage = stage.finally,
                 mutexGroup = mutexGroup,
-                containPostTaskFlag = container.containPostTaskFlag
+                containPostTaskFlag = container.containPostTaskFlag,
+                agentReuseMutex = agentReuseMutex
             ),
             matrixGroupFlag = false,
             matrixGroupId = matrixGroupId
