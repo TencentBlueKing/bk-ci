@@ -294,7 +294,7 @@ class PipelineContainerService @Autowired constructor(
         jobControlOption: JobControlOption,
         postParentIdMap: Map<String, String>,
         mutexGroup: MutexGroup?,
-        agentReuseMutex: AgentReuseMutex
+        agentReuseMutex: AgentReuseMutex?
     ): PipelineBuildContainer {
         var startVMTaskSeq = -1 // 启动构建机位置，解决如果在执行人工审核插件时，无编译环境不需要提前无意义的启动
         var taskSeq = 0
