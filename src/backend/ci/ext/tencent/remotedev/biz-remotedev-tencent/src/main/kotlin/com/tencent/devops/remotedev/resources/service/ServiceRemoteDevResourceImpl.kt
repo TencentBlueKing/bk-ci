@@ -15,6 +15,7 @@ import com.tencent.devops.remotedev.api.service.ServiceRemoteDevResource
 import com.tencent.devops.remotedev.common.Constansts
 import com.tencent.devops.remotedev.pojo.ProjectWorkspaceCreate
 import com.tencent.devops.remotedev.pojo.WindowsResourceTypeConfig
+import com.tencent.devops.remotedev.pojo.WorkspaceOwnerType
 import com.tencent.devops.remotedev.pojo.op.OpProjectWorkspaceAssignData
 import com.tencent.devops.remotedev.pojo.op.RemotedevCvmData
 import com.tencent.devops.remotedev.pojo.op.WorkspaceNotifyData
@@ -118,9 +119,16 @@ class ServiceRemoteDevResourceImpl(
         userId: String,
         oldWorkspaceName: String?,
         projectId: String?,
+        ownerType: WorkspaceOwnerType?,
         uid: String
     ): Result<Boolean> {
-        val res = createControl.createWinWorkspaceByVm(userId, oldWorkspaceName, projectId, uid)
+        val res = createControl.createWinWorkspaceByVm(
+            userId = userId,
+            oldWorkspaceName = oldWorkspaceName,
+            projectCode = projectId,
+            ownerType = ownerType,
+            uid = uid
+        )
         return Result(res)
     }
 

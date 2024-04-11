@@ -30,6 +30,7 @@ package com.tencent.devops.remotedev.api.op
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.remotedev.pojo.ShareWorkspace
+import com.tencent.devops.remotedev.pojo.WorkspaceOwnerType
 import com.tencent.devops.remotedev.pojo.WorkspaceShared
 import com.tencent.devops.remotedev.pojo.WorkspaceSharedOpUse
 import com.tencent.devops.remotedev.pojo.WorkspaceStatus
@@ -131,9 +132,12 @@ interface OpWorkspaceResource {
         @Parameter(description = "老workspace记录，可以为空，如果填写将会做清理", required = true)
         @QueryParam("oldWorkspaceName")
         oldWorkspaceName: String?,
-        @Parameter(description = "项目ID，可以为空，如果填写就是团队空间，否则个人空间", required = true)
+        @Parameter(description = "项目ID，可以为空，如果oldWorkspaceName=null 必填", required = true)
         @QueryParam("projectId")
         projectId: String?,
+        @Parameter(description = "工作空间类型，可以为空，如果oldWorkspaceName=null 必填", required = true)
+        @QueryParam("ownerType")
+        ownerType: WorkspaceOwnerType?,
         @Parameter(description = "机器uid", required = true)
         @QueryParam("uid")
         uid: String

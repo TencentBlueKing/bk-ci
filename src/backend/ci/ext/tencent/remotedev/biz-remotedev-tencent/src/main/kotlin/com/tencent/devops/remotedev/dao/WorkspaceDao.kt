@@ -81,11 +81,13 @@ class WorkspaceDao {
                     this,
                     WORKSPACE_NAME,
                     WIN_CONFIG_ID,
-                    IMAGE_ID
+                    IMAGE_ID,
+                    ZONE_ID
                 ).values(
                     workspace.workspaceName,
                     workspace.winConfigId,
-                    workspace.imageId
+                    workspace.imageId,
+                    workspace.zoneId
                 ).execute()
             }
         }
