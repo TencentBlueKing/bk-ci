@@ -282,9 +282,9 @@ class BcsRemoteDevService @Autowired constructor(
             status = environmentStatus.status,
             hostIP = environmentStatus.hostIP,
             environmentIP = environmentStatus.environmentIP,
-            clusterId = environmentStatus.clusterId,
-            namespace = environmentStatus.namespace,
-            environmentHost = getEnvironmentHost(environmentStatus.clusterId, workspaceName),
+            clusterId = environmentStatus.clusterId ?: "",
+            namespace = environmentStatus.namespace ?: "",
+            environmentHost = getEnvironmentHost(environmentStatus.clusterId ?: "", workspaceName),
             ready = podInfo?.ready ?: false,
             started = podInfo?.started ?: false
         )
