@@ -69,11 +69,15 @@ class NodeDao {
         nodeIp: String?,
         displayName: String?,
         createdUser: String?,
-        lastModifiedUser: String?
+        lastModifiedUser: String?,
+        keywords: String?
     ): List<TNodeRecord> {
         return with(TNode.T_NODE) {
             val query = dslContext.selectFrom(this)
                 .where(PROJECT_ID.eq(projectId))
+            if (!keywords.isNullOrEmpty()) {
+                query.and(NODE_IP.like("%$keywords%").or(DISPLAY_NAME.like("%$keywords%")))
+            }
             if (!nodeIp.isNullOrEmpty()) {
                 query.and(NODE_IP.like("%$nodeIp%"))
             }

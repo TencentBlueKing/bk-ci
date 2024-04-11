@@ -178,13 +178,15 @@ class NodeService @Autowired constructor(
         nodeIp: String?,
         displayName: String?,
         createdUser: String?,
-        lastModifiedUser: String?
+        lastModifiedUser: String?,
+        keywords: String?
     ): Page<NodeWithPermission> {
         val nodeRecordList =
             if (-1 != page) {
                 val sqlLimit = PageUtil.convertPageSizeToSQLLimit(page ?: 1, pageSize ?: 20)
                 nodeDao.listNodesWithPageLimitAndSearchCondition(
-                    dslContext, projectId, sqlLimit.limit, sqlLimit.offset, nodeIp, displayName, createdUser, lastModifiedUser
+                    dslContext, projectId, sqlLimit.limit, sqlLimit.offset,
+                    nodeIp, displayName, createdUser, lastModifiedUser, keywords
                 )
             } else {
                 nodeDao.listNodes(dslContext, projectId)
