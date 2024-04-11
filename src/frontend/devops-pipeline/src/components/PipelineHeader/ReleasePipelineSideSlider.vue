@@ -1,109 +1,64 @@
 <template>
-    <bk-sideslider
-        :is-show.sync="value"
-        :width="640"
-        @shown="showReleaseSlider"
-        @hidden="hideReleaseSlider"
-        ext-cls="release-pipeline-side-slider"
-    >
+    <bk-sideslider :is-show.sync="value" :width="640" @shown="showReleaseSlider" @hidden="hideReleaseSlider"
+        ext-cls="release-pipeline-side-slider">
         <header slot="header" :class="['release-pipeline-side-slider-header', {
             'has-pac-tag': pacEnabled
         }]">
             {{ $t("releasePipeline") }}
             <PacTag v-if="pacEnabled" :info="pipelineInfo?.yamlInfo" />
-            <span v-bk-overflow-tips class="release-pipeline-new-version">{{ $t("releasePipelineVersion", [newReleaseVersionName]) }}</span>
+            <span v-bk-overflow-tips class="release-pipeline-new-version">{{ $t("releasePipelineVersion",
+                                                                                [newReleaseVersionName]) }}</span>
             <span v-bk-overflow-tips>
                 {{ $t("releasePipelineBaseVersion", [draftBaseVersionName]) }}
             </span>
         </header>
-        <section
-            slot="content"
-            v-bkloading="{ isLoading: isLoading || releasing }"
-            class="release-pipeline-pac-form"
-        >
+        <section slot="content" v-bkloading="{ isLoading: isLoading || releasing }" class="release-pipeline-pac-form">
             <div v-if="!pacEnabled" class="release-pipeline-pac-conf">
                 <aside class="release-pipeline-pac-conf-leftside">
                     <label for="enablePac">
                         {{ $t("pacMode") }}
                     </label>
-                    <bk-switcher
-                        :disabled="pacEnabled"
-                        theme="primary"
-                        name="enablePac"
-                        v-model="releaseParams.enablePac"
-                        @change="handlePacEnableChange"
-                    />
+                    <bk-switcher :disabled="pacEnabled" theme="primary" name="enablePac"
+                        v-model="releaseParams.enablePac" @change="handlePacEnableChange" />
                 </aside>
                 <aside v-if="releaseParams.enablePac" class="release-pipeline-pac-conf-rightside">
                     <label for="enablePac">
                         {{ $t("codelibSrc") }}
                     </label>
                     <bk-radio-group v-model="releaseParams.scmType">
-                        <bk-radio
-                            v-for="item in pacSupportScmTypeList"
-                            :key="item.id"
-                            :value="item.id"
-                        >
+                        <bk-radio v-for="item in pacSupportScmTypeList" :key="item.id" :value="item.id">
                             {{ $t(item.value) }}
                         </bk-radio>
                     </bk-radio-group>
                 </aside>
             </div>
-            <bk-form
-                v-if="!releaseParams.enablePac || (releaseParams.enablePac && hasOauth)"
-                label-width="auto"
-                form-type="vertical"
-                :model="releaseParams"
-                :rules="rules"
-                ref="releaseForm"
-                class="release-pipeline-pac-setting"
-                error-display-type="normal"
-            >
+            <bk-form v-if="!releaseParams.enablePac || (releaseParams.enablePac && hasOauth)" label-width="auto"
+                form-type="vertical" :model="releaseParams" :rules="rules" ref="releaseForm"
+                class="release-pipeline-pac-setting" error-display-type="normal">
                 <div v-if="releaseParams.enablePac && hasOauth">
-                    <header
-                        @click="togglePacCodelibSettingForm"
-                        class="release-pac-pipeline-form-header"
-                    >
+                    <header @click="togglePacCodelibSettingForm" class="release-pac-pipeline-form-header">
                         {{ $t("codelibSetting") }}
-                        <i
-                            :class="[
-                                'devops-icon icon-angle-right',
-                                {
-                                    'pac-codelib-form-show': showPacCodelibSetting
-                                }
-                            ]"
-                        />
+                        <i :class="[
+                            'devops-icon icon-angle-right',
+                            {
+                                'pac-codelib-form-show': showPacCodelibSetting
+                            }
+                        ]" />
                     </header>
                     <section v-show="showPacCodelibSetting">
                         <label class="yaml-info-codelib-label" for="yamlCodelib">
                             {{ $t("yamlCodeLib") }}
-                            <i
-                                class="devops-icon icon-question-circle-shape"
-                                v-bk-tooltips="$t('yamlCodeLibDesc')"
-                            />
+                            <i class="devops-icon icon-question-circle-shape" v-bk-tooltips="$t('yamlCodeLibDesc')" />
                         </label>
                         <bk-form-item required property="repoHashId">
-                            <bk-select
-                                id="yamlCodelib"
-                                :disabled="pacEnabled"
-                                searchable
-                                enable-scroll-load
-                                v-model="releaseParams.repoHashId"
-                                :scroll-loading="scrollLoadmoreConf"
-                                :loading="isInitPacRepo"
-                                :show-empty="false"
-                                :placeholder="$t('editPage.atomForm.selectTips')"
-                                :z-index="2600"
-                                @scroll-end="fetchPacEnableCodelibList(false)"
-                                @toggle="refreshPacEnableCodelibList"
-                            >
+                            <bk-select id="yamlCodelib" :disabled="pacEnabled" searchable enable-scroll-load
+                                v-model="releaseParams.repoHashId" :scroll-loading="scrollLoadmoreConf"
+                                :loading="isInitPacRepo" :show-empty="false"
+                                :placeholder="$t('editPage.atomForm.selectTips')" :z-index="2600"
+                                @scroll-end="fetchPacEnableCodelibList(false)" @toggle="refreshPacEnableCodelibList">
                                 <template v-if="pacEnableCodelibList.length">
-                                    <bk-option
-                                        v-for="option in pacEnableCodelibList"
-                                        :key="option.repositoryHashId"
-                                        :id="option.repositoryHashId"
-                                        :name="option.aliasName"
-                                    >
+                                    <bk-option v-for="option in pacEnableCodelibList" :key="option.repositoryHashId"
+                                        :id="option.repositoryHashId" :name="option.aliasName">
                                     </bk-option>
                                 </template>
                                 <bk-loading is-loading mode="spin" size="small" v-else-if="isInitPacRepo">
@@ -121,13 +76,11 @@
                         </bk-form-item>
                         <label class="yaml-info-codelib-label" for="yamlFilePath">
                             {{ $t("yamlDir") }}
-                            <i
-                                class="devops-icon icon-question-circle-shape"
-                                v-bk-tooltips="$t('yamlDirDesc')"
-                            />
+                            <i class="devops-icon icon-question-circle-shape" v-bk-tooltips="$t('yamlDirDesc')" />
                         </label>
                         <bk-form-item required property="filePath">
-                            <bk-input :disabled="pacEnabled" v-model="releaseParams.filePath" id="yamlFilePath">
+                            <bk-input :disabled="pacEnabled" v-model="releaseParams.filePath" id="yamlFilePath"
+                                :placeholder="$t('yamlFilePathPlaceholder')">
                                 <span class="group-text" slot="prepend">{{ filePathDir }}</span>
                             </bk-input>
                         </bk-form-item>
@@ -139,64 +92,40 @@
                     </header>
 
                     <bk-form-item required :label="$t('versionDesc')" property="description">
-                        <bk-input
-                            type="textarea"
-                            v-model="releaseParams.description"
-                            :placeholder="
-                                $t(
-                                    releaseParams.enablePac
-                                        ? 'commitMsgPlaceholder'
-                                        : 'versionDescPlaceholder'
-                                )
-                            "
-                        />
+                        <bk-input type="textarea" v-model="releaseParams.description" :placeholder="$t(
+                            releaseParams.enablePac
+                                ? 'commitMsgPlaceholder'
+                                : 'versionDescPlaceholder'
+                        )
+                        " />
                         <span v-if="releaseParams.enablePac" class="release-pac-version-desc">
                             {{ $t("commitMsgDesc") }}
                         </span>
                     </bk-form-item>
-                    <bk-form-item
-                        v-if="releaseParams.enablePac"
-                        required
-                        :label="$t('targetBranch')"
-                        property="targetAction"
-                    >
+                    <bk-form-item v-if="releaseParams.enablePac" required :label="$t('targetBranch')"
+                        property="targetAction">
                         <bk-radio-group v-model="releaseParams.targetAction">
-                            <bk-radio
-                                v-for="option in targetActionOptions"
-                                class="pac-pipeline-dest-branch-radio"
-                                :key="option"
-                                :value="option"
-                            >
+                            <bk-radio v-for="option in targetActionOptions" class="pac-pipeline-dest-branch-radio"
+                                :key="option" :value="option">
                                 {{ $t(option, [baseVersionBranch]) }}
                             </bk-radio>
                         </bk-radio-group>
                     </bk-form-item>
                 </div>
             </bk-form>
-            <div
-                v-if="releaseParams.enablePac && !hasOauth"
-                class="pac-oauth-enable"
-                v-bkloading="{ isLoading: refreshing }"
-            >
+            <div v-if="releaseParams.enablePac && !hasOauth" class="pac-oauth-enable"
+                v-bkloading="{ isLoading: refreshing }">
                 <header>
-                    <bk-button
-                        :loading="oauthing"
-                        :disabled="oauthing"
-                        theme="primary"
-                        size="large"
-                        @click="requestOauth"
-                    >
+                    <bk-button :loading="oauthing" :disabled="oauthing" theme="primary" size="large"
+                        @click="requestOauth">
                         {{ $t("oauth") }}
                     </bk-button>
-                    <span
-                        :class="[
-                            'text-link',
-                            {
-                                disabled: refreshing
-                            }
-                        ]"
-                        @click="refreshOatuStatus"
-                    >
+                    <span :class="[
+                        'text-link',
+                        {
+                            disabled: refreshing
+                        }
+                    ]" @click="refreshOatuStatus">
                         <i class="devops-icon icon-refresh" />
                         {{ $t("refreshOauthStatus") }}
                     </span>
@@ -204,28 +133,12 @@
                 <p class="pac-oauth-tips" v-html="$t('oauthPacTips')"></p>
             </div>
         </section>
-        <footer
-            v-if="!releaseParams.enablePac || hasOauth"
-            slot="footer"
-            class="release-pipeline-pac-footer"
-        >
-            <bk-button
-                theme="primary"
-                :loading="releasing"
-                :disabled="releasing"
-                @click="releasePipeline"
-            >
+        <footer v-if="!releaseParams.enablePac || hasOauth" slot="footer" class="release-pipeline-pac-footer">
+            <bk-button theme="primary" :loading="releasing" :disabled="releasing" @click="releasePipeline">
                 {{ $t("release") }}
             </bk-button>
-            <version-diff-entry
-                v-if="releaseParams.enablePac"
-                :text="false"
-                theme=""
-                :disabled="releasing"
-                :can-switch-version="false"
-                :version="pipelineInfo?.releaseVersion"
-                :latest-version="version"
-            >
+            <version-diff-entry v-if="releaseParams.enablePac" :text="false" theme="" :disabled="releasing"
+                :can-switch-version="false" :version="pipelineInfo?.releaseVersion" :latest-version="version">
                 {{ $t("checkDiff") }}
             </version-diff-entry>
             <bk-button :disabled="releasing" @click="cancelRelease">
@@ -318,7 +231,8 @@
                     filePath: [
                         {
                             required: true,
-                            message: this.$t('stageReview.requireRule', [this.$t('filePath')]),
+                            regex: /^[\w]+\.ya?ml$/,
+                            message: this.$t('yamlFilePathErrorTip'),
                             trigger: 'blur'
                         }
                     ],
@@ -789,166 +703,196 @@
 @import "@/scss/mixins/ellipsis";
 
 .release-pipeline-side-slider-header {
-  display: grid;
-  align-items: center;
-  grid-template-columns: max-content min-content 1fr;
-  grid-gap: 12px;
-  padding: 0 16px 0 0;
-  height: 100%;
-  line-height: 1;
-  overflow: hidden;
-  &.has-pac-tag {
-    grid-template-columns: max-content max-content min-content 1fr;
-  }
-  .release-pipeline-new-version {
-    background: #f5f6fa;
-    border-radius: 10px;
-    background: rgba(151,155,165,.1);
-    border-color: rgba(220, 222, 229, .6);
-    height: 22px;
-    line-height: 22px;
-    padding: 0 12px;
-    max-width: 300px;
-  }
-  > span {
-    color: #979ba5;
-    font-size: 12px;
-    flex: 1;
-    flex-shrink: 0;
-    @include ellipsis();
-  }
-}
-.release-pipeline-pac-form {
-  height: calc(100vh - 114px);
-  overflow: auto;
-  .release-pac-pipeline-form-header {
-    display: flex;
+    display: grid;
     align-items: center;
-    justify-content: space-between;
-    font-weight: 700;
-    font-size: 14px;
-    border-bottom: 1px solid #dcdee5;
-    padding-bottom: 8px;
-    margin-bottom: 16px;
-    .devops-icon.icon-angle-right {
-      transition: all 0.3s;
-      &.pac-codelib-form-show {
-        display: inline-flex;
-        transform: rotate(90deg);
-      }
-    }
-  }
-  .release-pipeline-pac-conf {
-    display: flex;
-    background: #fafbfd;
-    height: 80px;
-    align-items: center;
-    font-size: 12px;
-    > :first-child {
-      border-right: 1px solid #dcdee5;
-    }
-    .release-pipeline-pac-conf-leftside,
-    .release-pipeline-pac-conf-rightside {
-      display: flex;
-      flex-direction: column;
-      padding-left: 24px;
-      justify-content: center;
-      grid-gap: 8px;
-      flex: 1;
+    grid-template-columns: max-content min-content 1fr;
+    grid-gap: 12px;
+    padding: 0 16px 0 0;
+    height: 100%;
+    line-height: 1;
+    overflow: hidden;
 
-      &.release-pipeline-pac-conf-leftside {
-        width: 176px;
+    &.has-pac-tag {
+        grid-template-columns: max-content max-content min-content 1fr;
+    }
+
+    .release-pipeline-new-version {
+        background: #f5f6fa;
+        border-radius: 10px;
+        background: rgba(151, 155, 165, .1);
+        border-color: rgba(220, 222, 229, .6);
+        height: 22px;
+        line-height: 22px;
+        padding: 0 12px;
+        max-width: 300px;
+    }
+
+    >span {
+        color: #979ba5;
+        font-size: 12px;
+        flex: 1;
         flex-shrink: 0;
-      }
+        @include ellipsis();
     }
-  }
-  .release-pipeline-pac-setting {
-    flex: 1;
-    padding: 24px;
-    display: flex;
-    flex-direction: column;
-    grid-gap: 24px;
-    .release-pac-version-desc {
-      font-size: 12px;
-      color: #979ba5;
-      letter-spacing: 0;
-      line-height: 20px;
+}
+
+.release-pipeline-pac-form {
+    height: calc(100vh - 114px);
+    overflow: auto;
+
+    .release-pac-pipeline-form-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        font-weight: 700;
+        font-size: 14px;
+        border-bottom: 1px solid #dcdee5;
+        padding-bottom: 8px;
+        margin-bottom: 16px;
+
+        .devops-icon.icon-angle-right {
+            transition: all 0.3s;
+            display: inline-flex;
+            justify-content: center;
+            width: 12px;
+            height: 12px;
+            line-height: 1;
+            font-size: 12px;
+
+            &.pac-codelib-form-show {
+                display: inline-flex;
+                transform: rotate(90deg);
+            }
+        }
     }
-    .pac-pipeline-dest-branch-radio {
-      margin-right: 24px;
+
+    .release-pipeline-pac-conf {
+        display: flex;
+        background: #fafbfd;
+        height: 80px;
+        align-items: center;
+        font-size: 12px;
+
+        > :first-child {
+            border-right: 1px solid #dcdee5;
+        }
+
+        .release-pipeline-pac-conf-leftside,
+        .release-pipeline-pac-conf-rightside {
+            display: flex;
+            flex-direction: column;
+            padding-left: 24px;
+            justify-content: center;
+            grid-gap: 8px;
+            flex: 1;
+
+            &.release-pipeline-pac-conf-leftside {
+                width: 176px;
+                flex-shrink: 0;
+            }
+        }
     }
-  }
+
+    .release-pipeline-pac-setting {
+        flex: 1;
+        padding: 24px;
+        display: flex;
+        flex-direction: column;
+        grid-gap: 24px;
+
+        .release-pac-version-desc {
+            font-size: 12px;
+            color: #979ba5;
+            letter-spacing: 0;
+            line-height: 20px;
+        }
+
+        .pac-pipeline-dest-branch-radio {
+            margin-right: 24px;
+        }
+    }
 }
 
 .yaml-info-codelib-label {
-  position: relative;
-  font-size: 12px;
-  height: 32px;
-  display: inline-flex;
-  align-items: center;
-  grid-gap: 24px;
-  & + .yaml-info-codelib-label {
-    margin-top: 20px;
-  }
-  &:after {
-    content: "*";
-    position: absolute;
-    display: inline-block;
-    right: 28px;
-    top: 2px;
-    color: #ea3636;
-  }
-  > .devops-icon {
-    font-size: 14px;
-    color: #979ba5;
-  }
+    position: relative;
+    font-size: 12px;
+    height: 32px;
+    display: inline-flex;
+    align-items: center;
+    grid-gap: 24px;
+
+    &+.yaml-info-codelib-label {
+        margin-top: 20px;
+    }
+
+    &:after {
+        content: "*";
+        position: absolute;
+        display: inline-block;
+        right: 28px;
+        top: 2px;
+        color: #ea3636;
+    }
+
+    >.devops-icon {
+        font-size: 14px;
+        color: #979ba5;
+    }
 }
 
 .release-pipeline-pac-footer {
-  padding: 0 24px;
+    padding: 0 24px;
 }
 
 .pipeline-release-suc-tips {
-  background: #f5f6fa;
-  display: flex;
-  flex-direction: column;
-  border-radius: 2px;
-  padding: 14px 20px;
-  letter-spacing: 0;
-  line-height: 22px;
-  text-align: left;
-  b {
-    color: #ff9c01;
-  }
+    background: #f5f6fa;
+    display: flex;
+    flex-direction: column;
+    border-radius: 2px;
+    padding: 14px 20px;
+    letter-spacing: 0;
+    line-height: 22px;
+    text-align: left;
+
+    b {
+        color: #ff9c01;
+    }
 }
+
 .no-pac-enable-codelib-yet {
-  color: #c4c6cc;
-  font-size: 12px;
+    color: #c4c6cc;
+    font-size: 12px;
 }
+
 .enable-pac-codelib-link {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  grid-gap: 6px;
-  cursor: pointer;
-  &:hover {
-    color: $primaryColor;
-  }
-}
-.pac-oauth-enable {
-  margin: 16px 24px;
-  > header {
     display: flex;
     align-items: center;
-    grid-gap: 24px;
-  }
-  .pac-oauth-tips {
-    color: #979ba5;
-    line-height: 22px;
-    margin-top: 16px;
-    font-size: 12px;
-  }
+    justify-content: center;
+    grid-gap: 6px;
+    cursor: pointer;
+
+    &:hover {
+        color: $primaryColor;
+    }
 }
+
+.pac-oauth-enable {
+    margin: 16px 24px;
+
+    >header {
+        display: flex;
+        align-items: center;
+        grid-gap: 24px;
+    }
+
+    .pac-oauth-tips {
+        color: #979ba5;
+        line-height: 22px;
+        margin-top: 16px;
+        font-size: 12px;
+    }
+}
+
 .belongs-to-groups-box {
     margin-top: 10px;
     display: flex;

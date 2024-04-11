@@ -1025,7 +1025,7 @@
     "stageLimit": "stage数量不能大于",
     "jobLimit": "单个stage下的job数量不能大于",
     "atomLimit": "单个job下的插件数量不能大于",
-    "correctPipeline": "请输入正确的流水线",
+    "correctPipeline": "存在无效配置，请修改流水线",
     "PleaseSelectAtom": "请先选择插件",
     "oneCodecc": "只允许一个代码扫描插件",
     "oneManualTrigger": "流水线不允许超过一个手动触发插件",
@@ -1498,12 +1498,13 @@
   "checkDiff": "查看差异",
   "versionRule": "版本号规则",
   "versionRuleP": "P：流水线编排版本，包括Stage、Job、Step、变量",
-  "versionRuleT": "T：流水线触发器版本",                  
+  "versionRuleT": "T：流水线触发器版本",
   "versionRuleA": "附加位：流水线其他信息修改版本，如名称、描述、运行设置等",
   "willRelease": "待发布",
   "clickToAddStage": "点击添加第一个流水线Stage",
   "buildMsg": "构建信息",
-  "executeStepPreview": "预览待执行的步骤"
+  "executeStepPreview": "预览待执行的步骤",
+  "yamlFilePathErrorTip": "YAML 文件路径需要以yml或者yaml结尾",
+  "yamlFilePathPlaceholder": "build.yml 或者 build.yaml",
+  "alreadyReleasedTips": "流水线未变更，无需发布"
 }
-
-

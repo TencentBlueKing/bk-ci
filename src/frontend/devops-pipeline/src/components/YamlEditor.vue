@@ -1,35 +1,36 @@
 /*
- * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
- *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
- *
- * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
- *
- * A copy of the MIT License is included in this file.
- *
- *
- * Terms of the MIT License:
- * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
- */
+* Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
+*
+* Copyright (C) 2019 THL A29 Limited, a Tencent company. All rights reserved.
+*
+* BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
+*
+* A copy of the MIT License is included in this file.
+*
+*
+* Terms of the MIT License:
+* ---------------------------------------------------
+* Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit
+persons to whom the Software is furnished to do so, subject to the following conditions:
+*
+* The above copyright notice and this permission notice shall be included in all copies or substantial portions of the
+Software.
+*
+* THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE
+WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
+COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
+OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+*/
 <template>
     <section v-bkloading="{ isLoading }" :style="style">
-        <i
-            :class="['yaml-full-screen-switcher', 'devops-icon', fullScreen ? 'icon-un-full-screen' : 'icon-full-screen']"
-            :title="$t('editPage.isFullScreen')"
-            @click="toggleFullScreen"
-        />
+        <i :class="['yaml-full-screen-switcher', 'devops-icon', fullScreen ? 'icon-un-full-screen' : 'icon-full-screen']"
+            :title="$t('editPage.isFullScreen')" @click="toggleFullScreen" />
         <div ref="box" :style="style">
         </div>
         <ul v-if="!readOnly" class="yaml-error-summary">
-            <li
-                v-for="(item, index) in errorList"
-                :key="index"
-            >
+            <li v-for="(item, index) in errorList" :key="index">
                 <i class="devops-icon icon-close-circle-fill"></i>
                 <p>
                     <span>
@@ -138,15 +139,15 @@
                     this.registerCodeLensProvider()
                 } else {
                     this.$nextTick(() => {
-                        this.scheuleUpdateCodeLens?.()
+                    this.scheuleUpdateCodeLens?.()
                     })
                 }
             })
         },
         beforeDestroy () {
-            this.editor?.getModel()?.dispose?.()
-            this.codeLens?.dispose?.()
-            this.editor?.dispose?.()
+        this.editor?.getModel()?.dispose?.()
+        this.codeLens?.dispose?.()
+        this.editor?.dispose?.()
         },
         methods: {
             toggleFullScreen () {
@@ -173,7 +174,7 @@
                 this.$emit('input', value, this.editor)
             },
             format () {
-                this.editor?.getAction('editor.action.formatDocument').run()
+            this.editor?.getAction('editor.action.formatDocument').run()
             },
             highlightBlocks (blocks) {
                 if (this.monaco && this.editor && Array.isArray(blocks) && blocks.length > 0) {
@@ -190,16 +191,26 @@
                             marginClassName: 'code-highlight-block'
                         }
                     }))
-                    this.collections?.clear?.()
+                this.collections?.clear?.()
                     this.collections = this.editor.createDecorationsCollection(ranges)
                     this.editor.revealRangeInCenterIfOutsideViewport(ranges[0].range, this.monaco.editor.ScrollType.Smooth)
                 } else {
-                    this.collections?.clear?.()
+                this.collections?.clear?.()
                 }
             },
             handleYamlPluginClick ({ editingElementPos, pos, range }) {
                 const atom = this.getAtomByPos(editingElementPos)
-                this.$emit('step-click', editingElementPos, atom.with)
+                console.log('click atom', atom)
+                if (atom.run) {
+                    this.$emit('step-click', editingElementPos, {
+                        ...atom,
+                        with: {
+                            script: atom.run
+                        }
+                    })
+                } else {
+                    this.$emit('step-click', editingElementPos, atom)
+                }
             },
             visitYaml (yaml) {
                 const lineCounter = new YAML.LineCounter()
@@ -290,9 +301,9 @@
                         }
                     })
                 } else {
-                    this.editor?.updateOptions?.({
-                        codeLens: false
-                    })
+                this.editor?.updateOptions?.({
+                    codeLens: false
+                })
                 }
             }
         }
@@ -300,51 +311,60 @@
 </script>
 
 <style lang="scss">
-    @import '@/scss/conf';
-    .yaml-full-screen-switcher {
-        cursor: pointer;
-        position: absolute;
-        z-index: 1;
-        right: 24px;
-        top: 24px;
-        color: white;
+@import '@/scss/conf';
+
+.yaml-full-screen-switcher {
+    cursor: pointer;
+    position: absolute;
+    z-index: 1;
+    right: 24px;
+    top: 24px;
+    color: white;
+}
+
+.code-highlight-block {
+    background: #232D46;
+}
+
+.monaco-editor .codelens-decoration {
+    // left: 0 !important;
+    color: #63656E !important;
+}
+
+.yaml-error-summary {
+    position: absolute;
+    bottom: 0;
+    max-height: 200px;
+    width: 100%;
+    background: #212121;
+    padding: 20px 16px;
+    overflow: auto;
+
+    ::webkit-scrollbar {
+        width: 14px;
     }
-    .code-highlight-block {
-        background: #3A84FF;
-        opacity: .1;
+
+    ::webkit-scrollbar-thumb {
+        background: rgba(121, 121, 121, 0.4);
     }
-    .monaco-editor .codelens-decoration  {
-        // left: 0 !important;
-        color: #63656E !important;
-    }
-    .yaml-error-summary {
-        position: absolute;
-        bottom: 0;
-        max-height: 200px;
-        width: 100%;
-        background: #212121;
-        padding: 20px 16px;
-        overflow: auto;
-        ::webkit-scrollbar {
-            width: 14px;
+
+    >li {
+        display: flex;
+        align-items: center;
+        font-size: 12px;
+        grid-gap: 8px;
+
+        &:not(:last-child) {
+            margin-bottom: 12px;
         }
-        ::webkit-scrollbar-thumb {
-            background: rgba(121, 121, 121, 0.4);
+
+        >p>span {
+            color: white;
         }
-        > li {
-            display: flex;
-            align-items: center;
-            font-size: 12px;
-            grid-gap: 8px;
-            &:not(:last-child) {
-                margin-bottom: 12px;
-            }
-            > p > span {
-                color: white;
-            }
-            .devops-icon.icon-close-circle-fill {
-                color: $dangerColor;
-            }
+
+        .devops-icon.icon-close-circle-fill {
+            color: $dangerColor;
         }
     }
+}
 </style>

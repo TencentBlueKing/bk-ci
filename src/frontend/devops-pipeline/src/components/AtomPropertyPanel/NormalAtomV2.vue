@@ -3,8 +3,16 @@
         <template v-for="(group, groupKey) in paramsGroupMap">
             <template v-if="groupKey === 'rootProps'">
                 <template v-for="(obj, key) in group.props">
-                    <form-field v-if="!isHidden(obj, atomValue) && rely(obj, atomValue)" :class="{ 'changed-prop': atomVersionChangedKeys.includes(key) }" :key="key" :desc="obj.desc" :desc-link="obj.descLink" :desc-link-text="obj.descLinkText" :required="obj.required" :label="obj.label" :is-error="errors.has(key)" :error-msg="errors.first(key)">
-                        <component :is="obj.type" :container="container" :atom-value="atomValue" :disabled="disabled" :name="key" v-validate.initial="Object.assign({}, { max: getMaxLengthByType(obj.type) }, obj.rule, { required: !!obj.required })" :handle-change="handleUpdateAtomInput" :value="atomValue[key]" v-bind="obj" :get-atom-key-modal="getAtomKeyModal" :placeholder="getPlaceholder(obj, atomValue)"></component>
+                    <form-field v-if="!isHidden(obj, atomValue) && rely(obj, atomValue)"
+                        :class="{ 'changed-prop': atomVersionChangedKeys.includes(key) }" :key="key" :desc="obj.desc"
+                        :desc-link="obj.descLink" :desc-link-text="obj.descLinkText" :required="obj.required"
+                        :label="obj.label" :is-error="errors.has(key)" :error-msg="errors.first(key)">
+                        <component :is="obj.type" :container="container" :atom-value="atomValue" :disabled="disabled"
+                            :name="key"
+                            v-validate.initial="Object.assign({}, { max: getMaxLengthByType(obj.type) }, obj.rule, { required: !!obj.required })"
+                            :handle-change="handleUpdateAtomInput" :value="atomValue[key]" v-bind="obj"
+                            :get-atom-key-modal="getAtomKeyModal" :placeholder="getPlaceholder(obj, atomValue)">
+                        </component>
                         <route-tips v-bind="getComponentTips(obj, atomValue)"></route-tips>
                     </form-field>
                 </template>
@@ -16,15 +24,23 @@
                 </header>
                 <div slot="content">
                     <template v-for="(obj, key) in group.props">
-                        <form-field v-if="!isHidden(obj, atomValue) && rely(obj, atomValue)" :class="{ 'changed-prop': atomVersionChangedKeys.includes(key) }" :key="key" :desc="obj.desc" :desc-link="obj.descLink" :desc-link-text="obj.descLinkText" :required="obj.required" :label="obj.label" :is-error="errors.has(key)" :error-msg="errors.first(key)">
-                            <component :is="obj.type" :container="container" :atom-value="atomValue" :name="key" v-validate.initial="Object.assign({}, { max: getMaxLengthByType(obj.type) }, obj.rule, { required: !!obj.required })" :handle-change="handleUpdateAtomInput" :value="atomValue[key]" v-bind="obj" :placeholder="getPlaceholder(obj, atomValue)"></component>
+                        <form-field v-if="!isHidden(obj, atomValue) && rely(obj, atomValue)"
+                            :class="{ 'changed-prop': atomVersionChangedKeys.includes(key) }" :key="key"
+                            :desc="obj.desc" :desc-link="obj.descLink" :desc-link-text="obj.descLinkText"
+                            :required="obj.required" :label="obj.label" :is-error="errors.has(key)"
+                            :error-msg="errors.first(key)">
+                            <component :is="obj.type" :container="container" :atom-value="atomValue" :name="key"
+                                v-validate.initial="Object.assign({}, { max: getMaxLengthByType(obj.type) }, obj.rule, { required: !!obj.required })"
+                                :handle-change="handleUpdateAtomInput" :value="atomValue[key]" v-bind="obj"
+                                :placeholder="getPlaceholder(obj, atomValue)"></component>
                             <route-tips v-bind="getComponentTips(obj, atomValue)"></route-tips>
                         </form-field>
                     </template>
                 </div>
             </accordion>
         </template>
-        <atom-output :element="element" :atom-props-model="atomPropsModel" :set-parent-validate="() => {}"></atom-output>
+        <atom-output :element="element" :atom-props-model="atomPropsModel"
+            :set-parent-validate="() => { }"></atom-output>
     </section>
     <section v-else>
         <div class="empty-tips">{{ $t('editPage.noAppIdTips') }}</div>
@@ -32,19 +48,19 @@
 </template>
 
 <script>
-    import atomMixin from './atomMixin'
-    import validMixins from '../validMixins'
-    import Selector from '../AtomFormComponent/Selector'
-    import CcAppId from '@/components/AtomFormComponent/CcAppId'
     import AppId from '@/components/AtomFormComponent/AppId'
-    import Accordion from '@/components/atomFormField/Accordion'
-    import TimePicker from '@/components/AtomFormComponent/TimePicker'
-    import Parameter from '@/components/AtomFormComponent/Parameter'
-    import Tips from '@/components/AtomFormComponent/Tips'
+    import CcAppId from '@/components/AtomFormComponent/CcAppId'
     import DynamicParameter from '@/components/AtomFormComponent/DynamicParameter'
     import DynamicParameterSimple from '@/components/AtomFormComponent/DynamicParameterSimple'
+    import Parameter from '@/components/AtomFormComponent/Parameter'
+    import TimePicker from '@/components/AtomFormComponent/TimePicker'
+    import Tips from '@/components/AtomFormComponent/Tips'
+    import Accordion from '@/components/atomFormField/Accordion'
     import { getAtomDefaultValue } from '@/store/modules/atom/atomUtil'
+    import Selector from '../AtomFormComponent/Selector'
+    import validMixins from '../validMixins'
     import AtomOutput from './AtomOutput'
+    import atomMixin from './atomMixin'
 
     export default {
         name: 'normal-atom-v2',
@@ -166,13 +182,15 @@
 </script>
 
 <style lang="scss">
-    .atom-output-var-list {
-        > h4,
-        > p {
-            margin: 0;
-        }
-        > p {
-            line-height: 36px;
-        }
+.atom-output-var-list {
+
+    >h4,
+    >p {
+        margin: 0;
     }
+
+    >p {
+        line-height: 36px;
+    }
+}
 </style>

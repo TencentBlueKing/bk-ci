@@ -183,7 +183,7 @@
         },
 
         beforeDestroy () {
-            this.$refs.editor?.destroy()
+            this.$refs.editor?.destroy?.()
         },
         methods: {
             showVersionSideSlider () {

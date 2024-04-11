@@ -142,7 +142,7 @@ export default (r, initSetLocale = false) => {
                 'en-US': 'en' // 英文
             }
             console.log('sync backendLocalEnum', backendLocalEnum[localeLang], localeLang, bkLocalEnum[localeLang])
-            await Promise.all([
+            await Promise.any([
                 axios.put('/ms/project/api/user/locales/update', {
                     language: backendLocalEnum[localeLang]
                 }),

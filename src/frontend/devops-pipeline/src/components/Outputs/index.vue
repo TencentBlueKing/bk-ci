@@ -1,20 +1,11 @@
 <template>
     <div style="height: 100%;width: 100%;">
-        <bk-resize-layout
-            :collapsible="true"
-            class="pipeline-exec-outputs"
-            :initial-divide="initWidth"
-            :min="260"
-            :max="800"
-        >
+        <bk-resize-layout :collapsible="true" class="pipeline-exec-outputs" :initial-divide="initWidth" :min="260"
+            :max="800">
             <aside slot="aside" class="pipeline-exec-outputs-aside">
                 <div class="pipeline-exec-outputs-filter-input">
-                    <bk-input
-                        clearable
-                        right-icon="bk-icon icon-search"
-                        :placeholder="filterPlaceholder"
-                        v-model="keyWord"
-                    />
+                    <bk-input clearable right-icon="bk-icon icon-search" :placeholder="filterPlaceholder"
+                        v-model="keyWord" />
                 </div>
                 <!-- <div class="pipeline-exec-outputs-filter">
                     <i class="devops-icon icon-filter"></i>
@@ -22,35 +13,18 @@
                     <bk-tag class="output-filter-condition-count">2</bk-tag>
                 </div> -->
                 <ul v-if="visibleOutputs.length > 0" class="pipeline-exec-outputs-list">
-                    <li
-                        v-for="output in visibleOutputs"
-                        :key="output.id"
-                        :class="{
-                            active: output.id === activeOutput.id
-                        }"
-                        @click="setActiveOutput(output)"
-                    >
+                    <li v-for="output in visibleOutputs" :key="output.id" :class="{
+                        active: output.id === activeOutput.id
+                    }" @click="setActiveOutput(output)">
                         <i :class="['devops-icon', `icon-${output.icon}`]"></i>
                         <span :title="output.name">{{ output.name }}</span>
                         <p class="output-hover-icon-box">
-                            <output-qrcode
-                                v-if="output.isApp"
-                                :output="output"
-                            />
-                            <artifact-download-button
-                                v-if="output.downloadable"
-                                :output="output"
-                                download-icon
-                                :has-permission="hasPermission"
-                                :path="output.fullPath"
-                                :name="output.name"
-                                :artifactory-type="output.artifactoryType"
-                            />
-                            <i
-                                v-if="output.isReportOutput"
-                                class="devops-icon icon-full-screen"
-                                @click.stop="fullScreenViewReport(output)"
-                            />
+                            <output-qrcode v-if="output.isApp" :output="output" />
+                            <artifact-download-button v-if="output.downloadable" :output="output" download-icon
+                                :has-permission="hasPermission" :path="output.fullPath" :name="output.name"
+                                :artifactory-type="output.artifactoryType" />
+                            <i v-if="output.isReportOutput" class="devops-icon icon-full-screen"
+                                @click.stop="fullScreenViewReport(output)" />
                         </p>
                     </li>
                 </ul>
@@ -62,16 +36,9 @@
 
             </aside>
             <section slot="main" v-bkloading="{ isLoading }" class="pipeline-exec-outputs-section">
-                <iframe-report
-                    v-if="isCustomizeReport"
-                    ref="iframeReport"
-                    :report-name="activeOutput.name"
-                    :index-file-url="activeOutput.indexFileUrl"
-                />
-                <third-party-report
-                    v-else-if="isActiveThirdReport"
-                    :report-list="thirdPartyReportList"
-                />
+                <iframe-report v-if="isCustomizeReport" ref="iframeReport" :report-name="activeOutput.name"
+                    :index-file-url="activeOutput.indexFileUrl" />
+                <third-party-report v-else-if="isActiveThirdReport" :report-list="thirdPartyReportList" />
                 <template v-else-if="activeOutputDetail">
                     <div class="pipeline-exec-output-header">
                         <span class="pipeline-exec-output-header-name">
@@ -80,37 +47,20 @@
                         </span>
                         <bk-tag theme="info">{{ $t(activeOutputDetail.artifactoryTypeTxt) }}</bk-tag>
                         <p class="pipeline-exec-output-actions">
-                            <artifact-download-button
-                                v-if="activeOutput.downloadable"
-                                :output="activeOutput"
-                                :has-permission="hasPermission"
-                                :path="activeOutput.fullPath"
-                                :name="activeOutput.name"
-                                :artifactory-type="activeOutput.artifactoryType"
-                            />
-                            <bk-button
-                                text
-                                theme="primary"
-                                v-for="btn in btns"
-                                :key="btn.text"
-                                @click="btn.handler"
-                            >
+                            <artifact-download-button v-if="activeOutput.downloadable" :output="activeOutput"
+                                :has-permission="hasPermission" :path="activeOutput.fullPath" :name="activeOutput.name"
+                                :artifactory-type="activeOutput.artifactoryType" />
+                            <bk-button text theme="primary" v-for="btn in btns" :key="btn.text" @click="btn.handler">
                                 {{ btn.text }}
                             </bk-button>
-                            <output-qrcode
-                                :output="activeOutput"
-                                v-if="activeOutputDetail.isApp"
-                            />
+                            <output-qrcode :output="activeOutput" v-if="activeOutputDetail.isApp" />
 
-                            <ext-menu v-if="!activeOutputDetail.folder" :data="activeOutputDetail" :config="artifactMoreActions"></ext-menu>
+                            <ext-menu v-if="!activeOutputDetail.folder" :data="activeOutputDetail"
+                                :config="artifactMoreActions"></ext-menu>
                         </p>
                     </div>
                     <div class="pipeline-exec-output-artifact">
-                        <div
-                            v-for="block in infoBlocks"
-                            :key="block.title"
-                            class="pipeline-exec-output-block"
-                        >
+                        <div v-for="block in infoBlocks" :key="block.title" class="pipeline-exec-output-block">
                             <h6 class="pipeline-exec-output-block-title">{{ block.title }}</h6>
                             <bk-table v-if="block.key === 'meta'" :data="block.value">
                                 <bk-table-column :label="$t('view.key')" prop="key"></bk-table-column>
@@ -356,119 +306,119 @@
                     { key: 'md5', name: 'MD5' }
                 ]
             }
-            // filterConditionLength () {
-            //     if (!this.filtering) return 0
-            //     return Object.keys(this.filterConditionMap).filter(key => {
-            //         if (Array.isArray(this.filterConditionMap[key])) {
-            //             return this.filterConditionMap[key].length > 0
-            //         }
-            //         return !!this.filterConditionMap[key]
-            //     }).length
-            // },
-            // conditions () {
-            //     return [
-            //         {
-            //             id: 'triggerTime',
-            //             label: this.$t('details.triggerTime'),
-            //             component: 'bk-date-picker',
-            //             props: {
-            //                 type: 'datetimerange',
-            //                 shortcuts: this.shortcuts,
-            //                 value: this.filterConditionMap.timeRange
-            //             },
-            //             listeners: {
-            //                 change: (range) => {
-            //                     this.filterConditionMap.timeRange = range
-            //                 }
-            //             }
-            //         },
-            //         {
-            //             id: 'buildNo',
-            //             label: this.$t('构建号'),
-            //             component: 'bk-input',
-            //             props: {
-            //                 value: this.filterConditionMap.buildNo
-            //             },
-            //             listeners: {
-            //                 change: (buildNo) => {
-            //                     this.filterConditionMap.buildNo = buildNo
-            //                 }
-            //             }
-            //         },
-            //         {
-            //             id: 'filename',
-            //             label: this.$t('文件名'),
-            //             component: 'bk-input',
-            //             props: {
-            //                 value: this.filterConditionMap.filename
-            //             },
-            //             listeners: {
-            //                 change: (filename) => {
-            //                     this.filterConditionMap.filename = filename
-            //                 }
-            //             }
-            //         },
-            //         {
-            //             id: 'creator',
-            //             label: this.$t('触发人'),
-            //             component: 'bk-input',
-            //             props: {
-            //                 value: this.filterConditionMap.creator
-            //             },
-            //             listeners: {
-            //                 change: (creator) => {
-            //                     this.filterConditionMap.creator = creator
-            //                 }
-            //             }
-            //         },
-            //         {
-            //             id: 'property',
-            //             label: this.$t('元数据'),
-            //             component: 'bk-input',
-            //             props: {
-            //                 value: this.filterConditionMap.property
-            //             },
-            //             listeners: {
-            //                 change: (property) => {
-            //                     this.filterConditionMap.property = property
-            //                 }
-            //             }
-            //         }
-            //     ]
-            // },
-            // shortcuts () {
-            //     return [
-            //         {
-            //             text: '今天',
-            //             value () {
-            //                 const end = new Date()
-            //                 const start = new Date(end.getFullYear(), end.getMonth(), end.getDate())
-            //                 return [start, end]
-            //             },
-            //             onClick: picker => {
-            //                 console.log(picker)
-            //             }
-            //         },
-            //         {
-            //             text: '近7天',
-            //             value () {
-            //                 const end = new Date()
-            //                 const start = new Date()
-            //                 start.setTime(start.getTime() - 3600 * 1000 * 24 * 7)
-            //                 return [start, end]
-            //             }
-            //         },
-            //         {
-            //             text: '近15天',
-            //             value () {
-            //                 const end = new Date()
-            //                 const start = new Date()
-            //                 start.setTime(start.getTime() - 3600 * 1000 * 24 * 15)
-            //                 return [start, end]
-            //             }
-            //         }
-            //     ]
-            // }
+        // filterConditionLength () {
+        //     if (!this.filtering) return 0
+        //     return Object.keys(this.filterConditionMap).filter(key => {
+        //         if (Array.isArray(this.filterConditionMap[key])) {
+        //             return this.filterConditionMap[key].length > 0
+        //         }
+        //         return !!this.filterConditionMap[key]
+        //     }).length
+        // },
+        // conditions () {
+        //     return [
+        //         {
+        //             id: 'triggerTime',
+        //             label: this.$t('details.triggerTime'),
+        //             component: 'bk-date-picker',
+        //             props: {
+        //                 type: 'datetimerange',
+        //                 shortcuts: this.shortcuts,
+        //                 value: this.filterConditionMap.timeRange
+        //             },
+        //             listeners: {
+        //                 change: (range) => {
+        //                     this.filterConditionMap.timeRange = range
+        //                 }
+        //             }
+        //         },
+        //         {
+        //             id: 'buildNo',
+        //             label: this.$t('构建号'),
+        //             component: 'bk-input',
+        //             props: {
+        //                 value: this.filterConditionMap.buildNo
+        //             },
+        //             listeners: {
+        //                 change: (buildNo) => {
+        //                     this.filterConditionMap.buildNo = buildNo
+        //                 }
+        //             }
+        //         },
+        //         {
+        //             id: 'filename',
+        //             label: this.$t('文件名'),
+        //             component: 'bk-input',
+        //             props: {
+        //                 value: this.filterConditionMap.filename
+        //             },
+        //             listeners: {
+        //                 change: (filename) => {
+        //                     this.filterConditionMap.filename = filename
+        //                 }
+        //             }
+        //         },
+        //         {
+        //             id: 'creator',
+        //             label: this.$t('触发人'),
+        //             component: 'bk-input',
+        //             props: {
+        //                 value: this.filterConditionMap.creator
+        //             },
+        //             listeners: {
+        //                 change: (creator) => {
+        //                     this.filterConditionMap.creator = creator
+        //                 }
+        //             }
+        //         },
+        //         {
+        //             id: 'property',
+        //             label: this.$t('元数据'),
+        //             component: 'bk-input',
+        //             props: {
+        //                 value: this.filterConditionMap.property
+        //             },
+        //             listeners: {
+        //                 change: (property) => {
+        //                     this.filterConditionMap.property = property
+        //                 }
+        //             }
+        //         }
+        //     ]
+        // },
+        // shortcuts () {
+        //     return [
+        //         {
+        //             text: '今天',
+        //             value () {
+        //                 const end = new Date()
+        //                 const start = new Date(end.getFullYear(), end.getMonth(), end.getDate())
+        //                 return [start, end]
+        //             },
+        //             onClick: picker => {
+        //                 console.log(picker)
+        //             }
+        //         },
+        //         {
+        //             text: '近7天',
+        //             value () {
+        //                 const end = new Date()
+        //                 const start = new Date()
+        //                 start.setTime(start.getTime() - 3600 * 1000 * 24 * 7)
+        //                 return [start, end]
+        //             }
+        //         },
+        //         {
+        //             text: '近15天',
+        //             value () {
+        //                 const end = new Date()
+        //                 const start = new Date()
+        //                 start.setTime(start.getTime() - 3600 * 1000 * 24 * 15)
+        //                 return [start, end]
+        //             }
+        //         }
+        //     ]
+        // }
         },
         watch: {
             visibleOutputs (outputs) {
@@ -690,7 +640,7 @@
             fullScreenViewReport (output) {
                 this.setActiveOutput(output)
                 this.$nextTick(() => {
-                    this.$refs.iframeReport?.toggleFullScreen?.()
+                this.$refs.iframeReport?.toggleFullScreen?.()
                 })
             }
         }
@@ -700,195 +650,228 @@
 <style lang="scss">
 @import "@/scss/conf";
 @import "@/scss/mixins/ellipsis";
+
 .pipeline-exec-outputs {
-  height: 100%;
-  display: flex;
-  .no-outputs-placeholder {
-    color: #979ba5;
-    display: flex;
     height: 100%;
-    align-items: center;
-    justify-content: center;
-    flex-direction: column;
-    > span {
-      font-size: 12px;
-      margin-top: -46px;
-    }
-  }
-  .pipeline-exec-outputs-aside {
-    position: relative;
-    height: 100%;
-    flex-shrink: 0;
-    padding: 16px 11px;
     display: flex;
-    flex-direction: column;
-    .pipeline-exec-outputs-filter-input {
-        margin: 12px 0;
-    }
-    .pipeline-exec-outputs-filter {
-      position: relative;
-      margin: 16px 0 6px 0;
-      width: 100%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      height: 32px;
-      background: white;
-      border: 1px solid #c4c6cc;
-      border-radius: 2px;
-      font-size: 14px;
-      cursor: pointer;
-      &.filter-active {
-        color: $primaryColor;
-        border-color: $primaryColor;
-      }
-      .output-filter-condition-count {
-        margin: 0;
-        position: absolute;
-        right: 16px;
-      }
-    }
-    .pipeline-exec-outputs-list {
-      overflow: auto;
-      flex: 1;
-      padding-top: 10px;
-      > li {
+    border: 0;
+
+    .no-outputs-placeholder {
+        color: #979ba5;
         display: flex;
+        height: 100%;
         align-items: center;
-        padding: 10px 19px;
-        cursor: pointer;
-        border-radius: 2px;
-        font-size: 12px;
-        margin-bottom: 10px;
-        grid-gap: 10px;
-        > .devops-icon {
-          display: inline-flex;
-          font-size: 16px;
-          flex-shrink: 0;
-          align-items: center;
+        justify-content: center;
+        flex-direction: column;
+
+        >span {
+            font-size: 12px;
+            margin-top: -46px;
         }
-        .output-hover-icon-box {
+    }
+
+    .pipeline-exec-outputs-aside {
+        position: relative;
+        height: 100%;
+        flex-shrink: 0;
+        padding: 16px 11px;
+        display: flex;
+        flex-direction: column;
+
+        .pipeline-exec-outputs-filter-input {
+            margin: 12px 0;
+        }
+
+        .pipeline-exec-outputs-filter {
+            position: relative;
+            margin: 16px 0 6px 0;
+            width: 100%;
             display: flex;
             align-items: center;
-            grid-gap: 6px;
-            :hover {
-                color:$primaryColor;
+            justify-content: center;
+            height: 32px;
+            background: white;
+            border: 1px solid #c4c6cc;
+            border-radius: 2px;
+            font-size: 14px;
+            cursor: pointer;
+
+            &.filter-active {
+                color: $primaryColor;
+                border-color: $primaryColor;
+            }
+
+            .output-filter-condition-count {
+                margin: 0;
+                position: absolute;
+                right: 16px;
             }
         }
-        > span {
+
+        .pipeline-exec-outputs-list {
+            overflow: auto;
             flex: 1;
-            display: -webkit-box;
-            -webkit-box-orient: vertical;
-            -webkit-line-clamp: 2;
-            overflow: hidden;
-            word-break: break-all;
+            padding-top: 10px;
+
+            >li {
+                display: flex;
+                align-items: center;
+                padding: 10px 19px;
+                cursor: pointer;
+                border-radius: 2px;
+                font-size: 12px;
+                margin-bottom: 10px;
+                grid-gap: 10px;
+
+                >.devops-icon {
+                    display: inline-flex;
+                    font-size: 16px;
+                    flex-shrink: 0;
+                    align-items: center;
+                }
+
+                .output-hover-icon-box {
+                    display: flex;
+                    align-items: center;
+                    grid-gap: 6px;
+
+                    :hover {
+                        color: $primaryColor;
+                    }
+                }
+
+                >span {
+                    flex: 1;
+                    display: -webkit-box;
+                    -webkit-box-orient: vertical;
+                    -webkit-line-clamp: 2;
+                    overflow: hidden;
+                    word-break: break-all;
+                }
+
+                &.active,
+                &:hover {
+                    color: $iconPrimaryColor;
+                    background: #f5f7fa;
+                }
+            }
         }
-        &.active,
-        &:hover {
-            color: $iconPrimaryColor;
-            background: #f5f7fa;
-        }
-      }
     }
-  }
-  .pipeline-exec-outputs-section {
-    height: 100%;
-    display: flex;
-    flex-direction: column;
-    overflow: hidden;
-    .pipeline-exec-output-header {
-      display: flex;
-      align-items: center;
-      height: 48px;
-      background: #fafbfd;
-      padding: 0 24px;
-      flex-shrink: 0;
-      &-name {
+
+    .pipeline-exec-outputs-section {
+        height: 100%;
         display: flex;
-        align-items: center;
-        font-size: 16px;
-        color: #313238;
-        padding-right: 16px;
-        > i {
-          padding-right: 12px;
-        }
-      }
-      .pipeline-exec-output-actions {
-        display: grid;
-        grid-gap: 16px;
-        grid-auto-flow: column;
-        align-items: center;
-        justify-self: flex-end;
-        margin-left: auto;
-      }
-    }
-    .pipeline-exec-output-artifact {
-        flex: 1;
-        overflow: auto;
-    }
-    .pipeline-exec-output-block {
-      padding: 16px 24px;
-      .pipeline-exec-output-block-title {
-        font-size: 14px;
-        border-bottom: 1px solid #dcdee5;
-        margin: 0 0 16px 0;
-        line-height: 24px;
-      }
-      .pipeline-exec-output-block-content {
-        font-size: 12px;
-        > li {
+        flex-direction: column;
+        overflow: hidden;
+
+        .pipeline-exec-output-header {
             display: flex;
             align-items: center;
-          margin-bottom: 16px;
-          .pipeline-exec-output-block-row-label {
-            color: #979ba5;
-            text-align: right;
-            @include ellipsis();
-            width: 110px;
+            height: 48px;
+            background: #fafbfd;
+            padding: 0 24px;
             flex-shrink: 0;
-          }
-          .pipeline-exec-output-block-row-value {
-            @include ellipsis();
-          }
+
+            &-name {
+                display: flex;
+                align-items: center;
+                font-size: 16px;
+                color: #313238;
+                padding-right: 16px;
+
+                >i {
+                    padding-right: 12px;
+                }
+            }
+
+            .pipeline-exec-output-actions {
+                display: grid;
+                grid-gap: 16px;
+                grid-auto-flow: column;
+                align-items: center;
+                justify-self: flex-end;
+                margin-left: auto;
+            }
         }
-      }
+
+        .pipeline-exec-output-artifact {
+            flex: 1;
+            overflow: auto;
+        }
+
+        .pipeline-exec-output-block {
+            padding: 16px 24px;
+
+            .pipeline-exec-output-block-title {
+                font-size: 14px;
+                border-bottom: 1px solid #dcdee5;
+                margin: 0 0 16px 0;
+                line-height: 24px;
+            }
+
+            .pipeline-exec-output-block-content {
+                font-size: 12px;
+
+                >li {
+                    display: flex;
+                    align-items: center;
+                    margin-bottom: 16px;
+
+                    .pipeline-exec-output-block-row-label {
+                        color: #979ba5;
+                        text-align: right;
+                        @include ellipsis();
+                        width: 110px;
+                        flex-shrink: 0;
+                    }
+
+                    .pipeline-exec-output-block-row-value {
+                        @include ellipsis();
+                    }
+                }
+            }
+        }
     }
-  }
-  .pipeline-outputs-filter-aside {
-    width: 480px;
-    background: white;
-    position: absolute;
-    right: 0;
-    top: 0;
-    height: 100%;
-    border: 1px solid #DCDEE5;
-    display: grid;
-    grid-template-rows: 52px 1fr 48px;
-    transform: translateX(100%);
-    transition: all 0.3s ease;
-    &.pipeline-outputs-filter-aside-show {
-        transform: translateX(0);
+
+    .pipeline-outputs-filter-aside {
+        width: 480px;
+        background: white;
+        position: absolute;
+        right: 0;
+        top: 0;
+        height: 100%;
+        border: 1px solid #DCDEE5;
+        display: grid;
+        grid-template-rows: 52px 1fr 48px;
+        transform: translateX(100%);
+        transition: all 0.3s ease;
+
+        &.pipeline-outputs-filter-aside-show {
+            transform: translateX(0);
+        }
+
+        >header {
+            padding: 0 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: #FFFFFF;
+            box-shadow: inset 0 -1px 0 0 #DCDEE5;
+            color: #313238;
+        }
+
+        .pipeline-outputs-filter-conditions {
+            padding: 16px 24px;
+        }
+
+        >footer {
+            padding: 0 24px;
+            display: flex;
+            align-items: center;
+            grid-gap: 8px;
+            background: #FAFBFD;
+            box-shadow: 0 -1px 0 0 #DCDEE5;
+        }
     }
-    > header {
-        padding: 0 24px;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        background: #FFFFFF;
-        box-shadow: inset 0 -1px 0 0 #DCDEE5;
-        color: #313238;
-    }
-    .pipeline-outputs-filter-conditions {
-        padding: 16px 24px;
-    }
-    > footer {
-        padding: 0 24px;
-        display: flex;
-        align-items: center;
-        grid-gap: 8px;
-        background: #FAFBFD;
-        box-shadow: 0 -1px 0 0 #DCDEE5;
-    }
-  }
 }
 </style>

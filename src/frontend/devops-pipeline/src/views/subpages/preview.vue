@@ -1,45 +1,33 @@
 <template>
     <div class="pipeline-execute-preview" v-bkloading="{ isLoading }">
         <template v-if="!isDebugPipeline && buildList.length">
-            <header
-                :class="['params-collapse-trigger', {
-                    'params-collapse-expand': activeName.has(1)
-                }]" @click="toggleCollapse(1)">
+            <header :class="['params-collapse-trigger', {
+                'params-collapse-expand': activeName.has(1)
+            }]" @click="toggleCollapse(1)">
                 <i class="devops-icon icon-angle-right" />
                 {{ $t('buildMsg') }}
             </header>
             <div v-if="activeName.has(1)" class="params-collapse-content">
-                <pipeline-params-form
-                    ref="buildForm"
-                    :param-values="buildValues"
-                    :handle-param-change="handleBuildChange"
-                    :params="buildList"
-                />
+                <pipeline-params-form ref="buildForm" :param-values="buildValues"
+                    :handle-param-change="handleBuildChange" :params="buildList" />
             </div>
         </template>
         <template v-if="isVisibleVersion">
-            <header
-                :class="['params-collapse-trigger', {
-                    'params-collapse-expand': activeName.has(2)
-                }]" @click="toggleCollapse(2)">
+            <header :class="['params-collapse-trigger', {
+                'params-collapse-expand': activeName.has(2)
+            }]" @click="toggleCollapse(2)">
                 <i class="devops-icon icon-angle-right" />
                 {{ $t('preview.introVersion') }}
             </header>
             <div v-if="activeName.has(2)" class="params-collapse-content">
-                <pipeline-versions-form
-                    ref="versionParamForm"
-                    :build-no="buildNo"
-                    :is-preview="true"
-                    :version-param-values="versionParamValues"
-                    :handle-version-change="handleVersionChange"
-                    :handle-build-no-change="handleBuildNoChange"
-                ></pipeline-versions-form>
+                <pipeline-versions-form ref="versionParamForm" :build-no="buildNo" :is-preview="true"
+                    :version-param-values="versionParamValues" :handle-version-change="handleVersionChange"
+                    :handle-build-no-change="handleBuildNoChange"></pipeline-versions-form>
             </div>
         </template>
-        <header
-            :class="['params-collapse-trigger', {
-                'params-collapse-expand': activeName.has(3)
-            }]" @click="toggleCollapse(3)">
+        <header :class="['params-collapse-trigger', {
+            'params-collapse-expand': activeName.has(3)
+        }]" @click="toggleCollapse(3)">
             <i class="devops-icon icon-angle-right" />
             {{ $t('buildParams') }}
             <template v-if="paramList.length > 0">
@@ -54,66 +42,44 @@
             </template>
         </header>
         <div v-if="activeName.has(3)" class="params-collapse-content">
-            <bk-alert
-                v-if="showChangedParamsAlert && changedParams.length"
-                type="warning"
-                :title="$t('paramChangeTips', [changedParams.length])"
-            >
+            <bk-alert v-if="showChangedParamsAlert && changedParams.length" type="warning"
+                :title="$t('paramChangeTips', [changedParams.length])">
             </bk-alert>
-            <pipeline-params-form
-                v-if="paramList.length > 0"
-                ref="paramsForm"
-                :param-values="paramsValues"
-                :highlight-changed-param="showChangedParamsAlert"
-                :handle-param-change="handleParamChange"
-                :params="paramList"
-            />
+            <pipeline-params-form v-if="paramList.length > 0" ref="paramsForm" :param-values="paramsValues"
+                :highlight-changed-param="showChangedParamsAlert" :handle-param-change="handleParamChange"
+                :params="paramList" />
             <bk-exception v-else type="empty" scene="part">
-                {{$t('noParams')}}
+                {{ $t('noParams') }}
             </bk-exception>
         </div>
 
         <template v-if="constantParams.length > 0">
-            <header
-                :class="['params-collapse-trigger', {
-                    'params-collapse-expand': activeName.has(4)
-                }]" @click="toggleCollapse(4)">
+            <header :class="['params-collapse-trigger', {
+                'params-collapse-expand': activeName.has(4)
+            }]" @click="toggleCollapse(4)">
                 <i class="devops-icon icon-angle-right" />
                 {{ $t('newui.const') }}
             </header>
             <div v-if="activeName.has(4)" class="params-collapse-content">
-                <pipeline-params-form
-                    ref="paramsForm"
-                    disabled
-                    :param-values="constantValues"
-                    :params="constantParams"
-                />
+                <pipeline-params-form ref="paramsForm" disabled :param-values="constantValues"
+                    :params="constantParams" />
             </div>
         </template>
         <template v-if="otherParams.length > 0">
-            <header
-                :class="['params-collapse-trigger', {
-                    'params-collapse-expand': activeName.has(5)
-                }]" @click="toggleCollapse(5)">
+            <header :class="['params-collapse-trigger', {
+                'params-collapse-expand': activeName.has(5)
+            }]" @click="toggleCollapse(5)">
                 <i class="devops-icon icon-angle-right" />
                 {{ $t('newui.pipelineParam.otherVar') }}
             </header>
             <div v-if="activeName.has(5)" class="params-collapse-content">
-                <pipeline-params-form
-                    ref="paramsForm"
-                    disabled
-                    :param-values="otherValues"
-                    :params="otherParams"
-                />
+                <pipeline-params-form ref="paramsForm" disabled :param-values="otherValues" :params="otherParams" />
             </div>
         </template>
 
-        <header
-            :class="['params-collapse-trigger', {
-                'params-collapse-expand': activeName.has(6)
-            }]"
-            @click="toggleCollapse(6)"
-        >
+        <header :class="['params-collapse-trigger', {
+            'params-collapse-expand': activeName.has(6)
+        }]" @click="toggleCollapse(6)">
             <i class="devops-icon icon-angle-right" />
             {{ $t(startupInfo?.canElementSkip ? 'preview.atomToExec' : 'executeStepPreview') }}
             <template v-if="startupInfo?.canElementSkip">
@@ -125,23 +91,15 @@
                     {{ $t('preview.skipTipsSuffix') }})
                 </span>
                 <span @click.stop class="no-bold-font">
-                    <bk-checkbox
-                        @change="handleCheckTotalChange"
-                        v-model="checkTotal"
-                    >
+                    <bk-checkbox @change="handleCheckTotalChange" v-model="checkTotal">
                         {{ $t('preview.selectAll') }}/{{ $t('preview.selectNone') }}
                     </bk-checkbox>
                 </span>
             </template>
         </header>
         <div v-if="activeName.has(6)" class="params-collapse-content pipeline-optional-model">
-            <pipeline
-                is-preview
-                :show-header="false"
-                :pipeline="pipelineModel"
-                :editable="false"
-                :can-skip-element="startupInfo?.canElementSkip"
-            >
+            <pipeline is-preview :show-header="false" :pipeline="pipelineModel" :editable="false"
+                :can-skip-element="startupInfo?.canElementSkip">
             </pipeline>
         </div>
 
@@ -477,82 +435,100 @@
 </script>
 
 <style lang="scss">
-    @import '../../scss/conf';
-    @import '../../scss/mixins/ellipsis';
-    $header-height: 36px;
-    .pipeline-execute-preview {
-        height: 100%;
+@import '../../scss/conf';
+@import '../../scss/mixins/ellipsis';
+$header-height: 36px;
+
+.pipeline-execute-preview {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    margin: 24px 24px 0 24px;
+    box-shadow: 0 2px 2px 0 #00000026;
+    overflow: auto !important;
+    background-color: white;
+
+    @for $i from 1 through 6 {
+        :nth-child(#{$i} of .params-collapse-trigger) {
+            top: $header-height * ($i - 1);
+        }
+    }
+
+    .params-collapse-trigger {
         display: flex;
-        flex-direction: column;
-        margin: 24px 24px 0 24px;
-        box-shadow: 0 2px 2px 0 #00000026;
-        overflow: auto !important;
+        flex-shrink: 0;
+        align-items: center;
+        font-size: 14px;
+        font-weight: 700;
+        border-bottom: 1px solid #DCDEE5;
+        height: $header-height;
+        top: 0;
+        margin: 0 24px;
+        position: sticky;
+        grid-gap: 10px;
         background-color: white;
-        @for $i from 1 through 6 {
-            :nth-child(#{$i} of .params-collapse-trigger) {
-                top: $header-height * ($i - 1);
-            }
+        z-index: 6;
+
+        .no-bold-font {
+            font-weight: normal;
         }
-        .params-collapse-trigger {
-            display: flex;
-            flex-shrink: 0;
-            align-items: center;
-            font-size: 14px;
-            font-weight: 700;
-            border-bottom: 1px solid #DCDEE5;
-            height: $header-height;
-            top: 0;
-            padding: 0 16px;
-            position: sticky;
-            grid-gap: 10px;
-            background-color: white;
-            z-index: 6;
-            .no-bold-font {
-                font-weight: normal;
-            }
-            &.params-collapse-expand {
-                .icon-angle-right {
-                    transform: rotate(90deg);
-                }
-            }
+
+        &.params-collapse-expand {
             .icon-angle-right {
-                transition: all 0.3 ease;
-                font-size: 12px;
+                transform: rotate(90deg);
             }
-            .collapse-trigger-divider {
+        }
+
+        .icon-angle-right {
+            transition: all 0.3 ease;
+            font-size: 12px;
+            width: 12px;
+            height: 12px;
+            line-height: 1;
+            text-align: center;
+        }
+
+        .collapse-trigger-divider {
+            display: inline-block;
+            margin: 0 10px;
+            color: #DCDEE5;
+        }
+
+        .text-link {
+            font-size: 14px;
+            ;
+            font-weight: normal;
+
+            .icon-question-circle {
                 display: inline-block;
-                margin: 0 10px;
-                color: #DCDEE5;
-            }
-            .text-link {
-                font-size: 14px;;
-                font-weight: normal;
-                .icon-question-circle {
-                    display: inline-block;
-                    color: #979BA5;
-                    margin-left: 4px;
-                }
-            }
-        }
-        .params-collapse-content {
-            padding: 16px;
-        }
-        .empty-execute-params-exception {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            height: 100%;
-        }
-        .bkci-property-panel {
-            .bk-sideslider-wrapper {
-                top: 0;
-                .bk-sideslider-title {
-                    word-wrap: break-word;
-                    word-break: break-all;
-                    overflow: hidden;
-                    padding: 0 0 0 20px !important;
-                }
+                color: #979BA5;
+                margin-left: 4px;
             }
         }
     }
+
+    .params-collapse-content {
+        padding: 16px 24px;
+    }
+
+    .empty-execute-params-exception {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        height: 100%;
+    }
+
+    .bkci-property-panel {
+        .bk-sideslider-wrapper {
+            top: 0;
+
+            .bk-sideslider-title {
+                word-wrap: break-word;
+                word-break: break-all;
+                overflow: hidden;
+                padding: 0 0 0 20px !important;
+            }
+        }
+    }
+}
 </style>

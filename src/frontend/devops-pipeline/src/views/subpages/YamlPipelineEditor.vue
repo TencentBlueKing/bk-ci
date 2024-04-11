@@ -1,69 +1,35 @@
 <template>
     <div class="edit-pipeline-yaml">
         <header class="edit-pipeline-yaml-header">
-            <bk-button
-                @click="addPlugin"
-            >
-                {{$t('addPlugin')}}
+            <bk-button @click="addPlugin">
+                {{ $t('addPlugin') }}
             </bk-button>
         </header>
         <section class="edit-pipeline-yaml-editor">
-            <YamlEditor
-                ref="editor"
-                show-yaml-plugin
-                :value="pipelineYaml"
-                @change="handleYamlChange"
-                :highlight-ranges="yamlHighlightBlock"
-                @step-click="handleStepClick"
-            />
+            <YamlEditor ref="editor" show-yaml-plugin :value="pipelineYaml" @change="handleYamlChange"
+                :highlight-ranges="yamlHighlightBlock" @step-click="handleStepClick" />
         </section>
         <template v-if="container">
             <YamlPreviewPopup v-if="showAtomYaml" @close="resetPreviewAtomYaml" :yaml="atomYaml" />
-            <atom-selector
-                v-else
-                v-bind="editingElementPos"
-                :container="container"
-            />
+            <atom-selector v-else v-bind="editingElementPos" :container="container" />
         </template>
         <template v-if="editingElementPos">
             <template v-if="(typeof editingElementPos.elementIndex !== 'undefined')">
-                <atom-property-panel
-                    close-confirm
-                    v-bind="editingElementPos"
-                    :editable="pipelineEditable"
-                    :stages="stages"
-                    :is-instance-template="instanceFromTemplate"
-                >
+                <atom-property-panel close-confirm v-bind="editingElementPos" :editable="pipelineEditable"
+                    :stages="stages" :is-instance-template="instanceFromTemplate">
                     <footer slot="footer">
-                        <bk-button
-                            v-if="isUpdateElement"
-                            :disabled="isUpdating"
-                            :loading="isUpdating"
-                            @click="syncModelToYaml"
-                        >
+                        <bk-button v-if="isUpdateElement" :disabled="isUpdating" :loading="isUpdating"
+                            @click="syncModelToYaml">
                             {{ $t('applyToYaml') }}
                         </bk-button>
-                        <bk-button
-                            v-else
-                            theme="primary"
-                            :loading="isAdding"
-                            :disabled="isAdding"
-                            @click="confirmAdd"
-                        >
-                            {{ $t('add') }}
+                        <bk-button v-else theme="primary" :loading="isAdding" :disabled="isAdding" @click="confirmAdd">
+                            {{ $t('editPage.append') }}
                         </bk-button>
 
-                        <bk-button
-                            @click="previewAtom"
-                            :disabled="!canPreviewYaml"
-                            :loading="isPreviewingAtomYAML"
-                        >
+                        <bk-button @click="previewAtom" :disabled="!canPreviewYaml" :loading="isPreviewingAtomYAML">
                             {{ $t('previewYaml') }}
                         </bk-button>
-                        <bk-button
-                            :disabled="isAdding || isUpdating"
-                            @click="cancelAdd"
-                        >
+                        <bk-button :disabled="isAdding || isUpdating" @click="cancelAdd">
                             {{ $t('cancel') }}
                         </bk-button>
                     </footer>
@@ -74,12 +40,12 @@
 </template>
 
 <script>
-    import YamlEditor from '@/components/YamlEditor'
-    import { isObject } from '@/utils/util'
-    import { mapState, mapActions, mapGetters } from 'vuex'
-    import AtomSelector from '@/components/AtomSelector'
     import AtomPropertyPanel from '@/components/AtomPropertyPanel'
+    import AtomSelector from '@/components/AtomSelector'
+    import YamlEditor from '@/components/YamlEditor'
     import YamlPreviewPopup from '@/components/YamlPreviewPopup'
+    import { isObject } from '@/utils/util'
+    import { mapActions, mapGetters, mapState } from 'vuex'
     export default {
         components: {
             YamlEditor,
@@ -148,6 +114,7 @@
             editingElementPos (val) {
                 if (!val) {
                     this.resetPreviewAtomYaml()
+                    this.isUpdateElement = false
                     this.$nextTick(() => {
                         this.resetTempData()
                     })
@@ -159,6 +126,7 @@
                 'toggleAtomSelectorPopup',
                 'togglePropertyPanel',
                 'addAtom',
+                'updateAtomInput',
                 'updateAtom',
                 'setPipelineEditing',
                 'yamlNavToPipelineModel',
@@ -240,10 +208,34 @@
             handleStepClick (editingElementPos, atom) {
                 const { stageIndex, containerIndex, elementIndex } = editingElementPos
                 const element = this.pipelineWithoutTrigger.stages[stageIndex].containers[containerIndex].elements[elementIndex]
-                this.updateAtom({
-                    element,
-                    newParam: atom
-                })
+                if (!element) {
+                    this.addAtom({
+                        ...editingElementPos,
+                        atomIndex: elementIndex - 1,
+                        container: this.pipelineWithoutTrigger.stages[stageIndex].containers[containerIndex]
+                    })
+                    this.isUpdateElement = true
+                    return
+                }
+                if (element?.data?.input) {
+                    this.updateAtomInput({
+                        atom: element,
+                        newParam: atom.with
+                    })
+                } else {
+                    this.updateAtom({
+                        element,
+                        newParam: atom.with
+                    })
+                }
+                if (atom.name !== element.name) {
+                    this.updateAtom({
+                        element,
+                        newParam: {
+                            name: atom.name
+                        }
+                    })
+                }
                 this.isUpdateElement = true
                 this.togglePropertyPanel({
                     isShow: true,
@@ -354,22 +346,23 @@
 </script>
 
 <style lang="scss">
-    .edit-pipeline-yaml {
-        display: flex;
-        flex-direction: column;
-        padding: 24px;
-        height: 100%;
-        overflow: hidden;
-        grid-gap: 16px;
-        &-header {
-            display: flex;
-            justify-content: flex-start;
-            flex-shrink: 0;
-        }
+.edit-pipeline-yaml {
+    display: flex;
+    flex-direction: column;
+    padding: 24px;
+    height: 100%;
+    overflow: hidden;
+    grid-gap: 16px;
 
-        &-editor {
-            flex: 1;
-            overflow: hidden;
-        }
+    &-header {
+        display: flex;
+        justify-content: flex-start;
+        flex-shrink: 0;
     }
+
+    &-editor {
+        flex: 1;
+        overflow: hidden;
+    }
+}
 </style>

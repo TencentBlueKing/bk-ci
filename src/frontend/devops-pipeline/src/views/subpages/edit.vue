@@ -1,38 +1,25 @@
 <template>
     <section v-bkloading="{ isLoading }" class="bkdevops-pipeline-edit-wrapper">
-        <empty-tips
-            v-if="hasNoPermission"
-            :show-lock="true"
-            :title="noPermissionTipsConfig.title"
-            :desc="noPermissionTipsConfig.desc"
-            :btns="noPermissionTipsConfig.btns"
-        >
+        <empty-tips v-if="hasNoPermission" :show-lock="true" :title="noPermissionTipsConfig.title"
+            :desc="noPermissionTipsConfig.desc" :btns="noPermissionTipsConfig.btns">
         </empty-tips>
         <YamlPipelineEditor v-else-if="isCodeMode" />
         <template v-else>
             <show-variable v-if="currentTab === 'pipeline' && pipeline" :pipeline="pipeline" />
-            <header class="choose-type-switcher" :class="{ 'when-show-variable': currentTab === 'pipeline' && showVariable }">
-                <span
-                    v-for="panel in panels"
-                    :key="panel.name"
-                    :class="[
-                        'choose-type-switcher-tab',
-                        {
-                            active: currentTab === panel.name
-                        }
-                    ]"
-                    @click="switchTab(panel)"
-                >
+            <header class="choose-type-switcher"
+                :class="{ 'when-show-variable': currentTab === 'pipeline' && showVariable }">
+                <span v-for="panel in panels" :key="panel.name" :class="[
+                    'choose-type-switcher-tab',
+                    {
+                        active: currentTab === panel.name
+                    }
+                ]" @click="switchTab(panel)">
                     {{ panel.label }}
                 </span>
             </header>
 
             <div class="edit-content-area" :class="{ 'when-show-variable': currentTab === 'pipeline' && showVariable }">
-                <component
-                    :is="curPanel.component"
-                    v-bind="curPanel.bindData"
-                    v-on="curPanel.listeners"
-                ></component>
+                <component :is="curPanel.component" v-bind="curPanel.bindData" v-on="curPanel.listeners"></component>
                 <template v-if="!isLoading && pipeline && currentTab === 'pipeline'">
                     <!-- <mini-map :stages="pipeline.stages" scroll-class=".bk-tab-section .bk-tab-content"></mini-map> -->
                 </template>
@@ -78,8 +65,6 @@
                 hasNoPermission: false,
                 leaving: false,
                 confirmMsg: this.$t('editPage.confirmMsg'),
-                confirmTitle: this.$t('editPage.confirmTitle'),
-                cancelText: this.$t('cancel'),
                 noPermissionTipsConfig: {
                     title: this.$t('noPermission'),
                     desc: this.$t('history.noEditPermissionTips'),
@@ -290,9 +275,8 @@
                     if (this.isEditing) {
                         this.leaving = true
                         navConfirm({
-                            content: this.confirmMsg,
-                            type: 'warning',
-                            cancelText: this.cancelText
+                            title: this.$t('leaveConfirmTitle'),
+                            content: this.$t('leaveConfirmTips')
                         })
                             .then((result) => {
                                 next(result)
@@ -342,116 +326,133 @@
 
 <style lang="scss">
 @import "@/scss/conf";
+
 .new-ui-form {
-  .ui-inner-label,
-  .bk-label {
-    font-size: 12px;
-    line-height: 20px;
-    min-height: 20px;
-    margin-bottom: 4px;
-  }
-  .ui-inner-label {
-    display: flex;
-    align-items: center;
-  }
-  .bk-form-tip,
-  .bk-form-help {
-    margin-bottom: 0;
-    line-height: 18px;
-  }
-  i.icon-question-circle-shape {
-    color: #979ba5;
-    font-size: 14px;
-  }
+
+    .ui-inner-label,
+    .bk-label {
+        font-size: 12px;
+        line-height: 20px;
+        min-height: 20px;
+        margin-bottom: 4px;
+    }
+
+    .ui-inner-label {
+        display: flex;
+        align-items: center;
+    }
+
+    .bk-form-tip,
+    .bk-form-help {
+        margin-bottom: 0;
+        line-height: 18px;
+    }
+
+    i.icon-question-circle-shape {
+        color: #979ba5;
+        font-size: 14px;
+    }
 }
-.new-ui-form.bk-form-vertical .bk-form-item + .bk-form-item {
-  margin-top: 24px;
+
+.new-ui-form.bk-form-vertical .bk-form-item+.bk-form-item {
+    margin-top: 24px;
 }
+
 .bkdevops-pipeline-edit-wrapper {
-  .choose-type-switcher {
-    background: #f0f1f5;
-    height: 42px;
-    flex-shrink: 0;
-    display: flex;
-    align-items: center;
-    margin: 24px 24px 0;
-    &.when-show-variable {
-        margin-right: 496px;
-    }
-    .choose-type-switcher-tab {
-      padding: 0 18px;
-      height: 42px;
-      font-size: 14px;
-      display: flex;
-      align-items: center;
-      position: relative;
-      cursor: pointer;
-      &:hover {
-        color: $primaryColor;
-      }
-      &:not(:first-child)::before {
-        position: absolute;
-        content: "";
-        width: 1px;
-        height: 16px;
-        background-color: #c4c6cc;
-        top: 13px;
-        left: 0;
-      }
+    .choose-type-switcher {
+        background: #f0f1f5;
+        height: 42px;
+        flex-shrink: 0;
+        display: flex;
+        align-items: center;
+        margin: 24px 24px 0;
 
-      &:last-child::after {
-        position: absolute;
-        content: "";
-        width: 1px;
-        height: 16px;
-        background-color: #c4c6cc;
-        top: 13px;
-        right: 0;
-      }
-
-      &.active {
-        background-color: white;
-        border-radius: 4px 4px 0 0;
-
-        &::before,
-        &::after {
-          background-color: white;
+        &.when-show-variable {
+            margin-right: 496px;
         }
-      }
-      &.active + ::before {
-        display: none;
-      }
-    }
-  }
 
-  .edit-content-area {
-    position: relative;
-    background: white;
-    height: calc(100vh - 114px);
-    margin: 0 24px;
-    padding: 24px 24px 40px;
-    overflow-y: auto;
-    flex: 1;
-    box-shadow: 0 2px 2px 0 #00000026;
-    &.when-show-variable {
-        margin-right: 496px;
+        .choose-type-switcher-tab {
+            padding: 0 18px;
+            height: 42px;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            position: relative;
+            cursor: pointer;
+
+            &:hover {
+                color: $primaryColor;
+            }
+
+            &:not(:first-child)::before {
+                position: absolute;
+                content: "";
+                width: 1px;
+                height: 16px;
+                background-color: #c4c6cc;
+                top: 13px;
+                left: 0;
+            }
+
+            &:last-child::after {
+                position: absolute;
+                content: "";
+                width: 1px;
+                height: 16px;
+                background-color: #c4c6cc;
+                top: 13px;
+                right: 0;
+            }
+
+            &.active {
+                background-color: white;
+                border-radius: 4px 4px 0 0;
+
+                &::before,
+                &::after {
+                    background-color: white;
+                }
+            }
+
+            &.active+ ::before {
+                display: none;
+            }
+        }
     }
-  }
-  .choose-type-container {
-    margin: 26px 24px 20px;
-  }
-  .bk-tab-section {
-    padding: 0 25px 20px;
-  }
-  .bkdevops-pipeline-edit-tab {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    width: 100%;
-    overflow: hidden;
-    .bk-tab-content {
-      overflow: auto;
+
+    .edit-content-area {
+        position: relative;
+        background: white;
+        height: calc(100vh - 114px);
+        margin: 0 24px;
+        padding: 24px 24px 40px;
+        overflow-y: auto;
+        flex: 1;
+        box-shadow: 0 2px 2px 0 #00000026;
+
+        &.when-show-variable {
+            margin-right: 496px;
+        }
     }
-  }
+
+    .choose-type-container {
+        margin: 26px 24px 20px;
+    }
+
+    .bk-tab-section {
+        padding: 0 25px 20px;
+    }
+
+    .bkdevops-pipeline-edit-tab {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        width: 100%;
+        overflow: hidden;
+
+        .bk-tab-content {
+            overflow: auto;
+        }
+    }
 }
 </style>

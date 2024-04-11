@@ -1363,7 +1363,7 @@
   "refParamsTips": "Variables can be referenced in the plugin through the expression ${{ xxx }}",
   "pickTimeRange": "Select Date Time Range",
   "mainMinorPatch": " ( Major.Minor.Patch ) ",
-  "debugParamsTips": "During debugging, the parameter values used in the last debugging will be automatically filled in for you. You can choose to restore to the default values",  
+  "debugParamsTips": "During debugging, the parameter values used in the last debugging will be automatically filled in for you. You can choose to restore to the default values",
   "restoreDetaulParamsTips": "The last build parameter value has been automatically filled in. If you don't need to fill it in, please modify the trigger [manual trigger] plugin configuration",
   "paramChangeTips": "The last build parameter value has been automatically filled in. {0} parameters have changed the default value. Please pay attention to whether the changes meet the expected",
   "resetDefault": "Restore Default",
@@ -1497,10 +1497,13 @@
   "checkDiff": "Diff",
   "versionRule": "Version Rule",
   "versionRuleP": "P: Pipeline arrangement version, including Stage, Job, Step, and variables",
-  "versionRuleT": "T: Pipeline trigger version",                  
+  "versionRuleT": "T: Pipeline trigger version",
   "versionRuleA": "Additional bits: Modified version of other information of the pipeline, such as name, description, running settings, etc.",
   "willRelease": "To be released",
   "clickToAddStage": "Click to add the first pipeline stage",
   "buildMsg": "Build Message",
-  "executeStepPreview": "Preview of steps to be executed"
+  "executeStepPreview": "Preview of steps to be executed",
+  "yamlFilePathErrorTip": "File path must end with .yml or .yaml",
+  "yamlFilePathPlaceholder": "build.yml or build.yaml",
+  "alreadyReleasedTips": "Pipeline unchanged, no release necessary"
 }
