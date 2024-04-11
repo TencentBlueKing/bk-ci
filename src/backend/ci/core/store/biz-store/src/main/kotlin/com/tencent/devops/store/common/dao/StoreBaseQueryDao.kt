@@ -194,6 +194,7 @@ class StoreBaseQueryDao {
             val conditions = mutableListOf<Condition>()
             conditions.add(STORE_CODE.eq(storeCode))
             conditions.add(STORE_TYPE.eq(storeTepe.type.toByte()))
+            conditions.add(STATUS.eq(StoreStatusEnum.RELEASED.name))
             if (version != null) {
                 conditions.add(VERSION.like(VersionUtils.generateQueryVersion(version)))
             }
