@@ -95,7 +95,7 @@ class BatchInstallAgentService @Autowired constructor(
         val agentHashId = HashUtil.encodeLongId(agentId)
 
         // 生成安装脚本
-        return downloadAgentInstallService.downloadInstallScript(agentHashId)
+        return downloadAgentInstallService.downloadInstallScript(agentHashId, true)
     }
 
     private fun verifyToken(token: String): Triple<String, String, String?> {
