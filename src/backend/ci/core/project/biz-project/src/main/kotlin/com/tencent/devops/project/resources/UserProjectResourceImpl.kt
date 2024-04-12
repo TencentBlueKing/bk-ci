@@ -258,4 +258,10 @@ class UserProjectResourceImpl @Autowired constructor(
             projectService.getOperationalProducts()
         )
     }
+
+    override fun getOperationalProductsByBgName(userId: String, bgName: String): Result<List<OperationalProductVO>> {
+        return Result(
+            projectService.getOperationalProductsByBgName(bgName)
+        )
+    }
 }
