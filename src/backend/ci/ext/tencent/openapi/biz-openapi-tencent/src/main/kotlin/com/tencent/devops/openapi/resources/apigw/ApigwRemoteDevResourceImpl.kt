@@ -7,6 +7,7 @@ import com.tencent.devops.openapi.api.apigw.ApigwRemoteDevResource
 import com.tencent.devops.project.api.service.ServiceUserResource
 import com.tencent.devops.remotedev.api.service.ServiceRemoteDevResource
 import com.tencent.devops.remotedev.pojo.WindowsResourceTypeConfig
+import com.tencent.devops.remotedev.pojo.WindowsWorkspaceCreate
 import com.tencent.devops.remotedev.pojo.op.OpProjectWorkspaceAssignData
 import com.tencent.devops.remotedev.pojo.op.RemotedevCvmData
 import com.tencent.devops.remotedev.pojo.op.WorkspaceNotifyData
@@ -14,17 +15,10 @@ import com.tencent.devops.remotedev.pojo.project.RemotedevProject
 import com.tencent.devops.remotedev.pojo.project.WeSecProjectWorkspace
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.beans.factory.annotation.Value
 
 @RestResource
 class ApigwRemoteDevResourceImpl @Autowired constructor(private val client: Client) :
     ApigwRemoteDevResource {
-
-    @Value("\${devx.gwToken:}")
-    val devxGwToken = ""
-
-    @Value("\${devx.originalHost:}")
-    val devxOriginalHost = ""
 
     companion object {
         private val logger = LoggerFactory.getLogger(ApigwProjectResourceImpl::class.java)
@@ -58,41 +52,6 @@ class ApigwRemoteDevResourceImpl @Autowired constructor(private val client: Clie
             businessLineName = null,
             ownerName = null
         )
-    }
-
-    override fun getProjectWorkspace(
-        appCode: String?,
-        apigwType: String?,
-        ip: String?,
-        originalHost: String?,
-        devxToken: String?
-    ): Result<WeSecProjectWorkspace?> {
-        return when {
-            ip.isNullOrBlank() -> Result(
-                message = "获取到的云桌面IP为空",
-                data = null
-            )
-
-            devxToken.isNullOrBlank() -> Result(
-                message = "来源请求token不能为空",
-                data = null
-            )
-
-            originalHost != devxOriginalHost -> Result(
-                message = "来源请求域名不符",
-                data = null
-            )
-
-            devxToken != devxGwToken -> Result(
-                message = "来源请求token不符",
-                data = null
-            )
-
-            else -> {
-                logger.info("Get projects workspace ip $ip")
-                client.get(ServiceRemoteDevResource::class).getProjectWorkspaceIp(ip = ip)
-            }
-        }
     }
 
     override fun queryWorkspaceProjects(
@@ -201,5 +160,20 @@ class ApigwRemoteDevResourceImpl @Autowired constructor(private val client: Clie
             ip = null,
             projectId = null
         )
+    }
+
+    override fun createPersonalWorkspace(userId: String, data: WindowsWorkspaceCreate): Result<String> {
+        logger.info("createPersonalWorkspace $userId|$data")
+        return client.get(ServiceRemoteDevResource::class).createPersonalWorkspace(userId, data)
+    }
+
+    override fun deletePersonalWorkspace(userId: String, workspaceName: String): Result<Boolean> {
+        logger.info("deletePersonalWorkspace $userId|$workspaceName")
+        return client.get(ServiceRemoteDevResource::class).deletePersonalWorkspace(userId, workspaceName)
+    }
+
+    override fun getPersonalWorkspace(userId: String, workspaceName: String): Result<WeSecProjectWorkspace?> {
+        logger.info("getPersonalWorkspace $userId|$workspaceName")
+        return client.get(ServiceRemoteDevResource::class).getPersonalWorkspace(userId, workspaceName)
     }
 }

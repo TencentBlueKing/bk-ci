@@ -71,6 +71,7 @@ import com.tencent.devops.remotedev.pojo.common.RemoteDevNotifyType
 import com.tencent.devops.remotedev.pojo.event.RemoteDevUpdateEvent
 import com.tencent.devops.remotedev.pojo.event.UpdateEventType
 import com.tencent.devops.remotedev.resources.op.AssignWorkspacePipelineInfo
+import com.tencent.devops.remotedev.service.BKCCService
 import com.tencent.devops.remotedev.service.RemoteDevSettingService
 import com.tencent.devops.remotedev.service.SshPublicKeysService
 import com.tencent.devops.remotedev.service.WhiteListService
@@ -112,7 +113,8 @@ class WorkspaceCommon @Autowired constructor(
     private val whiteListService: WhiteListService,
     private val workspaceWindowsDao: WorkspaceWindowsDao,
     private val notifyControl: NotifyControl,
-    private val kafkaClient: KafkaClient
+    private val kafkaClient: KafkaClient,
+    private val bkccService: BKCCService
 ) {
 
     companion object {
@@ -278,6 +280,10 @@ class WorkspaceCommon @Autowired constructor(
                 return WorkspaceStatus.DELETED
             }
 
+            workspaceInfo.status == EnvStatusEnum.restarting -> {
+                return WorkspaceStatus.RESTARTING
+            }
+
             workspaceInfo.status == EnvStatusEnum.running && workspaceInfo.started != false -> {
                 startControl.doStartWS(true, userId, workspaceName, workspaceInfo.environmentHost)
                 return WorkspaceStatus.RUNNING
@@ -285,7 +291,7 @@ class WorkspaceCommon @Autowired constructor(
 
             else -> logger.warn(
                 "wait workspace change over $DEFAULT_WAIT_TIME second |" +
-                        "$workspaceName|${workspaceInfo.status}"
+                    "$workspaceName|${workspaceInfo.status}"
             )
         }
         return status
@@ -297,11 +303,11 @@ class WorkspaceCommon @Autowired constructor(
      */
     fun notOk2doNextAction(workspace: WorkspaceRecord): Boolean {
         return (
-                workspace.status.notOk2doNextAction(workspace.workspaceSystemType) && Duration.between(
-                    workspace.lastStatusUpdateTime ?: LocalDateTime.now(),
-                    LocalDateTime.now()
-                ).seconds < DEFAULT_WAIT_TIME
-                ) ||
+            workspace.status.notOk2doNextAction(workspace.workspaceSystemType) && Duration.between(
+                workspace.lastStatusUpdateTime ?: LocalDateTime.now(),
+                LocalDateTime.now()
+            ).seconds < DEFAULT_WAIT_TIME
+            ) ||
             workspace.status.checkDeleted() || workspace.status.workspaceInitializing() ||
             workspace.status.checkInProcess()
     }
@@ -326,7 +332,7 @@ class WorkspaceCommon @Autowired constructor(
     ) {
         logger.info(
             "updateStatusAndCreateHistory|workspace|$workspace|oldStatus|${workspace.status}" +
-                    "newStatus|$newStatus|action|$action"
+                "newStatus|$newStatus|action|$action"
         )
         workspaceDao.updateWorkspaceStatus(
             dslContext = dslContext,
@@ -416,14 +422,15 @@ class WorkspaceCommon @Autowired constructor(
         ownerType: WorkspaceOwnerType
     ) {
         when {
-            type == WorkspaceMountType.START && ownerType == WorkspaceOwnerType.PERSONAL -> {
-                val timeLeft = remoteDevSettingService.userWinTimeLeft(userId)
-                if (timeLeft <= 0) {
-                    throw ErrorCodeException(
-                        errorCode = ErrorCodeEnum.WORKSPACE_UNAVAILABLE_WIN_GPU.errorCode
-                    )
-                }
-            }
+//            --story=116722016 【个人云桌面续期优化】去掉个人云桌面体验时长的限制
+//            type == WorkspaceMountType.START && ownerType == WorkspaceOwnerType.PERSONAL -> {
+//                val timeLeft = remoteDevSettingService.userWinTimeLeft(userId)
+//                if (timeLeft <= 0) {
+//                    throw ErrorCodeException(
+//                        errorCode = ErrorCodeEnum.WORKSPACE_UNAVAILABLE_WIN_GPU.errorCode
+//                    )
+//                }
+//            }
 
             else -> {}
         }
@@ -603,9 +610,21 @@ class WorkspaceCommon @Autowired constructor(
     }
 
     fun genWorkspaceCCInfo(
-        projectId: String
+        projectId: String,
+        workspaceName: String,
+        owner: String?
     ): Map<String, Any> {
-        return mapOf("devx_meta" to JsonUtil.toJson(listOf(mapOf("projectId" to projectId)), formatted = false))
+        return mapOf(
+            "devx_meta" to JsonUtil.toJson(
+                listOf(
+                    mapOf(
+                        "projectId" to projectId,
+                        "workspaceName" to workspaceName,
+                        "owner" to (owner ?: "")
+                    )
+                ), formatted = false
+            )
+        )
     }
 
     /*
@@ -704,5 +723,19 @@ class WorkspaceCommon @Autowired constructor(
         } catch (e: Exception) {
             logger.warn("execute make disk mount pipeline error", e)
         }
+    }
+
+    fun updateHostMonitor(workspaceName: String, props: Map<String, Any>, type: WorkspaceSystemType) {
+        if (!type.checkWindows()) return
+        val detail = getWorkspaceDetail(workspaceName) ?: return
+        val regId = detail.regionId
+        val ip = detail.environmentIP.substringAfter(".")
+        if (regId == null) {
+            logger.warn("update $workspaceName but regionid is null")
+            return
+        }
+        bkccService.updateHostMonitor(
+            regId, ip, props
+        )
     }
 }

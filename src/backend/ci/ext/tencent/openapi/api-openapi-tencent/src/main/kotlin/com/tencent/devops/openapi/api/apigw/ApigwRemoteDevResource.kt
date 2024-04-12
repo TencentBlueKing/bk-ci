@@ -2,11 +2,11 @@ package com.tencent.devops.openapi.api.apigw
 
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_APP_CODE
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE
-import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_ORIGINAL_HOST
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.remotedev.pojo.WindowsResourceTypeConfig
+import com.tencent.devops.remotedev.pojo.WindowsWorkspaceCreate
 import com.tencent.devops.remotedev.pojo.op.OpProjectWorkspaceAssignData
 import com.tencent.devops.remotedev.pojo.op.RemotedevCvmData
 import com.tencent.devops.remotedev.pojo.op.WorkspaceNotifyData
@@ -16,6 +16,7 @@ import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.tags.Tag
 import javax.ws.rs.Consumes
+import javax.ws.rs.DELETE
 import javax.ws.rs.GET
 import javax.ws.rs.HeaderParam
 import javax.ws.rs.POST
@@ -69,27 +70,6 @@ interface ApigwRemoteDevResource {
         @QueryParam("ip")
         ip: String?
     ): Result<List<WeSecProjectWorkspace>>
-
-    @Operation(summary = "云研发SDK根据X-BK-NGGW-CLIENT-ADDRESS获取云桌面信息", tags = ["v4_app_remotedev_workspace_detail"])
-    @GET
-    @Path("/project/workspace/detail")
-    fun getProjectWorkspace(
-        @Parameter(description = "appCode", required = true, example = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
-        @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
-        appCode: String?,
-        @Parameter(description = "apigw Type", required = true)
-        @PathParam("apigwType")
-        apigwType: String?,
-        @Parameter(description = "IP", required = false)
-        @HeaderParam("X-BK-NGGW-CLIENT-ADDRESS")
-        ip: String?,
-        @Parameter(description = "original host", required = false)
-        @HeaderParam(AUTH_HEADER_DEVOPS_ORIGINAL_HOST)
-        originalHost: String?,
-        @Parameter(description = "devx token", required = false)
-        @HeaderParam("X-DEVOPS-DEVX-GW-TOKEN")
-        devxToken: String?
-    ): Result<WeSecProjectWorkspace?>
 
     @Operation(summary = "提供给wesec获取云桌面信息", tags = ["v4_app_remotedev_project_list"])
     @GET
@@ -241,4 +221,39 @@ interface ApigwRemoteDevResource {
         @QueryParam("taiUser")
         taiUser: String
     ): Result<List<WeSecProjectWorkspace>>
+
+    @Operation(summary = "创建windows工作空间", tags = ["v4_app_remotedev_win_create"])
+    @POST
+    @Path("/personal_win_workspace")
+    fun createPersonalWorkspace(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
+        userId: String,
+        @Parameter(description = "创建内容", required = true)
+        data: WindowsWorkspaceCreate
+    ): Result<String>
+
+    @Operation(summary = "删除windows工作空间", tags = ["v4_app_remotedev_win_delete"])
+    @DELETE
+    @Path("/personal_win_workspace")
+    fun deletePersonalWorkspace(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
+        userId: String,
+        @Parameter(description = "工作空间名", required = true)
+        @QueryParam("workspaceName")
+        workspaceName: String
+    ): Result<Boolean>
+
+    @Operation(summary = "获取windows工作空间", tags = ["v4_app_remotedev_win_detail"])
+    @GET
+    @Path("/personal_win_workspace")
+    fun getPersonalWorkspace(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
+        userId: String,
+        @Parameter(description = "工作空间名", required = true)
+        @QueryParam("workspaceName")
+        workspaceName: String
+    ): Result<WeSecProjectWorkspace?>
 }

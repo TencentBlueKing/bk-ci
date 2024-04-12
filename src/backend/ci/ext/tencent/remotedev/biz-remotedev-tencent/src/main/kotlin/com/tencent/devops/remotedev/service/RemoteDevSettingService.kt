@@ -241,6 +241,7 @@ class RemoteDevSettingService @Autowired constructor(
      * op接口使用，批量更新太湖账号信息
      */
     fun updateAllTaiUserInfo(userIds: List<String> = emptyList()) {
+        val update = userIds.isNotEmpty()
         var page = 1
         val pageSize = 50
         while (true) {
@@ -249,7 +250,7 @@ class RemoteDevSettingService @Autowired constructor(
                 limit = PageUtil.convertPageSizeToSQLLimit(page, pageSize),
                 userIds = userIds.filter { UserUtil.isTaiUser(it) }.toSet().ifEmpty { null }
             )
-            val notInit = taiUsers.filter { it.value.first.isBlank() || it.value.second.isBlank() }
+            val notInit = taiUsers.filter { it.value.first.isBlank() || it.value.second.isBlank() || update }
             val taiInfos = taiClient.taiUserInfo(TaiUserInfoRequest(usernames = notInit.keys))
                 .associateBy({
                     it.username

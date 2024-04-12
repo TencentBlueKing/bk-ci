@@ -25,16 +25,18 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.scm.code.svn.api
+package com.tencent.devops.remotedev.pojo.windows
 
-import okhttp3.Request
+import com.tencent.devops.remotedev.pojo.WorkspaceAction
+import com.tencent.devops.remotedev.pojo.WorkspaceStatus
+import io.swagger.v3.oas.annotations.media.Schema
 
-@Suppress("ALL")
-open class SVNOauthApi : SVNApi() {
-
-    override fun request(host: String, token: String, url: String, page: Int?, pageSize: Int?): Request.Builder {
-        return if (page != null && pageSize != null)
-            Request.Builder().url("$host/$url?access_token=$token&page=$page&per_page=$pageSize")
-        else Request.Builder().url("$host/$url?access_token=$token")
-    }
-}
+@Schema(title = "WINDOWS GPU资源配置表")
+data class WindowsDevCouldCallback(
+    @get:Schema(title = "工作空间名称")
+    val workspaceName: String,
+    @get:Schema(title = "状态")
+    val status: WorkspaceStatus,
+    @get:Schema(title = "行为")
+    val action: WorkspaceAction
+)

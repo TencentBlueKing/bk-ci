@@ -49,10 +49,10 @@ class ChooseAgentInstallChannelIdService @Autowired constructor(
         private const val PROD_NETWORK_AREA_SUPPORTING = 4
         private const val PROD_NETWORK_AREA_OSS = 6
         private const val PROD_NETWORK_AREA_DEVNET = 5 // 正式环境安装通道数值
-        private const val PROD_NETWORK_AREA_DEFAULT = -1
+        private val PROD_NETWORK_AREA_DEFAULT = null
     }
 
-    fun autoChooseAgentInstallChannelId(ip: String): Int {
+    fun autoChooseAgentInstallChannelId(ip: String): Int? {
         if (ip.isBlank()) {
             throw ParamBlankException(
                 message = "innerIp or innerIpv6 must be selected."
@@ -63,7 +63,7 @@ class ChooseAgentInstallChannelIdService @Autowired constructor(
             it.netArea to it.netSegment.split(",")
         }.toMap()
 
-        var networkArea = "SUPPORTING"
+        var networkArea = ""
         val startTime = LocalDateTime.now()
         if (ip.startsWith("9.134.") || ip.startsWith("9.135.")) {
             networkArea = "DEVNET"
@@ -79,10 +79,10 @@ class ChooseAgentInstallChannelIdService @Autowired constructor(
         logger.info("Ip: $ip, Auto choose agent install channel: $networkArea, cost time:${costTime}s.")
 
         return when (networkArea) {
-            "SUPPORTING" -> PROD_NETWORK_AREA_SUPPORTING
+            "SUPPORTING" -> PROD_NETWORK_AREA_SUPPORTING // 实际走不到，该区域暂时无法判断
             "OSS" -> PROD_NETWORK_AREA_OSS
             "DEVNET" -> PROD_NETWORK_AREA_DEVNET
-            else -> PROD_NETWORK_AREA_DEFAULT // 实际走不到，默认SUPPORTING
+            else -> PROD_NETWORK_AREA_DEFAULT // IDC直连区域
         }
     }
 

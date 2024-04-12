@@ -300,13 +300,6 @@
                 sortType = this.sortType
             ) {
                 if (!this.userId) this.isLoading = true
-                this.$router.push({
-                    query: {
-                        ...this.$route.query,
-                        sortBy,
-                        sortType
-                    }
-                })
                 await this.requestList({
                     projectId,
                     aliasName,
@@ -371,13 +364,10 @@
                 this.sortBy = sortBy
                 this.sortType = sortType
                 this.refreshCodelibList()
-                if (sortBy && sortType) {
-                    localStorage.setItem('codelibSortType', sortType)
-                    localStorage.setItem('codelibSortBy', sortBy)
-                } else {
-                    localStorage.removeItem('codelibSortType')
-                    localStorage.removeItem('codelibSortBy')
-                }
+                localStorage.setItem('codelibSortType', sortType)
+                localStorage.setItem('codelibSortBy', sortBy)
+                const queryKeys = Object.keys(this.$route?.query || {})
+                if (!queryKeys.length) return
                 this.$router.push({
                     query: {
                         ...this.$route.query,
