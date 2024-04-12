@@ -687,7 +687,16 @@
                     } else {
                         this.$bkInfo({
                             title: this.$t('codelib.确定关闭 PAC 模式？'),
-                            confirmFn: this.handleClosePac
+                            confirmLoading: true,
+                            confirmFn: async () => {
+                                try {
+                                    await this.handleClosePac()
+                                    this.showClosePac = false
+                                    return true
+                                } catch {
+                                    return false
+                                }
+                            }
                         })
                     }
                 } else {
@@ -698,29 +707,46 @@
                     if (this.isOAUTH) {
                         this.$bkInfo({
                             title: this.$t('codelib.确定开启 PAC 模式？'),
-                            confirmFn: this.handleEnablePac
+                            confirmLoading: true,
+                            confirmFn: async () => {
+                                try {
+                                    await this.handleEnablePac()
+                                    return true
+                                } catch {
+                                    return false
+                                }
+                            }
                         })
                     } else {
                         this.$bkInfo({
                             type: 'warning',
                             title: this.$t('codelib.PAC 模式需使用 OAUTH 授权'),
                             subTitle: this.$t('codelib.确定重置授权为 OAUTH，同时开启 PAC 模式吗？'),
+                            confirmLoading: true,
                             confirmFn: async () => {
-                                const newRepoInfo = {
-                                    ...this.repoInfo
+                                try {
+                                    const newRepoInfo = {
+                                        ...this.repoInfo
+                                    }
+                                    if (newRepoInfo.authType === 'SSH' && newRepoInfo['@type'] === 'codeGit') {
+                                        const urlMap = newRepoInfo.url.split(':')
+                                        const hostName = urlMap[0].split('@')[1]
+                                        const repoName = urlMap[1]
+                                        newRepoInfo.url = `https://${hostName}/${repoName}`
+                                    }
+                                    newRepoInfo.authType = 'OAUTH'
+                                    newRepoInfo.enablePac = true
+                                    await this.handleUpdateRepo(newRepoInfo)
+                                    setTimeout(async () => {
+                                        await this.handleEnablePac()
+                                    }, 500)
+                                    return true
+                                } catch (e) {
+                                    this.$bkMessage({
+                                        theme: 'error',
+                                        message: e || e.message
+                                    })
                                 }
-                                if (newRepoInfo.authType === 'SSH' && newRepoInfo['@type'] === 'codeGit') {
-                                    const urlMap = newRepoInfo.url.split(':')
-                                    const hostName = urlMap[0].split('@')[1]
-                                    const repoName = urlMap[1]
-                                    newRepoInfo.url = `https://${hostName}/${repoName}`
-                                }
-                                newRepoInfo.authType = 'OAUTH'
-                                newRepoInfo.enablePac = true
-                                await this.handleUpdateRepo(newRepoInfo)
-                                setTimeout(async () => {
-                                    await this.handleEnablePac()
-                                }, 500)
                             }
                         })
                     }
@@ -758,33 +784,36 @@
             /**
              * 关闭PAC
              */
-            handleClosePac () {
-                this.closePac({
-                    projectId: this.projectId,
-                    repositoryHashId: this.repoInfo.repoHashId
-                }).then(async () => {
+            async handleClosePac () {
+                try {
+                    await this.closePac({
+                        projectId: this.projectId,
+                        repositoryHashId: this.repoInfo.repoHashId
+                    })
+
                     this.$bkMessage({
                         message: this.$t('codelib.关闭成功'),
                         theme: 'success'
                     })
-                    this.showClosePac = false
                     await this.fetchRepoDetail(this.repoInfo.repoHashId)
                     await this.refreshCodelibList()
-                }).catch(e => {
+                } catch (e) {
                     this.$bkMessage({
                         message: e.message || e,
                         theme: 'error'
                     })
-                })
+                }
             },
             /**
              * 开启PAC
              */
-            handleEnablePac () {
-                this.enablePac({
-                    projectId: this.projectId,
-                    repositoryHashId: this.repoInfo.repoHashId
-                }).then(async () => {
+            async handleEnablePac () {
+                try {
+                    await this.enablePac({
+                        projectId: this.projectId,
+                        repositoryHashId: this.repoInfo.repoHashId
+                    })
+
                     this.$bkMessage({
                         message: this.$t('codelib.开启成功'),
                         theme: 'success'
@@ -799,12 +828,12 @@
                     })
                     await this.fetchRepoDetail(this.repoInfo.repoHashId)
                     await this.refreshCodelibList()
-                }).catch((e) => {
+                } catch (e) {
                     this.$bkMessage({
                         message: e.message || e,
                         theme: 'error'
                     })
-                })
+                }
             },
 
             handleToggleShowClosePac (val) {
