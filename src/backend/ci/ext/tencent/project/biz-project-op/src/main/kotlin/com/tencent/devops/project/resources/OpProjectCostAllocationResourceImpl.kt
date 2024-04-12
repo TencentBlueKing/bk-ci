@@ -9,7 +9,7 @@ import com.tencent.devops.project.service.ProjectOperationalProductService
 
 @RestResource
 class OpProjectCostAllocationResourceImpl constructor(
-    val projectCostAllocationService: ProjectCostAllocationService
+    val projectCostAllocationService: ProjectCostAllocationService,
     val projectOperationalProductService: ProjectOperationalProductService
 ) : OpProjectCostAllocationResource {
     override fun processInactiveProject(projectList: List<String>): Result<Boolean> {
