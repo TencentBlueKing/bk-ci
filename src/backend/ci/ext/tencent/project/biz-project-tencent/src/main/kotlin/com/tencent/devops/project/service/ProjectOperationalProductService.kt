@@ -13,6 +13,7 @@ import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
+import java.util.concurrent.Executors
 import javax.annotation.PostConstruct
 
 @Service
@@ -24,6 +25,8 @@ class ProjectOperationalProductService constructor(
     companion object {
         private val logger = LoggerFactory.getLogger(ProjectOperationalProductService::class.java)
     }
+
+    private val executor = Executors.newSingleThreadExecutor()
 
     private val bgName2ProductList = mutableMapOf<String, MutableList<OperationalProductVO>>()
 
@@ -37,48 +40,52 @@ class ProjectOperationalProductService constructor(
 
     @PostConstruct
     fun syncOperationalProduct(): Boolean {
-        logger.info("sync operational product start!")
-        val obsProductList = getOperationalProductsByDictType(
-            dictType = ProjectProductDictType.OBS_PRODUCT
-        )
-        val planProductList = getOperationalProductsByDictType(
-            dictType = ProjectProductDictType.PLAN_PRODUCT
-        )
-        val deptList = getOperationalProductsByDictType(
-            dictType = ProjectProductDictType.DEPT
-        )
-        val bgList = getOperationalProductsByDictType(
-            dictType = ProjectProductDictType.BG
-        )
-        obsProductList.forEach { obsProductInfo ->
-            val planProductInfo = planProductList.firstOrNull {
-                it.planProductId == obsProductInfo.planProductId
-            }
-            val deptInfo = deptList.firstOrNull {
-                it.deptId == planProductInfo?.deptId
-            }
-            val bgInfo = bgList.firstOrNull {
-                it.bgId == deptInfo?.bgId
-            }
-
-            val operationalProductVO = OperationalProductVO(
-                productId = obsProductInfo.productId!!.toInt(),
-                productName = obsProductInfo.productName ?: "",
-                planProductName = planProductInfo?.planProductName ?: "",
-                deptName = deptInfo?.deptName ?: "",
-                bgName = bgInfo?.bgName ?: ""
+        executor.submit {
+            logger.info("sync operational product start!")
+            val obsProductList = getOperationalProductsByDictType(
+                dictType = ProjectProductDictType.OBS_PRODUCT
             )
-
-            projectOperationalProductDao.createOrUpdate(
-                dslContext = dslContext,
-                operationalProductVO = operationalProductVO
+            val planProductList = getOperationalProductsByDictType(
+                dictType = ProjectProductDictType.PLAN_PRODUCT
             )
-            productInfoList.add(operationalProductVO)
-            val productListWithBgName = bgName2ProductList.getOrPut(operationalProductVO.bgName!!) { mutableListOf() }
-            productListWithBgName.add(operationalProductVO)
+            val deptList = getOperationalProductsByDictType(
+                dictType = ProjectProductDictType.DEPT
+            )
+            val bgList = getOperationalProductsByDictType(
+                dictType = ProjectProductDictType.BG
+            )
+            obsProductList.forEach { obsProductInfo ->
+                val planProductInfo = planProductList.firstOrNull {
+                    it.planProductId == obsProductInfo.planProductId
+                }
+                val deptInfo = deptList.firstOrNull {
+                    it.deptId == planProductInfo?.deptId
+                }
+                val bgInfo = bgList.firstOrNull {
+                    it.bgId == deptInfo?.bgId
+                }
+
+                val operationalProductVO = OperationalProductVO(
+                    productId = obsProductInfo.productId!!.toInt(),
+                    productName = obsProductInfo.productName ?: "",
+                    planProductName = planProductInfo?.planProductName ?: "",
+                    deptName = deptInfo?.deptName ?: "",
+                    bgName = bgInfo?.bgName ?: ""
+                )
+
+                projectOperationalProductDao.createOrUpdate(
+                    dslContext = dslContext,
+                    operationalProductVO = operationalProductVO
+                )
+                productInfoList.add(operationalProductVO)
+                val productListWithBgName = bgName2ProductList.getOrPut(
+                    operationalProductVO.bgName!!
+                ) { mutableListOf() }
+                productListWithBgName.add(operationalProductVO)
+            }
+            bgName2ProductList["all"] = productInfoList
+            logger.info("sync operational product finish!")
         }
-        bgName2ProductList["all"] = productInfoList
-        logger.info("sync operational product finish!")
         return true
     }
 
