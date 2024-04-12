@@ -2,7 +2,6 @@ package com.tencent.devops.project.dao
 
 import com.tencent.devops.model.project.tables.TOperationalProduct
 import com.tencent.devops.model.project.tables.records.TOperationalProductRecord
-import com.tencent.devops.project.pojo.OperationalProductInfo
 import com.tencent.devops.project.pojo.OperationalProductVO
 import org.jooq.DSLContext
 import org.springframework.stereotype.Repository
