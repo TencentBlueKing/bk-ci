@@ -80,7 +80,7 @@
 </template>
 
 <script>
-    import { mapGetters, mapActions, mapState } from 'vuex'
+    import { mapActions, mapGetters, mapState } from 'vuex'
     import EmptyTips from '../common/empty'
     import atomCard from './atomCard'
 

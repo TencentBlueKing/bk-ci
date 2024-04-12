@@ -10,11 +10,7 @@
                     <span class="base-info-block-row-value">
                         <template v-if="['label', 'pipelineGroup'].includes(row.key)">
                             <template v-if="row.value.length > 0">
-                                <bk-tag
-                                    v-for="label in row.value"
-                                    :key="label"
-                                    class="base-info-block-row-value-label"
-                                >
+                                <bk-tag v-for="label in row.value" :key="label" class="base-info-block-row-value-label">
                                     {{ label }}
                                 </bk-tag>
                             </template>
@@ -90,7 +86,7 @@
                 return [
                     {
                         key: 'customBuildNum',
-                        value: this.basicInfo?.buildNumRule ?? '${{DATE:”yyyyMMdd”}}.${{BUILD_NO_OF_DAY}}'
+                        value: this.basicInfo?.buildNumRule ?? '--'
                     },
                     {
                         key: 'parallelSetting',
@@ -103,35 +99,38 @@
 </script>
 
 <style lang="scss">
-    .pipeline-base-config-panel-header {
-        font-size: 14px;
-        font-weight: 700;
-        height: 24px;
-        line-height: 24px;
-        border-bottom: 1px solid #DCDEE5;
-    }
-    .base-info-panel-content {
+.pipeline-base-config-panel-header {
+    font-size: 14px;
+    font-weight: 700;
+    height: 24px;
+    line-height: 24px;
+    border-bottom: 1px solid #DCDEE5;
+}
+
+.base-info-panel-content {
+    display: grid;
+    grid-gap: 16px;
+    grid-template-row: minmax(18px, auto);
+    margin-bottom: 32px;
+
+    >p {
         display: grid;
-        grid-gap: 16px;
-        grid-template-row: minmax(18px, auto);
-        margin-bottom: 32px;
-        > p {
-            display: grid;
-            grid-auto-flow: column;
-            grid-template-columns: 120px 1fr;
-            align-items: flex-start;
-            grid-gap: 10px;
-            font-size: 12px;
-            color: #63656e;
-            > label {
-                text-align: right;
-                line-height: 18px;
-                color: #979BA5;
-            }
-            .bk-tag {
-                margin-top: 0;
-            }
+        grid-auto-flow: column;
+        grid-template-columns: 120px 1fr;
+        align-items: flex-start;
+        grid-gap: 10px;
+        font-size: 12px;
+        color: #63656e;
+
+        >label {
+            text-align: right;
+            line-height: 18px;
+            color: #979BA5;
+        }
+
+        .bk-tag {
+            margin-top: 0;
         }
     }
-
+}
 </style>

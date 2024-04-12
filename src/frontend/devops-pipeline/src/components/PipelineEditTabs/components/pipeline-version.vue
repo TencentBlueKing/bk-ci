@@ -18,7 +18,7 @@
                     :handle-change="handleBuildNoChange"
                 />
             </section>
-            <bk-button :disabled="disabled" v-if="showVersions" @click="editVersions">
+            <bk-button v-if="showVersions && !disabled" @click="editVersions">
                 {{$t('newui.editVersions')}}
             </bk-button>
         </div>

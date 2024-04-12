@@ -143,11 +143,8 @@
     }
 </script>
 
-<style lang="scss">
+<style lang="scss" scoped>
     .code-highlight-block {
-        background: #3A84FF;
-        opacity: .1;
-
+        background: #232D46;
     }
-
 </style>
