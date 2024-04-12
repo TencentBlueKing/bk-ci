@@ -208,7 +208,7 @@
                     installChannelId: 'auto',
                     innerIp: '',
                     bkHostId: null,
-                    port: 36000
+                    port: '36000'
                 }
             }
             return {
@@ -269,10 +269,10 @@
             'formData.osType' (val) {
                 if (['LINUX', 'AIX', 'SOLARIS'].includes(val)) {
                     this.formData.account = 'root'
-                    this.formData.port = 36000
+                    this.formData.port = '36000'
                 } else {
                     this.formData.account = 'Administrator'
-                    this.formData.port = 445
+                    this.formData.port = '445'
                 }
             },
             async taskId (val) {
