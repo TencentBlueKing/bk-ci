@@ -25,34 +25,25 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.store.common.dao
+package com.tencent.devops.store.pojo.common.publication
 
-import com.tencent.devops.model.store.tables.TStoreBaseEnv
-import com.tencent.devops.model.store.tables.records.TStoreBaseEnvRecord
-import org.jooq.Condition
-import org.jooq.DSLContext
-import org.jooq.Result
-import org.springframework.stereotype.Repository
+import com.tencent.devops.store.pojo.common.PASS
+import com.tencent.devops.store.pojo.common.enums.RdTypeEnum
+import io.swagger.v3.oas.annotations.media.Schema
 
-@Repository
-class StoreBaseEnvQueryDao {
-
-    fun getBaseEnvsByStoreId(
-        dslContext: DSLContext,
-        storeId: String,
-        osName: String? = null,
-        osArch: String? = null
-    ): Result<TStoreBaseEnvRecord>? {
-        return with(TStoreBaseEnv.T_STORE_BASE_ENV) {
-            val conditions = mutableListOf<Condition>()
-            conditions.add(STORE_ID.eq(storeId))
-            if (!osName.isNullOrBlank()) {
-                conditions.add(OS_NAME.eq(osName))
-            }
-            if (!osArch.isNullOrBlank()) {
-                conditions.add(OS_ARCH.eq(osArch))
-            }
-            dslContext.selectFrom(this).where(conditions).fetch()
-        }
-    }
-}
+data class StoreApproveReleaseRequest(
+    @get:Schema(title = "是否为公共组件", required = true)
+    val publicFlag: Boolean = false,
+    @get:Schema(title = "是否推荐", required = true)
+    val recommendFlag: Boolean = true,
+    @get:Schema(title = "是否为官方认证", required = true)
+    val certificationFlag: Boolean = false,
+    @get:Schema(title = "研发来源 SELF_DEVELOPED：自研 THIRD_PARTY：第三方", required = false)
+    val rdType: RdTypeEnum? = null,
+    @get:Schema(title = "权重（数值越大代表权重越高）", required = false)
+    val weight: Int? = null,
+    @get:Schema(title = "审核结果：PASS：通过|REJECT：驳回", required = true)
+    val result: String = PASS,
+    @get:Schema(title = "审核结果说明", required = true)
+    val message: String = ""
+)

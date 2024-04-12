@@ -53,4 +53,18 @@ interface ArchiveStorePkgService {
      * 删除组件包
      */
     fun deleteStorePkg(userId: String, storeCode: String, storeType: StoreTypeEnum)
+
+    /**
+     * 获取组件包文件下载链接
+     */
+    @Suppress("LongParameterList")
+    fun getComponentPkgDownloadUrl(
+        userId: String,
+        projectId: String,
+        storeType: StoreTypeEnum,
+        storeCode: String,
+        version: String,
+        osName: String? = null,
+        osArch: String? = null
+    ): String
 }

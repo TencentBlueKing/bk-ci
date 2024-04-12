@@ -125,4 +125,19 @@ interface ServiceStoreResource {
         @QueryParam("errorCodeType")
         errorCodeType: ErrorCodeTypeEnum
     ): Result<Boolean>
+
+    @GET
+    @Path("/projects/{projectCode}/types/{storeType}/codes/{storeCode}/permission/validate")
+    @Operation(summary = "校验项目是否有使用该组件的权限")
+    fun validateProjectComponentPermission(
+        @PathParam("projectCode")
+        @Parameter(description = "项目编码", required = true)
+        projectCode: String,
+        @Parameter(description = "标识", required = true)
+        @PathParam("storeCode")
+        storeCode: String,
+        @Parameter(description = "类型", required = true)
+        @PathParam("storeType")
+        storeType: StoreTypeEnum
+    ): Result<Boolean>
 }

@@ -25,34 +25,22 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.store.common.dao
+package com.tencent.devops.store.common.service
 
-import com.tencent.devops.model.store.tables.TStoreBaseEnv
-import com.tencent.devops.model.store.tables.records.TStoreBaseEnvRecord
-import org.jooq.Condition
-import org.jooq.DSLContext
-import org.jooq.Result
-import org.springframework.stereotype.Repository
+import com.tencent.devops.store.pojo.common.publication.StoreApproveReleaseRequest
 
-@Repository
-class StoreBaseEnvQueryDao {
+interface OpStoreComponentService {
 
-    fun getBaseEnvsByStoreId(
-        dslContext: DSLContext,
+    /**
+     * 审核组件发布
+     * @param userId 用户ID
+     * @param storeId 组件ID
+     * @param storeApproveReleaseRequest 审核组件发布请求请求报文
+     * @return 布尔值
+     */
+    fun approveComponentRelease(
+        userId: String,
         storeId: String,
-        osName: String? = null,
-        osArch: String? = null
-    ): Result<TStoreBaseEnvRecord>? {
-        return with(TStoreBaseEnv.T_STORE_BASE_ENV) {
-            val conditions = mutableListOf<Condition>()
-            conditions.add(STORE_ID.eq(storeId))
-            if (!osName.isNullOrBlank()) {
-                conditions.add(OS_NAME.eq(osName))
-            }
-            if (!osArch.isNullOrBlank()) {
-                conditions.add(OS_ARCH.eq(osArch))
-            }
-            dslContext.selectFrom(this).where(conditions).fetch()
-        }
-    }
+        storeApproveReleaseRequest: StoreApproveReleaseRequest
+    ): Boolean
 }

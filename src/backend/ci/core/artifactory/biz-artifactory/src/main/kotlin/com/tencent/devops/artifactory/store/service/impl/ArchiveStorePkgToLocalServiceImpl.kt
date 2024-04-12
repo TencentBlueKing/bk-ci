@@ -30,9 +30,12 @@ package com.tencent.devops.artifactory.store.service.impl
 import com.tencent.devops.artifactory.constant.REALM_LOCAL
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.exception.ErrorCodeException
+import com.tencent.devops.common.service.config.CommonConfig
+import com.tencent.devops.common.service.utils.HomeHostUtil
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import org.apache.commons.io.FileUtils
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition
+import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.stereotype.Service
@@ -47,6 +50,9 @@ class ArchiveStorePkgToLocalServiceImpl : ArchiveStorePkgServiceImpl() {
 
     @Value("\${artifactory.archiveLocalBasePath:#{null}}")
     private lateinit var storeArchiveLocalBasePath: String
+
+    @Autowired
+    lateinit var commonConfig: CommonConfig
 
     override fun getStoreArchiveBasePath(): String {
         return storeArchiveLocalBasePath
@@ -93,5 +99,14 @@ class ArchiveStorePkgToLocalServiceImpl : ArchiveStorePkgServiceImpl() {
         version: String
     ) {
         // 插件文件存在本地硬盘，不需要清理
+    }
+
+    override fun createPkgShareUri(
+        userId: String,
+        storeType: StoreTypeEnum,
+        pkgPath: String
+    ): String {
+        val host = HomeHostUtil.getHost(commonConfig.devopsHostGateway!!)
+        return "$host/ms/artifactory/api/user/artifactories/file/download/local?filePath=$pkgPath"
     }
 }

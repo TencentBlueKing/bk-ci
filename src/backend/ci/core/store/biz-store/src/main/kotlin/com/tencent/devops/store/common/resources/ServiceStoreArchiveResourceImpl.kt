@@ -77,7 +77,9 @@ class ServiceStoreArchiveResourceImpl @Autowired constructor(
         userId: String,
         storeType: StoreTypeEnum,
         storeCode: String,
-        version: String
+        version: String,
+        osName: String?,
+        osArch: String?
     ): Result<List<StorePkgEnvInfo>> {
         val storeSpecBusService = SpringContextUtil.getBean(
             StoreSpecBusService::class.java,

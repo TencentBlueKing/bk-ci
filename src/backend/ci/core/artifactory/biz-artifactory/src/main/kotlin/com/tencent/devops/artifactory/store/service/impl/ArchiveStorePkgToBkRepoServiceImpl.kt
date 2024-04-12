@@ -10,6 +10,7 @@ import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Value
 import java.io.File
 import java.io.InputStream
 import javax.ws.rs.NotFoundException
@@ -18,6 +19,10 @@ abstract class ArchiveStorePkgToBkRepoServiceImpl : ArchiveStorePkgServiceImpl()
 
     @Autowired
     lateinit var bkRepoClient: BkRepoClient
+
+    @Value("\${bkrepo.devxIdcHost:#{null}}")
+    private val devxIdcHost: String = ""
+
     override fun getStoreArchiveBasePath(): String {
         return System.getProperty("java.io.tmpdir")
     }
@@ -124,6 +129,28 @@ abstract class ArchiveStorePkgToBkRepoServiceImpl : ArchiveStorePkgServiceImpl()
         frontendDir?.let {
             File(frontendDir).deleteRecursively()
         }
+    }
+
+    override fun createPkgShareUri(
+        userId: String,
+        storeType: StoreTypeEnum,
+        pkgPath: String
+    ): String {
+        val shareUri = bkRepoClient.createShareUri(
+            creatorId = userId,
+            projectId = getBkRepoProjectId(storeType),
+            repoName = getBkRepoName(storeType),
+            fullPath = pkgPath,
+            downloadUsers = listOf(),
+            downloadIps = listOf(),
+            timeoutInSeconds = 3600L
+        )
+        val host = if (storeType == StoreTypeEnum.DEVX && devxIdcHost.isNotBlank()) {
+            devxIdcHost
+        } else {
+            bkRepoClient.getRkRepoIdcHost()
+        }
+        return "$host/repository$shareUri&download=true"
     }
 
     companion object {

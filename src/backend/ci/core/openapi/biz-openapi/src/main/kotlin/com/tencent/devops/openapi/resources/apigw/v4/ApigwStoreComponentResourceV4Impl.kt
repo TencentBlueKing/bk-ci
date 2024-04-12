@@ -24,35 +24,37 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
+package com.tencent.devops.openapi.resources.apigw.v4
 
-package com.tencent.devops.store.common.dao
+import com.tencent.devops.artifactory.api.ServiceArchiveComponentPkgResource
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.openapi.api.apigw.v4.ApigwStoreComponentResourceV4
+import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
+import org.springframework.beans.factory.annotation.Autowired
 
-import com.tencent.devops.model.store.tables.TStoreBaseEnv
-import com.tencent.devops.model.store.tables.records.TStoreBaseEnvRecord
-import org.jooq.Condition
-import org.jooq.DSLContext
-import org.jooq.Result
-import org.springframework.stereotype.Repository
+@RestResource
+class ApigwStoreComponentResourceV4Impl @Autowired constructor(private val client: Client) :
+    ApigwStoreComponentResourceV4 {
 
-@Repository
-class StoreBaseEnvQueryDao {
-
-    fun getBaseEnvsByStoreId(
-        dslContext: DSLContext,
-        storeId: String,
-        osName: String? = null,
-        osArch: String? = null
-    ): Result<TStoreBaseEnvRecord>? {
-        return with(TStoreBaseEnv.T_STORE_BASE_ENV) {
-            val conditions = mutableListOf<Condition>()
-            conditions.add(STORE_ID.eq(storeId))
-            if (!osName.isNullOrBlank()) {
-                conditions.add(OS_NAME.eq(osName))
-            }
-            if (!osArch.isNullOrBlank()) {
-                conditions.add(OS_ARCH.eq(osArch))
-            }
-            dslContext.selectFrom(this).where(conditions).fetch()
-        }
+    override fun getComponentPkgDownloadUrl(
+        userId: String,
+        projectId: String,
+        storeType: StoreTypeEnum,
+        storeCode: String,
+        version: String,
+        osName: String?,
+        osArch: String?
+    ): Result<String> {
+        return client.get(ServiceArchiveComponentPkgResource::class).getComponentPkgDownloadUrl(
+            userId = userId,
+            projectId = projectId,
+            storeType = storeType,
+            storeCode = storeCode,
+            version = version,
+            osName = osName,
+            osArch = osArch
+        )
     }
 }

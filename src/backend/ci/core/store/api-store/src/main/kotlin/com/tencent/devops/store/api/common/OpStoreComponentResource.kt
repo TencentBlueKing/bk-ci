@@ -24,35 +24,39 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
+package com.tencent.devops.store.api.common
 
-package com.tencent.devops.store.common.dao
+import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.store.pojo.common.publication.StoreApproveReleaseRequest
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.Parameter
+import io.swagger.v3.oas.annotations.tags.Tag
+import javax.ws.rs.Consumes
+import javax.ws.rs.HeaderParam
+import javax.ws.rs.PUT
+import javax.ws.rs.Path
+import javax.ws.rs.PathParam
+import javax.ws.rs.Produces
+import javax.ws.rs.core.MediaType
 
-import com.tencent.devops.model.store.tables.TStoreBaseEnv
-import com.tencent.devops.model.store.tables.records.TStoreBaseEnvRecord
-import org.jooq.Condition
-import org.jooq.DSLContext
-import org.jooq.Result
-import org.springframework.stereotype.Repository
+@Tag(name = "OP_STORE_COMPONENT", description = "研发商店-OP-组件管理")
+@Path("/op/store/components")
+@Produces(MediaType.APPLICATION_JSON)
+@Consumes(MediaType.APPLICATION_JSON)
+interface OpStoreComponentResource {
 
-@Repository
-class StoreBaseEnvQueryDao {
-
-    fun getBaseEnvsByStoreId(
-        dslContext: DSLContext,
+    @Operation(summary = "审核组件发布")
+    @PUT
+    @Path("/components/{storeId}/release/approve")
+    fun approveComponentRelease(
+        @Parameter(description = "用户ID", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "组件ID", required = true)
+        @PathParam("storeId")
         storeId: String,
-        osName: String? = null,
-        osArch: String? = null
-    ): Result<TStoreBaseEnvRecord>? {
-        return with(TStoreBaseEnv.T_STORE_BASE_ENV) {
-            val conditions = mutableListOf<Condition>()
-            conditions.add(STORE_ID.eq(storeId))
-            if (!osName.isNullOrBlank()) {
-                conditions.add(OS_NAME.eq(osName))
-            }
-            if (!osArch.isNullOrBlank()) {
-                conditions.add(OS_ARCH.eq(osArch))
-            }
-            dslContext.selectFrom(this).where(conditions).fetch()
-        }
-    }
+        @Parameter(description = "审核组件发布请求请求报文")
+        storeApproveReleaseRequest: StoreApproveReleaseRequest
+    ): Result<Boolean>
 }
