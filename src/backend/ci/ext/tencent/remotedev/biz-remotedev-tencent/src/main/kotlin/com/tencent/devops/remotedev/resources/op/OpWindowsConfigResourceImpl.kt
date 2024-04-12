@@ -80,5 +80,4 @@ class OpWindowsConfigResourceImpl @Autowired constructor(
     override fun addProjectRemotedevManager(userId: String, projectId: String, user: String): Result<Boolean> {
         return Result(windowsResourceConfigService.addProjectRemotedevManager(userId, projectId, user))
     }
-
 }

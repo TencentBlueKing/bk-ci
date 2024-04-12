@@ -262,9 +262,11 @@ class WindowsResourceConfigService @Autowired constructor(
             userId = userId,
             projectCode = projectId,
             properties = projectProperties.copy(
-                remotedevManager = if (remotedevManager.isNullOrBlank())  {
+                remotedevManager = if (remotedevManager.isNullOrBlank()) {
                     user
-                } else ("$remotedevManager;$user")
+                } else {
+                    ("$remotedevManager;$user")
+                }
             )
         ).data == true
     }
