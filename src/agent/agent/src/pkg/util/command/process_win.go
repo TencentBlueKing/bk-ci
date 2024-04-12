@@ -1,5 +1,5 @@
-//go:build linux || darwin
-// +build linux darwin
+//go:build windows
+// +build windows
 
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
@@ -31,63 +31,59 @@
 package command
 
 import (
-	"errors"
 	"fmt"
+	"os"
 	"os/exec"
-	"os/user"
-	"strconv"
-	"strings"
 	"syscall"
 
 	"github.com/TencentBlueKing/bk-ci/agentcommon/logs"
-
-	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/util/systemutil"
+	"github.com/pkg/errors"
 )
 
-var envHome = "HOME"
-var envUser = "USER"
-var envLogName = "LOGNAME"
+const createNewConsole = 0x00000010
 
-func setUser(cmd *exec.Cmd, runUser string) error {
-
-	if len(runUser) == 0 { // 传空则直接返回
-		return nil
+func StartProcess(command string, args []string, workDir string, envMap map[string]string, runUser string) (int, error) {
+	cmd := exec.Command(command)
+	cmd.SysProcAttr = &syscall.SysProcAttr{
+		CreationFlags:    createNewConsole,
+		NoInheritHandles: true,
 	}
-	// 解决重启构建机后，Linux的 /etc/rc.local 自动启动的agent，读取到HOME等系统变量为空的问题
-	if runUser == systemutil.GetCurrentUser().Username {
-		envHomeFound := false
-		envUserFound := false
-		envLogNameFound := false
-		for i := range cmd.Env {
-			splits := strings.Split(cmd.Env[i], "=")
-			if splits[0] == envHome && len(splits[1]) > 0 {
-				envHomeFound = true
-			} else if splits[0] == envUser && len(splits[1]) > 0 {
-				envUserFound = true
-			} else if splits[0] == envLogName && len(splits[1]) > 0 {
-				envLogNameFound = true
-			}
-		}
-		if envHomeFound && envUserFound && envLogNameFound {
-			return nil
+
+	if len(args) > 0 {
+		cmd.Args = append(cmd.Args, args...)
+	}
+
+	if workDir != "" {
+		cmd.Dir = workDir
+	}
+
+	cmd.Env = os.Environ()
+	if envMap != nil {
+		for k, v := range envMap {
+			cmd.Env = append(cmd.Env, fmt.Sprintf("%s=%s", k, v))
 		}
 	}
 
-	logs.Info("set user(linux or darwin): ", runUser)
-
-	rUser, err := user.Lookup(runUser)
+	err := setUser(cmd, runUser)
 	if err != nil {
-		logs.Error("user lookup failed, user: -", runUser, "-, error: ", err.Error())
-		return errors.New("user lookup failed, user: " + runUser)
+		logs.Error("set user failed: ", err.Error())
+		return -1, errors.New(
+			fmt.Sprintf("%s, Please check [devops.slave.user] in the {agent_dir}/.agent.properties", err.Error()))
 	}
-	uid, _ := strconv.Atoi(rUser.Uid)
-	gid, _ := strconv.Atoi(rUser.Gid)
-	cmd.SysProcAttr = &syscall.SysProcAttr{}
-	cmd.SysProcAttr.Credential = &syscall.Credential{Uid: uint32(uid), Gid: uint32(gid)}
 
-	cmd.Env = append(cmd.Env, fmt.Sprintf("%s=%s", envHome, rUser.HomeDir))
-	cmd.Env = append(cmd.Env, fmt.Sprintf("%s=%s", envUser, runUser))
-	cmd.Env = append(cmd.Env, fmt.Sprintf("%s=%s", envLogName, runUser))
+	logs.Info("cmd.Path: ", cmd.Path)
+	logs.Info("cmd.Args: ", cmd.Args)
+	logs.Info("cmd.workDir: ", cmd.Dir)
+	logs.Info("runUser: ", runUser)
 
+	err = cmd.Start()
+	if err != nil {
+		return -1, err
+	}
+	return cmd.Process.Pid, nil
+}
+
+func setUser(_ *exec.Cmd, runUser string) error {
+	logs.Info("set user(windows): ", runUser)
 	return nil
 }
