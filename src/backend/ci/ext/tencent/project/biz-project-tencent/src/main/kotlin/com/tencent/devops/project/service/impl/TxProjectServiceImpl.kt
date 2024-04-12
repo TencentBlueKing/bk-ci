@@ -31,7 +31,6 @@ import com.fasterxml.jackson.core.type.TypeReference
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.bkrepo.common.api.util.JsonUtils.objectMapper
-import com.tencent.devops.artifactory.api.service.ServiceFileResource
 import com.tencent.devops.auth.api.service.ServiceProjectAuthResource
 import com.tencent.devops.auth.service.ManagerService
 import com.tencent.devops.common.api.exception.ErrorCodeException
@@ -87,6 +86,7 @@ import com.tencent.devops.project.service.ProjectTagService
 import com.tencent.devops.project.service.ShardingRoutingRuleAssignService
 import com.tencent.devops.project.service.tof.TOFService
 import com.tencent.devops.project.util.ProjectUtils
+import com.tencent.devops.support.api.service.ServiceFileResource
 import okhttp3.Request
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
