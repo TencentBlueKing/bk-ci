@@ -303,7 +303,8 @@ object ProcessMessageCode {
     const val ERROR_REPOSITORY_NOT_OAUTH = "2101218" // 当前代码库关联人({0})未进行OAUTH授权，请尝试切换代码库凭证类型
     const val ERROR_TASK_NOT_ALLOWED_TO_BE_SKIPPED = "2101221" // task不允许被跳过
     const val ERROR_AGENT_REUSE_MUTEX_JOB_NULL = "2101232" // {0}使用流水线构建机复用互斥组需要声明具体的JobId，不能为空
-    const val ERROR_AGENT_REUSE_MUTEX_DEP_NULL_NODE = "2101233" // 流水线构建机复用互斥组节点 {0} 复用的 {1} 不存在
+    // 流水线构建机复用互斥组节点 {0} 复用的 {1} 不存在，或非第三方构建机节点
+    const val ERROR_AGENT_REUSE_MUTEX_DEP_NULL_NODE = "2101233"
     // 在 {0} 下，构建机复用互斥组节点 {1} 与被复用的 {2} 节点调度类型不同，AgentId和AgentEnv不能互相复用
     const val ERROR_AGENT_REUSE_MUTEX_DEP_ERROR = "2101234"
 
