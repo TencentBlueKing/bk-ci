@@ -231,7 +231,7 @@ interface ApigwRemoteDevResource {
         userId: String,
         @Parameter(description = "创建内容", required = true)
         data: WindowsWorkspaceCreate
-    ): Result<String>
+    ): Result<Boolean>
 
     @Operation(summary = "删除windows工作空间", tags = ["v4_app_remotedev_win_delete"])
     @DELETE

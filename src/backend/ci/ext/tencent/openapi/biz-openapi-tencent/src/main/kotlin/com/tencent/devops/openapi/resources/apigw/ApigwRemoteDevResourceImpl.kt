@@ -162,7 +162,7 @@ class ApigwRemoteDevResourceImpl @Autowired constructor(private val client: Clie
         )
     }
 
-    override fun createPersonalWorkspace(userId: String, data: WindowsWorkspaceCreate): Result<String> {
+    override fun createPersonalWorkspace(userId: String, data: WindowsWorkspaceCreate): Result<Boolean> {
         logger.info("createPersonalWorkspace $userId|$data")
         return client.get(ServiceRemoteDevResource::class).createPersonalWorkspace(userId, data)
     }

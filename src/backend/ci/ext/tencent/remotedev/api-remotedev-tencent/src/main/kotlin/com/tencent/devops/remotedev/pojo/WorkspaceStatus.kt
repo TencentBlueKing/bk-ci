@@ -49,6 +49,29 @@ enum class WorkspaceStatus {
     MAKING_IMAGE, // 14 制作镜像中
     REBUILDING; // 14 重装系统中
 
+    enum class Types {
+        USING {
+            override fun status() = setOf(
+                PREPARING,
+                RUNNING,
+                STOPPED,
+                SLEEP,
+                EXCEPTION,
+                STARTING,
+                SLEEPING,
+                DELIVERING,
+                DISTRIBUTING,
+                DELIVERING_FAILED,
+                STOPPING,
+                RESTARTING,
+                MAKING_IMAGE,
+                REBUILDING
+            )
+        };
+
+        abstract fun status(): Set<WorkspaceStatus>
+    }
+
     fun checkRunning() = this == RUNNING
 
     fun checkDeleted() = this == DELETED
@@ -67,6 +90,7 @@ enum class WorkspaceStatus {
 
     fun checkInUse() = !checkDeleted() && !checkException()
     fun checkInProcess() = this == RESTARTING || this == MAKING_IMAGE || this == REBUILDING
+
     /**
      * 当正在做某事时，不能新建任务去执行
      */
