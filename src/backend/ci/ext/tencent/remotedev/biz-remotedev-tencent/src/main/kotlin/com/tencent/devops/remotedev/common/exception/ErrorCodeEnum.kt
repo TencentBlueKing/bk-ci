@@ -79,7 +79,7 @@ enum class ErrorCodeEnum(
     WORKSPACE_ERROR(
         errorType = ErrorType.USER,
         errorCode = "2132014",
-        formatErrorMessage = "The workspace has error and cannot be repaired, please choose to destroy."
+        formatErrorMessage = "The workspace has error , please contact O2000."
     ),
     WORKSPACE_ERROR_FIX(
         errorType = ErrorType.USER,

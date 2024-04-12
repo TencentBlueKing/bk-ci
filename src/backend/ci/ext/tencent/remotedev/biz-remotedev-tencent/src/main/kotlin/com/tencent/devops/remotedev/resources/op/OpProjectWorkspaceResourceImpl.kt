@@ -16,13 +16,15 @@ import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.dispatch.kubernetes.pojo.remotedev.EnvironmentResourceData
 import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.project.api.service.service.ServiceTxProjectResource
 import com.tencent.devops.remotedev.api.op.OpProjectWorkspaceResource
 import com.tencent.devops.remotedev.common.Constansts
 import com.tencent.devops.remotedev.pojo.ProjectWorkspace
-import com.tencent.devops.remotedev.pojo.ProjectWorkspaceCreate
 import com.tencent.devops.remotedev.pojo.ProjectWorkspaceFetchData
+import com.tencent.devops.remotedev.pojo.WindowsWorkspaceCreate
+import com.tencent.devops.remotedev.pojo.WorkspaceOwnerType
 import com.tencent.devops.remotedev.pojo.op.OpProjectWorkspaceAssignData
 import com.tencent.devops.remotedev.pojo.op.OpUpdateCCHostData
 import com.tencent.devops.remotedev.pojo.op.WindowsSpecResInfo
@@ -37,10 +39,10 @@ import com.tencent.devops.remotedev.service.gitproxy.GitProxyService
 import com.tencent.devops.remotedev.service.workspace.CreateControl
 import com.tencent.devops.remotedev.service.workspace.NotifyControl
 import com.tencent.devops.remotedev.service.workspace.WorkspaceCommon
-import org.slf4j.LoggerFactory
-import org.springframework.beans.factory.annotation.Autowired
 import java.util.concurrent.Executors
 import javax.ws.rs.core.Response
+import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Autowired
 
 @Suppress("ALL")
 @RestResource
@@ -76,65 +78,9 @@ class OpProjectWorkspaceResourceImpl @Autowired constructor(
         // 分配之前先同步下最新的数据
         workspaceCommon.syncStartCloudResourceList()
         val cgsData = workspaceCommon.getCgsData(data.cgsIds, data.ips) ?: return Result(false)
-        // 增加可以分配的配额
-        if (!data.ips.isNullOrEmpty() || !data.cgsIds.isNullOrEmpty()) {
-            client.get(ServiceTxProjectResource::class).updateRemotedev(
-                userId = userId,
-                projectCode = data.projectId,
-                addcloudDesktopNum = (data.ips?.size ?: 0) + (data.cgsIds?.size ?: 0),
-                enable = null
-            )
-        }
-        // 判断是不是特殊机型，如果是特殊机型增加特殊机型份额
-        val allSpecSize = windowsResourceConfigService.getAllType(true, true).map { it.size }.toSet()
-        val allowSpecSize = windowsResourceConfigService.fetchSpec(
-            projectId = data.projectId,
-            machineType = null,
-            page = 1,
-            pageSize = 1000
-        ).records.associate { it.size to it.quota }
-        cgsData.forEach { cgs ->
-            // 判断是不是特殊机型，如果是特殊机型增加特殊机型份额
-            if (cgs.machineType in allSpecSize) {
-                windowsResourceConfigService.createOrUpdateSpec(
-                    WindowsSpecResInfo(
-                        projectId = data.projectId,
-                        size = cgs.machineType.trim(),
-                        quota = ((allowSpecSize[cgs.machineType.trim()] ?: 0) + 1)
-                    )
-                )
-            }
-            if (cgs.status != Constansts.CGS_AVAIABLE_STATUS) return@forEach
-            // 先校验该cgsId是否已被申领分配并运行中
-            if (workspaceCommon.checkCgsRunning(cgs.cgsId)) return@forEach
-            // 审计
-            ActionAuditContext.current()
-                .addInstanceInfo(
-                    cgs.cgsId,
-                    cgs.cgsId,
-                    null,
-                    null
-                )
-                .addAttribute(ActionAuditContent.PROJECT_CODE_TEMPLATE, data.projectId)
-                .scopeId = data.projectId
-            // 再根据机型和地域获取硬件资源配置
-            val windowsResourceConfigId = windowsResourceConfigService.getTypeConfig(
-                machineType = cgs.machineType
-            ) ?: return Result(false)
-            // 调用CreateControl.asyncCreateWorkspace发起创建
-            createControl.asyncCreateWorkspace(
-                pmUserId = userId,
-                projectId = data.projectId,
-                cgsId = cgs.cgsId,
-                autoAssign = false,
-                workspaceCreate = ProjectWorkspaceCreate(
-                    windowsType = windowsResourceConfigId.size,
-                    windowsZone = cgs.zoneId.replace(Regex("\\d+"), ""),
-                    baseImageId = 0,
-                    count = 1
-                )
-            )
-            Thread.sleep(200)
+        when (data.type) {
+            WorkspaceOwnerType.PROJECT -> assignProjectWorkspace(data, userId, cgsData)
+            WorkspaceOwnerType.PERSONAL -> assignPersonalWorkspace(data, cgsData)
         }
 
         // 启动流水线完成剩下的分配工作
@@ -178,6 +124,112 @@ class OpProjectWorkspaceResourceImpl @Autowired constructor(
         }
 
         return Result(true)
+    }
+
+    private fun assignProjectWorkspace(
+        data: OpProjectWorkspaceAssignData,
+        userId: String,
+        cgsData: List<EnvironmentResourceData>
+    ) {
+        val projectId = checkNotNull(data.projectId)
+        // 增加可以分配的配额
+        if (!data.ips.isNullOrEmpty() || !data.cgsIds.isNullOrEmpty()) {
+            client.get(ServiceTxProjectResource::class).updateRemotedev(
+                userId = userId,
+                projectCode = projectId,
+                addcloudDesktopNum = (data.ips?.size ?: 0) + (data.cgsIds?.size ?: 0),
+                enable = null
+            )
+        }
+        // 判断是不是特殊机型，如果是特殊机型增加特殊机型份额
+        val allSpecSize = windowsResourceConfigService.getAllType(true, true).map { it.size }.toSet()
+        val allowSpecSize = windowsResourceConfigService.fetchSpec(
+            projectId = data.projectId,
+            machineType = null,
+            page = 1,
+            pageSize = 1000
+        ).records.associate { it.size to it.quota }
+        cgsData.forEach { cgs ->
+            // 判断是不是特殊机型，如果是特殊机型增加特殊机型份额
+            if (cgs.machineType in allSpecSize) {
+                windowsResourceConfigService.createOrUpdateSpec(
+                    WindowsSpecResInfo(
+                        projectId = projectId,
+                        size = cgs.machineType.trim(),
+                        quota = ((allowSpecSize[cgs.machineType.trim()] ?: 0) + 1)
+                    )
+                )
+            }
+            if (cgs.status != Constansts.CGS_AVAIABLE_STATUS) return@forEach
+            // 先校验该cgsId是否已被申领分配并运行中
+            if (workspaceCommon.checkCgsRunning(cgs.cgsId)) return@forEach
+            // 审计
+            ActionAuditContext.current()
+                .addInstanceInfo(
+                    cgs.cgsId,
+                    cgs.cgsId,
+                    null,
+                    null
+                )
+                .addAttribute(ActionAuditContent.PROJECT_CODE_TEMPLATE, data.projectId)
+                .scopeId = data.projectId
+            // 再根据机型和地域获取硬件资源配置
+            val windowsResourceConfigId = windowsResourceConfigService.getTypeConfig(
+                machineType = cgs.machineType
+            ) ?: return
+            // 调用CreateControl.asyncCreateWorkspace发起创建
+            createControl.projectCreateWorkspace(
+                pmUserId = userId,
+                projectId = projectId,
+                cgsId = cgs.cgsId,
+                autoAssign = false,
+                workspaceCreate = WindowsWorkspaceCreate(
+                    windowsType = windowsResourceConfigId.size,
+                    windowsZone = cgs.zoneId.replace(Regex("\\d+"), ""),
+                    baseImageId = 0,
+                    count = 1
+                )
+            )
+            Thread.sleep(200)
+        }
+    }
+
+    private fun assignPersonalWorkspace(
+        data: OpProjectWorkspaceAssignData,
+        cgsData: List<EnvironmentResourceData>
+    ) {
+        val owner = checkNotNull(data.owner)
+        cgsData.forEach { cgs ->
+            if (cgs.status != Constansts.CGS_AVAIABLE_STATUS) return@forEach
+            // 先校验该cgsId是否已被申领分配并运行中
+            if (workspaceCommon.checkCgsRunning(cgs.cgsId)) return@forEach
+            // 审计
+            ActionAuditContext.current()
+                .addInstanceInfo(
+                    cgs.cgsId,
+                    cgs.cgsId,
+                    null,
+                    null
+                )
+                .addAttribute(ActionAuditContent.PROJECT_CODE_TEMPLATE, data.projectId)
+                .scopeId = data.projectId
+            // 再根据机型和地域获取硬件资源配置
+            val windowsResourceConfigId = windowsResourceConfigService.getTypeConfig(
+                machineType = cgs.machineType
+            ) ?: return
+            createControl.loadWorkspaceWithPersonalWindows(
+                userId = owner,
+                projectId = "_$owner",
+                workspaceCreate = WindowsWorkspaceCreate(
+                    windowsType = windowsResourceConfigId.size,
+                    windowsZone = cgs.zoneId.replace(Regex("\\d+"), ""),
+                    baseImageId = 0,
+                    count = 1
+                ),
+                cgsId = cgs.cgsId
+            )
+            Thread.sleep(200)
+        }
     }
 
     override fun getProjectWorkspaceList(

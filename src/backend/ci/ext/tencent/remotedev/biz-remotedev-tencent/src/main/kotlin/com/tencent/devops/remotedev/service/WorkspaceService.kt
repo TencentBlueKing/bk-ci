@@ -188,12 +188,21 @@ class WorkspaceService @Autowired constructor(
                 displayName = displayName
             )
         }
-
+        val owner = workspaceSharedDao.fetchWorkspaceSharedInfo(
+            dslContext = dslContext,
+            workspaceName = workspaceName,
+            assignType = WorkspaceShared.AssignType.OWNER
+        ).firstOrNull()?.sharedUser
         // 同步修改 cc 主机名称
-        if (ws.workspaceSystemType.checkWindows()) {
-            bkccService.updateHostName(displayName, workspaceName)
-        }
-
+        workspaceCommon.updateHostMonitor(
+            workspaceName = workspaceName,
+            props = workspaceCommon.genWorkspaceCCInfo(
+                projectId = ws.projectId,
+                workspaceName = displayName.ifBlank { workspaceName },
+                owner = owner
+            ).plus(mapOf("bk_host_name" to displayName)),
+            type = ws.workspaceSystemType
+        )
         return true
     }
 
@@ -280,7 +289,7 @@ class WorkspaceService @Autowired constructor(
             .scopeId = workspace.projectId
 
         if (needPermission) {
-            permissionService.checkOwnerPermission(userId, workspaceName, workspace.projectId)
+            permissionService.checkOwnerPermission(userId, workspaceName, workspace.projectId, workspace.ownerType)
         }
 
         RedisCallLimit(
@@ -519,13 +528,14 @@ class WorkspaceService @Autowired constructor(
         return records
     }
 
-    fun getProjectWorkspaceList4WeSec(
-        projectId: String?,
-        ip: String?,
-        hasDepartmentsInfo: Boolean?,
-        hasCurrentUser: Boolean?,
+    fun getWorkspaceList4WeSec(
+        projectId: String? = null,
+        ip: String? = null,
+        hasDepartmentsInfo: Boolean? = null,
+        hasCurrentUser: Boolean? = null,
         businessLineName: String? = null,
-        ownerName: String? = null
+        ownerName: String? = null,
+        workspaceName: String? = null
     ): List<WeSecProjectWorkspace> {
         val startTime = System.currentTimeMillis()
 
@@ -535,7 +545,8 @@ class WorkspaceService @Autowired constructor(
             projectIds = projectId?.let { setOf(projectId) },
             ip = ip,
             businessLineName = businessLineName,
-            ownerName = ownerName
+            ownerName = ownerName,
+            workspaceName = workspaceName
         ) ?: emptyList()
 
         val fetchWorkspaceWithOwnerEndTime = System.currentTimeMillis()

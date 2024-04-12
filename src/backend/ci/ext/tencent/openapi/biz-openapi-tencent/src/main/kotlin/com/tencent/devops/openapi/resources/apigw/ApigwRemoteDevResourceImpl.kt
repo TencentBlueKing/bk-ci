@@ -7,6 +7,7 @@ import com.tencent.devops.openapi.api.apigw.ApigwRemoteDevResource
 import com.tencent.devops.project.api.service.ServiceUserResource
 import com.tencent.devops.remotedev.api.service.ServiceRemoteDevResource
 import com.tencent.devops.remotedev.pojo.WindowsResourceTypeConfig
+import com.tencent.devops.remotedev.pojo.WindowsWorkspaceCreate
 import com.tencent.devops.remotedev.pojo.op.OpProjectWorkspaceAssignData
 import com.tencent.devops.remotedev.pojo.op.RemotedevCvmData
 import com.tencent.devops.remotedev.pojo.op.WorkspaceNotifyData
@@ -159,5 +160,20 @@ class ApigwRemoteDevResourceImpl @Autowired constructor(private val client: Clie
             ip = null,
             projectId = null
         )
+    }
+
+    override fun createPersonalWorkspace(userId: String, data: WindowsWorkspaceCreate): Result<String> {
+        logger.info("createPersonalWorkspace $userId|$data")
+        return client.get(ServiceRemoteDevResource::class).createPersonalWorkspace(userId, data)
+    }
+
+    override fun deletePersonalWorkspace(userId: String, workspaceName: String): Result<Boolean> {
+        logger.info("deletePersonalWorkspace $userId|$workspaceName")
+        return client.get(ServiceRemoteDevResource::class).deletePersonalWorkspace(userId, workspaceName)
+    }
+
+    override fun getPersonalWorkspace(userId: String, workspaceName: String): Result<WeSecProjectWorkspace?> {
+        logger.info("getPersonalWorkspace $userId|$workspaceName")
+        return client.get(ServiceRemoteDevResource::class).getPersonalWorkspace(userId, workspaceName)
     }
 }
