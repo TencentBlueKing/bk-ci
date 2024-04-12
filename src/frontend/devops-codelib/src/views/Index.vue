@@ -87,7 +87,7 @@
             </bk-button>
             <bk-button
                 theme="success"
-                @click="toApplyPermission"
+                @click="applyPermission"
             >
                 {{ $t('codelib.applyPermission') }}
             </bk-button>
