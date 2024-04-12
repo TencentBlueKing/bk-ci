@@ -18,11 +18,9 @@ import com.tencent.devops.project.api.pojo.enums.ProjectRelateOBSProductStatusEn
 import com.tencent.devops.project.dao.ProjectOperationalProductDao
 import com.tencent.devops.project.pojo.ObsBaseDictDTO
 import com.tencent.devops.project.pojo.ObsOperationalProductResponse
-import com.tencent.devops.project.pojo.OperationalProductInfo
 import com.tencent.devops.project.pojo.OperationalProductVO
 import com.tencent.devops.project.pojo.ProjectVO
 import com.tencent.devops.project.pojo.enums.ProjectProductDictType
-import com.tencent.devops.project.service.impl.TxProjectServiceImpl
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.slf4j.MDC
