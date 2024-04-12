@@ -216,7 +216,7 @@ interface OpWindowsConfigResource {
         @Parameter(description = "项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @Parameter(description = "配额", required = true)
+        @Parameter(description = "管理员，多人用分号分隔", required = true)
         @PathParam("user")
         user: String
     ): Result<Boolean>
