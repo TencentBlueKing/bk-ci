@@ -250,10 +250,7 @@ data class AgentReuseMutexTree(
             if (root.virtual) {
                 throw ErrorCodeException(
                     errorCode = ProcessMessageCode.ERROR_AGENT_REUSE_MUTEX_DEP_NULL_NODE,
-                    params = arrayOf(
-                        root.getAllChildJobId().joinToString("|"),
-                        root.jobId.toList().joinToString("|")
-                    )
+                    params = arrayOf(root.getAllChildJobId().joinToString("|"), root.jobId)
                 )
             }
 

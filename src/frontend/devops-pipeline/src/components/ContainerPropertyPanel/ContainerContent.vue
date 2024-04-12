@@ -157,6 +157,10 @@
                     :add-thrid-slave="addThridSlave"
                     :value="buildResource"
                     :env-project-id="buildResourceProj"
+                    :pipeline="pipeline"
+                    :container-index="containerIndex"
+                    :stage-index="stageIndex"
+                    :stage="stage"
                     :has-error="errors.has('buildResource')"
                     v-validate.initial="'required'"
                     name="buildResource"
@@ -476,7 +480,8 @@
             stageIndex: Number,
             stages: Array,
             editable: Boolean,
-            title: String
+            title: String,
+            pipeline: Object
         },
         data () {
             return {
