@@ -108,11 +108,11 @@ export default {
                         onlyBranchVersion: item.latestVersionStatus === VERSION_STATUS_ENUM.BRANCH,
                         onlyDraftVersion: item.latestVersionStatus === VERSION_STATUS_ENUM.COMMITTING,
                         historyRoute: {
-                            name: 'pipelinesHistory',
+                            name: item.latestVersionStatus === VERSION_STATUS_ENUM.COMMITTING ? 'pipelinesEdit' : 'pipelinesHistory',
                             params: {
                                 projectId: item.projectId,
                                 pipelineId: item.pipelineId,
-                                type: item.onlyDraft ? pipelineTabIdMap.pipeline : 'history'
+                                type: item.onlyDraftVersion ? pipelineTabIdMap.pipeline : 'history'
                             }
                         },
                         latestBuildRoute: {

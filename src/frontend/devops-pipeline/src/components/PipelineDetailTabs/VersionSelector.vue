@@ -119,6 +119,10 @@
             showDraftTag: {
                 type: Boolean,
                 default: false
+            },
+            includeDraft: {
+                type: Boolean,
+                default: true
             }
         },
         data () {
@@ -196,9 +200,10 @@
 
             async loadMore (page) {
                 try {
-                    if (page > 1 && !this.hasNext) return
                     const { projectId, pipelineId, pagination } = this
-                    if (page === 1) {
+                    const nextPage = page ?? pagination.page + 1
+                    if (nextPage > 1 && !this.hasNext) return
+                    if (nextPage === 1) {
                         this.isLoading = true
                     } else {
                         this.bottomLoadingOptions.isLoading = true
@@ -206,9 +211,10 @@
                     const res = await this.requestPipelineVersionList({
                         projectId,
                         pipelineId,
-                        page: page ?? pagination.page + 1,
+                        page: nextPage,
                         pageSize: pagination.limit,
-                        versionName: this.searchKeyword
+                        versionName: this.searchKeyword,
+                        includeDraft: this.includeDraft
                     })
                     this.pagination.page = res.page
                     this.hasNext = res.count > res.page * pagination.limit

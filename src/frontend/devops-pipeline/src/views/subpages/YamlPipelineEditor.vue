@@ -15,8 +15,13 @@
         </template>
         <template v-if="editingElementPos">
             <template v-if="(typeof editingElementPos.elementIndex !== 'undefined')">
-                <atom-property-panel close-confirm v-bind="editingElementPos" :editable="pipelineEditable"
-                    :stages="stages" :is-instance-template="instanceFromTemplate">
+                <atom-property-panel
+                    v-bind="editingElementPos"
+                    close-confirm
+                    :editable="pipelineEditable"
+                    :stages="stages"
+                    :is-instance-template="instanceFromTemplate"
+                >
                     <footer slot="footer">
                         <bk-button v-if="isUpdateElement" :disabled="isUpdating" :loading="isUpdating"
                             @click="syncModelToYaml">
@@ -68,7 +73,8 @@
                 isAdding: false,
                 isUpdating: false,
                 isUpdateElement: false,
-                tempPos: {}
+                tempPos: {},
+                editingModel: null
             }
         },
         computed: {
@@ -89,7 +95,7 @@
                 return this.pipelineWithoutTrigger?.instanceFromTemplate ?? false
             },
             stages () {
-                return this.pipelineWithoutTrigger?.stages ?? []
+                return this.editingModel?.stages ?? []
             },
             container () {
                 if (isObject(this.editingElementPos)) {
@@ -107,7 +113,7 @@
                 return this.element?.atomCode && !this.isPreviewingAtomYAML && !this.isAdding
             },
             pipelineEditable () {
-                return this.editable && !this.pipelineWithoutTrigger.instanceFromTemplate
+                return this.editable && !this.instanceFromTemplate
             }
         },
         watch: {
@@ -121,6 +127,9 @@
                 }
             }
         },
+        created () {
+            this.editingModel = this.pipelineWithoutTrigger
+        },
         methods: {
             ...mapActions('atom', [
                 'toggleAtomSelectorPopup',
@@ -130,6 +139,7 @@
                 'updateAtom',
                 'setPipelineEditing',
                 'yamlNavToPipelineModel',
+                'transfer',
                 'previewAtomYAML',
                 'insertAtomYAML',
                 'addStage',
@@ -138,8 +148,8 @@
                 'deleteStage'
             ]),
             getStageByIndex (stageIndex) {
-                const { getStage, pipelineWithoutTrigger } = this
-                return getStage(pipelineWithoutTrigger.stages, stageIndex)
+                const { getStage, editingModel } = this
+                return getStage(editingModel.stages, stageIndex)
             },
             handleYamlChange (yaml) {
                 this.$store.commit('atom/SET_PIPELINE_YAML', yaml)
@@ -205,14 +215,28 @@
                 this.showAtomYaml = false
                 this.atomYaml = ''
             },
-            handleStepClick (editingElementPos, atom) {
+            async handleStepClick (editingElementPos, atom) {
                 const { stageIndex, containerIndex, elementIndex } = editingElementPos
-                const element = this.pipelineWithoutTrigger.stages[stageIndex].containers[containerIndex].elements[elementIndex]
+                try {
+                    const model = await this.transfer({
+                        ...this.$route.params,
+                        actionType: 'FULL_YAML2MODEL',
+                        oldYaml: this.pipelineYaml
+                    })
+                    this.editingModel = {
+                        ...model.modelAndSetting.model,
+                        stages: model.modelAndSetting.model.stages.slice(1)
+                    }
+                } catch (error) {
+                    // TODO: 转换报错
+                    console.error(error)
+                }
+                const element = this.editingModel.stages[stageIndex].containers[containerIndex].elements[elementIndex]
                 if (!element) {
                     this.addAtom({
                         ...editingElementPos,
                         atomIndex: elementIndex - 1,
-                        container: this.pipelineWithoutTrigger.stages[stageIndex].containers[containerIndex]
+                        container: this.editingModel.stages[stageIndex].containers[containerIndex]
                     })
                     this.isUpdateElement = true
                     return
@@ -244,7 +268,7 @@
             },
             getInsertPos (stageIndex, containerIndex) {
                 try {
-                    const stages = this.pipelineWithoutTrigger?.stages
+                    const stages = this.editingModel?.stages
                     if (!Array.isArray(stages) || stages.length === 0) {
                         return null
                     }
@@ -268,16 +292,16 @@
                     body: this.pipelineYaml
                 })
                 let modelPos = this.getInsertPos(data.stageIndex, data.containerIndex)
-                let container = this.pipelineWithoutTrigger?.stages[modelPos?.stageIndex]?.containers[modelPos?.containerIndex]
+                let container = this.editingModel?.stages[modelPos?.stageIndex]?.containers[modelPos?.containerIndex]
 
                 let stepIndex = data.stepIndex ?? (container?.elements?.length ?? 0) - 1
 
                 if (!container) {
                     this.addStage({
                         stageIndex: 0,
-                        stages: this.pipelineWithoutTrigger?.stages
+                        stages: this.editingModel?.stages
                     })
-                    const containers = this.pipelineWithoutTrigger?.stages[0]?.containers
+                    const containers = this.editingModel?.stages[0]?.containers
                     this.addContainer({
                         containers,
                         type: this.osList[2].value
@@ -286,7 +310,7 @@
                         stageIndex: 0,
                         containerIndex: 0
                     }
-                    container = this.pipelineWithoutTrigger?.stages[0]?.containers[0]
+                    container = this.editingModel?.stages[0]?.containers[0]
                     stepIndex = container.elements?.length - 1
                     this.tempPos.addStage = true
                 }
@@ -306,7 +330,7 @@
                     })
                 } else if (Number.isInteger(this.tempPos.stepIndex)) {
                     this.deleteAtom({
-                        container: this.pipelineWithoutTrigger?.stages[this.tempPos.stageIndex]?.containers[this.tempPos.containerIndex],
+                        container: this.editingModel?.stages[this.tempPos.stageIndex]?.containers[this.tempPos.containerIndex],
                         atomIndex: this.tempPos.stepIndex + 1
                     })
                 }
@@ -336,6 +360,10 @@
                     this.isUpdateElement = false
                 } catch (error) {
                     console.log(error)
+                    this.$bkMessage({
+                        theme: 'error',
+                        message: error.message
+                    })
                 } finally {
                     this.isUpdating = false
                 }

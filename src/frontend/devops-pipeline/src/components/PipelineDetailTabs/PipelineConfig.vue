@@ -1,6 +1,5 @@
 <template>
     <div class="pipeline-config-wrapper" v-bkloading="{ isLoading }">
-
         <bk-alert
             v-if="isActiveDraftVersion"
             :title="

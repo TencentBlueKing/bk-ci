@@ -231,7 +231,7 @@
                     filePath: [
                         {
                             required: true,
-                            regex: /^[\w]+\.ya?ml$/,
+                            regex: /^[\w\/]+\.ya?ml$/,
                             message: this.$t('yamlFilePathErrorTip'),
                             trigger: 'blur'
                         }

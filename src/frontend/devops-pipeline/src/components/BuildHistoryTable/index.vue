@@ -480,8 +480,7 @@
             ...mapGetters({
                 historyPageStatus: 'pipelines/getHistoryPageStatus',
                 isReleasePipeline: 'atom/isReleasePipeline',
-                isCurPipelineLocked: 'atom/isCurPipelineLocked',
-                isActiveDraftVersion: 'atom/isActiveDraftVersion'
+                isCurPipelineLocked: 'atom/isCurPipelineLocked'
             }),
             ...mapState('atom', [
                 'pipelineInfo',

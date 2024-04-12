@@ -5,7 +5,7 @@
                 <h3>
                     <span
                         class="pipeline-cell-link"
-                        @click="goPipeline(pipeline.historyRoute)"
+                        @click="goPipeline(pipeline)"
                         v-bk-overflow-tips
                         v-perm="{
                             hasPermission: pipeline.permissions.canView,
@@ -47,13 +47,7 @@
                 <span
                     v-if="!pipeline.released"
                     class="bk-pipeline-card-trigger-btn"
-                    @click="goPipeline({
-                        name: 'pipelinesEdit',
-                        params: {
-                            projectId,
-                            pipelineId: pipeline.pipelineId
-                        }
-                    })"
+                    @click="goPipeline(pipeline)"
                     v-perm="{
                         hasPermission: pipeline.permissions.canEdit,
                         disablePermissionApi: true,
@@ -121,7 +115,11 @@
                         <pipeline-status-icon :status="pipeline.latestBuildStatus" />
                         {{ $t(`details.statusMap.${pipeline.latestBuildStatus}`) }}
                     </span>
-                    <bk-tag>{{ timeTag }}</bk-tag>
+                    <bk-tag ext-cls="bk-pipeline-card-info-build-time-tag">
+                        <span class="bk-pipeline-card-info-build-time-tag-span" v-bk-overflow-tips>
+                            {{ timeTag }}
+                        </span>
+                    </bk-tag>
                 </div>
                 <router-link
                     class="pipeline-cell-link bk-pipeline-card-info-row"
@@ -228,6 +226,7 @@
             projectId () {
                 return this.$route.params.projectId
             }
+            
         },
         methods: {
             exec () {
@@ -241,8 +240,20 @@
                     action: RESOURCE_ACTION.VIEW
                 })
             },
-            goPipeline (route) {
-                this.$router.push(route)
+            goPipeline (pipeline) {
+                const { onlyDraftVersion, pipelineId, projectId, historyRoute } = pipeline
+                const editRoute = {
+                    name: 'pipelinesEdit',
+                    params: {
+                        projectId,
+                        pipelineId
+                    }
+                }
+                if (onlyDraftVersion) {
+                    this.$router.push(editRoute)
+                    return
+                }
+                this.$router.push(historyRoute ?? editRoute)
             }
         }
     }
@@ -406,6 +417,13 @@
                 flex: 1;
                 &.build-result-row {
                     justify-content: space-between;
+                    .bk-pipeline-card-info-build-time-tag {
+                        overflow: hidden;
+                        &-span {
+                            width: 100%;
+                            @include ellipsis();
+                        }
+                    }
                     .bk-pipeline-card-info-build-result {
                         display: flex;
                         flex: 1;

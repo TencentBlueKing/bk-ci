@@ -40,7 +40,6 @@
                 'pipelineInfo'
             ]),
             breadCrumbs () {
-                console.log('this.pipelineName', this.pipeline)
                 return [{
                     icon: 'pipeline',
                     selectedValue: this.$t('pipeline'),
@@ -95,6 +94,12 @@
                     this.$updateTabTitle?.(title)
                 },
                 immediate: true
+            },
+            '$route.params.pipelineId' (val) {
+                this.requestPipelineSummary({
+                    projectId: this.$route.params.projectId,
+                    pipelineId: val
+                })
             }
         },
         created () {
