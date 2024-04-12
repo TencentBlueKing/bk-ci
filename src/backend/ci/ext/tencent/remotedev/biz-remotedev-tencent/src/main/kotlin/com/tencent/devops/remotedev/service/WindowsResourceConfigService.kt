@@ -75,6 +75,13 @@ class WindowsResourceConfigService @Autowired constructor(
         return windowsResourceTypeDao.fetchAny(dslContext, machineType)
     }
 
+    fun getTypeConfig(
+        id: Int
+    ): WindowsResourceTypeConfig? {
+        logger.info("get windows resource config type $id")
+        return windowsResourceTypeDao.fetchAny(dslContext, id)
+    }
+
     fun getZoneConfig(
         zone: String
     ): WindowsResourceZoneConfig? {

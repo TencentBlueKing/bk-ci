@@ -276,7 +276,13 @@ class StartCloudRemoteDevService @Autowired constructor(
             }
             kotlin.runCatching {
                 client.get(ServiceRemoteDevResource::class)
-                    .createWinWorkspaceByVm(oldWs.userId, oldWs.workspaceName, null, taskStatus.uid)
+                    .createWinWorkspaceByVm(
+                        userId = oldWs.userId,
+                        oldWorkspaceName = oldWs.workspaceName,
+                        projectId = null,
+                        ownerType = null,
+                        uid = taskStatus.uid
+                    )
             }.onFailure {
                 logger.warn("workspaceTaskCallback|createWinWorkspaceByVm fail ${it.message}", it)
             }
@@ -300,8 +306,8 @@ class StartCloudRemoteDevService @Autowired constructor(
             status = workspaceStatus.status,
             hostIP = workspaceStatus.hostIP,
             environmentIP = workspaceStatus.environmentIP,
-            clusterId = workspaceStatus.clusterId,
-            namespace = workspaceStatus.namespace,
+            clusterId = workspaceStatus.clusterId ?: "",
+            namespace = workspaceStatus.namespace ?: "",
             environmentHost = workspaceStatus.environmentIP,
             ready = true,
             started = true,
