@@ -51,8 +51,10 @@ data class PipelineSetting(
     var version: Int = 1,
     @get:Schema(title = "描述", required = false)
     var desc: String = "",
-    @get:Schema(title = "标签列表", required = false)
+    @get:Schema(title = "标签ID列表", required = false)
     var labels: List<String> = emptyList(),
+    @get:Schema(title = "标签名称列表（仅用于前端展示，不参与数据保存）", required = false)
+    var labelNames: List<String> = emptyList(),
     @field:BkField(patternStyle = BkStyleEnum.BUILD_NUM_RULE_STYLE, required = false)
     @get:Schema(title = "构建号生成规则", required = false)
     var buildNumRule: String? = null, // 构建号生成规则

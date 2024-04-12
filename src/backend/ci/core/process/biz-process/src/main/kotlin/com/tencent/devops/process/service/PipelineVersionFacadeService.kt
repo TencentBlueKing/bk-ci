@@ -513,6 +513,7 @@ class PipelineVersionFacadeService @Autowired constructor(
             pipelineId = pipelineId,
             version = resource.settingVersion ?: version
         )
+        // 后端主动填充前端展示的标签名称
         val modelAndSetting = PipelineModelAndSetting(
             setting = setting,
             model = pipelineInfoFacadeService.getFixedModel(
@@ -536,14 +537,12 @@ class PipelineVersionFacadeService @Autowired constructor(
             )
             Triple(true, response, null)
         } catch (e: PipelineTransferException) {
-            Triple(
-                false, null, I18nUtil.getCodeLanMessage(
+            Triple(false, null, I18nUtil.getCodeLanMessage(
                 messageCode = e.errorCode,
                 params = e.params,
                 language = I18nUtil.getLanguage(I18nUtil.getRequestUserId()),
                 defaultMessage = e.defaultMessage
-            )
-            )
+            ))
         }
         return PipelineVersionWithModel(
             modelAndSetting = modelAndSetting,

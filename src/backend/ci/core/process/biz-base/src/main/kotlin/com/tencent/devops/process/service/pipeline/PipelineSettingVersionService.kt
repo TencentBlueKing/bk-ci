@@ -74,8 +74,10 @@ class PipelineSettingVersionService @Autowired constructor(
             pipelineGroupService.getGroups(userId, projectId, pipelineId)
         }
         val labels = ArrayList<String>()
+        val labelNames = ArrayList<String>()
         groups?.forEach {
             labels.addAll(it.labels)
+            labelNames.addAll(it.labelNames)
         }
         if (settingInfo == null) {
             // 如果没有正式版本的设置，则从流水线信息获取关键信息，生成新的流水线配置
@@ -97,11 +99,13 @@ class PipelineSettingVersionService @Autowired constructor(
                 successSubscription = Subscription(),
                 failSubscription = Subscription(),
                 labels = labels,
+                labelNames = labelNames,
                 pipelineAsCodeSettings = PipelineAsCodeSettings()
             )
         } else {
             // 如果有正式版本，则将匹配好的标签替换进配置
             settingInfo.labels = labels
+            settingInfo.labelNames = labelNames
         }
 
         if (version > 0) { // #671 目前只接受通知设置的版本管理, 其他属于公共设置不接受版本管理
@@ -121,6 +125,16 @@ class PipelineSettingVersionService @Autowired constructor(
                 settingInfo.maxQueueSize = ve.maxQueueSize ?: PIPELINE_SETTING_MAX_QUEUE_SIZE_DEFAULT
                 settingInfo.concurrencyGroup = ve.concurrencyGroup
                 settingInfo.concurrencyCancelInProgress = ve.concurrencyCancelInProgress ?: false
+            }
+            // 版本中的可能还不是正式生效的，如果和正式配置中有差异则重新获取名称
+            if (settingInfo.labels.isNotEmpty() && settingInfo.labels != labels) {
+                labelNames.clear()
+                pipelineGroupService.getGroups(projectId, pipelineId).forEach { group ->
+                    group.labels.forEach { label ->
+                        if (settingInfo.labels.contains(label.id)) labelNames.add(label.name)
+                    }
+                }
+                settingInfo.labelNames = labelNames
             }
         }
 
