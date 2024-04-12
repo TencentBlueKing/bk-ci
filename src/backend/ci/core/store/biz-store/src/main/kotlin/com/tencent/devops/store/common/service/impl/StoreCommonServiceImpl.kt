@@ -39,6 +39,7 @@ import com.tencent.devops.store.common.dao.OperationLogDao
 import com.tencent.devops.store.common.dao.ReasonRelDao
 import com.tencent.devops.store.common.dao.SensitiveConfDao
 import com.tencent.devops.store.common.dao.StoreApproveDao
+import com.tencent.devops.store.common.dao.StoreBaseFeatureQueryDao
 import com.tencent.devops.store.common.dao.StoreBaseQueryDao
 import com.tencent.devops.store.common.dao.StoreCommentDao
 import com.tencent.devops.store.common.dao.StoreCommentPraiseDao
@@ -138,6 +139,9 @@ abstract class StoreCommonServiceImpl @Autowired constructor() : StoreCommonServ
     lateinit var storeBaseQueryDao: StoreBaseQueryDao
 
     @Autowired
+    lateinit var storeBaseFeatureQueryDao: StoreBaseFeatureQueryDao
+
+    @Autowired
     lateinit var storeDetailUrlConfig: StoreDetailUrlConfig
 
     private val logger = LoggerFactory.getLogger(StoreCommonServiceImpl::class.java)
@@ -146,13 +150,20 @@ abstract class StoreCommonServiceImpl @Autowired constructor() : StoreCommonServ
         storeId: String,
         storeType: StoreTypeEnum
     ): String {
-        logger.info("getStoreNameById: $storeId | $storeType")
-        val storeCommonDao = getStoreCommonDao(storeType.name)
-        return storeCommonDao.getStoreNameById(dslContext, storeId) ?: ""
+        var name = storeBaseQueryDao.getComponentById(dslContext, storeId)?.name
+        name?.let {
+            val storeCommonDao = getStoreCommonDao(storeType.name)
+            name = storeCommonDao.getStoreNameById(dslContext, storeId)
+        }
+        return name ?: ""
     }
 
     override fun getStorePublicFlagByCode(storeCode: String, storeType: StoreTypeEnum): Boolean {
-        return getStoreCommonDao(storeType.name).getStorePublicFlagByCode(dslContext, storeCode)
+        var publicFlag = storeBaseFeatureQueryDao.getBaseFeatureByStoreId(dslContext, storeCode, storeType)?.publicFlag
+        publicFlag?.let {
+            publicFlag = getStoreCommonDao(storeType.name).getStorePublicFlagByCode(dslContext, storeCode)
+        }
+        return publicFlag ?: false
     }
 
     private fun getStoreCommonDao(storeType: String): AbstractStoreCommonDao {
@@ -273,7 +284,7 @@ abstract class StoreCommonServiceImpl @Autowired constructor() : StoreCommonServ
             StoreTypeEnum.IMAGE -> getStoreDetailUrl(storeDetailUrlConfig.imageDetailBaseUrl, storeCode)
             StoreTypeEnum.IDE_ATOM -> getStoreDetailUrl(storeDetailUrlConfig.ideAtomDetailBaseUrl, storeCode)
             StoreTypeEnum.SERVICE -> getStoreDetailUrl(storeDetailUrlConfig.serviceDetailBaseUrl, storeCode)
-            else -> ""
+            else -> "${storeDetailUrlConfig.storeDetailBaseUrl}/${storeType.name.lowercase()}/$storeCode"
         }
     }
 

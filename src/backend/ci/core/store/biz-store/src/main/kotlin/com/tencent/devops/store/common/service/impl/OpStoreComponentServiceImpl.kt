@@ -30,7 +30,7 @@ package com.tencent.devops.store.common.service.impl
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.constant.INIT_VERSION
 import com.tencent.devops.common.api.exception.ErrorCodeException
-import com.tencent.devops.store.common.dao.OperationLogDao
+import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.store.common.dao.StoreBaseFeatureManageDao
 import com.tencent.devops.store.common.dao.StoreBaseManageDao
 import com.tencent.devops.store.common.dao.StoreBaseQueryDao
@@ -38,6 +38,7 @@ import com.tencent.devops.store.common.dao.StoreVersionLogDao
 import com.tencent.devops.store.common.service.OpStoreComponentService
 import com.tencent.devops.store.common.service.StoreNotifyService
 import com.tencent.devops.store.common.service.StoreReleaseService
+import com.tencent.devops.store.common.utils.StoreUtils
 import com.tencent.devops.store.pojo.common.PASS
 import com.tencent.devops.store.pojo.common.REJECT
 import com.tencent.devops.store.pojo.common.enums.AuditTypeEnum
@@ -63,7 +64,8 @@ class OpStoreComponentServiceImpl @Autowired constructor(
     private val storeBaseFeatureManageDao: StoreBaseFeatureManageDao,
     private val storeVersionLogDao: StoreVersionLogDao,
     private val storeNotifyService: StoreNotifyService,
-    private val storeReleaseService: StoreReleaseService
+    private val storeReleaseService: StoreReleaseService,
+    private val redisOperation: RedisOperation
 ) : OpStoreComponentService {
 
     override fun approveComponentRelease(
@@ -116,9 +118,6 @@ class OpStoreComponentServiceImpl @Autowired constructor(
                     releaseType = releaseType
                 )
             )
-        } else {
-            // 审核不通过则发消息告知用户
-            storeNotifyService.sendStoreReleaseAuditNotifyMessage(storeId, AuditTypeEnum.AUDIT_REJECT)
         }
         dslContext.transaction { t ->
             val context = DSL.using(t)
@@ -147,6 +146,16 @@ class OpStoreComponentServiceImpl @Autowired constructor(
                     modifier = userId
                 )
             )
+        }
+        // 更新公共组件缓存
+        if (storeApproveReleaseRequest.publicFlag) {
+            redisOperation.addSetValue(StoreUtils.getStorePublicFlagKey(storeType.name), storeCode)
+        } else {
+            redisOperation.removeSetMember(StoreUtils.getStorePublicFlagKey(storeType.name), storeCode)
+        }
+        if(!passFlag) {
+            // 审核不通过则发消息告知用户
+            storeNotifyService.sendStoreReleaseAuditNotifyMessage(storeId, AuditTypeEnum.AUDIT_REJECT)
         }
         return true
     }

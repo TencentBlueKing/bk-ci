@@ -27,32 +27,24 @@
 
 package com.tencent.devops.store.common.dao
 
-import com.tencent.devops.model.store.tables.TStoreBaseEnv
-import com.tencent.devops.model.store.tables.records.TStoreBaseEnvRecord
-import org.jooq.Condition
+import com.tencent.devops.model.store.tables.TStoreBaseFeature
+import com.tencent.devops.model.store.tables.records.TStoreBaseFeatureRecord
+import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import org.jooq.DSLContext
-import org.jooq.Result
 import org.springframework.stereotype.Repository
 
 @Repository
-class StoreBaseEnvQueryDao {
+class StoreBaseFeatureQueryDao {
 
-    fun getBaseEnvsByStoreId(
+    fun getBaseFeatureByStoreId(
         dslContext: DSLContext,
-        storeId: String,
-        osName: String? = null,
-        osArch: String? = null
-    ): Result<TStoreBaseEnvRecord>? {
-        return with(TStoreBaseEnv.T_STORE_BASE_ENV) {
-            val conditions = mutableListOf<Condition>()
-            conditions.add(STORE_ID.eq(storeId))
-            if (!osName.isNullOrBlank()) {
-                conditions.add(OS_NAME.eq(osName))
-            }
-            if (!osArch.isNullOrBlank()) {
-                conditions.add(OS_ARCH.eq(osArch))
-            }
-            dslContext.selectFrom(this).where(conditions).fetch()
+        storeCode: String,
+        storeType: StoreTypeEnum
+    ): TStoreBaseFeatureRecord? {
+        return with(TStoreBaseFeature.T_STORE_BASE_FEATURE) {
+            dslContext.selectFrom(this)
+                .where(STORE_CODE.eq(storeCode).and(STORE_TYPE.eq(storeType.type.toByte())))
+                .fetchOne()
         }
     }
 }

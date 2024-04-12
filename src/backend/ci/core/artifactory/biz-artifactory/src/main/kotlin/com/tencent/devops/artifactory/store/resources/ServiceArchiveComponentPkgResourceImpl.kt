@@ -25,34 +25,39 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.store.common.dao
+package com.tencent.devops.artifactory.store.resources
 
-import com.tencent.devops.model.store.tables.TStoreBaseEnv
-import com.tencent.devops.model.store.tables.records.TStoreBaseEnvRecord
-import org.jooq.Condition
-import org.jooq.DSLContext
-import org.jooq.Result
-import org.springframework.stereotype.Repository
+import com.tencent.devops.artifactory.api.ServiceArchiveComponentPkgResource
+import com.tencent.devops.artifactory.store.service.ArchiveStorePkgService
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
+import org.springframework.beans.factory.annotation.Autowired
 
-@Repository
-class StoreBaseEnvQueryDao {
+@RestResource
+class ServiceArchiveComponentPkgResourceImpl @Autowired constructor(
+    private val archiveStorePkgService: ArchiveStorePkgService
+) : ServiceArchiveComponentPkgResource {
 
-    fun getBaseEnvsByStoreId(
-        dslContext: DSLContext,
-        storeId: String,
-        osName: String? = null,
-        osArch: String? = null
-    ): Result<TStoreBaseEnvRecord>? {
-        return with(TStoreBaseEnv.T_STORE_BASE_ENV) {
-            val conditions = mutableListOf<Condition>()
-            conditions.add(STORE_ID.eq(storeId))
-            if (!osName.isNullOrBlank()) {
-                conditions.add(OS_NAME.eq(osName))
-            }
-            if (!osArch.isNullOrBlank()) {
-                conditions.add(OS_ARCH.eq(osArch))
-            }
-            dslContext.selectFrom(this).where(conditions).fetch()
-        }
+    override fun getComponentPkgDownloadUrl(
+        userId: String,
+        projectId: String,
+        storeType: StoreTypeEnum,
+        storeCode: String,
+        version: String,
+        osName: String?,
+        osArch: String?
+    ): Result<String> {
+        return Result(
+            archiveStorePkgService.getComponentPkgDownloadUrl(
+                userId = userId,
+                projectId = projectId,
+                storeType = storeType,
+                storeCode = storeCode,
+                version = version,
+                osName = osName,
+                osArch = osArch
+            )
+        )
     }
 }
