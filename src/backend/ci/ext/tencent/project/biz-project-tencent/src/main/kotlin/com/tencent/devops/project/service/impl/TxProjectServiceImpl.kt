@@ -36,7 +36,6 @@ import com.tencent.devops.auth.api.service.ServiceProjectAuthResource
 import com.tencent.devops.auth.service.ManagerService
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.OperationException
-import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.pojo.PipelineAsCodeSettings
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.MessageUtil
@@ -63,8 +62,6 @@ import com.tencent.devops.project.dao.ProjectUpdateHistoryDao
 import com.tencent.devops.project.dispatch.ProjectDispatcher
 import com.tencent.devops.project.jmx.api.ProjectJmxApi
 import com.tencent.devops.project.pojo.AuthProjectForList
-import com.tencent.devops.project.pojo.ObsBaseDictDTO
-import com.tencent.devops.project.pojo.ObsOperationalProductResponse
 import com.tencent.devops.project.pojo.OperationalProductVO
 import com.tencent.devops.project.pojo.ProjectCreateInfo
 import com.tencent.devops.project.pojo.ProjectCreateUserInfo
@@ -79,19 +76,17 @@ import com.tencent.devops.project.pojo.Result
 import com.tencent.devops.project.pojo.enums.ProjectApproveStatus
 import com.tencent.devops.project.pojo.enums.ProjectChannelCode
 import com.tencent.devops.project.pojo.enums.ProjectOperation
-import com.tencent.devops.project.pojo.enums.ProjectProductDictType
 import com.tencent.devops.project.pojo.user.UserDeptDetail
 import com.tencent.devops.project.service.ProjectApprovalService
-import com.tencent.devops.project.service.ProjectCostAllocationService
 import com.tencent.devops.project.service.ProjectExtOrganizationService
 import com.tencent.devops.project.service.ProjectExtPermissionService
 import com.tencent.devops.project.service.ProjectExtService
+import com.tencent.devops.project.service.ProjectOperationalProductService
 import com.tencent.devops.project.service.ProjectPermissionService
 import com.tencent.devops.project.service.ProjectTagService
 import com.tencent.devops.project.service.ShardingRoutingRuleAssignService
 import com.tencent.devops.project.service.tof.TOFService
 import com.tencent.devops.project.util.ProjectUtils
-import com.tencent.devops.support.api.service.ServiceFileResource
 import okhttp3.Request
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
@@ -116,7 +111,7 @@ class TxProjectServiceImpl @Autowired constructor(
     private val bkTag: BkTag,
     private val profile: Profile,
     private val organizationService: ProjectExtOrganizationService,
-    private val projectCostAllocationService: ProjectCostAllocationService,
+    private val projectOperationalProductService: ProjectOperationalProductService,
     authPermissionApi: AuthPermissionApi,
     projectAuthServiceCode: ProjectAuthServiceCode,
     shardingRoutingRuleAssignService: ShardingRoutingRuleAssignService,
@@ -540,11 +535,11 @@ class TxProjectServiceImpl @Autowired constructor(
     }
 
     override fun getOperationalProducts(): List<OperationalProductVO> {
-        return projectCostAllocationService.listProductByBgName(bgName = "all") ?: emptyList()
+        return projectOperationalProductService.listAllProducts()
     }
 
     override fun getOperationalProductsByBgName(bgName: String): List<OperationalProductVO> {
-        return projectCostAllocationService.listProductByBgName(bgName) ?: emptyList()
+        return projectOperationalProductService.listProductByBgName(bgName) ?: emptyList()
     }
 
     override fun fixProjectOrganization(tProjectRecord: TProjectRecord): ProjectOrganizationInfo {
