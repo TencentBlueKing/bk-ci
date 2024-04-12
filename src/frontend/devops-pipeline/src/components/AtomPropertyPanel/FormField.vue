@@ -48,6 +48,7 @@
         },
         computed: {
             widthStyle () {
+                if (!this.labelWidth) return {}
                 return {
                     width: `${this.labelWidth}px`
                 }
