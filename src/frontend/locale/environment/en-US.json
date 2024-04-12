@@ -417,5 +417,7 @@
     "离开": "Leave",
     "请填写登录账号": "Please enter account",
     "请填写密码": "Please enter password",
-    "关键字": "keywords"
+    "关键字": "Keywords",
+    "端口": "Port",
+    "请填写端口": "Please enter port."
 }
