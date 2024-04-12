@@ -96,6 +96,44 @@ class NodeDao {
         }
     }
 
+    fun countForAuthWithSearchCondition(
+        dslContext: DSLContext,
+        projectId: String?,
+        nodeIp: String?,
+        displayName: String?,
+        createdUser: String?,
+        lastModifiedUser: String?,
+        keywords: String?
+    ): Int {
+        with(TNode.T_NODE) {
+            return if (projectId.isNullOrBlank()) {
+                dslContext.selectCount()
+                    .from(TNode.T_NODE)
+                    .fetchOne(0, Int::class.java)!!
+            } else {
+                val query = dslContext.selectCount()
+                    .from(TNode.T_NODE)
+                    .where(PROJECT_ID.eq(projectId))
+                if (!keywords.isNullOrEmpty()) {
+                    query.and(NODE_IP.like("%$keywords%").or(DISPLAY_NAME.like("%$keywords%")))
+                }
+                if (!nodeIp.isNullOrEmpty()) {
+                    query.and(NODE_IP.like("%$nodeIp%"))
+                }
+                if (!displayName.isNullOrEmpty()) {
+                    query.and(DISPLAY_NAME.like("%$displayName%"))
+                }
+                if (!createdUser.isNullOrEmpty()) {
+                    query.and(CREATED_USER.like("%$createdUser%"))
+                }
+                if (!lastModifiedUser.isNullOrEmpty()) {
+                    query.and(LAST_MODIFY_USER.like("%$lastModifiedUser%"))
+                }
+                query.fetchOne(0, Int::class.java)!!
+            }
+        }
+    }
+
     fun listNodes(dslContext: DSLContext, projectId: String): List<TNodeRecord> {
         with(TNode.T_NODE) {
             return dslContext.selectFrom(this)

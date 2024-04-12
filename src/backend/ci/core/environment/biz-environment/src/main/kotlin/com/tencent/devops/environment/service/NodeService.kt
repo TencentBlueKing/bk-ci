@@ -194,7 +194,9 @@ class NodeService @Autowired constructor(
         if (nodeRecordList.isEmpty()) {
             return Page(1, 0, 0, emptyList())
         }
-        val count = nodeDao.countForAuth(dslContext, projectId).toLong()
+        val count = nodeDao.countForAuthWithSearchCondition(
+            dslContext, projectId, nodeIp, displayName, createdUser, lastModifiedUser, keywords
+        ).toLong()
         return Page(
             page = page ?: 1,
             pageSize = pageSize ?: 20,
