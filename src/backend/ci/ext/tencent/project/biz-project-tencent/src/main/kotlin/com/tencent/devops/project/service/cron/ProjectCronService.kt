@@ -3,8 +3,10 @@ package com.tencent.devops.project.service.cron
 import com.tencent.devops.common.auth.api.pojo.MigrateProjectConditionDTO
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.common.service.Profile
 import com.tencent.devops.project.service.ProjectCostAllocationService
 import com.tencent.devops.project.service.ProjectNotifyService
+import com.tencent.devops.project.service.ProjectOperationalProductService
 import org.slf4j.LoggerFactory
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Service
@@ -13,32 +15,62 @@ import org.springframework.stereotype.Service
 class ProjectCronService constructor(
     val projectNotifyService: ProjectNotifyService,
     val projectCostAllocationService: ProjectCostAllocationService,
-    val redisOperation: RedisOperation
+    val redisOperation: RedisOperation,
+    val profile: Profile,
+    val projectOperationalProductService: ProjectOperationalProductService
 ) {
+    val redisLock = RedisLock(redisOperation, PROJECT_CRON_KEY, 10)
+
     companion object {
-        private const val CHECK_CHANGES_OF_PROJECT_REGULARLY = "check_changes_of_project_regularly"
-        private const val PROCESS_INACTIVE_PROJECT_REGULARLY = "process_inactive_project_regularly"
+        private const val PROJECT_CRON_KEY = "project_cron_key"
         private val logger = LoggerFactory.getLogger(ProjectCronService::class.java)
-        private const val VERIFY_PROJECT_MANAGER_ORGANIZATION_BG = "verify_project_manager_organization_bg"
+        private const val PROCESS_INACTIVE_PROJECT_BG = "process_inactive_project_bg"
     }
 
-    @Scheduled(cron = "0 0 3 * * ?")
+    @Scheduled(cron = "0 0 6 * * ?")
     fun checkChangesOfProjectRegularly() {
-        RedisLock(redisOperation, CHECK_CHANGES_OF_PROJECT_REGULARLY, 10).use { redisLock ->
-            try {
-                logger.info("check changes of project regularly |start")
-                val lockSuccess = redisLock.tryLock()
-                if (lockSuccess) {
-                    projectNotifyService.sendEmailForProjectOrganizationChange()
-                    projectNotifyService.sendEmailForProjectProductChange()
-                    projectNotifyService.sendEmailForVerifyProjectOrganization()
-                    logger.info("check changes of project regularly |finish")
-                } else {
-                    logger.info("check changes of project regularly |running")
-                }
-            } catch (e: Exception) {
-                logger.warn("check changes of project regularly |error", e)
+        if (!profile.isRbacGray()) {
+            return
+        }
+        try {
+            logger.info("check changes of project regularly |start")
+            val lockSuccess = redisLock.tryLock()
+            if (lockSuccess) {
+                projectNotifyService.sendEmailForProjectOrganizationChange()
+                projectNotifyService.sendEmailForProjectProductChange()
+                logger.info("check changes of project regularly |finish")
+            } else {
+                logger.info("check changes of project regularly |running")
             }
+        } catch (e: Exception) {
+            logger.warn("check changes of project regularly |error", e)
+        }
+    }
+
+
+    /**
+     * 每周一3点开启任务
+     * 监控如下场景：项目管理员所属组织架构和管理员所属组织架构是否匹配
+    - 若全部管理员为 IEG 的，但项目所属组织架构不属于 IEG，发送告警邮件给系统管理员
+    - 若部分管理员为 IEG 的，但项目所属组织架构不属于 IEG，需汇总到邮件中，需人工确认后，可以设置不告警
+    - 邮件包括如下信息：项目名称、项目ID、项目所属组织架构、所属组织架构为IEG的管理员、所属组织架构为非IEG的管理员
+     * */
+    @Scheduled(cron = "0 0 3 ? * MON")
+    fun checkProjectOrganizationRegularly() {
+        if (!profile.isRbacGray()) {
+            return
+        }
+        try {
+            logger.info("check project organization regularly |start")
+            val lockSuccess = redisLock.tryLock()
+            if (lockSuccess) {
+                projectNotifyService.sendEmailForVerifyProjectOrganization()
+                logger.info("check project organization regularly  |finish")
+            } else {
+                logger.info("check project organization regularly  |running")
+            }
+        } catch (e: Exception) {
+            logger.warn("check project organization regularly |error", e)
         }
     }
 
@@ -46,28 +78,51 @@ class ProjectCronService constructor(
     @Scheduled(cron = "0 0 8 ? * MON")
     @Suppress("NestedBlockDepth")
     fun processInactiveProjectRegularly() {
-        RedisLock(redisOperation, PROCESS_INACTIVE_PROJECT_REGULARLY, 10).use { redisLock ->
-            try {
-                logger.info("process inactive project regularly |start")
-                val lockSuccess = redisLock.tryLock()
-                if (lockSuccess) {
-                    val bgIds = redisOperation.get(key = VERIFY_PROJECT_MANAGER_ORGANIZATION_BG)
-                    if (bgIds.isNullOrBlank()) {
-                        logger.info("bg ids is null or blank")
-                        return
-                    }
-                    projectCostAllocationService.processInactiveProjectByCondition(
-                        migrateProjectConditionDTO = MigrateProjectConditionDTO(
-                            bgIdList = bgIds.split(",").map { it.toLong() }
-                        )
-                    )
-                    logger.info("process inactive project regularly  |finish")
-                } else {
-                    logger.info("process inactive project regularly  |running")
+        if (!profile.isRbacGray()) {
+            return
+        }
+        try {
+            logger.info("process inactive project regularly |start")
+            val lockSuccess = redisLock.tryLock()
+            if (lockSuccess) {
+                val bgIds = redisOperation.get(key = PROCESS_INACTIVE_PROJECT_BG)
+                if (bgIds.isNullOrBlank()) {
+                    logger.info("bg ids is null or blank")
+                    return
                 }
-            } catch (e: Exception) {
-                logger.warn("process inactive project regularly  |error", e)
+                projectCostAllocationService.processInactiveProjectByCondition(
+                    migrateProjectConditionDTO = MigrateProjectConditionDTO(
+                        bgIdList = bgIds.split(",").map { it.toLong() }
+                    )
+                )
+                logger.info("process inactive project regularly  |finish")
+            } else {
+                logger.info("process inactive project regularly  |running")
             }
+        } catch (e: Exception) {
+            logger.warn("process inactive project regularly  |error", e)
+        }
+    }
+
+    /**
+     * 每周日更新OBS产品
+     * */
+    @Scheduled(cron = "0 0 6 ? * SUN")
+    fun updateObsProduct() {
+        if (!profile.isRbacGray()) {
+            return
+        }
+        try {
+            logger.info("update obs product | start")
+            val lockSuccess = redisLock.tryLock()
+            if (lockSuccess) {
+                projectOperationalProductService.syncOperationalProduct()
+                logger.info("update obs product|finish")
+            } else {
+                logger.info("update obs product|running")
+            }
+        } catch (e: Exception) {
+            logger.warn("update obs product | error", e)
         }
     }
 }

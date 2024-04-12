@@ -44,6 +44,7 @@ const val PROFILE_STREAM = "stream"
 const val PROFILE_AUTO = "auto"
 const val PROFILE_DEVX = "devx"
 const val PROFILE_RBAC = "rbac"
+const val PROFILE_RBAC_GRAY = "rbac-gray"
 
 @Component
 class Profile(private val environment: Environment) {
@@ -102,6 +103,14 @@ class Profile(private val environment: Environment) {
     fun isRbac(): Boolean {
         activeProfiles.forEach { activeProfile ->
             if (activeProfile.contains(PROFILE_RBAC)) {
+                return true
+            }
+        }
+        return false
+    }
+    fun isRbacGray(): Boolean {
+        activeProfiles.forEach { activeProfile ->
+            if (activeProfile.contains(PROFILE_RBAC_GRAY)) {
                 return true
             }
         }
