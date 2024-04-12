@@ -50,6 +50,7 @@ import com.tencent.devops.project.pojo.ProjectVO
 import com.tencent.devops.project.pojo.ProjectWithPermission
 import com.tencent.devops.project.pojo.Result
 import com.tencent.devops.project.pojo.enums.ProjectChannelCode
+import com.tencent.devops.project.pojo.enums.ProjectProductDictType
 import com.tencent.devops.project.pojo.enums.ProjectValidateType
 import java.io.InputStream
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition
@@ -250,6 +251,8 @@ interface ProjectService {
     fun updateProjectCreator(projectUpdateCreatorDtoList: List<ProjectUpdateCreatorDTO>): Boolean
 
     fun getOperationalProducts(): List<OperationalProductVO>
+
+    fun getOperationalProductsByDictType(dictType: ProjectProductDictType): List<OperationalProductVO>
 
     fun updateProjectProductId(
         englishName: String,

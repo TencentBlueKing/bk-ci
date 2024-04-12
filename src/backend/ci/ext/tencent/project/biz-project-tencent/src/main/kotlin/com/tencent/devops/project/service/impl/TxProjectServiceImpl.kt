@@ -78,6 +78,7 @@ import com.tencent.devops.project.pojo.Result
 import com.tencent.devops.project.pojo.enums.ProjectApproveStatus
 import com.tencent.devops.project.pojo.enums.ProjectChannelCode
 import com.tencent.devops.project.pojo.enums.ProjectOperation
+import com.tencent.devops.project.pojo.enums.ProjectProductDictType
 import com.tencent.devops.project.pojo.user.UserDeptDetail
 import com.tencent.devops.project.service.ProjectApprovalService
 import com.tencent.devops.project.service.ProjectExtOrganizationService
@@ -542,6 +543,10 @@ class TxProjectServiceImpl @Autowired constructor(
     }
 
     override fun getOperationalProducts(): List<OperationalProductVO> {
+        return getOperationalProductsByDictType(dictType = ProjectProductDictType.OBS_PRODUCT)
+    }
+
+    override fun getOperationalProductsByDictType(dictType: ProjectProductDictType): List<OperationalProductVO> {
         return try {
             val obsBaseDictDTO = ObsBaseDictDTO(
                 jsonrpc = "2.0",
@@ -550,7 +555,7 @@ class TxProjectServiceImpl @Autowired constructor(
                 params = mapOf(
                     "DeptId" to "2",
                     "StaffName" to "xx",
-                    "DictType" to "4"
+                    "DictType" to dictType.value.toString()
                 )
             )
             val requestBody = objectMapper.writeValueAsString(obsBaseDictDTO)

@@ -11,7 +11,11 @@ import com.tencent.devops.common.service.trace.TraceTag
 import com.tencent.devops.metrics.api.ServiceMetricsResource
 import com.tencent.devops.metrics.pojo.vo.BaseQueryReqVO
 import com.tencent.devops.project.api.pojo.enums.ProjectRelateOBSProductStatusEnum
+import com.tencent.devops.project.dao.ProjectOperationalProductDao
+import com.tencent.devops.project.pojo.OperationalProductInfo
 import com.tencent.devops.project.pojo.ProjectVO
+import com.tencent.devops.project.pojo.enums.ProjectProductDictType
+import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.slf4j.MDC
 import org.springframework.stereotype.Service
@@ -21,14 +25,16 @@ import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 
 @Service
-@Suppress("NestedBlockDepth", "ComplexMethod")
+@Suppress("NestedBlockDepth", "ComplexMethod", "LongParameterList")
 class ProjectCostAllocationService constructor(
     val client: Client,
     val projectService: ProjectService,
     val redisOperation: RedisOperation,
     val tokenService: ClientTokenService,
     val projectNotifyService: ProjectNotifyService,
-    val projectUserService: ProjectUserService
+    val projectUserService: ProjectUserService,
+    val dslContext: DSLContext,
+    val projectOperationalProductDao: ProjectOperationalProductDao
 ) {
     companion object {
         private val DATE_FORMATTER: DateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd")
@@ -193,5 +199,43 @@ class ProjectCostAllocationService constructor(
             )
         ).data?.pipelineSumInfoDO?.totalExecuteCount ?: 0
         return totalExecuteCount != 0L
+    }
+
+    fun syncOperationalProduct(): Boolean {
+        val obsProductList = projectService.getOperationalProductsByDictType(
+            dictType = ProjectProductDictType.OBS_PRODUCT
+        )
+        val planProductList = projectService.getOperationalProductsByDictType(
+            dictType = ProjectProductDictType.PLAN_PRODUCT
+        )
+        val deptList = projectService.getOperationalProductsByDictType(
+            dictType = ProjectProductDictType.DEPT
+        )
+        val bgList = projectService.getOperationalProductsByDictType(
+            dictType = ProjectProductDictType.BG
+        )
+        obsProductList.forEach { obsProductInfo ->
+            val planProductInfo = planProductList.firstOrNull {
+                it.planProductId == obsProductInfo.planProductId
+            }
+            val deptInfo = deptList.firstOrNull {
+                it.deptId == planProductInfo?.deptId
+            }
+            val bgInfo = bgList.firstOrNull {
+                it.bgId == deptInfo?.bgId
+            }
+
+            projectOperationalProductDao.createOrUpdate(
+                dslContext = dslContext,
+                operationalProductInfo = OperationalProductInfo(
+                    productId = obsProductInfo.productId!!.toInt(),
+                    productName = obsProductInfo.productName ?: "",
+                    planProductName = planProductInfo?.planProductName ?: "",
+                    deptName = deptInfo?.deptName ?: "",
+                    bgName = bgInfo?.bgName ?: ""
+                )
+            )
+        }
+        return true
     }
 }

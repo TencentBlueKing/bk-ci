@@ -54,6 +54,7 @@ import com.tencent.devops.project.pojo.ProjectOrganizationInfo
 import com.tencent.devops.project.pojo.ProjectProductValidateDTO
 import com.tencent.devops.project.pojo.ProjectUpdateInfo
 import com.tencent.devops.project.pojo.ResourceUpdateInfo
+import com.tencent.devops.project.pojo.enums.ProjectProductDictType
 import com.tencent.devops.project.pojo.user.UserDeptDetail
 import com.tencent.devops.project.service.impl.AbsProjectServiceImpl
 import org.jooq.DSLContext
@@ -209,6 +210,15 @@ class SimpleProjectServiceImpl @Autowired constructor(
     override fun isRbacPermission(projectId: String): Boolean = true
 
     override fun getOperationalProducts(): List<OperationalProductVO> {
+        return listOf(
+            OperationalProductVO(
+                productId = -1,
+                productName = "其他"
+            )
+        )
+    }
+
+    override fun getOperationalProductsByDictType(dictType: ProjectProductDictType): List<OperationalProductVO> {
         return listOf(
             OperationalProductVO(
                 productId = -1,

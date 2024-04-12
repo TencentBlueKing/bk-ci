@@ -27,4 +27,8 @@ class OpProjectCostAllocationResourceImpl constructor(
             )
         )
     }
+
+    override fun syncOperationalProduct(): Result<Boolean> {
+        return Result(projectCostAllocationService.syncOperationalProduct())
+    }
 }

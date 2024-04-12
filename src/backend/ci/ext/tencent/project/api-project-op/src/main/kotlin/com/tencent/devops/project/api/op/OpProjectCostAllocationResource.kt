@@ -31,4 +31,9 @@ interface OpProjectCostAllocationResource {
         @Parameter(description = "条件", required = true)
         migrateProjectConditionDTO: MigrateProjectConditionDTO
     ): Result<Boolean>
+
+    @Operation(summary = "同步OBS数据")
+    @POST
+    @Path("/syncOperationalProduct/")
+    fun syncOperationalProduct(): Result<Boolean>
 }
