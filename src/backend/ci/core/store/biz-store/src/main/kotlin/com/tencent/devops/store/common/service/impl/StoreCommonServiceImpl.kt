@@ -151,7 +151,7 @@ abstract class StoreCommonServiceImpl @Autowired constructor() : StoreCommonServ
         storeType: StoreTypeEnum
     ): String {
         var name = storeBaseQueryDao.getComponentById(dslContext, storeId)?.name
-        name?.let {
+        if (name == null) {
             val storeCommonDao = getStoreCommonDao(storeType.name)
             name = storeCommonDao.getStoreNameById(dslContext, storeId)
         }
@@ -159,11 +159,11 @@ abstract class StoreCommonServiceImpl @Autowired constructor() : StoreCommonServ
     }
 
     override fun getStorePublicFlagByCode(storeCode: String, storeType: StoreTypeEnum): Boolean {
-        var publicFlag = storeBaseFeatureQueryDao.getBaseFeatureByStoreId(dslContext, storeCode, storeType)?.publicFlag
-        publicFlag?.let {
+        var publicFlag = storeBaseFeatureQueryDao.getBaseFeatureByCode(dslContext, storeCode, storeType)?.publicFlag
+        if (publicFlag == null) {
             publicFlag = getStoreCommonDao(storeType.name).getStorePublicFlagByCode(dslContext, storeCode)
         }
-        return publicFlag ?: false
+        return publicFlag
     }
 
     private fun getStoreCommonDao(storeType: String): AbstractStoreCommonDao {

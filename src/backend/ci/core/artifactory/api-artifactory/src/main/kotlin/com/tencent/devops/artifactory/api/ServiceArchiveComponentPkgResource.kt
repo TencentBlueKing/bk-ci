@@ -71,7 +71,7 @@ interface ServiceArchiveComponentPkgResource {
         @BkField(patternStyle = BkStyleEnum.CODE_STYLE)
         storeCode: String,
         @Parameter(description = "组件版本号", required = true)
-        @QueryParam("version")
+        @PathParam("version")
         version: String,
         @Parameter(description = "操作系统名称", required = false)
         @QueryParam("osName")

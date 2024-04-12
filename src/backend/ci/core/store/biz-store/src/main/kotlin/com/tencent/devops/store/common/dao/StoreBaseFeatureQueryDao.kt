@@ -36,7 +36,7 @@ import org.springframework.stereotype.Repository
 @Repository
 class StoreBaseFeatureQueryDao {
 
-    fun getBaseFeatureByStoreId(
+    fun getBaseFeatureByCode(
         dslContext: DSLContext,
         storeCode: String,
         storeType: StoreTypeEnum
