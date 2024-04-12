@@ -208,7 +208,7 @@ interface OpWindowsConfigResource {
 
     @Operation(summary = "设置云研发项目管理员")
     @PUT
-    @Path("/add/{projectId}/{user}")
+    @Path("/add/{projectId}/manager")
     fun addProjectRemotedevManager(
         @Parameter(description = "用户ID", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
@@ -217,7 +217,7 @@ interface OpWindowsConfigResource {
         @PathParam("projectId")
         projectId: String,
         @Parameter(description = "管理员，多人用分号分隔", required = true)
-        @PathParam("user")
-        user: String
+        @QueryParam("manager")
+        manager: String
     ): Result<Boolean>
 }
