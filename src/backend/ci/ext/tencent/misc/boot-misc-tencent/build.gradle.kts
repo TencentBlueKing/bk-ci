@@ -32,4 +32,5 @@ dependencies {
     api(project(":ext:tencent:misc:biz-plugin-tencent"))
     api(project(":ext:tencent:misc:biz-lambda-tencent"))
     api(project(":ext:tencent:misc:biz-support-tencent"))
+    api(project(":ext:tencent:misc:biz-prebuild-tencent"))
 }

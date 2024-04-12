@@ -38,7 +38,9 @@ import org.springframework.context.annotation.ComponentScan
     "com.tencent.devops.monitoring",
     "com.tencent.devops.plugin",
     "com.tencent.devops.lambda",
-    "com.tencent.devops.support"
+    "com.tencent.devops.support",
+    "com.tencent.devops.prebuild",
+    "com.tencent.devops.process.yaml"
 )
 class TencentMiscApplication
 

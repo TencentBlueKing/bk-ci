@@ -36,7 +36,6 @@ dependencies {
     api(project(":core:common:common-redis"))
     api(project(":core:common:common-auth"))
     api(project(":core:common:common-archive"))
-    api(project(":core:common:common-db"))
     api(project(":core:dispatch:api-dispatch"))
     api(project(":core:process:api-process"))
     api(project(":core:project:api-project"))
@@ -47,8 +46,8 @@ dependencies {
     api(project(":ext:tencent:common:common-pipeline-yaml-tencent"))
     api(project(":ext:tencent:project:api-project-tencent"))
     api(project(":ext:tencent:environment:api-environment-tencent"))
-    api(project(":ext:tencent:prebuild:api-prebuild-tencent"))
-    api(project(":ext:tencent:prebuild:model-prebuild"))
+    api(project(":ext:tencent:misc:api-prebuild-tencent"))
+    api(project(":ext:tencent:misc:model-prebuild-tencent"))
 
     api("com.github.docker-java:docker-java")
     api("org.apache.httpcomponents:httpclient")

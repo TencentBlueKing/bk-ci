@@ -48,6 +48,7 @@ import javax.sql.DataSource
 @Configuration
 @AutoConfigureOrder(Ordered.HIGHEST_PRECEDENCE)
 @EnableTransactionManagement
+@SuppressWarnings("TooManyFunctions")
 class ExtDataSourceConfig {
 
     @Bean
@@ -272,6 +273,38 @@ class ExtDataSourceConfig {
         executeListenerProviders: ObjectProvider<ExecuteListenerProvider>
     ): DefaultConfiguration {
         return defaultConfiguration(supportDataSource, executeListenerProviders)
+    }
+
+    @Bean
+    fun prebuildDataSource(
+        @Value("\${spring.datasource.prebuild.url}")
+        datasourceUrl: String,
+        @Value("\${spring.datasource.prebuild.username}")
+        datasourceUsername: String,
+        @Value("\${spring.datasource.prebuild.password}")
+        datasourcePassword: String,
+        @Value("\${spring.datasource.prebuild.initSql:#{null}}")
+        datasourceInitSql: String? = null,
+        @Value("\${spring.datasource.prebuild.leakDetectionThreshold:#{0}}")
+        datasourceLeakDetectionThreshold: Long = 0
+    ): DataSource {
+        return hikariDataSource(
+            datasourcePoolName = "DBPool-prebuild",
+            datasourceUrl = datasourceUrl,
+            datasourceUsername = datasourceUsername,
+            datasourcePassword = datasourcePassword,
+            datasourceInitSql = datasourceInitSql,
+            datasourceLeakDetectionThreshold = datasourceLeakDetectionThreshold
+        )
+    }
+
+    @Bean
+    fun prebuildJooqConfiguration(
+        @Qualifier("prebuildDataSource")
+        prebuildDataSource: DataSource,
+        executeListenerProviders: ObjectProvider<ExecuteListenerProvider>
+    ): DefaultConfiguration {
+        return defaultConfiguration(prebuildDataSource, executeListenerProviders)
     }
 
     @SuppressWarnings("LongParameterList", "MagicNumber")
