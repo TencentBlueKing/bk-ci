@@ -2,44 +2,46 @@
     <div v-bkloading="{ isLoading: switchingVersion }" :class="['pipeline-detail-entry', {
         'show-pipeline-var': activeChild.showVar
     }]">
-        <aside class="pipeline-detail-entry-aside">
-            <ul v-for="item in asideNav" :key="item.title">
-                <li class="nav-item-title">
-                    {{ item.title }}
-                    <span class="nav-item-link" v-if="item.link" @click="item.link.handler">
-                        <logo :name="item.link.icon" size="16"></logo>
-                        {{ item.link.title }}
-                    </span>
-                </li>
-                <ul class="nav-child-list">
-                    <li
-                        @click="switchType(child)"
-                        v-for="child in item.children"
-                        :key="child.name"
-                        :class="[
-                            'nav-child-title',
-                            {
-                                active: child.active,
-                                'nav-child-disabled': child.disabled
-                            }
-                        ]"
-                        v-bk-tooltips="child.disableTooltip"
-                    >
-                        {{ child.title }}
+        <template v-show="!switchingVersion">
+            <aside class="pipeline-detail-entry-aside">
+                <ul v-for="item in asideNav" :key="item.title">
+                    <li class="nav-item-title">
+                        {{ item.title }}
+                        <span class="nav-item-link" v-if="item.link" @click="item.link.handler">
+                            <logo :name="item.link.icon" size="16"></logo>
+                            {{ item.link.title }}
+                        </span>
                     </li>
-
+                    <ul class="nav-child-list">
+                        <li
+                            @click="switchType(child)"
+                            v-for="child in item.children"
+                            :key="child.name"
+                            :class="[
+                                'nav-child-title',
+                                {
+                                    active: child.active,
+                                    'nav-child-disabled': child.disabled
+                                }
+                            ]"
+                            v-bk-tooltips="child.disableTooltip"
+                        >
+                            {{ child.title }}
+                        </li>
+    
+                    </ul>
                 </ul>
-            </ul>
-            <div v-for="i in [1,2,3,4]" :key="i" ref="disableToolTips" class="disable-nav-child-item-tooltips">
-                {{$t('switchToReleaseVersion')}}
-                <span v-if="isReleasePipeline" @click="switchToReleaseVersion" class="text-link">{{ $t('newlist.view') }}</span>
-            </div>
-        </aside>
-
-        <main class="pipeline-detail-entry-main">
-            <component :is="activeChild.component" v-bind="activeChild.props" />
-        </main>
-        <show-variable v-if="activeChild.showVar && pipeline" :editable="false" :pipeline="pipeline" />
+                <div v-for="i in [1,2]" :key="i" ref="disableToolTips" class="disable-nav-child-item-tooltips">
+                    {{$t('switchToReleaseVersion')}}
+                    <span v-if="isReleasePipeline" @click="switchToReleaseVersion" class="text-link">{{ $t('newlist.view') }}</span>
+                </div>
+            </aside>
+    
+            <main class="pipeline-detail-entry-main">
+                <component :is="activeChild.component" v-bind="activeChild.props" />
+            </main>
+            <show-variable v-if="activeChild.showVar && pipeline" :editable="false" :pipeline="pipeline" />
+        </template>
     </div>
 </template>
 
@@ -67,7 +69,7 @@
         },
         computed: {
             ...mapState('atom', ['pipelineInfo', 'pipeline', 'activePipelineVersion', 'switchingVersion']),
-            ...mapGetters('atom', ['isActiveDraftVersion', 'isReleaseVersion', 'isReleasePipeline']),
+            ...mapGetters('atom', ['isActiveDraftVersion', 'isReleaseVersion', 'isReleasePipeline', 'isBranchVersion']),
             activeMenuItem () {
                 return this.$route.params.type || 'history'
             },
@@ -80,23 +82,11 @@
                         title: this.$t('executeInfo'),
                         children: [
                             {
-                                title: this.$t(this.isActiveDraftVersion ? 'draftExecRecords' : 'pipelinesHistory'),
-                                disabled: !this.isReleaseVersion && !this.isActiveDraftVersion,
-                                disableTooltip: {
-                                    content: this.$refs.disableToolTips?.[0],
-                                    disabled: this.isReleaseVersion || this.isActiveDraftVersion,
-                                    delay: [300, 0]
-                                },
+                                title: this.$t('pipelinesHistory'),
                                 name: 'history'
                             },
                             {
                                 title: this.$t('triggerEvent'),
-                                disabled: !this.isReleaseVersion,
-                                disableTooltip: {
-                                    content: this.$refs.disableToolTips?.[1],
-                                    disabled: this.isReleaseVersion,
-                                    delay: [300, 0]
-                                },
                                 name: 'triggerEvent'
                             }
                             // , {
@@ -141,7 +131,7 @@
                             {
                                 title: this.$t('authSetting'),
                                 disableTooltip: {
-                                    content: this.$refs.disableToolTips?.[2],
+                                    content: this.$refs.disableToolTips?.[0],
                                     disabled: this.isReleaseVersion,
                                     delay: [300, 0]
                                 },
@@ -150,7 +140,7 @@
                             {
                                 title: this.$t('operationLog'),
                                 disableTooltip: {
-                                    content: this.$refs.disableToolTips?.[3],
+                                    content: this.$refs.disableToolTips?.[1],
                                     disabled: this.isReleaseVersion,
                                     delay: [300, 0]
                                 },
@@ -199,6 +189,11 @@
                         isDraft,
                         isRelease: data.status === VERSION_STATUS_ENUM.RELEASED
                     })
+                    if (isDraft) {
+                        this.$router.replace({
+                            name: 'pipelinesEdit'
+                        })
+                    }
                 } catch (error) {
                     console.log(error)
                 }

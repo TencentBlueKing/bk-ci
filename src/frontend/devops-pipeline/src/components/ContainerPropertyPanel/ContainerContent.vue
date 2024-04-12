@@ -39,7 +39,7 @@
                     :handle-change="changeBuildResource" :value="buildImageType">
                 </enum-input>
 
-                <section v-if="buildImageType === 'BKSTORE'" class="bk-image">
+                <section v-if="isBkStoreImageType" class="bk-image">
                     <section class="image-name">
                         <span :class="[
                             { disable: !editable },
@@ -399,6 +399,9 @@
             buildImageType () {
                 return this.container.dispatchType.imageType
             },
+            isBkStoreImageType () {
+                return this.buildImageType === 'BKSTORE'
+            },
             buildImageCode () {
                 return this.container.dispatchType && this.container.dispatchType.imageCode
             },
@@ -549,7 +552,7 @@
                     }).catch((err) => this.$showTips({ theme: 'error', message: err.message || err })).finally(() => (this.isLoadingImage = false))
                 }
             }
-            if (this.container.dispatchType && this.container.dispatchType.imageCode) {
+            if (this.container.dispatchType?.imageCode) {
                 this.getVersionList(this.container.dispatchType.imageCode)
             }
             if (this.buildResourceType === 'MACOS') this.getMacOsData()
@@ -592,7 +595,7 @@
                 }))
                 if (val === 'MACOS') this.getMacOsData()
                 if (val === 'WINDOWS') this.getWinData()
-                if (this.container.dispatchType && this.container.dispatchType.imageCode) {
+                if (this.container.dispatchType?.imageCode) {
                     this.getVersionList(this.container.dispatchType.imageCode)
                 }
             },
@@ -646,6 +649,7 @@
             },
 
             getVersionList (imageCode) {
+                if (!this.isBkStoreImageType) return
                 this.isVersionLoading = true
                 const data = {
                     projectCode: this.projectId,

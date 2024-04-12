@@ -156,8 +156,10 @@ OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
             insertFragmentAtPos (text, { stageIndex, containerIndex, elementIndex }) {
                 try {
                     const doc = YAML.parse(this.value)
-                    const jobs = Object.values(doc.stages[stageIndex].jobs)
-                    jobs[containerIndex].steps[elementIndex] = YAML.parse(text)[0]
+                    const jobs = this.getJobsByPos(doc, { stageIndex, containerIndex })
+                    
+                    // eslint-disable-next-line no-unused-vars
+                    jobs[elementIndex] = YAML.parse(text)[0]
                     const result = YAML.stringify(doc)
                     this.emitChange(result)
                 } catch (error) {
@@ -230,6 +232,9 @@ OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
                             containerIndex = -1
                         }
                         if (pair.key && pair.key.value === 'steps') {
+                            if (stageIndex < 0) {
+                                stageIndex = 0
+                            }
                             containerIndex++
                             if (Array.isArray(pair.value.items)) {
                                 steps = steps.concat(pair.value.items.map((item, index) => {
@@ -258,9 +263,19 @@ OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
             getAtomByPos ({ stageIndex, containerIndex, elementIndex }) {
                 try {
                     const doc = YAML.parse(this.value)
-                    const jobs = Object.values(doc.stages[stageIndex].jobs)
-
-                    return jobs[containerIndex].steps[elementIndex]
+                    const steps = this.getJobsByPos(doc, { stageIndex, containerIndex })
+                    return steps[elementIndex]
+                } catch (error) {
+                    return null
+                }
+            },
+            getJobsByPos (doc, { stageIndex, containerIndex }) {
+                try {
+                    if (doc.stages?.[stageIndex] || doc.jobs) {
+                        const jobs = doc.stages?.[stageIndex] ? Object.values(doc.stages[stageIndex].jobs) : Object.values(doc.jobs)
+                        return jobs[containerIndex]?.steps ?? jobs[containerIndex]
+                    }
+                    return doc.steps
                 } catch (error) {
                     return null
                 }

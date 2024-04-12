@@ -9,6 +9,7 @@
                     ref="versionSelectorInstance"
                     @change="handleVersionChange"
                     @showAllVersion="showVersionSideSlider"
+                    :include-draft="false"
                     refresh-list-on-expand
                 />
                 <div slot="content">
@@ -250,7 +251,6 @@
             async init () {
                 try {
                     const version = this.currentVersion
-                    console.log('watch,init', this.currentVersion)
                     if (version) {
                         this.setSwitchingPipelineVersion(true)
                         await this.requestPipeline({
@@ -290,11 +290,13 @@
                 if (version) {
                     this.selectPipelineVersion(version)
                     if (this.releaseVersion) {
-                        const noRecordVersion = ['history', 'triggerEvent'].includes(this.$route.params.type) && !(versionId === this.releaseVersion || version.isDraft)
+                        const noRecordVersion = ['history', 'triggerEvent'].includes(this.$route.params.type) && !(versionId === this.releaseVersion || version.isBranchVersion)
                         routeType = noRecordVersion ? pipelineTabIdMap.pipeline : this.$route.params.type
                     }
                 }
-                this.$router.push({
+                console.log('handleVersionChange', versionId, version?.status)
+                this.$router.replace({
+                    name: this.isActiveDraftVersion ? 'pipelinesEdit' : this.$route.params.name,
                     params: {
                         ...this.$route.params,
                         version: versionId,
