@@ -550,10 +550,13 @@ class WorkspaceDao {
         mountType: WorkspaceMountType? = null,
         projectIds: Set<String>? = null,
         ips: Set<String>? = null,
+        owners: Set<String>? = null,
         workspaceNames: Set<String>? = null
     ): Result<out Record>? {
         val t1 = TWorkspace.T_WORKSPACE.`as`("t1")
         val t2 = TWorkspaceWindows.T_WORKSPACE_WINDOWS.`as`("t2")
+        val shared = TWorkspaceShared.T_WORKSPACE_SHARED
+
         val conditions = mutableListOf<Condition>()
         conditions.add(
             t1.STATUS.notEqual(WorkspaceStatus.DELETED.ordinal)
@@ -580,6 +583,18 @@ class WorkspaceDao {
 
         if (!ips.isNullOrEmpty()) {
             conditions.add(t2.HOST_IP.likeRegex(ips.joinToString("|")))
+        }
+
+        if (!owners.isNullOrEmpty()) {
+            conditions.add(
+                t1.NAME.`in`(
+                    DSL.selectDistinct(shared.WORKSPACE_NAME).from(shared).where(
+                        shared.SHARED_USER.`in`(
+                            owners
+                        ).and(shared.ASSIGN_TYPE.eq(WorkspaceShared.AssignType.OWNER.name))
+                    )
+                )
+            )
         }
 
         return dslContext.selectDistinct(
