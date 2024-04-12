@@ -63,7 +63,9 @@ data class PreTemplateScriptBuildYamlV3(
     @JsonProperty("disable-pipeline")
     override var disablePipeline: Boolean? = null,
     @JsonProperty("recommended-version")
-    override var recommendedVersion: RecommendedVersion? = null
+    override var recommendedVersion: RecommendedVersion? = null,
+    @JsonProperty("custom-build-num")
+    override var customBuildNum: String? = null
 ) : IPreTemplateScriptBuildYaml, ITemplateFilter {
 
     init {

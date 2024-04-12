@@ -1764,6 +1764,9 @@
           }
         }
       }
+    },
+    "custom-build-num" : {
+      "type" : "string"
     }
   },
   "definitions" : {
@@ -2200,7 +2203,20 @@
               "type" : "string"
             },
             "checkout" : {
-              "type" : "string"
+              "oneOf" : [ {
+                "type" : "string"
+              }, {
+                "type" : "object",
+                "additionalProperties" : false,
+                "properties" : {
+                  "repo-id" : {
+                    "type" : "string"
+                  },
+                  "repo-name" : {
+                    "type" : "string"
+                  }
+                }
+              } ]
             },
             "if-modify" : {
               "$ref" : "#/definitions/ifModify"

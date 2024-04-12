@@ -77,7 +77,6 @@ class DispatchTransfer @Autowired(required = false) constructor(
         dispatcherWindows(job)?.let { return Pair(it, VMBaseOS.WINDOWS) }
         // macos构建机
         dispatcherMacos(job)?.let { return Pair(it, VMBaseOS.MACOS) }
-        println(job)
         // 转换失败
         throw PipelineTransferException(
             CommonMessageCode.DISPATCH_NOT_SUPPORT_TRANSFER,

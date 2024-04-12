@@ -91,6 +91,8 @@ import com.tencent.devops.process.yaml.v3.models.on.TriggerOn
 import com.tencent.devops.process.yaml.v3.models.stage.PreStage
 import com.tencent.devops.process.yaml.v3.models.stage.Stage
 import com.tencent.devops.process.yaml.v3.models.stage.StageLabel
+import com.tencent.devops.process.yaml.v3.models.step.CheckoutStep
+import com.tencent.devops.process.yaml.v3.models.step.PreCheckoutStep
 import com.tencent.devops.process.yaml.v3.models.step.Step
 import com.tencent.devops.process.yaml.v3.parameter.ParametersType
 import java.io.BufferedReader
@@ -416,7 +418,6 @@ object ScriptYmlUtils {
                     poolName = preRunsOn.toString()
                 )
             }
-            println("$preRunsOn")
             throw YamlFormatException(
                 I18nUtil.getCodeLanMessage(
                     messageCode = ERROR_YAML_FORMAT_EXCEPTION,
@@ -490,10 +491,26 @@ object ScriptYmlUtils {
             env = preStep.env,
             run = preStep.run,
             runAdditionalOptions = mapOf("shell" to preStep.shell),
-            checkout = preStep.checkout,
+            checkout = paresCheckout(preStep.checkout),
             manualRetry = preStep.manualRetry,
             taskId = taskId
         )
+    }
+
+    private fun paresCheckout(checkout: Any?): CheckoutStep? {
+        return when {
+            checkout == null -> null
+            checkout is String && checkout == "self" -> CheckoutStep(self = true)
+            checkout is String -> CheckoutStep(url = checkout)
+            checkout is Map<*, *> -> {
+                val preCheckout = kotlin.runCatching {
+                    YamlUtil.getObjectMapper().readValue(JsonUtil.toJson(checkout), PreCheckoutStep::class.java)
+                }.getOrNull()
+                CheckoutStep(repoName = preCheckout?.repoName, repoId = preCheckout?.repoId)
+            }
+
+            else -> null
+        }
     }
 
     private fun preStages2Stages(preStageList: List<PreStage>?, transferData: YamlTransferData?): List<Stage> {
