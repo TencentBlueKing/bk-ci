@@ -67,6 +67,10 @@ class PipelineRecordModelService @Autowired constructor(
     private val modelTaskIdGenerator: ModelTaskIdGenerator
 ) {
 
+    companion object {
+        private const val QUALITY_FLAG = "qualityFlag"
+    }
+
     /**
      * 生成构建变量模型map集合
      * @param mergeBuildRecordParam 合并流水线变量模型参数
@@ -181,24 +185,20 @@ class PipelineRecordModelService @Autowired constructor(
         val stageRecordTasks = buildRecordTasks.filter { it.stageId == stageId }
         val containers = mutableListOf<Map<String, Any>>()
         val stageNormalRecordContainers = stageRecordContainers.filter { it.matrixGroupId.isNullOrBlank() }
-        stageNormalRecordContainers.forEach { stageRecordContainer ->
-            val containerVarMap = stageRecordContainer.containerVar
-            val containerId = stageRecordContainer.containerId
-            containerVarMap[Container::id.name] = containerId
-            containerVarMap[Container::status.name] = stageRecordContainer.status ?: ""
-            containerVarMap[Container::executeCount.name] = stageRecordContainer.executeCount
-            containerVarMap[Container::containPostTaskFlag.name] = stageRecordContainer.containPostTaskFlag ?: false
+        stageNormalRecordContainers.forEach { stageNormalRecordContainer ->
+            val containerId = stageNormalRecordContainer.containerId
+            val containerVarMap = generateContainerVarMap(stageNormalRecordContainer, containerId)
             val containerBaseMap = (stageBaseMap[Stage::containers.name] as List<Map<String, Any>>).first {
                 it[Container::id.name] == containerId
             }
             val containerBaseModelMap = containerBaseMap.deepCopy<MutableMap<String, Any>>()
             handleContainerRecordTask(
                 stageRecordTasks = stageRecordTasks,
-                buildRecordContainer = stageRecordContainer,
+                buildRecordContainer = stageNormalRecordContainer,
                 containerVarMap = containerVarMap,
                 containerBaseMap = containerBaseModelMap
             )
-            val matrixGroupFlag = stageRecordContainer.matrixGroupFlag
+            val matrixGroupFlag = stageNormalRecordContainer.matrixGroupFlag
             if (matrixGroupFlag == true) {
                 // 过滤出矩阵分裂出的job数据
                 val matrixRecordContainers =
@@ -206,13 +206,8 @@ class PipelineRecordModelService @Autowired constructor(
                 val groupContainers = mutableListOf<Map<String, Any>>()
                 matrixRecordContainers.forEach { matrixRecordContainer ->
                     // 生成矩阵job的变量模型
-                    var matrixContainerVarMap = matrixRecordContainer.containerVar
                     val matrixContainerId = matrixRecordContainer.containerId
-                    matrixContainerVarMap[Container::id.name] = matrixContainerId
-                    matrixContainerVarMap[Container::status.name] = matrixRecordContainer.status ?: ""
-                    matrixContainerVarMap[Container::executeCount.name] = matrixRecordContainer.executeCount
-                    matrixContainerVarMap[Container::containPostTaskFlag.name] =
-                        matrixRecordContainer.containPostTaskFlag ?: false
+                    var matrixContainerVarMap = generateContainerVarMap(matrixRecordContainer, matrixContainerId)
                     handleContainerRecordTask(
                         stageRecordTasks = stageRecordTasks,
                         buildRecordContainer = matrixRecordContainer,
@@ -235,18 +230,30 @@ class PipelineRecordModelService @Autowired constructor(
         stageVarMap[Stage::containers.name] = containers
     }
 
+    private fun generateContainerVarMap(
+        recordContainer: BuildRecordContainer,
+        containerId: String
+    ): MutableMap<String, Any> {
+        val containerVarMap = recordContainer.containerVar
+        containerVarMap[Container::id.name] = containerId
+        containerVarMap[Container::status.name] = recordContainer.status ?: ""
+        containerVarMap[Container::executeCount.name] = recordContainer.executeCount
+        containerVarMap[Container::containPostTaskFlag.name] = recordContainer.containPostTaskFlag ?: false
+        return containerVarMap
+    }
+
     private fun handleContainerRecordTask(
         stageRecordTasks: List<BuildRecordTask>,
         buildRecordContainer: BuildRecordContainer,
         containerVarMap: MutableMap<String, Any>,
-        containerBaseMap: Map<String, Any>,
+        containerBaseMap: MutableMap<String, Any>,
         matrixTaskFlag: Boolean = false
     ) {
         val containerId = buildRecordContainer.containerId
         // 过滤出job下的task变量数据
         val containerRecordTasks = stageRecordTasks.filter { it.containerId == containerId }.sortedBy { it.taskSeq }
         val tasks = mutableListOf<Map<String, Any>>()
-        val taskBaseMaps = containerBaseMap[Container::elements.name] as List<Map<String, Any>>
+        val taskBaseMaps = (containerBaseMap[Container::elements.name] as List<Map<String, Any>>).toMutableList()
         // 如果job下的task都被跳过，则使用流水线model的element节点生成task模型
         val containerExecuteCount = buildRecordContainer.executeCount
         if (buildRecordContainer.matrixGroupFlag != true && containerRecordTasks.isEmpty()) {
@@ -259,30 +266,41 @@ class PipelineRecordModelService @Autowired constructor(
         }
         val lastElementTaskId = taskBaseMaps[taskBaseMaps.size - 1][Element::id.name].toString()
         var supplementSkipTaskFlag = true
-        var lastContainerRecordSeq = 1
+        var preContainerRecordTaskSeq = 1
+        // 获取开机任务的序号
+        val startVMTaskSeq = buildRecordContainer.containerVar[Container::startVMTaskSeq.name]?.toString()?.toInt() ?: 1
         containerRecordTasks.forEach { containerRecordTask ->
-            while (containerRecordTask.taskSeq - lastContainerRecordSeq > 1) {
-                // 补充跳过的task对象
-                val taskBaseMap = taskBaseMaps[lastContainerRecordSeq - 1]
-                val taskVarMap = generateSkipTaskVarModel(matrixTaskFlag, taskBaseMap, containerRecordTask.executeCount)
-                if (taskVarMap[Element::id.name].toString() == lastElementTaskId) {
-                    supplementSkipTaskFlag = false
-                }
-                tasks.add(taskVarMap)
-                lastContainerRecordSeq++
+            if (startVMTaskSeq > 1 && startVMTaskSeq > containerRecordTask.taskSeq) {
+                // 当开机任务的序号大于1时，说明第一个任务不是开机任务，job含有内置插件任务，需要重新调整开机任务前面的task任务的taskSeq值
+                containerRecordTask.taskSeq += 1
             }
-            val taskId = containerRecordTask.taskId
-            if (matrixTaskFlag || taskId == lastElementTaskId) {
-                supplementSkipTaskFlag = false
-            }
-            lastContainerRecordSeq = containerRecordTask.taskSeq
             val taskVarMap = generateTaskVarMap(
                 containerRecordTask = containerRecordTask,
-                taskId = taskId,
+                taskId = containerRecordTask.taskId,
                 containerBaseMap = containerBaseMap,
                 matrixTaskFlag = matrixTaskFlag,
                 taskBaseMaps = taskBaseMaps
             )
+            while (containerRecordTask.taskSeq - preContainerRecordTaskSeq > 1) {
+                // 补充跳过的task对象
+                val taskBaseMap = taskBaseMaps[preContainerRecordTaskSeq - 1]
+                val skipTaskVarMap = generateSkipTaskVarModel(
+                    matrixTaskFlag = matrixTaskFlag,
+                    taskBaseMap = taskBaseMap,
+                    executeCount = containerRecordTask.executeCount,
+                    mergeFlag = containerBaseMap[QUALITY_FLAG] == true
+                )
+                if (skipTaskVarMap[Element::id.name].toString() == lastElementTaskId) {
+                    supplementSkipTaskFlag = false
+                }
+                tasks.add(skipTaskVarMap)
+                preContainerRecordTaskSeq++
+            }
+            if (containerRecordTask.elementPostInfo != null || containerRecordTask.taskId == lastElementTaskId) {
+                // 当job含有post任务或者db中存在model最后一个插件的任务记录，则不需要再补充跳过的task任务
+                supplementSkipTaskFlag = false
+            }
+            preContainerRecordTaskSeq = containerRecordTask.taskSeq
             tasks.add(taskVarMap)
         }
         // 判断当前job执行的task任务后是否还有跳过的task任务，有则继续补充跳过的task对象
@@ -304,9 +322,9 @@ class PipelineRecordModelService @Autowired constructor(
     private fun generateTaskVarMap(
         containerRecordTask: BuildRecordTask,
         taskId: String,
-        containerBaseMap: Map<String, Any>,
+        containerBaseMap: MutableMap<String, Any>,
         matrixTaskFlag: Boolean,
-        taskBaseMaps: List<Map<String, Any>>
+        taskBaseMaps: MutableList<Map<String, Any>>
     ): MutableMap<String, Any> {
         var taskVarMap = containerRecordTask.taskVar
         taskVarMap[Element::id.name] = taskId
@@ -318,14 +336,23 @@ class PipelineRecordModelService @Autowired constructor(
             taskVarMap = doElementPostInfoBus(elementPostInfo, taskVarMap, containerBaseMap)
         }
         val classType = containerRecordTask.classType
-        if (classType in listOf(QualityGateInElement.classType, QualityGateOutElement.classType)) {
+        val atomCode = containerRecordTask.atomCode
+        val qualityTaskFlag = atomCode in listOf(QualityGateInElement.classType, QualityGateOutElement.classType)
+        val taskBaseMapIndex = containerRecordTask.taskSeq - 2
+        if (qualityTaskFlag) {
             // 补充质量红线相关信息以便详情页模型数据组装合并
             taskVarMap["@type"] = classType
-            taskVarMap[KEY_ATOM_CODE] = containerRecordTask.atomCode
+            taskVarMap[KEY_ATOM_CODE] = atomCode
+            taskBaseMaps.add(taskBaseMapIndex, taskVarMap)
+            // 把当前job中含有质量红线的标识写入job模型
+            containerBaseMap[QUALITY_FLAG] = true
         }
-        if (matrixTaskFlag && elementPostInfo == null) {
-            // 生成矩阵task的变量模型
-            val taskBaseMap = taskBaseMaps[containerRecordTask.taskSeq - 2]
+        // 当前job是矩阵类型或者质量红线任务标识为true，且当前任务不是post任务或者质量红线任务，则需要生成完整的task变量模型以便后面和model合并
+        val mergeTaskVarFlag = (matrixTaskFlag || containerBaseMap[QUALITY_FLAG] == true) &&
+            elementPostInfo == null && !qualityTaskFlag
+        if (mergeTaskVarFlag) {
+            // 生成完整的task的变量模型
+            val taskBaseMap = taskBaseMaps[taskBaseMapIndex]
             taskVarMap = ModelUtils.generateBuildModelDetail(taskBaseMap.deepCopy(), taskVarMap)
         }
         return taskVarMap
@@ -339,19 +366,24 @@ class PipelineRecordModelService @Autowired constructor(
         tasks: MutableList<Map<String, Any>>
     ) {
         val containerResourceRecordTasks = containerRecordTasks.filter {
-            it.elementPostInfo == null && it.classType !in listOf(
-                QualityGateInElement.classType, QualityGateOutElement.classType
-            )
+            it.elementPostInfo == null
         }.sortedBy { it.taskSeq }
         if (containerResourceRecordTasks.isNotEmpty()) {
-            val lastResourceRecordTaskId = containerResourceRecordTasks[containerResourceRecordTasks.size - 1].taskId
-            val lastResourceRecordTaskBaseMap =
-                taskBaseMaps.firstOrNull { it[Element::id.name] == lastResourceRecordTaskId }
-            val lastResourceRecordTaskIndex = taskBaseMaps.indexOf(lastResourceRecordTaskBaseMap)
+            val lastResourceRecordTaskSeq = containerResourceRecordTasks[containerResourceRecordTasks.size - 1].taskSeq
+            val lastResourceRecordTaskIndex = lastResourceRecordTaskSeq - 2
             val taskBaseMapNum = taskBaseMaps.size
             if (taskBaseMapNum - lastResourceRecordTaskIndex > 1) {
+                // 如果job里含有质量红线任务，则后续跳过的任务都需要生成完整的变量模型以便和model合并
+                val mergeFlag = containerResourceRecordTasks.firstOrNull {
+                    it.atomCode in listOf(QualityGateInElement.classType, QualityGateOutElement.classType)
+                } != null
                 for (i in lastResourceRecordTaskIndex + 1 until taskBaseMapNum) {
-                    val taskVarMap = generateSkipTaskVarModel(matrixTaskFlag, taskBaseMaps[i], containerExecuteCount)
+                    val taskVarMap = generateSkipTaskVarModel(
+                        matrixTaskFlag = matrixTaskFlag,
+                        taskBaseMap = taskBaseMaps[i],
+                        executeCount = containerExecuteCount,
+                        mergeFlag = mergeFlag
+                    )
                     tasks.add(taskVarMap)
                 }
             }
@@ -394,7 +426,8 @@ class PipelineRecordModelService @Autowired constructor(
     private fun generateSkipTaskVarModel(
         matrixTaskFlag: Boolean,
         taskBaseMap: Map<String, Any>,
-        executeCount: Int
+        executeCount: Int,
+        mergeFlag: Boolean = false
     ): MutableMap<String, Any> {
         var taskVarMap = mutableMapOf<String, Any>()
         val taskId = if (matrixTaskFlag) {
@@ -412,6 +445,8 @@ class PipelineRecordModelService @Autowired constructor(
                 taskBaseMap[MatrixStatusElement::classType.name].toString()
             taskVarMap[MatrixStatusElement::originAtomCode.name] = taskBaseMap[KEY_ATOM_CODE].toString()
             taskVarMap[MatrixStatusElement::originTaskAtom.name] = taskBaseMap[KEY_TASK_ATOM].toString()
+            taskVarMap = ModelUtils.generateBuildModelDetail(taskBaseMap.deepCopy(), taskVarMap)
+        } else if (mergeFlag) {
             taskVarMap = ModelUtils.generateBuildModelDetail(taskBaseMap.deepCopy(), taskVarMap)
         }
         return taskVarMap

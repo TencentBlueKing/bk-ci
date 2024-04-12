@@ -27,6 +27,7 @@
 
 package com.tencent.devops.common.pipeline.utils
 
+import com.tencent.devops.common.api.exception.InvalidParamException
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.pipeline.pojo.MatrixPipelineInfo
 
@@ -46,7 +47,7 @@ object MatrixYamlCheckUtils {
                 )
                 null
             } catch (ignore: Throwable) {
-                ignore.message
+                throw InvalidParamException("[include] field is not a legal yaml or fromJSON method")
             },
             exclude = try {
                 MatrixContextUtils.schemaCheck(
@@ -60,7 +61,7 @@ object MatrixYamlCheckUtils {
                 )
                 null
             } catch (ignore: Throwable) {
-                ignore.message
+                throw InvalidParamException("[exclude] field is not a legal yaml or fromJSON method")
             },
             strategy = try {
                 MatrixContextUtils.schemaCheck(
@@ -74,7 +75,7 @@ object MatrixYamlCheckUtils {
                 )
                 null
             } catch (ignore: Throwable) {
-                ignore.message
+                throw InvalidParamException("[strategy] field is not a legal yaml or fromJSON method")
             }
         )
         return matrixPipelineInfo

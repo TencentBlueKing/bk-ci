@@ -28,6 +28,9 @@
 package com.tencent.devops.project.service.impl
 
 import com.fasterxml.jackson.databind.ObjectMapper
+import com.tencent.bk.audit.annotations.ActionAuditRecord
+import com.tencent.bk.audit.annotations.AuditInstanceRecord
+import com.tencent.bk.audit.context.ActionAuditContext
 import com.tencent.devops.common.api.enums.SystemModuleEnum
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.InvalidParamException
@@ -40,9 +43,17 @@ import com.tencent.devops.common.api.util.FileUtil
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.api.util.UUIDUtil
+import com.tencent.devops.common.audit.ActionAuditContent.PROJECT_CREATE_CONTENT
+import com.tencent.devops.common.audit.ActionAuditContent.PROJECT_EDIT_CONTENT
+import com.tencent.devops.common.audit.ActionAuditContent.PROJECT_ENABLE_CONTENT
+import com.tencent.devops.common.audit.ActionAuditContent.PROJECT_ENABLE_OR_DISABLE_TEMPLATE
+import com.tencent.devops.common.auth.api.ActionId.PROJECT_CREATE
+import com.tencent.devops.common.auth.api.ActionId.PROJECT_EDIT
+import com.tencent.devops.common.auth.api.ActionId.PROJECT_ENABLE
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthPermissionApi
 import com.tencent.devops.common.auth.api.AuthResourceType
+import com.tencent.devops.common.auth.api.ResourceTypeId.PROJECT
 import com.tencent.devops.common.auth.api.pojo.MigrateProjectConditionDTO
 import com.tencent.devops.common.auth.api.pojo.ResourceRegisterInfo
 import com.tencent.devops.common.auth.api.pojo.SubjectScopeInfo
@@ -63,6 +74,7 @@ import com.tencent.devops.project.constant.ProjectMessageCode.BOUND_IAM_GRADIENT
 import com.tencent.devops.project.constant.ProjectMessageCode.PROJECT_NOT_EXIST
 import com.tencent.devops.project.constant.ProjectMessageCode.UNDER_APPROVAL_PROJECT
 import com.tencent.devops.project.dao.ProjectDao
+import com.tencent.devops.project.dao.ProjectUpdateHistoryDao
 import com.tencent.devops.project.dispatch.ProjectDispatcher
 import com.tencent.devops.project.jmx.api.ProjectJmxApi
 import com.tencent.devops.project.jmx.api.ProjectJmxApi.Companion.PROJECT_LIST
@@ -74,9 +86,11 @@ import com.tencent.devops.project.pojo.ProjectCreateInfo
 import com.tencent.devops.project.pojo.ProjectDiffVO
 import com.tencent.devops.project.pojo.ProjectLogo
 import com.tencent.devops.project.pojo.ProjectOrganizationInfo
+import com.tencent.devops.project.pojo.ProjectProductValidateDTO
 import com.tencent.devops.project.pojo.ProjectProperties
 import com.tencent.devops.project.pojo.ProjectSortType
 import com.tencent.devops.project.pojo.ProjectUpdateCreatorDTO
+import com.tencent.devops.project.pojo.ProjectUpdateHistoryInfo
 import com.tencent.devops.project.pojo.ProjectUpdateInfo
 import com.tencent.devops.project.pojo.ProjectVO
 import com.tencent.devops.project.pojo.ProjectWithPermission
@@ -84,8 +98,10 @@ import com.tencent.devops.project.pojo.ResourceUpdateInfo
 import com.tencent.devops.project.pojo.Result
 import com.tencent.devops.project.pojo.enums.ProjectApproveStatus
 import com.tencent.devops.project.pojo.enums.ProjectChannelCode
+import com.tencent.devops.project.pojo.enums.ProjectOperation
 import com.tencent.devops.project.pojo.enums.ProjectTipsStatus
 import com.tencent.devops.project.pojo.enums.ProjectValidateType
+import com.tencent.devops.project.pojo.mq.ProjectEnableStatusBroadCastEvent
 import com.tencent.devops.project.pojo.mq.ProjectUpdateBroadCastEvent
 import com.tencent.devops.project.pojo.mq.ProjectUpdateLogoBroadCastEvent
 import com.tencent.devops.project.pojo.user.UserDeptDetail
@@ -123,7 +139,8 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
     private val projectExtService: ProjectExtService,
     private val projectApprovalService: ProjectApprovalService,
     private val clientTokenService: ClientTokenService,
-    private val profile: Profile
+    private val profile: Profile,
+    private val projectUpdateHistoryDao: ProjectUpdateHistoryDao
 ) : ProjectService {
 
     override fun validate(validateType: ProjectValidateType, name: String, projectId: String?) {
@@ -183,6 +200,16 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
     /**
      * 创建项目信息
      */
+    @ActionAuditRecord(
+        actionId = PROJECT_CREATE,
+        instance = AuditInstanceRecord(
+            resourceType = PROJECT,
+            instanceIds = "#projectCreateInfo?.englishName",
+            instanceNames = "#projectCreateInfo?.projectName"
+        ),
+        scopeId = "#projectCreateInfo?.englishName",
+        content = PROJECT_CREATE_CONTENT
+    )
     override fun create(
         userId: String,
         projectCreateInfo: ProjectCreateInfo,
@@ -196,6 +223,15 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
             validate(ProjectValidateType.project_name, projectCreateInfo.projectName)
             validate(ProjectValidateType.english_name, projectCreateInfo.englishName)
         }
+        validateProjectRelateProduct(
+            ProjectProductValidateDTO(
+                englishName = projectCreateInfo.englishName,
+                userId = userId,
+                projectOperation = ProjectOperation.CREATE,
+                channelCode = projectChannel,
+                productId = projectCreateInfo.productId
+            )
+        )
         val userDeptDetail = getDeptInfo(userId)
         var projectId = defaultProjectId
         val subjectScopes = projectCreateInfo.subjectScopes!!.ifEmpty {
@@ -208,6 +244,7 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
             ProjectApproveStatus.APPROVED.status
         }
         val projectInfo = organizationMarkUp(projectCreateInfo, userDeptDetail)
+        ActionAuditContext.current().setInstance(projectCreateInfo)
         try {
             if (createExtInfo.needAuth!!) {
                 val authProjectCreateInfo = AuthProjectCreateInfo(
@@ -360,14 +397,6 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
         return projectVO
     }
 
-    override fun getByEnglishNameWithoutPerm(englishName: String): ProjectVO? {
-        val record = projectDao.getByEnglishName(
-            dslContext = dslContext,
-            englishName = englishName
-        ) ?: return null
-        return ProjectUtils.packagingBean(record)
-    }
-
     override fun show(userId: String, englishName: String, accessToken: String?): ProjectVO? {
         val record = projectDao.getByEnglishName(dslContext, englishName) ?: return null
         val rightProjectOrganization = fixProjectOrganization(tProjectRecord = record)
@@ -433,6 +462,16 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
         return ProjectUtils.packagingBean(record)
     }
 
+    @ActionAuditRecord(
+        actionId = PROJECT_EDIT,
+        instance = AuditInstanceRecord(
+            resourceType = PROJECT,
+            instanceIds = "#englishName",
+            instanceNames = "#projectUpdateInfo?.projectName"
+        ),
+        scopeId = "#englishName",
+        content = PROJECT_EDIT_CONTENT
+    )
     override fun update(
         userId: String,
         englishName: String,
@@ -444,6 +483,14 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
             validateType = ProjectValidateType.project_name,
             name = projectUpdateInfo.projectName,
             projectId = projectUpdateInfo.englishName
+        )
+        validateProjectRelateProduct(
+            ProjectProductValidateDTO(
+                englishName = englishName,
+                userId = userId,
+                projectOperation = ProjectOperation.UPDATE,
+                productId = projectUpdateInfo.productId
+            )
         )
         val startEpoch = System.currentTimeMillis()
         var success = false
@@ -461,6 +508,11 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
                     dslContext = dslContext,
                     englishName = englishName
                 ) ?: throw NotFoundException("project - $englishName is not exist!")
+                // 审计
+                ActionAuditContext.current()
+                    .setOriginInstance(ProjectUtils.packagingBean(projectInfo))
+                    .setInstance(projectUpdateInfo)
+
                 val approvalStatus = ProjectApproveStatus.parse(projectInfo.approvalStatus)
                 if (approvalStatus.isSuccess() || projectInfo.creator != userId) {
                     val verify = validatePermission(projectUpdateInfo.englishName, userId, AuthPermission.EDIT)
@@ -534,6 +586,24 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
                         }
                     }
                 }
+                // 记录项目更新记录
+                val projectUpdateHistoryInfo = ProjectUpdateHistoryInfo(
+                    englishName = englishName,
+                    beforeProjectName = projectInfo.projectName,
+                    afterProjectName = projectUpdateInfo.projectName,
+                    beforeProductId = projectInfo.productId,
+                    afterProductId = projectUpdateInfo.productId,
+                    beforeOrganization = with(projectInfo) { getOrganizationStr(bgName, businessLineName, deptName, centerName) },
+                    afterOrganization = with(projectUpdateInfo) { getOrganizationStr(bgName, businessLineName, deptName, centerName) },
+                    beforeSubjectScopes = projectInfo.subjectScopes,
+                    afterSubjectScopes = subjectScopesStr,
+                    operator = userId,
+                    approvalStatus = newApprovalStatus
+                )
+                projectUpdateHistoryDao.create(
+                    dslContext = dslContext,
+                    projectUpdateHistoryInfo = projectUpdateHistoryInfo
+                )
                 if (!projectUpdateInfo.secrecy) {
                     redisOperation.removeSetMember(SECRECY_PROJECT_REDIS_KEY, projectUpdateInfo.englishName)
                 } else {
@@ -556,6 +626,17 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
             projectJmxApi.execute(ProjectJmxApi.PROJECT_UPDATE, System.currentTimeMillis() - startEpoch, success)
         }
         return success
+    }
+
+    private fun getOrganizationStr(
+        bgName: String?,
+        businessLineName: String?,
+        deptName: String?,
+        centerName: String?
+    ): String {
+        return listOf(
+            bgName, businessLineName, deptName, centerName
+        ).filter { !it.isNullOrBlank() }.joinToString("-")
     }
 
     /**
@@ -886,7 +967,8 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
                 projectName = it.projectName,
                 englishName = it.englishName,
                 permission = true,
-                routerTag = buildRouterTag(it.routerTag)
+                routerTag = buildRouterTag(it.routerTag),
+                bgId = it.bgId
             )
         }
     }
@@ -1041,6 +1123,15 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
         return projectDao.updateProjectName(dslContext, projectId, projectName) > 0
     }
 
+    @ActionAuditRecord(
+        actionId = PROJECT_ENABLE,
+        instance = AuditInstanceRecord(
+            resourceType = PROJECT,
+            instanceIds = "#englishName"
+        ),
+        scopeId = "#englishName",
+        content = PROJECT_ENABLE_CONTENT
+    )
     override fun updateUsableStatus(
         userId: String?,
         englishName: String,
@@ -1065,17 +1156,38 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
                     I18nUtil.getCodeLanMessage(ProjectMessageCode.PEM_CHECK_FAIL)
                 )
             }
-            validateProjectRelateProduct(
-                userId = userId,
-                enabled = enabled,
-                productId = projectInfo.productId
-            )
+            if (enabled) {
+                validateProjectRelateProduct(
+                    ProjectProductValidateDTO(
+                        englishName = englishName,
+                        userId = userId,
+                        projectOperation = ProjectOperation.ENABLE,
+                        productId = projectInfo.productId
+                    )
+                )
+            }
+        }
+        ActionAuditContext.current()
+            .setInstanceName(projectInfo.projectName)
+        if (enabled) {
+            ActionAuditContext.current()
+                .addAttribute(PROJECT_ENABLE_OR_DISABLE_TEMPLATE, "enable")
+        } else {
+            ActionAuditContext.current()
+                .addAttribute(PROJECT_ENABLE_OR_DISABLE_TEMPLATE, "disable")
         }
         projectDao.updateUsableStatus(
             dslContext = dslContext,
             userId = userId,
             projectId = projectInfo.projectId,
             enabled = enabled
+        )
+        projectDispatcher.dispatch(
+            ProjectEnableStatusBroadCastEvent(
+                userId = userId ?: "",
+                projectId = englishName,
+                enabled = enabled
+            )
         )
     }
 
@@ -1291,16 +1403,23 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
 
     override fun updateProjectProductId(
         englishName: String,
-        productName: String
+        productName: String?,
+        productId: Int?
     ) {
         logger.info("update project productId|$englishName|$productName")
+        if (productId == null && productName == null) {
+            throw NotFoundException("productName or productId must not be null")
+        }
         projectDao.getByEnglishName(
             dslContext = dslContext,
             englishName = englishName
         ) ?: throw NotFoundException("project - $englishName is not exist!")
-        val product = getOperationalProducts().firstOrNull {
-            it.productName == productName
-        } ?: throw NotFoundException("product - $productName is not exist!")
+        val products = getOperationalProducts()
+        val product = if (productId != null) {
+            products.firstOrNull { it.productId == productId }
+        } else {
+            products.firstOrNull { it.productName == productName }
+        } ?: throw NotFoundException("product is not exist!")
         projectDao.updateProductId(
             dslContext = dslContext,
             englishName = englishName,
@@ -1317,6 +1436,24 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
             englishName = englishName,
             projectOrganizationInfo = projectOrganizationInfo
         )
+    }
+
+    override fun getProjectListByProductId(productId: Int): List<ProjectBaseInfo> {
+        return projectDao.getProjectListByProductId(
+            dslContext = dslContext,
+            productId = productId
+        ).map {
+            ProjectBaseInfo(
+                id = it.value1(),
+                englishName = it.value2(),
+                projectName = it.value3(),
+                enabled = it.value4()
+            )
+        }
+    }
+
+    override fun getExistedEnglishName(englishNameList: List<String>): List<String>? {
+        return projectDao.getExistedEnglishName(dslContext, englishNameList)
     }
 
     abstract fun validatePermission(projectCode: String, userId: String, permission: AuthPermission): Boolean
@@ -1366,9 +1503,7 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
     abstract fun buildRouterTag(routerTag: String?): String?
 
     abstract fun validateProjectRelateProduct(
-        userId: String,
-        enabled: Boolean,
-        productId: Int?
+        projectProductValidateDTO: ProjectProductValidateDTO
     )
 
     companion object {

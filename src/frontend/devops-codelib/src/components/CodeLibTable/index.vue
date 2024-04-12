@@ -547,7 +547,8 @@
                     scmType: this.scmType,
                     id: this.selectId,
                     page: this.page,
-                    limit: this.pagination.limit
+                    limit: this.pagination.limit,
+                    projectId: this.projectId
                 }))
             },
 
@@ -593,6 +594,11 @@
                                     message: this.$t('codelib.successfullyDeleted'),
                                     theme: 'success'
                                 })
+                            }).catch((e) => {
+                                this.$bkMessage({
+                                    message: e.message || e,
+                                    theme: 'error'
+                                })
                             })
                         }
                     })
@@ -630,6 +636,13 @@
                 this.$refs.list.clearSort()
                 this.$emit('update:aliasName', '')
                 this.$emit('handleSortChange', { sortBy: '', sortType: '' })
+                localStorage.removeItem(CODE_REPOSITORY_SEARCH_VAL)
+                this.$router.push({
+                    query: {
+                        ...this.$route.query,
+                        searchName: ''
+                    }
+                })
             },
 
             handelHeaderDragend (newWidth, oldWidth, column) {

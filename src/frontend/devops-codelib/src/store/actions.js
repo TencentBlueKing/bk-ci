@@ -466,11 +466,11 @@ const actions = {
         eventId = '',
         eventType = '',
         triggerUser = '',
-        pipelineName = '',
+        pipelineId = '',
         startTime = '',
         endTime = ''
     }) {
-        return vue.$ajax.get(`${PROCESS_API_URL_PREFIX}/user/trigger/event/${projectId}/${repositoryHashId}/listRepoTriggerEvent?page=${page}&pageSize=${pageSize}&triggerType=${triggerType}&eventType=${eventType}&triggerUser=${triggerUser}&pipelineName=${pipelineName}&startTime=${startTime}&endTime=${endTime}&eventId=${eventId}`)
+        return vue.$ajax.get(`${PROCESS_API_URL_PREFIX}/user/trigger/event/${projectId}/${repositoryHashId}/listRepoTriggerEvent?page=${page}&pageSize=${pageSize}&triggerType=${triggerType}&eventType=${eventType}&triggerUser=${triggerUser}&pipelineId=${pipelineId}&startTime=${startTime}&endTime=${endTime}&eventId=${eventId}`)
     },
 
     /**
@@ -481,10 +481,10 @@ const actions = {
         eventId,
         page,
         pageSize,
-        pipelineName
+        pipelineId
     }) {
         let queryUrl = ''
-        queryUrl = pipelineName ? `page=${page}&pageSize=${pageSize}&pipelineName=${pipelineName}` : `page=${page}&pageSize=${pageSize}`
+        queryUrl = pipelineId ? `page=${page}&pageSize=${pageSize}&pipelineId=${pipelineId}` : `page=${page}&pageSize=${pageSize}`
         return vue.$ajax.get(`${PROCESS_API_URL_PREFIX}/user/trigger/event/${projectId}/${eventId}/listEventDetail?${queryUrl}`)
     },
 
@@ -591,6 +591,16 @@ const actions = {
         pageSize
     }) {
         return vue.$ajax.get(`${PROCESS_API_URL_PREFIX}/user/pipeline/yaml/${projectId}/${repositoryHashId}/listYamlPipeline?page=${page}&pageSize=${pageSize}`)
+    },
+    
+    fetchPipelinesByName ({ commit }, {
+        projectId,
+        keyword = ''
+    }) {
+        return vue.$ajax.get(`${PROCESS_API_URL_PREFIX}/user/pipelineInfos/${projectId}/searchByName?pipelineName=${keyword}`).then(data => data.map(_ => ({
+            id: _.pipelineId,
+            name: _.pipelineName
+        })))
     }
 }
 
