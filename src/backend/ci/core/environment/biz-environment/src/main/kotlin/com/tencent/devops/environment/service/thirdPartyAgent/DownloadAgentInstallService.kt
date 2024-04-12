@@ -98,7 +98,6 @@ class DownloadAgentInstallService @Autowired constructor(
             }else{
                 "install.bat"
             }
-
         } else {
             "install.sh"
         }
