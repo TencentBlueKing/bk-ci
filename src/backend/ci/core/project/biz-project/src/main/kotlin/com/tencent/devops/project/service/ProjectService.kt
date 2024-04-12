@@ -252,7 +252,7 @@ interface ProjectService {
 
     fun getOperationalProducts(): List<OperationalProductVO>
 
-    fun getOperationalProductsByDictType(dictType: ProjectProductDictType): List<OperationalProductVO>
+    fun getOperationalProductsByBgName(bgName: String): List<OperationalProductVO>
 
     fun updateProjectProductId(
         englishName: String,

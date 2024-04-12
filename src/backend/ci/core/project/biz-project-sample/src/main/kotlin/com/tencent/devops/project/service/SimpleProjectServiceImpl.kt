@@ -218,7 +218,7 @@ class SimpleProjectServiceImpl @Autowired constructor(
         )
     }
 
-    override fun getOperationalProductsByDictType(dictType: ProjectProductDictType): List<OperationalProductVO> {
+    override fun getOperationalProductsByBgName(bgName: String): List<OperationalProductVO> {
         return listOf(
             OperationalProductVO(
                 productId = -1,
