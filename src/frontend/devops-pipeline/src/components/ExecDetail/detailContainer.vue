@@ -126,7 +126,7 @@
                 }
             }
             &.black-theme {
-                background: #2C2D34;
+                background: #1A1A1A;
             }
             &.white-theme {
                 background: #fff;
