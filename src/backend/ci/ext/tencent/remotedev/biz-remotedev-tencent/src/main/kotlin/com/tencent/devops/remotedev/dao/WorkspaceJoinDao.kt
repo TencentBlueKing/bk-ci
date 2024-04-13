@@ -515,6 +515,21 @@ class WorkspaceJoinDao {
             .toSet()
     }
 
+    // 获取正在运行的 workspace 的用户
+    fun fetchProjectSharedUser(
+        dslContext: DSLContext,
+        projectId: String
+    ): Set<String> {
+        return dslContext.select(TWorkspace.T_WORKSPACE.PROJECT_ID)
+            .from(TWorkspace.T_WORKSPACE, TWorkspaceShared.T_WORKSPACE_SHARED)
+            .where(TWorkspace.T_WORKSPACE.NAME.eq(TWorkspaceShared.T_WORKSPACE_SHARED.WORKSPACE_NAME))
+            .and(TWorkspace.T_WORKSPACE.STATUS.notEqual(WorkspaceStatus.DELETED.ordinal))
+            .fetch().distinct()
+            .map { it[TWorkspaceShared.T_WORKSPACE_SHARED.SHARED_USER] as String? ?: "" }
+            .filter { it.isNotBlank() }
+            .toSet()
+    }
+
     class TWorkspaceFieldJooqMapper : RecordMapper<Record, WorkspaceRecord> {
         override fun map(record: Record?): WorkspaceRecord? {
             if (record == null) {
