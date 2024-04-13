@@ -46,6 +46,14 @@ import (
 )
 
 func StartProcess(command string, args []string, workDir string, envMap map[string]string, runUser string) (int, error) {
+	cmd, err := StartProcessCmd(command, args, workDir, envMap, runUser)
+	if err != nil {
+		return -1, err
+	}
+	return cmd.Process.Pid, nil
+}
+
+func StartProcessCmd(command string, args []string, workDir string, envMap map[string]string, runUser string) (*exec.Cmd, error) {
 	cmd := exec.Command(command)
 
 	if len(args) > 0 {
@@ -66,8 +74,7 @@ func StartProcess(command string, args []string, workDir string, envMap map[stri
 	err := setUser(cmd, runUser)
 	if err != nil {
 		logs.Error("set user failed: ", err.Error())
-		return -1, errors.New(
-			fmt.Sprintf("%s, Please check [devops.slave.user] in the {agent_dir}/.agent.properties", err.Error()))
+		return nil, fmt.Errorf("%s, Please check [devops.slave.user] in the {agent_dir}/.agent.properties", err.Error())
 	}
 
 	logs.Info("cmd.Path: ", cmd.Path)
@@ -77,9 +84,10 @@ func StartProcess(command string, args []string, workDir string, envMap map[stri
 
 	err = cmd.Start()
 	if err != nil {
-		return -1, err
+		return nil, err
 	}
-	return cmd.Process.Pid, nil
+
+	return cmd, nil
 }
 
 var envHome = "HOME"

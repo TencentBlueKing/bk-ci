@@ -31,70 +31,49 @@
 package command
 
 import (
-	"fmt"
 	"os"
-	"os/exec"
-	"syscall"
+	"unsafe"
 
-	"github.com/TencentBlueKing/bk-ci/agentcommon/logs"
+	"golang.org/x/sys/windows"
 )
 
-const createNewConsole = 0x00000010
-
-func StartProcess(command string, args []string, workDir string, envMap map[string]string, runUser string) (int, error) {
-	cmd, err := StartProcessCmd(command, args, workDir, envMap, runUser)
-	if err != nil {
-		return -1, err
-	}
-	return cmd.Process.Pid, nil
+// We use this struct to retreive process handle(which is unexported)
+// from os.Process using unsafe operation.
+type process struct {
+	Pid    int
+	Handle uintptr
 }
 
-func StartProcessCmd(command string, args []string, workDir string, envMap map[string]string, runUser string) (*exec.Cmd, error) {
-	cmd := exec.Command(command)
+type ProcessExitGroup windows.Handle
 
-	// TODO: #10179 读取环境变量判断是否使用 newConsole
-	if true {
-		cmd.SysProcAttr = &syscall.SysProcAttr{
-			CreationFlags:    createNewConsole,
-			NoInheritHandles: true,
-		}
-	}
-
-	if len(args) > 0 {
-		cmd.Args = append(cmd.Args, args...)
-	}
-
-	if workDir != "" {
-		cmd.Dir = workDir
-	}
-
-	cmd.Env = os.Environ()
-	if envMap != nil {
-		for k, v := range envMap {
-			cmd.Env = append(cmd.Env, fmt.Sprintf("%s=%s", k, v))
-		}
-	}
-
-	err := setUser(cmd, runUser)
+func NewProcessExitGroup() (ProcessExitGroup, error) {
+	handle, err := windows.CreateJobObject(nil, nil)
 	if err != nil {
-		logs.Error("set user failed: ", err.Error())
-		return nil, fmt.Errorf("%s, Please check [devops.slave.user] in the {agent_dir}/.agent.properties", err.Error())
+		return 0, err
 	}
 
-	logs.Info("cmd.Path: ", cmd.Path)
-	logs.Info("cmd.Args: ", cmd.Args)
-	logs.Info("cmd.workDir: ", cmd.Dir)
-	logs.Info("runUser: ", runUser)
-
-	err = cmd.Start()
-	if err != nil {
-		return nil, err
+	info := windows.JOBOBJECT_EXTENDED_LIMIT_INFORMATION{
+		BasicLimitInformation: windows.JOBOBJECT_BASIC_LIMIT_INFORMATION{
+			LimitFlags: windows.JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE,
+		},
+	}
+	if _, err := windows.SetInformationJobObject(
+		handle,
+		windows.JobObjectExtendedLimitInformation,
+		uintptr(unsafe.Pointer(&info)),
+		uint32(unsafe.Sizeof(info))); err != nil {
+		return 0, err
 	}
 
-	return cmd, nil
+	return ProcessExitGroup(handle), nil
 }
 
-func setUser(_ *exec.Cmd, runUser string) error {
-	logs.Info("set user(windows): ", runUser)
-	return nil
+func (g ProcessExitGroup) Dispose() error {
+	return windows.CloseHandle(windows.Handle(g))
+}
+
+func (g ProcessExitGroup) AddProcess(p *os.Process) error {
+	return windows.AssignProcessToJobObject(
+		windows.Handle(g),
+		windows.Handle((*process)(unsafe.Pointer(p)).Handle))
 }
