@@ -160,7 +160,7 @@
 
 <script lang="ts">
     import Vue from 'vue'
-    import { Component, Watch } from 'vue-property-decorator'
+    import { Component } from 'vue-property-decorator'
     import { Action, Getter, State } from 'vuex-class'
     import eventBus from '../../utils/eventBus'
     import { isAbsoluteUrl, urlJoin } from '../../utils/util'
@@ -269,14 +269,8 @@
             projectDropdown: any
         }
 
-        @Watch('showProjectList')
-        toggleShowProjectList (val) {
-            if (val) {
-                this.checkRemindUserOfRelatedProduct()
-            }
-        }
-
         created () {
+            this.checkRemindUserOfRelatedProduct()
             eventBus.$on('show-project-menu', () => {
                 const ele = this.$refs.projectDropdown && this.$refs.projectDropdown.$el
                 if (ele) {
@@ -414,7 +408,7 @@
         }
 
         checkRemindUserOfRelatedProduct () {
-            if (this.$route.name === 'manage') return
+            if (this.$route.name === 'manage' || !this.projectId) return
             this.remindUserOfRelatedProduct({
                 projectId: this.projectId
             }).then(res => {
