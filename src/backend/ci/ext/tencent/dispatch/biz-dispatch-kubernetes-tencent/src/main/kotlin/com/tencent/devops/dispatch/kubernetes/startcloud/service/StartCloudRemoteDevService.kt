@@ -324,9 +324,9 @@ class StartCloudRemoteDevService @Autowired constructor(
         logger.info("StartCloud remoteDevService waitTaskFinish|userId|$userId|taskId|$taskId")
         val startTime = System.currentTimeMillis()
         val timeout = if (
-            type == UpdateEventType.CREATE
-            || type == UpdateEventType.REBUILD
-            || type == UpdateEventType.MAKE_IMAGE
+            type == UpdateEventType.CREATE ||
+            type == UpdateEventType.REBUILD ||
+            type == UpdateEventType.MAKE_IMAGE
             ) {
             START_CREATE_TIMEOUT
         } else {
