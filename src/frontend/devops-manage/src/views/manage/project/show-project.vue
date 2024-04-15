@@ -178,16 +178,14 @@ const handleToApprovalDetails = (applyId: any) => {
 
 const fetchOperationalList = async (bgName) => {
   isLoading.value = true;
-  await http.getOperationalList(bgName).then((res) => {
-    operationalList.value = res.map(i => ({
-      ...i,
-      value: i.ProductId,
-      label: i.ProductName,
-      id: i.ProductId,
-    }));
-    isLoading.value = false;
-  });
-};
+  const res = await http.getOperationalList(bgName);
+  operationalList.value = res.map(i => ({
+    ...i,
+    value: i.ProductId,
+    label: i.ProductName,
+    id: i.ProductId,
+  }));
+  isLoading.value = false;
 
 const getOperational = id => operationalList.value.find(i => String(i.ProductId) === String(id));
 

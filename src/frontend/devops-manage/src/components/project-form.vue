@@ -351,15 +351,14 @@ const showMemberDialog = () => {
 const fetchOperationalList = async (bgName) => {
   if (!bgName) return;
   deptLoading.value.product = true;
-  await http.getOperationalList(bgName).then((res) => {
-    operationalList.value = res.map(i => ({
-      ...i,
-      value: i.ProductId,
-      label: i.ProductName,
-      id: i.ProductId,
-    }));
-    deptLoading.value.product = false;
-  });
+  const res = await http.getOperationalList(bgName);
+  operationalList.value = res.map(i => ({
+    ...i,
+    value: i.ProductId,
+    label: i.ProductName,
+    id: i.ProductId,
+  }));
+  deptLoading.value.product = false;
 };
 
 const validateProjectNameTips = ref('');
