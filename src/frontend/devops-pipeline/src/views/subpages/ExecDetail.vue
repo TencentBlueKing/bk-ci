@@ -24,6 +24,10 @@
                 <aside class="exec-detail-summary-header-title">
                     <bk-tag class="exec-status-tag" type="stroke" :theme="statusTagTheme">
                         <span class="exec-status-label">
+                            <i v-if="isRunning" :class="['devops-icon', {
+                                'icon-hourglass': execDetail.status === 'QUEUE',
+                                'icon-circle-2-1 spin-icon': execDetail.status === 'RUNNING'
+                            }]" />
                             {{ statusLabel }}
                             <span
                                 v-if="execDetail.status === 'CANCELED'"
@@ -225,6 +229,9 @@
             execFormatStartTime () {
                 return convertTime(this.execDetail?.queueTime)
             },
+            isRunning () {
+                return ['RUNNING', 'QUEUE'].includes(this.execDetail?.status)
+            },
             panels () {
                 return [
                     {
@@ -235,7 +242,8 @@
                         bindData: {
                             execDetail: this.execDetail,
                             isLatestBuild: this.isLatestBuild,
-                            matchRules: this.curMatchRules
+                            matchRules: this.curMatchRules,
+                            isRunning: this.isRunning
                         }
                     },
                     {
@@ -554,6 +562,12 @@
         align-items: center;
         grid-auto-flow: column;
         grid-gap: 6px;
+        .devops-icon.icon-hourglass {
+            animation: hourglassSpin;
+            animation-delay: 0.5s, 0.5s;
+            animation-duration: 1s;
+            animation-iteration-count: infinite;
+        }
       }
 
       .exec-detail-summary-header-build-msg {

@@ -54,7 +54,6 @@
             },
             baseInfoRows () {
                 const { basicInfo } = this
-                console.log(this.basicInfo, 123321321)
                 return [
                     {
                         key: 'pipelineName',
@@ -62,7 +61,7 @@
                     },
                     {
                         key: 'label',
-                        value: basicInfo?.labels ?? []
+                        value: basicInfo?.labelNames ?? []
                     },
                     {
                         key: 'pipelineGroup',
