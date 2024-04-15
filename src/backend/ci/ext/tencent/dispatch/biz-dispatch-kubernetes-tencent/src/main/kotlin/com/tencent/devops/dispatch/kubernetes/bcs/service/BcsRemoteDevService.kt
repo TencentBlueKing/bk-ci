@@ -267,7 +267,13 @@ class BcsRemoteDevService @Autowired constructor(
             }
             kotlin.runCatching {
                 client.get(ServiceRemoteDevResource::class)
-                    .createWinWorkspaceByVm(oldWs.userId, oldWs.workspaceName, null, taskStatus.uid)
+                    .createWinWorkspaceByVm(
+                        userId = oldWs.userId,
+                        oldWorkspaceName = oldWs.workspaceName,
+                        projectId = null,
+                        ownerType = null,
+                        uid = taskStatus.uid
+                    )
             }.onFailure {
                 logger.warn("workspaceTaskCallback|createWinWorkspaceByVm fail ${it.message}", it)
             }
@@ -282,9 +288,9 @@ class BcsRemoteDevService @Autowired constructor(
             status = environmentStatus.status,
             hostIP = environmentStatus.hostIP,
             environmentIP = environmentStatus.environmentIP,
-            clusterId = environmentStatus.clusterId,
-            namespace = environmentStatus.namespace,
-            environmentHost = getEnvironmentHost(environmentStatus.clusterId, workspaceName),
+            clusterId = environmentStatus.clusterId ?: "",
+            namespace = environmentStatus.namespace ?: "",
+            environmentHost = getEnvironmentHost(environmentStatus.clusterId ?: "", workspaceName),
             ready = podInfo?.ready ?: false,
             started = podInfo?.started ?: false
         )

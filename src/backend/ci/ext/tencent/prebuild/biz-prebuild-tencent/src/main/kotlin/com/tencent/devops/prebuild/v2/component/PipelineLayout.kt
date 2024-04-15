@@ -537,7 +537,8 @@ class PipelineLayout private constructor(
                 displayName = agentId,
                 workspace = userLocalProjectInfo.workspace,
                 agentType = AgentType.ID,
-                dockerInfo = null
+                dockerInfo = null,
+                reusedInfo = null
             )
         }
 
@@ -548,7 +549,8 @@ class PipelineLayout private constructor(
                 envProjectId = null,
                 workspace = job.runsOn.workspace,
                 agentType = AgentType.NAME,
-                dockerInfo = null
+                dockerInfo = null,
+                reusedInfo = null
             )
         }
 

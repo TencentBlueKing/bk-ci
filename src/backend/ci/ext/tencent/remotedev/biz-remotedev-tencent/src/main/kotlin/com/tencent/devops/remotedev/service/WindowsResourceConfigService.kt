@@ -75,6 +75,13 @@ class WindowsResourceConfigService @Autowired constructor(
         return windowsResourceTypeDao.fetchAny(dslContext, machineType)
     }
 
+    fun getTypeConfig(
+        id: Int
+    ): WindowsResourceTypeConfig? {
+        logger.info("get windows resource config type $id")
+        return windowsResourceTypeDao.fetchAny(dslContext, id)
+    }
+
     fun getZoneConfig(
         zone: String
     ): WindowsResourceZoneConfig? {
@@ -228,6 +235,38 @@ class WindowsResourceConfigService @Autowired constructor(
             projectCode = projectId,
             properties = projectProperties.copy(
                 cloudDesktopNum = (curQuota + quota)
+            )
+        ).data == true
+    }
+
+    fun addProjectRemotedevManager(
+        userId: String,
+        projectId: String,
+        user: String
+    ): Boolean {
+        logger.info("addProjectTotalQuota|projectId|$projectId|user|$user")
+        // 先获取当前项目的properties配置获取当前配额，再追加申请的配额，更新
+        val projectInfo = kotlin.runCatching {
+            client.get(ServiceProjectResource::class).get(projectId)
+        }.onFailure { logger.warn("get project $projectId info error|${it.message}") }
+            .getOrElse { null }?.data ?: throw RemoteServiceException(
+            "not find project $projectId", HTTP_400
+        )
+        val projectProperties = projectInfo.properties
+        if (projectProperties?.remotedev == null || projectProperties.remotedev == false) {
+            logger.info("addProjectRemotedevManager|$projectId|not open remotedev")
+            return false
+        }
+        val remotedevManager = projectProperties.remotedevManager
+        return client.get(OPProjectResource::class).setProjectProperties(
+            userId = userId,
+            projectCode = projectId,
+            properties = projectProperties.copy(
+                remotedevManager = if (remotedevManager.isNullOrBlank()) {
+                    user
+                } else {
+                    ("$remotedevManager;$user")
+                }
             )
         ).data == true
     }

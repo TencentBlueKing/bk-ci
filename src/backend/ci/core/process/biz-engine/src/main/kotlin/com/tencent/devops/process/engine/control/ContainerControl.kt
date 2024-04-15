@@ -42,6 +42,7 @@ import com.tencent.devops.process.engine.common.VMUtils
 import com.tencent.devops.process.engine.control.command.container.ContainerCmd
 import com.tencent.devops.process.engine.control.command.container.ContainerCmdChain
 import com.tencent.devops.process.engine.control.command.container.ContainerContext
+import com.tencent.devops.process.engine.control.command.container.impl.AgentReuseMutexCmd
 import com.tencent.devops.process.engine.control.command.container.impl.CheckConditionalSkipContainerCmd
 import com.tencent.devops.process.engine.control.command.container.impl.CheckDependOnContainerCmd
 import com.tencent.devops.process.engine.control.command.container.impl.CheckDispatchQueueContainerCmd
@@ -197,6 +198,7 @@ class ContainerControl @Autowired constructor(
             commandCache.get(CheckDispatchQueueContainerCmd::class.java), // 检查流水线全局Job并发队列
             commandCache.get(InitializeMatrixGroupStageCmd::class.java), // 执行matrix运算生成所有Container数据
             commandCache.get(MatrixExecuteContainerCmd::class.java), // 循环进行矩阵执行和状态刷新
+            commandCache.get(AgentReuseMutexCmd::class.java), // #10082 Agent复用互斥逻辑
             commandCache.get(StartActionTaskContainerCmd::class.java), // 检查启动事件消息
             commandCache.get(ContainerCmdLoop::class.java), // 发送本事件的循环消息
             commandCache.get(UpdateStateContainerCmdFinally::class.java) // 更新Job状态并可能返回Stage处理

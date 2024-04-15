@@ -55,6 +55,7 @@ import com.tencent.devops.dispatch.kubernetes.startcloud.pojo.EnvironmentUserCre
 import com.tencent.devops.dispatch.kubernetes.startcloud.utils.StartCloudRedisUtils
 import com.tencent.devops.dispatch.kubernetes.utils.WorkspaceRedisUtils
 import com.tencent.devops.remotedev.api.service.ServiceRemoteDevResource
+import com.tencent.devops.remotedev.pojo.WorkspaceOwnerType
 import com.tencent.devops.remotedev.pojo.event.UpdateEventType
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
@@ -123,7 +124,8 @@ class StartCloudRemoteDevService @Autowired constructor(
                     machineType = event.devFile.machineType,
                     cgsId = event.devFile.cgsId,
                     projectId = event.projectId,
-                    image = event.devFile.imageCosFile
+                    image = event.devFile.imageCosFile,
+                    internal = event.ownerType == WorkspaceOwnerType.PERSONAL
                 )
             )
         )
@@ -274,7 +276,13 @@ class StartCloudRemoteDevService @Autowired constructor(
             }
             kotlin.runCatching {
                 client.get(ServiceRemoteDevResource::class)
-                    .createWinWorkspaceByVm(oldWs.userId, oldWs.workspaceName, null, taskStatus.uid)
+                    .createWinWorkspaceByVm(
+                        userId = oldWs.userId,
+                        oldWorkspaceName = oldWs.workspaceName,
+                        projectId = null,
+                        ownerType = null,
+                        uid = taskStatus.uid
+                    )
             }.onFailure {
                 logger.warn("workspaceTaskCallback|createWinWorkspaceByVm fail ${it.message}", it)
             }
@@ -298,8 +306,8 @@ class StartCloudRemoteDevService @Autowired constructor(
             status = workspaceStatus.status,
             hostIP = workspaceStatus.hostIP,
             environmentIP = workspaceStatus.environmentIP,
-            clusterId = workspaceStatus.clusterId,
-            namespace = workspaceStatus.namespace,
+            clusterId = workspaceStatus.clusterId ?: "",
+            namespace = workspaceStatus.namespace ?: "",
             environmentHost = workspaceStatus.environmentIP,
             ready = true,
             started = true,

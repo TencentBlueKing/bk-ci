@@ -165,7 +165,8 @@ enum class PoolType {
                         credential = null,
                         options = null,
                         imagePullPolicy = null
-                    )
+                    ),
+                    reusedInfo = null
                 )
             } else if (!pool.envId.isNullOrBlank()) {
                 return ThirdPartyAgentEnvDispatchType(
@@ -178,7 +179,8 @@ enum class PoolType {
                         credential = null,
                         options = null,
                         imagePullPolicy = null
-                    )
+                    ),
+                    reusedInfo = null
                 )
             } else if (!pool.agentId.isNullOrBlank()) {
                 return ThirdPartyAgentIDDispatchType(
@@ -190,7 +192,8 @@ enum class PoolType {
                         credential = null,
                         options = null,
                         imagePullPolicy = null
-                    )
+                    ),
+                    reusedInfo = null
                 )
             } else {
                 return ThirdPartyAgentIDDispatchType(
@@ -202,7 +205,8 @@ enum class PoolType {
                         credential = null,
                         options = null,
                         imagePullPolicy = null
-                    )
+                    ),
+                    reusedInfo = null
                 )
             }
         }
