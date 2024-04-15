@@ -182,7 +182,7 @@ OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
                 if (this.monaco && this.editor && Array.isArray(blocks) && blocks.length > 0) {
                     const ranges = blocks.map(({ startMark, endMark }) => ({
                         range: new this.monaco.Range(
-                            startMark.line,
+                            startMark.line + 1,
                             startMark.column,
                             endMark.line,
                             endMark.column

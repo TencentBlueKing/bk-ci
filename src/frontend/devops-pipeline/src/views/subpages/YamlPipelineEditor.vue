@@ -125,10 +125,11 @@
                         this.resetTempData()
                     })
                 }
+            },
+            pipelineWithoutTrigger (val, oldVal) {
+                debugger
+                this.editingModel = val
             }
-        },
-        created () {
-            this.editingModel = this.pipelineWithoutTrigger
         },
         methods: {
             ...mapActions('atom', [
