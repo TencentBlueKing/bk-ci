@@ -215,9 +215,11 @@
                 this.showAtomYaml = false
                 this.atomYaml = ''
             },
-            async handleStepClick (editingElementPos, atom) {
+            async handleStepClick (editingElementPos) {
                 const { stageIndex, containerIndex, elementIndex } = editingElementPos
+                
                 try {
+                    // TODO: 需要先把当前的yaml转化为Model,展示侧边栏
                     const model = await this.transfer({
                         ...this.$route.params,
                         actionType: 'FULL_YAML2MODEL',
@@ -227,44 +229,30 @@
                         ...model.modelAndSetting.model,
                         stages: model.modelAndSetting.model.stages.slice(1)
                     }
-                } catch (error) {
-                    // TODO: 转换报错
-                    console.error(error)
-                }
-                const element = this.editingModel.stages[stageIndex].containers[containerIndex].elements[elementIndex]
-                if (!element) {
-                    this.addAtom({
-                        ...editingElementPos,
-                        atomIndex: elementIndex - 1,
-                        container: this.editingModel.stages[stageIndex].containers[containerIndex]
-                    })
+                    const container = this.editingModel?.stages?.[stageIndex]?.containers?.[containerIndex]
+                    const element = container?.elements?.[elementIndex]
+                    if (!element) {
+                        this.addAtom({
+                            ...editingElementPos,
+                            container,
+                            atomIndex: elementIndex - 1
+                        })
+                        this.isUpdateElement = true
+                        return
+                    }
+               
                     this.isUpdateElement = true
-                    return
-                }
-                if (element?.data?.input) {
-                    this.updateAtomInput({
-                        atom: element,
-                        newParam: atom.with
+                    this.togglePropertyPanel({
+                        isShow: true,
+                        editingElementPos
                     })
-                } else {
-                    this.updateAtom({
-                        element,
-                        newParam: atom.with
+                } catch (error) {
+                    // TODO: 转换报错 Fallback
+                    this.$bkMessage({
+                        theme: 'error',
+                        message: error.message
                     })
                 }
-                if (atom.name !== element.name) {
-                    this.updateAtom({
-                        element,
-                        newParam: {
-                            name: atom.name
-                        }
-                    })
-                }
-                this.isUpdateElement = true
-                this.togglePropertyPanel({
-                    isShow: true,
-                    editingElementPos
-                })
             },
             getInsertPos (stageIndex, containerIndex) {
                 try {
