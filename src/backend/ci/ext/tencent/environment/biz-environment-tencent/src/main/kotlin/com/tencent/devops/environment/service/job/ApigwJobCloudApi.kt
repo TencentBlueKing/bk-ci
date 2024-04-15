@@ -145,6 +145,11 @@ class ApigwJobCloudApi {
             }
             val jobCloudResp = mapper.readValue<JobCloudResp<T>>(responseBody)
             if (!jobCloudResp.result) {
+                if (null == jobCloudResp.code) {
+                    val jobErrorMsg = "Execute failed! Job response exception."
+                    logger.error("[$operationName] $jobErrorMsg")
+                    throw CustomException(INTERNAL_SERVER_ERROR_STATUS, jobErrorMsg)
+                }
                 val errorMsg = "Execute failed! Req ID: ${jobCloudResp.jobRequestId}, " +
                     "Error code: ${jobCloudResp.code}, " +
                     "Error msg: ${jobCloudResp.message}"
