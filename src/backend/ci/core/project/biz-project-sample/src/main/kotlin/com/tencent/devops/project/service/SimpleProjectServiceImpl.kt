@@ -217,6 +217,15 @@ class SimpleProjectServiceImpl @Autowired constructor(
         )
     }
 
+    override fun getOperationalProductsByBgName(bgName: String): List<OperationalProductVO> {
+        return listOf(
+            OperationalProductVO(
+                productId = -1,
+                productName = "其他"
+            )
+        )
+    }
+
     override fun fixProjectOrganization(tProjectRecord: TProjectRecord): ProjectOrganizationInfo {
         return with(tProjectRecord) {
             ProjectOrganizationInfo(
