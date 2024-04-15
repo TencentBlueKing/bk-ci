@@ -88,7 +88,7 @@ class TransferCreatorImpl @Autowired constructor() : TransferCreator {
             }
 
             step.checkout?.repoId != null -> {
-                inputMap[CheckoutAtomParam::repositoryName.name] = step.checkout?.repoId!!
+                inputMap[CheckoutAtomParam::repositoryHashId.name] = step.checkout?.repoId!!
                 inputMap[CheckoutAtomParam::repositoryType.name] = CheckoutAtomParam.CheckoutRepositoryType.ID
             }
 
