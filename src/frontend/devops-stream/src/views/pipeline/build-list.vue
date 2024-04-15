@@ -631,7 +631,7 @@
                 const params = {
                     page: this.compactPaging.current,
                     pageSize: this.compactPaging.limit,
-                    pipelineId: this.curPipeline.pipelineId,
+                    pipelineId: this.$route.params.pipelineId || this.curPipeline.pipelineId,
                     ...this.filterData,
                     triggerUser
                 }
