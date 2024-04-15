@@ -1,7 +1,14 @@
 <template>
     <div class="bk-button-group">
-        <bk-button v-for="item in pipelineModes" size="small" :key="item.id" :class="item.cls" :disabled="isSwitching"
-            @click="updateMode(item.id)">
+        <bk-button
+            v-for="item in pipelineModes"
+            size="small"
+            :key="item.id"
+            :class="item.cls"
+            :disabled="isSwitching"
+            :loading="isSwitching"
+            @click="updateMode(item.id)"
+        >
             {{ item.label }}
         </bk-button>
         <bk-dialog render-directive="if" v-model="leaveConfirmVisisble" :title="$t('tips')" header-position="left"
