@@ -53,13 +53,23 @@ import org.springframework.stereotype.Service
 
 @Primary
 @Service
-class TxStoreNotifyServiceImpl @Autowired constructor(
-    private val client: Client,
-    private val dslContext: DSLContext,
-    private val storeBaseQueryDao: StoreBaseQueryDao,
-    private val storeVersionLogDao: StoreVersionLogDao,
-    private val storeMemberDao: StoreMemberDao
-) : StoreNotifyService {
+class TxStoreNotifyServiceImpl @Autowired constructor() : StoreNotifyService {
+
+    @Autowired
+    private lateinit var client: Client
+
+    @Autowired
+    private lateinit var dslContext: DSLContext
+
+    @Autowired
+    private lateinit var storeBaseQueryDao: StoreBaseQueryDao
+
+    @Autowired
+    private lateinit var storeVersionLogDao: StoreVersionLogDao
+
+    @Autowired
+    private lateinit var storeMemberDao: StoreMemberDao
+
 
     @Value("\${store.storeDetailBaseUrl:#{null}}")
     private var storeDetailBaseUrl: String = ""

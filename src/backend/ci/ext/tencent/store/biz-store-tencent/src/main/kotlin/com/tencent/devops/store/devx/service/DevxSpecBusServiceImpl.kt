@@ -46,6 +46,7 @@ import com.tencent.devops.common.api.constant.SUCCESS
 import com.tencent.devops.common.api.constant.TEST
 import com.tencent.devops.common.api.constant.UNDO
 import com.tencent.devops.common.api.exception.ErrorCodeException
+import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.ReflectUtil
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.store.common.dao.StoreBaseEnvExtQueryDao
@@ -55,6 +56,7 @@ import com.tencent.devops.store.common.service.StoreCommonService
 import com.tencent.devops.store.common.service.StoreSpecBusService
 import com.tencent.devops.store.pojo.common.KEY_STORE_CODE
 import com.tencent.devops.store.pojo.common.KEY_STORE_TYPE
+import com.tencent.devops.store.pojo.common.StoreBaseInfo
 import com.tencent.devops.store.pojo.common.enums.StoreStatusEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.pojo.common.publication.ReleaseProcessItem
@@ -152,7 +154,9 @@ class DevxSpecBusServiceImpl @Autowired constructor(
         userId: String,
         storeType: StoreTypeEnum,
         storeCode: String,
-        version: String
+        version: String,
+        osName: String?,
+        osArch: String?
     ): List<StorePkgEnvInfo> {
         val baseRecord = storeBaseQueryDao.getComponent(
             dslContext = dslContext,
@@ -162,7 +166,12 @@ class DevxSpecBusServiceImpl @Autowired constructor(
         )
         val storePkgEnvInfos = mutableListOf<StorePkgEnvInfo>()
         val baseEnvRecords = if (baseRecord != null) {
-            storeBaseEnvQueryDao.getBaseEnvsByStoreId(dslContext, baseRecord.id)
+            storeBaseEnvQueryDao.getBaseEnvsByStoreId(
+                dslContext = dslContext,
+                storeId = baseRecord.id,
+                osName = osName,
+                osArch = osArch
+            )
         } else {
             null
         }
