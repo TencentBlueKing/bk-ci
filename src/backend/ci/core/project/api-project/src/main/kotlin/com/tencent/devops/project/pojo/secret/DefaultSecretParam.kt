@@ -36,6 +36,10 @@ data class DefaultSecretParam(
 
     override fun getSecretType() = BcsSecretParam.classType
 
+    override fun encode(aesKey: String) = this
+
+    override fun decode(aesKey: String) = this
+
     companion object {
         const val classType = "default"
     }
