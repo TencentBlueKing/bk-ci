@@ -64,10 +64,9 @@ import com.tencent.devops.worker.common.constants.WorkerMessageCode.BK_FAILED_SE
 import com.tencent.devops.worker.common.constants.WorkerMessageCode.BK_FAILED_UPDATE_PLUG
 import com.tencent.devops.worker.common.env.AgentEnv
 import com.tencent.devops.worker.common.logger.LoggerService
-import java.io.File
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.RequestBody
-import java.util.*
+import java.io.File
 
 @ApiPriority(priority = 9)
 class TencentAtomArchiveResourceApi : AbstractBuildResourceApi(),
