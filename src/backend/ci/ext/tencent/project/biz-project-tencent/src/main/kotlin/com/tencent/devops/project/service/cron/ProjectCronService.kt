@@ -108,7 +108,7 @@ class ProjectCronService constructor(
     /**
      * 每周日更新OBS产品
      * */
-    @Scheduled(cron = "0 0 6 ? * SUN")
+    @Scheduled(cron = "0 0 3 * * ?")
     fun updateObsProduct() {
         if (!enable) {
             return
