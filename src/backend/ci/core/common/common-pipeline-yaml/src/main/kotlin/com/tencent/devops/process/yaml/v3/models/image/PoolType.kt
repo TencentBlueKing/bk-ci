@@ -122,7 +122,8 @@ enum class PoolType {
                         JobRunsOnPoolType.ENV_ID.name
                     },
                     workspace = dispatcher.workspace,
-                    container = makeContainer(dispatcher.dockerInfo)
+                    container = makeContainer(dispatcher.dockerInfo),
+                    envProjectId = dispatcher.envProjectId
                 )
             }
             if (dispatcher is ThirdPartyAgentIDDispatchType) {

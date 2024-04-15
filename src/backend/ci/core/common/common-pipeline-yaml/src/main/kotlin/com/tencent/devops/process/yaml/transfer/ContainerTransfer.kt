@@ -256,7 +256,10 @@ class ContainerTransfer @Autowired(required = false) constructor(
         when (poolType) {
             JobRunsOnPoolType.AGENT_ID.name -> {
                 nodeName = transferCache.getThirdPartyAgent(
-                    JobRunsOnPoolType.AGENT_ID, userId, projectId, nodeName
+                    poolType = JobRunsOnPoolType.AGENT_ID,
+                    userId = userId,
+                    projectId = projectId,
+                    value = nodeName
                 ) ?: throw PipelineTransferException(
                     CommonMessageCode.DISPATCH_NOT_SUPPORT_TRANSFER,
                     arrayOf("agentId: $nodeName")
@@ -265,7 +268,10 @@ class ContainerTransfer @Autowired(required = false) constructor(
 
             JobRunsOnPoolType.ENV_ID.name -> {
                 poolName = transferCache.getThirdPartyAgent(
-                    JobRunsOnPoolType.ENV_ID, userId, projectId, poolName
+                    poolType = JobRunsOnPoolType.ENV_ID,
+                    userId = userId,
+                    projectId = envProjectId ?: projectId,
+                    value = poolName
                 ) ?: throw PipelineTransferException(
                     CommonMessageCode.DISPATCH_NOT_SUPPORT_TRANSFER,
                     arrayOf("envId: $poolName")
