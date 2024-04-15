@@ -140,8 +140,7 @@ class ModelTransfer @Autowired constructor(
             stages = stageList,
             labels = emptyList(),
             instanceFromTemplate = false,
-            pipelineCreator = yamlInput.pipelineInfo?.creator ?: yamlInput.userId,
-            resources = yamlInput.yaml.formatResources()
+            pipelineCreator = yamlInput.pipelineInfo?.creator ?: yamlInput.userId
         )
         model.latestVersion = yamlInput.pipelineInfo?.version ?: 0
 
