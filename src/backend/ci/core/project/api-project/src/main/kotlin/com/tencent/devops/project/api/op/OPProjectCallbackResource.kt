@@ -39,6 +39,7 @@ import javax.ws.rs.HeaderParam
 import javax.ws.rs.POST
 import javax.ws.rs.Path
 import javax.ws.rs.Produces
+import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
 @Tag(name = "OP_PROJECT", description = "项目列表接口")
@@ -55,10 +56,12 @@ interface OPProjectCallbackResource {
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String,
         @Parameter(description = "事件类型", required = true)
+        @QueryParam("event")
         event: String,
         @Parameter(description = "回调凭证", required = true)
         secretParam: ISecretParam,
         @Parameter(description = "回调地址", required = true)
+        @QueryParam("callbackUrl")
         callbackUrl: String
     ): Result<Boolean>
 
@@ -69,8 +72,10 @@ interface OPProjectCallbackResource {
         @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String,
+        @QueryParam("event")
         @Parameter(description = "事件类型", required = true)
         event: String,
+        @QueryParam("callbackUrl")
         @Parameter(description = "回调地址", required = true)
         callbackUrl: String
     ): Result<Boolean>

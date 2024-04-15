@@ -33,7 +33,7 @@ data class BlueWhaleSecretParam(
     override val userId: String
 ) : ISecretParam {
 
-    override fun getSecretType() = BcsSecretParam.classType
+    override fun getSecretType() = classType
 
     override fun encode(aesKey: String) = this
 
