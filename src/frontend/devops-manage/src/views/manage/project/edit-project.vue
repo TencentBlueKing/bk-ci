@@ -140,14 +140,13 @@ const updateProject = async () => {
 
 const fetchOperationalList = async (bgName) => {
   if (!bgName) return
-  await http.getOperationalList(bgName).then((res) => {
-    operationalList.value = res.map(i => ({
-      ...i,
-      value: i.ProductId,
-      label: i.ProductName,
-      id: i.ProductId,
-    }));
-  });
+  const res = await http.getOperationalList(bgName)
+  operationalList.value = res.map(i => ({
+    ...i,
+    value: i.ProductId,
+    label: i.ProductName,
+    id: i.ProductId,
+  }));
 };
 
 const showNeedApprovedTips = () => {
