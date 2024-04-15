@@ -29,6 +29,7 @@ package com.tencent.devops.process.yaml.transfer
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.tencent.devops.common.api.constant.CommonMessageCode
+import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.util.YamlUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.NameAndValue
@@ -104,10 +105,19 @@ class ContainerTransfer @Autowired(required = false) constructor(
         buildTemplateAcrossInfo: BuildTemplateAcrossInfo?
     ) {
         val buildEnv = if (job.runsOn.selfHosted == false) job.runsOn.needs?.ifEmpty { null } else null
-        val (dispatchType, baseOS) = dispatchTransfer.makeDispatchType(
-            job = job,
-            buildTemplateAcrossInfo = buildTemplateAcrossInfo
-        )
+        val (dispatchType, baseOS) = kotlin.runCatching {
+            dispatchTransfer.makeDispatchType(
+                job = job,
+                buildTemplateAcrossInfo = buildTemplateAcrossInfo
+            )
+        }.onFailure {
+            if (it is OperationException) {
+                throw PipelineTransferException(
+                    CommonMessageCode.YAML_NOT_VALID,
+                    arrayOf("${it.message}")
+                )
+            }
+        }.getOrThrow()
         if (dispatchType is StoreDispatchType && dispatchType.imageType == ImageType.BKSTORE) {
             val imageName = transferCache.getStoreImageDetail(
                 userId, dispatchType.imageCode!!, dispatchType.imageVersion

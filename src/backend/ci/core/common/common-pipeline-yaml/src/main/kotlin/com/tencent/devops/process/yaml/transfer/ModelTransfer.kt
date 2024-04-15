@@ -80,6 +80,7 @@ class ModelTransfer @Autowired constructor(
         return PipelineSetting(
             projectId = yamlInput.pipelineInfo?.projectId ?: "",
             pipelineId = yamlInput.pipelineInfo?.pipelineId ?: "",
+            buildNumRule = yaml.customBuildNum,
             pipelineName = yaml.name ?: yamlInput.pipelineInfo?.pipelineName ?: "",
             desc = yaml.desc ?: yamlInput.pipelineInfo?.pipelineDesc ?: "",
             concurrencyGroup = yaml.concurrency?.group ?: PIPELINE_SETTING_CONCURRENCY_GROUP_DEFAULT,
@@ -253,6 +254,7 @@ class ModelTransfer @Autowired constructor(
         } else null
         yaml.finally = finally as LinkedHashMap<String, Any>?
         yaml.concurrency = makeConcurrency(modelInput.setting)
+        yaml.customBuildNum = modelInput.setting.buildNumRule
         yaml.recommendedVersion = variableTransfer.makeRecommendedVersion(modelInput.model)
         yaml.disablePipeline = (modelInput.setting.runLockType == PipelineRunLockType.LOCK).nullIfDefault(false)
         modelInput.aspectWrapper.setYaml4Yaml(yaml, PipelineTransferAspectWrapper.AspectType.AFTER)

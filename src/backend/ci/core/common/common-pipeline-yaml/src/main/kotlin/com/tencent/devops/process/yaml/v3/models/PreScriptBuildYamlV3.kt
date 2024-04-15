@@ -60,7 +60,8 @@ data class PreScriptBuildYamlV3(
     override var finally: LinkedHashMap<String, PreJob>? = null,
     override val concurrency: Concurrency? = null,
     override val disablePipeline: Boolean? = null,
-    override val recommendedVersion: RecommendedVersion? = null
+    override val recommendedVersion: RecommendedVersion? = null,
+    override val customBuildNum: String? = null
 ) : PreScriptBuildYamlI {
     override fun yamlVersion() = YamlVersion.Version.V3_0
 }

@@ -72,6 +72,7 @@ import com.tencent.devops.process.yaml.v3.models.on.ManualRule
 import com.tencent.devops.process.yaml.v3.models.on.RemoteRule
 import com.tencent.devops.process.yaml.v3.models.on.SchedulesRule
 import com.tencent.devops.process.yaml.v3.models.on.TriggerOn
+import com.tencent.devops.process.yaml.v3.models.step.PreCheckoutStep
 import com.tencent.devops.process.yaml.v3.models.step.PreManualReviewUserTaskElement
 import com.tencent.devops.process.yaml.v3.models.step.Step
 import org.slf4j.LoggerFactory
@@ -518,8 +519,8 @@ class ElementTransfer @Autowired(required = false) constructor(
                 val repositoryName = input[CheckoutAtomParam::repositoryName.name].toString().ifBlank { null }
                 val repositoryUrl = input[CheckoutAtomParam::repositoryUrl.name].toString().ifBlank { null }
                 val checkout = when (repositoryType) {
-                    CheckoutAtomParam.CheckoutRepositoryType.ID -> repositoryHashId
-                    CheckoutAtomParam.CheckoutRepositoryType.NAME -> repositoryName
+                    CheckoutAtomParam.CheckoutRepositoryType.ID -> PreCheckoutStep(repoId = repositoryHashId)
+                    CheckoutAtomParam.CheckoutRepositoryType.NAME -> PreCheckoutStep(repoName = repositoryName)
                     CheckoutAtomParam.CheckoutRepositoryType.URL -> repositoryUrl
                     CheckoutAtomParam.CheckoutRepositoryType.SELF -> "self"
                     else -> null
@@ -536,13 +537,6 @@ class ElementTransfer @Autowired(required = false) constructor(
                         this.remove(CheckoutAtomParam::repositoryHashId.name)
                         this.remove(CheckoutAtomParam::repositoryName.name)
                         this.remove(CheckoutAtomParam::repositoryUrl.name)
-                        val type = repositoryType?.name
-                            ?.nullIfDefault(CheckoutAtomParam.CheckoutRepositoryType.NAME.name)
-                            ?.nullIfDefault(CheckoutAtomParam.CheckoutRepositoryType.URL.name)
-                            ?.nullIfDefault(CheckoutAtomParam.CheckoutRepositoryType.SELF.name)
-                        if (type != null) {
-                            this["type"] = type
-                        }
                     }.ifEmpty { null },
                     checkout = checkout
                 )
