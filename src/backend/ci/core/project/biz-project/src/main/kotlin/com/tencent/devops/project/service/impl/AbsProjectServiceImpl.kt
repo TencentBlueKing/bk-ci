@@ -1423,7 +1423,7 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
         projectDao.updateProductId(
             dslContext = dslContext,
             englishName = englishName,
-            productId = product.productId
+            productId = product.productId!!
         )
     }
 
