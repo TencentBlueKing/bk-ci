@@ -170,11 +170,14 @@
             stageIndex: Number,
             stages: Array,
             editable: Boolean,
-            isInstanceTemplate: Boolean
+            isInstanceTemplate: Boolean,
+            handleUpdateAtom: {
+                type: Function,
+                default: () => () => {}
+            }
         },
         data () {
             return {
-                nameEditing: false,
                 isSetted: false,
                 isSupportVersion: true,
                 curVersionRelativeRules: [],
@@ -426,7 +429,6 @@
             ...mapActions('atom', [
                 'toggleAtomSelectorPopup',
                 'requestGlobalEnvs',
-                'updateAtom',
                 'updateAtomType',
                 'fetchAtomModal',
                 'fetchAtomVersionList',
@@ -474,10 +476,6 @@
                     this[loadingKey] = false
                 })
             },
-
-            toggleEditName (show) {
-                this.nameEditing = show
-            },
             setAtomValidate (addErrors, removeErrors) {
                 if (addErrors && addErrors.length) {
                     addErrors.map(e => this.errors.add(e))
@@ -485,14 +483,6 @@
                 if (removeErrors && removeErrors.length) {
                     removeErrors.map(e => this.errors.remove(e.field))
                 }
-            },
-            handleUpdateAtom (name, val) {
-                this.updateAtom({
-                    element: this.element,
-                    newParam: {
-                        [name]: val
-                    }
-                })
             },
             handleFetchAtomModal (atomCode, version) {
                 const { atomModalMap, fetchAtomModal, getAtomModalKey } = this

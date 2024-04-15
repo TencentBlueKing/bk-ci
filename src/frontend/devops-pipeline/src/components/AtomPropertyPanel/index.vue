@@ -29,7 +29,7 @@
                 <i v-if="atomCode && editable" @click="toggleEditName(true)" class="devops-icon icon-edit" :class="nameEditing ? 'editing' : ''" />
             </div>
         </header>
-        <atom-content v-bind="$props" slot="content">
+        <atom-content v-bind="$props" slot="content" :handle-update-atom="handleUpdateAtom">
             <template slot="footer">
                 <slot name="footer"></slot>
             </template>
@@ -121,16 +121,6 @@
                 return ''
             }
         },
-        watch: {
-            element: {
-                handler (val, oldVal) {
-                    console.log('element', JSON.stringify(val), JSON.stringify(oldVal))
-                    this.isElementModified = true
-                },
-                deep: true
-
-            }
-        },
         methods: {
             ...mapActions('atom', [
                 'toggleAtomSelectorPopup',
@@ -163,6 +153,9 @@
             },
 
             handleUpdateAtom (name, val) {
+                if (!['isError'].includes(name)) {
+                    this.isElementModified = true
+                }
                 this.updateAtom({
                     element: this.element,
                     newParam: {
