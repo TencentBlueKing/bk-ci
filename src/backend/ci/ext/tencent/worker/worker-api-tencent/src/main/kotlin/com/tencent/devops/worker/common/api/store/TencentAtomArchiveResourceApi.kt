@@ -304,6 +304,8 @@ class TencentAtomArchiveResourceApi : AbstractBuildResourceApi(),
                 headers.remove(AUTH_HEADER_BKREPO_MODE)
                 request = buildGet(bkrepoUrl, headers)
                 download(request = request, destPath = file)
+            } else {
+                throw ignored
             }
         }
     }
