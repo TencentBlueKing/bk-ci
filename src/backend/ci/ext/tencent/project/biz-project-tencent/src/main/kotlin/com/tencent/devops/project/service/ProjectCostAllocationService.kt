@@ -1,36 +1,24 @@
 package com.tencent.devops.project.service
 
 import com.github.benmanes.caffeine.cache.Caffeine
-import com.tencent.bkrepo.common.api.util.JsonUtils
-import com.tencent.devops.common.api.exception.RemoteServiceException
-import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.auth.api.pojo.MigrateProjectConditionDTO
 import com.tencent.devops.common.auth.enums.AuthSystemType
 import com.tencent.devops.common.client.Client
-import com.tencent.devops.common.client.ClientTokenService
 import com.tencent.devops.common.redis.RedisOperation
-import com.tencent.devops.common.service.config.CommonConfig
 import com.tencent.devops.common.service.trace.TraceTag
 import com.tencent.devops.metrics.api.ServiceMetricsResource
 import com.tencent.devops.metrics.pojo.vo.BaseQueryReqVO
 import com.tencent.devops.project.api.pojo.enums.ProjectRelateOBSProductStatusEnum
-import com.tencent.devops.project.dao.ProjectOperationalProductDao
-import com.tencent.devops.project.pojo.ObsBaseDictDTO
-import com.tencent.devops.project.pojo.ObsOperationalProductResponse
-import com.tencent.devops.project.pojo.OperationalProductVO
 import com.tencent.devops.project.pojo.ProjectVO
-import com.tencent.devops.project.pojo.enums.ProjectProductDictType
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.slf4j.MDC
-import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
-import javax.annotation.PostConstruct
 
 @Service
 @Suppress("NestedBlockDepth", "ComplexMethod", "LongParameterList")
