@@ -54,6 +54,7 @@ import com.tencent.devops.project.pojo.ProjectOrganizationInfo
 import com.tencent.devops.project.pojo.ProjectProductValidateDTO
 import com.tencent.devops.project.pojo.ProjectUpdateInfo
 import com.tencent.devops.project.pojo.ResourceUpdateInfo
+import com.tencent.devops.project.pojo.enums.ProjectChannelCode
 import com.tencent.devops.project.pojo.user.UserDeptDetail
 import com.tencent.devops.project.service.impl.AbsProjectServiceImpl
 import org.jooq.DSLContext
@@ -251,6 +252,14 @@ class SimpleProjectServiceImpl @Autowired constructor(
 
     override fun validateProjectRelateProduct(
         projectProductValidateDTO: ProjectProductValidateDTO
+    ) = Unit
+
+    override fun validateProjectOrganization(
+        projectChannel: ProjectChannelCode?,
+        bgId: Long,
+        bgName: String,
+        deptId: Long?,
+        deptName: String?
     ) = Unit
 
     companion object {
