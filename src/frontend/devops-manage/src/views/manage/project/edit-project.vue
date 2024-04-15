@@ -138,8 +138,9 @@ const updateProject = async () => {
   return Promise.resolve(false);
 };
 
-const fetchOperationalList = async () => {
-  await http.getOperationalList().then((res) => {
+const fetchOperationalList = async (bgName) => {
+  if (!bgName) return
+  await http.getOperationalList(bgName).then((res) => {
     operationalList.value = res.map(i => ({
       ...i,
       value: i.ProductId,
@@ -194,9 +195,9 @@ const handleNoPermission = () => {
   });
 };
 
-onMounted(() => {
-  fetchProjectData();
-  fetchOperationalList();
+onMounted(async () => {
+  await fetchProjectData();
+  await fetchOperationalList(projectData.value.bgName);
 });
 </script>
 

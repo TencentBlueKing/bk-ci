@@ -219,7 +219,7 @@ export default {
     return http.get(`${IAM_PERFIX}/${projectCode}/${resourceType}/${resourceCode}/getResource`);
   },
 
-  async getOperationalList() {
-    return http.get(`${PROJECT_PERFIX}/user/projects/product/getOperationalProducts`)
+  async getOperationalList(bgName: string) {
+    return http.get(`${PROJECT_PERFIX}/user/projects/product/getOperationalProductsByBgName/${bgName}`)
   }
 };

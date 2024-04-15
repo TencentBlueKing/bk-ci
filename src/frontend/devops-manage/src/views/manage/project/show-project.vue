@@ -176,9 +176,9 @@ const handleToApprovalDetails = (applyId: any) => {
   window.open(`/console/permission/my-apply/${applyId}`, '_blank');
 };
 
-const fetchOperationalList = async () => {
+const fetchOperationalList = async (bgName) => {
   isLoading.value = true;
-  await http.getOperationalList().then((res) => {
+  await http.getOperationalList(bgName).then((res) => {
     operationalList.value = res.map(i => ({
       ...i,
       value: i.ProductId,
@@ -355,7 +355,7 @@ watch(() => projectData.value.approvalStatus, (status) => {
 onMounted(async () => {
   await getUserInfo();
   await fetchProjectData();
-  await fetchOperationalList();
+  await fetchOperationalList(projectData.value.bgName);
 });
 </script>
 
