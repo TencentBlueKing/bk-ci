@@ -91,7 +91,8 @@ class CodeGitRepositoryService @Autowired constructor(
             repo = repository,
             token = credentialInfo.token
         )?.id ?: throw ErrorCodeException(
-            errorCode = ERROR_GIT_PROJECT_NOT_FOUND_OR_NOT_PERMISSION, params = arrayOf(repository.url)
+            errorCode = ERROR_GIT_PROJECT_NOT_FOUND_OR_NOT_PERMISSION,
+            params = arrayOf(repository.url, userId)
         )
         if (repository.enablePac == true) {
             pacCheckEnabled(projectId = projectId, userId = userId, repository = repository, retry = false)
@@ -176,7 +177,8 @@ class CodeGitRepositoryService @Autowired constructor(
                 repo = repository,
                 token = credentialInfo.token
             )?.id ?: throw ErrorCodeException(
-                errorCode = ERROR_GIT_PROJECT_NOT_FOUND_OR_NOT_PERMISSION, params = arrayOf(repository.url)
+                errorCode = ERROR_GIT_PROJECT_NOT_FOUND_OR_NOT_PERMISSION,
+                params = arrayOf(repository.url, repository.userName)
             )
         }
         dslContext.transaction { configuration ->
@@ -303,7 +305,7 @@ class CodeGitRepositoryService @Autowired constructor(
             errorCode = NOT_AUTHORIZED_BY_OAUTH,
             params = arrayOf(userId)
         )
-        val gitProjectId = getGitProjectInfo(repoUrl, token).id
+        val gitProjectId = getGitProjectInfo(repoUrl = repoUrl, userId = userId, token = token).id
         return getPacRepository(externalId = gitProjectId.toString())?.projectId
     }
 
@@ -333,7 +335,8 @@ class CodeGitRepositoryService @Autowired constructor(
         } catch (ignore: Exception) {
             null
         } ?: throw ErrorCodeException(
-            errorCode = ERROR_GIT_PROJECT_NOT_FOUND_OR_NOT_PERMISSION, params = arrayOf(repository.url)
+            errorCode = ERROR_GIT_PROJECT_NOT_FOUND_OR_NOT_PERMISSION,
+            params = arrayOf(repository.url, repository.userName)
         )
         if (gitProjectInfo.defaultBranch == null) {
             throw ErrorCodeException(
@@ -394,7 +397,11 @@ class CodeGitRepositoryService @Autowired constructor(
     override fun getGitFileTree(projectId: String, userId: String, record: TRepositoryRecord): List<GitFileInfo> {
         val codeGitRepository = compose(record)
         val credentialInfo = getCredentialInfo(projectId = projectId, repository = codeGitRepository)
-        val gitProjectInfo = getGitProjectInfo(repoUrl = record.url, token = credentialInfo.token)
+        val gitProjectInfo = getGitProjectInfo(
+            repoUrl = record.url,
+            userId = codeGitRepository.userName,
+            token = credentialInfo.token
+        )
         return gitService.getGitFileTree(
             gitProjectId = gitProjectInfo.id.toString(),
             ref = gitProjectInfo.defaultBranch,
@@ -477,7 +484,7 @@ class CodeGitRepositoryService @Autowired constructor(
         return repositoryProjectInfo
     }
 
-    private fun getGitProjectInfo(repoUrl: String, token: String): GitProjectInfo {
+    private fun getGitProjectInfo(repoUrl: String, userId: String, token: String): GitProjectInfo {
         val gitProjectName = GitUtils.getProjectName(repoUrl)
         return scmOauthService.getProjectInfo(
             projectName = gitProjectName,
@@ -486,7 +493,7 @@ class CodeGitRepositoryService @Autowired constructor(
             token = token
         ) ?: throw ErrorCodeException(
             errorCode = ERROR_GIT_PROJECT_NOT_FOUND_OR_NOT_PERMISSION,
-            params = arrayOf(repoUrl)
+            params = arrayOf(repoUrl, userId)
         )
     }
 
