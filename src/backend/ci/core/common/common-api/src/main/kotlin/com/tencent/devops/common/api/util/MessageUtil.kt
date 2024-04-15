@@ -72,12 +72,8 @@ object MessageUtil {
             val resourceBundle = ResourceBundle.getBundle(baseName, localeObj)
             // 通过resourceBundle获取对应语言的描述信息
             message = String(resourceBundle.getString(messageCode).toByteArray(Charsets.ISO_8859_1), Charsets.UTF_8)
-            if (null != params && !message.isNullOrBlank()) {
-                val pattern = Regex("\\{([^0-9}]*)\\}")
-                val replace = pattern.replace(message) {
-                    "'${it.groups[0]?.value}'"
-                }
-                val mf = MessageFormat(replace)
+            if (null != params) {
+                val mf = MessageFormat(message)
                 // 根据参数动态替换状态码描述里的占位符
                 message = mf.format(params)
             }
