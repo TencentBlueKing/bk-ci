@@ -102,6 +102,7 @@ class PipelineSettingVersionDao {
             ).onDuplicateKeyUpdate()
                 .set(NAME, setting.pipelineName)
                 .set(DESC, setting.desc)
+                .set(LABELS, setting.labels.let { self -> JsonUtil.toJson(self, false) })
                 .set(RUN_LOCK_TYPE, PipelineRunLockType.toValue(setting.runLockType))
                 .set(WAIT_QUEUE_TIME_SECOND, DateTimeUtil.minuteToSecond(setting.waitQueueTimeMinute))
                 .set(MAX_QUEUE_SIZE, setting.maxQueueSize)

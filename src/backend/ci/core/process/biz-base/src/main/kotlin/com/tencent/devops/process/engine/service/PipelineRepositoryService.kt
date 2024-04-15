@@ -1049,20 +1049,26 @@ class PipelineRepositoryService constructor(
                             projectId = projectId,
                             pipelineId = pipelineId
                         )
-                        // 流水线版本兼容历史数据，至少取发布版本的版本号
-                        pipelineVersion = PipelineVersionUtils.getPipelineVersion(
-                            currVersion = releaseResource.pipelineVersion ?: releaseResource.version,
-                            originModel = releaseResource.model,
-                            newModel = model
-                        ).coerceAtLeast(1)
+                        // 如果是仅有草稿的版本发布，则直接从0计算版本号
+                        // 对于流水线版本的历史数据，至少取发布版本的版本号
+                        // 数据分离：发布记录的版本自增，旧数据保留和版本表中version一致，后续单独用于前端展示
+                        if (draftVersion?.version == releaseResource.version) {
+                            pipelineVersion = 1
+                            versionNum = 1
+                        } else {
+                            pipelineVersion = PipelineVersionUtils.getPipelineVersion(
+                                currVersion = releaseResource.pipelineVersion ?: releaseResource.version,
+                                originModel = releaseResource.model,
+                                newModel = model
+                            ).coerceAtLeast(1)
+                            versionNum = (releaseResource.versionNum ?: releaseResource.version) + 1
+                        }
                         triggerVersion = PipelineVersionUtils.getTriggerVersion(
                             currVersion = releaseResource.triggerVersion ?: 0,
                             originModel = releaseResource.model,
                             newModel = model
                         ).coerceAtLeast(1)
                         operationLogType = OperationLogType.RELEASE_MASTER_VERSION
-                        // 数据分离：发布记录的版本自增，旧数据保留和版本表中version一致，后续单独用于前端展示
-                        versionNum = (releaseResource.versionNum ?: releaseResource.version) + 1
                         val newVersionName = PipelineVersionUtils.getVersionName(
                             versionNum!!, pipelineVersion, triggerVersion, settingVersion
                         )
