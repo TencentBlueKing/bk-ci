@@ -62,6 +62,7 @@ class ApigwJobCloudApi {
     companion object {
         private const val LOG_OUTPUT_MAX_LENGTH = 4000
         private const val INTERNAL_SERVER_ERROR_CODE = 1240002
+        private val INTERNAL_SERVER_ERROR_STATUS = javax.ws.rs.core.Response.Status.INTERNAL_SERVER_ERROR
 
         private val postPathMap = mapOf(
             "executeScript" to "/api/v3/fast_execute_script",
@@ -138,14 +139,18 @@ class ApigwJobCloudApi {
         try {
             val responseBody = response.body?.string()
             logger.info("[$operationName] response body(origin): ${logWithLengthLimit(responseBody.toString())}")
-            val jobCloudResp = mapper.readValue<JobCloudResp<T>>(responseBody!!)
+            if (responseBody.isNullOrEmpty()) {
+                val responseEmptyErrorMsg = "[$operationName] Job response body is empty."
+                throw CustomException(INTERNAL_SERVER_ERROR_STATUS, responseEmptyErrorMsg)
+            }
+            val jobCloudResp = mapper.readValue<JobCloudResp<T>>(responseBody)
             if (!jobCloudResp.result) {
                 val errorMsg = "Execute failed! Req ID: ${jobCloudResp.jobRequestId}, " +
                     "Error code: ${jobCloudResp.code}, " +
                     "Error msg: ${jobCloudResp.message}"
                 logger.error("[$operationName] $errorMsg")
                 if (INTERNAL_SERVER_ERROR_CODE == jobCloudResp.code) {
-                    throw CustomException(javax.ws.rs.core.Response.Status.INTERNAL_SERVER_ERROR, errorMsg)
+                    throw CustomException(INTERNAL_SERVER_ERROR_STATUS, errorMsg)
                 }
                 throw CustomException(javax.ws.rs.core.Response.Status.BAD_REQUEST, errorMsg)
             } else {
