@@ -633,15 +633,15 @@ class PipelineRepositoryService constructor(
     ): DeployPipelineResult {
         // #8161 如果只有一个草稿版本的创建操作，流水线状态也为仅有草稿
         val modelVersion = 1
-        var versionNum = 1
-        var pipelineVersion = 1
-        var triggerVersion = 1
+        var versionNum: Int? = 1
+        var pipelineVersion: Int? = 1
+        var triggerVersion: Int? = 1
         val settingVersion = 1
         // 如果是仅有草稿的状态，resource表的版本号先设为0作为基准
         if (versionStatus == VersionStatus.COMMITTING || versionStatus == VersionStatus.BRANCH) {
-            versionNum = 0
-            pipelineVersion = 0
-            triggerVersion = 0
+            versionNum = null
+            pipelineVersion = null
+            triggerVersion = null
         }
         val taskCount: Int = model.taskCount()
         val id = client.get(ServiceAllocIdResource::class).generateSegmentId("PIPELINE_INFO").data

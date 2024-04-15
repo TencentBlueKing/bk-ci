@@ -49,14 +49,17 @@ object PipelineVersionUtils {
     }
 
     fun getVersionName(
-        versionNum: Int,
+        versionNum: Int?,
         pipelineVersion: Int?,
         triggerVersion: Int?,
         settingVersion: Int?
     ): String? {
-        return if (pipelineVersion == null || triggerVersion == null || settingVersion == null) {
+        return if (versionNum == null || pipelineVersion == null ||
+            triggerVersion == null || settingVersion == null) {
             null
-        } else "V$versionNum(P$pipelineVersion.T$triggerVersion.$settingVersion)"
+        } else {
+            "V$versionNum(P$pipelineVersion.T$triggerVersion.$settingVersion)"
+        }
     }
 
     /**
