@@ -863,6 +863,14 @@
     flex-direction: column;
     align-items: center;
 
+    > h3 {
+        width: 100%;
+        margin: 0 0 16px 0;
+        font-size: 14px;
+        font-weight: normal;
+        text-align: left;
+    }
+
     .release-info-title {
         font-size: 20px;
         color: #313238;
