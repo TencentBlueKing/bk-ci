@@ -55,9 +55,9 @@ class PipelineResourceDao {
         model: Model,
         yamlStr: String?,
         versionNum: Int?,
-        pipelineVersion: Int,
-        triggerVersion: Int,
-        settingVersion: Int
+        pipelineVersion: Int?,
+        triggerVersion: Int?,
+        settingVersion: Int?
     ) {
         logger.info("Create the pipeline model pipelineId=$pipelineId, version=$version")
         with(T_PIPELINE_RESOURCE) {

@@ -596,7 +596,7 @@ class PipelineResourceVersionDao {
                 val versionName = record.versionName.takeIf {
                     name -> name != "init"
                 } ?: PipelineVersionUtils.getVersionName(
-                    record.version, record.version, 0, 0
+                    record.versionNum, record.version, record.triggerVersion, record.settingVersion
                 ) ?: ""
                 PipelineVersionSimple(
                     pipelineId = record.pipelineId,

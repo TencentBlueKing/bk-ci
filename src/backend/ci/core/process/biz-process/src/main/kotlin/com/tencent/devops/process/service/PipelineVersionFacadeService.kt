@@ -320,6 +320,9 @@ class PipelineVersionFacadeService @Autowired constructor(
             Pair(VersionStatus.DRAFT_RELEASE, null)
         }
         if (enabled) {
+            if (draftVersion.yaml.isNullOrBlank()) throw ErrorCodeException(
+                errorCode = ProcessMessageCode.ERROR_YAML_CONTENT_IS_EMPTY
+            )
             if (request.yamlInfo == null) throw ErrorCodeException(
                 errorCode = CommonMessageCode.ERROR_NEED_PARAM_,
                 params = arrayOf(PipelineVersionReleaseRequest::yamlInfo.name)
