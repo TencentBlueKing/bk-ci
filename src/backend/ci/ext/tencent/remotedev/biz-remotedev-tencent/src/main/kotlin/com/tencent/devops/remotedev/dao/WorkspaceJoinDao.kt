@@ -520,7 +520,7 @@ class WorkspaceJoinDao {
         dslContext: DSLContext,
         projectId: String
     ): Set<String> {
-        return dslContext.select(TWorkspace.T_WORKSPACE.PROJECT_ID)
+        return dslContext.select(TWorkspaceShared.T_WORKSPACE_SHARED.SHARED_USER)
             .from(TWorkspace.T_WORKSPACE, TWorkspaceShared.T_WORKSPACE_SHARED)
             .where(TWorkspace.T_WORKSPACE.NAME.eq(TWorkspaceShared.T_WORKSPACE_SHARED.WORKSPACE_NAME))
             .and(TWorkspace.T_WORKSPACE.STATUS.notEqual(WorkspaceStatus.DELETED.ordinal))

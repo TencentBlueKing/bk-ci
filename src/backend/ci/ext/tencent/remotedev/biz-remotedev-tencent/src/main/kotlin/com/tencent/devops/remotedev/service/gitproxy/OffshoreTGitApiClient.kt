@@ -300,7 +300,7 @@ class OffshoreTGitApiClient @Autowired constructor(
             .dns(
                 TGitDns(
                     url = tGitConfig.tGitUrl.removePrefix("https://").removePrefix("http://"),
-                    ips = tGitConfig.tGitUrl.split(";").filter { it.isNotBlank() }.toSet()
+                    ips = tGitConfig.tGitIp.split(";").filter { it.isNotBlank() }.toSet()
                 )
             )
             .build()
