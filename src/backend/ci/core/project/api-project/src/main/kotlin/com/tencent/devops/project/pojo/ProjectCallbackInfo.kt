@@ -25,27 +25,19 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.project.pojo.secret.bkrepo
+package com.tencent.devops.project.pojo
 
-data class BkrepoProjectSecretParam(
-    val name: String,
-    val displayName: String,
-    val description: String,
-    val display: Boolean,
-    override val url: String,
-    override val userId: String
-) : BkrepoCommonSecretParam(
-    userId = userId,
-    url = url
-) {
+import com.tencent.devops.project.pojo.secret.ISecretParam
+import io.swagger.v3.oas.annotations.media.Schema
 
-    override fun getSecretType() = classType
-
-    override fun encode(aesKey: String) = this
-
-    override fun decode(aesKey: String) = this
-
-    companion object {
-        const val classType = "bkRepoProject"
-    }
-}
+@Schema(title = "项目回调记录信息")
+data class ProjectCallbackInfo constructor(
+    @get:Schema(title = "事件类型")
+    val event: String,
+    @get:Schema(title = "请求参数")
+    val secretParam: ISecretParam,
+    @get:Schema(title = "回调地址")
+    val callbackUrl: String,
+    @get:Schema(title = "优先级")
+    val priority: Int
+)

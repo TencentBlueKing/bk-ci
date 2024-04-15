@@ -47,6 +47,7 @@ import com.tencent.devops.project.util.OkHttpUtils
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import java.time.LocalDateTime
 import javax.annotation.PostConstruct
@@ -56,6 +57,9 @@ class ProjectCallbackControl @Autowired constructor(
     val projectCallbackDao: ProjectCallbackDao,
     val dslContext: DSLContext
 ) {
+
+    @Value("\${project.callback.secretParam.aes-key}")
+    private val aesKey = "C/R%3{?OS}IeGT21"
 
     @PostConstruct
     fun init() {
@@ -71,12 +75,12 @@ class ProjectCallbackControl @Autowired constructor(
 
     fun callBackProjectEvent(eventType: ProjectEventType, callbackData: ProjectCallbackData) {
         // 查询事件相关的回调记录
-        val callBackList = projectCallbackDao.getProjectCallback(
+        val callBackList = projectCallbackDao.get(
             dslContext = dslContext,
             event = eventType.name
         )
         callBackList.map {
-            val secretParam = JsonUtil.to(it.secretParam, ISecretParam::class.java)
+            val secretParam = JsonUtil.to(it.secretParam, ISecretParam::class.java).decode(aesKey)
             val secretTokenService = SecretTokenServiceFactory.getSecretTokenService(secretParam)
             val secretRequestParam = secretTokenService.getSecretRequestParam(
                 userId = secretParam.userId,

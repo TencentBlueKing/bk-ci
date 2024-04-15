@@ -27,10 +27,13 @@
 
 package com.tencent.devops.project.pojo.secret.bkrepo
 
+import com.tencent.devops.project.pojo.secret.ISecretParam
+import com.tencent.devops.project.util.SecretParamEncryptUtil
+
 data class BkrepoModelSecretParam(
     val pipelineSecret: String,
     val bkRepoName: String,
-    val storageCredentialsKey: String,
+    var storageCredentialsKey: String,
     val display: Boolean,
     override val url: String,
     override val userId: String
@@ -39,7 +42,17 @@ data class BkrepoModelSecretParam(
     url = url
 ) {
 
-    override fun getSecretType() = BkrepoModelSecretParam.classType
+    override fun getSecretType() = classType
+
+    override fun encode(aesKey: String): ISecretParam {
+        this.storageCredentialsKey = SecretParamEncryptUtil.encryptCredential(aesKey, storageCredentialsKey)!!
+        return this
+    }
+
+    override fun decode(aesKey: String): ISecretParam {
+        this.storageCredentialsKey = SecretParamEncryptUtil.decryptCredential(aesKey, storageCredentialsKey)!!
+        return this
+    }
 
     companion object {
         const val classType = "bkRepoModel"

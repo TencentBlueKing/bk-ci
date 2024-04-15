@@ -36,26 +36,39 @@ import com.tencent.devops.project.pojo.secret.ISecretParam
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Value
 
 @Suppress("ALL")
 @RestResource
 class OPProjectCallbackResourceImpl @Autowired constructor(
-    val projectCallbackDao: ProjectCallbackDao, val dslContext: DSLContext
+    val projectCallbackDao: ProjectCallbackDao,
+    val dslContext: DSLContext
 ) : OPProjectCallbackResource {
+
+    @Value("\${project.callback.secretParam.aes-key}")
+    private val aesKey = "C/R%3{?OS}IeGT21"
+
     override fun create(
-        userId: String, event: String, secretParam: ISecretParam, callbackUrl: String
+        userId: String,
+        event: String,
+        secretParam: ISecretParam,
+        callbackUrl: String
     ): Result<Boolean> {
         projectCallbackDao.create(
             dslContext = dslContext,
             event = event,
             url = callbackUrl,
-            secretParam = JsonUtil.toJson(secretParam, false),
+            secretParam = JsonUtil.toJson(secretParam.encode(aesKey), false),
             secretType = secretParam.getSecretType()
         )
         return Result(true)
     }
 
-    override fun delete(userId: String, event: String, callbackUrl: String): Result<Boolean> {
+    override fun delete(
+        userId: String,
+        event: String,
+        callbackUrl: String
+    ): Result<Boolean> {
         logger.info("start delete callback: userId[$userId]|event[$event]|callbackUrl[$callbackUrl]")
         val changeCount = projectCallbackDao.delete(
             dslContext = dslContext,
@@ -66,7 +79,9 @@ class OPProjectCallbackResourceImpl @Autowired constructor(
         return Result(true)
     }
 
-    companion object{
-        val logger  = LoggerFactory.getLogger(OPProjectCallbackResourceImpl::class.java)
+
+
+    companion object {
+        val logger = LoggerFactory.getLogger(OPProjectCallbackResourceImpl::class.java)
     }
 }

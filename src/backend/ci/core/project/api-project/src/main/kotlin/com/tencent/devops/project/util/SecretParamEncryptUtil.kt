@@ -25,27 +25,22 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.project.pojo.secret.bkrepo
+package com.tencent.devops.project.util
 
-data class BkrepoProjectSecretParam(
-    val name: String,
-    val displayName: String,
-    val description: String,
-    val display: Boolean,
-    override val url: String,
-    override val userId: String
-) : BkrepoCommonSecretParam(
-    userId = userId,
-    url = url
-) {
+import com.tencent.devops.common.security.util.BkCryptoUtil
 
-    override fun getSecretType() = classType
+object SecretParamEncryptUtil {
+    fun encryptCredential(aesKey: String, value: String?): String? {
+        if (value.isNullOrBlank()) {
+            return null
+        }
+        return BkCryptoUtil.encryptSm4ButAes(aesKey, value)
+    }
 
-    override fun encode(aesKey: String) = this
-
-    override fun decode(aesKey: String) = this
-
-    companion object {
-        const val classType = "bkRepoProject"
+    fun decryptCredential(aesKey: String, value: String?): String? {
+        if (value.isNullOrBlank()) {
+            return null
+        }
+        return BkCryptoUtil.decryptSm4OrAes(aesKey, value)
     }
 }

@@ -28,14 +28,12 @@
 package com.tencent.devops.project.dao
 
 import com.tencent.devops.model.project.tables.TProjectCallback
-import com.tencent.devops.model.project.tables.records.TProjectCallbackRecord
 import org.jooq.DSLContext
-import org.jooq.Result
 import org.springframework.stereotype.Repository
 
 @Repository
 class ProjectCallbackDao {
-    fun getProjectCallback(dslContext: DSLContext, event: String) = with(TProjectCallback.T_PROJECT_CALLBACK) {
+    fun get(dslContext: DSLContext, event: String) = with(TProjectCallback.T_PROJECT_CALLBACK) {
         dslContext.selectFrom(this)
             .where(EVENT.eq(event))
             .fetch()
