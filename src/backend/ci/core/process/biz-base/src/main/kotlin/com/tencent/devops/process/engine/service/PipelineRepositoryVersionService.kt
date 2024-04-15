@@ -209,8 +209,8 @@ class PipelineRepositoryVersionService(
                 limit = limit
             )
         )
-        // #8161 兼容老数据的版本表无记录
-        if (result.isEmpty()) {
+        // #8161 当过滤草稿时查到空结果是正常的，只在不过滤草稿时兼容老数据的版本表无记录
+        if (result.isEmpty() && includeDraft != false) {
             pipelineResourceDao.getReleaseVersionResource(
                 dslContext, projectId, pipelineId
             )?.let { record ->
