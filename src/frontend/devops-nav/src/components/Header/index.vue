@@ -418,7 +418,7 @@
             this.remindUserOfRelatedProduct({
                 projectId: this.projectId
             }).then(res => {
-                this.showOperationalDialog = !res
+                this.showOperationalDialog = res
             })
         }
 
