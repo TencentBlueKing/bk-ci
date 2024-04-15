@@ -265,7 +265,8 @@
             execDetail: {
                 type: Object,
                 required: true
-            }
+            },
+            isRunning: Boolean
         },
         data () {
             return {
@@ -303,9 +304,6 @@
                         label: this.$t('Errors')
                     }
                 ]
-            },
-            isRunning () {
-                return ['RUNNING', 'QUEUE'].includes(this.execDetail?.status)
             },
             timeDetailConf () {
                 return {

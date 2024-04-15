@@ -50,12 +50,15 @@
                 :text="false"
                 :has-permission="canEdit"
                 :version="currentVersion"
+                :draft-version="pipelineInfo?.version"
                 :pipeline-id="pipelineId"
                 :project-id="projectId"
                 :version-name="activePipelineVersion?.versionName"
                 :draft-base-version-name="draftBaseVersionName"
                 :is-active-draft="activePipelineVersion?.isDraft"
-            />
+            >
+                {{ operateName }}
+            </RollbackEntry>
             <template v-else>
                 <bk-button
                     theme="primary"
@@ -156,10 +159,10 @@
                 pacEnabled: 'atom/pacEnabled'
             }),
             showRollback () {
-                return !this.isActiveDraftVersion && !this.isReleaseVersion
+                return (!this.isActiveDraftVersion && !this.isReleaseVersion) || this.activePipelineVersion?.baseVersion !== this.pipelineInfo?.baseVersion
             },
             currentVersion () {
-                return parseInt(this.$route.params.version)
+                return this.$route.params.version ? parseInt(this.$route.params.version) : undefined
             },
             releaseVersion () {
                 return this.pipelineInfo?.releaseVersion
@@ -187,6 +190,9 @@
             },
             canManualStartup () {
                 return this.pipelineInfo?.canManualStartup ?? true
+            },
+            operateName () {
+                return this.isReleaseVersion ? this.$t('edit') : this.$t('rollback')
             },
             tooltip () {
                 return this.executable
@@ -235,14 +241,19 @@
                 'setSwitchingPipelineVersion',
                 'setShowVariable'
             ]),
-            goEdit () {
-                this.$router.push({
-                    name: 'pipelinesEdit',
-                    query: {
-                        tab: pipelineTabIdMap[this.$route.params.type] ?? 'pipeline'
-                    }
-                })
-            },
+            // goEdit () {
+            //     console.log(this.activePipelineVersion.baseVersion, this.pipelineInfo?.baseVersion, this.activePipelineVersion)
+            //     if (this.activePipelineVersion.baseVersion === this.pipelineInfo?.baseVersion) {
+            //         this.$router.push({
+            //             name: 'pipelinesEdit',
+            //             query: {
+            //                 tab: pipelineTabIdMap[this.$route.params.type] ?? 'pipeline'
+            //             }
+            //         })
+            //     } else {
+
+            //     }
+            // },
             showVersionSideSlider () {
                 this.setShowVariable(false)
                 this.$refs?.versionSelectorInstance?.close?.()

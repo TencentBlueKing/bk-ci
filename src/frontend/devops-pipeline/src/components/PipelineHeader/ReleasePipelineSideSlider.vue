@@ -231,7 +231,7 @@
                     filePath: [
                         {
                             required: true,
-                            regex: /^[\w\/]+\.ya?ml$/,
+                            regex: /\.ya?ml$/,
                             message: this.$t('yamlFilePathErrorTip'),
                             trigger: 'blur'
                         }
@@ -468,22 +468,32 @@
                             && this.releaseParams.targetAction === 'CHECKOUT_BRANCH_AND_REQUEST_MERGE'
                     const h = this.$createElement
                     const instance = this.$bkInfo({
-                        type: 'success',
-                        title: this.$t(isPacMR ? 'pacMRRelaseTips' : 'releaseSuc'),
+                        type: isPacMR ? '' : 'success',
                         width: 600,
                         position: {
                             top: 100,
                             left: 100
                         },
+                        
                         showFooter: false,
-                        subHeader: h('div', {}, [
+                        subHeader: h('div', {
+                            attrs: {
+                                class: 'release-info-content'
+                            }
+                        }, [
+                            isPacMR
+                                ? h('span', {
+                                    attrs: {
+                                        class: 'part-of-mr'
+                                    }
+                                })
+                                : null,
+                            h('p', {
+                                attrs: {
+                                    class: 'release-info-title'
+                                }
+                            }, this.$t(isPacMR ? 'pacMRRelaseTips' : 'releaseSuc')),
                             h('h3', {
-                                style: {
-                                    margin: '0 0 12px 0',
-                                    fontWeight: 'normal',
-                                    fontSize: '14px',
-                                    textAlign: 'left'
-                                },
                                 domProps: {
                                     innerHTML: this.$t(isPacMR ? 'pacMRRelaseSuc' : 'relaseSucTips', [
                                         versionName
@@ -491,40 +501,44 @@
                                 }
                             }),
                             ...(tipsArrayLength > 0
-                                ? [h(
-                                    'p',
-                                    {
-                                        attrs: {
-                                            class: 'pipeline-release-suc-tips'
-                                        }
-                                    },
-                                    Array.from({ length: tipsArrayLength }).map((_, index) => {
-                                        if (index === 1 && this.releaseParams.enablePac) {
-                                            return h('ul', {}, [
-                                                h('span', {}, this.$t(`${tipsI18nKey}${index}`)),
-                                                Array(3)
-                                                    .fill(0)
-                                                    .map((_, i) =>
-                                                        h(
-                                                            'li',
-                                                            {
-                                                                domProps: {
-                                                                    innerHTML: this.$t(
-                                                                        `${tipsI18nKey}${index}-${i}`
-                                                                    )
-                                                                },
-                                                                style: {
-                                                                    marginLeft: '32px',
-                                                                    listStyle: 'disc'
-                                                                }
-                                                            }
-                                                        )
-                                                    )
-                                            ])
-                                        }
-                                        return h('span', {}, this.$t(`${tipsI18nKey}${index}`))
-                                    })
-                                )]
+                                ? [
+                                    h(
+                                        'p',
+                                        {
+                                            attrs: {
+                                                class: 'pipeline-release-suc-tips'
+                                            }
+                                        },
+                                        [
+                                            h('h3', {}, this.$t('pacPipelineConfRule')),
+                                            ...Array.from({ length: tipsArrayLength }).map((_, index) => {
+                                                if (index === 1 && this.releaseParams.enablePac) {
+                                                    return h('ul', {}, [
+                                                        h('span', {}, this.$t(`${tipsI18nKey}${index}`)),
+                                                        Array(3)
+                                                            .fill(0)
+                                                            .map((_, i) =>
+                                                                h(
+                                                                    'li',
+                                                                    {
+                                                                        domProps: {
+                                                                            innerHTML: this.$t(
+                                                                                `${tipsI18nKey}${index}-${i}`
+                                                                            )
+                                                                        },
+                                                                        style: {
+                                                                            marginLeft: '32px',
+                                                                            listStyle: 'disc'
+                                                                        }
+                                                                    }
+                                                                )
+                                                            )
+                                                    ])
+                                                }
+                                                return h('span', {}, this.$t(`${tipsI18nKey}${index}`))
+                                            })
+                                        ]
+                                    )]
                                 : []),
                             h(
                                 'footer',
@@ -844,18 +858,65 @@
     padding: 0 24px;
 }
 
-.pipeline-release-suc-tips {
-    background: #f5f6fa;
+.release-info-content {
     display: flex;
     flex-direction: column;
-    border-radius: 2px;
-    padding: 14px 20px;
-    letter-spacing: 0;
-    line-height: 22px;
-    text-align: left;
+    align-items: center;
 
-    b {
-        color: #ff9c01;
+    .release-info-title {
+        font-size: 20px;
+        color: #313238;
+        margin: 22px 0 12px 0;
+        line-height: 1.2;
+        text-align: center;
+    }
+    
+    .pipeline-release-suc-tips {
+        background: #f5f6fa;
+        display: flex;
+        font-size: 14px;
+        flex-direction: column;
+        border-radius: 2px;
+        padding: 14px 20px;
+        letter-spacing: 0;
+        line-height: 22px;
+        text-align: left;
+        > h3 {
+            font-weight: 700;
+            font-size: 14px;
+            margin: 0 0 10px 0;
+        }
+    }
+    
+    .part-of-mr {
+        position: relative;
+        width: 42px;
+        height: 42px;
+        background-color: #E1ECFF;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        &:before {
+            position: absolute;
+            content: '';
+            width: 0;
+            height: 0;
+            border: 14px solid #3A84FF;
+            border-top-color: transparent;
+            position: absolute;
+            transform: rotate(-45deg);
+            border-radius: 50%;
+        }
+        &:after {
+            content: '';
+            position: absolute;
+            border: 2px solid #3A84FF;
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+    
+        }
     }
 }
 

@@ -96,10 +96,12 @@
                 immediate: true
             },
             '$route.params.pipelineId' (val) {
-                this.requestPipelineSummary({
-                    projectId: this.$route.params.projectId,
-                    pipelineId: val
-                })
+                if (val) {
+                    this.requestPipelineSummary({
+                        projectId: this.$route.params.projectId,
+                        pipelineId: val
+                    })
+                }
             }
         },
         created () {

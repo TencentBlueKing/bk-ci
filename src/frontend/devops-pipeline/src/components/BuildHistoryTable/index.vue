@@ -498,6 +498,9 @@
             pipelineId () {
                 return this.$route.params.pipelineId
             },
+            routePipelineVersion () {
+                return this.$route.params.version ? parseInt(this.$route.params.version) : ''
+            },
             canEdit () {
                 return this.pipelineInfo?.permissions.canEdit ?? true
             },
@@ -643,7 +646,7 @@
             activePipelineVersion: {
                 deep: true,
                 handler (newVal, oldVal) {
-                    if (this.pipelineChanged || !this.initedVersion || (newVal?.version !== oldVal?.version && newVal?.isDraft !== oldVal?.isDraft)) {
+                    if (this.pipelineChanged || !this.initedVersion || (newVal?.version !== this.routePipelineVersion)) {
                         this.pipelineChanged = false
                         this.initedVersion = true
                         this.handlePageChange(1)
@@ -667,7 +670,7 @@
 
         mounted () {
             webSocketMessage.installWsMessage(this.requestHistory)
-            if (this.$route.params.version) {
+            if (this.routePipelineVersion) {
                 this.initedVersion = true
                 this.requestHistory()
             }
@@ -696,7 +699,7 @@
             },
             async requestHistory () {
                 try {
-                    const version = this.$route.params.version
+                    const version = this.routePipelineVersion
                     if (!version) return
                     this.isLoading = true
                     this.resetRemark()

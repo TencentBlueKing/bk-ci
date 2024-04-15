@@ -24,12 +24,12 @@
 </template>
 
 <script>
-    import { mapState, mapActions, mapGetters } from 'vuex'
-    import { navConfirm } from '@/utils/util'
     import { UPDATE_PIPELINE_INFO } from '@/store/modules/atom/constants'
     import {
         RESOURCE_ACTION
     } from '@/utils/permission'
+    import { navConfirm } from '@/utils/util'
+    import { mapActions, mapGetters, mapState } from 'vuex'
 
     export default {
         props: {
@@ -56,7 +56,7 @@
             draftBaseVersionName: {
                 type: String
             },
-            draftBaseVersion: {
+            draftVersion: {
                 type: Number
             },
             projectId: {
@@ -101,7 +101,7 @@
                 if (this.isRollback) {
                     this.rollback()
                 } else {
-                    this.goEdit(this.version)
+                    this.goEdit(this.draftVersion ?? this.version)
                 }
             },
             async rollback () {

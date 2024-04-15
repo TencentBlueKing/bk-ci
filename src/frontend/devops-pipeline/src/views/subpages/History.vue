@@ -31,7 +31,7 @@
     
                     </ul>
                 </ul>
-                <div v-for="i in [1,2]" :key="i" ref="disableToolTips" class="disable-nav-child-item-tooltips">
+                <div v-for="i in [1,2,3,4]" :key="i" ref="disableToolTips" class="disable-nav-child-item-tooltips">
                     {{$t('switchToReleaseVersion')}}
                     <span v-if="isReleasePipeline" @click="switchToReleaseVersion" class="text-link">{{ $t('newlist.view') }}</span>
                 </div>
@@ -83,10 +83,20 @@
                         children: [
                             {
                                 title: this.$t('pipelinesHistory'),
+                                disableTooltip: {
+                                    content: this.$refs.disableToolTips?.[0],
+                                    disabled: this.isReleaseVersion || this.isBranchVersion,
+                                    delay: [300, 0]
+                                },
                                 name: 'history'
                             },
                             {
                                 title: this.$t('triggerEvent'),
+                                disableTooltip: {
+                                    content: this.$refs.disableToolTips?.[1],
+                                    disabled: this.isReleaseVersion || this.isBranchVersion,
+                                    delay: [300, 0]
+                                },
                                 name: 'triggerEvent'
                             }
                             // , {
@@ -95,6 +105,7 @@
                             // }
                         ].map((child) => ({
                             ...child,
+                            disabled: !this.isReleaseVersion && !this.isBranchVersion,
                             active: this.activeMenuItem === child.name
                         }))
                     },
@@ -131,7 +142,7 @@
                             {
                                 title: this.$t('authSetting'),
                                 disableTooltip: {
-                                    content: this.$refs.disableToolTips?.[0],
+                                    content: this.$refs.disableToolTips?.[2],
                                     disabled: this.isReleaseVersion,
                                     delay: [300, 0]
                                 },
@@ -140,7 +151,7 @@
                             {
                                 title: this.$t('operationLog'),
                                 disableTooltip: {
-                                    content: this.$refs.disableToolTips?.[1],
+                                    content: this.$refs.disableToolTips?.[3],
                                     disabled: this.isReleaseVersion,
                                     delay: [300, 0]
                                 },
@@ -189,9 +200,16 @@
                         isDraft,
                         isRelease: data.status === VERSION_STATUS_ENUM.RELEASED
                     })
-                    if (isDraft) {
+                    if (isDraft && !this.isReleasePipeline) {
                         this.$router.replace({
                             name: 'pipelinesEdit'
+                        })
+                    } else {
+                        this.$router.replace({
+                            params: {
+                                ...this.$route.params,
+                                version: this.pipelineInfo?.releaseVersion
+                            }
                         })
                     }
                 } catch (error) {
