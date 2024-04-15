@@ -107,7 +107,10 @@ export default {
    */
   getOrganizations(params: any) {
     const { type, id } = params;
-    return http.get(`${PROJECT_PERFIX}/user/organizations/types/${type}/ids/${id}`);
+    const url = type === 'dept'
+      ? `${PROJECT_PERFIX}/user/organizations/types/${type}/ids/${id}?excludeBelowTheDept=true`
+      : `${PROJECT_PERFIX}/user/organizations/types/${type}/ids/${id}`
+    return http.get(url);
   },
 
   /**
