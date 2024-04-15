@@ -47,7 +47,6 @@ import com.tencent.devops.common.auth.api.ResourceTypeId
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.redis.concurrent.SimpleRateLimiter
 import com.tencent.devops.common.web.utils.I18nUtil
-import com.tencent.devops.common.websocket.dispatch.WebSocketDispatcher
 import com.tencent.devops.environment.TpaLock
 import com.tencent.devops.environment.constant.EnvironmentMessageCode
 import com.tencent.devops.environment.dao.NodeDao
@@ -55,7 +54,6 @@ import com.tencent.devops.environment.dao.thirdpartyagent.ThirdPartyAgentDao
 import com.tencent.devops.environment.permission.EnvironmentPermissionService
 import com.tencent.devops.environment.pojo.enums.NodeStatus
 import com.tencent.devops.environment.pojo.enums.NodeType
-import com.tencent.devops.environment.service.NodeWebsocketService
 import com.tencent.devops.environment.service.slave.SlaveGatewayService
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
@@ -73,8 +71,6 @@ class ImportService @Autowired constructor(
     private val nodeDao: NodeDao,
     private val slaveGatewayService: SlaveGatewayService,
     private val environmentPermissionService: EnvironmentPermissionService,
-    private val webSocketDispatcher: WebSocketDispatcher,
-    private val websocketService: NodeWebsocketService,
     private val simpleRateLimiter: SimpleRateLimiter
 ) {
 
@@ -193,7 +189,7 @@ class ImportService @Autowired constructor(
                 projectId = projectId,
                 ip = agentRecord.ip,
                 name = agentRecord.hostname,
-                osName = agentRecord.os.toLowerCase(),
+                osName = agentRecord.os.lowercase(),
                 status = NodeStatus.NORMAL,
                 type = NodeType.THIRDPARTY,
                 userId = userId,
@@ -223,7 +219,6 @@ class ImportService @Autowired constructor(
                 nodeName = "$nodeStringId(${agentRecord.ip})"
             )
         }
-        webSocketDispatcher.dispatch(websocketService.buildDetailMessage(projectId = projectId, userId = userId))
         return nodeId
     }
 }
