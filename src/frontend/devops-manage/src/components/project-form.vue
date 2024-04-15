@@ -338,7 +338,7 @@ const fetchUserDetail = async () => {
     type: 'center',
   });
 
-  if (deptInfos[1].type === 'bg') {
+  if (deptInfos.length && deptInfos[1].type === 'bg') {
     fetchOperationalList(deptInfos[1].name);
   }
   return deptInfos;
