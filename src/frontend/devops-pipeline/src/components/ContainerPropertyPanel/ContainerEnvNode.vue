@@ -155,7 +155,7 @@
             required: Boolean,
             pipeline: {
                 type: Object,
-                default: () => {}
+                default: () => () => {}
             },
             stageIndex: {
                 type: Number
