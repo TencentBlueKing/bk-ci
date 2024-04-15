@@ -40,7 +40,7 @@ class ProjectCostAllocationService constructor(
     val redisOperation: RedisOperation,
     val projectNotifyService: ProjectNotifyService,
     val projectUserService: ProjectUserService,
-    val dslContext: DSLContext,
+    val dslContext: DSLContext
 ) {
     companion object {
         private val DATE_FORMATTER: DateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd")
@@ -59,11 +59,6 @@ class ProjectCostAllocationService constructor(
         .build<String/*manager*/, MutableList<ProjectVO>/*projectList*/>()
     private val disabledProjectList = mutableListOf<String>()
 
-    @Value("\${obs.url:#{null}}")
-    private var obsUrl: String = ""
-
-    @Value("\${obs.token:#{null}}")
-    private var obsToken: String = ""
     fun processInactiveProjectByCondition(
         migrateProjectConditionDTO: MigrateProjectConditionDTO
     ): Boolean {
