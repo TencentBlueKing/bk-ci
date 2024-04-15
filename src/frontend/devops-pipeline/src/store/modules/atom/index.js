@@ -86,7 +86,8 @@ export default {
         isPipelineEditing: false,
         activePipelineVersion: null,
         yamlHighlightBlockMap: {},
-        switchingVersion: false
+        switchingVersion: false,
+        isElementModified: false
     },
     mutations,
     actions,

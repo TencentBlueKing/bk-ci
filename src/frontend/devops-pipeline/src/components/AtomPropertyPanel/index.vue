@@ -65,15 +65,15 @@
         },
         data () {
             return {
-                nameEditing: false,
-                isElementModified: false
+                nameEditing: false
             }
         },
         computed: {
             ...mapState('atom', [
                 'showVariable',
                 'globalEnvs',
-                'isPropertyPanelVisible'
+                'isPropertyPanelVisible',
+                'isElementModified'
             ]),
             ...mapGetters('atom', [
                 'getDefaultVersion',
@@ -126,6 +126,7 @@
             ...mapActions('atom', [
                 'toggleAtomSelectorPopup',
                 'updateAtom',
+                'setAtomEditing',
                 'togglePropertyPanel'
             ]),
             async handleBeforeClose () {
@@ -140,7 +141,7 @@
                 if (res && typeof this.beforeClose === 'function') {
                     await this.beforeClose()
                 }
-                this.isElementModified = false
+                this.setAtomEditing(false)
                 return res
             },
 
@@ -154,9 +155,6 @@
             },
 
             handleUpdateAtom (name, val) {
-                if (!['isError'].includes(name)) {
-                    this.isElementModified = true
-                }
                 this.updateAtom({
                     element: this.element,
                     newParam: {

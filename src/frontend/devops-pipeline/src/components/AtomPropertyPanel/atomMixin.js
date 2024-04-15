@@ -126,7 +126,6 @@ const atomMixin = {
         ...mapActions('atom', [
             'updateAtomInput',
             'updateWholeAtomInput',
-            'updateAtomOutput',
             'updateAtomOutputNameSpace',
             'updateAtom',
             'deleteAtomProps'
@@ -159,14 +158,6 @@ const atomMixin = {
             this.updateWholeAtomInput({
                 atom: this.element,
                 newInput
-            })
-        },
-        handleUpdateAtomOutput (name, value) {
-            this.updateAtomOutput({
-                atom: this.element,
-                newParam: {
-                    [name]: value
-                }
             })
         },
         handleUpdateAtomOutputNameSpace (name, value) {
