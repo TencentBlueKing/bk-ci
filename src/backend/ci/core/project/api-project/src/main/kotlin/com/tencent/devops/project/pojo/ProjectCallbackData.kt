@@ -28,7 +28,6 @@
 package com.tencent.devops.project.pojo
 
 import com.tencent.devops.project.enum.ProjectEventType
-import com.tencent.devops.project.pojo.mq.ProjectBroadCastEvent
 
 class ProjectCallbackData(
     val event: ProjectEventType,

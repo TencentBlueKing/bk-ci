@@ -73,7 +73,7 @@ class BkrepoModelSecretTokenService : BkrepoSecretTokenCommonService<BkrepoModel
         super.requestSuccess()
     }
 
-    companion object{
+    companion object {
         private val logger = LoggerFactory.getLogger(BkrepoModelSecretTokenService::class.java)
     }
 }

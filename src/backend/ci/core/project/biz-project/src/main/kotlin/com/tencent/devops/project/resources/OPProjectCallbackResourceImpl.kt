@@ -79,8 +79,6 @@ class OPProjectCallbackResourceImpl @Autowired constructor(
         return Result(true)
     }
 
-
-
     companion object {
         val logger = LoggerFactory.getLogger(OPProjectCallbackResourceImpl::class.java)
     }

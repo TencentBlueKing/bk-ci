@@ -48,7 +48,10 @@ class BkrepoProjectSecretTokenService : BkrepoSecretTokenCommonService<BkrepoPro
         )
     }
 
-    override fun getRequestBody(secretParam: BkrepoProjectSecretParam, projectCallbackData: ProjectCallbackData): String {
+    override fun getRequestBody(
+        secretParam: BkrepoProjectSecretParam,
+        projectCallbackData: ProjectCallbackData
+    ): String {
         val projectId = projectCallbackData.getProjectId()
         val userProjectCreateRequest = UserProjectCreateRequest(
             name = projectId,
@@ -67,7 +70,7 @@ class BkrepoProjectSecretTokenService : BkrepoSecretTokenCommonService<BkrepoPro
         super.requestSuccess()
     }
 
-    companion object{
+    companion object {
         private val logger = LoggerFactory.getLogger(BkrepoProjectSecretTokenService::class.java)
     }
 }

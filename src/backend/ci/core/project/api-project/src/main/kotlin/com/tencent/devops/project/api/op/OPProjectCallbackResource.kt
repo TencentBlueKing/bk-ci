@@ -62,7 +62,6 @@ interface OPProjectCallbackResource {
         callbackUrl: String
     ): Result<Boolean>
 
-
     @DELETE
     @Path("/delete")
     @Operation(summary = "移除项目级回调")

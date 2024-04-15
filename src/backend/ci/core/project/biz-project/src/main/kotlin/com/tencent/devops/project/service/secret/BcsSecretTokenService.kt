@@ -31,7 +31,7 @@ import com.tencent.devops.project.pojo.ProjectCallbackData
 import com.tencent.devops.project.pojo.SecretRequestParam
 import com.tencent.devops.project.pojo.secret.BcsSecretParam
 
-class BcsSecretTokenService: ISecretTokenService<BcsSecretParam> {
+class BcsSecretTokenService : ISecretTokenService<BcsSecretParam> {
     override fun getSecretRequestParam(
         userId: String,
         projectId: String,

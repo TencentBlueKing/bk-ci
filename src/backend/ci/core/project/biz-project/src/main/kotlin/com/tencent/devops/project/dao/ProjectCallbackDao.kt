@@ -66,7 +66,7 @@ class ProjectCallbackDao {
         dslContext: DSLContext,
         event: String,
         url: String
-    ) :Int{
+    ): Int {
         return with(TProjectCallback.T_PROJECT_CALLBACK) {
             dslContext.deleteFrom(this).where(
                 EVENT.eq(event)
