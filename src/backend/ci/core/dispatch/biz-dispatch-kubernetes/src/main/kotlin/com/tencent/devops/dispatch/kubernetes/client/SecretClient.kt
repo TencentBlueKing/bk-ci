@@ -35,7 +35,6 @@ import com.tencent.devops.common.dispatch.sdk.BuildFailureException
 import com.tencent.devops.dispatch.kubernetes.pojo.KubernetesResult
 import com.tencent.devops.dispatch.kubernetes.pojo.common.ErrorCodeEnum
 import io.fabric8.kubernetes.api.model.Secret
-import io.fabric8.kubernetes.api.model.Service
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.RequestBody
 import org.slf4j.LoggerFactory
