@@ -3,11 +3,11 @@ package com.tencent.devops.project.service.cron
 import com.tencent.devops.common.auth.api.pojo.MigrateProjectConditionDTO
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
-import com.tencent.devops.common.service.Profile
 import com.tencent.devops.project.service.ProjectCostAllocationService
 import com.tencent.devops.project.service.ProjectNotifyService
 import com.tencent.devops.project.service.ProjectOperationalProductService
 import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Service
 
@@ -16,10 +16,12 @@ class ProjectCronService constructor(
     val projectNotifyService: ProjectNotifyService,
     val projectCostAllocationService: ProjectCostAllocationService,
     val redisOperation: RedisOperation,
-    val profile: Profile,
     val projectOperationalProductService: ProjectOperationalProductService
 ) {
-    val redisLock = RedisLock(redisOperation, PROJECT_CRON_KEY, 10)
+    private val redisLock = RedisLock(redisOperation, PROJECT_CRON_KEY, 10)
+
+    @Value("\${project.cron.enable:#{false}}")
+    private var enable: Boolean = false
 
     companion object {
         private const val PROJECT_CRON_KEY = "project_cron_key"
@@ -29,7 +31,7 @@ class ProjectCronService constructor(
 
     @Scheduled(cron = "0 0 6 * * ?")
     fun checkChangesOfProjectRegularly() {
-        if (!profile.isRbacGray()) {
+        if (!enable) {
             return
         }
         try {
@@ -56,7 +58,7 @@ class ProjectCronService constructor(
      * */
     @Scheduled(cron = "0 0 3 ? * MON")
     fun checkProjectOrganizationRegularly() {
-        if (!profile.isRbacGray()) {
+        if (!enable) {
             return
         }
         try {
@@ -77,7 +79,7 @@ class ProjectCronService constructor(
     @Scheduled(cron = "0 0 8 ? * MON")
     @Suppress("NestedBlockDepth")
     fun processInactiveProjectRegularly() {
-        if (!profile.isRbacGray()) {
+        if (!enable) {
             return
         }
         try {
@@ -108,7 +110,7 @@ class ProjectCronService constructor(
      * */
     @Scheduled(cron = "0 0 6 ? * SUN")
     fun updateObsProduct() {
-        if (!profile.isRbacGray()) {
+        if (!enable) {
             return
         }
         try {
