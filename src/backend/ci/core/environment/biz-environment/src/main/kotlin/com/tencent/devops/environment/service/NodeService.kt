@@ -172,13 +172,22 @@ class NodeService @Autowired constructor(
         nodeIp: String?,
         displayName: String?,
         createdUser: String?,
-        lastModifiedUser: String?
+        lastModifiedUser: String?,
+        keywords: String?
     ): Page<NodeWithPermission> {
         val nodeRecordList =
             if (-1 != page) {
                 val sqlLimit = PageUtil.convertPageSizeToSQLLimit(page ?: 1, pageSize ?: 20)
                 nodeDao.listNodesWithPageLimitAndSearchCondition(
-                    dslContext, projectId, sqlLimit.limit, sqlLimit.offset, nodeIp, displayName, createdUser, lastModifiedUser
+                    dslContext = dslContext,
+                    projectId = projectId,
+                    limit = sqlLimit.limit,
+                    offset = sqlLimit.offset,
+                    nodeIp = nodeIp,
+                    displayName = displayName,
+                    createdUser = createdUser,
+                    lastModifiedUser = lastModifiedUser,
+                    keywords = keywords
                 )
             } else {
                 nodeDao.listNodes(dslContext, projectId)
@@ -186,7 +195,15 @@ class NodeService @Autowired constructor(
         if (nodeRecordList.isEmpty()) {
             return Page(1, 0, 0, emptyList())
         }
-        val count = nodeDao.countForAuth(dslContext, projectId).toLong()
+        val count = nodeDao.countForAuthWithSearchCondition(
+            dslContext = dslContext,
+            projectId = projectId,
+            nodeIp = nodeIp,
+            displayName = displayName,
+            createdUser = createdUser,
+            lastModifiedUser = lastModifiedUser,
+            keywords = keywords
+        ).toLong()
         return Page(
             page = page ?: 1,
             pageSize = pageSize ?: 20,
