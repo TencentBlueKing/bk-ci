@@ -271,7 +271,7 @@
     "newPool": "创建",
     "查看构建机监控": "查看构建机监控",
     "查看更多指标监控": "查看更多指标监控",
-    "nodeSearchTips": "IP/别名/导入人/最近修改人",
+    "nodeSearchTips": "关键字/IP/别名/导入人/最近修改人",
     "alias": "别名",
     "lastModifier": "最近修改人",
     "installAgent": "安装Agent",

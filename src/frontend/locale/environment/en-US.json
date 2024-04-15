@@ -276,7 +276,7 @@
     "newPool": "New Pool",
     "查看构建机监控": "View build machine monitoring",
     "查看更多指标监控": "View more metric monitoring",
-    "nodeSearchTips": "IP / Alias / Importer / Last Modifier",
+    "nodeSearchTips": "Keywords / IP / Alias / Importer / Last Modifier",
     "alias": "Alias",
     "lastModifier": "Last Modifier",
     "installAgent": "Install Agent",
