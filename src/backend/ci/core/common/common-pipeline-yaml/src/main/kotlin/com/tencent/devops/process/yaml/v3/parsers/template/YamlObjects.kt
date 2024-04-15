@@ -217,7 +217,7 @@ object YamlObjects {
             },
             run = step["run"]?.toString(),
             shell = step["shell"]?.toString(),
-            checkout = step["checkout"]?.toString(),
+            checkout = step["checkout"],
             manualRetry = getNullValue("can-manually-retry", step)?.toBoolean(),
             yamlMetaData = if (step["yamlMetaData"] == null) {
                 MetaData(templateInfo = repo)
