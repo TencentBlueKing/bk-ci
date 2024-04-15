@@ -351,6 +351,7 @@ internal class ModelTransferTest : BkCiAbstractTest() {
 
         val invalidElement = mutableListOf<String>()
         val defaultAspects = PipelineTransferAspectLoader.checkInvalidElement(invalidElement)
+        PipelineTransferAspectLoader.sharedEnvTransfer(defaultAspects)
         val watcher = Watcher(id = "yaml and model transfer watcher")
         watcher.start("step_1|FULL_MODEL2YAML V3 start")
         val yml = modelTransfer.model2yaml(
@@ -416,6 +417,7 @@ internal class ModelTransferTest : BkCiAbstractTest() {
                 }
             }
         )
+        PipelineTransferAspectLoader.sharedEnvTransfer(aspects)
         watcher.start("normalize Yaml")
         pYml.replaceTemplate { templateFilter ->
             YamlTemplate(
