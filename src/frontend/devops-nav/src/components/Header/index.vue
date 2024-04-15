@@ -160,7 +160,7 @@
 
 <script lang="ts">
     import Vue from 'vue'
-    import { Component } from 'vue-property-decorator'
+    import { Component, Watch } from 'vue-property-decorator'
     import { Action, Getter, State } from 'vuex-class'
     import eventBus from '../../utils/eventBus'
     import { isAbsoluteUrl, urlJoin } from '../../utils/util'
@@ -267,6 +267,11 @@
 
         $refs: {
             projectDropdown: any
+        }
+
+        @Watch('projectId')
+        changeProjectId () {
+            this.checkRemindUserOfRelatedProduct()
         }
 
         created () {
