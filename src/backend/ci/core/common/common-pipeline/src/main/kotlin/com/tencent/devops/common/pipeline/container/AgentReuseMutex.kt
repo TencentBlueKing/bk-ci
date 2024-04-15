@@ -38,7 +38,7 @@ data class AgentReuseMutex(
     @get:Schema(title = "支持变量解析的timeout，变量值非数字则会改取timeout值", required = false)
     var timeoutVar: String? = null,
     @get:Schema(title = "排队队列大小", required = false)
-    val queue: Int = 5,
+    val queue: Int = 10,
     // 运行时的agentOrEnvId，如果有值说明已经初始化了
     var runtimeAgentOrEnvId: String? = null,
     @get:Schema(title = "占用锁定的信息用于日志提示", required = false)
