@@ -78,14 +78,14 @@ import {
     TOGGLE_STAGE_REVIEW_PANEL,
     UPDATE_ATOM,
     UPDATE_ATOM_INPUT,
-    UPDATE_ATOM_OUTPUT,
     UPDATE_ATOM_OUTPUT_NAMESPACE,
     UPDATE_ATOM_TYPE,
     UPDATE_CONTAINER,
     UPDATE_PIPELINE_INFO,
     UPDATE_PIPELINE_SETTING_MUNTATION,
     UPDATE_STAGE,
-    UPDATE_WHOLE_ATOM_INPUT
+    UPDATE_WHOLE_ATOM_INPUT,
+    SET_ATOM_EDITING
 } from './constants'
 
 export default {
@@ -326,18 +326,6 @@ export default {
             console.warn(e, 'update atom input error', atom)
         }
     },
-
-    [UPDATE_ATOM_OUTPUT]: (state, { atom, newParam }) => {
-        try {
-            for (const key in newParam) {
-                if (Object.prototype.hasOwnProperty.call(newParam, key)) {
-                    Vue.set(atom.data.output, key, newParam[key])
-                }
-            }
-        } catch (e) {
-            console.warn(e, 'update atom input error', atom)
-        }
-    },
     [UPDATE_ATOM_OUTPUT_NAMESPACE]: (state, { atom, namespace }) => {
         try {
             Vue.set(atom.data, 'namespace', namespace)
@@ -485,6 +473,13 @@ export default {
     [SWITCHING_PIPELINE_VERSION]: (state, payload) => {
         Object.assign(state, {
             switchingVersion: payload
+        })
+        return state
+    },
+    [SET_ATOM_EDITING]: (state, payload) => {
+        Object.assign(state, {
+            isElementModified: payload
+
         })
         return state
     }

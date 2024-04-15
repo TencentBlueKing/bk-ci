@@ -79,13 +79,13 @@ import {
     TOGGLE_STAGE_REVIEW_PANEL,
     UPDATE_ATOM,
     UPDATE_ATOM_INPUT,
-    UPDATE_ATOM_OUTPUT,
     UPDATE_ATOM_OUTPUT_NAMESPACE,
     UPDATE_ATOM_TYPE,
     UPDATE_CONTAINER,
     UPDATE_PIPELINE_SETTING_MUNTATION,
     UPDATE_STAGE,
-    UPDATE_WHOLE_ATOM_INPUT
+    UPDATE_WHOLE_ATOM_INPUT,
+    SET_ATOM_EDITING
 } from './constants'
 
 function rootCommit (commit, ACTION_CONST, payload) {
@@ -610,7 +610,6 @@ export default {
     },
     updateAtomInput: PipelineEditActionCreator(UPDATE_ATOM_INPUT),
     updateWholeAtomInput: PipelineEditActionCreator(UPDATE_WHOLE_ATOM_INPUT),
-    updateAtomOutput: PipelineEditActionCreator(UPDATE_ATOM_OUTPUT),
     updateAtomOutputNameSpace: PipelineEditActionCreator(UPDATE_ATOM_OUTPUT_NAMESPACE),
     deleteAtomProps: PipelineEditActionCreator(DELETE_ATOM_PROP),
     togglePropertyPanel: ({ commit }, payload) => {
@@ -829,6 +828,9 @@ export default {
     },
     getPipelineVersionInfo ({ commit }, { projectId, pipelineId, version }) {
         return request.get(`/${PROCESS_API_URL_PREFIX}/user/version/projects/${projectId}/pipelines/${pipelineId}/versions/${version}/info`)
+    },
+    setAtomEditing ({ commit }, isEditing) {
+        return commit(SET_ATOM_EDITING, isEditing)
     }
 
 }

@@ -224,6 +224,7 @@
             this.setPipelineEditing(false)
             this.setSaveStatus(false)
             this.setEditFrom(false)
+            this.setAtomEditing(false)
             this.togglePropertyPanel({
                 isShow: false
             })
@@ -246,7 +247,8 @@
                 'setPipelineEditing',
                 'setSaveStatus',
                 'setEditFrom',
-                'updatePipelineSetting'
+                'updatePipelineSetting',
+                'setAtomEditing'
             ]),
             ...mapActions('common', [
                 'requestQualityAtom',

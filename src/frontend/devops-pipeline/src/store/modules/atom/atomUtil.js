@@ -17,7 +17,7 @@
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-import { ADD_STAGE, NORMAL_CONTAINER_TYPE, SET_PIPELINE_EDITING, TRIGGER_CONTAINER_TYPE, UPDATE_ATOM_OUTPUT_NAMESPACE, VM_CONTAINER_TYPE } from './constants'
+import { ADD_STAGE, NORMAL_CONTAINER_TYPE, SET_PIPELINE_EDITING, TRIGGER_CONTAINER_TYPE, UPDATE_ATOM_OUTPUT_NAMESPACE, VM_CONTAINER_TYPE, SET_ATOM_EDITING } from './constants'
 
 /**
  * 获取原子模型unique Key
@@ -96,10 +96,12 @@ export function PipelineEditActionCreator (mutation) {
             }
         } else if (payload.element && payload.newParam) {
             if (compareParam(payload.newParam, payload.element)) {
+                commit(SET_ATOM_EDITING, true)
                 commit(SET_PIPELINE_EDITING, true)
             }
         } else if (payload.atom && payload.newParam) {
             if (compareParam(payload.newParam, payload.atom)) {
+                commit(SET_ATOM_EDITING, true)
                 commit(SET_PIPELINE_EDITING, true)
             }
         } else if (payload.stage && payload.newParam) {
