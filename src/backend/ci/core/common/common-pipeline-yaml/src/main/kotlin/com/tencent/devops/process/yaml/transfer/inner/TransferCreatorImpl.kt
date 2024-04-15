@@ -78,22 +78,27 @@ class TransferCreatorImpl @Autowired constructor() : TransferCreator {
             inputMap.putAll(step.with!!)
         }
         when {
-            step.checkout == "self" -> {
+            step.checkout?.self == true -> {
                 inputMap[CheckoutAtomParam::repositoryType.name] = CheckoutAtomParam.CheckoutRepositoryType.SELF
             }
-            inputMap["type"] == CheckoutAtomParam.CheckoutRepositoryType.ID.name -> {
-                inputMap[CheckoutAtomParam::repositoryHashId.name] = step.checkout!!
+
+            step.checkout?.repoName != null -> {
+                inputMap[CheckoutAtomParam::repositoryName.name] = step.checkout?.repoName!!
+                inputMap[CheckoutAtomParam::repositoryType.name] = CheckoutAtomParam.CheckoutRepositoryType.NAME
+            }
+
+            step.checkout?.repoId != null -> {
+                inputMap[CheckoutAtomParam::repositoryName.name] = step.checkout?.repoId!!
                 inputMap[CheckoutAtomParam::repositoryType.name] = CheckoutAtomParam.CheckoutRepositoryType.ID
             }
 
-            step.checkout?.startsWith("http") == true -> {
-                inputMap[CheckoutAtomParam::repositoryUrl.name] = step.checkout!!
+            step.checkout?.url?.startsWith("http") == true -> {
+                inputMap[CheckoutAtomParam::repositoryUrl.name] = step.checkout?.url!!
                 inputMap[CheckoutAtomParam::repositoryType.name] = CheckoutAtomParam.CheckoutRepositoryType.URL
             }
 
             else -> {
-                inputMap[CheckoutAtomParam::repositoryName.name] = step.checkout!!
-                inputMap[CheckoutAtomParam::repositoryType.name] = CheckoutAtomParam.CheckoutRepositoryType.NAME
+                inputMap[CheckoutAtomParam::repositoryType.name] = CheckoutAtomParam.CheckoutRepositoryType.SELF
             }
         }
 

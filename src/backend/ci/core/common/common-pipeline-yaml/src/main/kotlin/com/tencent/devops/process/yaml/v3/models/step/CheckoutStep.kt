@@ -25,45 +25,17 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.pipeline.pojo.transfer
+package com.tencent.devops.process.yaml.v3.models.step
 
-import com.fasterxml.jackson.annotation.JsonFilter
-import com.fasterxml.jackson.annotation.JsonProperty
 import io.swagger.v3.oas.annotations.media.Schema
 
-interface IPreStep
-
-/**
- * 为了方便产生中间变量的过度类和Step一模一样
- */
-@JsonFilter(YAME_META_DATA_JSON_FILTER)
-data class PreStep(
-    var enable: Boolean? = null,
-    val checkout: Any? = null,
-    val name: String?,
-    val id: String?,
-    @get:Schema(title = "if")
-    @JsonProperty("if")
-    val ifFiled: String?,
-    @get:Schema(title = "if-modify")
-    @JsonProperty("if-modify")
-    val ifModify: List<String>? = null,
-    val uses: String?,
-    val with: Map<String, Any?>?,
-    @get:Schema(title = "timeout-minutes")
-    @JsonProperty("timeout-minutes")
-    var timeoutMinutes: String? = null,
-    @get:Schema(title = "continue-on-error")
-    @JsonProperty("continue-on-error")
-    var continueOnError: Any? = null,
-    @get:Schema(title = "retry-times")
-    @JsonProperty("retry-times")
-    var retryTimes: Int? = null,
-    var env: Map<String, Any?>? = emptyMap(),
-    val run: String? = null,
-    val shell: String? = null,
-    @get:Schema(title = "can-manually-retry")
-    @JsonProperty("can-manually-retry")
-    var manualRetry: Boolean? = null,
-    override val yamlMetaData: MetaData? = null
-) : YamlMetaData, IPreStep
+data class CheckoutStep(
+    @get:Schema(title = "如果直接填的http/https地址, 此参数有值", required = false)
+    val url: String? = null,
+    @get:Schema(title = "如果直接填的SELF, 此参数有值且为true", required = false)
+    val self: Boolean? = null,
+    @get:Schema(title = "如果填的是代码库唯一id, 此参数有值", required = false)
+    val repoId: String? = null,
+    @get:Schema(title = "如果直接填的代码库别名, 此参数有值", required = false)
+    val repoName: String? = null
+)
