@@ -26,11 +26,18 @@
  */
 package com.tencent.devops.store.common.resources
 
+import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.store.api.common.OpStoreComponentResource
 import com.tencent.devops.store.common.service.OpStoreComponentService
+import com.tencent.devops.store.pojo.common.MyStoreComponent
+import com.tencent.devops.store.pojo.common.StoreBaseInfoUpdateRequest
+import com.tencent.devops.store.pojo.common.StoreDetailInfo
+import com.tencent.devops.store.pojo.common.enums.StoreSortTypeEnum
 import com.tencent.devops.store.pojo.common.publication.StoreApproveReleaseRequest
+import com.tencent.devops.store.pojo.common.publication.StoreOfflineRequest
+import com.tencent.devops.store.pojo.common.version.StoreDeskVersionItem
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
@@ -44,5 +51,56 @@ class OpStoreComponentResourceImpl @Autowired constructor(
         storeApproveReleaseRequest: StoreApproveReleaseRequest
     ): Result<Boolean> {
         return Result(opStoreComponentService.approveComponentRelease(userId, storeId, storeApproveReleaseRequest))
+    }
+
+    override fun listComponents(
+        userId: String,
+        storeType: String,
+        name: String?,
+        type: String?,
+        processFlag: Boolean?,
+        classifyCode: String?,
+        categoryCodes: String?,
+        labelCodes: String?,
+        sortType: StoreSortTypeEnum?,
+        page: Int,
+        pageSize: Int
+    ): Result<Page<MyStoreComponent>?> {
+        TODO("Not yet implemented")
+    }
+
+    override fun getComponentVersionsByCode(
+        userId: String,
+        storeType: String,
+        storeCode: String,
+        page: Int,
+        pageSize: Int
+    ): Result<Page<StoreDeskVersionItem>> {
+        TODO("Not yet implemented")
+    }
+
+    override fun getComponentDetailInfoById(
+        userId: String,
+        storeType: String,
+        storeId: String
+    ): Result<StoreDetailInfo?> {
+        TODO("Not yet implemented")
+    }
+
+    override fun updateComponentBaseInfo(
+        userId: String,
+        storeType: String,
+        storeCode: String,
+        storeBaseInfoUpdateRequest: StoreBaseInfoUpdateRequest
+    ): Result<Boolean> {
+        TODO("Not yet implemented")
+    }
+
+    override fun deleteComponent(userId: String, storeType: String, storeCode: String): Result<Boolean> {
+        TODO("Not yet implemented")
+    }
+
+    override fun offlineComponent(userId: String, storeOfflineRequest: StoreOfflineRequest): Result<Boolean> {
+        TODO("Not yet implemented")
     }
 }

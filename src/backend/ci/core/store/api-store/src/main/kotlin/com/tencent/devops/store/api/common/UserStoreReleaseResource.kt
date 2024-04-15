@@ -115,14 +115,14 @@ interface UserStoreReleaseResource {
         storeId: String
     ): Result<Boolean>
 
-    @Operation(summary = "下线组件")
+    @Operation(summary = "下架组件")
     @PUT
     @Path("/component/offline")
     fun offlineComponent(
         @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "工作台-下线组件请求报文体", required = true)
+        @Parameter(description = "工作台-下架组件请求报文体", required = true)
         @Valid
         storeOfflineRequest: StoreOfflineRequest
     ): Result<Boolean>
