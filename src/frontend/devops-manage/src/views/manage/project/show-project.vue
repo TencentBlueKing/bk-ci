@@ -186,6 +186,7 @@ const fetchOperationalList = async (bgName) => {
     id: i.ProductId,
   }));
   isLoading.value = false;
+}
 
 const getOperational = id => operationalList.value.find(i => String(i.ProductId) === String(id));
 
