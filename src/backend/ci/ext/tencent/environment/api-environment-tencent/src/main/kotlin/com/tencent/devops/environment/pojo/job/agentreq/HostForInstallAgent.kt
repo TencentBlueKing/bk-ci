@@ -50,5 +50,7 @@ data class HostForInstallAgent(
     @get:Schema(title = "密码")
     val password: String?,
     @get:Schema(title = "密钥")
-    val key: String?
+    val key: String?,
+    @get:Schema(title = "端口")
+    val port: String?
 )
