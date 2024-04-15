@@ -93,6 +93,17 @@
                     <div v-if="formData.authType === 'PASSWORD'" class="keyFile-tips">{{ $t('environment.keyFileTips', [formData.osType === 'WINDOWS' ? 'Administrator' : 'root']) }}</div>
                 </bk-form-item>
                 <bk-form-item
+                    :label="$t('environment.端口')"
+                    :required="true"
+                    property="port"
+                >
+                    <bk-input
+                        v-model="formData.port"
+                        :placeholder="$t('environment.请填写端口')"
+                        @change="handleChangeData"
+                    />
+                </bk-form-item>
+                <bk-form-item
                     :label="$t('environment.installationChannel')"
                     :required="true"
                     property="installChannelId"
@@ -196,7 +207,8 @@
                     password: '',
                     installChannelId: 'auto',
                     innerIp: '',
-                    bkHostId: null
+                    bkHostId: null,
+                    port: '36000'
                 }
             }
             return {
@@ -257,8 +269,10 @@
             'formData.osType' (val) {
                 if (['LINUX', 'AIX', 'SOLARIS'].includes(val)) {
                     this.formData.account = 'root'
+                    this.formData.port = '36000'
                 } else {
                     this.formData.account = 'Administrator'
+                    this.formData.port = '445'
                 }
             },
             async taskId (val) {
