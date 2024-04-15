@@ -275,4 +275,9 @@ interface ProjectService {
     fun getExistedEnglishName(
         englishNameList: List<String>
     ): List<String>?
+
+    fun remindUserOfRelatedProduct(
+        userId: String,
+        englishName: String
+    ): Boolean
 }

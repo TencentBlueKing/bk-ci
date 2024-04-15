@@ -259,6 +259,15 @@ class UserProjectResourceImpl @Autowired constructor(
         )
     }
 
+    override fun remindUserOfRelatedProduct(userId: String, englishName: String): Result<Boolean> {
+        return Result(
+            projectService.remindUserOfRelatedProduct(
+                userId = userId,
+                englishName = englishName
+            )
+        )
+    }
+
     override fun getOperationalProductsByBgName(userId: String, bgName: String): Result<List<OperationalProductVO>> {
         return Result(
             projectService.getOperationalProductsByBgName(bgName)

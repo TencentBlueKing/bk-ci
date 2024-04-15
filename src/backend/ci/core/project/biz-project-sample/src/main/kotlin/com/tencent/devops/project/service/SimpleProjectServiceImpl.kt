@@ -241,6 +241,10 @@ class SimpleProjectServiceImpl @Autowired constructor(
         }
     }
 
+    override fun remindUserOfRelatedProduct(userId: String, englishName: String): Boolean {
+        return false
+    }
+
     override fun buildRouterTag(routerTag: String?): String? = null
 
     override fun updateProjectRouterTag(englishName: String) = Unit
