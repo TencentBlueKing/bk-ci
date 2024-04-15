@@ -25,14 +25,9 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.pipeline.type.agent
+package com.tencent.devops.store.pojo.atom.enums
 
-enum class AgentType {
-    ID, // This is only for old pipeline, new pipelines will use name
-    NAME,
-
-    // 是否复用其他job的Agent节点
-    REUSE_JOB_ID;
-
-    fun isReuse() = this == REUSE_JOB_ID
+enum class AtomFailPolicyEnum {
+    AUTO_CONTINUE, // 自动继续
+    MANUALLY_CONTINUE // 手动继续
 }

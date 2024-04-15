@@ -23,16 +23,14 @@
  * NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ *
  */
 
-package com.tencent.devops.common.pipeline.type.agent
+package com.tencent.devops.project.pojo.enums
 
-enum class AgentType {
-    ID, // This is only for old pipeline, new pipelines will use name
-    NAME,
-
-    // 是否复用其他job的Agent节点
-    REUSE_JOB_ID;
-
-    fun isReuse() = this == REUSE_JOB_ID
+enum class ProjectProductDictType(val value: Int) {
+    BG(1),
+    DEPT(2),
+    PLAN_PRODUCT(3),
+    OBS_PRODUCT(4);
 }
