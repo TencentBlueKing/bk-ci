@@ -28,6 +28,7 @@
 package com.tencent.devops.project.api.op
 
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID
+import com.tencent.devops.project.pojo.ProjectCallbackPojo
 import com.tencent.devops.project.pojo.Result
 import com.tencent.devops.project.pojo.secret.ISecretParam
 import io.swagger.v3.oas.annotations.tags.Tag
@@ -35,6 +36,7 @@ import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
 import javax.ws.rs.Consumes
 import javax.ws.rs.DELETE
+import javax.ws.rs.GET
 import javax.ws.rs.HeaderParam
 import javax.ws.rs.POST
 import javax.ws.rs.Path
@@ -59,10 +61,7 @@ interface OPProjectCallbackResource {
         @QueryParam("event")
         event: String,
         @Parameter(description = "回调凭证", required = true)
-        secretParam: ISecretParam,
-        @Parameter(description = "回调地址", required = true)
-        @QueryParam("callbackUrl")
-        callbackUrl: String
+        secretParam: ISecretParam
     ): Result<Boolean>
 
     @DELETE
@@ -79,4 +78,19 @@ interface OPProjectCallbackResource {
         @Parameter(description = "回调地址", required = true)
         callbackUrl: String
     ): Result<Boolean>
+
+    @GET
+    @Path("/list")
+    @Operation(summary = "查询项目级回调")
+    fun list(
+        @Parameter(description = "userId", required = true)
+        @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
+        userId: String,
+        @QueryParam("event")
+        @Parameter(description = "事件类型", required = true)
+        event: String,
+        @QueryParam("callbackUrl")
+        @Parameter(description = "回调地址", required = true)
+        callbackUrl: String?
+    ): Result<List<ProjectCallbackPojo>>
 }

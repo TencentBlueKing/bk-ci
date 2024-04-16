@@ -25,58 +25,10 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.project.dao
+package com.tencent.devops.project.pojo
 
-import com.tencent.devops.model.project.tables.TProjectCallback
-import org.jooq.DSLContext
-import org.springframework.stereotype.Repository
-
-@Repository
-class ProjectCallbackDao {
-    fun get(
-        dslContext: DSLContext,
-        event: String,
-        url: String?
-    ) = with(TProjectCallback.T_PROJECT_CALLBACK) {
-        dslContext.selectFrom(this)
-            .where(EVENT.eq(event).let {
-                if (url.isNullOrBlank()) it else it.and(CALLBACK_URL.eq(url))
-            }).fetch()
-    }
-
-    fun create(
-        dslContext: DSLContext,
-        event: String,
-        url: String,
-        secretType: String,
-        secretParam: String
-    ) {
-        with(TProjectCallback.T_PROJECT_CALLBACK) {
-            dslContext.insertInto(
-                this,
-                EVENT,
-                CALLBACK_URL,
-                SECRET_TYPE,
-                SECRET_PARAM
-            ).values(
-                event,
-                url,
-                secretType,
-                secretParam
-            ).execute()
-        }
-    }
-
-    fun delete(
-        dslContext: DSLContext,
-        event: String,
-        url: String
-    ): Int {
-        return with(TProjectCallback.T_PROJECT_CALLBACK) {
-            dslContext.deleteFrom(this).where(
-                EVENT.eq(event)
-                    .and(CALLBACK_URL.eq(url))
-            ).execute()
-        }
-    }
-}
+data class ProjectCallbackPojo(
+    val callbackUrl: String,
+    val event: String,
+    val secretType: String
+)

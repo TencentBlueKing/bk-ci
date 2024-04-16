@@ -77,7 +77,8 @@ class ProjectCallbackControl @Autowired constructor(
         // 查询事件相关的回调记录
         val callBackList = projectCallbackDao.get(
             dslContext = dslContext,
-            event = eventType.name
+            event = eventType.name,
+            url = null
         )
         callBackList.map {
             val secretParam = JsonUtil.to(it.secretParam, ISecretParam::class.java).decode(aesKey)

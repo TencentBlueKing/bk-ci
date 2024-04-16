@@ -31,6 +31,7 @@ import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.project.api.op.OPProjectCallbackResource
 import com.tencent.devops.project.dao.ProjectCallbackDao
+import com.tencent.devops.project.pojo.ProjectCallbackPojo
 import com.tencent.devops.project.pojo.Result
 import com.tencent.devops.project.pojo.secret.ISecretParam
 import org.jooq.DSLContext
@@ -51,13 +52,12 @@ class OPProjectCallbackResourceImpl @Autowired constructor(
     override fun create(
         userId: String,
         event: String,
-        secretParam: ISecretParam,
-        callbackUrl: String
+        secretParam: ISecretParam
     ): Result<Boolean> {
         projectCallbackDao.create(
             dslContext = dslContext,
             event = event,
-            url = callbackUrl,
+            url = secretParam.url,
             secretParam = JsonUtil.toJson(secretParam.encode(aesKey), false),
             secretType = secretParam.getSecretType()
         )
@@ -77,6 +77,21 @@ class OPProjectCallbackResourceImpl @Autowired constructor(
         )
         logger.info("delete callback changeCount[$changeCount]")
         return Result(true)
+    }
+
+    override fun list(userId: String, event: String, callbackUrl: String?): Result<List<ProjectCallbackPojo>> {
+        val list = projectCallbackDao.get(
+            dslContext = dslContext,
+            event = event,
+            url = callbackUrl
+        ).map {
+            ProjectCallbackPojo(
+                event = it.event,
+                callbackUrl = it.callbackUrl,
+                secretType = it.secretType
+            )
+        }
+        return Result(list)
     }
 
     companion object {
