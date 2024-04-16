@@ -784,9 +784,6 @@ class PipelineInfoFacadeService @Autowired constructor(
                 create = false,
                 updateLastModifyUser = updateLastModifyUser
             )
-            if (checkPermission) {
-                pipelinePermissionService.modifyResource(projectId, pipelineId, model.name)
-            }
             // 审计
             ActionAuditContext.current()
                 .addInstanceInfo(pipelineId, model.name, existModel, model)
@@ -842,7 +839,7 @@ class PipelineInfoFacadeService @Autowired constructor(
         pipelineSettingFacadeService.saveSetting(
             userId = userId,
             setting = setting,
-            checkPermission = false,
+            checkPermission = checkPermission,
             version = pipelineResult.version,
             dispatchPipelineUpdateEvent = false
         )

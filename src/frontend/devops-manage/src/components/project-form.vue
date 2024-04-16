@@ -48,8 +48,6 @@ const logoFiles = computed(() => {
 });
 const englishNameReg = /^[a-z][a-z0-9-]{1,32}$/;
 const inited = ref(false);
-const authProvider = ref(window.top.BK_CI_AUTH_PROVIDER || '');
-const isRbac = computed(() => authProvider.value === 'rbac');
 const projectForm = ref<any>(null);
 const iframeRef = ref(null);
 const operationalList = ref([]);
@@ -118,6 +116,8 @@ const showDialog = ref(false);
 
 const orgTree = shallowRef<Dept[]>([]);
 
+const bgName = ref('');
+
 const getDepartment = async ({ id, type = 'dept' }: Partial<Dept>, resolve?) => {
   try {
     if (!id) return [];
@@ -167,6 +167,11 @@ const handleChangeDept = async (deptPath) => {
   }].forEach(setProjectDeptProp);
 
   deptPath.forEach((deptId: string) => {
+    const dept = deptMap.value.get(deptId);
+    if (dept.type === 'bg') {
+      fetchOperationalList(dept.name);
+      projectData.value.productId = '';
+    }
     setProjectDeptProp(deptMap.value.get(deptId));
   });
   handleChangeForm();
@@ -321,7 +326,6 @@ const fetchUserDetail = async () => {
     centerId = res.centerId;
     centerName = res.centerName;
   }
-  console.log(deptInfos, 123);
   if (centerId) {
     setProjectDeptProp({
       type: 'center',
@@ -333,6 +337,10 @@ const fetchUserDetail = async () => {
     id: deptInfos[deptInfos.length - 1].id,
     type: 'center',
   });
+
+  if (deptInfos.length && deptInfos[1].type === 'bg') {
+    fetchOperationalList(deptInfos[1].name);
+  }
   return deptInfos;
 };
 
@@ -340,17 +348,17 @@ const showMemberDialog = () => {
   showDialog.value = true;
 };
 
-const fetchOperationalList = async () => {
+const fetchOperationalList = async (bgName) => {
+  if (!bgName) return;
   deptLoading.value.product = true;
-  await http.getOperationalList().then((res) => {
-    operationalList.value = res.map(i => ({
-      ...i,
-      value: i.ProductId,
-      label: i.ProductName,
-      id: i.ProductId,
-    }));
-    deptLoading.value.product = false;
-  });
+  const res = await http.getOperationalList(bgName);
+  operationalList.value = res.map(i => ({
+    ...i,
+    value: i.ProductId,
+    label: i.ProductName,
+    id: i.ProductId,
+  }));
+  deptLoading.value.product = false;
 };
 
 const validateProjectNameTips = ref('');
@@ -407,10 +415,7 @@ watch(() => projectData.value.productId, (id) => {
 
 onMounted(async () => {
   const deptInfos = await fetchUserDetail();
-  await Promise.all([
-    fetchDepartmentList(deptInfos),
-    fetchOperationalList(),
-  ]);
+  await fetchDepartmentList(deptInfos);
   emits('initProjectForm', projectForm.value);
   window.addEventListener('message', handleMessage);
 });
@@ -540,7 +545,6 @@ onBeforeUnmount(() => {
       </bk-select>
     </bk-form-item>
     <bk-form-item
-      v-if="isRbac"
       :label="t('项目性质')"
       property="authSecrecy"
       :required="true"
@@ -562,7 +566,6 @@ onBeforeUnmount(() => {
       </bk-radio-group>
     </bk-form-item>
     <bk-form-item
-      v-if="isRbac"
       :label="t('项目最大可授权人员范围')"
       :description="t('该设置表示可以加入项目的成员的最大范围，范围内的用户才可以成功加入项目下的任意用户组')"
       property="subjectScopes"

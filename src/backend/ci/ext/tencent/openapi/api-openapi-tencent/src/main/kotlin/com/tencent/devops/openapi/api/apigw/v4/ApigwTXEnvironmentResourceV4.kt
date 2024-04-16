@@ -5,6 +5,7 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VA
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.environment.pojo.job.AddCmdbNodesRes
 import io.swagger.v3.oas.annotations.tags.Tag
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
@@ -40,5 +41,5 @@ interface ApigwTXEnvironmentResourceV4 {
         projectId: String,
         @Parameter(description = "CMDB节点 IP", required = true)
         nodeIps: List<String>
-    ): Result<Boolean>
+    ): Result<AddCmdbNodesRes>
 }

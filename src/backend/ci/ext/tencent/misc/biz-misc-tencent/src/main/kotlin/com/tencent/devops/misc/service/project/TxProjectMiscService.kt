@@ -40,7 +40,6 @@ class TxProjectMiscService @Autowired constructor(
     private val projectMiscDao: ProjectMiscDao,
     private val txProjectMiscDao: TxProjectMiscDao
 ) {
-
     fun getMaxId(
         projectIdList: List<String>? = null
     ): Long? {

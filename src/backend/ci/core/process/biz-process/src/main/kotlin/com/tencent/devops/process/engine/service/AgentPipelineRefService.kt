@@ -32,7 +32,7 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.container.VMBuildContainer
 import com.tencent.devops.common.pipeline.type.agent.ThirdPartyAgentIDDispatchType
-import com.tencent.devops.environment.api.thirdPartyAgent.ServiceThirdPartyAgentResource
+import com.tencent.devops.environment.api.thirdpartyagent.ServiceThirdPartyAgentResource
 import com.tencent.devops.environment.pojo.AgentPipelineRefInfo
 import com.tencent.devops.environment.pojo.AgentPipelineRefRequest
 import com.tencent.devops.process.engine.dao.PipelineResDao

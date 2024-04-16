@@ -43,8 +43,16 @@ class UserProjectOrganizationResourceImpl @Autowired constructor(
     override fun getOrganizations(
         userId: String,
         type: OrganizationType,
-        id: Int
+        id: Int,
+        excludeBelowTheDept: Boolean?
     ): Result<List<OrganizationInfo>> {
-        return Result(tofService.getOrganizationInfo(userId, type, id))
+        return Result(
+            tofService.getOrganizationInfo(
+                userId = userId,
+                type = type,
+                id = id,
+                excludeBelowTheDept = excludeBelowTheDept ?: false
+            )
+        )
     }
 }

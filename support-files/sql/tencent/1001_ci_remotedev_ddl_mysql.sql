@@ -59,6 +59,7 @@ CREATE TABLE IF NOT EXISTS `T_WORKSPACE_WINDOWS` (
     `HOST_IP` varchar(64) NOT NULL DEFAULT '' COMMENT '云桌面IP',
     `MAC_ADDRESS` varchar(64) NOT NULL DEFAULT '' COMMENT 'mac地址',
     `IMAGE_ID` varchar(32) default '' not null comment '镜像唯一标识',
+    `ZONE_ID` varchar(32) default '' null comment '地域id',
     PRIMARY KEY (`ID`),
     UNIQUE `ukey`(`WORKSPACE_NAME`),
     KEY `ipKey`(`HOST_IP`),

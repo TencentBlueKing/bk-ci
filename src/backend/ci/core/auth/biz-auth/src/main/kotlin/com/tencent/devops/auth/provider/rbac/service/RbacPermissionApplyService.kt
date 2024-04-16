@@ -50,6 +50,7 @@ import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
+import java.net.URLEncoder
 import java.util.concurrent.Executors
 import java.util.concurrent.Future
 
@@ -337,8 +338,7 @@ class RbacPermissionApplyService @Autowired constructor(
         } catch (e: Exception) {
             throw ErrorCodeException(
                 errorCode = AuthMessageCode.APPLY_TO_JOIN_GROUP_FAIL,
-                params = arrayOf(applyJoinGroupInfo.groupIds.toString()),
-                defaultMessage = "Failed to apply to join group(${e.message}})"
+                params = arrayOf(e.message ?: "")
             )
         }
         return true
@@ -569,6 +569,7 @@ class RbacPermissionApplyService @Autowired constructor(
     ) {
         val projectId = projectInfo.resourceCode
         val projectName = projectInfo.resourceName
+        val encodedResourceName = URLEncoder.encode(resourceName, "UTF-8")
         // 若动作是挂在项目下，返回的资源类型必须是project
         val finalResourceType =
             if (action?.substringBeforeLast("_") == AuthResourceType.PROJECT.value) {
@@ -582,7 +583,7 @@ class RbacPermissionApplyService @Autowired constructor(
                 AuthRedirectGroupInfoVo(
                     url = String.format(
                         authApplyRedirectUrl, projectId, projectName, finalResourceType,
-                        resourceName, iamResourceCode, action ?: "", "", ""
+                        encodedResourceName, iamResourceCode, action ?: "", "", ""
                     )
                 )
             )
@@ -593,7 +594,7 @@ class RbacPermissionApplyService @Autowired constructor(
                         buildRedirectGroupInfo(
                             groupInfoList = groupInfoList,
                             projectInfo = projectInfo,
-                            resourceName = resourceName,
+                            resourceName = encodedResourceName,
                             action = action,
                             resourceType = finalResourceType,
                             resourceCode = resourceCode,
@@ -606,7 +607,7 @@ class RbacPermissionApplyService @Autowired constructor(
                 buildRedirectGroupInfo(
                     groupInfoList = groupInfoList,
                     projectInfo = projectInfo,
-                    resourceName = resourceName,
+                    resourceName = encodedResourceName,
                     action = action,
                     resourceType = finalResourceType,
                     resourceCode = resourceCode,

@@ -41,12 +41,15 @@ import com.tencent.devops.common.event.enums.ActionType
 import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildFinishBroadCastEvent
 import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildStatusBroadCastEvent
 import com.tencent.devops.common.log.utils.BuildLogPrinter
+import com.tencent.devops.common.pipeline.container.AgentReuseMutex
 import com.tencent.devops.common.pipeline.container.Container
 import com.tencent.devops.common.pipeline.container.TriggerContainer
 import com.tencent.devops.common.pipeline.container.VMBuildContainer
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.pojo.BuildNoType
+import com.tencent.devops.common.pipeline.type.agent.ThirdPartyAgentDispatch
 import com.tencent.devops.common.pipeline.utils.BuildStatusSwitcher
+import com.tencent.devops.common.redis.RedisLockByValue
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.prometheus.BkTimed
 import com.tencent.devops.common.service.utils.LogUtils
@@ -198,11 +201,38 @@ class BuildEndControl @Autowired constructor(
 
         pipelineRuntimeService.updateBuildHistoryStageState(projectId, buildId, allStageStatus)
 
+        // #10082 兜底解锁Agent复用锁和退出队列
+        if (model.stages.any { stage ->
+                stage.containers.filterIsInstance<VMBuildContainer>().any { con ->
+                    con.dispatchType is ThirdPartyAgentDispatch &&
+                            (con.dispatchType as ThirdPartyAgentDispatch).agentType.isReuse()
+                }
+            }) {
+            buildVariableService.fetchAgentReuseMutexVar(
+                projectId = projectId,
+                buildId = buildId,
+                likeStr = "%${AgentReuseMutex.CONTEXT_KEY_SUFFIX}"
+            ).forEach { agentId ->
+                RedisLockByValue(
+                    redisOperation = redisOperation,
+                    lockKey = AgentReuseMutex.genAgentReuseMutexLockKey(projectId, agentId),
+                    lockValue = buildId,
+                    expiredTimeInSeconds = AgentReuseMutex.AGENT_LOCK_TIMEOUT
+                ).unlock()
+                val queueKey = AgentReuseMutex.genAgentReuseMutexQueueKey(projectId, agentId)
+                redisOperation.hdelete(queueKey, buildId)
+            }
+        }
+
         // 上报SLA数据
         if (buildStatus.isSuccess() || buildStatus == BuildStatus.STAGE_SUCCESS) {
-            metricsIncrement(SUCCESS_PIPELINE_COUNT)
+            metricsIncrement(SUCCESS_PIPELINE_COUNT, true)
         } else if (buildStatus.isFailure()) {
-            metricsIncrement(FAIL_PIPELINE_COUNT)
+            metricsIncrement(
+                FAIL_PIPELINE_COUNT,
+                // 只要有一个用户错误,则归为用户导致的失败
+                buildInfo.errorInfoList?.map { it.errorType == ErrorType.USER.num }?.isNotEmpty() ?: true
+            )
         }
         buildInfo.endTime = endTime.timestampmilli()
         buildInfo.status = buildStatus
@@ -466,8 +496,8 @@ class BuildEndControl @Autowired constructor(
         }
     }
 
-    private fun metricsIncrement(name: String) {
-        Counter.builder(name).register(meterRegistry).increment()
+    private fun metricsIncrement(name: String, isUser: Boolean) {
+        Counter.builder(name).tag("isUser", isUser.toString()).register(meterRegistry).increment()
         Counter.builder(FINISH_PIPELINE_COUNT).register(meterRegistry).increment()
     }
 }

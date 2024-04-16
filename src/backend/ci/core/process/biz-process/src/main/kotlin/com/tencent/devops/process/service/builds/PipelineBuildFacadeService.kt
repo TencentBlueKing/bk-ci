@@ -490,6 +490,19 @@ class PipelineBuildFacadeService(
                                     return@run
                                 }
                                 if (element.id == taskId) {
+                                    // 校验task是否允许跳过
+                                    if (skipFailedTask == true) {
+                                        val isSkipTask = pipelineRetryFacadeService.isSkipTask(
+                                            userId = userId,
+                                            projectId = projectId,
+                                            manualSkip = element.additionalOptions?.manualSkip
+                                        )
+                                        if (!isSkipTask) {
+                                            throw ErrorCodeException(
+                                                errorCode = ProcessMessageCode.ERROR_TASK_NOT_ALLOWED_TO_BE_SKIPPED
+                                            )
+                                        }
+                                    }
                                     pipelineTaskService.getByTaskId(null, projectId, buildId, taskId)
                                         ?: run {
                                             throw ErrorCodeException(

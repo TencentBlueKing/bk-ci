@@ -74,6 +74,7 @@ object SignUtils {
         wildcardInfo: MobileProvisionInfo,
         codeSignPath: String,
         replaceKeyList: Map<String, String>?,
+        removeKeyList: List<String>?,
         codesignExternalStr: String?,
         bundleId: String?,
         bundleName: String?,
@@ -85,7 +86,7 @@ object SignUtils {
         }
         return try {
             // 通配符签名统一不做Bundle替换
-            overwriteInfo(appDir, wildcardInfo, false, replaceKeyList, null, null, null)
+            overwriteInfo(appDir, wildcardInfo, false, replaceKeyList, removeKeyList, null, null, null)
 
             // 扫描是否有其他待签目录
             val needResignDirs = scanNeedResignFiles(appDir, mutableListOf())
@@ -100,6 +101,7 @@ object SignUtils {
                                 wildcardInfo = wildcardInfo,
                                 codeSignPath = codeSignPath,
                                 replaceKeyList = replaceKeyList,
+                                removeKeyList = removeKeyList,
                                 codesignExternalStr = codesignExternalStr,
                                 bundleId = bundleId,
                                 bundleName = bundleName,
@@ -114,6 +116,7 @@ object SignUtils {
                                 certId = certId,
                                 info = wildcardInfo,
                                 replaceKeyList = replaceKeyList,
+                                removeKeyList = removeKeyList,
                                 codeSignPath = codeSignPath,
                                 codesignExternalStr = codesignExternalStr
                             )
@@ -126,6 +129,7 @@ object SignUtils {
                                 wildcardInfo,
                                 false,
                                 replaceKeyList,
+                                removeKeyList,
                                 bundleId,
                                 bundleName,
                                 bundleVersion
@@ -169,6 +173,7 @@ object SignUtils {
         codeSignPath: String,
         replaceBundleId: Boolean,
         replaceKeyList: Map<String, String>?,
+        removeKeyList: List<String>?,
         securityApplicationGroupList: List<String>? = null,
         universalLinks: List<String>? = null,
         codesignExternalStr: String? = null,
@@ -193,7 +198,8 @@ object SignUtils {
             }
 
             // 用主描述文件对外层app进行信息替换
-            overwriteInfo(appDir, info, replaceBundleId, replaceKeyList, bundleId, bundleName, bundleVersion)
+            overwriteInfo(appDir, info, replaceBundleId, replaceKeyList, removeKeyList, bundleId, bundleName,
+                bundleVersion)
 
             // 扫描是否有其他待签目录
             val needResignDirs = scanNeedResignFiles(appDir, mutableListOf())
@@ -211,6 +217,7 @@ object SignUtils {
                                     replaceBundleId = replaceBundleId,
                                     securityApplicationGroupList = securityApplicationGroupList,
                                     replaceKeyList = replaceKeyList,
+                                    removeKeyList = removeKeyList,
                                     codeSignPath = codeSignPath,
                                     codesignExternalStr = codesignExternalStr,
                                     bundleId = bundleId,
@@ -227,6 +234,7 @@ object SignUtils {
                                 certId = certId,
                                 info = info,
                                 replaceKeyList = replaceKeyList,
+                                removeKeyList = removeKeyList,
                                 codeSignPath = codeSignPath,
                                 codesignExternalStr = codesignExternalStr
                             )
@@ -234,7 +242,8 @@ object SignUtils {
 
                         // 如果不是app或framework目录，则使用主描述文件进行重签
                         else -> {
-                            overwriteInfo(subFile, info, false, replaceKeyList, bundleId, bundleName, bundleVersion)
+                            overwriteInfo(subFile, info, false, replaceKeyList, removeKeyList, bundleId,
+                                bundleName, bundleVersion)
                             codesignFile(certId, subFile.absolutePath, codeSignPath, codesignExternalStr)
                         }
                     }
@@ -270,6 +279,7 @@ object SignUtils {
         info: MobileProvisionInfo,
         codeSignPath: String,
         replaceKeyList: Map<String, String>?,
+        removeKeyList: List<String>?,
         codesignExternalStr: String?,
         bundleId: String? = null,
         bundleName: String? = null,
@@ -286,7 +296,7 @@ object SignUtils {
                 resignDir.listFiles()?.forEach { subFile ->
                     // 如果是个其他待签文件则使用主描述文件进行重签
                     overwriteInfo(
-                        subFile, info, false, replaceKeyList,
+                        subFile, info, false, replaceKeyList, removeKeyList,
                         bundleId, bundleName, bundleVersion
                     )
                     codesignFile(
@@ -297,7 +307,7 @@ object SignUtils {
             }
             // 重签当前目录
             overwriteInfo(
-                frameworkDir, info, false, replaceKeyList,
+                frameworkDir, info, false, replaceKeyList, removeKeyList,
                 bundleId, bundleName, bundleVersion
             )
             codesignFile(certId, frameworkDir.absolutePath, codeSignPath, codesignExternalStr)
@@ -342,6 +352,7 @@ object SignUtils {
         info: MobileProvisionInfo,
         replaceBundle: Boolean,
         replaceKeyList: Map<String, String>?,
+        removeKeyList: List<String>?,
         bundleId: String?,
         bundleName: String?,
         bundleVersion: String?
@@ -366,6 +377,11 @@ object SignUtils {
         if (replaceKeyList?.isNotEmpty() == true) {
             replaceKeyList.forEach {
                 replaceInfoKey(it.key, it.value, infoPlist.absolutePath)
+            }
+        }
+        if (!removeKeyList.isNullOrEmpty()) {
+            removeKeyList.forEach {
+                removeInfoKey(it, infoPlist.absolutePath)
             }
         }
     }
@@ -495,6 +511,18 @@ object SignUtils {
             runtimeExec(cmd)
         } catch (ignore: Throwable) {
             logger.warn("[replace key with error: ] $cmd")
+        }
+    }
+    private fun removeInfoKey(
+        key: String,
+        infoPlistPath: String
+    ) {
+        val cmd = "plutil -remove $key ${fixPath(infoPlistPath)}"
+        logger.info("[removeKey: ] $cmd")
+        try {
+            runtimeExec(cmd)
+        } catch (ignore: Throwable) {
+            logger.warn("[remove key with error: ] $cmd")
         }
     }
 
