@@ -474,7 +474,8 @@
                             top: 100,
                             left: 100
                         },
-                        
+                        draggable: false,
+                        extCls: 'release-info-dialog',
                         showFooter: false,
                         subHeader: h('div', {
                             attrs: {
@@ -858,6 +859,16 @@
     padding: 0 24px;
 }
 
+.release-info-dialog {
+    .bk-dialog.bk-info-box {
+        height: 100% !important;
+        top: 0;
+        .bk-dialog-content {
+            top: 50%;
+            transform: translateY(-55%);
+        }
+    }
+}
 .release-info-content {
     display: flex;
     flex-direction: column;
