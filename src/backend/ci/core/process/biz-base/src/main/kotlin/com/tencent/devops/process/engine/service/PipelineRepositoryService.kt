@@ -690,7 +690,7 @@ class PipelineRepositoryService constructor(
                     val failSubscription = Subscription(
                         types = failType,
                         groups = emptySet(),
-                        users = "\${$PIPELINE_START_USER_NAME}",
+                        users = "\${{ci.actor}}",
                         content = NotifyTemplateUtils.getCommonShutdownFailureContent()
                     ).takeIf { failType.isNotEmpty() }
                     PipelineSetting(
