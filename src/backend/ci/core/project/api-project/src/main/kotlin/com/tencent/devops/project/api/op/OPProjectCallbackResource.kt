@@ -42,6 +42,7 @@ import javax.ws.rs.GET
 import javax.ws.rs.HeaderParam
 import javax.ws.rs.POST
 import javax.ws.rs.Path
+import javax.ws.rs.PathParam
 import javax.ws.rs.Produces
 import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
@@ -70,18 +71,15 @@ interface OPProjectCallbackResource {
     ): Result<Boolean>
 
     @DELETE
-    @Path("/delete")
+    @Path("/delete/{id}")
     @Operation(summary = "移除项目级回调")
     fun delete(
         @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String,
-        @QueryParam("event")
+        @PathParam("id")
         @Parameter(description = "事件类型", required = true)
-        event: String,
-        @QueryParam("callbackUrl")
-        @Parameter(description = "回调地址", required = true)
-        callbackUrl: String
+        id: Int
     ): Result<Boolean>
 
     @GET
@@ -95,7 +93,7 @@ interface OPProjectCallbackResource {
         @Parameter(description = "事件类型", required = true)
         event: String,
         @QueryParam("callbackUrl")
-        @Parameter(description = "回调地址", required = true)
+        @Parameter(description = "回调地址", required = false)
         callbackUrl: String?
     ): Result<List<ProjectCallbackPojo>>
 }

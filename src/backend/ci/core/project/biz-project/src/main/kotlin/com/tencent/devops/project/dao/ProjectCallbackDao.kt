@@ -69,14 +69,10 @@ class ProjectCallbackDao {
 
     fun delete(
         dslContext: DSLContext,
-        event: String,
-        url: String
+        id: Int
     ): Int {
         return with(TProjectCallback.T_PROJECT_CALLBACK) {
-            dslContext.deleteFrom(this).where(
-                EVENT.eq(event)
-                    .and(CALLBACK_URL.eq(url))
-            ).execute()
+            dslContext.deleteFrom(this).where(ID.eq(id)).execute()
         }
     }
 }

@@ -71,14 +71,12 @@ class OPProjectCallbackResourceImpl @Autowired constructor(
 
     override fun delete(
         userId: String,
-        event: String,
-        callbackUrl: String
+        id: Int
     ): Result<Boolean> {
-        logger.info("start delete callback: userId[$userId]|event[$event]|callbackUrl[$callbackUrl]")
+        logger.info("start delete callback: userId[$userId]|id[$id]")
         val changeCount = projectCallbackDao.delete(
             dslContext = dslContext,
-            event = event,
-            url = callbackUrl
+            id = id
         )
         logger.info("delete callback changeCount[$changeCount]")
         return Result(true)
