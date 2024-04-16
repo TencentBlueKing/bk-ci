@@ -136,6 +136,7 @@ import com.tencent.devops.store.common.service.StoreUserService
 import com.tencent.devops.store.common.service.action.StoreDecorateFactory
 import com.tencent.devops.store.common.service.StoreWebsocketService
 import com.tencent.devops.store.common.utils.StoreUtils
+import com.tencent.devops.store.pojo.common.InstallStoreReq
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
@@ -937,10 +938,12 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
         }
         return storeProjectService.installStoreComponent(
             userId = userId,
-            projectCodeList = installAtomReq.projectCode,
             storeId = atom.id,
-            storeCode = atom.atomCode,
-            storeType = StoreTypeEnum.ATOM,
+            installStoreReq = InstallStoreReq(
+                projectCodes = installAtomReq.projectCode,
+                storeCode = atom.atomCode,
+                storeType = StoreTypeEnum.ATOM
+            ),
             publicFlag = atom.defaultFlag,
             channelCode = channelCode
         )

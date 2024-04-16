@@ -27,14 +27,17 @@
 
 package com.tencent.devops.store.pojo.common
 
+import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "安装组件到项目请求报文")
-data class InstallReq(
+data class InstallStoreReq(
     @get:Schema(title = "项目标识", required = true)
     val projectCodes: ArrayList<String>,
-    @get:Schema(title = "组件ID", required = true)
-    val storeId: String,
     @get:Schema(title = "组件标识", required = true)
-    val storeCode: String
+    val storeCode: String,
+    @get:Schema(title = "组件类型", required = true)
+    val storeType: StoreTypeEnum,
+    @get:Schema(title = "版本号", required = false)
+    val version: String? = null
 )
