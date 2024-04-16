@@ -35,7 +35,7 @@ import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.archive.element.ReportArchiveElement
-import com.tencent.devops.common.util.HttpRetryUtils
+import com.tencent.devops.common.service.utils.RetryUtils
 import com.tencent.devops.process.pojo.BuildTask
 import com.tencent.devops.process.pojo.BuildVariables
 import com.tencent.devops.process.pojo.report.ReportEmail
@@ -54,6 +54,7 @@ import com.tencent.devops.worker.common.service.RepoServiceFactory
 import com.tencent.devops.worker.common.task.ITask
 import com.tencent.devops.worker.common.task.TaskClassType
 import com.tencent.devops.worker.common.utils.TaskUtil
+import org.slf4j.LoggerFactory
 import java.io.File
 import java.nio.file.Path
 import java.nio.file.Paths
@@ -61,7 +62,6 @@ import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.TimeoutException
 import java.util.regex.Pattern
-import org.slf4j.LoggerFactory
 
 @TaskClassType(classTypes = [ReportArchiveElement.classType])
 class ReportArchiveTask : ITask() {
@@ -196,15 +196,17 @@ class ReportArchiveTask : ITask() {
         token: String?
     ) {
         val relativePath = fileDirPath.relativize(Paths.get(file.canonicalPath)).toString()
-        HttpRetryUtils.retry(retryTime = 3) {
-            api.uploadReport(
-                file = file,
-                taskId = elementId,
-                relativePath = relativePath,
-                buildVariables = buildVariables,
-                token = token
-            )
-        }
+        RetryUtils.execute(action = object : RetryUtils.Action<Unit> {
+            override fun execute() {
+                api.uploadReport(
+                    file = file,
+                    taskId = elementId,
+                    relativePath = relativePath,
+                    buildVariables = buildVariables,
+                    token = token
+                )
+            }
+        }, retryTime = 3)
     }
 
     private fun recursiveGetFiles(file: File): List<File> {
