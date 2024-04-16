@@ -23,18 +23,14 @@
  * NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ *
  */
 
-package com.tencent.devops.scm.code.svn.api
+package com.tencent.devops.project.pojo.enums
 
-import okhttp3.Request
-
-@Suppress("ALL")
-open class SVNOauthApi : SVNApi() {
-
-    override fun request(host: String, token: String, url: String, page: Int?, pageSize: Int?): Request.Builder {
-        return if (page != null && pageSize != null)
-            Request.Builder().url("$host/$url?access_token=$token&page=$page&per_page=$pageSize")
-        else Request.Builder().url("$host/$url?access_token=$token")
-    }
+enum class ProjectProductDictType(val value: Int) {
+    BG(1),
+    DEPT(2),
+    PLAN_PRODUCT(3),
+    OBS_PRODUCT(4);
 }

@@ -25,16 +25,9 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.scm.code.svn.api
+package com.tencent.devops.store.pojo.atom.enums
 
-import okhttp3.Request
-
-@Suppress("ALL")
-open class SVNOauthApi : SVNApi() {
-
-    override fun request(host: String, token: String, url: String, page: Int?, pageSize: Int?): Request.Builder {
-        return if (page != null && pageSize != null)
-            Request.Builder().url("$host/$url?access_token=$token&page=$page&per_page=$pageSize")
-        else Request.Builder().url("$host/$url?access_token=$token")
-    }
+enum class AtomRetryPolicyEnum {
+    AUTO_RETRY, // 自动重试
+    MANUALLY_RETRY // 手动重试
 }
