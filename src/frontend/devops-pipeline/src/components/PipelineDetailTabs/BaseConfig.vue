@@ -119,7 +119,7 @@
 .base-info-panel-content {
     display: grid;
     grid-gap: 16px;
-    grid-template-row: minmax(18px, auto);
+    grid-template-rows: minmax(18px, auto);
     margin-bottom: 32px;
 
     >p {
