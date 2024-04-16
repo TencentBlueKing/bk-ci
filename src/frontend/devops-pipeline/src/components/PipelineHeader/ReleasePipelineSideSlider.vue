@@ -860,6 +860,9 @@
 }
 
 .release-info-dialog {
+    .bk-dialog-tool {
+        display: none !important;
+    }
     .bk-dialog.bk-info-box {
         height: 100% !important;
         top: 0;
@@ -873,6 +876,7 @@
     display: flex;
     flex-direction: column;
     align-items: center;
+    margin-top: 30px;
 
     > h3 {
         width: 100%;
