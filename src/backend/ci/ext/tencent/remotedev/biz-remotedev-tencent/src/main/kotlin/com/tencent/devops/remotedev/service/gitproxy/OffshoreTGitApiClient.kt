@@ -139,7 +139,7 @@ class OffshoreTGitApiClient @Autowired constructor(
         page: Int,
         pageSize: Int
     ): List<TGitNamespace> {
-        val url = "${tGitConfig.tGitUrl}/api/v3/groups".addQuery(
+        val url = "${tGitConfig.tGitUrl}/api/v3/namespaces".addQuery(
             "access_token" to accessToken,
             "page" to page,
             "per_page" to pageSize,
