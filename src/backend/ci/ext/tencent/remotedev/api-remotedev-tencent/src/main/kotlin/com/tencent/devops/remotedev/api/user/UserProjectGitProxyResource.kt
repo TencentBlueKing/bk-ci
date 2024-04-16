@@ -7,8 +7,10 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.remotedev.pojo.gitproxy.CreateGitProxyData
+import com.tencent.devops.remotedev.pojo.gitproxy.CreateTGitProjectInfo
 import com.tencent.devops.remotedev.pojo.gitproxy.FetchRepoResp
 import com.tencent.devops.remotedev.pojo.gitproxy.LinktgitData
+import com.tencent.devops.remotedev.pojo.gitproxy.TGitNamespace
 import com.tencent.devops.remotedev.pojo.gitproxy.TGitRepoData
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
@@ -83,7 +85,7 @@ interface UserProjectGitProxyResource {
         @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "项目ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "项目ID", required = true)
         @HeaderParam(AUTH_HEADER_PROJECT_ID)
         projectId: String,
         data: LinktgitData
@@ -96,7 +98,7 @@ interface UserProjectGitProxyResource {
         @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "项目ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "项目ID", required = true)
         @HeaderParam(AUTH_HEADER_PROJECT_ID)
         projectId: String
     ): Result<List<TGitRepoData>>
@@ -108,7 +110,7 @@ interface UserProjectGitProxyResource {
         @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "项目ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @Parameter(description = "项目ID", required = true)
         @HeaderParam(AUTH_HEADER_PROJECT_ID)
         projectId: String,
         @Parameter(description = "工蜂仓库ID", required = true)
@@ -117,5 +119,37 @@ interface UserProjectGitProxyResource {
         @Parameter(description = "仓库链接", required = true)
         @QueryParam("url")
         url: String
+    ): Result<Boolean>
+
+    @Operation(summary = "获取工蜂namespace")
+    @GET
+    @Path("/tgit/namespaces")
+    fun getTGitNamespaces(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "页码", required = true)
+        @QueryParam("page")
+        page: Int,
+        @Parameter(description = "每页数量", required = true)
+        @QueryParam("pageSize")
+        pageSize: Int,
+        @Parameter(description = "是否是svn项目", required = true)
+        @QueryParam("svnProject")
+        svnProject: Boolean
+    ): Result<List<TGitNamespace>>
+
+    @Operation(summary = "创建工蜂项目")
+    @POST
+    @Path("/tgit/createProject")
+    fun createProject(
+        @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "项目ID", required = true)
+        @HeaderParam(AUTH_HEADER_PROJECT_ID)
+        projectId: String,
+        @Parameter(description = "创建项目信息", required = true)
+        data: CreateTGitProjectInfo
     ): Result<Boolean>
 }

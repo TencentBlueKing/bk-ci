@@ -18,6 +18,8 @@ import com.tencent.devops.remotedev.pojo.TGitRepoDaoData
 import com.tencent.devops.remotedev.pojo.WorkspaceSearch
 import com.tencent.devops.remotedev.pojo.WorkspaceSystemType
 import com.tencent.devops.remotedev.pojo.common.QueryType
+import com.tencent.devops.remotedev.pojo.gitproxy.CreateTGitProjectInfo
+import com.tencent.devops.remotedev.pojo.gitproxy.TGitNamespace
 import com.tencent.devops.remotedev.pojo.gitproxy.TGitRepoData
 import com.tencent.devops.remotedev.pojo.gitproxy.TGitRepoStatus
 import com.tencent.devops.remotedev.service.BKItsmService
@@ -648,6 +650,71 @@ class GitProxyTGitService @Autowired constructor(
         }
     }
 
+    fun getTGitNamespaces(
+        userId: String,
+        page: Int,
+        pageSize: Int,
+        svnProject: Boolean
+    ): List<TGitNamespace> {
+        val token = client.get(ServiceOauthResource::class).tGitGet(userId).data ?: throw ErrorCodeException(
+            errorCode = ErrorCodeEnum.NO_TGIT_OAUTH_ERROR.errorCode,
+            errorType = ErrorCodeEnum.NO_TGIT_OAUTH_ERROR.errorType,
+            params = arrayOf(userId, tGitConfig.tGitUrl)
+        )
+        if (!svnProject) {
+            return offshoreTGitApiClient.getNamespaces(token.accessToken, page, pageSize)
+        }
+
+        val result = mutableListOf<TGitNamespace>()
+        var fetchPage = 1
+        val fetchPageSize = 100
+        // 工作空间每次会带一个个人工作空间
+        val maxSize = page * pageSize + 1
+        while (true) {
+            val request = offshoreTGitApiClient.getNamespaces(token.accessToken, fetchPage, fetchPageSize)
+            // 第一次先把个人项目添加进去，后续都不添加
+            if (result.isEmpty()) {
+                result.addAll(request.filter { it.kind == TGitNamespaceKind.USER.text })
+            }
+
+            result.addAll(request.filter { it.kind != TGitNamespaceKind.USER.text && it.parentId == null })
+
+            // 没有多余的页数就直接退出
+            if (request.size - 1 < pageSize) {
+                break
+            }
+
+            // 判断筛选的总量是否到达了需要分页的总数
+            if (result.size == maxSize) {
+                break
+            }
+
+            // 都不满足就继续
+            fetchPage += 1
+        }
+
+        val startIndex = (page - 1) * pageSize
+        val endIndex = minOf(startIndex + pageSize, result.size)
+
+        return result.subList(startIndex, endIndex)
+    }
+
+    fun createProjectAndLinkTGit(
+        userId: String,
+        projectId: String,
+        info: CreateTGitProjectInfo
+    ): Boolean {
+        val token = client.get(ServiceOauthResource::class).tGitGet(userId).data ?: throw ErrorCodeException(
+            errorCode = ErrorCodeEnum.NO_TGIT_OAUTH_ERROR.errorCode,
+            errorType = ErrorCodeEnum.NO_TGIT_OAUTH_ERROR.errorType,
+            params = arrayOf(userId, tGitConfig.tGitUrl)
+        )
+
+        val data = offshoreTGitApiClient.createProject(token.accessToken, info.name, info.namespaceId, info.svnProject)
+        val res = linkTGit(userId, projectId, mapOf(data.id to (data.httpsUrlToRepo ?: data.httpUrlToRepo ?: "")))
+        return res[data.id] ?: false
+    }
+
     private fun String.removeHttpPrefix() = this.removePrefix("https://").removePrefix("http://")
 
     fun refreshTGitAcl(projectId: String?) {
@@ -668,7 +735,7 @@ class GitProxyTGitService @Autowired constructor(
                     val ok = updateTGitProjectAcl(token, repo.tgitId.toString(), ips, users)
                     if (!ok) {
                         logger.warn("OP|refreshTGitAcl|$projectId|${repo.tgitId}|updateTGitProjectAcl false")
-                    }else{
+                    } else {
                         logger.info("OP|refreshTGitAcl|$projectId|${repo.tgitId}|updateTGitProjectAcl true")
                     }
                 }

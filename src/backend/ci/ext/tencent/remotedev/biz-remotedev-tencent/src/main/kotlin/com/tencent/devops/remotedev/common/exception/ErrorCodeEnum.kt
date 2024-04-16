@@ -211,6 +211,11 @@ enum class ErrorCodeEnum(
         errorType = ErrorType.THIRD_PARTY,
         errorCode = "2132040",
         formatErrorMessage = "request bkvision {0} error {1}"
+    ),
+    REQ_TGIT_API_ERROR(
+        errorType = ErrorType.THIRD_PARTY,
+        errorCode = "2132041",
+        formatErrorMessage = "request tgit api {0} error {1}"
     );
 
     fun getErrorMessage(): String {
