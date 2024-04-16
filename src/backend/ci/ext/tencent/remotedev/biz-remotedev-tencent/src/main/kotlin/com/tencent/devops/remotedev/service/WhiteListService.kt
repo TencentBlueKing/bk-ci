@@ -140,7 +140,7 @@ class WhiteListService @Autowired constructor(
     fun windowsNumberLimit(userId: String, value: Long) {
         val limit = cacheService.checkWindowsGpuLimit(userId)
         logger.info("numberLimit|$value|$limit")
-        if (limit != null && value < limit) {
+        if (limit != null && value <= limit) {
             // 没有达到限制，直接return
             return
         }
