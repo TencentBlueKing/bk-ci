@@ -175,6 +175,7 @@ class BkRepoResourceApi : AbstractBuildResourceApi() {
             if (obj.has("code") && obj["code"].asText() != "0") throw RemoteServiceException(message)
         } catch (e: Exception) {
             logger.error(e.message ?: "")
+            throw e
         }
     }
 
