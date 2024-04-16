@@ -3,11 +3,22 @@
         <pipeline-bread-crumb :pipeline-name="pipelineSetting?.pipelineName">
             <span class="pipeline-edit-header-tag">
                 <PacTag v-if="pacEnabled" :info="pipelineInfo?.yamlInfo" />
-                <bk-tag>{{ currentVersionName }}</bk-tag>
+                <bk-tag>
+                    <span v-bk-overflow-tips class="edit-header-draft-tag">
+                        {{ currentVersionName }}
+                    </span>
+                </bk-tag>
             </span>
         </pipeline-bread-crumb>
         <mode-switch :save="saveDraft" />
         <aside class="pipeline-edit-right-aside">
+            <bk-button
+                :disabled="saveStatus"
+                :loading="saveStatus"
+                @click="goBack"
+            >
+                {{ $t("cancel") }}
+            </bk-button>
             <bk-button
                 :disabled="saveStatus || !isEditing"
                 :loading="saveStatus"
@@ -270,6 +281,9 @@
                         }
                     })
                 }
+            },
+            goBack () {
+                this.$router.back()
             }
         }
     }
@@ -292,8 +306,8 @@
     line-height: 1;
     .bk-tag {
         margin: 0;
-        max-width: 360px;
-        > span {
+        max-width: 222px;
+        .edit-header-draft-tag {
             @include ellipsis();
             width: 100%;
         }

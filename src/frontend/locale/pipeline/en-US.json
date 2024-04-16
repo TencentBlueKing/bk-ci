@@ -1506,5 +1506,8 @@
   "executeStepPreview": "Preview of steps to be executed",
   "yamlFilePathErrorTip": "File path must end with .yml or .yaml",
   "yamlFilePathPlaceholder": "build.yml or build.yaml",
-  "alreadyReleasedTips": "Pipeline unchanged, no release necessary"
+  "alreadyReleasedTips": "Pipeline unchanged, no release necessary",
+  "newVersion": "New Version",
+  "editDraft": "Edit Draft",
+  "thinkthink": "Thinking again"
 }

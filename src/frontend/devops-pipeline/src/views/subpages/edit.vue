@@ -278,7 +278,8 @@
                         this.leaving = true
                         navConfirm({
                             title: this.$t('leaveConfirmTitle'),
-                            content: this.$t('leaveConfirmTips')
+                            content: this.$t('leaveConfirmTips'),
+                            width: 600
                         })
                             .then((result) => {
                                 next(result)
