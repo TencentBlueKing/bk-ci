@@ -175,6 +175,7 @@ class MarketStoreQueryDao {
             tStoreBase.PUB_TIME,
             tStoreBase.MODIFIER,
             tStoreBase.UPDATE_TIME,
+            tStoreBase.CLASSIFY_ID,
             tStoreBaseFeature.RECOMMEND_FLAG,
             tStoreBaseFeature.RD_TYPE,
             tStoreBaseFeature.PUBLIC_FLAG,
