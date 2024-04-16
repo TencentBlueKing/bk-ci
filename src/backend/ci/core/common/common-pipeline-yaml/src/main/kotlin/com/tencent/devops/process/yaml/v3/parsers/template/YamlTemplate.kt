@@ -732,13 +732,13 @@ class YamlTemplate<T>(
             resourcePoolMapExt = resourcePoolMapExt,
             conf = conf
         ).replace(parameters = parameters)
-
-        // 将远程模板引用的pools加入
-        if (resYamlObject.resources?.pools != null) {
-            resYamlObject.resources?.pools?.forEach { pool ->
-                resourcePoolMapExt?.put(pool.format(), pool)
-            }
-        }
+//
+//        // 将远程模板引用的pools加入
+//        if (resYamlObject.resources?.pools != null) {
+//            resYamlObject.resources?.pools?.forEach { pool ->
+//                resourcePoolMapExt?.put(pool.format(), pool)
+//            }
+//        }
         // 替换后的远程模板去除不必要参数
         resYamlObject.resources = null
         return TemplateYamlMapper.toYaml(resYamlObject)

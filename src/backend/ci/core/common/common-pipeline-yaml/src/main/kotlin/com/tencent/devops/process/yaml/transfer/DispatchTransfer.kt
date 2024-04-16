@@ -160,7 +160,8 @@ class DispatchTransfer @Autowired(required = false) constructor(
                         envName = poolName,
                         workspace = workspace,
                         agentName = nodeName,
-                        dockerInfo = getDockerInfo(job, buildTemplateAcrossInfo)
+                        dockerInfo = getDockerInfo(job, buildTemplateAcrossInfo),
+                        envProjectId = envProjectId
                     )
                 }
             )

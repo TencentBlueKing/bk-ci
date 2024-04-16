@@ -116,13 +116,14 @@ class PipelineTransferYamlService @Autowired constructor(
         val watcher = Watcher(id = "yaml and model transfer watcher")
         try {
             if (aspects.isEmpty()) {
-                val defaultAspects = PipelineTransferAspectLoader.initByDefaultTriggerOn(
+                PipelineTransferAspectLoader.initByDefaultTriggerOn(
                     {
                         getRepoAliasName(projectId = projectId, pipelineId)
-                    }
+                    },
+                    aspects
                 )
-                aspects.addAll(defaultAspects)
             }
+            PipelineTransferAspectLoader.sharedEnvTransfer(aspects)
             when (actionType) {
                 TransferActionType.FULL_MODEL2YAML -> {
                     watcher.start("step_1|FULL_MODEL2YAML start")

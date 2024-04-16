@@ -172,7 +172,10 @@ data class RunsOn(
     @get:Schema(title = "queue-timeout-minutes")
     @JsonProperty("queue-timeout-minutes")
     var queueTimeoutMinutes: Int? = null,
-    var needs: Map<String, String>? = null
+    var needs: Map<String, String>? = null,
+    @JsonIgnore
+    @get:Schema(title = "跨库分享的projectId, 不序列化出去。只参与内部计算。")
+    var envProjectId: String? = null
 ) {
     fun checkLinux() = poolName == "docker" || (
         poolName == null && nodeName == null

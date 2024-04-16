@@ -1,5 +1,9 @@
 package com.tencent.devops.process.yaml.transfer.aspect
 
+import com.tencent.devops.common.pipeline.pojo.transfer.Resources
+import com.tencent.devops.common.pipeline.pojo.transfer.ResourcesPools
+import com.tencent.devops.process.yaml.v3.models.PreTemplateScriptBuildYamlV3
+import com.tencent.devops.process.yaml.v3.models.job.RunsOn
 import java.util.LinkedList
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.ConcurrentMap
@@ -20,6 +24,61 @@ object PipelineTransferAspectLoader {
             }
         }
         return instance
+    }
+
+    fun sharedEnvTransfer(
+        aspects: LinkedList<IPipelineTransferAspect> = LinkedList()
+    ): LinkedList<IPipelineTransferAspect> {
+        val pools = mutableListOf<ResourcesPools>()
+        aspects.add(
+            object : IPipelineTransferAspectJob {
+                override fun before(jp: PipelineTransferJoinPoint): Any? {
+                    if (jp.yamlJob() != null && jp.yaml()?.formatResources()?.pools != null) {
+                        jp.yaml()?.formatResources()?.pools?.find {
+                            it.name == jp.yamlJob()!!.runsOn.poolName
+                        }?.let { pool ->
+                            jp.yamlJob()!!.runsOn.envProjectId = pool.from?.substringBefore("@")
+                            jp.yamlJob()!!.runsOn.poolName = pool.from?.substringAfter("@")
+                        }
+                    }
+
+                    return null
+                }
+
+                override fun after(jp: PipelineTransferJoinPoint) {
+                    if (jp.yamlPreJob()?.runsOn != null &&
+                        jp.yamlPreJob()?.runsOn is RunsOn &&
+                        (jp.yamlPreJob()?.runsOn as RunsOn).envProjectId != null
+                    ) {
+                        val pool = jp.yamlPreJob()?.runsOn as RunsOn
+                        pools.add(
+                            ResourcesPools(
+                                from = "${pool.envProjectId}@${pool.poolName}",
+                                name = pool.poolName
+                            )
+                        )
+                    }
+                }
+            }
+        )
+
+        aspects.add(
+            object : IPipelineTransferAspectModel {
+                override fun after(jp: PipelineTransferJoinPoint) {
+                    if (jp.yaml() != null &&
+                        jp.yaml() is PreTemplateScriptBuildYamlV3 &&
+                        pools.isNotEmpty()
+                    ) {
+                        val v3 = jp.yaml() as PreTemplateScriptBuildYamlV3
+                        v3.resources = Resources(
+                            repositories = v3.resources?.repositories,
+                            pools = v3.resources?.pools?.plus(pools) ?: pools
+                        )
+                    }
+                }
+            }
+        )
+        return aspects
     }
 
     fun initByDefaultTriggerOn(
