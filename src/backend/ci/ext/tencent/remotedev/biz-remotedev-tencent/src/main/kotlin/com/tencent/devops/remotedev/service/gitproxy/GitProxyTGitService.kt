@@ -668,7 +668,7 @@ class GitProxyTGitService @Autowired constructor(
                     val ok = updateTGitProjectAcl(token, repo.tgitId.toString(), ips, users)
                     if (!ok) {
                         logger.warn("OP|refreshTGitAcl|$projectId|${repo.tgitId}|updateTGitProjectAcl false")
-                    }else{
+                    } else {
                         logger.info("OP|refreshTGitAcl|$projectId|${repo.tgitId}|updateTGitProjectAcl true")
                     }
                 }
@@ -680,6 +680,6 @@ class GitProxyTGitService @Autowired constructor(
         private val logger = LoggerFactory.getLogger(GitProxyTGitService::class.java)
 
         //  云桌面公网ip，可能会动态变化所以放redis里
-        private val REDIS_REMOTEDEV_PUBLIC_IPS = "remotedev:public:ips"
+        private const val REDIS_REMOTEDEV_PUBLIC_IPS = "remotedev:public:ips"
     }
 }
