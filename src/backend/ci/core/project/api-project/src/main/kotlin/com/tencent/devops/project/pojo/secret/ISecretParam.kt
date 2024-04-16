@@ -41,7 +41,7 @@ import com.tencent.devops.project.pojo.secret.bkrepo.BkrepoProjectSecretParam
     JsonSubTypes.Type(value = DefaultSecretParam::class, name = DefaultSecretParam.classType)
 )
 interface ISecretParam {
-    val url: String
+    var url: String
 
     val userId: String
 

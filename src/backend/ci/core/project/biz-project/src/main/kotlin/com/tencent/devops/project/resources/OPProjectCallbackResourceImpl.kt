@@ -59,10 +59,11 @@ class OPProjectCallbackResourceImpl @Autowired constructor(
         gatewayType: GatewayType,
         secretParam: ISecretParam
     ): Result<Boolean> {
+        secretParam.url = urlGenerator.generate(gatewayType, secretParam.url)
         projectCallbackDao.create(
             dslContext = dslContext,
             event = event.name,
-            url = urlGenerator.generate(gatewayType, secretParam.url),
+            url = secretParam.url,
             secretParam = JsonUtil.toJson(secretParam.encode(aesKey), false),
             secretType = secretParam.getSecretType()
         )

@@ -83,11 +83,13 @@ class ProjectCallbackControl @Autowired constructor(
         callBackList.map {
             val secretParam = JsonUtil.to(it.secretParam, ISecretParam::class.java).decode(aesKey)
             val secretTokenService = SecretTokenServiceFactory.getSecretTokenService(secretParam)
+            // 1.获取URL/请求头/URL参数
             val secretRequestParam = secretTokenService.getSecretRequestParam(
                 userId = secretParam.userId,
                 projectId = callbackData.getProjectId(),
                 secretParam = secretParam
             )
+            // 2.获取请求体
             val requestBody = secretTokenService.getRequestBody(
                 secretParam = secretParam,
                 projectCallbackData = callbackData
@@ -96,6 +98,7 @@ class ProjectCallbackControl @Autowired constructor(
                 "start send project callback|eventType[${it.event}]|url[${it.callbackUrl}]|" +
                         "secretType[${it.secretType}]"
             )
+            // 3.发请求
             send(
                 secretRequestParam = secretRequestParam,
                 requestBody = requestBody,
