@@ -29,7 +29,7 @@ package com.tencent.devops.project.pojo.secret
 
 data class BlueWhaleSecretParam(
     val pipelineSecret: String,
-    override val url: String,
+    override var url: String,
     override val userId: String
 ) : ISecretParam {
 

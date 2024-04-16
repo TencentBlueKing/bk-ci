@@ -35,7 +35,7 @@ data class BkrepoModelSecretParam(
     val bkRepoName: String,
     var storageCredentialsKey: String,
     val display: Boolean,
-    override val url: String,
+    override var url: String,
     override val userId: String
 ) : BkrepoCommonSecretParam(
     userId = userId,

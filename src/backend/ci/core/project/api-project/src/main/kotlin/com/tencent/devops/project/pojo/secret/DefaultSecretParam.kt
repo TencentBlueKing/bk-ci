@@ -30,7 +30,7 @@ package com.tencent.devops.project.pojo.secret
 data class DefaultSecretParam(
     val headers: Map<String, String>,
     val params: Map<String, String>,
-    override val url: String,
+    override var url: String,
     override val userId: String
 ) : ISecretParam {
 

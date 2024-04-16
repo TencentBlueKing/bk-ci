@@ -32,7 +32,7 @@ data class BkrepoProjectSecretParam(
     val displayName: String,
     val description: String,
     val display: Boolean,
-    override val url: String,
+    override var url: String,
     override val userId: String
 ) : BkrepoCommonSecretParam(
     userId = userId,
