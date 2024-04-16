@@ -30,5 +30,6 @@ package com.tencent.devops.project.pojo
 data class ProjectCallbackPojo(
     val callbackUrl: String,
     val event: String,
-    val secretType: String
+    val secretType: String,
+    val id: Int
 )

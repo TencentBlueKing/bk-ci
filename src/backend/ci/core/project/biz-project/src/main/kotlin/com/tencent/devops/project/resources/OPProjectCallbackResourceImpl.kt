@@ -91,7 +91,8 @@ class OPProjectCallbackResourceImpl @Autowired constructor(
             ProjectCallbackPojo(
                 event = it.event,
                 callbackUrl = it.callbackUrl,
-                secretType = it.secretType
+                secretType = it.secretType,
+                id = it.id
             )
         }
         return Result(list)
