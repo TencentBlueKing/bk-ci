@@ -64,7 +64,7 @@ interface OPProjectCallbackResource {
         @QueryParam("event")
         event: ProjectEventType,
         @Parameter(description = "事件类型", required = true)
-        @QueryParam("event")
+        @QueryParam("gatewayType")
         gatewayType: GatewayType,
         @Parameter(description = "回调凭证", required = true)
         secretParam: ISecretParam
