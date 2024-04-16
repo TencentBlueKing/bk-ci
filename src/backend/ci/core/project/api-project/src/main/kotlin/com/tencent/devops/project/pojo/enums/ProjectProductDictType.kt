@@ -23,36 +23,14 @@
  * NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ *
  */
 
-package com.tencent.devops.project.resources
+package com.tencent.devops.project.pojo.enums
 
-import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.project.api.service.user.UserProjectOrganizationResource
-import com.tencent.devops.project.pojo.OrganizationInfo
-import com.tencent.devops.project.pojo.Result
-import com.tencent.devops.project.pojo.enums.OrganizationType
-import com.tencent.devops.project.service.tof.TOFService
-import org.springframework.beans.factory.annotation.Autowired
-
-@RestResource
-class UserProjectOrganizationResourceImpl @Autowired constructor(
-    private val tofService: TOFService
-) : UserProjectOrganizationResource {
-
-    override fun getOrganizations(
-        userId: String,
-        type: OrganizationType,
-        id: Int,
-        excludeBelowTheDept: Boolean?
-    ): Result<List<OrganizationInfo>> {
-        return Result(
-            tofService.getOrganizationInfo(
-                userId = userId,
-                type = type,
-                id = id,
-                excludeBelowTheDept = excludeBelowTheDept ?: false
-            )
-        )
-    }
+enum class ProjectProductDictType(val value: Int) {
+    BG(1),
+    DEPT(2),
+    PLAN_PRODUCT(3),
+    OBS_PRODUCT(4);
 }

@@ -7,6 +7,8 @@ data class WorkspaceNotifyData(
     val projectId: List<String>?,
     @Parameter(description = "ip", required = false)
     val ip: List<String>?,
+    @Parameter(description = "owner", required = false)
+    val owner: List<String>?,
     @Parameter(description = "title", required = true)
     val title: String,
     @Parameter(description = "desc", required = false)

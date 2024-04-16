@@ -217,9 +217,10 @@
                     ]
             },
             reuseJobList () {
+                if (!this.pipeline) return []
                 const list = []
                 const curJobId = this.stage.containers[this.containerIndex]?.jobId || ''
-                const isTrigger = this.pipeline.stages[0].isTrigger
+                const isTrigger = this.pipeline?.stages[0]?.isTrigger
                 this.pipeline.stages && this.pipeline.stages.forEach((stage, index) => {
                     if ((!isTrigger || index !== 0) && index <= this.stageIndex) {
                         stage && stage.containers.forEach((container, containerIndex) => {
