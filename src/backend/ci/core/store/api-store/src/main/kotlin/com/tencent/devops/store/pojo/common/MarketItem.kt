@@ -41,11 +41,11 @@ data class MarketItem(
     @get:Schema(title = "名称", required = true)
     @BkFieldI18n(source = I18nSourceEnum.DB)
     val name: String,
-    @get:Schema(title = "标识", required = true)
+    @get:Schema(title = "组件标识", required = true)
     val code: String,
     @get:Schema(title = "版本号", required = true)
     val version: String,
-    @get:Schema(title = "类型", required = true)
+    @get:Schema(title = "组件类型", required = true)
     val type: String,
     @get:Schema(title = "研发来源类型", required = false)
     val rdType: String? = null,
@@ -94,6 +94,8 @@ data class MarketItem(
     val recentExecuteNum: Int? = null,
     @get:Schema(title = "是否为受欢迎组件", required = false)
     val hotFlag: Boolean? = null,
+    @get:Schema(title = "是否需要更新", required = false)
+    val updateFlag: Boolean? = null,
     @get:Schema(title = "扩展字段集合", required = false)
     val extData: Map<String, Any>? = null
 )

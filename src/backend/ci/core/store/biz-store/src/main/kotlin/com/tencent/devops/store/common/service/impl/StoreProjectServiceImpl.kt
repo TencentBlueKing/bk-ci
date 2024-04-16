@@ -38,22 +38,22 @@ import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.utils.LogUtils
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.project.api.service.ServiceProjectResource
-import com.tencent.devops.store.constant.StoreMessageCode
 import com.tencent.devops.store.common.dao.StoreProjectRelDao
 import com.tencent.devops.store.common.dao.StoreStatisticDailyDao
 import com.tencent.devops.store.common.dao.StoreStatisticDao
-import com.tencent.devops.store.pojo.common.InstalledProjRespItem
-import com.tencent.devops.store.pojo.common.statistic.StoreDailyStatisticRequest
-import com.tencent.devops.store.pojo.common.enums.StoreProjectTypeEnum
-import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.common.service.StoreProjectService
 import com.tencent.devops.store.common.service.StoreUserService
-import java.util.Date
+import com.tencent.devops.store.constant.StoreMessageCode
+import com.tencent.devops.store.pojo.common.InstallStoreReq
+import com.tencent.devops.store.pojo.common.InstalledProjRespItem
+import com.tencent.devops.store.pojo.common.enums.StoreProjectTypeEnum
+import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
+import com.tencent.devops.store.pojo.common.statistic.StoreDailyStatisticRequest
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
-import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
+import java.util.Date
 
 /**
  * store项目通用业务逻辑类
@@ -72,8 +72,6 @@ class StoreProjectServiceImpl @Autowired constructor(
     private val redisOperation: RedisOperation
 ) : StoreProjectService {
 
-    private val logger = LoggerFactory.getLogger(StoreProjectServiceImpl::class.java)
-
     /**
      * 根据商城组件标识获取已安装的项目列表
      */
@@ -87,7 +85,7 @@ class StoreProjectServiceImpl @Autowired constructor(
             // 获取用户有权限的项目列表
             watcher.start("get accessible projects")
             val projectList = client.get(ServiceProjectResource::class).list(userId).data
-            if (projectList?.count() == 0) {
+            if (projectList?.isEmpty() == true) {
                 return Result(mutableListOf())
             }
             val projectCodeMap = projectList?.map { it.projectCode to it }?.toMap()!!
@@ -118,13 +116,15 @@ class StoreProjectServiceImpl @Autowired constructor(
 
     override fun installStoreComponent(
         userId: String,
-        projectCodeList: ArrayList<String>,
         storeId: String,
-        storeCode: String,
-        storeType: StoreTypeEnum,
+        installStoreReq: InstallStoreReq,
         publicFlag: Boolean,
         channelCode: ChannelCode
     ): Result<Boolean> {
+        val storeCode = installStoreReq.storeCode
+        val storeType = installStoreReq.storeType
+        val version = installStoreReq.version
+        val projectCodeList = installStoreReq.projectCodes
         val testProjectCodeList = storeProjectRelDao.getTestProjectCodesByStoreCode(
             dslContext = dslContext,
             storeCode = storeCode,
@@ -133,8 +133,21 @@ class StoreProjectServiceImpl @Autowired constructor(
         if (!testProjectCodeList.isNullOrEmpty()) {
             // 剔除需要安装的调试项目
             projectCodeList.removeAll(testProjectCodeList)
+            version?.let {
+                testProjectCodeList.forEach { testProjectCode ->
+                    storeProjectRelDao.addStoreProjectRel(
+                        dslContext = dslContext,
+                        userId = userId,
+                        storeCode = storeCode,
+                        projectCode = testProjectCode,
+                        type = StoreProjectTypeEnum.TEST.type.toByte(),
+                        storeType = storeType.type.toByte(),
+                        version = version
+                    )
+                }
+            }
         }
-        if (projectCodeList.isNullOrEmpty()) {
+        if (projectCodeList.isEmpty()) {
             // 如果全都是调试项目，无需安装
             return Result(true)
         }
@@ -153,24 +166,14 @@ class StoreProjectServiceImpl @Autowired constructor(
         dslContext.transaction { t ->
             val context = DSL.using(t)
             for (projectCode in projectCodeList) {
-                // 判断是否已安装
-                val relCount = storeProjectRelDao.countInstalledProject(
-                    dslContext = context,
-                    projectCode = projectCode,
-                    storeCode = storeCode,
-                    storeType = storeType.type.toByte()
-                )
-                if (relCount > 0) {
-                    continue
-                }
-                // 未安装则入库
                 val result = storeProjectRelDao.addStoreProjectRel(
                     dslContext = context,
                     userId = userId,
                     storeCode = storeCode,
                     projectCode = projectCode,
                     type = StoreProjectTypeEnum.COMMON.type.toByte(),
-                    storeType = storeType.type.toByte()
+                    storeType = storeType.type.toByte(),
+                    version = version
                 )
                 // 使用 ON DUPLICATE KEY UPDATE，如果将行作为新行插入，则每行的受影响行值为 1，如果更新现有行，则为 2
                 if (result == 1) {
@@ -228,7 +231,7 @@ class StoreProjectServiceImpl @Autowired constructor(
         )
         val storeDailyStatisticRequest = StoreDailyStatisticRequest(
             totalDownloads = downloads,
-            dailyDownloads = storeDailyStatistic?.dailyDownloads ?: 0 + increment
+            dailyDownloads = storeDailyStatistic?.dailyDownloads ?: increment
         )
         if (storeDailyStatistic != null) {
             storeStatisticDailyDao.updateDailyStatisticData(
