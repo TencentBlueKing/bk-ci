@@ -306,7 +306,7 @@
                 }
                 console.log('handleVersionChange', versionId, version?.status)
                 this.$router.replace({
-                    name: this.isActiveDraftVersion ? 'pipelinesEdit' : this.$route.params.name,
+                    name: !this.pipelineHistoryViewAble ? 'pipelinesEdit' : this.$route.params.name,
                     params: {
                         ...this.$route.params,
                         version: versionId,
