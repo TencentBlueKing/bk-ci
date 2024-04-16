@@ -260,6 +260,25 @@ class CreateControl @Autowired constructor(
             newNum = workspaceCreate.count
         }
 
+        createCheckWhenWinNotAlready(windowsZone, windowsConfig, newNum)
+
+        doCreateWorkspace(
+            workspaceCreate = workspaceCreate,
+            projectId = projectId,
+            creator = pmUserId,
+            windowsConfig = windowsConfig,
+            projectInfo = projectInfo,
+            windowsZone = windowsZone,
+            cgsId = cgsId,
+            autoAssign = autoAssign
+        )
+    }
+
+    private fun createCheckWhenWinNotAlready(
+        windowsZone: WindowsResourceZoneConfig,
+        windowsConfig: WindowsResourceTypeConfig,
+        newNum: Int
+    ) {
         val data = client.get(ServiceStartCloudResource::class).getResourceVm(
             ResourceVmReq(
                 zoneId = windowsZone.zoneShortName,
@@ -290,17 +309,6 @@ class CreateControl @Autowired constructor(
                 )
             )
         }
-
-        doCreateWorkspace(
-            workspaceCreate = workspaceCreate,
-            projectId = projectId,
-            creator = pmUserId,
-            windowsConfig = windowsConfig,
-            projectInfo = projectInfo,
-            windowsZone = windowsZone,
-            cgsId = cgsId,
-            autoAssign = autoAssign
-        )
     }
 
     private fun doCreateWorkspace(
@@ -967,11 +975,8 @@ class CreateControl @Autowired constructor(
         windowsGpuCheck(userId, workspaceNames.size)
         workspaceCommon.checkWorkspaceAvailability(userId, mountType, WorkspaceOwnerType.PERSONAL)
         val resourceCount = startCloudResourceCountCheck(workspaceCreate.windowsType!!, workspaceCreate.windowsZone!!)
-        if (resourceCount < workspaceNames.size) {
-            throw ErrorCodeException(
-                errorCode = ErrorCodeEnum.DESKTOP_RESOURCES_INSUFFICIENT.errorCode,
-                params = arrayOf(resourceCount.toString())
-            )
+        if (workspaceNames.size - resourceCount > 0) {
+            createCheckWhenWinNotAlready(windowsZone, windowsConfig, workspaceNames.size - resourceCount)
         }
         val res = mutableListOf<Workspace>()
         repeat(workspaceNames.size) { index ->
