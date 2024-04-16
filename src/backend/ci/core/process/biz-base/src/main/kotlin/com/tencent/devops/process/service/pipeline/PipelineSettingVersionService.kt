@@ -70,15 +70,15 @@ class PipelineSettingVersionService @Autowired constructor(
         var settingInfo = pipelineSettingDao.getSetting(dslContext, projectId, pipelineId)
 
         // 获取已生效的流水线的标签和分组
-        val groups = userId?.let {
-            pipelineGroupService.getGroups(userId, projectId, pipelineId)
-        }
         val labels = ArrayList<String>()
         val labelNames = ArrayList<String>()
-        groups?.forEach {
-            labels.addAll(it.labels)
-            labelNames.addAll(it.labelNames)
+        userId?.let {
+            pipelineGroupService.getGroups(userId, projectId, pipelineId).forEach {
+                labels.addAll(it.labels)
+                labelNames.addAll(it.labelNames)
+            }
         }
+
         if (settingInfo == null) {
             // 如果没有正式版本的设置，则从流水线信息获取关键信息，生成新的流水线配置
             val (pipelineName, pipelineDesc) = detailInfo?.let {
@@ -126,10 +126,10 @@ class PipelineSettingVersionService @Autowired constructor(
                 settingInfo.concurrencyGroup = ve.concurrencyGroup
                 settingInfo.concurrencyCancelInProgress = ve.concurrencyCancelInProgress ?: false
             }
-            // 版本中的可能还不是正式生效的，如果和正式配置中有差异则重新获取名称
-            if (settingInfo.labels.isNotEmpty() && settingInfo.labels != labels) {
+            // 来自前端的请求中，版本中的可能还不是正式生效的，如果和正式配置中有差异则重新获取名称
+            if (settingInfo.labels.isNotEmpty() && settingInfo.labels != labels && userId != null) {
                 labelNames.clear()
-                pipelineGroupService.getGroups(projectId, pipelineId).forEach { group ->
+                pipelineGroupService.getGroups(userId, projectId).forEach { group ->
                     group.labels.forEach { label ->
                         if (settingInfo.labels.contains(label.id)) labelNames.add(label.name)
                     }
