@@ -410,8 +410,10 @@ class ThirdPartyDispatchService @Autowired constructor(
             buildId = event.buildId,
             message = logMessage,
             tag = VMUtils.genStartVMTaskId(event.vmSeqId),
-            jobId = event.containerHashId,
-            executeCount = event.executeCount ?: 1
+            containerHashId = event.containerHashId,
+            executeCount = event.executeCount ?: 1,
+            jobId = event.jobId,
+            stepId = null
         )
     }
 

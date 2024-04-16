@@ -216,8 +216,8 @@ class ApigwLogResourceV3Impl @Autowired constructor(
         projectId: String,
         pipelineId: String,
         buildId: String,
-        tag: String?,
         executeCount: Int?,
+        tag: String?,
         stepId: String?,
         archiveFlag: Boolean?
     ): Result<QueryLogStatus> {
