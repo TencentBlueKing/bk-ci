@@ -25,7 +25,7 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.dispatch.docker.service
+package com.tencent.devops.dispatch.docker.service.debug.impl
 
 import com.tencent.devops.dispatch.docker.service.debug.ExtDebugService
 
