@@ -92,7 +92,7 @@
                 'getStage'
             ]),
             instanceFromTemplate () {
-                return this.pipelineWithoutTrigger?.instanceFromTemplate ?? false
+                return this.editingModel?.instanceFromTemplate ?? false
             },
             stages () {
                 return this.editingModel?.stages ?? []
@@ -126,11 +126,15 @@
                     })
                 }
             },
-            pipelineWithoutTrigger (val, oldVal) {
-                debugger
-                this.editingModel = val
+            pipelineWithoutTrigger: {
+                immediate: true,
+                handler (val) {
+                    debugger
+                    this.editingModel = val
+                }
             }
         },
+
         methods: {
             ...mapActions('atom', [
                 'toggleAtomSelectorPopup',
