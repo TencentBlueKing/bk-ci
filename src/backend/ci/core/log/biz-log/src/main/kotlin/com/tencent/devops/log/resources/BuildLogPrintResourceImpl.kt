@@ -215,8 +215,10 @@ class BuildLogPrintResourceImpl @Autowired constructor(
             logType = logType,
             tag = tag,
             subTag = subTag,
-            jobId = jobId,
-            executeCount = executeCount
+            containerHashId = jobId,
+            executeCount = executeCount,
+            jobId = null,
+            stepId = null
         )
         recordMultiLogCount(initLogs.data?.logs?.size ?: 0)
         return initLogs
@@ -245,8 +247,10 @@ class BuildLogPrintResourceImpl @Autowired constructor(
             logType = logType,
             tag = tag,
             subTag = subTag,
-            jobId = jobId,
-            executeCount = executeCount
+            containerHashId = jobId,
+            executeCount = executeCount,
+            jobId = null,
+            stepId = null
         )
         recordMultiLogCount(afterLogs.data?.logs?.size ?: 0)
 

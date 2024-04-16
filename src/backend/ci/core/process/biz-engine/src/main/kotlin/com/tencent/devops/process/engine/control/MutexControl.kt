@@ -207,8 +207,10 @@ class MutexControl @Autowired constructor(
                     language = I18nUtil.getDefaultLocaleLanguage()
                 ) + " Mutex[$runtimeMutexGroup]",
                 tag = VMUtils.genStartVMTaskId(containerId),
+                containerHashId = null,
+                executeCount = executeCount ?: 1,
                 jobId = null,
-                executeCount = executeCount ?: 1
+                stepId = VMUtils.genStartVMTaskId(containerId)
             )
         }
     }
@@ -478,16 +480,20 @@ class MutexControl @Autowired constructor(
                 buildId = container.buildId,
                 message = message,
                 tag = VMUtils.genStartVMTaskId(container.containerId),
+                containerHashId = null,
+                executeCount = container.executeCount,
                 jobId = null,
-                executeCount = container.executeCount
+                stepId = VMUtils.genStartVMTaskId(container.containerId)
             )
         } else {
             buildLogPrinter.addYellowLine(
                 buildId = container.buildId,
                 message = message,
                 tag = VMUtils.genStartVMTaskId(container.containerId),
+                containerHashId = null,
+                executeCount = container.executeCount,
                 jobId = null,
-                executeCount = container.executeCount
+                stepId = VMUtils.genStartVMTaskId(container.containerId)
             )
         }
     }

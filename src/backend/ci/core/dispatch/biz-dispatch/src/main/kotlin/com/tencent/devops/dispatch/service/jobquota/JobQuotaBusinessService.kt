@@ -230,8 +230,10 @@ class JobQuotaBusinessService @Autowired constructor(
                         language = I18nUtil.getDefaultLocaleLanguage()
                     ),
                     tag = VMUtils.genStartVMTaskId(containerId),
-                    jobId = containerHashId,
-                    executeCount = executeCount ?: 1
+                    containerHashId = containerHashId,
+                    executeCount = executeCount ?: 1,
+                    jobId = null,
+                    stepId = VMUtils.genStartVMTaskId(containerId)
                 )
                 return false
             }
@@ -250,8 +252,10 @@ class JobQuotaBusinessService @Autowired constructor(
                         language = I18nUtil.getDefaultLocaleLanguage()
                     ),
                     tag = VMUtils.genStartVMTaskId(containerId),
-                    jobId = containerHashId,
-                    executeCount = executeCount ?: 1
+                    containerHashId = containerHashId,
+                    executeCount = executeCount ?: 1,
+                    jobId = null,
+                    stepId = VMUtils.genStartVMTaskId(containerId)
                 )
             }
 

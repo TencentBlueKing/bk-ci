@@ -154,7 +154,9 @@ class PipelineRemoteAuthService @Autowired constructor(
                         arrayOf("$sourceIp")
                     ),
                     tag = taskId,
-                    executeCount = 1
+                    executeCount = 1,
+                    jobId = null,
+                    stepId = taskId
                 )
             }
             BuildId(
