@@ -59,27 +59,48 @@
             >
                 {{ operateName }}
             </RollbackEntry>
-            <span v-if="isReleaseVersion" v-bk-tooltips="tooltip">
-                <bk-button
-                    :disabled="!executable"
-                    theme="primary"
-                    v-perm="{
-                        hasPermission: canExecute,
-                        disablePermissionApi: true,
-                        permissionData: {
-                            projectId,
-                            resourceType: 'pipeline',
-                            resourceCode: pipelineId,
-                            action: RESOURCE_ACTION.EXECUTE
-                        }
-                    }"
-                    @click="goExecPreview"
-                >
-                    {{ $t(isActiveDraftVersion ? 'debug' : 'exec') }}
-
-                </bk-button>
-            </span>
-            <more-actions v-if="isReleaseVersion" />
+            <bk-button
+                v-else
+                theme="primary"
+                outline
+                v-perm="{
+                    hasPermission: canEdit,
+                    disablePermissionApi: true,
+                    permissionData: {
+                        projectId,
+                        resourceType: 'pipeline',
+                        resourceCode: pipelineId,
+                        action: RESOURCE_ACTION.EDIT
+                    }
+                }"
+                @click="goEdit"
+            >
+                {{ $t("edit") }}
+            </bk-button>
+            <template v-if="isReleaseVersion">
+                <span v-bk-tooltips="tooltip">
+                    <bk-button
+                        :disabled="!executable"
+                        theme="primary"
+                        v-perm="{
+                            hasPermission: canExecute,
+                            disablePermissionApi: true,
+                            permissionData: {
+                                projectId,
+                                resourceType: 'pipeline',
+                                resourceCode: pipelineId,
+                                action: RESOURCE_ACTION.EXECUTE
+                            }
+                        }"
+                        @click="goExecPreview"
+                    >
+                        {{ $t(isActiveDraftVersion ? 'debug' : 'exec') }}
+    
+                    </bk-button>
+                </span>
+                
+                <more-actions />
+            </template>
         </aside>
         <VersionHistorySideSlider
             :show-version-sideslider="showVersionSideslider"
@@ -222,6 +243,14 @@
                 'setSwitchingPipelineVersion',
                 'setShowVariable'
             ]),
+            goEdit () {
+                this.$router.push({
+                    name: 'pipelinesEdit',
+                    query: {
+                        tab: pipelineTabIdMap[this.$route.params.type] ?? 'pipeline'
+                    }
+                })
+            },
             showVersionSideSlider () {
                 this.setShowVariable(false)
                 this.$refs?.versionSelectorInstance?.close?.()
