@@ -692,7 +692,7 @@ class StoreComponentQueryServiceImpl @Autowired constructor(
         classifyMap: Map<String, String>,
         urlProtocolTrim: Boolean,
         categoryInfoMap: Map<String, List<Category>>,
-        storeEnvInfo: TStoreBaseEnvRecord
+        storeEnvInfo: TStoreBaseEnvRecord?
     ): MarketItem {
         val tStoreBase = TStoreBase.T_STORE_BASE
         val tStoreBaseFeature = TStoreBaseFeature.T_STORE_BASE_FEATURE
@@ -708,9 +708,9 @@ class StoreComponentQueryServiceImpl @Autowired constructor(
         val storeIndexInfos = storeIndexInfosMap?.get(storeCode)
         val members = memberData?.get(storeCode)
         val rdType = record[tStoreBaseFeature.RD_TYPE]
-        val osStr = storeEnvInfo.osName
+        val osStr = storeEnvInfo?.osName
         val flag = storeCommonService.generateInstallFlag(
-            defaultFlag = storeEnvInfo.defaultFlag,
+            defaultFlag = storeEnvInfo?.defaultFlag ?: false,
             members = members,
             userId = userId,
             visibleList = visibleList,
