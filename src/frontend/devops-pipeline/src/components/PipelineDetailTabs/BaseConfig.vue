@@ -1,6 +1,12 @@
 <template>
     <bk-collapse v-model="activeName">
-        <bk-collapse-item v-for="panel in panels" :key="panel.name" :name="panel.name" hide-arrow>
+        <bk-collapse-item
+            hide-arrow
+            ext-cls="no-animation-collapse"
+            v-for="panel in panels"
+            :key="panel.name"
+            :name="panel.name"
+        >
             <header class="pipeline-base-config-panel-header">
                 {{ $t(panel.name) }}
             </header>
@@ -105,7 +111,11 @@
     line-height: 24px;
     border-bottom: 1px solid #DCDEE5;
 }
-
+.no-animation-collapse {
+    .collapse-transition {
+        transition: none !important;
+    }
+}
 .base-info-panel-content {
     display: grid;
     grid-gap: 16px;

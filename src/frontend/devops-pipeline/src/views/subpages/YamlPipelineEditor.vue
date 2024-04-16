@@ -129,7 +129,6 @@
             pipelineWithoutTrigger: {
                 immediate: true,
                 handler (val) {
-                    debugger
                     this.editingModel = val
                 }
             }

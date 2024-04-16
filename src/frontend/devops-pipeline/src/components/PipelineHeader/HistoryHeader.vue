@@ -214,7 +214,6 @@
             pipelineInfo: {
                 deep: true,
                 handler (val, oldVal) {
-                    // debugger
                     if (val?.pipelineId !== oldVal?.pipelineId) {
                         if (val.releaseVersion === oldVal?.releaseVersion) {
                             this.init()
