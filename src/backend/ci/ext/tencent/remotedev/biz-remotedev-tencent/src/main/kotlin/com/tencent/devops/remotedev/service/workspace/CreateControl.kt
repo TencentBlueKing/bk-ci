@@ -770,7 +770,7 @@ class CreateControl @Autowired constructor(
         ws: WorkspaceRecord,
         event: RemoteDevUpdateEvent
     ) {
-        if (ws.ownerType == WorkspaceOwnerType.PROJECT) {
+        if (ws.workspaceSystemType == WorkspaceSystemType.WINDOWS_GPU) {
             val windowsInfo = workspaceWindowsDao.fetchAnyWorkspaceWindowsInfo(dslContext, ws.workspaceName)
             val windowsConfig = windowsInfo?.winConfigId?.let {
                 windowsResourceConfigService.getTypeConfig(it)
