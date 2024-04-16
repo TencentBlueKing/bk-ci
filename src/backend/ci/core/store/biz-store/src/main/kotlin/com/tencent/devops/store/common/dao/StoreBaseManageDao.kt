@@ -56,6 +56,8 @@ class StoreBaseManageDao {
                 STATUS,
                 STATUS_MSG,
                 LOGO_URL,
+                SUMMARY,
+                DESCRIPTION,
                 LATEST_FLAG,
                 PUBLISHER,
                 PUB_TIME,
@@ -73,6 +75,8 @@ class StoreBaseManageDao {
                 storeBaseDataPO.status.name,
                 storeBaseDataPO.statusMsg,
                 storeBaseDataPO.logoUrl,
+                storeBaseDataPO.summary,
+                storeBaseDataPO.description,
                 storeBaseDataPO.latestFlag,
                 storeBaseDataPO.publisher,
                 storeBaseDataPO.pubTime,
@@ -88,6 +92,8 @@ class StoreBaseManageDao {
                 .set(STATUS, storeBaseDataPO.status.name)
                 .set(STATUS_MSG, storeBaseDataPO.statusMsg)
                 .set(LOGO_URL, storeBaseDataPO.logoUrl)
+                .set(SUMMARY, storeBaseDataPO.summary)
+                .set(DESCRIPTION, storeBaseDataPO.description)
                 .set(LATEST_FLAG, storeBaseDataPO.latestFlag)
                 .set(PUBLISHER, storeBaseDataPO.publisher)
                 .set(PUB_TIME, storeBaseDataPO.pubTime)

@@ -51,6 +51,7 @@ import javax.ws.rs.core.MediaType
 @Path("/service/store/archives")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
+@Suppress("LongParameterList")
 interface ServiceStoreArchiveResource {
 
     @Operation(summary = "校验用户上传的组件包是否合法")
@@ -89,7 +90,13 @@ interface ServiceStoreArchiveResource {
         storeCode: String,
         @Parameter(description = "版本号", required = true)
         @PathParam("version")
-        version: String
+        version: String,
+        @Parameter(description = "操作系统名称", required = false)
+        @QueryParam("osName")
+        osName: String? = null,
+        @Parameter(description = "操作系统架构", required = false)
+        @QueryParam("osArch")
+        osArch: String? = null
     ): Result<List<StorePkgEnvInfo>>
 
     @Operation(summary = "更新组件执行包相关信息")

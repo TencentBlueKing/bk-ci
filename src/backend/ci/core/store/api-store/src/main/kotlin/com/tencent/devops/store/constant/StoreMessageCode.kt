@@ -89,6 +89,8 @@ object StoreMessageCode {
     const val USER_REPOSITORY_ERROR_JSON_FIELD_IS_INVALID = "2120037" // 研发商店：插件配置文件[error.json]errorCode格式不正确，请检查
     const val TASK_JSON_CONFIGURE_FORMAT_ERROR = "2120038" // 参数[{0}] 的{1} ,请检查task.json配置格式是否正确 \n
     const val GET_ATOM_LANGUAGE_ENV_INFO_FAILED = "2120039" // 获取插件开发语言相关的环境变量信息失败
+    // 研发商店：插件配置文件[task.json]config配置格式不正确,{0}
+    const val TASK_JSON_CONFIG_IS_INVALID = "2120040"
 
     const val USER_TEMPLATE_VERSION_IS_NOT_FINISH = "2120201" // 研发商店：模板{0}的{1}版本发布未结束，请稍后再试
     const val USER_TEMPLATE_RELEASE_STEPS_ERROR = "2120202" // 研发商店：模板发布流程状态变更顺序不正确
@@ -155,8 +157,9 @@ object StoreMessageCode {
     const val STORE_BRANCH_NO_NEW_COMMIT = "2120928" // 代码未变更，分支测试版本生成失败
     const val STORE_VERSION_IS_NOT_FINISH = "2120929" // 研发商店：组件[{0}]的[{1}]版本发布未结束，请稍后再试
     const val STORE_RELEASE_STEPS_ERROR = "2120930" // 研发商店：组件发布流程中状态变更顺序不正确
-    const val STORE_INSTALL_VALIDATE_FAIL = "2120931" // 研发商店: 组件{0}安装校验失败,失败原因:{1}
-    const val STORE_COMPONENT_REPO_FILE_DELETE_FAIL = "2120932" // 研发商店：组件仓库文件删除失败
+    const val STORE_PROJECT_COMPONENT_NO_PERMISSION= "2120931" // 研发商店：项目[{0}]没有组件[{1}]的使用权限，请先安装组件
+    const val STORE_INSTALL_VALIDATE_FAIL = "2120932" // 研发商店: 组件{0}安装校验失败,失败原因:{1}
+    const val STORE_COMPONENT_REPO_FILE_DELETE_FAIL = "2120933" // 研发商店：组件仓库文件删除失败
 
     const val BK_OTHER = "bkOther" // 其他
     const val BK_PIPELINED_JOB = "bkPipelinedJob" // 流水线Job

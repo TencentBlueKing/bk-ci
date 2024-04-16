@@ -36,6 +36,18 @@ import org.springframework.stereotype.Repository
 @Repository
 class StoreBaseFeatureQueryDao {
 
+    fun getBaseFeatureByCode(
+        dslContext: DSLContext,
+        storeCode: String,
+        storeType: StoreTypeEnum
+    ): TStoreBaseFeatureRecord? {
+        return with(TStoreBaseFeature.T_STORE_BASE_FEATURE) {
+            dslContext.selectFrom(this)
+                .where(STORE_CODE.eq(storeCode).and(STORE_TYPE.eq(storeType.type.toByte())))
+                .fetchOne()
+        }
+    }
+
     fun getComponentFeatureDataByCode(
         dslContext: DSLContext,
         storeCode: String,

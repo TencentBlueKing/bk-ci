@@ -121,8 +121,12 @@ class StoreBaseQueryDao {
         num: Int? = null
     ): Result<TStoreBaseRecord>? {
         return with(TStoreBase.T_STORE_BASE) {
+            val conditions = mutableListOf<Condition>()
+            conditions.add(STORE_TYPE.eq(storeType.type.toByte()))
+            conditions.add(STORE_CODE.eq(storeCode))
+            conditions.add(STATUS.eq(StoreStatusEnum.RELEASED.name))
             val baseStep = dslContext.selectFrom(this)
-                .where(STORE_CODE.eq(storeCode).and(STORE_TYPE.eq(storeType.type.toByte())))
+                .where(conditions)
                 .orderBy(CREATE_TIME.desc())
             if (null != num) {
                 baseStep.limit(num)

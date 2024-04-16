@@ -41,6 +41,8 @@ import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.service.utils.ZipUtil
 import com.tencent.devops.store.api.common.ServiceStoreArchiveResource
+import com.tencent.devops.store.api.common.ServiceStoreResource
+import com.tencent.devops.store.constant.StoreMessageCode
 import com.tencent.devops.store.pojo.common.enums.ReleaseTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.pojo.common.publication.StorePkgEnvInfo
@@ -291,4 +293,40 @@ abstract class ArchiveStorePkgServiceImpl : ArchiveStorePkgService {
         storeCode: String,
         version: String
     )
+
+    override fun getComponentPkgDownloadUrl(
+        userId: String,
+        projectId: String,
+        storeType: StoreTypeEnum,
+        storeCode: String,
+        version: String,
+        osName: String?,
+        osArch: String?
+    ): String {
+        // 判断项目是否有使用该组件的权限
+        val validateResult =
+            client.get(ServiceStoreResource::class).validateProjectComponentPermission(projectId, storeCode, storeType)
+        if (validateResult.isNotOk() || validateResult.data == false) {
+            throw ErrorCodeException(
+                errorCode = StoreMessageCode.STORE_PROJECT_COMPONENT_NO_PERMISSION,
+                params = arrayOf(projectId, storeCode)
+            )
+        }
+        val storePkgEnvInfos = client.get(ServiceStoreArchiveResource::class).getComponentPkgEnvInfo(
+            userId = userId,
+            storeType = storeType,
+            storeCode = storeCode,
+            version = version,
+            osName = osName,
+            osArch = osArch
+        ).data ?: throw ErrorCodeException(errorCode = CommonMessageCode.ERROR_CLIENT_REST_ERROR)
+        val storePkgEnvInfo = storePkgEnvInfos[0]
+        return createPkgShareUri(userId, storeType, storePkgEnvInfo.pkgRepoPath)
+    }
+
+    abstract fun createPkgShareUri(
+        userId: String,
+        storeType: StoreTypeEnum,
+        pkgPath: String
+    ): String
 }

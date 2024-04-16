@@ -79,13 +79,18 @@ interface StoreSpecBusService {
      * @param storeType 组件类型
      * @param storeCode 组件标识
      * @param version 组件版本
+     * @param osName 操作系统名称
+     * @param osArch 操作系统架构
      * @return 包环境信息列表
      */
+    @Suppress("LongParameterList")
     fun getComponentPkgEnvInfo(
         userId: String,
         storeType: StoreTypeEnum,
         storeCode: String,
-        version: String
+        version: String,
+        osName: String? = null,
+        osArch: String? = null
     ): List<StorePkgEnvInfo>
 
     /**

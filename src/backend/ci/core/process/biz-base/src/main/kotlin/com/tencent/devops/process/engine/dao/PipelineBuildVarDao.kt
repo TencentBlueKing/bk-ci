@@ -46,7 +46,8 @@ class PipelineBuildVarDao @Autowired constructor() {
         pipelineId: String,
         buildId: String,
         name: String,
-        value: Any
+        value: Any,
+        readOnly: Boolean?
     ) {
 
         with(T_PIPELINE_BUILD_VAR) {
@@ -56,9 +57,10 @@ class PipelineBuildVarDao @Autowired constructor() {
                 PIPELINE_ID,
                 BUILD_ID,
                 KEY,
-                VALUE
+                VALUE,
+                READ_ONLY
             )
-                .values(projectId, pipelineId, buildId, name, value.toString())
+                .values(projectId, pipelineId, buildId, name, value.toString(), readOnly)
                 .onDuplicateKeyUpdate()
                 .set(PIPELINE_ID, pipelineId)
                 .set(VALUE, value.toString())
@@ -224,6 +226,23 @@ class PipelineBuildVarDao @Autowired constructor() {
         return with(T_PIPELINE_BUILD_VAR) {
             dslContext.delete(this).where(PROJECT_ID.eq(projectId))
                 .and(PIPELINE_ID.eq(pipelineId)).execute()
+        }
+    }
+
+    fun fetchVarByLikeKey(
+        dslContext: DSLContext,
+        projectId: String,
+        buildId: String,
+        readOnly: Boolean?,
+        likeStr: String
+    ): Set<String> {
+        with(T_PIPELINE_BUILD_VAR) {
+            val dsl = dslContext.selectFrom(this).where(BUILD_ID.eq(buildId)).and(PROJECT_ID.eq(projectId))
+                .and(KEY.like(likeStr))
+            if (readOnly != null) {
+                dsl.and(READ_ONLY.eq(readOnly))
+            }
+            return dsl.fetch().map { it.value }.toSet()
         }
     }
 
