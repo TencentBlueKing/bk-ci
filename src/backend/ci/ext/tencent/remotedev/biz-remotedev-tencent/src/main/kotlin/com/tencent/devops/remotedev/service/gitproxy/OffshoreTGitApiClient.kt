@@ -195,7 +195,7 @@ class OffshoreTGitApiClient @Autowired constructor(
 
         val request = Request.Builder()
             .url(url)
-            .put(JsonUtil.toJson(body).toRequestBody("application/json; charset=utf-8".toMediaTypeOrNull()))
+            .post(JsonUtil.toJson(body).toRequestBody("application/json; charset=utf-8".toMediaTypeOrNull()))
             .build()
         try {
             doRetryHttp(request).use { response ->
