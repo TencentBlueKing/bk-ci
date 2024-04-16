@@ -71,7 +71,7 @@ class OpJobQuotaProjectResourceImpl @Autowired constructor(
         createTime: String,
         channelCode: String
     ): Result<Boolean> {
-        jobQuotaRedisUtils.restoreProjectJobTime(projectId, vmType, channelCode)
+        jobQuotaManagerService.clearRunningJobs(projectId, vmType, createTime, channelCode)
         return Result(true)
     }
 }
