@@ -15,11 +15,11 @@
 </template>
 
 <script>
-    import PipelineGroupAside from './PipelineGroupAside'
     import {
-        PIPELINE_GROUP_ASIDE_WIDTH_CACHE,
-        PIPELINE_ASIDE_PANEL_TOGGLE
+        PIPELINE_ASIDE_PANEL_TOGGLE,
+        PIPELINE_GROUP_ASIDE_WIDTH_CACHE
     } from '@/store/constants'
+    import PipelineGroupAside from './PipelineGroupAside'
 
     export default {
         components: {
@@ -47,9 +47,7 @@
 </script>
 
 <style lang="scss">
-    @import '@/scss/mixins/ellipsis';
     @import '@/scss/conf';
-
     .pipeline-group-section {
         flex: 1;
         display: flex;
@@ -104,63 +102,10 @@
                     }
                 }
             }
-            .pipeline-latest-exec-cell {
-                display: flex;
-                align-items: center;
-                .pipeline-exec-status-icon {
-                    display: inline-flex;
-                    font-size: 22px;
-                    margin-right: 10px;
-
-                }
-                .pipeline-exec-msg {
-                    display: flex;
-                    flex-direction: column;
-                    font-size: 12px;
-                    line-height: 20px;
-                    margin-left: 12px;
-                    overflow: hidden;
-                    .desc {
-                        color: #979BA5;
-                    }
-                    .pipeline-exec-msg-title {
-                        @include ellipsis();
-                        flex: 1;
-                    }
-                    .pipeline-exec-msg-desc {
-                        display: grid;
-                        column-gap: 16px;
-                        grid-template-columns: auto auto auto;
-                        > span {
-                            display: flex;
-                            align-items: center;
-                            overflow: hidden;
-                            > span {
-                                display: flex;
-                                @include ellipsis();
-                                min-width: 0;
-                                margin-left: 6px;
-                            }
-                        }
-                    }
-                }
-            }
             .hidden {
                 visibility: hidden;
             }
-            .pipeline-operation-cell {
-                display: flex;
-                align-items: center;
-                text-wrap: nowrap;
-                .more-action-menu {
-                    font-size: 0;
-                    cursor: pointer;
-                    .more-action-menu-trigger {
-                        font-size: 18px;
-                        padding: 0 6px;
-                    }
-                }
-            }
+            
             .pipeline-cell-link {
                 color: $primaryColor;
                 cursor: pointer;

@@ -468,7 +468,6 @@
                             && this.releaseParams.targetAction === 'CHECKOUT_BRANCH_AND_REQUEST_MERGE'
                     const h = this.$createElement
                     const instance = this.$bkInfo({
-                        type: isPacMR ? '' : 'success',
                         width: 600,
                         position: {
                             top: 100,
@@ -488,7 +487,11 @@
                                         class: 'part-of-mr'
                                     }
                                 })
-                                : null,
+                                : h('i', {
+                                    attrs: {
+                                        class: 'devops-icon icon-check-small release-success-icon'
+                                    }
+                                }),
                             h('p', {
                                 attrs: {
                                     class: 'release-info-title'
@@ -878,37 +881,16 @@
     align-items: center;
     margin-top: 30px;
 
-    > h3 {
-        width: 100%;
-        margin: 0 0 16px 0;
-        font-size: 14px;
-        font-weight: normal;
-        text-align: left;
-    }
-
-    .release-info-title {
-        font-size: 20px;
-        color: #313238;
-        margin: 22px 0 12px 0;
-        line-height: 1.2;
-        text-align: center;
-    }
-    
-    .pipeline-release-suc-tips {
-        background: #f5f6fa;
+    .release-success-icon {
+        border-radius: 50%;
+        height: 42px;
+        width: 42px;
         display: flex;
-        font-size: 14px;
-        flex-direction: column;
-        border-radius: 2px;
-        padding: 14px 20px;
-        letter-spacing: 0;
-        line-height: 22px;
-        text-align: left;
-        > h3 {
-            font-weight: 700;
-            font-size: 14px;
-            margin: 0 0 10px 0;
-        }
+        align-items: center;
+        justify-content: center;
+        background-color: #e5f6ea;
+        color: #3fc06d;
+        font-size: 36px;
     }
     
     .part-of-mr {
@@ -941,6 +923,40 @@
     
         }
     }
+
+    > h3 {
+        width: 100%;
+        margin: 0 0 16px 0;
+        font-size: 14px;
+        font-weight: normal;
+        text-align: left;
+    }
+
+    .release-info-title {
+        font-size: 20px;
+        color: #313238;
+        margin: 22px 0 12px 0;
+        line-height: 1.2;
+        text-align: center;
+    }
+    
+    .pipeline-release-suc-tips {
+        background: #f5f6fa;
+        display: flex;
+        font-size: 14px;
+        flex-direction: column;
+        border-radius: 2px;
+        padding: 14px 20px;
+        letter-spacing: 0;
+        line-height: 22px;
+        text-align: left;
+        > h3 {
+            font-weight: 700;
+            font-size: 14px;
+            margin: 0 0 10px 0;
+        }
+    }
+
 }
 
 .no-pac-enable-codelib-yet {
