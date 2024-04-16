@@ -874,7 +874,7 @@ class StoreComponentQueryServiceImpl @Autowired constructor(
                         classifyMap = classifyMap,
                         urlProtocolTrim = urlProtocolTrim,
                         categoryInfoMap = categoryInfoMap,
-                        storeEnvInfo = storeEnvInfos.find { it.id == record[TStoreBase.T_STORE_BASE.ID] }!!
+                        storeEnvInfo = storeEnvInfos.find { it.id == record[TStoreBase.T_STORE_BASE.ID] }
                     )
                     results.add(marketItem)
                 }
