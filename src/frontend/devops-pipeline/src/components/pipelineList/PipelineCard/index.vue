@@ -436,6 +436,10 @@
                 .bk-pipeline-card-info-build-msg {
                     flex: 1;
                     @include ellipsis();
+                    color: #63656e;
+                    &:hover {
+                        color: $primaryColor;
+                    }
                 }
                 &.bk-pipeline-card-desc-row {
                     display: grid;

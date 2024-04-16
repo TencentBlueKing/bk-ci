@@ -275,6 +275,7 @@
 
 <style lang="scss">
 @import '@/scss/conf';
+@import '@/scss/mixins/ellipsis';
 .pipeline-edit-header {
   display: flex;
   width: 100%;
@@ -289,6 +290,11 @@
     line-height: 1;
     .bk-tag {
         margin: 0;
+        max-width: 360px;
+        > span {
+            @include ellipsis();
+            width: 100%;
+        }
     }
   }
   .debug-pipeline-draft-btn {
