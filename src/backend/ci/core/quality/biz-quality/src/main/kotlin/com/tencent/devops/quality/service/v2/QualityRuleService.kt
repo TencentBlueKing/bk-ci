@@ -27,11 +27,18 @@
 
 package com.tencent.devops.quality.service.v2
 
+import com.tencent.bk.audit.annotations.ActionAuditRecord
+import com.tencent.bk.audit.annotations.AuditAttribute
+import com.tencent.bk.audit.annotations.AuditInstanceRecord
+import com.tencent.bk.audit.context.ActionAuditContext
 import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.api.util.Watcher
+import com.tencent.devops.common.audit.ActionAuditContent
+import com.tencent.devops.common.auth.api.ActionId
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthResourceType
+import com.tencent.devops.common.auth.api.ResourceTypeId
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.notify.enums.NotifyType
 import com.tencent.devops.common.pipeline.pojo.element.Element
@@ -66,13 +73,13 @@ import com.tencent.devops.quality.pojo.enum.RuleOperation
 import com.tencent.devops.quality.pojo.enum.RuleRange
 import com.tencent.devops.quality.service.QualityPermissionService
 import com.tencent.devops.quality.util.ElementUtils
-import java.time.LocalDateTime
 import org.apache.commons.lang3.math.NumberUtils
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
+import java.time.LocalDateTime
 
 @Service
 @Suppress("ALL")
@@ -102,6 +109,15 @@ class QualityRuleService @Autowired constructor(
         )
     }
 
+    @ActionAuditRecord(
+        actionId = ActionId.RULE_CREATE,
+        instance = AuditInstanceRecord(
+            resourceType = ResourceTypeId.RULE
+        ),
+        attributes = [AuditAttribute(name = ActionAuditContent.PROJECT_CODE_TEMPLATE, value = "#projectId")],
+        scopeId = "#projectId",
+        content = ActionAuditContent.RULE_CREATE_CONTENT
+    )
     fun userCreate(userId: String, projectId: String, ruleRequest: RuleCreateRequest): String {
         val permission = AuthPermission.CREATE
         qualityPermissionService.validateRulePermission(
@@ -114,11 +130,18 @@ class QualityRuleService @Autowired constructor(
                 arrayOf(permission.getI18n(I18nUtil.getLanguage(userId)))
             )
         )
-        return serviceCreate(
+
+        val ruleHashId = serviceCreate(
             userId = userId,
             projectId = projectId,
             ruleRequest = ruleRequest
         )
+        // audit
+        ActionAuditContext.current()
+            .setInstanceId(HashUtil.decodeIdToLong(ruleHashId).toString())
+            .setInstanceName(ruleRequest.name)
+            .setInstance(ruleRequest)
+        return ruleHashId
     }
 
     fun serviceCreate(userId: String, projectId: String, ruleRequest: RuleCreateRequest): String {
@@ -156,6 +179,15 @@ class QualityRuleService @Autowired constructor(
         }
     }
 
+    @ActionAuditRecord(
+        actionId = ActionId.RULE_EDIT,
+        instance = AuditInstanceRecord(
+            resourceType = ResourceTypeId.RULE
+        ),
+        attributes = [AuditAttribute(name = ActionAuditContent.PROJECT_CODE_TEMPLATE, value = "#projectId")],
+        scopeId = "#projectId",
+        content = ActionAuditContent.RULE_EDIT_CONTENT
+    )
     fun userUpdate(userId: String, projectId: String, ruleHashId: String, ruleRequest: RuleUpdateRequest): Boolean {
         val ruleId = HashUtil.decodeIdToLong(ruleHashId)
         logger.info("user($userId) update the rule($ruleId) in project($projectId): $ruleRequest")
@@ -171,6 +203,16 @@ class QualityRuleService @Autowired constructor(
                 arrayOf(permission.getI18n(I18nUtil.getLanguage(userId)))
             )
         )
+        val ruleInfo = userGetRule(
+            userId = userId,
+            projectId = projectId,
+            ruleHashId = ruleHashId
+        )
+        ActionAuditContext.current()
+            .setInstanceId(ruleId.toString())
+            .setInstanceName(ruleRequest.name)
+            .setOriginInstance(ruleInfo)
+            .setInstance(ruleRequest)
         dslContext.transactionResult { configuration ->
             val context = DSL.using(configuration)
             qualityRuleDao.update(context, userId, projectId, ruleId, ruleRequest)
@@ -197,6 +239,15 @@ class QualityRuleService @Autowired constructor(
         return true
     }
 
+    @ActionAuditRecord(
+        actionId = ActionId.RULE_ENABLE,
+        instance = AuditInstanceRecord(
+            resourceType = ResourceTypeId.RULE
+        ),
+        attributes = [AuditAttribute(name = ActionAuditContent.PROJECT_CODE_TEMPLATE, value = "#projectId")],
+        scopeId = "#projectId",
+        content = ActionAuditContent.RULE_ENABLE_CONTENT
+    )
     fun userUpdateEnable(userId: String, projectId: String, ruleHashId: String, enable: Boolean) {
         val ruleId = HashUtil.decodeIdToLong(ruleHashId)
         val permission = AuthPermission.ENABLE
@@ -212,10 +263,28 @@ class QualityRuleService @Autowired constructor(
                 arrayOf(permission.getI18n(I18nUtil.getLanguage(userId)))
             )
         )
-        qualityRuleDao.updateEnable(dslContext = dslContext, ruleId = ruleId, enable = enable)
+        val qualityRuleInfo = qualityRuleDao.get(dslContext, ruleId)
+        ActionAuditContext.current()
+            .setInstanceId(ruleId.toString())
+            .setInstanceName(qualityRuleInfo.name)
+        qualityRuleDao.updateEnable(
+            dslContext = dslContext,
+            projectId = projectId,
+            ruleId = ruleId,
+            enable = enable
+        )
         refreshRedis(projectId, ruleId)
     }
 
+    @ActionAuditRecord(
+        actionId = ActionId.RULE_DELETE,
+        instance = AuditInstanceRecord(
+            resourceType = ResourceTypeId.RULE
+        ),
+        attributes = [AuditAttribute(name = ActionAuditContent.PROJECT_CODE_TEMPLATE, value = "#projectId")],
+        scopeId = "#projectId",
+        content = ActionAuditContent.RULE_DELETE_CONTENT
+    )
     fun userDelete(userId: String, projectId: String, ruleHashId: String) {
         val ruleId = HashUtil.decodeIdToLong(ruleHashId)
         val ruleRecord = qualityRuleDao.get(dslContext, ruleId)
@@ -232,7 +301,10 @@ class QualityRuleService @Autowired constructor(
                 arrayOf(permission.getI18n(I18nUtil.getLanguage(userId)))
             )
         )
-        qualityRuleDao.delete(dslContext, ruleId)
+        ActionAuditContext.current()
+            .setInstanceId(ruleId.toString())
+            .setInstanceName(ruleRecord.name)
+        qualityRuleDao.delete(dslContext = dslContext, projectId = projectId, ruleId = ruleId)
         qualityPermissionService.deleteRuleResource(projectId, ruleId)
         refreshDeletedRuleRedis(projectId, ruleRecord.indicatorRange, ruleRecord.pipelineTemplateRange)
     }

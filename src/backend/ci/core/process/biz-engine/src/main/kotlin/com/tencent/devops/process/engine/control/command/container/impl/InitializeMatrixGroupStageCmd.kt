@@ -248,11 +248,11 @@ class InitializeMatrixGroupStageCmd(
                 }
 
                 contextCaseList.forEach { contextCase ->
-                    val contextPair = if (asCodeEnabled) {
-                        EnvReplacementParser.getCustomExecutionContextByMap(variables)
-                    } else null
                     // 包括matrix.xxx的所有上下文，矩阵生成的要覆盖原变量
                     val allContext = (modelContainer.customBuildEnv ?: mapOf()).plus(contextCase)
+                    val contextPair = if (asCodeEnabled) {
+                        EnvReplacementParser.getCustomExecutionContextByMap(allContext)
+                    } else null
 
                     // 对自定义构建环境的做特殊解析
                     // customDispatchType决定customBaseOS是否计算，请勿填充默认值
@@ -334,16 +334,18 @@ class InitializeMatrixGroupStageCmd(
                             jobControlOption = jobControlOption,
                             matrixGroupId = matrixGroupId,
                             postParentIdMap = postParentIdMap,
-                            mutexGroup = mutexGroup
+                            mutexGroup = mutexGroup,
+                            agentReuseMutex = parentContainer.controlOption.agentReuseMutex
                         )
                     )
                     recordContainer?.let {
-                        val containerVar = mutableMapOf<String, Any>(
+                        val containerVar = mutableMapOf(
                             "@type" to newContainer.getClassType(),
                             newContainer::containerHashId.name to (newContainer.containerHashId ?: ""),
                             newContainer::name.name to (newContainer.name),
                             newContainer::matrixGroupId.name to matrixGroupId,
-                            newContainer::matrixContext.name to contextCase
+                            newContainer::matrixContext.name to contextCase,
+                            newContainer::startVMTaskSeq.name to (newContainer.startVMTaskSeq ?: 1)
                         )
                         modelContainer.mutexGroup?.let {
                             containerVar[newContainer::mutexGroup.name] = it
@@ -405,7 +407,7 @@ class InitializeMatrixGroupStageCmd(
                         modelContainer.elements, context.executeCount, postParentIdMap, matrixTaskIds
                     )
                     val replacement = if (asCodeEnabled) {
-                        EnvReplacementParser.getCustomExecutionContextByMap(variables)
+                        EnvReplacementParser.getCustomExecutionContextByMap(contextCase)
                     } else null
                     val mutexGroup = modelContainer.mutexGroup?.let { self ->
                         self.copy(
@@ -448,16 +450,18 @@ class InitializeMatrixGroupStageCmd(
                             jobControlOption = jobControlOption,
                             matrixGroupId = matrixGroupId,
                             postParentIdMap = postParentIdMap,
-                            mutexGroup = mutexGroup
+                            mutexGroup = mutexGroup,
+                            agentReuseMutex = parentContainer.controlOption.agentReuseMutex
                         )
                     )
                     recordContainer?.let {
-                        val containerVar = mutableMapOf<String, Any>(
+                        val containerVar = mutableMapOf(
                             "@type" to newContainer.getClassType(),
                             newContainer::containerHashId.name to (newContainer.containerHashId ?: ""),
                             newContainer::name.name to (newContainer.name),
                             newContainer::matrixGroupId.name to matrixGroupId,
-                            newContainer::matrixContext.name to contextCase
+                            newContainer::matrixContext.name to contextCase,
+                            newContainer::startVMTaskSeq.name to (newContainer.startVMTaskSeq ?: 1)
                         )
                         modelContainer.mutexGroup?.let {
                             containerVar[newContainer::mutexGroup.name] = it

@@ -36,6 +36,7 @@ import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.api.pojo.IdValue
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.pojo.SimpleResult
+import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.auth.api.AuthPermission
@@ -176,6 +177,7 @@ class PipelineBuildFacadeService(
 
     companion object {
         private val logger = LoggerFactory.getLogger(PipelineBuildFacadeService::class.java)
+        private const val RETRY_THIRD_AGENT_ENV = "RETRY_THIRD_AGENT_ENV"
     }
 
     private fun filterParams(
@@ -371,9 +373,7 @@ class PipelineBuildFacadeService(
             )
         }
 
-        val redisLock = BuildIdLock(redisOperation = redisOperation, buildId = buildId)
-        try {
-
+        BuildIdLock(redisOperation = redisOperation, buildId = buildId).use { redisLock ->
             redisLock.lock()
 
             val buildInfo = pipelineRuntimeService.getBuildInfo(projectId, buildId)
@@ -389,7 +389,9 @@ class PipelineBuildFacadeService(
 
             // 运行中的task重试走全新的处理逻辑
             if (!buildInfo.isFinish()) {
-                if (pipelineRetryFacadeService.runningBuildTaskRetry(
+                // 当前流水线整体状态为STAGE_SUCCESS，表示流水线处于stage审核中，不接受重试
+                if (!buildInfo.isStageSuccess() &&
+                    pipelineRetryFacadeService.runningBuildTaskRetry(
                         userId = userId,
                         projectId = projectId,
                         pipelineId = pipelineId,
@@ -403,10 +405,7 @@ class PipelineBuildFacadeService(
                     return BuildId(buildId, buildInfo.executeCount ?: 1, projectId, pipelineId)
                 }
 
-                // 对不合法的重试进行拦截，防止重复提交
-                throw ErrorCodeException(
-                    errorCode = ProcessMessageCode.ERROR_DUPLICATE_BUILD_RETRY_ACT
-                )
+                throw ErrorCodeException(errorCode = ProcessMessageCode.ERROR_DUPLICATE_BUILD_RETRY_ACT)
             }
 
             val readyToBuildPipelineInfo =
@@ -491,16 +490,25 @@ class PipelineBuildFacadeService(
                                     return@run
                                 }
                                 if (element.id == taskId || element.stepId == taskId) {
-                                    pipelineTaskService.getByTaskId(
-                                        transactionContext = null,
-                                        projectId = projectId,
-                                        buildId = buildId,
-                                        taskId = element.id!!
-                                    ) ?: run {
-                                        throw ErrorCodeException(
-                                            errorCode = ProcessMessageCode.ERROR_BUILD_EXPIRED_CANT_RETRY
+                                    // 校验task是否允许跳过
+                                    if (skipFailedTask == true) {
+                                        val isSkipTask = pipelineRetryFacadeService.isSkipTask(
+                                            userId = userId,
+                                            projectId = projectId,
+                                            manualSkip = element.additionalOptions?.manualSkip
                                         )
+                                        if (!isSkipTask) {
+                                            throw ErrorCodeException(
+                                                errorCode = ProcessMessageCode.ERROR_TASK_NOT_ALLOWED_TO_BE_SKIPPED
+                                            )
+                                        }
                                     }
+                                    pipelineTaskService.getByTaskId(null, projectId, buildId, taskId)
+                                        ?: run {
+                                            throw ErrorCodeException(
+                                                errorCode = ProcessMessageCode.ERROR_BUILD_EXPIRED_CANT_RETRY
+                                            )
+                                        }
                                     paramMap[PIPELINE_RETRY_START_TASK_ID] = BuildParameters(
                                         key = PIPELINE_RETRY_START_TASK_ID, value = element.id!!
                                     )
@@ -554,8 +562,6 @@ class PipelineBuildFacadeService(
                 handlePostFlag = false,
                 webHookStartParam = webHookStartParam
             )
-        } finally {
-            redisLock.unlock()
         }
     }
 
@@ -2238,6 +2244,9 @@ class PipelineBuildFacadeService(
         return pipelineRuntimeService.getLatestBuild(projectId, pipelineIds)
     }
 
+    /**
+     * @return <启动人，#9910 环境构建时遇到启动错误时调度到一个新的Agent 是否重新调度>
+     */
     fun workerBuildFinish(
         projectCode: String,
         pipelineId: String, /* pipelineId在agent请求的数据有值前不可用 */
@@ -2246,7 +2255,7 @@ class PipelineBuildFacadeService(
         nodeHashId: String?,
         executeCount: Int?,
         simpleResult: SimpleResult
-    ) {
+    ): Pair<String?, Boolean> {
         var msg = simpleResult.message
 
         if (!nodeHashId.isNullOrBlank()) {
@@ -2280,10 +2289,31 @@ class PipelineBuildFacadeService(
                         jobId = null, stepId = startUpVMTask.stepId
                     )
                 }
-                return
+                return Pair(startUpVMTask?.starter, false)
             }
         } else {
             msg = "$msg| ${I18nUtil.getCodeLanMessage(ProcessMessageCode.BUILD_WORKER_DEAD_ERROR)}"
+            // #9910 环境构建时遇到启动错误时调度到一个新的Agent
+            // 通过更新 task param 一个固定的参数，使其在尝试完成时重新发送启动请求
+            if (!simpleResult.ignoreAgentIds.isNullOrEmpty()) {
+                val startUpVMTask = pipelineTaskService.getBuildTask(
+                    projectId = projectCode,
+                    buildId = buildId,
+                    taskId = VMUtils.genStartVMTaskId(vmSeqId)
+                )
+                if (startUpVMTask?.status?.isRunning() == true) {
+                    val taskParam = startUpVMTask.taskParams
+                    taskParam[RETRY_THIRD_AGENT_ENV] = simpleResult.ignoreAgentIds!!.joinToString(",")
+                    pipelineTaskService.updateTaskParam(
+                        transactionContext = null,
+                        projectId = startUpVMTask.projectId,
+                        buildId = startUpVMTask.buildId,
+                        taskId = startUpVMTask.taskId,
+                        taskParam = JsonUtil.toJson(taskParam)
+                    )
+                    return Pair(startUpVMTask.starter, true)
+                }
+            }
         }
 
         // 添加错误码日志
@@ -2297,12 +2327,12 @@ class PipelineBuildFacadeService(
         val buildInfo = pipelineRuntimeService.getBuildInfo(projectCode, buildId)
         if (buildInfo == null || buildInfo.status.isFinish()) {
             logger.warn("[$buildId]|workerBuildFinish|The build status is ${buildInfo?.status}")
-            return
+            return Pair(buildInfo?.startUser, false)
         }
 
         if (executeCount != null && buildInfo.executeCount != null && executeCount != buildInfo.executeCount) {
             logger.warn("[$buildId]|workerBuildFinish|executeCount ne [$executeCount != ${buildInfo.executeCount}]")
-            return
+            return Pair(buildInfo.startUser, false)
         }
 
         val container = pipelineContainerService.getContainer(
@@ -2330,6 +2360,7 @@ class PipelineBuildFacadeService(
                         containerId = vmSeqId,
                         containerHashId = container.containerHashId,
                         containerType = container.containerType,
+                        executeCount = container.executeCount,
                         actionType = ActionType.TERMINATE,
                         reason = msg,
                         errorCode = simpleResult.error?.errorCode ?: 0,
@@ -2338,6 +2369,8 @@ class PipelineBuildFacadeService(
                 )
             }
         }
+
+        return Pair(buildInfo.startUser, false)
     }
 
     fun saveBuildVmInfo(projectId: String, pipelineId: String, buildId: String, vmSeqId: String, vmInfo: VmInfo) {

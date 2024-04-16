@@ -34,7 +34,7 @@ import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.websocket.dispatch.WebSocketDispatcher
 import com.tencent.devops.environment.constant.THIRD_PARTY_AGENT_HEARTBEAT_INTERVAL
 import com.tencent.devops.environment.dao.NodeDao
-import com.tencent.devops.environment.dao.thirdPartyAgent.ThirdPartyAgentDao
+import com.tencent.devops.environment.dao.thirdpartyagent.ThirdPartyAgentDao
 import com.tencent.devops.environment.pojo.enums.NodeStatus
 import com.tencent.devops.environment.service.NodeWebsocketService
 import com.tencent.devops.environment.utils.ThirdPartyAgentHeartbeatUtils
@@ -110,9 +110,6 @@ class ThirdPartyAgentHeartBeatJob @Autowired constructor(
                     }
                     nodeDao.updateNodeStatus(context, record.nodeId, NodeStatus.ABNORMAL)
                 }
-                webSocketDispatcher.dispatch(
-                    nodeWebsocketService.buildDetailMessage(record.projectId, "")
-                )
             }
         }
     }

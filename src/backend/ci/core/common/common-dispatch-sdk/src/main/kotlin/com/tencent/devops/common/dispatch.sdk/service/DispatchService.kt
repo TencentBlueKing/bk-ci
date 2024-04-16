@@ -186,9 +186,12 @@ class DispatchService constructor(
         }
 
         if (!needStart) {
-            if (event.retryTime > 1) return false
-            // 如果Job已经结束或为在启动中，则dispatch主动发起的重试
             logger.warn("The build event($event) is not running")
+            // dispatch主动发起的重试或者用户已取消的流水线忽略异常报错
+            if (event.retryTime > 1 || buildContainer.status.isCancel()) {
+                return false
+            }
+
             val errorMessage = I18nUtil.getCodeLanMessage(JOB_BUILD_STOPS)
             throw BuildFailureException(
                 errorType = ErrorType.USER,

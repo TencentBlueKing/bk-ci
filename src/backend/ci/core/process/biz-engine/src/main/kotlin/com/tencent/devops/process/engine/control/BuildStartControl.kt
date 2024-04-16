@@ -496,7 +496,7 @@ class BuildStartControl @Autowired constructor(
                         projectId = buildInfo.projectId,
                         buildId = buildInfo.buildId,
                         stageId = stage.id!!,
-                        containerId = container.containerId!!,
+                        containerId = container.id!!,
                         startTime = now,
                         endTime = now,
                         buildStatus = BuildStatus.SUCCEED
@@ -506,7 +506,7 @@ class BuildStartControl @Autowired constructor(
                         pipelineId = buildInfo.pipelineId,
                         buildId = buildInfo.buildId,
                         stageId = stage.id!!,
-                        containerId = container.containerId!!,
+                        containerId = container.id!!,
                         taskId = taskId,
                         buildStatus = BuildStatus.SUCCEED,
                         executeCount = executeCount,
@@ -554,7 +554,7 @@ class BuildStartControl @Autowired constructor(
         container.startVMStatus = BuildStatus.SUCCEED.name
         containerRecordService.updateContainerRecord(
             projectId = buildInfo.projectId, pipelineId = buildInfo.pipelineId, buildId = buildInfo.buildId,
-            executeCount = executeCount, containerId = container.containerId!!, buildStatus = BuildStatus.SUCCEED,
+            executeCount = executeCount, containerId = container.id!!, buildStatus = BuildStatus.SUCCEED,
             containerVar = mutableMapOf(
                 Container::startEpoch.name to nowMills,
                 Container::systemElapsed.name to (stage.elapsed ?: 0),

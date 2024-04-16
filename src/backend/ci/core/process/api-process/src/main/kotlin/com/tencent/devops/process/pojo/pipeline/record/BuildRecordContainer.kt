@@ -33,45 +33,45 @@ import com.tencent.devops.common.pipeline.container.VMBuildContainer
 import com.tencent.devops.common.pipeline.enums.BuildRecordTimeStamp
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.pojo.time.BuildTimestampType
+import com.tencent.devops.common.pipeline.utils.ElementUtils
 import com.tencent.devops.process.pojo.app.StartBuildContext
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 import java.time.LocalDateTime
 
 @Suppress("LongParameterList", "LongMethod")
-@ApiModel("构建详情记录-插件任务")
+@Schema(title = "构建详情记录-插件任务")
 data class BuildRecordContainer(
-    @ApiModelProperty("构建ID", required = true)
+    @get:Schema(title = "构建ID", required = true)
     val buildId: String,
-    @ApiModelProperty("项目ID", required = true)
+    @get:Schema(title = "项目ID", required = true)
     val projectId: String,
-    @ApiModelProperty("流水线ID", required = true)
+    @get:Schema(title = "流水线ID", required = true)
     val pipelineId: String,
-    @ApiModelProperty("编排版本号", required = true)
+    @get:Schema(title = "编排版本号", required = true)
     val resourceVersion: Int,
-    @ApiModelProperty("步骤ID", required = true)
+    @get:Schema(title = "步骤ID", required = true)
     val stageId: String,
-    @ApiModelProperty("作业容器ID", required = true)
+    @get:Schema(title = "作业容器ID", required = true)
     val containerId: String,
-    @ApiModelProperty("执行次数", required = true)
+    @get:Schema(title = "执行次数", required = true)
     val executeCount: Int,
-    @ApiModelProperty("执行变量", required = true)
+    @get:Schema(title = "执行变量", required = true)
     val containerVar: MutableMap<String, Any>,
-    @ApiModelProperty("作业容器类型", required = true)
+    @get:Schema(title = "作业容器类型", required = true)
     val containerType: String,
-    @ApiModelProperty("构建状态", required = false)
+    @get:Schema(title = "构建状态", required = false)
     var status: String? = null,
-    @ApiModelProperty("是否为构建矩阵组", required = false)
+    @get:Schema(title = "是否为构建矩阵组", required = false)
     val containPostTaskFlag: Boolean? = null,
-    @ApiModelProperty("是否为构建矩阵组", required = false)
+    @get:Schema(title = "是否为构建矩阵组", required = false)
     val matrixGroupFlag: Boolean? = null,
-    @ApiModelProperty("所在矩阵组ID", required = false)
+    @get:Schema(title = "所在矩阵组ID", required = false)
     val matrixGroupId: String? = null,
-    @ApiModelProperty("开始时间", required = true)
+    @get:Schema(title = "开始时间", required = true)
     var startTime: LocalDateTime? = null,
-    @ApiModelProperty("结束时间", required = true)
+    @get:Schema(title = "结束时间", required = true)
     var endTime: LocalDateTime? = null,
-    @ApiModelProperty("业务时间戳集合", required = true)
+    @get:Schema(title = "业务时间戳集合", required = true)
     var timestamps: Map<BuildTimestampType, BuildRecordTimeStamp>
 ) {
     companion object {
@@ -79,6 +79,7 @@ data class BuildRecordContainer(
         @Suppress("ComplexMethod")
         fun MutableList<BuildRecordContainer>.addRecords(
             stageId: String,
+            stageEnableFlag: Boolean,
             container: Container,
             context: StartBuildContext,
             buildStatus: BuildStatus?,
@@ -88,6 +89,10 @@ data class BuildRecordContainer(
             containerVar[Container::name.name] = container.name
             container.containerHashId?.let {
                 containerVar[Container::containerHashId.name] = it
+            }
+            val startVMTaskSeq = container.startVMTaskSeq
+            startVMTaskSeq?.let {
+                containerVar[Container::startVMTaskSeq.name] = it
             }
             if (container is TriggerContainer) {
                 containerVar[container::params.name] = container.params
@@ -109,7 +114,7 @@ data class BuildRecordContainer(
                     resourceVersion = context.resourceVersion,
                     buildId = context.buildId,
                     stageId = stageId,
-                    containerId = container.containerId!!,
+                    containerId = container.id!!,
                     containerType = container.getClassType(),
                     executeCount = context.executeCount,
                     matrixGroupFlag = container.matrixGroupFlag,
@@ -120,21 +125,38 @@ data class BuildRecordContainer(
             )
             if (taskBuildRecords == null) return
             container.elements.forEachIndexed { index, element ->
+                if (buildStatus == BuildStatus.SKIP && !ElementUtils.getTaskAddFlag(
+                        element = element,
+                        stageEnableFlag = stageEnableFlag,
+                        containerEnableFlag = container.isContainerEnable(),
+                        originMatrixContainerFlag = container.fetchGroupContainers() != null
+                    )
+                ) {
+                    // 不保存跳过的非post任务记录或非质量红线记录
+                    return@forEachIndexed
+                }
+                val taskSeq = if (startVMTaskSeq != null && startVMTaskSeq > 1 && index < startVMTaskSeq - 1) {
+                    // 开机任务前的任务的序号需要在index基础上加1
+                    index + 1
+                } else {
+                    // 开机任务后的任务的序号需要在index基础上加2
+                    index + 2
+                }
                 taskBuildRecords.add(
                     BuildRecordTask(
                         projectId = context.projectId,
                         pipelineId = context.pipelineId,
                         buildId = context.buildId,
                         stageId = stageId,
-                        containerId = container.containerId!!,
+                        containerId = container.id!!,
                         taskId = element.id!!,
                         classType = element.getClassType(),
-                        atomCode = element.getTaskAtom(),
+                        atomCode = element.getAtomCode(),
                         executeCount = context.executeCount,
                         resourceVersion = context.resourceVersion,
-                        taskSeq = index,
+                        taskSeq = taskSeq,
                         status = buildStatus?.name,
-                        taskVar = mutableMapOf(),
+                        taskVar = element.initTaskVar(),
                         timestamps = mapOf(),
                         elementPostInfo = element.additionalOptions?.elementPostInfo?.takeIf { info ->
                             info.parentElementId != element.id

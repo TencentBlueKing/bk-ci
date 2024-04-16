@@ -154,6 +154,7 @@ class PipelineTaskPauseListener @Autowired constructor(
                 userId = userId,
                 projectId = task.projectId,
                 actionType = ActionType.REFRESH,
+                executeCount = task.executeCount,
                 containerType = ""
             )
         )
@@ -213,6 +214,7 @@ class PipelineTaskPauseListener @Autowired constructor(
                 containerId = task.containerId,
                 containerHashId = task.containerHashId,
                 stageId = task.stageId,
+                executeCount = task.executeCount,
                 containerType = containerRecord?.containerType ?: "vmBuild"
             ),
             PipelineBuildStatusBroadCastEvent(

@@ -27,6 +27,7 @@
 
 package com.tencent.devops.process.plugin.trigger.dao
 
+import com.tencent.devops.common.db.utils.skipCheck
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.model.process.Tables.T_PIPELINE_TIMER
 import com.tencent.devops.model.process.tables.records.TPipelineTimerRecord
@@ -84,7 +85,7 @@ open class PipelineTimerDao {
 
     open fun list(dslContext: DSLContext, offset: Int, limit: Int): Result<TPipelineTimerRecord> {
         return with(T_PIPELINE_TIMER) {
-            dslContext.selectFrom(this).limit(offset, limit).fetch()
+            dslContext.selectFrom(this).limit(offset, limit).skipCheck().fetch()
         }
     }
 }

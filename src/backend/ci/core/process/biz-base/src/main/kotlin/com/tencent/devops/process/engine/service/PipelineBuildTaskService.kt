@@ -133,6 +133,7 @@ class PipelineBuildTaskService @Autowired constructor(
                     containerType = buildTask.containerType,
                     actionType = actionType,
                     errorCode = errorCode,
+                    executeCount = buildTask.executeCount,
                     errorTypeName = buildTask.errorType?.getI18n(I18nUtil.getDefaultLocaleLanguage()),
                     reason = buildTask.errorMsg
                 )

@@ -50,7 +50,6 @@ import com.tencent.devops.repository.service.scm.IScmOauthService
 import com.tencent.devops.repository.service.scm.IScmService
 import com.tencent.devops.scm.pojo.TokenCheckResult
 import com.tencent.devops.scm.utils.code.git.GitUtils
-import com.tencent.devops.ticket.pojo.enums.CredentialType
 import org.apache.commons.lang3.StringUtils
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
@@ -83,7 +82,8 @@ class CodeGitRepositoryService @Autowired constructor(
                 userId = userId,
                 aliasName = repository.aliasName,
                 url = repository.getFormatURL(),
-                type = ScmType.CODE_GIT
+                type = ScmType.CODE_GIT,
+                atom = repository.atom
             )
             // Git项目ID
             val gitProjectId =
@@ -111,6 +111,15 @@ class CodeGitRepositoryService @Autowired constructor(
         repository: CodeGitRepository,
         record: TRepositoryRecord
     ) {
+        // 插件库仅允许修改OAUTH用户，不得修改其他内容
+        if (record.atom == true && repository.authType != RepoAuthType.OAUTH) {
+            throw OperationException(
+                MessageUtil.getMessageByLocale(
+                    RepositoryMessageCode.ATOM_REPO_CAN_NOT_EDIT,
+                    I18nUtil.getLanguage(userId)
+                )
+            )
+        }
         // 提交的参数与数据库中类型不匹配
         if (record.type != ScmType.CODE_GIT.name) {
             throw OperationException(
@@ -184,7 +193,8 @@ class CodeGitRepositoryService @Autowired constructor(
             authType = RepoAuthType.parse(record.authType),
             projectId = repository.projectId,
             repoHashId = HashUtil.encodeOtherLongId(repository.repositoryId),
-            gitProjectId = record.gitProjectId
+            gitProjectId = record.gitProjectId,
+            atom = repository.atom
         )
     }
 
@@ -298,16 +308,6 @@ class CodeGitRepositoryService @Autowired constructor(
         val repoCredentialInfo = getCredentialInfo(projectId = projectId, repository = repository)
         // 若授权类型不为OAUTH则需要检查Token
         if (repository.authType != RepoAuthType.OAUTH) {
-            // 授权凭证信息
-            if (repoCredentialInfo.credentialType == CredentialType.USERNAME_PASSWORD.name) {
-                logger.info("using credential of type [USERNAME_PASSWORD],loginUser[${repoCredentialInfo.username}]")
-                repoCredentialInfo.token = scmService.getGitSession(
-                    type = ScmType.CODE_GIT,
-                    username = repoCredentialInfo.username,
-                    password = repoCredentialInfo.password,
-                    url = repository.url
-                )?.privateToken ?: ""
-            }
             val checkResult = checkToken(
                 repoCredentialInfo = repoCredentialInfo,
                 repository = repository
@@ -332,7 +332,8 @@ class CodeGitRepositoryService @Autowired constructor(
         } else {
             credentialService.getCredentialInfo(
                 projectId = projectId,
-                repository = repository
+                repository = repository,
+                tryGetSession = true
             )
         }
     }

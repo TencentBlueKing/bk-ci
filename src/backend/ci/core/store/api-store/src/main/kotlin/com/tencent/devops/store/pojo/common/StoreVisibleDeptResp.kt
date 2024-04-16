@@ -27,11 +27,10 @@
 
 package com.tencent.devops.store.pojo.common
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("store插件可见范围响应报文体")
+@Schema(title = "store插件可见范围响应报文体")
 data class StoreVisibleDeptResp(
-    @ApiModelProperty("机构列表", required = true)
+    @get:Schema(title = "机构列表", required = true)
     val deptInfos: List<DeptInfo>
 )

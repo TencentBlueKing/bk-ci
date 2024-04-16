@@ -29,32 +29,31 @@ package com.tencent.devops.quality.api.v3.pojo.request
 
 import com.tencent.devops.common.notify.enums.NotifyType
 import com.tencent.devops.quality.pojo.enum.RuleOperation
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.v3.oas.annotations.media.Schema
 
-@ApiModel("规则创建请求")
+@Schema(title = "规则创建请求")
 data class RuleCreateRequestV3(
-    @ApiModelProperty("规则名称", required = true)
+    @get:Schema(title = "规则名称", required = true)
     val name: String,
-    @ApiModelProperty("规则描述", required = true)
+    @get:Schema(title = "规则描述", required = true)
     val desc: String?,
-    @ApiModelProperty("指标类型", required = true)
+    @get:Schema(title = "指标类型", required = true)
     val indicators: List<CreateRequestIndicator>,
-    @ApiModelProperty("控制点位置", required = true)
+    @get:Schema(title = "控制点位置", required = true)
     val position: String,
-    @ApiModelProperty("生效的流水线id集合", required = true)
+    @get:Schema(title = "生效的流水线id集合", required = true)
     val range: List<String>?,
-    @ApiModelProperty("生效的流水线模板id集合", required = true)
+    @get:Schema(title = "生效的流水线模板id集合", required = true)
     val templateRange: List<String>?,
-    @ApiModelProperty("操作类型结合", required = false)
+    @get:Schema(title = "操作类型结合", required = false)
     val opList: List<CreateRequestOp>?,
-    @ApiModelProperty("红线匹配的id", required = false)
+    @get:Schema(title = "红线匹配的id", required = false)
     val gatewayId: String?,
-    @ApiModelProperty("红线把关人", required = false)
+    @get:Schema(title = "红线把关人", required = false)
     val gateKeepers: List<String>?,
-    @ApiModelProperty("红线所在stage", required = false)
+    @get:Schema(title = "红线所在stage", required = false)
     val stageId: String,
-    @ApiModelProperty("红线指定的任务节点", required = false)
+    @get:Schema(title = "红线指定的任务节点", required = false)
     val taskSteps: List<CreateRequestTask>?
 ) {
     data class CreateRequestIndicator(
@@ -65,24 +64,24 @@ data class RuleCreateRequestV3(
     )
 
     data class CreateRequestOp(
-        @ApiModelProperty("操作类型", required = true)
+        @get:Schema(title = "操作类型", required = true)
         val operation: RuleOperation,
-        @ApiModelProperty("通知类型", required = false)
+        @get:Schema(title = "通知类型", required = false)
         val notifyTypeList: List<NotifyType>?,
-        @ApiModelProperty("通知组名单", required = false)
+        @get:Schema(title = "通知组名单", required = false)
         val notifyGroupList: List<String>?,
-        @ApiModelProperty("通知人员名单", required = false)
+        @get:Schema(title = "通知人员名单", required = false)
         val notifyUserList: List<String>?,
-        @ApiModelProperty("审核通知人员", required = false)
+        @get:Schema(title = "审核通知人员", required = false)
         val auditUserList: List<String>?,
-        @ApiModelProperty("审核超时时间", required = false)
+        @get:Schema(title = "审核超时时间", required = false)
         val auditTimeoutMinutes: Int?
     )
 
     data class CreateRequestTask(
-        @ApiModelProperty("任务节点名", required = false)
+        @get:Schema(title = "任务节点名", required = false)
         val taskName: String?,
-        @ApiModelProperty("指标名", required = false)
+        @get:Schema(title = "指标名", required = false)
         val indicatorEnName: String?
     )
 }

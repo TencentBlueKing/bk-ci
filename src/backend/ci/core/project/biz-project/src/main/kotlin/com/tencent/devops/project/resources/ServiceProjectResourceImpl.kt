@@ -27,6 +27,9 @@
 
 package com.tencent.devops.project.resources
 
+import com.tencent.bk.audit.annotations.AuditEntry
+import com.tencent.devops.common.auth.api.ActionId
+import com.tencent.devops.common.auth.api.ActionId.PROJECT_CREATE
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.pojo.MigrateProjectConditionDTO
 import com.tencent.devops.common.auth.api.pojo.SubjectScopeInfo
@@ -37,6 +40,7 @@ import com.tencent.devops.project.pojo.ProjectBaseInfo
 import com.tencent.devops.project.pojo.ProjectCreateExtInfo
 import com.tencent.devops.project.pojo.ProjectCreateInfo
 import com.tencent.devops.project.pojo.ProjectCreateUserInfo
+import com.tencent.devops.project.pojo.ProjectOrganizationInfo
 import com.tencent.devops.project.pojo.ProjectProperties
 import com.tencent.devops.project.pojo.ProjectUpdateInfo
 import com.tencent.devops.project.pojo.ProjectVO
@@ -116,6 +120,7 @@ class ServiceProjectResourceImpl @Autowired constructor(
         return Result(projectService.getByEnglishName(englishName))
     }
 
+    @AuditEntry(actionId = PROJECT_CREATE)
     override fun create(
         userId: String,
         projectCreateInfo: ProjectCreateInfo,
@@ -133,6 +138,7 @@ class ServiceProjectResourceImpl @Autowired constructor(
         return Result(true)
     }
 
+    @AuditEntry(actionId = PROJECT_CREATE)
     override fun createExtSystem(
         userId: String,
         projectInfo: ProjectCreateInfo,
@@ -152,6 +158,7 @@ class ServiceProjectResourceImpl @Autowired constructor(
         )
     }
 
+    @AuditEntry(actionId = ActionId.PROJECT_EDIT)
     override fun update(
         userId: String,
         projectId: String,
@@ -229,6 +236,44 @@ class ServiceProjectResourceImpl @Autowired constructor(
                 projectId = projectId,
                 subjectScopes = subjectScopes
             )
+        )
+    }
+
+    override fun updateProjectProductId(
+        projectCode: String,
+        productName: String?,
+        productId: Int?
+    ): Result<Boolean> {
+        projectService.updateProjectProductId(
+            englishName = projectCode,
+            productName = productName,
+            productId = productId
+        )
+        return Result(true)
+    }
+
+    override fun updateOrganizationByEnglishName(
+        projectCode: String,
+        projectOrganizationInfo: ProjectOrganizationInfo
+    ): Result<Boolean> {
+        projectService.updateOrganizationByEnglishName(
+            englishName = projectCode,
+            projectOrganizationInfo = projectOrganizationInfo
+        )
+        return Result(true)
+    }
+
+    override fun getProjectListByProductId(productId: Int): Result<List<ProjectBaseInfo>> {
+        return Result(
+            projectService.getProjectListByProductId(
+                productId = productId
+            )
+        )
+    }
+
+    override fun getExistedEnglishName(englishName: List<String>): Result<List<String>?> {
+        return Result(
+            projectService.getExistedEnglishName(englishName)
         )
     }
 }

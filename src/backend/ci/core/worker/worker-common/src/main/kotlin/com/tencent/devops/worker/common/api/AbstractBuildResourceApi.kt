@@ -221,12 +221,13 @@ abstract class AbstractBuildResourceApi : WorkerRestApiSDK {
             readTimeoutInSec = readTimeoutInSec,
             writeTimeoutInSec = writeTimeoutInSec
         ).use { response ->
-            if (response.code == HTTP_404) {
-                throw RemoteServiceException("file does not exist")
+            val httpStatus = response.code
+            if (httpStatus == HTTP_404) {
+                throw RemoteServiceException(errorMessage = "file does not exist", httpStatus = httpStatus)
             }
             if (!response.isSuccessful) {
                 LoggerService.addNormalLine(response.body!!.string())
-                throw RemoteServiceException("Failed to get file")
+                throw RemoteServiceException(errorMessage = "Failed to get file", httpStatus = httpStatus)
             }
             val dest = destPath.toPath()
             if (Files.notExists(dest.parent)) Files.createDirectories(dest.parent)

@@ -326,6 +326,7 @@ class MatrixExecuteContainerCmd(
                 containerId = container.containerId,
                 containerHashId = container.containerHashId,
                 actionType = actionType,
+                executeCount = container.executeCount,
                 errorCode = 0,
                 errorTypeName = null,
                 reason = reason
