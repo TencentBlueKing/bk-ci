@@ -313,8 +313,8 @@
     "item": "Items",
     "minutes": "Minutes",
     "itemPlaceholder": "Please enter",
-    "defaultSuc": "【${BK_CI_PROJECT_NAME_CN}】- 【${BK_CI_PIPELINE_NAME}】#${BK_CI_BUILD_NUM} build success, Takes ${BK_CI_BUILD_TOTAL_TIME}, Trigger user: ${BK_CI_START_USER_NAME.",
-    "defaultFail": "【${BK_CI_PROJECT_NAME_CN}】- 【${BK_CI_PIPELINE_NAME}】#${BK_CI_BUILD_NUM} build fail, Takes ${BK_CI_BUILD_TOTAL_TIME}, Trigger user: ${BK_CI_START_USER_NAME}.",
+    "defaultSuc": "【${{ci.project_name}}】- 【${{ci.pipeline_name}}】#${{ci.build_num}} build success, Takes ${{ci.pipeline_execute_time}}, Trigger user: ${{ci.actor}.",
+    "defaultFail": "【${{ci.project_name}}】- 【${{ci.pipeline_name}}】#${{ci.build_num}} build fail, Takes ${{ci.pipeline_execute_time}}, Trigger user: ${{ci.actor}}.",
     "runningOption": {
       "multiple": "Can run concurrently",
       "lock": "Disable the pipeline, it cannot be run by any triggering method",
@@ -1522,5 +1522,8 @@
   "executeStepPreview": "Preview of steps to be executed",
   "yamlFilePathErrorTip": "File path must end with .yml or .yaml",
   "yamlFilePathPlaceholder": "build.yml or build.yaml",
-  "alreadyReleasedTips": "Pipeline unchanged, no release necessary"
+  "alreadyReleasedTips": "Pipeline unchanged, no release necessary",
+  "newVersion": "New Version",
+  "editDraft": "Edit Draft",
+  "thinkthink": "Thinking again"
 }

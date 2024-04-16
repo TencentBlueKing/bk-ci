@@ -1,26 +1,58 @@
 <template>
-    <bk-button
-        :text="text"
-        :outline="outline"
-        :theme="theme"
-        :disabled="loading"
-        :loading="loading"
-        v-perm="{
-            hasPermission,
-            disablePermissionApi: typeof hasPermission === 'boolean',
-            permissionData: {
-                projectId: projectId,
-                resourceType: 'pipeline',
-                resourceCode: pipelineId,
-                action: RESOURCE_ACTION.EDIT
-            }
-        }"
-        @click.stop="handleClick"
-    >
-        <slot>
-            {{ operateName }}
-        </slot>
-    </bk-button>
+    <span>
+        <bk-button
+            :text="text"
+            :outline="outline"
+            :theme="theme"
+            :disabled="loading"
+            :loading="loading"
+            v-perm="{
+                hasPermission,
+                disablePermissionApi: typeof hasPermission === 'boolean',
+                permissionData: {
+                    projectId: projectId,
+                    resourceType: 'pipeline',
+                    resourceCode: pipelineId,
+                    action: RESOURCE_ACTION.EDIT
+                }
+            }"
+            @click.stop="handleClick"
+        >
+            <slot>
+                {{ operateName }}
+            </slot>
+        </bk-button>
+        <bk-dialog
+            v-model="isShowConfirmDialog"
+            :width="666"
+            footer-position="center"
+            theme="primary"
+        >
+            <header class="draft-hint-title" slot="header">
+                <i class="devops-icon icon-exclamation"></i>
+                {{$t('hasDraftTips', [draftBaseVersionName])}}
+            </header>
+            <div class="draft-hint-content">
+                <p>
+                    {{ draftHintMsg }}
+                </p>
+            </div>
+            <footer slot="footer">
+                <bk-button
+                    theme="primary"
+                    @click="rollback"
+                >
+                    {{ $t('newVersion') }}
+                </bk-button>
+                <bk-button @click="goEdit(draftVersion)">
+                    {{ $t('editDraft') }}
+                </bk-button>
+                <bk-button @click="close">
+                    {{ $t('thinkthink') }}
+                </bk-button>
+            </footer>
+        </bk-dialog>
+    </span>
 </template>
 
 <script>
@@ -28,7 +60,6 @@
     import {
         RESOURCE_ACTION
     } from '@/utils/permission'
-    import { navConfirm } from '@/utils/util'
     import { mapActions, mapGetters, mapState } from 'vuex'
 
     export default {
@@ -72,6 +103,7 @@
         data () {
             return {
                 loading: false,
+                isShowConfirmDialog: false,
                 RESOURCE_ACTION
             }
         },
@@ -91,6 +123,9 @@
                 return this.isRollback
                     ? this.$t('rollback')
                     : this.$t('edit')
+            },
+            draftHintMsg () {
+                return this.$t(this.hasDraftPipeline ? 'dropDraftTips' : 'createDraftTips', [this.versionName])
             }
         },
         methods: {
@@ -99,31 +134,20 @@
             ]),
             handleClick () {
                 if (this.isRollback) {
-                    this.rollback()
+                    this.showDraftConfirmDialog()
                 } else {
                     this.goEdit(this.draftVersion ?? this.version)
                 }
             },
+            showDraftConfirmDialog () {
+                this.isShowConfirmDialog = true
+            },
+            close () {
+                this.isShowConfirmDialog = false
+            },
             async rollback () {
                 try {
                     this.loading = true
-                    const hasDraft = this.hasDraftPipeline
-                        ? {
-                            title: this.$t('hasDraftTips', [this.draftBaseVersionName]),
-                            content: this.$t('dropDraftTips', [this.versionName])
-                        }
-                        : {
-                            content: this.$t('createDraftTips', [this.versionName])
-                        }
-                    const result = await navConfirm({
-                        ...hasDraft,
-                        width: 620,
-                        type: hasDraft ? 'warning' : '',
-                        theme: hasDraft ? 'warning' : ''
-                    })
-                    if (!result) {
-                        return
-                    }
                     const { version, versionName } = await this.rollbackPipelineVersion({
                         ...this.$route.params,
                         version: this.version
@@ -158,3 +182,28 @@
         }
     }
 </script>
+
+<style lang="scss">
+    .draft-hint-title {
+        color: #313238;
+        font-size: 20px;
+        display: flex;
+        flex-direction: column;
+        grid-gap: 24px;
+        align-items: center;
+        > i {
+            border-radius: 50%;
+            background-color: #ffe8c3;
+            color: #ff9c01;
+            order-radius: 50%;
+            font-size: 24px;
+            height: 42px;
+            line-height: 42px;
+            width: 42px;
+        }
+    }
+    .draft-hint-content {
+        display: flex;
+        flex-direction: column;
+    }
+</style>
