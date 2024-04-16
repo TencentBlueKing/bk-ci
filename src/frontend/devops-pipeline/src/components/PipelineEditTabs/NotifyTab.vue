@@ -82,7 +82,7 @@
     const defaultSuc = {
         types: [],
         groups: [],
-        users: '${BK_CI_START_USER_NAME}',
+        users: '${{ci.actor}}',
         wechatGroupFlag: false,
         wechatGroup: '',
         wechatGroupMarkdownFlag: false,
@@ -93,7 +93,7 @@
     const defaultFail = {
         types: [],
         groups: [],
-        users: '${BK_CI_START_USER_NAME}',
+        users: '${{ci.actor}}',
         wechatGroupFlag: false,
         wechatGroup: '',
         wechatGroupMarkdownFlag: false,
