@@ -25,6 +25,7 @@ import javax.net.ssl.SSLSocketFactory
 import javax.net.ssl.TrustManager
 import javax.net.ssl.X509TrustManager
 
+@Suppress("ALL")
 @Service
 class OffshoreTGitApiClient @Autowired constructor(
     private val tGitConfig: TGitConfig
