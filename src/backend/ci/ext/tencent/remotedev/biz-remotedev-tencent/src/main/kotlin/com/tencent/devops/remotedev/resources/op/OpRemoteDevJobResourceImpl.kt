@@ -43,4 +43,9 @@ class OpRemoteDevJobResourceImpl @Autowired constructor(
         remoteDevJobService.pipelineJobEnd(jobId)
         return Result(true)
     }
+
+    override fun deleteSchema(userId: String, schemaId: String): Result<Boolean> {
+        remoteDevSchemaService.deleteSchema(schemaId)
+        return Result(true)
+    }
 }

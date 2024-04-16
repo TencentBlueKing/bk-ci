@@ -9,6 +9,7 @@ import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.tags.Tag
 import javax.ws.rs.Consumes
+import javax.ws.rs.DELETE
 import javax.ws.rs.GET
 import javax.ws.rs.HeaderParam
 import javax.ws.rs.POST
@@ -70,5 +71,16 @@ interface OpRemoteDevJobResource {
         userId: String,
         @QueryParam("jobId")
         jobId: Long
+    ): Result<Boolean>
+
+    @Operation(summary = "删除schema")
+    @DELETE
+    @Path("/schema")
+    fun deleteSchema(
+        @Parameter(description = "用户ID", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @QueryParam("schemaId")
+        schemaId: String
     ): Result<Boolean>
 }

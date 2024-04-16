@@ -92,4 +92,8 @@ class RemoteDevSchemaService @Autowired constructor(
             jobActionExtraParam = extraParam
         )
     }
+
+    fun deleteSchema(schemaId: String) {
+        remoteDevJobSchemaDao.delete(dslContext = dslContext, schemaId = schemaId)
+    }
 }
