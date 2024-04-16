@@ -19,7 +19,4 @@ class TGitConfig {
 
     @Value("\${tgit.expiredPermTmpCode:}")
     val expiredPermTmpCode: String = ""
-
-    @Value("\${tgit.remotedevPublicIps:}")
-    val remotedevPublicIps: String = ""
 }

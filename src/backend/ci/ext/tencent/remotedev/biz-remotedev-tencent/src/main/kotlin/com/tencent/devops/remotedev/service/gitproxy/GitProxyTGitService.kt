@@ -1,8 +1,11 @@
 package com.tencent.devops.remotedev.service.gitproxy
 
+import com.github.benmanes.caffeine.cache.Caffeine
+import com.github.benmanes.caffeine.cache.LoadingCache
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.notify.enums.NotifyType
+import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.model.remotedev.tables.records.TProjectTgitIdLinkRecord
 import com.tencent.devops.notify.api.service.ServiceNotifyMessageTemplateResource
 import com.tencent.devops.notify.pojo.SendNotifyMessageTemplateRequest
@@ -26,6 +29,7 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Service
+import java.time.Duration
 import java.util.concurrent.Executors
 
 @Suppress("ALL")
@@ -37,7 +41,8 @@ class GitProxyTGitService @Autowired constructor(
     private val projectTGitLinkDao: ProjectTGitLinkDao,
     private val bkitsmService: BKItsmService,
     private val offshoreTGitApiClient: OffshoreTGitApiClient,
-    private val tGitConfig: TGitConfig
+    private val tGitConfig: TGitConfig,
+    private val redisOperation: RedisOperation
 ) {
     // 校验当前凭据的用户是否拥有连接项目的 master 及以上权限
     fun checkUserPermission(
@@ -442,6 +447,11 @@ class GitProxyTGitService @Autowired constructor(
         }
     }
 
+    private val publicIpsCache: LoadingCache<String, String> = Caffeine.newBuilder()
+        .maximumSize(5)
+        .expireAfterWrite(Duration.ofHours(1))
+        .build { key -> redisOperation.get(key, isDistinguishCluster = false) ?: "" }
+
     // 默认规则组仅放云桌面 IP, 并清空用户白名单
     // 分配了云桌面的用户都加到特定访问人群名单
     // 特殊规则组 IP 加上云桌面 IP 及所有公网 IP（过渡期，后续会移除公网 IP）
@@ -458,10 +468,14 @@ class GitProxyTGitService @Autowired constructor(
         } else {
             true
         }
+
         val specIpOk = offshoreTGitApiClient.updateProjectAclSpecIps(
             accessToken = token,
             projectId = tGitProjectId,
-            ips = ips.plus(tGitConfig.remotedevPublicIps.split(";").filter { it.isNotBlank() }.toSet())
+            ips = ips.plus(
+                publicIpsCache.get(REDIS_REMOTEDEV_PUBLIC_IPS)?.split(";")?.filter { it.isNotBlank() }?.toSet()
+                    ?: emptySet()
+            )
         )
 
         return ipOk && userOk && specUserOk && specIpOk
@@ -661,5 +675,8 @@ class GitProxyTGitService @Autowired constructor(
 
     companion object {
         private val logger = LoggerFactory.getLogger(GitProxyTGitService::class.java)
+
+        //  云桌面公网ip，可能会动态变化所以放redis里
+        private val REDIS_REMOTEDEV_PUBLIC_IPS = "remotedev:public:ips"
     }
 }
