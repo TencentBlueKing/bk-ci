@@ -1068,7 +1068,8 @@ class PipelineBuildDao {
                     buildNoEnd = buildNoEnd,
                     buildMsg = buildMsg
                 )
-
+                // 增加过滤，对前端屏蔽已删除的构建
+                where.and(DELETE_TIME.isNull)
                 when (updateTimeDesc) {
                     true -> where.orderBy(UPDATE_TIME.desc(), BUILD_ID)
                     false -> where.orderBy(UPDATE_TIME.asc(), BUILD_ID)
@@ -1668,6 +1669,21 @@ class PipelineBuildDao {
         }
     }
 
+    fun getDebugHistory(
+        dslContext: DSLContext,
+        projectId: String,
+        pipelineId: String,
+        version: Int
+    ): List<BuildInfo> {
+        with(T_PIPELINE_BUILD_HISTORY_DEBUG) {
+            return dslContext.selectFrom(this)
+                .where(PROJECT_ID.eq(projectId).and(PIPELINE_ID.eq(pipelineId)))
+                .and(VERSION.eq(version))
+                .and(DELETE_TIME.isNotNull)
+                .fetch(debugMapper)
+        }
+    }
+
     fun clearDebugHistory(
         dslContext: DSLContext,
         projectId: String,
@@ -1675,7 +1691,9 @@ class PipelineBuildDao {
         version: Int
     ): Int {
         with(T_PIPELINE_BUILD_HISTORY_DEBUG) {
-            return dslContext.deleteFrom(this)
+            val now = LocalDateTime.now()
+            return dslContext.update(this)
+                .set(DELETE_TIME, now)
                 .where(PROJECT_ID.eq(projectId).and(PIPELINE_ID.eq(pipelineId)))
                 .and(VERSION.eq(version))
                 .execute()

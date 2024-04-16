@@ -63,6 +63,7 @@ import com.tencent.devops.process.pojo.PipelineVersionReleaseRequest
 import com.tencent.devops.process.pojo.pipeline.DeployPipelineResult
 import com.tencent.devops.process.pojo.pipeline.PrefetchReleaseResult
 import com.tencent.devops.process.pojo.setting.PipelineVersionSimple
+import com.tencent.devops.process.service.builds.PipelineBuildFacadeService
 import com.tencent.devops.process.service.label.PipelineGroupService
 import com.tencent.devops.process.service.pipeline.PipelineSettingFacadeService
 import com.tencent.devops.process.service.pipeline.PipelineTransferYamlService
@@ -91,6 +92,7 @@ class PipelineVersionFacadeService @Autowired constructor(
     private val pipelineRepositoryService: PipelineRepositoryService,
     private val repositoryVersionService: PipelineRepositoryVersionService,
     private val pipelineYamlFacadeService: PipelineYamlFacadeService,
+    private val pipelineBuildFacadeService: PipelineBuildFacadeService,
     private val pipelineRecentUseService: PipelineRecentUseService,
     private val templateFacadeService: TemplateFacadeService,
     private val pipelineGroupService: PipelineGroupService,
@@ -420,7 +422,12 @@ class PipelineVersionFacadeService @Autowired constructor(
             pipelineId = pipelineId,
             staticViewIds = request.staticViews
         )
-        // #8164 发布后的流水将调试信息清空为0，重新计数，同时删除所有该版本的调试记录
+        // #8164 发布后的流水将调试信息清空为0，重新计数，同时取消该版本的调试记录
+        pipelineBuildDao.getDebugHistory(dslContext, projectId, pipelineId, version).forEach {
+            if (!it.status.isFinish()) pipelineBuildFacadeService.serviceShutdown(
+                projectId, pipelineId, it.buildId, pipeline.channelCode
+            )
+        }
         pipelineBuildSummaryDao.resetDebugInfo(dslContext, projectId, pipelineId)
         pipelineBuildDao.clearDebugHistory(dslContext, projectId, pipelineId, version)
         return DeployPipelineResult(

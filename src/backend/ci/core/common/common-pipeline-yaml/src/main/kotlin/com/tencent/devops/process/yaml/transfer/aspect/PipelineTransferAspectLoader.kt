@@ -38,6 +38,7 @@ object PipelineTransferAspectLoader {
                             it.name == jp.yamlJob()!!.runsOn.poolName
                         }?.let { pool ->
                             jp.yamlJob()!!.runsOn.envProjectId = pool.from?.substringBefore("@")
+                            jp.yamlJob()!!.runsOn.poolName = pool.from?.substringAfter("@")
                         }
                     }
 
