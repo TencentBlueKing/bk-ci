@@ -67,7 +67,6 @@ class TencentServiceJobResourceImpl @Autowired constructor(
 ) : TencentServiceJobResource {
     companion object {
         private val logger = LoggerFactory.getLogger(TencentServiceJobResourceImpl::class.java)
-        private const val EXPIRATION_TIME_ONE_MONTH = "one month"
     }
 
     override fun executeScript(
@@ -217,11 +216,10 @@ class TencentServiceJobResourceImpl @Autowired constructor(
 
     private fun checkJobInsBelongToProj(projectId: String, jobInstanceId: Long) {
         if (!permissionManageService.isJobInsBelongToProj(projectId, jobInstanceId)) {
-            val expirationTime = EXPIRATION_TIME_ONE_MONTH
             throw CustomException(
                 status = Response.Status.BAD_REQUEST,
                 message = "The job instance you have queried doesn't belong to the current project " +
-                    "or more than " + expirationTime + "."
+                    "or more than one month."
             )
         }
     }
