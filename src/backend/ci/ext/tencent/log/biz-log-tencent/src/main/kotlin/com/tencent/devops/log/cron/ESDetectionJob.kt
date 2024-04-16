@@ -169,10 +169,12 @@ class ESDetectionJob @Autowired constructor(
             for (i in 1 until MULTI_LOG_LINES) {
                 val log = LogMessageWithLineNo(
                     tag = "test-tag-$i",
-                    jobId = "job-$i",
+                    containerHashId = "job-$i",
                     message = "message lines - $i",
                     timestamp = System.currentTimeMillis(),
-                    lineNo = i.toLong()
+                    lineNo = i.toLong(),
+                    jobId = null,
+                    stepId = null
                 )
                 val indexRequest = genIndexRequest(
                     buildId = buildId,
