@@ -256,8 +256,9 @@ class ServiceRemoteDevResourceImpl(
     override fun getPersonalWorkspace(userId: String, workspaceName: String): Result<WeSecProjectWorkspace?> {
         return Result(
             workspaceService.getWorkspaceList4WeSec(
-                workspaceName = workspaceName
-            ).first()
+                workspaceName = workspaceName,
+                notStatus = null
+            ).firstOrNull()
         )
     }
 }

@@ -535,7 +535,12 @@ class WorkspaceService @Autowired constructor(
         hasCurrentUser: Boolean? = null,
         businessLineName: String? = null,
         ownerName: String? = null,
-        workspaceName: String? = null
+        workspaceName: String? = null,
+        notStatus: List<WorkspaceStatus>? = listOf(
+            WorkspaceStatus.DELETED,
+            WorkspaceStatus.PREPARING,
+            WorkspaceStatus.DELIVERING_FAILED
+        )
     ): List<WeSecProjectWorkspace> {
         val startTime = System.currentTimeMillis()
 
@@ -546,7 +551,8 @@ class WorkspaceService @Autowired constructor(
             ip = ip,
             businessLineName = businessLineName,
             ownerName = ownerName,
-            workspaceName = workspaceName
+            workspaceName = workspaceName,
+            notStatus = notStatus
         ) ?: emptyList()
 
         val fetchWorkspaceWithOwnerEndTime = System.currentTimeMillis()
