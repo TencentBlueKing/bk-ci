@@ -137,7 +137,7 @@ interface TencentServiceJobResource {
         @PathParam("projectId")
         projectId: String,
         @Parameter(description = "批量查询日志的请求信息", required = true)
-        queryLogsReq: QueryJobInstanceLogsReq
+        queryJobInstanceLogsReq: QueryJobInstanceLogsReq
     ): JobResult<QueryJobInstanceLogsResult>
 
     @Operation(summary = "创建帐号的Job接口")
