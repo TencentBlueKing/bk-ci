@@ -226,7 +226,7 @@ const routes = [
                     },
                     {
                         // 执行历史
-                        path: 'history/:type/:version?',
+                        path: 'history/:type?/:version?',
                         name: 'pipelinesHistory',
                         components: {
                             header: HistoryHeader,
@@ -237,6 +237,18 @@ const routes = [
                             header: 'pipeline',
                             icon: 'pipeline',
                             to: 'PipelineManageList'
+                        },
+                        beforeEnter (to, from, next) {
+                            if (!to.params.type) {
+                                next({
+                                    name: to.name,
+                                    params: Object.assign(to.params, {
+                                        type: 'history'
+                                    })
+                                })
+                            } else {
+                                next(true)
+                            }
                         }
                     },
                     {

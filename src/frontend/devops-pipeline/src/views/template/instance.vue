@@ -177,11 +177,11 @@
     import innerHeader from '@/components/devops/inner_header'
     import emptyTips from '@/components/pipelineList/imgEmptyTips'
     import instanceCompared from '@/components/template/instance-compared.vue'
-    import { convertTime } from '@/utils/util'
     import {
-        TEMPLATE_RESOURCE_ACTION,
-        RESOURCE_ACTION
+        RESOURCE_ACTION,
+        TEMPLATE_RESOURCE_ACTION
     } from '@/utils/permission'
+    import { convertTime } from '@/utils/util'
 
     export default {
         components: {
