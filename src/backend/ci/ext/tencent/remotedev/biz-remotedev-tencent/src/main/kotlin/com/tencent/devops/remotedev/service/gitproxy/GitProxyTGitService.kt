@@ -507,7 +507,7 @@ class GitProxyTGitService @Autowired constructor(
                 } else {
                     val newToken = client.get(ServiceOauthResource::class).tGitGet(repo.oauthUser).data
                     if (newToken == null) {
-                        logger.warn("addOrRemoveAclIp|get $projectId|${repo.oauthUser} token is null")
+                        logger.warn("fetchProjectTGit|get $projectId|${repo.oauthUser} token is null")
                         return@forEach
                     }
                     tokenMap[repo.oauthUser] = newToken.accessToken
@@ -659,6 +659,7 @@ class GitProxyTGitService @Autowired constructor(
                 setOf(projectId)
             }
             projects.forEach { projectId ->
+                logger.info("OP|refreshTGitAcl|$projectId start")
                 val users = workspaceJoinDao.fetchProjectSharedUser(dslContext, projectId)
                 fetchProjectTGit(projectId) { repo, token ->
                     val config =
@@ -667,6 +668,8 @@ class GitProxyTGitService @Autowired constructor(
                     val ok = updateTGitProjectAcl(token, repo.tgitId.toString(), ips, users)
                     if (!ok) {
                         logger.warn("OP|refreshTGitAcl|$projectId|${repo.tgitId}|updateTGitProjectAcl false")
+                    }else{
+                        logger.info("OP|refreshTGitAcl|$projectId|${repo.tgitId}|updateTGitProjectAcl true")
                     }
                 }
             }

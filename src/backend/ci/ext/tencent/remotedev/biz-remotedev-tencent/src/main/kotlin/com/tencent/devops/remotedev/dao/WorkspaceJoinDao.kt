@@ -523,9 +523,15 @@ class WorkspaceJoinDao {
         return dslContext.select(TWorkspaceShared.T_WORKSPACE_SHARED.SHARED_USER)
             .from(TWorkspace.T_WORKSPACE, TWorkspaceShared.T_WORKSPACE_SHARED)
             .where(TWorkspace.T_WORKSPACE.NAME.eq(TWorkspaceShared.T_WORKSPACE_SHARED.WORKSPACE_NAME))
-            .and(TWorkspace.T_WORKSPACE.STATUS.notEqual(WorkspaceStatus.DELETED.ordinal))
+            .and(
+                TWorkspace.T_WORKSPACE.STATUS.notIn(
+                    WorkspaceStatus.PREPARING.ordinal,
+                    WorkspaceStatus.DELETED.ordinal,
+                    WorkspaceStatus.DELIVERING_FAILED.ordinal
+                )
+            )
             .fetch().distinct()
-            .map { it[TWorkspaceShared.T_WORKSPACE_SHARED.SHARED_USER] as String? ?: "" }
+            .map { it[TWorkspaceShared.T_WORKSPACE_SHARED.SHARED_USER] ?: "" }
             .filter { it.isNotBlank() }
             .toSet()
     }
