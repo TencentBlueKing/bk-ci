@@ -158,6 +158,7 @@
                 isActiveDraftVersion: 'atom/isActiveDraftVersion',
                 isOutdatedVersion: 'atom/isOutdatedVersion',
                 draftBaseVersionName: 'atom/getDraftBaseVersionName',
+                pipelineHistoryViewAble: 'atom/pipelineHistoryViewAble',
                 pacEnabled: 'atom/pacEnabled'
             }),
             showRollback () {
@@ -304,7 +305,7 @@
                         routeType = noRecordVersion ? pipelineTabIdMap.pipeline : this.$route.params.type
                     }
                 }
-                console.log('handleVersionChange', versionId, version?.status)
+                console.log('handleVersionChange', this.pipelineHistoryViewAble, versionId, version?.status)
                 this.$router.replace({
                     name: !this.pipelineHistoryViewAble ? 'pipelinesEdit' : this.$route.params.name,
                     params: {
