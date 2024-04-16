@@ -32,17 +32,16 @@ import com.tencent.devops.common.api.pojo.PipelineAsCodeSettings
 import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.notify.enums.NotifyType
-import com.tencent.devops.model.process.tables.TPipelineSetting
-import com.tencent.devops.model.process.tables.records.TPipelineSettingRecord
-import com.tencent.devops.common.pipeline.pojo.setting.PipelineSubscriptionType
 import com.tencent.devops.common.pipeline.pojo.setting.PipelineRunLockType
 import com.tencent.devops.common.pipeline.pojo.setting.PipelineSetting
+import com.tencent.devops.common.pipeline.pojo.setting.PipelineSubscriptionType
 import com.tencent.devops.common.pipeline.pojo.setting.Subscription
+import com.tencent.devops.model.process.tables.TPipelineSetting
+import com.tencent.devops.model.process.tables.records.TPipelineSettingRecord
 import com.tencent.devops.process.util.NotifyTemplateUtils
 import com.tencent.devops.process.utils.PIPELINE_RES_NUM_MIN
 import com.tencent.devops.process.utils.PIPELINE_SETTING_MAX_QUEUE_SIZE_DEFAULT
 import com.tencent.devops.process.utils.PIPELINE_SETTING_WAIT_QUEUE_TIME_MINUTE_DEFAULT
-import com.tencent.devops.process.utils.PIPELINE_START_USER_NAME
 import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.Record1
@@ -74,7 +73,7 @@ class PipelineSettingDao {
             val failSubscription = Subscription(
                 types = failType,
                 groups = emptySet(),
-                users = "\${$PIPELINE_START_USER_NAME}",
+                users = "\${{ci.actor}}",
                 content = NotifyTemplateUtils.getCommonShutdownFailureContent()
             )
             val result = dslContext.insertInto(
@@ -352,7 +351,13 @@ class PipelineSettingDao {
         }
     }
 
-    fun updateSetting(dslContext: DSLContext, projectId: String, pipelineId: String, name: String, desc: String): PipelineSetting? {
+    fun updateSetting(
+        dslContext: DSLContext,
+        projectId: String,
+        pipelineId: String,
+        name: String,
+        desc: String
+    ): PipelineSetting? {
         with(TPipelineSetting.T_PIPELINE_SETTING) {
             val result = dslContext.update(this)
                 .set(NAME, name)

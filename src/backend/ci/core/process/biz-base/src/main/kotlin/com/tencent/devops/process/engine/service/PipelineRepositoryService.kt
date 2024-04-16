@@ -57,6 +57,12 @@ import com.tencent.devops.common.pipeline.pojo.MatrixPipelineInfo
 import com.tencent.devops.common.pipeline.pojo.PipelineModelAndSetting
 import com.tencent.devops.common.pipeline.pojo.element.SubPipelineCallElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.ManualTriggerElement
+import com.tencent.devops.common.pipeline.pojo.setting.PipelineRunLockType
+import com.tencent.devops.common.pipeline.pojo.setting.PipelineSetting
+import com.tencent.devops.common.pipeline.pojo.setting.PipelineSubscriptionType
+import com.tencent.devops.common.pipeline.pojo.setting.Subscription
+import com.tencent.devops.common.pipeline.pojo.transfer.TransferActionType
+import com.tencent.devops.common.pipeline.pojo.transfer.TransferBody
 import com.tencent.devops.common.pipeline.utils.MatrixYamlCheckUtils
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.utils.LogUtils
@@ -77,6 +83,7 @@ import com.tencent.devops.process.engine.dao.PipelineInfoDao
 import com.tencent.devops.process.engine.dao.PipelineModelTaskDao
 import com.tencent.devops.process.engine.dao.PipelineResourceDao
 import com.tencent.devops.process.engine.dao.PipelineResourceVersionDao
+import com.tencent.devops.process.engine.dao.PipelineYamlInfoDao
 import com.tencent.devops.process.engine.dao.template.TemplateDao
 import com.tencent.devops.process.engine.dao.template.TemplatePipelineDao
 import com.tencent.devops.process.engine.pojo.PipelineInfo
@@ -85,8 +92,8 @@ import com.tencent.devops.process.engine.pojo.event.PipelineCreateEvent
 import com.tencent.devops.process.engine.pojo.event.PipelineDeleteEvent
 import com.tencent.devops.process.engine.pojo.event.PipelineRestoreEvent
 import com.tencent.devops.process.engine.pojo.event.PipelineUpdateEvent
-import com.tencent.devops.process.enums.OperationLogType
 import com.tencent.devops.process.engine.utils.PipelineUtils
+import com.tencent.devops.process.enums.OperationLogType
 import com.tencent.devops.process.plugin.load.ElementBizRegistrar
 import com.tencent.devops.process.pojo.PipelineCollation
 import com.tencent.devops.process.pojo.PipelineName
@@ -96,13 +103,6 @@ import com.tencent.devops.process.pojo.pipeline.DeployPipelineResult
 import com.tencent.devops.process.pojo.pipeline.PipelineResourceVersion
 import com.tencent.devops.process.pojo.pipeline.TemplateInfo
 import com.tencent.devops.process.pojo.setting.PipelineModelVersion
-import com.tencent.devops.common.pipeline.pojo.setting.PipelineRunLockType
-import com.tencent.devops.common.pipeline.pojo.setting.PipelineSetting
-import com.tencent.devops.common.pipeline.pojo.setting.PipelineSubscriptionType
-import com.tencent.devops.common.pipeline.pojo.setting.Subscription
-import com.tencent.devops.common.pipeline.pojo.transfer.TransferActionType
-import com.tencent.devops.common.pipeline.pojo.transfer.TransferBody
-import com.tencent.devops.process.engine.dao.PipelineYamlInfoDao
 import com.tencent.devops.process.service.PipelineOperationLogService
 import com.tencent.devops.process.service.pipeline.PipelineSettingVersionService
 import com.tencent.devops.process.service.pipeline.PipelineTransferYamlService
@@ -115,16 +115,15 @@ import com.tencent.devops.process.utils.PIPELINE_SETTING_MAX_QUEUE_SIZE_MIN
 import com.tencent.devops.process.utils.PIPELINE_SETTING_WAIT_QUEUE_TIME_MINUTE_DEFAULT
 import com.tencent.devops.process.utils.PIPELINE_SETTING_WAIT_QUEUE_TIME_MINUTE_MAX
 import com.tencent.devops.process.utils.PIPELINE_SETTING_WAIT_QUEUE_TIME_MINUTE_MIN
-import com.tencent.devops.process.utils.PIPELINE_START_USER_NAME
 import com.tencent.devops.process.utils.PipelineVersionUtils
 import com.tencent.devops.project.api.service.ServiceAllocIdResource
+import java.time.LocalDateTime
+import java.util.concurrent.atomic.AtomicInteger
+import javax.ws.rs.core.Response
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
-import java.time.LocalDateTime
-import java.util.concurrent.atomic.AtomicInteger
-import javax.ws.rs.core.Response
 
 @Suppress(
     "LongParameterList",
@@ -724,14 +723,14 @@ class PipelineRepositoryService constructor(
                                 setting.successSubscription = Subscription(
                                     types = setOf(),
                                     groups = emptySet(),
-                                    users = "\${$PIPELINE_START_USER_NAME}",
+                                    users = "\${{ci.actor}}",
                                     content = NotifyTemplateUtils.getCommonShutdownSuccessContent()
                                 )
                                 setting.successSubscriptionList = null
                                 setting.failSubscription = Subscription(
                                     types = setOf(PipelineSubscriptionType.EMAIL, PipelineSubscriptionType.RTX),
                                     groups = emptySet(),
-                                    users = "\${$PIPELINE_START_USER_NAME}",
+                                    users = "\${{ci.actor}}",
                                     content = NotifyTemplateUtils.getCommonShutdownFailureContent()
                                 )
                                 setting.failSubscriptionList = listOf(setting.failSubscription)
