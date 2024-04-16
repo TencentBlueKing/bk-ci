@@ -83,10 +83,14 @@ object OkHttpUtils {
         method: String,
         url: String,
         requestBodyStr: String,
-        headers: Map<String, String>? = null
+        headers: Map<String, String>? = null,
+        params: Map<String, String>? = null,
     ) = Request.Builder()
-        .url(url)
         .let { requestBuilder ->
+            params?.let {
+                requestBuilder.url(url.plus(if (url.contains("?")) "&" else "?")
+                    .plus(params.map { it.key + "=" + it.value }.joinToString("&")))
+            }
             val requestBody = RequestBody.create(JSON, requestBodyStr.ifBlank {
                 "{}"
             })
@@ -107,6 +111,7 @@ object OkHttpUtils {
         url: String,
         requestBody: String,
         headers: Map<String, String>? = null,
+        params: Map<String, String>? = null,
         retryCount: Int = MAX_RETRY_COUNT,
         failAction: ((exception: Exception) -> Unit) = { },
         successAction: (() -> Unit) = { }
@@ -115,7 +120,8 @@ object OkHttpUtils {
             method = method,
             url = url,
             requestBodyStr = requestBody,
-            headers = headers
+            headers = headers,
+            params = params
         )
         try {
             HttpRetryUtils.retry(retryCount) {

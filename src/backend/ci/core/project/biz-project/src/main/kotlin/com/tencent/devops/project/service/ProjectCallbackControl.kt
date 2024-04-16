@@ -116,6 +116,7 @@ class ProjectCallbackControl @Autowired constructor(
                 method = "POST",
                 url = url,
                 headers = insertCommonHeader(header),
+                params = params,
                 requestBody = requestBody,
                 failAction = failAction,
                 successAction = successAction
