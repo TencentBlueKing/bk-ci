@@ -129,7 +129,8 @@ class OffshoreTGitApiClient @Autowired constructor(
         accessToken: String,
         projectId: String
     ): TGitAclConfig? {
-        val url = "${tGitConfig.tGitUrl}/api/v3/projects/$projectId/acl/config?access_token=$accessToken"
+        val url = "${tGitConfig.tGitUrl}/api/v3/projects/$projectId/acl/config" +
+                "?policy=offshore&access_token=$accessToken"
         val request = Request.Builder()
             .url(url)
             .get()
@@ -154,7 +155,8 @@ class OffshoreTGitApiClient @Autowired constructor(
         projectId: String,
         ips: Set<String>
     ): Boolean {
-        val url = "${tGitConfig.tGitUrl}/api/v3/projects/$projectId/acl/config/allow_ips?access_token=$accessToken"
+        val url = "${tGitConfig.tGitUrl}/api/v3/projects/$projectId/acl/config/allow_ips" +
+                "?policy=offshore&access_token=$accessToken"
         val body = mapOf(
             "allow_ips" to ips.joinToString(";")
         )
@@ -182,7 +184,8 @@ class OffshoreTGitApiClient @Autowired constructor(
         projectId: String,
         users: Set<String>
     ): Boolean {
-        val url = "${tGitConfig.tGitUrl}/api/v3/projects/$projectId/acl/config/allow_users?access_token=$accessToken"
+        val url = "${tGitConfig.tGitUrl}/api/v3/projects/$projectId/acl/config/allow_users" +
+                "?policy=offshore&access_token=$accessToken"
         val body = mapOf(
             "allow_users" to users.joinToString(";")
         )
@@ -210,7 +213,8 @@ class OffshoreTGitApiClient @Autowired constructor(
         projectId: String,
         ips: Set<String>
     ): Boolean {
-        val url = "${tGitConfig.tGitUrl}/api/v3/projects/$projectId/acl/config/spec_allow_ips?access_token=$accessToken"
+        val url = "${tGitConfig.tGitUrl}/api/v3/projects/$projectId/acl/config/spec_allow_ips" +
+                "?policy=offshore&access_token=$accessToken"
         val body = mapOf(
             "spec_allow_ips" to ips.joinToString(";")
         )
@@ -238,7 +242,8 @@ class OffshoreTGitApiClient @Autowired constructor(
         projectId: String,
         users: Set<String>
     ): Boolean {
-        val url = "${tGitConfig.tGitUrl}/api/v3/projects/$projectId/acl/config/spec_hit_users?access_token=$accessToken"
+        val url = "${tGitConfig.tGitUrl}/api/v3/projects/$projectId/acl/config/spec_hit_users" +
+                "?policy=offshore&access_token=$accessToken"
         val body = mapOf(
             "spec_hit_users" to users.joinToString(";")
         )
