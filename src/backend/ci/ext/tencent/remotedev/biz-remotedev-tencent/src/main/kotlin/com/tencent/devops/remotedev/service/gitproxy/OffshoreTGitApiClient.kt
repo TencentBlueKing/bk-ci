@@ -161,6 +161,8 @@ class OffshoreTGitApiClient @Autowired constructor(
                 }
                 return JsonUtil.to(data, object : TypeReference<List<TGitNamespace>>() {})
             }
+        } catch (e: ErrorCodeException) {
+            throw e
         } catch (e: Exception) {
             logger.error("getNamespaces error", e)
             throw ErrorCodeException(
@@ -190,7 +192,7 @@ class OffshoreTGitApiClient @Autowired constructor(
             "name" to name
         )
         if (namespaceId != null) {
-            body["namespaceId"] = namespaceId.toString()
+            body["namespace_id"] = namespaceId.toString()
         }
 
         val request = Request.Builder()
@@ -209,6 +211,8 @@ class OffshoreTGitApiClient @Autowired constructor(
                 }
                 return JsonUtil.to(data, object : TypeReference<TGitProjectInfo>() {})
             }
+        } catch (e: ErrorCodeException) {
+            throw e
         } catch (e: Exception) {
             logger.error("createProject $uri error", e)
             throw ErrorCodeException(
