@@ -32,130 +32,32 @@ import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.annotation.BkField
 import com.tencent.devops.common.web.constant.BkStyleEnum
+import com.tencent.devops.store.pojo.common.InstallStoreReq
 import com.tencent.devops.store.pojo.common.MarketItem
 import com.tencent.devops.store.pojo.common.MarketMainItem
-import com.tencent.devops.store.pojo.common.MyStoreComponent
 import com.tencent.devops.store.pojo.common.StoreDetailInfo
+import com.tencent.devops.store.pojo.common.UnInstallReq
 import com.tencent.devops.store.pojo.common.enums.RdTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreSortTypeEnum
-import com.tencent.devops.store.pojo.common.version.StoreDeskVersionItem
-import com.tencent.devops.store.pojo.common.version.StoreShowVersionInfo
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.tags.Tag
 import javax.ws.rs.Consumes
+import javax.ws.rs.DELETE
 import javax.ws.rs.GET
 import javax.ws.rs.HeaderParam
+import javax.ws.rs.POST
 import javax.ws.rs.Path
 import javax.ws.rs.PathParam
 import javax.ws.rs.Produces
 import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
-@Tag(name = "USER_STORE_COMPONENT", description = "研发商店-组件查询")
-@Path("/user/store/components")
+@Tag(name = "SERVICE_STORE_COMPONENT", description = "研发商店-SERVICE-组件管理")
+@Path("/service/store/components")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
-interface UserStoreComponentQueryResource {
-
-    @Operation(summary = "根据用户获取工作台组件列表")
-    @GET
-    @Path("/desk/types/{storeType}/component/list")
-    @BkInterfaceI18n(
-        keyPrefixNames = ["{data.records[*].storeType}", "{data.records[*].storeCode}", "{data.records[*].version}",
-            "releaseInfo"]
-    )
-    fun getMyComponents(
-        @Parameter(description = "userId", required = true)
-        @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String,
-        @Parameter(description = "组件类型", required = true)
-        @PathParam("storeType")
-        @BkField(patternStyle = BkStyleEnum.CODE_STYLE)
-        storeType: String,
-        @Parameter(description = "组件名称", required = false)
-        @QueryParam("name")
-        name: String?,
-        @Parameter(description = "页码", required = true)
-        @QueryParam("page")
-        @BkField(patternStyle = BkStyleEnum.NUMBER_STYLE)
-        page: Int = 1,
-        @Parameter(description = "每页数量", required = true)
-        @QueryParam("pageSize")
-        @BkField(patternStyle = BkStyleEnum.PAGE_SIZE_STYLE)
-        pageSize: Int = 10
-    ): Result<Page<MyStoreComponent>?>
-
-    @Operation(summary = "根据组件标识获取组件版本列表")
-    @GET
-    @Path("/desk/types/{storeType}/codes/{storeCode}/component/version/list")
-    @BkInterfaceI18n(
-        keyPrefixNames = ["{data.records[*].storeType}", "{data.records[*].storeCode}", "{data.records[*].version}",
-            "releaseInfo"]
-    )
-    fun getComponentVersionsByCode(
-        @Parameter(description = "userId", required = true)
-        @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String,
-        @Parameter(description = "组件类型", required = true)
-        @PathParam("storeType")
-        @BkField(patternStyle = BkStyleEnum.CODE_STYLE)
-        storeType: String,
-        @Parameter(description = "组件代码", required = true)
-        @PathParam("storeCode")
-        @BkField(patternStyle = BkStyleEnum.CODE_STYLE)
-        storeCode: String,
-        @Parameter(description = "页码", required = true)
-        @QueryParam("page")
-        @BkField(patternStyle = BkStyleEnum.NUMBER_STYLE)
-        page: Int = 1,
-        @Parameter(description = "每页数量", required = true)
-        @QueryParam("pageSize")
-        @BkField(patternStyle = BkStyleEnum.PAGE_SIZE_STYLE)
-        pageSize: Int = 10
-    ): Result<Page<StoreDeskVersionItem>>
-
-    @Operation(summary = "根据组件ID获取组件详情")
-    @GET
-    @Path("/types/{storeType}/ids/{storeId}/component/detail")
-    @BkInterfaceI18n(
-        keyPrefixNames = ["{data.records[*].storeType}", "{data.records[*].storeCode}", "{data.records[*].version}",
-            "releaseInfo"]
-    )
-    fun getComponentDetailInfoById(
-        @Parameter(description = "userId", required = true)
-        @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String,
-        @Parameter(description = "组件类型", required = true)
-        @PathParam("storeType")
-        @BkField(patternStyle = BkStyleEnum.CODE_STYLE)
-        storeType: String,
-        @Parameter(description = "组件ID", required = true)
-        @PathParam("storeId")
-        @BkField(patternStyle = BkStyleEnum.ID_STYLE, required = false)
-        storeId: String
-    ): Result<StoreDetailInfo?>
-
-    @Operation(summary = "根据组件代码获取组件详情")
-    @GET
-    @Path("/types/{storeType}/codes/{storeCode}/component/detail")
-    @BkInterfaceI18n(
-        keyPrefixNames = ["{data.records[*].storeType}", "{data.records[*].storeCode}", "{data.records[*].version}",
-            "releaseInfo"]
-    )
-    fun getComponentDetailInfoByCode(
-        @Parameter(description = "userId", required = true)
-        @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String,
-        @Parameter(description = "组件类型", required = true)
-        @PathParam("storeType")
-        @BkField(patternStyle = BkStyleEnum.CODE_STYLE)
-        storeType: String,
-        @Parameter(description = "组件代码", required = true)
-        @PathParam("storeCode")
-        @BkField(patternStyle = BkStyleEnum.CODE_STYLE)
-        storeCode: String
-    ): Result<StoreDetailInfo?>
+interface ServiceStoreComponentResource {
 
     @Operation(summary = "获取研发商店首页组件的数据")
     @Path("/types/{storeType}/component/main/page/list")
@@ -181,7 +83,6 @@ interface UserStoreComponentQueryResource {
         @BkField(patternStyle = BkStyleEnum.PAGE_SIZE_STYLE)
         pageSize: Int = 8
     ): Result<List<MarketMainItem>>
-
 
     @Operation(summary = "根据条件查询组件列表")
     @Path("/types/{storeType}/component/list")
@@ -214,9 +115,6 @@ interface UserStoreComponentQueryResource {
         @QueryParam("labelId")
         @BkField(patternStyle = BkStyleEnum.ID_STYLE, required = false)
         labelId: String?,
-        @QueryParam("categoryId")
-        @BkField(patternStyle = BkStyleEnum.ID_STYLE, required = false)
-        categoryId: String?,
         @Parameter(description = "评分", required = false)
         @QueryParam("score")
         @BkField(patternStyle = BkStyleEnum.NUMBER_STYLE, required = false)
@@ -248,10 +146,14 @@ interface UserStoreComponentQueryResource {
         pageSize: Int = 10
     ): Result<Page<MarketItem>>
 
-    @Operation(summary = "根据组件标识获取组件回显版本信息")
+    @Operation(summary = "根据组件ID获取组件详情")
     @GET
-    @Path("/types/{storeType}/codes/{storeCode}/component/showVersionInfo")
-    fun getComponentShowVersionInfo(
+    @Path("/types/{storeType}/ids/{storeId}/component/detail")
+    @BkInterfaceI18n(
+        keyPrefixNames = ["{data.records[*].storeType}", "{data.records[*].storeCode}", "{data.records[*].version}",
+            "releaseInfo"]
+    )
+    fun getComponentDetailInfoById(
         @Parameter(description = "userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
@@ -259,9 +161,42 @@ interface UserStoreComponentQueryResource {
         @PathParam("storeType")
         @BkField(patternStyle = BkStyleEnum.CODE_STYLE)
         storeType: String,
+        @Parameter(description = "组件ID", required = true)
+        @PathParam("storeId")
+        @BkField(patternStyle = BkStyleEnum.ID_STYLE, required = false)
+        storeId: String
+    ): Result<StoreDetailInfo?>
+
+    @Operation(summary = "安装组件到项目")
+    @POST
+    @Path("/types/{storeType}/component/install")
+    fun installComponent(
+        @Parameter(description = "userId", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "安装组件到项目请求报文体", required = true)
+        installStoreReq: InstallStoreReq
+    ): Result<Boolean>
+
+    @Operation(summary = "卸载组件")
+    @Path("/projects/{projectCode}/types/{storeType}/codes/{storeCode}/component/uninstall")
+    @DELETE
+    fun uninstallComponent(
+        @Parameter(description = "userId", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @Parameter(description = "项目代码", required = true)
+        @PathParam("projectCode")
+        projectCode: String,
+        @Parameter(description = "组件类型", required = true)
+        @PathParam("storeType")
+        @BkField(patternStyle = BkStyleEnum.CODE_STYLE)
+        storeType: String,
         @Parameter(description = "组件代码", required = true)
         @PathParam("storeCode")
         @BkField(patternStyle = BkStyleEnum.CODE_STYLE)
-        storeCode: String
-    ): Result<StoreShowVersionInfo>
+        storeCode: String,
+        @Parameter(description = "卸载组件请求包体", required = true)
+        unInstallReq: UnInstallReq
+    ): Result<Boolean>
 }

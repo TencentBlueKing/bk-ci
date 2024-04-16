@@ -51,16 +51,18 @@ class StoreProjectRelDao {
         storeCode: String,
         projectCode: String,
         type: Byte,
-        storeType: Byte
+        storeType: Byte,
+        version: String? = null
     ): Int {
         with(TStoreProjectRel.T_STORE_PROJECT_REL) {
-            return dslContext.insertInto(
+            val baseStep = dslContext.insertInto(
                 this,
                 ID,
                 STORE_CODE,
                 PROJECT_CODE,
                 TYPE,
                 STORE_TYPE,
+                VERSION,
                 CREATOR,
                 MODIFIER
             ).values(
@@ -69,13 +71,17 @@ class StoreProjectRelDao {
                 projectCode,
                 type,
                 storeType,
+                version,
                 userId,
                 userId
             ).onDuplicateKeyUpdate()
                 .set(PROJECT_CODE, projectCode)
                 .set(MODIFIER, userId)
                 .set(UPDATE_TIME, LocalDateTime.now())
-                .execute()
+            version?.let {
+                baseStep.set(VERSION, version)
+            }
+            return baseStep.execute()
         }
     }
 
@@ -490,16 +496,6 @@ class StoreProjectRelDao {
                 .and(STORE_TYPE.eq(storeType.type.toByte()))
                 .groupBy(STORE_CODE)
                 .fetch()
-        }
-    }
-
-    fun getAtomProjectRel(dslContext: DSLContext, storeCode: String): TStoreProjectRelRecord? {
-        with(TStoreProjectRel.T_STORE_PROJECT_REL) {
-            return dslContext.selectFrom(this)
-                .where(STORE_CODE.eq(storeCode))
-                .and(TYPE.eq(StoreProjectTypeEnum.INIT.type.toByte()))
-                .and(STORE_TYPE.eq(StoreTypeEnum.ATOM.type.toByte()))
-                .fetchOne()
         }
     }
 }
