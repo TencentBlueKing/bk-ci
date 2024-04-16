@@ -92,18 +92,10 @@ stages:
               scriptContent: |
                 cd /data/tmp-devx
                 rm -rf frontend
-                mkdir -p frontend
-                unzip -o frontend.zip -d frontend
+                unzip -o frontend.zip -d /data/bkee/ci/frontend-devx-new
 
-                if [ "${{ variables.path }}" = "default" ]; then
-                    f_path=frontend
-                else
-                    f_path=frontend-${{ variables.path }}
-                fi
-
-                mkdir -p /data/bkee/ci/frontend-devx
-                cp -rf /data/tmp-devx/frontend/* /data/bkee/ci/frontend-devx
-
+                mv frontend-devx frontend-devx-old && mv frontend-devx-new frontend-devx
+                rm -rf frontend-devx-old
               account: "root"
               targetIpList: ${{ variables.ips }}
 

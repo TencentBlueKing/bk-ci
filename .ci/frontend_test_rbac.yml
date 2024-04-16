@@ -3,8 +3,6 @@ name: "bk-ci前端部署【test-rbac】"
 variables:
   modules: "nav,pipeline,vs,ticket,codelib,quality,turbo,atomstore,environment,experience,metrics,stream,metrics,permission,manage"
   ips: "11.185.145.49"
-  # 9.134.78.69,10.123.135.151,9.66.32.218
-  #
 on:
   push: ["test"]
 

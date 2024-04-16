@@ -87,18 +87,10 @@ stages:
               scriptContent: |
                 cd /data/tmp-rbac
                 rm -rf frontend
-                mkdir -p frontend
-                unzip -o frontend.zip -d frontend
+                unzip -o frontend.zip -d /data/bkee/ci/frontend-rbac-new
 
-                if [ "${{ variables.path }}" = "default" ]; then
-                    f_path=frontend
-                else
-                    f_path=frontend-${{ variables.path }}
-                fi
-
-                mkdir -p /data/bkee/ci/frontend-rbac
-                cp -rf /data/tmp-rbac/frontend/* /data/bkee/ci/frontend-rbac
-
+                mv frontend-rbac frontend-rbac-old && mv frontend-rbac-new frontend-rbac
+                rm -rf frontend-rbac-old
               account: "root"
               targetIpList: ${{ variables.ips }}
 
