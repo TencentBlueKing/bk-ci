@@ -69,7 +69,7 @@ class SampleProjectEventListener @Autowired constructor(
         projectCallbackControl.callBackProjectEvent(
             eventType = ProjectEventType.UPDATE_LOGO,
             callbackData = ProjectCallbackData(
-                event = ProjectEventType.UPDATE,
+                event = ProjectEventType.UPDATE_LOGO,
                 updateLogo = ProjectUpdateLogoInfo(
                     logo_addr = event.logoAddr,
                     updator = event.userId
