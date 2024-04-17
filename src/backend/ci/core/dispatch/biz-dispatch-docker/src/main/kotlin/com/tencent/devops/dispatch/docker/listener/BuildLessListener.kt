@@ -51,7 +51,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
 
 @Component
-class AgentLessListener @Autowired constructor(
+class BuildLessListener @Autowired constructor(
     private val client: Client,
     private val buildLogPrinter: BuildLogPrinter,
     private val jobQuotaService: JobQuotaService,
@@ -175,6 +175,6 @@ class AgentLessListener @Autowired constructor(
     }
 
     companion object {
-        private val logger = LoggerFactory.getLogger(AgentLessListener::class.java)
+        private val logger = LoggerFactory.getLogger(BuildLessListener::class.java)
     }
 }
