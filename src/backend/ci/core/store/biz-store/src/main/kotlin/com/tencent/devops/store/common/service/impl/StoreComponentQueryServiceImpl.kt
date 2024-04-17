@@ -164,7 +164,7 @@ class StoreComponentQueryServiceImpl @Autowired constructor(
         val storeCodes = mutableListOf<String>()
         val storeProjectMap = mutableMapOf<String, String>()
         val tStoreBase = TStoreBase.T_STORE_BASE
-        val myMyStoreComponent = mutableListOf<MyStoreComponent>()
+        val storeComponentList = mutableListOf<MyStoreComponent>()
         val storeIds = mutableListOf<String>()
         records?.forEach { record ->
             storeIds.add(record[tStoreBase.ID])
@@ -224,7 +224,7 @@ class StoreComponentQueryServiceImpl @Autowired constructor(
             }
             val logoUrl = it[tStoreBase.LOGO_URL]
             val storeId = it[tStoreBase.ID]
-            myMyStoreComponent.add(
+            storeComponentList.add(
                 MyStoreComponent(
                     storeId = storeId,
                     storeCode = it[tStoreBase.STORE_CODE] as String,
@@ -250,7 +250,7 @@ class StoreComponentQueryServiceImpl @Autowired constructor(
             count = count.toLong(),
             page = page,
             pageSize = pageSize,
-            records = myMyStoreComponent
+            records = storeComponentList
         )
     }
 
