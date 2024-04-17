@@ -87,10 +87,11 @@ object OkHttpUtils {
         params: Map<String, String>? = null,
     ) = Request.Builder()
         .let { requestBuilder ->
-            params?.let {
-                requestBuilder.url(url.plus(if (url.contains("?")) "&" else "?")
-                    .plus(params.map { it.key + "=" + it.value }.joinToString("&")))
-            }
+            val targetUrl = params?.let {
+                url.plus(if (url.contains("?")) "&" else "?")
+                    .plus(params.map { it.key + "=" + it.value }.joinToString("&"))
+            }?: url
+            requestBuilder.url(targetUrl)
             val requestBody = RequestBody.create(JSON, requestBodyStr.ifBlank {
                 "{}"
             })
