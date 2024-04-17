@@ -137,6 +137,7 @@ class NotifyControl @Autowired constructor(
             dslContext = dslContext,
             mountType = WorkspaceMountType.START,
             ips = notifyData.ip?.toSet(),
+            owners = notifyData.owner?.toSet(),
             projectIds = notifyData.projectId?.toSet()
         ) ?: throw ErrorCodeException(
             errorCode = ErrorCodeEnum.WORKSPACE_NOT_FIND.errorCode,

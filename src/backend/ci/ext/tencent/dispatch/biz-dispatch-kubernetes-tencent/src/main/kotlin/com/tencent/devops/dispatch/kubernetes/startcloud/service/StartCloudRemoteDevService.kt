@@ -323,7 +323,11 @@ class StartCloudRemoteDevService @Autowired constructor(
     ): DispatchBuildTaskStatus {
         logger.info("StartCloud remoteDevService waitTaskFinish|userId|$userId|taskId|$taskId")
         val startTime = System.currentTimeMillis()
-        val timeout = if (type == UpdateEventType.CREATE || type == UpdateEventType.REBUILD) {
+        val timeout = if (
+            type == UpdateEventType.CREATE ||
+            type == UpdateEventType.REBUILD ||
+            type == UpdateEventType.MAKE_IMAGE
+            ) {
             START_CREATE_TIMEOUT
         } else {
             START_OTHER_TIMEOUT
@@ -379,7 +383,7 @@ class StartCloudRemoteDevService @Autowired constructor(
 
     companion object {
         private val logger = LoggerFactory.getLogger(StartCloudRemoteDevService::class.java)
-        private const val START_CREATE_TIMEOUT = 60 * 60 * 1000 // start生成资源最长轮训时间
+        private const val START_CREATE_TIMEOUT = 90 * 60 * 1000 // start生成资源最长轮训时间
         private const val START_OTHER_TIMEOUT = 30 * 60 * 1000
         private const val START_CREATE_LOOP_INTERVAL = 1000L
     }

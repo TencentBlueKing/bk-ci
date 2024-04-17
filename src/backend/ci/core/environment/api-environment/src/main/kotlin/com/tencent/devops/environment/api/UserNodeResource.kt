@@ -117,7 +117,10 @@ interface UserNodeResource {
         createdUser: String?,
         @Parameter(description = "最后修改人", required = false)
         @QueryParam("lastModifiedUser")
-        lastModifiedUser: String?
+        lastModifiedUser: String?,
+        @Parameter(description = "关键字", required = false)
+        @QueryParam("keywords")
+        keywords: String?
     ): Result<Page<NodeWithPermission>>
 
     @Operation(summary = "获取用户有权限使用的服务器列表")

@@ -110,9 +110,6 @@ class ThirdPartyAgentHeartBeatJob @Autowired constructor(
                     }
                     nodeDao.updateNodeStatus(context, record.nodeId, NodeStatus.ABNORMAL)
                 }
-                webSocketDispatcher.dispatch(
-                    nodeWebsocketService.buildDetailMessage(record.projectId, "")
-                )
             }
         }
     }

@@ -64,7 +64,7 @@ object TGitApiClient {
         projectId: String,
         ips: Set<String>
     ): Boolean {
-        val url = "$gitUrl/api/v3/projects/$projectId/acl/config/allow_ips?access_token=$accessToken"
+        val url = "$gitUrl/api/v3/projects/$projectId/acl/config/allow_ips?policy=offshore&access_token=$accessToken"
         val body = mapOf(
             "allow_ips" to ips.joinToString(";")
         )
@@ -93,7 +93,7 @@ object TGitApiClient {
         accessToken: String,
         projectId: String
     ): TGitAclConfig? {
-        val url = "$gitUrl/api/v3/projects/$projectId/acl/config?access_token=$accessToken"
+        val url = "$gitUrl/api/v3/projects/$projectId/acl/config?policy=offshore&access_token=$accessToken"
         val request = Request.Builder()
             .url(url)
             .get()
