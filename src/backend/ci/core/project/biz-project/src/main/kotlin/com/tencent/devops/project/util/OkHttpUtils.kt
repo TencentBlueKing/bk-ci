@@ -33,6 +33,7 @@ import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.RequestBody
+import okhttp3.Response
 import org.slf4j.LoggerFactory
 import java.security.cert.CertificateException
 import java.security.cert.X509Certificate
@@ -84,7 +85,7 @@ object OkHttpUtils {
         url: String,
         requestBodyStr: String,
         headers: Map<String, String>? = null,
-        params: Map<String, String>? = null,
+        params: Map<String, String>? = null
     ) = Request.Builder()
         .let { requestBuilder ->
             val targetUrl = params?.let {
@@ -116,7 +117,7 @@ object OkHttpUtils {
         params: Map<String, String>? = null,
         retryCount: Int = MAX_RETRY_COUNT,
         failAction: ((exception: Exception) -> Unit) = { },
-        successAction: (() -> Unit) = { }
+        successAction: ((response: Response) -> Unit) = { }
     ) {
         val request = buildRequest(
             method = method,
@@ -130,10 +131,11 @@ object OkHttpUtils {
                 httpClient.newCall(request).execute()
             }
             if (response.isSuccessful) {
-                successAction.invoke()
+                logger.info(("success to send callback request|url[$url]|content[${response.body.toString()}]"))
+                successAction.invoke(response)
             } else {
                 throw RuntimeException(
-                    "Exception occurred in callback interface|code[${response.code}]" +
+                    "exception occurred in callback interface|code[${response.code}]" +
                             "|content[${response.body.toString()}]"
                 )
             }

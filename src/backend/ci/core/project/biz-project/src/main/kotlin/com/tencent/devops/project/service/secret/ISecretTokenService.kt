@@ -29,6 +29,7 @@ package com.tencent.devops.project.service.secret
 
 import com.tencent.devops.project.pojo.ProjectCallbackData
 import com.tencent.devops.project.pojo.SecretRequestParam
+import okhttp3.Response
 import java.lang.Exception
 
 interface ISecretTokenService<T> {
@@ -38,5 +39,5 @@ interface ISecretTokenService<T> {
 
     fun requestFail(exception: Exception) = Unit
 
-    fun requestSuccess() = Unit
+    fun requestSuccess(response: Response) = Unit
 }

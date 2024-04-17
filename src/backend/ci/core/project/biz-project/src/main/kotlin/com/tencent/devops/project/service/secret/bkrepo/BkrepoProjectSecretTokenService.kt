@@ -62,14 +62,6 @@ class BkrepoProjectSecretTokenService : BkrepoSecretTokenCommonService<BkrepoPro
         return JsonUtil.toJson(userProjectCreateRequest, false)
     }
 
-    override fun requestFail(exception: Exception) {
-        super.requestFail(exception)
-    }
-
-    override fun requestSuccess() {
-        super.requestSuccess()
-    }
-
     companion object {
         private val logger = LoggerFactory.getLogger(BkrepoProjectSecretTokenService::class.java)
     }
