@@ -57,7 +57,7 @@ class BkrepoModelSecretTokenService : BkrepoSecretTokenCommonService<BkrepoModel
             projectId = projectCallbackData.getProjectId(),
             type = RepositoryType.GENERIC,
             public = false,
-            description = "storage for devops ci $secretParam.repoName",
+            description = "storage for devops ci ${secretParam.bkRepoName}",
             storageCredentialsKey = secretParam.storageCredentialsKey,
             display = secretParam.display
         )
