@@ -1019,7 +1019,7 @@ class WorkspaceDao {
             return dslContext.selectFrom(this).where(PROJECT_ID.eq(projectId))
                 .and(SYSTEM_TYPE.eq(WorkspaceSystemType.WINDOWS_GPU.name))
                 .and(
-                    TWorkspace.T_WORKSPACE.STATUS.notIn(
+                    STATUS.notIn(
                         WorkspaceStatus.PREPARING.ordinal,
                         WorkspaceStatus.DELETED.ordinal,
                         WorkspaceStatus.DELIVERING_FAILED.ordinal

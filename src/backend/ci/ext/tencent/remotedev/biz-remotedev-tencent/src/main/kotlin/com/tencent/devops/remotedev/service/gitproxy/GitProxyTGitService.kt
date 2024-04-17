@@ -686,7 +686,6 @@ class GitProxyTGitService @Autowired constructor(
 
     fun createProjectAndLinkTGit(
         userId: String,
-        projectId: String,
         info: CreateTGitProjectInfo
     ): Boolean {
         val token = client.get(ServiceOauthResource::class).tGitGet(userId).data ?: throw ErrorCodeException(
@@ -698,8 +697,8 @@ class GitProxyTGitService @Autowired constructor(
         val data = offshoreTGitApiClient.createProject(token.accessToken, info.name, info.namespaceId, info.svnProject)
 
         // 关联
-        val ips = workspaceDao.fetchProjectIp(dslContext, projectId).map { it.substringAfter(".") }.toSet()
-        val users = workspaceJoinDao.fetchProjectSharedUser(dslContext, projectId)
+        val ips = workspaceDao.fetchProjectIp(dslContext, info.projectId).map { it.substringAfter(".") }.toSet()
+        val users = workspaceJoinDao.fetchProjectSharedUser(dslContext, info.projectId)
 
         val ok = updateTGitProjectAcl(
             token = token.accessToken,
@@ -712,7 +711,7 @@ class GitProxyTGitService @Autowired constructor(
 
         projectTGitLinkDao.add(
             dslContext = dslContext,
-            projectId = projectId,
+            projectId = info.projectId,
             tgitId = data.id,
             status = if (ok) {
                 TGitRepoStatus.AVAILABLE

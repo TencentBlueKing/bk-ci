@@ -146,9 +146,6 @@ interface UserProjectGitProxyResource {
         @Parameter(description = "用户ID", required = true, example = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @Parameter(description = "项目ID", required = true)
-        @HeaderParam(AUTH_HEADER_PROJECT_ID)
-        projectId: String,
         @Parameter(description = "创建项目信息", required = true)
         data: CreateTGitProjectInfo
     ): Result<Boolean>

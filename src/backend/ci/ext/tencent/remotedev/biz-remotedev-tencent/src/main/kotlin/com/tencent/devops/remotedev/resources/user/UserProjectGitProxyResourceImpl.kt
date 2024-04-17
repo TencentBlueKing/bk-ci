@@ -75,7 +75,7 @@ class UserProjectGitProxyResourceImpl @Autowired constructor(
         return Result(gitProxyTGitService.getTGitNamespaces(userId, page, pageSize, svnProject))
     }
 
-    override fun createProject(userId: String, projectId: String, data: CreateTGitProjectInfo): Result<Boolean> {
-        return Result(gitProxyTGitService.createProjectAndLinkTGit(userId, projectId, data))
+    override fun createProject(userId: String, data: CreateTGitProjectInfo): Result<Boolean> {
+        return Result(gitProxyTGitService.createProjectAndLinkTGit(userId, data))
     }
 }
