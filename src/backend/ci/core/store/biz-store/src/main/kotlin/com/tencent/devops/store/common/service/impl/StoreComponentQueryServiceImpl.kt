@@ -165,8 +165,10 @@ class StoreComponentQueryServiceImpl @Autowired constructor(
         val storeCodes = mutableListOf<String>()
         val storeProjectMap = mutableMapOf<String, String>()
         val tStoreBase = TStoreBase.T_STORE_BASE
-        records?.forEach {
-            val storeCode = it[tStoreBase.STORE_CODE] as String
+        val myMyStoreComponent = mutableListOf<MyStoreComponent>()
+
+        records?.forEach { record ->
+            val storeCode = record[tStoreBase.STORE_CODE] as String
             storeCodes.add(storeCode)
             val testProjectCode = storeProjectRelDao.getUserStoreTestProjectCode(
                 dslContext = dslContext,
@@ -179,20 +181,20 @@ class StoreComponentQueryServiceImpl @Autowired constructor(
                 storeProjectMap[storeCode] = testProjectCode
             }
         }
+
         val processingStoreRecords = storeBaseQueryDao.getStoreBaseInfoByConditions(
             dslContext = dslContext,
             storeType = storeTypeEnum,
             storeCodeList = storeCodes,
             storeStatusList = StoreStatusEnum.getProcessingStatusList()
         )
-        var processingVersionInfoMap: MutableMap<String, MutableList<StoreBaseInfo>>? = null
+
+        val processingVersionInfoMap = mutableMapOf<String, MutableList<StoreBaseInfo>>()
+
         processingStoreRecords.forEach { processingAtomRecord ->
             val version = processingAtomRecord[tStoreBase.VERSION] as String
             if (version == INIT_VERSION || version.isBlank()) {
                 return@forEach
-            }
-            if (processingVersionInfoMap == null) {
-                processingVersionInfoMap = mutableMapOf()
             }
             val storeCode = processingAtomRecord[tStoreBase.STORE_CODE] as String
             val storeBaseInfo = StoreBaseInfo(
@@ -207,16 +209,10 @@ class StoreComponentQueryServiceImpl @Autowired constructor(
                 publisher = processingAtomRecord[tStoreBase.PUBLISHER] as String,
                 classifyId = processingAtomRecord[tStoreBase.CLASSIFY_ID] as String,
             )
-            if (processingVersionInfoMap!!.containsKey(storeCode)) {
-                val storeBaseInfoList = processingVersionInfoMap!![storeCode]
-                storeBaseInfoList?.add(storeBaseInfo)
-            } else {
-                processingVersionInfoMap!![storeCode] = mutableListOf(storeBaseInfo)
-            }
+            processingVersionInfoMap.getOrPut(storeCode) { mutableListOf() }.add(storeBaseInfo)
         }
         val projectMap =
             client.get(ServiceProjectResource::class).getNameByCode(projectCodeList.joinToString(",")).data
-        val myMyStoreComponent = mutableListOf<MyStoreComponent>()
         records?.forEach {
             val storeCode = it[tStoreBase.STORE_CODE] as String
             var releaseFlag = false // 是否有处于上架状态的组件版本
@@ -243,7 +239,7 @@ class StoreComponentQueryServiceImpl @Autowired constructor(
                     modifier = it[tStoreBase.MODIFIER] as String,
                     createTime = DateTimeUtil.toDateTime(it[tStoreBase.CREATE_TIME] as LocalDateTime),
                     updateTime = DateTimeUtil.toDateTime(it[tStoreBase.UPDATE_TIME] as LocalDateTime),
-                    processingVersionInfos = processingVersionInfoMap?.get(storeCode)
+                    processingVersionInfos = processingVersionInfoMap[storeCode]
                 )
             )
         }
