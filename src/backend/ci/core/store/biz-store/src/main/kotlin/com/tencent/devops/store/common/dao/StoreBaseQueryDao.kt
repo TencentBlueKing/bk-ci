@@ -283,9 +283,6 @@ class StoreBaseQueryDao {
             .join(tStoreMember)
             .on(tStoreBase.STORE_CODE.eq(tStoreMember.STORE_CODE))
             .where(conditions)
-            .groupBy(tStoreBase.ID)
-            .orderBy(tStoreBase.UPDATE_TIME.desc())
-            .limit(1)
             .fetchOne(0, Int::class.java) ?: 0
     }
 

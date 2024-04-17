@@ -35,7 +35,6 @@ import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.DateTimeUtil
-import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.ThreadLocalUtil
 import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.client.Client
@@ -44,7 +43,6 @@ import com.tencent.devops.common.web.utils.BkApiUtil
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.model.store.tables.TStoreBase
 import com.tencent.devops.model.store.tables.TStoreBaseFeature
-import com.tencent.devops.model.store.tables.records.TStoreBaseEnvRecord
 import com.tencent.devops.project.api.service.ServiceProjectResource
 import com.tencent.devops.store.common.dao.ClassifyDao
 import com.tencent.devops.store.common.dao.MarketStoreQueryDao
@@ -82,17 +80,14 @@ import com.tencent.devops.store.pojo.common.MarketMainItemLabel
 import com.tencent.devops.store.pojo.common.MyStoreComponent
 import com.tencent.devops.store.pojo.common.StoreBaseInfo
 import com.tencent.devops.store.pojo.common.StoreDetailInfo
-import com.tencent.devops.store.pojo.common.category.Category
+import com.tencent.devops.store.pojo.common.StoreInfoQuery
 import com.tencent.devops.store.pojo.common.classify.Classify
 import com.tencent.devops.store.pojo.common.enums.RdTypeEnum
 import com.tencent.devops.store.pojo.common.enums.ReleaseTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreSortTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreStatusEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
-import com.tencent.devops.store.pojo.common.honor.HonorInfo
-import com.tencent.devops.store.pojo.common.index.StoreIndexInfo
 import com.tencent.devops.store.pojo.common.statistic.StoreDailyStatistic
-import com.tencent.devops.store.pojo.common.statistic.StoreStatistic
 import com.tencent.devops.store.pojo.common.version.StoreDeskVersionItem
 import com.tencent.devops.store.pojo.common.version.StoreShowVersionInfo
 import com.tencent.devops.store.pojo.common.version.VersionModel
@@ -341,13 +336,9 @@ class StoreComponentQueryServiceImpl @Autowired constructor(
             errorCode = CommonMessageCode.PARAMETER_IS_INVALID,
             params = arrayOf(storeCode)
         )
-        val storeBaseEnvInfo = storeBaseEnvQueryDao.getStoreEnvInfo(dslContext, storeId) ?: throw ErrorCodeException(
-            errorCode = CommonMessageCode.PARAMETER_IS_INVALID,
-            params = arrayOf(storeCode)
-        )
         // 用户是否可安装组件
         val installFlag = storeUserService.isCanInstallStoreComponent(
-            defaultFlag = storeBaseEnvInfo.defaultFlag,
+            defaultFlag = storeFeatureRecord.publicFlag,
             userId = userId,
             storeCode = storeCode,
             storeType = storeType
@@ -464,20 +455,22 @@ class StoreComponentQueryServiceImpl @Autowired constructor(
         futureList.add(
             doList(
                 userId = userId,
-                storeType = storeType,
-                projectCode = null,
                 userDeptList = userDeptList,
-                keyword = null,
-                classifyId = null,
-                labelId = null,
-                score = null,
-                rdType = null,
-                categoryId = null,
-                recommendFlag = null,
-                queryProjectComponentFlag = false,
-                sortType = StoreSortTypeEnum.UPDATE_TIME,
-                page = page,
-                pageSize = pageSize,
+                storeInfoQuery = StoreInfoQuery(
+                    storeType = storeType,
+                    projectCode = null,
+                    keyword = null,
+                    classifyId = null,
+                    labelId = null,
+                    score = null,
+                    rdType = null,
+                    categoryId = null,
+                    recommendFlag = null,
+                    queryProjectComponentFlag = false,
+                    sortType = StoreSortTypeEnum.UPDATE_TIME,
+                    page = page,
+                    pageSize = pageSize
+                ),
                 urlProtocolTrim = urlProtocolTrim
             )
         )
@@ -490,20 +483,22 @@ class StoreComponentQueryServiceImpl @Autowired constructor(
         futureList.add(
             doList(
                 userId = userId,
-                storeType = storeType,
-                projectCode = null,
                 userDeptList = userDeptList,
-                keyword = null,
-                classifyId = null,
-                labelId = null,
-                score = null,
-                rdType = null,
-                categoryId = null,
-                recommendFlag = null,
-                queryProjectComponentFlag = false,
-                sortType = StoreSortTypeEnum.DOWNLOAD_COUNT,
-                page = page,
-                pageSize = pageSize,
+                storeInfoQuery = StoreInfoQuery(
+                    storeType = storeType,
+                    projectCode = null,
+                    keyword = null,
+                    classifyId = null,
+                    labelId = null,
+                    score = null,
+                    rdType = null,
+                    categoryId = null,
+                    recommendFlag = null,
+                    queryProjectComponentFlag = false,
+                    sortType = StoreSortTypeEnum.DOWNLOAD_COUNT,
+                    page = page,
+                    pageSize = pageSize
+                ),
                 urlProtocolTrim = urlProtocolTrim
             )
         )
@@ -521,20 +516,22 @@ class StoreComponentQueryServiceImpl @Autowired constructor(
                 futureList.add(
                     doList(
                         userId = userId,
-                        storeType = storeType,
-                        projectCode = null,
                         userDeptList = userDeptList,
-                        keyword = null,
-                        classifyId = it.id,
-                        labelId = null,
-                        score = null,
-                        rdType = null,
-                        categoryId = null,
-                        recommendFlag = null,
-                        queryProjectComponentFlag = false,
-                        sortType = StoreSortTypeEnum.DOWNLOAD_COUNT,
-                        page = page,
-                        pageSize = pageSize,
+                        storeInfoQuery = StoreInfoQuery(
+                            storeType = storeType,
+                            projectCode = null,
+                            keyword = null,
+                            classifyId = it.id,
+                            labelId = null,
+                            score = null,
+                            rdType = null,
+                            categoryId = null,
+                            recommendFlag = null,
+                            queryProjectComponentFlag = false,
+                            sortType = StoreSortTypeEnum.DOWNLOAD_COUNT,
+                            page = page,
+                            pageSize = pageSize
+                        ),
                         urlProtocolTrim = urlProtocolTrim
                     )
                 )
@@ -578,20 +575,22 @@ class StoreComponentQueryServiceImpl @Autowired constructor(
         val userDeptList = storeUserService.getUserDeptList(userId)
         return doList(
             userId = userId,
-            storeType = storeType,
-            projectCode = projectCode,
             userDeptList = userDeptList,
-            keyword = keyword,
-            classifyId = classifyId,
-            labelId = labelId,
-            score = score,
-            rdType = rdType,
-            categoryId = categoryId,
-            recommendFlag = recommendFlag,
-            queryProjectComponentFlag = queryProjectComponentFlag,
-            sortType = StoreSortTypeEnum.DOWNLOAD_COUNT,
-            page = page,
-            pageSize = pageSize,
+            storeInfoQuery = StoreInfoQuery(
+                storeType = storeType,
+                projectCode = projectCode,
+                keyword = keyword,
+                classifyId = classifyId,
+                labelId = labelId,
+                score = score,
+                rdType = rdType,
+                categoryId = categoryId,
+                recommendFlag = recommendFlag,
+                queryProjectComponentFlag = queryProjectComponentFlag,
+                sortType = StoreSortTypeEnum.DOWNLOAD_COUNT,
+                page = page,
+                pageSize = pageSize
+            ),
             urlProtocolTrim = urlProtocolTrim
         ).get()
     }
@@ -630,185 +629,26 @@ class StoreComponentQueryServiceImpl @Autowired constructor(
         return storeCommonService.getStoreShowVersionInfo(cancelFlag, showReleaseType, showVersion)
     }
 
-    private fun getStoreInfos(
-        storeType: String,
-        projectCode: String?,
-        keyword: String?,
-        classifyId: String?,
-        labelId: String?,
-        categoryId: String?,
-        score: Int?,
-        rdType: RdTypeEnum?,
-        recommendFlag: Boolean?,
-        queryProjectComponentFlag: Boolean,
-        sortType: StoreSortTypeEnum?,
-        page: Int,
-        pageSize: Int
-    ): Pair<Long, List<Record>> {
-        val storeTypeEnum = StoreTypeEnum.valueOf(storeType)
+    private fun getStoreInfos(storeInfoQuery: StoreInfoQuery): Pair<Long, List<Record>> {
         val count = marketStoreQueryDao.count(
             dslContext = dslContext,
-            storeType = storeTypeEnum,
-            projectCode = projectCode,
-            keyword = keyword,
-            classifyId = classifyId,
-            labelId = labelId,
-            categoryId = categoryId,
-            score = score,
-            recommendFlag = recommendFlag,
-            rdType = rdType,
-            queryProjectComponentFlag = queryProjectComponentFlag,
+            storeInfoQuery = storeInfoQuery
         )
         val storeInfos = marketStoreQueryDao.list(
             dslContext = dslContext,
-            storeType = storeTypeEnum,
-            projectCode = projectCode,
-            keyword = keyword,
-            classifyId = classifyId,
-            labelId = labelId,
-            categoryId = categoryId,
-            score = score,
-            recommendFlag = recommendFlag,
-            rdType = rdType,
-            queryProjectComponentFlag = queryProjectComponentFlag,
-            page = page,
-            pageSize = pageSize,
-            sortType = sortType
-        ) ?: emptyList()
+            storeInfoQuery = storeInfoQuery
+        )
 
         return Pair(count.toLong(), storeInfos)
     }
 
-    private fun processStoreInfo(
-        userId: String,
-        projectCode: String?,
-        userDeptList: List<Int>,
-        record: Record,
-        storeVisibleData: Map<String, MutableList<Int>>?,
-        storeStatisticData: Map<String, StoreStatistic>?,
-        storeHonorInfoMap: Map<String, List<HonorInfo>>?,
-        storeIndexInfosMap: Map<String, List<StoreIndexInfo>>?,
-        memberData: Map<String, MutableList<String>>?,
-        classifyMap: Map<String, String>,
-        urlProtocolTrim: Boolean,
-        categoryInfoMap: Map<String, List<Category>>,
-        storeEnvInfo: TStoreBaseEnvRecord?
-    ): MarketItem {
-        val tStoreBase = TStoreBase.T_STORE_BASE
-        val tStoreBaseFeature = TStoreBaseFeature.T_STORE_BASE_FEATURE
-
-        val storeCode = record[tStoreBase.STORE_CODE]
-        val storeId = record[tStoreBase.ID]
-        val storeType = StoreTypeEnum.getStoreTypeObj(record[tStoreBase.STORE_TYPE].toInt())
-        val name = record[tStoreBase.NAME]
-        val version = record[tStoreBase.VERSION]
-        val visibleList = storeVisibleData?.get(storeCode)
-        val statistic = storeStatisticData?.get(storeCode)
-        val storeHonorInfos = storeHonorInfoMap?.get(storeCode)
-        val storeIndexInfos = storeIndexInfosMap?.get(storeCode)
-        val members = memberData?.get(storeCode)
-        val rdType = record[tStoreBaseFeature.RD_TYPE]
-        val osStr = storeEnvInfo?.osName
-        val flag = storeCommonService.generateInstallFlag(
-            defaultFlag = storeEnvInfo?.defaultFlag ?: false,
-            members = members,
-            userId = userId,
-            visibleList = visibleList,
-            userDeptList = userDeptList
-        )
-        var logoUrl = record[tStoreBase.LOGO_URL]
-        logoUrl = logoUrl?.let {
-            StoreDecorateFactory.get(StoreDecorateFactory.Kind.HOST)?.decorate(logoUrl) as? String
-        }
-        logoUrl = if (logoUrl?.contains("?") == true) {
-            logoUrl.plus("&logo=true")
-        } else {
-            logoUrl?.plus("?logo=true")
-        }
-        if (urlProtocolTrim) { // #4796 LogoUrl跟随主站协议
-            logoUrl = RegexUtils.trimProtocol(logoUrl)
-        }
-        val installed = projectCode?.let {
-            storeProjectService.isInstalledByProject(
-                projectCode = projectCode,
-                storeCode = storeCode,
-                storeType = storeType.type.toByte()
-            )
-        }
-
-        val extDataResult = storeBaseFeatureExtQueryDao.queryStoreBaseFeatureExt(
-            dslContext = dslContext,
-            storeCode = storeCode,
-            storeType = StoreTypeEnum.getStoreTypeObj(storeType.type)
-        )
-
-        val extData = if (extDataResult.isEmpty()) {
-            null
-        } else {
-            mutableMapOf<String, Any>()
-        }
-
-        extData?.let {
-            extDataResult.forEach { record ->
-                extData[record.fieldName] = record.fieldValue
-            }
-        }
-
-        return MarketItem(
-            id = storeId,
-            name = name,
-            code = storeCode,
-            version = version,
-            type = storeType.name,
-            rdType = rdType,
-            classifyCode = classifyMap[record[tStoreBase.CLASSIFY_ID] as String],
-            category = categoryInfoMap[storeId]?.joinToString(","),
-            logoUrl = logoUrl,
-            publisher = record[tStoreBase.PUBLISHER],
-            os = if (!osStr.isNullOrBlank()) JsonUtil.getObjectMapper().readValue(
-                osStr,
-                List::class.java
-            ) as List<String> else null,
-            downloads = statistic?.downloads ?: 0,
-            score = statistic?.score ?:0.toDouble(),
-            summary = record[tStoreBase.SUMMARY],
-            flag = flag,
-            publicFlag = record[tStoreBaseFeature.PUBLIC_FLAG],
-            buildLessRunFlag = null,
-            docsLink = record[tStoreBase.DOCS_LINK],
-            modifier = record[tStoreBase.MODIFIER],
-            updateTime = DateTimeUtil.toDateTime(record[tStoreBase.UPDATE_TIME] as LocalDateTime),
-            recommendFlag = record[tStoreBaseFeature.RECOMMEND_FLAG],
-            yamlFlag = null,
-            installed = installed,
-            dailyStatisticList = getRecentDailyStatisticList(storeCode, storeType),
-            honorInfos = storeHonorInfos,
-            indexInfos = storeIndexInfos,
-            recentExecuteNum = statistic?.recentExecuteNum,
-            hotFlag = statistic?.hotFlag,
-            extData = extData
-        )
-    }
-
     private fun doList(
         userId: String,
-        storeType: String,
-        projectCode: String?,
         userDeptList: List<Int>,
-        keyword: String?,
-        classifyId: String?,
-        labelId: String?,
-        categoryId: String?,
-        score: Int?,
-        rdType: RdTypeEnum?,
-        recommendFlag: Boolean?,
-        queryProjectComponentFlag: Boolean,
-        sortType: StoreSortTypeEnum?,
-        page: Int,
-        pageSize: Int,
+        storeInfoQuery: StoreInfoQuery,
         urlProtocolTrim: Boolean = false
     ): Future<Page<MarketItem>> {
-        logger.info("doList|storeType:$storeType")
+        logger.info("doList|storeType:${storeInfoQuery.storeType}")
         val referer = BkApiUtil.getHttpServletRequest()?.getHeader(REFERER)
         return executor.submit(Callable<Page<MarketItem>> {
             referer?.let {
@@ -817,28 +657,16 @@ class StoreComponentQueryServiceImpl @Autowired constructor(
             val results = mutableListOf<MarketItem>()
 
             // 调用拆分出的getStoreInfos函数获取商品信息
-            val (count, storeInfos) = getStoreInfos(
-                storeType = storeType,
-                projectCode = projectCode,
-                keyword = keyword,
-                classifyId = classifyId,
-                labelId = labelId,
-                categoryId = categoryId,
-                score = score,
-                rdType = rdType,
-                recommendFlag = recommendFlag,
-                queryProjectComponentFlag = queryProjectComponentFlag,
-                sortType = sortType,
-                page = page,
-                pageSize = pageSize
-            )
+            val (count, storeInfos) = getStoreInfos(storeInfoQuery)
             try {
                 val storeCodeList = mutableListOf<String>()
                 val storeIds = mutableListOf<String>()
-                val storeTypeEnum = StoreTypeEnum.valueOf(storeType)
+                val storeTypeEnum = StoreTypeEnum.valueOf(storeInfoQuery.storeType)
+                val tStoreBase = TStoreBase.T_STORE_BASE
+                val tStoreBaseFeature = TStoreBaseFeature.T_STORE_BASE_FEATURE
                 storeInfos.forEach {
-                    storeCodeList.add(it[TStoreBase.T_STORE_BASE.STORE_CODE] as String)
-                    storeIds.add(it[TStoreBaseFeature.T_STORE_BASE_FEATURE.ID] as String)
+                    storeCodeList.add(it[tStoreBase.STORE_CODE] as String)
+                    storeIds.add(it[tStoreBaseFeature.ID] as String)
                 }
                 val storeVisibleData =
                     storeCommonService.generateStoreVisibleData(storeCodeList, storeTypeEnum)
@@ -858,23 +686,53 @@ class StoreComponentQueryServiceImpl @Autowired constructor(
                 val storeIndexInfosMap =
                     storeIndexManageService.getStoreIndexInfosByStoreCodes(storeTypeEnum, storeCodeList)
                 val categoryInfoMap = categoryService.getByRelStoreIds(storeIds)
-                val storeEnvInfos = storeBaseEnvQueryDao.batchQueryStoreEnvInfo(dslContext, storeIds)
                 storeInfos.forEach { record ->
-                    // 调用拆分出的processStoreInfo函数处理商品信息
-                    val marketItem = processStoreInfo(
-                        userId = userId,
-                        projectCode = projectCode,
-                        userDeptList = userDeptList,
-                        record = record,
-                        storeVisibleData = storeVisibleData,
-                        storeStatisticData = storeStatisticData,
-                        storeHonorInfoMap = storeHonorInfoMap,
-                        storeIndexInfosMap = storeIndexInfosMap,
-                        memberData = memberData,
-                        classifyMap = classifyMap,
-                        urlProtocolTrim = urlProtocolTrim,
-                        categoryInfoMap = categoryInfoMap,
-                        storeEnvInfo = storeEnvInfos.find { it.id == record[TStoreBase.T_STORE_BASE.ID] }
+                    val storeId = record[tStoreBase.ID]
+                    val storeCode = record[tStoreBase.STORE_CODE]
+                    val statistic = storeStatisticData[storeCode]
+                    val marketItem =MarketItem(
+                        id = storeId,
+                        name = record[tStoreBase.NAME],
+                        code = storeCode,
+                        version = record[tStoreBase.VERSION],
+                        type = StoreTypeEnum.getStoreType(record[tStoreBase.STORE_TYPE].toInt()),
+                        rdType = record[tStoreBaseFeature.RD_TYPE],
+                        classifyCode = classifyMap[record[tStoreBase.CLASSIFY_ID] as String],
+                        category =
+                        categoryInfoMap[record[tStoreBase.ID]]?.joinToString(",") { it.categoryCode },
+                        logoUrl = record[tStoreBase.LOGO_URL]?.let { convertLogoUrl(it, urlProtocolTrim) },
+                        publisher = record[tStoreBase.PUBLISHER],
+                        os = storeBaseEnvQueryDao.getBaseEnvsByStoreId(dslContext, storeId)?.map { it.osName },
+                        downloads = statistic?.downloads ?: 0,
+                        score = statistic?.score ?: 0.toDouble(),
+                        summary = record[tStoreBase.SUMMARY],
+                        flag = storeCommonService.generateInstallFlag(
+                            defaultFlag = record[tStoreBaseFeature.PUBLIC_FLAG],
+                            members = memberData?.get(storeCode),
+                            userId = userId,
+                            visibleList = storeVisibleData?.get(storeCode),
+                            userDeptList = userDeptList
+                        ),
+                        publicFlag = record[tStoreBaseFeature.PUBLIC_FLAG],
+                        buildLessRunFlag = null,
+                        docsLink = record[tStoreBase.DOCS_LINK],
+                        modifier = record[tStoreBase.MODIFIER],
+                        updateTime = DateTimeUtil.toDateTime(record[tStoreBase.UPDATE_TIME] as LocalDateTime),
+                        recommendFlag = record[tStoreBaseFeature.RECOMMEND_FLAG],
+                        yamlFlag = null,
+                        installed = storeInfoQuery.projectCode?.let {
+                            storeProjectService.isInstalledByProject(
+                                projectCode = it,
+                                storeCode = storeCode,
+                                storeType = storeTypeEnum.type.toByte()
+                            )
+                        },
+                        dailyStatisticList = getRecentDailyStatisticList(storeCode, storeTypeEnum),
+                        honorInfos = storeHonorInfoMap[storeCode],
+                        indexInfos = storeIndexInfosMap[storeCode],
+                        recentExecuteNum = statistic?.recentExecuteNum,
+                        hotFlag = statistic?.hotFlag,
+                        extData = getExtData(storeCode, storeTypeEnum)
                     )
                     results.add(marketItem)
                 }
@@ -882,8 +740,8 @@ class StoreComponentQueryServiceImpl @Autowired constructor(
                 ThreadLocalUtil.remove(REFERER)
             }
             return@Callable Page(
-                page = page,
-                pageSize = pageSize,
+                page = storeInfoQuery.page,
+                pageSize = storeInfoQuery.pageSize,
                 count = count,
                 records = results
             )
@@ -911,5 +769,39 @@ class StoreComponentQueryServiceImpl @Autowired constructor(
             ),
             endTime = endTime
         )
+    }
+
+    private fun convertLogoUrl(url: String, urlProtocolTrim: Boolean): String? {
+        var logoUrl = StoreDecorateFactory.get(StoreDecorateFactory.Kind.HOST)?.decorate(url) as? String
+        logoUrl = if (logoUrl?.contains("?") == true) {
+            logoUrl.plus("&logo=true")
+        } else {
+            logoUrl?.plus("?logo=true")
+        }
+        if (urlProtocolTrim) { // #4796 LogoUrl跟随主站协议
+            logoUrl = RegexUtils.trimProtocol(logoUrl)
+        }
+        return logoUrl
+    }
+
+    private fun getExtData(storeCode: String, storeType: StoreTypeEnum): MutableMap<String, Any>? {
+        val extDataResult = storeBaseFeatureExtQueryDao.queryStoreBaseFeatureExt(
+            dslContext = dslContext,
+            storeCode = storeCode,
+            storeType = StoreTypeEnum.getStoreTypeObj(storeType.type)
+        )
+
+        val extData = if (extDataResult.isEmpty()) {
+            null
+        } else {
+            mutableMapOf<String, Any>()
+        }
+
+        extData?.let {
+            extDataResult.forEach { record ->
+                extData[record.fieldName] = record.fieldValue
+            }
+        }
+        return extData
     }
 }

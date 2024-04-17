@@ -29,57 +29,48 @@ package com.tencent.devops.store.common.resources
 
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.store.api.common.UserStoreComponentQueryResource
+import com.tencent.devops.store.api.common.ServiceStoreComponentResource
+import com.tencent.devops.store.common.service.StoreComponentManageService
 import com.tencent.devops.store.common.service.StoreComponentQueryService
+import com.tencent.devops.store.pojo.common.InstallStoreReq
 import com.tencent.devops.store.pojo.common.MarketItem
 import com.tencent.devops.store.pojo.common.MarketMainItem
-import com.tencent.devops.store.pojo.common.MyStoreComponent
 import com.tencent.devops.store.pojo.common.StoreDetailInfo
+import com.tencent.devops.store.pojo.common.UnInstallReq
 import com.tencent.devops.store.pojo.common.enums.RdTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreSortTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
-import com.tencent.devops.store.pojo.common.version.StoreDeskVersionItem
-import com.tencent.devops.store.pojo.common.version.StoreShowVersionInfo
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
-class UserStoreComponentQueryResourceImpl @Autowired constructor(
-    private val storeComponentQueryService: StoreComponentQueryService
-) : UserStoreComponentQueryResource {
-    override fun getMyComponents(
-        userId: String,
-        storeType: String,
-        name: String?,
-        page: Int,
-        pageSize: Int
-    ): Result<Page<MyStoreComponent>?> {
-        return Result(
-            storeComponentQueryService.getMyComponents(
-                userId = userId,
-                storeType = storeType,
-                name = name,
-                page = page,
-                pageSize = pageSize
-            )
+class ServiceStoreComponentResourceImpl @Autowired constructor(
+    private val storeComponentQueryService: StoreComponentQueryService,
+    private val storeComponentManageService: StoreComponentManageService
+) : ServiceStoreComponentResource {
+
+    override fun installComponent(userId: String, installStoreReq: InstallStoreReq): Result<Boolean> {
+        return storeComponentManageService.installComponent(
+            userId = userId,
+            channelCode = ChannelCode.BS,
+            installStoreReq = installStoreReq
         )
     }
 
-    override fun getComponentVersionsByCode(
+    override fun uninstallComponent(
         userId: String,
+        projectCode: String,
         storeType: String,
         storeCode: String,
-        page: Int,
-        pageSize: Int
-    ): Result<Page<StoreDeskVersionItem>> {
-        return Result(
-            storeComponentQueryService.getComponentVersionsByCode(
-                userId = userId,
-                storeCode = storeCode,
-                storeType = storeType,
-                page = page,
-                pageSize = pageSize
-            )
+        unInstallReq: UnInstallReq
+    ): Result<Boolean> {
+        return storeComponentManageService.uninstallComponent(
+            userId = userId,
+            projectCode = projectCode,
+            storeType = storeType,
+            storeCode = storeCode,
+            unInstallReq = unInstallReq
         )
     }
 
@@ -93,20 +84,6 @@ class UserStoreComponentQueryResourceImpl @Autowired constructor(
                 userId = userId,
                 storeId = storeId,
                 storeType = StoreTypeEnum.valueOf(storeType),
-            )
-        )
-    }
-
-    override fun getComponentDetailInfoByCode(
-        userId: String,
-        storeType: String,
-        storeCode: String
-    ): Result<StoreDetailInfo?> {
-        return Result(
-            storeComponentQueryService.getComponentDetailInfoByCode(
-                userId = userId,
-                storeCode = storeCode,
-                storeType = storeType,
             )
         )
     }
@@ -158,20 +135,6 @@ class UserStoreComponentQueryResourceImpl @Autowired constructor(
                 sortType = sortType,
                 page = page,
                 pageSize = pageSize
-            )
-        )
-    }
-
-    override fun getComponentShowVersionInfo(
-        userId: String,
-        storeType: String,
-        storeCode: String
-    ): Result<StoreShowVersionInfo> {
-        return Result(
-            storeComponentQueryService.getComponentShowVersionInfo(
-                userId = userId,
-                storeCode = storeCode,
-                storeType = storeType,
             )
         )
     }

@@ -25,34 +25,38 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.store.common.dao
+package com.tencent.devops.store.pojo.common
 
-import com.tencent.devops.model.store.tables.TStoreBaseEnv
-import com.tencent.devops.model.store.tables.records.TStoreBaseEnvRecord
-import org.jooq.Condition
-import org.jooq.DSLContext
-import org.jooq.Result
-import org.springframework.stereotype.Repository
+import com.tencent.devops.store.pojo.common.enums.RdTypeEnum
+import com.tencent.devops.store.pojo.common.enums.StoreSortTypeEnum
+import io.swagger.v3.oas.annotations.media.Schema
 
-@Repository
-class StoreBaseEnvQueryDao {
-
-    fun getBaseEnvsByStoreId(
-        dslContext: DSLContext,
-        storeId: String,
-        osName: String? = null,
-        osArch: String? = null
-    ): Result<TStoreBaseEnvRecord>? {
-        return with(TStoreBaseEnv.T_STORE_BASE_ENV) {
-            val conditions = mutableListOf<Condition>()
-            conditions.add(STORE_ID.eq(storeId))
-            if (!osName.isNullOrBlank()) {
-                conditions.add(OS_NAME.eq(osName))
-            }
-            if (!osArch.isNullOrBlank()) {
-                conditions.add(OS_ARCH.eq(osArch))
-            }
-            dslContext.selectFrom(this).where(conditions).fetch()
-        }
-    }
-}
+@Schema(title = "研发商店-查询组件条件")
+data class StoreInfoQuery(
+    @get:Schema(title = "组件类型", required = true)
+    val storeType: String,
+    @get:Schema(title = "项目代码", required = false)
+    val projectCode: String?,
+    @get:Schema(title = "搜索关键字", required = false)
+    val keyword: String?,
+    @get:Schema(title = "分类ID", required = false)
+    val classifyId: String?,
+    @get:Schema(title = "标签ID", required = false)
+    val labelId: String?,
+    @get:Schema(title = "范畴ID", required = false)
+    val categoryId: String?,
+    @get:Schema(title = "评分", required = false)
+    val score: Int?,
+    @get:Schema(title = "研发来源类型", required = false)
+    val rdType: RdTypeEnum?,
+    @get:Schema(title = "是否推荐标识 true：推荐，false：不推荐", required = false)
+    val recommendFlag: Boolean?,
+    @get:Schema(title = "是否查询项目下组件标识", required = true)
+    val queryProjectComponentFlag: Boolean,
+    @get:Schema(title = "排序", required = false)
+    val sortType: StoreSortTypeEnum?,
+    @get:Schema(title = "页码", required = true)
+    val page: Int,
+    @get:Schema(title = "每页数量", required = true)
+    val pageSize: Int
+)

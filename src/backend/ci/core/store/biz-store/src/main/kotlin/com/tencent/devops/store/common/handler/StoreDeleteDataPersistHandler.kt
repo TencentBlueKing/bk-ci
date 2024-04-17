@@ -28,7 +28,6 @@
 package com.tencent.devops.store.common.handler
 
 import com.tencent.devops.store.common.service.StoreBaseDeleteService
-import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.pojo.common.handler.Handler
 import com.tencent.devops.store.pojo.common.publication.StoreDeleteRequest
 import org.springframework.stereotype.Service
