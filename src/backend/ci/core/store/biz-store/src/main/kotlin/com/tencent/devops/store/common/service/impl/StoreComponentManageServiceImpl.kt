@@ -50,9 +50,7 @@ import com.tencent.devops.store.common.service.StoreBaseInstallService
 import com.tencent.devops.store.common.service.StoreComponentManageService
 import com.tencent.devops.store.common.service.StoreManagementExtraService
 import com.tencent.devops.store.common.service.StoreProjectService
-import com.tencent.devops.store.common.service.StoreSpecBusService
 import com.tencent.devops.store.common.utils.StoreReleaseUtils
-import com.tencent.devops.store.common.utils.StoreUtils
 import com.tencent.devops.store.constant.StoreMessageCode
 import com.tencent.devops.store.pojo.common.InstallStoreReq
 import com.tencent.devops.store.pojo.common.StoreBaseInfoUpdateRequest
@@ -216,10 +214,8 @@ class StoreComponentManageServiceImpl @Autowired constructor(
         }
         return storeProjectService.installStoreComponent(
             userId = userId,
-            projectCodeList = installStoreReq.projectCodes,
+            installStoreReq = installStoreReq,
             storeId = storeBaseInfo.storeId,
-            storeCode = storeBaseInfo.storeCode,
-            storeType = storeBaseInfo.storeType,
             publicFlag = storeBaseInfo.publicFlag,
             channelCode = channelCode
         )
