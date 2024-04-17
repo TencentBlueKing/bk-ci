@@ -29,7 +29,6 @@ package com.tencent.devops.project.service.impl
 
 import com.fasterxml.jackson.core.type.TypeReference
 import com.fasterxml.jackson.databind.ObjectMapper
-import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.bkrepo.common.api.util.JsonUtils.objectMapper
 import com.tencent.devops.auth.api.service.ServiceProjectAuthResource
 import com.tencent.devops.auth.service.ManagerService
@@ -60,7 +59,6 @@ import com.tencent.devops.project.dao.ProjectDao
 import com.tencent.devops.project.dao.ProjectUpdateHistoryDao
 import com.tencent.devops.project.dispatch.ProjectDispatcher
 import com.tencent.devops.project.jmx.api.ProjectJmxApi
-import com.tencent.devops.project.pojo.AuthProjectForList
 import com.tencent.devops.project.pojo.OperationalProductVO
 import com.tencent.devops.project.pojo.ProjectCreateInfo
 import com.tencent.devops.project.pojo.ProjectCreateUserInfo
@@ -71,7 +69,6 @@ import com.tencent.devops.project.pojo.ProjectTagUpdateDTO
 import com.tencent.devops.project.pojo.ProjectUpdateInfo
 import com.tencent.devops.project.pojo.ProjectVO
 import com.tencent.devops.project.pojo.ResourceUpdateInfo
-import com.tencent.devops.project.pojo.Result
 import com.tencent.devops.project.pojo.enums.ProjectApproveStatus
 import com.tencent.devops.project.pojo.enums.ProjectChannelCode
 import com.tencent.devops.project.pojo.enums.ProjectOperation
@@ -252,14 +249,7 @@ class TxProjectServiceImpl @Autowired constructor(
         userId: String?,
         accessToken: String?
     ): List<String> {
-        val iamV0List = projectDao.list(
-            dslContext = dslContext,
-            englishNameList = getV0UserProject(userId, accessToken).toSet(),
-            routerTag = AuthSystemType.RBAC_AUTH_TYPE.value
-        ).map { it.englishName }
-        logger.info("$userId V0 project: $iamV0List")
         val projectList = mutableSetOf<String>()
-        projectList.addAll(iamV0List)
         // 请求v3以及rbac的项目
         val iamList = getIamUserProject(userId!!)
         logger.info("$userId iam project: $iamList")
@@ -421,40 +411,6 @@ class TxProjectServiceImpl @Autowired constructor(
             AuthSystemType.RBAC_AUTH_TYPE.value
         } else {
             AuthSystemType.V0_AUTH_TYPE.value
-        }
-    }
-
-    private fun getV0UserProject(userId: String?, accessToken: String?): List<String> {
-        val token = if (accessToken.isNullOrEmpty()) {
-            bkAccessTokenApi.getPipelineAccessToken()
-        } else {
-            accessToken
-        }
-        val url = "$v0IamUrl/projects?access_token=$token&user_id=$userId"
-        logger.info("Start to get auth projects - ($url)")
-        val request = Request.Builder().url(url).get().build()
-        val responseContent = request(
-            request, I18nUtil.getCodeLanMessage(
-            messageCode = ProjectMessageCode.PEM_QUERY_ERROR,
-            language = I18nUtil.getLanguage(userId)
-        )
-        )
-        val result = objectMapper.readValue<Result<ArrayList<AuthProjectForList>>>(responseContent)
-        if (result.isNotOk()) {
-            logger.warn("Fail to get the project info with response $responseContent")
-            throw OperationException(
-                I18nUtil.getCodeLanMessage(
-                    messageCode = ProjectMessageCode.PEM_QUERY_ERROR,
-                    language = I18nUtil.getLanguage(userId)
-                )
-            )
-        }
-        if (result.data == null) {
-            return emptyList()
-        }
-
-        return result.data!!.map {
-            it.project_code
         }
     }
 
