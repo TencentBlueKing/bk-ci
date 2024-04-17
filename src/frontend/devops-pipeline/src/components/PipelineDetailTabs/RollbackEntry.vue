@@ -30,12 +30,10 @@
         >
             <header class="draft-hint-title" slot="header">
                 <i class="devops-icon icon-exclamation"></i>
-                {{$t('hasDraftTips', [draftBaseVersionName])}}
+                {{ draftHintTitle }}
             </header>
-            <div class="draft-hint-content">
-                <p>
-                    {{ draftHintMsg }}
-                </p>
+            <div v-if="hasDraftPipeline" class="draft-hint-content">
+                {{ $t('dropDraftTips', [versionName]) }}
             </div>
             <footer slot="footer">
                 <bk-button
@@ -44,7 +42,7 @@
                 >
                     {{ $t('newVersion') }}
                 </bk-button>
-                <bk-button @click="goEdit(draftVersion)">
+                <bk-button v-if="hasDraftPipeline" @click="goEdit(draftVersion)">
                     {{ $t('editDraft') }}
                 </bk-button>
                 <bk-button @click="close">
@@ -124,8 +122,8 @@
                     ? this.$t('rollback')
                     : this.$t('edit')
             },
-            draftHintMsg () {
-                return this.$t(this.hasDraftPipeline ? 'dropDraftTips' : 'createDraftTips', [this.versionName])
+            draftHintTitle () {
+                return this.hasDraftPipeline ? this.$t('hasDraftTips', [this.draftBaseVersionName]) : this.$t('createDraftTips', [this.versionName])
             }
         },
         methods: {
@@ -195,7 +193,7 @@
             border-radius: 50%;
             background-color: #ffe8c3;
             color: #ff9c01;
-            order-radius: 50%;
+            border-radius: 50%;
             font-size: 24px;
             height: 42px;
             line-height: 42px;
@@ -203,7 +201,6 @@
         }
     }
     .draft-hint-content {
-        display: flex;
-        flex-direction: column;
+        text-align: center;
     }
 </style>
