@@ -56,7 +56,6 @@ import com.tencent.devops.store.common.dao.StoreProjectRelDao
 import com.tencent.devops.store.common.dao.StoreVersionLogDao
 import com.tencent.devops.store.common.service.CategoryService
 import com.tencent.devops.store.common.service.ClassifyService
-import com.tencent.devops.store.common.service.StoreClassifyService
 import com.tencent.devops.store.common.service.StoreCommentService
 import com.tencent.devops.store.common.service.StoreCommonService
 import com.tencent.devops.store.common.service.StoreComponentQueryService
@@ -127,7 +126,7 @@ class StoreComponentQueryServiceImpl @Autowired constructor(
     private val storeProjectService: StoreProjectService,
     private val storeDailyStatisticService: StoreDailyStatisticService,
     private val storeBaseFeatureExtQueryDao: StoreBaseFeatureExtQueryDao,
-    private val storeClassifyService: StoreClassifyService
+    private val storeClassifyService: ClassifyService
 ): StoreComponentQueryService {
 
     companion object {
@@ -502,7 +501,7 @@ class StoreComponentQueryServiceImpl @Autowired constructor(
             )
         )
 
-        val classifyList = storeClassifyService.getStoreClassifyList(storeType).data
+        val classifyList = storeClassifyService.getAllClassify(StoreTypeEnum.valueOf(storeType).type.toByte()).data
         classifyList?.forEach {
             val classifyCode = it.classifyCode
             if (classifyCode != "trigger") {

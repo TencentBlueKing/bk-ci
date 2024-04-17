@@ -34,7 +34,6 @@ import com.tencent.devops.model.store.tables.TStoreCategoryRel
 import com.tencent.devops.model.store.tables.TStoreLabelRel
 import com.tencent.devops.model.store.tables.TStoreProjectRel
 import com.tencent.devops.model.store.tables.TStoreStatisticsTotal
-import com.tencent.devops.model.store.tables.records.TClassifyRecord
 import com.tencent.devops.store.pojo.common.StoreInfoQuery
 import com.tencent.devops.store.pojo.common.enums.StoreSortTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreStatusEnum
@@ -245,21 +244,5 @@ class MarketStoreQueryDao {
         conditions.add(tStoreBase.STATUS.eq(StoreStatusEnum.RELEASED.name)) // 已发布的
         conditions.add(tStoreBase.LATEST_FLAG.eq(true)) // 最新版本
         return conditions
-    }
-
-    fun getAllStoreClassify(dslContext: DSLContext, storeType: StoreTypeEnum): Result<TClassifyRecord> {
-        with(TClassify.T_CLASSIFY) {
-            val tStoreBase = TStoreBase.T_STORE_BASE
-            val conditions = setStoreVisibleCondition(tStoreBase, storeType)
-            conditions.add(0, tStoreBase.CLASSIFY_ID.eq(this.ID))
-            return dslContext.selectFrom(this)
-                .where(ID.`in`(
-                    dslContext.select(tStoreBase.CLASSIFY_ID)
-                        .from(tStoreBase)
-                        .where(conditions).groupBy(tStoreBase.CLASSIFY_ID))
-                )
-                .and(TYPE.eq(storeType.type.toByte()))
-                .orderBy(WEIGHT.desc()).fetch()
-        }
     }
 }
