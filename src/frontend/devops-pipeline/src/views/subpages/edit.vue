@@ -272,7 +272,7 @@
                 }
             },
             switchTab (tab) {
-                this.$router.push({
+                this.$router.replace({
                     query: {
                         tab: tab.name
                     }
