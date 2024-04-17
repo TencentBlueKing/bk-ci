@@ -6,8 +6,8 @@ import com.tencent.devops.remotedev.api.op.OpRemoteDevJobResource
 import com.tencent.devops.remotedev.pojo.job.JobActionType
 import com.tencent.devops.remotedev.pojo.job.JobSchema
 import com.tencent.devops.remotedev.pojo.job.JobSchemaConstValResp
-import com.tencent.devops.remotedev.pojo.job.JobSchemaCreateData
 import com.tencent.devops.remotedev.pojo.job.JobType
+import com.tencent.devops.remotedev.pojo.job.OpJobSchemaCreateData
 import com.tencent.devops.remotedev.service.job.RemoteDevJobService
 import com.tencent.devops.remotedev.service.job.RemoteDevSchemaService
 import org.springframework.beans.factory.annotation.Autowired
@@ -26,8 +26,8 @@ class OpRemoteDevJobResourceImpl @Autowired constructor(
         )
     }
 
-    override fun createJobSchema(userId: String, data: JobSchemaCreateData): Result<Boolean> {
-        remoteDevSchemaService.createOrUpdateSchema(data)
+    override fun createJobSchema(userId: String, data: OpJobSchemaCreateData): Result<Boolean> {
+        remoteDevSchemaService.opCreateOrUpdateSchema(data)
         return Result(true)
     }
 
@@ -41,6 +41,11 @@ class OpRemoteDevJobResourceImpl @Autowired constructor(
 
     override fun callBackUpdateJobStatus(userId: String, jobId: Long): Result<Boolean> {
         remoteDevJobService.pipelineJobEnd(jobId)
+        return Result(true)
+    }
+
+    override fun deleteSchema(userId: String, schemaId: String): Result<Boolean> {
+        remoteDevSchemaService.deleteSchema(schemaId)
         return Result(true)
     }
 }

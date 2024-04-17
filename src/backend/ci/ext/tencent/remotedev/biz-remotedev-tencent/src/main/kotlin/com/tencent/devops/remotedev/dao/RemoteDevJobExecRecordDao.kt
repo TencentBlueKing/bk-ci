@@ -120,7 +120,7 @@ class RemoteDevJobExecRecordDao {
                     name = name,
                     id = id
                 )
-            ).limit(sqlLimit.limit).offset(sqlLimit.offset).fetch()
+            ).orderBy(ID.desc()).limit(sqlLimit.limit).offset(sqlLimit.offset).fetch()
         }
     }
 

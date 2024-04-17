@@ -66,4 +66,13 @@ class RemoteDevJobSchemaDao {
                 .execute()
         }
     }
+
+    fun delete(
+        dslContext: DSLContext,
+        schemaId: String
+    ) {
+        with(TRemotedevJobSchema.T_REMOTEDEV_JOB_SCHEMA) {
+            dslContext.deleteFrom(this).where(JOB_ID.eq(schemaId)).execute()
+        }
+    }
 }
