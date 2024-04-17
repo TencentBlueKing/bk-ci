@@ -27,37 +27,22 @@
 
 package com.tencent.devops.dispatch.docker.service
 
-import com.tencent.devops.dispatch.docker.service.debug.ExtDebugService
+import com.tencent.devops.common.dispatch.sdk.pojo.docker.DockerRoutingType
+import com.tencent.devops.dispatch.docker.pojo.Pool
+import com.tencent.devops.dispatch.docker.pojo.resource.UserDockerResourceOptionsVO
+import com.tencent.devops.process.pojo.mq.PipelineAgentStartupEvent
 
-class ExtDebugServiceImpl : ExtDebugService {
-    override fun startDebug(
+interface ExtDockerResourceService {
+    fun getDockerResourceConfigList(
         userId: String,
         projectId: String,
-        pipelineId: String,
-        buildId: String?,
-        vmSeqId: String
-    ): String? {
-        return null
-    }
+        buildType: String
+    ): UserDockerResourceOptionsVO?
 
-    override fun getWebsocketUrl(
-        userId: String,
-        projectId: String,
-        pipelineId: String,
-        buildId: String?,
-        vmSeqId: String,
-        containerId: String
-    ): String? {
-        return null
-    }
-
-    override fun stopDebug(
-        userId: String,
-        projectId: String,
-        pipelineId: String,
-        vmSeqId: String,
-        containerName: String
-    ): Boolean {
-        return true
-    }
+    fun startExtDocker(
+        event: PipelineAgentStartupEvent,
+        containerPool: Pool,
+        dockerRoutingType: DockerRoutingType = DockerRoutingType.VM,
+        demoteFlag: Boolean = false
+    )
 }

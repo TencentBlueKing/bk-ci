@@ -75,7 +75,7 @@ class PermissionSubsetManagerService @Autowired constructor(
         resourceName: String,
         iamResourceCode: String
     ): Int {
-        val managerGroupConfig = authResourceGroupConfigDao.get(
+        val managerGroupConfig = authResourceGroupConfigDao.getByGroupCode(
             dslContext = dslContext,
             resourceType = resourceType,
             groupCode = DefaultGroupType.MANAGER.value
@@ -127,7 +127,7 @@ class PermissionSubsetManagerService @Autowired constructor(
         resourceName: String,
         iamResourceCode: String
     ): Boolean {
-        val managerGroupConfig = authResourceGroupConfigDao.get(
+        val managerGroupConfig = authResourceGroupConfigDao.getByGroupCode(
             dslContext = dslContext,
             resourceType = resourceType,
             groupCode = DefaultGroupType.MANAGER.value

@@ -23,19 +23,23 @@
  * NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ *
  */
 
-package com.tencent.devops.dispatch.docker.service
+package com.tencent.devops.project.pojo.enums
 
-import com.tencent.devops.dispatch.docker.pojo.resource.UserDockerResourceOptionsVO
+import io.swagger.v3.oas.annotations.media.Schema
 
-class ExtDockerResourceOptionsServiceImpl : ExtDockerResourceOptionsService {
+/**
+ * 项目操作
+ */
+enum class ProjectOperation {
+    @Schema(title = "启用项目")
+    ENABLE,
 
-    override fun getDockerResourceConfigList(
-        userId: String,
-        projectId: String,
-        buildType: String
-    ): UserDockerResourceOptionsVO? {
-        return null
-    }
+    @Schema(title = "创建项目")
+    CREATE,
+
+    @Schema(title = "更新项目")
+    UPDATE
 }

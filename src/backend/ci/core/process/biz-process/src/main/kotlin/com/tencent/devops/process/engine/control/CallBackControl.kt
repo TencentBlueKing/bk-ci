@@ -63,8 +63,9 @@ import com.tencent.devops.project.api.service.ServiceAllocIdResource
 import io.github.resilience4j.circuitbreaker.CallNotPermittedException
 import io.github.resilience4j.circuitbreaker.CircuitBreaker
 import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry
+import io.micrometer.core.instrument.Counter
 import io.micrometer.core.instrument.MeterRegistry
-import io.micrometer.core.instrument.binder.okhttp3.OkHttpMetricsEventListener
+import io.micrometer.core.instrument.Tags
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.OkHttpClient
 import okhttp3.Request
@@ -73,6 +74,7 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
+import java.net.URL
 import java.security.cert.CertificateException
 import java.security.cert.X509Certificate
 import java.time.LocalDateTime
@@ -100,46 +102,6 @@ class CallBackControl @Autowired constructor(
 
     @Value("\${callback.failureDisableTimePeriod:#{43200000}}")
     private val failureDisableTimePeriod: Long = DEFAULT_FAILURE_DISABLE_TIME_PERIOD
-
-    private fun anySslSocketFactory(): SSLSocketFactory {
-        try {
-            val sslContext = SSLContext.getInstance("SSL")
-            sslContext.init(null, trustAnyCerts, java.security.SecureRandom())
-            return sslContext.socketFactory
-        } catch (ignored: Exception) {
-            throw RemoteServiceException(ignored.message!!)
-        }
-    }
-
-    private val trustAnyCerts = arrayOf<TrustManager>(object : X509TrustManager {
-
-        @Throws(CertificateException::class)
-        override fun checkClientTrusted(chain: Array<X509Certificate>, authType: String) = Unit
-
-        @Throws(CertificateException::class)
-        override fun checkServerTrusted(chain: Array<X509Certificate>, authType: String) = Unit
-
-        override fun getAcceptedIssuers(): Array<X509Certificate> = arrayOf()
-    })
-
-    private val callbackClient = OkHttpClient.Builder()
-        .connectTimeout(connectTimeout, TimeUnit.SECONDS)
-        .readTimeout(readTimeout, TimeUnit.SECONDS)
-        .writeTimeout(writeTimeout, TimeUnit.SECONDS)
-        .sslSocketFactory(anySslSocketFactory(), trustAnyCerts[0] as X509TrustManager)
-        .hostnameVerifier { _, _ -> true }
-        // 增加回调度量监控
-        .eventListener(
-            OkHttpMetricsEventListener.builder(meterRegistry, "okhttp3-pipeline-callback")
-                .includeHostTag(false)
-                // url只保留路径,不需要参数
-                .uriMapper { request ->
-                    projectPipelineCallBackUrlGenerator.decodeCallbackUrl(
-                        request.url.toString()
-                    ).substringBefore("?")
-                }.build()
-        )
-        .build()
 
     fun pipelineCreateEvent(projectId: String, pipelineId: String) {
         callBackPipelineEvent(projectId, pipelineId, CallBackEvent.CREATE_PIPELINE)
@@ -349,6 +311,14 @@ class CallBackControl @Autowired constructor(
             errorMsg = e.message
             status = ProjectPipelineCallbackStatus.FAILED
         } finally {
+            // 去掉代理url后,真实的url地址
+            val realUrl = projectPipelineCallBackUrlGenerator.decodeCallbackUrl(
+                request.url.toString()
+            ).substringBefore("?")
+            Counter.builder(PIPELINE_CALLBACK_COUNT)
+                .tags(Tags.of("status", status.name).and("host", URL(realUrl).host))
+                .register(meterRegistry)
+                .increment()
             saveHistory(
                 callBack = callBack,
                 requestHeaders = listOf(CallBackHeader(name = "X-DEVOPS-WEBHOOK-UNIQUE-ID", value = uniqueId)),
@@ -528,9 +498,39 @@ class CallBackControl @Autowired constructor(
         const val MAX_RETRY_COUNT = 3
         // 默认连续失败12小时,则禁用回调地址
         private const val DEFAULT_FAILURE_DISABLE_TIME_PERIOD = 12 * 60 * 60 * 1000L
+        private const val PIPELINE_CALLBACK_COUNT = "pipeline_callback_count"
 
         private const val connectTimeout = 3L
         private const val readTimeout = 3L
         private const val writeTimeout = 3L
+
+        private fun anySslSocketFactory(): SSLSocketFactory {
+            try {
+                val sslContext = SSLContext.getInstance("SSL")
+                sslContext.init(null, trustAnyCerts, java.security.SecureRandom())
+                return sslContext.socketFactory
+            } catch (ignored: Exception) {
+                throw RemoteServiceException(ignored.message!!)
+            }
+        }
+
+        private val trustAnyCerts = arrayOf<TrustManager>(object : X509TrustManager {
+
+            @Throws(CertificateException::class)
+            override fun checkClientTrusted(chain: Array<X509Certificate>, authType: String) = Unit
+
+            @Throws(CertificateException::class)
+            override fun checkServerTrusted(chain: Array<X509Certificate>, authType: String) = Unit
+
+            override fun getAcceptedIssuers(): Array<X509Certificate> = arrayOf()
+        })
+
+        private val callbackClient = OkHttpClient.Builder()
+            .connectTimeout(connectTimeout, TimeUnit.SECONDS)
+            .readTimeout(readTimeout, TimeUnit.SECONDS)
+            .writeTimeout(writeTimeout, TimeUnit.SECONDS)
+            .sslSocketFactory(anySslSocketFactory(), trustAnyCerts[0] as X509TrustManager)
+            .hostnameVerifier { _, _ -> true }
+            .build()
     }
 }

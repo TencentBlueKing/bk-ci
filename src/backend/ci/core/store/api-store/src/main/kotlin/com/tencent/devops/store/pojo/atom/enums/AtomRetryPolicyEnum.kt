@@ -25,10 +25,9 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.dispatch.docker.service
+package com.tencent.devops.store.pojo.atom.enums
 
-import com.tencent.devops.dispatch.docker.pojo.resource.UserDockerResourceOptionsVO
-
-interface ExtDockerResourceOptionsService {
-    fun getDockerResourceConfigList(userId: String, projectId: String, buildType: String): UserDockerResourceOptionsVO?
+enum class AtomRetryPolicyEnum {
+    AUTO_RETRY, // 自动重试
+    MANUALLY_RETRY // 手动重试
 }
