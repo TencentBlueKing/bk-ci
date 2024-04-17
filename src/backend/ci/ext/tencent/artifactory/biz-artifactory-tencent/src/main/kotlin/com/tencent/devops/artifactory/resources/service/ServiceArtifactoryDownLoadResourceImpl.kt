@@ -39,15 +39,14 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.archive.client.BkRepoClient
 import com.tencent.devops.common.archive.pojo.defender.ApkDefenderTasks
 import com.tencent.devops.common.auth.api.ActionId
-import com.tencent.devops.common.service.config.CommonConfig
 import com.tencent.devops.common.web.RestResource
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
+@SuppressWarnings("LongParameterList")
 class ServiceArtifactoryDownLoadResourceImpl @Autowired constructor(
     private val bkRepoDownloadService: BkRepoDownloadService,
-    private val bkRepoClient: BkRepoClient,
-    private val commonConfig: CommonConfig
+    private val bkRepoClient: BkRepoClient
 ) : ServiceArtifactoryDownLoadResource {
 
     override fun getThirdPartyDownloadUrl(
