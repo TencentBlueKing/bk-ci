@@ -107,6 +107,7 @@ object OkHttpUtils {
             requestBuilder.build()
         }
 
+    @SuppressWarnings("TooGenericExceptionThrown", "LongParameterList")
     fun sendRequest(
         method: String,
         url: String,
@@ -125,10 +126,17 @@ object OkHttpUtils {
             params = params
         )
         try {
-            HttpRetryUtils.retry(retryCount) {
+            val response = HttpRetryUtils.retry(retryCount) {
                 httpClient.newCall(request).execute()
             }
-            successAction.invoke()
+            if (response.isSuccessful) {
+                successAction.invoke()
+            } else {
+                throw RuntimeException(
+                    "Exception occurred in callback interface|code[${response.code}]" +
+                            "|content[${response.body.toString()}]"
+                )
+            }
         } catch (ignored: Exception) {
             logger.warn("fail to send request|url[$url],$ignored")
             failAction.invoke(ignored)
