@@ -665,6 +665,7 @@ class GitProxyTGitService @Autowired constructor(
             return offshoreTGitApiClient.getNamespaces(token.accessToken, page, pageSize)
         }
 
+        val userResult = mutableListOf<TGitNamespace>()
         val result = mutableListOf<TGitNamespace>()
         var fetchPage = 1
         val fetchPageSize = 100
@@ -673,14 +674,14 @@ class GitProxyTGitService @Autowired constructor(
         while (true) {
             val request = offshoreTGitApiClient.getNamespaces(token.accessToken, fetchPage, fetchPageSize)
             // 第一次先把个人项目添加进去，后续都不添加
-            if (result.isEmpty()) {
-                result.addAll(request.filter { it.kind == TGitNamespaceKind.USER.text })
+            if (userResult.isEmpty()) {
+                userResult.addAll(request.filter { it.kind == TGitNamespaceKind.USER.text })
             }
 
             result.addAll(request.filter { it.kind != TGitNamespaceKind.USER.text && it.parentId == null })
 
             // 没有多余的页数就直接退出
-            if (request.size - 1 < pageSize) {
+            if ((request.size - userResult.size) < pageSize) {
                 break
             }
 
@@ -695,8 +696,9 @@ class GitProxyTGitService @Autowired constructor(
 
         val startIndex = (page - 1) * pageSize
         val endIndex = minOf(startIndex + pageSize, result.size)
+        userResult.addAll(result.subList(startIndex, endIndex))
 
-        return result.subList(startIndex, endIndex)
+        return userResult
     }
 
     fun createProjectAndLinkTGit(
