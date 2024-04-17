@@ -218,7 +218,8 @@ class GitProxyTGitService @Autowired constructor(
         }?.toSet() ?: emptySet()
 
         // 获取项目下正在跑的所有机器的用户
-        val users = workspaceJoinDao.fetchProjectSharedUser(dslContext, projectId)
+//        val users = workspaceJoinDao.fetchProjectSharedUser(dslContext, projectId)
+        val users = emptySet<String>()
 
         // 获取关联的工蜂仓库
         val repoMap = projectTGitLinkDao.fetch(dslContext, projectId).associate {
@@ -487,7 +488,8 @@ class GitProxyTGitService @Autowired constructor(
     ) {
         executor.execute {
             // 获取项目下正在跑的所有机器的用户
-            val users = workspaceJoinDao.fetchProjectSharedUser(dslContext, projectId)
+//            val users = workspaceJoinDao.fetchProjectSharedUser(dslContext, projectId)
+            val users = emptySet<String>()
             fetchProjectTGit(projectId) { repo, token ->
                 offshoreTGitApiClient.updateProjectAclSpecUser(token, repo.tgitId.toString(), users)
             }
