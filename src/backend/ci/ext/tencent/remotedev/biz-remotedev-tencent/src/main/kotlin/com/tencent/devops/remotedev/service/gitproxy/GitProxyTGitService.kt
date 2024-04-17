@@ -743,11 +743,9 @@ class GitProxyTGitService @Autowired constructor(
             }
             projects.forEach { projectId ->
                 logger.info("OP|refreshTGitAcl|$projectId start")
+                val ips = workspaceDao.fetchProjectIp(dslContext, projectId).map { it.substringAfter(".") }.toSet()
                 val users = workspaceJoinDao.fetchProjectSharedUser(dslContext, projectId)
                 fetchProjectTGit(projectId) { repo, token ->
-                    val config =
-                        offshoreTGitApiClient.getProjectAcl(token, repo.tgitId.toString()) ?: return@fetchProjectTGit
-                    val ips = config.allowIps.split(";").filter { it.isNotBlank() }.toMutableSet()
                     val ok = updateTGitProjectAcl(token, repo.tgitId.toString(), ips, users)
                     if (!ok) {
                         logger.warn("OP|refreshTGitAcl|$projectId|${repo.tgitId}|updateTGitProjectAcl false")
