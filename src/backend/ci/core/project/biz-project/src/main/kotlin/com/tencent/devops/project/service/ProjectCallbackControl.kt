@@ -87,7 +87,7 @@ class ProjectCallbackControl @Autowired constructor(
             // 1.获取URL/请求头/URL参数
             val secretRequestParam = secretTokenService.getSecretRequestParam(
                 userId = secretParam.userId,
-                projectId = callbackData.getProjectId(),
+                projectId = callbackData.projectId,
                 secretParam = secretParam
             )
             // 2.获取请求体

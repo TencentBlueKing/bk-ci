@@ -32,12 +32,9 @@ import com.tencent.devops.project.enum.ProjectEventType
 class ProjectCallbackData(
     val event: ProjectEventType,
     val userId: String,
+    val projectId: String,
     val updateInfo: ProjectUpdateInfo? = null,
-    val createInfo: ProjectCreateInfo? = null
-) {
-    fun getProjectId() = if (event == ProjectEventType.CREATE) {
-        createInfo!!.englishName
-    } else {
-        updateInfo!!.englishName
-    }
-}
+    val createInfo: ProjectCreateInfo? = null,
+    val updateLogo: ProjectUpdateLogoInfo? = null,
+    val enabled: Boolean? = null
+)

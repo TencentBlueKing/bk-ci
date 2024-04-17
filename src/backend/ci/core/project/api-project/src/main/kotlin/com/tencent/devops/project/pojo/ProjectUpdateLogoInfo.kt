@@ -25,36 +25,9 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.project.service.secret
+package com.tencent.devops.project.pojo
 
-import com.tencent.devops.project.pojo.ProjectCallbackData
-import com.tencent.devops.project.pojo.SecretRequestParam
-import okhttp3.Response
-import java.lang.Exception
-
-interface ISecretTokenService<T> {
-    /**
-     * 获取URL/请求头/URL参数
-     * @param userId 用户ID
-     * @param projectId 蓝盾项目ID
-     * @param secretParam 回调参数
-     */
-    fun getSecretRequestParam(userId: String, projectId: String, secretParam: T): SecretRequestParam
-
-    /**
-     * 获取请求体内容
-     * @param secretParam 回调参数
-     * @param projectCallbackData 项目回调参数[更新/创建/禁用事件信息]
-     */
-    fun getRequestBody(secretParam: T, projectCallbackData: ProjectCallbackData): String
-
-    /**
-     * 请求失败回调动作
-     */
-    fun requestFail(exception: Exception) = Unit
-
-    /**
-     * 请求成功回调动作
-     */
-    fun requestSuccess(response: Response) = Unit
-}
+data class ProjectUpdateLogoInfo(
+    val logo_addr: String,
+    val updator: String
+)

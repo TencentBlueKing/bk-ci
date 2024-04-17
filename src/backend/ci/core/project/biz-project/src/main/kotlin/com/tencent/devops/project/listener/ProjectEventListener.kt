@@ -30,6 +30,7 @@ package com.tencent.devops.project.listener
 import com.tencent.devops.common.event.listener.Listener
 import com.tencent.devops.project.pojo.mq.ProjectBroadCastEvent
 import com.tencent.devops.project.pojo.mq.ProjectCreateBroadCastEvent
+import com.tencent.devops.project.pojo.mq.ProjectEnableStatusBroadCastEvent
 import com.tencent.devops.project.pojo.mq.ProjectUpdateBroadCastEvent
 import com.tencent.devops.project.pojo.mq.ProjectUpdateLogoBroadCastEvent
 
@@ -53,6 +54,9 @@ interface ProjectEventListener : Listener<ProjectBroadCastEvent> {
             is ProjectCreateBroadCastEvent -> {
                 onReceiveProjectCreate(event)
             }
+            is ProjectEnableStatusBroadCastEvent -> {
+                onReceiveProjectEnable(event)
+            }
         }
     }
 
@@ -73,4 +77,10 @@ interface ProjectEventListener : Listener<ProjectBroadCastEvent> {
      *  @param event ProjectUpdateLogoBroadCastEvent
      */
     fun onReceiveProjectUpdateLogo(event: ProjectUpdateLogoBroadCastEvent)
+
+    /**
+     *  处理项目禁用事件
+     *  @param event ProjectEnableStatusBroadCastEvent
+     */
+    fun onReceiveProjectEnable(event: ProjectEnableStatusBroadCastEvent)
 }

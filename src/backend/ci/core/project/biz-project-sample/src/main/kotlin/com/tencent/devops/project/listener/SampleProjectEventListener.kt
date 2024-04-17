@@ -29,7 +29,9 @@ package com.tencent.devops.project.listener
 
 import com.tencent.devops.project.enum.ProjectEventType
 import com.tencent.devops.project.pojo.ProjectCallbackData
+import com.tencent.devops.project.pojo.ProjectUpdateLogoInfo
 import com.tencent.devops.project.pojo.mq.ProjectCreateBroadCastEvent
+import com.tencent.devops.project.pojo.mq.ProjectEnableStatusBroadCastEvent
 import com.tencent.devops.project.pojo.mq.ProjectUpdateBroadCastEvent
 import com.tencent.devops.project.pojo.mq.ProjectUpdateLogoBroadCastEvent
 import com.tencent.devops.project.service.ProjectCallbackControl
@@ -45,7 +47,8 @@ class SampleProjectEventListener @Autowired constructor(
             callbackData = ProjectCallbackData(
                 event = ProjectEventType.CREATE,
                 createInfo = event.projectInfo,
-                userId = event.userId
+                userId = event.userId,
+                projectId = event.projectId
             )
         )
     }
@@ -56,10 +59,36 @@ class SampleProjectEventListener @Autowired constructor(
             callbackData = ProjectCallbackData(
                 event = ProjectEventType.UPDATE,
                 updateInfo = event.projectInfo,
-                userId = event.userId
+                userId = event.userId,
+                projectId = event.projectId
             )
         )
     }
 
-    override fun onReceiveProjectUpdateLogo(event: ProjectUpdateLogoBroadCastEvent) = Unit
+    override fun onReceiveProjectUpdateLogo(event: ProjectUpdateLogoBroadCastEvent)  {
+        projectCallbackControl.callBackProjectEvent(
+            eventType = ProjectEventType.UPDATE_LOGO,
+            callbackData = ProjectCallbackData(
+                event = ProjectEventType.UPDATE,
+                updateLogo = ProjectUpdateLogoInfo(
+                    logo_addr = event.logoAddr,
+                    updator = event.userId
+                ),
+                userId = event.userId,
+                projectId = event.projectId
+            )
+        )
+    }
+
+    override fun onReceiveProjectEnable(event: ProjectEnableStatusBroadCastEvent) {
+        projectCallbackControl.callBackProjectEvent(
+            eventType = ProjectEventType.ENABLE,
+            callbackData = ProjectCallbackData(
+                event = ProjectEventType.ENABLE,
+                enabled = event.enabled,
+                userId = event.userId,
+                projectId = event.projectId
+            )
+        )
+    }
 }

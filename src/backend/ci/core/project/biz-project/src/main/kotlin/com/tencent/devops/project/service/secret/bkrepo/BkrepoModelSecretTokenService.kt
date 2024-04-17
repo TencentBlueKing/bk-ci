@@ -54,7 +54,7 @@ class BkrepoModelSecretTokenService : BkrepoSecretTokenCommonService<BkrepoModel
         val repoCreateRequest = RepoCreateRequest(
             category = RepositoryCategory.LOCAL,
             name = secretParam.bkRepoName,
-            projectId = projectCallbackData.getProjectId(),
+            projectId = projectCallbackData.projectId,
             type = RepositoryType.GENERIC,
             public = false,
             description = "storage for devops ci ${secretParam.bkRepoName}",
