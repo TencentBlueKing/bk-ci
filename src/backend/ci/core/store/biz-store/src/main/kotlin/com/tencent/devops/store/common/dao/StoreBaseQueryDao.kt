@@ -256,7 +256,6 @@ class StoreBaseQueryDao {
         name: String?
     ): Int {
         val tStoreBase = TStoreBase.T_STORE_BASE
-        val tStoreMember = TStoreMember.T_STORE_MEMBER
         val conditions = generateGetMyComponentConditions(
             userId = userId,
             storeName = name,
@@ -264,8 +263,6 @@ class StoreBaseQueryDao {
         )
         return dslContext.selectCount()
             .from(tStoreBase)
-            .join(tStoreMember)
-            .on(tStoreBase.STORE_CODE.eq(tStoreMember.STORE_CODE))
             .where(conditions)
             .fetchOne(0, Int::class.java) ?: 0
     }
