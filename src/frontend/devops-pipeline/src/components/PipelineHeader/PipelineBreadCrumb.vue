@@ -14,7 +14,7 @@
     import BreadCrumbItem from '@/components/BreadCrumb/BreadCrumbItem'
     import { RESOURCE_ACTION } from '@/utils/permission'
     import { debounce } from '@/utils/util'
-    import { mapActions, mapState } from 'vuex'
+    import { mapActions, mapGetters, mapState } from 'vuex'
 
     export default {
         components: {
@@ -34,11 +34,13 @@
             }
         },
         computed: {
-
             ...mapState('atom', [
                 'pipeline',
                 'pipelineInfo'
             ]),
+            ...mapGetters({
+                pipelineHistoryViewAble: 'atom/pipelineHistoryViewAble'
+            }),
             breadCrumbs () {
                 return [{
                     icon: 'pipeline',
@@ -58,7 +60,7 @@
                         showTips: true,
                         tipsName: 'switch_pipeline_hint',
                         tipsContent: this.$t('subpage.switchPipelineTooltips'),
-                        to: ['pipelinesHistory'].includes(this.$route.name)
+                        to: ['pipelinesHistory'].includes(this.$route.name) || !this.pipelineHistoryViewAble
                             ? null
                             : {
                                 name: 'pipelinesHistory',
