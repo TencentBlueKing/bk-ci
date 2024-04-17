@@ -660,7 +660,8 @@ class GitProxyTGitService @Autowired constructor(
             }
             projects.forEach { projectId ->
                 logger.info("OP|refreshTGitAcl|$projectId start")
-                val users = workspaceJoinDao.fetchProjectSharedUser(dslContext, projectId)
+//                val users = workspaceJoinDao.fetchProjectSharedUser(dslContext, projectId)
+                val users = emptySet<String>()
                 fetchProjectTGit(projectId) { repo, token ->
                     val config =
                         offshoreTGitApiClient.getProjectAcl(token, repo.tgitId.toString()) ?: return@fetchProjectTGit
