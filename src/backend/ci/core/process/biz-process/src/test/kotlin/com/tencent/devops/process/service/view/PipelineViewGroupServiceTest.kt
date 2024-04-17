@@ -95,25 +95,25 @@ class PipelineViewGroupServiceTest : BkCiAbstractTest() {
         /*viewType*/PipelineViewType.DYNAMIC
     )
 
-    private val pi = TPipelineInfoRecord(
-        "p-test", //        setPipelineId(pipelineId);
-        "test", //    setProjectId(projectId);
-        "test", //    setPipelineName(pipelineName);
-        "test", //    setPipelineDesc(pipelineDesc);
-        1, //    setVersion(version);
-        now, //    setCreateTime(createTime);
-        "test", //    setCreator(creator);
-        now, //    setUpdateTime(updateTime);
-        "test", //    setLastModifyUser(lastModifyUser);
-        "test", //    setChannel(channel);
-        1, //    setManualStartup(manualStartup);
-        1, //    setElementSkip(elementSkip);
-        1, //    setTaskCount(taskCount);
-        false, //    setDelete(delete);
-        1, //    setId(id);
-        "test", //    setPipelineNamePinyin(pipelineNamePinyin);
-        now //    setLatestStartTime(latestStartTime);,
-    )
+    private val pi = TPipelineInfoRecord().apply {
+        setPipelineId("p-test")
+        setProjectId("test")
+        setPipelineName("test")
+        setPipelineDesc("test")
+        setVersion(1)
+        setCreateTime(now)
+        setCreator("test")
+        setUpdateTime(now)
+        setLastModifyUser("test")
+        setChannel("test")
+        setManualStartup(1)
+        setElementSkip(1)
+        setTaskCount(1)
+        setDelete(false)
+        setId(1)
+        setPipelineNamePinyin("test")
+        setLatestStartTime(now)
+    }
 
     private val pipelineViewForm = PipelineViewForm(
         id = "test",
