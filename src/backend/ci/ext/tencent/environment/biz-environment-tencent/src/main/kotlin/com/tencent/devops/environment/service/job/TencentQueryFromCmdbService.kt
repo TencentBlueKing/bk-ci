@@ -2,6 +2,7 @@ package com.tencent.devops.environment.service.job
 
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
+import com.tencent.devops.common.api.exception.CustomException
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.environment.constant.DEFAULT_SYTEM_USER
@@ -18,6 +19,7 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.annotation.Primary
 import org.springframework.stereotype.Service
+import javax.ws.rs.core.Response
 
 @Service
 @Primary
@@ -136,7 +138,15 @@ class TencentQueryFromCmdbService {
     }
 
     private fun getNodeIpToCmdbDataMap(responseBody: String?): Map<String, CmdbDataIns> {
-        val cmdbData = jacksonObjectMapper().readValue<CmdbResp>(responseBody!!).data.data
+        val cmdbData: List<CmdbDataIns>?
+        try {
+            cmdbData = jacksonObjectMapper().readValue<CmdbResp>(responseBody!!).data.data
+        } catch (e: Exception) {
+            throw CustomException(
+                Response.Status.INTERNAL_SERVER_ERROR,
+                "CMDB api response error."
+            )
+        }
         return cmdbData?.associateBy { it.SvrIp!! } ?: mapOf()
     }
 
