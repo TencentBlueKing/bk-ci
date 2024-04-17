@@ -72,7 +72,6 @@ import com.tencent.devops.store.common.service.action.StoreDecorateFactory
 import com.tencent.devops.store.constant.StoreMessageCode
 import com.tencent.devops.store.pojo.common.HOTTEST
 import com.tencent.devops.store.pojo.common.KEY_HTML_TEMPLATE_VERSION
-import com.tencent.devops.store.pojo.common.KEY_LANGUAGE
 import com.tencent.devops.store.pojo.common.LATEST
 import com.tencent.devops.store.pojo.common.MarketItem
 import com.tencent.devops.store.pojo.common.MarketMainItem
@@ -166,8 +165,9 @@ class StoreComponentQueryServiceImpl @Autowired constructor(
         val storeProjectMap = mutableMapOf<String, String>()
         val tStoreBase = TStoreBase.T_STORE_BASE
         val myMyStoreComponent = mutableListOf<MyStoreComponent>()
-
+        val storeIds = mutableListOf<String>()
         records?.forEach { record ->
+            storeIds.add(record[tStoreBase.ID])
             val storeCode = record[tStoreBase.STORE_CODE] as String
             storeCodes.add(storeCode)
             val testProjectCode = storeProjectRelDao.getUserStoreTestProjectCode(
@@ -181,6 +181,8 @@ class StoreComponentQueryServiceImpl @Autowired constructor(
                 storeProjectMap[storeCode] = testProjectCode
             }
         }
+        val intoMap =
+            storeBaseEnvQueryDao.batchQueryStoreLanguage(dslContext, storeIds).intoMap({ it.value1() }, { it.value2() })
 
         val processingStoreRecords = storeBaseQueryDao.getStoreBaseInfoByConditions(
             dslContext = dslContext,
@@ -205,7 +207,7 @@ class StoreComponentQueryServiceImpl @Autowired constructor(
                 version = version,
                 publicFlag = processingAtomRecord[TStoreBaseFeature.T_STORE_BASE_FEATURE.PUBLIC_FLAG] as Boolean,
                 status = processingAtomRecord[tStoreBase.STATUS] as String,
-                logoUrl = processingAtomRecord[tStoreBase.LOGO_URL] as? String,
+                logoUrl = processingAtomRecord[tStoreBase.LOGO_URL],
                 publisher = processingAtomRecord[tStoreBase.PUBLISHER] as String,
                 classifyId = processingAtomRecord[tStoreBase.CLASSIFY_ID] as String,
             )
@@ -221,13 +223,14 @@ class StoreComponentQueryServiceImpl @Autowired constructor(
                 releaseFlag = true
             }
             val logoUrl = it[tStoreBase.LOGO_URL]
+            val storeId = it[tStoreBase.ID]
             myMyStoreComponent.add(
                 MyStoreComponent(
-                    storeId = it[tStoreBase.ID] as String,
+                    storeId = storeId,
                     storeCode = it[tStoreBase.STORE_CODE] as String,
                     storeType = storeType,
                     name = it[tStoreBase.NAME] as String,
-                    language = it[KEY_LANGUAGE] as? String,
+                    language = intoMap[storeId],
                     logoUrl = logoUrl?.let {
                         StoreDecorateFactory.get(StoreDecorateFactory.Kind.HOST)?.decorate(logoUrl) as? String
                     },
