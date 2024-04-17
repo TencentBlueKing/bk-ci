@@ -211,6 +211,23 @@ class RunningJobsDao {
         }
     }
 
+    fun clearRunningJobs(
+        dslContext: DSLContext,
+        projectId: String,
+        vmType: JobQuotaVmType,
+        channelCode: String,
+        createTime: LocalDateTime
+    ) {
+        with(TDispatchRunningJobs.T_DISPATCH_RUNNING_JOBS) {
+            dslContext.deleteFrom(this)
+                .where(PROJECT_ID.eq(projectId))
+                .and(VM_TYPE.eq(vmType.name))
+                .and(CHANNEL_CODE.eq(channelCode))
+                .and(CREATED_TIME.lessOrEqual(createTime))
+                .execute()
+        }
+    }
+
     fun getProject(dslContext: DSLContext): Result<Record1<String>>? {
         with(TDispatchRunningJobs.T_DISPATCH_RUNNING_JOBS) {
             return dslContext.selectDistinct(PROJECT_ID).from(this).fetch()
