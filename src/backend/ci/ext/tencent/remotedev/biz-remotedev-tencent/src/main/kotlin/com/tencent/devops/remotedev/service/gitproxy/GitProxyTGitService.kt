@@ -13,11 +13,9 @@ import com.tencent.devops.project.api.service.ServiceProjectResource
 import com.tencent.devops.remotedev.common.exception.ErrorCodeEnum
 import com.tencent.devops.remotedev.config.TGitConfig
 import com.tencent.devops.remotedev.dao.ProjectTGitLinkDao
+import com.tencent.devops.remotedev.dao.WorkspaceDao
 import com.tencent.devops.remotedev.dao.WorkspaceJoinDao
 import com.tencent.devops.remotedev.pojo.TGitRepoDaoData
-import com.tencent.devops.remotedev.pojo.WorkspaceSearch
-import com.tencent.devops.remotedev.pojo.WorkspaceSystemType
-import com.tencent.devops.remotedev.pojo.common.QueryType
 import com.tencent.devops.remotedev.pojo.gitproxy.CreateTGitProjectInfo
 import com.tencent.devops.remotedev.pojo.gitproxy.TGitNamespace
 import com.tencent.devops.remotedev.pojo.gitproxy.TGitRepoData
@@ -39,6 +37,7 @@ import java.util.concurrent.Executors
 class GitProxyTGitService @Autowired constructor(
     private val client: Client,
     private val dslContext: DSLContext,
+    private val workspaceDao: WorkspaceDao,
     private val workspaceJoinDao: WorkspaceJoinDao,
     private val projectTGitLinkDao: ProjectTGitLinkDao,
     private val bkitsmService: BKItsmService,
@@ -203,23 +202,7 @@ class GitProxyTGitService @Autowired constructor(
 
         val result = mutableMapOf<Long, Boolean>()
 
-        // 获取项目下正在跑的所有机器IP
-        val ips = workspaceJoinDao.limitFetchProjectWorkspace(
-            dslContext = dslContext,
-            null,
-            queryType = QueryType.WEB,
-            search = WorkspaceSearch(
-                projectId = listOf(projectId),
-                workspaceSystemType = listOf(WorkspaceSystemType.WINDOWS_GPU),
-                onFuzzyMatch = false
-            )
-        )?.filter { !it.hostName.isNullOrBlank() }?.map {
-            it.hostName?.split(".")?.let { host ->
-                host.subList(1, host.size).joinToString(separator = ".")
-            }!!
-        }?.toSet() ?: emptySet()
-
-        // 获取项目下正在跑的所有机器的用户
+        val ips = workspaceDao.fetchProjectIp(dslContext, projectId).map { it.substringAfter(".") }.toSet()
         val users = workspaceJoinDao.fetchProjectSharedUser(dslContext, projectId)
 
         // 获取关联的工蜂仓库
@@ -713,8 +696,39 @@ class GitProxyTGitService @Autowired constructor(
         )
 
         val data = offshoreTGitApiClient.createProject(token.accessToken, info.name, info.namespaceId, info.svnProject)
-        val res = linkTGit(userId, projectId, mapOf(data.id to (data.httpsUrlToRepo ?: data.httpUrlToRepo ?: "")))
-        return res[data.id] ?: false
+
+        // 关联
+        val ips = workspaceDao.fetchProjectIp(dslContext, projectId).map { it.substringAfter(".") }.toSet()
+        val users = workspaceJoinDao.fetchProjectSharedUser(dslContext, projectId)
+
+        val ok = updateTGitProjectAcl(
+            token = token.accessToken,
+            tGitProjectId = data.id.toString(),
+            ips = ips,
+            users = users
+        )
+
+        val url = data.httpsUrlToRepo ?: data.httpUrlToRepo ?: ""
+
+        projectTGitLinkDao.add(
+            dslContext = dslContext,
+            projectId = projectId,
+            tgitId = data.id,
+            status = if (ok) {
+                TGitRepoStatus.AVAILABLE
+            } else {
+                TGitRepoStatus.ABNORMAL
+            },
+            oauthUser = userId,
+            gitType = if (info.svnProject) {
+                TGitProjectType.SVN.name
+            } else {
+                TGitProjectType.GIT.name
+            },
+            url = url.removeHttpPrefix()
+        )
+
+        return ok
     }
 
     private fun String.removeHttpPrefix() = this.removePrefix("https://").removePrefix("http://")
