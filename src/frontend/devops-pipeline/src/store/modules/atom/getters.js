@@ -40,7 +40,7 @@ export default {
         return [
             VERSION_STATUS_ENUM.BRANCH,
             VERSION_STATUS_ENUM.RELEASED
-        ].includes(state.activePipelineVersion?.status ?? state.pipelineInfo?.latestVersionStatus)
+        ].includes(state.pipelineInfo?.latestVersionStatus)
     },
     isBranchVersion: state => {
         return state.activePipelineVersion?.status === VERSION_STATUS_ENUM.BRANCH
