@@ -184,6 +184,12 @@ class SignInfoService(
         )
     }
 
+    fun getSignInfo(resignId: String): SignHistory? {
+        return signHistoryDao.getSignHistory(dslContext, resignId)?.let {
+            signHistoryDao.convert(it)
+        }
+    }
+
     /*
     * 检查IpaSignInfo信息，并补齐默认值，如果返回null则表示IpaSignInfo的值不合法
     * */

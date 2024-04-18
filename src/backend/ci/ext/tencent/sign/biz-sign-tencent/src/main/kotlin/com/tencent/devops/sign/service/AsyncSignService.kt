@@ -27,8 +27,10 @@
 
 package com.tencent.devops.sign.service
 
+import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.sign.api.pojo.IpaSignInfo
+import com.tencent.devops.sign.api.pojo.SignHistory
 import com.tencent.devops.sign.jmx.SignBean
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.DisposableBean
@@ -36,6 +38,7 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Service
 import java.io.File
+import java.net.InetAddress
 import java.time.LocalDateTime
 import java.util.concurrent.LinkedBlockingQueue
 import java.util.concurrent.RejectedExecutionException
@@ -55,6 +58,15 @@ class AsyncSignService(
     @Value("\${bkci.sign.taskQueueSize:#{null}}")
     private val taskQueueSize: Int? = null
 
+    @Value("\${metrics.bkmonitor.url:#{null}}")
+    private val bkMonitorUrl: String? = null
+
+    @Value("\${metrics.bkmonitor.data_id:#{null}}")
+    private val bkMonitorDataId: String? = null
+
+    @Value("\${metrics.bkmonitor.access_token:#{null}}")
+    private val bkMonitorAccessToken: String? = null
+
     // 线程池队列和线程上限保持一致，并保持有一个活跃线程
     private val signExecutorService = ThreadPoolExecutor(
         taskPoolSize ?: DEFAULT_TASK_POOL_SIZE,
@@ -70,9 +82,10 @@ class AsyncSignService(
         ipaFile: File,
         taskExecuteCount: Int
     ) {
+        val start = LocalDateTime.now()
+        var status = 0
         try {
             signExecutorService.execute {
-                val start = LocalDateTime.now()
                 logger.info("[$resignId] asyncSign start")
                 val success = signService.signIpaAndArchive(
                     resignId = resignId,
@@ -80,6 +93,7 @@ class AsyncSignService(
                     ipaFile = ipaFile,
                     taskExecuteCount = taskExecuteCount
                 )
+                if (success) status = 1
                 logger.info("[$resignId] asyncSign finished with success:$success")
                 signBean.signTaskFinish(
                     elapse = LocalDateTime.now().timestampmilli() - start.timestampmilli(),
@@ -106,7 +120,74 @@ class AsyncSignService(
             )
             // 异步处理，所以无需抛出异常
             logger.error("[$resignId] asyncSign failed: $ignore")
+        } finally {
+            signInfoService.getSignInfo(resignId)?.let { history ->
+                metricsUpload(history, start, status, ipaSignInfo, resignId)
+            }
         }
+    }
+
+    private fun metricsUpload(
+        history: SignHistory,
+        start: LocalDateTime,
+        status: Int,
+        ipaSignInfo: IpaSignInfo,
+        resignId: String
+    ) {
+        val uploadCost = history.uploadFinishTime?.let { after ->
+            history.createTime?.let { before ->
+                after - before
+            }
+        } ?: 0
+        val unzipCost = history.unzipFinishTime?.let { after ->
+            history.uploadFinishTime?.let { before ->
+                after - before
+            }
+        } ?: 0
+        val resignCost = history.resignFinishTime?.let { after ->
+            history.unzipFinishTime?.let { before ->
+                after - before
+            }
+        } ?: 0
+        val zipCost = history.zipFinishTime?.let { after ->
+            history.resignFinishTime?.let { before ->
+                after - before
+            }
+        } ?: 0
+        val archiveCost = history.archiveFinishTime?.let { after ->
+            history.zipFinishTime?.let { before ->
+                after - before
+            }
+        } ?: 0
+        OkhttpUtils.doPost(
+            url = bkMonitorUrl ?: "",
+            jsonParam = """
+                        {
+                            "data_id": $bkMonitorDataId,
+                            "access_token": "$bkMonitorAccessToken",
+                            "data": [{
+                                "metrics": {
+                                    "create_at": ${start.timestampmilli()},
+                                    "finish_at": ${LocalDateTime.now().timestampmilli()},
+                                    "status": $status,
+                                    "upload_cost": $uploadCost,
+                                    "unzip_cost": $unzipCost,
+                                    "sign_cost": $resignCost,
+                                    "zip_cost": $zipCost,
+                                    "archive_cost": $archiveCost
+                                },
+                                "target": "${InetAddress.getLocalHost()}",
+                                "dimension": {
+                                    "user_id": "${ipaSignInfo.userId}",
+                                    "file_name": "${ipaSignInfo.fileName}",
+                                    "sign_id": "$resignId",
+                                    "project_id": "${ipaSignInfo.projectId}"
+                                },
+                                "timestamp": 1713424877774
+                            }]
+                        }
+                    """.trimIndent()
+        )
     }
 
     override fun destroy() {
