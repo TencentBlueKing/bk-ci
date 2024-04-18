@@ -69,6 +69,15 @@ class AsyncSignService(
     @Value("\${metrics.bkmonitor.access_token:#{null}}")
     private val bkMonitorAccessToken: String? = null
 
+    @Value("\${metrics.bkmonitor2.url:#{null}}")
+    private val bkMonitorUrl2: String? = null
+
+    @Value("\${metrics.bkmonitor2.data_id:#{null}}")
+    private val bkMonitorDataId2: String? = null
+
+    @Value("\${metrics.bkmonitor2.access_token:#{null}}")
+    private val bkMonitorAccessToken2: String? = null
+
     // 线程池队列和线程上限保持一致，并保持有一个活跃线程
     private val signExecutorService = ThreadPoolExecutor(
         taskPoolSize ?: DEFAULT_TASK_POOL_SIZE,
@@ -109,7 +118,7 @@ class AsyncSignService(
                 message = "Sign service queue tasks exceed the limit: ${e.message}"
             )
             // 异步处理，所以无需抛出异常
-            logger.error("[$resignId] asyncSign failed: $e")
+            logger.error("[$resignId] asyncSign with rejectedExecutionException: $e")
         } catch (ignore: Throwable) {
             // 失败结束签名逻辑
             signInfoService.failResign(
@@ -169,8 +178,8 @@ class AsyncSignService(
                 after - before
             }
         } ?: 0
-        val response = OkhttpUtils.doPost(
-            url = bkMonitorUrl ?: "",
+        val response1 = OkhttpUtils.doPost(
+            url = bkMonitorUrl ?: return,
             jsonParam = """
                         {
                             "data_id": $bkMonitorDataId,
@@ -199,7 +208,38 @@ class AsyncSignService(
                         }
                     """.trimIndent()
         )
-        logger.info("bkmonitor metrics upload result: $response")
+        logger.info("bkmonitor metrics upload result: $response1")
+        val response2 = OkhttpUtils.doPost(
+            url = bkMonitorUrl2 ?: return,
+            jsonParam = """
+                        {
+                            "data_id": $bkMonitorDataId2,
+                            "access_token": "$bkMonitorAccessToken2",
+                            "data": [{
+                                "metrics": {
+                                    "create_at": ${start.timestampmilli()},
+                                    "finish_at": ${LocalDateTime.now().timestampmilli()},
+                                    "upload_cost": $uploadCost,
+                                    "unzip_cost": $unzipCost,
+                                    "sign_cost": $resignCost,
+                                    "zip_cost": $zipCost,
+                                    "archive_cost": $archiveCost,
+                                    "count": 1
+                                },
+                                "target": "${InetAddress.getLocalHost()}",
+                                "dimension": {
+                                    "user_id": "${ipaSignInfo.userId}",
+                                    "file_name": "${ipaSignInfo.fileName}",
+                                    "sign_id": "$resignId",
+                                    "project_id": "${ipaSignInfo.projectId}",
+                                    "result": $result
+                                },
+                                "timestamp": ${LocalDateTime.now().timestamp()}
+                            }]
+                        }
+                    """.trimIndent()
+        )
+        logger.info("bkmonitor2 metrics upload result: $response2")
     }
 
     override fun destroy() {
