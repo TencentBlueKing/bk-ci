@@ -69,7 +69,7 @@ class StoreBuildServiceImpl @Autowired constructor(
         val storeType = storePipelineRelRecord.storeType
         val storeHandleBuildResultService =
             getStoreHandleBuildResultService(StoreTypeEnum.getStoreType(storeType.toInt()))
-        val result = storeHandleBuildResultService.handleStoreBuildResult(storeBuildResultRequest)
+        val result = storeHandleBuildResultService.handleStoreBuildResult(pipelineId, buildId, storeBuildResultRequest)
         logger.info("handleStoreBuildResult result is:$result")
         if (result.isNotOk() || result.data != true) {
             return result

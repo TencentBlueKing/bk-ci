@@ -37,6 +37,8 @@ abstract class AbstractStoreHandleBuildResultService {
      * 处理store组件发布时内置构建流水线结果
      */
     abstract fun handleStoreBuildResult(
+        pipelineId: String,
+        buildId: String,
         storeBuildResultRequest: StoreBuildResultRequest
     ): Result<Boolean>
 }

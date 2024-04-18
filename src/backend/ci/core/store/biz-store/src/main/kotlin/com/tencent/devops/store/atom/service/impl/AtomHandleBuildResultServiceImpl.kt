@@ -59,7 +59,11 @@ class AtomHandleBuildResultServiceImpl @Autowired constructor(
 
     private val logger = LoggerFactory.getLogger(AtomHandleBuildResultServiceImpl::class.java)
 
-    override fun handleStoreBuildResult(storeBuildResultRequest: StoreBuildResultRequest): Result<Boolean> {
+    override fun handleStoreBuildResult(
+        pipelineId: String,
+        buildId: String,
+        storeBuildResultRequest: StoreBuildResultRequest
+    ): Result<Boolean> {
         logger.info("handleStoreBuildResult storeBuildResultRequest is:$storeBuildResultRequest")
         val atomId = storeBuildResultRequest.storeId
         val atomRecord = marketAtomDao.getAtomRecordById(dslContext, atomId)
