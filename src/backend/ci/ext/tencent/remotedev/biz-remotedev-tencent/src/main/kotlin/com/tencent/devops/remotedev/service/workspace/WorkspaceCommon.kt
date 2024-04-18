@@ -47,6 +47,7 @@ import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.project.api.service.ServiceProjectTagResource
 import com.tencent.devops.remotedev.common.Constansts.ADMIN_NAME
 import com.tencent.devops.remotedev.common.exception.ErrorCodeEnum
+import com.tencent.devops.remotedev.config.RemoteDevCommonConfig
 import com.tencent.devops.remotedev.dao.ProjectStartAppLinkDao
 import com.tencent.devops.remotedev.dao.RemoteDevBillingDao
 import com.tencent.devops.remotedev.dao.RemoteDevSettingDao
@@ -118,7 +119,8 @@ class WorkspaceCommon @Autowired constructor(
     private val kafkaClient: KafkaClient,
     private val bkccService: BKCCService,
     private val remotedevProjectService: RemotedevProjectService,
-    private val projectStartAppLinkDao: ProjectStartAppLinkDao
+    private val projectStartAppLinkDao: ProjectStartAppLinkDao,
+    private val config: RemoteDevCommonConfig
 ) {
 
     companion object {
@@ -127,9 +129,6 @@ class WorkspaceCommon @Autowired constructor(
         private const val REPOID = "lsync"
         private const val LOCALDRIVER = "L"
         private const val PIPELINE_CONFIG_INFO = "remotedev:assignWorkspace.pipelineinfo"
-        private const val appName: String = "IEG_BKCI"
-
-        private const val curLaunchId: Long = 980007L
     }
 
     @Value("\${spring.kafka.topics.cgsInfoTopic:#{null}}")
@@ -762,8 +761,11 @@ class WorkspaceCommon @Autowired constructor(
 
     fun getGameIdAndAppId(projectId: String?, ownerType: WorkspaceOwnerType): Pair<String, Long> {
         if (projectId.isNullOrBlank() || ownerType == WorkspaceOwnerType.PERSONAL) {
-            return appName to curLaunchId
+            return config.devcouldAppName to config.devcouldCurLaunchId
         }
+        // 先上devcloud 后上gameId改造。由于有依赖，在这个拆分gameId改造。上gameId改造时去掉此处限制逻辑
+        return config.bkciAppName to config.bkciCurLaunchId
+        // 去掉上面return
         return projectStartAppLinkDao.getAppId(dslContext, projectId)?.let { projectId to it } ?: kotlin.run {
             remotedevProjectService.migrateOldData(projectId)
             checkNotNull(projectStartAppLinkDao.getAppId(dslContext, projectId)?.let { projectId to it })

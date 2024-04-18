@@ -959,7 +959,7 @@ class CreateControl @Autowired constructor(
     ): List<Workspace> {
         val mountType = WorkspaceMountType.START
         val systemType = WorkspaceSystemType.WINDOWS_GPU
-        val windowsConfig = windowsResourceConfigService.getTypeConfig(workspaceCreate.windowsType!!)
+        val windowsConfig = windowsResourceConfigService.getTypeConfig(workspaceCreate.windowsType)
             ?: throw ErrorCodeException(
                 errorCode = ErrorCodeEnum.WINDOWS_CONFIG_NOT_FIND.errorCode,
                 params = arrayOf(workspaceCreate.windowsType.toString())
@@ -972,15 +972,15 @@ class CreateControl @Autowired constructor(
             )
         }
 
-        val windowsZone = windowsResourceConfigService.getZoneConfig(workspaceCreate.windowsZone!!)
+        val windowsZone = windowsResourceConfigService.getZoneConfig(workspaceCreate.windowsZone)
             ?: throw ErrorCodeException(
                 errorCode = ErrorCodeEnum.WINDOWS_CONFIG_NOT_FIND.errorCode,
-                params = arrayOf(workspaceCreate.windowsZone!!)
+                params = arrayOf(workspaceCreate.windowsZone)
             )
         if (windowsZone.available == false) {
             throw ErrorCodeException(
                 errorCode = ErrorCodeEnum.WINDOWS_RESOURCE_NOT_AVAILABLE.errorCode,
-                params = arrayOf(workspaceCreate.windowsZone!!)
+                params = arrayOf(workspaceCreate.windowsZone)
             )
         }
 
@@ -990,7 +990,7 @@ class CreateControl @Autowired constructor(
 
         windowsGpuCheck(userId, workspaceNames.size)
         workspaceCommon.checkWorkspaceAvailability(userId, mountType, WorkspaceOwnerType.PERSONAL)
-        val resourceCount = startCloudResourceCountCheck(workspaceCreate.windowsType!!, workspaceCreate.windowsZone!!)
+        val resourceCount = startCloudResourceCountCheck(workspaceCreate.windowsType, workspaceCreate.windowsZone)
         if (workspaceNames.size - resourceCount > 0) {
             createCheckWhenWinNotAlready(windowsZone, windowsConfig, workspaceNames.size - resourceCount)
         }
