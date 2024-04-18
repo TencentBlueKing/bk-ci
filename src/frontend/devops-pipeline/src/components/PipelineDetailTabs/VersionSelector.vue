@@ -308,6 +308,7 @@
     padding: 0 8px;
     min-width: 200px;
     width: 100%;
+    cursor: pointer;
     overflow: hidden;
     .icon-edit-line,
     .icon-check-circle {
@@ -329,8 +330,13 @@
             @include ellipsis();
         }
     }
-
-    cursor: pointer;
+    .icon-circle-2-1 {
+        width: 20px;
+        height: 20px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
     .icon-angle-down {
         transition: transform 0.3s;
         font-size: 20px;
