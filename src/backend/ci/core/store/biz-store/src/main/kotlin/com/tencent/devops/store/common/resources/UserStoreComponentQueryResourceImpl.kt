@@ -36,6 +36,7 @@ import com.tencent.devops.store.pojo.common.MarketItem
 import com.tencent.devops.store.pojo.common.MarketMainItem
 import com.tencent.devops.store.pojo.common.MyStoreComponent
 import com.tencent.devops.store.pojo.common.StoreDetailInfo
+import com.tencent.devops.store.pojo.common.StoreInfoQuery
 import com.tencent.devops.store.pojo.common.enums.RdTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreSortTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
@@ -137,6 +138,7 @@ class UserStoreComponentQueryResourceImpl @Autowired constructor(
         rdType: RdTypeEnum?,
         recommendFlag: Boolean?,
         updateFlag: Boolean?,
+        installedFlag: Boolean?,
         queryProjectComponentFlag: Boolean,
         sortType: StoreSortTypeEnum?,
         page: Int,
@@ -145,19 +147,24 @@ class UserStoreComponentQueryResourceImpl @Autowired constructor(
         return Result(
             storeComponentQueryService.queryComponents(
                 userId = userId,
-                storeType = storeType,
-                projectCode = projectCode,
-                keyword = keyword,
-                classifyId = classifyId,
-                labelId = labelId,
-                categoryId = categoryId,
-                score = score,
-                recommendFlag = recommendFlag,
-                rdType = rdType,
-                queryProjectComponentFlag = queryProjectComponentFlag,
-                sortType = sortType,
-                page = page,
-                pageSize = pageSize
+                storeInfoQuery = StoreInfoQuery(
+                    storeType = storeType,
+                    projectCode = projectCode,
+                    keyword = keyword,
+                    classifyId = classifyId,
+                    labelId = labelId,
+                    categoryId = categoryId,
+                    score = score,
+                    recommendFlag = recommendFlag,
+                    rdType = rdType,
+                    queryProjectComponentFlag = queryProjectComponentFlag,
+                    sortType = sortType,
+                    page = page,
+                    pageSize = pageSize,
+                    installedFlag = installedFlag,
+                    updateFlag = updateFlag
+                ),
+                urlProtocolTrim = true
             )
         )
     }

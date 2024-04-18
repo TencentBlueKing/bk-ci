@@ -49,11 +49,11 @@ import com.tencent.devops.store.pojo.common.InstalledProjRespItem
 import com.tencent.devops.store.pojo.common.enums.StoreProjectTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.pojo.common.statistic.StoreDailyStatisticRequest
+import java.util.Date
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
-import java.util.Date
 
 /**
  * store项目通用业务逻辑类
@@ -313,5 +313,13 @@ class StoreProjectServiceImpl @Autowired constructor(
             storeCode = storeCode,
             storeType = storeType
         )
+    }
+
+    override fun getInstalledComponent(projectCode: String, storeType: Byte): List<String>? {
+        return storeProjectRelDao.getInstalledComponent(
+            dslContext = dslContext,
+            projectCode = projectCode,
+            storeType = storeType
+        )?.map { it.storeCode }
     }
 }

@@ -33,8 +33,7 @@ import com.tencent.devops.store.pojo.common.MarketItem
 import com.tencent.devops.store.pojo.common.MarketMainItem
 import com.tencent.devops.store.pojo.common.MyStoreComponent
 import com.tencent.devops.store.pojo.common.StoreDetailInfo
-import com.tencent.devops.store.pojo.common.enums.RdTypeEnum
-import com.tencent.devops.store.pojo.common.enums.StoreSortTypeEnum
+import com.tencent.devops.store.pojo.common.StoreInfoQuery
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.pojo.common.version.StoreDeskVersionItem
 import com.tencent.devops.store.pojo.common.version.StoreShowVersionInfo
@@ -97,19 +96,7 @@ interface StoreComponentQueryService {
      */
     fun queryComponents(
         userId: String,
-        storeType: String,
-        projectCode: String?,
-        keyword: String?,
-        classifyId: String?,
-        labelId: String?,
-        categoryId: String?,
-        score: Int?,
-        recommendFlag: Boolean?,
-        rdType: RdTypeEnum?,
-        queryProjectComponentFlag: Boolean,
-        sortType: StoreSortTypeEnum?,
-        page: Int,
-        pageSize: Int,
+        storeInfoQuery: StoreInfoQuery,
         urlProtocolTrim: Boolean = false
     ): Page<MarketItem>
 

@@ -90,4 +90,9 @@ interface StoreProjectService {
         storeCode: String,
         storeType: Byte
     ): Boolean
+
+    /**
+     * 获取项目下已安装的组件列表
+     */
+    fun getInstalledComponent(projectCode: String, storeType: Byte): List<String>?
 }

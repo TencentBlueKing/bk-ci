@@ -223,6 +223,7 @@ class CategoryDao {
                 .join(tStoreCategoryRel)
                 .on(ID.eq(tStoreCategoryRel.CATEGORY_ID))
                 .where(tStoreCategoryRel.STORE_ID.`in`(storeIds))
+                .skipCheck()
                 .fetch()
         }
     }

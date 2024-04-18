@@ -80,7 +80,6 @@ import com.tencent.devops.store.pojo.common.StoreBaseInfo
 import com.tencent.devops.store.pojo.common.StoreDetailInfo
 import com.tencent.devops.store.pojo.common.StoreInfoQuery
 import com.tencent.devops.store.pojo.common.classify.Classify
-import com.tencent.devops.store.pojo.common.enums.RdTypeEnum
 import com.tencent.devops.store.pojo.common.enums.ReleaseTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreSortTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreStatusEnum
@@ -464,6 +463,8 @@ class StoreComponentQueryServiceImpl @Autowired constructor(
                     rdType = null,
                     categoryId = null,
                     recommendFlag = null,
+                    installedFlag = null,
+                    updateFlag = null,
                     queryProjectComponentFlag = false,
                     sortType = StoreSortTypeEnum.UPDATE_TIME,
                     page = page,
@@ -492,6 +493,8 @@ class StoreComponentQueryServiceImpl @Autowired constructor(
                     rdType = null,
                     categoryId = null,
                     recommendFlag = null,
+                    installedFlag = null,
+                    updateFlag = null,
                     queryProjectComponentFlag = false,
                     sortType = StoreSortTypeEnum.DOWNLOAD_COUNT,
                     page = page,
@@ -525,6 +528,8 @@ class StoreComponentQueryServiceImpl @Autowired constructor(
                             rdType = null,
                             categoryId = null,
                             recommendFlag = null,
+                            installedFlag = null,
+                            updateFlag = null,
                             queryProjectComponentFlag = false,
                             sortType = StoreSortTypeEnum.DOWNLOAD_COUNT,
                             page = page,
@@ -553,42 +558,17 @@ class StoreComponentQueryServiceImpl @Autowired constructor(
 
     override fun queryComponents(
         userId: String,
-        storeType: String,
-        projectCode: String?,
-        keyword: String?,
-        classifyId: String?,
-        labelId: String?,
-        categoryId: String?,
-        score: Int?,
-        recommendFlag: Boolean?,
-        rdType: RdTypeEnum?,
-        queryProjectComponentFlag: Boolean,
-        sortType: StoreSortTypeEnum?,
-        page: Int,
-        pageSize: Int,
+        storeInfoQuery: StoreInfoQuery,
         urlProtocolTrim: Boolean
     ): Page<MarketItem> {
-        logger.info("queryComponents:Input:($userId,$storeType,$page,$pageSize)")
+        logger.info("queryComponents:Input:" +
+                "($userId,${storeInfoQuery.storeType},${storeInfoQuery.page},${storeInfoQuery.pageSize})")
         // 获取用户组织架构
         val userDeptList = storeUserService.getUserDeptList(userId)
         return doList(
             userId = userId,
             userDeptList = userDeptList,
-            storeInfoQuery = StoreInfoQuery(
-                storeType = storeType,
-                projectCode = projectCode,
-                keyword = keyword,
-                classifyId = classifyId,
-                labelId = labelId,
-                score = score,
-                rdType = rdType,
-                categoryId = categoryId,
-                recommendFlag = recommendFlag,
-                queryProjectComponentFlag = queryProjectComponentFlag,
-                sortType = StoreSortTypeEnum.DOWNLOAD_COUNT,
-                page = page,
-                pageSize = pageSize
-            ),
+            storeInfoQuery = storeInfoQuery,
             urlProtocolTrim = urlProtocolTrim
         ).get()
     }
@@ -674,6 +654,9 @@ class StoreComponentQueryServiceImpl @Autowired constructor(
                 )
                 // 获取用户
                 val memberData = storeMemberService.batchListMember(storeCodeList, storeTypeEnum).data
+                val installedComponentList = storeInfoQuery.projectCode?.let {
+                    storeProjectService.getInstalledComponent(it, storeTypeEnum.type.toByte())
+                }
                 // 获取分类
                 val classifyList = classifyService.getAllClassify(storeTypeEnum.type.toByte()).data
                 val classifyMap = mutableMapOf<String, String>()
@@ -718,13 +701,7 @@ class StoreComponentQueryServiceImpl @Autowired constructor(
                         updateTime = DateTimeUtil.toDateTime(record[tStoreBase.UPDATE_TIME] as LocalDateTime),
                         recommendFlag = record[tStoreBaseFeature.RECOMMEND_FLAG],
                         yamlFlag = null,
-                        installed = storeInfoQuery.projectCode?.let {
-                            storeProjectService.isInstalledByProject(
-                                projectCode = it,
-                                storeCode = storeCode,
-                                storeType = storeTypeEnum.type.toByte()
-                            )
-                        },
+                        installed = installedComponentList?.contains(storeCode),
                         dailyStatisticList = getRecentDailyStatisticList(storeCode, storeTypeEnum),
                         honorInfos = storeHonorInfoMap[storeCode],
                         indexInfos = storeIndexInfosMap[storeCode],

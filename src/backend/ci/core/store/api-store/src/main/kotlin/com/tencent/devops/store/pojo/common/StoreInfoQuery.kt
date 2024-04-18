@@ -53,6 +53,10 @@ data class StoreInfoQuery(
     val recommendFlag: Boolean?,
     @get:Schema(title = "是否查询项目下组件标识", required = true)
     val queryProjectComponentFlag: Boolean,
+    @get:Schema(title = "是否已安装", required = false)
+    val installedFlag: Boolean?,
+    @get:Schema(title = "是否需要更新标识 true：需要，false：不需要", required = false)
+    val updateFlag: Boolean?,
     @get:Schema(title = "排序", required = false)
     val sortType: StoreSortTypeEnum?,
     @get:Schema(title = "页码", required = true)

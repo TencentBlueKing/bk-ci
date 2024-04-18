@@ -274,11 +274,12 @@ class StoreBaseQueryDao {
     ): MutableList<Condition> {
         val tStoreBase = TStoreBase.T_STORE_BASE
         val conditions = mutableListOf<Condition>()
-        conditions.add(tStoreBase.LATEST_FLAG.eq(true))
-        conditions.add(existsUserComponents(userId, storeType, tStoreBase))
+        conditions.add(tStoreBase.STORE_TYPE.eq(storeType.type.toByte()))
         if (null != storeName) {
             conditions.add(tStoreBase.NAME.contains(storeName))
         }
+        conditions.add(tStoreBase.LATEST_FLAG.eq(true))
+        conditions.add(existsUserComponents(userId, storeType, tStoreBase))
         return conditions
     }
 
