@@ -34,11 +34,15 @@ import com.tencent.devops.metrics.pojo.`do`.ComplianceInfoDO
 import com.tencent.devops.metrics.pojo.dto.QueryPipelineOverviewDTO
 import com.tencent.devops.metrics.pojo.dto.QueryPipelineSummaryInfoDTO
 import com.tencent.devops.metrics.pojo.vo.BaseQueryReqVO
+import com.tencent.devops.metrics.pojo.vo.MaxJobConcurrencyVO
 import com.tencent.devops.metrics.pojo.vo.PipelineSumInfoVO
+import com.tencent.devops.metrics.pojo.vo.ProjectUserCountV0
 import com.tencent.devops.metrics.pojo.vo.QueryIntervalVO
 import com.tencent.devops.metrics.pojo.vo.ThirdPlatformOverviewInfoVO
 import com.tencent.devops.metrics.service.AtomStatisticsManageService
+import com.tencent.devops.metrics.service.DispatchJobMetricsService
 import com.tencent.devops.metrics.service.PipelineOverviewManageService
+import com.tencent.devops.metrics.service.ProjectBuildSummaryService
 import com.tencent.devops.metrics.service.ThirdPartyManageService
 import com.tencent.devops.metrics.utils.QueryParamCheckUtil
 
@@ -46,7 +50,9 @@ import com.tencent.devops.metrics.utils.QueryParamCheckUtil
 class ServiceMetricsResourceImpl constructor(
     private val thirdPartyManageService: ThirdPartyManageService,
     private val pipelineOverviewManageService: PipelineOverviewManageService,
-    private val atomStatisticsManageService: AtomStatisticsManageService
+    private val atomStatisticsManageService: AtomStatisticsManageService,
+    private val projectBuildSummaryService: ProjectBuildSummaryService,
+    private val dispatchJobMetricsService: DispatchJobMetricsService
 ) : ServiceMetricsResource {
 
     override fun queryPipelineSumInfo(
@@ -106,6 +112,24 @@ class ServiceMetricsResourceImpl constructor(
                 userId = userId,
                 atomCode = atomCode,
                 queryIntervalVO = queryIntervalVO
+            )
+        )
+    }
+
+    override fun getProjectActiveUserCount(
+        baseQueryReq: BaseQueryReqVO
+    ): Result<ProjectUserCountV0?> {
+        return Result(
+            projectBuildSummaryService.getProjectActiveUserCount(
+                baseQueryReq = baseQueryReq
+            )
+        )
+    }
+
+    override fun getMaxJobConcurrency(dispatchJobReq: BaseQueryReqVO): Result<MaxJobConcurrencyVO?> {
+        return Result(
+            dispatchJobMetricsService.getMaxJobConcurrency(
+                dispatchJobReq = dispatchJobReq
             )
         )
     }

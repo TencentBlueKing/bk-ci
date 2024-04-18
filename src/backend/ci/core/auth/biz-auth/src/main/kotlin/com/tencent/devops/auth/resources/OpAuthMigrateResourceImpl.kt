@@ -33,7 +33,7 @@ import com.tencent.devops.auth.pojo.dto.MigrateResourceDTO
 import com.tencent.devops.auth.pojo.dto.PermissionHandoverDTO
 import com.tencent.devops.auth.service.iam.PermissionMigrateService
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.auth.api.pojo.MigrateProjectConditionDTO
+import com.tencent.devops.common.auth.api.pojo.ProjectConditionDTO
 import com.tencent.devops.common.web.RestResource
 import org.springframework.beans.factory.annotation.Autowired
 
@@ -54,10 +54,10 @@ class OpAuthMigrateResourceImpl @Autowired constructor(
         return Result(permissionMigrateService.allToRbacAuth())
     }
 
-    override fun toRbacAuthByCondition(migrateProjectConditionDTO: MigrateProjectConditionDTO): Result<Boolean> {
+    override fun toRbacAuthByCondition(projectConditionDTO: ProjectConditionDTO): Result<Boolean> {
         return Result(
             permissionMigrateService.toRbacAuthByCondition(
-                migrateProjectConditionDTO = migrateProjectConditionDTO
+                projectConditionDTO = projectConditionDTO
             )
         )
     }
@@ -94,8 +94,8 @@ class OpAuthMigrateResourceImpl @Autowired constructor(
         return Result(permissionMigrateService.migrateMonitorResource(projectCodes = projectCodes))
     }
 
-    override fun autoRenewal(migrateProjectConditionDTO: MigrateProjectConditionDTO): Result<Boolean> {
-        permissionMigrateService.autoRenewal(migrateProjectConditionDTO)
+    override fun autoRenewal(projectConditionDTO: ProjectConditionDTO): Result<Boolean> {
+        permissionMigrateService.autoRenewal(projectConditionDTO)
         return Result(true)
     }
 }

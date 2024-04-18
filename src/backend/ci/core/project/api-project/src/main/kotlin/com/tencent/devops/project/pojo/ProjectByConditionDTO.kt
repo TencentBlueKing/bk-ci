@@ -3,7 +3,7 @@ package com.tencent.devops.project.pojo
 import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(title = "项目--权限")
-data class ProjectWithPermission(
+data class ProjectByConditionDTO(
     @get:Schema(title = "项目名称")
     val projectName: String,
     @get:Schema(title = "项目英文名称")

@@ -30,7 +30,7 @@ package com.tencent.devops.auth.service.iam
 
 import com.tencent.devops.auth.pojo.dto.MigrateResourceDTO
 import com.tencent.devops.auth.pojo.dto.PermissionHandoverDTO
-import com.tencent.devops.common.auth.api.pojo.MigrateProjectConditionDTO
+import com.tencent.devops.common.auth.api.pojo.ProjectConditionDTO
 
 /**
  * 权限中心迁移服务
@@ -55,7 +55,7 @@ interface PermissionMigrateService {
     /**
      * 按条件升级到rbac权限
      */
-    fun toRbacAuthByCondition(migrateProjectConditionDTO: MigrateProjectConditionDTO): Boolean
+    fun toRbacAuthByCondition(projectConditionDTO: ProjectConditionDTO): Boolean
 
     /**
      * 对比迁移鉴权结果
@@ -97,6 +97,6 @@ interface PermissionMigrateService {
     ): Boolean
 
     fun autoRenewal(
-        migrateProjectConditionDTO: MigrateProjectConditionDTO
+        projectConditionDTO: ProjectConditionDTO
     ): Boolean
 }

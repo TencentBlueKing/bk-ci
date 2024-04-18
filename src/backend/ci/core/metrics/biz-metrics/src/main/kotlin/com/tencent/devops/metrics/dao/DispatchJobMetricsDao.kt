@@ -27,9 +27,13 @@
 
 package com.tencent.devops.metrics.dao
 
+import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.event.pojo.measure.DispatchJobMetricsData
+import com.tencent.devops.metrics.pojo.vo.BaseQueryReqVO
+import com.tencent.devops.metrics.pojo.vo.MaxJobConcurrencyVO
 import com.tencent.devops.model.metrics.tables.TDispatchJobDailyMetrics
 import org.jooq.DSLContext
+import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Repository
 
@@ -58,6 +62,79 @@ class DispatchJobMetricsDao {
                     logger.error("Save dispatchJobMetrics error.", e)
                 }
             }
+        }
+    }
+
+    fun getMaxJobConcurrency(
+        dslContext: DSLContext,
+        dispatchJobReq: BaseQueryReqVO
+    ): MaxJobConcurrencyVO? {
+        val startDateTime =
+            DateTimeUtil.stringToLocalDate(dispatchJobReq.startTime!!)!!.atStartOfDay()
+        val endDateTime =
+            DateTimeUtil.stringToLocalDate(dispatchJobReq.endTime!!)!!.atStartOfDay()
+        with(TDispatchJobDailyMetrics.T_DISPATCH_JOB_DAILY_METRICS) {
+            val subQuery = dslContext.select(
+                PROJECT_ID,
+                JOB_TYPE,
+                DSL.max(MAX_JOB_CONCURRENCY.cast(Int::class.java)).`as`("maxJobConcurrency")
+            ).from(this)
+                .where(PROJECT_ID.eq(dispatchJobReq.projectId))
+                .and(CREATE_TIME.between(startDateTime, endDateTime))
+                .groupBy(PROJECT_ID, JOB_TYPE)
+                .asTable("subQuery")
+
+            return dslContext.select(
+                subQuery.field("PROJECT_ID", String::class.java),
+                DSL.max(
+                    DSL.`when`(
+                        subQuery.field("JOB_TYPE", String::class.java)!!.eq("DOCKER_VM"),
+                        subQuery.field("maxJobConcurrency", Int::class.java)
+                    ).otherwise(0)
+                ).`as`("VM最大并发"),
+                DSL.max(
+                    DSL.`when`(
+                        subQuery.field("JOB_TYPE", String::class.java)!!.eq("DOCKER_DEVCLOUD"),
+                        subQuery.field("maxJobConcurrency", Int::class.java)
+                    ).otherwise(0)
+                ).`as`("DevCloud-Linux最大并发"),
+                DSL.max(
+                    DSL.`when`(
+                        subQuery.field("JOB_TYPE", String::class.java)!!.eq("MACOS_DEVCLOUD"),
+                        subQuery.field("maxJobConcurrency", Int::class.java)
+                    ).otherwise(0)
+                ).`as`("DevCloud-macOS最大并发"),
+                DSL.max(
+                    DSL.`when`(
+                        subQuery.field("JOB_TYPE", String::class.java)!!.eq("WINDOWS_DEVCLOUD"),
+                        subQuery.field("maxJobConcurrency", Int::class.java)
+                    ).otherwise(0)
+                ).`as`("DevCloud-Windows最大并发"),
+                DSL.max(
+                    DSL.`when`(
+                        subQuery.field("JOB_TYPE", String::class.java)!!.eq("BUILD_LESS"),
+                        subQuery.field("maxJobConcurrency", Int::class.java)
+                    ).otherwise(0)
+                ).`as`("无编译环境最大并发"),
+                DSL.max(
+                    DSL.`when`(
+                        subQuery.field("JOB_TYPE", String::class.java)!!.eq("OTHER"),
+                        subQuery.field("maxJobConcurrency", Int::class.java)
+                    ).otherwise(0)
+                ).`as`("第三方构建机最大并发")
+            ).from(subQuery)
+                .groupBy(subQuery.field("PROJECT_ID", String::class.java))
+                .fetchAny()?.let {
+                    MaxJobConcurrencyVO(
+                        projectId = it.value1(),
+                        dockerVm = it.value2(),
+                        dockerDevcloud = it.value3(),
+                        macosDevcloud = it.value4(),
+                        windowsDevcloud = it.value5(),
+                        buildLess = it.value6(),
+                        other = it.value7()
+                    )
+                }
         }
     }
 
