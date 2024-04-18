@@ -33,13 +33,17 @@ package job
 import (
 	"fmt"
 	"os"
+	"os/exec"
+	"runtime"
 	"strings"
+	"syscall"
 
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/api"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/config"
+	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/constant"
 	exitcode "github.com/TencentBlueKing/bk-ci/agent/src/pkg/exiterror"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/i18n"
-	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/util/command"
+	ucommand "github.com/TencentBlueKing/bk-ci/agent/src/pkg/util/command"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/util/systemutil"
 	"github.com/TencentBlueKing/bk-ci/agentcommon/logs"
 	"github.com/TencentBlueKing/bk-ci/agentcommon/utils/fileutil"
@@ -60,7 +64,11 @@ func doBuild(
 		return err
 	}
 
-	cmd, err := command.StartProcessCmd(startScriptFile, []string{}, workDir, goEnv, runUser)
+	enableExitGroup := config.FetchEnvAndCheck(constant.DEVOPS_AGENT_ENABLE_EXIT_GROUP, "true")
+	if enableExitGroup {
+		logs.Infof("%s enable exit group", buildInfo.BuildId)
+	}
+	cmd, err := StartProcessCmd(startScriptFile, []string{}, workDir, goEnv, runUser, enableExitGroup)
 	if err != nil {
 		errMsg := i18n.Localize("StartWorkerProcessFailed", map[string]interface{}{"err": err.Error()})
 		logs.Error(errMsg)
@@ -78,6 +86,18 @@ func doBuild(
 	_ = systemutil.Chmod(errorMsgFile, os.ModePerm)
 
 	err = cmd.Wait()
+	if enableExitGroup {
+		go func() {
+			pid := cmd.Process.Pid
+			logs.Infof("%s do kill %d process group", buildInfo.BuildId, pid)
+			// 杀死进程组
+			err = syscall.Kill(-pid, syscall.SIGTERM)
+			if err != nil {
+				logs.Errorf("%s failed to kill %d process group: %s", buildInfo.BuildId, pid, err.Error())
+				return
+			}
+		}()
+	}
 	// #5806 从b-xxxx_build_msg.log 读取错误信息，此信息可由worker-agent.jar写入，用于当异常时能够将信息上报给服务器
 	msgFile := getWorkerErrorMsgFile(buildInfo.BuildId, buildInfo.VmSeqId)
 	msg, _ := fileutil.GetString(msgFile)
@@ -181,4 +201,53 @@ func getCurrentShell() (shell string) {
 	}
 	logs.Info("current shell: ", shell)
 	return
+}
+
+func StartProcessCmd(
+	command string,
+	args []string,
+	workDir string,
+	envMap map[string]string,
+	runUser string,
+	enableExitGroup bool,
+) (*exec.Cmd, error) {
+	cmd := exec.Command(command)
+
+	// arm64机器目前无法通过worker杀进程
+	if enableExitGroup || (systemutil.IsMacos() && runtime.GOARCH == "arm") {
+		cmd.SysProcAttr = &syscall.SysProcAttr{Setpgid: true}
+	}
+
+	if len(args) > 0 {
+		cmd.Args = append(cmd.Args, args...)
+	}
+
+	if workDir != "" {
+		cmd.Dir = workDir
+	}
+
+	cmd.Env = os.Environ()
+	if envMap != nil {
+		for k, v := range envMap {
+			cmd.Env = append(cmd.Env, fmt.Sprintf("%s=%s", k, v))
+		}
+	}
+
+	err := ucommand.SetUser(cmd, runUser)
+	if err != nil {
+		logs.Error("set user failed: ", err.Error())
+		return nil, fmt.Errorf("%s, Please check [devops.slave.user] in the {agent_dir}/.agent.properties", err.Error())
+	}
+
+	logs.Info("cmd.Path: ", cmd.Path)
+	logs.Info("cmd.Args: ", cmd.Args)
+	logs.Info("cmd.workDir: ", cmd.Dir)
+	logs.Info("runUser: ", runUser)
+
+	err = cmd.Start()
+	if err != nil {
+		return nil, err
+	}
+
+	return cmd, nil
 }

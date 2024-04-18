@@ -208,10 +208,11 @@ func runBuild(buildInfo *api.ThirdPartyBuildInfo) error {
 		"DEVOPS_GATEWAY":        config.GetGateWay(),
 		"BK_CI_LOCALE_LANGUAGE": config.GAgentConfig.Language,
 	}
-	if config.GEnvVars != nil {
-		for k, v := range config.GEnvVars {
+	if config.GApiEnvVars != nil {
+		config.GApiEnvVars.RangeDo(func(k, v string) bool {
 			goEnv[k] = v
-		}
+			return true
+		})
 	}
 	// #5806 定义临时目录
 	tmpDir, tmpMkErr := systemutil.MkBuildTmpDir()

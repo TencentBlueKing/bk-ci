@@ -33,7 +33,6 @@ package command
 import (
 	"errors"
 	"fmt"
-	"os"
 	"os/exec"
 	"os/user"
 	"strconv"
@@ -45,56 +44,11 @@ import (
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/util/systemutil"
 )
 
-func StartProcess(command string, args []string, workDir string, envMap map[string]string, runUser string) (int, error) {
-	cmd, err := StartProcessCmd(command, args, workDir, envMap, runUser)
-	if err != nil {
-		return -1, err
-	}
-	return cmd.Process.Pid, nil
-}
-
-func StartProcessCmd(command string, args []string, workDir string, envMap map[string]string, runUser string) (*exec.Cmd, error) {
-	cmd := exec.Command(command)
-
-	if len(args) > 0 {
-		cmd.Args = append(cmd.Args, args...)
-	}
-
-	if workDir != "" {
-		cmd.Dir = workDir
-	}
-
-	cmd.Env = os.Environ()
-	if envMap != nil {
-		for k, v := range envMap {
-			cmd.Env = append(cmd.Env, fmt.Sprintf("%s=%s", k, v))
-		}
-	}
-
-	err := setUser(cmd, runUser)
-	if err != nil {
-		logs.Error("set user failed: ", err.Error())
-		return nil, fmt.Errorf("%s, Please check [devops.slave.user] in the {agent_dir}/.agent.properties", err.Error())
-	}
-
-	logs.Info("cmd.Path: ", cmd.Path)
-	logs.Info("cmd.Args: ", cmd.Args)
-	logs.Info("cmd.workDir: ", cmd.Dir)
-	logs.Info("runUser: ", runUser)
-
-	err = cmd.Start()
-	if err != nil {
-		return nil, err
-	}
-
-	return cmd, nil
-}
-
 var envHome = "HOME"
 var envUser = "USER"
 var envLogName = "LOGNAME"
 
-func setUser(cmd *exec.Cmd, runUser string) error {
+func SetUser(cmd *exec.Cmd, runUser string) error {
 
 	if len(runUser) == 0 { // 传空则直接返回
 		return nil

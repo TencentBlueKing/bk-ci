@@ -33,11 +33,15 @@ package job
 import (
 	"fmt"
 	"os"
+	"os/exec"
+	"syscall"
 
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/api"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/config"
+	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/constant"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/i18n"
-	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/util/command"
+	ucommand "github.com/TencentBlueKing/bk-ci/agent/src/pkg/util/command"
+	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/util/process"
 	"github.com/TencentBlueKing/bk-ci/agent/src/pkg/util/systemutil"
 	"github.com/TencentBlueKing/bk-ci/agentcommon/logs"
 	"github.com/TencentBlueKing/bk-ci/agentcommon/utils/fileutil"
@@ -50,10 +54,11 @@ func doBuild(
 	goEnv map[string]string,
 	runUser string,
 ) error {
-	// TODO: #10179 根据环境变量判断是否使用进程组
-	var exitGroup *command.ProcessExitGroup = nil
-	if true {
-		exitGroup, err := command.NewProcessExitGroup()
+	var err error
+	var exitGroup process.ProcessExitGroup
+	enableExitGroup := config.FetchEnvAndCheck(constant.DEVOPS_AGENT_ENABLE_EXIT_GROUP, "true")
+	if enableExitGroup {
+		exitGroup, err = process.NewProcessExitGroup()
 		if err != nil {
 			errMsg := i18n.Localize("StartWorkerProcessFailed", map[string]interface{}{"err": err.Error()})
 			logs.Error(errMsg)
@@ -79,7 +84,7 @@ func doBuild(
 		"-jar",
 		config.BuildAgentJarPath(),
 		getEncodedBuildInfo(buildInfo)}
-	cmd, err := command.StartProcessCmd(startCmd, args, workDir, goEnv, runUser)
+	cmd, err := StartProcessCmd(startCmd, args, workDir, goEnv, runUser)
 	if err != nil {
 		errMsg := i18n.Localize("StartWorkerProcessFailed", map[string]interface{}{"err": err.Error()})
 		logs.Error(errMsg)
@@ -88,7 +93,7 @@ func doBuild(
 	}
 	pid := cmd.Process.Pid
 
-	if exitGroup != nil {
+	if enableExitGroup {
 		logs.Infof("%s process %d add exit group ", buildInfo.BuildId, pid)
 		if err := exitGroup.AddProcess(cmd.Process); err != nil {
 			logs.Errorf("%s add process  to %d exit group error %s", buildInfo.BuildId, pid, err.Error())
@@ -131,4 +136,50 @@ func doBuild(
 	}
 
 	return nil
+}
+
+const createNewConsole = 0x00000010
+
+func StartProcessCmd(command string, args []string, workDir string, envMap map[string]string, runUser string) (*exec.Cmd, error) {
+	cmd := exec.Command(command)
+
+	if config.FetchEnvAndCheck(constant.DEVOPS_AGENT_ENABLE_NEW_CONSOLE, "true") {
+		cmd.SysProcAttr = &syscall.SysProcAttr{
+			CreationFlags:    createNewConsole,
+			NoInheritHandles: true,
+		}
+	}
+
+	if len(args) > 0 {
+		cmd.Args = append(cmd.Args, args...)
+	}
+
+	if workDir != "" {
+		cmd.Dir = workDir
+	}
+
+	cmd.Env = os.Environ()
+	if envMap != nil {
+		for k, v := range envMap {
+			cmd.Env = append(cmd.Env, fmt.Sprintf("%s=%s", k, v))
+		}
+	}
+
+	err := ucommand.SetUser(cmd, runUser)
+	if err != nil {
+		logs.Error("set user failed: ", err.Error())
+		return nil, fmt.Errorf("%s, Please check [devops.slave.user] in the {agent_dir}/.agent.properties", err.Error())
+	}
+
+	logs.Info("cmd.Path: ", cmd.Path)
+	logs.Info("cmd.Args: ", cmd.Args)
+	logs.Info("cmd.workDir: ", cmd.Dir)
+	logs.Info("runUser: ", runUser)
+
+	err = cmd.Start()
+	if err != nil {
+		return nil, err
+	}
+
+	return cmd, nil
 }
