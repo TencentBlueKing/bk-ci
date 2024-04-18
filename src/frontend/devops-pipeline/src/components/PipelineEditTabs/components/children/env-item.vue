@@ -10,7 +10,7 @@
                 <i
                     v-bk-tooltips="{
                         content: disabledCopyTips,
-                        placement: 'top-start',
+                        placement: 'top-end',
                         disabled: !disabledCopyTips
                     }"
                     class="bk-icon icon-copy"
