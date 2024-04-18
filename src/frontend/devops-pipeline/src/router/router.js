@@ -23,9 +23,7 @@ const pipelines = () => import(/* webpackChunkName: "pipelines" */'../views')
 const CreatePipeline = () => import(/* webpackChunkName: "pipelineCreate" */'../views/CreatePipeline.vue')
 
 const pipelineListEntry = () => import(/* webpackChunkName: "pipelinesNewList" */'../views/PipelineList')
-const pipelinesNewList = () => import(/* webpackChunkName: "pipelinesNewList" */'../views/PipelineList/list')
-const PipelineManageList = () => import(/* webpackChunkName: "pipelinesNewList" */'../views/PipelineList/PipelineManageList')
-const PatchManageList = () => import(/* webpackChunkName: "pipelinesNewList" */'../views/PipelineList/PatchManageList')
+const PipelineManageList = () => import(/* webpackChunkName: "pipelinesNewList" */'../views/PipelineList/list')
 const PipelineListAuth = () => import(/* webpackChunkName: "pipelinesNewList" */'../views/PipelineList/Auth')
 
 const pipelinesGroup = () => import(/* webpackChunkName: "pipelinesGroup" */'../views/list/group')
@@ -123,49 +121,25 @@ const routes = [
                         component: PipelineListAuth
                     },
                     {
-                        path: '',
-                        component: pipelinesNewList,
-                        children: [
-                            {
-                                path: ':viewId/patch',
-                                name: 'patchManageList',
-                                component: PatchManageList,
-                                beforeEnter (to, from, next) {
-                                    if (!to.params.viewId) {
-                                        next({
-                                            ...to,
-                                            params: {
-                                                ...to.params,
-                                                viewId: getCacheViewId(to.params.projectId)
-                                            }
-                                        })
-                                    } else {
-                                        next()
+                        path: ':viewId/:type?',
+                        name: 'PipelineManageList',
+                        component: PipelineManageList,
+                        meta: {
+                            webSocket: true
+                        },
+                        beforeEnter (to, from, next) {
+                            if (!to.params.viewId) {
+                                next({
+                                    ...to,
+                                    params: {
+                                        ...to.params,
+                                        viewId: getCacheViewId(to.params.projectId)
                                     }
-                                }
-                            },
-                            {
-                                path: ':viewId',
-                                name: 'PipelineManageList',
-                                component: PipelineManageList,
-                                meta: {
-                                    webSocket: true
-                                },
-                                beforeEnter (to, from, next) {
-                                    if (!to.params.viewId) {
-                                        next({
-                                            ...to,
-                                            params: {
-                                                ...to.params,
-                                                viewId: getCacheViewId(to.params.projectId)
-                                            }
-                                        })
-                                    } else {
-                                        next()
-                                    }
-                                }
+                                })
+                            } else {
+                                next()
                             }
-                        ]
+                        }
                     }
                 ]
             },
