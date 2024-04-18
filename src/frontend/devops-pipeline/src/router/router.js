@@ -127,9 +127,22 @@ const routes = [
                         component: pipelinesNewList,
                         children: [
                             {
-                                path: 'patch',
+                                path: ':viewId/patch',
                                 name: 'patchManageList',
-                                component: PatchManageList
+                                component: PatchManageList,
+                                beforeEnter (to, from, next) {
+                                    if (!to.params.viewId) {
+                                        next({
+                                            ...to,
+                                            params: {
+                                                ...to.params,
+                                                viewId: getCacheViewId(to.params.projectId)
+                                            }
+                                        })
+                                    } else {
+                                        next()
+                                    }
+                                }
                             },
                             {
                                 path: ':viewId',

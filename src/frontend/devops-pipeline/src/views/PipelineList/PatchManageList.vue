@@ -2,7 +2,7 @@
     <main class="pipeline-list-main">
         <h5 class="current-pipeline-group-name">{{currentViewName}}</h5>
         <header class="pipeline-list-main-header">
-            <div>
+            <div class="pipeline-list-main-header-left-area">
                 <bk-button
                     :disabled="!isSelected"
                     @click="togglePatchAddTo"

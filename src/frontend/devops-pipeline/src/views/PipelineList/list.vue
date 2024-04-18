@@ -10,7 +10,7 @@
         @after-resize="afterResize"
     >
         <pipeline-group-aside slot="aside" />
-        <router-view slot="main" />
+        <Component :is="ListRightComponent" slot="main" />
     </bk-resize-layout>
 </template>
 
@@ -19,15 +19,24 @@
         PIPELINE_ASIDE_PANEL_TOGGLE,
         PIPELINE_GROUP_ASIDE_WIDTH_CACHE
     } from '@/store/constants'
+    import PatchManageList from './PatchManageList'
     import PipelineGroupAside from './PipelineGroupAside'
+    import PipelineManageList from './PipelineManageList'
 
     export default {
         components: {
-            PipelineGroupAside
+            PipelineGroupAside,
+            PipelineManageList,
+            PatchManageList
         },
         data () {
             return {
                 initialDivide: Number(localStorage.getItem(PIPELINE_GROUP_ASIDE_WIDTH_CACHE)) || 280
+            }
+        },
+        computed: {
+            ListRightComponent () {
+                return this.$route.params.type === 'patch' ? PatchManageList : PipelineManageList
             }
         },
         mounted () {
@@ -89,6 +98,9 @@
                 display: flex;
                 justify-content: space-between;
                 margin-bottom: 16px;
+                .pipeline-list-main-header-left-area {
+                    flex-shrink: 0;
+                }
                 .pipeline-list-main-header-right-area {
                     flex: 1;
                     display: flex;
