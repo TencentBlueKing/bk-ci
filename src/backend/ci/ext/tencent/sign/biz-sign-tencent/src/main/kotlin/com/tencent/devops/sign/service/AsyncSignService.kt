@@ -134,7 +134,7 @@ class AsyncSignService(
         resignId: String
     ) {
         val status = EnumResignStatus.parse(history.status)
-        val resultStatus = if (status == EnumResignStatus.SUCCESS) {
+        val result = if (status == EnumResignStatus.SUCCESS) {
             // 已成功
             1
         } else if (history.uploadFinishTime == null) {
@@ -183,7 +183,8 @@ class AsyncSignService(
                                     "unzip_cost": $unzipCost,
                                     "sign_cost": $resignCost,
                                     "zip_cost": $zipCost,
-                                    "archive_cost": $archiveCost
+                                    "archive_cost": $archiveCost,
+                                    "count": 1
                                 },
                                 "target": "${InetAddress.getLocalHost()}",
                                 "dimension": {
@@ -191,7 +192,7 @@ class AsyncSignService(
                                     "file_name": "${ipaSignInfo.fileName}",
                                     "sign_id": "$resignId",
                                     "project_id": "${ipaSignInfo.projectId}",
-                                    "status": $resultStatus
+                                    "result": $result
                                 },
                                 "timestamp": ${LocalDateTime.now().timestamp()}
                             }]
