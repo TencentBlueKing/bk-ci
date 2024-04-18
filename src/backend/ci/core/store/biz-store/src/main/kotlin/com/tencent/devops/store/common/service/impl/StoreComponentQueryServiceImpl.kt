@@ -68,6 +68,7 @@ import com.tencent.devops.store.common.service.StoreProjectService
 import com.tencent.devops.store.common.service.StoreTotalStatisticService
 import com.tencent.devops.store.common.service.StoreUserService
 import com.tencent.devops.store.common.service.action.StoreDecorateFactory
+import com.tencent.devops.store.common.utils.StoreUtils
 import com.tencent.devops.store.constant.StoreMessageCode
 import com.tencent.devops.store.pojo.common.HOTTEST
 import com.tencent.devops.store.pojo.common.KEY_HTML_TEMPLATE_VERSION
@@ -463,7 +464,7 @@ class StoreComponentQueryServiceImpl @Autowired constructor(
                     rdType = null,
                     categoryId = null,
                     recommendFlag = null,
-                    installedFlag = null,
+                    installed = null,
                     updateFlag = null,
                     queryProjectComponentFlag = false,
                     sortType = StoreSortTypeEnum.UPDATE_TIME,
@@ -493,7 +494,7 @@ class StoreComponentQueryServiceImpl @Autowired constructor(
                     rdType = null,
                     categoryId = null,
                     recommendFlag = null,
-                    installedFlag = null,
+                    installed = null,
                     updateFlag = null,
                     queryProjectComponentFlag = false,
                     sortType = StoreSortTypeEnum.DOWNLOAD_COUNT,
@@ -528,7 +529,7 @@ class StoreComponentQueryServiceImpl @Autowired constructor(
                             rdType = null,
                             categoryId = null,
                             recommendFlag = null,
-                            installedFlag = null,
+                            installed = null,
                             updateFlag = null,
                             queryProjectComponentFlag = false,
                             sortType = StoreSortTypeEnum.DOWNLOAD_COUNT,
@@ -642,6 +643,7 @@ class StoreComponentQueryServiceImpl @Autowired constructor(
                 val storeTypeEnum = StoreTypeEnum.valueOf(storeInfoQuery.storeType)
                 val tStoreBase = TStoreBase.T_STORE_BASE
                 val tStoreBaseFeature = TStoreBaseFeature.T_STORE_BASE_FEATURE
+                val projectCode = storeInfoQuery.projectCode
                 storeInfos.forEach {
                     storeCodeList.add(it[tStoreBase.STORE_CODE] as String)
                     storeIds.add(it[tStoreBaseFeature.ID] as String)
@@ -654,7 +656,7 @@ class StoreComponentQueryServiceImpl @Autowired constructor(
                 )
                 // 获取用户
                 val memberData = storeMemberService.batchListMember(storeCodeList, storeTypeEnum).data
-                val installedComponentList = storeInfoQuery.projectCode?.let {
+                val installedInfoMap = projectCode?.let {
                     storeProjectService.getInstalledComponent(it, storeTypeEnum.type.toByte())
                 }
                 // 获取分类
@@ -671,11 +673,13 @@ class StoreComponentQueryServiceImpl @Autowired constructor(
                     val storeId = record[tStoreBase.ID]
                     val storeCode = record[tStoreBase.STORE_CODE]
                     val statistic = storeStatisticData[storeCode]
+                    val version = record[tStoreBase.VERSION]
+                    val installed = projectCode?.let { installedInfoMap?.contains(storeCode) }
                     val marketItem =MarketItem(
                         id = storeId,
                         name = record[tStoreBase.NAME],
                         code = storeCode,
-                        version = record[tStoreBase.VERSION],
+                        version = version,
                         type = StoreTypeEnum.getStoreType(record[tStoreBase.STORE_TYPE].toInt()),
                         rdType = record[tStoreBaseFeature.RD_TYPE],
                         classifyCode = classifyMap[record[tStoreBase.CLASSIFY_ID] as String],
@@ -701,7 +705,10 @@ class StoreComponentQueryServiceImpl @Autowired constructor(
                         updateTime = DateTimeUtil.toDateTime(record[tStoreBase.UPDATE_TIME] as LocalDateTime),
                         recommendFlag = record[tStoreBaseFeature.RECOMMEND_FLAG],
                         yamlFlag = null,
-                        installed = installedComponentList?.contains(storeCode),
+                        installed = installed,
+                        updateFlag = if (installed == true) {
+                            StoreUtils.isGreaterVersion(version, installedInfoMap!![storeCode]!!)
+                        } else null,
                         dailyStatisticList = getRecentDailyStatisticList(storeCode, storeTypeEnum),
                         honorInfos = storeHonorInfoMap[storeCode],
                         indexInfos = storeIndexInfosMap[storeCode],
