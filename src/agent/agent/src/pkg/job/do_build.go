@@ -64,7 +64,8 @@ func doBuild(
 		return err
 	}
 
-	enableExitGroup := config.FetchEnvAndCheck(constant.DEVOPS_AGENT_ENABLE_EXIT_GROUP, "true")
+	enableExitGroup := config.FetchEnvAndCheck(constant.DEVOPS_AGENT_ENABLE_EXIT_GROUP, "true") ||
+		(systemutil.IsMacos() && runtime.GOARCH == "arm64")
 	if enableExitGroup {
 		logs.Infof("%s enable exit group", buildInfo.BuildId)
 	}
@@ -85,18 +86,25 @@ func doBuild(
 	_ = fileutil.WriteString(errorMsgFile, i18n.Localize("BuilderProcessWasKilled", nil))
 	_ = systemutil.Chmod(errorMsgFile, os.ModePerm)
 
-	err = cmd.Wait()
 	if enableExitGroup {
-		go func() {
-			pid := cmd.Process.Pid
-			logs.Infof("%s do kill %d process group", buildInfo.BuildId, pid)
-			// 杀死进程组
-			err = syscall.Kill(-pid, syscall.SIGTERM)
-			if err != nil {
-				logs.Errorf("%s failed to kill %d process group: %s", buildInfo.BuildId, pid, err.Error())
-				return
-			}
-		}()
+		pgId, errPg := syscall.Getpgid(pid)
+		if errPg != nil {
+			logs.Errorf("%s %d get pgid error %s", buildInfo.BuildId, pid, errPg.Error())
+		}
+		err = cmd.Wait()
+		if errPg == nil {
+			go func() {
+				logs.Infof("%s do kill %d process group %d", buildInfo.BuildId, pid, pgId)
+				// 杀死进程组
+				errPg = syscall.Kill(-pgId, syscall.SIGKILL)
+				if errPg != nil {
+					logs.Errorf("%s failed to kill %d process group %d : %s", buildInfo.BuildId, pid, pgId, errPg.Error())
+					return
+				}
+			}()
+		}
+	} else {
+		err = cmd.Wait()
 	}
 	// #5806 从b-xxxx_build_msg.log 读取错误信息，此信息可由worker-agent.jar写入，用于当异常时能够将信息上报给服务器
 	msgFile := getWorkerErrorMsgFile(buildInfo.BuildId, buildInfo.VmSeqId)
@@ -214,7 +222,7 @@ func StartProcessCmd(
 	cmd := exec.Command(command)
 
 	// arm64机器目前无法通过worker杀进程
-	if enableExitGroup || (systemutil.IsMacos() && runtime.GOARCH == "arm") {
+	if enableExitGroup {
 		cmd.SysProcAttr = &syscall.SysProcAttr{Setpgid: true}
 	}
 
